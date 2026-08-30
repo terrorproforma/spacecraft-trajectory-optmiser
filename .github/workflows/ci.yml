@@ -47,3 +47,8 @@ jobs:
         run: >-
           spacepdhcg-powered-descent-scvx
           --intervals 6 --step-seconds 2.0 --max-iterations 3 --tolerance 5e-3
+      - name: Scenario-aware block-arrow smoke test
+        run: >-
+          spacepdhcg-scenario-layout
+          --scenarios 8 --intervals 6 --common-prefix 4
+          --scenario-partitions 2 --time-partitions 1
