@@ -2,9 +2,20 @@
 
 from __future__ import annotations
 
+from typing import Protocol
+
 import numpy as np
 
-from spacepdhcg.cqp.problem import CQPSolution
+
+class SolutionQualityView(Protocol):
+    """Minimal result surface required for residual qualification."""
+
+    status: str
+    primal_residual: float
+    dual_residual: float
+
+    @property
+    def solved(self) -> bool: ...
 
 
 _RESIDUAL_QUALIFIABLE_STATUSES = {
@@ -14,7 +25,7 @@ _RESIDUAL_QUALIFIABLE_STATUSES = {
 
 
 def residual_qualified(
-    solution: CQPSolution,
+    solution: SolutionQualityView,
     *,
     tolerance: float,
 ) -> bool:
