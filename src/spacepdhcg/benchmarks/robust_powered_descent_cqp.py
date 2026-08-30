@@ -8,6 +8,7 @@ import json
 import numpy as np
 
 from spacepdhcg.backends import PersistentClarabel
+from spacepdhcg.cqp import residual_qualified
 from spacepdhcg.distributed import ScenarioCQPBundle, ScenarioTree
 from spacepdhcg.models import (
     PoweredDescent3DOFConfig,
@@ -105,8 +106,12 @@ def run(
         verbose=False,
     )
     solution = solver.solve()
-    if not solution.solved:
-        raise RuntimeError(f"robust CQP failed with status {solution.status}")
+    if not residual_qualified(solution, tolerance=max(tolerance, 2.0e-8)):
+        raise RuntimeError(
+            "robust CQP failed residual qualification with "
+            f"status {solution.status}, primal={solution.primal_residual}, "
+            f"dual={solution.dual_residual}"
+        )
 
     decoded = bundle.decode_primal(solution.primal)
     diagnostics = [
@@ -134,6 +139,7 @@ def run(
     return {
         "benchmark": "uncertain robust 3-DoF powered-descent CQP",
         "status": solution.status,
+        "residual_qualified": True,
         "scenarios": scenarios,
         "intervals": intervals,
         "gravity_spread": gravity_spread,
@@ -164,6 +170,8 @@ def run(
         "maximum_virtual_control": max(
             diagnostic.virtual_control_inf for diagnostic in diagnostics
         ),
+        "primal_residual": solution.primal_residual,
+        "dual_residual": solution.dual_residual,
         "iterations": solution.iterations,
         "setup_seconds": solver.setup_seconds,
         "solve_seconds": solution.solve_seconds,
