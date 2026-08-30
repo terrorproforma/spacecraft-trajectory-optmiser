@@ -1,6 +1,7 @@
 import numpy as np
 
 from spacepdhcg.backends import PersistentClarabel
+from spacepdhcg.cqp import CanonicalCQP
 from spacepdhcg.distributed import ScenarioCQPBundle, ScenarioTree
 from spacepdhcg.models import PoweredDescent3DOFModel
 from spacepdhcg.scvx import make_dynamics_consistent_reference
@@ -62,21 +63,11 @@ def _bundle(subproblem, scenario_count: int = 3) -> ScenarioCQPBundle:
 
 def test_identical_scenario_bundle_matches_single_scenario_objective() -> None:
     subproblem, local_values = _local_problem()
-    local_solver = PersistentClarabel(
-        subproblem.canonical(
-            *(
-                np.zeros((subproblem.layout.intervals + 1, 7)),
-                np.zeros((subproblem.layout.intervals, 4)),
-                np.zeros(7),
-                np.zeros(3),
-                np.zeros(3),
-            )
-        )
-    )
-    # Replace the deliberately invalid canonical shortcut with the already validated
-    # numerical instance while retaining an independently constructed workspace.
-    local_solver.update_values(local_values)
-    local_solution = local_solver.solve()
+    local_solution = PersistentClarabel(
+        CanonicalCQP(subproblem.structure, local_values),
+        tolerance=1.0e-8,
+        iteration_limit=1_000,
+    ).solve()
     assert local_solution.solved
 
     bundle = _bundle(subproblem)
@@ -124,7 +115,12 @@ def test_bundle_decodes_dual_blocks_and_consensus_controls() -> None:
             local_control = primal.local[scenario][
                 subproblem.layout.control_slice(block.node.stage)
             ]
-            np.testing.assert_allclose(local_control, consensus, atol=1.0e-7, rtol=0.0)
+            np.testing.assert_allclose(
+                local_control,
+                consensus,
+                atol=1.0e-7,
+                rtol=0.0,
+            )
 
 
 def test_numerical_updates_preserve_global_sparse_structure() -> None:
@@ -140,4 +136,9 @@ def test_numerical_updates_preserve_global_sparse_structure() -> None:
     assert first.constraint.shape == second.constraint.shape
     assert first.affine_cone.shape == second.affine_cone.shape
     assert not np.array_equal(first.linear, second.linear)
-    np.testing.assert_array_equal(first.constraint[-2 * bundle.nonanticipativity_rows :], second.constraint[-2 * bundle.nonanticipativity_rows :])
+    first_matrix = bundle.structure.constraint.matrix(first.constraint)
+    second_matrix = bundle.structure.constraint.matrix(second.constraint)
+    np.testing.assert_array_equal(
+        first_matrix[-bundle.nonanticipativity_rows :].toarray(),
+        second_matrix[-bundle.nonanticipativity_rows :].toarray(),
+    )
