@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -73,6 +75,20 @@ def run(
     }
 
 
+def json_safe(value: Any) -> Any:
+    """Convert diagnostics to standards-compliant JSON without losing semantics."""
+
+    if isinstance(value, np.generic):
+        return json_safe(value.item())
+    if isinstance(value, float):
+        return value if np.isfinite(value) else None
+    if isinstance(value, Mapping):
+        return {str(key): json_safe(item) for key, item in value.items()}
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return [json_safe(item) for item in value]
+    return value
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--intervals", type=int, default=10)
@@ -86,7 +102,7 @@ def main() -> None:
         max_iterations=arguments.max_iterations,
         tolerance=arguments.tolerance,
     )
-    print(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False))
+    print(json.dumps(json_safe(payload), indent=2, sort_keys=True, allow_nan=False))
 
 
 if __name__ == "__main__":
