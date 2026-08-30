@@ -144,7 +144,8 @@ class PersistentOSQP:
             raise ValueError("OSQP reference backend supports scalar QPs only")
         if np.any(np.isfinite(values.variable_lower)) or np.any(np.isfinite(values.variable_upper)):
             raise ValueError(
-                "OSQP reference backend currently requires variable bounds to be encoded as scalar rows"
+                "OSQP reference backend currently requires variable bounds "
+                "to be encoded as scalar rows"
             )
 
     @staticmethod
