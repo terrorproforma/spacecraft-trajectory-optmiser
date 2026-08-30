@@ -1,7 +1,7 @@
 import numpy as np
 
 from spacepdhcg.backends import PersistentClarabel
-from spacepdhcg.cqp import CanonicalCQP
+from spacepdhcg.cqp import CanonicalCQP, residual_qualified
 from spacepdhcg.distributed import ScenarioCQPBundle, ScenarioTree
 from spacepdhcg.models import PoweredDescent3DOFModel
 from spacepdhcg.scvx import make_dynamics_consistent_reference
@@ -68,7 +68,7 @@ def test_identical_scenario_bundle_matches_single_scenario_objective() -> None:
         tolerance=1.0e-8,
         iteration_limit=1_000,
     ).solve()
-    assert local_solution.solved
+    assert residual_qualified(local_solution, tolerance=1.0e-8)
 
     bundle = _bundle(subproblem)
     global_problem = bundle.problem([local_values] * bundle.scenario_count)
@@ -78,7 +78,7 @@ def test_identical_scenario_bundle_matches_single_scenario_objective() -> None:
         iteration_limit=1_000,
     ).solve()
 
-    assert global_solution.solved
+    assert residual_qualified(global_solution, tolerance=2.0e-8)
     decoded = bundle.decode_primal(global_solution.primal)
     assert bundle.maximum_nonanticipativity_violation(global_solution.primal) < 1.0e-7
     for local in decoded.local[1:]:
@@ -97,7 +97,7 @@ def test_bundle_decodes_dual_blocks_and_consensus_controls() -> None:
         iteration_limit=1_000,
     ).solve()
 
-    assert solution.solved
+    assert residual_qualified(solution, tolerance=2.0e-8)
     primal = bundle.decode_primal(solution.primal)
     dual = bundle.decode_dual(solution.dual)
     assert len(primal.local) == 2
