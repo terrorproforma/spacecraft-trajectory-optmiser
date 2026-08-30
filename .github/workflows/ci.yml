@@ -9,6 +9,15 @@ permissions:
   contents: read
 
 jobs:
+  native-interface:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate persistent C++ interface
+        run: >-
+          c++ -std=c++20 -Wall -Wextra -Wpedantic -Werror
+          -Icpp/include -fsyntax-only cpp/tests/interface_smoke.cpp
+
   test:
     runs-on: ubuntu-latest
     strategy:
