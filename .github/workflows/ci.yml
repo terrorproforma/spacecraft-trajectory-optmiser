@@ -43,3 +43,7 @@ jobs:
         run: spacepdhcg-cw-socp-benchmark --repeats 3 --intervals 12 --tolerance 1e-7
       - name: Random trajectory-banded correctness smoke test
         run: spacepdhcg-banded-correctness --seeds 7 --intervals 4 --tolerance 1e-7
+      - name: Nonlinear 3-DoF SCvx smoke test
+        run: >-
+          spacepdhcg-powered-descent-scvx
+          --intervals 6 --step-seconds 2.0 --max-iterations 3 --tolerance 5e-3
