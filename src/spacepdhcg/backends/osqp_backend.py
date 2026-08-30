@@ -14,7 +14,7 @@ import numpy as np
 import osqp
 from numpy.typing import NDArray
 
-from spacepdhcg.cqp import CQPStructure, CQPValues, CQPSolution, CanonicalCQP
+from spacepdhcg.cqp import CanonicalCQP, CQPSolution, CQPStructure, CQPValues
 
 
 class PersistentOSQP:

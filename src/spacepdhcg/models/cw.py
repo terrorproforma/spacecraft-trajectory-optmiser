@@ -9,7 +9,7 @@ import scipy.linalg as la
 import scipy.sparse as sp
 from numpy.typing import NDArray
 
-from spacepdhcg.cqp import CQPStructure, CQPValues, CanonicalCQP, CSCStructure
+from spacepdhcg.cqp import CanonicalCQP, CQPStructure, CQPValues, CSCStructure
 
 NX = 6
 NU = 3

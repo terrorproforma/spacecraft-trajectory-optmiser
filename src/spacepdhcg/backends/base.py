@@ -6,7 +6,7 @@ from typing import Protocol
 
 from numpy.typing import NDArray
 
-from spacepdhcg.cqp import CQPStructure, CQPValues, CQPSolution
+from spacepdhcg.cqp import CQPSolution, CQPStructure, CQPValues
 
 
 class PersistentCQPBackend(Protocol):

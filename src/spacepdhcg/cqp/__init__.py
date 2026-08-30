@@ -1,21 +1,21 @@
 """Canonical conic quadratic problem data structures."""
 
 from spacepdhcg.cqp.problem import (
-    CQPStructure,
-    CQPValues,
-    CQPSolution,
     CanonicalCQP,
     ConeBlock,
     ConeKind,
+    CQPSolution,
+    CQPStructure,
+    CQPValues,
     CSCStructure,
 )
 
 __all__ = [
+    "CQPSolution",
     "CQPStructure",
     "CQPValues",
-    "CQPSolution",
+    "CSCStructure",
     "CanonicalCQP",
     "ConeBlock",
     "ConeKind",
-    "CSCStructure",
 ]
