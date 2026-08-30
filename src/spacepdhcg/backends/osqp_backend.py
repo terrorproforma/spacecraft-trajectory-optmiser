@@ -27,6 +27,7 @@ class PersistentOSQP:
     ) -> None:
         self.structure: CQPStructure = problem.structure
         values = problem.values.validated(self.structure)
+        self._require_supported(values)
         quadratic = self.structure.quadratic.matrix(values.quadratic)
         constraint = self.structure.constraint.matrix(values.constraint)
 
@@ -64,6 +65,7 @@ class PersistentOSQP:
         """Update numerical coefficients while retaining the OSQP workspace."""
 
         updated = values.validated(self.structure)
+        self._require_supported(updated)
         arguments: dict[str, NDArray[np.float64]] = {
             "q": updated.linear,
             "l": updated.lower,
@@ -121,7 +123,7 @@ class PersistentOSQP:
         if settings:
             self._solver.update_settings(**settings)
 
-        result = self._solver.solve()
+        result = self._solver.solve(raise_error=False)
         info = result.info
         primal = self._result_vector(result.x, self.structure.n_variables)
         dual = self._result_vector(result.y, self.structure.n_constraints)
@@ -136,6 +138,14 @@ class PersistentOSQP:
             iterations=int(info.iter),
             solve_seconds=float(info.run_time),
         )
+
+    def _require_supported(self, values: CQPValues) -> None:
+        if self.structure.affine_cone is not None or self.structure.variable_cones:
+            raise ValueError("OSQP reference backend supports scalar QPs only")
+        if np.any(np.isfinite(values.variable_lower)) or np.any(np.isfinite(values.variable_upper)):
+            raise ValueError(
+                "OSQP reference backend currently requires variable bounds to be encoded as scalar rows"
+            )
 
     @staticmethod
     def _result_vector(vector: NDArray | None, size: int) -> NDArray[np.float64]:

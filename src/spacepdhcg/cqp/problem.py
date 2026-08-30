@@ -1,8 +1,8 @@
 """Fixed-pattern conic quadratic problem representation.
 
 The immutable :class:`CQPStructure` is allocated once. Successive solves replace only
-:class:`CQPValues`. This is the CPU reference contract for the future device-resident
-``PersistentCQP`` implementation.
+:class:`CQPValues`. The canonical form mirrors PDHCG's native split between scalar
+bounds, affine cone rows, variable bounds, and variable cone blocks.
 """
 
 from __future__ import annotations
@@ -19,10 +19,8 @@ IntArray = NDArray[np.int64]
 
 
 class ConeKind(StrEnum):
-    """Cone families required by the core spacecraft programme."""
+    """Native nonpolyhedral cone families supported by the programme."""
 
-    ZERO = "zero"
-    NONNEGATIVE = "nonnegative"
     SECOND_ORDER = "second_order"
     ROTATED_SECOND_ORDER = "rotated_second_order"
     EXPONENTIAL = "exponential"
@@ -32,17 +30,46 @@ class ConeKind(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class ConeBlock:
-    """A fixed conic row block in the affine constraint operator."""
+    """A fixed native cone block.
+
+    ``vector_dimension`` follows PDHCG's ``v_dim`` convention. SOC and rotated-SOC
+    blocks therefore contain ``vector_dimension + 2`` scalar slots. Exponential and
+    power cones contain three slots. PSD blocks contain an ``svec`` representation of
+    a matrix whose order is ``vector_dimension``.
+    """
 
     kind: ConeKind
     start: int
-    size: int
+    vector_dimension: int
+    power_alpha: float = 0.0
 
     def __post_init__(self) -> None:
         if self.start < 0:
             raise ValueError("cone start must be non-negative")
-        if self.size <= 0:
-            raise ValueError("cone size must be positive")
+        if self.vector_dimension <= 0:
+            raise ValueError("cone vector_dimension must be positive")
+        if self.kind in {ConeKind.EXPONENTIAL, ConeKind.POWER} and self.vector_dimension != 1:
+            raise ValueError("exponential and power cones require vector_dimension == 1")
+        if self.kind is ConeKind.POWER:
+            if not np.isfinite(self.power_alpha) or not 0.0 < self.power_alpha < 1.0:
+                raise ValueError("power cone alpha must lie strictly between zero and one")
+        elif self.power_alpha != 0.0:
+            raise ValueError("power_alpha is only valid for power cones")
+
+    @property
+    def slot_count(self) -> int:
+        if self.kind in {ConeKind.SECOND_ORDER, ConeKind.ROTATED_SECOND_ORDER}:
+            return self.vector_dimension + 2
+        if self.kind in {ConeKind.EXPONENTIAL, ConeKind.POWER}:
+            return 3
+        if self.kind is ConeKind.POSITIVE_SEMIDEFINITE:
+            order = self.vector_dimension
+            return order * (order + 1) // 2
+        raise AssertionError(f"unhandled cone kind {self.kind}")
+
+    @property
+    def stop(self) -> int:
+        return self.start + self.slot_count
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,11 +156,13 @@ class CSCStructure:
 
 @dataclass(frozen=True, slots=True)
 class CQPStructure:
-    """Immutable symbolic structure of a conic quadratic problem."""
+    """Immutable symbolic structure of a native PDHCG-compatible CQP."""
 
     quadratic: CSCStructure
     constraint: CSCStructure
-    cones: tuple[ConeBlock, ...] = ()
+    affine_cone: CSCStructure | None = None
+    affine_cones: tuple[ConeBlock, ...] = ()
+    variable_cones: tuple[ConeBlock, ...] = ()
 
     def __post_init__(self) -> None:
         rows, columns = self.quadratic.shape
@@ -141,14 +170,37 @@ class CQPStructure:
             raise ValueError("quadratic matrix must be square")
         if self.constraint.shape[1] != columns:
             raise ValueError("constraint matrix column count must equal variable count")
+        if self.affine_cone is None:
+            if self.affine_cones:
+                raise ValueError("affine cone blocks require an affine cone matrix")
+        else:
+            if self.affine_cone.shape[1] != columns:
+                raise ValueError("affine cone matrix column count must equal variable count")
+            self._validate_cones(
+                self.affine_cones,
+                self.affine_cone.shape[0],
+                require_cover=True,
+            )
+        self._validate_cones(self.variable_cones, columns, require_cover=False)
 
+    @staticmethod
+    def _validate_cones(
+        cones: tuple[ConeBlock, ...],
+        ambient_dimension: int,
+        *,
+        require_cover: bool,
+    ) -> None:
         previous_stop = 0
-        for cone in sorted(self.cones, key=lambda item: item.start):
-            if cone.start < previous_stop:
-                raise ValueError("cone blocks must not overlap")
-            if cone.start + cone.size > self.n_constraints:
-                raise ValueError("cone block exceeds constraint row count")
-            previous_stop = cone.start + cone.size
+        for index, cone in enumerate(cones):
+            if index and cone.start < previous_stop:
+                raise ValueError("cone blocks must be sorted and non-overlapping")
+            if require_cover and cone.start != previous_stop:
+                raise ValueError("affine cone blocks must contiguously cover every affine row")
+            if cone.stop > ambient_dimension:
+                raise ValueError("cone block exceeds its ambient dimension")
+            previous_stop = cone.stop
+        if require_cover and previous_stop != ambient_dimension:
+            raise ValueError("affine cone blocks must cover every affine row")
 
     @property
     def n_variables(self) -> int:
@@ -157,6 +209,16 @@ class CQPStructure:
     @property
     def n_constraints(self) -> int:
         return self.constraint.shape[0]
+
+    @property
+    def n_affine_constraints(self) -> int:
+        return 0 if self.affine_cone is None else self.affine_cone.shape[0]
+
+    @property
+    def n_duals(self) -> int:
+        """PDHCG dual size, ordered ``[dual_A, dual_F]``."""
+
+        return self.n_constraints + self.n_affine_constraints
 
 
 @dataclass(slots=True)
@@ -168,45 +230,53 @@ class CQPValues:
     linear: FloatArray
     lower: FloatArray
     upper: FloatArray
+    affine_cone: FloatArray
+    affine_offset: FloatArray
+    variable_lower: FloatArray
+    variable_upper: FloatArray
 
     def validated(self, structure: CQPStructure) -> CQPValues:
         """Return an owned, validated copy compatible with ``structure``."""
 
-        quadratic = np.asarray(self.quadratic, dtype=np.float64).copy()
-        constraint = np.asarray(self.constraint, dtype=np.float64).copy()
-        linear = np.asarray(self.linear, dtype=np.float64).copy()
-        lower = np.asarray(self.lower, dtype=np.float64).copy()
-        upper = np.asarray(self.upper, dtype=np.float64).copy()
-
-        expected = {
-            "quadratic": (quadratic, structure.quadratic.nnz),
-            "constraint": (constraint, structure.constraint.nnz),
-            "linear": (linear, structure.n_variables),
-            "lower": (lower, structure.n_constraints),
-            "upper": (upper, structure.n_constraints),
+        arrays = {
+            "quadratic": np.asarray(self.quadratic, dtype=np.float64).copy(),
+            "constraint": np.asarray(self.constraint, dtype=np.float64).copy(),
+            "linear": np.asarray(self.linear, dtype=np.float64).copy(),
+            "lower": np.asarray(self.lower, dtype=np.float64).copy(),
+            "upper": np.asarray(self.upper, dtype=np.float64).copy(),
+            "affine_cone": np.asarray(self.affine_cone, dtype=np.float64).copy(),
+            "affine_offset": np.asarray(self.affine_offset, dtype=np.float64).copy(),
+            "variable_lower": np.asarray(self.variable_lower, dtype=np.float64).copy(),
+            "variable_upper": np.asarray(self.variable_upper, dtype=np.float64).copy(),
         }
-        for name, (array, size) in expected.items():
+        expected_sizes = {
+            "quadratic": structure.quadratic.nnz,
+            "constraint": structure.constraint.nnz,
+            "linear": structure.n_variables,
+            "lower": structure.n_constraints,
+            "upper": structure.n_constraints,
+            "affine_cone": 0 if structure.affine_cone is None else structure.affine_cone.nnz,
+            "affine_offset": structure.n_affine_constraints,
+            "variable_lower": structure.n_variables,
+            "variable_upper": structure.n_variables,
+        }
+        for name, size in expected_sizes.items():
+            array = arrays[name]
             if array.ndim != 1 or array.size != size:
                 raise ValueError(f"{name} must have shape ({size},), received {array.shape}")
 
-        if not np.all(np.isfinite(quadratic)):
-            raise ValueError("quadratic values must be finite")
-        if not np.all(np.isfinite(constraint)):
-            raise ValueError("constraint values must be finite")
-        if not np.all(np.isfinite(linear)):
-            raise ValueError("linear objective must be finite")
-        if np.any(np.isnan(lower)) or np.any(np.isnan(upper)):
-            raise ValueError("constraint bounds may be infinite but not NaN")
-        if np.any(lower > upper):
+        for name in ("quadratic", "constraint", "linear", "affine_cone", "affine_offset"):
+            if not np.all(np.isfinite(arrays[name])):
+                raise ValueError(f"{name} values must be finite")
+        for name in ("lower", "upper", "variable_lower", "variable_upper"):
+            if np.any(np.isnan(arrays[name])):
+                raise ValueError(f"{name} may be infinite but not NaN")
+        if np.any(arrays["lower"] > arrays["upper"]):
             raise ValueError("lower constraint bound exceeds upper bound")
+        if np.any(arrays["variable_lower"] > arrays["variable_upper"]):
+            raise ValueError("lower variable bound exceeds upper variable bound")
 
-        return CQPValues(
-            quadratic=quadratic,
-            constraint=constraint,
-            linear=linear,
-            lower=lower,
-            upper=upper,
-        )
+        return CQPValues(**arrays)
 
     def copy(self) -> CQPValues:
         return CQPValues(
@@ -215,6 +285,10 @@ class CQPValues:
             linear=self.linear.copy(),
             lower=self.lower.copy(),
             upper=self.upper.copy(),
+            affine_cone=self.affine_cone.copy(),
+            affine_offset=self.affine_offset.copy(),
+            variable_lower=self.variable_lower.copy(),
+            variable_upper=self.variable_upper.copy(),
         )
 
 

@@ -3,6 +3,7 @@ import numpy as np
 from spacepdhcg.models import (
     CWRendezvousConfig,
     CWRendezvousProblem,
+    ThrustConstraint,
     cw_continuous_matrices,
     discretise_cw,
 )
@@ -29,6 +30,25 @@ def test_initial_and_target_updates_preserve_symbolic_structure() -> None:
     assert not np.array_equal(first.lower, second.lower)
     assert problem.structure.n_variables == (8 + 1) * 6 + 8 * 3
     assert problem.structure.n_constraints == 6 + 8 * 6 + 6 + 8 * 3
+    assert problem.structure.n_affine_constraints == 0
+
+
+def test_soc_thrust_uses_native_affine_cone_rows() -> None:
+    intervals = 8
+    problem = CWRendezvousProblem(
+        CWRendezvousConfig(
+            intervals=intervals,
+            thrust_constraint=ThrustConstraint.SECOND_ORDER_CONE,
+        )
+    )
+    values = problem.values(np.array([100.0, 0, 0, 0, 0, 0]), np.zeros(6))
+
+    assert problem.structure.n_constraints == 6 + intervals * 6 + 6
+    assert problem.structure.n_affine_constraints == intervals * 4
+    assert len(problem.structure.affine_cones) == intervals
+    assert all(cone.slot_count == 4 for cone in problem.structure.affine_cones)
+    assert values.affine_offset.shape == (intervals * 4,)
+    np.testing.assert_allclose(values.affine_offset.reshape(intervals, 4)[:, -1], 5.0e-2)
 
 
 def test_decode_rejects_wrong_decision_shape() -> None:

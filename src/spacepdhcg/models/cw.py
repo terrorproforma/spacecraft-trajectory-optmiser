@@ -1,19 +1,35 @@
-"""Clohessy-Wiltshire rendezvous model and fixed-pattern QP benchmark."""
+"""Clohessy-Wiltshire rendezvous QP/SOCP benchmark family."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 
 import numpy as np
 import scipy.linalg as la
 import scipy.sparse as sp
 from numpy.typing import NDArray
 
-from spacepdhcg.cqp import CanonicalCQP, CQPStructure, CQPValues, CSCStructure
+from spacepdhcg.cqp import (
+    CanonicalCQP,
+    ConeBlock,
+    ConeKind,
+    CQPStructure,
+    CQPValues,
+    CSCStructure,
+)
 
 NX = 6
 NU = 3
+SOC_SLOTS = 4
 FloatArray = NDArray[np.float64]
+
+
+class ThrustConstraint(StrEnum):
+    """Control constraint used by the CW benchmark."""
+
+    BOX = "box"
+    SECOND_ORDER_CONE = "soc"
 
 
 def cw_continuous_matrices(mean_motion: float) -> tuple[FloatArray, FloatArray]:
@@ -51,12 +67,13 @@ def discretise_cw(mean_motion: float, step_seconds: float) -> tuple[FloatArray, 
 
 @dataclass(frozen=True, slots=True)
 class CWRendezvousConfig:
-    """Numerical configuration for the B1 deterministic rendezvous QP."""
+    """Numerical configuration for the deterministic rendezvous benchmark."""
 
     intervals: int = 40
     step_seconds: float = 20.0
     mean_motion: float = 1.13e-3
     max_component_acceleration: float = 5.0e-2
+    thrust_constraint: ThrustConstraint | str = ThrustConstraint.BOX
     state_weights: tuple[float, float, float, float, float, float] = (
         1.0e-4,
         1.0e-4,
@@ -68,6 +85,7 @@ class CWRendezvousConfig:
     control_weights: tuple[float, float, float] = (1.0, 1.0, 1.0)
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "thrust_constraint", ThrustConstraint(self.thrust_constraint))
         if self.intervals < 2:
             raise ValueError("intervals must be at least two")
         if self.step_seconds <= 0 or not np.isfinite(self.step_seconds):
@@ -85,6 +103,7 @@ class CWRendezvousConfig:
 @dataclass(frozen=True, slots=True)
 class CWRendezvousLayout:
     intervals: int
+    thrust_constraint: ThrustConstraint
 
     @property
     def state_variable_count(self) -> int:
@@ -100,7 +119,16 @@ class CWRendezvousLayout:
 
     @property
     def n_constraints(self) -> int:
-        return NX + self.intervals * NX + NX + self.intervals * NU
+        scalar_control_rows = (
+            self.intervals * NU if self.thrust_constraint is ThrustConstraint.BOX else 0
+        )
+        return NX + self.intervals * NX + NX + scalar_control_rows
+
+    @property
+    def n_affine_constraints(self) -> int:
+        if self.thrust_constraint is ThrustConstraint.SECOND_ORDER_CONE:
+            return self.intervals * SOC_SLOTS
+        return 0
 
     @property
     def initial_rows(self) -> slice:
@@ -119,7 +147,8 @@ class CWRendezvousLayout:
     @property
     def control_rows(self) -> slice:
         start = self.terminal_rows.stop
-        return slice(start, start + self.intervals * NU)
+        size = self.intervals * NU if self.thrust_constraint is ThrustConstraint.BOX else 0
+        return slice(start, start + size)
 
     def state_slice(self, index: int) -> slice:
         if not 0 <= index <= self.intervals:
@@ -140,6 +169,7 @@ class CWRendezvousDiagnostics:
     dynamics_defect_inf: float
     control_violation_inf: float
     maximum_component_acceleration: float
+    maximum_acceleration_norm: float
 
     def feasible(self, tolerance: float = 1.0e-6) -> bool:
         return max(
@@ -151,24 +181,51 @@ class CWRendezvousDiagnostics:
 
 
 class CWRendezvousProblem:
-    """Fixed-pattern CW rendezvous QP with mutable initial and target states."""
+    """Fixed-pattern CW rendezvous QP or SOCP with mutable boundary states."""
 
     def __init__(self, config: CWRendezvousConfig | None = None) -> None:
         self.config = config or CWRendezvousConfig()
-        self.layout = CWRendezvousLayout(self.config.intervals)
+        self.layout = CWRendezvousLayout(
+            self.config.intervals,
+            self.config.thrust_constraint,
+        )
         self.ad, self.bd = discretise_cw(
             self.config.mean_motion,
             self.config.step_seconds,
         )
-        quadratic, constraint = self._build_matrices()
+        quadratic, constraint, affine_cone = self._build_matrices()
+        affine_structure = (
+            None if affine_cone is None else CSCStructure.from_matrix(affine_cone)
+        )
+        cone_blocks = (
+            tuple(
+                ConeBlock(
+                    kind=ConeKind.SECOND_ORDER,
+                    start=interval * SOC_SLOTS,
+                    vector_dimension=2,
+                )
+                for interval in range(self.config.intervals)
+            )
+            if affine_structure is not None
+            else ()
+        )
         self.structure = CQPStructure(
             quadratic=CSCStructure.from_matrix(quadratic),
             constraint=CSCStructure.from_matrix(constraint),
+            affine_cone=affine_structure,
+            affine_cones=cone_blocks,
         )
         self._quadratic_values = self.structure.quadratic.values_from(quadratic)
         self._constraint_values = self.structure.constraint.values_from(constraint)
+        self._affine_values = (
+            np.empty(0, dtype=np.float64)
+            if affine_cone is None
+            else self.structure.affine_cone.values_from(affine_cone)
+        )
 
-    def _build_matrices(self) -> tuple[sp.csc_matrix, sp.csc_matrix]:
+    def _build_matrices(
+        self,
+    ) -> tuple[sp.csc_matrix, sp.csc_matrix, sp.csc_matrix | None]:
         state_weights = np.asarray(self.config.state_weights, dtype=np.float64)
         control_weights = np.asarray(self.config.control_weights, dtype=np.float64)
         diagonal = np.concatenate(
@@ -194,14 +251,30 @@ class CWRendezvousProblem:
             constraint[rows, layout.control_slice(interval)] = -self.bd
 
         constraint[layout.terminal_rows, layout.state_slice(self.config.intervals)] = np.eye(NX)
-        constraint[layout.control_rows, layout.state_variable_count :] = sp.eye(
-            layout.control_variable_count,
-            format="csc",
-        )
-        result = constraint.tocsc()
-        result.sum_duplicates()
-        result.sort_indices()
-        return quadratic, result
+        if self.config.thrust_constraint is ThrustConstraint.BOX:
+            constraint[layout.control_rows, layout.state_variable_count :] = sp.eye(
+                layout.control_variable_count,
+                format="csc",
+            )
+
+        scalar = constraint.tocsc()
+        scalar.sum_duplicates()
+        scalar.sort_indices()
+
+        if self.config.thrust_constraint is ThrustConstraint.SECOND_ORDER_CONE:
+            affine = sp.lil_matrix(
+                (layout.n_affine_constraints, layout.n_variables),
+                dtype=np.float64,
+            )
+            for interval in range(self.config.intervals):
+                start = interval * SOC_SLOTS
+                affine[start : start + NU, layout.control_slice(interval)] = np.eye(NU)
+            affine_result = affine.tocsc()
+            affine_result.sum_duplicates()
+            affine_result.sort_indices()
+        else:
+            affine_result = None
+        return quadratic, scalar, affine_result
 
     def values(self, initial_state: FloatArray, target_state: FloatArray) -> CQPValues:
         initial = self._state(initial_state, "initial_state")
@@ -219,9 +292,21 @@ class CWRendezvousProblem:
         upper[layout.initial_rows] = initial
         lower[layout.terminal_rows] = target
         upper[layout.terminal_rows] = target
-        acceleration = self.config.max_component_acceleration
-        lower[layout.control_rows] = -acceleration
-        upper[layout.control_rows] = acceleration
+        if self.config.thrust_constraint is ThrustConstraint.BOX:
+            acceleration = self.config.max_component_acceleration
+            lower[layout.control_rows] = -acceleration
+            upper[layout.control_rows] = acceleration
+
+        if self.config.thrust_constraint is ThrustConstraint.SECOND_ORDER_CONE:
+            affine_offset = np.tile(
+                np.array(
+                    [0.0, 0.0, 0.0, self.config.max_component_acceleration],
+                    dtype=np.float64,
+                ),
+                self.config.intervals,
+            )
+        else:
+            affine_offset = np.empty(0, dtype=np.float64)
 
         return CQPValues(
             quadratic=self._quadratic_values.copy(),
@@ -229,6 +314,10 @@ class CWRendezvousProblem:
             linear=linear,
             lower=lower,
             upper=upper,
+            affine_cone=self._affine_values.copy(),
+            affine_offset=affine_offset,
+            variable_lower=np.full(layout.n_variables, -np.inf, dtype=np.float64),
+            variable_upper=np.full(layout.n_variables, np.inf, dtype=np.float64),
         ).validated(self.structure)
 
     def canonical(self, initial_state: FloatArray, target_state: FloatArray) -> CanonicalCQP:
@@ -256,16 +345,25 @@ class CWRendezvousProblem:
         states, controls = self.decode(decision)
         predicted = states[:-1] @ self.ad.T + controls @ self.bd.T
         defect = states[1:] - predicted
-        violation = np.maximum(
-            np.abs(controls) - self.config.max_component_acceleration,
-            0.0,
-        )
+        component_acceleration = np.abs(controls)
+        acceleration_norm = np.linalg.norm(controls, axis=1)
+        if self.config.thrust_constraint is ThrustConstraint.BOX:
+            violation = np.maximum(
+                component_acceleration - self.config.max_component_acceleration,
+                0.0,
+            )
+        else:
+            violation = np.maximum(
+                acceleration_norm - self.config.max_component_acceleration,
+                0.0,
+            )
         return CWRendezvousDiagnostics(
             initial_error_inf=float(np.max(np.abs(states[0] - initial))),
             terminal_error_inf=float(np.max(np.abs(states[-1] - target))),
             dynamics_defect_inf=float(np.max(np.abs(defect))),
             control_violation_inf=float(np.max(violation)),
-            maximum_component_acceleration=float(np.max(np.abs(controls))),
+            maximum_component_acceleration=float(np.max(component_acceleration)),
+            maximum_acceleration_norm=float(np.max(acceleration_norm)),
         )
 
     @staticmethod

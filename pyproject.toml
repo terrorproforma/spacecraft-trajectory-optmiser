@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "SpacePDHCG contributors" }]
 dependencies = [
+  "clarabel>=0.11.0",
   "numpy>=1.26",
   "scipy>=1.12",
   "osqp>=1.0.0",
@@ -24,6 +25,7 @@ dev = [
 
 [project.scripts]
 spacepdhcg-cw-benchmark = "spacepdhcg.benchmarks.cw_repeat:main"
+spacepdhcg-cw-socp-benchmark = "spacepdhcg.benchmarks.cw_socp_repeat:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

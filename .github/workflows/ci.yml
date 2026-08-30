@@ -28,5 +28,7 @@ jobs:
         run: ruff check .
       - name: Test
         run: pytest --cov=spacepdhcg --cov-report=term-missing
-      - name: Persistent benchmark smoke test
+      - name: Persistent QP benchmark smoke test
         run: spacepdhcg-cw-benchmark --repeats 3 --intervals 12 --tolerance 1e-6
+      - name: Persistent SOCP benchmark smoke test
+        run: spacepdhcg-cw-socp-benchmark --repeats 3 --intervals 12 --tolerance 1e-7
