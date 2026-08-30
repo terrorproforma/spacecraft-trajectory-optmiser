@@ -209,7 +209,11 @@ class PoweredDescent3DOFModel:
                 raise ValueError("rollout produced non-positive mass")
         return states
 
-    def path_diagnostics(self, states: FloatArray, controls: FloatArray) -> PoweredDescentPathDiagnostics:
+    def path_diagnostics(
+        self,
+        states: FloatArray,
+        controls: FloatArray,
+    ) -> PoweredDescentPathDiagnostics:
         """Evaluate thrust, tilt, mass, altitude and glide-slope violations."""
 
         state_array = np.asarray(states, dtype=np.float64)
