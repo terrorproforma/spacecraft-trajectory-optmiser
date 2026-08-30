@@ -9,6 +9,7 @@ from spacepdhcg.cqp.problem import (
     CQPValues,
     CSCStructure,
 )
+from spacepdhcg.cqp.quality import residual_qualified
 
 __all__ = [
     "CQPSolution",
@@ -18,4 +19,5 @@ __all__ = [
     "CanonicalCQP",
     "ConeBlock",
     "ConeKind",
+    "residual_qualified",
 ]
