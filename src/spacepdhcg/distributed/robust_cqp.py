@@ -18,9 +18,9 @@ from numpy.typing import NDArray
 from spacepdhcg.cqp import (
     CanonicalCQP,
     ConeBlock,
-    CSCStructure,
     CQPStructure,
     CQPValues,
+    CSCStructure,
 )
 
 from .layout import BlockArrowLayout
@@ -127,44 +127,50 @@ class ScenarioCQPBundle:
                 sp.block_diag(affine_local, format="csc")
             )
 
-        linear = np.concatenate(
-            tuple(
-                probability * values.linear
-                for probability, values in zip(probabilities, validated, strict=True)
-            )
-            + (np.zeros(self.layout.consensus_dimension, dtype=np.float64),)
+        linear_parts = [
+            probability * values.linear
+            for probability, values in zip(probabilities, validated, strict=True)
+        ]
+        linear_parts.append(
+            np.zeros(self.layout.consensus_dimension, dtype=np.float64)
         )
-        lower = np.concatenate(
-            tuple(values.lower for values in validated)
-            + (np.zeros(self.nonanticipativity_rows, dtype=np.float64),)
+        linear = np.concatenate(linear_parts)
+
+        lower_parts = [values.lower for values in validated]
+        lower_parts.append(
+            np.zeros(self.nonanticipativity_rows, dtype=np.float64)
         )
-        upper = np.concatenate(
-            tuple(values.upper for values in validated)
-            + (np.zeros(self.nonanticipativity_rows, dtype=np.float64),)
+        lower = np.concatenate(lower_parts)
+
+        upper_parts = [values.upper for values in validated]
+        upper_parts.append(
+            np.zeros(self.nonanticipativity_rows, dtype=np.float64)
         )
+        upper = np.concatenate(upper_parts)
         affine_offset = np.concatenate(
-            tuple(values.affine_offset for values in validated)
+            [values.affine_offset for values in validated]
         )
-        variable_lower = np.concatenate(
-            tuple(values.variable_lower for values in validated)
-            + (
-                np.full(
-                    self.layout.consensus_dimension,
-                    -np.inf,
-                    dtype=np.float64,
-                ),
+
+        variable_lower_parts = [values.variable_lower for values in validated]
+        variable_lower_parts.append(
+            np.full(
+                self.layout.consensus_dimension,
+                -np.inf,
+                dtype=np.float64,
             )
         )
-        variable_upper = np.concatenate(
-            tuple(values.variable_upper for values in validated)
-            + (
-                np.full(
-                    self.layout.consensus_dimension,
-                    np.inf,
-                    dtype=np.float64,
-                ),
+        variable_lower = np.concatenate(variable_lower_parts)
+
+        variable_upper_parts = [values.variable_upper for values in validated]
+        variable_upper_parts.append(
+            np.full(
+                self.layout.consensus_dimension,
+                np.inf,
+                dtype=np.float64,
             )
         )
+        variable_upper = np.concatenate(variable_upper_parts)
+
         return CQPValues(
             quadratic=self.structure.quadratic.values_from(quadratic),
             constraint=self.structure.constraint.values_from(constraint),
