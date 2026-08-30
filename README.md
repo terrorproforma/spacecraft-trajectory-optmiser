@@ -19,35 +19,38 @@ A conditional result is useful: the project will produce a reproducible crossove
 ## Current status
 
 - **M0 — repository and numerical contract:** complete at the CPU reference level.
-- **M1 — native conic bridge:** in progress.
+- **M1 — native conic bridge:** active; CPU QP/SOCP references are green and the upstream one-shot adapter is implemented for CUDA integration.
 
-The executable correctness spine now contains:
+The executable correctness spine contains:
 
 1. immutable CSC structure and mutable CQP values;
 2. exact-discrete Clohessy–Wiltshire dynamics;
 3. a fixed-workspace OSQP rendezvous QP baseline;
 4. native PDHCG-compatible affine cone metadata;
 5. a persistent Clarabel SOCP reference with explicit PDHCG cone-coordinate conversion;
-6. independent endpoint, dynamics and thrust checks;
-7. Python 3.11/3.12 CI and repeat-solve smoke benchmarks.
+6. an optional `PDHCGOneShot` adapter mapping the same canonical problem into upstream `pdhcg.Model`;
+7. independent endpoint, dynamics and thrust checks;
+8. Python 3.11/3.12 CI and repeat-solve smoke benchmarks.
 
 The public upstream PDHCG API is currently one-shot at the device-workspace level. The main B contribution is therefore a lower-level `PersistentCQP` extension, not a wrapper around `Model.optimize()`.
 
 ## Programme ladder
 
 1. fixed-pattern QP/SOCP correctness and cross-solver fixtures;
-2. one-shot PDHCG adapter and persistent C++/CUDA ownership design;
-3. nonlinear 3-DoF powered-descent CT-SCvx;
-4. adaptive inexact solves and interior-point polish;
-5. robust 6-DoF scenario optimisation and multi-GPU decomposition;
-6. Paper 1 crossover study and release;
-7. multi-destination routing built on the finished trajectory oracle.
+2. real CUDA execution through the one-shot PDHCG adapter;
+3. persistent C++/CUDA ownership, in-place updates and device warm starts;
+4. nonlinear 3-DoF powered-descent CT-SCvx;
+5. adaptive inexact solves and interior-point polish;
+6. robust 6-DoF scenario optimisation and multi-GPU decomposition;
+7. Paper 1 crossover study and release;
+8. multi-destination routing built on the finished trajectory oracle.
 
 See:
 
 - [`docs/PROJECT_BRIEF.md`](docs/PROJECT_BRIEF.md)
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - [`docs/MILESTONES.md`](docs/MILESTONES.md)
+- [`docs/PDHCG_INTEGRATION.md`](docs/PDHCG_INTEGRATION.md)
 - [`docs/adr/0001-pdhcg-native-canonical-form.md`](docs/adr/0001-pdhcg-native-canonical-form.md)
 - [`docs/RESEARCH_LOG.md`](docs/RESEARCH_LOG.md)
 
@@ -73,6 +76,8 @@ pytest
 spacepdhcg-cw-benchmark --repeats 20 --intervals 40
 spacepdhcg-cw-socp-benchmark --repeats 20 --intervals 40
 ```
+
+The upstream PDHCG package is intentionally optional because it requires a compatible NVIDIA CUDA environment. CPU installation and CI do not import it.
 
 ## Development status
 

@@ -40,10 +40,41 @@ The fixed symbolic structure, numerical update path, warm-start lifecycle and in
 
 ADR 0001 locks a native-compatible canonical form. The repository now adds a persistent Clarabel CPU reference that converts PDHCG cone coordinates explicitly. The actual B contribution remains a lower-level PDHCG extension with persistent device buffers and in-place coefficient updates.
 
+## 2026-08-30 — Native SOCP bridge passes CI
+
+### Evidence
+
+- Python 3.11 and 3.12 CI passed lint, ten tests, QP persistence and SOCP persistence.
+- The 12-interval SOCP used 114 variables, 84 scalar rows and 48 affine-cone rows arranged as 12 SOC blocks.
+- Independent checks reported zero thrust-norm violation, a maximum dynamics defect of approximately `7.11e-14`, and a maximum terminal error of approximately `5.55e-15`.
+- Clarabel solve time was sub-millisecond in this smoke case, while the current Python conversion/update path was roughly 26 ms. This is not a cross-hardware performance claim; it exposes the host-side assembly cost contribution B is intended to remove.
+
+### Interpretation
+
+The same spacecraft model now produces either a scalar-bound QP or a native affine-SOC problem. PDHCG's cone slot convention and the Clarabel coordinate transformation are exercised by committed tests.
+
+## 2026-08-30 — One-shot upstream adapter implemented
+
+### Upstream lock
+
+The adapter targets `Lhongpei/PDHCG` commit `167c8b72b4b96d2f94d405b8763e485514192b81`.
+
+### Scope
+
+- `PDHCGOneShot` maps Q, c, A, scalar bounds, F, g, affine cones, variable bounds and variable cones directly into `pdhcg.Model`.
+- Solver tolerances map to `OptimalityTol` and `FeasibilityTol`; iteration caps map to `IterationLimit`.
+- Primal and dual warm starts preserve the native dual ordering `[dual_A, dual_F]`.
+- Returned objective, relative residuals, iteration count and runtime map into the backend-independent solution record.
+- CPU CI injects a strict fake upstream module to verify exact API semantics without claiming CUDA execution.
+
+### Boundary
+
+The adapter is explicitly `is_persistent = False`. Each `solve()` constructs a new upstream model and therefore retains the setup, scaling, allocation and transfer costs that the contribution-B extension must eliminate.
+
 ### Immediate next work
 
-1. Close the native SOC correctness gate in CI.
-2. Add a one-shot PDHCG adapter for CUDA-enabled integration tests.
-3. Define the C++ `PersistentCQP` ownership and stream semantics against upstream internal types.
-4. Add random trajectory-banded QP/SOCP cross-solver fixtures.
-5. Begin the nonlinear 3-DoF powered-descent transcription only after the conic bridge is stable.
+1. Run the one-shot adapter against real upstream PDHCG on a compatible CUDA host.
+2. Add random trajectory-banded QP/SOCP cross-solver fixtures.
+3. Define the C++ `PersistentCQP` ownership, rescaling and stream semantics against upstream internal types.
+4. Implement a benchmark manifest that records both repositories, solver versions and hardware.
+5. Begin nonlinear 3-DoF powered-descent transcription only after the real PDHCG correctness gate closes.
