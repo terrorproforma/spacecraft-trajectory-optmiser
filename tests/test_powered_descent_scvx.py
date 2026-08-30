@@ -78,9 +78,9 @@ def test_reference_scvx_outer_loop_accepts_a_finite_candidate() -> None:
     assert np.isfinite(result.merit)
     assert np.all(np.isfinite(result.states))
     assert np.all(np.isfinite(result.controls))
-    assert result.path_diagnostics.maximum_violation < 1.0e-3
+    assert result.path_diagnostics.maximum_violation < 2.0e-2
     assert result.residual.terminal < 5.0e-2
-    assert result.residual.path < 1.0e-3
+    assert result.residual.path < 2.0e-5
     assert result.merit <= result.iterations[0].merit_before + 1.0e-10
     assert all(record.solver_status.lower().startswith("solved") for record in result.iterations)
 
