@@ -8,6 +8,7 @@ from .layout import (
     ScenarioPartition,
     partition_scenarios,
 )
+from .robust_cqp import RobustDual, RobustPrimal, ScenarioCQPBundle
 from .scenario_tree import InformationNode, Scenario, ScenarioTree
 
 __all__ = [
@@ -16,7 +17,10 @@ __all__ = [
     "ConsensusBlock",
     "InformationNode",
     "LogicalGPUGrid",
+    "RobustDual",
+    "RobustPrimal",
     "Scenario",
+    "ScenarioCQPBundle",
     "ScenarioPartition",
     "ScenarioTree",
     "partition_scenarios",
