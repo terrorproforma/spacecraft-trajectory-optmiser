@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import ClassVar
 
 import numpy as np
 import pytest
@@ -18,7 +19,7 @@ class FakeConeSpec:
 
 
 class FakeModel:
-    instances: list[FakeModel] = []
+    instances: ClassVar[list[FakeModel]] = []
 
     def __init__(self, **arguments) -> None:
         self.arguments = arguments
