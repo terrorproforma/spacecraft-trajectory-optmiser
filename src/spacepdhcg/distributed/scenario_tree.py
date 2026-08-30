@@ -8,8 +8,8 @@ checkpoint/restart code.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 import numpy as np
 
@@ -155,7 +155,7 @@ class ScenarioTree:
         *,
         common_prefix: int | None = None,
         probabilities: Iterable[float] | None = None,
-    ) -> "ScenarioTree":
+    ) -> ScenarioTree:
         """Construct a shared prefix followed by scenario-local recourse.
 
         ``common_prefix=None`` means every control stage is shared. A value of zero
