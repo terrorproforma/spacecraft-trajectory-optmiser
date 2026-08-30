@@ -131,7 +131,7 @@ class AdaptiveForcingRule:
         if accepted_streak < 0:
             raise ValueError("accepted_streak must be non-negative")
         if agreement is not None and not np.isfinite(agreement):
-            raise ValueError("agreement must be finite when provided")
+            agreement = None
 
         maximum = residual.maximum
         residual_target = self.config.coefficient * maximum ** (1.0 + self.config.alpha)
