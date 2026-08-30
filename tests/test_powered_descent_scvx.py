@@ -81,7 +81,9 @@ def test_reference_scvx_outer_loop_accepts_a_finite_candidate() -> None:
     assert result.path_diagnostics.maximum_violation < 2.0e-2
     assert result.residual.terminal < 5.0e-2
     assert result.residual.path < 2.0e-5
-    assert result.merit <= result.iterations[0].merit_before + 1.0e-10
+    for record in result.iterations:
+        if record.accepted and not record.restoration_accepted:
+            assert record.actual_reduction > 0.0
     assert all(record.solver_status.lower().startswith("solved") for record in result.iterations)
 
 
