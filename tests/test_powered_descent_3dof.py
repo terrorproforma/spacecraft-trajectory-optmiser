@@ -114,7 +114,7 @@ def test_path_diagnostics_detect_violations() -> None:
             [200.0, 0.0, -2.0, 0.0, 0.0, 0.0, 900.0],
         ]
     )
-    controls = np.array([[6_000.0, 0.0, 1_000.0, 400.0]])
+    controls = np.array([[6_000.0, 0.0, 100.0, 400.0]])
     diagnostics = model.path_diagnostics(states, controls)
 
     assert diagnostics.thrust_epigraph > 0.0
