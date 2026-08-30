@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .problem import CQPSolution
+from spacepdhcg.cqp.problem import CQPSolution
 
 
 _RESIDUAL_QUALIFIABLE_STATUSES = {
