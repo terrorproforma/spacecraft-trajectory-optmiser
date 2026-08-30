@@ -16,21 +16,22 @@ static_assert(std::is_trivially_copyable_v<SparsePatternView>);
 static_assert(std::is_trivially_copyable_v<ConeBlockDescriptor>);
 
 int main() {
-    constexpr std::array<Index, 3> offsets{0, 1, 2};
-    constexpr std::array<Index, 2> indices{0, 1};
-    constexpr std::array<ConeBlockDescriptor, 1> cones{
+    const std::array<Index, 3> offsets{0, 1, 2};
+    const std::array<Index, 2> indices{0, 1};
+    const std::array<ConeBlockDescriptor, 1> cones{
         ConeBlockDescriptor{ConeKind::second_order, 0, 2, 0.0},
     };
 
-    constexpr SparsePatternView identity{
+    const SparsePatternView identity{
         SparseFormat::csc,
         2,
         2,
         HostConstSpan<Index>{offsets.data(), offsets.size()},
         HostConstSpan<Index>{indices.data(), indices.size()},
     };
-    static_assert(identity.well_formed());
-    static_assert(identity.nonzeros() == 2);
+    if (!identity.well_formed() || identity.nonzeros() != 2) {
+        return 1;
+    }
 
     const StructureDescriptor structure{
         2,
