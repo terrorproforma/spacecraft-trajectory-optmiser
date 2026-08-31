@@ -1,5 +1,6 @@
 """Scenario-tree and block-arrow decomposition infrastructure."""
 
+from .certification import encode_condensed_primal
 from .condensed_cqp import (
     CondensedConsensusBlock,
     CondensedDual,
@@ -33,5 +34,6 @@ __all__ = [
     "ScenarioCQPBundle",
     "ScenarioPartition",
     "ScenarioTree",
+    "encode_condensed_primal",
     "partition_scenarios",
 ]
