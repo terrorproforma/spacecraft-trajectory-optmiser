@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 int main() {
@@ -47,7 +49,7 @@ int main() {
         500.0,
         0U,
         1U,
-        ArcFidelity::certified_high_fidelity,
+        ArcFidelity::certified,
         1.0e-8,
         "j2-certification-smoke",
         std::nullopt,
@@ -79,13 +81,13 @@ int main() {
     };
     const auto result = stage.evaluate(request);
     if (!result.feasible
-        || result.achieved_fidelity != ArcFidelity::certified_high_fidelity
+        || result.achieved_fidelity != ArcFidelity::certified
         || result.warm_start_token != request.warm_start_token) {
         return 1;
     }
     if (result.terminal_error > 1.0e-8
         || result.maximum_constraint_violation > 1.0e-12
-        || result.achieved_accuracy > 1.0e-8) {
+        || result.achieved_tolerance > 1.0e-8) {
         return 2;
     }
     if (result.delta_v > 1.0e-12 || result.propellant > 1.0e-12
