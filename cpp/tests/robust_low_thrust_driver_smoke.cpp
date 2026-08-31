@@ -117,7 +117,7 @@ int main() {
     LowThrustScvxConfig transcription{};
     transcription.intervals = 3U;
     transcription.step_seconds = 10.0;
-    transcription.discretisation = DiscretisationMethod::euler;
+    transcription.discretisation = DiscretisationMethod::forward_euler;
     transcription.trust_radius = 1.0;
     const LowThrustState initial{
         7'000.0,
