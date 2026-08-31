@@ -32,7 +32,15 @@ one-sided derivative when one perturbation crosses a physical-domain boundary. T
 rollout now normalises the initial attitude at the public rollout boundary and validates the
 normalised state before integration.
 
+## 31 August 2026 — unsanitized native truth gate passes
+
+With those boundary fixes applied, all 23 host-native smoke tests pass. This includes the
+selectable higher-order transcriptions, nonlinear 3-DoF SCvx driver, 6-DoF and low-thrust
+models, robust scenario CQPs, expected/worst/CVaR risk augmentations, dynamic time-grid
+discovery, route-column master, multi-fidelity trajectory oracle, Lambert screening and
+continuous inter-node checks.
+
 One-shot source-migration scripts and workflows were removed after their asserted edits were
-applied. The remaining Python reference-layer lint defect was corrected rather than suppressed.
-The compiler, runtime, sanitizer, package-consumer and Python-reference gates are rerun from a
-human-authored commit before the pre-GPU branch can be declared green.
+applied. The Python reference-layer rename was completed without suppressing lint rules. The
+ASan/UBSan, install/package-consumer and Python-reference gates are rerun from this
+human-authored commit before the pre-GPU branch is declared fully green.
