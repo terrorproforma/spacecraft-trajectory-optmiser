@@ -9,8 +9,9 @@ DLPack managed tensors by `dlpack_adapter.hpp`.
 
 The contract answers, without reference to a particular Python framework:
 
-- which device owns each pointer;
-- the scalar type, length, byte offset, and stride;
+- which device executes the work;
+- which memory class stores each pointer;
+- scalar type, length, byte offset, and stride;
 - whether SpacePDHCG may mutate the storage;
 - which CUDA stream consumes the storage;
 - who owns the allocation and when its deleter is called;
@@ -36,9 +37,15 @@ DLPack is optional. The build is pinned for reproducibility to the metadata in
 with matching major version. A minor-version increase is acceptable only when the encountered
 device, dtype, flags, and fields are already understood.
 
-## 3. Supported memory classes
+## 3. Execution device versus storage device
 
-Version 1 supports:
+These are distinct concepts:
+
+- `AcceleratorStream.device` is always an ordinary CUDA execution device, such as CUDA device 0 or
+  device 3. Its native handle is interpreted as a `cudaStream_t` for that device.
+- Every `AcceleratorBufferView.device` describes the storage memory class.
+
+Version 1 recognises:
 
 | SpacePDHCG code | DLPack code | Meaning |
 |---|---:|---|
@@ -47,25 +54,28 @@ Version 1 supports:
 | `cuda_host` | `kDLCUDAHost = 3` | CUDA-pinned host allocation |
 | `cuda_managed` | `kDLCUDAManaged = 13` | CUDA managed allocation |
 
-A persistent solve exchange must use CUDA device or managed storage. Pinned host views are staging
-views, not solver-resident numerical buffers.
+A persistent solve exchange accepts one of two storage modes:
 
-All views in one `CqpAcceleratorExchange` must have the same `AcceleratorDevice`. Version 1 does
-not permit one logical workspace exchange to mix device 0 and device 1, nor CUDA device and pinned
-host views. Multi-GPU ownership is represented by one exchange per local shard.
+1. ordinary CUDA storage whose device id exactly matches the consumer stream's CUDA device id;
+2. CUDA-managed storage, represented by DLPack device id zero, consumed on the declared ordinary
+   CUDA stream device.
+
+Pinned host views are staging views, not persistent solver state. CPU storage is not a GPU-resident
+exchange. One exchange may not mix CUDA and managed storage or several CUDA device ids. Multi-GPU
+ownership is represented by one exchange per local shard.
 
 ## 4. Supported scalar types
 
 Version 1 recognises:
 
-- signed `int32` for CSC offsets and row indices;
-- signed `int64` for future large-index adapters, but not for the current fixed CQP topology;
-- IEEE `float32` as a recognised framework type, not a valid Paper 1 numerical buffer;
+- signed `int32` for current CSC offsets and row indices;
+- signed `int64` for future large-index adapters, but not current fixed CQP topology;
+- IEEE `float32` as a recognised framework type, not a valid primary Paper 1 numerical buffer;
 - IEEE `float64` for all CQP coefficients, bounds, affine offsets, primal iterates, and dual
   iterates.
 
 Vector lanes must equal one. Endianness must be native. Sub-byte, complex, boolean, bfloat, and
-opaque handle dtypes are rejected.
+opaque-handle dtypes are rejected.
 
 ## 5. Tensor shape and layout
 
@@ -86,6 +96,7 @@ A zero-length view must have:
 data = NULL
 elements = 0
 byte_offset = 0
+positive stride
 ```
 
 A nonempty view must have a non-null pointer. The implementation may not dereference a pointer until
@@ -95,7 +106,7 @@ stream and lifetime preconditions have been met.
 
 ### 6.1 Immutable workspace-lifetime topology
 
-The following are read-only after workspace creation:
+The following are exactly read-only after workspace creation:
 
 - `Q.col_offsets`, `Q.row_indices`;
 - `A.col_offsets`, `A.row_indices`;
@@ -109,7 +120,7 @@ The lengths must exactly equal those in the owning `FixedStructure`. The fingerp
 
 ### 6.2 Mutable iteration values
 
-The following are writable and may change in place at every SCvx iteration:
+The following are exactly read-write and may change in place at every SCvx iteration:
 
 - `Q.values`;
 - `A.values`;
@@ -123,7 +134,7 @@ The sparse index arrays may never be reallocated or changed through a numerical 
 
 ### 6.3 Mutable solver state
 
-The primal and dual iterate views are writable and retained between solves. Their exact lengths are:
+The primal and dual iterate views are read-write and retained between solves. Their exact lengths are:
 
 ```text
 primal = number of CQP variables
@@ -135,11 +146,11 @@ Krylov/proximal state, is workspace-owned and is not exposed through version 1.
 
 ## 7. Access and aliasing
 
-Topology views are read-only. Numerical and iterate views must be read-write. A DLPack tensor with
-`DLPACK_FLAG_BITMASK_READ_ONLY` cannot satisfy a writable slot.
+Topology views must be marked read-only. Numerical and iterate views must be marked read-write. A
+DLPack tensor carrying `DLPACK_FLAG_BITMASK_READ_ONLY` cannot satisfy a writable slot. Writable
+topology is rejected as a contract error rather than tolerated.
 
-Unless a future API explicitly permits it, two writable slots may not overlap in storage. In
-particular:
+Unless a future API explicitly permits it, writable slots may not overlap in storage. In particular:
 
 - primal and dual may not alias;
 - objective and bounds may not alias;
@@ -153,14 +164,14 @@ validated once.
 ## 8. Stream semantics
 
 `consumer_stream.native_handle` is the CUDA stream on which SpacePDHCG first consumes and then
-mutates the supplied views. Handle zero means the legacy/default CUDA stream for the selected
-device; nonzero values are interpreted as the native `cudaStream_t` bit pattern transported through
-`uintptr_t`.
+mutates the supplied views. Handle zero means the legacy/default CUDA stream for the selected CUDA
+execution device; nonzero values are interpreted as the native `cudaStream_t` bit pattern transported
+through `uintptr_t`.
 
 The producer must make its latest writes visible to the consumer stream before the workspace call.
 For Python Array API/DLPack producers, the preferred sequence is:
 
-1. obtain the target SpacePDHCG consumer stream;
+1. obtain the target SpacePDHCG CUDA consumer stream;
 2. call the producer's `__dlpack__(stream=<consumer stream>)` protocol;
 3. consume the resulting `DLManagedTensorVersioned` without an additional host synchronization;
 4. retain the managed tensor until SpacePDHCG releases the borrow.
@@ -172,6 +183,10 @@ hot path.
 On return from an asynchronous update or solve call, storage is not necessarily host-readable.
 The future API must expose an event/future or an explicit stream-synchronization boundary. Compact
 host diagnostics may be copied only after their completion event.
+
+Managed memory is not implicitly coherent for performance purposes. The implementation may prefetch
+managed pages to the consumer stream's GPU, but such prefetch time/bytes must be recorded. It may not
+pretend managed memory has the same residency semantics as an ordinary device allocation.
 
 ## 9. DLPack ownership
 
@@ -198,16 +213,17 @@ A workspace creation call must validate in this order:
 
 1. exchange ABI version;
 2. CQP topology fingerprint;
-3. device and stream descriptor;
-4. rank/shape/stride/offset/dtype of every view;
-5. exact element counts;
-6. read-only versus writable access;
-7. same-device invariant;
-8. optional address-overlap diagnostics;
-9. actual CUDA pointer attributes on the selected device;
-10. stream/event readiness.
+3. ordinary CUDA execution device and stream descriptor;
+4. one allowed persistent storage class;
+5. CUDA storage id matching the stream GPU, or managed storage id zero;
+6. rank/shape/stride/offset/dtype of every view;
+7. exact element counts;
+8. exact read-only versus read-write access;
+9. optional address-overlap diagnostics;
+10. actual CUDA pointer attributes on the selected device;
+11. stream/event readiness.
 
-A numerical update repeats steps 4–10 for replaceable views but never accepts changed topology.
+A numerical update repeats replaceable-view checks but never accepts changed topology.
 
 ## 11. Planned persistent CUDA calls
 
@@ -246,6 +262,8 @@ Framework-specific DLPack capsule consumption will be a thin Python extension or
 Issue #2 cannot close until real CUDA tests demonstrate:
 
 - pointer attributes match declared devices and memory classes;
+- ordinary CUDA storage matches the stream GPU;
+- managed storage is prefetched/consumed on the declared stream without invalid device assumptions;
 - no topology allocation/copy after creation;
 - coefficient updates occur on the supplied stream;
 - no hidden device-wide synchronization;
