@@ -83,7 +83,10 @@ def test_omitting_nonanticipativity_solves_an_unattainable_policy() -> None:
     """C7: independent scenario controls beat every pre-observation shared control."""
 
     preferred = (-1.0, 1.0)
-    independent_cost = sum((control - target) ** 2 for control, target in zip(preferred, preferred))
+    independent_cost = sum(
+        (control - target) ** 2
+        for control, target in zip(preferred, preferred, strict=True)
+    )
 
     def shared_cost(control: float) -> float:
         return 0.5 * sum((control - target) ** 2 for target in preferred)
