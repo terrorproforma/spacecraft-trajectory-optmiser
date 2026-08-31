@@ -29,6 +29,8 @@ struct PoweredDescent6DofConfig {
     double minimum_sigma{0.0};
     double maximum_torque{2'000.0};
     double maximum_angular_rate{1.0};
+    double maximum_tilt_radians{0.5235987755982988};
+    double glide_slope_radians{1.0471975511965976};
 
     void validate() const {
         validate_finite(gravity, "gravity must be finite");
@@ -42,6 +44,21 @@ struct PoweredDescent6DofConfig {
         }
         require_positive(maximum_torque, "maximum torque must be positive");
         require_positive(maximum_angular_rate, "maximum angular rate must be positive");
+        constexpr double half_pi = 1.5707963267948966;
+        if (!(maximum_tilt_radians > 0.0 && maximum_tilt_radians < half_pi)) {
+            throw std::invalid_argument("maximum tilt must lie in (0, pi/2)");
+        }
+        if (!(glide_slope_radians > 0.0 && glide_slope_radians < half_pi)) {
+            throw std::invalid_argument("glide slope must lie in (0, pi/2)");
+        }
+    }
+
+    [[nodiscard]] double tilt_cosine() const noexcept {
+        return std::cos(maximum_tilt_radians);
+    }
+
+    [[nodiscard]] double glide_slope_tangent() const noexcept {
+        return std::tan(glide_slope_radians);
     }
 
   private:

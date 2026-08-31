@@ -2,6 +2,8 @@
 
 #include "spacepdhcg/core/fixed_cqp.hpp"
 #include "spacepdhcg/dynamics/powered_descent_3dof.hpp"
+#include "spacepdhcg/transcription/discrete_flow_linearisation.hpp"
+#include "spacepdhcg/transcription/discretisation.hpp"
 
 #include <algorithm>
 #include <array>
@@ -29,6 +31,8 @@ struct PoweredDescentScvxConfig {
     double virtual_quadratic_weight{1.0e-8};
     double virtual_epigraph_regularisation{1.0e-10};
     double fuel_weight{1.0e-3};
+    DiscretisationMethod discretisation{DiscretisationMethod::forward_euler};
+    double finite_difference_relative_step{1.0e-6};
     std::array<double, 7U> state_tracking_weights{
         1.0e-4,
         1.0e-4,
@@ -76,6 +80,10 @@ struct PoweredDescentScvxConfig {
             "virtual epigraph regularisation must be non-negative"
         );
         require_nonnegative(fuel_weight, "fuel weight must be non-negative");
+        require_positive(
+            finite_difference_relative_step,
+            "finite-difference relative step must be positive"
+        );
         require_positive_vector(state_tracking_weights, "state tracking weights must be positive");
         require_positive_vector(
             control_tracking_weights,
@@ -214,8 +222,8 @@ struct PoweredDescentConvexDiagnostics {
 class PoweredDescent3DofSubproblem {
   public:
     explicit PoweredDescent3DofSubproblem(
-        PoweredDescent3DofModel model = {},
-        PoweredDescentScvxConfig config = {}
+        PoweredDescent3DofModel model = PoweredDescent3DofModel{},
+        PoweredDescentScvxConfig config = PoweredDescentScvxConfig{}
     )
         : model_(std::move(model)), config_(config), layout_(config_.intervals) {
         config_.validate();
@@ -682,10 +690,13 @@ class PoweredDescent3DofSubproblem {
         const std::vector<PoweredDescentControl>& controls
     ) const {
         for (std::size_t interval = 0; interval < layout_.intervals; ++interval) {
-            const auto linearisation = model_.linearised_euler_dynamics(
+            const auto linearisation = linearise_discrete_flow<7U, 4U>(
+                model_,
                 states[interval],
                 controls[interval],
-                config_.step_seconds
+                config_.step_seconds,
+                config_.discretisation,
+                config_.finite_difference_relative_step
             );
             const auto row_start = layout_.dynamics_rows().start + 7U * interval;
             const auto state = layout_.state(interval);
