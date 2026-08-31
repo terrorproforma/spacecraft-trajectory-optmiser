@@ -27,6 +27,10 @@ The repeated numerical hot path is intended to be C++/CUDA. Python remains the t
 correctness oracle, research interface, and experiment layer. Removing Python from those roles
 would not accelerate the device-resident solver and would reduce auditability.
 
+The current host-native branch now closes the previously highest-priority CPU gaps: automatic
+continuous-time violation-state sampling, concrete low-thrust OrbitWeaver coarse/refined stages,
+multi-revolution Lambert families, and an executable restricted-master/column-generation loop.
+
 # Status legend
 
 - **COMPLETE-REFERENCE** — implemented and covered by CPU/native correctness tests.
@@ -49,8 +53,9 @@ would not accelerate the device-resident solver and would reduce auditability.
 | Selectable higher-order transcription | COMPLETE-REFERENCE | Euler or RK4 discrete-flow linearisation with invariant topology |
 | Domain-aware finite differences | COMPLETE-REFERENCE | central interior and valid one-sided boundary derivatives |
 | Continuous inter-node certification | COMPLETE-REFERENCE | dense nonlinear propagation and path-violation checks |
-| Violation-state CT enforcement inside the CQP | OPEN-CPU | dense checking exists; integral violation states remain |
-| Adaptive mesh refinement between episodes | OPEN-CPU | fixed hot-loop topology remains the baseline |
+| Violation-state CT enforcement inside the CQP | COMPLETE-REFERENCE | immutable affine samples, cumulative states and interval budgets |
+| Automatic CT sample/linearisation construction | COMPLETE-REFERENCE | midpoint, trapezoidal, Simpson and four-node Gauss–Lobatto rules |
+| Adaptive mesh refinement between episodes | COMPLETE-REFERENCE | route-gap-driven discovery and fixed hot-loop topology |
 
 # B — persistent device-resident SCvx
 
@@ -63,7 +68,8 @@ would not accelerate the device-resident solver and would reduce auditability.
 | Scaling reuse/refresh controller | COMPLETE-REFERENCE | change thresholds and reuse budget |
 | Primal-dual warm-start lifecycle | COMPLETE-REFERENCE | backend and session contracts |
 | Checkpoint/restart | COMPLETE-REFERENCE | deterministic topology-locked state |
-| Native persistent outer SCvx driver | COMPLETE-REFERENCE | create once, update thereafter, adaptive solves and trust region |
+| Native persistent 3-DoF outer SCvx driver | COMPLETE-REFERENCE | create once, update thereafter, adaptive solves and trust region |
+| Native persistent low-thrust outer SCvx driver | COMPLETE-REFERENCE | physical initial reference, nonlinear rollout and lifecycle counters |
 | Dense C++ ADMM debug backend | COMPLETE-REFERENCE | small QP/SOCP truth solver, not a performance claim |
 | Stable C ABI | COMPLETE-REFERENCE | native dynamics/Jacobians/Lambert callable outside C++ |
 | Installable native CMake package | COMPLETE-REFERENCE | exported targets and external consumer test |
@@ -81,7 +87,8 @@ would not accelerate the device-resident solver and would reduce auditability.
 |---|---|---|
 | Repair/progress/refinement/polish forcing | COMPLETE-REFERENCE | Python and C++ implementations |
 | Fixed-tolerance comparator | COMPLETE-REFERENCE | experiment baseline |
-| Re-solve-before-shrink rule | COMPLETE-REFERENCE | implemented in outer drivers |
+| Re-solve-before-trust-region-shrink logic | COMPLETE-REFERENCE | implemented in outer drivers |
+| Trust-region acceptance and radius updates | COMPLETE-REFERENCE | native deterministic drivers |
 | Inexact error ledger | COMPLETE-REFERENCE | accumulated and relative diagnostics |
 | Hybrid first-order/IPM plan | COMPLETE-REFERENCE | explicit handoff and final-polish contract |
 | Conditional convergence argument | COMPLETE-REFERENCE | assumptions and proof obligations documented |
@@ -121,8 +128,11 @@ would not accelerate the device-resident solver and would reduce auditability.
 | Exact request cache and warm-start pipeline | COMPLETE-REFERENCE | solver-independent native implementation |
 | Hohmann/phasing screening | COMPLETE-REFERENCE | Python/C++ analytical screen |
 | Zero-revolution Lambert solver | COMPLETE-REFERENCE | universal-variable C++ solver |
-| Executable Lambert screening oracle | COMPLETE-REFERENCE | ephemerides, matching impulses and mass closure |
+| Multi-revolution Lambert families | COMPLETE-REFERENCE | short/long directions and lower/higher parameter branches |
+| Executable Lambert screening oracle | COMPLETE-REFERENCE | family enumeration, matching impulses and mass closure |
 | Edelbaum low-thrust screening | COMPLETE-REFERENCE | native radius/inclination estimate |
+| Coarse convex low-thrust arc adapter | COMPLETE-REFERENCE | native CQP solve plus independent nonlinear rollout |
+| Refined deterministic SCvx arc adapter | COMPLETE-REFERENCE | persistent native low-thrust driver and warm-reference transfer |
 | Deterministic beam search | COMPLETE-REFERENCE | time/mass-dependent native search |
 | Time-expanded moving-target graph | COMPLETE-REFERENCE | scheduled-arc truth graph |
 | Exact elementary-route labels | COMPLETE-REFERENCE | small-instance truth model up to 64 targets |
@@ -130,11 +140,9 @@ would not accelerate the device-resident solver and would reduce auditability.
 | Dynamic discretisation discovery | COMPLETE-REFERENCE | route-gap-driven epoch refinement |
 | Route-column dominance and pricing | COMPLETE-REFERENCE | reduced-cost candidate filtering |
 | Exact multi-spacecraft route master | COMPLETE-REFERENCE | small-instance set-partitioning truth model |
-| Full iterative column-generation controller | OPEN-CPU | master/pricing primitives exist; iteration policy remains |
-| Coarse convex arc adapter | OPEN-CPU | native CQP backend can be attached to the oracle |
-| Refined deterministic SCvx arc adapter | PREPARED | native driver exists; orbital adapter remains |
-| Robust SCvx arc adapter | PREPARED | scenario CQP exists; production multi-GPU backend remains |
-| Multi-revolution Lambert families | OPEN-CPU | branch enumeration and regression cases remain |
+| Native restricted-master LP | COMPLETE-REFERENCE | dependency-free two-phase simplex and dual recovery |
+| Full iterative column-generation controller | COMPLETE-REFERENCE | executable master/pricing loop with incumbent and gap history |
+| Robust SCvx arc adapter | PREPARED | scenario CQP exists; host adapter and production multi-GPU backend remain |
 | Final high-fidelity certification adapter | OPEN-CPU | chosen force model and validation policy required |
 | Massive route × scenario throughput | EXPERIMENT-BLOCKED | central Paper 2 scaling result needs GPUs |
 
@@ -145,9 +153,11 @@ would not accelerate the device-resident solver and would reduce auditability.
 | Full warnings-as-errors native build | COMPLETE-REFERENCE |
 | All host-native smoke targets | COMPLETE-REFERENCE |
 | ASan/UBSan suite | COMPLETE-REFERENCE |
+| Native-core GCC and Clang build/test | COMPLETE-REFERENCE |
+| Native C++/Python parity gate | COMPLETE-REFERENCE |
 | macOS native build | COMPLETE-REFERENCE |
 | Installed CMake package consumer | COMPLETE-REFERENCE |
-| Python 3.11/3.12 lint and reference suite | COMPLETE-REFERENCE pending latest branch run |
+| Python 3.11/3.12 lint and reference suite | COMPLETE-REFERENCE |
 | Condensed formulation certificate | COMPLETE-REFERENCE |
 | Hardware benchmark provenance schema | COMPLETE-REFERENCE |
 
@@ -184,15 +194,14 @@ formulations, route algorithms, correctness certificates, theory, manifests or p
 
 In descending leverage:
 
-1. coarse-convex and refined-SCvx OrbitWeaver arc adapters;
-2. full iterative column generation with incumbent and bound provenance;
-3. multi-revolution Lambert branch families;
-4. integral continuous-time violation-state enforcement;
-5. stronger variational integration where it beats finite-difference RK4;
-6. theorem-level inexact-SCvx assumptions, lemmas and counterexample tests;
-7. native wheel packaging and accelerator-pointer exchange design;
-8. paper outlines, notation lock and figure-generation schemas;
-9. additional adversarial, randomized and property-based tests.
+1. robust scenario-SCvx OrbitWeaver arc adapter on the host truth path;
+2. final high-fidelity certification adapter and force-model policy;
+3. stronger variational integration where it beats finite-difference RK4;
+4. theorem-level inexact-SCvx assumptions, lemmas and counterexample tests;
+5. native wheel packaging and accelerator-pointer exchange design;
+6. paper outlines, notation lock and figure-generation schemas;
+7. additional adversarial, randomized and property-based tests;
+8. reproducible scale-sweep manifests and synthetic memory/work estimates.
 
 # First GPU-day run order
 
