@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from itertools import pairwise
 
 import pytest
 
@@ -27,7 +28,7 @@ def test_quartic_stationarity_residual_has_no_linear_error_bound() -> None:
         distance = abs(x)
         residual = abs(x**3)
         ratios.append(distance / residual)
-    assert all(later > earlier for earlier, later in zip(ratios, ratios[1:], strict=True))
+    assert all(later > earlier for earlier, later in pairwise(ratios))
     assert ratios[-1] > 1.0e15
 
 
