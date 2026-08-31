@@ -434,7 +434,7 @@ class CondensedScenarioCQPBundle:
 
     def _variable_cones(self) -> tuple[ConeBlock, ...]:
         blocks: dict[tuple[object, int, int, float], ConeBlock] = {}
-        for scenario, mapping in enumerate(self._local_to_global):
+        for _scenario, mapping in enumerate(self._local_to_global):
             for cone in self.local_structure.variable_cones:
                 local_indices = np.arange(cone.start, cone.stop, dtype=np.int64)
                 mapped = mapping[local_indices]
@@ -455,7 +455,6 @@ class CondensedScenarioCQPBundle:
                     block.power_alpha,
                 )
                 blocks[key] = block
-        del scenario
         return tuple(sorted(blocks.values(), key=lambda block: block.start))
 
     def _node_lookup(self) -> tuple[tuple[InformationNode, ...], ...]:

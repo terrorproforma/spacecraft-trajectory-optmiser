@@ -2,6 +2,8 @@
 
 #include "spacepdhcg/core/fixed_cqp.hpp"
 #include "spacepdhcg/dynamics/low_thrust_two_body.hpp"
+#include "spacepdhcg/transcription/discrete_flow_linearisation.hpp"
+#include "spacepdhcg/transcription/discretisation.hpp"
 
 #include <algorithm>
 #include <array>
@@ -30,6 +32,8 @@ struct LowThrustScvxConfig {
     double virtual_quadratic_weight{1.0e-8};
     double virtual_epigraph_regularisation{1.0e-10};
     double fuel_weight{1.0};
+    DiscretisationMethod discretisation{DiscretisationMethod::forward_euler};
+    double finite_difference_relative_step{1.0e-6};
     std::array<double, 7U> state_tracking_weights{
         1.0e-6,
         1.0e-6,
@@ -77,6 +81,10 @@ struct LowThrustScvxConfig {
             "virtual epigraph regularisation must be non-negative"
         );
         require_nonnegative(fuel_weight, "fuel weight must be non-negative");
+        require_positive(
+            finite_difference_relative_step,
+            "finite-difference relative step must be positive"
+        );
         require_positive_array(state_tracking_weights, "state weights must be positive");
         require_positive_array(control_tracking_weights, "control weights must be positive");
         require_positive_array(state_trust_scales, "state trust scales must be positive");
@@ -204,8 +212,8 @@ struct LowThrustConvexDiagnostics {
 class LowThrustSubproblem {
   public:
     explicit LowThrustSubproblem(
-        LowThrustTwoBodyModel model = {},
-        LowThrustScvxConfig config = {}
+        LowThrustTwoBodyModel model = LowThrustTwoBodyModel{},
+        LowThrustScvxConfig config = LowThrustScvxConfig{}
     )
         : model_(std::move(model)), config_(config), layout_(config_.intervals) {
         config_.validate();
@@ -639,10 +647,13 @@ class LowThrustSubproblem {
         const std::vector<LowThrustControl>& controls
     ) const {
         for (std::size_t interval = 0; interval < layout_.intervals; ++interval) {
-            const auto linearisation = model_.linearised_euler_dynamics(
+            const auto linearisation = linearise_discrete_flow<7U, 4U>(
+                model_,
                 states[interval],
                 controls[interval],
-                config_.step_seconds
+                config_.step_seconds,
+                config_.discretisation,
+                config_.finite_difference_relative_step
             );
             const auto row_start = layout_.dynamics_rows().start + 7U * interval;
             const auto state = layout_.state(interval);

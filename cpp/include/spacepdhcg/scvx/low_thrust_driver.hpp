@@ -1,14 +1,15 @@
 #pragma once
 
 #include "spacepdhcg/core/host_backend.hpp"
-#include "spacepdhcg/dynamics/powered_descent_3dof.hpp"
+#include "spacepdhcg/dynamics/low_thrust_two_body.hpp"
 #include "spacepdhcg/scvx/policies.hpp"
-#include "spacepdhcg/transcription/powered_descent_3dof.hpp"
+#include "spacepdhcg/transcription/low_thrust.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -20,13 +21,10 @@
 
 namespace spacepdhcg::scvx {
 
-using transcription::PoweredDescent3DofSubproblem;
-using transcription::PoweredDescentDecodedDecision;
-
-struct NativePoweredDescentOuterConfig {
-    std::size_t maximum_iterations{15U};
+struct NativeLowThrustOuterConfig {
+    std::size_t maximum_iterations{20U};
     std::size_t minimum_iterations{2U};
-    double convergence_tolerance{2.0e-4};
+    double convergence_tolerance{5.0e-4};
     double step_tolerance{2.0e-2};
     double acceptance_threshold{0.05};
     double feasibility_penalty{100.0};
@@ -38,7 +36,7 @@ struct NativePoweredDescentOuterConfig {
 
     void validate() const {
         if (maximum_iterations == 0U || minimum_iterations > maximum_iterations) {
-            throw std::invalid_argument("native SCvx iteration limits are invalid");
+            throw std::invalid_argument("low-thrust SCvx iteration limits are invalid");
         }
         require_positive(convergence_tolerance, "convergence tolerance must be positive");
         require_positive(step_tolerance, "step tolerance must be positive");
@@ -51,30 +49,30 @@ struct NativePoweredDescentOuterConfig {
         );
         if (!std::isfinite(acceptance_threshold) || acceptance_threshold < 0.0
             || acceptance_threshold >= 1.0) {
-            throw std::invalid_argument("acceptance threshold must lie in [0, 1)");
+            throw std::invalid_argument("acceptance threshold must lie in [0,1)");
         }
         if (!std::isfinite(restoration_reduction) || restoration_reduction <= 0.0
             || restoration_reduction >= 1.0) {
-            throw std::invalid_argument("restoration reduction must lie in (0, 1)");
+            throw std::invalid_argument("restoration reduction must lie in (0,1)");
         }
     }
 
   private:
-    static void require_positive(double value, const char* message) {
+    static void require_positive(const double value, const char* message) {
         if (!std::isfinite(value) || value <= 0.0) {
             throw std::invalid_argument(message);
         }
     }
 };
 
-enum class NativeScvxStatus : std::uint8_t {
+enum class NativeLowThrustStatus : std::uint8_t {
     converged,
     maximum_iterations,
     trust_region_exhausted,
     solver_failed,
 };
 
-struct NativeScvxIterationRecord {
+struct NativeLowThrustIterationRecord {
     std::size_t iteration{0U};
     SolvePhase phase{SolvePhase::repair};
     double requested_tolerance{0.0};
@@ -96,114 +94,211 @@ struct NativeScvxIterationRecord {
     bool restoration_accepted{false};
     bool re_solved{false};
     OuterResidual residual{};
-    transcription::PoweredDescentConvexDiagnostics convex_diagnostics{};
+    transcription::LowThrustConvexDiagnostics convex_diagnostics{};
 };
 
-struct NativePoweredDescentScvxResult {
-    NativeScvxStatus status{NativeScvxStatus::maximum_iterations};
-    std::vector<dynamics::PoweredDescentState> states{};
-    std::vector<dynamics::PoweredDescentControl> controls{};
+struct NativeLowThrustScvxResult {
+    NativeLowThrustStatus status{NativeLowThrustStatus::maximum_iterations};
+    std::vector<dynamics::LowThrustState> states{};
+    std::vector<dynamics::LowThrustControl> controls{};
     double merit{0.0};
     OuterResidual residual{};
-    dynamics::PoweredDescentPathDiagnostics path_diagnostics{};
-    std::vector<NativeScvxIterationRecord> iterations{};
+    dynamics::LowThrustPathDiagnostics path_diagnostics{};
+    std::vector<NativeLowThrustIterationRecord> iterations{};
     std::size_t accepted_iterations{0U};
     std::size_t backend_creations{0U};
     std::size_t backend_updates{0U};
 
     [[nodiscard]] bool converged() const noexcept {
-        return status == NativeScvxStatus::converged;
+        return status == NativeLowThrustStatus::converged;
     }
 };
 
-using HostBackendFactory = std::function<core::HostBackendPointer(core::FixedCQP)>;
+struct LowThrustDecodedDecision {
+    std::vector<dynamics::LowThrustState> states{};
+    std::vector<dynamics::LowThrustControl> controls{};
+    std::vector<dynamics::LowThrustState> virtual_controls{};
+};
 
-inline std::pair<
-    std::vector<dynamics::PoweredDescentState>,
-    std::vector<dynamics::PoweredDescentControl>>
-make_native_powered_descent_reference(
-    const dynamics::PoweredDescent3DofModel& model,
-    const dynamics::PoweredDescentState& initial,
-    const std::array<double, 3U>& target_position,
-    const std::array<double, 3U>& target_velocity,
-    std::size_t intervals,
-    double step_seconds
+using LowThrustReference = std::pair<
+    std::vector<dynamics::LowThrustState>,
+    std::vector<dynamics::LowThrustControl>>;
+using LowThrustHostBackendFactory =
+    std::function<core::HostBackendPointer(core::FixedCQP)>;
+
+[[nodiscard]] inline LowThrustDecodedDecision decode_low_thrust_decision(
+    const transcription::LowThrustSubproblem& subproblem,
+    const std::vector<double>& decision
 ) {
-    if (intervals < 2U || !std::isfinite(step_seconds) || step_seconds <= 0.0) {
-        throw std::invalid_argument("native powered-descent reference grid is invalid");
+    const auto& layout = subproblem.layout();
+    if (decision.size() != layout.variables()) {
+        throw std::invalid_argument("low-thrust decision vector has the wrong size");
     }
-    if (initial[6U] <= model.config().minimum_mass) {
-        throw std::invalid_argument("reference initial mass must exceed the reserve");
-    }
-    const auto first_moment = static_cast<double>(intervals * (intervals - 1U)) / 2.0;
-    const auto second_moment = static_cast<double>(
-        (intervals - 1U) * intervals * (2U * intervals - 1U)
-    ) / 6.0;
-    const auto a00 = static_cast<double>(intervals);
-    const auto a01 = static_cast<double>(intervals * intervals);
-    const auto a10 = step_seconds * first_moment;
-    const auto a11 = step_seconds * second_moment;
-    const auto determinant = a00 * a11 - a01 * a10;
-    if (std::abs(determinant) <= 1.0e-14) {
-        throw std::runtime_error("native powered-descent reference system is singular");
-    }
-
-    std::vector<std::array<double, 3U>> velocities(intervals + 1U);
-    for (std::size_t axis = 0; axis < 3U; ++axis) {
-        const auto rhs0 = target_velocity[axis] - initial[3U + axis];
-        const auto rhs1 = target_position[axis] - initial[axis]
-                          - step_seconds * static_cast<double>(intervals)
-                                * initial[3U + axis];
-        const auto linear = (rhs0 * a11 - a01 * rhs1) / determinant;
-        const auto quadratic = (a00 * rhs1 - rhs0 * a10) / determinant;
-        for (std::size_t node = 0; node <= intervals; ++node) {
-            const auto index = static_cast<double>(node);
-            velocities[node][axis] = initial[3U + axis] + linear * index
-                                     + quadratic * index * index;
-        }
-    }
-
-    std::vector<dynamics::PoweredDescentState> states(intervals + 1U);
-    std::vector<dynamics::PoweredDescentControl> controls(intervals);
-    states.front() = initial;
-    for (std::size_t interval = 0; interval < intervals; ++interval) {
-        dynamics::ThrustVector requested{};
-        for (std::size_t axis = 0; axis < 3U; ++axis) {
-            const auto acceleration =
-                (velocities[interval + 1U][axis] - velocities[interval][axis])
-                / step_seconds;
-            requested[axis] = states[interval][6U]
-                              * (acceleration - model.config().gravity[axis]);
-        }
-        const auto thrust = model.project_thrust(requested);
-        const auto sigma = std::sqrt(
-            thrust[0U] * thrust[0U] + thrust[1U] * thrust[1U]
-            + thrust[2U] * thrust[2U]
+    LowThrustDecodedDecision result;
+    result.states.resize(layout.intervals + 1U);
+    result.controls.resize(layout.intervals);
+    result.virtual_controls.resize(layout.intervals);
+    for (std::size_t node = 0; node <= layout.intervals; ++node) {
+        const auto range = layout.state(node);
+        std::copy_n(
+            decision.begin() + static_cast<std::ptrdiff_t>(range.start),
+            range.size,
+            result.states[node].begin()
         );
-        controls[interval] = dynamics::PoweredDescentControl{
-            thrust[0U],
-            thrust[1U],
-            thrust[2U],
-            sigma,
-        };
-        states[interval + 1U] = model.euler_step(
-            states[interval],
-            controls[interval],
-            step_seconds
-        );
-        if (states[interval + 1U][6U] <= model.config().minimum_mass) {
-            throw std::runtime_error("native reference consumes the propellant reserve");
-        }
     }
-    return {states, controls};
+    for (std::size_t interval = 0; interval < layout.intervals; ++interval) {
+        const auto control = layout.control(interval);
+        std::copy_n(
+            decision.begin() + static_cast<std::ptrdiff_t>(control.start),
+            control.size,
+            result.controls[interval].begin()
+        );
+        const auto virtual_control = layout.virtual_control(interval);
+        std::copy_n(
+            decision.begin() + static_cast<std::ptrdiff_t>(virtual_control.start),
+            virtual_control.size,
+            result.virtual_controls[interval].begin()
+        );
+    }
+    return result;
 }
 
-class NativePoweredDescentScvxDriver {
+namespace low_thrust_driver_detail {
+
+inline std::array<double, 3U> hermite_position(
+    const dynamics::LowThrustState& initial,
+    const dynamics::LowThrustState& target,
+    const double duration,
+    const double normalised_time
+) {
+    const auto s = normalised_time;
+    const auto s2 = s * s;
+    const auto s3 = s2 * s;
+    const auto h00 = 2.0 * s3 - 3.0 * s2 + 1.0;
+    const auto h10 = s3 - 2.0 * s2 + s;
+    const auto h01 = -2.0 * s3 + 3.0 * s2;
+    const auto h11 = s3 - s2;
+    std::array<double, 3U> result{};
+    for (std::size_t axis = 0; axis < 3U; ++axis) {
+        result[axis] = h00 * initial[axis] + h10 * duration * initial[3U + axis]
+                       + h01 * target[axis] + h11 * duration * target[3U + axis];
+    }
+    return result;
+}
+
+inline std::array<double, 3U> hermite_acceleration(
+    const dynamics::LowThrustState& initial,
+    const dynamics::LowThrustState& target,
+    const double duration,
+    const double normalised_time
+) {
+    const auto s = normalised_time;
+    const auto d2h00 = 12.0 * s - 6.0;
+    const auto d2h10 = 6.0 * s - 4.0;
+    const auto d2h01 = -12.0 * s + 6.0;
+    const auto d2h11 = 6.0 * s - 2.0;
+    std::array<double, 3U> result{};
+    const auto inverse_duration_squared = 1.0 / (duration * duration);
+    for (std::size_t axis = 0; axis < 3U; ++axis) {
+        result[axis] =
+            (d2h00 * initial[axis] + d2h10 * duration * initial[3U + axis]
+             + d2h01 * target[axis] + d2h11 * duration * target[3U + axis])
+            * inverse_duration_squared;
+    }
+    return result;
+}
+
+inline double norm3(const std::array<double, 3U>& vector) noexcept {
+    return std::sqrt(
+        vector[0U] * vector[0U] + vector[1U] * vector[1U]
+        + vector[2U] * vector[2U]
+    );
+}
+
+}  // namespace low_thrust_driver_detail
+
+/// Construct a physical, dynamically propagated initial reference.
+///
+/// A cubic Hermite boundary curve supplies desired midpoint accelerations. The corresponding
+/// thrust is clipped to the physical limit, then the actual nonlinear model is propagated.
+/// Virtual control in the first convex subproblem absorbs the remaining boundary mismatch.
+[[nodiscard]] inline LowThrustReference make_native_low_thrust_reference(
+    const dynamics::LowThrustTwoBodyModel& model,
+    const dynamics::LowThrustState& initial,
+    const dynamics::LowThrustState& target,
+    const std::size_t intervals,
+    const double step_seconds,
+    const bool use_rk4 = true
+) {
+    if (intervals < 2U || !std::isfinite(step_seconds) || step_seconds <= 0.0) {
+        throw std::invalid_argument("low-thrust reference grid is invalid");
+    }
+    const dynamics::LowThrustControl zero_control{0.0, 0.0, 0.0, 0.0};
+    static_cast<void>(model.dynamics(initial, zero_control));
+    static_cast<void>(model.dynamics(target, zero_control));
+    if (initial[6U] <= model.config().minimum_mass) {
+        throw std::invalid_argument("low-thrust initial mass must exceed the reserve");
+    }
+
+    const auto duration = static_cast<double>(intervals) * step_seconds;
+    std::vector<dynamics::LowThrustControl> controls(intervals);
+    double reference_mass = initial[6U];
+    for (std::size_t interval = 0; interval < intervals; ++interval) {
+        const auto midpoint =
+            (static_cast<double>(interval) + 0.5) / static_cast<double>(intervals);
+        const auto position = low_thrust_driver_detail::hermite_position(
+            initial,
+            target,
+            duration,
+            midpoint
+        );
+        const auto acceleration = low_thrust_driver_detail::hermite_acceleration(
+            initial,
+            target,
+            duration,
+            midpoint
+        );
+        const auto radius = low_thrust_driver_detail::norm3(position);
+        if (!std::isfinite(radius) || radius <= 0.0) {
+            throw std::runtime_error("Hermite low-thrust reference crosses the central singularity");
+        }
+        const auto gravity_scale =
+            -model.config().gravitational_parameter / (radius * radius * radius);
+        std::array<double, 3U> requested{};
+        for (std::size_t axis = 0; axis < 3U; ++axis) {
+            requested[axis] = reference_mass
+                              * (acceleration[axis] - gravity_scale * position[axis])
+                              / model.config().thrust_to_acceleration;
+        }
+        auto magnitude = low_thrust_driver_detail::norm3(requested);
+        if (magnitude > model.config().maximum_thrust) {
+            const auto scale = model.config().maximum_thrust / magnitude;
+            for (auto& component : requested) {
+                component *= scale;
+            }
+            magnitude = model.config().maximum_thrust;
+        }
+        controls[interval] = dynamics::LowThrustControl{
+            requested[0U],
+            requested[1U],
+            requested[2U],
+            magnitude,
+        };
+        reference_mass -= model.config().mass_flow_coefficient * magnitude * step_seconds;
+        if (reference_mass <= model.config().minimum_mass) {
+            throw std::runtime_error("low-thrust reference consumes the mass reserve");
+        }
+    }
+    auto states = model.rollout(initial, controls, step_seconds, use_rk4);
+    return LowThrustReference{std::move(states), std::move(controls)};
+}
+
+class NativeLowThrustScvxDriver {
   public:
-    NativePoweredDescentScvxDriver(
-        PoweredDescent3DofSubproblem subproblem,
-        HostBackendFactory backend_factory,
-        NativePoweredDescentOuterConfig outer_config = {},
+    NativeLowThrustScvxDriver(
+        transcription::LowThrustSubproblem subproblem,
+        LowThrustHostBackendFactory backend_factory,
+        NativeLowThrustOuterConfig outer_config = {},
         ForcingRuleConfig forcing_config = {},
         TrustRegionConfig trust_config = {}
     )
@@ -211,56 +306,55 @@ class NativePoweredDescentScvxDriver {
           backend_factory_(std::move(backend_factory)),
           outer_config_(outer_config),
           forcing_(forcing_config),
-          trust_(normalise_trust_config(trust_config, subproblem_.config().trust_radius)) {
+          trust_(normalise_trust_config(
+              trust_config,
+              subproblem_.config().trust_radius
+          )) {
         if (!backend_factory_) {
-            throw std::invalid_argument("native SCvx requires a backend factory");
+            throw std::invalid_argument("low-thrust SCvx requires a backend factory");
         }
         outer_config_.validate();
     }
 
-    [[nodiscard]] NativePoweredDescentScvxResult solve(
-        const dynamics::PoweredDescentState& initial,
-        const std::array<double, 3U>& target_position,
-        const std::array<double, 3U>& target_velocity,
-        std::optional<std::pair<
-            std::vector<dynamics::PoweredDescentState>,
-            std::vector<dynamics::PoweredDescentControl>>> reference = std::nullopt
+    [[nodiscard]] const transcription::LowThrustSubproblem& subproblem() const noexcept {
+        return subproblem_;
+    }
+
+    [[nodiscard]] NativeLowThrustScvxResult solve(
+        const dynamics::LowThrustState& initial,
+        const dynamics::LowThrustState& target,
+        std::optional<LowThrustReference> reference = std::nullopt
     ) {
+        trust_.reset();
         auto [current_states, current_controls] = reference.has_value()
                                                       ? std::move(*reference)
-                                                      : make_native_powered_descent_reference(
+                                                      : make_native_low_thrust_reference(
                                                             subproblem_.model(),
                                                             initial,
-                                                            target_position,
-                                                            target_velocity,
+                                                            target,
                                                             subproblem_.layout().intervals,
-                                                            subproblem_.config().step_seconds
+                                                            subproblem_.config().step_seconds,
+                                                            use_rk4()
                                                         );
         validate_reference(current_states, current_controls);
-        auto current_merit = actual_merit(
-            current_states,
-            current_controls,
-            target_position,
-            target_velocity
-        );
+        auto current_merit = actual_merit(current_states, current_controls, target);
         auto current_residual = outer_residual(
             current_states,
             current_controls,
             current_states,
-            target_position,
-            target_velocity,
+            target,
             1.0
         );
 
         core::HostBackendPointer backend{};
         core::HostWarmStart warm_start{};
         bool have_warm_start{false};
-        std::vector<NativeScvxIterationRecord> records{};
+        std::vector<NativeLowThrustIterationRecord> records{};
         std::size_t accepted_streak{0U};
         std::size_t accepted_iterations{0U};
         std::size_t backend_creations{0U};
         std::optional<double> previous_agreement{};
-        auto status = NativeScvxStatus::maximum_iterations;
+        auto status = NativeLowThrustStatus::maximum_iterations;
 
         for (std::size_t iteration = 0; iteration < outer_config_.maximum_iterations;
              ++iteration) {
@@ -276,8 +370,7 @@ class NativePoweredDescentScvxDriver {
                 current_states,
                 current_controls,
                 initial,
-                target_position,
-                target_velocity,
+                target,
                 trust_.radius()
             );
             if (!backend) {
@@ -285,7 +378,9 @@ class NativePoweredDescentScvxDriver {
                 ++backend_creations;
                 if (!backend || backend->structure().fingerprint()
                                     != subproblem_.structure().fingerprint()) {
-                    throw std::runtime_error("native backend factory returned incompatible topology");
+                    throw std::runtime_error(
+                        "low-thrust backend factory returned incompatible topology"
+                    );
                 }
             } else {
                 backend->update(values);
@@ -302,8 +397,7 @@ class NativePoweredDescentScvxDriver {
                 current_states,
                 current_controls,
                 initial,
-                target_position,
-                target_velocity,
+                target,
                 current_merit,
                 current_residual
             );
@@ -333,8 +427,7 @@ class NativePoweredDescentScvxDriver {
                     current_states,
                     current_controls,
                     initial,
-                    target_position,
-                    target_velocity,
+                    target,
                     current_merit,
                     current_residual
                 );
@@ -346,35 +439,33 @@ class NativePoweredDescentScvxDriver {
                 candidate.agreement,
                 candidate.step_fraction
             );
-            records.push_back(
-                NativeScvxIterationRecord{
-                    iteration,
-                    request.phase,
-                    request.tolerance,
-                    effective_tolerance,
-                    solution.outer_iterations + solution.inner_iterations,
-                    solution.primal_residual,
-                    solution.dual_residual,
-                    solution.setup_seconds,
-                    solution.update_seconds,
-                    solution.solve_seconds,
-                    trust_update.radius_before,
-                    trust_update.radius_after,
-                    trust_update.action,
-                    candidate.step_fraction,
-                    candidate.predicted_reduction,
-                    candidate.actual_reduction,
-                    candidate.agreement,
-                    candidate.accepted,
-                    candidate.restoration,
-                    re_solved,
-                    candidate.residual,
-                    candidate.convex_diagnostics,
-                }
-            );
+            records.push_back(NativeLowThrustIterationRecord{
+                iteration,
+                request.phase,
+                request.tolerance,
+                effective_tolerance,
+                solution.outer_iterations + solution.inner_iterations,
+                solution.primal_residual,
+                solution.dual_residual,
+                solution.setup_seconds,
+                solution.update_seconds,
+                solution.solve_seconds,
+                trust_update.radius_before,
+                trust_update.radius_after,
+                trust_update.action,
+                candidate.step_fraction,
+                candidate.predicted_reduction,
+                candidate.actual_reduction,
+                candidate.agreement,
+                candidate.accepted,
+                candidate.restoration,
+                re_solved,
+                candidate.residual,
+                candidate.convex_diagnostics,
+            });
 
             if (!solution.solved()) {
-                status = NativeScvxStatus::solver_failed;
+                status = NativeLowThrustStatus::solver_failed;
                 break;
             }
             if (candidate.accepted) {
@@ -390,20 +481,20 @@ class NativePoweredDescentScvxDriver {
                 if (iteration + 1U >= outer_config_.minimum_iterations
                     && current_residual.maximum() <= outer_config_.convergence_tolerance
                     && candidate.step_fraction <= outer_config_.step_tolerance) {
-                    status = NativeScvxStatus::converged;
+                    status = NativeLowThrustStatus::converged;
                     break;
                 }
             } else {
                 accepted_streak = 0U;
                 previous_agreement.reset();
                 if (trust_.exhausted()) {
-                    status = NativeScvxStatus::trust_region_exhausted;
+                    status = NativeLowThrustStatus::trust_region_exhausted;
                     break;
                 }
             }
         }
 
-        return NativePoweredDescentScvxResult{
+        return NativeLowThrustScvxResult{
             status,
             current_states,
             current_controls,
@@ -419,9 +510,9 @@ class NativePoweredDescentScvxDriver {
 
   private:
     struct Candidate {
-        PoweredDescentDecodedDecision decoded{};
-        std::vector<dynamics::PoweredDescentState> rollout{};
-        transcription::PoweredDescentConvexDiagnostics convex_diagnostics{};
+        LowThrustDecodedDecision decoded{};
+        std::vector<dynamics::LowThrustState> rollout{};
+        transcription::LowThrustConvexDiagnostics convex_diagnostics{};
         OuterResidual residual{};
         double model_merit{0.0};
         double actual_merit{0.0};
@@ -433,15 +524,15 @@ class NativePoweredDescentScvxDriver {
         bool restoration{false};
     };
 
-    PoweredDescent3DofSubproblem subproblem_;
-    HostBackendFactory backend_factory_;
-    NativePoweredDescentOuterConfig outer_config_{};
+    transcription::LowThrustSubproblem subproblem_;
+    LowThrustHostBackendFactory backend_factory_;
+    NativeLowThrustOuterConfig outer_config_{};
     AdaptiveForcingRule forcing_{};
     TrustRegionController trust_{};
 
     static TrustRegionConfig normalise_trust_config(
         TrustRegionConfig config,
-        double subproblem_radius
+        const double subproblem_radius
     ) {
         if (config.initial_radius == TrustRegionConfig{}.initial_radius
             && subproblem_radius != config.initial_radius) {
@@ -451,39 +542,45 @@ class NativePoweredDescentScvxDriver {
         return config;
     }
 
+    [[nodiscard]] bool use_rk4() const noexcept {
+        return subproblem_.config().discretisation
+               == transcription::DiscretisationMethod::rk4_finite_difference;
+    }
+
     void validate_reference(
-        const std::vector<dynamics::PoweredDescentState>& states,
-        const std::vector<dynamics::PoweredDescentControl>& controls
+        const std::vector<dynamics::LowThrustState>& states,
+        const std::vector<dynamics::LowThrustControl>& controls
     ) const {
         if (states.size() != subproblem_.layout().intervals + 1U
             || controls.size() != subproblem_.layout().intervals) {
-            throw std::invalid_argument("native SCvx reference trajectory has the wrong horizon");
+            throw std::invalid_argument("low-thrust reference trajectory has the wrong horizon");
         }
         for (std::size_t interval = 0; interval < controls.size(); ++interval) {
             static_cast<void>(subproblem_.model().dynamics(states[interval], controls[interval]));
         }
+        const dynamics::LowThrustControl zero_control{0.0, 0.0, 0.0, 0.0};
+        static_cast<void>(subproblem_.model().dynamics(states.back(), zero_control));
     }
 
     [[nodiscard]] Candidate evaluate_candidate(
         const core::HostCqpSolution& solution,
         const core::NumericValues& values,
-        const std::vector<dynamics::PoweredDescentState>& current_states,
-        const std::vector<dynamics::PoweredDescentControl>& current_controls,
-        const dynamics::PoweredDescentState& initial,
-        const std::array<double, 3U>& target_position,
-        const std::array<double, 3U>& target_velocity,
-        double current_merit,
+        const std::vector<dynamics::LowThrustState>& current_states,
+        const std::vector<dynamics::LowThrustControl>& current_controls,
+        const dynamics::LowThrustState& initial,
+        const dynamics::LowThrustState& target,
+        const double current_merit,
         const OuterResidual& current_residual
     ) const {
         if (solution.primal.size() != subproblem_.layout().variables()) {
-            throw std::runtime_error("native backend returned a primal with the wrong size");
+            throw std::runtime_error("low-thrust backend returned a primal with the wrong size");
         }
         if (!solution.dual.empty()
             && solution.dual.size() != static_cast<std::size_t>(subproblem_.structure().duals())) {
-            throw std::runtime_error("native backend returned a dual with the wrong size");
+            throw std::runtime_error("low-thrust backend returned a dual with the wrong size");
         }
         Candidate candidate{};
-        candidate.decoded = subproblem_.decode(solution.primal);
+        candidate.decoded = decode_low_thrust_decision(subproblem_, solution.primal);
         candidate.convex_diagnostics = subproblem_.diagnostics(solution.primal, values);
         candidate.step_fraction = step_fraction(
             candidate.decoded.states,
@@ -497,30 +594,23 @@ class NativePoweredDescentScvxDriver {
                 initial,
                 candidate.decoded.controls,
                 subproblem_.config().step_seconds,
-                subproblem_.config().discretisation
-                    == transcription::DiscretisationMethod::rk4_finite_difference
+                use_rk4()
             );
         } catch (const std::exception&) {
             candidate.rollout.clear();
         }
-        candidate.model_merit = model_merit(
-            candidate.decoded,
-            target_position,
-            target_velocity
-        );
+        candidate.model_merit = model_merit(candidate.decoded, target);
         candidate.actual_merit = candidate.rollout.empty()
                                      ? std::numeric_limits<double>::infinity()
                                      : actual_merit(
                                            candidate.rollout,
                                            candidate.decoded.controls,
-                                           target_position,
-                                           target_velocity
+                                           target
                                        );
         candidate.predicted_reduction = current_merit - candidate.model_merit;
         candidate.actual_reduction = current_merit - candidate.actual_merit;
         if (candidate.predicted_reduction > outer_config_.minimum_predicted_reduction) {
-            candidate.agreement =
-                candidate.actual_reduction / candidate.predicted_reduction;
+            candidate.agreement = candidate.actual_reduction / candidate.predicted_reduction;
         }
         candidate.residual = candidate.rollout.empty()
                                  ? OuterResidual{
@@ -533,8 +623,7 @@ class NativePoweredDescentScvxDriver {
                                        candidate.decoded.states,
                                        candidate.decoded.controls,
                                        candidate.rollout,
-                                       target_position,
-                                       target_velocity,
+                                       target,
                                        candidate.step_fraction
                                    );
         candidate.restoration = !candidate.rollout.empty()
@@ -558,12 +647,11 @@ class NativePoweredDescentScvxDriver {
     }
 
     [[nodiscard]] OuterResidual outer_residual(
-        const std::vector<dynamics::PoweredDescentState>& decision_states,
-        const std::vector<dynamics::PoweredDescentControl>& controls,
-        const std::vector<dynamics::PoweredDescentState>& rollout,
-        const std::array<double, 3U>& target_position,
-        const std::array<double, 3U>& target_velocity,
-        double step_fraction_value
+        const std::vector<dynamics::LowThrustState>& decision_states,
+        const std::vector<dynamics::LowThrustControl>& controls,
+        const std::vector<dynamics::LowThrustState>& rollout,
+        const dynamics::LowThrustState& target,
+        const double step_fraction_value
     ) const {
         const auto& scales = subproblem_.config().state_trust_scales;
         double dynamics_residual{0.0};
@@ -579,35 +667,30 @@ class NativePoweredDescentScvxDriver {
             }
         }
         double terminal{0.0};
-        for (std::size_t axis = 0; axis < 3U; ++axis) {
+        for (std::size_t component = 0; component < 6U; ++component) {
             terminal = std::max(
                 terminal,
-                std::abs((rollout.back()[axis] - target_position[axis]) * scales[axis])
-            );
-            terminal = std::max(
-                terminal,
-                std::abs(
-                    (rollout.back()[3U + axis] - target_velocity[axis])
-                    * scales[3U + axis]
-                )
+                std::abs((rollout.back()[component] - target[component]) * scales[component])
             );
         }
-        const auto path = maximum_path_component(rollout, controls);
-        return OuterResidual{dynamics_residual, path, terminal, step_fraction_value};
+        return OuterResidual{
+            dynamics_residual,
+            maximum_path_component(rollout, controls),
+            terminal,
+            step_fraction_value,
+        };
     }
 
     [[nodiscard]] double actual_merit(
-        const std::vector<dynamics::PoweredDescentState>& states,
-        const std::vector<dynamics::PoweredDescentControl>& controls,
-        const std::array<double, 3U>& target_position,
-        const std::array<double, 3U>& target_velocity
+        const std::vector<dynamics::LowThrustState>& states,
+        const std::vector<dynamics::LowThrustControl>& controls,
+        const dynamics::LowThrustState& target
     ) const {
         const auto& scales = subproblem_.config().state_trust_scales;
         double terminal{0.0};
-        for (std::size_t axis = 0; axis < 3U; ++axis) {
-            terminal += std::abs((states.back()[axis] - target_position[axis]) * scales[axis]);
+        for (std::size_t component = 0; component < 6U; ++component) {
             terminal += std::abs(
-                (states.back()[3U + axis] - target_velocity[axis]) * scales[3U + axis]
+                (states.back()[component] - target[component]) * scales[component]
             );
         }
         return normalised_fuel(controls)
@@ -616,19 +699,14 @@ class NativePoweredDescentScvxDriver {
     }
 
     [[nodiscard]] double model_merit(
-        const PoweredDescentDecodedDecision& decision,
-        const std::array<double, 3U>& target_position,
-        const std::array<double, 3U>& target_velocity
+        const LowThrustDecodedDecision& decision,
+        const dynamics::LowThrustState& target
     ) const {
         const auto& scales = subproblem_.config().state_trust_scales;
         double terminal{0.0};
-        for (std::size_t axis = 0; axis < 3U; ++axis) {
+        for (std::size_t component = 0; component < 6U; ++component) {
             terminal += std::abs(
-                (decision.states.back()[axis] - target_position[axis]) * scales[axis]
-            );
-            terminal += std::abs(
-                (decision.states.back()[3U + axis] - target_velocity[axis])
-                * scales[3U + axis]
+                (decision.states.back()[component] - target[component]) * scales[component]
             );
         }
         double virtual_measure{0.0};
@@ -648,29 +726,9 @@ class NativePoweredDescentScvxDriver {
                + outer_config_.virtual_penalty * virtual_measure;
     }
 
-    [[nodiscard]] double maximum_path_component(
-        const std::vector<dynamics::PoweredDescentState>& states,
-        const std::vector<dynamics::PoweredDescentControl>& controls
-    ) const {
-        const auto components = path_components(states, controls);
-        return *std::max_element(components.begin(), components.end());
-    }
-
-    [[nodiscard]] double sum_path_components(
-        const std::vector<dynamics::PoweredDescentState>& states,
-        const std::vector<dynamics::PoweredDescentControl>& controls
-    ) const {
-        const auto components = path_components(states, controls);
-        double total{0.0};
-        for (const auto component : components) {
-            total += component;
-        }
-        return total;
-    }
-
-    [[nodiscard]] std::array<double, 7U> path_components(
-        const std::vector<dynamics::PoweredDescentState>& states,
-        const std::vector<dynamics::PoweredDescentControl>& controls
+    [[nodiscard]] std::array<double, 4U> path_components(
+        const std::vector<dynamics::LowThrustState>& states,
+        const std::vector<dynamics::LowThrustControl>& controls
     ) const {
         const auto diagnostics = subproblem_.model().path_diagnostics(states, controls);
         const auto maximum_thrust = subproblem_.model().config().maximum_thrust;
@@ -679,20 +737,36 @@ class NativePoweredDescentScvxDriver {
              subproblem_.config().state_trust_scales[1U],
              subproblem_.config().state_trust_scales[2U]}
         );
-        const auto mass_scale = subproblem_.config().state_trust_scales[6U];
         return {
             diagnostics.thrust_epigraph / maximum_thrust,
-            diagnostics.throttle_lower / maximum_thrust,
             diagnostics.throttle_upper / maximum_thrust,
-            diagnostics.tilt / maximum_thrust,
-            diagnostics.minimum_mass * mass_scale,
-            diagnostics.altitude * position_scale,
-            diagnostics.glide_slope * position_scale,
+            diagnostics.minimum_mass * subproblem_.config().state_trust_scales[6U],
+            diagnostics.minimum_radius * position_scale,
         };
     }
 
+    [[nodiscard]] double maximum_path_component(
+        const std::vector<dynamics::LowThrustState>& states,
+        const std::vector<dynamics::LowThrustControl>& controls
+    ) const {
+        const auto components = path_components(states, controls);
+        return *std::max_element(components.begin(), components.end());
+    }
+
+    [[nodiscard]] double sum_path_components(
+        const std::vector<dynamics::LowThrustState>& states,
+        const std::vector<dynamics::LowThrustControl>& controls
+    ) const {
+        const auto components = path_components(states, controls);
+        double result{0.0};
+        for (const auto component : components) {
+            result += component;
+        }
+        return result;
+    }
+
     [[nodiscard]] double normalised_fuel(
-        const std::vector<dynamics::PoweredDescentControl>& controls
+        const std::vector<dynamics::LowThrustControl>& controls
     ) const {
         double total{0.0};
         for (const auto& control : controls) {
@@ -706,11 +780,11 @@ class NativePoweredDescentScvxDriver {
     }
 
     [[nodiscard]] double step_fraction(
-        const std::vector<dynamics::PoweredDescentState>& states,
-        const std::vector<dynamics::PoweredDescentControl>& controls,
-        const std::vector<dynamics::PoweredDescentState>& reference_states,
-        const std::vector<dynamics::PoweredDescentControl>& reference_controls,
-        double radius
+        const std::vector<dynamics::LowThrustState>& states,
+        const std::vector<dynamics::LowThrustControl>& controls,
+        const std::vector<dynamics::LowThrustState>& reference_states,
+        const std::vector<dynamics::LowThrustControl>& reference_controls,
+        const double radius
     ) const {
         double maximum{0.0};
         for (std::size_t interval = 0; interval < controls.size(); ++interval) {
@@ -729,26 +803,28 @@ class NativePoweredDescentScvxDriver {
             }
             maximum = std::max(maximum, std::sqrt(norm_squared) / radius);
         }
-        double terminal_norm{0.0};
+        double terminal_norm_squared{0.0};
         for (std::size_t component = 0; component < 7U; ++component) {
             const auto value =
                 (states.back()[component] - reference_states.back()[component])
                 * subproblem_.config().state_trust_scales[component];
-            terminal_norm += value * value;
+            terminal_norm_squared += value * value;
         }
-        return std::max(maximum, std::sqrt(terminal_norm) / radius);
+        return std::max(maximum, std::sqrt(terminal_norm_squared) / radius);
     }
 };
 
-inline std::string_view native_scvx_status_name(NativeScvxStatus status) noexcept {
+[[nodiscard]] inline std::string_view native_low_thrust_status_name(
+    const NativeLowThrustStatus status
+) noexcept {
     switch (status) {
-        case NativeScvxStatus::converged:
+        case NativeLowThrustStatus::converged:
             return "converged";
-        case NativeScvxStatus::maximum_iterations:
+        case NativeLowThrustStatus::maximum_iterations:
             return "maximum_iterations";
-        case NativeScvxStatus::trust_region_exhausted:
+        case NativeLowThrustStatus::trust_region_exhausted:
             return "trust_region_exhausted";
-        case NativeScvxStatus::solver_failed:
+        case NativeLowThrustStatus::solver_failed:
             return "solver_failed";
     }
     return "unknown";

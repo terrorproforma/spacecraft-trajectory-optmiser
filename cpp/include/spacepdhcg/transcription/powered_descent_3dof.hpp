@@ -2,6 +2,8 @@
 
 #include "spacepdhcg/core/fixed_cqp.hpp"
 #include "spacepdhcg/dynamics/powered_descent_3dof.hpp"
+#include "spacepdhcg/transcription/discrete_flow_linearisation.hpp"
+#include "spacepdhcg/transcription/discretisation.hpp"
 
 #include <algorithm>
 #include <array>
@@ -29,6 +31,8 @@ struct PoweredDescentScvxConfig {
     double virtual_quadratic_weight{1.0e-8};
     double virtual_epigraph_regularisation{1.0e-10};
     double fuel_weight{1.0e-3};
+    DiscretisationMethod discretisation{DiscretisationMethod::forward_euler};
+    double finite_difference_relative_step{1.0e-6};
     std::array<double, 7U> state_tracking_weights{
         1.0e-4,
         1.0e-4,
@@ -76,6 +80,10 @@ struct PoweredDescentScvxConfig {
             "virtual epigraph regularisation must be non-negative"
         );
         require_nonnegative(fuel_weight, "fuel weight must be non-negative");
+        require_positive(
+            finite_difference_relative_step,
+            "finite-difference relative step must be positive"
+        );
         require_positive_vector(state_tracking_weights, "state tracking weights must be positive");
         require_positive_vector(
             control_tracking_weights,
@@ -211,11 +219,18 @@ struct PoweredDescentConvexDiagnostics {
     }
 };
 
+struct PoweredDescentDecodedDecision {
+    std::vector<PoweredDescentState> states{};
+    std::vector<PoweredDescentControl> controls{};
+    std::vector<PoweredDescentState> virtual_controls{};
+    std::vector<PoweredDescentState> virtual_epigraphs{};
+};
+
 class PoweredDescent3DofSubproblem {
   public:
     explicit PoweredDescent3DofSubproblem(
-        PoweredDescent3DofModel model = {},
-        PoweredDescentScvxConfig config = {}
+        PoweredDescent3DofModel model = PoweredDescent3DofModel{},
+        PoweredDescentScvxConfig config = PoweredDescentScvxConfig{}
     )
         : model_(std::move(model)), config_(config), layout_(config_.intervals) {
         config_.validate();
@@ -344,6 +359,57 @@ class PoweredDescent3DofSubproblem {
             );
         }
         return decision;
+    }
+
+    [[nodiscard]] PoweredDescentDecodedDecision decode(
+        const std::vector<double>& decision
+    ) const {
+        if (decision.size() != layout_.variables()) {
+            throw std::invalid_argument(
+                "powered-descent decision vector has the wrong size"
+            );
+        }
+        for (const auto value : decision) {
+            if (!std::isfinite(value)) {
+                throw std::invalid_argument(
+                    "powered-descent decision vector must be finite"
+                );
+            }
+        }
+        PoweredDescentDecodedDecision decoded{};
+        decoded.states.resize(layout_.intervals + 1U);
+        decoded.controls.resize(layout_.intervals);
+        decoded.virtual_controls.resize(layout_.intervals);
+        decoded.virtual_epigraphs.resize(layout_.intervals);
+        for (std::size_t node = 0; node <= layout_.intervals; ++node) {
+            const auto range = layout_.state(node);
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(range.start),
+                7U,
+                decoded.states[node].begin()
+            );
+        }
+        for (std::size_t interval = 0; interval < layout_.intervals; ++interval) {
+            const auto control = layout_.control(interval);
+            const auto virtual_control = layout_.virtual_control(interval);
+            const auto epigraph = layout_.virtual_epigraph(interval);
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(control.start),
+                4U,
+                decoded.controls[interval].begin()
+            );
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(virtual_control.start),
+                7U,
+                decoded.virtual_controls[interval].begin()
+            );
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(epigraph.start),
+                7U,
+                decoded.virtual_epigraphs[interval].begin()
+            );
+        }
+        return decoded;
     }
 
     [[nodiscard]] PoweredDescentConvexDiagnostics diagnostics(
@@ -682,10 +748,13 @@ class PoweredDescent3DofSubproblem {
         const std::vector<PoweredDescentControl>& controls
     ) const {
         for (std::size_t interval = 0; interval < layout_.intervals; ++interval) {
-            const auto linearisation = model_.linearised_euler_dynamics(
+            const auto linearisation = linearise_discrete_flow<7U, 4U>(
+                model_,
                 states[interval],
                 controls[interval],
-                config_.step_seconds
+                config_.step_seconds,
+                config_.discretisation,
+                config_.finite_difference_relative_step
             );
             const auto row_start = layout_.dynamics_rows().start + 7U * interval;
             const auto state = layout_.state(interval);

@@ -29,6 +29,8 @@ struct PoweredDescent6DofConfig {
     double minimum_sigma{0.0};
     double maximum_torque{2'000.0};
     double maximum_angular_rate{1.0};
+    double maximum_tilt_radians{0.5235987755982988};
+    double glide_slope_radians{1.0471975511965976};
 
     void validate() const {
         validate_finite(gravity, "gravity must be finite");
@@ -42,6 +44,21 @@ struct PoweredDescent6DofConfig {
         }
         require_positive(maximum_torque, "maximum torque must be positive");
         require_positive(maximum_angular_rate, "maximum angular rate must be positive");
+        constexpr double half_pi = 1.5707963267948966;
+        if (!(maximum_tilt_radians > 0.0 && maximum_tilt_radians < half_pi)) {
+            throw std::invalid_argument("maximum tilt must lie in (0, pi/2)");
+        }
+        if (!(glide_slope_radians > 0.0 && glide_slope_radians < half_pi)) {
+            throw std::invalid_argument("glide slope must lie in (0, pi/2)");
+        }
+    }
+
+    [[nodiscard]] double tilt_cosine() const noexcept {
+        return std::cos(maximum_tilt_radians);
+    }
+
+    [[nodiscard]] double glide_slope_tangent() const noexcept {
+        return std::tan(glide_slope_radians);
     }
 
   private:
@@ -180,6 +197,22 @@ class PoweredDescent6DofModel {
         return result;
     }
 
+    [[nodiscard]] PoweredDescent6DofState euler_step(
+        const PoweredDescent6DofState& state,
+        const PoweredDescent6DofControl& control,
+        double step_seconds
+    ) const {
+        require_step(step_seconds);
+        const auto derivative = dynamics(state, control);
+        PoweredDescent6DofState next{};
+        for (std::size_t component = 0; component < next.size(); ++component) {
+            next[component] = state[component] + step_seconds * derivative[component];
+        }
+        normalise_quaternion(next);
+        validate_state(next, true);
+        return next;
+    }
+
     [[nodiscard]] PoweredDescent6DofState rk4_step(
         const PoweredDescent6DofState& state,
         const PoweredDescent6DofControl& control,
@@ -208,9 +241,11 @@ class PoweredDescent6DofModel {
         const std::vector<PoweredDescent6DofControl>& controls,
         double step_seconds
     ) const {
-        validate_state(initial, true);
+        validate_state(initial, false);
         std::vector<PoweredDescent6DofState> states(controls.size() + 1U);
         states.front() = initial;
+        normalise_quaternion(states.front());
+        validate_state(states.front(), true);
         for (std::size_t interval = 0; interval < controls.size(); ++interval) {
             states[interval + 1U] = rk4_step(states[interval], controls[interval], step_seconds);
         }

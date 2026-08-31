@@ -143,7 +143,10 @@ void test_cw_cqp() {
             "CW numerical update changed quadratic topology");
     require(problem.scalar_constraint.indices == scalar_indices,
             "CW numerical update changed scalar topology");
-    require(std::abs(problem.linear[model.layout().state_offset(config.intervals)]) > 0.0,
+    const auto terminal_state = static_cast<std::size_t>(
+        model.layout().state_offset(config.intervals)
+    );
+    require(std::abs(problem.linear[terminal_state]) > 0.0,
             "CW target update did not change the linear objective");
 }
 
