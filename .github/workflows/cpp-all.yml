@@ -1,0 +1,55 @@
+name: cpp-all
+
+on:
+  push:
+    paths:
+      - "cpp/**"
+      - ".github/workflows/cpp-all.yml"
+  pull_request:
+    paths:
+      - "cpp/**"
+      - ".github/workflows/cpp-all.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure all native smoke targets
+        run: >-
+          cmake
+          -S cpp/all
+          -B build/cpp-all
+          -DBUILD_TESTING=ON
+          -DSPACEPDHCG_ALL_CPP_WARNINGS_AS_ERRORS=ON
+
+      - name: Build all native smoke targets
+        run: cmake --build build/cpp-all --parallel 2
+
+      - name: Run all native smoke targets
+        run: ctest --test-dir build/cpp-all --output-on-failure
+
+      - name: Configure sanitized native smoke targets
+        run: >-
+          cmake
+          -S cpp/all
+          -B build/cpp-all-sanitized
+          -DBUILD_TESTING=ON
+          -DSPACEPDHCG_ALL_CPP_WARNINGS_AS_ERRORS=ON
+          -DSPACEPDHCG_ALL_CPP_ENABLE_SANITIZERS=ON
+
+      - name: Build sanitized native smoke targets
+        run: cmake --build build/cpp-all-sanitized --parallel 2
+
+      - name: Run sanitized native smoke targets
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ctest --test-dir build/cpp-all-sanitized --output-on-failure
