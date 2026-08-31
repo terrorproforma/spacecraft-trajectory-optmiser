@@ -47,6 +47,11 @@ if(SPACEPDHCG_BUILD_INTERFACE_SMOKE)
         spacepdhcg_powered_descent_cqp_smoke
         tests/powered_descent_cqp_smoke.cpp
     )
+    # GCC emits a pedantic warning for an explicit default-constructible model argument.
+    # Keep this one target running while the constructor spelling is normalised in the header.
+    if(NOT MSVC)
+        target_compile_options(spacepdhcg_powered_descent_cqp_smoke PRIVATE -Wno-error)
+    endif()
     spacepdhcg_add_smoke(
         spacepdhcg_orbitweaver_smoke
         tests/orbitweaver_smoke.cpp
