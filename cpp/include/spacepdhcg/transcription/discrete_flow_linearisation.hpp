@@ -1,6 +1,8 @@
 #pragma once
 
 #include "spacepdhcg/transcription/discretisation.hpp"
+#include "spacepdhcg/transcription/linearisation_types.hpp"
+#include "spacepdhcg/transcription/variational_rk4.hpp"
 
 #include <algorithm>
 #include <array>
@@ -11,13 +13,6 @@
 
 namespace spacepdhcg::transcription {
 
-template <std::size_t StateDimension, std::size_t ControlDimension>
-struct DiscreteAffineLinearisation {
-    std::array<double, StateDimension * StateDimension> state{};
-    std::array<double, StateDimension * ControlDimension> control{};
-    std::array<double, StateDimension> offset{};
-};
-
 namespace discrete_flow_detail {
 
 template <typename Model, typename State, typename Control>
@@ -25,7 +20,7 @@ template <typename Model, typename State, typename Control>
     const Model& model,
     const State& state,
     const Control& control,
-    double step_seconds
+    const double step_seconds
 ) {
     const auto derivative = model.dynamics(state, control);
     State next{};
@@ -40,19 +35,20 @@ template <typename Model, typename State, typename Control>
     const Model& model,
     const State& state,
     const Control& control,
-    double step_seconds,
-    DiscretisationMethod method
+    const double step_seconds,
+    const DiscretisationMethod method
 ) {
     switch (method) {
         case DiscretisationMethod::forward_euler:
             return forward_euler_step(model, state, control, step_seconds);
-        case DiscretisationMethod::rk4_finite_difference:
+        case DiscretisationMethod::rk4_variational:
+        case DiscretisationMethod::rk4_finite_difference_reference:
             return model.rk4_step(state, control, step_seconds);
     }
     throw std::invalid_argument("unsupported discrete-flow method");
 }
 
-inline double perturbation(double value, double relative_step) {
+inline double perturbation(const double value, const double relative_step) {
     return relative_step * std::max(1.0, std::abs(value));
 }
 
@@ -69,8 +65,8 @@ template <typename Vector, typename Output, typename Evaluator>
 [[nodiscard]] Output finite_difference_column(
     const Vector& reference_vector,
     const Output& reference_output,
-    std::size_t column,
-    double delta,
+    const std::size_t column,
+    const double delta,
     Evaluator&& evaluate
 ) {
     auto plus = reference_vector;
@@ -113,35 +109,17 @@ template <typename Vector, typename Output, typename Evaluator>
     );
 }
 
-}  // namespace discrete_flow_detail
-
-/// Linearise the selected one-step map directly, preserving the fixed CQP topology.
-///
-/// The affine model is `x_next = A x + B u + d`. Central differences are used in the
-/// interior. When a perturbation crosses a physical domain boundary, such as nonnegative
-/// mass or thrust epigraph, the valid one-sided derivative is used. The offset is formed from
-/// the exact selected step at the reference, so the affine model reproduces that reference
-/// step to roundoff even when derivative columns are approximate.
 template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
 [[nodiscard]] DiscreteAffineLinearisation<StateDimension, ControlDimension>
-linearise_discrete_flow(
+linearise_by_finite_difference(
     const Model& model,
     const std::array<double, StateDimension>& state,
     const std::array<double, ControlDimension>& control,
-    double step_seconds,
-    DiscretisationMethod method,
-    double relative_step = 1.0e-6
+    const double step_seconds,
+    const DiscretisationMethod method,
+    const double relative_step
 ) {
-    if (!std::isfinite(step_seconds) || step_seconds <= 0.0) {
-        throw std::invalid_argument("discrete-flow step duration must be finite and positive");
-    }
-    if (!std::isfinite(relative_step) || relative_step <= 0.0) {
-        throw std::invalid_argument("finite-difference relative step must be finite and positive");
-    }
-    discrete_flow_detail::require_finite_vector(state, "discrete-flow state must be finite");
-    discrete_flow_detail::require_finite_vector(control, "discrete-flow control must be finite");
-
-    const auto reference = discrete_flow_detail::discrete_step(
+    const auto reference = discrete_step(
         model,
         state,
         control,
@@ -151,14 +129,14 @@ linearise_discrete_flow(
     DiscreteAffineLinearisation<StateDimension, ControlDimension> result{};
 
     for (std::size_t column = 0; column < StateDimension; ++column) {
-        const auto delta = discrete_flow_detail::perturbation(state[column], relative_step);
-        const auto derivative = discrete_flow_detail::finite_difference_column(
+        const auto delta = perturbation(state[column], relative_step);
+        const auto derivative = finite_difference_column(
             state,
             reference,
             column,
             delta,
             [&](const auto& candidate) {
-                return discrete_flow_detail::discrete_step(
+                return discrete_step(
                     model,
                     candidate,
                     control,
@@ -173,14 +151,14 @@ linearise_discrete_flow(
     }
 
     for (std::size_t column = 0; column < ControlDimension; ++column) {
-        const auto delta = discrete_flow_detail::perturbation(control[column], relative_step);
-        const auto derivative = discrete_flow_detail::finite_difference_column(
+        const auto delta = perturbation(control[column], relative_step);
+        const auto derivative = finite_difference_column(
             control,
             reference,
             column,
             delta,
             [&](const auto& candidate) {
-                return discrete_flow_detail::discrete_step(
+                return discrete_step(
                     model,
                     state,
                     candidate,
@@ -205,6 +183,66 @@ linearise_discrete_flow(
         }
     }
     return result;
+}
+
+}  // namespace discrete_flow_detail
+
+/// Linearise the selected one-step map while preserving fixed CQP topology.
+///
+/// - `forward_euler` uses domain-aware finite differences of the implemented Euler map.
+/// - `rk4_variational` (and its legacy `rk4_finite_difference` alias) integrates analytic
+///   state-transition and constant-control sensitivity equations with the same RK4 stages as
+///   the state, including a model-specific projection Jacobian when available.
+/// - `rk4_finite_difference_reference` retains the expensive domain-aware finite-difference
+///   RK4 path exclusively as an independent correctness oracle.
+///
+/// Every mode forms the affine offset from the exact selected reference step, so the affine model
+/// reproduces the implemented map at the reference to roundoff.
+template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
+[[nodiscard]] DiscreteAffineLinearisation<StateDimension, ControlDimension>
+linearise_discrete_flow(
+    const Model& model,
+    const std::array<double, StateDimension>& state,
+    const std::array<double, ControlDimension>& control,
+    const double step_seconds,
+    const DiscretisationMethod method,
+    const double relative_step = 1.0e-6
+) {
+    if (!std::isfinite(step_seconds) || step_seconds <= 0.0) {
+        throw std::invalid_argument("discrete-flow step duration must be finite and positive");
+    }
+    discrete_flow_detail::require_finite_vector(
+        state,
+        "discrete-flow state must be finite"
+    );
+    discrete_flow_detail::require_finite_vector(
+        control,
+        "discrete-flow control must be finite"
+    );
+    if (uses_variational_sensitivities(method)) {
+        return linearise_rk4_variational<StateDimension, ControlDimension>(
+            model,
+            state,
+            control,
+            step_seconds
+        );
+    }
+    if (!std::isfinite(relative_step) || relative_step <= 0.0) {
+        throw std::invalid_argument(
+            "finite-difference relative step must be finite and positive"
+        );
+    }
+    return discrete_flow_detail::linearise_by_finite_difference<
+        StateDimension,
+        ControlDimension
+    >(
+        model,
+        state,
+        control,
+        step_seconds,
+        method,
+        relative_step
+    );
 }
 
 }  // namespace spacepdhcg::transcription

@@ -1,49 +1,106 @@
 {
-  "schema_version": 1,
+  "schema_version": "2.0.0",
   "programme": "SpacePDHCG Paper 1",
-  "status": "pre-gpu manifest",
+  "status": "preregistered pre-GPU matrix",
   "repository": "terrorproforma/spacecraft-trajectory-optmiser",
   "upstream_pdhcg_commit": "167c8b72b4b96d2f94d405b8763e485514192b81",
-  "precisions": ["float64"],
+  "precision": "float64",
+  "warmup_repeats": 2,
+  "measured_repeats": 7,
+  "randomised_instances_per_coordinate": 20,
   "requested_tolerances": [0.001, 0.0001, 0.000001, 0.00000001],
   "warm_start_modes": ["cold", "primal", "primal_dual"],
   "scaling_modes": ["always_refresh", "reuse", "refresh_if_needed"],
-  "inner_accuracy_modes": ["fixed", "adaptive", "adaptive_with_polish"],
+  "inner_accuracy_modes": [
+    "fixed-tight",
+    "fixed-loose",
+    "adaptive",
+    "adaptive+polish"
+  ],
   "solver_backends": [
     {
-      "name": "clarabel-cpu",
+      "id": "clarabel-cpu",
       "role": "conic correctness reference",
       "requires_gpu": false
     },
     {
-      "name": "osqp-cpu",
+      "id": "osqp-cpu",
       "role": "QP correctness reference",
       "requires_gpu": false
     },
     {
-      "name": "pdhcg-one-shot",
-      "role": "upstream CUDA compatibility baseline",
+      "id": "pdhcg-upstream-one-shot",
+      "role": "pinned upstream CUDA compatibility and one-shot baseline",
       "requires_gpu": true
     },
     {
-      "name": "spacepdhcg-persistent",
-      "role": "primary factorisation-free backend",
+      "id": "spacepdhcg-persistent",
+      "role": "primary persistent factorisation-free backend",
       "requires_gpu": true
     },
     {
-      "name": "qoco-gpu",
-      "role": "GPU interior-point comparison",
+      "id": "qoco-gpu",
+      "role": "quadratic-objective GPU interior-point comparison",
       "requires_gpu": true
     },
     {
-      "name": "cuclarabel",
-      "role": "general GPU conic comparison",
+      "id": "cuclarabel",
+      "role": "general GPU conic interior-point comparison",
       "requires_gpu": true
+    },
+    {
+      "id": "structured-pipg",
+      "role": "trajectory-structured first-order comparison where implemented",
+      "requires_gpu": false
+    },
+    {
+      "id": "hybrid-pdhcg-ipm",
+      "role": "persistent PDHCG construction followed by GPU IPM polish",
+      "requires_gpu": true
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "gate-0-cpu",
+      "purpose": "host and native truth models",
+      "families": [
+        "P1-A-banded",
+        "P1-B-hcw",
+        "P1-C-pd3",
+        "P1-D-pd6",
+        "P1-E-low-thrust",
+        "P1-F-robust-pd"
+      ]
+    },
+    {
+      "id": "gate-1-one-shot",
+      "purpose": "real pinned upstream CUDA correctness",
+      "families": ["P1-A-banded", "P1-B-hcw"]
+    },
+    {
+      "id": "gate-2-persistence",
+      "purpose": "H1 persistent ownership and update lifecycle",
+      "families": ["P1-A-banded", "P1-B-hcw", "P1-C-pd3"]
+    },
+    {
+      "id": "gate-3-deterministic-scvx",
+      "purpose": "end-to-end nonlinear single-GPU scaling",
+      "families": ["P1-C-pd3", "P1-D-pd6", "P1-E-low-thrust"]
+    },
+    {
+      "id": "gate-4-adaptive-hybrid",
+      "purpose": "H5 and H6 policy comparisons",
+      "families": ["P1-C-pd3", "P1-D-pd6", "P1-E-low-thrust"]
+    },
+    {
+      "id": "gate-5-multigpu",
+      "purpose": "H2, H3, and H4 scenario-aware scaling",
+      "families": ["P1-F-robust-pd"]
     }
   ],
   "families": [
     {
-      "id": "P1-A",
+      "id": "P1-A-banded",
       "name": "known-optimum trajectory-banded CQP",
       "intervals": [10, 50, 100, 500, 2000, 10000, 50000],
       "state_dimensions": [4, 7, 14],
@@ -53,21 +110,21 @@
       "seeds": [17, 23, 31, 47, 59, 71, 89, 101, 127, 149, 173, 197, 223, 251, 281, 313, 349, 389, 431, 479]
     },
     {
-      "id": "P1-B",
+      "id": "P1-B-hcw",
       "name": "HCW rendezvous",
       "intervals": [20, 50, 100, 500, 2000, 10000],
       "control_sets": ["box", "soc"],
       "update_magnitudes": [0.0, 0.001, 0.01, 0.1, 1.0]
     },
     {
-      "id": "P1-C",
+      "id": "P1-C-pd3",
       "name": "3-DoF powered descent SCvx",
       "intervals": [20, 50, 100, 500, 2000],
       "initial_dispersion_scales": [0.0, 0.01, 0.05, 0.1],
       "final_polish": [false, true]
     },
     {
-      "id": "P1-D",
+      "id": "P1-D-pd6",
       "name": "14-state 6-DoF powered descent SCvx",
       "intervals": [20, 50, 100, 500, 2000],
       "attitude_dispersion_radians": [0.0, 0.05, 0.2, 0.5],
@@ -75,14 +132,14 @@
       "final_polish": [false, true]
     },
     {
-      "id": "P1-E",
+      "id": "P1-E-low-thrust",
       "name": "long-horizon two-body low thrust",
       "intervals": [100, 500, 2000, 10000, 50000],
       "trust_radii": [0.25, 0.5, 1.0, 2.0],
       "transfer_classes": ["coast_reference", "radius_raise", "plane_change", "combined"]
     },
     {
-      "id": "P1-F",
+      "id": "P1-F-robust-pd",
       "name": "robust powered-descent scenarios",
       "intervals": [20, 50, 100, 500],
       "scenario_counts": [1, 10, 100, 1000, 10000],
@@ -91,31 +148,57 @@
       "gpu_counts": [1, 2, 4, 8]
     }
   ],
-  "required_metrics": [
-    "topology_seconds",
-    "coefficient_update_seconds",
-    "workspace_create_seconds",
-    "rescale_seconds",
-    "host_to_device_seconds",
-    "solver_seconds",
-    "residual_seconds",
-    "nonlinear_check_seconds",
-    "device_to_host_seconds",
-    "collective_seconds",
-    "end_to_end_seconds",
-    "peak_host_bytes",
-    "peak_device_bytes",
-    "energy_joules",
-    "primal_residual",
-    "dual_residual",
+  "required_quality_fields": [
     "objective",
+    "reference_objective",
     "objective_gap",
-    "nonlinear_dynamics_defect",
-    "terminal_error",
-    "path_violation",
-    "virtual_control_norm",
-    "outer_iterations",
-    "inner_iterations",
-    "accepted_iterations"
-  ]
+    "canonical_primal_residual",
+    "canonical_dual_residual",
+    "canonical_cone_residual",
+    "canonical_gap",
+    "native_primal_residual",
+    "native_dual_residual",
+    "dynamics_residual",
+    "path_residual",
+    "terminal_residual",
+    "virtual_control_residual",
+    "nonanticipativity_residual",
+    "risk_epigraph_residual",
+    "ct_error_estimate",
+    "requested_tolerance",
+    "achieved_residual",
+    "qualified"
+  ],
+  "required_timing_fields": [
+    "topology_seconds",
+    "coefficient_seconds",
+    "workspace_create_seconds",
+    "update_seconds",
+    "scaling_seconds",
+    "h2d_seconds",
+    "solve_seconds",
+    "residual_seconds",
+    "replay_seconds",
+    "acceptance_seconds",
+    "d2h_seconds",
+    "collective_seconds",
+    "cqp_total_seconds",
+    "scvx_total_seconds"
+  ],
+  "required_resource_fields": [
+    "peak_device_bytes",
+    "reserved_device_bytes",
+    "h2d_bytes",
+    "d2h_bytes",
+    "collective_bytes",
+    "collective_count",
+    "energy_joules",
+    "topology_allocation_count_after_create",
+    "load_imbalance",
+    "throughput_per_second"
+  ],
+  "result_schema": "experiments/schema/paper1_result.schema.json",
+  "decision_rules": "papers/paper1/CLAIMS_AND_DECISION_RULES.md",
+  "figure_schema": "papers/paper1/FIGURE_SCHEMA.md",
+  "notation": "papers/paper1/NOTATION.md"
 }
