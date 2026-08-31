@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 import json
 
 import pytest
@@ -89,7 +90,7 @@ def test_manifest_requires_commit_and_problem_identity() -> None:
         "timestamp_utc": "2026-08-31T00:00:00Z",
         "repository": {"commit": ""},
         "upstream": {},
-        "host": _host().__dict__,
+        "host": asdict(_host()),
         "experiment": {},
         "problem": {"family": "", "instance_id": ""},
         "solver": {"name": "solver", "mode": "mode"},
