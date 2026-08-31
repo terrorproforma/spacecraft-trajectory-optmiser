@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
-#include <vector>
 
 namespace {
 
@@ -55,6 +54,29 @@ bool rejects(Function&& function) {
         return true;
     }
     return false;
+}
+
+void set_storage_device(
+    CqpAcceleratorExchange& exchange,
+    const AcceleratorDevice storage
+) {
+    exchange.topology.quadratic_offsets.device = storage;
+    exchange.topology.quadratic_indices.device = storage;
+    exchange.topology.scalar_offsets.device = storage;
+    exchange.topology.scalar_indices.device = storage;
+    exchange.topology.affine_offsets.device = storage;
+    exchange.topology.affine_indices.device = storage;
+    exchange.numeric.quadratic.device = storage;
+    exchange.numeric.scalar_constraint.device = storage;
+    exchange.numeric.affine_cone.device = storage;
+    exchange.numeric.linear_objective.device = storage;
+    exchange.numeric.scalar_lower.device = storage;
+    exchange.numeric.scalar_upper.device = storage;
+    exchange.numeric.affine_offset.device = storage;
+    exchange.numeric.variable_lower.device = storage;
+    exchange.numeric.variable_upper.device = storage;
+    exchange.iterates.primal.device = storage;
+    exchange.iterates.dual.device = storage;
 }
 
 }  // namespace
@@ -170,6 +192,15 @@ int main() {
     };
     validate_cqp_accelerator_exchange(problem, exchange);
 
+    // Managed storage has DLPack device id zero but is consumed on an ordinary CUDA stream.
+    auto managed = exchange;
+    set_storage_device(
+        managed,
+        AcceleratorDevice{AcceleratorDeviceType::cuda_managed, 0}
+    );
+    managed.consumer_stream.device = AcceleratorDevice{AcceleratorDeviceType::cuda, 3};
+    validate_cqp_accelerator_exchange(problem, managed);
+
     auto wrong_fingerprint = exchange;
     ++wrong_fingerprint.topology_fingerprint;
     if (!rejects([&] {
@@ -194,12 +225,20 @@ int main() {
         return 3;
     }
 
+    auto writable_topology = exchange;
+    writable_topology.topology.quadratic_offsets.access = AcceleratorAccess::read_write;
+    if (!rejects([&] {
+            validate_cqp_accelerator_exchange(problem, writable_topology);
+        })) {
+        return 4;
+    }
+
     auto strided_values = exchange;
     strided_values.numeric.scalar_constraint.element_stride = 2;
     if (!rejects([&] {
             validate_cqp_accelerator_exchange(problem, strided_values);
         })) {
-        return 4;
+        return 5;
     }
 
     auto wrong_type = exchange;
@@ -207,7 +246,7 @@ int main() {
     if (!rejects([&] {
             validate_cqp_accelerator_exchange(problem, wrong_type);
         })) {
-        return 5;
+        return 6;
     }
 
     auto bad_zero = exchange;
@@ -215,7 +254,7 @@ int main() {
     if (!rejects([&] {
             validate_cqp_accelerator_exchange(problem, bad_zero);
         })) {
-        return 6;
+        return 7;
     }
 
     auto misaligned = exchange;
@@ -223,7 +262,24 @@ int main() {
     if (!rejects([&] {
             validate_cqp_accelerator_exchange(problem, misaligned);
         })) {
-        return 7;
+        return 8;
+    }
+
+    auto managed_stream = exchange;
+    managed_stream.consumer_stream.device =
+        AcceleratorDevice{AcceleratorDeviceType::cuda_managed, 0};
+    if (!rejects([&] {
+            validate_cqp_accelerator_exchange(problem, managed_stream);
+        })) {
+        return 9;
+    }
+
+    auto mismatched_cuda_stream = exchange;
+    mismatched_cuda_stream.consumer_stream.device.id = 1;
+    if (!rejects([&] {
+            validate_cqp_accelerator_exchange(problem, mismatched_cuda_stream);
+        })) {
+        return 10;
     }
     return 0;
 }
