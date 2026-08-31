@@ -241,9 +241,11 @@ class PoweredDescent6DofModel {
         const std::vector<PoweredDescent6DofControl>& controls,
         double step_seconds
     ) const {
-        validate_state(initial, true);
+        validate_state(initial, false);
         std::vector<PoweredDescent6DofState> states(controls.size() + 1U);
         states.front() = initial;
+        normalise_quaternion(states.front());
+        validate_state(states.front(), true);
         for (std::size_t interval = 0; interval < controls.size(); ++interval) {
             states[interval + 1U] = rk4_step(states[interval], controls[interval], step_seconds);
         }
