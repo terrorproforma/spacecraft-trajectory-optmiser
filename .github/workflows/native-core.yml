@@ -1,0 +1,41 @@
+name: native-core
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cpp/native/**"
+      - "cpp/include/**"
+      - ".github/workflows/native-core.yml"
+  pull_request:
+    paths:
+      - "cpp/native/**"
+      - "cpp/include/**"
+      - ".github/workflows/native-core.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [g++, clang++]
+    env:
+      CXX: ${{ matrix.compiler }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure native core
+        run: >-
+          cmake
+          -S cpp/native
+          -B build/native-core
+          -DCMAKE_BUILD_TYPE=Release
+          -DSPACEPDHCG_NATIVE_BUILD_TESTS=ON
+      - name: Build native core
+        run: cmake --build build/native-core --parallel 2
+      - name: Run native tests
+        run: ctest --test-dir build/native-core --output-on-failure
