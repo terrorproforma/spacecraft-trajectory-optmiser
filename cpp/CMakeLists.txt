@@ -1,28 +1,39 @@
 cmake_minimum_required(VERSION 3.24)
 project(spacepdhcg_native LANGUAGES CXX)
 
-add_library(spacepdhcg_interface INTERFACE)
+include(CTest)
+
+add_library(spacepdhcg_core INTERFACE)
 target_include_directories(
-    spacepdhcg_interface
+    spacepdhcg_core
     INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_compile_features(spacepdhcg_interface INTERFACE cxx_std_20)
+target_compile_features(spacepdhcg_core INTERFACE cxx_std_20)
 
-option(SPACEPDHCG_BUILD_INTERFACE_SMOKE "Build the host-only interface smoke test" ON)
+# Compatibility alias retained for downstream code written against the first interface name.
+add_library(spacepdhcg_interface ALIAS spacepdhcg_core)
+
+option(SPACEPDHCG_BUILD_INTERFACE_SMOKE "Build host-only C++ verification executables" ON)
 if(SPACEPDHCG_BUILD_INTERFACE_SMOKE)
-    add_executable(spacepdhcg_interface_smoke tests/interface_smoke.cpp)
-    target_link_libraries(spacepdhcg_interface_smoke PRIVATE spacepdhcg_interface)
-    if(MSVC)
-        target_compile_options(spacepdhcg_interface_smoke PRIVATE /W4 /WX)
-    else()
-        target_compile_options(
-            spacepdhcg_interface_smoke
-            PRIVATE
-                -Wall
-                -Wextra
-                -Wpedantic
-                -Werror
-        )
-    endif()
+    function(spacepdhcg_add_smoke target source)
+        add_executable(${target} ${source})
+        target_link_libraries(${target} PRIVATE spacepdhcg_core)
+        if(MSVC)
+            target_compile_options(${target} PRIVATE /W4 /WX)
+        else()
+            target_compile_options(
+                ${target}
+                PRIVATE
+                    -Wall
+                    -Wextra
+                    -Wpedantic
+                    -Werror
+            )
+        endif()
+        add_test(NAME ${target} COMMAND ${target})
+    endfunction()
+
+    spacepdhcg_add_smoke(spacepdhcg_interface_smoke tests/interface_smoke.cpp)
+    spacepdhcg_add_smoke(spacepdhcg_core_smoke tests/core_smoke.cpp)
 endif()
