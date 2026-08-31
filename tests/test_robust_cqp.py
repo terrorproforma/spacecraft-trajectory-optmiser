@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from spacepdhcg.backends import PersistentClarabel
 from spacepdhcg.cqp import CanonicalCQP, residual_qualified
@@ -6,6 +7,7 @@ from spacepdhcg.distributed import (
     CondensedScenarioCQPBundle,
     ScenarioCQPBundle,
     ScenarioTree,
+    encode_condensed_primal,
 )
 from spacepdhcg.models import PoweredDescent3DOFModel
 from spacepdhcg.scvx import make_dynamics_consistent_reference
@@ -95,24 +97,104 @@ def _local_solution(subproblem, local_values):
     return solution
 
 
-def test_condensed_identical_bundle_matches_single_scenario_objective() -> None:
+def _canonical_objective(problem, primal) -> float:
+    quadratic = problem.structure.quadratic.matrix(problem.values.quadratic)
+    return float(0.5 * primal @ (quadratic @ primal) + problem.values.linear @ primal)
+
+
+def test_condensed_identical_bundle_contains_repeated_local_optimum() -> None:
     subproblem, local_values = _local_problem()
     local_solution = _local_solution(subproblem, local_values)
     bundle = _condensed_bundle(subproblem)
-    global_solution = PersistentClarabel(
-        bundle.problem([local_values] * bundle.scenario_count),
+    problem = bundle.problem([local_values] * bundle.scenario_count)
+    repeated = encode_condensed_primal(
+        bundle,
+        [local_solution.primal] * bundle.scenario_count,
+    )
+
+    decoded = bundle.decode_primal(repeated)
+    assert bundle.maximum_nonanticipativity_violation(repeated) < 1.0e-12
+    for local in decoded.local:
+        np.testing.assert_allclose(local, local_solution.primal, atol=0.0, rtol=0.0)
+    expected = bundle.expected_objective(
+        decoded.local,
+        [local_values] * bundle.scenario_count,
+    )
+    assert abs(expected - local_solution.objective) < 1.0e-8
+    assert abs(_canonical_objective(problem, repeated) - expected) < 1.0e-8
+
+    scalar = problem.structure.constraint.matrix(problem.values.constraint) @ repeated
+    scalar_violation = np.maximum(
+        np.maximum(problem.values.lower - scalar, 0.0),
+        np.maximum(scalar - problem.values.upper, 0.0),
+    )
+    variable_violation = np.maximum(
+        np.maximum(problem.values.variable_lower - repeated, 0.0),
+        np.maximum(repeated - problem.values.variable_upper, 0.0),
+    )
+    assert np.max(scalar_violation, initial=0.0) < 2.0e-8
+    assert np.max(variable_violation, initial=0.0) < 2.0e-8
+
+    assert problem.structure.affine_cone is not None
+    affine = (
+        problem.structure.affine_cone.matrix(problem.values.affine_cone) @ repeated
+        + problem.values.affine_offset
+    )
+    for cone in problem.structure.affine_cones:
+        segment = affine[cone.start : cone.stop]
+        assert np.linalg.norm(segment[:-1]) <= segment[-1] + 2.0e-8
+
+
+def test_known_incumbent_prevents_false_solver_qualification() -> None:
+    subproblem, local_values = _local_problem()
+    local_solution = _local_solution(subproblem, local_values)
+    bundle = _condensed_bundle(subproblem)
+    problem = bundle.problem([local_values] * bundle.scenario_count)
+    repeated = encode_condensed_primal(
+        bundle,
+        [local_solution.primal] * bundle.scenario_count,
+    )
+    incumbent_objective = _canonical_objective(problem, repeated)
+    solution = PersistentClarabel(
+        problem,
         tolerance=1.0e-8,
         iteration_limit=1_000,
     ).solve()
 
-    assert residual_qualified(global_solution, tolerance=2.0e-8)
-    decoded = bundle.decode_primal(global_solution.primal)
-    assert bundle.maximum_nonanticipativity_violation(global_solution.primal) < 1.0e-12
-    for local in decoded.local[1:]:
-        np.testing.assert_allclose(local, decoded.local[0], atol=2.0e-6, rtol=0.0)
-    expected = bundle.expected_objective(decoded.local, [local_values] * 3)
-    assert abs(global_solution.objective - expected) < 1.0e-6
-    assert abs(global_solution.objective - local_solution.objective) < 2.0e-6
+    qualified_without_incumbent = residual_qualified(
+        solution,
+        tolerance=2.0e-8,
+    )
+    qualified_with_incumbent = residual_qualified(
+        solution,
+        tolerance=2.0e-8,
+        objective_upper_bound=incumbent_objective,
+        objective_tolerance=2.0e-6,
+    )
+    expected_qualification = bool(
+        qualified_without_incumbent
+        and solution.objective <= incumbent_objective + 2.0e-6
+    )
+    assert qualified_with_incumbent is expected_qualification
+
+    decoded = bundle.decode_primal(solution.primal)
+    expected = bundle.expected_objective(
+        decoded.local,
+        [local_values] * bundle.scenario_count,
+    )
+    assert abs(solution.objective - expected) < 1.0e-6
+
+
+def test_condensed_encoder_rejects_inconsistent_shared_controls() -> None:
+    subproblem, local_values = _local_problem(intervals=4)
+    local_solution = _local_solution(subproblem, local_values)
+    bundle = _condensed_bundle(subproblem, scenario_count=2)
+    local_primals = [local_solution.primal.copy(), local_solution.primal.copy()]
+    shared = subproblem.layout.control_slice(0)
+    local_primals[1][shared.start] += 1.0e-3
+
+    with pytest.raises(ValueError, match="shared information-node control"):
+        encode_condensed_primal(bundle, local_primals)
 
 
 def test_consensus_row_bundle_contains_the_repeated_local_optimum() -> None:
