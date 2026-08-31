@@ -43,4 +43,12 @@ if(SPACEPDHCG_BUILD_INTERFACE_SMOKE)
     )
     spacepdhcg_add_smoke(spacepdhcg_cw_cqp_smoke tests/cw_cqp_smoke.cpp)
     spacepdhcg_add_smoke(spacepdhcg_host_pdhg_smoke tests/host_pdhg_smoke.cpp)
+    spacepdhcg_add_smoke(
+        spacepdhcg_powered_descent_cqp_smoke
+        tests/powered_descent_cqp_smoke.cpp
+    )
+    spacepdhcg_add_smoke(
+        spacepdhcg_orbitweaver_smoke
+        tests/orbitweaver_smoke.cpp
+    )
 endif()
