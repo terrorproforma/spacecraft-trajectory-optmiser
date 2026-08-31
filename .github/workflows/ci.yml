@@ -9,14 +9,16 @@ permissions:
   contents: read
 
 jobs:
-  native-interface:
+  native-core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate persistent C++ interface
-        run: >-
-          c++ -std=c++20 -Wall -Wextra -Wpedantic -Werror
-          -Icpp/include -fsyntax-only cpp/tests/interface_smoke.cpp
+      - name: Configure C++ core
+        run: cmake -S cpp -B build/cpp -DSPACEPDHCG_BUILD_INTERFACE_SMOKE=ON
+      - name: Build C++ core
+        run: cmake --build build/cpp --parallel 2
+      - name: Test C++ core
+        run: ctest --test-dir build/cpp --output-on-failure
 
   test:
     runs-on: ubuntu-latest
