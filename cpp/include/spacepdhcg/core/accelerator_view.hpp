@@ -2,7 +2,6 @@
 
 #include "spacepdhcg/core/fixed_cqp.hpp"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -55,15 +54,17 @@ struct AcceleratorDevice {
     [[nodiscard]] bool operator==(const AcceleratorDevice&) const noexcept = default;
 };
 
+/// CUDA execution context. Storage may be ordinary CUDA memory on this device or CUDA-managed
+/// memory whose DLPack device id is necessarily zero.
 struct AcceleratorStream {
-    AcceleratorDevice device{};
+    AcceleratorDevice device{AcceleratorDeviceType::cuda, 0};
     std::uintptr_t native_handle{0U};
 
     void validate() const {
         device.validate();
-        if (device.type != AcceleratorDeviceType::cuda && native_handle != 0U) {
+        if (device.type != AcceleratorDeviceType::cuda) {
             throw std::invalid_argument(
-                "only CUDA device views may carry a nonzero native stream handle"
+                "accelerator consumer stream must identify a CUDA execution device"
             );
         }
     }
@@ -99,13 +100,17 @@ struct AcceleratorBufferView {
                 "accelerator buffer stride must be positive"
             );
         }
-        const auto last_element = static_cast<std::size_t>(element_stride)
-                                  * (elements - 1U);
+        const auto stride = static_cast<std::size_t>(element_stride);
+        if (elements - 1U > std::numeric_limits<std::size_t>::max() / stride) {
+            throw std::overflow_error("accelerator buffer element extent overflows size_t");
+        }
+        const auto last_element = stride * (elements - 1U);
+        const auto bytes = scalar_bytes();
         if (last_element >
-            (std::numeric_limits<std::size_t>::max() / scalar_bytes()) - 1U) {
+            (std::numeric_limits<std::size_t>::max() / bytes) - 1U) {
             throw std::overflow_error("accelerator buffer byte size overflows size_t");
         }
-        return (last_element + 1U) * scalar_bytes();
+        return (last_element + 1U) * bytes;
     }
 
     void validate() const {
@@ -119,6 +124,11 @@ struct AcceleratorBufferView {
             if (byte_offset != 0U) {
                 throw std::invalid_argument(
                     "zero-length accelerator buffers must use byte_offset zero"
+                );
+            }
+            if (element_stride <= 0) {
+                throw std::invalid_argument(
+                    "zero-length accelerator buffer stride must still be positive"
                 );
             }
             return;
@@ -185,16 +195,16 @@ namespace accelerator_view_detail {
 
 inline void require_view(
     const AcceleratorBufferView& view,
-    const AcceleratorDevice expected_device,
+    const AcceleratorDevice expected_storage,
     const AcceleratorScalarType expected_type,
     const std::size_t expected_elements,
-    const AcceleratorAccess minimum_access,
+    const AcceleratorAccess expected_access,
     const std::string_view name
 ) {
     view.validate();
-    if (view.device != expected_device) {
+    if (view.device != expected_storage) {
         throw std::invalid_argument(
-            std::string(name) + " is on a different device"
+            std::string(name) + " is in a different storage class or device"
         );
     }
     if (view.scalar_type != expected_type) {
@@ -213,10 +223,12 @@ inline void require_view(
             std::string(name) + " must be contiguous"
         );
     }
-    if (minimum_access == AcceleratorAccess::read_write
-        && view.access != AcceleratorAccess::read_write) {
+    if (view.access != expected_access) {
         throw std::invalid_argument(
-            std::string(name) + " must be writable"
+            std::string(name)
+            + (expected_access == AcceleratorAccess::read_write
+                   ? " must be writable"
+                   : " must be read-only")
         );
     }
 }
@@ -233,15 +245,33 @@ inline std::size_t affine_offset_entries(const FixedStructure& structure) noexce
                : 0U;
 }
 
+inline AcceleratorDevice storage_device(const CqpAcceleratorExchange& exchange) {
+    const auto storage = exchange.topology.quadratic_offsets.device;
+    storage.validate();
+    if (storage.type != AcceleratorDeviceType::cuda
+        && storage.type != AcceleratorDeviceType::cuda_managed) {
+        throw std::invalid_argument(
+            "persistent accelerator storage must be CUDA device or CUDA-managed memory"
+        );
+    }
+    if (storage.type == AcceleratorDeviceType::cuda
+        && storage.id != exchange.consumer_stream.device.id) {
+        throw std::invalid_argument(
+            "CUDA storage device does not match the consumer stream device"
+        );
+    }
+    return storage;
+}
+
 }  // namespace accelerator_view_detail
 
 /// Validate a complete zero-copy workspace exchange against one immutable CQP topology.
 ///
-/// Topology buffers are read-only and uploaded/borrowed once. Numerical values and iterates are
-/// writable because a persistent workspace updates coefficients and warm starts in place. Every
-/// view must reside on the same CUDA device as the supplied consumer stream. CUDA-host or managed
-/// buffers are valid individual views, but a single exchange may not mix devices/memory classes;
-/// callers that stage through pinned host memory must create a distinct transfer operation.
+/// Topology buffers are exactly read-only and borrowed once. Numerical values and iterates are
+/// exactly writable because a persistent workspace updates coefficients and warm starts in place.
+/// All storage views use one memory class: either ordinary CUDA memory on the consumer-stream GPU,
+/// or CUDA-managed memory (DLPack device id zero) consumed by that GPU's stream. CUDA-host staging
+/// buffers require a separate transfer operation and are not accepted as persistent solver state.
 inline void validate_cqp_accelerator_exchange(
     const FixedStructure& structure,
     const CqpAcceleratorExchange& exchange
@@ -256,18 +286,12 @@ inline void validate_cqp_accelerator_exchange(
         );
     }
     exchange.consumer_stream.validate();
-    const auto device = exchange.consumer_stream.device;
-    if (device.type != AcceleratorDeviceType::cuda
-        && device.type != AcceleratorDeviceType::cuda_managed) {
-        throw std::invalid_argument(
-            "persistent accelerator exchange requires CUDA device or managed memory"
-        );
-    }
+    const auto storage = accelerator_view_detail::storage_device(exchange);
     using accelerator_view_detail::require_view;
     const auto index_type = AcceleratorScalarType::int32;
     require_view(
         exchange.topology.quadratic_offsets,
-        device,
+        storage,
         index_type,
         structure.quadratic.offsets.size(),
         AcceleratorAccess::read_only,
@@ -275,7 +299,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.topology.quadratic_indices,
-        device,
+        storage,
         index_type,
         structure.quadratic.indices.size(),
         AcceleratorAccess::read_only,
@@ -283,7 +307,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.topology.scalar_offsets,
-        device,
+        storage,
         index_type,
         structure.scalar_constraint.offsets.size(),
         AcceleratorAccess::read_only,
@@ -291,7 +315,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.topology.scalar_indices,
-        device,
+        storage,
         index_type,
         structure.scalar_constraint.indices.size(),
         AcceleratorAccess::read_only,
@@ -299,7 +323,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.topology.affine_offsets,
-        device,
+        storage,
         index_type,
         accelerator_view_detail::affine_offset_entries(structure),
         AcceleratorAccess::read_only,
@@ -307,7 +331,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.topology.affine_indices,
-        device,
+        storage,
         index_type,
         accelerator_view_detail::affine_nonzeros(structure),
         AcceleratorAccess::read_only,
@@ -318,7 +342,7 @@ inline void validate_cqp_accelerator_exchange(
     const auto writable = AcceleratorAccess::read_write;
     require_view(
         exchange.numeric.quadratic,
-        device,
+        storage,
         floating,
         structure.quadratic.nonzeros(),
         writable,
@@ -326,7 +350,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.scalar_constraint,
-        device,
+        storage,
         floating,
         structure.scalar_constraint.nonzeros(),
         writable,
@@ -334,7 +358,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.affine_cone,
-        device,
+        storage,
         floating,
         accelerator_view_detail::affine_nonzeros(structure),
         writable,
@@ -342,7 +366,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.linear_objective,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.variables()),
         writable,
@@ -350,7 +374,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.scalar_lower,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.scalar_rows()),
         writable,
@@ -358,7 +382,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.scalar_upper,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.scalar_rows()),
         writable,
@@ -366,7 +390,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.affine_offset,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.affine_rows()),
         writable,
@@ -374,7 +398,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.variable_lower,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.variables()),
         writable,
@@ -382,7 +406,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.numeric.variable_upper,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.variables()),
         writable,
@@ -390,7 +414,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.iterates.primal,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.variables()),
         writable,
@@ -398,7 +422,7 @@ inline void validate_cqp_accelerator_exchange(
     );
     require_view(
         exchange.iterates.dual,
-        device,
+        storage,
         floating,
         static_cast<std::size_t>(structure.duals()),
         writable,
