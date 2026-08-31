@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import os
@@ -72,18 +73,46 @@ def write_atomic(path: Path, payload: str) -> None:
 
 
 def create_reproducible_tar(source: Path, destination: Path) -> None:
+    """Create a byte-reproducible gzip-compressed POSIX tar archive.
+
+    Tar member ordering is lexical, uid/gid/user/group and mtimes are normalised, and the gzip
+    header uses an empty filename plus mtime zero. File modes are preserved because executable
+    experiment scripts and captured permissions are meaningful evidence.
+    """
+
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(destination, "w:gz", compresslevel=9) as archive:
-        for path in files(source, {destination.resolve()}):
-            relative = path.relative_to(source)
-            info = archive.gettarinfo(str(path), arcname=relative.as_posix())
-            info.uid = 0
-            info.gid = 0
-            info.uname = ""
-            info.gname = ""
-            info.mtime = 0
-            with path.open("rb") as stream:
-                archive.addfile(info, stream)
+    excluded = {destination.resolve()}
+    with tempfile.NamedTemporaryFile(
+        suffix=".tar",
+        dir=destination.parent,
+        delete=False,
+    ) as temporary_stream:
+        temporary_tar = Path(temporary_stream.name)
+    try:
+        with tarfile.open(temporary_tar, "w", format=tarfile.PAX_FORMAT) as archive:
+            for path in files(source, excluded | {temporary_tar.resolve()}):
+                relative = path.relative_to(source)
+                info = archive.gettarinfo(str(path), arcname=relative.as_posix())
+                info.uid = 0
+                info.gid = 0
+                info.uname = ""
+                info.gname = ""
+                info.mtime = 0
+                # Suppress platform-dependent high-resolution timestamp PAX records.
+                info.pax_headers = {}
+                with path.open("rb") as stream:
+                    archive.addfile(info, stream)
+        with temporary_tar.open("rb") as uncompressed, destination.open("wb") as output:
+            with gzip.GzipFile(
+                filename="",
+                mode="wb",
+                fileobj=output,
+                compresslevel=9,
+                mtime=0,
+            ) as compressed:
+                shutil.copyfileobj(uncompressed, compressed, length=_CHUNK)
+    finally:
+        temporary_tar.unlink(missing_ok=True)
 
 
 def parse_args() -> argparse.Namespace:
@@ -98,7 +127,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--archive",
         type=Path,
-        help="optional reproducible .tar.gz destination",
+        help="optional byte-reproducible .tar.gz destination",
     )
     parser.add_argument(
         "--require-clean-repository",
