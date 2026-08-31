@@ -6,6 +6,7 @@ import json
 import math
 import re
 from collections.abc import Mapping, Sequence
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, Final
 
@@ -51,6 +52,7 @@ _REQUIRED_TOP_LEVEL: Final = frozenset(
         "artifacts",
     }
 )
+_ALLOWED_TOP_LEVEL: Final = _REQUIRED_TOP_LEVEL | {"notes"}
 _REQUIRED_TIMING: Final = (
     "topology_seconds",
     "coefficient_seconds",
@@ -109,6 +111,16 @@ def _require_keys(value: Mapping[str, Any], required: Sequence[str], name: str) 
         raise Paper1ResultError(f"{name} is missing required keys: {', '.join(missing)}")
 
 
+def _reject_unknown_keys(
+    value: Mapping[str, Any],
+    allowed: Sequence[str] | set[str] | frozenset[str],
+    name: str,
+) -> None:
+    unknown = sorted(set(value) - set(allowed))
+    if unknown:
+        raise Paper1ResultError(f"{name} contains unknown keys: {', '.join(unknown)}")
+
+
 def _nonempty_string(value: Any, name: str) -> str:
     if not isinstance(value, str) or not value:
         raise Paper1ResultError(f"{name} must be a non-empty string")
@@ -137,19 +149,18 @@ def _finite_or_none(value: Any, name: str, *, nonnegative: bool = False) -> floa
 
 
 def _validate_identity(identity: Mapping[str, Any]) -> None:
-    _require_keys(
-        identity,
-        (
-            "run_id",
-            "repository_commit",
-            "family",
-            "instance_id",
-            "solver",
-            "policy",
-            "status",
-        ),
-        "identity",
+    required = (
+        "run_id",
+        "repository_commit",
+        "family",
+        "instance_id",
+        "solver",
+        "policy",
+        "status",
     )
+    allowed = (*required, "hardware_id", "precision", "warm_start", "cold_start")
+    _require_keys(identity, required, "identity")
+    _reject_unknown_keys(identity, allowed, "identity")
     _nonempty_string(identity["run_id"], "identity.run_id")
     commit = _nonempty_string(identity["repository_commit"], "identity.repository_commit")
     if _SHA40.fullmatch(commit) is None:
@@ -162,27 +173,33 @@ def _validate_identity(identity: Mapping[str, Any]) -> None:
         raise Paper1ResultError(f"unknown Paper 1 status: {identity['status']!r}")
     _nonempty_string(identity["instance_id"], "identity.instance_id")
     _nonempty_string(identity["policy"], "identity.policy")
+    if identity.get("hardware_id") is not None:
+        _nonempty_string(identity["hardware_id"], "identity.hardware_id")
+    if identity.get("precision") not in {None, "float32", "float64", "mixed"}:
+        raise Paper1ResultError("identity.precision is invalid")
+    for key in ("warm_start", "cold_start"):
+        if identity.get(key) is not None and not isinstance(identity[key], bool):
+            raise Paper1ResultError(f"identity.{key} must be boolean or null")
 
 
 def _validate_dimensions(dimensions: Mapping[str, Any]) -> None:
-    _require_keys(
-        dimensions,
-        (
-            "intervals",
-            "scenarios",
-            "gpus",
-            "state_dimension",
-            "control_dimension",
-            "variables",
-            "scalar_rows",
-            "affine_rows",
-            "q_nonzeros",
-            "a_nonzeros",
-            "f_nonzeros",
-            "cone_inventory",
-        ),
-        "dimensions",
+    required = (
+        "intervals",
+        "scenarios",
+        "gpus",
+        "state_dimension",
+        "control_dimension",
+        "variables",
+        "scalar_rows",
+        "affine_rows",
+        "q_nonzeros",
+        "a_nonzeros",
+        "f_nonzeros",
+        "cone_inventory",
     )
+    allowed = (*required, "topology_bytes", "numeric_bytes")
+    _require_keys(dimensions, required, "dimensions")
+    _reject_unknown_keys(dimensions, allowed, "dimensions")
     positive = ("intervals", "scenarios", "state_dimension", "control_dimension", "variables")
     for key in positive:
         value = _nonnegative_int_or_none(dimensions[key], f"dimensions.{key}")
@@ -191,6 +208,9 @@ def _validate_dimensions(dimensions: Mapping[str, Any]) -> None:
     for key in ("gpus", "scalar_rows", "affine_rows", "q_nonzeros", "a_nonzeros", "f_nonzeros"):
         if _nonnegative_int_or_none(dimensions[key], f"dimensions.{key}") is None:
             raise Paper1ResultError(f"dimensions.{key} may not be null")
+    for key in ("topology_bytes", "numeric_bytes"):
+        if key in dimensions:
+            _nonnegative_int_or_none(dimensions[key], f"dimensions.{key}")
     inventory = _mapping(dimensions["cone_inventory"], "dimensions.cone_inventory")
     for key, value in inventory.items():
         _nonempty_string(key, "cone inventory key")
@@ -199,15 +219,25 @@ def _validate_dimensions(dimensions: Mapping[str, Any]) -> None:
 
 
 def _validate_quality(quality: Mapping[str, Any], status: str) -> None:
+    allowed = {
+        "qualified",
+        *_REQUIRED_QUALITY,
+        "reference_objective",
+        "objective_gap",
+        "native_primal_residual",
+        "native_dual_residual",
+        "ct_error_estimate",
+        "requested_tolerance",
+        "achieved_residual",
+    }
     _require_keys(quality, ("qualified", *_REQUIRED_QUALITY), "quality")
+    _reject_unknown_keys(quality, allowed, "quality")
     if not isinstance(quality["qualified"], bool):
         raise Paper1ResultError("quality.qualified must be boolean")
-    for key in _REQUIRED_QUALITY:
-        _finite_or_none(
-            quality[key],
-            f"quality.{key}",
-            nonnegative=key != "objective",
-        )
+    for key, value in quality.items():
+        if key == "qualified":
+            continue
+        _finite_or_none(value, f"quality.{key}", nonnegative=key != "objective")
     if status == "qualified" and not quality["qualified"]:
         raise Paper1ResultError("qualified identity status requires quality.qualified=true")
     if status != "qualified" and quality["qualified"]:
@@ -219,10 +249,12 @@ def _validate_quality(quality: Mapping[str, Any], status: str) -> None:
 
 
 def _validate_timing(timing: Mapping[str, Any]) -> None:
+    allowed = (*_REQUIRED_TIMING, "accepted_trajectory_seconds")
     _require_keys(timing, _REQUIRED_TIMING, "timing")
+    _reject_unknown_keys(timing, allowed, "timing")
     values = {
-        key: _finite_or_none(timing[key], f"timing.{key}", nonnegative=True)
-        for key in _REQUIRED_TIMING
+        key: _finite_or_none(value, f"timing.{key}", nonnegative=True)
+        for key, value in timing.items()
     }
     cqp_total = values["cqp_total_seconds"]
     scvx_total = values["scvx_total_seconds"]
@@ -230,8 +262,37 @@ def _validate_timing(timing: Mapping[str, Any]) -> None:
         raise Paper1ResultError("timing.scvx_total_seconds may not be below cqp_total_seconds")
 
 
+def _validate_work(work: Mapping[str, Any]) -> None:
+    integer_fields = (
+        "outer_iterations",
+        "inner_iterations",
+        "matvecs",
+        "cone_projections",
+        "factorisations",
+        "accepted_steps",
+        "rejected_steps",
+        "resolved_steps",
+    )
+    allowed = (*integer_fields, "polish_used", "scaling_refreshes")
+    _require_keys(work, (*integer_fields, "polish_used"), "work")
+    _reject_unknown_keys(work, allowed, "work")
+    for key in integer_fields:
+        _nonnegative_int_or_none(work[key], f"work.{key}")
+    if "scaling_refreshes" in work:
+        _nonnegative_int_or_none(work["scaling_refreshes"], "work.scaling_refreshes")
+    polish = work["polish_used"]
+    if polish is not None and not isinstance(polish, bool):
+        raise Paper1ResultError("work.polish_used must be boolean or null")
+
+
 def _validate_resources(resources: Mapping[str, Any]) -> None:
+    allowed = {
+        *_REQUIRED_RESOURCE,
+        "load_imbalance",
+        "throughput_per_second",
+    }
     _require_keys(resources, _REQUIRED_RESOURCE, "resources")
+    _reject_unknown_keys(resources, allowed, "resources")
     integer_fields = {
         "peak_device_bytes",
         "reserved_device_bytes",
@@ -243,26 +304,27 @@ def _validate_resources(resources: Mapping[str, Any]) -> None:
     }
     for key in integer_fields:
         _nonnegative_int_or_none(resources[key], f"resources.{key}")
-    _finite_or_none(resources["energy_joules"], "resources.energy_joules", nonnegative=True)
+    for key in ("energy_joules", "load_imbalance", "throughput_per_second"):
+        if key in resources:
+            _finite_or_none(resources[key], f"resources.{key}", nonnegative=True)
 
 
 def _validate_aggregation(aggregation: Mapping[str, Any], status: str) -> None:
-    _require_keys(
-        aggregation,
-        (
-            "warmup_repeats",
-            "measured_repeats",
-            "statistic",
-            "median",
-            "q1",
-            "q3",
-            "minimum",
-            "maximum",
-            "coefficient_of_variation",
-            "censored_count",
-        ),
-        "aggregation",
+    required = (
+        "warmup_repeats",
+        "measured_repeats",
+        "statistic",
+        "median",
+        "q1",
+        "q3",
+        "minimum",
+        "maximum",
+        "coefficient_of_variation",
+        "censored_count",
     )
+    allowed = (*required, "bootstrap_low", "bootstrap_high")
+    _require_keys(aggregation, required, "aggregation")
+    _reject_unknown_keys(aggregation, allowed, "aggregation")
     warmup = _nonnegative_int_or_none(aggregation["warmup_repeats"], "aggregation.warmup_repeats")
     measured = _nonnegative_int_or_none(
         aggregation["measured_repeats"], "aggregation.measured_repeats"
@@ -273,21 +335,23 @@ def _validate_aggregation(aggregation: Mapping[str, Any], status: str) -> None:
     assert warmup is not None and measured is not None and censored is not None
     if aggregation["statistic"] != "median_iqr":
         raise Paper1ResultError("aggregation.statistic must be 'median_iqr'")
-    ordered_names = ("minimum", "q1", "median", "q3", "maximum")
     ordered = [
         _finite_or_none(aggregation[name], f"aggregation.{name}", nonnegative=True)
-        for name in ordered_names
+        for name in ("minimum", "q1", "median", "q3", "maximum")
     ]
     supplied = [value for value in ordered if value is not None]
     if supplied and len(supplied) != len(ordered):
         raise Paper1ResultError("aggregation quantiles must be all supplied or all null")
-    if supplied and any(right < left for left, right in zip(supplied, supplied[1:], strict=True)):
+    if supplied and any(right < left for left, right in pairwise(supplied)):
         raise Paper1ResultError("aggregation quantiles are not monotonically ordered")
     _finite_or_none(
         aggregation["coefficient_of_variation"],
         "aggregation.coefficient_of_variation",
         nonnegative=True,
     )
+    for key in ("bootstrap_low", "bootstrap_high"):
+        if key in aggregation:
+            _finite_or_none(aggregation[key], f"aggregation.{key}")
     if status == "qualified" and measured < 5:
         raise Paper1ResultError("qualified deterministic summaries require at least five repeats")
 
@@ -295,6 +359,7 @@ def _validate_aggregation(aggregation: Mapping[str, Any], status: str) -> None:
 def _validate_artifact(value: Any, name: str) -> None:
     artifact = _mapping(value, name)
     _require_keys(artifact, ("location", "sha256"), name)
+    _reject_unknown_keys(artifact, ("location", "sha256"), name)
     _nonempty_string(artifact["location"], f"{name}.location")
     digest = _nonempty_string(artifact["sha256"], f"{name}.sha256")
     if _SHA256.fullmatch(digest) is None:
@@ -302,7 +367,15 @@ def _validate_artifact(value: Any, name: str) -> None:
 
 
 def _validate_artifacts(artifacts: Mapping[str, Any]) -> None:
+    allowed = {
+        *_REQUIRED_ARTIFACTS,
+        "nsys",
+        "ncu",
+        "compute_sanitizer",
+        "energy_trace",
+    }
     _require_keys(artifacts, _REQUIRED_ARTIFACTS, "artifacts")
+    _reject_unknown_keys(artifacts, allowed, "artifacts")
     for key in _REQUIRED_ARTIFACTS:
         _validate_artifact(artifacts[key], f"artifacts.{key}")
     for key, value in artifacts.items():
@@ -318,6 +391,7 @@ def validate_paper1_result(payload: Mapping[str, Any]) -> None:
     missing = sorted(_REQUIRED_TOP_LEVEL - set(payload))
     if missing:
         raise Paper1ResultError(f"result is missing top-level keys: {', '.join(missing)}")
+    _reject_unknown_keys(payload, _ALLOWED_TOP_LEVEL, "result")
     if payload["schema_version"] != PAPER1_SCHEMA_VERSION:
         raise Paper1ResultError(
             f"unsupported Paper 1 schema version {payload['schema_version']!r}"
@@ -335,25 +409,14 @@ def validate_paper1_result(payload: Mapping[str, Any]) -> None:
     _validate_dimensions(dimensions)
     _validate_quality(quality, str(identity["status"]))
     _validate_timing(timing)
+    _validate_work(work)
     _validate_resources(resources)
     _validate_aggregation(aggregation, str(identity["status"]))
     _validate_artifacts(artifacts)
 
-    for key in (
-        "outer_iterations",
-        "inner_iterations",
-        "matvecs",
-        "cone_projections",
-        "factorisations",
-        "accepted_steps",
-        "rejected_steps",
-        "resolved_steps",
-    ):
-        if key not in work:
-            raise Paper1ResultError(f"work is missing required key {key}")
-        _nonnegative_int_or_none(work[key], f"work.{key}")
-    if "polish_used" not in work or work["polish_used"] not in {True, False, None}:
-        raise Paper1ResultError("work.polish_used must be boolean or null")
+    notes = payload.get("notes", [])
+    if not isinstance(notes, list) or not all(isinstance(note, str) for note in notes):
+        raise Paper1ResultError("notes must be an array of strings")
 
     solver = str(identity["solver"])
     gpus = int(dimensions["gpus"])
