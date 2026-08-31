@@ -15,6 +15,24 @@ formerly complete native build:
 3. the native 3-DoF SCvx driver referenced a decision decoder that had never been implemented;
 4. the driver used stale forcing-policy and trust-action names.
 
-The branch now implements those interfaces instead of excluding the failing targets. This file
-is an evidence log, not a green-build claim: each newly exposed compile, sanitizer or runtime
-failure is cleared before the pre-GPU gate is declared complete.
+The branch implements those interfaces instead of excluding the failing targets.
+
+## 31 August 2026 — complete native suite reaches runtime
+
+After the interface repairs, all 23 host-native smoke targets compiled with warnings treated as
+errors. Twenty-one tests passed immediately. The two runtime failures identified valid domain
+boundary defects:
+
+- low-thrust discrete-flow finite differences perturbed a zero thrust-magnitude epigraph into
+  the negative half-line;
+- 6-DoF rollout rejected a finite near-unit initial quaternion before it could be normalised.
+
+The finite-difference lineariser now uses central differences in the interior and a valid
+one-sided derivative when one perturbation crosses a physical-domain boundary. The 6-DoF
+rollout now normalises the initial attitude at the public rollout boundary and validates the
+normalised state before integration.
+
+One-shot source-migration scripts and workflows were removed after their asserted edits were
+applied. The remaining Python reference-layer lint defect was corrected rather than suppressed.
+The compiler, runtime, sanitizer, package-consumer and Python-reference gates are rerun from a
+human-authored commit before the pre-GPU branch can be declared green.
