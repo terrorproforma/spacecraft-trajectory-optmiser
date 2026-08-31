@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import shutil
 import subprocess
 import sys
@@ -82,6 +83,11 @@ def test_generated_gpu_directories_are_git_ignored() -> None:
             check=False,
         )
         assert completed.returncode == 0, f"{path} must remain ignored"
+
+
+@pytest.mark.skipif(os.name != "posix", reason="executable bits are POSIX-specific")
+def test_pinned_checkout_script_is_executable() -> None:
+    assert os.access(GPU_SCRIPTS / "checkout_pinned_pdhcg.sh", os.X_OK)
 
 
 @pytest.mark.skipif(shutil.which("bash") is None, reason="bash is unavailable")
