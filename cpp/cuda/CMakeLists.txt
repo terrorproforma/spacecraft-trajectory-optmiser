@@ -83,7 +83,12 @@ message(STATUS
     "sha256=${SPACEPDHCG_PDHCG_CLEANUP_PATCH_SHA256}"
 )
 
-add_library(spacepdhcg_cuda SHARED src/persistent_pdhcg.cu)
+add_library(
+    spacepdhcg_cuda
+    SHARED
+        src/device_scvx.cu
+        src/persistent_pdhcg.cu
+)
 add_library(SpacePDHCG::cuda ALIAS spacepdhcg_cuda)
 target_include_directories(
     spacepdhcg_cuda
