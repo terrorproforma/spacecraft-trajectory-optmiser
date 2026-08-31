@@ -383,7 +383,7 @@ class HighFidelityLowThrustOrbitStage {
     }
 
     void register_stage(FidelityPipelineOracle& pipeline) const {
-        pipeline.register_stage(ArcFidelity::certified_high_fidelity, stage());
+        pipeline.register_stage(ArcFidelity::certified, stage());
     }
 
     [[nodiscard]] ArcSolution evaluate(
@@ -391,7 +391,7 @@ class HighFidelityLowThrustOrbitStage {
         const std::optional<ArcSolution>& previous = std::nullopt
     ) const {
         request.validate();
-        if (request.fidelity != ArcFidelity::certified_high_fidelity
+        if (request.fidelity != ArcFidelity::certified
             || !request.arrival_epoch.has_value()) {
             throw std::invalid_argument(
                 "high-fidelity low-thrust stage requires certified fidelity and arrival epoch"
@@ -481,7 +481,7 @@ class HighFidelityLowThrustOrbitStage {
                                      : 0.0;
         ArcSolution result{
             true,
-            ArcFidelity::certified_high_fidelity,
+            ArcFidelity::certified,
             cost,
             lower_bound,
             duration,
@@ -534,7 +534,7 @@ class HighFidelityLowThrustOrbitStage {
 
     static ArcSolution infeasible(std::string diagnostics) {
         ArcSolution result{};
-        result.achieved_fidelity = ArcFidelity::certified_high_fidelity;
+        result.achieved_fidelity = ArcFidelity::certified;
         result.diagnostics = std::move(diagnostics);
         return result;
     }
