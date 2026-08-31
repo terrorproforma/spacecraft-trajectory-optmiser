@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/run_manifest.schema.json",
+  "title": "SpacePDHCG run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "timestamp_utc",
+    "repository",
+    "upstream",
+    "host",
+    "experiment",
+    "problem",
+    "solver",
+    "quality",
+    "timing",
+    "status",
+    "artifacts",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "run_id": {"type": "string", "minLength": 1},
+    "timestamp_utc": {"type": "string", "format": "date-time"},
+    "repository": {
+      "type": "object",
+      "required": ["url", "commit", "branch", "dirty"],
+      "properties": {
+        "url": {"type": "string", "minLength": 1},
+        "commit": {"type": "string", "minLength": 7},
+        "branch": {"type": ["string", "null"]},
+        "dirty": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "upstream": {"type": "object"},
+    "host": {
+      "type": "object",
+      "required": [
+        "hostname",
+        "operating_system",
+        "architecture",
+        "processor",
+        "logical_cpu_count",
+        "memory_bytes",
+        "accelerator_vendor",
+        "accelerator_model",
+        "accelerator_count",
+        "driver_version",
+        "runtime_version",
+        "interconnect"
+      ],
+      "properties": {
+        "hostname": {"type": "string", "minLength": 1},
+        "operating_system": {"type": "string", "minLength": 1},
+        "architecture": {"type": "string", "minLength": 1},
+        "processor": {"type": "string"},
+        "logical_cpu_count": {"type": ["integer", "null"], "minimum": 0},
+        "memory_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "accelerator_vendor": {"type": ["string", "null"]},
+        "accelerator_model": {"type": ["string", "null"]},
+        "accelerator_count": {"type": ["integer", "null"], "minimum": 0},
+        "driver_version": {"type": ["string", "null"]},
+        "runtime_version": {"type": ["string", "null"]},
+        "interconnect": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "experiment": {"type": "object"},
+    "problem": {
+      "type": "object",
+      "required": ["family", "instance_id"],
+      "properties": {
+        "family": {"type": "string", "minLength": 1},
+        "instance_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "solver": {
+      "type": "object",
+      "required": ["name", "mode"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "mode": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": {"type": ["number", "integer", "boolean", "null"]}
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": {"type": ["number", "integer", "null"], "minimum": 0}
+    },
+    "status": {
+      "enum": [
+        "solved",
+        "qualified",
+        "iteration_limit",
+        "infeasible",
+        "failed",
+        "skipped"
+      ]
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "minLength": 1}
+    },
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}
