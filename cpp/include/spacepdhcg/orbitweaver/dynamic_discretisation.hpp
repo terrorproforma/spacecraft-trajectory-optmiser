@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <iterator>
 #include <limits>
 #include <map>
+#include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <utility>
