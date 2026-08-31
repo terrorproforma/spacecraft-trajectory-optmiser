@@ -75,6 +75,15 @@ def test_evidence_archive_is_byte_reproducible(tmp_path: Path) -> None:
     assert module.sha256(first) == module.sha256(second)
 
 
+def test_generated_gpu_directories_are_git_ignored() -> None:
+    for path in ("_upstream/pdhcg", "build/pdhcg-one-shot", "results/gpu/first-gate"):
+        completed = subprocess.run(
+            ["git", "-C", str(ROOT), "check-ignore", "--quiet", path],
+            check=False,
+        )
+        assert completed.returncode == 0, f"{path} must remain ignored"
+
+
 @pytest.mark.skipif(shutil.which("bash") is None, reason="bash is unavailable")
 @pytest.mark.parametrize(
     "script",
