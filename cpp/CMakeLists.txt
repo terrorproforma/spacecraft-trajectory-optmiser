@@ -41,4 +41,5 @@ if(SPACEPDHCG_BUILD_INTERFACE_SMOKE)
         spacepdhcg_ct_constraints_smoke
         tests/ct_constraints_smoke.cpp
     )
+    spacepdhcg_add_smoke(spacepdhcg_cw_cqp_smoke tests/cw_cqp_smoke.cpp)
 endif()
