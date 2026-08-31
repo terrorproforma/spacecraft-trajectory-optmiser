@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import json
+from dataclasses import asdict
 
 import pytest
 
@@ -100,5 +100,5 @@ def test_manifest_requires_commit_and_problem_identity() -> None:
         "artifacts": {},
         "notes": [],
     }
-    with pytest.raises(ValueError, match="repository.commit"):
+    with pytest.raises(ValueError, match=r"repository\.commit"):
         RunManifest.from_dict(payload)
