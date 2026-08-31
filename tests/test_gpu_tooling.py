@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from types import ModuleType
 
@@ -17,6 +18,7 @@ def _load(name: str, path: Path) -> ModuleType:
     if specification is None or specification.loader is None:
         raise RuntimeError(f"could not load {path}")
     module = importlib.util.module_from_spec(specification)
+    sys.modules[name] = module
     specification.loader.exec_module(module)
     return module
 
