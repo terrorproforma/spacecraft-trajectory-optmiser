@@ -134,7 +134,7 @@ int main() {
     if (std::abs(result.cost - 2.0) > 5.0e-4 || result.terminal_error > 5.0e-4) {
         return 2;
     }
-    if (result.inner_iterations == 0U || result.solve_seconds < 0.0) {
+    if (result.outer_iterations == 0U || result.solve_seconds < 0.0) {
         return 3;
     }
     if (result.warm_start_token != 77U || result.final_mass != 99.0) {
