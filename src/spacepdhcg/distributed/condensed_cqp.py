@@ -455,7 +455,6 @@ class CondensedScenarioCQPBundle:
                     block.power_alpha,
                 )
                 blocks[key] = block
-        del scenario
         return tuple(sorted(blocks.values(), key=lambda block: block.start))
 
     def _node_lookup(self) -> tuple[tuple[InformationNode, ...], ...]:
