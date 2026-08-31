@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "name": "PDHCG-CQP",
+  "repository": "https://github.com/Lhongpei/PDHCG",
+  "commit": "167c8b72b4b96d2f94d405b8763e485514192b81",
+  "tree": "62b05e6c1bedd385f6c267af3645ae4aae0421b4",
+  "commit_date": "2026-08-12T16:55:13Z",
+  "commit_verification": "verified",
+  "integration": {
+    "single_gpu": "Python/C++ one-shot compatibility gate followed by a SpacePDHCG persistent-workspace extension",
+    "multi_gpu": "C++ MPI/NCCL executable and scenario-aware partition extension",
+    "minimum_cuda": "12.4",
+    "required_tools": [
+      "CMake >= 3.20",
+      "C++ compiler",
+      "NVCC",
+      "CUDA runtime",
+      "cuBLAS",
+      "cuSPARSE",
+      "cuSOLVER"
+    ],
+    "distributed_tools": [
+      "MPI",
+      "NCCL"
+    ]
+  },
+  "notes": [
+    "Do not replace this commit with a moving branch in reproducible experiments.",
+    "The public upstream Python API is one-shot and single-GPU at this revision.",
+    "No SpacePDHCG GPU performance claim is valid until a result manifest records this commit, hardware, driver, CUDA toolkit and complete end-to-end timings."
+  ]
+}
