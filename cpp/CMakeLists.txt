@@ -61,4 +61,5 @@ if(SPACEPDHCG_BUILD_INTERFACE_SMOKE)
         spacepdhcg_orbitweaver_smoke
         tests/orbitweaver_smoke.cpp
     )
+    spacepdhcg_add_smoke(spacepdhcg_lambert_smoke tests/lambert_smoke.cpp)
 endif()
