@@ -207,6 +207,18 @@ Rules:
 The adapter is enabled only when `<dlpack/dlpack.h>` is available. The default native build has no
 mandatory DLPack dependency.
 
+The persistent CUDA C ABI additionally exposes
+`persistent_pdhcg_dlpack_c_api.h`. Its managed-tensor wrappers accept both the
+legacy `DLManagedTensor` layout and `DLManagedTensorVersioned` version 1
+without introducing a Python or DLPack-header runtime dependency. The
+`create_from_dlpack`, `update_from_dlpack_async`, and
+`warm_start_from_dlpack_async` entry points consume ownership on entry,
+validate the tensor metadata before forwarding accelerator views, and retain
+the producer deleters until the corresponding asynchronous work is complete.
+Python capsules must be renamed from `dltensor`/`dltensor_versioned` to their
+`used_*` names exactly once; `spacepdhcg.backends.dlpack_capsule` performs this
+capsule step before invoking the C ABI.
+
 ## 10. Validation order
 
 A workspace creation call must validate in this order:

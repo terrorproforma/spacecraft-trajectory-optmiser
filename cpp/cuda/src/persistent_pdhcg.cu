@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "spacepdhcg/cuda/persistent_pdhcg_c_api.h"
+#include "spacepdhcg/cuda/persistent_pdhcg_dlpack_c_api.h"
 
 #include "spacepdhcg/cuda/allocation_ledger.hpp"
 #include "spacepdhcg/cuda/device_buffers.hpp"
 #include "spacepdhcg/cuda/stream_event.hpp"
 
-#include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <cusparse.h>
 
@@ -40,6 +40,94 @@ using spacepdhcg::cuda::native_stream;
 using spacepdhcg::cuda::same_stream;
 
 constexpr int kThreads = 256;
+constexpr std::uint32_t kDLPackMajorVersion = 1U;
+constexpr std::uint64_t kDLPackReadOnly = 1ULL;
+
+struct DLPackDevice {
+    std::int32_t type;
+    std::int32_t id;
+};
+
+struct DLPackDataType {
+    std::uint8_t code;
+    std::uint8_t bits;
+    std::uint16_t lanes;
+};
+
+struct DLPackTensor {
+    void* data;
+    DLPackDevice device;
+    std::int32_t ndim;
+    DLPackDataType dtype;
+    std::int64_t* shape;
+    std::int64_t* strides;
+    std::uint64_t byte_offset;
+};
+
+struct DLPackLegacyManaged {
+    DLPackTensor tensor;
+    void* manager_context;
+    void (*deleter)(DLPackLegacyManaged*);
+};
+
+struct DLPackVersion {
+    std::uint32_t major;
+    std::uint32_t minor;
+};
+
+struct DLPackVersionedManaged {
+    DLPackVersion version;
+    void* manager_context;
+    void (*deleter)(DLPackVersionedManaged*);
+    std::uint64_t flags;
+    DLPackTensor tensor;
+};
+
+class DLPackOwner {
+  public:
+    DLPackOwner() = default;
+    explicit DLPackOwner(spacepdhcg_dlpack_managed_tensor managed)
+        : pointer_(managed.managed_tensor), kind_(managed.kind) {}
+
+    DLPackOwner(const DLPackOwner&) = delete;
+    DLPackOwner& operator=(const DLPackOwner&) = delete;
+
+    DLPackOwner(DLPackOwner&& other) noexcept
+        : pointer_(std::exchange(other.pointer_, nullptr)), kind_(other.kind_) {}
+
+    DLPackOwner& operator=(DLPackOwner&& other) noexcept {
+        if (this != &other) {
+            reset();
+            pointer_ = std::exchange(other.pointer_, nullptr);
+            kind_ = other.kind_;
+        }
+        return *this;
+    }
+
+    ~DLPackOwner() { reset(); }
+
+    void reset() noexcept {
+        void* pointer = std::exchange(pointer_, nullptr);
+        if (pointer == nullptr) {
+            return;
+        }
+        if (kind_ == SPACEPDHCG_DLPACK_VERSIONED) {
+            auto* managed = static_cast<DLPackVersionedManaged*>(pointer);
+            if (managed->deleter != nullptr) {
+                managed->deleter(managed);
+            }
+        } else {
+            auto* managed = static_cast<DLPackLegacyManaged*>(pointer);
+            if (managed->deleter != nullptr) {
+                managed->deleter(managed);
+            }
+        }
+    }
+
+  private:
+    void* pointer_{nullptr};
+    spacepdhcg_dlpack_managed_kind kind_{SPACEPDHCG_DLPACK_LEGACY};
+};
 
 struct DeviceCone {
     int kind;
@@ -762,6 +850,113 @@ struct ViewExpectation {
     const char* name;
 };
 
+spacepdhcg_cuda_status dlpack_view(
+    const spacepdhcg_dlpack_managed_tensor& source,
+    DLPackOwner& owner,
+    spacepdhcg_accelerator_buffer_view& destination,
+    std::string& error
+) {
+    if (source.managed_tensor == nullptr
+        || (source.kind != SPACEPDHCG_DLPACK_LEGACY
+            && source.kind != SPACEPDHCG_DLPACK_VERSIONED)
+        || (source.access != SPACEPDHCG_ACCESS_READ_ONLY
+            && source.access != SPACEPDHCG_ACCESS_READ_WRITE)) {
+        error = "invalid DLPack managed tensor wrapper";
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    owner = DLPackOwner(source);
+
+    const DLPackTensor* tensor = nullptr;
+    if (source.kind == SPACEPDHCG_DLPACK_VERSIONED) {
+        const auto* managed =
+            static_cast<const DLPackVersionedManaged*>(source.managed_tensor);
+        if (managed->version.major != kDLPackMajorVersion) {
+            error = "incompatible DLPack major ABI version";
+            return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+        }
+        if (source.access == SPACEPDHCG_ACCESS_READ_WRITE
+            && (managed->flags & kDLPackReadOnly) != 0U) {
+            error = "read-only DLPack tensor cannot satisfy a writable slot";
+            return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+        }
+        tensor = &managed->tensor;
+    } else {
+        tensor = &static_cast<const DLPackLegacyManaged*>(
+                      source.managed_tensor
+        )->tensor;
+    }
+
+    if (tensor->ndim != 1 || tensor->shape == nullptr
+        || tensor->shape[0] < 0) {
+        error = "DLPack tensor must have rank one and a non-negative shape";
+        return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+    }
+    if (tensor->shape[0] > 0 && tensor->strides != nullptr
+        && tensor->strides[0] != 1) {
+        error = "DLPack tensor must have compact unit stride";
+        return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+    }
+    if (tensor->dtype.lanes != 1U
+        || (tensor->dtype.code != 0U && tensor->dtype.code != 2U)
+        || (tensor->dtype.bits != 32U && tensor->dtype.bits != 64U)) {
+        error = "DLPack tensor has an unsupported scalar dtype";
+        return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+    }
+    if (static_cast<std::uint64_t>(tensor->shape[0])
+        > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max())) {
+        error = "DLPack tensor element count exceeds size_t";
+        return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+    }
+
+    spacepdhcg_accelerator_device device{};
+    if (tensor->device.type == 2 && tensor->device.id >= 0) {
+        device = {SPACEPDHCG_DEVICE_CUDA, tensor->device.id};
+    } else if (tensor->device.type == 13 && tensor->device.id == 0) {
+        device = {SPACEPDHCG_DEVICE_CUDA_MANAGED, 0};
+    } else {
+        error = "DLPack storage must be CUDA device or CUDA managed memory";
+        return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+    }
+
+    spacepdhcg_accelerator_scalar_type scalar_type{};
+    if (tensor->dtype.code == 0U) {
+        scalar_type = tensor->dtype.bits == 32U
+            ? SPACEPDHCG_SCALAR_INT32
+            : SPACEPDHCG_SCALAR_INT64;
+    } else {
+        scalar_type = tensor->dtype.bits == 32U
+            ? SPACEPDHCG_SCALAR_FLOAT32
+            : SPACEPDHCG_SCALAR_FLOAT64;
+    }
+    const auto elements = static_cast<std::size_t>(tensor->shape[0]);
+    const auto scalar_bytes = static_cast<std::size_t>(tensor->dtype.bits / 8U);
+    if (elements > 0U && tensor->data == nullptr) {
+        error = "non-empty DLPack tensor has a null data pointer";
+        return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+    }
+    const auto pointer_value = reinterpret_cast<std::uintptr_t>(tensor->data);
+    if (tensor->byte_offset > std::numeric_limits<std::size_t>::max()
+        || (elements > 0U
+            && (tensor->byte_offset
+                    > std::numeric_limits<std::uintptr_t>::max() - pointer_value
+                || (pointer_value + static_cast<std::size_t>(tensor->byte_offset))
+                        % scalar_bytes
+                    != 0U))) {
+        error = "DLPack tensor byte offset is not scalar aligned";
+        return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+    }
+    destination = {
+        elements == 0U ? nullptr : tensor->data,
+        device,
+        scalar_type,
+        elements,
+        elements == 0U ? 0U : static_cast<std::size_t>(tensor->byte_offset),
+        1,
+        source.access,
+    };
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
 spacepdhcg_cuda_status validate_view(
     const spacepdhcg_accelerator_buffer_view& view,
     const spacepdhcg_accelerator_device storage,
@@ -904,6 +1099,8 @@ struct spacepdhcg_cuda_workspace {
     bool warm_accepted{false};
     bool external_retained{false};
     std::string error{};
+    std::vector<DLPackOwner> persistent_dlpack_borrows{};
+    std::vector<DLPackOwner> pending_dlpack_borrows{};
     AllocationLedger ledger{};
     DeviceTopology topology{};
     DeviceNumeric numeric{};
@@ -915,7 +1112,6 @@ struct spacepdhcg_cuda_workspace {
     DeviceReport* report{nullptr};
     DeviceReport* host_report{nullptr};
     int* host_cancellation{nullptr};
-    cublasHandle_t blas{nullptr};
     cusparseHandle_t sparse{nullptr};
     cusparseSpMatDescr_t q_descriptor{nullptr};
     cusparseSpMatDescr_t a_descriptor{nullptr};
@@ -946,6 +1142,20 @@ void set_error(spacepdhcg_cuda_workspace* workspace, const char* message) {
     if (workspace != nullptr) {
         workspace->error = message == nullptr ? "unknown error" : message;
     }
+}
+
+spacepdhcg_cuda_status append_dlpack_view(
+    const spacepdhcg_dlpack_managed_tensor& source,
+    spacepdhcg_accelerator_buffer_view& destination,
+    std::vector<DLPackOwner>& owners,
+    std::string& error
+) {
+    DLPackOwner owner{};
+    const auto status = dlpack_view(source, owner, destination, error);
+    if (status == SPACEPDHCG_CUDA_SUCCESS) {
+        owners.push_back(std::move(owner));
+    }
+    return status;
 }
 
 spacepdhcg_cuda_status cuda_failure(
@@ -1186,6 +1396,7 @@ spacepdhcg_cuda_status finalize_if_complete(spacepdhcg_cuda_workspace* workspace
     } else if (workspace->last_operation == LastOperation::update) {
         workspace->update_seconds = workspace->update_timer.elapsed_seconds();
     }
+    workspace->pending_dlpack_borrows.clear();
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
@@ -1236,9 +1447,6 @@ void cleanup_workspace(spacepdhcg_cuda_workspace* workspace) noexcept {
     }
     if (workspace->f_descriptor != nullptr) {
         static_cast<void>(cusparseDestroySpMat(workspace->f_descriptor));
-    }
-    if (workspace->blas != nullptr) {
-        static_cast<void>(cublasDestroy(workspace->blas));
     }
     if (workspace->sparse != nullptr) {
         static_cast<void>(cusparseDestroy(workspace->sparse));
@@ -1743,9 +1951,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             result->solver.primal,
             variables
         );
-        if (cublasCreate(&result->blas) != CUBLAS_STATUS_SUCCESS
-            || cublasSetStream(result->blas, stream) != CUBLAS_STATUS_SUCCESS
-            || cusparseCreate(&result->sparse) != CUSPARSE_STATUS_SUCCESS
+        if (cusparseCreate(&result->sparse) != CUSPARSE_STATUS_SUCCESS
             || cusparseSetStream(result->sparse, stream) != CUSPARSE_STATUS_SUCCESS) {
             set_error(result, "failed to create or bind CUDA library handles");
             cleanup_workspace(result);
@@ -2164,6 +2370,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_wait(
     } else if (workspace->last_operation == LastOperation::update) {
         workspace->update_seconds = workspace->update_timer.elapsed_seconds();
     }
+    workspace->pending_dlpack_borrows.clear();
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
@@ -2628,6 +2835,202 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_last_error(
     std::memcpy(destination, workspace->error.data(), length);
     destination[length] = '\0';
     return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create_from_dlpack(
+    const spacepdhcg_cuda_structure* structure,
+    const spacepdhcg_cqp_dlpack_exchange* exchange,
+    const spacepdhcg_cuda_create_options* options,
+    spacepdhcg_cuda_workspace** workspace
+) {
+    if (workspace == nullptr) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    *workspace = nullptr;
+    try {
+    if (structure == nullptr || exchange == nullptr || options == nullptr
+        || exchange->abi_version != SPACEPDHCG_ACCELERATOR_EXCHANGE_ABI_VERSION) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    spacepdhcg_cqp_accelerator_exchange views{};
+    views.abi_version = exchange->abi_version;
+    views.topology_fingerprint = exchange->topology_fingerprint;
+    views.consumer_stream = exchange->consumer_stream;
+    std::vector<DLPackOwner> owners{};
+    owners.reserve(17U);
+    std::string error{};
+    spacepdhcg_cuda_status status = SPACEPDHCG_CUDA_SUCCESS;
+#define SPACEPDHCG_DLPACK_CREATE_VIEW(PATH) \
+    { \
+        const auto current_status = \
+            append_dlpack_view(exchange->PATH, views.PATH, owners, error); \
+        if (status == SPACEPDHCG_CUDA_SUCCESS) { \
+            status = current_status; \
+        } \
+    }
+    SPACEPDHCG_DLPACK_CREATE_VIEW(topology.quadratic_offsets)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(topology.quadratic_indices)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(topology.scalar_offsets)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(topology.scalar_indices)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(topology.affine_offsets)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(topology.affine_indices)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.quadratic)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.scalar_constraint)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.affine_cone)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.linear_objective)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.scalar_lower)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.scalar_upper)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.affine_offset)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.variable_lower)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(numeric.variable_upper)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(iterates.primal)
+    SPACEPDHCG_DLPACK_CREATE_VIEW(iterates.dual)
+#undef SPACEPDHCG_DLPACK_CREATE_VIEW
+    if (status != SPACEPDHCG_CUDA_SUCCESS) {
+        return status;
+    }
+    status = spacepdhcg_cuda_workspace_create(structure, &views, options, workspace);
+    if (status == SPACEPDHCG_CUDA_SUCCESS) {
+        std::lock_guard lock((*workspace)->mutex);
+        (*workspace)->persistent_dlpack_borrows = std::move(owners);
+    }
+    return status;
+    } catch (const std::bad_alloc&) {
+        if (*workspace != nullptr) {
+            static_cast<void>(spacepdhcg_cuda_workspace_destroy(workspace));
+        }
+        return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    } catch (...) {
+        if (*workspace != nullptr) {
+            static_cast<void>(spacepdhcg_cuda_workspace_destroy(workspace));
+        }
+        return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+    }
+}
+
+extern "C" spacepdhcg_cuda_status
+spacepdhcg_cuda_workspace_update_from_dlpack_async(
+    spacepdhcg_cuda_workspace* workspace,
+    const uint64_t topology_fingerprint,
+    const spacepdhcg_cqp_numeric_dlpack_tensors* values,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (workspace == nullptr || values == nullptr) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    try {
+    spacepdhcg_cqp_numeric_accelerator_views views{};
+    std::vector<DLPackOwner> owners{};
+    owners.reserve(9U);
+    std::string error{};
+    spacepdhcg_cuda_status status = SPACEPDHCG_CUDA_SUCCESS;
+#define SPACEPDHCG_DLPACK_UPDATE_VIEW(NAME) \
+    { \
+        const auto current_status = \
+            append_dlpack_view(values->NAME, views.NAME, owners, error); \
+        if (status == SPACEPDHCG_CUDA_SUCCESS) { \
+            status = current_status; \
+        } \
+    }
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(quadratic)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(scalar_constraint)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(affine_cone)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(linear_objective)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(scalar_lower)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(scalar_upper)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(affine_offset)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(variable_lower)
+    SPACEPDHCG_DLPACK_UPDATE_VIEW(variable_upper)
+#undef SPACEPDHCG_DLPACK_UPDATE_VIEW
+    if (status != SPACEPDHCG_CUDA_SUCCESS) {
+        return status;
+    }
+    status = spacepdhcg_cuda_workspace_update_async(
+        workspace,
+        topology_fingerprint,
+        &views,
+        stream
+    );
+    if (status == SPACEPDHCG_CUDA_SUCCESS) {
+        std::lock_guard lock(workspace->mutex);
+        for (auto& owner : owners) {
+            workspace->pending_dlpack_borrows.push_back(std::move(owner));
+        }
+    }
+    return status;
+    } catch (const std::bad_alloc&) {
+        return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    } catch (...) {
+        return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+    }
+}
+
+extern "C" spacepdhcg_cuda_status
+spacepdhcg_cuda_workspace_warm_start_from_dlpack_async(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_warm_start_mode mode,
+    const spacepdhcg_cqp_iterate_dlpack_tensors* iterates,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (workspace == nullptr) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    try {
+    if (mode == SPACEPDHCG_CUDA_WARM_START_NONE
+        || mode == SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED) {
+        if (iterates != nullptr) {
+            return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+        }
+        return spacepdhcg_cuda_workspace_warm_start_async(
+            workspace,
+            mode,
+            nullptr,
+            stream
+        );
+    }
+    if (iterates == nullptr) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    spacepdhcg_cqp_iterate_accelerator_views views{};
+    std::vector<DLPackOwner> owners{};
+    owners.reserve(2U);
+    std::string error{};
+    auto status = append_dlpack_view(
+        iterates->primal,
+        views.primal,
+        owners,
+        error
+    );
+    const auto dual_status = append_dlpack_view(
+        iterates->dual,
+        views.dual,
+        owners,
+        error
+    );
+    if (status == SPACEPDHCG_CUDA_SUCCESS) {
+        status = dual_status;
+    }
+    if (status != SPACEPDHCG_CUDA_SUCCESS) {
+        return status;
+    }
+    status = spacepdhcg_cuda_workspace_warm_start_async(
+        workspace,
+        mode,
+        &views,
+        stream
+    );
+    if (status == SPACEPDHCG_CUDA_SUCCESS) {
+        std::lock_guard lock(workspace->mutex);
+        for (auto& owner : owners) {
+            workspace->pending_dlpack_borrows.push_back(std::move(owner));
+        }
+    }
+    return status;
+    } catch (const std::bad_alloc&) {
+        return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    } catch (...) {
+        return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+    }
 }
 
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_destroy(

@@ -222,7 +222,8 @@ inline std::vector<Root> roots_in_revolution_band(
     const auto upper = upper_singularity - margin;
 
     std::vector<Root> roots{};
-    std::optional<std::pair<double, detail::UniversalEvaluation>> previous{};
+    std::pair<double, detail::UniversalEvaluation> previous{};
+    bool has_previous = false;
     for (std::size_t sample = 0; sample <= scan_samples; ++sample) {
         const auto fraction = static_cast<double>(sample)
                               / static_cast<double>(scan_samples);
@@ -236,18 +237,19 @@ inline std::vector<Root> roots_in_revolution_band(
             gravitational_parameter
         );
         if (!evaluation.has_value()) {
-            previous.reset();
+            has_previous = false;
             continue;
         }
         if (std::abs(evaluation->residual) <= time_tolerance) {
             roots.push_back(Root{parameter, 0U});
             previous = std::make_pair(parameter, *evaluation);
+            has_previous = true;
             continue;
         }
-        if (previous.has_value()
-            && previous->second.residual * evaluation->residual < 0.0) {
+        if (has_previous
+            && previous.second.residual * evaluation->residual < 0.0) {
             roots.push_back(bisect_root(
-                previous->first,
+                previous.first,
                 parameter,
                 geometry_value,
                 time_of_flight,
@@ -257,6 +259,7 @@ inline std::vector<Root> roots_in_revolution_band(
             ));
         }
         previous = std::make_pair(parameter, *evaluation);
+        has_previous = true;
     }
     std::sort(roots.begin(), roots.end(), [](const Root& left, const Root& right) {
         return left.parameter < right.parameter;

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdio>
 #include <limits>
+#include <string>
 #include <vector>
 
 namespace test = spacepdhcg::cuda::test;
@@ -96,7 +97,9 @@ double standard_soc_distance(double x0, double x1, double radius) {
 
 }  // namespace
 
-int main() {
+int main(const int argc, char** argv) {
+    const bool compare_one_shot =
+        argc == 2 && std::string(argv[1]) == "--with-one-shot";
     auto problem = test::make_soc_problem(true, true);
     auto* workspace = test::create_workspace(problem);
     auto diagnostics = test::solve_and_wait(
@@ -109,11 +112,15 @@ int main() {
         "persistent SOCP did not converge"
     );
     const auto persistent = problem.primal.download(problem.stream);
-    const auto one_shot = one_shot_reference(problem);
+    const auto one_shot = compare_one_shot
+        ? one_shot_reference(problem)
+        : std::vector<double>(2U, std::numeric_limits<double>::quiet_NaN());
     test::require_close(persistent[0], 1.0, 8.0e-4, "SOCP CPU x0");
     test::require_close(persistent[1], 0.0, 8.0e-4, "SOCP CPU x1");
-    test::require_close(persistent[0], one_shot[0], 1.5e-3, "SOCP one-shot x0");
-    test::require_close(persistent[1], one_shot[1], 1.5e-3, "SOCP one-shot x1");
+    if (compare_one_shot) {
+        test::require_close(persistent[0], one_shot[0], 1.5e-3, "SOCP one-shot x0");
+        test::require_close(persistent[1], one_shot[1], 1.5e-3, "SOCP one-shot x1");
+    }
 
     const double cpu_cone_distance =
         standard_soc_distance(persistent[0], persistent[1], 1.0);
@@ -148,9 +155,11 @@ int main() {
 
     std::printf(
         "{\"case\":\"persistent_soc\",\"managed\":true,"
+        "\"one_shot_comparison\":%s,"
         "\"x\":[%.12g,%.12g],\"oneshot\":[%.12g,%.12g],"
         "\"cone_distance\":%.9g,\"natural_residual\":%.9g,"
         "\"topology_allocations\":%llu,\"topology_index_copies\":%llu}\n",
+        compare_one_shot ? "true" : "false",
         persistent[0],
         persistent[1],
         one_shot[0],

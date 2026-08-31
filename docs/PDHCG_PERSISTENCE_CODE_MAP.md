@@ -32,11 +32,12 @@ G2 uses the allowed **linked internal adapter** strategy:
    `third_party/patches/pdhcg/0001-free-quadratic-state.patch` is applied only
    to an ignored build-tree copy after lock verification. It frees
    quadratic-state allocations omitted by the pinned destructor and
-   initializes spectral SpMV output scratch so one-shot reference runs are
-   clean under memcheck/initcheck. It does not change numerical kernels.
+   initializes spectral, CSC-conversion, and SpMV scratch allocations so
+   application-owned memory is fully initialized under initcheck. It does not
+   change numerical kernels.
 
 The patch SHA-256 is
-`7f212ac5ef6afa96b7084092bfcff80602c2c976e1a7a9f3305d1817cb7554f4`.
+`dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6`.
 
 The adapter boundary is deliberate: pinned upstream launches many kernels on
 the implicit default stream and destructively rescales/extracts state. Calling

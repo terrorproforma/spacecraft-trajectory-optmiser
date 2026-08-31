@@ -1,6 +1,14 @@
 diff --git a/src/solver_state.cu b/src/solver_state.cu
 --- a/src/solver_state.cu
 +++ b/src/solver_state.cu
+@@ -751,6 +751,7 @@ pdhg_solver_state_t *initialize_solver_state(
+                                                      CUSPARSE_CSR2CSC_ALG_DEFAULT,
+                                                      &buffer_size));
+         CUDA_CHECK(cudaMalloc(&buffer, buffer_size));
++        CUDA_CHECK(cudaMemset(buffer, 0, buffer_size));
+ 
+         CUSPARSE_CHECK(cusparseCsr2cscEx2(state->sparse_handle,
+                                           state->constraint_matrix->num_rows,
 @@ -1165,6 +1165,28 @@ void pdhg_solver_state_free(pdhg_solver_state_t *state)
          if (state->quadratic_objective_term->spmv_ctx_Rt)
              pdhcg_spmv_ctx_destroy(state->quadratic_objective_term->spmv_ctx_Rt);
@@ -42,3 +50,14 @@ diff --git a/src/pdhg_core_op.cu b/src/pdhg_core_op.cu
  
      double *eigenvector_h = (double *)safe_malloc(safe_m * sizeof(double));
      unsigned int seed = 1234 + row_coord;
+diff --git a/src/spmv_backend.cu b/src/spmv_backend.cu
+--- a/src/spmv_backend.cu
++++ b/src/spmv_backend.cu
+@@ -128,6 +128,7 @@ pdhcg_spmv_ctx_t *pdhcg_spmv_ctx_create(cusparseHandle_t sparse_handle,
+     if (buffer_size > 0)
+     {
+         CUDA_CHECK(cudaMalloc(&ctx->buffer, buffer_size));
++        CUDA_CHECK(cudaMemset(ctx->buffer, 0, buffer_size));
+     }
+ 
+     pdhcg_spmv_prepare(sparse_handle, ctx->mat, ctx->vec_x, ctx->vec_y, ctx->buffer, &ctx->descr, &ctx->plan);

@@ -96,7 +96,6 @@ target_link_libraries(
     spacepdhcg_cuda
     PUBLIC
         CUDA::cudart
-        CUDA::cublas
         CUDA::cusparse
 )
 target_compile_features(spacepdhcg_cuda PUBLIC cxx_std_20)
@@ -210,7 +209,11 @@ if(BUILD_TESTING)
                 CUDA_RESOLVE_DEVICE_SYMBOLS ON
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/cuda-tests"
         )
-        add_test(NAME "${test_name}" COMMAND "${test_name}")
+        if(test_name STREQUAL "persistent_soc_test")
+            add_test(NAME "${test_name}" COMMAND "${test_name}" --with-one-shot)
+        else()
+            add_test(NAME "${test_name}" COMMAND "${test_name}")
+        endif()
         set_tests_properties("${test_name}" PROPERTIES TIMEOUT 180)
     endforeach()
 endif()

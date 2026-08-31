@@ -832,7 +832,7 @@ compute-sanitizer --tool memcheck --leak-check full \
 compute-sanitizer --tool racecheck \
   ./build/cuda-tests/stream_lifetime_test
 
-compute-sanitizer --tool initcheck --track-unused-memory yes \
+compute-sanitizer --tool initcheck --track-unused-memory \
   ./build/cuda-tests/persistent_soc_test
 
 compute-sanitizer --tool synccheck \
