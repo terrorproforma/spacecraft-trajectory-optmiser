@@ -74,6 +74,8 @@ Rewriting the reference and analysis layer in C++ would reduce scientific transp
 - partition-invariant CPU forward/transpose operator truth models;
 - expected-value, worst-case and CVaR aggregation;
 - fixed-pattern affine-loss risk-CQP augmentations;
+- common-open-loop robust low-thrust SCvx with scenario-local nonlinear rollouts;
+- expected, worst-case and CVaR propellant-risk objectives;
 - robust nonlinear post-evaluation.
 
 ### OrbitWeaver
@@ -84,6 +86,8 @@ Rewriting the reference and analysis layer in C++ would reduce scientific transp
 - low-thrust feasibility screening;
 - concrete native coarse-convex low-thrust arc adapter;
 - concrete persistent deterministic low-thrust SCvx arc adapter;
+- concrete robust-scenario SCvx arc adapter with risk-aware certification;
+- independent dense J2 RK4 high-fidelity certification with step-doubling error estimation;
 - typed, request-compatible warm-reference transfer between fidelity stages;
 - deterministic beam search;
 - time-expanded moving-target graph and elementary-route solver;
@@ -108,8 +112,6 @@ The following items remain legitimate CPU-side work and should be pursued before
 
 - complete adversarial, randomized and property-based tests for the risk, route-master, Lambert-family, CT-sampling and oracle layers;
 - finish higher-order variational integration alternatives to finite-difference RK4 where analytic or automatic derivatives provide a clear benefit;
-- connect robust scenario SCvx to the OrbitWeaver robust-fidelity stage on the host truth path;
-- define and implement a final high-fidelity certification adapter with a selected force model and independent acceptance policy;
 - add native wheel packaging and a documented accelerator-pointer exchange design;
 - construct reproducible scale-sweep manifests and synthetic memory/work estimates;
 - expand the formal inexact-SCvx argument into theorem, assumptions, lemmas and counterexample tests;
