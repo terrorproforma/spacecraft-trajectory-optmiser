@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spacepdhcg/orbitweaver/lambert.hpp"
+#include "spacepdhcg/orbitweaver/lambert_family.hpp"
 #include "spacepdhcg/orbitweaver/trajectory_oracle.hpp"
 
 #include <algorithm>
@@ -9,9 +10,11 @@
 #include <cstddef>
 #include <functional>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace spacepdhcg::orbitweaver {
 
@@ -30,8 +33,11 @@ struct LambertScreeningConfig {
     double specific_impulse_seconds{300.0};
     double cost_per_delta_v{1.0};
     bool long_way{false};
+    bool evaluate_both_directions{false};
+    std::size_t maximum_revolutions{0U};
     double time_tolerance{1.0e-8};
     std::size_t maximum_iterations{256U};
+    std::size_t scan_samples_per_revolution{8'192U};
 
     void validate() const {
         for (const auto value : {
@@ -46,8 +52,10 @@ struct LambertScreeningConfig {
                 );
             }
         }
-        if (maximum_iterations == 0U) {
-            throw std::invalid_argument("Lambert screening iteration limit must be positive");
+        if (maximum_iterations == 0U || scan_samples_per_revolution < 16U) {
+            throw std::invalid_argument(
+                "Lambert screening iteration and scan limits are invalid"
+            );
         }
     }
 };
@@ -74,14 +82,64 @@ inline void validate_ephemeris(const CartesianEphemerisState& state) {
     }
 }
 
+inline std::string branch_name(const LambertParameterBranch branch) {
+    switch (branch) {
+        case LambertParameterBranch::unique:
+            return "unique";
+        case LambertParameterBranch::lower_parameter:
+            return "lower-parameter";
+        case LambertParameterBranch::higher_parameter:
+            return "higher-parameter";
+    }
+    return "unknown";
+}
+
+struct ScreenedFamilyMember {
+    LambertFamilyMember member{};
+    double departure_delta_v{0.0};
+    double arrival_delta_v{0.0};
+    double total_delta_v{0.0};
+    double propellant{0.0};
+};
+
+inline ScreenedFamilyMember score(
+    const LambertFamilyMember& member,
+    const CartesianEphemerisState& departure,
+    const CartesianEphemerisState& arrival,
+    const double initial_mass,
+    const double specific_impulse_seconds
+) {
+    const auto departure_delta_v = velocity_difference_norm(
+        member.solution.departure_velocity,
+        departure.velocity
+    );
+    const auto arrival_delta_v = velocity_difference_norm(
+        arrival.velocity,
+        member.solution.arrival_velocity
+    );
+    const auto total_delta_v = departure_delta_v + arrival_delta_v;
+    return ScreenedFamilyMember{
+        member,
+        departure_delta_v,
+        arrival_delta_v,
+        total_delta_v,
+        propellant_required(
+            initial_mass,
+            total_delta_v,
+            specific_impulse_seconds
+        ),
+    };
+}
+
 }  // namespace lambert_oracle_detail
 
 /// Host-executable analytical stage for the OrbitWeaver fidelity pipeline.
 ///
-/// It solves the classical zero-revolution Lambert boundary-value problem against target
-/// ephemerides, includes departure and arrival matching impulses, and closes propellant mass
-/// with the rocket equation. The lower bound is deliberately conservative (`0`) until a
-/// mission-specific admissible bound is supplied by a stronger screening stage.
+/// It enumerates the requested zero- and multi-revolution universal-variable Lambert
+/// families, evaluates short/long transfer directions when configured, and selects the
+/// minimum matching-impulse candidate that closes the rocket equation. The lower bound is
+/// deliberately conservative (`0`) until a mission-specific admissible bound is supplied by
+/// a stronger screening stage.
 class LambertScreeningOracle final : public TrajectoryOracle {
   public:
     LambertScreeningOracle(
@@ -115,66 +173,89 @@ class LambertScreeningOracle final : public TrajectoryOracle {
         const auto duration = *request.arrival_epoch - request.departure_epoch;
 
         const auto start = std::chrono::steady_clock::now();
-        LambertSolution transfer{};
+        std::vector<LambertFamilyMember> family{};
         try {
-            transfer = solve_lambert_zero_revolution(
-                departure.position,
-                arrival.position,
-                duration,
-                config_.gravitational_parameter,
-                config_.long_way,
-                config_.time_tolerance,
-                config_.maximum_iterations
-            );
+            if (config_.evaluate_both_directions) {
+                family = enumerate_lambert_families(
+                    departure.position,
+                    arrival.position,
+                    duration,
+                    config_.gravitational_parameter,
+                    config_.maximum_revolutions,
+                    true,
+                    true,
+                    config_.time_tolerance,
+                    config_.maximum_iterations,
+                    config_.scan_samples_per_revolution
+                );
+            } else {
+                family = solve_lambert_revolution_family(
+                    departure.position,
+                    arrival.position,
+                    duration,
+                    config_.gravitational_parameter,
+                    config_.maximum_revolutions,
+                    config_.long_way,
+                    config_.time_tolerance,
+                    config_.maximum_iterations,
+                    config_.scan_samples_per_revolution
+                );
+            }
         } catch (const std::runtime_error& error) {
             ArcSolution infeasible{};
             infeasible.achieved_fidelity = ArcFidelity::analytical_screening;
-            infeasible.diagnostics = std::string{"Lambert solve failed: "} + error.what();
+            infeasible.diagnostics = std::string{"Lambert family solve failed: "} + error.what();
             return infeasible;
         }
         const auto end = std::chrono::steady_clock::now();
 
-        const auto departure_delta_v = lambert_oracle_detail::velocity_difference_norm(
-            transfer.departure_velocity,
-            departure.velocity
-        );
-        const auto arrival_delta_v = lambert_oracle_detail::velocity_difference_norm(
-            arrival.velocity,
-            transfer.arrival_velocity
-        );
-        const auto total_delta_v = departure_delta_v + arrival_delta_v;
-        const auto propellant = propellant_required(
-            request.initial_mass,
-            total_delta_v,
-            config_.specific_impulse_seconds
-        );
-        if (propellant >= request.initial_mass) {
+        std::optional<lambert_oracle_detail::ScreenedFamilyMember> best{};
+        for (const auto& member : family) {
+            const auto scored = lambert_oracle_detail::score(
+                member,
+                departure,
+                arrival,
+                request.initial_mass,
+                config_.specific_impulse_seconds
+            );
+            if (scored.propellant >= request.initial_mass) {
+                continue;
+            }
+            if (!best.has_value() || scored.total_delta_v < best->total_delta_v) {
+                best = scored;
+            }
+        }
+        if (!best.has_value()) {
             ArcSolution infeasible{};
             infeasible.achieved_fidelity = ArcFidelity::analytical_screening;
-            infeasible.diagnostics = "Lambert transfer exceeds the available mass";
+            infeasible.diagnostics = "every Lambert family member exceeds the available mass";
             return infeasible;
         }
 
-        const auto residual = std::abs(transfer.time_of_flight_residual);
+        const auto residual = std::abs(best->member.solution.time_of_flight_residual);
         const auto solve_seconds = std::chrono::duration<double>(end - start).count();
+        const auto direction = best->member.long_way ? "long-way" : "short-way";
         ArcSolution result{
             true,
             ArcFidelity::analytical_screening,
-            config_.cost_per_delta_v * total_delta_v,
+            config_.cost_per_delta_v * best->total_delta_v,
             0.0,
             duration,
-            total_delta_v,
-            propellant,
-            request.initial_mass - propellant,
+            best->total_delta_v,
+            best->propellant,
+            request.initial_mass - best->propellant,
             residual,
             0.0,
             std::max(residual, std::numeric_limits<double>::epsilon()),
             0U,
-            transfer.iterations,
+            best->member.solution.iterations,
             0.0,
             solve_seconds,
             std::nullopt,
-            "zero-revolution Lambert screening",
+            std::string{"Lambert family screening: "} + direction
+                + ", revolutions=" + std::to_string(best->member.revolutions)
+                + ", branch="
+                + lambert_oracle_detail::branch_name(best->member.branch),
         };
         result.validate(request);
         return result;
