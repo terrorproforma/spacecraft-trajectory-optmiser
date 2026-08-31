@@ -28,8 +28,9 @@ correctness oracle, research interface, and experiment layer. Removing Python fr
 would not accelerate the device-resident solver and would reduce auditability.
 
 The current host-native branch now closes the previously highest-priority CPU gaps: automatic
-continuous-time violation-state sampling, concrete low-thrust OrbitWeaver coarse/refined stages,
-multi-revolution Lambert families, and an executable restricted-master/column-generation loop.
+continuous-time violation-state sampling, deterministic and robust low-thrust OrbitWeaver stages,
+multi-revolution Lambert families, executable restricted-master column generation, and independent
+J2 high-fidelity certification.
 
 # Status legend
 
@@ -88,7 +89,7 @@ multi-revolution Lambert families, and an executable restricted-master/column-ge
 | Repair/progress/refinement/polish forcing | COMPLETE-REFERENCE | Python and C++ implementations |
 | Fixed-tolerance comparator | COMPLETE-REFERENCE | experiment baseline |
 | Re-solve-before-trust-region-shrink logic | COMPLETE-REFERENCE | implemented in outer drivers |
-| Trust-region acceptance and radius updates | COMPLETE-REFERENCE | native deterministic drivers |
+| Trust-region acceptance and radius updates | COMPLETE-REFERENCE | native deterministic and robust drivers |
 | Inexact error ledger | COMPLETE-REFERENCE | accumulated and relative diagnostics |
 | Hybrid first-order/IPM plan | COMPLETE-REFERENCE | explicit handoff and final-polish contract |
 | Conditional convergence argument | COMPLETE-REFERENCE | assumptions and proof obligations documented |
@@ -112,6 +113,7 @@ multi-revolution Lambert families, and an executable restricted-master/column-ge
 | Partition-invariant forward/transpose truth model | COMPLETE-REFERENCE | CPU comparison against monolithic operators |
 | 3-DoF robust assembly | COMPLETE-REFERENCE | native and Python paths |
 | 6-DoF robust assembly | COMPLETE-REFERENCE | generic 14-state scenario bundle |
+| Robust low-thrust SCvx driver | COMPLETE-REFERENCE | common-prefix controls, scenario nonlinear rollouts and affine propellant risk |
 | Expected/worst/VaR/CVaR evaluation | COMPLETE-REFERENCE | native and Python aggregation |
 | Expected/worst/CVaR CQP augmentation | COMPLETE-REFERENCE | fixed-pattern affine-loss epigraphs |
 | Known-incumbent solution qualification | COMPLETE-REFERENCE | catches degenerate IPM false positives |
@@ -133,6 +135,8 @@ multi-revolution Lambert families, and an executable restricted-master/column-ge
 | Edelbaum low-thrust screening | COMPLETE-REFERENCE | native radius/inclination estimate |
 | Coarse convex low-thrust arc adapter | COMPLETE-REFERENCE | native CQP solve plus independent nonlinear rollout |
 | Refined deterministic SCvx arc adapter | COMPLETE-REFERENCE | persistent native low-thrust driver and warm-reference transfer |
+| Robust SCvx arc adapter | COMPLETE-REFERENCE | scenario provider, common-open-loop controls and expected/worst/CVaR certificates |
+| Final high-fidelity certification adapter | COMPLETE-REFERENCE | independent J2 RK4 replay, dense path checks and step-doubling error estimate |
 | Deterministic beam search | COMPLETE-REFERENCE | time/mass-dependent native search |
 | Time-expanded moving-target graph | COMPLETE-REFERENCE | scheduled-arc truth graph |
 | Exact elementary-route labels | COMPLETE-REFERENCE | small-instance truth model up to 64 targets |
@@ -142,8 +146,6 @@ multi-revolution Lambert families, and an executable restricted-master/column-ge
 | Exact multi-spacecraft route master | COMPLETE-REFERENCE | small-instance set-partitioning truth model |
 | Native restricted-master LP | COMPLETE-REFERENCE | dependency-free two-phase simplex and dual recovery |
 | Full iterative column-generation controller | COMPLETE-REFERENCE | executable master/pricing loop with incumbent and gap history |
-| Robust SCvx arc adapter | PREPARED | scenario CQP exists; host adapter and production multi-GPU backend remain |
-| Final high-fidelity certification adapter | OPEN-CPU | chosen force model and validation policy required |
 | Massive route × scenario throughput | EXPERIMENT-BLOCKED | central Paper 2 scaling result needs GPUs |
 
 # Native and reference quality gates
@@ -194,14 +196,12 @@ formulations, route algorithms, correctness certificates, theory, manifests or p
 
 In descending leverage:
 
-1. robust scenario-SCvx OrbitWeaver arc adapter on the host truth path;
-2. final high-fidelity certification adapter and force-model policy;
-3. stronger variational integration where it beats finite-difference RK4;
-4. theorem-level inexact-SCvx assumptions, lemmas and counterexample tests;
-5. native wheel packaging and accelerator-pointer exchange design;
-6. paper outlines, notation lock and figure-generation schemas;
-7. additional adversarial, randomized and property-based tests;
-8. reproducible scale-sweep manifests and synthetic memory/work estimates.
+1. stronger variational integration where it beats finite-difference RK4;
+2. theorem-level inexact-SCvx assumptions, lemmas and counterexample tests;
+3. native wheel packaging and accelerator-pointer exchange design;
+4. paper outlines, notation lock and figure-generation schemas;
+5. additional adversarial, randomized and property-based tests;
+6. reproducible scale-sweep manifests and synthetic memory/work estimates.
 
 # First GPU-day run order
 
