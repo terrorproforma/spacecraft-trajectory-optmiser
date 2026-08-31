@@ -7,16 +7,17 @@ updates remain in the C++/CUDA numerical core.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
 import hashlib
 import json
 import math
 import os
-from pathlib import Path
 import platform
 import socket
-from typing import Any, Mapping
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 SCHEMA_VERSION = "1.0.0"
