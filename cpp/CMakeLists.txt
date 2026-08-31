@@ -62,6 +62,14 @@ if(SPACEPDHCG_BUILD_INTERFACE_SMOKE)
         target_compile_options(spacepdhcg_powered_descent_scvx_smoke PRIVATE -Wno-error)
     endif()
     spacepdhcg_add_smoke(
+        spacepdhcg_scenario_cqp_smoke
+        tests/scenario_cqp_smoke.cpp
+    )
+    spacepdhcg_add_smoke(
+        spacepdhcg_risk_cqp_smoke
+        tests/risk_cqp_smoke.cpp
+    )
+    spacepdhcg_add_smoke(
         spacepdhcg_orbitweaver_smoke
         tests/orbitweaver_smoke.cpp
     )
