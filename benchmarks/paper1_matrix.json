@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "programme": "SpacePDHCG Paper 1",
+  "status": "pre-gpu manifest",
+  "repository": "terrorproforma/spacecraft-trajectory-optmiser",
+  "upstream_pdhcg_commit": "167c8b72b4b96d2f94d405b8763e485514192b81",
+  "precisions": ["float64"],
+  "requested_tolerances": [0.001, 0.0001, 0.000001, 0.00000001],
+  "warm_start_modes": ["cold", "primal", "primal_dual"],
+  "scaling_modes": ["always_refresh", "reuse", "refresh_if_needed"],
+  "inner_accuracy_modes": ["fixed", "adaptive", "adaptive_with_polish"],
+  "solver_backends": [
+    {
+      "name": "clarabel-cpu",
+      "role": "conic correctness reference",
+      "requires_gpu": false
+    },
+    {
+      "name": "osqp-cpu",
+      "role": "QP correctness reference",
+      "requires_gpu": false
+    },
+    {
+      "name": "pdhcg-one-shot",
+      "role": "upstream CUDA compatibility baseline",
+      "requires_gpu": true
+    },
+    {
+      "name": "spacepdhcg-persistent",
+      "role": "primary factorisation-free backend",
+      "requires_gpu": true
+    },
+    {
+      "name": "qoco-gpu",
+      "role": "GPU interior-point comparison",
+      "requires_gpu": true
+    },
+    {
+      "name": "cuclarabel",
+      "role": "general GPU conic comparison",
+      "requires_gpu": true
+    }
+  ],
+  "families": [
+    {
+      "id": "P1-A",
+      "name": "known-optimum trajectory-banded CQP",
+      "intervals": [10, 50, 100, 500, 2000, 10000, 50000],
+      "state_dimensions": [4, 7, 14],
+      "control_dimensions": [3, 4, 7],
+      "control_sets": ["box", "soc"],
+      "weight_log10_spans": [0.0, 2.0, 4.0, 8.0],
+      "seeds": [17, 23, 31, 47, 59, 71, 89, 101, 127, 149, 173, 197, 223, 251, 281, 313, 349, 389, 431, 479]
+    },
+    {
+      "id": "P1-B",
+      "name": "HCW rendezvous",
+      "intervals": [20, 50, 100, 500, 2000, 10000],
+      "control_sets": ["box", "soc"],
+      "update_magnitudes": [0.0, 0.001, 0.01, 0.1, 1.0]
+    },
+    {
+      "id": "P1-C",
+      "name": "3-DoF powered descent SCvx",
+      "intervals": [20, 50, 100, 500, 2000],
+      "initial_dispersion_scales": [0.0, 0.01, 0.05, 0.1],
+      "final_polish": [false, true]
+    },
+    {
+      "id": "P1-D",
+      "name": "14-state 6-DoF powered descent SCvx",
+      "intervals": [20, 50, 100, 500, 2000],
+      "attitude_dispersion_radians": [0.0, 0.05, 0.2, 0.5],
+      "angular_rate_dispersion": [0.0, 0.05, 0.2],
+      "final_polish": [false, true]
+    },
+    {
+      "id": "P1-E",
+      "name": "long-horizon two-body low thrust",
+      "intervals": [100, 500, 2000, 10000, 50000],
+      "trust_radii": [0.25, 0.5, 1.0, 2.0],
+      "transfer_classes": ["coast_reference", "radius_raise", "plane_change", "combined"]
+    },
+    {
+      "id": "P1-F",
+      "name": "robust powered-descent scenarios",
+      "intervals": [20, 50, 100, 500],
+      "scenario_counts": [1, 10, 100, 1000, 10000],
+      "common_prefix_fractions": [0.0, 0.25, 0.5, 1.0],
+      "risk_metrics": ["expected", "worst", "cvar_0.9", "cvar_0.99"],
+      "gpu_counts": [1, 2, 4, 8]
+    }
+  ],
+  "required_metrics": [
+    "topology_seconds",
+    "coefficient_update_seconds",
+    "workspace_create_seconds",
+    "rescale_seconds",
+    "host_to_device_seconds",
+    "solver_seconds",
+    "residual_seconds",
+    "nonlinear_check_seconds",
+    "device_to_host_seconds",
+    "collective_seconds",
+    "end_to_end_seconds",
+    "peak_host_bytes",
+    "peak_device_bytes",
+    "energy_joules",
+    "primal_residual",
+    "dual_residual",
+    "objective",
+    "objective_gap",
+    "nonlinear_dynamics_defect",
+    "terminal_error",
+    "path_violation",
+    "virtual_control_norm",
+    "outer_iterations",
+    "inner_iterations",
+    "accepted_iterations"
+  ]
+}
