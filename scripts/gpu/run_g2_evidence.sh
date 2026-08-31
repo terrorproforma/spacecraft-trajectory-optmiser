@@ -3,6 +3,8 @@ set -euo pipefail
 
 root="$(git rev-parse --show-toplevel)"
 cd "${root}"
+export CUDACXX=/usr/local/cuda-12.8/bin/nvcc
+export PATH="/usr/local/cuda-12.8/bin:${PATH}"
 head="$(git rev-parse --short=7 HEAD)"
 run_id="g2-$(date -u +%Y%m%dT%H%M%SZ)-${head}"
 run="results/gpu/g2/${run_id}"
