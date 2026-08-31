@@ -37,4 +37,8 @@ if(SPACEPDHCG_BUILD_INTERFACE_SMOKE)
     spacepdhcg_add_smoke(spacepdhcg_interface_smoke tests/interface_smoke.cpp)
     spacepdhcg_add_smoke(spacepdhcg_core_smoke tests/core_smoke.cpp)
     spacepdhcg_add_smoke(spacepdhcg_sixdof_smoke tests/sixdof_smoke.cpp)
+    spacepdhcg_add_smoke(
+        spacepdhcg_ct_constraints_smoke
+        tests/ct_constraints_smoke.cpp
+    )
 endif()
