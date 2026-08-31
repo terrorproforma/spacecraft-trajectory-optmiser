@@ -1,0 +1,33 @@
+name: apply-rollout-boundary-patch
+
+on:
+  push:
+    branches: [feat/pre-gpu-roadmap-completion]
+    paths:
+      - tools/apply_rollout_boundary_patch.py
+      - .github/workflows/apply-rollout-boundary-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/pre-gpu-roadmap-completion
+          fetch-depth: 0
+      - name: Apply asserted source migration
+        run: python tools/apply_rollout_boundary_patch.py
+      - name: Commit migrated native sources
+        run: |
+          if git diff --quiet; then
+            echo "Migration already applied"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cpp/include/spacepdhcg/dynamics/powered_descent_6dof.hpp
+          git commit -m "fix: normalise 6-DoF initial attitude at rollout boundary"
+          git push origin HEAD:feat/pre-gpu-roadmap-completion
