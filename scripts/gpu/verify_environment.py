@@ -69,9 +69,16 @@ def run(command: list[str], *, timeout: float = 30.0) -> CommandResult:
 
 
 def parse_version(text: str) -> tuple[int, int, int] | None:
-    match = _VERSION.search(text)
-    if match is None:
+    matches = list(_VERSION.finditer(text))
+    if not matches:
         return None
+    # Tool banners can include a short release followed by the precise build
+    # (for example, "release 12.8, V12.8.93"). Prefer the most specific,
+    # latest occurrence so the frozen manifest retains the complete version.
+    match = max(
+        matches,
+        key=lambda candidate: (candidate.group(3) is not None, candidate.start()),
+    )
     return (
         int(match.group(1)),
         int(match.group(2)),
