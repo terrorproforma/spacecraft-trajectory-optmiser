@@ -1,7 +1,8 @@
 #pragma once
 
-#include "spacepdhcg/transcription/discrete_flow_linearisation.hpp"
+#include "spacepdhcg/transcription/linearisation_types.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -17,6 +18,15 @@ struct AugmentedState {
     std::array<double, StateDimension * StateDimension> transition{};
     std::array<double, StateDimension * ControlDimension> control_sensitivity{};
 };
+
+template <typename Vector>
+void require_finite(const Vector& values, const char* message) {
+    if (!std::all_of(values.begin(), values.end(), [](const double value) {
+            return std::isfinite(value);
+        })) {
+        throw std::invalid_argument(message);
+    }
+}
 
 template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
 [[nodiscard]] AugmentedState<StateDimension, ControlDimension> derivative(
@@ -49,6 +59,15 @@ template <std::size_t StateDimension, std::size_t ControlDimension, typename Mod
             result.control_sensitivity[row * ControlDimension + column] = value;
         }
     }
+    require_finite(result.state, "variational RK4 state derivative is non-finite");
+    require_finite(
+        result.transition,
+        "variational RK4 state-transition derivative is non-finite"
+    );
+    require_finite(
+        result.control_sensitivity,
+        "variational RK4 control-sensitivity derivative is non-finite"
+    );
     return result;
 }
 
@@ -56,7 +75,7 @@ template <std::size_t StateDimension, std::size_t ControlDimension>
 [[nodiscard]] AugmentedState<StateDimension, ControlDimension> add_scaled(
     const AugmentedState<StateDimension, ControlDimension>& base,
     const AugmentedState<StateDimension, ControlDimension>& increment,
-    double scale
+    const double scale
 ) {
     AugmentedState<StateDimension, ControlDimension> result = base;
     for (std::size_t index = 0; index < StateDimension; ++index) {
@@ -71,27 +90,57 @@ template <std::size_t StateDimension, std::size_t ControlDimension>
     return result;
 }
 
+template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
+void apply_post_step_projection(
+    const Model& model,
+    AugmentedState<StateDimension, ControlDimension>& integrated
+) {
+    if constexpr (requires {
+                      model.project_rk4_variational(
+                          integrated.state,
+                          integrated.transition,
+                          integrated.control_sensitivity
+                      );
+                  }) {
+        model.project_rk4_variational(
+            integrated.state,
+            integrated.transition,
+            integrated.control_sensitivity
+        );
+    }
+}
+
 }  // namespace variational_rk4_detail
 
-/// Integrate the state-transition and constant-control sensitivity equations with RK4.
+/// Integrate the one-step map and its exact RK4 algorithmic sensitivities.
 ///
-/// This avoids one dynamics rollout per Jacobian column for models whose state lives in a
-/// Euclidean coordinate chart and whose `jacobians()` method is analytic. Models that apply a
-/// post-step manifold projection, such as quaternion normalisation, must additionally apply the
-/// projection Jacobian or retain finite-difference discrete-flow linearisation.
+/// For constant control over one interval, the augmented variational equations are
+///
+///     x_dot     = f(x,u),
+///     Phi_dot   = f_x(x,u) Phi,        Phi(0) = I,
+///     Gamma_dot = f_x(x,u) Gamma + f_u(x,u), Gamma(0) = 0.
+///
+/// The same four RK4 stages are applied to all three blocks. This gives derivatives of the
+/// implemented RK4 map, not merely of the continuous flow. Models may expose
+/// `project_rk4_variational(state, Phi, Gamma)` to differentiate a deterministic post-step
+/// manifold projection. The 6-DoF powered-descent model uses that hook for quaternion
+/// normalisation. Euclidean models need no hook.
 template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
 [[nodiscard]] DiscreteAffineLinearisation<StateDimension, ControlDimension>
 linearise_rk4_variational(
     const Model& model,
     const std::array<double, StateDimension>& state,
     const std::array<double, ControlDimension>& control,
-    double step_seconds
+    const double step_seconds
 ) {
     if (!std::isfinite(step_seconds) || step_seconds <= 0.0) {
         throw std::invalid_argument("variational RK4 step must be finite and positive");
     }
-    discrete_flow_detail::require_finite_vector(state, "variational RK4 state must be finite");
-    discrete_flow_detail::require_finite_vector(
+    variational_rk4_detail::require_finite(
+        state,
+        "variational RK4 state must be finite"
+    );
+    variational_rk4_detail::require_finite(
         control,
         "variational RK4 control must be finite"
     );
@@ -123,17 +172,17 @@ linearise_rk4_variational(
         control
     );
 
-    Augmented integrated = initial;
     const auto accumulate = [step_seconds](
-                                double initial_value,
-                                double first,
-                                double second,
-                                double third,
-                                double fourth
+                                const double initial_value,
+                                const double first,
+                                const double second,
+                                const double third,
+                                const double fourth
                             ) {
         return initial_value
                + step_seconds * (first + 2.0 * second + 2.0 * third + fourth) / 6.0;
     };
+    Augmented integrated = initial;
     for (std::size_t index = 0; index < StateDimension; ++index) {
         integrated.state[index] = accumulate(
             initial.state[index],
@@ -162,10 +211,24 @@ linearise_rk4_variational(
         );
     }
 
+    variational_rk4_detail::apply_post_step_projection(model, integrated);
+    variational_rk4_detail::require_finite(
+        integrated.transition,
+        "variational RK4 state-transition matrix is non-finite"
+    );
+    variational_rk4_detail::require_finite(
+        integrated.control_sensitivity,
+        "variational RK4 control-sensitivity matrix is non-finite"
+    );
+
+    // The model's public step is authoritative for the affine intercept. This guarantees that
+    // the linear model reproduces the exact implemented reference step to roundoff, including
+    // any model-specific post-step projection.
+    const auto reference = model.rk4_step(state, control, step_seconds);
     DiscreteAffineLinearisation<StateDimension, ControlDimension> result{};
     result.state = integrated.transition;
     result.control = integrated.control_sensitivity;
-    result.offset = integrated.state;
+    result.offset = reference;
     for (std::size_t row = 0; row < StateDimension; ++row) {
         for (std::size_t column = 0; column < StateDimension; ++column) {
             result.offset[row] -= result.state[row * StateDimension + column] * state[column];
@@ -175,6 +238,10 @@ linearise_rk4_variational(
                 result.control[row * ControlDimension + column] * control[column];
         }
     }
+    variational_rk4_detail::require_finite(
+        result.offset,
+        "variational RK4 affine offset is non-finite"
+    );
     return result;
 }
 
