@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spacepdhcg/dynamics/powered_descent_6dof_variational.hpp"
 #include "spacepdhcg/transcription/linearisation_types.hpp"
 
 #include <algorithm>
@@ -96,12 +97,28 @@ void apply_post_step_projection(
     AugmentedState<StateDimension, ControlDimension>& integrated
 ) {
     if constexpr (requires {
-                      model.project_rk4_variational(
+                      project_rk4_variational(
+                          model,
                           integrated.state,
                           integrated.transition,
                           integrated.control_sensitivity
                       );
                   }) {
+        // Deliberately unqualified: argument-dependent lookup selects the model's manifold
+        // projection derivative without coupling Euclidean models to a projection interface.
+        project_rk4_variational(
+            model,
+            integrated.state,
+            integrated.transition,
+            integrated.control_sensitivity
+        );
+    } else if constexpr (requires {
+                             model.project_rk4_variational(
+                                 integrated.state,
+                                 integrated.transition,
+                                 integrated.control_sensitivity
+                             );
+                         }) {
         model.project_rk4_variational(
             integrated.state,
             integrated.transition,
@@ -117,14 +134,14 @@ void apply_post_step_projection(
 /// For constant control over one interval, the augmented variational equations are
 ///
 ///     x_dot     = f(x,u),
-///     Phi_dot   = f_x(x,u) Phi,        Phi(0) = I,
+///     Phi_dot   = f_x(x,u) Phi,             Phi(0) = I,
 ///     Gamma_dot = f_x(x,u) Gamma + f_u(x,u), Gamma(0) = 0.
 ///
 /// The same four RK4 stages are applied to all three blocks. This gives derivatives of the
-/// implemented RK4 map, not merely of the continuous flow. Models may expose
-/// `project_rk4_variational(state, Phi, Gamma)` to differentiate a deterministic post-step
-/// manifold projection. The 6-DoF powered-descent model uses that hook for quaternion
-/// normalisation. Euclidean models need no hook.
+/// implemented RK4 map, not merely of the continuous flow. A model may expose an ADL-visible
+/// `project_rk4_variational(model,state,Phi,Gamma)` or an equivalent member to differentiate a
+/// deterministic post-step manifold projection. The 6-DoF powered-descent model uses this hook
+/// for quaternion normalisation; Euclidean models need no hook.
 template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
 [[nodiscard]] DiscreteAffineLinearisation<StateDimension, ControlDimension>
 linearise_rk4_variational(
