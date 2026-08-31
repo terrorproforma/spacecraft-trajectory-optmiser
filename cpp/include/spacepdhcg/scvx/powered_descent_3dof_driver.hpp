@@ -87,7 +87,7 @@ struct NativeScvxIterationRecord {
     double solve_seconds{0.0};
     double trust_radius_before{0.0};
     double trust_radius_after{0.0};
-    TrustAction trust_action{TrustAction::hold};
+    TrustAction trust_action{TrustAction::retain};
     double step_fraction{0.0};
     double predicted_reduction{0.0};
     double actual_reduction{0.0};
@@ -268,7 +268,9 @@ class NativePoweredDescentScvxDriver {
                 iteration,
                 current_residual,
                 accepted_streak,
-                previous_agreement
+                previous_agreement.value_or(
+                    std::numeric_limits<double>::quiet_NaN()
+                )
             );
             auto values = subproblem_.values(
                 current_states,
@@ -322,7 +324,7 @@ class NativePoweredDescentScvxDriver {
                     effective_tolerance,
                     std::max(
                         request.iteration_limit,
-                        forcing_.config().convergence_iteration_limit
+                        forcing_.config().refinement_iteration_limit
                     )
                 );
                 candidate = evaluate_candidate(
@@ -495,7 +497,8 @@ class NativePoweredDescentScvxDriver {
                 initial,
                 candidate.decoded.controls,
                 subproblem_.config().step_seconds,
-                false
+                subproblem_.config().discretisation
+                    == transcription::DiscretisationMethod::rk4_finite_difference
             );
         } catch (const std::exception&) {
             candidate.rollout.clear();

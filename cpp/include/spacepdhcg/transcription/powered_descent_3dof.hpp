@@ -219,6 +219,13 @@ struct PoweredDescentConvexDiagnostics {
     }
 };
 
+struct PoweredDescentDecodedDecision {
+    std::vector<PoweredDescentState> states{};
+    std::vector<PoweredDescentControl> controls{};
+    std::vector<PoweredDescentState> virtual_controls{};
+    std::vector<PoweredDescentState> virtual_epigraphs{};
+};
+
 class PoweredDescent3DofSubproblem {
   public:
     explicit PoweredDescent3DofSubproblem(
@@ -352,6 +359,57 @@ class PoweredDescent3DofSubproblem {
             );
         }
         return decision;
+    }
+
+    [[nodiscard]] PoweredDescentDecodedDecision decode(
+        const std::vector<double>& decision
+    ) const {
+        if (decision.size() != layout_.variables()) {
+            throw std::invalid_argument(
+                "powered-descent decision vector has the wrong size"
+            );
+        }
+        for (const auto value : decision) {
+            if (!std::isfinite(value)) {
+                throw std::invalid_argument(
+                    "powered-descent decision vector must be finite"
+                );
+            }
+        }
+        PoweredDescentDecodedDecision decoded{};
+        decoded.states.resize(layout_.intervals + 1U);
+        decoded.controls.resize(layout_.intervals);
+        decoded.virtual_controls.resize(layout_.intervals);
+        decoded.virtual_epigraphs.resize(layout_.intervals);
+        for (std::size_t node = 0; node <= layout_.intervals; ++node) {
+            const auto range = layout_.state(node);
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(range.start),
+                7U,
+                decoded.states[node].begin()
+            );
+        }
+        for (std::size_t interval = 0; interval < layout_.intervals; ++interval) {
+            const auto control = layout_.control(interval);
+            const auto virtual_control = layout_.virtual_control(interval);
+            const auto epigraph = layout_.virtual_epigraph(interval);
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(control.start),
+                4U,
+                decoded.controls[interval].begin()
+            );
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(virtual_control.start),
+                7U,
+                decoded.virtual_controls[interval].begin()
+            );
+            std::copy_n(
+                decision.begin() + static_cast<std::ptrdiff_t>(epigraph.start),
+                7U,
+                decoded.virtual_epigraphs[interval].begin()
+            );
+        }
+        return decoded;
     }
 
     [[nodiscard]] PoweredDescentConvexDiagnostics diagnostics(

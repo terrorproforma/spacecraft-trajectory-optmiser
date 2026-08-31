@@ -197,6 +197,22 @@ class PoweredDescent6DofModel {
         return result;
     }
 
+    [[nodiscard]] PoweredDescent6DofState euler_step(
+        const PoweredDescent6DofState& state,
+        const PoweredDescent6DofControl& control,
+        double step_seconds
+    ) const {
+        require_step(step_seconds);
+        const auto derivative = dynamics(state, control);
+        PoweredDescent6DofState next{};
+        for (std::size_t component = 0; component < next.size(); ++component) {
+            next[component] = state[component] + step_seconds * derivative[component];
+        }
+        normalise_quaternion(next);
+        validate_state(next, true);
+        return next;
+    }
+
     [[nodiscard]] PoweredDescent6DofState rk4_step(
         const PoweredDescent6DofState& state,
         const PoweredDescent6DofControl& control,
