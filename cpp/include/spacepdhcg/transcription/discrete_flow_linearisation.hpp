@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 
 namespace spacepdhcg::transcription {
@@ -64,14 +65,63 @@ void require_finite_vector(const Vector& values, const char* message) {
     }
 }
 
+template <typename Vector, typename Output, typename Evaluator>
+[[nodiscard]] Output finite_difference_column(
+    const Vector& reference_vector,
+    const Output& reference_output,
+    std::size_t column,
+    double delta,
+    Evaluator&& evaluate
+) {
+    auto plus = reference_vector;
+    auto minus = reference_vector;
+    plus[column] += delta;
+    minus[column] -= delta;
+
+    std::optional<Output> plus_output{};
+    std::optional<Output> minus_output{};
+    try {
+        plus_output = evaluate(plus);
+    } catch (const std::invalid_argument&) {
+    }
+    try {
+        minus_output = evaluate(minus);
+    } catch (const std::invalid_argument&) {
+    }
+
+    Output derivative{};
+    if (plus_output.has_value() && minus_output.has_value()) {
+        for (std::size_t row = 0; row < derivative.size(); ++row) {
+            derivative[row] = ((*plus_output)[row] - (*minus_output)[row]) / (2.0 * delta);
+        }
+        return derivative;
+    }
+    if (plus_output.has_value()) {
+        for (std::size_t row = 0; row < derivative.size(); ++row) {
+            derivative[row] = ((*plus_output)[row] - reference_output[row]) / delta;
+        }
+        return derivative;
+    }
+    if (minus_output.has_value()) {
+        for (std::size_t row = 0; row < derivative.size(); ++row) {
+            derivative[row] = (reference_output[row] - (*minus_output)[row]) / delta;
+        }
+        return derivative;
+    }
+    throw std::invalid_argument(
+        "finite-difference perturbations are infeasible in both directions"
+    );
+}
+
 }  // namespace discrete_flow_detail
 
 /// Linearise the selected one-step map directly, preserving the fixed CQP topology.
 ///
-/// The affine model is `x_next = A x + B u + d`. Central differences are used because the
-/// resulting operators are later evaluated many times but their sparse positions do not change.
-/// The offset is formed from the exact selected step at the reference, so the affine model
-/// reproduces that reference step to roundoff even when derivative columns are approximate.
+/// The affine model is `x_next = A x + B u + d`. Central differences are used in the
+/// interior. When a perturbation crosses a physical domain boundary, such as nonnegative
+/// mass or thrust epigraph, the valid one-sided derivative is used. The offset is formed from
+/// the exact selected step at the reference, so the affine model reproduces that reference
+/// step to roundoff even when derivative columns are approximate.
 template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
 [[nodiscard]] DiscreteAffineLinearisation<StateDimension, ControlDimension>
 linearise_discrete_flow(
@@ -102,53 +152,45 @@ linearise_discrete_flow(
 
     for (std::size_t column = 0; column < StateDimension; ++column) {
         const auto delta = discrete_flow_detail::perturbation(state[column], relative_step);
-        auto plus = state;
-        auto minus = state;
-        plus[column] += delta;
-        minus[column] -= delta;
-        const auto plus_step = discrete_flow_detail::discrete_step(
-            model,
-            plus,
-            control,
-            step_seconds,
-            method
-        );
-        const auto minus_step = discrete_flow_detail::discrete_step(
-            model,
-            minus,
-            control,
-            step_seconds,
-            method
+        const auto derivative = discrete_flow_detail::finite_difference_column(
+            state,
+            reference,
+            column,
+            delta,
+            [&](const auto& candidate) {
+                return discrete_flow_detail::discrete_step(
+                    model,
+                    candidate,
+                    control,
+                    step_seconds,
+                    method
+                );
+            }
         );
         for (std::size_t row = 0; row < StateDimension; ++row) {
-            result.state[row * StateDimension + column] =
-                (plus_step[row] - minus_step[row]) / (2.0 * delta);
+            result.state[row * StateDimension + column] = derivative[row];
         }
     }
 
     for (std::size_t column = 0; column < ControlDimension; ++column) {
         const auto delta = discrete_flow_detail::perturbation(control[column], relative_step);
-        auto plus = control;
-        auto minus = control;
-        plus[column] += delta;
-        minus[column] -= delta;
-        const auto plus_step = discrete_flow_detail::discrete_step(
-            model,
-            state,
-            plus,
-            step_seconds,
-            method
-        );
-        const auto minus_step = discrete_flow_detail::discrete_step(
-            model,
-            state,
-            minus,
-            step_seconds,
-            method
+        const auto derivative = discrete_flow_detail::finite_difference_column(
+            control,
+            reference,
+            column,
+            delta,
+            [&](const auto& candidate) {
+                return discrete_flow_detail::discrete_step(
+                    model,
+                    state,
+                    candidate,
+                    step_seconds,
+                    method
+                );
+            }
         );
         for (std::size_t row = 0; row < StateDimension; ++row) {
-            result.control[row * ControlDimension + column] =
-                (plus_step[row] - minus_step[row]) / (2.0 * delta);
+            result.control[row * ControlDimension + column] = derivative[row];
         }
     }
 
