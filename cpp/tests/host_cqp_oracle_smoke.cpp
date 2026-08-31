@@ -38,7 +38,10 @@ int main() {
     using spacepdhcg::orbitweaver::HostCqpFidelityStage;
     using spacepdhcg::orbitweaver::HostCqpOracleConfig;
 
-    const auto builder = [](const ArcRequest& request, const std::optional<ArcSolution>& previous) {
+    const auto builder = [](
+                             const ArcRequest&,
+                             const std::optional<ArcSolution>& previous
+                         ) {
         if (!previous.has_value() || previous->warm_start_token != 42U) {
             throw std::runtime_error("coarse CQP stage did not receive screening context");
         }
