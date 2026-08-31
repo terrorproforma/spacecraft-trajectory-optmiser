@@ -1,0 +1,55 @@
+name: cpp-core
+
+on:
+  push:
+    paths:
+      - "cpp/**"
+      - ".github/workflows/cpp-core.yml"
+  pull_request:
+    paths:
+      - "cpp/**"
+      - ".github/workflows/cpp-core.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpp-core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure C++20 core
+        run: >-
+          cmake
+          -S cpp/core
+          -B build/cpp-core
+          -DBUILD_TESTING=ON
+          -DSPACEPDHCG_CORE_WARNINGS_AS_ERRORS=ON
+
+      - name: Build C++20 core
+        run: cmake --build build/cpp-core --parallel 2
+
+      - name: Run C++20 core tests
+        run: ctest --test-dir build/cpp-core --output-on-failure
+
+      - name: Configure sanitizer build
+        run: >-
+          cmake
+          -S cpp/core
+          -B build/cpp-core-sanitized
+          -DBUILD_TESTING=ON
+          -DSPACEPDHCG_CORE_WARNINGS_AS_ERRORS=ON
+          -DSPACEPDHCG_CORE_ENABLE_SANITIZERS=ON
+
+      - name: Build sanitizer targets
+        run: cmake --build build/cpp-core-sanitized --parallel 2
+
+      - name: Run sanitizer tests
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ctest --test-dir build/cpp-core-sanitized --output-on-failure
