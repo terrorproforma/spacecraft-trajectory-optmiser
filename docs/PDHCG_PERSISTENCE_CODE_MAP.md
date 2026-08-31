@@ -26,10 +26,17 @@ G2 uses the allowed **linked internal adapter** strategy:
 3. The upstream target remains the one-shot GPU reference. SpacePDHCG owns the
    explicit persistent lifecycle, stream binding, topology/value buffers,
    diagnostics, and allocation ledger under `cpp/cuda`.
-4. Every imported source path and the exact commit/tree are recorded by CMake
-   and in the G2 evidence manifest.
-5. No patch is currently applied. The manifest records an empty patch set, so
-   a future patch cannot silently enter a certified build.
+4. Every imported source path, the exact commit/tree, and patch digest are
+   recorded by CMake and in the G2 evidence manifest.
+5. The deterministic patch
+   `third_party/patches/pdhcg/0001-free-quadratic-state.patch` is applied only
+   to an ignored build-tree copy after lock verification. It frees
+   quadratic-state allocations omitted by the pinned destructor and
+   initializes spectral SpMV output scratch so one-shot reference runs are
+   clean under memcheck/initcheck. It does not change numerical kernels.
+
+The patch SHA-256 is
+`7f212ac5ef6afa96b7084092bfcff80602c2c976e1a7a9f3305d1817cb7554f4`.
 
 The adapter boundary is deliberate: pinned upstream launches many kernels on
 the implicit default stream and destructively rescales/extracts state. Calling

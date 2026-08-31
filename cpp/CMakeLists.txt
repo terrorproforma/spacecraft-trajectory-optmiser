@@ -14,6 +14,7 @@ option(SPACEPDHCG_BUILD_C_API "Build the stable native C ABI library" ON)
 option(SPACEPDHCG_BUILD_NATIVE_TESTS "Build every host-only native smoke test" ON)
 option(SPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS "Treat native warnings as errors" ON)
 option(SPACEPDHCG_NATIVE_ENABLE_SANITIZERS "Enable ASan and UBSan" OFF)
+option(SPACEPDHCG_BUILD_CUDA "Build the persistent single-GPU CUDA workspace" OFF)
 option(
     SPACEPDHCG_PYTHON_WHEEL
     "Install the native C ABI inside the spacepdhcg Python package"
@@ -85,6 +86,10 @@ if(BUILD_TESTING AND SPACEPDHCG_BUILD_NATIVE_TESTS)
         spacepdhcg_apply_native_options(${target_name})
         add_test(NAME ${target_name} COMMAND ${target_name})
     endforeach()
+endif()
+
+if(SPACEPDHCG_BUILD_CUDA)
+    add_subdirectory(cuda)
 endif()
 
 if(SPACEPDHCG_PYTHON_WHEEL)

@@ -1,0 +1,44 @@
+diff --git a/src/solver_state.cu b/src/solver_state.cu
+--- a/src/solver_state.cu
++++ b/src/solver_state.cu
+@@ -1165,6 +1165,28 @@ void pdhg_solver_state_free(pdhg_solver_state_t *state)
+         if (state->quadratic_objective_term->spmv_ctx_Rt)
+             pdhcg_spmv_ctx_destroy(state->quadratic_objective_term->spmv_ctx_Rt);
+ 
++        if (state->quadratic_objective_term->diagonal_objective_matrix)
++            CUDA_CHECK(cudaFree(state->quadratic_objective_term->diagonal_objective_matrix));
++        if (state->quadratic_objective_term->Rx_product)
++            CUDA_CHECK(cudaFree(state->quadratic_objective_term->Rx_product));
++        cu_sparse_matrix_csr_t *owned_matrices[] = {
++            state->quadratic_objective_term->objective_sparse_matrix,
++            state->quadratic_objective_term->objective_lowrank_matrix,
++            state->quadratic_objective_term->objective_lowrank_matrix_t,
++        };
++        for (cu_sparse_matrix_csr_t *matrix : owned_matrices)
++        {
++            if (!matrix)
++                continue;
++            if (matrix->row_ptr)
++                CUDA_CHECK(cudaFree(matrix->row_ptr));
++            if (matrix->col_ind)
++                CUDA_CHECK(cudaFree(matrix->col_ind));
++            if (matrix->val)
++                CUDA_CHECK(cudaFree(matrix->val));
++            free(matrix);
++        }
++
+         if (state->quadratic_objective_term->d_middle_diag)
+             CUDA_CHECK(cudaFree(state->quadratic_objective_term->d_middle_diag));
+         if (state->quadratic_objective_term->d_middle_dense)
+diff --git a/src/pdhg_core_op.cu b/src/pdhg_core_op.cu
+--- a/src/pdhg_core_op.cu
++++ b/src/pdhg_core_op.cu
+@@ -1689,6 +1689,8 @@ double estimate_maximum_singular_value(cusparseHandle_t sparse_handle,
+     CUDA_CHECK(cudaMalloc(&eigenvector_d, safe_m * sizeof(double)));
+     CUDA_CHECK(cudaMalloc(&next_eigenvector_d, safe_m * sizeof(double)));
+     CUDA_CHECK(cudaMalloc(&dual_product_d, safe_n * sizeof(double)));
++    CUDA_CHECK(cudaMemset(next_eigenvector_d, 0, safe_m * sizeof(double)));
++    CUDA_CHECK(cudaMemset(dual_product_d, 0, safe_n * sizeof(double)));
+ 
+     double *eigenvector_h = (double *)safe_malloc(safe_m * sizeof(double));
+     unsigned int seed = 1234 + row_coord;
