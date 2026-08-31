@@ -14,6 +14,11 @@ option(SPACEPDHCG_BUILD_C_API "Build the stable native C ABI library" ON)
 option(SPACEPDHCG_BUILD_NATIVE_TESTS "Build every host-only native smoke test" ON)
 option(SPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS "Treat native warnings as errors" ON)
 option(SPACEPDHCG_NATIVE_ENABLE_SANITIZERS "Enable ASan and UBSan" OFF)
+option(
+    SPACEPDHCG_PYTHON_WHEEL
+    "Install the native C ABI inside the spacepdhcg Python package"
+    OFF
+)
 
 add_library(spacepdhcg_interface INTERFACE)
 add_library(SpacePDHCG::headers ALIAS spacepdhcg_interface)
@@ -82,51 +87,63 @@ if(BUILD_TESTING AND SPACEPDHCG_BUILD_NATIVE_TESTS)
     endforeach()
 endif()
 
-install(
-    TARGETS spacepdhcg_interface
-    EXPORT SpacePDHCGTargets
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-if(TARGET spacepdhcg_c_api)
+if(SPACEPDHCG_PYTHON_WHEEL)
+    if(NOT TARGET spacepdhcg_c_api)
+        message(FATAL_ERROR "SPACEPDHCG_PYTHON_WHEEL requires SPACEPDHCG_BUILD_C_API=ON")
+    endif()
     install(
         TARGETS spacepdhcg_c_api
+        LIBRARY DESTINATION spacepdhcg/native
+        ARCHIVE DESTINATION spacepdhcg/native
+        RUNTIME DESTINATION spacepdhcg/native
+    )
+else()
+    install(
+        TARGETS spacepdhcg_interface
         EXPORT SpacePDHCGTargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+    if(TARGET spacepdhcg_c_api)
+        install(
+            TARGETS spacepdhcg_c_api
+            EXPORT SpacePDHCGTargets
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
+    endif()
+    install(
+        DIRECTORY include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+    )
+
+    configure_package_config_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/SpacePDHCGConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfig.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SpacePDHCG
+    )
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfigVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfig.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SpacePDHCG
+    )
+    install(
+        EXPORT SpacePDHCGTargets
+        FILE SpacePDHCGTargets.cmake
+        NAMESPACE SpacePDHCG::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SpacePDHCG
+    )
+
+    export(
+        EXPORT SpacePDHCGTargets
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGTargets.cmake
+        NAMESPACE SpacePDHCG::
     )
 endif()
-install(
-    DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-)
-
-configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/SpacePDHCGConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SpacePDHCG
-)
-write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion
-)
-install(
-    FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGConfigVersion.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SpacePDHCG
-)
-install(
-    EXPORT SpacePDHCGTargets
-    FILE SpacePDHCGTargets.cmake
-    NAMESPACE SpacePDHCG::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SpacePDHCG
-)
-
-export(
-    EXPORT SpacePDHCGTargets
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/SpacePDHCGTargets.cmake
-    NAMESPACE SpacePDHCG::
-)
