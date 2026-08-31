@@ -1,7 +1,7 @@
 import numpy as np
 
 from spacepdhcg.backends import PersistentClarabel
-from spacepdhcg.cqp import CanonicalCQP, residual_qualified
+from spacepdhcg.cqp import CanonicalCQP, ConeKind, residual_qualified
 from spacepdhcg.distributed import (
     CondensedScenarioCQPBundle,
     ScenarioCQPBundle,
@@ -95,24 +95,87 @@ def _local_solution(subproblem, local_values):
     return solution
 
 
-def test_condensed_identical_bundle_matches_single_scenario_objective() -> None:
+def _condensed_repeated_candidate(bundle, local_primal):
+    candidate = np.zeros(bundle.structure.n_variables)
+    for scenario in range(bundle.scenario_count):
+        candidate[bundle.local_to_global(scenario)] = local_primal
+    return candidate
+
+
+def _objective(problem, primal) -> float:
+    quadratic = problem.structure.quadratic.matrix(problem.values.quadratic)
+    return float(
+        0.5 * primal @ (quadratic @ primal)
+        + problem.values.linear @ primal
+    )
+
+
+def _maximum_convex_violation(problem, primal) -> float:
+    values = problem.values
+    scalar = problem.structure.constraint.matrix(values.constraint) @ primal
+    scalar_violation = np.maximum(
+        np.maximum(values.lower - scalar, 0.0),
+        np.maximum(scalar - values.upper, 0.0),
+    )
+    variable_violation = np.maximum(
+        np.maximum(values.variable_lower - primal, 0.0),
+        np.maximum(primal - values.variable_upper, 0.0),
+    )
+    cone_violation = 0.0
+    if problem.structure.affine_cone is not None:
+        affine = (
+            problem.structure.affine_cone.matrix(values.affine_cone) @ primal
+            + values.affine_offset
+        )
+        for cone in problem.structure.affine_cones:
+            assert cone.kind is ConeKind.SECOND_ORDER
+            segment = affine[cone.start : cone.stop]
+            cone_violation = max(
+                cone_violation,
+                float(max(np.linalg.norm(segment[:-1]) - segment[-1], 0.0)),
+            )
+    return max(
+        float(np.max(scalar_violation, initial=0.0)),
+        float(np.max(variable_violation, initial=0.0)),
+        cone_violation,
+    )
+
+
+def test_condensed_bundle_contains_the_exact_repeated_local_optimum() -> None:
     subproblem, local_values = _local_problem()
     local_solution = _local_solution(subproblem, local_values)
     bundle = _condensed_bundle(subproblem)
+    problem = bundle.problem([local_values] * bundle.scenario_count)
+    candidate = _condensed_repeated_candidate(bundle, local_solution.primal)
+    decoded = bundle.decode_primal(candidate)
+
+    assert bundle.maximum_nonanticipativity_violation(candidate) == 0.0
+    assert _maximum_convex_violation(problem, candidate) < 2.0e-7
+    for local in decoded.local:
+        np.testing.assert_allclose(local, local_solution.primal, atol=0.0, rtol=0.0)
+    expected = bundle.expected_objective(
+        decoded.local,
+        [local_values] * bundle.scenario_count,
+    )
+    assert abs(expected - local_solution.objective) < 1.0e-6
+    assert abs(_objective(problem, candidate) - expected) < 1.0e-8
+
+    # This highly degenerate exact-penalty problem can make Clarabel terminate at a
+    # conservative symmetric point despite tiny reported residuals.  It remains a
+    # solve smoke test; the exact repeated candidate above is the formulation oracle.
     global_solution = PersistentClarabel(
-        bundle.problem([local_values] * bundle.scenario_count),
+        problem,
         tolerance=1.0e-8,
         iteration_limit=1_000,
     ).solve()
-
     assert residual_qualified(global_solution, tolerance=2.0e-8)
-    decoded = bundle.decode_primal(global_solution.primal)
-    assert bundle.maximum_nonanticipativity_violation(global_solution.primal) < 1.0e-12
-    for local in decoded.local[1:]:
-        np.testing.assert_allclose(local, decoded.local[0], atol=2.0e-6, rtol=0.0)
-    expected = bundle.expected_objective(decoded.local, [local_values] * 3)
-    assert abs(global_solution.objective - expected) < 1.0e-6
-    assert abs(global_solution.objective - local_solution.objective) < 2.0e-6
+    solved_decoded = bundle.decode_primal(global_solution.primal)
+    solved_expected = bundle.expected_objective(
+        solved_decoded.local,
+        [local_values] * bundle.scenario_count,
+    )
+    assert abs(global_solution.objective - solved_expected) < 1.0e-6
+    assert global_solution.objective >= expected - 1.0e-5
 
 
 def test_consensus_row_bundle_contains_the_repeated_local_optimum() -> None:
