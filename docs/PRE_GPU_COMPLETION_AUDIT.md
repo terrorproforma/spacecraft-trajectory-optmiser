@@ -51,6 +51,9 @@ Rewriting the reference and analysis layer in C++ would reduce scientific transp
 - 6-DoF powered-descent dynamics and fixed-pattern transcription;
 - long-horizon low-thrust two-body dynamics and transcription;
 - continuous inter-node path checking;
+- automatic fixed-grid Gauss–Lobatto, Simpson, trapezoidal and midpoint path sampling;
+- nonlinear path linearisation into immutable affine sample patterns;
+- integral violation-state CT enforcement inside the CQP;
 - selectable Euler or RK4 discrete-flow linearisation with invariant sparse topology;
 - exact dense-ADMM and high-accuracy CPU references for supported problem classes.
 
@@ -75,19 +78,27 @@ Rewriting the reference and analysis layer in C++ would reduce scientific transp
 
 ### OrbitWeaver
 
-- zero-revolution Lambert screening;
+- zero- and multi-revolution universal-variable Lambert families;
+- explicit short/long direction and lower/higher parameter branch metadata;
+- family-aware Lambert screening with matching impulses and mass closure;
 - low-thrust feasibility screening;
+- concrete native coarse-convex low-thrust arc adapter;
+- concrete persistent deterministic low-thrust SCvx arc adapter;
+- typed, request-compatible warm-reference transfer between fidelity stages;
 - deterministic beam search;
 - time-expanded moving-target graph and elementary-route solver;
 - route-driven dynamic discretisation discovery;
 - exact small-instance multi-spacecraft route-column master;
 - route-column dominance and reduced-cost pricing primitives;
+- dependency-free two-phase restricted-master simplex with dual-price recovery;
+- full iterative column generation with incumbent, lower bound and iteration records;
 - native multi-fidelity trajectory-oracle contract, exact cache and warm-start pipeline.
 
 ### Native delivery
 
-- root CMake now builds the full host-native smoke suite and C ABI;
+- root CMake builds the full host-native smoke suite and C ABI;
 - warnings-as-errors and ASan/UBSan gates;
+- native-core and native-parity merge-surface checks;
 - installable CMake package exports;
 - external package-consumer test.
 
@@ -95,14 +106,14 @@ Rewriting the reference and analysis layer in C++ would reduce scientific transp
 
 The following items remain legitimate CPU-side work and should be pursued before expensive hardware campaigns:
 
-- complete adversarial and randomized tests for the new risk, route-master and oracle layers;
+- complete adversarial, randomized and property-based tests for the risk, route-master, Lambert-family, CT-sampling and oracle layers;
 - finish higher-order variational integration alternatives to finite-difference RK4 where analytic or automatic derivatives provide a clear benefit;
-- add multi-revolution Lambert families with explicit branch metadata and regression cases;
-- add coarse-convex and refined-SCvx OrbitWeaver oracle adapters backed by the native host solver;
-- add route incumbent certification, lower-bound provenance and column-generation iteration records;
+- connect robust scenario SCvx to the OrbitWeaver robust-fidelity stage on the host truth path;
+- define and implement a final high-fidelity certification adapter with a selected force model and independent acceptance policy;
+- add native wheel packaging and a documented accelerator-pointer exchange design;
 - construct reproducible scale-sweep manifests and synthetic memory/work estimates;
-- reconcile old milestone and programme-status documents with this ledger;
 - expand the formal inexact-SCvx argument into theorem, assumptions, lemmas and counterexample tests;
+- lock Paper 1 and Paper 2 notation, table schemas and figure-generation interfaces;
 - prepare paper tables and plotting schemas without inventing hardware results.
 
 ## Partially hardware-blocked
