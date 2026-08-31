@@ -53,7 +53,6 @@ if(SPACEPDHCG_BUILD_C_API)
     add_library(spacepdhcg_c_api SHARED src/c_api.cpp)
     add_library(SpacePDHCG::c_api ALIAS spacepdhcg_c_api)
     target_link_libraries(spacepdhcg_c_api PUBLIC spacepdhcg_interface)
-    target_compile_definitions(spacepdhcg_c_api PRIVATE SPACEPDHCG_C_API_EXPORTS)
     set_target_properties(
         spacepdhcg_c_api
         PROPERTIES
