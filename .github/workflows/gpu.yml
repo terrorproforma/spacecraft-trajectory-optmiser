@@ -1,0 +1,86 @@
+name: gpu-validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_multi_gpu_build:
+        description: Also compile the upstream MPI/NCCL target on a multi-GPU runner
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  single-gpu-correctness:
+    runs-on: [self-hosted, linux, x64, gpu, nvidia, cuda-12]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record hardware and toolchain
+        run: |
+          set -euo pipefail
+          mkdir -p results/gpu
+          nvidia-smi --query-gpu=name,uuid,driver_version,memory.total,compute_cap --format=csv > results/gpu/nvidia-smi.csv
+          nvcc --version | tee results/gpu/nvcc.txt
+          cmake --version | tee results/gpu/cmake.txt
+          python --version | tee results/gpu/python.txt
+      - name: Verify and checkout pinned PDHCG
+        run: |
+          set -euo pipefail
+          PDHCG_SHA=$(python -c 'import json; print(json.load(open("third_party/pdhcg.lock.json"))["commit"])')
+          rm -rf _upstream/pdhcg
+          git clone --filter=blob:none https://github.com/Lhongpei/PDHCG.git _upstream/pdhcg
+          git -C _upstream/pdhcg checkout --detach "${PDHCG_SHA}"
+          test "$(git -C _upstream/pdhcg rev-parse HEAD)" = "${PDHCG_SHA}"
+          git -C _upstream/pdhcg rev-parse HEAD | tee results/gpu/pdhcg-commit.txt
+      - name: Install SpacePDHCG and pinned upstream binding
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+          python -m pip install ./_upstream/pdhcg
+      - name: Run one-shot CUDA correctness gate
+        run: |
+          set -euo pipefail
+          spacepdhcg-banded-correctness \
+            --pdhcg --seeds 17 29 41 --intervals 8 --tolerance 1e-6 \
+            | tee results/gpu/pdhcg-banded-correctness.json
+      - name: Upload raw GPU evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: spacepdhcg-single-gpu-${{ github.run_id }}
+          path: results/gpu
+          if-no-files-found: error
+          retention-days: 30
+
+  multi-gpu-build-gate:
+    if: ${{ inputs.run_multi_gpu_build }}
+    runs-on: [self-hosted, linux, x64, gpu, nvidia, cuda-12, multi-gpu]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify distributed prerequisites
+        run: |
+          set -euo pipefail
+          test "$(nvidia-smi -L | wc -l)" -ge 2
+          command -v mpirun
+          ldconfig -p | grep -i nccl
+          nvcc --version
+      - name: Checkout pinned PDHCG
+        run: |
+          set -euo pipefail
+          PDHCG_SHA=$(python -c 'import json; print(json.load(open("third_party/pdhcg.lock.json"))["commit"])')
+          rm -rf _upstream/pdhcg
+          git clone --filter=blob:none https://github.com/Lhongpei/PDHCG.git _upstream/pdhcg
+          git -C _upstream/pdhcg checkout --detach "${PDHCG_SHA}"
+          test "$(git -C _upstream/pdhcg rev-parse HEAD)" = "${PDHCG_SHA}"
+      - name: Compile upstream MPI/NCCL target
+        run: |
+          set -euo pipefail
+          cmake -S _upstream/pdhcg -B build/pdhcg-distributed \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPDHCG_COMPILE_DISTRIBUTED=ON
+          cmake --build build/pdhcg-distributed --parallel
+          test -x build/pdhcg-distributed/pdhcg
