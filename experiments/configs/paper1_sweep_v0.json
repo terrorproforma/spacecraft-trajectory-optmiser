@@ -1,0 +1,114 @@
+{
+  "suite": "spacepdhcg-paper1-v0",
+  "schema_version": "1.0.0",
+  "replicates": 5,
+  "warmup_runs": 2,
+  "quality_policy": {
+    "reference_backend": "clarabel_cpu",
+    "objective_relative_tolerance": 1e-5,
+    "primal_residual_max": 1e-5,
+    "dual_residual_max": 1e-5,
+    "nonlinear_dynamics_defect_inf_max": 1e-4,
+    "path_violation_inf_max": 1e-5,
+    "terminal_error_inf_max": 1e-4
+  },
+  "families": [
+    {
+      "id": "B0-cw-qp",
+      "problem": "cw_rendezvous",
+      "formulation": "qp_box_thrust",
+      "nodes": [50, 100, 500, 2000, 10000],
+      "tolerances": [0.001, 0.0001, 0.000001, 1e-8],
+      "scenarios": [1]
+    },
+    {
+      "id": "B1-cw-socp",
+      "problem": "cw_rendezvous",
+      "formulation": "soc_thrust",
+      "nodes": [50, 100, 500, 2000, 10000],
+      "tolerances": [0.001, 0.0001, 0.000001, 1e-8],
+      "scenarios": [1]
+    },
+    {
+      "id": "B2-powered-descent-3dof",
+      "problem": "powered_descent_3dof",
+      "formulation": "fixed_grid_scvx",
+      "nodes": [50, 100, 500, 2000],
+      "tolerances": [0.001, 0.0001, 0.000001],
+      "scenarios": [1],
+      "inner_accuracy_modes": ["fixed", "adaptive", "hybrid"]
+    },
+    {
+      "id": "B3-robust-powered-descent-3dof",
+      "problem": "powered_descent_3dof",
+      "formulation": "scenario_scvx",
+      "nodes": [50, 100, 500],
+      "tolerances": [0.001, 0.0001, 0.000001],
+      "scenarios": [1, 10, 100, 1000, 10000],
+      "risk_modes": ["expected", "worst_case", "cvar_0.95"]
+    },
+    {
+      "id": "B4-powered-descent-6dof",
+      "problem": "powered_descent_6dof",
+      "formulation": "fixed_grid_scvx",
+      "nodes": [50, 100, 500, 2000],
+      "tolerances": [0.001, 0.0001, 0.000001],
+      "scenarios": [1, 10, 100]
+    }
+  ],
+  "solver_modes": [
+    {
+      "name": "pdhcg",
+      "execution": ["one_shot_gpu", "persistent_gpu", "persistent_multi_gpu"],
+      "warm_start": [false, true]
+    },
+    {
+      "name": "qoco_gpu",
+      "execution": ["gpu_interior_point"],
+      "warm_start": [false, true]
+    },
+    {
+      "name": "cuclarabel",
+      "execution": ["gpu_interior_point"],
+      "warm_start": [false, true]
+    },
+    {
+      "name": "clarabel_cpu",
+      "execution": ["cpu_reference"],
+      "warm_start": [false]
+    },
+    {
+      "name": "host_pdhg",
+      "execution": ["cpu_lifecycle_reference"],
+      "warm_start": [false, true]
+    }
+  ],
+  "required_measurements": [
+    "initial_setup_seconds",
+    "coefficient_update_seconds",
+    "rescale_seconds",
+    "inner_solve_seconds",
+    "nonlinear_rollout_seconds",
+    "acceptance_seconds",
+    "end_to_end_seconds",
+    "peak_host_memory_bytes",
+    "peak_device_memory_bytes",
+    "energy_joules",
+    "outer_iterations",
+    "inner_iterations",
+    "objective",
+    "primal_residual",
+    "dual_residual",
+    "nonlinear_dynamics_defect_inf",
+    "path_violation_inf",
+    "terminal_error_inf"
+  ],
+  "hypotheses": {
+    "H1": "persistent setup and update overhead is below five percent at scale",
+    "H2": "scenario-aware multi-GPU decomposition has useful weak scaling",
+    "H3": "factorisation-free solving reaches a memory crossover before GPU IPMs",
+    "H4": "scenario-aware partitioning communicates less than generic partitioning",
+    "H5": "adaptive inner accuracy reduces end-to-end work at matched nonlinear quality",
+    "H6": "first-order construction plus IPM polish dominates either solver alone in part of the sweep"
+  }
+}
