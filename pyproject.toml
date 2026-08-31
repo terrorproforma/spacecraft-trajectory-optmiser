@@ -26,6 +26,7 @@ dev = [
 
 [project.scripts]
 spacepdhcg-banded-correctness = "spacepdhcg.benchmarks.banded_correctness:main"
+spacepdhcg-g1-correctness = "spacepdhcg.benchmarks.g1_correctness:main"
 spacepdhcg-cw-benchmark = "spacepdhcg.benchmarks.cw_repeat:main"
 spacepdhcg-cw-socp-benchmark = "spacepdhcg.benchmarks.cw_socp_repeat:main"
 spacepdhcg-powered-descent-scvx = "spacepdhcg.benchmarks.powered_descent_scvx:main"
