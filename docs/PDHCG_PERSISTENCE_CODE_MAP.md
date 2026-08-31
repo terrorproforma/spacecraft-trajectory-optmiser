@@ -17,19 +17,25 @@ be a persistent GPU implementation.
 
 ## Chosen G2 integration seam
 
-G2 uses the preferred **minimal pinned upstream patch** strategy:
+G2 uses the allowed **linked internal adapter** strategy:
 
-1. CMake verifies the locked commit and tree before applying anything.
-2. Deterministic patches live in `third_party/patches/pdhcg/`.
-3. A patched build tree is generated under the ignored build directory; the
-   ignored `_upstream/pdhcg` checkout is never edited and no upstream snapshot
-   is copied into the repository.
-4. The patch exposes lifecycle operations around the existing internal solver
-   state and keeps upstream numerical kernels as the source of truth.
-5. Patch SHA-256 values are recorded in build and G2 evidence manifests.
+1. CMake verifies the locked commit and tree before importing any source.
+2. The adapter compiles the selected pinned single-GPU upstream sources
+   directly from `_upstream/pdhcg`; the ignored checkout is never edited and no
+   upstream snapshot is copied into the repository.
+3. The upstream target remains the one-shot GPU reference. SpacePDHCG owns the
+   explicit persistent lifecycle, stream binding, topology/value buffers,
+   diagnostics, and allocation ledger under `cpp/cuda`.
+4. Every imported source path and the exact commit/tree are recorded by CMake
+   and in the G2 evidence manifest.
+5. No patch is currently applied. The manifest records an empty patch set, so
+   a future patch cannot silently enter a certified build.
 
-The SpacePDHCG C ABI and policy/state machine remain in `cpp/cuda`; the patch
-is restricted to the lower-level upstream persistence seam.
+The adapter boundary is deliberate: pinned upstream launches many kernels on
+the implicit default stream and destructively rescales/extracts state. Calling
+that one-shot orchestration from a repeated solve would violate G2. The
+persistent target therefore retains its own CUDA execution state while linking
+the pinned implementation for matched-quality one-shot comparisons.
 
 ## Public entry and one-shot orchestration
 
