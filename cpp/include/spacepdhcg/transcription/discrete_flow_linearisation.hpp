@@ -41,8 +41,8 @@ template <typename Model, typename State, typename Control>
     switch (method) {
         case DiscretisationMethod::forward_euler:
             return forward_euler_step(model, state, control, step_seconds);
-        case DiscretisationMethod::rk4_finite_difference:
         case DiscretisationMethod::rk4_variational:
+        case DiscretisationMethod::rk4_finite_difference_reference:
             return model.rk4_step(state, control, step_seconds);
     }
     throw std::invalid_argument("unsupported discrete-flow method");
@@ -189,15 +189,15 @@ linearise_by_finite_difference(
 
 /// Linearise the selected one-step map while preserving fixed CQP topology.
 ///
-/// - `forward_euler` and `rk4_finite_difference` use domain-aware finite differences.
-/// - `rk4_variational` integrates analytic state-transition and constant-control sensitivity
-///   equations with the same RK4 stages as the state. A model-specific post-step projection
-///   Jacobian is applied when exposed by the model.
+/// - `forward_euler` uses domain-aware finite differences of the implemented Euler map.
+/// - `rk4_variational` (and its legacy `rk4_finite_difference` alias) integrates analytic
+///   state-transition and constant-control sensitivity equations with the same RK4 stages as
+///   the state, including a model-specific projection Jacobian when available.
+/// - `rk4_finite_difference_reference` retains the expensive domain-aware finite-difference
+///   RK4 path exclusively as an independent correctness oracle.
 ///
-/// The affine model is `x_next = A x + B u + d`. Finite differences use central columns in the
-/// interior and a valid one-sided column when a perturbation crosses a physical domain boundary.
-/// Every mode forms the offset from the exact selected step at the reference, so the affine model
-/// reproduces the implemented reference step to roundoff.
+/// Every mode forms the affine offset from the exact selected reference step, so the affine model
+/// reproduces the implemented map at the reference to roundoff.
 template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
 [[nodiscard]] DiscreteAffineLinearisation<StateDimension, ControlDimension>
 linearise_discrete_flow(
@@ -219,7 +219,7 @@ linearise_discrete_flow(
         control,
         "discrete-flow control must be finite"
     );
-    if (method == DiscretisationMethod::rk4_variational) {
+    if (uses_variational_sensitivities(method)) {
         return linearise_rk4_variational<StateDimension, ControlDimension>(
             model,
             state,
