@@ -30,6 +30,16 @@ jobs:
         run: cmake --build build/native --parallel 2
       - name: Test
         run: ctest --test-dir build/native --output-on-failure
+      - name: Install native package
+        run: cmake --install build/native --prefix "$PWD/build/install"
+      - name: Configure external package consumer
+        run: >-
+          cmake -S cpp/package-smoke -B build/package-smoke
+          -DCMAKE_PREFIX_PATH="$PWD/build/install"
+      - name: Build external package consumer
+        run: cmake --build build/package-smoke --parallel 2
+      - name: Test external package consumer
+        run: ctest --test-dir build/package-smoke --output-on-failure
 
   native-sanitizers:
     name: C++20 ASan and UBSan
