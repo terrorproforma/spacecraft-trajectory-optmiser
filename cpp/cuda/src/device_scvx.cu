@@ -503,6 +503,7 @@ __global__ void hcw_exact_kernel(
     const double* control = controls + interval * 3U;
     double* output = propagated + interval * 6U;
     for (int row = 0; row < 6; ++row) {
+        output[row] = 0.0;
         for (int column = 0; column < 6; ++column) {
             const double value = state_matrix[row * 6 + column];
             transition[interval * 36U + row * 6 + column] = value;

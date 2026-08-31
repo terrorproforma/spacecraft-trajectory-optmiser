@@ -279,6 +279,9 @@ void test_direct_csc_fill() {
     d_control_positions.upload(control_positions, native_stream);
     d_next_positions.upload(next_positions, native_stream);
     d_virtual_positions.upload(virtual_positions, native_stream);
+    scalar_values.upload(std::vector<double>(nonzeros, 0.0), native_stream);
+    scalar_lower.upload(std::vector<double>(10U, 0.0), native_stream);
+    scalar_upper.upload(std::vector<double>(10U, 0.0), native_stream);
     const auto view64 = [](auto& buffer) {
         return test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_FLOAT64,
