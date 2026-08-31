@@ -1,0 +1,29 @@
+.venv/bin/ruff check . 
+.venv/bin/pytest -q 
+.venv/bin/cmake -S cpp -B build/g2-evidence-host-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_BUILD_CUDA=OFF -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON 
+.venv/bin/cmake --build build/g2-evidence-host-debug --parallel 4 
+.venv/bin/ctest --test-dir build/g2-evidence-host-debug --output-on-failure 
+.venv/bin/cmake -S cpp -B build/g2-evidence-cuda-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=120 
+.venv/bin/cmake --build build/g2-evidence-cuda-debug --parallel 4 
+env LD_LIBRARY_PATH=build/g2-evidence-cuda-debug/cuda:/usr/local/cuda-12.8/lib64 .venv/bin/ctest --test-dir build/g2-evidence-cuda-debug --output-on-failure 
+.venv/bin/cmake -S cpp -B build/g2-evidence-host-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPACEPDHCG_BUILD_CUDA=OFF -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON 
+.venv/bin/cmake --build build/g2-evidence-host-release --parallel 4 
+.venv/bin/ctest --test-dir build/g2-evidence-host-release --output-on-failure 
+.venv/bin/cmake -S cpp -B build/g2-evidence-cuda-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=120 
+.venv/bin/cmake --build build/g2-evidence-cuda-release --parallel 4 
+env LD_LIBRARY_PATH=build/g2-evidence-cuda-release/cuda:/usr/local/cuda-12.8/lib64 .venv/bin/ctest --test-dir build/g2-evidence-cuda-release --output-on-failure 
+.venv/bin/python scripts/gpu/dlpack_producer_compat.py --producer cupy --library build/g2-evidence-cuda-debug/cuda/libspacepdhcg_cuda.so 
+.venv/bin/python scripts/gpu/dlpack_producer_compat.py --producer torch --library build/g2-evidence-cuda-debug/cuda/libspacepdhcg_cuda.so 
+.venv/bin/python scripts/gpu/dlpack_producer_compat.py --producer jax --library build/g2-evidence-cuda-debug/cuda/libspacepdhcg_cuda.so 
+build/g2-evidence-cuda-debug/cuda-tests/persistent_cw_test 
+build/g2-evidence-cuda-debug/cuda-tests/dlpack_contract_test 
+build/g2-evidence-cuda-debug/cuda-tests/cone_inventory_test 
+build/g2-evidence-cuda-debug/cuda-tests/allocation_lifecycle_test 
+build/g2-evidence-cuda-debug/cuda-tests/pointer_contract_test 
+build/g2-evidence-cuda-debug/cuda-tests/stream_lifetime_test 
+build/g2-evidence-cuda-debug/cuda-tests/persistent_soc_test --with-one-shot 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --leak-check full --error-exitcode 91 build/g2-evidence-cuda-debug/cuda-tests/persistent_cw_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --leak-check full --error-exitcode 92 build/g2-evidence-cuda-debug/cuda-tests/dlpack_contract_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool racecheck --error-exitcode 93 build/g2-evidence-cuda-debug/cuda-tests/stream_lifetime_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool initcheck --track-unused-memory --error-exitcode 94 build/g2-evidence-cuda-debug/cuda-tests/persistent_soc_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool synccheck --error-exitcode 95 build/g2-evidence-cuda-debug/cuda-tests/persistent_cw_test 
