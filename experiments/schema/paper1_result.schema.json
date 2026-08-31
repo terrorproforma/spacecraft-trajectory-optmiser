@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/paper1_result.schema.json",
+  "title": "SpacePDHCG Paper 1 compact result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "identity",
+    "dimensions",
+    "quality",
+    "timing",
+    "work",
+    "resources",
+    "aggregation",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "repository_commit",
+        "family",
+        "instance_id",
+        "solver",
+        "policy",
+        "status"
+      ],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1},
+        "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "family": {
+          "enum": [
+            "P1-A-banded",
+            "P1-B-hcw",
+            "P1-C-pd3",
+            "P1-D-pd6",
+            "P1-E-low-thrust",
+            "P1-F-robust-pd"
+          ]
+        },
+        "instance_id": {"type": "string", "minLength": 1},
+        "solver": {
+          "enum": [
+            "clarabel-cpu",
+            "osqp-cpu",
+            "pdhcg-upstream-one-shot",
+            "spacepdhcg-persistent",
+            "qoco-gpu",
+            "cuclarabel",
+            "structured-pipg",
+            "hybrid-pdhcg-ipm"
+          ]
+        },
+        "policy": {"type": "string", "minLength": 1},
+        "status": {
+          "enum": [
+            "qualified",
+            "unqualified",
+            "unsupported",
+            "oom",
+            "timeout",
+            "failed"
+          ]
+        },
+        "hardware_id": {"type": ["string", "null"]},
+        "precision": {"enum": ["float32", "float64", "mixed", null]},
+        "warm_start": {"type": ["boolean", "null"]},
+        "cold_start": {"type": ["boolean", "null"]}
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intervals",
+        "scenarios",
+        "gpus",
+        "state_dimension",
+        "control_dimension",
+        "variables",
+        "scalar_rows",
+        "affine_rows",
+        "q_nonzeros",
+        "a_nonzeros",
+        "f_nonzeros",
+        "cone_inventory"
+      ],
+      "properties": {
+        "intervals": {"type": "integer", "minimum": 1},
+        "scenarios": {"type": "integer", "minimum": 1},
+        "gpus": {"type": "integer", "minimum": 0},
+        "state_dimension": {"type": "integer", "minimum": 1},
+        "control_dimension": {"type": "integer", "minimum": 1},
+        "variables": {"type": "integer", "minimum": 1},
+        "scalar_rows": {"type": "integer", "minimum": 0},
+        "affine_rows": {"type": "integer", "minimum": 0},
+        "q_nonzeros": {"type": "integer", "minimum": 0},
+        "a_nonzeros": {"type": "integer", "minimum": 0},
+        "f_nonzeros": {"type": "integer", "minimum": 0},
+        "cone_inventory": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "topology_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "numeric_bytes": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualified",
+        "objective",
+        "canonical_primal_residual",
+        "canonical_dual_residual",
+        "canonical_cone_residual",
+        "canonical_gap",
+        "dynamics_residual",
+        "path_residual",
+        "terminal_residual",
+        "virtual_control_residual",
+        "nonanticipativity_residual",
+        "risk_epigraph_residual"
+      ],
+      "properties": {
+        "qualified": {"type": "boolean"},
+        "objective": {"$ref": "#/$defs/finiteOrNull"},
+        "reference_objective": {"$ref": "#/$defs/finiteOrNull"},
+        "objective_gap": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "canonical_primal_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "canonical_dual_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "canonical_cone_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "canonical_gap": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "native_primal_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "native_dual_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "dynamics_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "path_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "terminal_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "virtual_control_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "nonanticipativity_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "risk_epigraph_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "ct_error_estimate": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "requested_tolerance": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "achieved_residual": {"$ref": "#/$defs/nonnegativeOrNull"}
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topology_seconds",
+        "coefficient_seconds",
+        "workspace_create_seconds",
+        "update_seconds",
+        "scaling_seconds",
+        "h2d_seconds",
+        "solve_seconds",
+        "residual_seconds",
+        "replay_seconds",
+        "acceptance_seconds",
+        "d2h_seconds",
+        "collective_seconds",
+        "cqp_total_seconds",
+        "scvx_total_seconds"
+      ],
+      "properties": {
+        "topology_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "coefficient_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "workspace_create_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "update_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "scaling_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "h2d_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "solve_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "residual_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "replay_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "acceptance_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "d2h_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "collective_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "cqp_total_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "scvx_total_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "accepted_trajectory_seconds": {"$ref": "#/$defs/nonnegativeOrNull"}
+      }
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outer_iterations",
+        "inner_iterations",
+        "matvecs",
+        "cone_projections",
+        "factorisations",
+        "accepted_steps",
+        "rejected_steps",
+        "resolved_steps",
+        "polish_used"
+      ],
+      "properties": {
+        "outer_iterations": {"type": ["integer", "null"], "minimum": 0},
+        "inner_iterations": {"type": ["integer", "null"], "minimum": 0},
+        "matvecs": {"type": ["integer", "null"], "minimum": 0},
+        "cone_projections": {"type": ["integer", "null"], "minimum": 0},
+        "factorisations": {"type": ["integer", "null"], "minimum": 0},
+        "accepted_steps": {"type": ["integer", "null"], "minimum": 0},
+        "rejected_steps": {"type": ["integer", "null"], "minimum": 0},
+        "resolved_steps": {"type": ["integer", "null"], "minimum": 0},
+        "polish_used": {"type": ["boolean", "null"]},
+        "scaling_refreshes": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "peak_device_bytes",
+        "reserved_device_bytes",
+        "h2d_bytes",
+        "d2h_bytes",
+        "collective_bytes",
+        "collective_count",
+        "energy_joules",
+        "topology_allocation_count_after_create"
+      ],
+      "properties": {
+        "peak_device_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "reserved_device_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "h2d_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "d2h_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "collective_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "collective_count": {"type": ["integer", "null"], "minimum": 0},
+        "energy_joules": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "topology_allocation_count_after_create": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "load_imbalance": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "throughput_per_second": {"$ref": "#/$defs/nonnegativeOrNull"}
+      }
+    },
+    "aggregation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "warmup_repeats",
+        "measured_repeats",
+        "statistic",
+        "median",
+        "q1",
+        "q3",
+        "minimum",
+        "maximum",
+        "coefficient_of_variation",
+        "censored_count"
+      ],
+      "properties": {
+        "warmup_repeats": {"type": "integer", "minimum": 0},
+        "measured_repeats": {"type": "integer", "minimum": 0},
+        "statistic": {"const": "median_iqr"},
+        "median": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "q1": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "q3": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "minimum": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "maximum": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "coefficient_of_variation": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "censored_count": {"type": "integer", "minimum": 0},
+        "bootstrap_low": {"$ref": "#/$defs/finiteOrNull"},
+        "bootstrap_high": {"$ref": "#/$defs/finiteOrNull"}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "raw", "stdout", "stderr"],
+      "properties": {
+        "manifest": {"$ref": "#/$defs/artifact"},
+        "raw": {"$ref": "#/$defs/artifact"},
+        "stdout": {"$ref": "#/$defs/artifact"},
+        "stderr": {"$ref": "#/$defs/artifact"},
+        "nsys": {"$ref": "#/$defs/artifactOrNull"},
+        "ncu": {"$ref": "#/$defs/artifactOrNull"},
+        "compute_sanitizer": {"$ref": "#/$defs/artifactOrNull"},
+        "energy_trace": {"$ref": "#/$defs/artifactOrNull"}
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "$defs": {
+    "finiteOrNull": {
+      "type": ["number", "null"]
+    },
+    "nonnegativeOrNull": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "sha256"],
+      "properties": {
+        "location": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "artifactOrNull": {
+      "anyOf": [
+        {"$ref": "#/$defs/artifact"},
+        {"type": "null"}
+      ]
+    }
+  }
+}
