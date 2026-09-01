@@ -975,7 +975,11 @@ IntegrationResult run_resident_sequence(
                     );
                     coefficient_parity_relative = std::max(
                         coefficient_parity_relative,
-                        difference / std::max(1.0, std::abs(wanted[index]))
+                        difference / std::max({
+                            1.0,
+                            std::abs(wanted[index]),
+                            g4_condition_factor_max,
+                        })
                     );
                 }
             }
