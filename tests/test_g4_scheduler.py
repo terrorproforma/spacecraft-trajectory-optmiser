@@ -5,7 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from spacepdhcg.experiments.g4 import POLICY_NAMES, coverage_count, load_policy
+from spacepdhcg.experiments.g4 import (
+    POLICY_NAMES,
+    G4ContractError,
+    coverage_count,
+    load_policy,
+)
 from spacepdhcg.experiments.g4_scheduler import (
     CampaignStore,
     atomic_create,
@@ -47,13 +52,13 @@ def test_coordinate_unranking_covers_frozen_ledger_and_rotation() -> None:
 
 def test_store_recovers_interrupted_attempt_without_overwrite(tmp_path: Path) -> None:
     loaded = policy()
-    store = CampaignStore(tmp_path, loaded.values, loaded.sha256)
+    store = CampaignStore(tmp_path, loaded.values, loaded.sha256, "a" * 40)
     first = store.claim()
     assert first is not None
     first_directory = tmp_path / "runs" / first.coordinate_id / first.attempt_id
     store.close()
 
-    with CampaignStore(tmp_path, loaded.values, loaded.sha256) as recovered:
+    with CampaignStore(tmp_path, loaded.values, loaded.sha256, "a" * 40) as recovered:
         second = recovered.claim()
         assert second is not None
         assert second.ordinal == first.ordinal
@@ -87,7 +92,7 @@ def test_invalid_record_is_quarantined_and_atomic_create_refuses_reuse(
     tmp_path: Path,
 ) -> None:
     loaded = policy()
-    with CampaignStore(tmp_path, loaded.values, loaded.sha256) as store:
+    with CampaignStore(tmp_path, loaded.values, loaded.sha256, "b" * 40) as store:
         claim = store.claim()
         assert claim is not None
         store.finish(
@@ -107,3 +112,5 @@ def test_invalid_record_is_quarantined_and_atomic_create_refuses_reuse(
     with pytest.raises(FileExistsError):
         atomic_create(target, b"second")
     assert target.read_bytes() == b"first"
+    with pytest.raises(G4ContractError, match="source_commit"):
+        CampaignStore(tmp_path, loaded.values, loaded.sha256, "c" * 40)

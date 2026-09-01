@@ -175,17 +175,28 @@ class Claim:
 class CampaignStore:
     """Sparse SQLite checkpoint plus an fsynced append-only audit journal."""
 
-    def __init__(self, root: Path, policy: Mapping[str, Any], policy_sha256: str) -> None:
+    def __init__(
+        self,
+        root: Path,
+        policy: Mapping[str, Any],
+        policy_sha256: str,
+        source_commit: str,
+    ) -> None:
         self.root = root
         self.policy = policy
         self.policy_sha256 = policy_sha256
+        self.source_commit = source_commit
         self.total = coverage_count(policy)
         root.mkdir(parents=True, exist_ok=True)
         self.database = sqlite3.connect(root / "checkpoint.sqlite3", timeout=30.0)
         self.database.row_factory = sqlite3.Row
         self.database.execute("PRAGMA journal_mode=WAL")
         self.database.execute("PRAGMA synchronous=FULL")
-        self._create_schema()
+        try:
+            self._create_schema()
+        except Exception:
+            self.database.close()
+            raise
 
     def _create_schema(self) -> None:
         self.database.executescript(
@@ -218,6 +229,7 @@ class CampaignStore:
         expected = {
             "schema_version": str(SCHEMA_VERSION),
             "policy_sha256": self.policy_sha256,
+            "source_commit": self.source_commit,
             "total_rows": str(self.total),
             "next_ordinal": "0",
         }

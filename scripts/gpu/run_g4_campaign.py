@@ -46,12 +46,19 @@ def locked_policy(repository: Path) -> tuple[dict[str, Any], str]:
     return loaded.values, loaded.sha256
 
 
-def load_capabilities(path: Path, executable: Path, policy_sha256: str) -> dict[str, Any]:
+def load_capabilities(
+    path: Path,
+    executable: Path,
+    policy_sha256: str,
+    source_commit: str,
+) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if value.get("schema_version") != 1:
         raise G4ContractError("unsupported G4 executor capability schema")
     if value.get("policy_sha256") != policy_sha256:
         raise G4ContractError("executor capability policy hash mismatch")
+    if value.get("source_commit") != source_commit:
+        raise G4ContractError("executor capability source commit mismatch")
     if value.get("executable_sha256") != sha256_path(executable):
         raise G4ContractError("executor capability executable hash mismatch")
     if set(value.get("applied_parameters", ())) != CAPABILITY_PARAMETERS:
@@ -297,8 +304,29 @@ def main() -> int:
     parser.add_argument("--max-runs", type=int)
     parser.add_argument("--nvidia-smi", default="nvidia-smi")
     arguments = parser.parse_args()
-    policy, policy_sha256 = locked_policy(arguments.repository.resolve())
-    with CampaignStore(arguments.campaign.resolve(), policy, policy_sha256) as store:
+    repository = arguments.repository.resolve()
+    policy, policy_sha256 = locked_policy(repository)
+    source_commit = subprocess.run(
+        ["git", "-C", repository, "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if arguments.action != "status":
+        dirty = subprocess.run(
+            ["git", "-C", repository, "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        if dirty:
+            raise G4ContractError("campaign initialization and execution require a clean commit")
+    with CampaignStore(
+        arguments.campaign.resolve(),
+        policy,
+        policy_sha256,
+        source_commit,
+    ) as store:
         if arguments.action == "status":
             print(json.dumps(store.status(), sort_keys=True))
             return 0
@@ -308,7 +336,12 @@ def main() -> int:
         if arguments.executable is None or arguments.capabilities is None:
             raise G4ContractError("run requires --executable and --capabilities")
         executable = arguments.executable.resolve()
-        load_capabilities(arguments.capabilities.resolve(), executable, policy_sha256)
+        load_capabilities(
+            arguments.capabilities.resolve(),
+            executable,
+            policy_sha256,
+            source_commit,
+        )
         lock_descriptor = os.open(store.root / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
         try:
             fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)

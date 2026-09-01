@@ -7,6 +7,7 @@ order applies the frozen solver-order rotation while preserving the canonical le
 ## Durability
 
 - `checkpoint.sqlite3` uses WAL journaling and `synchronous=FULL`.
+- Checkpoint metadata pins the exact clean source commit, policy hash and ledger cardinality.
 - `journal.jsonl` is append-only and fsynced after every claim and terminal transition.
 - Every attempt uses `runs/<coordinate-id>/<random-attempt-id>/`; files use exclusive atomic
   creation and can never replace earlier evidence.
@@ -23,7 +24,7 @@ evaluation seed or conditioning span. Consequently it cannot truthfully execute 
 matrix yet. The scheduler refuses to claim a row unless an independently produced capability JSON
 pins:
 
-- the exact executable SHA-256 and policy SHA-256;
+- the exact source commit, executable SHA-256 and policy SHA-256;
 - application of seed, conditioning, dispersion, transfer and solver-order parameters;
 - the common timing boundary;
 - independent nonlinear replay.
