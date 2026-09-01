@@ -47,6 +47,8 @@ PAPER1_STATUSES: Final = frozenset(
     {
         "qualified",
         "unqualified",
+        "hybrid_handoff_ineligible",
+        "not_applicable",
         "unsupported",
         "oom",
         "timeout",
@@ -202,6 +204,7 @@ def _validate_identity(identity: Mapping[str, Any]) -> None:
         "precision",
         "warm_start",
         "cold_start",
+        "record_scope",
         *_G4_IDENTITY,
     )
     _require_keys(identity, required, "identity")
@@ -227,6 +230,12 @@ def _validate_identity(identity: Mapping[str, Any]) -> None:
     for key in ("warm_start", "cold_start"):
         if identity.get(key) is not None and not isinstance(identity[key], bool):
             raise Paper1ResultError(f"identity.{key} must be boolean or null")
+    if identity.get("record_scope") not in {
+        None,
+        "measured_attempt",
+        "publication_aggregate",
+    }:
+        raise Paper1ResultError("identity.record_scope is invalid")
     if _is_primary_g4(identity):
         if identity["quality_tier"] not in QUALITY_TIERS:
             raise Paper1ResultError("identity.quality_tier is invalid")
@@ -256,6 +265,16 @@ def _validate_identity(identity: Mapping[str, Any]) -> None:
                 raise Paper1ResultError("qualified G4 result may not report a failure")
         elif not isinstance(reason, str) or not reason:
             raise Paper1ResultError("non-qualified G4 result requires a failure reason")
+        if (
+            identity["status"]
+            in {
+                "hybrid_handoff_ineligible",
+                "not_applicable",
+                "unsupported",
+            }
+            and identity["failure_class"] != identity["status"]
+        ):
+            raise Paper1ResultError("exact G4 terminal status and failure class must match")
 
 
 def _validate_dimensions(dimensions: Mapping[str, Any]) -> None:
@@ -394,6 +413,8 @@ def _validate_quality(
             "max_iterations",
             "numerical_failure",
             "infeasible",
+            "hybrid_handoff_ineligible",
+            "not_applicable",
             "unsupported",
         }:
             raise Paper1ResultError("quality.solver_status is invalid")
@@ -613,7 +634,13 @@ def _validate_resources(resources: Mapping[str, Any], *, primary_g4: bool) -> No
             raise Paper1ResultError("energy with reported sampling gaps may not be marked valid")
 
 
-def _validate_aggregation(aggregation: Mapping[str, Any], status: str, *, primary_g4: bool) -> None:
+def _validate_aggregation(
+    aggregation: Mapping[str, Any],
+    status: str,
+    *,
+    primary_g4: bool,
+    record_scope: str | None,
+) -> None:
     required = (
         "warmup_repeats",
         "measured_repeats",
@@ -657,19 +684,38 @@ def _validate_aggregation(aggregation: Mapping[str, Any], status: str, *, primar
     for key in ("bootstrap_low", "bootstrap_high"):
         if key in aggregation:
             _finite_or_none(aggregation[key], f"aggregation.{key}")
-    if status == "qualified" and measured < 5:
+    if status == "qualified" and measured < 5 and record_scope != "measured_attempt":
         raise Paper1ResultError("qualified deterministic summaries require at least five repeats")
     if primary_g4:
-        if warmup != 2 or measured != 7:
-            raise Paper1ResultError("primary G4 summaries require 2 warmups and 7 measured repeats")
+        if record_scope == "measured_attempt":
+            if warmup != 0 or measured != 1:
+                raise Paper1ResultError(
+                    "G4 measured attempts require 0 warmups and 1 measured observation"
+                )
+        elif warmup != 2 or measured != 7:
+            raise Paper1ResultError(
+                "primary G4 publication summaries require 2 warmups and 7 measured repeats"
+            )
         for key in g4_fields:
             value = _nonnegative_int_or_none(aggregation[key], f"aggregation.{key}")
             if value is None:
                 raise Paper1ResultError(f"aggregation.{key} may not be null")
-        if aggregation["instance_count"] < 20 or aggregation["evaluation_seed_count"] < 20:
-            raise Paper1ResultError("primary G4 summaries require 20 evaluation instances/seeds")
-        if aggregation["paired_bootstrap_samples"] != 10_000:
-            raise Paper1ResultError("primary G4 summaries require 10000 bootstrap samples")
+        if record_scope == "measured_attempt":
+            if aggregation["instance_count"] != 1 or aggregation["evaluation_seed_count"] != 1:
+                raise Paper1ResultError(
+                    "G4 measured attempts require exactly one evaluation instance/seed"
+                )
+            if aggregation["paired_bootstrap_samples"] != 0:
+                raise Paper1ResultError("G4 measured attempts may not bootstrap")
+        else:
+            if aggregation["instance_count"] < 20 or aggregation["evaluation_seed_count"] < 20:
+                raise Paper1ResultError(
+                    "primary G4 publication summaries require 20 evaluation instances/seeds"
+                )
+            if aggregation["paired_bootstrap_samples"] != 10_000:
+                raise Paper1ResultError(
+                    "primary G4 publication summaries require 10000 bootstrap samples"
+                )
 
 
 def _validate_artifact(value: Any, name: str, *, primary_g4: bool) -> None:
@@ -728,7 +774,7 @@ def _validate_artifacts(artifacts: Mapping[str, Any], *, primary_g4: bool, quali
             )
 
 
-def _validate_g4(g4: Mapping[str, Any], *, hybrid: bool) -> None:
+def _validate_g4(g4: Mapping[str, Any], *, hybrid: bool, status: str) -> None:
     required = (
         "policy_sha256",
         "runtime_requested",
@@ -750,8 +796,10 @@ def _validate_g4(g4: Mapping[str, Any], *, hybrid: bool) -> None:
             f"g4.{key}",
         )
     iterations = g4["outer_iterations"]
-    if not isinstance(iterations, list) or not iterations:
-        raise Paper1ResultError("g4.outer_iterations must be a non-empty array")
+    if not isinstance(iterations, list) or (
+        not iterations and status not in {"not_applicable", "unsupported"}
+    ):
+        raise Paper1ResultError("g4.outer_iterations must be non-empty for launched dispositions")
     iteration_required = (
         "phase",
         "requested_tolerance",
@@ -815,16 +863,19 @@ def _validate_g4(g4: Mapping[str, Any], *, hybrid: bool) -> None:
             item["recovery_reason"],
             f"g4.outer_iterations[{index}].recovery_reason",
         )
-    if hybrid:
+    if hybrid and status not in {"not_applicable", "unsupported"}:
         if not isinstance(g4["hybrid_permutation"], list) or not g4["hybrid_permutation"]:
             raise Paper1ResultError("hybrid G4 result requires the applied permutation")
         if g4["hybrid_dual_disposition"] not in {
             "transferred",
+            "discarded_unsupported",
             "discarded-unsupported",
             "not-produced",
         }:
             raise Paper1ResultError("hybrid G4 result has invalid dual disposition")
-    elif g4["hybrid_permutation"] is not None or g4["hybrid_dual_disposition"] is not None:
+    elif not hybrid and (
+        g4["hybrid_permutation"] is not None or g4["hybrid_dual_disposition"] is not None
+    ):
         raise Paper1ResultError("non-hybrid G4 result must use null hybrid disposition")
 
 
@@ -861,12 +912,25 @@ def validate_paper1_result(payload: Mapping[str, Any]) -> None:
         quality_tier=str(identity["quality_tier"]) if primary_g4 else None,
     )
     _validate_timing(timing, primary_g4=primary_g4)
+    if primary_g4 and identity["status"] in {
+        "hybrid_handoff_ineligible",
+        "not_applicable",
+        "unsupported",
+    }:
+        for key in ("cqp_total_seconds", "scvx_total_seconds"):
+            if timing[key] is None:
+                raise Paper1ResultError(
+                    f"identity.status={identity['status']} requires explicit timing.{key}"
+                )
     _validate_work(work)
     _validate_resources(resources, primary_g4=primary_g4)
     _validate_aggregation(
         aggregation,
         str(identity["status"]),
         primary_g4=primary_g4,
+        record_scope=(
+            str(identity["record_scope"]) if identity.get("record_scope") is not None else None
+        ),
     )
     _validate_artifacts(
         artifacts,
@@ -879,6 +943,7 @@ def validate_paper1_result(payload: Mapping[str, Any]) -> None:
         _validate_g4(
             _mapping(payload["g4"], "g4"),
             hybrid=identity["policy"] == "hybrid-pdhcg-ipm",
+            status=str(identity["status"]),
         )
     elif "g4" in payload:
         raise Paper1ResultError("g4 telemetry is reserved for primary G4 results")
@@ -907,6 +972,30 @@ def validate_paper1_result(payload: Mapping[str, Any]) -> None:
             raise Paper1ResultError(
                 "qualified persistent result must record post-create topology allocations"
             )
+
+
+def validate_paper1_result_schema(
+    payload: Mapping[str, Any],
+    schema_path: str | Path,
+) -> None:
+    """Apply Draft 2020-12 structure and the strict semantic contract."""
+
+    try:
+        from jsonschema import Draft202012Validator
+        from jsonschema.exceptions import ValidationError
+    except ImportError as error:
+        raise Paper1ResultError(
+            "strict Paper 1 schema validation requires the project dev dependencies"
+        ) from error
+    schema = json.loads(Path(schema_path).read_text(encoding="utf-8"))
+    try:
+        Draft202012Validator.check_schema(schema)
+        Draft202012Validator(schema).validate(payload)
+    except ValidationError as error:
+        raise Paper1ResultError(
+            f"Paper 1 JSON schema validation failed: {error.message}"
+        ) from error
+    validate_paper1_result(payload)
 
 
 def read_paper1_result(path: str | Path) -> dict[str, Any]:

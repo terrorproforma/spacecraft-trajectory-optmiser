@@ -60,6 +60,8 @@
           "enum": [
             "qualified",
             "unqualified",
+            "hybrid_handoff_ineligible",
+            "not_applicable",
             "unsupported",
             "oom",
             "timeout",
@@ -75,6 +77,9 @@
         "cold_start": {"type": ["boolean", "null"]},
         "gate": {"enum": ["G4", null]},
         "campaign": {"type": ["string", "null"]},
+        "record_scope": {
+          "enum": ["measured_attempt", "publication_aggregate", null]
+        },
         "quality_tier": {"enum": ["coarse", "medium", "tight", "ipm", null]},
         "conditioning": {"$ref": "#/$defs/nonnegativeOrNull"},
         "scaling_mode": {
@@ -88,6 +93,8 @@
         "failure_class": {
           "enum": [
             "none",
+            "hybrid_handoff_ineligible",
+            "not_applicable",
             "unsupported",
             "oom",
             "timeout",
@@ -188,6 +195,8 @@
             "max_iterations",
             "numerical_failure",
             "infeasible",
+            "hybrid_handoff_ineligible",
+            "not_applicable",
             "unsupported",
             null
           ]
@@ -387,7 +396,6 @@
         "runtime_actual": {"$ref": "#/$defs/g4Runtime"},
         "outer_iterations": {
           "type": "array",
-          "minItems": 1,
           "items": {"$ref": "#/$defs/g4OuterIteration"}
         },
         "hybrid_permutation": {
@@ -395,7 +403,13 @@
           "items": {"type": "integer", "minimum": 0}
         },
         "hybrid_dual_disposition": {
-          "enum": ["transferred", "discarded-unsupported", "not-produced", null]
+          "enum": [
+            "transferred",
+            "discarded_unsupported",
+            "discarded-unsupported",
+            "not-produced",
+            null
+          ]
         }
       }
     },

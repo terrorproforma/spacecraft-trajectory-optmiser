@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/g4_raw_attempt.schema.json",
+  "title": "G4 raw attempt evidence",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "record_kind",
+    "group_id",
+    "attempt_id",
+    "family",
+    "intervals",
+    "policy",
+    "instance",
+    "seed",
+    "repeat_kind",
+    "repeat",
+    "launched",
+    "statistics_eligible",
+    "disposition",
+    "failure_class",
+    "reason",
+    "timing"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "record_kind": {"const": "raw_attempt"},
+    "group_id": {"type": "string", "pattern": "^g4-group-v1-[0-9a-f]{64}$"},
+    "attempt_id": {"type": "string", "minLength": 1},
+    "family": {"enum": ["P1-C-pd3", "P1-D-pd6", "P1-E-low-thrust"]},
+    "intervals": {"type": "integer", "minimum": 1},
+    "policy": {
+      "enum": [
+        "fixed-tight",
+        "fixed-loose",
+        "adaptive",
+        "adaptive+polish",
+        "pure-gpu-ipm",
+        "hybrid-pdhcg-ipm"
+      ]
+    },
+    "instance": {"type": "string", "pattern": "^g4-instance-v2-[0-9a-f]{64}$"},
+    "seed": {"type": "integer", "minimum": 0},
+    "repeat_kind": {"enum": ["warmup", "measured"]},
+    "repeat": {"type": "integer", "minimum": 0},
+    "launched": {"type": "boolean"},
+    "statistics_eligible": {"type": "boolean"},
+    "disposition": {
+      "enum": [
+        "qualified",
+        "unqualified",
+        "hybrid_handoff_ineligible",
+        "not_applicable",
+        "unsupported",
+        "oom",
+        "timeout",
+        "numerical",
+        "infeasible",
+        "unrun"
+      ]
+    },
+    "failure_class": {
+      "enum": [
+        "none",
+        "hybrid_handoff_ineligible",
+        "not_applicable",
+        "unsupported",
+        "oom",
+        "timeout",
+        "numerical",
+        "infeasible",
+        "max_iterations",
+        "unrun",
+        "evidence"
+      ]
+    },
+    "reason": {"type": "string", "minLength": 1},
+    "timing": {
+      "type": "object",
+      "required": ["elapsed_seconds"],
+      "properties": {
+        "elapsed_seconds": {"type": "number", "minimum": 0}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"repeat_kind": {"const": "warmup"}}},
+      "then": {"properties": {"statistics_eligible": {"const": false}}}
+    },
+    {
+      "if": {"properties": {"repeat_kind": {"const": "measured"}}},
+      "then": {"properties": {"statistics_eligible": {"const": true}}}
+    },
+    {
+      "if": {"properties": {"disposition": {"enum": ["timeout", "oom", "hybrid_handoff_ineligible"]}}},
+      "then": {"properties": {"launched": {"const": true}}}
+    },
+    {
+      "if": {"properties": {"disposition": {"const": "not_applicable"}}},
+      "then": {"properties": {"launched": {"const": false}}}
+    }
+  ]
+}

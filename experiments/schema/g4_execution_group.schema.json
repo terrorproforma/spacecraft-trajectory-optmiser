@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/g4_execution_group.schema.json",
+  "title": "G4 persistent execution group",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_kind",
+    "group_id",
+    "physical_instance_id",
+    "coordinate",
+    "process_contract",
+    "attempts"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "record_kind": {"const": "execution_group"},
+    "group_id": {"type": "string", "pattern": "^g4-group-v1-[0-9a-f]{64}$"},
+    "physical_instance_id": {"type": "string", "pattern": "^g4-instance-v2-[0-9a-f]{64}$"},
+    "coordinate": {"type": "object"},
+    "process_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "processes",
+        "persistent_session",
+        "persistent_workspace",
+        "policy_reset_between_attempts"
+      ],
+      "properties": {
+        "processes": {"const": 1},
+        "persistent_session": {"const": true},
+        "persistent_workspace": {"const": true},
+        "policy_reset_between_attempts": {"const": true}
+      }
+    },
+    "attempts": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {"$ref": "#/$defs/plannedAttempt"}
+    }
+  },
+  "$defs": {
+    "plannedAttempt": {
+      "type": "object",
+      "required": [
+        "group_id",
+        "instance",
+        "family",
+        "intervals",
+        "policy",
+        "seed",
+        "repeat_kind",
+        "repeat",
+        "statistics_eligible"
+      ],
+      "properties": {
+        "group_id": {"type": "string", "pattern": "^g4-group-v1-[0-9a-f]{64}$"},
+        "instance": {"type": "string", "pattern": "^g4-instance-v2-[0-9a-f]{64}$"},
+        "family": {"enum": ["P1-C-pd3", "P1-D-pd6", "P1-E-low-thrust"]},
+        "intervals": {"type": "integer", "minimum": 1},
+        "policy": {"type": "string"},
+        "seed": {"type": "integer", "minimum": 0},
+        "repeat_kind": {"enum": ["warmup", "measured"]},
+        "repeat": {"type": "integer", "minimum": 0},
+        "statistics_eligible": {"type": "boolean"}
+      }
+    }
+  }
+}

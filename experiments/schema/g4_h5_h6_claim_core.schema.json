@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/g4_h5_h6_claim_core.schema.json",
+  "title": "Preregistered G4 H5/H6 claim-resolution core",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "campaign_kind",
+    "preregistered_before_results",
+    "claims_resolved",
+    "full_regime_matrix_substitute",
+    "paper1_regime_products_permitted",
+    "scope_statement",
+    "source_policy",
+    "source_applicability",
+    "solver_order_seed",
+    "evaluation_seeds",
+    "repetitions",
+    "session_contract",
+    "fixed_axes",
+    "families",
+    "expected_counts"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "campaign_id": {"const": "g4-h5-h6-claim-core-v1"},
+    "campaign_kind": {"const": "h5_h6_claim_resolution_core"},
+    "preregistered_before_results": {"const": true},
+    "claims_resolved": {"const": ["H5", "H6"]},
+    "full_regime_matrix_substitute": {"const": false},
+    "paper1_regime_products_permitted": {"const": []},
+    "scope_statement": {"type": "string", "minLength": 1},
+    "source_policy": {"const": "benchmarks/g4_policy.json"},
+    "source_applicability": {"const": "benchmarks/g4_applicability.json"},
+    "solver_order_seed": {"type": "integer"},
+    "evaluation_seeds": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "uniqueItems": true,
+      "items": {"type": "integer", "minimum": 0}
+    },
+    "repetitions": {
+      "const": {"instances": 20, "warmups": 2, "measurements": 7}
+    },
+    "session_contract": {
+      "type": "object",
+      "required": [
+        "processes_per_group",
+        "workspace_reused_within_group",
+        "attempt_order",
+        "warmups_recorded_separately",
+        "warmups_in_statistics",
+        "policy_reset_between_attempts"
+      ]
+    },
+    "fixed_axes": {
+      "type": "object",
+      "required": [
+        "quality_tier",
+        "quality_tolerance",
+        "conditioning",
+        "scaling_mode",
+        "warm_mode"
+      ]
+    },
+    "families": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["family", "classes", "scales", "policies", "claim_roles"],
+        "properties": {
+          "family": {"enum": ["P1-C-pd3", "P1-D-pd6", "P1-E-low-thrust"]},
+          "classes": {"type": "object"},
+          "scales": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {"type": "integer", "minimum": 1}
+          },
+          "policies": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "fixed-tight",
+                "fixed-loose",
+                "adaptive",
+                "adaptive+polish",
+                "pure-gpu-ipm",
+                "hybrid-pdhcg-ipm"
+              ]
+            }
+          },
+          "claim_roles": {"type": "object"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "expected_counts": {
+      "const": {
+        "families": 2,
+        "scales_per_family": 3,
+        "policy_scale_pairs": 18,
+        "physical_instances_per_policy_scale": 20,
+        "execution_groups": 360,
+        "warmup_invocations": 720,
+        "measured_invocations": 2520,
+        "total_invocations": 3240
+      }
+    }
+  }
+}

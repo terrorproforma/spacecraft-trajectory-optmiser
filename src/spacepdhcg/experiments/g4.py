@@ -33,6 +33,8 @@ SCALING_MODES: Final = ("always_refresh", "reuse", "refresh_if_needed")
 WARM_MODES: Final = ("cold", "primal", "primal_dual")
 FAILURE_CLASSES: Final = (
     "none",
+    "hybrid_handoff_ineligible",
+    "not_applicable",
     "unsupported",
     "oom",
     "timeout",
@@ -45,6 +47,8 @@ FAILURE_CLASSES: Final = (
 DISPOSITIONS: Final = (
     "qualified",
     "unqualified",
+    "hybrid_handoff_ineligible",
+    "not_applicable",
     "unsupported",
     "oom",
     "timeout",
@@ -546,6 +550,16 @@ def paired_bootstrap_interval(
 def _coordinate_evidence(
     row: Mapping[str, Any], policy: Mapping[str, Any], *, baseline_key: str, candidate_key: str
 ) -> dict[str, Any]:
+    disposition = row.get("disposition")
+    if disposition is not None and disposition != "qualified":
+        return {
+            "eligible": False,
+            "reason": f"terminal disposition {disposition} is not winner-eligible",
+            "family": row.get("family"),
+            "scale": row.get("scale"),
+            "censored": disposition in {"timeout", "oom"},
+            "terminal_disposition": disposition,
+        }
     baseline = row.get(baseline_key, ())
     candidate = row.get(candidate_key, ())
     if not isinstance(baseline, Sequence) or isinstance(baseline, (str, bytes)):
@@ -827,6 +841,8 @@ def iter_coverage_ledger(
 ) -> Iterator[dict[str, Any]]:
     """Yield the complete frozen Cartesian ledger with explicit dispositions."""
 
+    from .g4_execution_contract import physical_instance_id, solver_rotation
+
     supported = set(supported_policies)
     executed_by_key: dict[tuple[Any, ...], Mapping[str, Any]] = {}
     for row in executed:
@@ -839,6 +855,14 @@ def iter_coverage_ledger(
             "every coverage disposition requires an explicit failure class",
         )
         _require(bool(row.get("reason")), "every coverage disposition requires a reason")
+        if disposition in {"hybrid_handoff_ineligible", "not_applicable", "unsupported"}:
+            timing = row.get("timing")
+            _require(
+                isinstance(timing, Mapping)
+                and isinstance(timing.get("elapsed_seconds"), (int, float))
+                and timing["elapsed_seconds"] >= 0,
+                f"{disposition} requires explicit terminal timing",
+            )
         executed_by_key[key] = row
 
     matrix = policy["matrix"]
@@ -871,13 +895,6 @@ def iter_coverage_ledger(
                 repeats,
             ):
                 repeat_kind, repeat_index = repeat
-                order_material = (
-                    f"{policy['randomisation']['solver_order_seed']}:{family}:{intervals}:"
-                    f"{quality_tier}:{conditioning}:{scaling_mode}:{warm_mode}:{seed}:"
-                    f"{repeat_kind}:{repeat_index}"
-                )
-                rotation = int(hashlib.sha256(order_material.encode()).hexdigest()[:8], 16)
-                solver_order = (POLICY_NAMES.index(policy_name) + rotation) % len(POLICY_NAMES)
                 base = {
                     "family": family,
                     "intervals": intervals,
@@ -888,11 +905,17 @@ def iter_coverage_ledger(
                     "warm_mode": warm_mode,
                     **classes,
                     "seed": seed,
-                    "instance": f"{family}-seed-{seed}",
                     "repeat_kind": repeat_kind,
                     "repeat": repeat_index,
-                    "solver_order": solver_order,
                 }
+                base["instance"] = physical_instance_id(base)
+                rotation = solver_rotation(
+                    int(policy["randomisation"]["solver_order_seed"]),
+                    base,
+                )
+                base["solver_order"] = (POLICY_NAMES.index(policy_name) + rotation) % len(
+                    POLICY_NAMES
+                )
                 prior = executed_by_key.pop(_coverage_key(base), None)
                 if prior is not None:
                     yield {**base, **prior}

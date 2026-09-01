@@ -889,3 +889,38 @@ Use this file as persistent, repo-local execution memory.
 - A full campaign freeze still needs physical P1-F evidence at 2, 4, and 8 GPUs.
 - CPU reference records (`gpus=0`) are valid inputs to one-GPU comparisons; only physical GPU
   counts above one and P1-F records cross the `single-gpu-v1` boundary.
+### 2026-09-02 10:00 AEST - G4 execution-contract correction
+
+#### What Worked
+
+- Preserved the authoritative 24,883,200-row logical ledger while separating it from 2,764,800
+  persistent execution groups, raw attempts, and later publication aggregates.
+- Content-addressing physical identity from family, intervals, applicable family classes, and seed
+  made all 3,200 physical evaluation instances collision-free while leaving repeat identity
+  separate.
+- A full-coordinate rotation digest gives differential coverage for physical classes,
+  conditioning, scaling, quality, and warm mode without pretending repeat changes the instance.
+- Encoding QOCO `primal_dual` as executable-with-explicit-dual-discard avoided conflating a missing
+  dual API with an unsupported solver.
+- A separate hash-pinned 360-group/3,240-invocation H5/H6 core gives a legitimate early-decision
+  path while a product-builder guard prevents it from entering full regime products.
+
+#### Mistakes And Fixes
+
+- `[tool]` The default WSL Python was 3.10 and lacked both `StrEnum` and pytest. The integrated
+  virtual environment's editable install also pointed at another worktree.
+- Fix: used Python 3.11 with `-S` and an explicit branch `src` plus virtual-environment
+  site-packages path, ensuring tests imported this isolated worktree.
+- `[tool]` Two inherited Python files use CRLF blobs; editing them made `git diff --check` report
+  carriage returns as trailing whitespace.
+- Fix: moved the persistent-capability assertion into the LF runner/new test and left the inherited
+  CRLF files byte-unchanged.
+
+#### Guardrails For Next Session
+
+- Never resume the row-oriented checkpoint with the grouped scheduler; initialize a new checkpoint
+  and retain the old evidence historically.
+- A group-capable executor must emit nine raw attempt records from one process and validate all
+  seven measured Paper 1 records before the group can complete.
+- Timeout/OOM is legal only after actual launch; larger rows remain pending and may not be inferred.
+- Claim-core evidence resolves only H5/H6 and is forbidden from F01-F12/T01-T08 products.

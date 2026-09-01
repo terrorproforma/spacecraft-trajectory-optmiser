@@ -25,10 +25,17 @@ from spacepdhcg.experiments.g4 import (  # noqa: E402
     load_policy,
     sha256_path,
 )
+from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
+    validate_attempt_record,
+)
 from spacepdhcg.experiments.g4_scheduler import (  # noqa: E402
     CampaignStore,
     Claim,
     atomic_create,
+)
+from spacepdhcg.experiments.paper1 import (  # noqa: E402
+    Paper1ResultError,
+    validate_paper1_result_schema,
 )
 
 CAPABILITY_AXES = {
@@ -70,6 +77,8 @@ def load_capabilities(
     policy_sha256: str,
     matrix_sha256: str,
     source_commit: str,
+    *,
+    require_persistent_group: bool = False,
 ) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if value.get("schema_version") != 1:
@@ -92,6 +101,17 @@ def load_capabilities(
         raise G4ContractError("executor timing boundary is not the frozen common boundary")
     if value.get("independent_replay") is not True:
         raise G4ContractError("executor lacks independent nonlinear replay")
+    if require_persistent_group:
+        execution = value.get("execution_contract", {})
+        if execution != {
+            "version": "g4-persistent-group-v1",
+            "one_process_per_group": True,
+            "persistent_session": True,
+            "persistent_workspace": True,
+            "separate_attempt_records": True,
+            "policy_reset_between_attempts": True,
+        }:
+            raise G4ContractError("executor lacks the persistent nine-attempt group contract")
     declared_hash = value.get("capability_sha256")
     payload = {key: item for key, item in value.items() if key != "capability_sha256"}
     if declared_hash != hashlib.sha256(canonical_bytes(payload)).hexdigest():
@@ -199,6 +219,29 @@ def command_for(
     ]
 
 
+def command_for_group(
+    executable: Path,
+    claim: Claim,
+    policy_sha256: str,
+    matrix_sha256: str,
+    capability_sha256: str,
+    manifest: Path,
+) -> list[str]:
+    """Launch exactly one executor process for a complete nine-attempt group."""
+
+    coordinate = claim.coordinate
+    if coordinate.get("record_kind") != "execution_group":
+        raise G4ContractError("group command requires an execution-group claim")
+    return [
+        str(executable),
+        "--g4-session",
+        str(manifest),
+        policy_sha256,
+        matrix_sha256,
+        capability_sha256,
+    ]
+
+
 def parse_records(text: str) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for line in text.splitlines():
@@ -294,6 +337,154 @@ def validate_success(
     if axis.get("coefficient_parity_relative", float("inf")) > 5.0e-12:
         return False, "CPU/GPU conditioned coefficient parity failed"
     return True, "strict runtime and sample records validated"
+
+
+def validate_group_success(
+    claim: Claim,
+    records: list[dict[str, Any]],
+) -> tuple[bool, str, list[dict[str, Any]]]:
+    """Validate distinct raw attempts and every measured Paper 1 result."""
+
+    emitted = [record for record in records if record.get("case") == "g4_attempt"]
+    planned = claim.coordinate["attempts"]
+    if len(emitted) != len(planned):
+        return False, "executor did not emit all nine raw attempt records", emitted
+    by_repeat: dict[tuple[str, int], dict[str, Any]] = {}
+    for record in emitted:
+        key = (str(record.get("repeat_kind")), int(record.get("repeat", -1)))
+        if key in by_repeat:
+            return False, f"duplicate raw attempt record {key!r}", emitted
+        by_repeat[key] = record
+    expected_keys = {(item["repeat_kind"], item["repeat"]) for item in planned}
+    if set(by_repeat) != expected_keys:
+        return False, "raw attempt repeat set differs from the group manifest", emitted
+    for item in planned:
+        key = (item["repeat_kind"], item["repeat"])
+        record = by_repeat[key]
+        for field in (
+            "group_id",
+            "family",
+            "intervals",
+            "policy",
+            "instance",
+            "seed",
+            "repeat_kind",
+            "repeat",
+            "statistics_eligible",
+        ):
+            if record.get(field) != item.get(field):
+                return False, f"raw attempt field {field} differs from manifest", emitted
+        try:
+            validate_attempt_record(record)
+            if item["repeat_kind"] == "measured":
+                result = record.get("paper1_result")
+                if not isinstance(result, dict):
+                    raise Paper1ResultError("completed measured attempt omitted paper1_result")
+                if result.get("identity", {}).get("record_scope") != "measured_attempt":
+                    raise Paper1ResultError(
+                        "raw measured evidence must use record_scope=measured_attempt"
+                    )
+                validate_paper1_result_schema(
+                    result,
+                    REPOSITORY / "experiments/schema/paper1_result.schema.json",
+                )
+        except (G4ContractError, Paper1ResultError, ValueError) as error:
+            return False, f"strict measured-result validation failed: {error}", emitted
+    return True, "all raw attempts and measured Paper 1 results validated", emitted
+
+
+def execute_group(
+    store: CampaignStore,
+    claim: Claim,
+    executable: Path,
+    policy_sha256: str,
+    matrix_sha256: str,
+    capability_sha256: str,
+    timeout_seconds: int,
+    nvidia_smi: str,
+    environment: dict[str, str],
+) -> None:
+    """Execute warmups and measurements in one persistent process/session/workspace."""
+
+    run_directory = store.root / "runs" / claim.coordinate_id / claim.attempt_id
+    manifest = run_directory / "execution-group.json"
+    atomic_create(manifest, canonical_bytes(claim.coordinate) + b"\n")
+    command = command_for_group(
+        executable,
+        claim,
+        policy_sha256,
+        matrix_sha256,
+        capability_sha256,
+        manifest,
+    )
+    atomic_create(run_directory / "command.json", canonical_bytes(command) + b"\n")
+    run_environment = dict(environment)
+    run_environment.update(
+        {
+            "SPACEPDHCG_G4_GROUP_ID": claim.coordinate_id,
+            "SPACEPDHCG_G4_POLICY_RESET": "independent-with-persistent-workspace",
+        }
+    )
+    sampler = EnergySampler(nvidia_smi)
+    started = time.monotonic()
+    sampler.start()
+    process_timed_out = False
+    try:
+        process = subprocess.run(
+            command,
+            env=run_environment,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds * 9 + 60,
+        )
+        stdout, stderr, returncode = process.stdout, process.stderr, process.returncode
+    except subprocess.TimeoutExpired as error:
+        stdout, stderr, returncode = error.stdout or "", error.stderr or "", 124
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors="replace")
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors="replace")
+        process_timed_out = True
+    elapsed = time.monotonic() - started
+    energy = sampler.finish()
+    atomic_create(run_directory / "stdout.jsonl", stdout.encode())
+    atomic_create(run_directory / "stderr.log", stderr.encode())
+    if process_timed_out:
+        valid, reason, attempts = (
+            False,
+            "persistent group process exceeded its nine-attempt safety boundary",
+            [],
+        )
+    elif returncode != 0:
+        valid, reason, attempts = (
+            False,
+            f"persistent group process exited {returncode}; no unlaunched row was censored",
+            [],
+        )
+    else:
+        try:
+            valid, reason, attempts = validate_group_success(claim, parse_records(stdout))
+        except (G4ContractError, json.JSONDecodeError, ValueError) as error:
+            valid, reason, attempts = False, f"invalid group executor records: {error}", []
+    record = {
+        "schema_version": "1.0.0",
+        "record_kind": "execution_group_result",
+        "group_id": claim.coordinate_id,
+        "attempt_id": claim.attempt_id,
+        "command": command,
+        "returncode": returncode,
+        "elapsed_seconds": elapsed,
+        "energy": energy,
+        "raw_attempts": attempts,
+        "reason": reason,
+    }
+    store.finish(
+        claim,
+        disposition="completed_group" if valid else "invalid_evidence",
+        reason=reason,
+        record=record,
+        valid=valid,
+    )
 
 
 def execute(
@@ -439,6 +630,7 @@ def main() -> int:
         policy,
         policy_sha256,
         source_commit,
+        grouped=True,
     ) as store:
         if arguments.action == "status":
             print(json.dumps(store.status(), sort_keys=True))
@@ -455,6 +647,7 @@ def main() -> int:
             policy_sha256,
             matrix_sha256,
             source_commit,
+            require_persistent_group=True,
         )
         capability_sha256 = capabilities["capability_sha256"]
         lock_descriptor = os.open(store.root / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
@@ -468,7 +661,7 @@ def main() -> int:
                 claim = store.claim()
                 if claim is None:
                     break
-                execute(
+                execute_group(
                     store,
                     claim,
                     executable,
