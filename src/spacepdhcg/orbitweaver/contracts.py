@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 PAPER2_MATRIX_SHA256 = "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+CAMPAIGN_SCOPE_IDS = ["single-gpu-v1", "full-multi-gpu-v1"]
 EVIDENCE_LEVELS = [
     "implemented_compiled",
     "cpu_correctness_tested",
@@ -150,67 +151,85 @@ G7_CONFIG_SCHEMA = {
     },
 }
 
+_G7_MANIFEST_PROPERTIES = {
+    "run_id": {"type": "string", "minLength": 1},
+    "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "seed": {"type": "integer", "minimum": 0},
+    "repeat_count": {"type": "integer", "minimum": 1},
+    "backend": {"type": "string", "minLength": 1},
+    "ownership": {"enum": ["single_gpu", "logical_rank_mock", "g5_distributed"]},
+    "device_ids": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": True,
+        "items": {"type": "integer", "minimum": 0},
+    },
+    "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "paper2_matrix_sha256": {"const": PAPER2_MATRIX_SHA256},
+    "toolchain": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["python", "compiler", "cmake", "cuda"],
+        "properties": {
+            name: {"type": ["string", "null"], "minLength": 1}
+            for name in ["python", "compiler", "cmake", "cuda"]
+        },
+    },
+    "hardware": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["os", "cpu", "gpus"],
+        "properties": {
+            "os": {"type": "string", "minLength": 1},
+            "cpu": {"type": ["string", "null"], "minLength": 1},
+            "gpus": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+            },
+        },
+    },
+    "evidence_level": {"enum": EVIDENCE_LEVELS},
+}
+_G7_MANIFEST_REQUIRED = [
+    "schema_version",
+    "run_id",
+    "repository_commit",
+    "seed",
+    "repeat_count",
+    "backend",
+    "ownership",
+    "device_ids",
+    "config_sha256",
+    "paper2_matrix_sha256",
+    "toolchain",
+    "hardware",
+    "evidence_level",
+]
 G7_MANIFEST_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-manifest-v1.json",
-    "title": "OrbitWeaver G7 run manifest",
-    "type": "object",
-    "additionalProperties": False,
-    "required": [
-        "schema_version",
-        "run_id",
-        "repository_commit",
-        "seed",
-        "repeat_count",
-        "backend",
-        "ownership",
-        "device_ids",
-        "config_sha256",
-        "paper2_matrix_sha256",
-        "toolchain",
-        "hardware",
-        "evidence_level",
+    "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-manifest.json",
+    "title": "OrbitWeaver G7 run manifest (historical v1 or scoped v2)",
+    "anyOf": [
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "required": _G7_MANIFEST_REQUIRED,
+            "properties": {
+                "schema_version": {"const": 1},
+                **_G7_MANIFEST_PROPERTIES,
+            },
+        },
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "required": [*_G7_MANIFEST_REQUIRED, "campaign_scope_id"],
+            "properties": {
+                "schema_version": {"const": 2},
+                "campaign_scope_id": {"enum": CAMPAIGN_SCOPE_IDS},
+                **_G7_MANIFEST_PROPERTIES,
+            },
+        },
     ],
-    "properties": {
-        "schema_version": {"const": 1},
-        "run_id": {"type": "string", "minLength": 1},
-        "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-        "seed": {"type": "integer", "minimum": 0},
-        "repeat_count": {"type": "integer", "minimum": 1},
-        "backend": {"type": "string", "minLength": 1},
-        "ownership": {"enum": ["single_gpu", "logical_rank_mock", "g5_distributed"]},
-        "device_ids": {
-            "type": "array",
-            "minItems": 1,
-            "uniqueItems": True,
-            "items": {"type": "integer", "minimum": 0},
-        },
-        "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "paper2_matrix_sha256": {"const": PAPER2_MATRIX_SHA256},
-        "toolchain": {
-            "type": "object",
-            "additionalProperties": False,
-            "required": ["python", "compiler", "cmake", "cuda"],
-            "properties": {
-                name: {"type": ["string", "null"], "minLength": 1}
-                for name in ["python", "compiler", "cmake", "cuda"]
-            },
-        },
-        "hardware": {
-            "type": "object",
-            "additionalProperties": False,
-            "required": ["os", "cpu", "gpus"],
-            "properties": {
-                "os": {"type": "string", "minLength": 1},
-                "cpu": {"type": ["string", "null"], "minLength": 1},
-                "gpus": {
-                    "type": "array",
-                    "items": {"type": "string", "minLength": 1},
-                },
-            },
-        },
-        "evidence_level": {"enum": EVIDENCE_LEVELS},
-    },
 }
 
 G7_CHECKPOINT_SCHEMA = {

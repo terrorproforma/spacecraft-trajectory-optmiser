@@ -36,6 +36,10 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("campaign", type=Path)
     build.add_argument("output", type=Path)
     build.add_argument("--synthetic", action="store_true")
+    build.add_argument(
+        "--campaign-scope-id",
+        choices=["single-gpu-v1", "full-multi-gpu-v1"],
+    )
 
     freeze = subcommands.add_parser("freeze", help="freeze a complete real campaign")
     freeze.add_argument("campaign", type=Path)
@@ -46,11 +50,19 @@ def _parser() -> argparse.ArgumentParser:
     reproduce = subcommands.add_parser("verify-reproducible", help="compare two complete builds")
     reproduce.add_argument("campaign", type=Path)
     reproduce.add_argument("--synthetic", action="store_true")
+    reproduce.add_argument(
+        "--campaign-scope-id",
+        choices=["single-gpu-v1", "full-multi-gpu-v1"],
+    )
 
     clean = subcommands.add_parser("verify-clean-clone", help="build from a clean Git clone")
     clean.add_argument("campaign_relative_path")
     clean.add_argument("--repository", type=Path, default=Path.cwd())
     clean.add_argument("--synthetic", action="store_true")
+    clean.add_argument(
+        "--campaign-scope-id",
+        choices=["single-gpu-v1", "full-multi-gpu-v1"],
+    )
 
     demo = subcommands.add_parser("synthetic-demo", help="generate and build labelled fixtures")
     demo.add_argument("campaign", type=Path)
@@ -72,7 +84,12 @@ def main(argv: list[str] | None = None) -> int:
             _print(index)
         elif arguments.command == "build":
             _print(
-                build_campaign(arguments.campaign, arguments.output, synthetic=arguments.synthetic)
+                build_campaign(
+                    arguments.campaign,
+                    arguments.output,
+                    synthetic=arguments.synthetic,
+                    campaign_scope_id=arguments.campaign_scope_id,
+                )
             )
         elif arguments.command == "freeze":
             path = freeze_campaign(
@@ -83,13 +100,20 @@ def main(argv: list[str] | None = None) -> int:
             )
             _print({"freeze_seal": str(path)})
         elif arguments.command == "verify-reproducible":
-            _print(verify_reproducible_build(arguments.campaign, synthetic=arguments.synthetic))
+            _print(
+                verify_reproducible_build(
+                    arguments.campaign,
+                    synthetic=arguments.synthetic,
+                    campaign_scope_id=arguments.campaign_scope_id,
+                )
+            )
         elif arguments.command == "verify-clean-clone":
             _print(
                 verify_clean_clone(
                     arguments.repository,
                     arguments.campaign_relative_path,
                     synthetic=arguments.synthetic,
+                    campaign_scope_id=arguments.campaign_scope_id,
                 )
             )
         elif arguments.command == "synthetic-demo":

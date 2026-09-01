@@ -6,6 +6,20 @@ post-hoc change from “where does the method work?” to a cherry-picked univer
 All comparisons are end-to-end and quality matched under `docs/BENCHMARK_PROTOCOL.md`. A run that
 fails the declared canonical or nonlinear gate cannot support a performance hypothesis.
 
+## Campaign-scope overlay (does not alter preregistration)
+
+The original rules below remain the authority for `full-multi-gpu-v1`. Under the active
+`single-gpu-v1` completion scope, H1, H2, H3, H5, and H6 remain active with every threshold and
+statistical rule unchanged. H4 alone is `deferred-not-in-scope` because its primary comparison
+requires physical multi-GPU topology. That label is not evidence for support, rejection, mixed, or
+unresolved. The scoped Paper 1 manuscript may state only that H4 was deferred and may not imply a
+physical scaling result.
+
+Scoped products carry `campaign_scope_id=single-gpu-v1`. F07, F12, and T06 are excluded and listed
+as deferred; F03 is architecture only, and T07/T08 must expose the scope/deferred disposition.
+Figures, tables, regime maps, and prose must reject P1-F or GPU-count-greater-than-one evidence in
+this scope.
+
 ## Common statistical rule
 
 Unless a hypothesis gives a stronger condition:
@@ -36,7 +50,8 @@ more than 5% of steady-state end-to-end CQP time in the regime where the GPU is 
 ### Primary metric
 
 \[
-\omega_{m persist}
+\omega_{
+m persist}
 =
 \frac{T_{\rm topo,repeated}+T_{\rm create,repeated}+T_{\rm topology\ h2d,repeated}}
      {T_{\rm CQP,steady}}.

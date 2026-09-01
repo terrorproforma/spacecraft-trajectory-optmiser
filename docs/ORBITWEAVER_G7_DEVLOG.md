@@ -75,3 +75,13 @@
   - Ruff and generated-schema checks passed.
 - Kept all GPU executables, energy collection and physical multi-GPU runs disabled while
   shared validation remained active.
+
+## 2026-09-02 single-GPU scope
+
+- Added schema-v2 G7 manifests with `campaign_scope_id`; schema-v1 historical records remain
+  readable.
+- Made `single-gpu-v1` require one-device ownership and reject physical-multi-GPU evidence labels.
+- Defined `complete-in-scope` as the full coarse/refined/scenario/pricing-master/certification/
+  visualisation flow with independently certified results.
+- Kept physical route-by-scenario scaling, throughput, energy, memory crossover, and
+  tractability-frontier claims in the preserved deferred backlog.

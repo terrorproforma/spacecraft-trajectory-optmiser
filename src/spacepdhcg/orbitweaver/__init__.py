@@ -24,6 +24,7 @@ from .adapters import (
 )
 from .g7 import (
     PAPER2_MATRIX_SHA256,
+    SINGLE_GPU_G7_STAGES,
     AdaptiveFidelity,
     ArcFidelity,
     ArcRequest,
@@ -49,10 +50,12 @@ from .g7 import (
     deterministic_top_k,
     expand_promising_scenarios,
     load_frozen_paper2_matrix,
+    single_gpu_completion_record,
 )
 
 __all__ = [
     "PAPER2_MATRIX_SHA256",
+    "SINGLE_GPU_G7_STAGES",
     "AdapterFlowResult",
     "AdaptiveFidelity",
     "ArcFidelity",
@@ -97,5 +100,6 @@ __all__ = [
     "expand_promising_scenarios",
     "flow_result_record",
     "load_frozen_paper2_matrix",
+    "single_gpu_completion_record",
     "solve_certified_route_master",
 ]

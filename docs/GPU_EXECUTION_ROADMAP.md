@@ -6,6 +6,13 @@
 **Minimum upstream CUDA requirement:** 12.4  
 **Primary implementation language:** C++20/CUDA; Python is orchestration, reference, and analysis only
 
+**Active completion scope (2026-09-02): `single-gpu-v1`.** The versioned authority is
+[`ACTIVE_SINGLE_GPU_ROADMAP.md`](ACTIVE_SINGLE_GPU_ROADMAP.md). Physical 2/4/8-GPU G5 and
+distributed OrbitWeaver execution are preserved in
+[`DEFERRED_MULTI_GPU_BACKLOG.md`](DEFERRED_MULTI_GPU_BACKLOG.md) and no longer block the active
+goal. This document retains the original full-campaign instructions as historical/runbook
+authority; it does not silently revise preregistered thresholds or old evidence.
+
 This is the execution manual for completing the remaining GPU-dependent programme on a local NVIDIA
 machine. It is deliberately more detailed than a normal roadmap. Follow the gates in order. Do not
 start multi-GPU work before the single-GPU correctness and persistent-ownership gates pass.
@@ -39,11 +46,12 @@ G3 device-resident deterministic SCvx
     ↓
 G4 adaptive/inexact and hybrid GPU experiments
     ↓
-G5 scenario-aware NCCL multi-GPU execution
+Paper 1 `single-gpu-v1` result freeze and manuscript
     ↓
-Paper 1 result freeze and manuscript
-    ↓
-OrbitWeaver route × scenario scaling
+OrbitWeaver one-GPU coarse/refined/scenario/pricing/master/certification/visualisation
+
+deferred do/test later:
+G5 physical 2/4/8-GPU execution → distributed OrbitWeaver route × scenario scaling
 ```
 
 No performance hypothesis is evaluated before the corresponding gate's correctness conditions pass.
@@ -1185,9 +1193,12 @@ G4 passes when:
 
 ---
 
-# 12. Gate G5 — contribution C: scenario-aware multi-GPU
+# 12. Gate G5 — contribution C: scenario-aware multi-GPU (deferred)
 
-Only start after G2/G3 single-GPU correctness.
+This section remains the exact preserved full-campaign contract. It is not on the
+`single-gpu-v1` completion path. Execute it later under
+`DEFERRED_MULTI_GPU_BACKLOG.md`; do not reinterpret one-rank/logical evidence as physical
+acceptance.
 
 ## 12.1 Build prerequisites
 
@@ -1711,7 +1722,7 @@ Then retain OOM as H3 evidence.
 
 # 19. Final Paper 1 freeze
 
-Paper 1 is ready to freeze only when:
+The historical `full-multi-gpu-v1` Paper 1 campaign is ready to freeze only when:
 
 - all G0–G5 applicable gates are complete;
 - H1–H6 have decision records;
@@ -1726,6 +1737,11 @@ Paper 1 is ready to freeze only when:
 Create a results PR from a clean branch and require all ordinary CI plus compact-result validation.
 After merge, tag the paper state and archive the tag, repository bundle, and evidence indices.
 
+For `single-gpu-v1`, G5 is excluded by the versioned scope. G6 instead requires complete portable
+G4 one-GPU evidence, active H1/H2/H3/H5/H6 decisions, H4 marked
+`deferred-not-in-scope`, and only the in-scope products. The freezer still refuses a full campaign
+without physical P1-F records at 2, 4, and 8 GPUs.
+
 ---
 
 # 20. OrbitWeaver after Paper 1
@@ -1734,11 +1750,15 @@ Once the persistent/multi-GPU trajectory oracle is stable:
 
 1. replace the host OrbitWeaver continuous arc adapters with the persistent GPU backend;
 2. batch arcs by compatible topology/fidelity;
-3. allocate route candidates across a candidate axis and scenarios across a scenario axis;
+3. on the active scope, batch route candidates and scenarios on exactly one physical GPU;
 4. reuse warm-start tokens between coarse, refined, robust, and certified stages;
 5. integrate arc lower bounds with column generation and dynamic discretisation;
-6. run route × scenario throughput experiments from `benchmarks/paper2_matrix.json`;
+6. complete coarse → refined → scenario → pricing/master → certification simulations and
+   trajectory/mission visualisation from `benchmarks/paper2_matrix.json`;
 7. retain high-fidelity certification independently of the optimization backend;
-8. report how GPU arc throughput changes the tractable routing frontier, not merely arc-kernel speed.
+8. make no scaling, energy, crossover, throughput, or tractability-frontier claim in
+   `single-gpu-v1`.
 
-This begins Paper 2. It does not alter Paper 1's preregistered solver claims.
+Distributed route × scenario scaling remains preserved for the deferred campaign. This begins
+Paper 2 engineering without claiming that the full Paper 2 scaling study is complete, and it does
+not alter Paper 1's preregistered solver claims.

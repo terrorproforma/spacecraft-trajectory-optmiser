@@ -1,147 +1,302 @@
 {
-  "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-manifest-v1.json",
+  "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-manifest.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
-  "properties": {
-    "backend": {
-      "minLength": 1,
-      "type": "string"
-    },
-    "config_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "type": "string"
-    },
-    "device_ids": {
-      "items": {
-        "minimum": 0,
-        "type": "integer"
-      },
-      "minItems": 1,
-      "type": "array",
-      "uniqueItems": true
-    },
-    "evidence_level": {
-      "enum": [
-        "implemented_compiled",
-        "cpu_correctness_tested",
-        "one_gpu_correctness_tested",
-        "physical_multi_gpu_tested"
-      ]
-    },
-    "hardware": {
+  "anyOf": [
+    {
       "additionalProperties": false,
       "properties": {
-        "cpu": {
-          "minLength": 1,
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "gpus": {
-          "items": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "os": {
+        "backend": {
           "minLength": 1,
           "type": "string"
+        },
+        "config_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "device_ids": {
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "evidence_level": {
+          "enum": [
+            "implemented_compiled",
+            "cpu_correctness_tested",
+            "one_gpu_correctness_tested",
+            "physical_multi_gpu_tested"
+          ]
+        },
+        "hardware": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "gpus": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "os": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "os",
+            "cpu",
+            "gpus"
+          ],
+          "type": "object"
+        },
+        "ownership": {
+          "enum": [
+            "single_gpu",
+            "logical_rank_mock",
+            "g5_distributed"
+          ]
+        },
+        "paper2_matrix_sha256": {
+          "const": "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+        },
+        "repeat_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "repository_commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "toolchain": {
+          "additionalProperties": false,
+          "properties": {
+            "cmake": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "compiler": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cuda": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "python": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "python",
+            "compiler",
+            "cmake",
+            "cuda"
+          ],
+          "type": "object"
         }
       },
       "required": [
-        "os",
-        "cpu",
-        "gpus"
+        "schema_version",
+        "run_id",
+        "repository_commit",
+        "seed",
+        "repeat_count",
+        "backend",
+        "ownership",
+        "device_ids",
+        "config_sha256",
+        "paper2_matrix_sha256",
+        "toolchain",
+        "hardware",
+        "evidence_level"
       ],
       "type": "object"
     },
-    "ownership": {
-      "enum": [
-        "single_gpu",
-        "logical_rank_mock",
-        "g5_distributed"
-      ]
-    },
-    "paper2_matrix_sha256": {
-      "const": "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
-    },
-    "repeat_count": {
-      "minimum": 1,
-      "type": "integer"
-    },
-    "repository_commit": {
-      "pattern": "^[0-9a-f]{40}$",
-      "type": "string"
-    },
-    "run_id": {
-      "minLength": 1,
-      "type": "string"
-    },
-    "schema_version": {
-      "const": 1
-    },
-    "seed": {
-      "minimum": 0,
-      "type": "integer"
-    },
-    "toolchain": {
+    {
       "additionalProperties": false,
       "properties": {
-        "cmake": {
+        "backend": {
           "minLength": 1,
-          "type": [
-            "string",
-            "null"
+          "type": "string"
+        },
+        "campaign_scope_id": {
+          "enum": [
+            "single-gpu-v1",
+            "full-multi-gpu-v1"
           ]
         },
-        "compiler": {
-          "minLength": 1,
-          "type": [
-            "string",
-            "null"
+        "config_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "device_ids": {
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "evidence_level": {
+          "enum": [
+            "implemented_compiled",
+            "cpu_correctness_tested",
+            "one_gpu_correctness_tested",
+            "physical_multi_gpu_tested"
           ]
         },
-        "cuda": {
-          "minLength": 1,
-          "type": [
-            "string",
-            "null"
+        "hardware": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "gpus": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "os": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "os",
+            "cpu",
+            "gpus"
+          ],
+          "type": "object"
+        },
+        "ownership": {
+          "enum": [
+            "single_gpu",
+            "logical_rank_mock",
+            "g5_distributed"
           ]
         },
-        "python": {
+        "paper2_matrix_sha256": {
+          "const": "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+        },
+        "repeat_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "repository_commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "run_id": {
           "minLength": 1,
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "toolchain": {
+          "additionalProperties": false,
+          "properties": {
+            "cmake": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "compiler": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cuda": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "python": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "python",
+            "compiler",
+            "cmake",
+            "cuda"
+          ],
+          "type": "object"
         }
       },
       "required": [
-        "python",
-        "compiler",
-        "cmake",
-        "cuda"
+        "schema_version",
+        "run_id",
+        "repository_commit",
+        "seed",
+        "repeat_count",
+        "backend",
+        "ownership",
+        "device_ids",
+        "config_sha256",
+        "paper2_matrix_sha256",
+        "toolchain",
+        "hardware",
+        "evidence_level",
+        "campaign_scope_id"
       ],
       "type": "object"
     }
-  },
-  "required": [
-    "schema_version",
-    "run_id",
-    "repository_commit",
-    "seed",
-    "repeat_count",
-    "backend",
-    "ownership",
-    "device_ids",
-    "config_sha256",
-    "paper2_matrix_sha256",
-    "toolchain",
-    "hardware",
-    "evidence_level"
   ],
-  "title": "OrbitWeaver G7 run manifest",
-  "type": "object"
+  "title": "OrbitWeaver G7 run manifest (historical v1 or scoped v2)"
 }

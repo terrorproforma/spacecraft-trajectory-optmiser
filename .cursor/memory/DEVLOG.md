@@ -436,3 +436,27 @@
 - Follow-up notes / risks:
   - Final full validation, immutable commit, generated capability, complete pilot and new
     commit-pinned campaign launch remain required before any G4 evidence claim.
+
+## 2026-09-02 09:45 AEST
+
+- Task summary:
+  - Changed the active completion goal to versioned one-GPU scope while preserving the original
+    full multi-GPU campaign and all G5/OrbitWeaver distributed tooling.
+- Changes:
+  - Added machine-readable `single-gpu-v1`/`full-multi-gpu-v1` scope records and JSON schema.
+  - Made G6 campaign configs, decisions, products, claim linkage and freeze seals scope-aware;
+    historical configs remain readable, scoped products carry their ID, H4 is deferred, and
+    F07/F12/T06 are explicit exclusions.
+  - Kept full-campaign freeze fail-closed without physical P1-F 2/4/8-GPU evidence.
+  - Added G7 schema-v2 scope identity and complete one-GPU
+    coarse/refined/scenario/pricing-master/certification/visualisation acceptance semantics.
+  - Reconciled the active roadmap, programme/G4/G5/G6/G7 status, Paper 1 claims/outline, and Paper 2
+    outline without rewriting historical evidence or preregistered thresholds.
+- Validation:
+  - Full Ruff format/lint and generated-schema checks passed.
+  - Full Python suite passed: 250 passed, 3 optional pinned-QOCO tests skipped.
+  - Focused scoped G6/G7/schema tests passed; no GPU executable or campaign was run.
+- Follow-up notes / risks:
+  - `single-gpu-v1` still requires complete portable current-head G4 evidence before G6 freeze.
+  - Physical G5 and distributed OrbitWeaver acceptance remain preserved in
+    `docs/DEFERRED_MULTI_GPU_BACKLOG.md`.

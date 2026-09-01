@@ -867,3 +867,25 @@ Use this file as persistent, repo-local execution memory.
   and evaluation seeds, and a content hash over the complete audit.
 - Do not interpret repeat index or solver rotation as a new mathematical instance. Matching
   numerical coordinates must reproduce hashes; different evaluation seeds must not.
+
+### 2026-09-02 09:45 AEST - single-GPU roadmap scope
+
+#### What Worked
+
+- Added explicit `single-gpu-v1` and historical `full-multi-gpu-v1` records without editing any
+  campaign output or deleting G5 tooling.
+- Versioned G6 configurations, decisions, products, manifests, and seals so a scoped product cannot
+  be mistaken for the original full campaign.
+- Kept H1/H2/H3/H5/H6 active and represented physical-only H4 as
+  `deferred-not-in-scope`, never as a scientific outcome.
+- Preserved schema-v1 G7 manifest reads while requiring schema-v2 one-GPU manifests to identify
+  scope and reject distributed/physical evidence.
+
+#### Guardrails
+
+- A scope change changes completion eligibility, not preregistered thresholds or historical
+  evidence.
+- Never silently drop physical products: list F07/F12/T06 as deferred and do not emit placeholders.
+- A full campaign freeze still needs physical P1-F evidence at 2, 4, and 8 GPUs.
+- CPU reference records (`gpus=0`) are valid inputs to one-GPU comparisons; only physical GPU
+  counts above one and P1-F records cross the `single-gpu-v1` boundary.

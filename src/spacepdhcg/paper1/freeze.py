@@ -12,6 +12,14 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any, Final
 
+from spacepdhcg.campaign_scope import (
+    CampaignScopeError,
+    effective_scope_id,
+    scope_definition,
+    validate_claims_for_scope,
+    validate_run_scope,
+)
+
 from .aggregate import TIMING_COMPONENTS, build_products
 from .decisions import build_decisions, validate_decision
 from .evidence import (
@@ -24,6 +32,7 @@ from .evidence import (
 )
 
 FREEZE_SCHEMA_VERSION: Final = "1.0.0"
+SCOPED_FREEZE_SCHEMA_VERSION: Final = "1.1.0"
 CLAIM_PRODUCTS: Final = {
     "H1": ["F02", "F08", "T04", "T07", "T08"],
     "H2": ["F04", "F09", "F10", "T07", "T08"],
@@ -97,11 +106,14 @@ def validate_campaign_config(config: Mapping[str, Any]) -> None:
         "solver_locks",
         "claims",
     }
+    version = config.get("schema_version")
+    if version == SCOPED_FREEZE_SCHEMA_VERSION:
+        required.add("campaign_scope_id")
+    elif version != FREEZE_SCHEMA_VERSION:
+        raise FreezeError("unsupported campaign config schema")
     missing, unknown = sorted(required - set(config)), sorted(set(config) - required)
     if missing or unknown:
         raise FreezeError(f"campaign config fields invalid; missing={missing}, unknown={unknown}")
-    if config["schema_version"] != FREEZE_SCHEMA_VERSION:
-        raise FreezeError("unsupported campaign config schema")
     commit = config["repository_commit"]
     if not isinstance(commit, str) or len(commit) != 40:
         raise FreezeError("campaign repository commit must be a full Git SHA")
@@ -115,8 +127,12 @@ def validate_campaign_config(config: Mapping[str, Any]) -> None:
         if not isinstance(config[category], list) or not config[category]:
             raise FreezeError(f"campaign requires pinned {category}")
     claims = config["claims"]
-    if not isinstance(claims, Mapping) or set(claims) != {f"H{index}" for index in range(1, 7)}:
+    if not isinstance(claims, Mapping):
         raise FreezeError("claims must link exactly H1-H6")
+    try:
+        validate_claims_for_scope(effective_scope_id(config), claims)
+    except CampaignScopeError as error:
+        raise FreezeError(str(error)) from error
 
 
 def _matches(run: ArchivedRun, selector: Mapping[str, Any]) -> bool:
@@ -159,6 +175,42 @@ def _check_coverage(runs: tuple[ArchivedRun, ...], config: Mapping[str, Any]) ->
                 raise FreezeError(
                     f"run {run.run_id} has {measured}/{minimum_repeats} measured repeats"
                 )
+
+
+def _check_scope_evidence(runs: tuple[ArchivedRun, ...], scope_id: str) -> None:
+    for run in runs:
+        try:
+            validate_run_scope(
+                scope_id,
+                family=str(run.result["identity"]["family"]),
+                gpus=int(run.result["dimensions"]["gpus"]),
+            )
+        except CampaignScopeError as error:
+            raise FreezeError(f"run {run.run_id}: {error}") from error
+    if scope_id == "single-gpu-v1":
+        represented = {
+            prefix
+            for prefix in ("P1-C", "P1-D", "P1-E")
+            if any(str(run.result["identity"]["family"]).startswith(prefix) for run in runs)
+        }
+        missing_families = sorted({"P1-C", "P1-D", "P1-E"} - represented)
+        if missing_families:
+            raise FreezeError(
+                "single-gpu-v1 freeze requires current-head G4 evidence for "
+                f"P1-C/P1-D/P1-E; missing={missing_families}"
+            )
+    if scope_definition(scope_id)["requires_physical_g5"]:
+        physical_counts = {
+            int(run.result["dimensions"]["gpus"])
+            for run in runs
+            if str(run.result["identity"]["family"]).startswith("P1-F")
+        }
+        missing = sorted({2, 4, 8} - physical_counts)
+        if missing:
+            raise FreezeError(
+                "full-multi-gpu-v1 freeze requires physical G5 evidence at "
+                f"2/4/8 GPUs; missing={missing}"
+            )
 
 
 def _check_matched_quality(runs: Iterable[ArchivedRun]) -> None:
@@ -245,7 +297,13 @@ def _checksums(root: Path) -> dict[str, Any]:
     return {"schema_version": FREEZE_SCHEMA_VERSION, "files": files}
 
 
-def _claim_linkage(config: Mapping[str, Any], decisions: Path) -> dict[str, Any]:
+def _claim_linkage(
+    config: Mapping[str, Any],
+    decisions: Path,
+    *,
+    campaign_scope_id: str,
+) -> dict[str, Any]:
+    scope = scope_definition(campaign_scope_id)
     links = []
     for hypothesis in sorted(config["claims"]):
         record = _load_json(decisions / f"{hypothesis.lower()}-decision.json", hypothesis)
@@ -253,11 +311,14 @@ def _claim_linkage(config: Mapping[str, Any], decisions: Path) -> dict[str, Any]
         if record["hypothesis"] != hypothesis:
             raise FreezeError(f"decision file mismatch for {hypothesis}")
         claims = config["claims"][hypothesis]
-        if (
-            not isinstance(claims, list)
-            or not claims
-            or not all(isinstance(claim, str) and claim for claim in claims)
+        if not isinstance(claims, list) or not all(
+            isinstance(claim, str) and claim for claim in claims
         ):
+            raise FreezeError(f"{hypothesis} has invalid manuscript claim IDs")
+        deferred = hypothesis in scope["deferred_hypotheses"]
+        if deferred and claims:
+            raise FreezeError(f"{hypothesis} cannot claim deferred multi-GPU evidence")
+        if not deferred and not claims:
             raise FreezeError(f"{hypothesis} requires non-empty manuscript claim IDs")
         links.append(
             {
@@ -265,10 +326,19 @@ def _claim_linkage(config: Mapping[str, Any], decisions: Path) -> dict[str, Any]
                 "decision_outcome": record["outcome"],
                 "decision_file": f"decisions/{hypothesis.lower()}-decision.json",
                 "claim_ids": claims,
-                "product_ids": CLAIM_PRODUCTS[hypothesis],
+                "product_ids": [
+                    product_id
+                    for product_id in CLAIM_PRODUCTS[hypothesis]
+                    if product_id in scope["included_products"]
+                ],
+                "disposition": "deferred-not-in-scope" if deferred else "active",
             }
         )
-    return {"schema_version": FREEZE_SCHEMA_VERSION, "links": links}
+    return {
+        "schema_version": SCOPED_FREEZE_SCHEMA_VERSION,
+        "campaign_scope_id": campaign_scope_id,
+        "links": links,
+    }
 
 
 def build_campaign(
@@ -276,13 +346,21 @@ def build_campaign(
     output_directory: str | Path,
     *,
     synthetic: bool = False,
+    campaign_scope_id: str | None = None,
 ) -> dict[str, Any]:
     runs = load_campaign(campaign_directory)
+    scope = None if campaign_scope_id is None else scope_definition(campaign_scope_id)
+    if scope is not None:
+        _check_scope_evidence(runs, campaign_scope_id)
     output = Path(output_directory)
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
-    decisions = build_decisions(runs, output / "decisions")
+    decisions = build_decisions(
+        runs,
+        output / "decisions",
+        campaign_scope_id=campaign_scope_id,
+    )
     decision_records = {
         hypothesis: _load_json(
             output / "decisions" / f"{hypothesis.lower()}-decision.json",
@@ -295,16 +373,23 @@ def build_campaign(
         output / "products",
         decisions=decision_records,
         synthetic=synthetic,
+        campaign_scope_id=campaign_scope_id,
+        included_product_ids=None if scope is None else scope["included_products"],
+        deferred_product_ids=() if scope is None else scope["deferred_products"],
     )
     index = evidence_index(runs)
     write_canonical_json(output / "evidence-index.json", index)
     manifest = {
-        "schema_version": FREEZE_SCHEMA_VERSION,
+        "schema_version": (
+            FREEZE_SCHEMA_VERSION if campaign_scope_id is None else SCOPED_FREEZE_SCHEMA_VERSION
+        ),
         "synthetic": synthetic,
         "run_count": len(runs),
         "product_manifest": figures,
         "decision_index": decisions,
     }
+    if campaign_scope_id is not None:
+        manifest["campaign_scope_id"] = campaign_scope_id
     write_canonical_json(output / "campaign-build.json", manifest)
     write_canonical_json(output / "checksums.json", _checksums(output))
     return manifest
@@ -321,6 +406,7 @@ def freeze_campaign(
     repo = Path(repository).resolve()
     config = _load_json(Path(config_path), "campaign config")
     validate_campaign_config(config)
+    campaign_scope_id = effective_scope_id(config)
     if config["synthetic"]:
         raise FreezeError("synthetic campaigns can be built but can never be frozen")
     if _git(repo, "status", "--porcelain"):
@@ -339,11 +425,17 @@ def freeze_campaign(
         runs = load_campaign(campaign_directory, verify_payloads=True)
     except EvidenceError as error:
         raise FreezeError(str(error)) from error
+    _check_scope_evidence(runs, campaign_scope_id)
     _check_coverage(runs, config)
     _check_matched_quality(runs)
     _check_timing_and_classification(runs)
     output = Path(output_directory)
-    build_campaign(campaign_directory, output, synthetic=False)
+    build_campaign(
+        campaign_directory,
+        output,
+        synthetic=False,
+        campaign_scope_id=campaign_scope_id,
+    )
     product_manifest = _load_json(output / "products/build-manifest.json", "product manifest")
     mapped = Counter(
         run_id for product in product_manifest["products"] for run_id in product["run_ids"]
@@ -351,11 +443,16 @@ def freeze_campaign(
     missing = sorted(run.run_id for run in runs if mapped[run.run_id] == 0)
     if missing:
         raise FreezeError(f"archived failures/results are silently excluded: {', '.join(missing)}")
-    linkage = _claim_linkage(config, output / "decisions")
+    linkage = _claim_linkage(
+        config,
+        output / "decisions",
+        campaign_scope_id=campaign_scope_id,
+    )
     write_canonical_json(output / "claim-decision-linkage.json", linkage)
     seal = {
-        "schema_version": FREEZE_SCHEMA_VERSION,
+        "schema_version": SCOPED_FREEZE_SCHEMA_VERSION,
         "campaign_id": config["campaign_id"],
+        "campaign_scope_id": campaign_scope_id,
         "repository_commit": head,
         "run_count": len(runs),
         "status_counts": dict(sorted(Counter(run.status for run in runs).items())),
@@ -374,6 +471,7 @@ def verify_reproducible_build(
     campaign_directory: str | Path,
     *,
     synthetic: bool,
+    campaign_scope_id: str | None = None,
 ) -> dict[str, Any]:
     """Build twice in clean temporary directories and compare every output byte."""
 
@@ -382,8 +480,18 @@ def verify_reproducible_build(
         tempfile.TemporaryDirectory(prefix="spacepdhcg-g6-b-") as second_raw,
     ):
         first, second = Path(first_raw), Path(second_raw)
-        build_campaign(campaign_directory, first, synthetic=synthetic)
-        build_campaign(campaign_directory, second, synthetic=synthetic)
+        build_campaign(
+            campaign_directory,
+            first,
+            synthetic=synthetic,
+            campaign_scope_id=campaign_scope_id,
+        )
+        build_campaign(
+            campaign_directory,
+            second,
+            synthetic=synthetic,
+            campaign_scope_id=campaign_scope_id,
+        )
         left, right = _checksums(first), _checksums(second)
         if left != right:
             left_map = {item["path"]: item["sha256"] for item in left["files"]}
@@ -394,14 +502,19 @@ def verify_reproducible_build(
                 if left_map.get(path) != right_map.get(path)
             )
             raise FreezeError(f"build is not byte reproducible: {', '.join(differences)}")
-        return {
-            "schema_version": FREEZE_SCHEMA_VERSION,
+        result = {
+            "schema_version": (
+                FREEZE_SCHEMA_VERSION if campaign_scope_id is None else SCOPED_FREEZE_SCHEMA_VERSION
+            ),
             "reproducible": True,
             "file_count": len(left["files"]),
             "aggregate_sha256": hashlib.sha256(
                 json.dumps(left, sort_keys=True).encode()
             ).hexdigest(),
         }
+        if campaign_scope_id is not None:
+            result["campaign_scope_id"] = campaign_scope_id
+        return result
 
 
 def verify_clean_clone(
@@ -409,6 +522,7 @@ def verify_clean_clone(
     campaign_relative_path: str,
     *,
     synthetic: bool,
+    campaign_scope_id: str | None = None,
 ) -> dict[str, Any]:
     """Verify the build from a Git-archive clean clone without local untracked inputs."""
 
@@ -419,6 +533,10 @@ def verify_clean_clone(
         clone = Path(temporary) / "repository"
         subprocess.run(["git", "clone", "--no-local", str(repo), str(clone)], check=True)
         campaign = clone / campaign_relative_path
-        result = verify_reproducible_build(campaign, synthetic=synthetic)
+        result = verify_reproducible_build(
+            campaign,
+            synthetic=synthetic,
+            campaign_scope_id=campaign_scope_id,
+        )
         result["repository_commit"] = _git(clone, "rev-parse", "HEAD")
         return result

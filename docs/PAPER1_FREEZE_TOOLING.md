@@ -3,6 +3,12 @@
 Status: tooling implementation only. This document does not assert that G4, G5, G6, or Paper 1
 has passed or frozen.
 
+Scope update: schema `1.1.0` configurations require `campaign_scope_id`. The active
+`single-gpu-v1` scope may freeze after complete portable in-scope G4 evidence; H4 and
+F07/F12/T06 are recorded as deferred rather than fabricated. Historical schema `1.0.0`
+configurations remain readable as `full-multi-gpu-v1`, and that scope still refuses to freeze
+without physical P1-F evidence at 2, 4, and 8 GPUs.
+
 ## Architecture
 
 `spacepdhcg.paper1` is deliberately downstream of the G4/G5 run producers:
@@ -16,7 +22,8 @@ has passed or frozen.
    comes only from validated records.
 3. `decisions.py` emits H1-H6 records with the frozen practical thresholds, 10,000-sample paired
    percentile bootstraps, fixed seeds, 95% intervals, sustained-scale rules, censored run IDs, and
-   explicit `supported`, `rejected`, `mixed`, or `unresolved` outcomes.
+   explicit `supported`, `rejected`, `mixed`, or `unresolved` outcomes. A scoped physical-only
+   hypothesis uses `deferred-not-in-scope`, which is not a scientific outcome.
 4. `freeze.py` orchestrates products, decisions, evidence indexes, checksums, claim linkage,
    byte-reproducibility checks, and clean-clone checks. `freeze` rejects synthetic, dirty,
    incomplete, unpinned, local-only, hash-mismatched, timing-inconsistent, or untraceable input.
@@ -43,6 +50,10 @@ spacepdhcg-paper1 verify-reproducible <campaign>
 spacepdhcg-paper1 verify-clean-clone <repo-relative-campaign>
 spacepdhcg-paper1 freeze <campaign> <campaign-config.json> <output> --repository .
 ```
+
+For direct scoped build/reproducibility commands, add
+`--campaign-scope-id single-gpu-v1`; `freeze` reads the mandatory ID from its schema-`1.1.0`
+configuration.
 
 The safe demonstration path is:
 
@@ -73,9 +84,12 @@ Each run directory must contain:
 objects: canonical-residual evidence, nonlinear replay evidence, and the immutable archive. A
 portable URI is mandatory even if a local mirror is supplied.
 
-The campaign configuration lists every required coordinate and its minimum record, instance, and
+The campaign configuration lists every required in-scope coordinate and its minimum record, instance, and
 measured-repeat counts. It also pins hardware manifests, toolchain manifests, and solver locks by
-repository-relative path and SHA-256. H1-H6 must each link to one or more manuscript claim IDs.
+repository-relative path and SHA-256. Historical full-campaign H1-H6 each link to one or more
+manuscript claim IDs. For schema `1.1.0`, active hypotheses require claim IDs while deferred
+hypotheses require an empty array. Scoped product sources and build/freeze manifests repeat the
+scope ID.
 
 ## Freeze refusal conditions
 
@@ -91,7 +105,9 @@ The command refuses to write `freeze-seal.json` if any of these checks fail:
 - archived status not mapped by at least one frozen product;
 - missing F11 variational trials for any of 3-DoF, 6-DoF, or low-thrust;
 - missing F12 expected, worst-case, or CVaR robust-iteration diagnostics;
-- missing H1-H6 decision or manuscript claim link.
+- missing active-hypothesis decision or manuscript claim link;
+- a manuscript claim for a deferred hypothesis, a 2/4/8-GPU or P1-F record in
+  `single-gpu-v1`, or a full campaign without physical P1-F 2/4/8-GPU records.
 
 `freeze-seal.json` is a completeness seal only. Its statement explicitly disclaims a scientific
 PASS claim.
@@ -120,7 +136,7 @@ including failures, with:
 
 Current known G4 failures must remain failures; this tooling will not promote them.
 
-## Exact G5 inputs still required
+## Exact G5 inputs still required for `full-multi-gpu-v1`
 
 The G5 producer must supply the complete P1-F matrix and all negative evidence with:
 
@@ -141,8 +157,9 @@ The G5 producer must supply the complete P1-F matrix and all negative evidence w
 - F12 per-outer-iteration expected/worst-case/CVaR dynamics, path, terminal, virtual-control,
   non-anticipativity, risk-epigraph, and canonical-KKT residuals with acceptance and trust radius.
 
-If G5 remains unauthorised or unexecuted, its configured coordinates remain incomplete and real
-freeze correctly refuses.
+If G5 remains unauthorised or unexecuted, `full-multi-gpu-v1` correctly refuses. In
+`single-gpu-v1`, those coordinates and F07/F12/T06 are explicitly deferred and excluded by scope;
+they are not empty generated products and cannot support a manuscript claim.
 
 ## Unified-roadmap validation
 

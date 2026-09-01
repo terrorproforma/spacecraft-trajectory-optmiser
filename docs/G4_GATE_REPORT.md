@@ -6,6 +6,12 @@ H5: **unresolved**
 H6: **unresolved**
 G5 authorised: **no**
 
+Scope reconciliation (2026-09-02): this report is retained historical evidence and its original
+FAIL/unresolved classifications are unchanged. Under `single-gpu-v1`, current-head G4 remains the
+active Paper 1 evidence gate, but physical G5 is a separate deferred campaign and does not block a
+future scoped freeze after the complete in-scope G4 ledger is qualified and portable. Nothing in
+this scope change promotes the failures below.
+
 ## Scope and frozen policy
 
 The G4 policy was frozen before evaluation in commit `8f318b9`. The machine-readable contract is

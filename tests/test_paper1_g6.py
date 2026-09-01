@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
+from spacepdhcg.campaign_scope import ACTIVE_SINGLE_GPU_SCOPE_ID, scope_definition
 from spacepdhcg.paper1 import (
     EvidenceError,
     FreezeError,
@@ -251,6 +252,67 @@ def test_decisions_are_complete_but_do_not_invent_resolution(tmp_path: Path) -> 
         "mixed",
         "unresolved",
     }
+
+
+def test_single_gpu_scope_defers_h4_and_excludes_physical_products(tmp_path: Path) -> None:
+    runs = tuple(
+        run
+        for run in load_campaign(_campaign(tmp_path))
+        if run.result["dimensions"]["gpus"] == 1
+        and not run.result["identity"]["family"].startswith("P1-F")
+    )
+    decisions_path = tmp_path / "scoped-decisions"
+    index = build_decisions(
+        runs,
+        decisions_path,
+        campaign_scope_id=ACTIVE_SINGLE_GPU_SCOPE_ID,
+    )
+    records = {
+        item["hypothesis"]: json.loads((decisions_path / item["file"]).read_text(encoding="utf-8"))
+        for item in index["decisions"]
+    }
+    decision_schema = json.loads(
+        (Path(__file__).parents[1] / "experiments/schema/paper1_decision.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    for record in records.values():
+        Draft202012Validator(decision_schema).validate(record)
+    assert records["H4"]["outcome"] == "deferred-not-in-scope"
+    assert records["H4"]["input_run_ids"] == []
+    assert all(
+        records[hypothesis]["outcome"] != "deferred-not-in-scope"
+        for hypothesis in {"H1", "H2", "H3", "H5", "H6"}
+    )
+
+    scope = scope_definition(ACTIVE_SINGLE_GPU_SCOPE_ID)
+    output = tmp_path / "scoped-products"
+    manifest = build_products(
+        runs,
+        output,
+        decisions=records,
+        synthetic=True,
+        campaign_scope_id=ACTIVE_SINGLE_GPU_SCOPE_ID,
+        included_product_ids=scope["included_products"],
+        deferred_product_ids=scope["deferred_products"],
+    )
+    assert manifest["campaign_scope_id"] == ACTIVE_SINGLE_GPU_SCOPE_ID
+    assert set(manifest["product_ids"]) == set(scope["included_products"])
+    assert {item["product_id"] for item in manifest["deferred_products"]} == set(
+        scope["deferred_products"]
+    )
+    product_schema = json.loads(
+        (
+            Path(__file__).parents[1] / "experiments/schema/paper1_product_source.schema.json"
+        ).read_text(encoding="utf-8")
+    )
+    for item in manifest["products"]:
+        source = json.loads((output / item["source"]).read_text(encoding="utf-8"))
+        assert source["campaign_scope_id"] == ACTIVE_SINGLE_GPU_SCOPE_ID
+        Draft202012Validator(product_schema).validate(source)
+    assert not (output / "fig07_multigpu_scaling.json").exists()
+    assert not (output / "fig12_robust_residuals.json").exists()
+    assert not (output / "tab06_robust_scaling.json").exists()
 
 
 def test_synthetic_campaign_can_never_freeze(tmp_path: Path) -> None:

@@ -3,6 +3,12 @@
 **Status:** implementation/build preparation in progress; **G5 is not accepted and must not be
 reported as PASS**.
 
+**Roadmap disposition (2026-09-02): DEFERRED-NOT-IN-SCOPE for `single-gpu-v1`.** All code,
+tooling, one-rank evidence, runbook instructions, and the exact physical acceptance list in this
+document remain preserved. Missing physical 2/4/8-GPU evidence still prevents a
+`full-multi-gpu-v1` freeze, but no longer blocks the active single-GPU completion goal. See
+[`DEFERRED_MULTI_GPU_BACKLOG.md`](DEFERRED_MULTI_GPU_BACKLOG.md).
+
 This branch establishes the scenario-aware distributed core from integrated commit
 `a33e950e06b0a302815fb079dc95f356c13db5fd`. It does not contain physical 2/4/8-GPU correctness,
 strong/weak scaling, performance, energy, or H2/H3/H4 evidence.
