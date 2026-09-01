@@ -36,10 +36,7 @@ def summarize(run: Path) -> dict[str, Any]:
     recovery = _record(run / "recovery.jsonl", "recovery")
     sanitizer_logs = sorted(run.glob("sanitizer-*.log"))
     sanitizer_clean = bool(sanitizer_logs) and all(
-        (
-            "ERROR SUMMARY: 0 errors" in text
-            or "RACECHECK SUMMARY: 0 hazards" in text
-        )
+        ("ERROR SUMMARY: 0 errors" in text or "RACECHECK SUMMARY: 0 hazards" in text)
         and "Target application returned an error" not in text
         for path in sanitizer_logs
         for text in [path.read_text(encoding="utf-8", errors="replace")]
@@ -49,10 +46,7 @@ def summarize(run: Path) -> dict[str, Any]:
     python_pytest = run / "python-pytest.log"
     ruff = run / "ruff.log"
     tests_clean = (
-        all(
-            path.exists()
-            for path in (debug_ctest, release_ctest, python_pytest, ruff)
-        )
+        all(path.exists() for path in (debug_ctest, release_ctest, python_pytest, ruff))
         and "100% tests passed" in debug_ctest.read_text(encoding="utf-8")
         and "100% tests passed" in release_ctest.read_text(encoding="utf-8")
         and "passed in" in python_pytest.read_text(encoding="utf-8")
@@ -98,10 +92,14 @@ def summarize(run: Path) -> dict[str, Any]:
         "build_test_sanitizer": tests_clean and sanitizer_clean,
     }
     passed = all(criteria.values())
-    nsys_stats = (run / "nsys-stats.log").read_text(
-        encoding="utf-8",
-        errors="replace",
-    ) if (run / "nsys-stats.log").exists() else ""
+    nsys_stats = (
+        (run / "nsys-stats.log").read_text(
+            encoding="utf-8",
+            errors="replace",
+        )
+        if (run / "nsys-stats.log").exists()
+        else ""
+    )
     return {
         "schema_version": "g3-decision-1.0.0",
         "decision": "PASS" if passed else "FAIL",
@@ -110,26 +108,20 @@ def summarize(run: Path) -> dict[str, Any]:
         "families_exercised": 4,
         "maximum_canonical_residual": maximum_canonical,
         "canonical_by_family": {
-            family: float(tight[family])
-            for family in ("hcw", "pd3", "low_thrust", "pd6")
+            family: float(tight[family]) for family in ("hcw", "pd3", "low_thrust", "pd6")
         },
         "maximum_nonlinear_residual": maximum_nonlinear,
         "maximum_cpu_gpu_trajectory_difference": maximum_trajectory,
         "hidden_cpu_fallback": production["hidden_cpu_fallback"],
-        "topology_allocation_delta": production[
-            "topology_allocations_after_create"
-        ],
-        "topology_index_copy_delta": production[
-            "topology_copies_after_create"
-        ],
+        "topology_allocation_delta": production["topology_allocations_after_create"],
+        "topology_index_copy_delta": production["topology_copies_after_create"],
         "h1_decision": h1["decision"],
         "h1_scale_boundary_intervals": h1["scale_boundary_intervals"],
         "h1_confidence_method": h1["confidence_method"],
         "sanitizer_logs": len(sanitizer_logs),
         "sanitizer_clean": sanitizer_clean,
         "nsight_kernel_records_available": (
-            "CUDA Kernel Summary" in nsys_stats
-            and "SKIPPED" not in nsys_stats
+            "CUDA Kernel Summary" in nsys_stats and "SKIPPED" not in nsys_stats
         ),
         "profiling_limitation": (
             "Nsight Systems under WSL did not expose kernel/memory records; "

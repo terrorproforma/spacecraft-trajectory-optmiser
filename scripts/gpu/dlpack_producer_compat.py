@@ -40,28 +40,34 @@ class Managed(ctypes.Structure):
 
 
 class Topology(ctypes.Structure):
-    _fields_ = [(name, Managed) for name in (
-        "quadratic_offsets",
-        "quadratic_indices",
-        "scalar_offsets",
-        "scalar_indices",
-        "affine_offsets",
-        "affine_indices",
-    )]
+    _fields_ = [
+        (name, Managed)
+        for name in (
+            "quadratic_offsets",
+            "quadratic_indices",
+            "scalar_offsets",
+            "scalar_indices",
+            "affine_offsets",
+            "affine_indices",
+        )
+    ]
 
 
 class Numeric(ctypes.Structure):
-    _fields_ = [(name, Managed) for name in (
-        "quadratic",
-        "scalar_constraint",
-        "affine_cone",
-        "linear_objective",
-        "scalar_lower",
-        "scalar_upper",
-        "affine_offset",
-        "variable_lower",
-        "variable_upper",
-    )]
+    _fields_ = [
+        (name, Managed)
+        for name in (
+            "quadratic",
+            "scalar_constraint",
+            "affine_cone",
+            "linear_objective",
+            "scalar_lower",
+            "scalar_upper",
+            "affine_offset",
+            "variable_lower",
+            "variable_upper",
+        )
+    ]
 
 
 class Iterates(ctypes.Structure):
@@ -121,20 +127,23 @@ class SolveOptions(ctypes.Structure):
 
 
 class PointerSnapshot(ctypes.Structure):
-    _fields_ = [(name, ctypes.c_size_t) for name in (
-        "quadratic_offsets",
-        "quadratic_indices",
-        "scalar_offsets",
-        "scalar_indices",
-        "affine_offsets",
-        "affine_indices",
-        "quadratic_values",
-        "scalar_values",
-        "affine_values",
-        "primal",
-        "dual",
-        "scaling",
-    )]
+    _fields_ = [
+        (name, ctypes.c_size_t)
+        for name in (
+            "quadratic_offsets",
+            "quadratic_indices",
+            "scalar_offsets",
+            "scalar_indices",
+            "affine_offsets",
+            "affine_indices",
+            "quadratic_values",
+            "scalar_values",
+            "affine_values",
+            "primal",
+            "dual",
+            "scaling",
+        )
+    ]
 
 
 class Provider:
@@ -392,15 +401,20 @@ def main() -> None:
     if invalid_status != POINTER_CONTRACT or invalid_workspace.value is not None:
         raise AssertionError(f"invalid dtype returned {invalid_status}")
 
-    print(json.dumps({
-        "case": "dlpack_producer_compat",
-        "producer": arguments.producer,
-        "non_default_stream": True,
-        "premature_update_release": True,
-        "invalid_dtype_rejected": True,
-        "pointer_stable": True,
-        "solution": [float(solution[0]), float(solution[1])],
-    }, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "case": "dlpack_producer_compat",
+                "producer": arguments.producer,
+                "non_default_stream": True,
+                "premature_update_release": True,
+                "invalid_dtype_rejected": True,
+                "pointer_stable": True,
+                "solution": [float(solution[0]), float(solution[1])],
+            },
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":

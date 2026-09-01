@@ -172,8 +172,7 @@ def test_known_incumbent_prevents_false_solver_qualification() -> None:
         objective_tolerance=2.0e-6,
     )
     expected_qualification = bool(
-        qualified_without_incumbent
-        and solution.objective <= incumbent_objective + 2.0e-6
+        qualified_without_incumbent and solution.objective <= incumbent_objective + 2.0e-6
     )
     assert qualified_with_incumbent is expected_qualification
 

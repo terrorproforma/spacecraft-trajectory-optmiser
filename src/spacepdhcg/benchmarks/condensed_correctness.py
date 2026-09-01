@@ -20,10 +20,7 @@ from spacepdhcg.transcription import (
 
 def _objective(problem: CanonicalCQP, primal: np.ndarray) -> float:
     quadratic = problem.structure.quadratic.matrix(problem.values.quadratic)
-    return float(
-        0.5 * primal @ (quadratic @ primal)
-        + problem.values.linear @ primal
-    )
+    return float(0.5 * primal @ (quadratic @ primal) + problem.values.linear @ primal)
 
 
 def _maximum_scalar_violation(problem: CanonicalCQP, primal: np.ndarray) -> float:

@@ -168,12 +168,15 @@ def main() -> None:
     parser.add_argument("--intervals", type=int, default=20)
     parser.add_argument("--output", type=Path)
     arguments = parser.parse_args()
-    payload = json.dumps(
-        run(arguments.dump, arguments.library, arguments.intervals),
-        indent=2,
-        sort_keys=True,
-        allow_nan=False,
-    ) + "\n"
+    payload = (
+        json.dumps(
+            run(arguments.dump, arguments.library, arguments.intervals),
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n"
+    )
     if arguments.output is None:
         print(payload, end="")
     else:

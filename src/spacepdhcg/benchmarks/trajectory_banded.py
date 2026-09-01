@@ -143,13 +143,16 @@ class TrajectoryBandedDiagnostics:
     objective_gap_abs: float
 
     def acceptable(self, tolerance: float = 1.0e-6) -> bool:
-        return max(
-            self.solution_error_inf,
-            self.scalar_violation_inf,
-            self.dynamics_defect_inf,
-            self.control_violation_inf,
-            self.objective_gap_abs,
-        ) <= tolerance
+        return (
+            max(
+                self.solution_error_inf,
+                self.scalar_violation_inf,
+                self.dynamics_defect_inf,
+                self.control_violation_inf,
+                self.objective_gap_abs,
+            )
+            <= tolerance
+        )
 
 
 class TrajectoryBandedFixture:
@@ -230,16 +233,12 @@ class TrajectoryBandedFixture:
             (layout.n_scalar_constraints, layout.n_variables),
             dtype=np.float64,
         )
-        scalar[layout.initial_rows, layout.state_slice(0)] = np.eye(
-            self.config.state_dimension
-        )
+        scalar[layout.initial_rows, layout.state_slice(0)] = np.eye(self.config.state_dimension)
         for interval in range(self.config.intervals):
             start = layout.dynamics_rows.start + interval * self.config.state_dimension
             rows = slice(start, start + self.config.state_dimension)
             scalar[rows, layout.state_slice(interval)] = -self.dynamics[interval]
-            scalar[rows, layout.state_slice(interval + 1)] = np.eye(
-                self.config.state_dimension
-            )
+            scalar[rows, layout.state_slice(interval + 1)] = np.eye(self.config.state_dimension)
             scalar[rows, layout.control_slice(interval)] = -self.control_maps[interval]
         scalar[layout.terminal_rows, layout.state_slice(self.config.intervals)] = np.eye(
             self.config.state_dimension
@@ -309,9 +308,7 @@ class TrajectoryBandedFixture:
             affine_values = self.structure.affine_cone.values_from(affine)
             slots = self.config.control_dimension + 1
             affine_offset = np.zeros(layout.n_affine_cone_rows, dtype=np.float64)
-            affine_offset.reshape(self.config.intervals, slots)[:, -1] = (
-                self.config.control_radius
-            )
+            affine_offset.reshape(self.config.intervals, slots)[:, -1] = self.config.control_radius
 
         return CQPValues(
             quadratic=quadratic_values,

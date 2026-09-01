@@ -39,9 +39,7 @@ def run_benchmark(
     target_states: list[np.ndarray] = []
     for _ in range(repeats):
         initial_states.append(
-            np.concatenate(
-                (rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3))
-            )
+            np.concatenate((rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3)))
         )
         target_states.append(np.concatenate((rng.uniform(-5.0, 5.0, 3), np.zeros(3))))
 

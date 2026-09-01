@@ -110,9 +110,11 @@ def active_jacobian(problem: CanonicalCQP, primal: FloatArray) -> dict[str, floa
             abs(float(lower)) if np.isfinite(lower) else 0.0,
             abs(float(upper)) if np.isfinite(upper) else 0.0,
         )
-        active = equality or (
-            np.isfinite(lower) and value - lower <= 1.0e-6 * scale
-        ) or (np.isfinite(upper) and upper - value <= 1.0e-6 * scale)
+        active = (
+            equality
+            or (np.isfinite(lower) and value - lower <= 1.0e-6 * scale)
+            or (np.isfinite(upper) and upper - value <= 1.0e-6 * scale)
+        )
         if active:
             rows.append(np.asarray(scalar.getrow(row).toarray()).ravel())
             equality_rows += int(equality)

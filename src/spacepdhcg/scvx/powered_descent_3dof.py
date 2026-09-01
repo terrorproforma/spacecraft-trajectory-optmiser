@@ -244,9 +244,7 @@ def make_dynamics_consistent_reference(
         )
         linear_term, quadratic_term = np.linalg.solve(system, right_hand_side)
         velocities[:, axis] = (
-            initial[3 + axis]
-            + linear_term * node_indices
-            + quadratic_term * node_indices**2
+            initial[3 + axis] + linear_term * node_indices + quadratic_term * node_indices**2
         )
 
     controls = np.empty((intervals, CONTROL_DIMENSION), dtype=np.float64)
@@ -254,9 +252,7 @@ def make_dynamics_consistent_reference(
     states[0] = initial
     for interval in range(intervals):
         acceleration = (velocities[interval + 1] - velocities[interval]) / step_seconds
-        requested_thrust = states[interval, 6] * (
-            acceleration - model.config.gravity_vector
-        )
+        requested_thrust = states[interval, 6] * (acceleration - model.config.gravity_vector)
         thrust = _project_thrust(model, requested_thrust)
         sigma = float(np.linalg.norm(thrust))
         controls[interval] = np.concatenate((thrust, np.asarray([sigma])))
@@ -475,8 +471,7 @@ class PoweredDescentSCvxSolver:
                     re_solved = True
 
                 retained_converged = (
-                    current_residual.feasibility
-                    <= self.outer_config.convergence_tolerance
+                    current_residual.feasibility <= self.outer_config.convergence_tolerance
                     and current_residual.step <= self.outer_config.step_tolerance
                 )
                 trust_update = (
@@ -523,8 +518,7 @@ class PoweredDescentSCvxSolver:
                     previous_agreement = candidate.agreement
                     if (
                         iteration + 1 >= self.outer_config.minimum_iterations
-                        and current_residual.feasibility
-                        <= self.outer_config.convergence_tolerance
+                        and current_residual.feasibility <= self.outer_config.convergence_tolerance
                         and candidate.step_fraction <= self.outer_config.step_tolerance
                     ):
                         status = "converged"
@@ -804,9 +798,7 @@ class PoweredDescentSCvxSolver:
         )
 
     def _normalised_fuel(self, controls: FloatArray) -> float:
-        return float(
-            np.mean(controls[:, 3]) / self.model.config.maximum_thrust
-        )
+        return float(np.mean(controls[:, 3]) / self.model.config.maximum_thrust)
 
     def _step_fraction(
         self,

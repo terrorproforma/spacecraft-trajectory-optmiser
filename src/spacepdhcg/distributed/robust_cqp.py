@@ -67,9 +67,7 @@ class ScenarioCQPBundle:
             local_auxiliary_dimension=local_auxiliary_dimension,
         )
         if self.layout.local_variables_per_scenario != local_structure.n_variables:
-            raise ValueError(
-                "block-arrow local layout does not match the local CQP variable count"
-            )
+            raise ValueError("block-arrow local layout does not match the local CQP variable count")
         self.structure = self._build_structure()
         self._local_scalar_rows = local_structure.n_constraints
         self._local_affine_rows = local_structure.n_affine_constraints
@@ -105,12 +103,9 @@ class ScenarioCQPBundle:
         )
 
         scalar_local = [
-            self.local_structure.constraint.matrix(values.constraint)
-            for values in validated
+            self.local_structure.constraint.matrix(values.constraint) for values in validated
         ]
-        scalar = self._pad_consensus_columns(
-            sp.block_diag(scalar_local, format="csc")
-        )
+        scalar = self._pad_consensus_columns(sp.block_diag(scalar_local, format="csc"))
         constraint = sp.vstack(
             (scalar, self.layout.nonanticipativity_operator(format="csc")),
             format="csc",
@@ -120,36 +115,25 @@ class ScenarioCQPBundle:
             affine = sp.csc_matrix((0, self.structure.n_variables))
         else:
             affine_local = [
-                self.local_structure.affine_cone.matrix(values.affine_cone)
-                for values in validated
+                self.local_structure.affine_cone.matrix(values.affine_cone) for values in validated
             ]
-            affine = self._pad_consensus_columns(
-                sp.block_diag(affine_local, format="csc")
-            )
+            affine = self._pad_consensus_columns(sp.block_diag(affine_local, format="csc"))
 
         linear_parts = [
             probability * values.linear
             for probability, values in zip(probabilities, validated, strict=True)
         ]
-        linear_parts.append(
-            np.zeros(self.layout.consensus_dimension, dtype=np.float64)
-        )
+        linear_parts.append(np.zeros(self.layout.consensus_dimension, dtype=np.float64))
         linear = np.concatenate(linear_parts)
 
         lower_parts = [values.lower for values in validated]
-        lower_parts.append(
-            np.zeros(self.nonanticipativity_rows, dtype=np.float64)
-        )
+        lower_parts.append(np.zeros(self.nonanticipativity_rows, dtype=np.float64))
         lower = np.concatenate(lower_parts)
 
         upper_parts = [values.upper for values in validated]
-        upper_parts.append(
-            np.zeros(self.nonanticipativity_rows, dtype=np.float64)
-        )
+        upper_parts.append(np.zeros(self.nonanticipativity_rows, dtype=np.float64))
         upper = np.concatenate(upper_parts)
-        affine_offset = np.concatenate(
-            [values.affine_offset for values in validated]
-        )
+        affine_offset = np.concatenate([values.affine_offset for values in validated])
 
         variable_lower_parts = [values.variable_lower for values in validated]
         variable_lower_parts.append(
@@ -190,16 +174,13 @@ class ScenarioCQPBundle:
     def decode_primal(self, primal: FloatArray) -> RobustPrimal:
         values = np.asarray(primal, dtype=np.float64)
         if values.shape != (self.structure.n_variables,):
-            raise ValueError(
-                f"primal must have shape ({self.structure.n_variables},)"
-            )
+            raise ValueError(f"primal must have shape ({self.structure.n_variables},)")
         local = tuple(
             values[self.layout.scenario_slice(scenario)].copy()
             for scenario in range(self.scenario_count)
         )
         consensus = tuple(
-            values[block.variable_slice].copy()
-            for block in self.layout.consensus_blocks
+            values[block.variable_slice].copy() for block in self.layout.consensus_blocks
         )
         return RobustPrimal(local=local, consensus=consensus)
 
@@ -209,28 +190,23 @@ class ScenarioCQPBundle:
             raise ValueError(f"dual must have shape ({self.structure.n_duals},)")
         scalar_local = tuple(
             values[
-                scenario * self._local_scalar_rows :
-                (scenario + 1) * self._local_scalar_rows
+                scenario * self._local_scalar_rows : (scenario + 1) * self._local_scalar_rows
             ].copy()
             for scenario in range(self.scenario_count)
         )
         nonanticipativity_start = self.scalar_rows_before_nonanticipativity
-        nonanticipativity_stop = (
-            nonanticipativity_start + self.nonanticipativity_rows
-        )
+        nonanticipativity_stop = nonanticipativity_start + self.nonanticipativity_rows
         affine_start = self.structure.n_constraints
         affine_local = tuple(
             values[
-                affine_start + scenario * self._local_affine_rows :
-                affine_start + (scenario + 1) * self._local_affine_rows
+                affine_start + scenario * self._local_affine_rows : affine_start
+                + (scenario + 1) * self._local_affine_rows
             ].copy()
             for scenario in range(self.scenario_count)
         )
         return RobustDual(
             local_scalar=scalar_local,
-            nonanticipativity=values[
-                nonanticipativity_start:nonanticipativity_stop
-            ].copy(),
+            nonanticipativity=values[nonanticipativity_start:nonanticipativity_stop].copy(),
             local_affine=affine_local,
         )
 
@@ -246,18 +222,15 @@ class ScenarioCQPBundle:
             raise ValueError("one local primal is required per scenario")
         validated = self._validated_local_values(local_values)
         objectives = np.empty(self.scenario_count, dtype=np.float64)
-        for scenario, (primal, values) in enumerate(
-            zip(local_primals, validated, strict=True)
-        ):
+        for scenario, (primal, values) in enumerate(zip(local_primals, validated, strict=True)):
             vector = np.asarray(primal, dtype=np.float64)
             if vector.shape != (self._local_variables,):
                 raise ValueError(
                     f"local primal {scenario} must have shape ({self._local_variables},)"
                 )
             quadratic = self.local_structure.quadratic.matrix(values.quadratic)
-            objectives[scenario] = (
-                0.5 * float(vector @ (quadratic @ vector))
-                + float(values.linear @ vector)
+            objectives[scenario] = 0.5 * float(vector @ (quadratic @ vector)) + float(
+                values.linear @ vector
             )
         return objectives
 
@@ -266,9 +239,7 @@ class ScenarioCQPBundle:
         local_primals: Sequence[FloatArray],
         local_values: Sequence[CQPValues],
     ) -> float:
-        return float(
-            self.tree.probabilities @ self.local_objectives(local_primals, local_values)
-        )
+        return float(self.tree.probabilities @ self.local_objectives(local_primals, local_values))
 
     def _build_structure(self) -> CQPStructure:
         local_q = self.local_structure.quadratic.matrix(
@@ -337,9 +308,7 @@ class ScenarioCQPBundle:
     ) -> tuple[CQPValues, ...]:
         if len(local_values) != self.scenario_count:
             raise ValueError("one local CQP value set is required per scenario")
-        return tuple(
-            values.validated(self.local_structure) for values in local_values
-        )
+        return tuple(values.validated(self.local_structure) for values in local_values)
 
     def _pad_consensus_columns(self, matrix: sp.spmatrix) -> sp.csc_matrix:
         padding = sp.csc_matrix(

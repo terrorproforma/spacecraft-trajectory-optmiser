@@ -277,9 +277,7 @@ def test_valid_result_round_trip(tmp_path: Path) -> None:
             "not monotonically ordered",
         ),
         (
-            lambda value: value["resources"].update(
-                topology_allocation_count_after_create=None
-            ),
+            lambda value: value["resources"].update(topology_allocation_count_after_create=None),
             "must record post-create topology allocations",
         ),
         (
@@ -333,9 +331,7 @@ def test_primary_g4_result_passes_schema_and_semantic_contract() -> None:
         ("g4", "outer_iterations", "missing required keys"),
     ],
 )
-def test_primary_g4_schema_gaps_are_rejected(
-    section: str, field: str, message: str
-) -> None:
+def test_primary_g4_schema_gaps_are_rejected(section: str, field: str, message: str) -> None:
     payload = valid_g4_result()
     del payload[section][field]  # type: ignore[index]
     with pytest.raises(Paper1ResultError, match=message):

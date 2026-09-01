@@ -127,8 +127,7 @@ def _record() -> tuple[dict, dict]:
 def test_parser_extracts_exactly_one_sample() -> None:
     module = _module()
     records = module.parse_json_lines(
-        'noise\n{"case":"g4_iteration","outer":0}\n'
-        '{"case":"g4_sample","qualified":false}\n'
+        'noise\n{"case":"g4_iteration","outer":0}\n{"case":"g4_sample","qualified":false}\n'
     )
     assert module.sample_record(records)["qualified"] is False
 

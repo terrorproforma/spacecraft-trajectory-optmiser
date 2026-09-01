@@ -88,9 +88,7 @@ def test_scheduler_groups_bounds_and_retains_failures() -> None:
 
 
 def test_scheduler_applies_backpressure_and_failure_propagation() -> None:
-    scheduler = BoundedScheduler(
-        Backend(), config=SchedulerConfig(1, 1, 1, 1)
-    )
+    scheduler = BoundedScheduler(Backend(), config=SchedulerConfig(1, 1, 1, 1))
     with pytest.raises(BufferError):
         scheduler.run([request(1), request(2)])
 
@@ -111,9 +109,7 @@ def test_risk_nonanticipativity_expected_worst_and_cvar() -> None:
 
 
 def test_scenario_expansion_and_checkpoint_restart(tmp_path: Path) -> None:
-    expanded = expand_promising_scenarios(
-        [request(2), request(1)], scenario_count=3, top_k=1
-    )
+    expanded = expand_promising_scenarios([request(2), request(1)], scenario_count=3, top_k=1)
     assert [item.scenario_index for item in expanded] == [0, 1, 2]
     assert all(item.fidelity is ArcFidelity.ROBUST_SCVX for item in expanded)
     checkpoint = Checkpoint(1, 42, 2, 4.0, 1.0, (1, 2), (101,))
@@ -123,9 +119,7 @@ def test_scenario_expansion_and_checkpoint_restart(tmp_path: Path) -> None:
 
 
 def test_independent_certification_rejects_optimizer_status() -> None:
-    result = Backend().evaluate(
-        request(1).topology, [request(1)], object(), threading.Event()
-    )[0]
+    result = Backend().evaluate(request(1).topology, [request(1)], object(), threading.Event())[0]
     accepted = IndependentCertifier(
         lambda _: CertificationChecks(0.0, 0.0, 0.0, 0.0, 1.0e-7),
         backend_identifier="independent-rk4",

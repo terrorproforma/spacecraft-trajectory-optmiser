@@ -122,17 +122,20 @@ def main() -> None:
     parser.add_argument("--maximum-attempts", type=int, default=15)
     parser.add_argument("--output", type=Path)
     arguments = parser.parse_args()
-    payload = json.dumps(
-        run(
-            arguments.library,
-            arguments.intervals,
-            arguments.dispersion,
-            arguments.maximum_attempts,
-        ),
-        indent=2,
-        sort_keys=True,
-        allow_nan=False,
-    ) + "\n"
+    payload = (
+        json.dumps(
+            run(
+                arguments.library,
+                arguments.intervals,
+                arguments.dispersion,
+                arguments.maximum_attempts,
+            ),
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n"
+    )
     if arguments.output is None:
         print(payload, end="")
     else:

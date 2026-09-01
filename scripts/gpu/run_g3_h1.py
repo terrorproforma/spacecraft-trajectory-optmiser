@@ -127,11 +127,7 @@ def _coordinate_summary(samples: list[dict[str, Any]]) -> dict[str, Any]:
     )
     median_omega = statistics.median(omega)
     supported = (
-        len(qualified) >= 5
-        and quality
-        and topology_clean
-        and median_omega <= 0.05
-        and high <= 0.08
+        len(qualified) >= 5 and quality and topology_clean and median_omega <= 0.05 and high <= 0.08
     )
     return {
         "status": "supported" if supported else "unresolved",
@@ -294,9 +290,7 @@ def run(arguments: argparse.Namespace) -> dict[str, Any]:
     executable = arguments.executable.resolve()
     environment = os.environ.copy()
     library = str(executable.parent.parent / "cuda")
-    environment["LD_LIBRARY_PATH"] = (
-        library + ":" + environment.get("LD_LIBRARY_PATH", "")
-    )
+    environment["LD_LIBRARY_PATH"] = library + ":" + environment.get("LD_LIBRARY_PATH", "")
     sizes = tuple(int(token) for token in arguments.sizes.split(","))
     all_samples: list[dict[str, Any]] = []
     coordinates: list[dict[str, Any]] = []
@@ -351,8 +345,7 @@ def run(arguments: argparse.Namespace) -> dict[str, Any]:
         )
     boundary = _sustained_boundary(coordinates)
     all_supported = all(
-        coordinate["summary"]["status"] == "supported"
-        for coordinate in coordinates
+        coordinate["summary"]["status"] == "supported" for coordinate in coordinates
     )
     decision = "supported" if all_supported else ("mixed" if boundary else "unresolved")
     result = {

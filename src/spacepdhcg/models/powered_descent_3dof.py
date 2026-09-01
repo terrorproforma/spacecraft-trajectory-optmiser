@@ -234,12 +234,8 @@ class PoweredDescent3DOFModel:
         altitude = state_array[:, 2]
         return PoweredDescentPathDiagnostics(
             thrust_epigraph=float(np.max(np.maximum(thrust_norm - sigma, 0.0))),
-            throttle_lower=float(
-                np.max(np.maximum(self.config.minimum_sigma - sigma, 0.0))
-            ),
-            throttle_upper=float(
-                np.max(np.maximum(sigma - self.config.maximum_thrust, 0.0))
-            ),
+            throttle_lower=float(np.max(np.maximum(self.config.minimum_sigma - sigma, 0.0))),
+            throttle_upper=float(np.max(np.maximum(sigma - self.config.maximum_thrust, 0.0))),
             tilt=float(
                 np.max(
                     np.maximum(

@@ -40,9 +40,7 @@ def packaged_library_path() -> Path:
     if override:
         path = Path(override).expanduser().resolve()
         if not path.is_file():
-            raise NativeLibraryError(
-                f"SPACEPDHCG_NATIVE_LIBRARY does not name a file: {path}"
-            )
+            raise NativeLibraryError(f"SPACEPDHCG_NATIVE_LIBRARY does not name a file: {path}")
         return path
 
     package = resources.files("spacepdhcg.native")

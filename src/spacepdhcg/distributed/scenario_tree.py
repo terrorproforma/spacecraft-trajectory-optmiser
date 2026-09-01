@@ -72,13 +72,9 @@ class ScenarioTree:
             raise ValueError("all scenarios must have the same information horizon")
         total_probability = float(sum(scenario.probability for scenario in self.scenarios))
         if abs(total_probability - 1.0) > probability_tolerance:
-            raise ValueError(
-                "scenario probabilities must sum to one within probability_tolerance"
-            )
+            raise ValueError("scenario probabilities must sum to one within probability_tolerance")
         self._nodes = tuple(
-            node
-            for stage in range(self.horizon)
-            for node in self._nodes_at_stage(stage)
+            node for stage in range(self.horizon) for node in self._nodes_at_stage(stage)
         )
 
     @property
@@ -122,10 +118,7 @@ class ScenarioTree:
         edges: list[tuple[int, int, int]] = []
         for node in self.shared_nodes:
             anchor = node.scenario_indices[0]
-            edges.extend(
-                (node.stage, anchor, scenario)
-                for scenario in node.scenario_indices[1:]
-            )
+            edges.extend((node.stage, anchor, scenario) for scenario in node.scenario_indices[1:])
         return tuple(edges)
 
     def _nodes_at_stage(self, stage: int) -> tuple[InformationNode, ...]:
@@ -179,9 +172,7 @@ class ScenarioTree:
         scenarios = []
         for scenario_index in range(scenario_count):
             history = tuple(
-                "open-loop"
-                if stage < prefix
-                else f"scenario-{scenario_index}/recourse-{stage}"
+                "open-loop" if stage < prefix else f"scenario-{scenario_index}/recourse-{stage}"
                 for stage in range(horizon)
             )
             scenarios.append(

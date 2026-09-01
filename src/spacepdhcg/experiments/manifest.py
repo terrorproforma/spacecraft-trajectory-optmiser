@@ -122,12 +122,15 @@ class RunManifest:
         return asdict(self)
 
     def to_json(self, *, indent: int = 2) -> str:
-        return json.dumps(
-            self.as_dict(),
-            indent=indent,
-            sort_keys=True,
-            allow_nan=False,
-        ) + "\n"
+        return (
+            json.dumps(
+                self.as_dict(),
+                indent=indent,
+                sort_keys=True,
+                allow_nan=False,
+            )
+            + "\n"
+        )
 
     def write(self, path: str | Path) -> Path:
         """Write atomically so interrupted benchmark jobs cannot leave valid-looking JSON."""

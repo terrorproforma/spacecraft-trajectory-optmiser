@@ -48,9 +48,7 @@ def run(
     )
 
     deltas = (
-        np.zeros(1)
-        if scenarios == 1
-        else np.linspace(-gravity_spread, gravity_spread, scenarios)
+        np.zeros(1) if scenarios == 1 else np.linspace(-gravity_spread, gravity_spread, scenarios)
     )
     subproblems = []
     local_values = []
@@ -93,9 +91,7 @@ def run(
         state_dimension=7,
         control_dimension=4,
         local_auxiliary_dimension=(
-            first.layout.n_variables
-            - first.layout.state_count
-            - first.layout.control_count
+            first.layout.n_variables - first.layout.state_count - first.layout.control_count
         ),
     )
     problem = bundle.problem(local_values)
@@ -154,16 +150,12 @@ def run(
         ),
         "local_objective_min": float(np.min(objectives)),
         "local_objective_max": float(np.max(objectives)),
-        "nonanticipativity_violation": bundle.maximum_nonanticipativity_violation(
-            solution.primal
-        ),
+        "nonanticipativity_violation": bundle.maximum_nonanticipativity_violation(solution.primal),
         "maximum_pairwise_control_difference": maximum_pairwise_control_difference,
         "maximum_scalar_violation": max(
             diagnostic.scalar_violation_inf for diagnostic in diagnostics
         ),
-        "maximum_cone_violation": max(
-            diagnostic.cone_violation_inf for diagnostic in diagnostics
-        ),
+        "maximum_cone_violation": max(diagnostic.cone_violation_inf for diagnostic in diagnostics),
         "maximum_linearised_dynamics_defect": max(
             diagnostic.linearised_dynamics_defect_inf for diagnostic in diagnostics
         ),

@@ -85,8 +85,7 @@ CQP_TIMING_COMPONENTS: Final = (
 )
 SCVX_EXTRA_TIMING_COMPONENTS: Final = ("replay_seconds", "acceptance_seconds")
 ACCEPTED_TIMING_BOUNDARY: Final = (
-    "coefficient-generation-through-independent-replay-and-acceptance;"
-    "cuda-startup-excluded"
+    "coefficient-generation-through-independent-replay-and-acceptance;cuda-startup-excluded"
 )
 
 
@@ -144,8 +143,7 @@ def validate_policy(policy: Mapping[str, Any]) -> None:
     )
     _require(set(tiers.values()) == {1e-3, 1e-4, 1e-6, 1e-8}, "quality values drift")
     _require(
-        policy["policies"]["fixed-tight"]["inner_tolerance_rule"]
-        == "selected-quality-tier",
+        policy["policies"]["fixed-tight"]["inner_tolerance_rule"] == "selected-quality-tier",
         "fixed-tight quality-tier rule drift",
     )
 
@@ -262,9 +260,7 @@ def runtime_configuration(
     }
 
 
-def verify_runtime_behavior(
-    requested: Mapping[str, Any], reported: Mapping[str, Any]
-) -> list[str]:
+def verify_runtime_behavior(requested: Mapping[str, Any], reported: Mapping[str, Any]) -> list[str]:
     """Return drift reasons between requested and actual executable behaviour."""
 
     reasons: list[str] = []
@@ -393,9 +389,11 @@ def qualify_matched_quality(record: Mapping[str, Any], policy: Mapping[str, Any]
         if item.get("independent") is not True:
             reasons.append(f"path check {name} is not independent")
         violation = item.get("violation")
-        if violation is None or _finite(
-            violation, f"path_inventory.{name}.violation", nonnegative=True
-        ) > nonlinear_limit:
+        if (
+            violation is None
+            or _finite(violation, f"path_inventory.{name}.violation", nonnegative=True)
+            > nonlinear_limit
+        ):
             reasons.append(f"path check {name} exceeds the matched nonlinear gate")
     if checks.get("path_inventory_complete") is not True:
         reasons.append("path inventory was not declared complete")
@@ -643,6 +641,7 @@ def decide_h5(rows: Sequence[Mapping[str, Any]], policy: Mapping[str, Any]) -> d
             censored += 1
         evidence.append(item)
     eligible = [item for item in evidence if item["eligible"] and not item["censored"]]
+
     def supported(item: Mapping[str, Any]) -> bool:
         return bool(
             item["matched_quality"]
@@ -655,12 +654,10 @@ def decide_h5(rows: Sequence[Mapping[str, Any]], policy: Mapping[str, Any]) -> d
 
     def rejected(item: Mapping[str, Any]) -> bool:
         return bool(
-            (
-                item["median"] <= -threshold["rejected_minimum_slowdown"]
-                and item["high"] < 0.0
-            )
+            (item["median"] <= -threshold["rejected_minimum_slowdown"] and item["high"] < 0.0)
             or item["failure_rate_delta"] > threshold["maximum_failure_rate_increase"]
         )
+
     required = int(policy["statistics"]["sustained_coordinates"])
     support_regions = _sustained(eligible, supported, required)
     reject_regions = _sustained(eligible, rejected, required)
@@ -721,13 +718,13 @@ def decide_h6(rows: Sequence[Mapping[str, Any]], policy: Mapping[str, Any]) -> d
             censored += 1
         evidence.append(item)
     eligible = [item for item in evidence if item["eligible"] and not item["censored"]]
+
     def supported(item: Mapping[str, Any]) -> bool:
         return bool(
             item["matched_quality"]
             and item["conversion_and_polish_included"]
             and item["transfer_reliable"]
-            and item["ipm_quality_factor"]
-            <= threshold["maximum_hybrid_to_ipm_residual_factor"]
+            and item["ipm_quality_factor"] <= threshold["maximum_hybrid_to_ipm_residual_factor"]
             and item["median"] >= threshold["supported_minimum_time_reduction"]
             and item["low"] > 0.0
             and (
@@ -738,9 +735,9 @@ def decide_h6(rows: Sequence[Mapping[str, Any]], policy: Mapping[str, Any]) -> d
 
     def rejected(item: Mapping[str, Any]) -> bool:
         return bool(
-            (item["median"] <= 0.0 and item["high"] <= 0.0)
-            or not item["transfer_reliable"]
+            (item["median"] <= 0.0 and item["high"] <= 0.0) or not item["transfer_reliable"]
         )
+
     required = int(policy["statistics"]["sustained_coordinates"])
     support_regions = _sustained(eligible, supported, required)
     reject_regions = _sustained(eligible, rejected, required)
@@ -957,9 +954,7 @@ def validate_artifact_contract(artifact: Mapping[str, Any], name: str) -> list[s
     return reasons
 
 
-def validate_portability(
-    artifacts: Any, *, raise_on_error: bool = True
-) -> dict[str, Any]:
+def validate_portability(artifacts: Any, *, raise_on_error: bool = True) -> dict[str, Any]:
     reasons: list[str] = []
     if not isinstance(artifacts, Mapping) or not artifacts:
         reasons.append("artifact evidence is missing")

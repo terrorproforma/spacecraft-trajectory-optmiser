@@ -52,9 +52,7 @@ def test_g4_split_is_disjoint_and_preserves_registered_seeds() -> None:
     evaluation = set(split["evaluation_seeds"])
     assert tuning.isdisjoint(evaluation)
     registered = next(
-        family["seeds"]
-        for family in paper1["families"]
-        if family["id"] == "P1-A-banded"
+        family["seeds"] for family in paper1["families"] if family["id"] == "P1-A-banded"
     )
     assert tuning | evaluation == set(registered)
     assert len(evaluation) == 20

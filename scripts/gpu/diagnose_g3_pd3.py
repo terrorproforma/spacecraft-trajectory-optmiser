@@ -313,9 +313,7 @@ def evaluate(
     dynamics_rows = slice(7, 7 + intervals * 7)
     terminal_rows = slice(dynamics_rows.stop, dynamics_rows.stop + 6)
     states = primal[:state_elements].reshape(intervals + 1, 7)
-    controls = primal[
-        state_elements : state_elements + control_elements
-    ].reshape(intervals, 4)
+    controls = primal[state_elements : state_elements + control_elements].reshape(intervals, 4)
     nonlinear_defect = np.vstack(
         [
             states[index + 1]
@@ -457,13 +455,13 @@ def run(
         "upstream_variant": upstream_variant,
     }
     if inspect_variable is not None:
-        column = canonical.structure.constraint.matrix(
-            canonical.values.constraint
-        ).getcol(inspect_variable).tocoo()
+        column = (
+            canonical.structure.constraint.matrix(canonical.values.constraint)
+            .getcol(inspect_variable)
+            .tocoo()
+        )
         scalar_value = np.asarray(
-            canonical.structure.constraint.matrix(
-                canonical.values.constraint
-            ) @ cpu.primal,
+            canonical.structure.constraint.matrix(canonical.values.constraint) @ cpu.primal,
             dtype=np.float64,
         )
         result["inspected_variable"] = {
@@ -472,9 +470,9 @@ def run(
             "linear": float(canonical.values.linear[inspect_variable]),
             "quadratic_gradient": float(
                 (
-                    canonical.structure.quadratic.matrix(
-                        canonical.values.quadratic
-                    ).getrow(inspect_variable)
+                    canonical.structure.quadratic.matrix(canonical.values.quadratic).getrow(
+                        inspect_variable
+                    )
                     @ cpu.primal
                 ).item()
             ),

@@ -441,9 +441,7 @@ class PoweredDescent3DOFSubproblem:
         diagonal[layout.virtual_offset : layout.virtual_epigraph_offset] = (
             self.config.virtual_quadratic_weight
         )
-        diagonal[layout.virtual_epigraph_offset :] = (
-            self.config.virtual_epigraph_regularisation
-        )
+        diagonal[layout.virtual_epigraph_offset :] = self.config.virtual_epigraph_regularisation
         values = np.zeros(self.structure.quadratic.nnz, dtype=np.float64)
         for index, value in enumerate(diagonal):
             self._quadratic_index.set(values, index, index, float(value))
@@ -629,9 +627,7 @@ class PoweredDescent3DOFSubproblem:
                 terminal_state.start + component,
                 scale,
             )
-            affine_offset[terminal_trust + component] = (
-                -scale * states[-1, component]
-            )
+            affine_offset[terminal_trust + component] = -scale * states[-1, component]
         affine_offset[terminal_trust + 7] = radius
 
         variable_lower = np.full(layout.n_variables, -np.inf, dtype=np.float64)
@@ -678,12 +674,12 @@ class PoweredDescent3DOFSubproblem:
             self.layout.intervals + 1,
             STATE_DIMENSION,
         )
-        controls = vector[
-            self.layout.control_offset : self.layout.virtual_offset
-        ].reshape(self.layout.intervals, CONTROL_DIMENSION)
-        virtual = vector[
-            self.layout.virtual_offset : self.layout.virtual_epigraph_offset
-        ].reshape(self.layout.intervals, STATE_DIMENSION)
+        controls = vector[self.layout.control_offset : self.layout.virtual_offset].reshape(
+            self.layout.intervals, CONTROL_DIMENSION
+        )
+        virtual = vector[self.layout.virtual_offset : self.layout.virtual_epigraph_offset].reshape(
+            self.layout.intervals, STATE_DIMENSION
+        )
         epigraph = vector[self.layout.virtual_epigraph_offset :].reshape(
             self.layout.intervals,
             STATE_DIMENSION,

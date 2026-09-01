@@ -214,8 +214,7 @@ class SchedulerConfig:
             )
             <= 0
             or self.maximum_batch_size > self.maximum_buffered_arcs
-            or self.maximum_batch_size * self.bytes_per_arc_budget
-            > self.maximum_workspace_bytes
+            or self.maximum_batch_size * self.bytes_per_arc_budget > self.maximum_workspace_bytes
         ):
             raise ValueError("invalid fixed-memory scheduler limits")
 
@@ -349,9 +348,7 @@ class BoundedScheduler:
                 for item in batch
             ]
         try:
-            result = list(
-                self.backend.evaluate(topology, batch, owner, self.cancelled)
-            )
+            result = list(self.backend.evaluate(topology, batch, owner, self.cancelled))
             if len(result) != len(batch):
                 raise RuntimeError("backend returned mismatched batch length")
             return result
@@ -416,9 +413,7 @@ def aggregate_risk(
     nonanticipativity_tolerance: float = 1.0e-10,
 ) -> RiskResult:
     scenarios = sorted(outcomes, key=lambda item: item.scenario)
-    if not scenarios or (
-        measure is RiskMeasure.CVAR and not 0.0 < cvar_alpha < 1.0
-    ):
+    if not scenarios or (measure is RiskMeasure.CVAR and not 0.0 < cvar_alpha < 1.0):
         raise ValueError("invalid risk configuration")
     if any(
         item.status is not ArcStatus.FEASIBLE
@@ -429,9 +424,7 @@ def aggregate_risk(
         for item in scenarios
     ):
         return RiskResult(False, math.inf, math.inf, math.inf)
-    if not math.isclose(
-        sum(item.probability for item in scenarios), 1.0, abs_tol=1.0e-12
-    ):
+    if not math.isclose(sum(item.probability for item in scenarios), 1.0, abs_tol=1.0e-12):
         raise ValueError("scenario probabilities must sum to one")
     reference = scenarios[0].nonanticipative_controls
     if any(len(item.nonanticipative_controls) != len(reference) for item in scenarios):
@@ -506,9 +499,10 @@ class IndependentCertifier:
                 False, None, self.backend_identifier, "optimizer status is not certification"
             )
         checks = self.callback(result)
-        accepted = all(
-            math.isfinite(value) and value >= 0.0 for value in asdict(checks).values()
-        ) and checks.maximum <= self.tolerance
+        accepted = (
+            all(math.isfinite(value) and value >= 0.0 for value in asdict(checks).values())
+            and checks.maximum <= self.tolerance
+        )
         return CertificationRecord(
             accepted,
             checks,
@@ -619,9 +613,7 @@ class ResultRecord:
     def validate(self) -> None:
         if self.schema_version != 1 or not self.run_id or not self.status:
             raise ValueError("invalid G7 result header")
-        if self.certified and (
-            self.certification is None or not self.certification.accepted
-        ):
+        if self.certified and (self.certification is None or not self.certification.accepted):
             raise ValueError("optimizer status alone may not certify a result")
         if (
             self.incumbent is not None

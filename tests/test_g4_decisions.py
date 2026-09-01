@@ -117,10 +117,7 @@ def test_h6_each_preregistered_gate_blocks_support() -> None:
         {"transfer_reliable": False},
     )
     for mutation in mutations:
-        rows = [
-            _h6_row("P1-E-low-thrust", scale, 0.15, **mutation)
-            for scale in (100, 500, 2000)
-        ]
+        rows = [_h6_row("P1-E-low-thrust", scale, 0.15, **mutation) for scale in (100, 500, 2000)]
         assert decide_h6(rows, _policy())["decision"] != "supported"
     slow = [_h6_row("P1-E-low-thrust", scale, 0.05) for scale in (100, 500, 2000)]
     assert decide_h6(slow, _policy())["decision"] != "supported"

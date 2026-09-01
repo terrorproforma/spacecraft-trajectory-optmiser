@@ -351,9 +351,9 @@ class PersistentClarabel:
             cursor += cone.slot_count
             if source == "affine":
                 transform = self._cone_transform(cone)
-                canonical[
-                    affine_offset + cone.start : affine_offset + cone.stop
-                ] = transform.T @ segment
+                canonical[affine_offset + cone.start : affine_offset + cone.stop] = (
+                    transform.T @ segment
+                )
         return canonical
 
     @staticmethod

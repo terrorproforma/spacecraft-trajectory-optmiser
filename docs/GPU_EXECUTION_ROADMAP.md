@@ -1483,6 +1483,7 @@ Every primary result must pass:
 
 ```python
 from spacepdhcg.experiments import read_paper1_result
+
 read_paper1_result("paper1-result.json")
 ```
 

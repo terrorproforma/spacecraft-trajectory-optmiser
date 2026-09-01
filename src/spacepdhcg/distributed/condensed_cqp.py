@@ -94,9 +94,7 @@ class CondensedScenarioCQPBundle:
         self.control_count = tree.horizon * self.control_dimension
         expected = self.state_count + self.control_count + self.local_auxiliary_dimension
         if expected != local_structure.n_variables:
-            raise ValueError(
-                "state/control/auxiliary layout does not match local variable count"
-            )
+            raise ValueError("state/control/auxiliary layout does not match local variable count")
 
         self._nodes_by_scenario_stage = self._node_lookup()
         self._scenario_slices, local_dimension = self._scenario_local_slices()
@@ -115,12 +113,10 @@ class CondensedScenarioCQPBundle:
         self.consensus_blocks = tuple(blocks)
         self.total_variables = offset
         self._block_by_key = {
-            (block.node.stage, block.node.history): block
-            for block in self.consensus_blocks
+            (block.node.stage, block.node.history): block for block in self.consensus_blocks
         }
         self._local_to_global = tuple(
-            self._make_local_to_global(scenario)
-            for scenario in range(tree.scenario_count)
+            self._make_local_to_global(scenario) for scenario in range(tree.scenario_count)
         )
         self.structure = self._build_structure()
 
@@ -178,9 +174,7 @@ class CondensedScenarioCQPBundle:
                 if self.structure.affine_cone is None
                 else self.structure.affine_cone.values_from(affine)
             ),
-            affine_offset=np.concatenate(
-                [values.affine_offset for values in validated]
-            ),
+            affine_offset=np.concatenate([values.affine_offset for values in validated]),
             variable_lower=variable_lower,
             variable_upper=variable_upper,
         ).validated(self.structure)
@@ -190,9 +184,7 @@ class CondensedScenarioCQPBundle:
         if vector.shape != (self.total_variables,):
             raise ValueError(f"primal must have shape ({self.total_variables},)")
         local = tuple(vector[mapping].copy() for mapping in self._local_to_global)
-        consensus = tuple(
-            vector[block.variable_slice].copy() for block in self.consensus_blocks
-        )
+        consensus = tuple(vector[block.variable_slice].copy() for block in self.consensus_blocks)
         return CondensedPrimal(local=local, consensus=consensus)
 
     def decode_dual(self, dual: FloatArray) -> CondensedDual:
@@ -208,8 +200,7 @@ class CondensedScenarioCQPBundle:
         affine_start = self.structure.n_constraints
         local_affine = tuple(
             vector[
-                affine_start + scenario * affine_rows :
-                affine_start + (scenario + 1) * affine_rows
+                affine_start + scenario * affine_rows : affine_start + (scenario + 1) * affine_rows
             ].copy()
             for scenario in range(self.scenario_count)
         )
@@ -248,19 +239,15 @@ class CondensedScenarioCQPBundle:
             raise ValueError("one local primal is required per scenario")
         validated = self._validated_local_values(local_values)
         objectives = np.empty(self.scenario_count, dtype=np.float64)
-        for scenario, (primal, values) in enumerate(
-            zip(local_primals, validated, strict=True)
-        ):
+        for scenario, (primal, values) in enumerate(zip(local_primals, validated, strict=True)):
             vector = np.asarray(primal, dtype=np.float64)
             if vector.shape != (self.local_structure.n_variables,):
                 raise ValueError(
-                    "local primal "
-                    f"{scenario} must have shape ({self.local_structure.n_variables},)"
+                    f"local primal {scenario} must have shape ({self.local_structure.n_variables},)"
                 )
             quadratic = self.local_structure.quadratic.matrix(values.quadratic)
-            objectives[scenario] = (
-                0.5 * float(vector @ (quadratic @ vector))
-                + float(values.linear @ vector)
+            objectives[scenario] = 0.5 * float(vector @ (quadratic @ vector)) + float(
+                values.linear @ vector
             )
         return objectives
 
@@ -269,9 +256,7 @@ class CondensedScenarioCQPBundle:
         local_primals: Sequence[FloatArray],
         local_values: Sequence[CQPValues],
     ) -> float:
-        return float(
-            self.tree.probabilities @ self.local_objectives(local_primals, local_values)
-        )
+        return float(self.tree.probabilities @ self.local_objectives(local_primals, local_values))
 
     def statistics(self) -> dict[str, int]:
         return {
@@ -344,31 +329,23 @@ class CondensedScenarioCQPBundle:
             quadratic_rows.append(mapping[local_q.row])
             quadratic_columns.append(mapping[local_q.col])
             quadratic_data.append(
-                np.ones(local_q.nnz, dtype=np.float64)
-                if symbolic
-                else probability * local_q.data
+                np.ones(local_q.nnz, dtype=np.float64) if symbolic else probability * local_q.data
             )
 
             local_a = self.local_structure.constraint.matrix(values.constraint).tocoo()
             constraint_rows.append(local_a.row + scalar_row_offset)
             constraint_columns.append(mapping[local_a.col])
             constraint_data.append(
-                np.ones(local_a.nnz, dtype=np.float64)
-                if symbolic
-                else local_a.data
+                np.ones(local_a.nnz, dtype=np.float64) if symbolic else local_a.data
             )
             scalar_row_offset += self.local_structure.n_constraints
 
             if self.local_structure.affine_cone is not None:
-                local_f = self.local_structure.affine_cone.matrix(
-                    values.affine_cone
-                ).tocoo()
+                local_f = self.local_structure.affine_cone.matrix(values.affine_cone).tocoo()
                 affine_rows.append(local_f.row + affine_row_offset)
                 affine_columns.append(mapping[local_f.col])
                 affine_data.append(
-                    np.ones(local_f.nnz, dtype=np.float64)
-                    if symbolic
-                    else local_f.data
+                    np.ones(local_f.nnz, dtype=np.float64) if symbolic else local_f.data
                 )
                 affine_row_offset += self.local_structure.n_affine_constraints
 
@@ -466,17 +443,13 @@ class CondensedScenarioCQPBundle:
                 table[scenario][node.stage] = node
         if any(node is None for row in table for node in row):
             raise AssertionError("scenario tree did not cover every scenario-stage pair")
-        return tuple(
-            tuple(node for node in row if node is not None) for row in table
-        )
+        return tuple(tuple(node for node in row if node is not None) for row in table)
 
     def _scenario_local_slices(self) -> tuple[tuple[slice, ...], int]:
         slices: list[slice] = []
         offset = 0
         for scenario in range(self.scenario_count):
-            local_stages = sum(
-                not node.shared for node in self._nodes_by_scenario_stage[scenario]
-            )
+            local_stages = sum(not node.shared for node in self._nodes_by_scenario_stage[scenario])
             size = (
                 self.state_count
                 + local_stages * self.control_dimension
@@ -510,9 +483,7 @@ class CondensedScenarioCQPBundle:
                 )
                 local_control_count += 1
         auxiliary_local_start = self.state_count + self.control_count
-        auxiliary_global_start = (
-            local_control_offset + local_control_count * self.control_dimension
-        )
+        auxiliary_global_start = local_control_offset + local_control_count * self.control_dimension
         mapping[auxiliary_local_start:] = np.arange(
             auxiliary_global_start,
             block.stop,
@@ -531,9 +502,7 @@ class CondensedScenarioCQPBundle:
     ) -> tuple[CQPValues, ...]:
         if len(local_values) != self.scenario_count:
             raise ValueError("one local CQP value set is required per scenario")
-        return tuple(
-            values.validated(self.local_structure) for values in local_values
-        )
+        return tuple(values.validated(self.local_structure) for values in local_values)
 
     def _validate_scenario(self, scenario: int) -> None:
         if not 0 <= scenario < self.scenario_count:

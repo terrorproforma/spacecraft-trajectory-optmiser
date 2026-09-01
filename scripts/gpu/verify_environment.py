@@ -242,9 +242,7 @@ def validate(record: MappingLike, *, allow_no_gpu: bool) -> list[str]:
     cmake = commands.get("cmake", {})
     cmake_version = parse_version(str(cmake.get("stdout", "")))
     if cmake_version is None or cmake_version[:2] < MINIMUM_CMAKE:
-        failures.append(
-            f"CMake {MINIMUM_CMAKE[0]}.{MINIMUM_CMAKE[1]}+ is required"
-        )
+        failures.append(f"CMake {MINIMUM_CMAKE[0]}.{MINIMUM_CMAKE[1]}+ is required")
 
     nvcc = commands.get("nvcc", {})
     nvcc_version = parse_version(str(nvcc.get("stdout", "")) + " " + str(nvcc.get("stderr", "")))
@@ -253,9 +251,7 @@ def validate(record: MappingLike, *, allow_no_gpu: bool) -> list[str]:
         if not isinstance(gpus, list) or not gpus:
             failures.append("no NVIDIA GPU was detected")
         if nvcc_version is None or nvcc_version[:2] < MINIMUM_CUDA:
-            failures.append(
-                f"CUDA toolkit {MINIMUM_CUDA[0]}.{MINIMUM_CUDA[1]}+ is required"
-            )
+            failures.append(f"CUDA toolkit {MINIMUM_CUDA[0]}.{MINIMUM_CUDA[1]}+ is required")
     if not commands.get("gxx", {}).get("available", False):
         failures.append("g++ is required")
     if not commands.get("ninja", {}).get("available", False):

@@ -613,9 +613,7 @@ def _validate_resources(resources: Mapping[str, Any], *, primary_g4: bool) -> No
             raise Paper1ResultError("energy with reported sampling gaps may not be marked valid")
 
 
-def _validate_aggregation(
-    aggregation: Mapping[str, Any], status: str, *, primary_g4: bool
-) -> None:
+def _validate_aggregation(aggregation: Mapping[str, Any], status: str, *, primary_g4: bool) -> None:
     required = (
         "warmup_repeats",
         "measured_repeats",
@@ -638,9 +636,7 @@ def _validate_aggregation(
     measured = _nonnegative_int_or_none(
         aggregation["measured_repeats"], "aggregation.measured_repeats"
     )
-    censored = _nonnegative_int_or_none(
-        aggregation["censored_count"], "aggregation.censored_count"
-    )
+    censored = _nonnegative_int_or_none(aggregation["censored_count"], "aggregation.censored_count")
     assert warmup is not None and measured is not None and censored is not None
     if aggregation["statistic"] != "median_iqr":
         raise Paper1ResultError("aggregation.statistic must be 'median_iqr'")
@@ -708,9 +704,7 @@ def _validate_artifact(value: Any, name: str, *, primary_g4: bool) -> None:
             raise Paper1ResultError(f"{name}.portable must be boolean")
 
 
-def _validate_artifacts(
-    artifacts: Mapping[str, Any], *, primary_g4: bool, qualified: bool
-) -> None:
+def _validate_artifacts(artifacts: Mapping[str, Any], *, primary_g4: bool, qualified: bool) -> None:
     allowed = {
         *_REQUIRED_ARTIFACTS,
         "nsys",
@@ -726,11 +720,7 @@ def _validate_artifacts(
         if key not in _REQUIRED_ARTIFACTS and value is not None:
             _validate_artifact(value, f"artifacts.{key}", primary_g4=primary_g4)
     if primary_g4 and qualified:
-        contracts = {
-            key: value
-            for key, value in artifacts.items()
-            if isinstance(value, Mapping)
-        }
+        contracts = {key: value for key, value in artifacts.items() if isinstance(value, Mapping)}
         portability = validate_portability(contracts, raise_on_error=False)
         if not portability["portable"]:
             raise Paper1ResultError(
@@ -820,9 +810,7 @@ def _validate_g4(g4: Mapping[str, Any], *, hybrid: bool) -> None:
         for key in ("cqp_fingerprint", "resolve_fingerprint"):
             _nonempty_string(item[key], f"g4.outer_iterations[{index}].{key}")
         if item["warm_mode_actual"] not in WARM_MODES:
-            raise Paper1ResultError(
-                f"g4.outer_iterations[{index}].warm_mode_actual is invalid"
-            )
+            raise Paper1ResultError(f"g4.outer_iterations[{index}].warm_mode_actual is invalid")
         _nonempty_string(
             item["recovery_reason"],
             f"g4.outer_iterations[{index}].recovery_reason",
@@ -850,9 +838,7 @@ def validate_paper1_result(payload: Mapping[str, Any]) -> None:
         raise Paper1ResultError(f"result is missing top-level keys: {', '.join(missing)}")
     _reject_unknown_keys(payload, _ALLOWED_TOP_LEVEL, "result")
     if payload["schema_version"] != PAPER1_SCHEMA_VERSION:
-        raise Paper1ResultError(
-            f"unsupported Paper 1 schema version {payload['schema_version']!r}"
-        )
+        raise Paper1ResultError(f"unsupported Paper 1 schema version {payload['schema_version']!r}")
     identity = _mapping(payload["identity"], "identity")
     dimensions = _mapping(payload["dimensions"], "dimensions")
     quality = _mapping(payload["quality"], "quality")
@@ -903,13 +889,17 @@ def validate_paper1_result(payload: Mapping[str, Any]) -> None:
 
     solver = str(identity["solver"])
     gpus = int(dimensions["gpus"])
-    if solver in {
-        "pdhcg-upstream-one-shot",
-        "spacepdhcg-persistent",
-        "qoco-gpu",
-        "cuclarabel",
-        "hybrid-pdhcg-ipm",
-    } and gpus < 1:
+    if (
+        solver
+        in {
+            "pdhcg-upstream-one-shot",
+            "spacepdhcg-persistent",
+            "qoco-gpu",
+            "cuclarabel",
+            "hybrid-pdhcg-ipm",
+        }
+        and gpus < 1
+    ):
         raise Paper1ResultError(f"GPU solver {solver!r} requires dimensions.gpus >= 1")
     if solver == "spacepdhcg-persistent" and str(identity["status"]) == "qualified":
         allocations = resources["topology_allocation_count_after_create"]

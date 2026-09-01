@@ -55,10 +55,7 @@ def residual_qualified(
         [solution.primal_residual, solution.dual_residual],
         dtype=np.float64,
     )
-    if not (
-        np.all(np.isfinite(residuals))
-        and np.max(np.abs(residuals)) <= tolerance
-    ):
+    if not (np.all(np.isfinite(residuals)) and np.max(np.abs(residuals)) <= tolerance):
         return False
     if objective_upper_bound is None:
         return True

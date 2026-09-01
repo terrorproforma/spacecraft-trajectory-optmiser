@@ -172,12 +172,15 @@ class CWRendezvousDiagnostics:
     maximum_acceleration_norm: float
 
     def feasible(self, tolerance: float = 1.0e-6) -> bool:
-        return max(
-            self.initial_error_inf,
-            self.terminal_error_inf,
-            self.dynamics_defect_inf,
-            self.control_violation_inf,
-        ) <= tolerance
+        return (
+            max(
+                self.initial_error_inf,
+                self.terminal_error_inf,
+                self.dynamics_defect_inf,
+                self.control_violation_inf,
+            )
+            <= tolerance
+        )
 
 
 class CWRendezvousProblem:
@@ -194,9 +197,7 @@ class CWRendezvousProblem:
             self.config.step_seconds,
         )
         quadratic, constraint, affine_cone = self._build_matrices()
-        affine_structure = (
-            None if affine_cone is None else CSCStructure.from_matrix(affine_cone)
-        )
+        affine_structure = None if affine_cone is None else CSCStructure.from_matrix(affine_cone)
         cone_blocks = (
             tuple(
                 ConeBlock(

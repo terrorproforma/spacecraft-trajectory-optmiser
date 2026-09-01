@@ -137,9 +137,7 @@ def evaluate_pdhcg_quality(
     quadratic = structure.quadratic.matrix(values.quadratic)
     scalar = structure.constraint.matrix(values.constraint)
     affine = (
-        None
-        if structure.affine_cone is None
-        else structure.affine_cone.matrix(values.affine_cone)
+        None if structure.affine_cone is None else structure.affine_cone.matrix(values.affine_cone)
     )
 
     # PDHCG exposes dual-cone values.  The natural-residual definition uses
@@ -260,9 +258,7 @@ def _qualify(quality: CanonicalQuality, tolerance: float) -> None:
     }
     failed = {name: value for name, value in quantities.items() if value > threshold}
     if failed:
-        raise RuntimeError(
-            f"independent G1 checks exceed {threshold:.3e}: {failed}"
-        )
+        raise RuntimeError(f"independent G1 checks exceed {threshold:.3e}: {failed}")
 
 
 def _states() -> tuple[FloatArray, FloatArray]:
@@ -287,9 +283,7 @@ def _reference(
 
 def _objective(canonical: CanonicalCQP, primal: FloatArray) -> float:
     quadratic = canonical.structure.quadratic.matrix(canonical.values.quadratic)
-    return float(
-        0.5 * primal @ (quadratic @ primal) + canonical.values.linear @ primal
-    )
+    return float(0.5 * primal @ (quadratic @ primal) + canonical.values.linear @ primal)
 
 
 def _solution_record(
@@ -349,11 +343,7 @@ def run_hcw_case(
             raise RuntimeError("PDHCG seed solve did not produce a warm start")
         backend.warm_start(
             primal=seed_solution.primal,
-            dual=(
-                seed_solution.dual
-                if start_mode is StartMode.PRIMAL_DUAL
-                else None
-            ),
+            dual=(seed_solution.dual if start_mode is StartMode.PRIMAL_DUAL else None),
         )
 
     solution = backend.solve(tolerance=tolerance)
@@ -501,9 +491,7 @@ def run_suite(
         "schema_version": "1.0.0",
         "suite": "G1 HCW one-shot CUDA correctness expansion",
         "pdhcg_version": PDHCGOneShot(
-            CWRendezvousProblem(
-                CWRendezvousConfig(intervals=min(intervals))
-            ).canonical(*_states()),
+            CWRendezvousProblem(CWRendezvousConfig(intervals=min(intervals))).canonical(*_states()),
             params={"LogLevel": 0},
         ).upstream_version,
         "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),

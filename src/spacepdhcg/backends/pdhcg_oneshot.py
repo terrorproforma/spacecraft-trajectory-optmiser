@@ -185,9 +185,7 @@ class PDHCGOneShot:
             "variable_upper_bound": values.variable_upper.copy(),
             "objective_constant": 0.0,
             "affine_cone_matrix": affine_matrix,
-            "affine_cone_offset": (
-                None if affine_matrix is None else values.affine_offset.copy()
-            ),
+            "affine_cone_offset": (None if affine_matrix is None else values.affine_offset.copy()),
             "affine_cones": self._cone_spec(self.structure.affine_cones),
             "variable_cones": self._cone_spec(self.structure.variable_cones),
         }

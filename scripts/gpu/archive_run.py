@@ -43,9 +43,7 @@ def git_output(root: Path, *arguments: str) -> str | None:
 
 def files(directory: Path, excluded: set[Path]) -> list[Path]:
     return sorted(
-        path
-        for path in directory.rglob("*")
-        if path.is_file() and path.resolve() not in excluded
+        path for path in directory.rglob("*") if path.is_file() and path.resolve() not in excluded
     )
 
 
@@ -155,8 +153,7 @@ def main() -> int:
         return 2
 
     artifact_records = [
-        relative_artifact(path, run_directory)
-        for path in files(run_directory, excluded)
+        relative_artifact(path, run_directory) for path in files(run_directory, excluded)
     ]
     payload = {
         "schema_version": "1.0.0",

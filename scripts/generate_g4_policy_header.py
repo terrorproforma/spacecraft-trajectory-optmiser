@@ -54,12 +54,8 @@ inline constexpr double resolve_trigger_multiple = {
         _number(resolve["trigger_multiple_of_requested_tolerance"])
     };
 inline constexpr double resolve_refinement_factor = {_number(resolve["refinement_factor"])};
-inline constexpr double resolve_minimum_tolerance = {
-        _number(resolve["minimum_resolve_tolerance"])
-    };
-inline constexpr std::size_t maximum_resolves = {
-        resolve["maximum_resolves_per_outer_iteration"]
-    }U;
+inline constexpr double resolve_minimum_tolerance = {_number(resolve["minimum_resolve_tolerance"])};
+inline constexpr std::size_t maximum_resolves = {resolve["maximum_resolves_per_outer_iteration"]}U;
 inline constexpr double trust_acceptance = {_number(trust["acceptance_threshold"])};
 inline constexpr double trust_initial = {_number(trust["initial_radius"])};
 inline constexpr double trust_minimum = {_number(trust["minimum_radius"])};
@@ -92,9 +88,7 @@ def main() -> int:
     expected = render(arguments.policy)
     if arguments.check:
         current = (
-            arguments.output.read_text(encoding="utf-8")
-            if arguments.output.exists()
-            else None
+            arguments.output.read_text(encoding="utf-8") if arguments.output.exists() else None
         )
         if current != expected:
             raise SystemExit("generated G4 policy header is stale")
