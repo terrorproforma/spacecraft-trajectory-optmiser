@@ -61,3 +61,41 @@ physical-instance scheduling are not implemented by process persistence
 alone. Therefore migration and launch are prohibited until those items are
 complete; changing a timeout into a predicted or synthetic classification is
 also prohibited.
+
+## Integration status
+
+The protocol-v2 concurrent lane executor from the historical batching experiment is inactive and
+is not the campaign execution contract. Its equivalence and performance gates failed, so this
+branch retains only the compatible persistent transport, direct NVML sampling, cancellation,
+content-addressed output, and crash-safe migration foundation. `docs/G4_EXECUTION_CONTRACT.md`
+is authoritative for future grouped checkpoints.
+
+## Measured migration-gate result
+
+The isolated pilots did not pass the migration gate:
+
+- `g4-pilot-70800f8-b8` exposed a thread-local deadline bug before migration.
+  Its watchdog read a zero deadline and cancelled immediately. The resulting
+  zero-iteration records are retained as failed evidence; commit `0193517`
+  captures the caller deadline by value and requires at least one outer
+  iteration for any non-timeout sample.
+- `g4-pilot-2d2adf6-b8` and `g4-pilot-2d2adf6-b6` showed that concurrent
+  one-block solves time-share an already saturated RTX 5090. Six lanes did not
+  produce a terminal row within the 600-second row deadline plus 120 seconds
+  of transport-only cleanup grace.
+- `g4-pilot-2d2adf6-b1` retained the same instance, problem, and coefficient
+  hashes as the old fixed-tight row, but reached only 83 of 100 outer
+  iterations at the actual 600-second deadline. The old row qualified in
+  356.864485 seconds. This is not status or trajectory equivalence and is not
+  a speedup.
+- During the six-lane run, sampled SM utilization was 97-100%, framebuffer
+  use was 6.8-7.9 GiB, and power was 107-134 W. The direct-NVML batch sample
+  had a valid 0.0684-second maximum gap; per-row energy remained null.
+
+Therefore no rows were migrated and no batched campaign was launched. At the
+measured single-GPU lower bound of 279.3 GPU-years, a one-year completion
+requires at least 282 equivalent dedicated RTX 5090 GPUs before scheduling,
+storage, failure, and shared-display overhead. A 30-day completion requires
+at least 3,425 equivalent GPUs. Kernel fusion/vectorization across the batch
+dimension, rather than concurrent copies of the existing persistent kernel,
+is required before another migration attempt.
