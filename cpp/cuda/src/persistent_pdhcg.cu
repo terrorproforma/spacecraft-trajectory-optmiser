@@ -3313,8 +3313,50 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
 
         const cudaStream_t stream = native_stream(exchange->consumer_stream);
         cuda_status = cudaMemsetAsync(result->report, 0, sizeof(DeviceReport), stream);
+        const struct ScratchInitialisation {
+            void* pointer;
+            std::size_t bytes;
+        } scratch_initialisations[] = {
+            {result->solver.previous_primal,
+             static_cast<std::size_t>(variables) * sizeof(double)},
+            {result->solver.extrapolated_primal,
+             static_cast<std::size_t>(variables) * sizeof(double)},
+            {result->solver.primal_product,
+             static_cast<std::size_t>(scalar_rows) * sizeof(double)},
+            {result->solver.affine_product,
+             static_cast<std::size_t>(affine_rows) * sizeof(double)},
+            {result->solver.gradient,
+             static_cast<std::size_t>(variables) * sizeof(double)},
+            {result->solver.cone_scratch,
+             static_cast<std::size_t>(affine_rows) * sizeof(double)},
+            {result->solver.average_primal,
+             static_cast<std::size_t>(variables) * sizeof(double)},
+            {result->solver.average_dual,
+             static_cast<std::size_t>(duals + variables) * sizeof(double)},
+            {result->solver.recovery_direction_dual,
+             static_cast<std::size_t>(duals + variables) * sizeof(double)},
+            {result->solver.recovery_coefficients,
+             static_cast<std::size_t>(duals + variables) * sizeof(double)},
+            {result->solver.recovery_row_values,
+             static_cast<std::size_t>(duals) * sizeof(double)},
+            {result->solver.recovery_scalars, 4U * sizeof(double)},
+            {result->solver.recovery_backup_primal,
+             static_cast<std::size_t>(variables) * sizeof(double)},
+            {result->solver.recovery_backup_dual,
+             static_cast<std::size_t>(duals) * sizeof(double)},
+        };
+        for (const auto& scratch : scratch_initialisations) {
+            if (cuda_status == cudaSuccess && scratch.bytes > 0U) {
+                cuda_status = cudaMemsetAsync(
+                    scratch.pointer,
+                    0,
+                    scratch.bytes,
+                    stream
+                );
+            }
+        }
         if (cuda_status != cudaSuccess) {
-            status = cuda_failure(result, cuda_status, "diagnostics initialization");
+            status = cuda_failure(result, cuda_status, "scratch initialization");
             cleanup_workspace(result);
             delete result;
             return status;
