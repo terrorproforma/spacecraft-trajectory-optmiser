@@ -550,6 +550,7 @@ __device__ void evaluate_report(
     add_transpose_dual(problem);
     if (threadIdx.x == 0) {
         double scalar_violation = 0.0;
+        double scalar_natural = 0.0;
         double scalar_scale = 1.0;
         double complementarity = 0.0;
         for (int row = 0; row < problem->scalar_rows; ++row) {
@@ -557,6 +558,15 @@ __device__ void evaluate_report(
             const double projection =
                 project_interval(value, problem->scalar_lower[row], problem->scalar_upper[row]);
             scalar_violation = fmax(scalar_violation, device_abs(value - projection));
+            const double natural_projection = project_interval(
+                value + problem->dual[row],
+                problem->scalar_lower[row],
+                problem->scalar_upper[row]
+            );
+            scalar_natural = fmax(
+                scalar_natural,
+                device_abs(value - natural_projection)
+            );
             if (isfinite(problem->scalar_lower[row])) {
                 scalar_scale = fmax(scalar_scale, device_abs(problem->scalar_lower[row]));
             }
@@ -603,6 +613,25 @@ __device__ void evaluate_report(
             affine_distance =
                 fmax(affine_distance, device_abs(original - problem->cone_scratch[row]));
         }
+        for (int row = 0; row < problem->affine_rows; ++row) {
+            problem->cone_scratch[row] =
+                problem->affine_product[row] + problem->affine_offset[row]
+                + problem->dual[problem->scalar_rows + row];
+        }
+        project_cone_blocks(
+            problem->cone_scratch,
+            problem->affine_cones,
+            problem->affine_cone_count
+        );
+        double affine_natural = 0.0;
+        for (int row = 0; row < problem->affine_rows; ++row) {
+            const double original =
+                problem->affine_product[row] + problem->affine_offset[row];
+            affine_natural = fmax(
+                affine_natural,
+                device_abs(original - problem->cone_scratch[row])
+            );
+        }
         double affine_complementarity = 0.0;
         for (int cone_index = 0;
              cone_index < problem->affine_cone_count;
@@ -621,7 +650,22 @@ __device__ void evaluate_report(
         }
         complementarity = fmax(complementarity, affine_complementarity);
         const double primal_residual = fmax(scalar_violation, fmax(box_violation, affine_distance));
-        const double dual_residual = fmax(stationarity, complementarity);
+        const double natural_residual = fmax(
+            fmax(primal_residual, stationarity),
+            fmax(scalar_natural, affine_natural)
+        );
+        const double dual_residual = fmax(
+            fmax(stationarity, complementarity),
+            fmax(scalar_natural, affine_natural)
+        );
+        double scaling_min = INFINITY;
+        double scaling_max = 0.0;
+        const int scaling_count =
+            problem->variables + problem->scalar_rows + problem->affine_rows;
+        for (int index = 0; index < scaling_count; ++index) {
+            scaling_min = fmin(scaling_min, problem->scaling[index]);
+            scaling_max = fmax(scaling_max, problem->scaling[index]);
+        }
 
         report->iterations = iteration;
         report->objective = objective;
@@ -629,14 +673,14 @@ __device__ void evaluate_report(
         report->box_violation_inf = box_violation;
         report->affine_cone_distance_inf = affine_distance;
         report->stationarity_inf = stationarity;
-        report->natural_residual_inf = fmax(primal_residual, stationarity);
+        report->natural_residual_inf = natural_residual;
         report->complementarity_inf = complementarity;
         report->relative_primal_residual = primal_residual / scalar_scale;
         report->relative_dual_residual = dual_residual / fmax(1.0, device_abs(objective));
         report->coefficient_change_max = control->coefficient_change_max;
         report->coefficient_change_norm = control->coefficient_change_norm;
-        report->scaling_min = 1.0;
-        report->scaling_max = 1.0;
+        report->scaling_min = scaling_min;
+        report->scaling_max = scaling_max;
         report->scaling_reuse_count = control->scaling_reuse_count;
         report->scaling_refreshed = control->scaling_refreshed;
     }
@@ -780,8 +824,11 @@ __global__ void solve_kernel(
                     report->termination = SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE;
                     atomicExch(&should_stop, 1);
                 } else if (
-                    report->relative_primal_residual <= control->feasibility_tolerance
-                    && report->relative_dual_residual <= control->optimality_tolerance
+                    report->natural_residual_inf
+                        <= fmin(
+                            control->feasibility_tolerance,
+                            control->optimality_tolerance
+                        )
                 ) {
                     report->termination = SPACEPDHCG_CUDA_TERMINATION_OPTIMAL;
                     atomicExch(&should_stop, 1);

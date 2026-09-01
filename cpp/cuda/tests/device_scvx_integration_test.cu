@@ -7,6 +7,8 @@
 #include "spacepdhcg/transcription/powered_descent_3dof.hpp"
 #include "spacepdhcg/transcription/powered_descent_6dof.hpp"
 
+#include <pdhcg.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -16,6 +18,7 @@
 #include <limits>
 #include <map>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -28,6 +31,13 @@ namespace {
 
 bool sanitizer_mode = false;
 bool tight_residual_mode = false;
+bool diagnostic_mode = false;
+bool dump_mode = false;
+bool tight_after_loose_mode = false;
+bool default_stream_mode = false;
+bool refresh_before_tight_mode = false;
+bool repeated_tight_mode = false;
+std::uint64_t tight_iteration_limit = 1'000'000U;
 
 spacepdhcg_cuda_cone_kind cone_kind(const spacepdhcg::ConeKind kind) {
     switch (kind) {
@@ -184,6 +194,208 @@ struct IntegrationResult {
     double maximum_solution_magnitude{0.0};
 };
 
+cone_type_t upstream_cone_kind(const spacepdhcg_cuda_cone_kind kind) {
+    switch (kind) {
+        case SPACEPDHCG_CUDA_CONE_SECOND_ORDER:
+            return CONE_STANDARD_SOC;
+        case SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER:
+            return CONE_ROTATED_SOC;
+        case SPACEPDHCG_CUDA_CONE_EXPONENTIAL:
+            return CONE_EXPONENTIAL;
+        case SPACEPDHCG_CUDA_CONE_POWER:
+            return CONE_POWER;
+        case SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE:
+            return CONE_PSD;
+    }
+    return CONE_STANDARD_SOC;
+}
+
+template <typename T>
+void print_diagnostic_vector(const char* name, const std::vector<T>& values) {
+    std::printf("PD3DATA %s", name);
+    for (const auto value : values) {
+        if constexpr (std::is_floating_point_v<T>) {
+            if (std::isinf(value)) {
+                std::printf(value < 0.0 ? " -inf" : " inf");
+            } else {
+                std::printf(" %.17g", value);
+            }
+        } else {
+            std::printf(" %lld", static_cast<long long>(value));
+        }
+    }
+    std::printf("\n");
+}
+
+void print_diagnostic_problem(const test::ProblemStorage& problem) {
+    std::printf(
+        "PD3DATA dimensions %d %d %d\n",
+        problem.variables,
+        problem.scalar_rows,
+        problem.affine_rows
+    );
+    print_diagnostic_vector("q_offsets", problem.h_q_offsets);
+    print_diagnostic_vector("q_indices", problem.h_q_indices);
+    print_diagnostic_vector("a_offsets", problem.h_a_offsets);
+    print_diagnostic_vector("a_indices", problem.h_a_indices);
+    print_diagnostic_vector("f_offsets", problem.h_f_offsets);
+    print_diagnostic_vector("f_indices", problem.h_f_indices);
+    print_diagnostic_vector("q", problem.h_q);
+    print_diagnostic_vector("a", problem.h_a);
+    print_diagnostic_vector("f", problem.h_f);
+    print_diagnostic_vector("c", problem.h_c);
+    print_diagnostic_vector("scalar_lower", problem.h_scalar_lower);
+    print_diagnostic_vector("scalar_upper", problem.h_scalar_upper);
+    print_diagnostic_vector("affine_offset", problem.h_affine_offset);
+    print_diagnostic_vector("variable_lower", problem.h_variable_lower);
+    print_diagnostic_vector("variable_upper", problem.h_variable_upper);
+    for (const auto& cone : problem.affine_cones) {
+        std::printf(
+            "PD3CONE affine %d %d %d %.17g\n",
+            static_cast<int>(cone.kind),
+            cone.start,
+            cone.vector_dimension,
+            cone.power_alpha
+        );
+    }
+    for (const auto& cone : problem.variable_cones) {
+        std::printf(
+            "PD3CONE variable %d %d %d %.17g\n",
+            static_cast<int>(cone.kind),
+            cone.start,
+            cone.vector_dimension,
+            cone.power_alpha
+        );
+    }
+}
+
+void run_upstream_diagnostic(test::ProblemStorage& problem) {
+    problem.h_q = problem.q.download(problem.stream);
+    problem.h_a = problem.a.download(problem.stream);
+    problem.h_f = problem.f.download(problem.stream);
+    problem.h_c = problem.c.download(problem.stream);
+    problem.h_scalar_lower = problem.scalar_lower.download(problem.stream);
+    problem.h_scalar_upper = problem.scalar_upper.download(problem.stream);
+    problem.h_affine_offset = problem.affine_offset.download(problem.stream);
+    problem.h_variable_lower = problem.variable_lower.download(problem.stream);
+    problem.h_variable_upper = problem.variable_upper.download(problem.stream);
+    print_diagnostic_problem(problem);
+    if (dump_mode) {
+        return;
+    }
+
+    matrix_desc_t q{};
+    q.m = problem.variables;
+    q.n = problem.variables;
+    q.fmt = matrix_csc;
+    q.data.csc = {
+        static_cast<int>(problem.h_q.size()),
+        problem.h_q_offsets.data(),
+        problem.h_q_indices.data(),
+        problem.h_q.data(),
+    };
+    matrix_desc_t a{};
+    a.m = problem.scalar_rows;
+    a.n = problem.variables;
+    a.fmt = matrix_csc;
+    a.data.csc = {
+        static_cast<int>(problem.h_a.size()),
+        problem.h_a_offsets.data(),
+        problem.h_a_indices.data(),
+        problem.h_a.data(),
+    };
+    matrix_desc_t f{};
+    f.m = problem.affine_rows;
+    f.n = problem.variables;
+    f.fmt = matrix_csc;
+    f.data.csc = {
+        static_cast<int>(problem.h_f.size()),
+        problem.h_f_offsets.data(),
+        problem.h_f_indices.data(),
+        problem.h_f.data(),
+    };
+    std::vector<cone_spec_t> affine_cones;
+    affine_cones.reserve(problem.affine_cones.size());
+    for (const auto& cone : problem.affine_cones) {
+        affine_cones.push_back({
+            upstream_cone_kind(cone.kind),
+            cone.start,
+            cone.vector_dimension,
+            cone.power_alpha,
+            nullptr,
+        });
+    }
+    std::vector<cone_spec_t> variable_cones;
+    variable_cones.reserve(problem.variable_cones.size());
+    for (const auto& cone : problem.variable_cones) {
+        variable_cones.push_back({
+            upstream_cone_kind(cone.kind),
+            cone.start,
+            cone.vector_dimension,
+            cone.power_alpha,
+            nullptr,
+        });
+    }
+    const double objective_constant = 0.0;
+    qp_problem_t* qp = create_qp_problem(
+        problem.h_c.data(),
+        &q,
+        nullptr,
+        nullptr,
+        &a,
+        problem.h_scalar_lower.data(),
+        problem.h_scalar_upper.data(),
+        problem.h_variable_lower.data(),
+        problem.h_variable_upper.data(),
+        &objective_constant,
+        static_cast<int>(variable_cones.size()),
+        variable_cones.empty() ? nullptr : variable_cones.data(),
+        &f,
+        problem.h_affine_offset.data(),
+        static_cast<int>(affine_cones.size()),
+        affine_cones.data()
+    );
+    test::require(qp != nullptr, "diagnostic one-shot QP creation failed");
+    pdhg_parameters_t parameters{};
+    set_default_parameters(&parameters);
+    parameters.verbose = 0;
+    parameters.presolve = false;
+    parameters.termination_criteria.eps_optimal_relative = 1.0e-6;
+    parameters.termination_criteria.eps_feasible_relative = 1.0e-6;
+    parameters.termination_criteria.iteration_limit = 1'000'000;
+    pdhcg_result_t* result = solve_qp_problem(qp, &parameters);
+    test::require(result != nullptr, "diagnostic one-shot solve failed");
+    std::printf(
+        "{\"case\":\"pd3_upstream_oneshot\",\"start\":\"cold\",\"termination\":%d,"
+        "\"iterations\":%d,\"relative_primal\":%.17g,\"relative_dual\":%.17g,"
+        "\"objective_gap\":%.17g,\"relative_objective_gap\":%.17g}\n",
+        static_cast<int>(result->termination_reason),
+        result->total_count,
+        result->relative_primal_residual,
+        result->relative_dual_residual,
+        result->objective_gap,
+        result->relative_objective_gap
+    );
+    set_start_values(qp, result->primal_solution, result->dual_solution);
+    pdhcg_result_t* warm_result = solve_qp_problem(qp, &parameters);
+    test::require(warm_result != nullptr, "diagnostic warm one-shot solve failed");
+    std::printf(
+        "{\"case\":\"pd3_upstream_oneshot\",\"start\":\"primal_dual\","
+        "\"termination\":%d,\"iterations\":%d,\"relative_primal\":%.17g,"
+        "\"relative_dual\":%.17g,\"objective_gap\":%.17g,"
+        "\"relative_objective_gap\":%.17g}\n",
+        static_cast<int>(warm_result->termination_reason),
+        warm_result->total_count,
+        warm_result->relative_primal_residual,
+        warm_result->relative_dual_residual,
+        warm_result->objective_gap,
+        warm_result->relative_objective_gap
+    );
+    pdhcg_result_free(warm_result);
+    pdhcg_result_free(result);
+    qp_problem_free(qp);
+}
+
 template <std::size_t StateDimension, std::size_t ControlDimension>
 IntegrationResult run_resident_sequence(
     const core::FixedStructure& structure,
@@ -195,7 +407,7 @@ IntegrationResult run_resident_sequence(
     const std::size_t dynamics_row_start,
     const spacepdhcg_cuda_dynamics_config& dynamics_config
 ) {
-    test::ProblemStorage problem(false, true);
+    test::ProblemStorage problem(false, !default_stream_mode);
     materialise(problem, structure, values);
     test::CudaBuffer<double> states(reference_states.size(), false);
     test::CudaBuffer<double> controls(reference_controls.size(), false);
@@ -265,7 +477,8 @@ IntegrationResult run_resident_sequence(
         "pointer snapshot before resident sequence"
     );
     spacepdhcg_cuda_diagnostics diagnostics{};
-    const int sequence_iterations = sanitizer_mode ? 1 : 2;
+    const int sequence_iterations =
+        sanitizer_mode || diagnostic_mode || dump_mode ? 1 : 2;
     for (int iteration = 0; iteration < sequence_iterations; ++iteration) {
         test::status_require(
             spacepdhcg_cuda_variational_rk4_async(
@@ -288,6 +501,19 @@ IntegrationResult run_resident_sequence(
         );
         test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "resident update wait");
         if (iteration > 0) {
+            if (refresh_before_tight_mode) {
+                test::status_require(
+                    spacepdhcg_cuda_workspace_refresh_scaling_async(
+                        workspace,
+                        problem.exchange.consumer_stream
+                    ),
+                    "forced scaling refresh before tight solve"
+                );
+                test::status_require(
+                    spacepdhcg_cuda_workspace_wait(workspace),
+                    "forced scaling refresh wait"
+                );
+            }
             test::status_require(
                 spacepdhcg_cuda_workspace_warm_start_async(
                     workspace,
@@ -303,12 +529,21 @@ IntegrationResult run_resident_sequence(
         }
         const auto solve = sanitizer_mode
             ? test::solve_options(1.0e-2, 5'000U)
-            : (tight_residual_mode
-                   ? test::solve_options(1.0e-6, 1'000'000U)
-                   : test::solve_options(2.0e-4, 200'000U));
+            : (dump_mode
+                   ? test::solve_options(1.0e-6, 1U)
+            : ((tight_residual_mode || diagnostic_mode || repeated_tight_mode
+                || (tight_after_loose_mode && iteration > 0))
+                   ? test::solve_options(1.0e-6, tight_iteration_limit)
+                   : (tight_after_loose_mode
+                          ? test::solve_options(1.0e-2, 200'000U)
+                          : test::solve_options(1.0e-2, 200'000U))));
+        if (diagnostic_mode || dump_mode) {
+            run_upstream_diagnostic(problem);
+        }
         diagnostics = test::solve_and_wait(workspace, problem, solve);
         if (diagnostics.termination != SPACEPDHCG_CUDA_TERMINATION_OPTIMAL) {
-            if (tight_residual_mode) {
+            if (tight_residual_mode || diagnostic_mode || dump_mode
+                || tight_after_loose_mode || repeated_tight_mode) {
                 std::fprintf(
                     stderr,
                     "{\"case\":\"tight_final_residual\",\"termination\":%d,"
@@ -321,7 +556,10 @@ IntegrationResult run_resident_sequence(
                     diagnostics.relative_dual_residual,
                     diagnostics.natural_residual_inf
                 );
-                std::exit(8);
+                if (repeated_tight_mode && iteration == 0) {
+                    continue;
+                }
+                break;
             }
             std::fprintf(
                 stderr,
@@ -408,6 +646,13 @@ IntegrationResult run_resident_sequence(
         "steady-state allocation detected"
     );
     const auto solution = problem.primal.download(problem.stream);
+    if (diagnostic_mode) {
+        print_diagnostic_vector("persistent_primal", solution);
+        print_diagnostic_vector(
+            "persistent_dual",
+            problem.dual.download(problem.stream)
+        );
+    }
     double maximum_solution = 0.0;
     for (const auto value : solution) {
         test::require(std::isfinite(value), "resident solution is non-finite");
@@ -645,8 +890,29 @@ IntegrationResult run_pd6() {
 }  // namespace
 
 int main(const int argc, char** argv) {
-    sanitizer_mode = argc > 1 && std::string_view(argv[1]) == "--sanitizer";
-    tight_residual_mode = argc > 1 && std::string_view(argv[1]) == "--tight-pd3";
+    const auto mode = argc > 1 ? std::string_view(argv[1]) : std::string_view{};
+    sanitizer_mode = mode == "--sanitizer";
+    tight_residual_mode =
+        mode == "--tight-pd3" || mode == "--tight-pd3-default-stream"
+        || mode == "--tight-pd3-1k" || mode == "--tight-pd3-10k"
+        || mode == "--tight-pd3-100k" || mode == "--tight-pd3-300k";
+    diagnostic_mode = mode == "--diagnose-pd3";
+    dump_mode = mode == "--dump-pd3";
+    tight_after_loose_mode =
+        mode == "--tight-after-loose-pd3"
+        || mode == "--tight-after-loose-refresh-pd3";
+    default_stream_mode = mode == "--tight-pd3-default-stream";
+    refresh_before_tight_mode = mode == "--tight-after-loose-refresh-pd3";
+    repeated_tight_mode = mode == "--tight-twice-pd3";
+    if (mode == "--tight-pd3-1k") {
+        tight_iteration_limit = 1'000U;
+    } else if (mode == "--tight-pd3-10k") {
+        tight_iteration_limit = 10'000U;
+    } else if (mode == "--tight-pd3-100k") {
+        tight_iteration_limit = 100'000U;
+    } else if (mode == "--tight-pd3-300k") {
+        tight_iteration_limit = 300'000U;
+    }
     if (sanitizer_mode) {
         const auto hcw = run_hcw();
         std::printf(
@@ -660,10 +926,32 @@ int main(const int argc, char** argv) {
     if (tight_residual_mode) {
         const auto pd3 = run_pd3();
         std::printf(
-            "{\"case\":\"tight_final_residual\",\"termination\":1,"
-            "\"requested\":1e-6,\"natural_residual\":%.9g}\n",
+            "{\"case\":\"tight_final_residual\",\"termination\":%d,"
+            "\"iterations\":%llu,\"requested\":1e-6,"
+            "\"relative_primal\":%.9g,\"relative_dual\":%.9g,"
+            "\"natural_residual\":%.9g}\n",
+            static_cast<int>(pd3.diagnostics.termination),
+            static_cast<unsigned long long>(pd3.diagnostics.iterations),
+            pd3.diagnostics.relative_primal_residual,
+            pd3.diagnostics.relative_dual_residual,
             pd3.diagnostics.natural_residual_inf
         );
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+    }
+    if (diagnostic_mode) {
+        const auto pd3 = run_pd3();
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+    }
+    if (dump_mode) {
+        static_cast<void>(run_pd3());
+        return 0;
+    }
+    if (tight_after_loose_mode) {
+        const auto pd3 = run_pd3();
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+    }
+    if (repeated_tight_mode) {
+        const auto pd3 = run_pd3();
         return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     const auto hcw = run_hcw();

@@ -84,6 +84,21 @@ run_log device-variational.jsonl \
     "${debug_build}/cuda-tests/device_variational_test"
 run_log device-scvx-integration.jsonl \
     "${debug_build}/cuda-tests/device_scvx_integration_test"
+run_log pd3-cqp.txt \
+    "${debug_build}/cuda-tests/device_scvx_integration_test" --dump-pd3
+run_log pd3-cpu-independent.json \
+    .venv/bin/python scripts/gpu/diagnose_g3_pd3.py \
+    --dump "${run}/pd3-cqp.txt"
+run_log pd3-upstream-independent.json \
+    .venv/bin/python scripts/gpu/diagnose_g3_pd3.py \
+    --dump "${run}/pd3-cqp.txt" \
+    --upstream-variant default
+run_log pd3-upstream-warm-convention.json \
+    .venv/bin/python scripts/gpu/diagnose_g3_pd3.py \
+    --dump "${run}/pd3-cqp.txt" \
+    --upstream-variant default \
+    --upstream-start cpu-primal-dual \
+    --iteration-limit 1000
 run_expected_failure tight-final-residual.jsonl \
     "${debug_build}/cuda-tests/device_scvx_integration_test" --tight-pd3
 
@@ -118,13 +133,21 @@ cat >"${run}/summary.json" <<'EOF'
   "g4_authorized": false,
   "families_exercised": 4,
   "production_outer_loop_complete": false,
-  "maximum_loose_repair_natural_residual": 0.00242428348,
+  "maximum_loose_repair_natural_residual": 0.00981253727,
   "tight_requested_residual": 1e-6,
   "tight_achieved_natural_residual": 0.000576465191,
   "tight_backend_termination": "iteration_limit",
   "tight_backend_iterations": 1000000,
   "tight_relative_primal_residual": 1.38560229e-8,
   "tight_relative_dual_residual": 7.55280608e-5,
+  "exact_cqp_sha256": "e6547c15187fbac09dd0c1cbb7a4eff1b4c8561eb07b2f71aaa30dff6c031817",
+  "cpu_clarabel_iterations": 18,
+  "cpu_clarabel_natural_residual": 1.902662916108966e-9,
+  "upstream_pdhcg_iterations": 1000000,
+  "upstream_pdhcg_termination": "iteration_limit",
+  "upstream_pdhcg_natural_residual": 0.0041638027426486755,
+  "upstream_pdhcg_relative_natural_residual": 9.014599527290556e-7,
+  "canonical_residual_contract_fixed": true,
   "topology_allocation_delta": 0,
   "topology_index_copy_delta": 0,
   "update_allocation_delta": 0,

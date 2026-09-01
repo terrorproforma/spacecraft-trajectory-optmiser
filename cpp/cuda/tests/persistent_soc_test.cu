@@ -169,6 +169,46 @@ int main(const int argc, char** argv) {
         static_cast<unsigned long long>(diagnostics.topology_allocation_count),
         static_cast<unsigned long long>(diagnostics.topology_index_copy_count)
     );
+
+    problem.primal.upload({1.0, 0.0}, problem.stream);
+    problem.dual.upload({1.0, 0.0, 1.0}, problem.stream);
+    test::status_require(
+        spacepdhcg_cuda_workspace_warm_start_async(
+            workspace,
+            SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL,
+            &problem.exchange.iterates,
+            problem.exchange.consumer_stream
+        ),
+        "non-normal dual regression warm start"
+    );
+    test::status_require(
+        spacepdhcg_cuda_workspace_wait(workspace),
+        "non-normal dual regression warm wait"
+    );
+    test::status_require(
+        spacepdhcg_cuda_workspace_residuals_async(
+            workspace,
+            problem.exchange.consumer_stream
+        ),
+        "non-normal dual regression residual"
+    );
+    test::status_require(
+        spacepdhcg_cuda_workspace_wait(workspace),
+        "non-normal dual regression residual wait"
+    );
+    test::status_require(
+        spacepdhcg_cuda_workspace_diagnostics(workspace, &diagnostics),
+        "non-normal dual regression diagnostics"
+    );
+    test::require(
+        diagnostics.affine_cone_distance_inf < 1.0e-12
+            && diagnostics.stationarity_inf < 1.0e-12,
+        "dual-natural regression point is not primal-feasible and stationary"
+    );
+    test::require(
+        diagnostics.natural_residual_inf > 0.5,
+        "canonical natural residual omitted affine-cone dual membership"
+    );
     test::destroy_workspace(workspace);
     return 0;
 }
