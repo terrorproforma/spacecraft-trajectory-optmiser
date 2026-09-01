@@ -628,3 +628,32 @@ Use this file as persistent, repo-local execution memory.
   relabel them as complete solver or physical full-mission evidence.
 - Native P1-D/P1-E need a host optimizer dual/natural residual owner; Paper 2 needs a parameterized
   physical Lambert/route/master/certification campaign owner.
+
+### 2026-09-02 09:50 AEST - CPU campaign recovery and validation
+
+#### What Worked
+
+- Recovered the live campaign at 12,500 records and completed all 16,324 coordinates without
+  restarting or discarding valid results.
+- Worker-coordinate turnover distinguished slow exact P1-F work from a hung process.
+- Final schema, coverage, semantic, rendering, Python, Ruff, and native checks passed.
+
+#### Mistakes And Fixes
+
+- `[self]` A 250-record checkpoint interval made healthy timeout-heavy work appear stalled and left
+  the final periodic checkpoint 74 rows behind the complete result set.
+- Fix: checkpoint every 25 completions and always emit the terminal checkpoint.
+- `[self]` Finalization overwrote `completed_utc`, changing replay render bytes despite stable
+  semantic data.
+- Fix: preserve the initial completion timestamp and regression-test the behavior.
+
+#### Guardrails For Next Session
+
+- Do not promote G7 component fixtures to physical Paper 2 evidence when the frozen matrix omits
+  target states, epochs, spacecraft resources, and uncertainty distributions.
+- A scale/method manifest is not a physical benchmark-instance contract.
+
+#### Follow-Ups / Risks
+
+- P1-C/D/E still need qualified optimizer-owned outputs; P1-F needs frozen worst/CVaR epigraph
+  formulations; Paper 2 needs versioned physical instances.
