@@ -24,8 +24,10 @@ The following deterministic preflight boundaries are fixed in source before resu
 - P1-E native variational-RK4 transfer/reference replay: execute through `N=2000`; larger
   coordinates retain timeout records.
 - P1-F deterministic scenario risk/non-anticipativity reference: all frozen coordinates.
-- P2-A/P2-B/P2-C bounded orchestration contracts: all coordinates execute but remain unqualified
-  unless a physical parameterized owner supplies the required Lambert/route/certification metrics.
+- P2-A/P2-B/P2-C bounded orchestration contracts: coordinates through 100,000 exact work items
+  execute but remain unqualified unless a physical parameterized owner supplies the required
+  Lambert/route/certification metrics; larger coordinates retain timeout records without reducing
+  the declared scale.
 - P2-D/P2-E full-mission formulations remain unsupported because this commit contains component
   seams but no authoritative full multi-spacecraft optimization model.
 

@@ -343,7 +343,13 @@ def _hcw(coordinate: dict[str, Any]) -> dict[str, Any]:
     runner = run_hcw_box if parameters["control_sets"] == "box" else run_hcw_soc
     seed = 7 + round(float(parameters["update_magnitudes"]) * 1000)
     started = time.perf_counter()
-    payload = runner(repeats=WARMUPS + MEASURED, intervals=intervals, seed=seed, tolerance=1.0e-8)
+    payload = runner(
+        repeats=WARMUPS + MEASURED,
+        intervals=intervals,
+        seed=seed,
+        tolerance=1.0e-8,
+        update_magnitude=float(parameters["update_magnitudes"]),
+    )
     residual = max(
         float(payload["maximum_terminal_error"]),
         float(payload["maximum_dynamics_defect"]),
@@ -406,13 +412,17 @@ def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
         step_seconds=2.0,
         max_iterations=8,
         tolerance=1.0e-3,
+        initial_dispersion_scale=float(parameters["initial_dispersion_scales"]),
+        final_polish=bool(parameters["final_polish"]),
     )
     residual = float(payload["final_outer_residual"])
+    polish = payload["polish"]
     return _base(
         coordinate,
         "unqualified",
-        "nonlinear CPU SCvx and independent replay executed; canonical CQP dual/natural "
-        "residual and requested final-polish handoff are not emitted by this owner",
+        "nonlinear CPU SCvx and independent replay executed with the requested dispersion and "
+        "optional final polish; polished CQP and outer nonlinear metrics describe different "
+        "decisions, so combined publication qualification fails closed",
         "PoweredDescentSCvxSolver",
         "cpu_solver_and_replay",
         _dimensions(intervals, variables=(intervals + 1) * 7 + intervals * 18),
@@ -420,11 +430,20 @@ def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
             **_null_quality(str(payload["status"])),
             "objective": float(payload["final_merit"]),
             "canonical_primal_residual": residual,
+            "canonical_dual_residual": (None if polish is None else float(polish["dual_residual"])),
+            "canonical_natural_residual": (
+                None
+                if polish is None
+                else max(
+                    float(polish["primal_residual"]),
+                    float(polish["dual_residual"]),
+                )
+            ),
             "dynamics_residual": float(payload["final_dynamics_residual"]),
             "path_residual": float(payload["final_path_residual"]),
             "terminal_residual": float(payload["final_terminal_residual"]),
             "continuous_time_violation": float(payload["path_violation"]),
-            "virtual_control_residual": None,
+            "virtual_control_residual": float(payload["maximum_virtual_control"]),
             "nonanticipativity_residual": 0.0,
             "risk_epigraph_residual": 0.0,
             "certified": bool(payload["converged"]),
@@ -437,7 +456,7 @@ def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
             "rejected_steps": int(payload["outer_iterations"])
             - int(payload["accepted_iterations"]),
             "forcing_satisfied": bool(payload["converged"]),
-            "polish_used": False,
+            "polish_used": polish is not None,
         },
         [float(payload["total_solve_seconds"]) / MEASURED] * MEASURED,
         time.perf_counter() - started,
@@ -631,11 +650,19 @@ def _paper2(coordinate: dict[str, Any]) -> dict[str, Any]:
             parameters.get("target_counts", 1) * parameters.get("epoch_counts", 1),
         )
     )
+    if scale > 100_000:
+        return _timeout(
+            coordinate,
+            "declared 120-second coordinate limit: bounded orchestration work exceeds "
+            "100,000 exact items; coordinate retained without reducing the declared scale",
+            "OrbitWeaver bounded component contract",
+            _dimensions(1, variables=scale),
+        )
     checksum = 0
     durations = []
     for repeat in range(WARMUPS + MEASURED):
         begin = time.perf_counter()
-        for index in range(min(scale, 100_000)):
+        for index in range(scale):
             checksum = (checksum * 1_000_003 + index + repeat) % 2_147_483_647
         elapsed = time.perf_counter() - begin
         if repeat >= WARMUPS:

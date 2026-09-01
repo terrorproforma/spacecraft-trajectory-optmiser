@@ -4,6 +4,11 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
+from spacepdhcg.benchmarks.cw_repeat import run_benchmark as run_hcw_box
+from spacepdhcg.benchmarks.powered_descent_scvx import run as run_pd3
+
 
 def _module():
     root = Path(__file__).resolve().parents[1]
@@ -133,3 +138,16 @@ def test_semantic_reproducibility_excludes_only_observation_fields() -> None:
         "family": "P1-A-banded",
         "quality": {"qualified": True},
     }
+
+
+def test_coordinate_specific_benchmark_inputs_are_validated() -> None:
+    with pytest.raises(ValueError, match="update_magnitude"):
+        run_hcw_box(repeats=2, intervals=20, update_magnitude=-1.0)
+    with pytest.raises(ValueError, match="initial_dispersion_scale"):
+        run_pd3(
+            intervals=20,
+            step_seconds=2.0,
+            max_iterations=1,
+            tolerance=1.0e-3,
+            initial_dispersion_scale=-1.0,
+        )
