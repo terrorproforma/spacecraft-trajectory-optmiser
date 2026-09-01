@@ -9,7 +9,11 @@ from spacepdhcg.cqp.problem import (
     CQPValues,
     CSCStructure,
 )
-from spacepdhcg.cqp.quality import residual_qualified
+from spacepdhcg.cqp.quality import (
+    CanonicalResidualAudit,
+    independent_canonical_residuals,
+    residual_qualified,
+)
 
 __all__ = [
     "CQPSolution",
@@ -17,7 +21,9 @@ __all__ = [
     "CQPValues",
     "CSCStructure",
     "CanonicalCQP",
+    "CanonicalResidualAudit",
     "ConeBlock",
     "ConeKind",
+    "independent_canonical_residuals",
     "residual_qualified",
 ]
