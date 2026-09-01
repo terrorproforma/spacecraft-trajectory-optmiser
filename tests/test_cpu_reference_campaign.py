@@ -153,6 +153,22 @@ def test_semantic_reproducibility_excludes_only_observation_fields() -> None:
     }
 
 
+def test_replay_timestamp_and_final_checkpoint_are_stable() -> None:
+    finalizer = _supported_finalizer_module()
+    original = {"completed_utc": "2026-09-01T00:00:00+00:00"}
+    assert finalizer._stamp_completion(original, "later") == original
+    assert finalizer._stamp_completion({}, "first") == {"completed_utc": "first"}
+
+    runner = _matrix_module()
+    payload = runner._checkpoint_payload(
+        16_324,
+        16_324,
+        runner.Counter({"timeout": 645, "executed": 12_148}),
+    )
+    assert payload["completed"] == payload["total"] == 16_324
+    assert list(payload["dispositions"]) == ["executed", "timeout"]
+
+
 def test_coordinate_specific_benchmark_inputs_are_validated() -> None:
     with pytest.raises(ValueError, match="update_magnitude"):
         run_hcw_box(repeats=2, intervals=20, update_magnitude=-1.0)

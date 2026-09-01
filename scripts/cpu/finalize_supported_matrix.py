@@ -45,6 +45,12 @@ def _write(path: Path, value: Any) -> None:
     path.write_bytes(_bytes(value))
 
 
+def _stamp_completion(environment: dict[str, Any], completed_utc: str) -> dict[str, Any]:
+    stamped = dict(environment)
+    stamped.setdefault("completed_utc", completed_utc)
+    return stamped
+
+
 def _semantic(result: dict[str, Any]) -> dict[str, Any]:
     return {
         key: value
@@ -416,9 +422,9 @@ def main() -> int:
     arguments = parser.parse_args()
     repository = arguments.repository.resolve()
     campaign = arguments.campaign.resolve()
-    environment = json.loads((campaign / "environment.json").read_text())
-    environment["completed_utc"] = (
-        __import__("datetime").datetime.now(__import__("datetime").UTC).isoformat()
+    environment = _stamp_completion(
+        json.loads((campaign / "environment.json").read_text()),
+        __import__("datetime").datetime.now(__import__("datetime").UTC).isoformat(),
     )
     _write(campaign / "environment.json", environment)
     schema = json.loads(
