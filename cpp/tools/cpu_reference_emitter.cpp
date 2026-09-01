@@ -88,9 +88,10 @@ void emit_pd6(
     using namespace spacepdhcg::transcription;
     const auto started = Clock::now();
     const PoweredDescent6DofModel model{};
+    const auto step_seconds = 10.0 / static_cast<double>(intervals);
     const PoweredDescent6DofScvxConfig config{
         .intervals = intervals,
-        .step_seconds = 0.5,
+        .step_seconds = step_seconds,
         .trust_radius = 1.0,
     };
     const PoweredDescent6DofSubproblem subproblem{model, config};
