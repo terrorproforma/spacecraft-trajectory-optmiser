@@ -383,7 +383,10 @@ class PersistentExecutor:
                         self.generation,
                         self.cuda_startup_seconds,
                     )
-        deadline = time.monotonic() + timeout_seconds + 5.0
+        # The frozen row deadline is enforced in-process. This transport grace
+        # only permits concurrent lanes to unwind recovery and emit final
+        # residual/status records after cancellation.
+        deadline = time.monotonic() + timeout_seconds + 120.0
         shared_lines: list[str] = []
         batch_complete = False
         while not batch_complete:
