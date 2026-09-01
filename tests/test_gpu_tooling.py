@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import argparse
+import hashlib
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -74,6 +77,34 @@ def test_evidence_archive_is_byte_reproducible(tmp_path: Path) -> None:
     module.create_reproducible_tar(source, second)
     assert first.read_bytes() == second.read_bytes()
     assert module.sha256(first) == module.sha256(second)
+
+
+def test_g5_seal_verifier_detects_archive_tampering(tmp_path: Path) -> None:
+    module = _load("spacepdhcg_seal_g5", GPU_SCRIPTS / "seal_g5_evidence.py")
+    archive = tmp_path / "run.tar.gz"
+    index = tmp_path / "evidence-index.json"
+    evidence = tmp_path / "evidence.json"
+    archive.write_bytes(b"archive")
+    index.write_text("{}\n", encoding="utf-8")
+    evidence.write_text("{}\n", encoding="utf-8")
+
+    def digest(path: Path) -> str:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    seal = tmp_path / "run.tar.gz.seal.json"
+    seal.write_text(
+        json.dumps(
+            {
+                "archive": {"path": str(archive), "sha256": digest(archive)},
+                "evidence_index": {"path": str(index), "sha256": digest(index)},
+                "evidence": {"path": str(evidence), "sha256": digest(evidence)},
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert module.verify(argparse.Namespace(seal=seal)) == 0
+    archive.write_bytes(b"tampered")
+    assert module.verify(argparse.Namespace(seal=seal)) == 2
 
 
 def test_generated_gpu_directories_are_git_ignored() -> None:

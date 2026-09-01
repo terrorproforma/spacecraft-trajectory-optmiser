@@ -1,0 +1,85 @@
+name: g5-physical-validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      gpu_count:
+        description: Exclusive homogeneous GPUs on this runner
+        required: true
+        type: choice
+        options: ["2", "4", "8"]
+      run_launch_probe:
+        description: Run the non-qualifying MPI/NCCL launch probe
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: g5-physical-${{ github.ref }}-${{ inputs.gpu_count }}
+  cancel-in-progress: false
+
+jobs:
+  preflight-build-and-optional-probe:
+    runs-on:
+      [self-hosted, linux, x64, gpu, nvidia, cuda-12, "g5-${{ inputs.gpu_count }}gpu"]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build pinned distributed runtime and harness
+        env:
+          BUILD_TYPE: Release
+          BUILD_DIR: build/g5-physical
+          RUN_ONE_RANK_GPU: "0"
+        run: |
+          set -euo pipefail
+          bash scripts/gpu/checkout_pinned_pdhcg.sh
+          bash scripts/gpu/run_g5_build_matrix.sh
+      - name: Capture fail-closed physical preflight
+        run: |
+          set -euo pipefail
+          python scripts/gpu/g5_campaign.py capture-preflight \
+            --expected-gpus "${{ inputs.gpu_count }}" \
+            --build-directory build/g5-physical \
+            --output "$RUNNER_TEMP/g5-preflight.json"
+      - name: Generate and statically verify launch probe
+        run: |
+          set -euo pipefail
+          python scripts/gpu/g5_campaign.py generate-plan \
+            --config benchmarks/g5_launch_probe.json \
+            --preflight "$RUNNER_TEMP/g5-preflight.json" \
+            --gpu-count "${{ inputs.gpu_count }}" \
+            --repository-commit "$GITHUB_SHA" \
+            --executable "$GITHUB_WORKSPACE/build/g5-physical/distributed-tools/g5_physical_validation_harness" \
+            --run-root "$RUNNER_TEMP/g5-runs" \
+            --output "$RUNNER_TEMP/g5-plan"
+          python scripts/gpu/g5_campaign.py verify-plan \
+            "$RUNNER_TEMP/g5-plan/launch-plan.json"
+      - name: Execute explicit non-qualifying launch probe
+        if: inputs.run_launch_probe
+        env:
+          PLAN: ${{ runner.temp }}/g5-plan/launch-plan.json
+        run: |
+          set -euo pipefail
+          manifest_rel="$(python -c 'import json,os; p=json.load(open(os.environ["PLAN"])); print(p["manifests"][0]["command"])')"
+          python scripts/gpu/g5_campaign.py execute \
+            --manifest "$RUNNER_TEMP/g5-plan/$manifest_rel" \
+            --preflight "$RUNNER_TEMP/g5-preflight.json" \
+            --confirm EXECUTE-PHYSICAL-G5
+      - name: Upload preflight, commands, and partial logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g5-physical-${{ inputs.gpu_count }}gpu-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/g5-preflight.json
+            ${{ runner.temp }}/preflight-raw/
+            ${{ runner.temp }}/g5-plan/
+            ${{ runner.temp }}/g5-runs/
+          if-no-files-found: warn
+          retention-days: 30

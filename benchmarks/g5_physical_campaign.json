@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "campaign": "G5-physical-validation",
+  "qualification_status": "tooling-only-until-physical-evidence",
+  "gpu_counts": [1, 2, 4, 8],
+  "nodes": [100, 500],
+  "partitions": ["scenario_aware", "nonzero_balanced"],
+  "risks": ["expected", "worst", "cvar_0.9", "cvar_0.99"],
+  "seeds": [17, 23, 31, 47, 59, 71, 89, 101, 127, 149, 173, 197, 223, 251, 281, 313, 349, 389, 431, 479],
+  "warmups": 2,
+  "repeats": 7,
+  "timeout_seconds": 1800,
+  "include_monolithic": true,
+  "strong": {
+    "scenario_counts": [1000, 10000]
+  },
+  "weak": {
+    "scenarios_per_gpu": [1000]
+  },
+  "required_rank_metrics": [
+    "collective_bytes",
+    "collective_count",
+    "collective_frequency",
+    "collective_seconds",
+    "communication_exposed_seconds",
+    "communication_overlapped_seconds",
+    "local_compute_seconds",
+    "predicted_load",
+    "measured_load",
+    "peak_device_bytes",
+    "energy_joules",
+    "canonical_primal_residual",
+    "canonical_dual_residual",
+    "canonical_cone_residual",
+    "nonanticipativity_residual",
+    "risk_epigraph_residual",
+    "dynamics_residual",
+    "path_residual",
+    "terminal_residual"
+  ]
+}
