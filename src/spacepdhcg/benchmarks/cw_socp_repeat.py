@@ -20,6 +20,7 @@ def run_benchmark(
     intervals: int = 40,
     seed: int = 11,
     tolerance: float = 1.0e-8,
+    update_magnitude: float | None = None,
 ) -> dict[str, Any]:
     """Run repeated SOCP numerical updates against one Clarabel workspace."""
 
@@ -37,11 +38,34 @@ def run_benchmark(
 
     initial_states: list[np.ndarray] = []
     target_states: list[np.ndarray] = []
+    if update_magnitude is not None and (
+        not np.isfinite(update_magnitude) or update_magnitude < 0.0
+    ):
+        raise ValueError("update_magnitude must be finite and non-negative")
+    base_initial = (
+        None
+        if update_magnitude is None
+        else np.concatenate((rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3)))
+    )
+    base_target = (
+        None
+        if update_magnitude is None
+        else np.concatenate((rng.uniform(-5.0, 5.0, 3), np.zeros(3)))
+    )
     for _ in range(repeats):
-        initial_states.append(
-            np.concatenate((rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3)))
-        )
-        target_states.append(np.concatenate((rng.uniform(-5.0, 5.0, 3), np.zeros(3))))
+        if update_magnitude is None:
+            initial = np.concatenate((rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3)))
+            target = np.concatenate((rng.uniform(-5.0, 5.0, 3), np.zeros(3)))
+        else:
+            assert base_initial is not None and base_target is not None
+            initial_delta = rng.normal(size=6)
+            target_delta = rng.normal(size=6)
+            initial_delta /= max(float(np.linalg.norm(initial_delta)), 1.0)
+            target_delta /= max(float(np.linalg.norm(target_delta)), 1.0)
+            initial = base_initial + update_magnitude * initial_delta
+            target = base_target + update_magnitude * target_delta
+        initial_states.append(initial)
+        target_states.append(target)
 
     backend = PersistentClarabel(
         problem.canonical(initial_states[0], target_states[0]),
@@ -91,6 +115,7 @@ def run_benchmark(
         "workspace_updates": backend.update_count,
         "seed": seed,
         "tolerance": tolerance,
+        "update_magnitude": update_magnitude,
     }
 
 
