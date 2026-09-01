@@ -1294,7 +1294,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
         || !(options->initial_trust_radius > 0.0)
         || !(options->minimum_trust_radius > 0.0)
         || options->minimum_trust_radius > options->initial_trust_radius
-        || options->initial_trust_radius > options->maximum_trust_radius) {
+        || options->initial_trust_radius > options->maximum_trust_radius
+        || (options->fixed_inner_tolerance > 0.0
+            && options->fixed_inner_iteration_limit == 0U)) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     *driver = nullptr;
@@ -1557,6 +1559,14 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             maximum_outer_residual(current),
             &solve_options
         );
+        if (driver->options.fixed_inner_tolerance > 0.0) {
+            solve_options.optimality_tolerance =
+                driver->options.fixed_inner_tolerance;
+            solve_options.feasibility_tolerance =
+                driver->options.fixed_inner_tolerance;
+            solve_options.iteration_limit =
+                driver->options.fixed_inner_iteration_limit;
+        }
         api_status = spacepdhcg_cuda_workspace_solve_async(
             driver->problem.workspace,
             &solve_options,

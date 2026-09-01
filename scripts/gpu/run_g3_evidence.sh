@@ -99,10 +99,25 @@ run_log pd3-upstream-warm-convention.json \
     --upstream-variant default \
     --upstream-start cpu-primal-dual \
     --iteration-limit 1000
-run_expected_failure tight-final-residual.jsonl \
-    "${debug_build}/cuda-tests/device_scvx_integration_test" --tight-pd3
+release_build=build/g3-evidence-cuda-release
+export LD_LIBRARY_PATH="${release_build}/cuda:/usr/local/cuda-12.8/lib64"
+run_log tight-all.jsonl \
+    "${release_build}/cuda-tests/device_scvx_integration_test" --tight-all
+run_log production-outer.jsonl \
+    "${release_build}/cuda-tests/device_scvx_integration_test" --production-outer
+run_log recovery.jsonl \
+    "${release_build}/cuda-tests/recovery_test"
+run_expected_failure no-device-negative-control.log \
+    env CUDA_VISIBLE_DEVICES= \
+    "${release_build}/cuda-tests/device_scvx_integration_test" --production-outer
+run_log h1.log \
+    .venv/bin/python scripts/gpu/run_g3_h1.py \
+    --repository . \
+    --executable "${release_build}/cuda-tests/device_scvx_integration_test" \
+    --output "${run}/h1"
 
 sanitizer=/usr/local/cuda-12.8/bin/compute-sanitizer
+export LD_LIBRARY_PATH="${debug_build}/cuda:/usr/local/cuda-12.8/lib64"
 for tool in memcheck racecheck synccheck; do
     run_log "sanitizer-variational-${tool}.log" \
         "${sanitizer}" --tool "${tool}" --error-exitcode 91 \
@@ -110,6 +125,13 @@ for tool in memcheck racecheck synccheck; do
     run_log "sanitizer-integration-${tool}.log" \
         "${sanitizer}" --tool "${tool}" --error-exitcode 92 \
         "${debug_build}/cuda-tests/device_scvx_integration_test" --sanitizer
+    run_log "sanitizer-recovery-${tool}.log" \
+        "${sanitizer}" --tool "${tool}" --error-exitcode 95 \
+        "${debug_build}/cuda-tests/recovery_test" --sanitizer
+    run_log "sanitizer-production-${tool}.log" \
+        "${sanitizer}" --tool "${tool}" --error-exitcode 96 \
+        "${debug_build}/cuda-tests/device_scvx_integration_test" \
+        --production-outer-sanitizer
 done
 run_log sanitizer-variational-initcheck.log \
     "${sanitizer}" --tool initcheck --track-unused-memory --error-exitcode 93 \
@@ -117,6 +139,13 @@ run_log sanitizer-variational-initcheck.log \
 run_log sanitizer-integration-initcheck.log \
     "${sanitizer}" --tool initcheck --track-unused-memory --error-exitcode 94 \
     "${debug_build}/cuda-tests/device_scvx_integration_test" --sanitizer
+run_log sanitizer-recovery-initcheck.log \
+    "${sanitizer}" --tool initcheck --track-unused-memory --error-exitcode 97 \
+    "${debug_build}/cuda-tests/recovery_test" --sanitizer
+run_log sanitizer-production-initcheck.log \
+    "${sanitizer}" --tool initcheck --track-unused-memory --error-exitcode 98 \
+    "${debug_build}/cuda-tests/device_scvx_integration_test" \
+    --production-outer-sanitizer
 
 profile="${run}/device-scvx"
 run_log nsys-profile.log \
@@ -127,42 +156,16 @@ run_log nsys-stats.log \
     nsys stats --report cuda_api_sum,cuda_gpu_kern_sum,cuda_gpu_mem_time_sum \
     "${profile}.nsys-rep"
 
-cat >"${run}/summary.json" <<'EOF'
-{
-  "decision": "FAIL",
-  "g4_authorized": false,
-  "families_exercised": 4,
-  "production_outer_loop_complete": false,
-  "maximum_loose_repair_natural_residual": 0.00981253727,
-  "tight_requested_residual": 1e-6,
-  "tight_achieved_natural_residual": 0.000576465191,
-  "tight_backend_termination": "iteration_limit",
-  "tight_backend_iterations": 1000000,
-  "tight_relative_primal_residual": 1.38560229e-8,
-  "tight_relative_dual_residual": 7.55280608e-5,
-  "exact_cqp_sha256": "e6547c15187fbac09dd0c1cbb7a4eff1b4c8561eb07b2f71aaa30dff6c031817",
-  "cpu_clarabel_iterations": 18,
-  "cpu_clarabel_natural_residual": 1.902662916108966e-9,
-  "upstream_pdhcg_iterations": 1000000,
-  "upstream_pdhcg_termination": "iteration_limit",
-  "upstream_pdhcg_natural_residual": 0.0041638027426486755,
-  "upstream_pdhcg_relative_natural_residual": 9.014599527290556e-7,
-  "canonical_residual_contract_fixed": true,
-  "topology_allocation_delta": 0,
-  "topology_index_copy_delta": 0,
-  "update_allocation_delta": 0,
-  "hidden_cpu_fallback": false,
-  "sanitizer_errors": 0,
-  "nsys_cuda_api_records": true,
-  "nsys_cuda_kernel_records": false,
-  "nsys_cuda_memory_records": false,
-  "h1_decision": "unresolved_not_qualified",
-  "h1_scale_boundary": null,
-  "h1_reason": "No matched-quality production SCvx outer loop because the final forcing residual gate failed."
-}
-EOF
-
-(cd "${run}" && sha256sum * >evidence-index.sha256)
-tar -czf "${run}.tar.gz" -C results/gpu/g3 "${run_id}"
+run_log summary-command.log \
+    .venv/bin/python scripts/gpu/summarize_g3_run.py "${run}"
+printf '%q ' .venv/bin/python scripts/gpu/archive_run.py \
+    "${run}" --repository . --require-clean-repository \
+    --archive "${run}.tar.gz" >>"${run}/commands.txt"
+printf '\n' >>"${run}/commands.txt"
+.venv/bin/python scripts/gpu/archive_run.py \
+    "${run}" \
+    --repository . \
+    --require-clean-repository \
+    --archive "${run}.tar.gz" >"${run}.archive.log" 2>&1
 sha256sum "${run}.tar.gz" >"${run}.tar.gz.sha256"
 printf '%s\n' "${run}"

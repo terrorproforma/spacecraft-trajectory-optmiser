@@ -64,6 +64,8 @@ typedef struct spacepdhcg_cuda_scvx_options {
     double maximum_trust_radius;
     double shrink_factor;
     double expansion_factor;
+    double fixed_inner_tolerance;
+    uint64_t fixed_inner_iteration_limit;
 } spacepdhcg_cuda_scvx_options;
 
 typedef struct spacepdhcg_cuda_scvx_iteration {

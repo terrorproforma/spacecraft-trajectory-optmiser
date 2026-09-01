@@ -596,6 +596,8 @@ IntegrationResult run_resident_sequence(
             8.0,
             0.5,
             1.8,
+            sanitizer_mode ? 1.0e-2 : 0.0,
+            sanitizer_mode ? 5'000U : 0U,
         };
         spacepdhcg_cuda_scvx_driver* driver = nullptr;
         test::status_require(
@@ -626,11 +628,12 @@ IntegrationResult run_resident_sequence(
             outer.status == SPACEPDHCG_CUDA_SCVX_CONVERGED,
             "production outer driver did not converge"
         );
+        const double quality_tolerance = sanitizer_mode ? 1.0e-2 : 1.0e-6;
         test::require(
-            outer.canonical_residual <= 1.0e-6
-                && outer.dynamics_defect <= 1.0e-6
-                && outer.path_violation <= 1.0e-6
-                && outer.terminal_residual <= 1.0e-6,
+            outer.canonical_residual <= quality_tolerance
+                && outer.dynamics_defect <= quality_tolerance
+                && outer.path_violation <= quality_tolerance
+                && outer.terminal_residual <= quality_tolerance,
             "production outer driver failed final quality"
         );
         test::require(
@@ -1159,7 +1162,9 @@ IntegrationResult run_pd6() {
 
 int main(const int argc, char** argv) {
     const auto mode = argc > 1 ? std::string_view(argv[1]) : std::string_view{};
-    sanitizer_mode = mode == "--sanitizer";
+    sanitizer_mode =
+        mode == "--sanitizer"
+        || mode == "--production-outer-sanitizer";
     tight_residual_mode =
         mode == "--tight-pd3" || mode == "--tight-pd3-default-stream"
         || mode == "--tight-pd3-1k" || mode == "--tight-pd3-10k"
@@ -1198,7 +1203,7 @@ int main(const int argc, char** argv) {
     } else if (mode == "--tight-pd3-300k") {
         tight_iteration_limit = 300'000U;
     }
-    if (sanitizer_mode) {
+    if (mode == "--sanitizer") {
         const auto hcw = run_hcw();
         std::printf(
             "{\"case\":\"device_scvx_integration_sanitizer\",\"family\":\"hcw\","
@@ -1284,9 +1289,6 @@ int main(const int argc, char** argv) {
             );
             return 0;
         }
-        if (mode == "--production-outer-sanitizer") {
-            return 0;
-        }
         const auto pd3 = run_pd3();
         const auto low_thrust = run_low_thrust();
         const auto pd6 = run_pd6();
@@ -1327,8 +1329,10 @@ int main(const int argc, char** argv) {
             maximum_nonlinear,
             maximum_trajectory_difference
         );
-        return maximum_canonical <= 1.0e-6
-                && maximum_nonlinear <= 1.0e-6
+        const double quality_tolerance =
+            mode == "--production-outer-sanitizer" ? 1.0e-2 : 1.0e-6;
+        return maximum_canonical <= quality_tolerance
+                && maximum_nonlinear <= quality_tolerance
             ? 0
             : 11;
     }
