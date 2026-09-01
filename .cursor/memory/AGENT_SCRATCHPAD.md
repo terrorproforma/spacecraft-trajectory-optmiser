@@ -478,3 +478,35 @@ Use this file as persistent, repo-local execution memory.
 
 - Real freeze still requires complete portable G4/G5 matrices; synthetic decision outcomes have no
   scientific meaning.
+
+### 2026-09-01 22:24 AEST - G4-G7 roadmap integration
+
+#### Task Summary
+
+- Assembled the requested P1-C/P1-E/P1-D, QOCO handback, native inventory, G5, G6, and G7 commits
+  from base `a33e950` in the isolated `integration/roadmap-code` worktree.
+- Preserved additive model behavior and all append-only histories while resolving shared CUDA,
+  schema-entry-point, and lifecycle conflicts.
+
+#### Mistakes And Fixes
+
+- `[tool]` A committer-identity failure left the first cherry-pick staged. Continued it with a
+  command-local identity and did not alter Git configuration.
+- `[tool]` CMake cannot copy a symlinked pinned PDHCG checkout. Replaced the ignored symlink with an
+  isolated local clone at commit `167c8b7` and tree `62b05e6`.
+- `[self]` Shared P1-C/P1-D telemetry conflict text would have double-counted refined solve timing.
+  Retained the single complete accounting path and compiled all CUDA targets to confirm the merge.
+
+#### What Worked
+
+- Ruff lint, 174 Python tests, focused G4-G7 tests, QOCO CPU ABI tests, complete native Release,
+  Debug, and ASan/UBSan matrices, CMake/wheel consumers, and all `sm_120` CUDA/G5 builds passed.
+- Pure-QOCO and hybrid labels remain distinct; P1-E path inventory, P1-D independent inventory,
+  QOCO handback, G5 logical ranks, G6 refusal/reproducibility, and G7 CPU seams remain present.
+
+#### Guardrails For Next Session
+
+- Cherry-pick the forthcoming P1-C trust-globalization commit onto this branch, resolve append-only
+  histories additively, then repeat the serialized GPU correctness/sanitizer matrix only when the
+  RTX 5090 is free.
+- Do not infer G4/G5 acceptance from compile, CPU/static, synthetic, or logical-rank validation.

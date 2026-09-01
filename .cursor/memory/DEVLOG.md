@@ -187,3 +187,30 @@
 - Follow-up notes / risks:
   - Real freeze remains blocked on complete portable G4/G5 evidence. Existing G4 failures and G5
     authorisation state are not altered by this tooling.
+
+## 2026-09-01 22:24 AEST
+
+- Task summary:
+  - Integrated all requested completed G4-G7 implementation commits on isolated branch
+    `integration/roadmap-code` from stable base `a33e950`.
+- Changes:
+  - Resolved shared CUDA outer-driver, QOCO handback, runtime-coordinate, CLI entry-point, and
+    append-only history conflicts without weakening classifications, policies, or tests.
+  - Preserved P1-E inventory, P1-D path/forcing corrections, P1-C lifecycle accounting, pure/hybrid
+    QOCO distinction, G5 interfaces, G6 tooling, and G7 CPU/CUDA seams.
+- Validation:
+  - Ruff lint passed; full Python suite passed 174 tests with three optional QOCO skips.
+  - Pinned CPU QOCO ABI/handback suite passed 29/29 when supplied `libqoco.so`.
+  - Top-level native Release, Debug, and ASan/UBSan each passed 43/43; standalone native-core
+    Release, Debug, and ASan/UBSan each passed 8/8, all with warnings as errors.
+  - CUDA/G5 Release, Debug, and sanitizer-capable configurations built all 77 targets for `sm_120`;
+    logical-rank contracts passed in Release and Debug.
+  - Pinned QOCO CPU and CUDA/cuDSS builds, native wheel ABI, both packaged CLIs, and the CMake
+    consumer passed. No GPU executable, measured benchmark, energy campaign, sanitizer execution,
+    or multi-GPU scaling run was launched.
+- Follow-up notes / risks:
+  - Full-repository Ruff format check reports 43 pre-existing/unintegrated files would be reformatted;
+    Ruff lint itself is clean.
+  - Add the forthcoming P1-C trust-globalization commit by ordinary cherry-pick, preserve histories
+    additively, rerun CPU/static matrices, then serialize deferred GPU validation after contention
+    clears.
