@@ -803,6 +803,8 @@ struct ScvxMetrics {
     double glide_slope;
     double angular_rate;
     double quaternion;
+    double maximum_stage_trust_distance;
+    double terminal_trust_distance;
 };
 
 template <int Model, int StateDimension, int ControlDimension>
@@ -1103,6 +1105,7 @@ __global__ void scvx_metrics_kernel(
     const int model,
     const double feasibility_penalty,
     const double virtual_penalty,
+    const double trust_radius,
     const spacepdhcg_cuda_scvx_numeric_update update,
     const double* scalar_lower,
     const double* variable_lower,
@@ -1147,7 +1150,12 @@ __global__ void scvx_metrics_kernel(
                 result.objective += 0.5 * value * value;
             }
         }
-        result.step = fmax(result.step, sqrt(step_squared));
+        const double stage_step = sqrt(step_squared);
+        result.step = fmax(result.step, stage_step);
+        result.maximum_stage_trust_distance = fmax(
+            result.maximum_stage_trust_distance,
+            stage_step - trust_radius
+        );
     }
     double terminal_step_squared = 0.0;
     for (size_t component = 0U; component < state_dimension; ++component) {
@@ -1160,7 +1168,12 @@ __global__ void scvx_metrics_kernel(
             * scale;
         terminal_step_squared += delta * delta;
     }
-    result.step = fmax(result.step, sqrt(terminal_step_squared));
+    const double terminal_step = sqrt(terminal_step_squared);
+    result.step = fmax(result.step, terminal_step);
+    result.terminal_trust_distance = fmax(
+        0.0,
+        terminal_step - trust_radius
+    );
     for (size_t node = 1; node <= intervals; ++node) {
         for (size_t state = 0; state < state_dimension; ++state) {
             result.dynamics = fmax(
@@ -1724,6 +1737,7 @@ spacepdhcg_cuda_status collect_metrics(
     const double* states,
     const double* controls,
     const bool include_virtual,
+    const double trust_radius,
     const cudaStream_t stream,
     double* replay_seconds,
     double* d2h_seconds
@@ -1765,6 +1779,7 @@ spacepdhcg_cuda_status collect_metrics(
         static_cast<int>(driver->problem.dynamics.model),
         driver->options.feasibility_penalty,
         driver->options.virtual_penalty,
+        trust_radius,
         driver->problem.numeric_update,
         view_pointer<const double>(driver->problem.numeric.scalar_lower),
         view_pointer<const double>(driver->problem.numeric.variable_lower),
@@ -2148,6 +2163,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         driver->candidate_states,
         driver->candidate_controls,
         false,
+        driver->options.initial_trust_radius,
         native,
         &result->replay_seconds,
         &result->d2h_seconds
@@ -2396,6 +2412,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             driver->candidate_states,
             driver->candidate_controls,
             true,
+            trust_radius,
             native,
             &result->replay_seconds,
             &result->d2h_seconds
@@ -2535,6 +2552,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 driver->candidate_states,
                 driver->candidate_controls,
                 true,
+                trust_radius,
                 native,
                 &result->replay_seconds,
                 &result->d2h_seconds
@@ -2703,6 +2721,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             last_diagnostics.recovery_final_primal_residual,
             last_diagnostics.recovery_final_stationarity,
             last_diagnostics.recovery_final_complementarity,
+            candidate.maximum_stage_trust_distance,
+            candidate.terminal_trust_distance,
         };
         result->outer_iterations = outer + 1U;
         if (outer + 1U >= driver->options.minimum_outer_iterations
@@ -2727,6 +2747,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         view_pointer<const double>(driver->problem.reference_states),
         view_pointer<const double>(driver->problem.reference_controls),
         false,
+        trust_radius,
         native,
         &result->replay_seconds,
         &result->d2h_seconds

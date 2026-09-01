@@ -1682,6 +1682,9 @@ IntegrationResult run_resident_sequence(
                     "\"resolve_fingerprint_match\":%d,\"trust_action\":%d,"
                     "\"trust_before\":%.17g,\"trust_after\":%.17g,"
                     "\"predicted\":%.17g,\"actual\":%.17g,\"ratio\":%.17g,"
+                    "\"step_fraction\":%.17g,"
+                    "\"maximum_stage_trust_distance\":%.17g,"
+                    "\"terminal_trust_distance\":%.17g,"
                     "\"candidate_dynamics\":%.17g,\"candidate_path\":%.17g,"
                     "\"candidate_terminal\":%.17g,\"candidate_virtual\":%.17g,"
                     "\"current_merit\":%.17g,\"candidate_merit\":%.17g,"
@@ -1729,6 +1732,9 @@ IntegrationResult run_resident_sequence(
                     record.predicted_reduction,
                     record.actual_reduction,
                     record.reduction_ratio,
+                    record.step_fraction,
+                    record.maximum_stage_trust_distance,
+                    record.terminal_trust_distance,
                     record.dynamics_defect,
                     record.path_violation,
                     record.terminal_residual,

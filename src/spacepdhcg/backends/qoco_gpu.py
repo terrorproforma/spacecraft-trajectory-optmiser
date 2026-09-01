@@ -855,6 +855,7 @@ class QOCOGPU:
     """Persistent exact QP/SOCP adapter for QOCO's CUDA or builtin library."""
 
     is_persistent = True
+    supports_dynamic_solve_settings = True
 
     def __init__(
         self,

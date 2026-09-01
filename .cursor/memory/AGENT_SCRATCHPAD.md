@@ -510,3 +510,38 @@ Use this file as persistent, repo-local execution memory.
   histories additively, then repeat the serialized GPU correctness/sanitizer matrix only when the
   RTX 5090 is free.
 - Do not infer G4/G5 acceptance from compile, CPU/static, synthetic, or logical-rank validation.
+
+### 2026-09-01 23:00 AEST - P1-C globalization and trust audit
+
+#### What Worked
+
+- Four unchanged-reference PDHCG attempts exercised radii `1, 0.5, 0.25, 0.125`; all were
+  rejected and produced distinct numeric fingerprints while each same-CQP resolve fingerprint
+  matched. This proves the device loop does retry when its attempt budget exceeds one.
+- The accurate radius-1 replay is inside the weighted trust region: maximum step fraction
+  `0.5629445645`, maximum stage trust distance `0`, terminal trust distance `0`. The nonlinear
+  merit blow-up is model disagreement, not a trust-cone sign, offset, or scale defect.
+- The pure-QOCO reference owner now retains one backend across numeric updates and closes it
+  transactionally. Its nonlinear lifecycle converges in two accepted steps with one creation,
+  one update, two solves, terminal residual `2.15e-13`, and ratios approaching one.
+
+#### Mistakes And Fixes
+
+- `[prior implementation]` The Python nonlinear owner constructed and leaked a backend for every
+  candidate and resolve. It now updates one persistent QOCO workspace; fixed-settings Clarabel is
+  rebuilt only when requested solve settings change.
+- `[prior implementation]` Python restoration/convergence conflated trajectory step with
+  feasibility and shrank an already converged retained reference. Feasibility and step criteria
+  are now evaluated separately, matching the resident device owner.
+- `[self]` Parallel Debug/Release CTest runs contended for the GPU and timed out the 180-second
+  production test. Reran the 51 short tests per configuration separately; all passed, and the
+  production outer regression had already passed alone.
+
+#### Follow-Ups / Risks
+
+- Fixed/adaptive PDHCG remain honestly negative for displaced P1-C: four attempts accepted zero
+  steps and ended at radius `0.0625`. Do not claim G4 PASS from the pure-QOCO reference script.
+- QOCO-GPU returned materially different near-optimal radius-1 candidates across cold executions;
+  preserve the exact output and forcing qualification for every handback.
+- The integrated C++ G4 fixture still receives its attempt budget from the command line. Passing
+  `outer-iterations=1` is a one-candidate run and is not valid globalization qualification.

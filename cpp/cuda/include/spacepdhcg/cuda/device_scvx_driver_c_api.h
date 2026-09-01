@@ -203,6 +203,8 @@ typedef struct spacepdhcg_cuda_scvx_iteration {
     double recovery_final_primal_residual;
     double recovery_final_stationarity;
     double recovery_final_complementarity;
+    double maximum_stage_trust_distance;
+    double terminal_trust_distance;
 } spacepdhcg_cuda_scvx_iteration;
 
 typedef struct spacepdhcg_cuda_scvx_result {

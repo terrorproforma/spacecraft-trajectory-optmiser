@@ -214,3 +214,29 @@
   - Add the forthcoming P1-C trust-globalization commit by ordinary cherry-pick, preserve histories
     additively, rerun CPU/static matrices, then serialize deferred GPU validation after contention
     clears.
+
+## 2026-09-01 23:00 AEST
+
+- Task summary:
+  - Traced P1-C rejection retries, audited weighted trust cones, and wired persistent pure-QOCO
+    nonlinear handback through the reference SCvx owner.
+- Changes:
+  - Added stage/terminal trust-distance and step-fraction telemetry to resident CUDA iterations.
+  - Reused and closed one QOCO workspace across rejected trust updates and resolves; retained
+    Clarabel compatibility for fixed solve settings.
+  - Separated outer feasibility from step convergence/restoration and added zero-step/model-merit
+    consistency coverage.
+  - Added exact-dump and end-to-end pure-QOCO P1-C lifecycle runners.
+- Validation:
+  - Radius-1 displaced candidate: step fraction `0.5629445645`, stage/terminal trust distances
+    both zero, predicted `0.4545113592`, actual `-18.0675875576`, ratio `-39.7516743866`.
+  - Four adaptive PDHCG attempts used radii `1 -> 0.5 -> 0.25 -> 0.125 -> 0.0625`; zero accepted.
+  - Pure-QOCO reference lifecycle: converged, two accepted, terminal `2.15e-13`, one workspace,
+    one numeric update, two solves; model agreement approached one.
+  - Ruff passed; Python `142 passed, 3 optional QOCO skips`; Debug/Release Werror builds passed;
+    51 short CTests passed in each build; standalone production outer regression passed; CUDA
+    memcheck/racecheck/initcheck/synccheck were clean.
+- Follow-up notes / risks:
+  - G4 remains FAIL for the resident PDHCG policies and G5 remains unauthorized.
+  - A one-attempt G4 invocation is not globalization evidence; branch integration must run a
+    multi-attempt policy budget and wire pure QOCO into the canonical C++ RK4 campaign owner.

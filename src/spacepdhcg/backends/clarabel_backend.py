@@ -44,6 +44,8 @@ class PersistentClarabel:
     Clarabel's conventional cone coordinates.
     """
 
+    supports_dynamic_solve_settings = False
+
     def __init__(
         self,
         problem: CanonicalCQP,
