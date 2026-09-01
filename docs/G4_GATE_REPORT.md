@@ -163,6 +163,18 @@ reported as an executed matrix point. H5 and H6 therefore remain unresolved.
 
 ## Evidence
 
+Integrated clean-commit negative evidence:
+
+- `results/gpu/g4/qualification/g4-20260901-f48adf4-integrated.tar.gz`
+- execution commit: `f48adf4`
+- archive SHA-256: `880653ec4cf85aacda5702012e2271e80568a4cf7b8c0c3bf0668e2c8cac7e40`
+- decision SHA-256: `98f8863d46f03c58aba79a34fdd0785226df5d0e45ebfde823f405334751e7d4`
+- P1-C runtime SHA-256: `ed153267f75fa1a79b18b6f891f91fe6dfbc92e4048d06c1e36ee91a43801087`
+- RTX QOCO test SHA-256: `2e5fbb3500e435fe276df5629ee52624867e00e39eea517396e0dfcb832c8386`
+
+The archive is explicitly local-only and non-portable because no immutable artifact URI exists.
+That publication limitation is separate from the authoritative G4 FAIL decision.
+
 Clean corrective qualification after the fixed-pattern update implementation:
 
 - `results/gpu/g4/qualification/g4-20260901-2cbebb3-clean-corrective/`
