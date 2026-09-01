@@ -162,6 +162,27 @@ typedef struct spacepdhcg_cuda_scvx_iteration {
     spacepdhcg_cuda_recovery_reason recovery_reason;
     int32_t forcing_satisfied;
     int32_t final_polish_handoff;
+    double current_merit;
+    double candidate_merit;
+    double candidate_model_merit;
+    double current_dynamics_defect;
+    double current_path_violation;
+    double current_terminal_residual;
+    double scalar_primal_residual;
+    double box_primal_residual;
+    double cone_primal_residual;
+    double stationarity_residual;
+    double natural_residual;
+    uint64_t recovery_attempt_count;
+    uint64_t recovery_accepted_count;
+    uint64_t recovery_rejected_count;
+    double recovery_seconds;
+    uint64_t recovery_iterations;
+    double recovery_initial_residual;
+    double recovery_final_residual;
+    double recovery_final_primal_residual;
+    double recovery_final_stationarity;
+    double recovery_final_complementarity;
 } spacepdhcg_cuda_scvx_iteration;
 
 typedef struct spacepdhcg_cuda_scvx_result {

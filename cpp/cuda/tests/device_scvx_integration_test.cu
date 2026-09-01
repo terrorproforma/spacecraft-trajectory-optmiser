@@ -46,6 +46,7 @@ bool tight_all_mode = false;
 bool tight_pd6_mode = false;
 bool production_driver_mode = false;
 bool g4_sample_mode = false;
+bool g4_diagnostic_mode = false;
 std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
@@ -992,6 +993,55 @@ IntegrationResult run_resident_sequence(
             spacepdhcg_cuda_workspace_diagnostics(workspace, &diagnostics),
             "production outer diagnostics"
         );
+        if (g4_diagnostic_mode) {
+            dump_mode = true;
+            run_upstream_diagnostic(problem);
+            print_diagnostic_vector(
+                "persistent_primal",
+                problem.primal.download(problem.stream)
+            );
+            print_diagnostic_vector(
+                "persistent_dual",
+                problem.dual.download(problem.stream)
+            );
+            print_diagnostic_vector("retained_states", final_states);
+            print_diagnostic_vector("retained_controls", final_controls);
+            std::printf(
+                "{\"case\":\"g4_recovery_diagnostic\","
+                "\"attempts\":%llu,\"accepted\":%llu,\"rejected\":%llu,"
+                "\"trigger\":%d,\"outcome\":%d,\"seconds\":%.17g,"
+                "\"iterations\":%llu,\"initial\":%.17g,\"final\":%.17g,"
+                "\"primal\":%.17g,\"stationarity\":%.17g,"
+                "\"complementarity\":%.17g,\"stationarity_index\":%d,"
+                "\"stationarity_value\":%.17g,"
+                "\"scalar\":%.17g,\"box\":%.17g,\"cone\":%.17g,"
+                "\"natural\":%.17g}\n",
+                static_cast<unsigned long long>(
+                    diagnostics.recovery_attempt_count
+                ),
+                static_cast<unsigned long long>(diagnostics.recovery_count),
+                static_cast<unsigned long long>(
+                    diagnostics.recovery_rejected_count
+                ),
+                static_cast<int>(diagnostics.recovery_trigger_reason),
+                static_cast<int>(diagnostics.recovery_outcome_reason),
+                diagnostics.recovery_seconds,
+                static_cast<unsigned long long>(
+                    diagnostics.recovery_iterations
+                ),
+                diagnostics.recovery_initial_residual,
+                diagnostics.recovery_final_residual,
+                diagnostics.recovery_final_primal_residual,
+                diagnostics.recovery_final_stationarity,
+                diagnostics.recovery_final_complementarity,
+                diagnostics.recovery_stationarity_index,
+                diagnostics.recovery_stationarity_value,
+                diagnostics.scalar_primal_violation_inf,
+                diagnostics.box_violation_inf,
+                diagnostics.affine_cone_distance_inf,
+                diagnostics.natural_residual_inf
+            );
+        }
         std::printf(
             "{\"case\":\"production_outer\",\"model\":%d,"
             "\"outer_iterations\":%u,\"accepted\":%u,\"rejected\":%u,"
@@ -1079,6 +1129,20 @@ IntegrationResult run_resident_sequence(
                     "\"predicted\":%.17g,\"actual\":%.17g,\"ratio\":%.17g,"
                     "\"candidate_dynamics\":%.17g,\"candidate_path\":%.17g,"
                     "\"candidate_terminal\":%.17g,\"candidate_virtual\":%.17g,"
+                    "\"current_merit\":%.17g,\"candidate_merit\":%.17g,"
+                    "\"candidate_model_merit\":%.17g,"
+                    "\"current_dynamics\":%.17g,\"current_path\":%.17g,"
+                    "\"current_terminal\":%.17g,"
+                    "\"scalar_primal\":%.17g,\"box_primal\":%.17g,"
+                    "\"cone_primal\":%.17g,\"stationarity\":%.17g,"
+                    "\"natural\":%.17g,"
+                    "\"recovery_attempts\":%llu,"
+                    "\"recovery_accepted\":%llu,\"recovery_rejected\":%llu,"
+                    "\"recovery_seconds\":%.17g,\"recovery_iterations\":%llu,"
+                    "\"recovery_initial\":%.17g,\"recovery_final\":%.17g,"
+                    "\"recovery_primal\":%.17g,"
+                    "\"recovery_stationarity\":%.17g,"
+                    "\"recovery_complementarity\":%.17g,"
                     "\"scaling_refreshed\":%d,\"scaling_min\":%.17g,"
                     "\"scaling_max\":%.17g,\"warm_start\":%d,"
                     "\"recovery_mode\":%d,\"forcing_satisfied\":%d,"
@@ -1114,6 +1178,35 @@ IntegrationResult run_resident_sequence(
                     record.path_violation,
                     record.terminal_residual,
                     record.virtual_control,
+                    record.current_merit,
+                    record.candidate_merit,
+                    record.candidate_model_merit,
+                    record.current_dynamics_defect,
+                    record.current_path_violation,
+                    record.current_terminal_residual,
+                    record.scalar_primal_residual,
+                    record.box_primal_residual,
+                    record.cone_primal_residual,
+                    record.stationarity_residual,
+                    record.natural_residual,
+                    static_cast<unsigned long long>(
+                        record.recovery_attempt_count
+                    ),
+                    static_cast<unsigned long long>(
+                        record.recovery_accepted_count
+                    ),
+                    static_cast<unsigned long long>(
+                        record.recovery_rejected_count
+                    ),
+                    record.recovery_seconds,
+                    static_cast<unsigned long long>(
+                        record.recovery_iterations
+                    ),
+                    record.recovery_initial_residual,
+                    record.recovery_final_residual,
+                    record.recovery_final_primal_residual,
+                    record.recovery_final_stationarity,
+                    record.recovery_final_complementarity,
                     record.scaling_refreshed,
                     record.scaling_min,
                     record.scaling_max,
@@ -1723,14 +1816,16 @@ int main(const int argc, char** argv) {
         mode == "--production-outer"
         || mode == "--production-outer-sanitizer"
         || mode == "--h1-hcw"
-        || mode == "--g4-sample";
-    if (mode == "--g4-sample") {
+        || mode == "--g4-sample"
+        || mode == "--g4-diagnose";
+    if (mode == "--g4-sample" || mode == "--g4-diagnose") {
         test::require(
             argc == 12,
             "G4 mode requires family intervals policy warm quality "
             "outer-iterations dispersion quality-tier scaling-mode policy-sha256"
         );
         g4_sample_mode = true;
+        g4_diagnostic_mode = mode == "--g4-diagnose";
         g4_family = argv[2];
         g4_intervals = std::stoull(argv[3]);
         g4_policy = argv[4];

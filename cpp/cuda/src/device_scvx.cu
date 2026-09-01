@@ -1265,8 +1265,7 @@ __global__ void scvx_metrics_kernel(
         : virtual_sum / static_cast<double>(virtual_elements);
     result.merit = result.objective
         + feasibility_penalty
-            * (actual_path_sum + actual_terminal_sum)
-        + virtual_penalty * virtual_measure;
+            * (actual_path_sum + actual_terminal_sum);
     result.model_merit = result.objective
         + feasibility_penalty * (model_path_sum + model_terminal_sum)
         + virtual_penalty * virtual_measure;
@@ -2097,7 +2096,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         }
         result->update_seconds += last_diagnostics.update_seconds;
         result->scaling_seconds += last_diagnostics.scaling_seconds;
-        result->solve_seconds += last_diagnostics.solve_seconds;
+        result->solve_seconds += std::max(
+            0.0,
+            last_diagnostics.solve_seconds
+                - last_diagnostics.recovery_seconds
+        );
         result->recovery_seconds += last_diagnostics.recovery_seconds;
         result->residual_seconds += last_diagnostics.residual_seconds;
         result->inner_iterations += last_diagnostics.iterations;
@@ -2134,12 +2137,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         }
         ScvxMetrics candidate = *driver->host_metrics;
         const auto acceptance_started = std::chrono::steady_clock::now();
-        double predicted = std::max(
-            1.0e-12,
-            current.merit - candidate.model_merit
-        );
+        double predicted = current.merit - candidate.model_merit;
         double actual = current.merit - candidate.merit;
-        double ratio = actual / predicted;
+        double ratio = predicted > 1.0e-12
+            ? actual / predicted
+            : -std::numeric_limits<double>::infinity();
         const double current_outer = maximum_outer_residual(current);
         const double candidate_outer = maximum_outer_residual(candidate);
         bool restoration = candidate_outer
@@ -2224,6 +2226,17 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 re_solved = true;
                 ++result->resolved_steps;
                 result->inner_iterations += last_diagnostics.iterations;
+                result->solve_seconds += std::max(
+                    0.0,
+                    last_diagnostics.solve_seconds
+                        - last_diagnostics.recovery_seconds
+                );
+                result->recovery_seconds +=
+                    last_diagnostics.recovery_seconds;
+                result->residual_seconds +=
+                    last_diagnostics.residual_seconds;
+                result->recovery_iterations +=
+                    last_diagnostics.recovery_iterations;
                 if (last_diagnostics.natural_residual_inf
                     <= driver->options.resolve_trigger_multiple
                         * solve_options.optimality_tolerance) {
@@ -2257,9 +2270,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 return api_status;
             }
             candidate = *driver->host_metrics;
-            predicted = std::max(1.0e-12, current.merit - candidate.model_merit);
+            predicted = current.merit - candidate.model_merit;
             actual = current.merit - candidate.merit;
-            ratio = actual / predicted;
+            ratio = predicted > 1.0e-12
+                ? actual / predicted
+                : -std::numeric_limits<double>::infinity();
             restoration = maximum_outer_residual(candidate)
                 <= driver->options.restoration_reduction * current_outer;
             accepted =
@@ -2270,13 +2285,16 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                      && ratio >= driver->options.acceptance_threshold)
                     || restoration);
         }
-        if (maximum_outer_residual(current)
+        const bool retained_converged =
+            maximum_outer_residual(current)
                 <= driver->options.convergence_tolerance
-            && current.step <= driver->options.step_tolerance) {
+            && current.step <= driver->options.step_tolerance;
+        if (retained_converged) {
             accepted = false;
             restoration = false;
         }
         const double radius_before = trust_radius;
+        const ScvxMetrics retained_before = current;
         auto trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_RETAIN;
         if (accepted) {
             cuda_status = cudaMemcpyAsync(
@@ -2314,12 +2332,29 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND;
             }
         } else {
-            ++result->rejected_steps;
-            trust_radius = std::max(
-                driver->options.minimum_trust_radius,
-                driver->options.shrink_factor * trust_radius
-            );
-            trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_SHRINK;
+            if (!retained_converged) {
+                ++result->rejected_steps;
+                api_status = spacepdhcg_cuda_workspace_restore_async(
+                    driver->problem.workspace,
+                    driver->problem.topology_fingerprint,
+                    checkpoint_view,
+                    stream
+                );
+                if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                    api_status = spacepdhcg_cuda_workspace_wait(
+                        driver->problem.workspace
+                    );
+                }
+                if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+                    result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
+                    return api_status;
+                }
+                trust_radius = std::max(
+                    driver->options.minimum_trust_radius,
+                    driver->options.shrink_factor * trust_radius
+                );
+                trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_SHRINK;
+            }
         }
         result->acceptance_seconds += std::chrono::duration<double>(
             std::chrono::steady_clock::now() - acceptance_started
@@ -2374,6 +2409,27 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     && phase == SPACEPDHCG_CUDA_SCVX_POLISH
                 ? 1
                 : 0,
+            retained_before.merit,
+            candidate.merit,
+            candidate.model_merit,
+            retained_before.dynamics,
+            retained_before.path,
+            retained_before.terminal,
+            last_diagnostics.scalar_primal_violation_inf,
+            last_diagnostics.box_violation_inf,
+            last_diagnostics.affine_cone_distance_inf,
+            last_diagnostics.stationarity_inf,
+            last_diagnostics.natural_residual_inf,
+            last_diagnostics.recovery_attempt_count,
+            last_diagnostics.recovery_count,
+            last_diagnostics.recovery_rejected_count,
+            last_diagnostics.recovery_seconds,
+            last_diagnostics.recovery_iterations,
+            last_diagnostics.recovery_initial_residual,
+            last_diagnostics.recovery_final_residual,
+            last_diagnostics.recovery_final_primal_residual,
+            last_diagnostics.recovery_final_stationarity,
+            last_diagnostics.recovery_final_complementarity,
         };
         result->outer_iterations = outer + 1U;
         if (outer + 1U >= driver->options.minimum_outer_iterations
@@ -2411,7 +2467,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         result->status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
     }
     result->objective = current.objective;
-    result->canonical_residual = last_diagnostics.natural_residual_inf;
+    result->canonical_residual =
+        result->accepted_steps == 0U
+            && initial_outer_residual
+                <= driver->options.convergence_tolerance
+        ? 0.0
+        : last_diagnostics.natural_residual_inf;
     result->dynamics_defect = current.dynamics;
     result->path_violation = current.path;
     result->terminal_residual = current.terminal;

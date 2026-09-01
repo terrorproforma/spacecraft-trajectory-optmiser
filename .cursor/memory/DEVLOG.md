@@ -40,3 +40,20 @@
     not itself provide nonlinear P1-C/P1-D/P1-E handback.
   - A 15-outer P1-C run exceeded 30 minutes and was terminated. The full matrix remains censored,
     H5/H6 unresolved, G4 failed, and G5 unauthorized.
+
+## 2026-09-01 22:05 AEST
+
+- Task summary:
+  - Isolated the displaced P1-C failure block-by-block and added complete recovery/merit telemetry.
+- Changes:
+  - Corrected actual-merit semantics, raw predicted-reduction sign handling, rejected warm-state
+    rollback, converged no-op handling, and re-solve recovery cost accounting.
+  - Extended the exact-dump comparator to arbitrary P1-C horizons and optional QOCO-GPU runs.
+- Validation:
+  - Exact P1-C still fails: recovery primal `1.016e-9`, recovery stationarity `3.853`,
+    rolled-back canonical residual `5.654e-4`, zero accepted steps.
+  - Identical-CQP QOCO-GPU reaches canonical primal `4.680e-7`, dual `9.090e-10`.
+  - Focused Python tests pass 35/35; Release warnings-as-errors build and production outer
+    regression pass.
+- Follow-up notes / risks:
+  - G4 remains failed. No H5/H6 matrix or G5 work was started.

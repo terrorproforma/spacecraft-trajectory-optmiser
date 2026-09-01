@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from spacepdhcg.backends import PDHCGOneShot, PersistentClarabel
+from spacepdhcg.backends import QOCOGPU, PDHCGOneShot, PersistentClarabel
 from spacepdhcg.cqp import (
     CanonicalCQP,
     ConeBlock,
@@ -214,6 +214,7 @@ def evaluate(
     *,
     normal_dual: FloatArray,
     cpu_objective: float,
+    intervals: int,
 ) -> IndependentQuality:
     """Recompute KKT, trajectory, and objective quantities without backend buffers."""
 
@@ -304,11 +305,17 @@ def evaluate(
     )
 
     objective = float(0.5 * primal @ (quadratic @ primal) + values.linear @ primal)
+    if intervals < 2:
+        raise ValueError("powered-descent diagnostics require at least two intervals")
+    state_elements = (intervals + 1) * 7
+    control_elements = intervals * 4
     initial_rows = slice(0, 7)
-    dynamics_rows = slice(7, 21)
-    terminal_rows = slice(21, 27)
-    states = primal[:21].reshape(3, 7)
-    controls = primal[21:29].reshape(2, 4)
+    dynamics_rows = slice(7, 7 + intervals * 7)
+    terminal_rows = slice(dynamics_rows.stop, dynamics_rows.stop + 6)
+    states = primal[:state_elements].reshape(intervals + 1, 7)
+    controls = primal[
+        state_elements : state_elements + control_elements
+    ].reshape(intervals, 4)
     nonlinear_defect = np.vstack(
         [
             states[index + 1]
@@ -386,6 +393,7 @@ def _solution_record(
     *,
     normal_dual: FloatArray,
     cpu_objective: float,
+    intervals: int,
 ) -> dict[str, Any]:
     def finite_or_none(value: float) -> float | None:
         return float(value) if np.isfinite(value) else None
@@ -403,6 +411,7 @@ def _solution_record(
                 solution,
                 normal_dual=normal_dual,
                 cpu_objective=cpu_objective,
+                intervals=intervals,
             )
         ),
     }
@@ -415,14 +424,18 @@ def run(
     upstream_variant: str | None,
     upstream_start: str,
     iteration_limit: int,
+    cpu_tolerance: float,
+    intervals: int,
+    qoco_library: Path | None,
+    inspect_variable: int | None,
 ) -> dict[str, Any]:
     canonical = load_dump(dump)
     cpu = PersistentClarabel(
         canonical,
-        tolerance=1.0e-10,
+        tolerance=cpu_tolerance,
         iteration_limit=2_000,
     ).solve()
-    if not cpu.solved:
+    if not cpu.solved and cpu.status != "AlmostSolved":
         raise RuntimeError(f"Clarabel failed with status {cpu.status}")
     cpu_normal_dual = cpu.dual.copy()
     cpu_normal_dual[canonical.structure.n_constraints :] *= -1.0
@@ -439,9 +452,53 @@ def run(
             cpu,
             normal_dual=cpu_normal_dual,
             cpu_objective=cpu_objective,
+            intervals=intervals,
         ),
         "upstream_variant": upstream_variant,
     }
+    if inspect_variable is not None:
+        column = canonical.structure.constraint.matrix(
+            canonical.values.constraint
+        ).getcol(inspect_variable).tocoo()
+        scalar_value = np.asarray(
+            canonical.structure.constraint.matrix(
+                canonical.values.constraint
+            ) @ cpu.primal,
+            dtype=np.float64,
+        )
+        result["inspected_variable"] = {
+            "index": inspect_variable,
+            "primal": float(cpu.primal[inspect_variable]),
+            "linear": float(canonical.values.linear[inspect_variable]),
+            "quadratic_gradient": float(
+                (
+                    canonical.structure.quadratic.matrix(
+                        canonical.values.quadratic
+                    ).getrow(inspect_variable)
+                    @ cpu.primal
+                ).item()
+            ),
+            "scalar_rows": [
+                {
+                    "row": int(row),
+                    "coefficient": float(value),
+                    "activity": float(scalar_value[row]),
+                    "lower": (
+                        float(canonical.values.lower[row])
+                        if np.isfinite(canonical.values.lower[row])
+                        else None
+                    ),
+                    "upper": (
+                        float(canonical.values.upper[row])
+                        if np.isfinite(canonical.values.upper[row])
+                        else None
+                    ),
+                    "dual": float(cpu_normal_dual[row]),
+                    "stationarity": float(value * cpu_normal_dual[row]),
+                }
+                for row, value in zip(column.row, column.data, strict=True)
+            ],
+        }
     if persistent_output is not None:
         persistent = load_persistent_solution(persistent_output)
         result["persistent_cuda"] = _solution_record(
@@ -449,6 +506,7 @@ def run(
             persistent,
             normal_dual=persistent.dual,
             cpu_objective=cpu_objective,
+            intervals=intervals,
         )
     if upstream_variant is not None:
         parameters = {
@@ -469,9 +527,29 @@ def run(
             solution,
             normal_dual=-solution.dual,
             cpu_objective=cpu_objective,
+            intervals=intervals,
         )
         result["upstream_parameters"] = parameters
         result["upstream_start"] = upstream_start
+    if qoco_library is not None:
+        with QOCOGPU(
+            canonical,
+            library_path=qoco_library,
+            tolerance=cpu_tolerance,
+            iteration_limit=2_000,
+        ) as backend:
+            qoco = backend.solve()
+            report = backend.last_report
+        qoco_normal_dual = qoco.dual.copy()
+        qoco_normal_dual[canonical.structure.n_constraints :] *= -1.0
+        result["qoco_gpu"] = _solution_record(
+            canonical,
+            qoco,
+            normal_dual=qoco_normal_dual,
+            cpu_objective=cpu_objective,
+            intervals=intervals,
+        )
+        result["qoco_report"] = asdict(report) if report is not None else None
     return result
 
 
@@ -490,6 +568,10 @@ def main() -> None:
         default="cold",
     )
     parser.add_argument("--iteration-limit", type=int, default=1_000_000)
+    parser.add_argument("--cpu-tolerance", type=float, default=1.0e-10)
+    parser.add_argument("--intervals", type=int, default=2)
+    parser.add_argument("--qoco-library", type=Path)
+    parser.add_argument("--inspect-variable", type=int)
     arguments = parser.parse_args()
     result = run(
         arguments.dump,
@@ -497,6 +579,10 @@ def main() -> None:
         upstream_variant=arguments.upstream_variant,
         upstream_start=arguments.upstream_start,
         iteration_limit=arguments.iteration_limit,
+        cpu_tolerance=arguments.cpu_tolerance,
+        intervals=arguments.intervals,
+        qoco_library=arguments.qoco_library,
+        inspect_variable=arguments.inspect_variable,
     )
     payload = json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n"
     if arguments.output is None:

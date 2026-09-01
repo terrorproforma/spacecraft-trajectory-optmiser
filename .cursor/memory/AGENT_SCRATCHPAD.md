@@ -192,3 +192,29 @@ Use this file as persistent, repo-local execution memory.
   remains the authoritative blocker. Do not execute or claim the full matrix.
 - The Python QOCO adapter has a valid primal-only handoff, but the nonlinear G4 family owners still
   need an end-to-end handback before H6 can be decided.
+
+### 2026-09-01 22:05 AEST - Displaced P1-C recovery diagnosis
+
+#### What Worked
+
+- The exact integrated command proves recovery does trigger on the final post-update CQP:
+  one attempt, 50,000 recovery iterations, identical `94c9c3c3e13187ef` numeric fingerprint.
+- Independent Clarabel and QOCO-GPU comparisons use the same 507-variable, 453-scalar-row,
+  391-cone-row dump (`19ac9e95...6598`). QOCO reaches canonical primal `4.680e-7`,
+  dual `9.090e-10`; the retained PDHCG iterate remains at `5.654e-4`.
+- Recovery repairs primal feasibility to `1.016e-9` but creates stationarity `3.853`; it therefore
+  rolls back transactionally. The worst row is a virtual-control epigraph pair, not stale data.
+
+#### Mistakes And Fixes
+
+- `[prior implementation]` Re-solve recovery time and iterations were omitted from outer totals;
+  the actual 91.7 seconds and 50,000 iterations are now exposed.
+- `[prior implementation]` Actual nonlinear merit incorrectly included virtual control, unlike the
+  CPU driver. It is now restricted to fuel plus replayed terminal/path penalty.
+- `[self]` Tested scaling, ergodic, active-set, and epigraph heuristics; none qualified generically,
+  so all experimental solver changes were removed instead of weakening recovery acceptance.
+
+#### Follow-Ups / Risks
+
+- G4 remains FAIL and G5 remains unauthorized. The remaining defect is the projected-KKT primal/
+  active-set recovery algorithm on larger L1-epigraph CQPs, not trigger, fingerprint, or reporting.
