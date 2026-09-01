@@ -137,16 +137,12 @@ class NvmlPower:
         if self.library.nvmlInit_v2() != 0:
             raise G4ContractError("NVML initialization failed")
         self.handle = ctypes.c_void_p()
-        if self.library.nvmlDeviceGetHandleByIndex_v2(
-            device_index, ctypes.byref(self.handle)
-        ) != 0:
+        if self.library.nvmlDeviceGetHandleByIndex_v2(device_index, ctypes.byref(self.handle)) != 0:
             raise G4ContractError(f"NVML device {device_index} unavailable")
 
     def watts(self) -> float:
         milliwatts = ctypes.c_uint()
-        status = self.library.nvmlDeviceGetPowerUsage(
-            self.handle, ctypes.byref(milliwatts)
-        )
+        status = self.library.nvmlDeviceGetPowerUsage(self.handle, ctypes.byref(milliwatts))
         if status != 0:
             raise RuntimeError(f"NVML power query failed with status {status}")
         return milliwatts.value / 1000.0
@@ -344,6 +340,82 @@ class PersistentExecutor:
         startup = self.cuda_startup_seconds
         return "".join(lines), "".join(stderr), returncode, timeout, generation, startup
 
+    def execute_batch(
+        self, commands: list[list[str]], timeout_seconds: int
+    ) -> tuple[dict[str, dict[str, Any]], str, str, int, float]:
+        """Execute compatible rows concurrently and route identity-tagged records."""
+
+        if not commands:
+            raise ValueError("persistent executor batch cannot be empty")
+        self.ensure_ready()
+        assert self.process.stdin is not None
+        responses = {
+            command[18]: {
+                "stdout": [],
+                "returncode": None,
+                "timeout": False,
+                "complete": False,
+                "elapsed_seconds": None,
+            }
+            for command in commands
+        }
+        if len(responses) != len(commands):
+            raise G4ContractError("batch contains duplicate coordinate identities")
+        self.process.stdin.write(f"batch\t{len(commands)}\n")
+        for command in commands:
+            self.process.stdin.write("\t".join(command[1:]) + "\n")
+        self.process.stdin.flush()
+        deadline = time.monotonic() + timeout_seconds + 5.0
+        shared_lines: list[str] = []
+        batch_complete = False
+        while not batch_complete:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0.0:
+                self._stop()
+                break
+            try:
+                line = self._stdout.get(timeout=remaining)
+            except queue.Empty:
+                self._stop()
+                break
+            if line is None:
+                break
+            try:
+                record = json.loads(line.replace("-inf", "-Infinity"))
+            except json.JSONDecodeError:
+                shared_lines.append(line)
+                continue
+            case = record.get("case")
+            identifier = record.get("coordinate_id")
+            if case == "g4_server_result" and identifier in responses:
+                responses[identifier]["returncode"] = int(record["returncode"])
+                responses[identifier]["complete"] = True
+                responses[identifier]["elapsed_seconds"] = float(record["elapsed_seconds"])
+            elif case == "g4_batch_result":
+                batch_complete = True
+            elif identifier in responses:
+                responses[identifier]["stdout"].append(line)
+            else:
+                shared_lines.append(line)
+        for response in responses.values():
+            if not response["complete"] and time.monotonic() >= deadline:
+                response["timeout"] = True
+                response["returncode"] = 124
+            response["stdout"] = "".join(response["stdout"])
+        stderr: list[str] = []
+        while True:
+            try:
+                stderr.append(self._stderr.get_nowait())
+            except queue.Empty:
+                break
+        return (
+            responses,
+            "".join(shared_lines),
+            "".join(stderr),
+            self.generation,
+            self.cuda_startup_seconds,
+        )
+
     def close(self) -> None:
         if self.process.poll() is None and self.process.stdin is not None:
             try:
@@ -376,13 +448,10 @@ def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
             fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as error:
             raise G4ContractError("source campaign worker is still active") from error
-        database = sqlite3.connect(
-            f"file:{source / 'checkpoint.sqlite3'}?mode=ro", uri=True
-        )
+        database = sqlite3.connect(f"file:{source / 'checkpoint.sqlite3'}?mode=ro", uri=True)
         database.row_factory = sqlite3.Row
         metadata = {
-            row["key"]: row["value"]
-            for row in database.execute("SELECT key, value FROM metadata")
+            row["key"]: row["value"] for row in database.execute("SELECT key, value FROM metadata")
         }
         if metadata.get("policy_sha256") != store.policy_sha256:
             raise G4ContractError("source campaign policy hash mismatch")
@@ -638,6 +707,7 @@ def execute(
         "returncode": returncode,
         "elapsed_seconds": elapsed,
         "disposition": disposition,
+        "valid": valid,
         "failure_class": failure,
         "reason": reason,
         "energy": energy,
@@ -649,12 +719,8 @@ def execute(
         },
         "stdout_object_sha256": stdout_sha256,
         "stdout_uncompressed_bytes": stdout_bytes,
-        "records": [
-            record for record in records if record.get("case") != "g4_iteration"
-        ],
-        "progress_record_count": sum(
-            record.get("case") == "g4_iteration" for record in records
-        ),
+        "records": [record for record in records if record.get("case") != "g4_iteration"],
+        "progress_record_count": sum(record.get("case") == "g4_iteration" for record in records),
     }
     store.finish(
         claim,
@@ -665,6 +731,167 @@ def execute(
     )
 
 
+def batch_group_key(claim: Claim) -> tuple[str, int, str]:
+    policy = claim.coordinate["policy"]
+    backend = (
+        "qoco"
+        if policy == "pure-gpu-ipm"
+        else ("hybrid" if policy == "hybrid-pdhcg-ipm" else "pdhcg")
+    )
+    return claim.coordinate["family"], int(claim.coordinate["intervals"]), backend
+
+
+def execute_claim_batch(
+    store: CampaignStore,
+    claims: list[Claim],
+    executable: Path,
+    executor: PersistentExecutor,
+    power: NvmlPower,
+    policy_sha256: str,
+    matrix_sha256: str,
+    capability_sha256: str,
+    timeout_seconds: int,
+    sampler_cpu_core: int | None,
+) -> int:
+    """Execute one compatible group and commit each completed row independently."""
+
+    commands = [
+        command_for(
+            executable,
+            claim,
+            policy_sha256,
+            matrix_sha256,
+            capability_sha256,
+        )
+        for claim in claims
+    ]
+    for claim, command in zip(claims, commands, strict=True):
+        run_directory = store.root / "runs" / claim.coordinate_id / claim.attempt_id
+        atomic_create(run_directory / "command.json", json.dumps(command).encode() + b"\n")
+    batch_id = hashlib.sha256(
+        canonical_bytes(
+            [
+                {"coordinate_id": claim.coordinate_id, "attempt_id": claim.attempt_id}
+                for claim in claims
+            ]
+        )
+    ).hexdigest()
+    batch_directory = store.root / "batches" / batch_id
+    batch_directory.mkdir(parents=True, exist_ok=False)
+    executor.ensure_ready()
+    sampler = EnergySampler(power, cpu_core=sampler_cpu_core)
+    batch_started = time.monotonic()
+    sampler.start()
+    responses, shared_stdout, shared_stderr, generation, startup_seconds = executor.execute_batch(
+        commands, timeout_seconds
+    )
+    batch_elapsed = time.monotonic() - batch_started
+    energy = sampler.finish()
+    shared_stdout_sha256, shared_stdout_bytes = archive_stdout(store.root, shared_stdout)
+    stderr_sha256 = hashlib.sha256(shared_stderr.encode()).hexdigest()
+    atomic_create(batch_directory / "stderr.log", shared_stderr.encode())
+    atomic_create(
+        batch_directory / "batch.json",
+        canonical_bytes(
+            {
+                "batch_id": batch_id,
+                "coordinate_ids": [claim.coordinate_id for claim in claims],
+                "elapsed_seconds": batch_elapsed,
+                "energy": energy,
+                "energy_attribution": "batch-only; per-row energy intentionally null",
+                "shared_stdout_object_sha256": shared_stdout_sha256,
+                "shared_stdout_uncompressed_bytes": shared_stdout_bytes,
+                "stderr_sha256": stderr_sha256,
+                "executor_generation": generation,
+            }
+        )
+        + b"\n",
+    )
+
+    completed = 0
+    for claim, command in zip(claims, commands, strict=True):
+        response = responses[claim.coordinate_id]
+        if not response["complete"]:
+            continue
+        stdout = str(response["stdout"])
+        returncode = int(response["returncode"])
+        run_directory = store.root / "runs" / claim.coordinate_id / claim.attempt_id
+        stdout_sha256, stdout_bytes = archive_stdout(store.root, stdout)
+        atomic_create(run_directory / "stderr.log", b"")
+        try:
+            records = parse_records(stdout)
+        except (json.JSONDecodeError, ValueError):
+            records = []
+        if returncode != 0:
+            lowered = shared_stderr.lower()
+            if returncode in {137, -9} or "out of memory" in lowered:
+                disposition, failure = "oom", "oom"
+            elif "unsupported" in lowered:
+                disposition, failure = "unsupported", "unsupported"
+            else:
+                disposition, failure = "numerical", "numerical"
+            valid, reason = True, f"persistent batch lane exited {returncode}"
+        else:
+            try:
+                valid, reason = validate_success(
+                    claim,
+                    records,
+                    policy_sha256,
+                    matrix_sha256,
+                    capability_sha256,
+                )
+            except (G4ContractError, json.JSONDecodeError, ValueError) as error:
+                records, valid, reason = [], False, f"invalid executor records: {error}"
+            sample = next(
+                (record for record in records if record.get("case") == "g4_sample"),
+                {},
+            )
+            if sample.get("status") == 4:
+                disposition, failure = "timeout", "timeout"
+                reason = "in-process deadline retained final residual and progress records"
+            else:
+                disposition = "qualified" if sample.get("qualified") is True else "unqualified"
+                failure = "none" if disposition == "qualified" else "max_iterations"
+        record = {
+            **claim.coordinate,
+            "coordinate_id": claim.coordinate_id,
+            "attempt_id": claim.attempt_id,
+            "command": command,
+            "returncode": returncode,
+            "elapsed_seconds": response["elapsed_seconds"],
+            "disposition": disposition,
+            "valid": valid,
+            "failure_class": failure,
+            "reason": reason,
+            "energy": None,
+            "batch_energy": {
+                "batch_id": batch_id,
+                "path": str(batch_directory / "batch.json"),
+                "attribution": "none",
+            },
+            "executor": {
+                "mode": "persistent-concurrent-lanes",
+                "generation": generation,
+                "cuda_startup_seconds": startup_seconds,
+                "cuda_startup_in_timing_boundary": False,
+                "batch_size": len(claims),
+            },
+            "stdout_object_sha256": stdout_sha256,
+            "stdout_uncompressed_bytes": stdout_bytes,
+            "records": [item for item in records if item.get("case") != "g4_iteration"],
+            "progress_record_count": sum(item.get("case") == "g4_iteration" for item in records),
+        }
+        store.finish(
+            claim,
+            disposition=disposition,
+            reason=reason,
+            record=record,
+            valid=valid,
+        )
+        completed += 1
+    return completed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=("init", "migrate", "status", "run"))
@@ -673,6 +900,7 @@ def main() -> int:
     parser.add_argument("--executable", type=Path)
     parser.add_argument("--capabilities", type=Path)
     parser.add_argument("--max-runs", type=int)
+    parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--source-campaign", type=Path)
     parser.add_argument("--nvml-library")
     parser.add_argument("--sampler-cpu-core", type=int)
@@ -710,9 +938,7 @@ def main() -> int:
         if arguments.action == "migrate":
             if arguments.source_campaign is None:
                 raise G4ContractError("migrate requires --source-campaign")
-            migration = migrate_terminal_rows(
-                store, arguments.source_campaign.resolve()
-            )
+            migration = migrate_terminal_rows(store, arguments.source_campaign.resolve())
             print(json.dumps({**store.status(), **migration}, sort_keys=True))
             return 0
         if arguments.executable is None or arguments.capabilities is None:
@@ -732,6 +958,8 @@ def main() -> int:
         except BlockingIOError as error:
             raise G4ContractError("another measured GPU worker owns this campaign") from error
         completed = 0
+        if arguments.batch_size <= 0 or arguments.batch_size > 1024:
+            raise G4ContractError("batch size must be in [1, 1024]")
         power = NvmlPower(arguments.nvml_library)
         timeout_seconds = int(policy["matrix"]["timeout_seconds_per_sample"])
         executor = PersistentExecutor(
@@ -741,22 +969,38 @@ def main() -> int:
         )
         try:
             while arguments.max_runs is None or completed < arguments.max_runs:
-                claim = store.claim()
-                if claim is None:
-                    break
-                execute(
-                    store,
-                    claim,
-                    executable,
-                    executor,
-                    power,
-                    policy_sha256,
-                    matrix_sha256,
-                    capability_sha256,
-                    timeout_seconds,
-                    arguments.sampler_cpu_core,
+                remaining_limit = (
+                    arguments.batch_size
+                    if arguments.max_runs is None
+                    else min(arguments.batch_size, arguments.max_runs - completed)
                 )
-                completed += 1
+                claims = store.claim_batch(remaining_limit)
+                if not claims:
+                    break
+                grouped: dict[tuple[str, int, str], list[Claim]] = {}
+                for claim in claims:
+                    grouped.setdefault(batch_group_key(claim), []).append(claim)
+                progress = 0
+                for group_key, group in grouped.items():
+                    lane_groups = (
+                        [group] if group_key[2] == "pdhcg" else [[claim] for claim in group]
+                    )
+                    for lane_group in lane_groups:
+                        progress += execute_claim_batch(
+                            store,
+                            lane_group,
+                            executable,
+                            executor,
+                            power,
+                            policy_sha256,
+                            matrix_sha256,
+                            capability_sha256,
+                            timeout_seconds,
+                            arguments.sampler_cpu_core,
+                        )
+                completed += progress
+                if progress == 0:
+                    executor.ensure_ready()
         finally:
             executor.close()
             fcntl.flock(lock_descriptor, fcntl.LOCK_UN)

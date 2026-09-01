@@ -267,6 +267,7 @@ class CampaignStore:
     def claim(self) -> Claim | None:
         """Claim the next row or resume the oldest interrupted row."""
 
+        self._recover_durable_results()
         now = self._now()
         with self.database:
             running = self.database.execute(
@@ -366,6 +367,194 @@ class CampaignStore:
             }
         )
         return claim
+
+    def claim_batch(self, limit: int) -> list[Claim]:
+        """Atomically claim independent rows for one bounded GPU batch."""
+
+        if limit <= 0:
+            raise ValueError("batch claim limit must be positive")
+        self._recover_durable_results()
+        now = self._now()
+        claims: list[Claim] = []
+        with self.database:
+            interrupted = self.database.execute(
+                """
+                SELECT ordinal, coordinate_id, latest_attempt_id
+                FROM coordinates
+                WHERE state = 'running'
+                ORDER BY ordinal
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            for row in interrupted:
+                ordinal = int(row["ordinal"])
+                coordinate = coordinate_at(self.policy, ordinal)
+                identifier = str(row["coordinate_id"])
+                if coordinate_id(coordinate) != identifier:
+                    raise G4ContractError("checkpoint coordinate content address drift")
+                self.database.execute(
+                    """
+                    UPDATE attempts
+                    SET state = 'interrupted', finished_at = ?,
+                        disposition = 'error',
+                        reason = 'worker exited before committing a terminal batch record'
+                    WHERE attempt_id = ? AND state = 'running'
+                    """,
+                    (now, str(row["latest_attempt_id"])),
+                )
+                claims.append(
+                    self._insert_batch_attempt(ordinal, identifier, coordinate, now, resume=True)
+                )
+
+            next_row = self.database.execute(
+                "SELECT value FROM metadata WHERE key = 'next_ordinal'"
+            ).fetchone()
+            schedule_index = int(next_row["value"])
+            while len(claims) < limit and schedule_index < self.total:
+                ordinal = scheduled_ordinal_at(self.policy, schedule_index)
+                schedule_index += 1
+                if (
+                    self.database.execute(
+                        "SELECT 1 FROM coordinates WHERE ordinal = ?",
+                        (ordinal,),
+                    ).fetchone()
+                    is not None
+                ):
+                    continue
+                coordinate = coordinate_at(self.policy, ordinal)
+                identifier = coordinate_id(coordinate)
+                claims.append(
+                    self._insert_batch_attempt(ordinal, identifier, coordinate, now, resume=False)
+                )
+            self.database.execute(
+                "UPDATE metadata SET value = ? WHERE key = 'next_ordinal'",
+                (str(schedule_index),),
+            )
+        for claim in claims:
+            self._journal(
+                {
+                    "event": "claimed",
+                    "at": now,
+                    "ordinal": claim.ordinal,
+                    "coordinate_id": claim.coordinate_id,
+                    "attempt_id": claim.attempt_id,
+                    "batch_size": len(claims),
+                }
+            )
+        return claims
+
+    def _insert_batch_attempt(
+        self,
+        ordinal: int,
+        identifier: str,
+        coordinate: dict[str, Any],
+        now: str,
+        *,
+        resume: bool,
+    ) -> Claim:
+        attempt_id = uuid.uuid4().hex
+        run_directory = self.root / "runs" / identifier / attempt_id
+        run_directory.mkdir(parents=True, exist_ok=False)
+        atomic_create(
+            run_directory / "coordinate.json",
+            _canonical_json(coordinate) + b"\n",
+        )
+        if resume:
+            self.database.execute(
+                """
+                UPDATE coordinates
+                SET latest_attempt_id = ?, updated_at = ?
+                WHERE ordinal = ?
+                """,
+                (attempt_id, now, ordinal),
+            )
+        else:
+            self.database.execute(
+                """
+                INSERT INTO coordinates(
+                    ordinal, coordinate_id, state, latest_attempt_id, updated_at
+                ) VALUES (?, ?, 'running', ?, ?)
+                """,
+                (ordinal, identifier, attempt_id, now),
+            )
+        self.database.execute(
+            """
+            INSERT INTO attempts(
+                attempt_id, ordinal, coordinate_id, state, started_at, run_directory
+            ) VALUES (?, ?, ?, 'running', ?, ?)
+            """,
+            (attempt_id, ordinal, identifier, now, str(run_directory)),
+        )
+        return Claim(ordinal, identifier, attempt_id, coordinate)
+
+    def _recover_durable_results(self) -> None:
+        """Commit result files fsynced before an interrupted SQLite handoff."""
+
+        rows = self.database.execute(
+            """
+            SELECT c.ordinal, c.coordinate_id, c.latest_attempt_id,
+                   a.run_directory
+            FROM coordinates c
+            JOIN attempts a ON a.attempt_id = c.latest_attempt_id
+            WHERE c.state = 'running' AND a.state = 'running'
+            ORDER BY c.ordinal
+            """
+        ).fetchall()
+        recovered: list[dict[str, Any]] = []
+        now = self._now()
+        with self.database:
+            for row in rows:
+                result_path = Path(str(row["run_directory"])) / "result.json"
+                if not result_path.is_file():
+                    continue
+                record = json.loads(result_path.read_text(encoding="utf-8"))
+                identifier = str(row["coordinate_id"])
+                attempt_id = str(row["latest_attempt_id"])
+                if (
+                    record.get("coordinate_id") != identifier
+                    or record.get("attempt_id") != attempt_id
+                    or not isinstance(record.get("valid"), bool)
+                    or not isinstance(record.get("disposition"), str)
+                    or not isinstance(record.get("reason"), str)
+                ):
+                    continue
+                state = "completed" if record["valid"] else "quarantined"
+                self.database.execute(
+                    """
+                    UPDATE attempts
+                    SET state = ?, finished_at = ?, disposition = ?, reason = ?
+                    WHERE attempt_id = ? AND state = 'running'
+                    """,
+                    (
+                        state,
+                        now,
+                        record["disposition"],
+                        record["reason"],
+                        attempt_id,
+                    ),
+                )
+                self.database.execute(
+                    """
+                    UPDATE coordinates
+                    SET state = ?, updated_at = ?
+                    WHERE ordinal = ? AND state = 'running'
+                      AND latest_attempt_id = ?
+                    """,
+                    (state, now, int(row["ordinal"]), attempt_id),
+                )
+                recovered.append(
+                    {
+                        "event": "recovered-durable-result",
+                        "at": now,
+                        "ordinal": int(row["ordinal"]),
+                        "coordinate_id": identifier,
+                        "attempt_id": attempt_id,
+                        "disposition": record["disposition"],
+                    }
+                )
+        for event in recovered:
+            self._journal(event)
 
     def import_terminal(
         self,

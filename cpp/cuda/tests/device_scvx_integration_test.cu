@@ -24,6 +24,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -40,64 +41,66 @@ namespace frozen_g4 = spacepdhcg::scvx::g4_policy;
 
 namespace {
 
-bool sanitizer_mode = false;
-bool tight_residual_mode = false;
-bool diagnostic_mode = false;
-bool dump_mode = false;
-bool tight_after_loose_mode = false;
-bool default_stream_mode = false;
-bool refresh_before_tight_mode = false;
-bool repeated_tight_mode = false;
-bool tight_all_mode = false;
-bool tight_pd6_mode = false;
-bool production_driver_mode = false;
-bool g4_sample_mode = false;
-bool g4_probe_mode = false;
-bool g4_diagnostic_mode = false;
-bool p1d_path_audit_mode = false;
-bool p1d_diagnostic_mode = false;
-bool qoco_handback_mode = false;
-bool qoco_unavailable_mode = false;
-bool p1c_qoco_repeatability_mode = false;
-std::size_t h1_intervals = 0U;
-std::size_t g4_intervals = 0U;
-std::string g4_family;
-std::string g4_policy{"adaptive"};
-std::string g4_quality_tier{"tight"};
-std::string g4_scaling_mode{"refresh_if_needed"};
-std::string g4_warm_mode{"primal_dual"};
-spacepdhcg_cuda_warm_start_mode g4_warm_start =
+thread_local bool sanitizer_mode = false;
+thread_local bool tight_residual_mode = false;
+thread_local bool diagnostic_mode = false;
+thread_local bool dump_mode = false;
+thread_local bool tight_after_loose_mode = false;
+thread_local bool default_stream_mode = false;
+thread_local bool refresh_before_tight_mode = false;
+thread_local bool repeated_tight_mode = false;
+thread_local bool tight_all_mode = false;
+thread_local bool tight_pd6_mode = false;
+thread_local bool production_driver_mode = false;
+thread_local bool g4_sample_mode = false;
+thread_local bool g4_probe_mode = false;
+thread_local bool g4_diagnostic_mode = false;
+thread_local bool p1d_path_audit_mode = false;
+thread_local bool p1d_diagnostic_mode = false;
+thread_local bool qoco_handback_mode = false;
+thread_local bool qoco_unavailable_mode = false;
+thread_local bool p1c_qoco_repeatability_mode = false;
+thread_local std::size_t h1_intervals = 0U;
+thread_local std::size_t g4_intervals = 0U;
+thread_local std::string g4_family;
+thread_local std::string g4_policy{"adaptive"};
+thread_local std::string g4_quality_tier{"tight"};
+thread_local std::string g4_scaling_mode{"refresh_if_needed"};
+thread_local std::string g4_warm_mode{"primal_dual"};
+thread_local spacepdhcg_cuda_warm_start_mode g4_warm_start =
     SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED;
-double g4_quality_tolerance = 1.0e-6;
-double g4_family_class = 0.0;
-std::string g4_transfer_class{"not_applicable"};
-double g4_dispersion = 0.0;
-double g4_secondary_dispersion = 0.0;
-double g4_conditioning_log10_span = 0.0;
-std::uint64_t g4_evaluation_seed = 0U;
-std::string g4_repeat_kind{"not_applicable"};
-std::uint32_t g4_repeat_index = 0U;
-std::uint32_t g4_solver_order = 0U;
-std::string g4_coordinate_id;
-std::string g4_matrix_sha256;
-std::string g4_capability_sha256;
-std::uint64_t g4_instance_hash = 0U;
-std::uint64_t g4_problem_hash = 0U;
-std::uint64_t g4_coefficient_hash = 0U;
-double g4_condition_factor_min = 1.0;
-double g4_condition_factor_max = 1.0;
-double g4_conditioned_coefficient_ratio = 1.0;
-std::uint32_t production_outer_iterations = 1U;
-double cuda_startup_seconds = 0.0;
-double g4_deadline_seconds = 0.0;
-std::chrono::steady_clock::time_point g4_deadline{};
-int benchmark_variables = 0;
-int benchmark_scalar_rows = 0;
-int benchmark_affine_rows = 0;
-std::size_t benchmark_q_nonzeros = 0U;
-std::size_t benchmark_a_nonzeros = 0U;
-std::size_t benchmark_f_nonzeros = 0U;
-std::uint64_t tight_iteration_limit = 1'000'000U;
+thread_local double g4_quality_tolerance = 1.0e-6;
+thread_local double g4_family_class = 0.0;
+thread_local std::string g4_transfer_class{"not_applicable"};
+thread_local double g4_dispersion = 0.0;
+thread_local double g4_secondary_dispersion = 0.0;
+thread_local double g4_conditioning_log10_span = 0.0;
+thread_local std::uint64_t g4_evaluation_seed = 0U;
+thread_local std::string g4_repeat_kind{"not_applicable"};
+thread_local std::uint32_t g4_repeat_index = 0U;
+thread_local std::uint32_t g4_solver_order = 0U;
+thread_local std::string g4_coordinate_id;
+thread_local std::string g4_matrix_sha256;
+thread_local std::string g4_capability_sha256;
+thread_local std::uint64_t g4_instance_hash = 0U;
+thread_local std::uint64_t g4_problem_hash = 0U;
+thread_local std::uint64_t g4_coefficient_hash = 0U;
+thread_local double g4_condition_factor_min = 1.0;
+thread_local double g4_condition_factor_max = 1.0;
+thread_local double g4_conditioned_coefficient_ratio = 1.0;
+thread_local std::uint32_t production_outer_iterations = 1U;
+thread_local double cuda_startup_seconds = 0.0;
+thread_local double g4_deadline_seconds = 0.0;
+thread_local std::chrono::steady_clock::time_point g4_deadline{};
+thread_local bool g4_server_request = false;
+thread_local std::size_t g4_lane_index = 0U;
+thread_local int benchmark_variables = 0;
+thread_local int benchmark_scalar_rows = 0;
+thread_local int benchmark_affine_rows = 0;
+thread_local std::size_t benchmark_q_nonzeros = 0U;
+thread_local std::size_t benchmark_a_nonzeros = 0U;
+thread_local std::size_t benchmark_f_nonzeros = 0U;
+thread_local std::uint64_t tight_iteration_limit = 1'000'000U;
 constexpr std::array<std::uint64_t, 20U> g4_evaluation_seeds{
     59U, 71U, 89U, 101U, 127U, 149U, 173U, 197U, 223U, 251U,
     281U, 313U, 349U, 389U, 431U, 479U, 521U, 569U, 617U, 659U,
@@ -390,6 +393,21 @@ struct IntegrationResult {
     double cpu_gpu_trajectory_max{0.0};
 };
 
+struct G4WorkspaceCacheEntry {
+    std::string key;
+    std::unique_ptr<test::ProblemStorage> problem;
+    spacepdhcg_cuda_workspace* workspace{nullptr};
+
+    ~G4WorkspaceCacheEntry() {
+        if (workspace != nullptr) {
+            static_cast<void>(spacepdhcg_cuda_workspace_destroy(&workspace));
+        }
+    }
+};
+
+std::mutex g4_workspace_cache_mutex;
+std::array<std::shared_ptr<G4WorkspaceCacheEntry>, 1024U> g4_workspace_cache{};
+
 cone_type_t upstream_cone_kind(const spacepdhcg_cuda_cone_kind kind) {
     switch (kind) {
         case SPACEPDHCG_CUDA_CONE_SECOND_ORDER:
@@ -614,7 +632,6 @@ IntegrationResult run_resident_sequence(
     const std::vector<double>* displaced_initial = nullptr,
     const std::vector<double>* displaced_target = nullptr
 ) {
-    test::ProblemStorage problem(false, !default_stream_mode);
     const auto topology_started = std::chrono::steady_clock::now();
     const auto conditioned_values = condition_values(
         structure,
@@ -622,7 +639,61 @@ IntegrationResult run_resident_sequence(
         dynamics_row_start,
         intervals * StateDimension
     );
-    materialise(problem, structure, conditioned_values);
+    std::shared_ptr<G4WorkspaceCacheEntry> cached_entry;
+    bool workspace_cache_hit = false;
+    std::unique_ptr<test::ProblemStorage> ephemeral_problem;
+    if (g4_sample_mode && g4_server_request) {
+        const std::string cache_key =
+            std::to_string(structure.fingerprint()) + ":" + g4_scaling_mode;
+        std::lock_guard lock(g4_workspace_cache_mutex);
+        auto& slot = g4_workspace_cache.at(g4_lane_index);
+        if (slot == nullptr || slot->key != cache_key) {
+            slot = std::make_shared<G4WorkspaceCacheEntry>();
+            slot->key = cache_key;
+            slot->problem = std::make_unique<test::ProblemStorage>(
+                false, !default_stream_mode
+            );
+            materialise(*slot->problem, structure, conditioned_values);
+        } else {
+            workspace_cache_hit = true;
+        }
+        cached_entry = slot;
+    } else {
+        ephemeral_problem = std::make_unique<test::ProblemStorage>(
+            false, !default_stream_mode
+        );
+        materialise(*ephemeral_problem, structure, conditioned_values);
+    }
+    auto& problem = cached_entry != nullptr
+        ? *cached_entry->problem
+        : *ephemeral_problem;
+    if (workspace_cache_hit) {
+        problem.h_q = conditioned_values.quadratic;
+        problem.h_a = conditioned_values.scalar_constraint;
+        problem.h_f = conditioned_values.affine_cone;
+        problem.h_c = conditioned_values.linear_objective;
+        problem.h_scalar_lower = conditioned_values.scalar_lower;
+        problem.h_scalar_upper = conditioned_values.scalar_upper;
+        problem.h_affine_offset = conditioned_values.affine_offset;
+        problem.h_variable_lower = conditioned_values.variable_lower;
+        problem.h_variable_upper = conditioned_values.variable_upper;
+        problem.upload_numeric();
+        problem.primal.upload(
+            std::vector<double>(static_cast<std::size_t>(problem.variables), 0.0),
+            problem.stream
+        );
+        problem.dual.upload(
+            std::vector<double>(
+                static_cast<std::size_t>(problem.scalar_rows + problem.affine_rows),
+                0.0
+            ),
+            problem.stream
+        );
+        test::cuda_require(
+            cudaStreamSynchronize(problem.stream),
+            "cached G4 problem reset"
+        );
+    }
     g4_coefficient_hash = numeric_hash(conditioned_values);
     g4_problem_hash = hash_value(
         hash_value(g4_instance_hash, structure.fingerprint()),
@@ -824,7 +895,26 @@ IntegrationResult run_resident_sequence(
                 SPACEPDHCG_CUDA_SCALING_REFRESH_IF_NEEDED;
         }
     }
-    auto* workspace = test::create_workspace(problem, create_options);
+    auto* workspace = cached_entry != nullptr ? cached_entry->workspace : nullptr;
+    if (workspace == nullptr) {
+        workspace = test::create_workspace(problem, create_options);
+        if (cached_entry != nullptr) {
+            cached_entry->workspace = workspace;
+        }
+    } else {
+        test::status_require(
+            spacepdhcg_cuda_workspace_reset_async(
+                workspace,
+                SPACEPDHCG_CUDA_RESET_FULL,
+                problem.exchange.consumer_stream
+            ),
+            "cached G4 workspace reset"
+        );
+        test::status_require(
+            spacepdhcg_cuda_workspace_wait(workspace),
+            "cached G4 workspace reset wait"
+        );
+    }
     const double workspace_create_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - workspace_create_started
     ).count();
@@ -1923,11 +2013,13 @@ IntegrationResult run_resident_sequence(
             const double primary_coordinate =
                 g4_family == "P1-D-pd6" ? g4_dispersion : g4_family_class;
             std::printf(
-                "{\"case\":\"g4_coordinate\",\"family\":\"%s\","
+                "{\"case\":\"g4_coordinate\",\"coordinate_id\":\"%s\","
+                "\"family\":\"%s\","
                 "\"primary_dispersion\":%.17g,"
                 "\"secondary_dispersion\":%.17g,"
                 "\"attitude_dispersion_radians\":%.17g,"
                 "\"angular_rate_dispersion\":%.17g}\n",
+                g4_coordinate_id.c_str(),
                 g4_family.c_str(),
                 primary_coordinate,
                 g4_family == "P1-D-pd6" ? g4_secondary_dispersion : 0.0,
@@ -1935,7 +2027,7 @@ IntegrationResult run_resident_sequence(
                 g4_family == "P1-D-pd6" ? g4_secondary_dispersion : 0.0
             );
             std::printf(
-                "{\"case\":\"g4_runtime\","
+                "{\"case\":\"g4_runtime\",\"coordinate_id\":\"%s\","
                 "\"policy_sha256\":\"%.*s\","
                 "\"requested\":{\"policy\":\"%s\",\"quality_tier\":\"%s\","
                 "\"quality_tolerance\":%.17g,\"scaling_mode\":\"%s\","
@@ -1948,6 +2040,7 @@ IntegrationResult run_resident_sequence(
                 "\"resolve_minimum_tolerance\":%.17g,"
                 "\"maximum_resolves\":%u,"
                 "\"polish_tolerance_ceiling\":%.17g}}\n",
+                g4_coordinate_id.c_str(),
                 static_cast<int>(frozen_g4::sha256.size()),
                 frozen_g4::sha256.data(),
                 g4_policy.c_str(),
@@ -2042,7 +2135,8 @@ IntegrationResult run_resident_sequence(
             for (std::size_t index = 0U; index < outer.outer_iterations; ++index) {
                 const auto& record = records[index];
                 std::printf(
-                    "{\"case\":\"g4_iteration\",\"family\":\"%s\","
+                    "{\"case\":\"g4_iteration\",\"coordinate_id\":\"%s\","
+                    "\"family\":\"%s\","
                     "\"policy\":\"%s\",\"intervals\":%zu,\"outer\":%u,"
                     "\"phase\":%d,\"requested\":%.17g,\"achieved\":%.17g,"
                     "\"native_primal\":%.17g,\"native_dual\":%.17g,"
@@ -2076,6 +2170,7 @@ IntegrationResult run_resident_sequence(
                     "\"scaling_max\":%.17g,\"warm_start\":%d,"
                     "\"recovery_mode\":%d,\"forcing_satisfied\":%d,"
                     "\"final_polish_handoff\":%d,\"accepted\":%d}\n",
+                    g4_coordinate_id.c_str(),
                     g4_family.c_str(),
                     g4_policy.c_str(),
                     intervals,
@@ -2158,7 +2253,8 @@ IntegrationResult run_resident_sequence(
                 && (g4_policy != "hybrid-pdhcg-ipm"
                     || outer.hybrid_handoff_eligible != 0);
             std::printf(
-                "{\"case\":\"g4_sample\",\"family\":\"%s\","
+                "{\"case\":\"g4_sample\",\"coordinate_id\":\"%s\","
+                "\"family\":\"%s\","
                 "\"policy\":\"%s\",\"intervals\":%zu,\"status\":%d,"
                 "\"trust_class\":%.17g,\"transfer_class\":\"%s\","
                 "\"qualified\":%s,\"quality_tolerance\":%.17g,"
@@ -2179,6 +2275,7 @@ IntegrationResult run_resident_sequence(
                 "\"inner_iterations\":%llu,\"h2d_bytes\":%llu,"
                 "\"d2h_bytes\":%llu,\"peak_device_bytes\":%llu,"
                 "\"topology_allocations_after_create\":%llu,"
+                "\"workspace_cache_hit\":%s,"
                 "\"hidden_cpu_fallback\":%d,"
                 "\"qoco_conversion_seconds\":%.17g,"
                 "\"qoco_setup_seconds\":%.17g,"
@@ -2189,6 +2286,7 @@ IntegrationResult run_resident_sequence(
                 "\"qoco_dual_discarded\":%d,"
                 "\"hybrid_handoff_eligible\":%d,"
                 "\"qoco_failure\":%d}\n",
+                g4_coordinate_id.c_str(),
                 g4_family.c_str(),
                 g4_policy.c_str(),
                 intervals,
@@ -2231,6 +2329,7 @@ IntegrationResult run_resident_sequence(
                 static_cast<unsigned long long>(
                     outer.topology_allocation_count_after_create
                 ),
+                workspace_cache_hit ? "true" : "false",
                 outer.hidden_cpu_fallback,
                 outer.qoco_conversion_seconds,
                 outer.qoco_setup_seconds,
@@ -2298,7 +2397,9 @@ IntegrationResult run_resident_sequence(
             coefficient_parity_max,
             replay_parity_maximum,
         };
-        test::destroy_workspace(workspace);
+        if (cached_entry == nullptr) {
+            test::destroy_workspace(workspace);
+        }
         return result;
     }
     const int sequence_iterations =
@@ -3555,8 +3656,9 @@ int main(const int argc, char** argv) {
         return run_invocation(argc, argv);
     }
     test::require(argc == 3, "G4 server requires a row deadline");
-    g4_deadline_seconds = std::stod(argv[2]);
-    test::require(g4_deadline_seconds > 0.0, "G4 server deadline must be positive");
+    const double server_deadline_seconds = std::stod(argv[2]);
+    test::require(server_deadline_seconds > 0.0, "G4 server deadline must be positive");
+    g4_deadline_seconds = server_deadline_seconds;
 
     const auto startup_begin = std::chrono::steady_clock::now();
     test::cuda_require(cudaFree(nullptr), "persistent G4 CUDA startup");
@@ -3564,17 +3666,13 @@ int main(const int argc, char** argv) {
         std::chrono::steady_clock::now() - startup_begin
     ).count();
     std::printf(
-        "{\"case\":\"g4_server_ready\",\"protocol_version\":1,"
+        "{\"case\":\"g4_server_ready\",\"protocol_version\":2,"
         "\"cuda_startup_seconds\":%.17g}\n",
         startup_seconds
     );
     std::fflush(stdout);
 
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        if (line == "cancel") {
-            break;
-        }
+    const auto parse_request = [](const std::string& line) {
         std::vector<std::string> arguments{"device_scvx_integration_test"};
         std::size_t begin = 0U;
         while (begin <= line.size()) {
@@ -3590,7 +3688,89 @@ int main(const int argc, char** argv) {
             }
             begin = end + 1U;
         }
-        if (arguments.size() != 21U || arguments[1] != "--g4-sample") {
+        return arguments;
+    };
+    const auto valid_request = [](const std::vector<std::string>& arguments) {
+        return arguments.size() == 21U && arguments[1] == "--g4-sample";
+    };
+    const auto execute_request = [&](std::vector<std::string>& arguments,
+                                     const std::size_t lane_index) {
+        g4_deadline_seconds = server_deadline_seconds;
+        g4_server_request = true;
+        g4_lane_index = lane_index;
+        std::vector<char*> pointers;
+        pointers.reserve(arguments.size());
+        for (auto& argument : arguments) {
+            pointers.push_back(argument.data());
+        }
+        return run_invocation(
+            static_cast<int>(pointers.size()),
+            pointers.data()
+        );
+    };
+    const auto emit_result = [](const std::vector<std::string>& arguments,
+                                const int returncode,
+                                const double elapsed_seconds) {
+        std::printf(
+            "{\"case\":\"g4_server_result\",\"protocol_version\":2,"
+            "\"coordinate_id\":\"%s\",\"returncode\":%d,"
+            "\"elapsed_seconds\":%.17g}\n",
+            arguments[18].c_str(),
+            returncode,
+            elapsed_seconds
+        );
+    };
+    std::mutex server_output_mutex;
+
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        if (line == "cancel") {
+            break;
+        }
+        if (line.starts_with("batch\t")) {
+            const auto count = static_cast<std::size_t>(
+                std::stoull(line.substr(6U))
+            );
+            test::require(count > 0U && count <= 1024U, "invalid G4 batch size");
+            std::vector<std::vector<std::string>> requests;
+            requests.reserve(count);
+            for (std::size_t index = 0U; index < count; ++index) {
+                test::require(
+                    static_cast<bool>(std::getline(std::cin, line)),
+                    "truncated G4 batch"
+                );
+                requests.push_back(parse_request(line));
+                test::require(valid_request(requests.back()), "invalid G4 batch request");
+            }
+            std::vector<int> returncodes(count, 0);
+            std::vector<std::thread> lanes;
+            lanes.reserve(count);
+            for (std::size_t index = 0U; index < count; ++index) {
+                lanes.emplace_back([&, index]() {
+                    const auto row_started = std::chrono::steady_clock::now();
+                    returncodes[index] = execute_request(requests[index], index);
+                    const double row_elapsed = std::chrono::duration<double>(
+                        std::chrono::steady_clock::now() - row_started
+                    ).count();
+                    std::lock_guard lock(server_output_mutex);
+                    emit_result(requests[index], returncodes[index], row_elapsed);
+                    std::fflush(stdout);
+                });
+            }
+            for (auto& lane : lanes) {
+                lane.join();
+            }
+            std::printf(
+                "{\"case\":\"g4_batch_result\",\"protocol_version\":2,"
+                "\"batch_size\":%zu}\n",
+                count
+            );
+            std::fflush(stdout);
+            continue;
+        }
+
+        auto arguments = parse_request(line);
+        if (!valid_request(arguments)) {
             std::printf(
                 "{\"case\":\"g4_server_error\",\"protocol_version\":1,"
                 "\"reason\":\"invalid request\"}\n"
@@ -3598,21 +3778,12 @@ int main(const int argc, char** argv) {
             std::fflush(stdout);
             continue;
         }
-        std::vector<char*> pointers;
-        pointers.reserve(arguments.size());
-        for (auto& argument : arguments) {
-            pointers.push_back(argument.data());
-        }
-        const int returncode = run_invocation(
-            static_cast<int>(pointers.size()),
-            pointers.data()
-        );
-        std::printf(
-            "{\"case\":\"g4_server_result\",\"protocol_version\":1,"
-            "\"coordinate_id\":\"%s\",\"returncode\":%d}\n",
-            arguments[18].c_str(),
-            returncode
-        );
+        const auto row_started = std::chrono::steady_clock::now();
+        const int returncode = execute_request(arguments, 0U);
+        const double row_elapsed = std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - row_started
+        ).count();
+        emit_result(arguments, returncode, row_elapsed);
         std::fflush(stdout);
     }
     return 0;

@@ -131,9 +131,7 @@ def test_imported_terminal_row_is_exactly_once_and_skipped(tmp_path: Path) -> No
         )
     source_run = source_root / "runs" / claim.coordinate_id / claim.attempt_id
 
-    with CampaignStore(
-        tmp_path / "target", loaded.values, loaded.sha256, "b" * 40
-    ) as target:
+    with CampaignStore(tmp_path / "target", loaded.values, loaded.sha256, "b" * 40) as target:
         arguments = {
             "ordinal": claim.ordinal,
             "identifier": claim.coordinate_id,
@@ -151,3 +149,65 @@ def test_imported_terminal_row_is_exactly_once_and_skipped(tmp_path: Path) -> No
         assert next_claim is not None
         assert next_claim.ordinal != claim.ordinal
         assert target.status()["completed"] == 1
+
+
+def test_batch_claim_recovers_only_uncommitted_rows(tmp_path: Path) -> None:
+    loaded = policy()
+    root = tmp_path / "batch"
+    store = CampaignStore(root, loaded.values, loaded.sha256, "a" * 40)
+    first = store.claim_batch(4)
+    assert len(first) == 4
+    assert len({claim.coordinate_id for claim in first}) == 4
+    for claim in first[:2]:
+        store.finish(
+            claim,
+            disposition="qualified",
+            reason="complete lane",
+            record={"coordinate_id": claim.coordinate_id},
+            valid=True,
+        )
+    unfinished = {claim.ordinal for claim in first[2:]}
+    store.close()
+
+    with CampaignStore(root, loaded.values, loaded.sha256, "a" * 40) as recovered:
+        second = recovered.claim_batch(4)
+        assert len(second) == 4
+        assert {claim.ordinal for claim in second[:2]} == unfinished
+        assert not unfinished.intersection(claim.ordinal for claim in second[2:])
+        attempts = recovered.database.execute(
+            "SELECT state, COUNT(*) count FROM attempts GROUP BY state"
+        ).fetchall()
+        counts = {row["state"]: row["count"] for row in attempts}
+        assert counts == {"completed": 2, "interrupted": 2, "running": 4}
+
+
+def test_batch_claim_commits_durable_result_without_replay(tmp_path: Path) -> None:
+    loaded = policy()
+    root = tmp_path / "handoff"
+    store = CampaignStore(root, loaded.values, loaded.sha256, "a" * 40)
+    claim = store.claim_batch(1)[0]
+    run_directory = root / "runs" / claim.coordinate_id / claim.attempt_id
+    atomic_create(
+        run_directory / "result.json",
+        json.dumps(
+            {
+                "coordinate_id": claim.coordinate_id,
+                "attempt_id": claim.attempt_id,
+                "valid": True,
+                "disposition": "qualified",
+                "reason": "fsynced before simulated database crash",
+            }
+        ).encode()
+        + b"\n",
+    )
+    store.close()
+
+    with CampaignStore(root, loaded.values, loaded.sha256, "a" * 40) as recovered:
+        next_claim = recovered.claim_batch(1)[0]
+        assert next_claim.ordinal != claim.ordinal
+        assert recovered.status()["completed"] == 1
+        attempt_count = recovered.database.execute(
+            "SELECT COUNT(*) count FROM attempts WHERE ordinal = ?",
+            (claim.ordinal,),
+        ).fetchone()["count"]
+        assert attempt_count == 1

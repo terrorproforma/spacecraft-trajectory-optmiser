@@ -118,9 +118,22 @@ if sys.argv[1] != "--g4-server":
 print(json.dumps({"case": "g4_server_ready", "protocol_version": 1,
                   "cuda_startup_seconds": 0.125}), flush=True)
 for line in sys.stdin:
-    if line.rstrip("\\n") == "cancel":
+    raw = line.rstrip("\\n")
+    if raw == "cancel":
         break
-    fields = line.rstrip("\\n").split("\\t")
+    if raw.startswith("batch\\t"):
+        count = int(raw.split("\\t")[1])
+        requests = [next(sys.stdin).rstrip("\\n").split("\\t") for _ in range(count)]
+        for fields in requests:
+            print(json.dumps({"case": "g4_sample", "coordinate_id": fields[17]}),
+                  flush=True)
+            print(json.dumps({"case": "g4_server_result", "protocol_version": 2,
+                              "coordinate_id": fields[17], "returncode": 0,
+                              "elapsed_seconds": 0.25}), flush=True)
+        print(json.dumps({"case": "g4_batch_result", "protocol_version": 2,
+                          "batch_size": count}), flush=True)
+        continue
+    fields = raw.split("\\t")
     print(json.dumps({"case": "g4_server_result", "protocol_version": 1,
                       "coordinate_id": fields[17], "returncode": 0}), flush=True)
 """
@@ -135,6 +148,29 @@ for line in sys.stdin:
         executor.close()
     assert first[2:] == (0, False, 1, 0.125)
     assert second[2:] == (0, False, 1, 0.125)
+
+
+def test_persistent_executor_routes_concurrent_batch_records(tmp_path: Path) -> None:
+    executable = tmp_path / "fake-g4-server"
+    source = Path(__file__).read_text()
+    script = source.split('"""#!/usr/bin/env python3', 1)[1].split('"""', 1)[0]
+    script = bytes(script, "utf-8").decode("unicode_escape")
+    executable.write_text("#!/usr/bin/env python3" + script)
+    executable.chmod(executable.stat().st_mode | 0o111)
+    first = [str(executable), "--g4-sample", *(["x"] * 16), "a" * 64, "x", "x"]
+    second = [str(executable), "--g4-sample", *(["x"] * 16), "b" * 64, "x", "x"]
+    executor = CAMPAIGN.PersistentExecutor(executable, dict(os.environ))
+    try:
+        responses, shared, stderr, generation, startup = executor.execute_batch([first, second], 2)
+    finally:
+        executor.close()
+    assert not shared
+    assert not stderr
+    assert generation == 1
+    assert startup == 0.125
+    assert set(responses) == {"a" * 64, "b" * 64}
+    assert all(response["complete"] for response in responses.values())
+    assert all(response["elapsed_seconds"] == 0.25 for response in responses.values())
 
 
 def test_direct_energy_sampler_integrates_without_subprocess() -> None:

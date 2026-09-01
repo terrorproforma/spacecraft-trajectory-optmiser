@@ -34,8 +34,21 @@ provide the required speedup by itself.
 - `PersistentExecutor` keeps one server alive, enforces the real 600 s row
   boundary, restarts after a timeout/crash, and records the process generation
   and one-time CUDA startup separately from the accepted timing boundary.
-- Every request remains sequential and independent. No concurrent stream or
-  batched-kernel timing is admitted yet.
+- Protocol v2 accepts bounded compatible batches. Each PDHCG row receives an
+  independent host lane, CUDA stream, driver, cancellation word, deadline,
+  primal/dual/internal state, residual report, and status record. Compatible
+  one-block PDHCG kernels can therefore reside concurrently without
+  mathematical coupling.
+- Each lane retains at most one workspace, keyed by topology fingerprint and
+  scaling mode. Matching rows update only numeric buffers, fully reset
+  iterates and scaling, and reuse immutable topology allocations and indices.
+  A topology/mode transition evicts that lane entry, bounding the cache by the
+  requested batch size.
+- Scheduler claims are atomic in batches, then partitioned by
+  family/topology/intervals and backend. Completed lanes commit independently;
+  an executor crash leaves only unfinished lanes for explicit interrupted
+  retry. Pure-QOCO and hybrid rows remain serialized because concurrent use of
+  the loaded QOCO library has not yet passed a thread-safety proof.
 - Full stdout, including every progress record, is retained as a deterministic
   gzip object under `objects/sha256`; per-attempt results retain the object
   hash, byte count, exact terminal records, and progress-record count.
@@ -56,8 +69,8 @@ The old worker must remain active until all of the following pass: Release and
 Debug CUDA builds, sanitizers, old/new equivalence over all frozen axes and
 failure modes, leakage tests, crash/restart tests, direct-NVML cadence tests,
 and a representative throughput pilot. Cross-row workspace reuse, bounded
-cache/backpressure, in-process cancellation with final progress, and grouped
-physical-instance scheduling are not implemented by process persistence
-alone. Therefore migration and launch are prohibited until those items are
-complete; changing a timeout into a predicted or synthetic classification is
-also prohibited.
+cache/backpressure, independent in-process cancellation, grouped scheduling,
+batch-only energy accounting, and crash-safe lane commits are implemented.
+Migration remains prohibited until the real-GPU equivalence, contamination,
+compute-sanitizer, and batch-size throughput gates pass; changing a timeout
+into a predicted or synthetic classification is also prohibited.
