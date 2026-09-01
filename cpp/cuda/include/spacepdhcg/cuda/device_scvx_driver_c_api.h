@@ -42,6 +42,25 @@ typedef enum spacepdhcg_cuda_scvx_trust_action {
     SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND = 2
 } spacepdhcg_cuda_scvx_trust_action;
 
+typedef struct spacepdhcg_cuda_scvx_numeric_update {
+    uint32_t abi_version;
+    spacepdhcg_accelerator_buffer_view quadratic_diagonal_positions;
+    spacepdhcg_accelerator_buffer_view radial_positions;
+    spacepdhcg_accelerator_buffer_view quaternion_positions;
+    size_t terminal_row_start;
+    size_t radial_row_start;
+    size_t quaternion_row_start;
+    size_t stage_trust_row_start;
+    size_t stage_trust_stride;
+    size_t terminal_trust_row_start;
+    size_t virtual_variable_offset;
+    size_t epigraph_variable_offset;
+    double state_trust_scales[14];
+    double control_trust_scales[7];
+    double fuel_weight;
+    double virtual_l1_weight;
+} spacepdhcg_cuda_scvx_numeric_update;
+
 typedef struct spacepdhcg_cuda_scvx_problem {
     uint32_t abi_version;
     spacepdhcg_cuda_workspace* workspace;
@@ -59,6 +78,7 @@ typedef struct spacepdhcg_cuda_scvx_problem {
     spacepdhcg_accelerator_buffer_view reference_states;
     spacepdhcg_accelerator_buffer_view reference_controls;
     spacepdhcg_accelerator_buffer_view target_state;
+    spacepdhcg_cuda_scvx_numeric_update numeric_update;
 } spacepdhcg_cuda_scvx_problem;
 
 typedef struct spacepdhcg_cuda_scvx_options {
@@ -174,6 +194,13 @@ typedef struct spacepdhcg_cuda_scvx_result {
     int32_t hidden_cpu_fallback;
     int32_t used_declared_stream;
 } spacepdhcg_cuda_scvx_result;
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_update_numeric_async(
+    const spacepdhcg_cuda_scvx_problem* problem,
+    double trust_radius,
+    double virtual_penalty,
+    spacepdhcg_accelerator_stream stream
+);
 
 spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
     const spacepdhcg_cuda_scvx_problem* problem,

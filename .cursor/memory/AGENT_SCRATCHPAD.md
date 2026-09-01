@@ -93,3 +93,38 @@ Use this file as persistent, repo-local execution memory.
 - The pinned QOCO API has primal-only warm start; H6 needs an audited dual-capable adapter or an
   explicit primal-only hybrid hypothesis revision before a future preregistration.
 - WSL power sampling showed 1.86-1.94 second gaps despite a 50 ms request; energy is diagnostic.
+
+### 2026-09-01 18:00 AEST - Displaced-reference root-cause correction
+
+#### Task Summary
+
+- Added fixed-pattern device updates for reference tracking, exact-penalty epigraph costs,
+  trust-cone centres/radii, low-thrust radial halfspaces, and 6-DoF quaternion linearisations.
+- Added CPU/device coefficient parity plus trust-radius and penalty-mutation checks.
+- Corrected outer merit scaling and stale-primal evaluation after an identical-CQP re-solve.
+
+#### Mistakes And Fixes
+
+- `[self]` Initially reused the outer virtual merit weight as the transcription L1 coefficient.
+  Separated the fixed transcription weight because these are distinct CPU contracts.
+- `[self]` The first metric correction used raw fuel, state, and virtual magnitudes. Matched the
+  CPU driver's thrust, trust-scale, terminal, mass, and virtual normalisations instead.
+- `[prior implementation]` Re-solve telemetry came from the refined solve while acceptance still
+  used the pre-refinement primal. Regathered, replayed, and reevaluated the refined primal.
+
+#### What Worked
+
+- All four production fixtures pass coefficient-by-coefficient CPU/device checks at `5e-12`;
+  trust radius and exact-penalty mutations occur in place with no topology mutation.
+- Rejected re-solves retain identical numerical fingerprints, while changing trust radii produce
+  distinct fingerprints as expected.
+
+#### Follow-Ups / Risks
+
+- The original G4 diagnosis was incomplete: its one-outer-iteration qualification never reached
+  a second reference update. After the update fix, P1-C still fails because PDHCG returns a poor
+  CQP candidate and eventually exhausts the trust region.
+- G3's nominal trajectory parity was materially weaker than displaced-start outer-loop parity;
+  the G3 report must be corrected and resealed before claiming the affected coverage.
+- G4 remains FAIL and G5 remains unauthorised pending an accurate QOCO-GPU adapter or another
+  production solver correction that passes frozen matched-quality criteria.

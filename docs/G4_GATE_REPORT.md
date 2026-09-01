@@ -60,11 +60,23 @@ All three samples:
 - reported zero post-create topology allocations and zero hidden CPU fallback;
 - were excluded from all performance claims.
 
-The root cause is architectural, not a threshold choice. The G3 outer driver updates dynamics
-linearisation entries, but it does not yet regenerate every reference-dependent objective,
-constraint, trust-region, virtual-control, and exact-penalty coefficient required by a displaced
-nonlinear reference. G3's steady reference parity fixtures did not expose this. For nontrivial G4
-starts, the candidate worsens nonlinear merit and is correctly rejected.
+The initial diagnosis identified a real architectural omission but overstated its causal role in
+this particular archive. The one-outer-iteration qualification materialised its first CQP from the
+displaced CPU reference, so it never reached a second reference update. The missing production
+updates were nevertheless in scope and are now implemented for the reference-tracking objective,
+trust-cone centres and radii, exact-penalty epigraph cost, low-thrust radial halfspaces, 6-DoF
+quaternion linearisation, and nonlinear dynamics.
+
+The corrective rerun found two additional production defects: nonlinear merit used unscaled
+magnitudes inconsistent with the CPU SCvx policy, and an identical-CQP refined re-solve updated
+telemetry but acceptance still evaluated the stale pre-refinement primal. Both are corrected, and
+all four fixtures now compare every CPU/device numerical vector within `5e-12` while changing trust
+radii and exact-penalty weights in place. Even after those fixes, displaced P1-C remains
+unqualified: a 15-outer fixed-loose diagnostic accepted one step after eight trust reductions but
+ended at the minimum radius with scaled dynamics `1.705e-3`, terminal `8.092e-4`, and virtual
+control `2.000e-3`. This is retained as new negative evidence, not as a replacement for the frozen
+archive. G4 therefore remains FAIL pending an accurate production IPM/hybrid path or a further
+solver correction under unchanged policy.
 
 The compact coverage ledger retains 1,080 family/interval/policy/warm-start/quality coordinates.
 Unexecuted first-order coordinates are explicitly censored after qualification failure. Pure-IPM

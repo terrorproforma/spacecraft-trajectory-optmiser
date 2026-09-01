@@ -246,6 +246,7 @@ struct IntegrationResult {
     std::uint64_t topology_copies{0U};
     std::uint64_t update_allocations{0U};
     double maximum_solution_magnitude{0.0};
+    double coefficient_parity_max{0.0};
     double cpu_gpu_trajectory_max{0.0};
 };
 
@@ -461,7 +462,11 @@ IntegrationResult run_resident_sequence(
     const DynamicsMaps& maps,
     const std::size_t intervals,
     const std::size_t dynamics_row_start,
-    const spacepdhcg_cuda_dynamics_config& dynamics_config
+    const spacepdhcg_cuda_dynamics_config& dynamics_config,
+    const std::vector<double>& state_trust_scales,
+    const std::vector<double>& control_trust_scales,
+    const double fuel_weight,
+    const double virtual_l1_weight
 ) {
     test::ProblemStorage problem(false, !default_stream_mode);
     const auto topology_started = std::chrono::steady_clock::now();
@@ -488,6 +493,83 @@ IntegrationResult run_resident_sequence(
     test::CudaBuffer<int> state_variables(maps.state_variables.size(), false);
     test::CudaBuffer<int> control_variables(maps.control_variables.size(), false);
     test::CudaBuffer<int> virtual_variables(maps.virtual_variables.size(), false);
+    const auto q_lookup = positions(structure.quadratic);
+    std::vector<int> q_diagonal_positions;
+    q_diagonal_positions.reserve(
+        maps.state_variables.size() + maps.control_variables.size()
+    );
+    for (const int variable : maps.state_variables) {
+        q_diagonal_positions.push_back(q_lookup.at({
+            static_cast<std::size_t>(variable),
+            static_cast<std::size_t>(variable),
+        }));
+    }
+    for (const int variable : maps.control_variables) {
+        q_diagonal_positions.push_back(q_lookup.at({
+            static_cast<std::size_t>(variable),
+            static_cast<std::size_t>(variable),
+        }));
+    }
+    std::vector<int> radial_positions;
+    std::vector<int> quaternion_positions;
+    std::size_t radial_row_start{0U};
+    std::size_t quaternion_row_start{0U};
+    std::size_t stage_trust_row_start{0U};
+    std::size_t stage_trust_stride{0U};
+    std::size_t terminal_trust_row_start{0U};
+    if (dynamics_config.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
+        radial_row_start = 7U + 7U * intervals + 6U + 14U * intervals;
+        stage_trust_row_start = 4U * intervals;
+        stage_trust_stride = 12U;
+        terminal_trust_row_start =
+            stage_trust_row_start + stage_trust_stride * intervals;
+        const auto scalar_lookup = positions(structure.scalar_constraint);
+        for (std::size_t node = 0U; node <= intervals; ++node) {
+            for (std::size_t component = 0U; component < 3U; ++component) {
+                radial_positions.push_back(scalar_lookup.at({
+                    radial_row_start + node,
+                    static_cast<std::size_t>(
+                        maps.state_variables[node * StateDimension + component]
+                    ),
+                }));
+            }
+        }
+    } else if (
+        dynamics_config.model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF
+    ) {
+        stage_trust_row_start = 4U * intervals + 3U * (intervals + 1U);
+        stage_trust_stride = 12U;
+        terminal_trust_row_start =
+            stage_trust_row_start + stage_trust_stride * intervals;
+    } else if (
+        dynamics_config.model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
+    ) {
+        quaternion_row_start =
+            14U + 14U * intervals + 13U + 28U * intervals + intervals;
+        stage_trust_row_start =
+            8U * intervals + 7U * (intervals + 1U);
+        stage_trust_stride = 22U;
+        terminal_trust_row_start =
+            stage_trust_row_start + stage_trust_stride * intervals;
+        const auto scalar_lookup = positions(structure.scalar_constraint);
+        for (std::size_t node = 0U; node <= intervals; ++node) {
+            for (std::size_t component = 0U; component < 4U; ++component) {
+                quaternion_positions.push_back(scalar_lookup.at({
+                    quaternion_row_start + node,
+                    static_cast<std::size_t>(
+                        maps.state_variables[
+                            node * StateDimension + 6U + component
+                        ]
+                    ),
+                }));
+            }
+        }
+    }
+    test::CudaBuffer<int> q_positions(q_diagonal_positions.size(), false);
+    test::CudaBuffer<int> radial_position_buffer(radial_positions.size(), false);
+    test::CudaBuffer<int> quaternion_position_buffer(
+        quaternion_positions.size(), false
+    );
     test::CudaBuffer<double> target(StateDimension, false);
     states.upload(reference_states, problem.stream);
     controls.upload(reference_controls, problem.stream);
@@ -498,6 +580,9 @@ IntegrationResult run_resident_sequence(
     state_variables.upload(maps.state_variables, problem.stream);
     control_variables.upload(maps.control_variables, problem.stream);
     virtual_variables.upload(maps.virtual_variables, problem.stream);
+    q_positions.upload(q_diagonal_positions, problem.stream);
+    radial_position_buffer.upload(radial_positions, problem.stream);
+    quaternion_position_buffer.upload(quaternion_positions, problem.stream);
     target.upload(target_state, problem.stream);
     const auto rw64 = [](auto& buffer) {
         return test::view(
@@ -561,8 +646,44 @@ IntegrationResult run_resident_sequence(
         "pointer snapshot before resident sequence"
     );
     spacepdhcg_cuda_diagnostics diagnostics{};
+    double coefficient_parity_max{0.0};
     if (production_driver_mode) {
         auto numeric = problem.numeric_views();
+        spacepdhcg_cuda_scvx_numeric_update numeric_update{};
+        numeric_update.abi_version = SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
+        numeric_update.quadratic_diagonal_positions = ro32(q_positions);
+        numeric_update.radial_positions = radial_positions.empty()
+            ? null_int_view()
+            : ro32(radial_position_buffer);
+        numeric_update.quaternion_positions = quaternion_positions.empty()
+            ? null_int_view()
+            : ro32(quaternion_position_buffer);
+        numeric_update.terminal_row_start =
+            dynamics_row_start + intervals * StateDimension;
+        numeric_update.radial_row_start = radial_row_start;
+        numeric_update.quaternion_row_start = quaternion_row_start;
+        numeric_update.stage_trust_row_start = stage_trust_row_start;
+        numeric_update.stage_trust_stride = stage_trust_stride;
+        numeric_update.terminal_trust_row_start = terminal_trust_row_start;
+        numeric_update.virtual_variable_offset =
+            maps.virtual_variables.empty()
+            ? 0U
+            : static_cast<std::size_t>(maps.virtual_variables.front());
+        numeric_update.epigraph_variable_offset =
+            numeric_update.virtual_variable_offset
+            + maps.virtual_variables.size();
+        std::copy(
+            state_trust_scales.begin(),
+            state_trust_scales.end(),
+            numeric_update.state_trust_scales
+        );
+        std::copy(
+            control_trust_scales.begin(),
+            control_trust_scales.end(),
+            numeric_update.control_trust_scales
+        );
+        numeric_update.fuel_weight = fuel_weight;
+        numeric_update.virtual_l1_weight = virtual_l1_weight;
         const spacepdhcg_cuda_scvx_problem outer_problem{
             SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
             workspace,
@@ -582,13 +703,142 @@ IntegrationResult run_resident_sequence(
             rw64(states),
             rw64(controls),
             ro64(target),
+            numeric_update,
         };
+        test::status_require(
+            spacepdhcg_cuda_variational_rk4_async(
+                &dynamics_config, &linearise, problem.exchange.consumer_stream
+            ),
+            "coefficient parity variational update"
+        );
+        test::status_require(
+            spacepdhcg_cuda_fill_dynamics_csc_async(
+                &fill, problem.exchange.consumer_stream
+            ),
+            "coefficient parity dynamics fill"
+        );
+        test::status_require(
+            spacepdhcg_cuda_scvx_update_numeric_async(
+                &outer_problem,
+                1.0,
+                virtual_l1_weight,
+                problem.exchange.consumer_stream
+            ),
+            "coefficient parity numeric update"
+        );
+        test::cuda_require(
+            cudaStreamSynchronize(problem.stream),
+            "coefficient parity synchronization"
+        );
+        auto expected = values;
+        const auto compare = [&coefficient_parity_max](
+            const std::vector<double>& actual,
+            const std::vector<double>& wanted
+        ) {
+            test::require(
+                actual.size() == wanted.size(),
+                "coefficient parity vector size mismatch"
+            );
+            for (std::size_t index = 0U; index < actual.size(); ++index) {
+                if (std::isinf(actual[index]) || std::isinf(wanted[index])) {
+                    test::require(
+                        actual[index] == wanted[index],
+                        "coefficient parity infinity mismatch"
+                    );
+                } else {
+                    coefficient_parity_max = std::max(
+                        coefficient_parity_max,
+                        std::abs(actual[index] - wanted[index])
+                    );
+                }
+            }
+        };
+        compare(problem.q.download(problem.stream), expected.quadratic);
+        compare(problem.a.download(problem.stream), expected.scalar_constraint);
+        compare(problem.f.download(problem.stream), expected.affine_cone);
+        compare(problem.c.download(problem.stream), expected.linear_objective);
+        compare(
+            problem.scalar_lower.download(problem.stream), expected.scalar_lower
+        );
+        compare(
+            problem.scalar_upper.download(problem.stream), expected.scalar_upper
+        );
+        compare(
+            problem.affine_offset.download(problem.stream), expected.affine_offset
+        );
+        compare(
+            problem.variable_lower.download(problem.stream), expected.variable_lower
+        );
+        compare(
+            problem.variable_upper.download(problem.stream), expected.variable_upper
+        );
+        test::require(
+            coefficient_parity_max <= 5.0e-12,
+            "device coefficient update diverged from CPU transcription"
+        );
+        if (!maps.virtual_variables.empty()) {
+            test::status_require(
+                spacepdhcg_cuda_scvx_update_numeric_async(
+                    &outer_problem,
+                    0.37,
+                    2.0 * virtual_l1_weight,
+                    problem.exchange.consumer_stream
+                ),
+                "trust and exact-penalty mutation"
+            );
+            test::cuda_require(
+                cudaStreamSynchronize(problem.stream),
+                "trust and exact-penalty synchronization"
+            );
+            const auto changed_c = problem.c.download(problem.stream);
+            for (std::size_t variable = numeric_update.epigraph_variable_offset;
+                 variable < changed_c.size();
+                 ++variable) {
+                test::require(
+                    std::abs(changed_c[variable] - 2.0 * virtual_l1_weight)
+                        <= 1.0e-12,
+                    "exact-penalty coefficient failed to update"
+                );
+            }
+            const auto changed_offset =
+                problem.affine_offset.download(problem.stream);
+            for (std::size_t interval = 0U; interval < intervals; ++interval) {
+                test::require(
+                    std::abs(
+                        changed_offset[
+                            numeric_update.stage_trust_row_start
+                            + (interval + 1U)
+                                * numeric_update.stage_trust_stride
+                            - 1U
+                        ] - 0.37
+                    ) <= 1.0e-12,
+                    "stage trust radius failed to update"
+                );
+            }
+            test::require(
+                std::abs(
+                    changed_offset[
+                        numeric_update.terminal_trust_row_start + StateDimension
+                    ] - 0.37
+                ) <= 1.0e-12,
+                "terminal trust radius failed to update"
+            );
+            test::status_require(
+                spacepdhcg_cuda_scvx_update_numeric_async(
+                    &outer_problem,
+                    1.0,
+                    virtual_l1_weight,
+                    problem.exchange.consumer_stream
+                ),
+                "restore initial numeric coefficients"
+            );
+        }
         spacepdhcg_cuda_scvx_options outer_options{
             SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
             production_outer_iterations,
             production_outer_iterations,
             1U,
-            1.0e-6,
+            sanitizer_mode ? 1.0e-2 : 1.0e-6,
             2.0e-2,
             0.05,
             0.90,
@@ -748,6 +998,8 @@ IntegrationResult run_resident_sequence(
                     "\"resolve_fingerprint_match\":%d,\"trust_action\":%d,"
                     "\"trust_before\":%.17g,\"trust_after\":%.17g,"
                     "\"predicted\":%.17g,\"actual\":%.17g,\"ratio\":%.17g,"
+                    "\"candidate_dynamics\":%.17g,\"candidate_path\":%.17g,"
+                    "\"candidate_terminal\":%.17g,\"candidate_virtual\":%.17g,"
                     "\"scaling_refreshed\":%d,\"scaling_min\":%.17g,"
                     "\"scaling_max\":%.17g,\"warm_start\":%d,"
                     "\"recovery_mode\":%d,\"forcing_satisfied\":%d,"
@@ -779,6 +1031,10 @@ IntegrationResult run_resident_sequence(
                     record.predicted_reduction,
                     record.actual_reduction,
                     record.reduction_ratio,
+                    record.dynamics_defect,
+                    record.path_violation,
+                    record.terminal_residual,
+                    record.virtual_control,
                     record.scaling_refreshed,
                     record.scaling_min,
                     record.scaling_max,
@@ -846,6 +1102,7 @@ IntegrationResult run_resident_sequence(
             outer.topology_index_copy_count_after_create,
             0U,
             0.0,
+            coefficient_parity_max,
             parity_maximum,
         };
         test::destroy_workspace(workspace);
@@ -1072,6 +1329,7 @@ IntegrationResult run_resident_sequence(
         diagnostics.allocation_delta_last_update,
         maximum_solution,
         0.0,
+        0.0,
     };
     test::destroy_workspace(workspace);
     return result;
@@ -1148,7 +1406,11 @@ IntegrationResult run_hcw() {
         maps,
         config.intervals,
         layout.dynamics_row(),
-        model_config(SPACEPDHCG_CUDA_DYNAMICS_HCW, config.step_seconds)
+        model_config(SPACEPDHCG_CUDA_DYNAMICS_HCW, config.step_seconds),
+        {},
+        {},
+        0.0,
+        0.0
     );
 }
 
@@ -1211,7 +1473,15 @@ IntegrationResult run_pd3() {
         layout.dynamics_rows().start,
         model_config(
             SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF, config.step_seconds
-        )
+        ),
+        std::vector<double>(
+            config.state_trust_scales.begin(), config.state_trust_scales.end()
+        ),
+        std::vector<double>(
+            config.control_trust_scales.begin(), config.control_trust_scales.end()
+        ),
+        config.fuel_weight,
+        config.virtual_l1_weight
     );
 }
 
@@ -1264,7 +1534,15 @@ IntegrationResult run_low_thrust() {
         maps,
         config.intervals,
         layout.dynamics_rows().start,
-        model_config(SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST, config.step_seconds)
+        model_config(SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST, config.step_seconds),
+        std::vector<double>(
+            config.state_trust_scales.begin(), config.state_trust_scales.end()
+        ),
+        std::vector<double>(
+            config.control_trust_scales.begin(), config.control_trust_scales.end()
+        ),
+        config.fuel_weight,
+        config.virtual_l1_weight
     );
 }
 
@@ -1325,7 +1603,15 @@ IntegrationResult run_pd6() {
         layout.dynamics_rows().start,
         model_config(
             SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF, config.step_seconds
-        )
+        ),
+        std::vector<double>(
+            config.state_trust_scales.begin(), config.state_trust_scales.end()
+        ),
+        std::vector<double>(
+            config.control_trust_scales.begin(), config.control_trust_scales.end()
+        ),
+        config.fuel_weight,
+        config.virtual_l1_weight
     );
 }
 

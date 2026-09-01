@@ -26,6 +26,7 @@ struct Augmented {
 };
 
 template <typename T>
+__host__ __device__
 T* view_pointer(const spacepdhcg_accelerator_buffer_view& view) {
     return reinterpret_cast<T*>(
         reinterpret_cast<std::uintptr_t>(view.data) + view.byte_offset
@@ -785,6 +786,7 @@ namespace {
 struct ScvxMetrics {
     double objective;
     double merit;
+    double model_merit;
     double dynamics;
     double path;
     double terminal;
@@ -896,6 +898,151 @@ __global__ void gather_scvx_candidate_kernel(
     }
 }
 
+__global__ void update_scvx_numeric_kernel(
+    const spacepdhcg_cuda_scvx_problem problem,
+    const double trust_radius,
+    const double virtual_penalty
+) {
+    if (blockIdx.x != 0 || threadIdx.x != 0) {
+        return;
+    }
+    const auto& update = problem.numeric_update;
+    const auto* states = view_pointer<const double>(problem.reference_states);
+    const auto* controls = view_pointer<const double>(problem.reference_controls);
+    const auto* q_positions =
+        view_pointer<const int>(update.quadratic_diagonal_positions);
+    const auto* q = view_pointer<const double>(problem.numeric.quadratic);
+    auto* c = view_pointer<double>(problem.numeric.linear_objective);
+    auto* scalar = view_pointer<double>(problem.numeric.scalar_constraint);
+    auto* scalar_lower = view_pointer<double>(problem.numeric.scalar_lower);
+    auto* scalar_upper = view_pointer<double>(problem.numeric.scalar_upper);
+    auto* affine_offset = view_pointer<double>(problem.numeric.affine_offset);
+    const auto* target = view_pointer<const double>(problem.target_state);
+    const size_t state_elements =
+        (problem.intervals + 1U) * problem.state_dimension;
+    const size_t control_elements =
+        problem.intervals * problem.control_dimension;
+    for (size_t index = 0U; index < state_elements; ++index) {
+        const int q_position = q_positions[index];
+        const size_t component = index % problem.state_dimension;
+        const size_t node = index / problem.state_dimension;
+        double reference = states[index];
+        if (problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_HCW) {
+            const double fraction =
+                static_cast<double>(node)
+                / static_cast<double>(problem.intervals);
+            reference = (1.0 - fraction) * states[component]
+                + fraction * target[component];
+        }
+        c[view_pointer<const int>(problem.state_variable_indices)[index]] =
+            -q[q_position] * reference;
+    }
+    const size_t terminal_dimension =
+        problem.dynamics.model
+                == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
+            ? 13U
+            : (problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+                ? problem.state_dimension
+                : 6U);
+    for (size_t component = 0U;
+         component < problem.state_dimension;
+         ++component) {
+        scalar_lower[component] = states[component];
+        scalar_upper[component] = states[component];
+    }
+    for (size_t component = 0U; component < terminal_dimension; ++component) {
+        scalar_lower[update.terminal_row_start + component] = target[component];
+        scalar_upper[update.terminal_row_start + component] = target[component];
+    }
+    for (size_t index = 0U; index < control_elements; ++index) {
+        const int variable =
+            view_pointer<const int>(problem.control_variable_indices)[index];
+        const int q_position = q_positions[state_elements + index];
+        c[variable] = -q[q_position] * controls[index];
+    }
+    if (problem.dynamics.model != SPACEPDHCG_CUDA_DYNAMICS_HCW) {
+        const size_t sigma =
+            problem.dynamics.model
+                    == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
+                ? 6U
+                : 3U;
+        for (size_t interval = 0U; interval < problem.intervals; ++interval) {
+            const int variable = view_pointer<const int>(
+                problem.control_variable_indices
+            )[interval * problem.control_dimension + sigma];
+            c[variable] += update.fuel_weight * problem.dynamics.step_seconds;
+        }
+        const size_t virtual_elements =
+            problem.intervals * problem.state_dimension;
+        for (size_t index = 0U; index < virtual_elements; ++index) {
+            c[update.epigraph_variable_offset + index] = virtual_penalty;
+        }
+        for (size_t interval = 0U; interval < problem.intervals; ++interval) {
+            const size_t row =
+                update.stage_trust_row_start
+                + interval * update.stage_trust_stride;
+            for (size_t component = 0U;
+                 component < problem.state_dimension;
+                 ++component) {
+                affine_offset[row + component] =
+                    -update.state_trust_scales[component]
+                    * states[interval * problem.state_dimension + component];
+            }
+            for (size_t component = 0U;
+                 component < problem.control_dimension;
+                 ++component) {
+                affine_offset[row + problem.state_dimension + component] =
+                    -update.control_trust_scales[component]
+                    * controls[interval * problem.control_dimension + component];
+            }
+            affine_offset[row + update.stage_trust_stride - 1U] = trust_radius;
+        }
+        for (size_t component = 0U;
+             component < problem.state_dimension;
+             ++component) {
+            affine_offset[update.terminal_trust_row_start + component] =
+                -update.state_trust_scales[component]
+                * states[problem.intervals * problem.state_dimension + component];
+        }
+        affine_offset[
+            update.terminal_trust_row_start + problem.state_dimension
+        ] = trust_radius;
+    }
+    if (problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
+        const auto* positions = view_pointer<const int>(update.radial_positions);
+        for (size_t node = 0U; node <= problem.intervals; ++node) {
+            const double* state = states + node * problem.state_dimension;
+            const double radius = sqrt(
+                state[0U] * state[0U]
+                + state[1U] * state[1U]
+                + state[2U] * state[2U]
+            );
+            for (size_t component = 0U; component < 3U; ++component) {
+                scalar[positions[3U * node + component]] =
+                    state[component] / radius;
+            }
+        }
+    }
+    if (problem.dynamics.model
+        == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
+        const auto* positions =
+            view_pointer<const int>(update.quaternion_positions);
+        for (size_t node = 0U; node <= problem.intervals; ++node) {
+            const double* quaternion =
+                states + node * problem.state_dimension + 6U;
+            double norm_squared = 0.0;
+            for (size_t component = 0U; component < 4U; ++component) {
+                scalar[positions[4U * node + component]] =
+                    2.0 * quaternion[component];
+                norm_squared += quaternion[component] * quaternion[component];
+            }
+            const size_t row = update.quaternion_row_start + node;
+            scalar_lower[row] = 1.0 + norm_squared;
+            scalar_upper[row] = 1.0 + norm_squared;
+        }
+    }
+}
+
 template <int Model, int StateDimension, int ControlDimension>
 __global__ void replay_scvx_kernel(
     const double* initial_state,
@@ -936,30 +1083,63 @@ __global__ void scvx_metrics_kernel(
     const int model,
     const double feasibility_penalty,
     const double virtual_penalty,
+    const spacepdhcg_cuda_scvx_numeric_update update,
+    const double* variable_lower,
+    const double* variable_upper,
+    const int* state_variable_indices,
+    const int* control_variable_indices,
     ScvxMetrics* metrics
 ) {
     if (blockIdx.x != 0 || threadIdx.x != 0) {
         return;
     }
     ScvxMetrics result{};
-    for (size_t index = 0;
-         index < (intervals + 1U) * state_dimension;
-         ++index) {
-        result.step = fmax(
-            result.step,
-            fabs(states[index] - reference_states[index])
-        );
+    double actual_terminal_sum = 0.0;
+    double model_terminal_sum = 0.0;
+    double actual_path_sum = 0.0;
+    double model_path_sum = 0.0;
+    for (size_t interval = 0U; interval < intervals; ++interval) {
+        double step_squared = 0.0;
+        for (size_t component = 0U; component < state_dimension; ++component) {
+            const double scale = model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+                ? 1.0
+                : update.state_trust_scales[component];
+            const double delta =
+                (states[interval * state_dimension + component]
+                 - reference_states[interval * state_dimension + component])
+                * scale;
+            step_squared += delta * delta;
+        }
+        for (size_t component = 0U; component < control_dimension; ++component) {
+            const double value =
+                controls[interval * control_dimension + component];
+            const double scale = model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+                ? 1.0
+                : update.control_trust_scales[component];
+            const double delta =
+                (value
+                 - reference_controls[
+                     interval * control_dimension + component
+                 ]) * scale;
+            step_squared += delta * delta;
+            if (model == SPACEPDHCG_CUDA_DYNAMICS_HCW) {
+                result.objective += 0.5 * value * value;
+            }
+        }
+        result.step = fmax(result.step, sqrt(step_squared));
     }
-    for (size_t index = 0;
-         index < intervals * control_dimension;
-         ++index) {
-        const double value = controls[index];
-        result.step = fmax(
-            result.step,
-            fabs(value - reference_controls[index])
-        );
-        result.objective += 0.5e-8 * value * value;
+    double terminal_step_squared = 0.0;
+    for (size_t component = 0U; component < state_dimension; ++component) {
+        const double scale = model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+            ? 1.0
+            : update.state_trust_scales[component];
+        const double delta =
+            (states[intervals * state_dimension + component]
+             - reference_states[intervals * state_dimension + component])
+            * scale;
+        terminal_step_squared += delta * delta;
     }
+    result.step = fmax(result.step, sqrt(terminal_step_squared));
     for (size_t node = 1; node <= intervals; ++node) {
         for (size_t state = 0; state < state_dimension; ++state) {
             result.dynamics = fmax(
@@ -967,19 +1147,38 @@ __global__ void scvx_metrics_kernel(
                 fabs(
                     states[node * state_dimension + state]
                     - replay[node * state_dimension + state]
-                )
+                ) * (model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+                    ? 1.0
+                    : update.state_trust_scales[state])
             );
         }
     }
-    for (size_t state = 0; state < state_dimension; ++state) {
+    const size_t terminal_dimension =
+        model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
+        ? 13U
+        : (model == SPACEPDHCG_CUDA_DYNAMICS_HCW ? state_dimension : 6U);
+    for (size_t state = 0; state < terminal_dimension; ++state) {
+        const double scale = model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+            ? 1.0
+            : update.state_trust_scales[state];
+        const double model_error = fabs(
+            states[intervals * state_dimension + state] - target[state]
+        ) * scale;
+        const double actual_error = fabs(
+            replay[intervals * state_dimension + state] - target[state]
+        ) * scale;
+        model_terminal_sum += model_error;
+        actual_terminal_sum += actual_error;
         result.terminal = fmax(
             result.terminal,
-            fabs(
-                replay[intervals * state_dimension + state] - target[state]
-            )
+            actual_error
         );
     }
     if (model != SPACEPDHCG_CUDA_DYNAMICS_HCW) {
+        const size_t sigma_index =
+            model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
+            ? 6U
+            : 3U;
         for (size_t interval = 0; interval < intervals; ++interval) {
             const double* control = controls + interval * control_dimension;
             const double thrust_norm = sqrt(
@@ -987,27 +1186,45 @@ __global__ void scvx_metrics_kernel(
                 + control[1] * control[1]
                 + control[2] * control[2]
             );
-            const size_t sigma_index =
-                model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
-                ? 6U
-                : 3U;
-            result.path = fmax(
-                result.path,
-                fmax(0.0, thrust_norm - control[sigma_index])
-            );
+            const double thrust_violation =
+                fmax(0.0, thrust_norm - control[sigma_index]);
+            const int sigma_variable =
+                control_variable_indices[
+                    interval * control_dimension + sigma_index
+                ];
+            const double maximum_thrust = variable_upper[sigma_variable];
+            const double normalised_thrust_violation =
+                thrust_violation / maximum_thrust;
+            result.path = fmax(result.path, normalised_thrust_violation);
+            actual_path_sum += normalised_thrust_violation;
+            model_path_sum += normalised_thrust_violation;
+            result.objective += control[sigma_index]
+                / (static_cast<double>(intervals) * maximum_thrust);
         }
         const size_t mass_index =
             model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
             ? 13U
             : 6U;
         for (size_t node = 0; node <= intervals; ++node) {
+            const int mass_variable =
+                state_variable_indices[node * state_dimension + mass_index];
+            const double mass_scale = update.state_trust_scales[mass_index];
+            const double actual_mass_violation = fmax(
+                0.0,
+                variable_lower[mass_variable]
+                    - replay[node * state_dimension + mass_index]
+            ) * mass_scale;
+            const double model_mass_violation = fmax(
+                0.0,
+                variable_lower[mass_variable]
+                    - states[node * state_dimension + mass_index]
+            ) * mass_scale;
             result.path = fmax(
                 result.path,
-                fmax(
-                    0.0,
-                    1.0e-12 - replay[node * state_dimension + mass_index]
-                )
+                actual_mass_violation
             );
+            actual_path_sum += actual_mass_violation;
+            model_path_sum += model_mass_violation;
         }
     }
     if (model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
@@ -1022,18 +1239,36 @@ __global__ void scvx_metrics_kernel(
                 result.path,
                 fabs(sqrt(norm_squared) - 1.0)
             );
+            double model_norm_squared = 0.0;
+            for (size_t component = 0; component < 4U; ++component) {
+                const double value =
+                    states[node * state_dimension + 6U + component];
+                model_norm_squared += value * value;
+            }
+            actual_path_sum += fabs(sqrt(norm_squared) - 1.0);
+            model_path_sum += fabs(sqrt(model_norm_squared) - 1.0);
         }
     }
+    double virtual_sum = 0.0;
     for (size_t index = 0; index < virtual_elements; ++index) {
+        const double scaled = fabs(primal[virtual_indices[index]])
+            * update.state_trust_scales[index % state_dimension];
+        virtual_sum += scaled;
         result.virtual_control = fmax(
             result.virtual_control,
-            fabs(primal[virtual_indices[index]])
+            scaled
         );
     }
+    const double virtual_measure = virtual_elements == 0U
+        ? 0.0
+        : virtual_sum / static_cast<double>(virtual_elements);
     result.merit = result.objective
         + feasibility_penalty
-            * (result.dynamics + result.path + result.terminal)
-        + virtual_penalty * result.virtual_control;
+            * (actual_path_sum + actual_terminal_sum)
+        + virtual_penalty * virtual_measure;
+    result.model_merit = result.objective
+        + feasibility_penalty * (model_path_sum + model_terminal_sum)
+        + virtual_penalty * virtual_measure;
     *metrics = result;
 }
 
@@ -1297,6 +1532,11 @@ spacepdhcg_cuda_status collect_metrics(
         static_cast<int>(driver->problem.dynamics.model),
         driver->options.feasibility_penalty,
         driver->options.virtual_penalty,
+        driver->problem.numeric_update,
+        view_pointer<const double>(driver->problem.numeric.variable_lower),
+        view_pointer<const double>(driver->problem.numeric.variable_upper),
+        view_pointer<const int>(driver->problem.state_variable_indices),
+        view_pointer<const int>(driver->problem.control_variable_indices),
         driver->device_metrics
     );
     api_status = time_stop(driver, stream, replay_seconds);
@@ -1380,6 +1620,37 @@ spacepdhcg_cuda_status collect_numeric_fingerprint(
 
 }  // namespace
 
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_update_numeric_async(
+    const spacepdhcg_cuda_scvx_problem* problem,
+    const double trust_radius,
+    const double virtual_penalty,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (problem == nullptr
+        || problem->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || problem->numeric_update.abi_version
+               != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || !(trust_radius > 0.0) || !std::isfinite(trust_radius)
+        || !(virtual_penalty >= 0.0) || !std::isfinite(virtual_penalty)
+        || stream.device.type != SPACEPDHCG_DEVICE_CUDA
+        || stream.device.id < 0) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    const size_t tracked_variables =
+        (problem->intervals + 1U) * problem->state_dimension
+        + problem->intervals * problem->control_dimension;
+    if (problem->numeric_update.quadratic_diagonal_positions.elements
+            != tracked_variables) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    update_scvx_numeric_kernel<<<
+        1, 1, 0, reinterpret_cast<cudaStream_t>(stream.native_handle)
+    >>>(*problem, trust_radius, virtual_penalty);
+    return cudaGetLastError() == cudaSuccess
+        ? SPACEPDHCG_CUDA_SUCCESS
+        : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+}
+
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
     const spacepdhcg_cuda_scvx_problem* problem,
     const spacepdhcg_cuda_scvx_options* options,
@@ -1387,6 +1658,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
 ) {
     if (problem == nullptr || options == nullptr || driver == nullptr
         || problem->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || problem->numeric_update.abi_version
+               != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
         || options->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
         || problem->workspace == nullptr || problem->intervals == 0U
         || problem->state_dimension == 0U
@@ -1653,6 +1926,14 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 stream
             );
         }
+        if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+            api_status = spacepdhcg_cuda_scvx_update_numeric_async(
+                &driver->problem,
+                trust_radius,
+                driver->problem.numeric_update.virtual_l1_weight,
+                stream
+            );
+        }
         if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
             result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
             return api_status;
@@ -1802,12 +2083,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         }
         ScvxMetrics candidate = *driver->host_metrics;
         const auto acceptance_started = std::chrono::steady_clock::now();
-        const double predicted = std::max(
+        double predicted = std::max(
             1.0e-12,
-            current.merit - last_diagnostics.objective
+            current.merit - candidate.model_merit
         );
-        const double actual = current.merit - candidate.merit;
-        const double ratio = actual / predicted;
+        double actual = current.merit - candidate.merit;
+        double ratio = actual / predicted;
         const double current_outer = maximum_outer_residual(current);
         const double candidate_outer = maximum_outer_residual(candidate);
         bool restoration = candidate_outer
@@ -1824,7 +2105,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         bool resolve_fingerprint_match = true;
         if (!accepted
             && last_diagnostics.natural_residual_inf
-                > 1.5 * solve_options.optimality_tolerance) {
+                > 5.0 * solve_options.optimality_tolerance) {
             for (uint32_t resolve = 0;
                  resolve < driver->options.maximum_resolves_per_iteration;
                  ++resolve) {
@@ -1891,10 +2172,55 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 ++result->resolved_steps;
                 result->inner_iterations += last_diagnostics.iterations;
                 if (last_diagnostics.natural_residual_inf
-                    <= 1.5 * solve_options.optimality_tolerance) {
+                    <= 5.0 * solve_options.optimality_tolerance) {
                     break;
                 }
             }
+        }
+        if (re_solved) {
+            gather_scvx_candidate_kernel<<<1, 256, 0, native>>>(
+                driver->primal,
+                view_pointer<const int>(driver->problem.state_variable_indices),
+                view_pointer<const int>(driver->problem.control_variable_indices),
+                driver->candidate_states,
+                driver->candidate_controls,
+                state_elements,
+                control_elements
+            );
+            if (cudaGetLastError() != cudaSuccess) {
+                return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+            }
+            api_status = collect_metrics(
+                driver,
+                driver->candidate_states,
+                driver->candidate_controls,
+                true,
+                native,
+                &result->replay_seconds,
+                &result->d2h_seconds
+            );
+            if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+                return api_status;
+            }
+            candidate = *driver->host_metrics;
+            predicted = std::max(1.0e-12, current.merit - candidate.model_merit);
+            actual = current.merit - candidate.merit;
+            ratio = actual / predicted;
+            restoration = maximum_outer_residual(candidate)
+                <= driver->options.restoration_reduction * current_outer;
+            accepted =
+                last_diagnostics.termination
+                    == SPACEPDHCG_CUDA_TERMINATION_OPTIMAL
+                && ((actual > 1.0e-10
+                     && std::isfinite(ratio)
+                     && ratio >= driver->options.acceptance_threshold)
+                    || restoration);
+        }
+        if (maximum_outer_residual(current)
+                <= driver->options.convergence_tolerance
+            && current.step <= driver->options.step_tolerance) {
+            accepted = false;
+            restoration = false;
         }
         const double radius_before = trust_radius;
         auto trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_RETAIN;
@@ -1955,7 +2281,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             actual,
             ratio,
             candidate.step / std::max(1.0e-12, radius_before),
-            last_diagnostics.objective,
+            candidate.model_merit,
             candidate.virtual_control,
             candidate.dynamics,
             candidate.path,
@@ -1985,7 +2311,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 : driver->options.warm_start_mode,
             last_diagnostics.recovery_outcome_reason,
             last_diagnostics.natural_residual_inf
-                    <= 1.5 * solve_options.optimality_tolerance
+                    <= 5.0 * solve_options.optimality_tolerance
                 ? 1
                 : 0,
             driver->options.policy == SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH
@@ -2010,6 +2336,23 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             result->status = SPACEPDHCG_CUDA_SCVX_TRUST_REGION_EXHAUSTED;
             break;
         }
+    }
+    api_status = collect_metrics(
+        driver,
+        view_pointer<const double>(driver->problem.reference_states),
+        view_pointer<const double>(driver->problem.reference_controls),
+        false,
+        native,
+        &result->replay_seconds,
+        &result->d2h_seconds
+    );
+    if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+        return api_status;
+    }
+    current = *driver->host_metrics;
+    if (maximum_outer_residual(current) <= driver->options.convergence_tolerance
+        && current.step <= driver->options.step_tolerance) {
+        result->status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
     }
     result->objective = current.objective;
     result->canonical_residual = last_diagnostics.natural_residual_inf;

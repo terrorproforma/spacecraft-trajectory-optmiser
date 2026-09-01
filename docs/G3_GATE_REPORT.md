@@ -2,7 +2,20 @@
 
 ## Decision
 
-**G3 PASS. G4 is authorised.**
+**G3 historical PASS amended: displaced-reference outer-loop parity was not established.**
+
+The original G3 campaign established nominal-reference residency, lifecycle, coefficient-generation,
+and solver diagnostics. Gate G4 later exposed that this wording overstated the production outer-loop
+coverage: the all-family parity fixture started from references whose nonlinear rollout already
+matched the reported final trajectory, so rejected candidates still produced zero trajectory
+difference. It did not verify coefficient evolution after an accepted displaced step.
+
+The corrective implementation now updates reference tracking objectives, trust-cone centres and
+radii, exact-penalty epigraph costs, low-thrust radial halfspaces, 6-DoF quaternion linearisations,
+and nonlinear dynamics in place. Direct CPU/device coefficient parity is within `5e-12`, but the
+frozen displaced-start outer-loop qualification remains above matched-quality tolerances because
+the current PDHCG production solve eventually exhausts the trust region. Therefore this amendment
+does not reseal G3 as a displaced-start PASS, and it does not authorise G5.
 
 The final clean campaign ran from implementation commit
 `9dcc070938594c12b0e54cad0b57d553600f4522`. Transactional projected-KKT/CGLS recovery now removes
