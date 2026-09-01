@@ -398,7 +398,7 @@ def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
     started = time.perf_counter()
     payload = run_pd3(
         intervals=intervals,
-        step_seconds=2.0,
+        step_seconds=40.0 / intervals,
         max_iterations=8,
         tolerance=1.0e-3,
         initial_dispersion_scale=float(parameters["initial_dispersion_scales"]),

@@ -8,6 +8,11 @@ import pytest
 
 from spacepdhcg.benchmarks.cw_repeat import run_benchmark as run_hcw_box
 from spacepdhcg.benchmarks.powered_descent_scvx import run as run_pd3
+from spacepdhcg.benchmarks.trajectory_banded import (
+    TrajectoryBandedConfig,
+    TrajectoryBandedFixture,
+)
+from spacepdhcg.models import CWRendezvousConfig, CWRendezvousProblem
 
 
 def _module():
@@ -191,3 +196,21 @@ def test_hcw_matrix_coordinate_is_fully_qualified(tmp_path: Path) -> None:
     assert result["disposition"] == "executed"
     assert result["quality"]["qualified"]
     assert result["quality"]["canonical_natural_residual"] <= 1.0e-7
+
+
+def test_large_sparse_fixtures_do_not_densify_identity_blocks() -> None:
+    intervals = 10_000
+    hcw = CWRendezvousProblem(CWRendezvousConfig(intervals=intervals))
+    assert hcw.structure.constraint.nnz == 12 + intervals * (6 * 6 + 6 + 6 * 3 + 3)
+
+    banded = TrajectoryBandedFixture(
+        TrajectoryBandedConfig(
+            intervals=intervals,
+            state_dimension=4,
+            control_dimension=3,
+            seed=17,
+            weight_log10_span=0.0,
+            control_constraint="box",
+        )
+    )
+    assert banded.structure.constraint.nnz == 8 + intervals * (4 * 4 + 4 + 4 * 3 + 3)
