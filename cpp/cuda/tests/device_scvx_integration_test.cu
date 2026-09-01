@@ -540,6 +540,10 @@ IntegrationResult run_resident_sequence(
         if (diagnostic_mode || dump_mode) {
             run_upstream_diagnostic(problem);
         }
+        if (dump_mode) {
+            test::destroy_workspace(workspace);
+            return {};
+        }
         diagnostics = test::solve_and_wait(workspace, problem, solve);
         if (diagnostics.termination != SPACEPDHCG_CUDA_TERMINATION_OPTIMAL) {
             if (tight_residual_mode || diagnostic_mode || dump_mode
