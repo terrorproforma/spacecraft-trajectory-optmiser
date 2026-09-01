@@ -61,6 +61,7 @@
   - Idle RTX 5090 Release one-rank MPI/NCCL/CUDA CTest passed; memcheck was leak/error clean and
     racecheck reported zero hazards.
 - Follow-up notes / risks:
-  - Initcheck/synccheck and overlap execution were deferred when G4 resumed GPU ownership.
+  - Initcheck/synccheck, overlap execution, and a final-HEAD rerun after adding compact status and
+    cancellation assertions were deferred when G4 resumed GPU ownership.
   - Physical 2/4/8 correctness, rank-failure behavior, strong/weak scaling, and H2/H3/H4 remain
     unverified. G5 must not be reported as PASS.
