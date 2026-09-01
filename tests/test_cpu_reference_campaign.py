@@ -138,6 +138,14 @@ def test_semantic_reproducibility_excludes_only_observation_fields() -> None:
         "family": "P1-A-banded",
         "quality": {"qualified": True},
     }
+    assert module._distribution([1.0, 2.0, 3.0]) == {
+        "count": 3,
+        "minimum": 1.0,
+        "q1": 1.5,
+        "median": 2.0,
+        "q3": 2.5,
+        "maximum": 3.0,
+    }
 
 
 def test_coordinate_specific_benchmark_inputs_are_validated() -> None:

@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import shutil
+import statistics
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -49,6 +50,27 @@ def _semantic(result: dict[str, Any]) -> dict[str, Any]:
         key: value
         for key, value in result.items()
         if key not in {"timing", "resources", "artifacts"}
+    }
+
+
+def _distribution(values: list[float]) -> dict[str, Any]:
+    if not values:
+        return {
+            "count": 0,
+            "minimum": None,
+            "q1": None,
+            "median": None,
+            "q3": None,
+            "maximum": None,
+        }
+    quartiles = statistics.quantiles(values, n=4, method="inclusive")
+    return {
+        "count": len(values),
+        "minimum": min(values),
+        "q1": quartiles[0],
+        "median": statistics.median(values),
+        "q3": quartiles[2],
+        "maximum": max(values),
     }
 
 
@@ -499,6 +521,8 @@ def main() -> int:
         },
         "counts": {
             "total": len(results),
+            "qualified_executed": dispositions["executed"],
+            "censored_or_unqualified": len(results) - dispositions["executed"],
             "dispositions": dict(sorted(dispositions.items())),
             "families": {
                 family: dict(sorted(counts.items()))
@@ -506,11 +530,31 @@ def main() -> int:
             },
         },
         "numerical_maxima": maxima,
+        "timing_distributions_seconds": {
+            "all_observed_coordinate_medians": _distribution(
+                [
+                    float(item["timing"]["median_seconds"])
+                    for item in results
+                    if item["timing"]["median_seconds"] is not None
+                ]
+            ),
+            "families": {
+                family: _distribution(
+                    [
+                        float(item["timing"]["median_seconds"])
+                        for item in results
+                        if item["family"] == family and item["timing"]["median_seconds"] is not None
+                    ]
+                )
+                for family in sorted(family_counts)
+            },
+        },
         "failures": {
             "count": len(failures),
             "by_disposition": dict(
                 sorted(Counter(item["disposition"] for item in failures).items())
             ),
+            "by_reason": dict(sorted(Counter(item["reason"] for item in failures).items())),
         },
         "reproducibility": {
             "semantic_source_sha256": source_digest,
