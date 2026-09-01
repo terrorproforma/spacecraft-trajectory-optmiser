@@ -174,7 +174,7 @@ def validate_probe(
     }
     if {key: probe.get(key) for key in expected} != expected:
         return False, "axis-probe requested/applied values disagree", probe
-    if probe.get("coefficient_parity_maximum", math.inf) > 1.0e-10:
+    if probe.get("coefficient_parity_relative", math.inf) > 5.0e-12:
         return False, "axis-probe CPU/GPU coefficient parity failed", probe
     if not math.isclose(
         probe["condition_factor_max"] / probe["condition_factor_min"],
@@ -214,6 +214,18 @@ def main() -> int:
     outcomes: list[dict[str, Any]] = []
     for coordinate in coordinates(policy):
         identifier = coordinate_id(coordinate)
+        print(
+            json.dumps(
+                {
+                    "event": "pilot_start",
+                    "coordinate_id": identifier,
+                    "family": coordinate["family"],
+                    "policy": coordinate["policy"],
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
         claim = Claim(coordinate["ordinal"], identifier, "pilot", coordinate)
         command = command_for(
             executable,
@@ -252,14 +264,21 @@ def main() -> int:
                 "condition_factor_min": axis.get("condition_factor_min"),
                 "condition_factor_max": axis.get("condition_factor_max"),
                 "coefficient_parity_maximum": axis.get("coefficient_parity_maximum"),
+                "coefficient_parity_relative": axis.get("coefficient_parity_relative"),
                 "policy_code": axis.get("policy_code"),
                 "scaling_code": axis.get("scaling_code"),
                 "warm_start_code": axis.get("warm_start_code"),
                 "stderr": process.stderr,
             }
         )
+        partial_path = arguments.output.with_suffix(arguments.output.suffix + ".partial")
+        partial_path.parent.mkdir(parents=True, exist_ok=True)
+        partial_path.write_text(json.dumps(outcomes, indent=2, sort_keys=True) + "\n")
         if process.returncode != 0 or not valid:
-            raise SystemExit(f"pilot coordinate {identifier} failed: {reason}")
+            raise SystemExit(
+                f"pilot coordinate {identifier} failed with exit "
+                f"{process.returncode}: {reason}; stderr={process.stderr!r}"
+            )
     first = outcomes[0]
     replay, cross_seed, mode_variant, condition_variant, class_variant = outcomes[-5:]
     hash_names = ("instance_hash", "problem_hash", "coefficient_hash")

@@ -291,7 +291,7 @@ def validate_success(
         )
     ):
         return False, "conditioning factors do not realize the requested logarithmic span"
-    if axis.get("coefficient_parity_maximum", float("inf")) > 1.0e-10:
+    if axis.get("coefficient_parity_relative", float("inf")) > 5.0e-12:
         return False, "CPU/GPU conditioned coefficient parity failed"
     return True, "strict runtime and sample records validated"
 

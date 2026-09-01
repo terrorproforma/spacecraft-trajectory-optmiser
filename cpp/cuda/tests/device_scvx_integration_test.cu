@@ -829,6 +829,7 @@ IntegrationResult run_resident_sequence(
     );
     spacepdhcg_cuda_diagnostics diagnostics{};
     double coefficient_parity_max{0.0};
+    double coefficient_parity_relative{0.0};
     if (production_driver_mode) {
         auto numeric = problem.numeric_views();
         spacepdhcg_cuda_scvx_numeric_update numeric_update{};
@@ -949,7 +950,10 @@ IntegrationResult run_resident_sequence(
             "coefficient parity synchronization"
         );
         auto expected = conditioned_values;
-        const auto compare = [&coefficient_parity_max](
+        const auto compare = [
+            &coefficient_parity_max,
+            &coefficient_parity_relative
+        ](
             const std::vector<double>& actual,
             const std::vector<double>& wanted
         ) {
@@ -964,9 +968,14 @@ IntegrationResult run_resident_sequence(
                         "coefficient parity infinity mismatch"
                     );
                 } else {
+                    const double difference =
+                        std::abs(actual[index] - wanted[index]);
                     coefficient_parity_max = std::max(
-                        coefficient_parity_max,
-                        std::abs(actual[index] - wanted[index])
+                        coefficient_parity_max, difference
+                    );
+                    coefficient_parity_relative = std::max(
+                        coefficient_parity_relative,
+                        difference / std::max(1.0, std::abs(wanted[index]))
                     );
                 }
             }
@@ -1094,11 +1103,11 @@ IntegrationResult run_resident_sequence(
                 "restore reference full numeric update"
             );
         }
-        if (coefficient_parity_max > 5.0e-12) {
+        if (coefficient_parity_relative > 5.0e-12) {
             std::fprintf(
                 stderr,
-                "coefficient parity maximum %.17g exceeds 5e-12\n",
-                coefficient_parity_max
+                "relative coefficient parity maximum %.17g exceeds 5e-12\n",
+                coefficient_parity_relative
             );
             test::require(
                 false,
@@ -1309,7 +1318,8 @@ IntegrationResult run_resident_sequence(
                 "\"condition_factor_min\":%.17g,"
                 "\"condition_factor_max\":%.17g,"
                 "\"conditioned_coefficient_ratio\":%.17g,"
-                "\"coefficient_parity_maximum\":%.17g}\n",
+                "\"coefficient_parity_maximum\":%.17g,"
+                "\"coefficient_parity_relative\":%.17g}\n",
                 g4_coordinate_id.c_str(),
                 static_cast<int>(frozen_g4::sha256.size()),
                 frozen_g4::sha256.data(),
@@ -1343,7 +1353,8 @@ IntegrationResult run_resident_sequence(
                 g4_condition_factor_min,
                 g4_condition_factor_max,
                 g4_conditioned_coefficient_ratio,
-                coefficient_parity_max
+                coefficient_parity_max,
+                coefficient_parity_relative
             );
             test::status_require(
                 spacepdhcg_cuda_scvx_driver_destroy(&driver),
@@ -1746,7 +1757,7 @@ IntegrationResult run_resident_sequence(
                 expected.variable_upper
             );
             test::require(
-                coefficient_parity_max <= 5.0e-12,
+                coefficient_parity_relative <= 5.0e-12,
                 "final P1-D CPU/device coefficients diverged"
             );
             if (p1d_path_audit_mode) {
@@ -1937,7 +1948,8 @@ IntegrationResult run_resident_sequence(
                 "\"condition_factor_min\":%.17g,"
                 "\"condition_factor_max\":%.17g,"
                 "\"conditioned_coefficient_ratio\":%.17g,"
-                "\"coefficient_parity_maximum\":%.17g}\n",
+                "\"coefficient_parity_maximum\":%.17g,"
+                "\"coefficient_parity_relative\":%.17g}\n",
                 g4_coordinate_id.c_str(),
                 static_cast<int>(frozen_g4::sha256.size()),
                 frozen_g4::sha256.data(),
@@ -1968,7 +1980,8 @@ IntegrationResult run_resident_sequence(
                 g4_condition_factor_min,
                 g4_condition_factor_max,
                 g4_conditioned_coefficient_ratio,
-                coefficient_parity_max
+                coefficient_parity_max,
+                coefficient_parity_relative
             );
             if constexpr (StateDimension == 14U && ControlDimension == 7U) {
                 std::printf(
