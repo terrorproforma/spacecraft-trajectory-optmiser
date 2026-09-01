@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/paper1_product_source.schema.json",
+  "title": "Paper 1 frozen figure/table source data",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "product_id",
+    "slug",
+    "description",
+    "synthetic",
+    "filter_query",
+    "aggregation",
+    "run_ids"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "product_id": {
+      "enum": [
+        "F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08",
+        "T01", "T02", "T03", "T04", "T05", "T06"
+      ]
+    },
+    "slug": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "synthetic": {"type": "boolean"},
+    "filter_query": {"type": "string", "minLength": 1},
+    "aggregation": {
+      "type": "object",
+      "required": ["statistic", "band", "pre_transform", "failure_retention"]
+    },
+    "run_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "axes": {"type": "array"},
+    "series": {"type": "array"},
+    "facets": {"type": "array"},
+    "panels": {"type": "array"},
+    "selection_rule": {"type": "string"},
+    "units": {},
+    "blocks": {"type": "array"},
+    "implementation_style": {"type": "string"},
+    "data": {"type": "array"},
+    "columns": {"type": "array"},
+    "rows": {"type": "array"}
+  },
+  "additionalProperties": false
+}

@@ -40,3 +40,22 @@
     not itself provide nonlinear P1-C/P1-D/P1-E handback.
   - A 15-outer P1-C run exceeded 30 minutes and was terminated. The full matrix remains censored,
     H5/H6 unresolved, G4 failed, and G5 unauthorized.
+
+## 2026-09-01 21:50 AEST
+
+- Task summary:
+  - Implemented Paper 1 G6 aggregation/freeze tooling in the isolated
+    feat/paper1-freeze-tooling worktree.
+- Changes:
+  - Added strict archived-evidence envelopes, immutable hash verification, run indexing, frozen
+    F01-F08/T01-T06 source and publication builders, H1-H6 deterministic decision records,
+    campaign freeze/refusal, checksums, claim linkage, and clean-clone verification.
+  - Added synthetic failure/censoring matrix, schemas, CLI, documentation, and CI.
+- Validation:
+  - Ruff, 151 Python tests, and the native wheel build passed.
+  - Generated a 14-run synthetic-only bundle with 52 deterministic output files and verified a
+    byte-identical second build.
+  - No GPU benchmark or real scientific campaign was run.
+- Follow-up notes / risks:
+  - Real freeze remains blocked on complete portable G4/G5 evidence. Existing G4 failures and G5
+    authorisation state are not altered by this tooling.

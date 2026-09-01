@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/paper1_decision.schema.json",
+  "title": "Paper 1 preregistered decision record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "hypothesis",
+    "outcome",
+    "input_run_ids",
+    "comparison_coordinates",
+    "practical_threshold",
+    "method",
+    "bootstrap_seed",
+    "bootstrap_samples",
+    "metric",
+    "point_estimate",
+    "confidence_interval_95",
+    "sustained_scale_rule",
+    "censored_run_ids",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "hypothesis": {"enum": ["H1", "H2", "H3", "H4", "H5", "H6"]},
+    "outcome": {"enum": ["supported", "rejected", "mixed", "unresolved"]},
+    "input_run_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "comparison_coordinates": {"type": "array", "items": {"type": "object"}},
+    "practical_threshold": {"type": "object"},
+    "method": {"type": "string", "minLength": 1},
+    "bootstrap_seed": {"type": "integer", "minimum": 0},
+    "bootstrap_samples": {"const": 10000},
+    "metric": {"type": "string", "minLength": 1},
+    "point_estimate": {"type": ["number", "null"]},
+    "confidence_interval_95": {
+      "type": "array",
+      "prefixItems": [{"type": ["number", "null"]}, {"type": ["number", "null"]}],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "sustained_scale_rule": {"type": "string", "minLength": 1},
+    "censored_run_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}

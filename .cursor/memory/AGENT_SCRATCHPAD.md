@@ -192,3 +192,37 @@ Use this file as persistent, repo-local execution memory.
   remains the authoritative blocker. Do not execute or claim the full matrix.
 - The Python QOCO adapter has a valid primal-only handoff, but the nonlinear G4 family owners still
   need an end-to-end handback before H6 can be decided.
+
+### 2026-09-01 21:50 AEST - G6 freeze tooling
+
+#### Task Summary
+
+- Implemented downstream evidence loading, frozen F01-F08/T01-T06 products, H1-H6 decisions,
+  campaign refusal/sealing, reproducibility checks, synthetic fixtures, documentation, and CI.
+
+#### Mistakes And Fixes
+
+- `[self]` Used Linux-looking paths with the Windows file patch tool; it created files under
+  `C:\home` instead of the WSL worktree. Detected because WSL `git status` showed only
+  `pyproject.toml`; copied the implementation into the isolated WSL worktree and thereafter used
+  `\\wsl.localhost\Ubuntu-22.04` paths.
+- `[tool]` WSL's system Python was 3.10 while the project requires 3.11. Used the existing `uv`
+  installation to create an isolated Python 3.11 environment; did not change the system runtime.
+
+#### What Worked
+
+- Byte-for-byte double builds exposed rendering metadata concerns; fixed PDF/PNG metadata and
+  verified all generated bundle bytes deterministically.
+- Separate G6 evidence envelopes preserve G4/G5 compact-result compatibility while adding
+  independent residual/replay/archive hashes and immutable URIs.
+
+#### Guardrails For Next Session
+
+- Use UNC paths for all dedicated file tools against WSL worktrees.
+- Treat a generated freeze seal as a completeness record, never as G6 PASS or a scientific claim.
+- Keep known G4 failure and unauthorised G5 state as explicit blockers until real archives arrive.
+
+#### Follow-Ups / Risks
+
+- Real freeze still requires complete portable G4/G5 matrices; synthetic decision outcomes have no
+  scientific meaning.
