@@ -34,7 +34,8 @@ typedef enum spacepdhcg_cuda_scvx_policy {
     SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT = 1,
     SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE = 2,
     SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH = 3,
-    SPACEPDHCG_CUDA_SCVX_PURE_QOCO = 4
+    SPACEPDHCG_CUDA_SCVX_PURE_QOCO = 4,
+    SPACEPDHCG_CUDA_SCVX_HYBRID_QOCO = 5
 } spacepdhcg_cuda_scvx_policy;
 
 typedef enum spacepdhcg_cuda_scvx_trust_action {
@@ -91,6 +92,7 @@ typedef struct spacepdhcg_cuda_scvx_numeric_update {
     double tilt_cosine;
     double glide_slope_tangent;
     double minimum_radius;
+    double conditioning_log10_span;
 } spacepdhcg_cuda_scvx_numeric_update;
 
 typedef struct spacepdhcg_cuda_scvx_problem {
@@ -272,6 +274,7 @@ typedef struct spacepdhcg_cuda_scvx_result {
     uint64_t qoco_numeric_updates;
     int32_t qoco_dual_discarded;
     spacepdhcg_cuda_qoco_failure qoco_failure;
+    int32_t hybrid_handoff_eligible;
 } spacepdhcg_cuda_scvx_result;
 
 typedef struct spacepdhcg_cuda_scvx_path_inventory {

@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+import hashlib
 import json
+import math
 import os
 import subprocess
 import sys
@@ -29,27 +31,44 @@ from spacepdhcg.experiments.g4_scheduler import (  # noqa: E402
     atomic_create,
 )
 
-CAPABILITY_PARAMETERS = {
+CAPABILITY_AXES = {
+    "family",
+    "intervals",
+    "policy",
+    "quality_tier",
     "conditioning",
-    "dispersion",
+    "scaling_mode",
+    "warm_start_mode",
+    "family_classes",
     "evaluation_seed",
+    "repeat",
     "solver_order",
-    "transfer_class",
 }
 
 
-def locked_policy(repository: Path) -> tuple[dict[str, Any], str]:
+def canonical_bytes(value: Any) -> bytes:
+    return json.dumps(
+        value,
+        allow_nan=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode()
+
+
+def locked_policy(repository: Path) -> tuple[dict[str, Any], str, str]:
     lock = (repository / "benchmarks/g4_policy.sha256").read_text().split()
     if len(lock) != 2 or lock[1] != "g4_policy.json":
         raise G4ContractError("invalid G4 policy lock")
     loaded = load_policy(repository / "benchmarks/g4_policy.json", expected_sha256=lock[0])
-    return loaded.values, loaded.sha256
+    matrix_sha256 = hashlib.sha256(canonical_bytes(loaded.values["matrix"])).hexdigest()
+    return loaded.values, loaded.sha256, matrix_sha256
 
 
 def load_capabilities(
     path: Path,
     executable: Path,
     policy_sha256: str,
+    matrix_sha256: str,
     source_commit: str,
 ) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -59,14 +78,24 @@ def load_capabilities(
         raise G4ContractError("executor capability policy hash mismatch")
     if value.get("source_commit") != source_commit:
         raise G4ContractError("executor capability source commit mismatch")
+    if value.get("matrix_sha256") != matrix_sha256:
+        raise G4ContractError("executor capability matrix hash mismatch")
     if value.get("executable_sha256") != sha256_path(executable):
         raise G4ContractError("executor capability executable hash mismatch")
-    if set(value.get("applied_parameters", ())) != CAPABILITY_PARAMETERS:
-        raise G4ContractError("executor cannot apply every frozen coordinate parameter")
+    if set(value.get("axes", {})) != CAPABILITY_AXES:
+        raise G4ContractError("executor capability does not audit every frozen axis")
+    if any(
+        axis.get("status") not in {"applied", "execution_only"} for axis in value["axes"].values()
+    ):
+        raise G4ContractError("executor cannot apply every roadmap-required axis")
     if value.get("timing_boundary") != ACCEPTED_TIMING_BOUNDARY:
         raise G4ContractError("executor timing boundary is not the frozen common boundary")
     if value.get("independent_replay") is not True:
         raise G4ContractError("executor lacks independent nonlinear replay")
+    declared_hash = value.get("capability_sha256")
+    payload = {key: item for key, item in value.items() if key != "capability_sha256"}
+    if declared_hash != hashlib.sha256(canonical_bytes(payload)).hexdigest():
+        raise G4ContractError("executor capability content hash mismatch")
     return value
 
 
@@ -129,7 +158,13 @@ class EnergySampler:
         }
 
 
-def command_for(executable: Path, claim: Claim, policy_sha256: str) -> list[str]:
+def command_for(
+    executable: Path,
+    claim: Claim,
+    policy_sha256: str,
+    matrix_sha256: str,
+    capability_sha256: str,
+) -> list[str]:
     coordinate = claim.coordinate
     family = coordinate["family"]
     if family == "P1-C-pd3":
@@ -153,6 +188,14 @@ def command_for(executable: Path, claim: Claim, policy_sha256: str) -> list[str]
         coordinate["quality_tier"],
         coordinate["scaling_mode"],
         policy_sha256,
+        str(coordinate["conditioning"]),
+        str(coordinate["seed"]),
+        coordinate["repeat_kind"],
+        str(coordinate["repeat"]),
+        str(coordinate["solver_order"]),
+        claim.coordinate_id,
+        matrix_sha256,
+        capability_sha256,
     ]
 
 
@@ -164,11 +207,18 @@ def parse_records(text: str) -> list[dict[str, Any]]:
     return records
 
 
-def validate_success(claim: Claim, records: list[dict[str, Any]]) -> tuple[bool, str]:
+def validate_success(
+    claim: Claim,
+    records: list[dict[str, Any]],
+    policy_sha256: str,
+    matrix_sha256: str,
+    capability_sha256: str,
+) -> tuple[bool, str]:
     samples = [record for record in records if record.get("case") == "g4_sample"]
     runtimes = [record for record in records if record.get("case") == "g4_runtime"]
-    if len(samples) != 1 or len(runtimes) != 1:
-        return False, "executor did not emit exactly one sample and runtime record"
+    axes = [record for record in records if record.get("case") == "g4_axis_application"]
+    if len(samples) != 1 or len(runtimes) != 1 or len(axes) != 1:
+        return False, "executor did not emit exactly one sample, runtime, and axis record"
     sample = samples[0]
     requested = runtimes[0].get("requested", {})
     coordinate = claim.coordinate
@@ -194,6 +244,55 @@ def validate_success(claim: Claim, records: list[dict[str, Any]]) -> tuple[bool,
         return False, f"runtime coordinate mismatch: expected {expected!r}, observed {observed!r}"
     if not isinstance(sample.get("qualified"), bool):
         return False, "sample qualification is missing"
+    axis = axes[0]
+    axis_expected = {
+        "coordinate_id": claim.coordinate_id,
+        "policy_sha256": policy_sha256,
+        "matrix_sha256": matrix_sha256,
+        "capability_sha256": capability_sha256,
+        "family": coordinate["family"],
+        "intervals": coordinate["intervals"],
+        "policy": coordinate["policy"],
+        "quality_tier": coordinate["quality_tier"],
+        "quality_tolerance": coordinate["quality_tolerance"],
+        "conditioning_log10_span": coordinate["conditioning"],
+        "scaling_mode": coordinate["scaling_mode"],
+        "warm_start_mode": coordinate["warm_mode"],
+        "dispersion_class": coordinate.get("dispersion_class", 0.0),
+        "attitude_class": coordinate.get("attitude_class", 0.0),
+        "rate_class": coordinate.get("rate_class", 0.0),
+        "trust_class": coordinate.get("trust_class", 0.0),
+        "transfer_class": coordinate.get("transfer_class", "not_applicable"),
+        "evaluation_seed": coordinate["seed"],
+        "instance": coordinate["instance"],
+        "repeat_kind": coordinate["repeat_kind"],
+        "repeat": coordinate["repeat"],
+        "solver_order": coordinate["solver_order"],
+    }
+    axis_observed = {key: axis.get(key) for key in axis_expected}
+    if axis_observed != axis_expected:
+        return (
+            False,
+            f"applied-axis mismatch: expected {axis_expected!r}, observed {axis_observed!r}",
+        )
+    for name in ("instance_hash", "problem_hash", "coefficient_hash"):
+        value = axis.get(name)
+        if not isinstance(value, str) or len(value) != 16:
+            return False, f"{name} is missing or invalid"
+    factor_min = axis.get("condition_factor_min")
+    factor_max = axis.get("condition_factor_max")
+    if (
+        not isinstance(factor_min, (int, float))
+        or not isinstance(factor_max, (int, float))
+        or not math.isclose(
+            factor_max / factor_min,
+            10.0 ** coordinate["conditioning"],
+            rel_tol=1.0e-12,
+        )
+    ):
+        return False, "conditioning factors do not realize the requested logarithmic span"
+    if axis.get("coefficient_parity_maximum", float("inf")) > 1.0e-10:
+        return False, "CPU/GPU conditioned coefficient parity failed"
     return True, "strict runtime and sample records validated"
 
 
@@ -202,11 +301,19 @@ def execute(
     claim: Claim,
     executable: Path,
     policy_sha256: str,
+    matrix_sha256: str,
+    capability_sha256: str,
     timeout_seconds: int,
     nvidia_smi: str,
     environment: dict[str, str],
 ) -> None:
-    command = command_for(executable, claim, policy_sha256)
+    command = command_for(
+        executable,
+        claim,
+        policy_sha256,
+        matrix_sha256,
+        capability_sha256,
+    )
     run_directory = store.root / "runs" / claim.coordinate_id / claim.attempt_id
     atomic_create(run_directory / "command.json", json.dumps(command).encode() + b"\n")
     run_environment = dict(environment)
@@ -266,7 +373,13 @@ def execute(
     else:
         try:
             records = parse_records(stdout)
-            valid, reason = validate_success(claim, records)
+            valid, reason = validate_success(
+                claim,
+                records,
+                policy_sha256,
+                matrix_sha256,
+                capability_sha256,
+            )
         except (G4ContractError, json.JSONDecodeError, ValueError) as error:
             records, valid, reason = [], False, f"invalid executor records: {error}"
         sample = next((record for record in records if record.get("case") == "g4_sample"), {})
@@ -305,7 +418,7 @@ def main() -> int:
     parser.add_argument("--nvidia-smi", default="nvidia-smi")
     arguments = parser.parse_args()
     repository = arguments.repository.resolve()
-    policy, policy_sha256 = locked_policy(repository)
+    policy, policy_sha256, matrix_sha256 = locked_policy(repository)
     source_commit = subprocess.run(
         ["git", "-C", repository, "rev-parse", "HEAD"],
         check=True,
@@ -336,12 +449,14 @@ def main() -> int:
         if arguments.executable is None or arguments.capabilities is None:
             raise G4ContractError("run requires --executable and --capabilities")
         executable = arguments.executable.resolve()
-        load_capabilities(
+        capabilities = load_capabilities(
             arguments.capabilities.resolve(),
             executable,
             policy_sha256,
+            matrix_sha256,
             source_commit,
         )
+        capability_sha256 = capabilities["capability_sha256"]
         lock_descriptor = os.open(store.root / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
         try:
             fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -358,6 +473,8 @@ def main() -> int:
                     claim,
                     executable,
                     policy_sha256,
+                    matrix_sha256,
+                    capability_sha256,
                     int(policy["matrix"]["timeout_seconds_per_sample"]),
                     arguments.nvidia_smi,
                     dict(os.environ),

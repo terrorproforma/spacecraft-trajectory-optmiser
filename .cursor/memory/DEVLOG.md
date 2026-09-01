@@ -413,3 +413,26 @@
     to host. Zeroing the full output transfer region before kernel field assignment fixed the ABI
     padding defect; current OrbitWeaver/G5 one-rank memcheck, racecheck, initcheck, and synccheck are
     clean.
+
+## 2026-09-02 05:15 AEST
+
+- Task summary:
+  - Closed the G4 executable-axis gap with deterministic physical instances, equivalent
+    conditioning transformations, complete runtime identities, strict capability generation and
+    hybrid execution.
+- Changes:
+  - Added seeded powered-descent and rotationally equivalent low-thrust inputs, exact dynamics-row
+    conditioning spans, CPU/GPU coefficient parity and deterministic numeric hashes.
+  - Extended the G4 CLI/output with conditioning, evaluation seed, repeat kind/index, solver order,
+    coordinate/matrix/capability hashes, complete requested/applied axes and diagnostics.
+  - Added hash-mismatch refusal tests, strict frozen-coordinate validation, a stratified axis pilot,
+    and a content-addressed capability generator.
+  - Implemented hybrid PDHCG-to-QOCO handoff with the frozen `1e-6` qualification threshold and
+    explicit ineligible telemetry.
+- Validation in progress:
+  - Focused scheduler/executor contract tests pass.
+  - CUDA Release compiles; P1-C span-0 seeded qualification passes and span-2 conditioning passes
+    with `1.78e-15` CPU/GPU coefficient parity.
+- Follow-up notes / risks:
+  - Final full validation, immutable commit, generated capability, complete pilot and new
+    commit-pinned campaign launch remain required before any G4 evidence claim.

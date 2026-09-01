@@ -17,21 +17,29 @@ order applies the frozen solver-order rotation while preserving the canonical le
   count as completed. Invalid records are quarantined and remain incomplete.
 - A non-blocking process lock enforces one measured GPU worker.
 
-## Fail-closed executor capability
+## Hash-pinned executor capability
 
-The current `device_scvx_integration_test --g4-sample` interface does not consume the frozen
-evaluation seed or conditioning span. Consequently it cannot truthfully execute the complete
-matrix yet. The scheduler refuses to claim a row unless an independently produced capability JSON
-pins:
+`device_scvx_integration_test --g4-sample` consumes and reports the complete coordinate contract.
+Evaluation seeds drive deterministic family-specific physical inputs. Conditioning bins apply an
+equivalent positive scaling across dynamics equality rows; both coefficients and equality bounds
+are transformed, so the physical feasible set is unchanged. The independent CPU expectation is
+transformed identically and checked against the GPU buffers before solve. Workspace scaling remains
+a separate runtime policy.
 
-- the exact source commit, executable SHA-256 and policy SHA-256;
-- application of seed, conditioning, dispersion, transfer and solver-order parameters;
+`scripts/gpu/generate_g4_executor_capability.py` queries the compiled executor and writes a
+content-addressed capability record that pins:
+
+- the exact source commit, executable, policy and matrix SHA-256 values;
+- numerical application of family, intervals, policy, quality, conditioning, scaling, warm-start,
+  family classes and evaluation seed;
+- execution-only treatment of warmup/repeat identity and frozen solver order;
 - the common timing boundary;
 - independent nonlinear replay.
 
-This prevents nominal fixture repetitions from being mislabeled as distinct matrix rows. A
-capability must only be emitted after the production executable implements and tests those
-parameters.
+Every successful row must repeat all requested/applied axis values and the coordinate, capability,
+policy and matrix hashes. It also emits deterministic instance/problem/coefficient hashes,
+conditioning-factor extrema, measured coefficient dynamic range and CPU/GPU coefficient parity.
+The scheduler quarantines any disagreement.
 
 ## Commands
 
@@ -46,6 +54,14 @@ python scripts/gpu/run_g4_campaign.py run \
   --campaign build/g4-campaign \
   --executable build-integration-cuda-release/cuda-tests/device_scvx_integration_test \
   --capabilities build/g4-executor-capabilities.json
+```
+
+Generate the capability only from a clean committed source and its final executable:
+
+```bash
+python scripts/gpu/generate_g4_executor_capability.py \
+  --executable build-integration-cuda-release/cuda-tests/device_scvx_integration_test \
+  --output build/g4-executor-capabilities.json
 ```
 
 The final command is also the restart command. It resumes an interrupted coordinate before

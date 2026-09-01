@@ -833,3 +833,37 @@ Use this file as persistent, repo-local execution memory.
   Lambert result ABI padding. Kernel field assignment cannot define padding; zeroing the complete
   result transfer region before the kernel removed all 12 errors. OrbitWeaver and G5 one-rank
   memcheck, racecheck, initcheck, and synccheck now each report zero errors/hazards.
+
+### 2026-09-02 05:15 AEST - executable G4 coordinate contract
+
+#### What Worked
+
+- Added deterministic SplitMix64 evaluation instances. Powered-descent seeds perturb physically
+  irrelevant-at-study-scale horizontal reference coordinates while preserving the frozen
+  dispersion construction; low-thrust seeds rotate the complete orbital instance under the
+  two-body model's rotational symmetry.
+- Conditioning is now a real equivalent CQP transformation: dynamics equality coefficients and
+  matching bounds receive deterministic positive row factors with exact requested log10 span.
+  Applying the same transform to host expectations produced CPU/GPU parity at
+  `1.78e-15` for the span-2 pilot while preserving P1-C qualification.
+- Runtime output now repeats every requested/applied axis and pins coordinate, policy, matrix,
+  capability, instance, problem and coefficient identities. Repeat and solver order are explicitly
+  execution-only axes rather than falsely claimed numerical perturbations.
+- Added a true hybrid driver policy: PDHCG must satisfy the frozen `1e-6` handoff before QOCO runs;
+  otherwise the row remains explicitly hybrid-ineligible.
+
+#### Mistakes And Fixes
+
+- `[self]` Initial QOCO probes appeared unsupported because `LD_LIBRARY_PATH` named the wrong cuDSS
+  shim directory. Restoring `build-integration-qoco-cudss-lib` recovered the 7/7 baseline.
+- `[self]` First interval/class validation used remembered small values instead of the frozen JSON.
+  Re-read the lock and corrected all P1-C/P1-D/P1-E interval and dispersion sets.
+- `[self]` Conditioning was initially launched even for span zero. Added a zero-span bypass so the
+  baseline takes the original numerical path exactly.
+
+#### Guardrails
+
+- Capability generation requires clean source, exact binary/policy/matrix hashes, disjoint tuning
+  and evaluation seeds, and a content hash over the complete audit.
+- Do not interpret repeat index or solver rotation as a new mathematical instance. Matching
+  numerical coordinates must reproduce hashes; different evaluation seeds must not.

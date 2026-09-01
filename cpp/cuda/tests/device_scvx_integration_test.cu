@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <cstdio>
 #include <limits>
 #include <map>
@@ -67,6 +68,20 @@ double g4_family_class = 0.0;
 std::string g4_transfer_class{"not_applicable"};
 double g4_dispersion = 0.0;
 double g4_secondary_dispersion = 0.0;
+double g4_conditioning_log10_span = 0.0;
+std::uint64_t g4_evaluation_seed = 0U;
+std::string g4_repeat_kind{"not_applicable"};
+std::uint32_t g4_repeat_index = 0U;
+std::uint32_t g4_solver_order = 0U;
+std::string g4_coordinate_id;
+std::string g4_matrix_sha256;
+std::string g4_capability_sha256;
+std::uint64_t g4_instance_hash = 0U;
+std::uint64_t g4_problem_hash = 0U;
+std::uint64_t g4_coefficient_hash = 0U;
+double g4_condition_factor_min = 1.0;
+double g4_condition_factor_max = 1.0;
+double g4_conditioned_coefficient_ratio = 1.0;
 std::uint32_t production_outer_iterations = 1U;
 double cuda_startup_seconds = 0.0;
 int benchmark_variables = 0;
@@ -76,6 +91,109 @@ std::size_t benchmark_q_nonzeros = 0U;
 std::size_t benchmark_a_nonzeros = 0U;
 std::size_t benchmark_f_nonzeros = 0U;
 std::uint64_t tight_iteration_limit = 1'000'000U;
+constexpr std::array<std::uint64_t, 20U> g4_evaluation_seeds{
+    59U, 71U, 89U, 101U, 127U, 149U, 173U, 197U, 223U, 251U,
+    281U, 313U, 349U, 389U, 431U, 479U, 521U, 569U, 617U, 659U,
+};
+
+std::uint64_t hash_bytes(
+    std::uint64_t hash,
+    const void* data,
+    const std::size_t size
+) {
+    const auto* bytes = static_cast<const unsigned char*>(data);
+    for (std::size_t index = 0U; index < size; ++index) {
+        hash ^= bytes[index];
+        hash *= 1'099'511'628'211ULL;
+    }
+    return hash;
+}
+
+template <typename Value>
+std::uint64_t hash_value(std::uint64_t hash, const Value& value) {
+    return hash_bytes(hash, &value, sizeof(value));
+}
+
+template <typename Value>
+std::uint64_t hash_vector(std::uint64_t hash, const std::vector<Value>& values) {
+    return hash_bytes(hash, values.data(), values.size() * sizeof(Value));
+}
+
+std::uint64_t splitmix64(std::uint64_t value) {
+    value += 0x9e3779b97f4a7c15ULL;
+    value = (value ^ (value >> 30U)) * 0xbf58476d1ce4e5b9ULL;
+    value = (value ^ (value >> 27U)) * 0x94d049bb133111ebULL;
+    return value ^ (value >> 31U);
+}
+
+double seeded_signed(const std::uint64_t stream) {
+    const auto bits = splitmix64(g4_evaluation_seed ^ stream) >> 11U;
+    return 2.0 * static_cast<double>(bits)
+        / static_cast<double>(1ULL << 53U) - 1.0;
+}
+
+double row_condition_factor(
+    const std::size_t row,
+    const std::size_t rows
+) {
+    if (g4_conditioning_log10_span == 0.0 || rows <= 1U) {
+        return 1.0;
+    }
+    const double fraction =
+        static_cast<double>(row) / static_cast<double>(rows - 1U);
+    return std::pow(
+        10.0,
+        g4_conditioning_log10_span * (fraction - 0.5)
+    );
+}
+
+core::NumericValues condition_values(
+    const core::FixedStructure& structure,
+    const core::NumericValues& source,
+    const std::size_t dynamics_row_start,
+    const std::size_t dynamics_rows
+) {
+    auto result = source;
+    if (!g4_sample_mode || g4_conditioning_log10_span == 0.0) {
+        return result;
+    }
+    const auto& scalar = structure.scalar_constraint;
+    for (std::size_t column = 0U;
+         column < static_cast<std::size_t>(scalar.columns);
+         ++column) {
+        for (int position = scalar.offsets[column];
+             position < scalar.offsets[column + 1U];
+             ++position) {
+            const auto row = static_cast<std::size_t>(scalar.indices[position]);
+            if (row >= dynamics_row_start
+                && row < dynamics_row_start + dynamics_rows) {
+                result.scalar_constraint[position] *= row_condition_factor(
+                    row - dynamics_row_start,
+                    dynamics_rows
+                );
+            }
+        }
+    }
+    for (std::size_t row = 0U; row < dynamics_rows; ++row) {
+        const double factor = row_condition_factor(row, dynamics_rows);
+        result.scalar_lower[dynamics_row_start + row] *= factor;
+        result.scalar_upper[dynamics_row_start + row] *= factor;
+    }
+    return result;
+}
+
+std::uint64_t numeric_hash(const core::NumericValues& values) {
+    std::uint64_t hash = 1'469'598'103'934'665'603ULL;
+    hash = hash_vector(hash, values.quadratic);
+    hash = hash_vector(hash, values.scalar_constraint);
+    hash = hash_vector(hash, values.affine_cone);
+    hash = hash_vector(hash, values.linear_objective);
+    hash = hash_vector(hash, values.scalar_lower);
+    hash = hash_vector(hash, values.scalar_upper);
+    hash = hash_vector(hash, values.affine_offset);
+    hash = hash_vector(hash, values.variable_lower);
+    return hash_vector(hash, values.variable_upper);
+}
 
 spacepdhcg_cuda_cone_kind cone_kind(const spacepdhcg::ConeKind kind) {
     switch (kind) {
@@ -491,7 +609,36 @@ IntegrationResult run_resident_sequence(
 ) {
     test::ProblemStorage problem(false, !default_stream_mode);
     const auto topology_started = std::chrono::steady_clock::now();
-    materialise(problem, structure, values);
+    const auto conditioned_values = condition_values(
+        structure,
+        values,
+        dynamics_row_start,
+        intervals * StateDimension
+    );
+    materialise(problem, structure, conditioned_values);
+    g4_coefficient_hash = numeric_hash(conditioned_values);
+    g4_problem_hash = hash_value(
+        hash_value(g4_instance_hash, structure.fingerprint()),
+        g4_coefficient_hash
+    );
+    g4_condition_factor_min = row_condition_factor(0U, intervals * StateDimension);
+    g4_condition_factor_max = row_condition_factor(
+        intervals * StateDimension - 1U,
+        intervals * StateDimension
+    );
+    double coefficient_min = std::numeric_limits<double>::infinity();
+    double coefficient_max = 0.0;
+    for (const double coefficient : conditioned_values.scalar_constraint) {
+        const double magnitude = std::abs(coefficient);
+        if (magnitude > 0.0 && std::isfinite(magnitude)) {
+            coefficient_min = std::min(coefficient_min, magnitude);
+            coefficient_max = std::max(coefficient_max, magnitude);
+        }
+    }
+    g4_conditioned_coefficient_ratio =
+        coefficient_min < std::numeric_limits<double>::infinity()
+        ? coefficient_max / coefficient_min
+        : 1.0;
     const double topology_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - topology_started
     ).count();
@@ -718,6 +865,8 @@ IntegrationResult run_resident_sequence(
         );
         numeric_update.fuel_weight = fuel_weight;
         numeric_update.virtual_l1_weight = virtual_l1_weight;
+        numeric_update.conditioning_log10_span =
+            g4_sample_mode ? g4_conditioning_log10_span : 0.0;
         if (dynamics_config.model
             == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF) {
             const dynamics::PoweredDescent3DofModel physical_model{};
@@ -798,7 +947,7 @@ IntegrationResult run_resident_sequence(
             cudaStreamSynchronize(problem.stream),
             "coefficient parity synchronization"
         );
-        auto expected = values;
+        auto expected = conditioned_values;
         const auto compare = [&coefficient_parity_max](
             const std::vector<double>& actual,
             const std::vector<double>& wanted
@@ -882,35 +1031,41 @@ IntegrationResult run_resident_sequence(
                 cudaStreamSynchronize(problem.stream),
                 "displaced coefficient synchronization"
             );
-            compare(problem.q.download(problem.stream), displaced_values->quadratic);
+            const auto conditioned_displaced = condition_values(
+                structure,
+                *displaced_values,
+                dynamics_row_start,
+                intervals * StateDimension
+            );
+            compare(problem.q.download(problem.stream), conditioned_displaced.quadratic);
             compare(
                 problem.a.download(problem.stream),
-                displaced_values->scalar_constraint
+                conditioned_displaced.scalar_constraint
             );
-            compare(problem.f.download(problem.stream), displaced_values->affine_cone);
+            compare(problem.f.download(problem.stream), conditioned_displaced.affine_cone);
             compare(
                 problem.c.download(problem.stream),
-                displaced_values->linear_objective
+                conditioned_displaced.linear_objective
             );
             compare(
                 problem.scalar_lower.download(problem.stream),
-                displaced_values->scalar_lower
+                conditioned_displaced.scalar_lower
             );
             compare(
                 problem.scalar_upper.download(problem.stream),
-                displaced_values->scalar_upper
+                conditioned_displaced.scalar_upper
             );
             compare(
                 problem.affine_offset.download(problem.stream),
-                displaced_values->affine_offset
+                conditioned_displaced.affine_offset
             );
             compare(
                 problem.variable_lower.download(problem.stream),
-                displaced_values->variable_lower
+                conditioned_displaced.variable_lower
             );
             compare(
                 problem.variable_upper.download(problem.stream),
-                displaced_values->variable_upper
+                conditioned_displaced.variable_upper
             );
             states.upload(reference_states, problem.stream);
             controls.upload(reference_controls, problem.stream);
@@ -1118,6 +1273,8 @@ IntegrationResult run_resident_sequence(
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_PURE_QOCO;
                 outer_options.fixed_inner_tolerance = 1.0e-8;
                 outer_options.fixed_inner_iteration_limit = 200U;
+            } else if (g4_policy == "hybrid-pdhcg-ipm") {
+                outer_options.policy = SPACEPDHCG_CUDA_SCVX_HYBRID_QOCO;
             } else {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE;
             }
@@ -1698,6 +1855,57 @@ IntegrationResult run_resident_sequence(
                 outer_options.maximum_resolves_per_iteration,
                 outer_options.polish_tolerance_ceiling
             );
+            std::printf(
+                "{\"case\":\"g4_axis_application\","
+                "\"coordinate_id\":\"%s\",\"policy_sha256\":\"%.*s\","
+                "\"matrix_sha256\":\"%s\",\"capability_sha256\":\"%s\","
+                "\"family\":\"%s\",\"intervals\":%zu,\"policy\":\"%s\","
+                "\"quality_tier\":\"%s\",\"quality_tolerance\":%.17g,"
+                "\"conditioning_log10_span\":%.17g,"
+                "\"scaling_mode\":\"%s\",\"warm_start_mode\":\"%s\","
+                "\"dispersion_class\":%.17g,\"attitude_class\":%.17g,"
+                "\"rate_class\":%.17g,\"trust_class\":%.17g,"
+                "\"transfer_class\":\"%s\",\"evaluation_seed\":%llu,"
+                "\"instance\":\"%s-seed-%llu\",\"repeat_kind\":\"%s\","
+                "\"repeat\":%u,\"solver_order\":%u,"
+                "\"instance_hash\":\"%016llx\",\"problem_hash\":\"%016llx\","
+                "\"coefficient_hash\":\"%016llx\","
+                "\"condition_factor_min\":%.17g,"
+                "\"condition_factor_max\":%.17g,"
+                "\"conditioned_coefficient_ratio\":%.17g,"
+                "\"coefficient_parity_maximum\":%.17g}\n",
+                g4_coordinate_id.c_str(),
+                static_cast<int>(frozen_g4::sha256.size()),
+                frozen_g4::sha256.data(),
+                g4_matrix_sha256.c_str(),
+                g4_capability_sha256.c_str(),
+                g4_family.c_str(),
+                intervals,
+                g4_policy.c_str(),
+                g4_quality_tier.c_str(),
+                g4_quality_tolerance,
+                g4_conditioning_log10_span,
+                g4_scaling_mode.c_str(),
+                g4_warm_mode.c_str(),
+                g4_family == "P1-C-pd3" ? g4_family_class : 0.0,
+                g4_family == "P1-D-pd6" ? g4_dispersion : 0.0,
+                g4_family == "P1-D-pd6" ? g4_secondary_dispersion : 0.0,
+                g4_family == "P1-E-low-thrust" ? g4_family_class : 0.0,
+                g4_transfer_class.c_str(),
+                static_cast<unsigned long long>(g4_evaluation_seed),
+                g4_family.c_str(),
+                static_cast<unsigned long long>(g4_evaluation_seed),
+                g4_repeat_kind.c_str(),
+                g4_repeat_index,
+                g4_solver_order,
+                static_cast<unsigned long long>(g4_instance_hash),
+                static_cast<unsigned long long>(g4_problem_hash),
+                static_cast<unsigned long long>(g4_coefficient_hash),
+                g4_condition_factor_min,
+                g4_condition_factor_max,
+                g4_conditioned_coefficient_ratio,
+                coefficient_parity_max
+            );
             if constexpr (StateDimension == 14U && ControlDimension == 7U) {
                 std::printf(
                     "{\"case\":\"g4_path_inventory\","
@@ -1833,7 +2041,9 @@ IntegrationResult run_resident_sequence(
                 && outer.dynamics_defect <= g4_quality_tolerance
                 && independent_path <= g4_quality_tolerance
                 && independent_terminal <= g4_quality_tolerance
-                && outer.virtual_control <= g4_quality_tolerance;
+                && outer.virtual_control <= g4_quality_tolerance
+                && (g4_policy != "hybrid-pdhcg-ipm"
+                    || outer.hybrid_handoff_eligible != 0);
             std::printf(
                 "{\"case\":\"g4_sample\",\"family\":\"%s\","
                 "\"policy\":\"%s\",\"intervals\":%zu,\"status\":%d,"
@@ -1857,6 +2067,7 @@ IntegrationResult run_resident_sequence(
                 "\"qoco_workspace_creations\":%llu,"
                 "\"qoco_numeric_updates\":%llu,"
                 "\"qoco_dual_discarded\":%d,"
+                "\"hybrid_handoff_eligible\":%d,"
                 "\"qoco_failure\":%d}\n",
                 g4_family.c_str(),
                 g4_policy.c_str(),
@@ -1901,6 +2112,7 @@ IntegrationResult run_resident_sequence(
                     outer.qoco_numeric_updates
                 ),
                 outer.qoco_dual_discarded,
+                outer.hybrid_handoff_eligible,
                 static_cast<int>(outer.qoco_failure)
             );
         }
@@ -2279,6 +2491,10 @@ IntegrationResult run_pd3() {
     dynamics::PoweredDescentState initial{
         0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 2'000.0
     };
+    if (g4_sample_mode) {
+        initial[0U] = 1.0e-6 * seeded_signed(50U);
+        initial[1U] = 1.0e-6 * seeded_signed(51U);
+    }
     std::vector<dynamics::PoweredDescentControl> controls(config.intervals);
     for (std::size_t interval = 0U; interval < config.intervals; ++interval) {
         const double thrust = 7'422.0 - 0.5 * static_cast<double>(interval);
@@ -2287,9 +2503,9 @@ IntegrationResult run_pd3() {
     const auto nominal_states =
         subproblem.model().rollout(initial, controls, config.step_seconds);
     if (g4_sample_mode) {
-        initial[0] += 10.0 * g4_family_class;
-        initial[2] += 100.0 * g4_family_class;
-        initial[3] -= 5.0 * g4_family_class;
+        initial[0U] += 10.0 * g4_family_class;
+        initial[2U] += 100.0 * g4_family_class;
+        initial[3U] -= 5.0 * g4_family_class;
     }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
     const std::array<double, 3U> target_position{
@@ -2298,6 +2514,19 @@ IntegrationResult run_pd3() {
     const std::array<double, 3U> target_velocity{
         nominal_states.back()[3], nominal_states.back()[4], nominal_states.back()[5]
     };
+    g4_instance_hash = hash_vector(
+        hash_bytes(
+            1'469'598'103'934'665'603ULL,
+            initial.data(),
+            initial.size() * sizeof(double)
+        ),
+        flatten_controls(controls)
+    );
+    g4_instance_hash = hash_bytes(
+        g4_instance_hash,
+        nominal_states.back().data(),
+        nominal_states.back().size() * sizeof(double)
+    );
     const auto values = subproblem.values(
         states, controls, initial, target_position, target_velocity
     );
@@ -2351,6 +2580,15 @@ IntegrationResult run_low_thrust() {
     dynamics::LowThrustState initial{
         7'000.0, 0.0, 0.0, 0.0, 7.546, 0.0, 500.0
     };
+    if (g4_sample_mode) {
+        const double angle = std::acos(-1.0) * seeded_signed(300U);
+        const double cosine = std::cos(angle);
+        const double sine = std::sin(angle);
+        initial[0U] = 7'000.0 * cosine;
+        initial[1U] = 7'000.0 * sine;
+        initial[3U] = -7.546 * sine;
+        initial[4U] = 7.546 * cosine;
+    }
     const std::vector<dynamics::LowThrustControl> controls(
         config.intervals,
         {0.0, 0.0, 0.0, 0.0}
@@ -2367,6 +2605,15 @@ IntegrationResult run_low_thrust() {
         );
         target = transfer.first.back();
     }
+    g4_instance_hash = hash_bytes(
+        hash_bytes(
+            1'469'598'103'934'665'603ULL,
+            initial.data(),
+            initial.size() * sizeof(double)
+        ),
+        target.data(),
+        target.size() * sizeof(double)
+    );
     const auto values = subproblem.values(
         states, controls, initial, target
     );
@@ -2453,6 +2700,10 @@ IntegrationResult run_pd6() {
         0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 2'000.0,
     };
+    if (g4_sample_mode) {
+        initial[0U] = 1.0e-6 * seeded_signed(350U);
+        initial[1U] = 1.0e-6 * seeded_signed(351U);
+    }
     std::vector<dynamics::PoweredDescent6DofControl> controls(config.intervals);
     for (std::size_t interval = 0U; interval < config.intervals; ++interval) {
         const double thrust = 7'422.0 - 0.2 * static_cast<double>(interval);
@@ -2467,12 +2718,13 @@ IntegrationResult run_pd6() {
     const auto nominal_states =
         subproblem.model().rollout(initial, controls, config.step_seconds);
     if (g4_sample_mode) {
+        const double direction = seeded_signed(400U) < 0.0 ? -1.0 : 1.0;
         const double half_angle = 0.5 * g4_dispersion;
         initial[6] = std::cos(half_angle);
-        initial[7] = std::sin(half_angle);
-        initial[8] = 0.0;
-        initial[9] = 0.0;
-        initial[10] += g4_secondary_dispersion;
+        initial[7U] = direction * std::sin(half_angle);
+        initial[8U] = 0.0;
+        initial[9U] = 0.0;
+        initial[10U] += direction * g4_secondary_dispersion;
     }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
     if (g4_sample_mode) {
@@ -2486,6 +2738,18 @@ IntegrationResult run_pd6() {
     }
     const auto values = subproblem.values(
         states, controls, initial, nominal_states.back()
+    );
+    g4_instance_hash = hash_vector(
+        hash_bytes(
+            hash_bytes(
+                1'469'598'103'934'665'603ULL,
+                initial.data(),
+                initial.size() * sizeof(double)
+            ),
+            nominal_states.back().data(),
+            nominal_states.back().size() * sizeof(double)
+        ),
+        flatten_controls(controls)
     );
     const auto& layout = subproblem.layout();
     const auto maps = make_maps(
@@ -2527,6 +2791,34 @@ IntegrationResult run_pd6() {
 
 int main(const int argc, char** argv) {
     const auto mode = argc > 1 ? std::string_view(argv[1]) : std::string_view{};
+    if (mode == "--g4-capabilities") {
+        std::printf(
+            "{\"schema_version\":1,\"executor_semantics_version\":1,"
+            "\"axes\":{"
+            "\"family\":{\"status\":\"applied\",\"mechanism\":\"model selection\"},"
+            "\"intervals\":{\"status\":\"applied\",\"mechanism\":\"transcription size\"},"
+            "\"policy\":{\"status\":\"applied\",\"mechanism\":\"solver policy\"},"
+            "\"quality_tier\":{\"status\":\"applied\",\"mechanism\":\"frozen tolerance\"},"
+            "\"conditioning\":{\"status\":\"applied\","
+            "\"mechanism\":\"equivalent dynamics-row scaling\"},"
+            "\"scaling_mode\":{\"status\":\"applied\","
+            "\"mechanism\":\"workspace scaling policy\"},"
+            "\"warm_start_mode\":{\"status\":\"applied\","
+            "\"mechanism\":\"resident iterate retention\"},"
+            "\"family_classes\":{\"status\":\"applied\","
+            "\"mechanism\":\"seeded physical initial/reference data\"},"
+            "\"evaluation_seed\":{\"status\":\"applied\","
+            "\"mechanism\":\"SplitMix64 physical instance generation\"},"
+            "\"repeat\":{\"status\":\"execution_only\","
+            "\"mechanism\":\"warmup/measured sample identity\"},"
+            "\"solver_order\":{\"status\":\"execution_only\","
+            "\"mechanism\":\"frozen external launch rotation\"}},"
+            "\"independent_replay\":true,"
+            "\"timing_boundary\":\"coefficient-generation-through-independent-"
+            "replay-and-acceptance;cuda-startup-excluded\"}\n"
+        );
+        return 0;
+    }
     sanitizer_mode =
         mode == "--sanitizer"
         || mode == "--production-outer-sanitizer";
@@ -2646,10 +2938,12 @@ int main(const int argc, char** argv) {
     }
     if (mode == "--g4-sample" || mode == "--g4-diagnose") {
         test::require(
-            argc == 13,
+            argc == 21,
             "G4 mode requires family intervals policy warm quality "
             "outer-iterations family-coordinate-1 family-coordinate-2 "
-            "quality-tier scaling-mode policy-sha256"
+            "quality-tier scaling-mode policy-sha256 conditioning seed "
+            "repeat-kind repeat-index solver-order coordinate-id matrix-sha256 "
+            "capability-sha256"
         );
         g4_sample_mode = true;
         g4_diagnostic_mode = mode == "--g4-diagnose";
@@ -2683,6 +2977,62 @@ int main(const int argc, char** argv) {
             std::string_view(argv[12]) == frozen_g4::sha256,
             "G4 runtime policy SHA-256 differs from generated policy"
         );
+        g4_conditioning_log10_span = std::stod(argv[13]);
+        g4_evaluation_seed = std::stoull(argv[14]);
+        g4_repeat_kind = argv[15];
+        g4_repeat_index = static_cast<std::uint32_t>(std::stoul(argv[16]));
+        g4_solver_order = static_cast<std::uint32_t>(std::stoul(argv[17]));
+        g4_coordinate_id = argv[18];
+        g4_matrix_sha256 = argv[19];
+        g4_capability_sha256 = argv[20];
+        test::require(
+            g4_conditioning_log10_span == 0.0
+                || g4_conditioning_log10_span == 2.0
+                || g4_conditioning_log10_span == 4.0
+                || g4_conditioning_log10_span == 8.0,
+            "conditioning span is outside the frozen matrix"
+        );
+        test::require(
+            g4_repeat_kind == "warmup" || g4_repeat_kind == "measured",
+            "unknown G4 repeat kind"
+        );
+        test::require(
+            std::find(
+                g4_evaluation_seeds.begin(),
+                g4_evaluation_seeds.end(),
+                g4_evaluation_seed
+            ) != g4_evaluation_seeds.end(),
+            "seed is not in the frozen evaluation set"
+        );
+        test::require(
+            (g4_repeat_kind == "warmup" && g4_repeat_index < 2U)
+                || (g4_repeat_kind == "measured" && g4_repeat_index < 7U),
+            "G4 repeat index is outside the frozen matrix"
+        );
+        test::require(g4_solver_order < 6U, "invalid G4 solver order");
+        test::require(
+            g4_coordinate_id.size() == 64U
+                && g4_matrix_sha256.size() == 64U
+                && g4_capability_sha256.size() == 64U,
+            "G4 hash identity has invalid length"
+        );
+        test::require(
+            g4_policy == "fixed-tight" || g4_policy == "fixed-loose"
+                || g4_policy == "adaptive" || g4_policy == "adaptive+polish"
+                || g4_policy == "pure-gpu-ipm"
+                || g4_policy == "hybrid-pdhcg-ipm",
+            "unknown G4 policy"
+        );
+        test::require(
+            (g4_quality_tier == "coarse" && g4_quality_tolerance == 1.0e-3)
+                || (g4_quality_tier == "medium"
+                    && g4_quality_tolerance == 1.0e-4)
+                || (g4_quality_tier == "tight"
+                    && g4_quality_tolerance == 1.0e-6)
+                || (g4_quality_tier == "ipm"
+                    && g4_quality_tolerance == 1.0e-8),
+            "G4 quality tier and tolerance disagree"
+        );
         if (g4_family == "P1-E-low-thrust") {
             static_cast<void>(
                 spacepdhcg::scvx::low_thrust_transfer_class(g4_transfer_class)
@@ -2692,12 +3042,48 @@ int main(const int argc, char** argv) {
                     || g4_family_class == 1.0 || g4_family_class == 2.0,
                 "P1-E trust radius is outside the frozen matrix"
             );
-        } else {
             test::require(
-                g4_transfer_class == "not_applicable",
-                "non-P1-E family may not report a transfer class"
+                g4_intervals == 100U || g4_intervals == 500U
+                    || g4_intervals == 2'000U
+                    || g4_intervals == 10'000U
+                    || g4_intervals == 50'000U,
+                "P1-E interval count is outside the frozen matrix"
             );
+        } else if (g4_family == "P1-C-pd3") {
+            test::require(
+                g4_family_class == 0.0 || g4_family_class == 0.01
+                    || g4_family_class == 0.05 || g4_family_class == 0.1,
+                "P1-C dispersion is outside the frozen matrix"
+            );
+            test::require(
+                g4_intervals == 20U || g4_intervals == 50U
+                    || g4_intervals == 100U || g4_intervals == 500U
+                    || g4_intervals == 2'000U,
+                "P1-C interval count is outside the frozen matrix"
+            );
+        } else if (g4_family == "P1-D-pd6") {
+            test::require(
+                (g4_dispersion == 0.0 || g4_dispersion == 0.05
+                 || g4_dispersion == 0.2 || g4_dispersion == 0.5)
+                    && (g4_secondary_dispersion == 0.0
+                        || g4_secondary_dispersion == 0.05
+                        || g4_secondary_dispersion == 0.2),
+                "P1-D dispersion is outside the frozen matrix"
+            );
+            test::require(
+                g4_intervals == 20U || g4_intervals == 50U
+                    || g4_intervals == 100U || g4_intervals == 500U
+                    || g4_intervals == 2'000U,
+                "P1-D interval count is outside the frozen matrix"
+            );
+        } else {
+            test::require(false, "unknown G4 family");
         }
+        test::require(
+            g4_family == "P1-E-low-thrust"
+                || g4_transfer_class == "not_applicable",
+            "non-P1-E family may not report a transfer class"
+        );
         test::require(
             g4_family == "P1-D-pd6" || g4_secondary_dispersion == 0.0,
             "secondary dispersion is only defined for P1-D-pd6"
