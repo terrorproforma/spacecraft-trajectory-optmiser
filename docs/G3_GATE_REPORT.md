@@ -16,6 +16,17 @@ Evidence was sealed from source commit `832aaf4` under
 `ed37f0e34d6f10df387bbd2ef8b35d27f2ab39ab85b3ac4b204107731bf127e1`.
 That negative archive is immutable and remains part of the record.
 
+The definitive follow-up was sealed from source commit `5fb59fb` under
+`results/gpu/g3/g3-20260901T004121Z-5fb59fb`. Its archive SHA-256 is
+`49bb2418cd5b3ae10c785ff3f93137ac13f5101f3cc7c53cadd3a41a5643482f`. It
+contains the exact full-precision CQP dump, independent CPU and upstream qualifications, warm-dual
+convention check, expected tight failure, builds/tests, sanitizers, and the retained WSL Nsight
+limitation.
+
+The focused controlled-ablation archive
+`results/gpu/g3/diagnostic-20260901T100544Z.tar.gz` has SHA-256
+`ffbec34391bc35ef0582747d81633cd21a7fe5edf02902d01f36954267f35269`.
+
 ## Exact reproduction and independent comparison
 
 The reproduced CQP has 57 variables, 57 scalar rows, 49 affine-cone rows, eight SOC blocks, and
@@ -139,7 +150,9 @@ floor.
 - `eef02bd` — fully initialised sanitizer-clean outputs.
 - `bf50194` — all-family values-only persistent integration and retained-state checks.
 - `832aaf4` — tight final-residual qualification and reproducible G3 evidence runner.
-- Follow-up diagnostic/residual-contract commit and archive: recorded below after sealing.
+- `e27c2e4` — complete natural-residual contract, exact CQP diagnostics, controlled root cause,
+  focused regression, and expanded evidence runner.
+- `5fb59fb` — clean full-precision CQP serialization for independent replay.
 
 ## Preserved blockers
 
