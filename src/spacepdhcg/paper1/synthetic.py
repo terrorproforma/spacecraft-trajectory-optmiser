@@ -84,6 +84,8 @@ def _result(
             "precision": "float64",
             "warm_start": True,
             "cold_start": False,
+            "quality_tier": "tight",
+            "warm_mode": "primal",
             "repeat": 0,
         },
         "dimensions": {
@@ -182,6 +184,56 @@ def _manifest(result: dict[str, Any]) -> RunManifest:
         "infeasible": "infeasible",
         "unrun": "skipped",
     }
+    experiment: dict[str, Any] = {
+        "synthetic": True,
+        "gpu_memory_bytes": 80 * 1024**3,
+        "analytic_collective_bytes": result["resources"]["collective_bytes"],
+        "scaling_kind": "strong",
+    }
+    total_seconds = result["timing"]["scvx_total_seconds"]
+    if total_seconds is not None:
+        experiment["measured_repeat_seconds"] = [
+            total_seconds * factor for factor in (0.94, 0.97, 0.99, 1.0, 1.01, 1.03, 1.06)
+        ]
+    model = {
+        "P1-C-pd3": "3-DoF",
+        "P1-D-pd6": "6-DoF",
+        "P1-E-low-thrust": "low-thrust",
+    }.get(identity["family"])
+    if model is not None:
+        experiment["variational_trials"] = [
+            {
+                "trial": trial,
+                "model": model,
+                "maximum_absolute_difference": (trial + 1) * 1e-9,
+                "maximum_relative_difference": (trial + 1) * 2e-9,
+                "analytic_fill_seconds": (trial + 1) * 1e-4,
+                "finite_difference_fill_seconds": (trial + 1) * 8e-4,
+                "quaternion_radial_sensitivity": (
+                    (trial + 1) * 5e-10 if model == "6-DoF" else None
+                ),
+                "declared_tolerance": 1e-6,
+            }
+            for trial in range(3)
+        ]
+    if identity["family"] == "P1-F-robust-pd":
+        experiment["robust_iterations"] = [
+            {
+                "risk_mode": risk_mode,
+                "outer_iteration": iteration,
+                "dynamics_residual": 1e-4 / (iteration + 1),
+                "path_residual": 2e-4 / (iteration + 1),
+                "terminal_residual": 3e-4 / (iteration + 1),
+                "virtual_control_residual": 4e-5 / (iteration + 1),
+                "nonanticipativity_residual": 5e-5 / (iteration + 1),
+                "risk_epigraph_residual": 6e-5 / (iteration + 1),
+                "canonical_kkt_residual": 7e-5 / (iteration + 1),
+                "accepted": iteration != 1,
+                "trust_radius": 1.0 / (iteration + 1),
+            }
+            for risk_mode in ("expected", "worst-case", "CVaR")
+            for iteration in range(3)
+        ]
     return RunManifest(
         run_id=identity["run_id"],
         timestamp_utc="2026-09-01T00:00:00Z",
@@ -206,12 +258,7 @@ def _manifest(result: dict[str, Any]) -> RunManifest:
             runtime_version="synthetic",
             interconnect="synthetic",
         ),
-        experiment={
-            "synthetic": True,
-            "gpu_memory_bytes": 80 * 1024**3,
-            "analytic_collective_bytes": result["resources"]["collective_bytes"],
-            "scaling_kind": "strong",
-        },
+        experiment=experiment,
         problem={
             "family": identity["family"],
             "instance_id": identity["instance_id"],

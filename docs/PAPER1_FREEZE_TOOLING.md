@@ -11,7 +11,7 @@ has passed or frozen.
    `evidence-record.json`. It validates run-ID/commit/family/solver traceability, separate
    independent-residual and replay artifacts, immutable URIs, content hashes, internal-index
    hashes, and optional local payload bytes. Failure/censoring statuses remain first-class rows.
-2. `aggregate.py` applies the frozen source-data contracts for F01-F08 and T01-T06. It writes
+2. `aggregate.py` applies the frozen source-data contracts for F01-F12 and T01-T08. It writes
    canonical JSON for every product, PDF/PNG figures, and JSON/CSV/TeX tables. Numeric plot input
    comes only from validated records.
 3. `decisions.py` emits H1-H6 records with the frozen practical thresholds, 10,000-sample paired
@@ -26,6 +26,7 @@ has passed or frozen.
 
 The versioned contracts are:
 
+- `papers/paper1/PRODUCT_CONTRACT_RECONCILIATION.md`
 - `experiments/schema/paper1_evidence.schema.json`
 - `experiments/schema/paper1_decision.schema.json`
 - `experiments/schema/paper1_campaign.schema.json`
@@ -88,6 +89,8 @@ The command refuses to write `freeze-seal.json` if any of these checks fail:
 - absent warm/cold classification, timing component, accepted-trajectory boundary, or timing sum;
 - qualified comparison without matched quality and independent replay;
 - archived status not mapped by at least one frozen product;
+- missing F11 variational trials for any of 3-DoF, 6-DoF, or low-thrust;
+- missing F12 expected, worst-case, or CVaR robust-iteration diagnostics;
 - missing H1-H6 decision or manuscript claim link.
 
 `freeze-seal.json` is a completeness seal only. Its statement explicitly disclaims a scientific
@@ -110,6 +113,10 @@ including failures, with:
   max-iteration, numerical, infeasible, timeout, OOM, unsupported, and unrun records;
 - active/reserved memory, allocation/copy counts, energy trace validity, immutable artifact URIs,
   archive hashes, and internal evidence-index hashes.
+- F11 trial-level analytic-versus-independent-finite-difference absolute/relative differences,
+  declared tolerances, coefficient-fill timings, and 6-DoF quaternion radial sensitivities.
+- paired measured-repeat timing arrays for F10 winner confidence; absent or incomplete pairs
+  deterministically produce a tie rather than a unique winner.
 
 Current known G4 failures must remain failures; this tooling will not promote them.
 
@@ -131,6 +138,8 @@ The G5 producer must supply the complete P1-F matrix and all negative evidence w
   explicitly rather than omitted;
 - pinned MPI/NCCL/CUDA/driver/hardware manifests, sanitizer/race evidence, immutable archive URIs,
   content hashes, and internal evidence indexes.
+- F12 per-outer-iteration expected/worst-case/CVaR dynamics, path, terminal, virtual-control,
+  non-anticipativity, risk-epigraph, and canonical-KKT residuals with acceptance and trust radius.
 
 If G5 remains unauthorised or unexecuted, its configured coordinates remain incomplete and real
 freeze correctly refuses.

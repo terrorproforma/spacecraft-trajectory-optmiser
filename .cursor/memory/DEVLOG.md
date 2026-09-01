@@ -40,7 +40,6 @@
     not itself provide nonlinear P1-C/P1-D/P1-E handback.
   - A 15-outer P1-C run exceeded 30 minutes and was terminated. The full matrix remains censored,
     H5/H6 unresolved, G4 failed, and G5 unauthorized.
-
 ## 2026-09-01 22:05 AEST
 
 - Task summary:
@@ -369,3 +368,23 @@
     no physical PCIe/NUMA affinity. No new GPU runtime or scaling measurement was run.
   - The harness validates launch/collectives/failures only. P1-F integration and all physical
     2/4/8 correctness, quality, failure, energy, and scaling evidence remain required.
+## 2026-09-02 01:40 AEST
+
+- Task summary:
+  - Reconciled the authoritative Paper 1 schema with the narrow initial G6 registry.
+- Changes:
+  - Added deterministic F09-F12 source/PDF/PNG and T07-T08 JSON/CSV/TeX generation.
+  - Added paired-repeat regime winners, matched-quality Pareto fronts, variational and robust
+    diagnostic completeness checks, full failure retention, claim-product links, schema/CI
+    inventory enforcement, and versioned reconciliation documentation.
+  - Added synthetic F11/F12 evidence and negative tests for missing diagnostics, manual
+    coordinates, failure omission, and unsupported unique winners.
+- Validation:
+  - Ruff passed; 155 Python tests passed with three optional QOCO tests skipped.
+  - The 70-file synthetic-only bundle reproduced byte-for-byte with aggregate SHA-256
+    `b7b67930940b54b8a47ff4c061a46d36db10001093d952b2f367b434344b0275`.
+  - An isolated wheel installed all rendering dependencies and built all 20 products; synthetic
+    freeze was refused with exit code 2.
+- Follow-up notes / risks:
+  - G4 must supply paired timing repeats and F11 trial evidence; G5 must supply F12 risk-mode
+    iteration evidence. No real scientific result or G6 PASS was claimed.

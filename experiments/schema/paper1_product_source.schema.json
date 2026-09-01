@@ -9,6 +9,9 @@
     "slug",
     "description",
     "synthetic",
+    "manual_coordinates",
+    "coordinate_origin",
+    "caption_context",
     "filter_query",
     "aggregation",
     "run_ids"
@@ -18,12 +21,38 @@
     "product_id": {
       "enum": [
         "F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08",
-        "T01", "T02", "T03", "T04", "T05", "T06"
+        "F09", "F10", "F11", "F12",
+        "T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08"
       ]
     },
     "slug": {"type": "string", "minLength": 1},
     "description": {"type": "string", "minLength": 1},
     "synthetic": {"type": "boolean"},
+    "manual_coordinates": {"const": false},
+    "coordinate_origin": {
+      "const": "validated archived run and referenced evidence fields"
+    },
+    "caption_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hardware_ids",
+        "precisions",
+        "warm_start_states",
+        "quality_tiers",
+        "requested_tolerances"
+      ],
+      "properties": {
+        "hardware_ids": {"type": "array", "items": {"type": "string"}},
+        "precisions": {"type": "array", "items": {"type": "string"}},
+        "warm_start_states": {"type": "array", "items": {"type": "string"}},
+        "quality_tiers": {"type": "array", "items": {"type": "string"}},
+        "requested_tolerances": {
+          "type": "array",
+          "items": {"type": "number", "minimum": 0}
+        }
+      }
+    },
     "filter_query": {"type": "string", "minLength": 1},
     "aggregation": {
       "type": "object",
@@ -34,6 +63,11 @@
     "series": {"type": "array"},
     "facets": {"type": "array"},
     "panels": {"type": "array"},
+    "marker_size": {"type": "string"},
+    "marker_shape": {"type": "string"},
+    "reference_line": {"type": "string"},
+    "companion_metric": {"type": "string"},
+    "background": {"type": "array"},
     "selection_rule": {"type": "string"},
     "units": {},
     "blocks": {"type": "array"},

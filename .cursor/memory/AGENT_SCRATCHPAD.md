@@ -759,3 +759,40 @@ Use this file as persistent, repo-local execution memory.
   physical PCIe/NUMA affinity; the new harness was compiled but not executed.
 - The launch harness is not the integrated P1-F nonlinear campaign driver. Physical 2/4/8
   correctness, failure behavior, quality, energy, and scaling remain unverified.
+### 2026-09-02 01:40 AEST - Paper 1 product-contract reconciliation
+
+#### Task Summary
+
+- Reconciled the narrow G6 registry against the authoritative frozen Paper 1 schema and expanded
+  deterministic generation from F01-F08/T01-T06 to F01-F12/T01-T08.
+
+#### What Worked
+
+- Treating the figure schema as the inclusion authority while preserving the outline's placement
+  distinction resolved the conflict without deleting F11 or weakening F12's diagnostic constraint.
+- Requiring archived paired-repeat arrays for F10 prevented a one-summary-point bootstrap from
+  manufacturing a unique regime winner.
+- Adding trial-level F11 and iteration-level F12 data to hashed manifests preserved provenance
+  without creating manual numeric coordinates in generator code.
+
+#### Mistakes And Fixes
+
+- `[self]` The first T08 implementation included only runs referenced by non-supported H1-H6
+  decisions, omitting an infeasible non-hypothesis run. Added explicit retained-negative rows for
+  every otherwise-unrepresented censored or failed run.
+- `[self]` The first wheel still required a manual matplotlib install. Promoted matplotlib from the
+  development extra to a runtime dependency and verified an isolated wheel-installed build.
+- `[self]` Initial reconciliation assertions matched prose across a Markdown line wrap. Replaced
+  them with semantic fragment checks.
+
+#### Guardrails For Next Session
+
+- Never infer an F10 unique winner from medians alone; absent paired repeat evidence means `tie`.
+- F11 needs all three declared model panels and F12 needs all three risk modes before publication
+  products can build.
+- Keep F11 placement optionality separate from generator/evidence completeness.
+
+#### Follow-Ups / Risks
+
+- Real F11/F12 inputs must be emitted by G4/G5 producers in the documented hashed-manifest fields.
+- Synthetic outputs remain non-scientific and the campaign freeze refusal remains mandatory.

@@ -38,6 +38,18 @@ jobs:
           spacepdhcg-paper1 synthetic-demo \
             build/paper1-synthetic/campaign \
             build/paper1-synthetic/bundle
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(
+              Path("build/paper1-synthetic/bundle/products/build-manifest.json").read_text()
+          )
+          expected = [
+              *(f"F{index:02d}" for index in range(1, 13)),
+              *(f"T{index:02d}" for index in range(1, 9)),
+          ]
+          assert manifest["product_ids"] == expected
+          PY
           spacepdhcg-paper1 verify-reproducible \
             build/paper1-synthetic/campaign --synthetic
       - name: Assert synthetic freeze refusal

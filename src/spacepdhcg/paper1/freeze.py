@@ -24,6 +24,14 @@ from .evidence import (
 )
 
 FREEZE_SCHEMA_VERSION: Final = "1.0.0"
+CLAIM_PRODUCTS: Final = {
+    "H1": ["F02", "F08", "T04", "T07", "T08"],
+    "H2": ["F04", "F09", "F10", "T07", "T08"],
+    "H3": ["F05", "F10", "T07", "T08"],
+    "H4": ["F03", "F07", "F10", "F12", "T06", "T07", "T08"],
+    "H5": ["F06", "F09", "F10", "T05", "T08"],
+    "H6": ["F06", "F09", "F10", "T05", "T08"],
+}
 SI_UNITS: Final = {
     "length": "metre",
     "time": "second",
@@ -257,6 +265,7 @@ def _claim_linkage(config: Mapping[str, Any], decisions: Path) -> dict[str, Any]
                 "decision_outcome": record["outcome"],
                 "decision_file": f"decisions/{hypothesis.lower()}-decision.json",
                 "claim_ids": claims,
+                "product_ids": CLAIM_PRODUCTS[hypothesis],
             }
         )
     return {"schema_version": FREEZE_SCHEMA_VERSION, "links": links}
@@ -273,8 +282,20 @@ def build_campaign(
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
-    figures = build_products(runs, output / "products", synthetic=synthetic)
     decisions = build_decisions(runs, output / "decisions")
+    decision_records = {
+        hypothesis: _load_json(
+            output / "decisions" / f"{hypothesis.lower()}-decision.json",
+            f"{hypothesis} decision",
+        )
+        for hypothesis in (f"H{index}" for index in range(1, 7))
+    }
+    figures = build_products(
+        runs,
+        output / "products",
+        decisions=decision_records,
+        synthetic=synthetic,
+    )
     index = evidence_index(runs)
     write_canonical_json(output / "evidence-index.json", index)
     manifest = {
