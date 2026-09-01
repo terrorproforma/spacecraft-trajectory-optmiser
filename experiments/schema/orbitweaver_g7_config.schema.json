@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-config-v1.json",
+  "title": "OrbitWeaver G7 configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seed",
+    "maximum_batch_size",
+    "maximum_buffered_arcs",
+    "maximum_workspace_bytes",
+    "top_k",
+    "risk_measure",
+    "certification_tolerance"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "seed": {"type": "integer", "minimum": 0},
+    "maximum_batch_size": {"type": "integer", "minimum": 1},
+    "maximum_buffered_arcs": {"type": "integer", "minimum": 1},
+    "maximum_workspace_bytes": {"type": "integer", "minimum": 1},
+    "top_k": {"type": "integer", "minimum": 1},
+    "risk_measure": {
+      "enum": ["expected", "worst_case", "cvar_0.9", "cvar_0.99"]
+    },
+    "certification_tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}
