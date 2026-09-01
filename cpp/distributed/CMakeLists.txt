@@ -68,6 +68,34 @@ set_target_properties(
         POSITION_INDEPENDENT_CODE ON
 )
 
+add_executable(
+    g5_physical_validation_harness
+    tools/physical_validation_harness.cu
+)
+target_link_libraries(
+    g5_physical_validation_harness
+    PRIVATE spacepdhcg_distributed
+)
+set_target_properties(
+    g5_physical_validation_harness
+    PROPERTIES
+        CUDA_STANDARD 20
+        CUDA_STANDARD_REQUIRED ON
+        CUDA_RESOLVE_DEVICE_SYMBOLS ON
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/distributed-tools"
+)
+target_compile_options(
+    g5_physical_validation_harness
+    PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo;-Xcompiler=-Wall,-Wextra>
+)
+if(SPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS)
+    target_compile_options(
+        g5_physical_validation_harness
+        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Werror>
+    )
+endif()
+
 if(BUILD_TESTING)
     add_executable(g5_logical_rank_test tests/logical_rank_test.cpp)
     target_link_libraries(g5_logical_rank_test PRIVATE spacepdhcg_distributed)

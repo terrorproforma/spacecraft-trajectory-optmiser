@@ -19,7 +19,10 @@ jobs="${BUILD_JOBS:-2}"
   -DSPACEPDHCG_NATIVE_ENABLE_SANITIZERS="${ENABLE_HOST_SANITIZERS:-OFF}"
 
 "${cmake_bin}" --build "${build_dir}" \
-  --target g5_logical_rank_test g5_one_rank_runtime_test \
+  --target \
+    g5_logical_rank_test \
+    g5_one_rank_runtime_test \
+    g5_physical_validation_harness \
   --parallel "${jobs}"
 
 "${cmake_bin}" --build "${build_dir}" --target g5_logical_checks
