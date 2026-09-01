@@ -25,6 +25,16 @@ def _matrix_module():
     return module
 
 
+def _supported_finalizer_module():
+    root = Path(__file__).resolve().parents[1]
+    path = root / "scripts" / "cpu" / "finalize_supported_matrix.py"
+    specification = importlib.util.spec_from_file_location("finalize_supported_matrix", path)
+    assert specification is not None and specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
 def test_frozen_coordinate_ledger_is_complete_and_fail_closed() -> None:
     module = _module()
     root = Path(__file__).resolve().parents[1]
@@ -105,3 +115,21 @@ def test_supported_matrix_driver_expands_same_frozen_inventory(tmp_path: Path) -
     assert result["disposition"] == "executed"
     assert result["quality"]["qualified"]
     assert result["quality"]["canonical_natural_residual"] <= 1.0e-8
+
+
+def test_semantic_reproducibility_excludes_only_observation_fields() -> None:
+    module = _supported_finalizer_module()
+    record = {
+        "coordinate_id": "a" * 24,
+        "family": "P1-A-banded",
+        "quality": {"qualified": True},
+        "timing": {"wall_seconds": 1.0},
+        "resources": {"peak_host_bytes": 100},
+        "artifacts": {"result": "result.json"},
+    }
+    semantic = module._semantic(record)
+    assert semantic == {
+        "coordinate_id": "a" * 24,
+        "family": "P1-A-banded",
+        "quality": {"qualified": True},
+    }
