@@ -604,7 +604,7 @@ IntegrationResult run_resident_sequence(
             SPACEPDHCG_CUDA_SCVX_ADAPTIVE,
             SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,
             1.0e-3,
-            1.0e-8,
+            g4_sample_mode ? 1.0e-8 : 1.0e-6,
             1.0e-3,
             0.2,
             0.5,
