@@ -144,14 +144,10 @@ def parse_nvidia_gpu_csv(payload: str) -> list[dict[str, Any]]:
         if not row:
             continue
         if len(row) != len(fields):
-            raise ValueError(
-                f"nvidia-smi returned {len(row)} fields; expected {len(fields)}"
-            )
+            raise ValueError(f"nvidia-smi returned {len(row)} fields; expected {len(fields)}")
         device: dict[str, Any] = {}
         for field, value in zip(fields, row, strict=True):
-            device[field] = (
-                _parse_optional_int(value) if field in integer_fields else value.strip()
-            )
+            device[field] = _parse_optional_int(value) if field in integer_fields else value.strip()
         devices.append(device)
     return devices
 
@@ -322,8 +318,7 @@ def validate_preflight_record(
     devices = list(record.get("gpus", []))
     if len(devices) < expected_gpu_count:
         failures.append(
-            f"detected {len(devices)} GPUs but campaign requires at least "
-            f"{expected_gpu_count}"
+            f"detected {len(devices)} GPUs but campaign requires at least {expected_gpu_count}"
         )
     if len({item.get("uuid") for item in devices}) != len(devices):
         failures.append("GPU UUIDs are missing or duplicated")
@@ -352,8 +347,7 @@ def validate_preflight_record(
         if isinstance(total, int) and isinstance(free, int):
             if total <= 0 or free / total < minimum_free_fraction:
                 failures.append(
-                    f"GPU {index} free-memory fraction is below "
-                    f"{minimum_free_fraction:.0%}"
+                    f"GPU {index} free-memory fraction is below {minimum_free_fraction:.0%}"
                 )
         else:
             failures.append(f"GPU {index} memory telemetry is unavailable")
@@ -512,9 +506,7 @@ def capture_preflight(
             "nccl": _first_line(captures["nccl"]),
             "mpi": _first_line(captures["mpi"]),
         },
-        "build": _capture_build_pin(
-            Path(build_directory) if build_directory is not None else None
-        ),
+        "build": _capture_build_pin(Path(build_directory) if build_directory is not None else None),
         "host": {
             "cpu": captures["cpu"]["stdout"],
             "numa": captures["numa"]["stdout"],
@@ -622,13 +614,9 @@ def rank_bindings(
     rank_cpus: dict[int, list[int]] = {}
     used_cpus: set[int] = set()
     for (_, affinity), ranks in affinity_groups.items():
-        available = [
-            cpu for cpu in expand_cpu_list(affinity) if cpu not in used_cpus
-        ]
+        available = [cpu for cpu in expand_cpu_list(affinity) if cpu not in used_cpus]
         if len(available) < len(ranks):
-            raise PreflightError(
-                f"CPU affinity {affinity} cannot provide one core per rank"
-            )
+            raise PreflightError(f"CPU affinity {affinity} cannot provide one core per rank")
         quotient, remainder = divmod(len(available), len(ranks))
         offset = 0
         for group_index, rank in enumerate(ranks):
@@ -639,9 +627,7 @@ def rank_bindings(
     bindings: list[dict[str, Any]] = []
     for rank, device in enumerate(selected):
         local_nics = [
-            item["name"]
-            for item in interfaces
-            if item.get("numa_node") == device.get("numa_node")
+            item["name"] for item in interfaces if item.get("numa_node") == device.get("numa_node")
         ]
         bindings.append(
             {
@@ -727,8 +713,7 @@ def generate_coordinates(config: Mapping[str, Any]) -> list[CampaignCoordinate]:
 
 def _rankfile(bindings: Sequence[Mapping[str, Any]], hostname: str) -> str:
     return "".join(
-        f"rank {binding['rank']}={hostname} slot={binding['cpu_set']}\n"
-        for binding in bindings
+        f"rank {binding['rank']}={hostname} slot={binding['cpu_set']}\n" for binding in bindings
     )
 
 
@@ -1069,13 +1054,10 @@ def build_partial_evidence(
     ]
     mean_compute = sum(local_compute) / len(local_compute) if local_compute else None
     load_imbalance = (
-        max(local_compute) / mean_compute
-        if mean_compute is not None and mean_compute > 0
-        else None
+        max(local_compute) / mean_compute if mean_compute is not None and mean_compute > 0 else None
     )
     collectives = [
-        {"rank": item.get("rank"), "collectives": item.get("collectives", [])}
-        for item in telemetry
+        {"rank": item.get("rank"), "collectives": item.get("collectives", [])} for item in telemetry
     ]
     return {
         "schema_version": G5_SCHEMA_VERSION,
@@ -1098,9 +1080,7 @@ def build_partial_evidence(
                 {
                     "rank": item.get("rank"),
                     "exposed_seconds": item.get("communication_exposed_seconds"),
-                    "overlapped_seconds": item.get(
-                        "communication_overlapped_seconds"
-                    ),
+                    "overlapped_seconds": item.get("communication_overlapped_seconds"),
                 }
                 for item in telemetry
             ]
@@ -1112,16 +1092,14 @@ def build_partial_evidence(
             if local_compute
             else None,
             "memory_per_gpu_bytes": [
-                {"rank": item.get("rank"), **(item.get("memory") or {})}
-                for item in telemetry
+                {"rank": item.get("rank"), **(item.get("memory") or {})} for item in telemetry
             ]
             or list(gpu_samples)
             or None,
             "timing_seconds": {
                 "launcher": launcher_seconds,
                 "per_rank": [
-                    {"rank": item.get("rank"), **(item.get("timing") or {})}
-                    for item in telemetry
+                    {"rank": item.get("rank"), **(item.get("timing") or {})} for item in telemetry
                 ],
             }
             if launcher_seconds is not None or telemetry
@@ -1133,16 +1111,13 @@ def build_partial_evidence(
             or list(gpu_samples)
             or None,
             "residuals_nonanticipativity_risk": [
-                {"rank": item.get("rank"), **(item.get("quality") or {})}
-                for item in telemetry
+                {"rank": item.get("rank"), **(item.get("quality") or {})} for item in telemetry
             ]
             or None,
             "nonlinear_quality": [
                 {
                     "rank": item.get("rank"),
-                    "nonlinear_quality": (item.get("quality") or {}).get(
-                        "nonlinear_quality"
-                    ),
+                    "nonlinear_quality": (item.get("quality") or {}).get("nonlinear_quality"),
                 }
                 for item in telemetry
             ]

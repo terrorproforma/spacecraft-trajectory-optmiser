@@ -85,9 +85,7 @@ def command_plan(args: argparse.Namespace) -> int:
     if args.gpu_count:
         selected_counts = set(args.gpu_count)
         coordinates = [
-            coordinate
-            for coordinate in coordinates
-            if coordinate.gpu_count in selected_counts
+            coordinate for coordinate in coordinates if coordinate.gpu_count in selected_counts
         ]
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -192,10 +190,7 @@ def command_verify(args: argparse.Namespace) -> int:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 2
-    print(
-        f"validated {len(plan['manifests'])} commands against installed "
-        "OpenMPI/CUDA/NCCL"
-    )
+    print(f"validated {len(plan['manifests'])} commands against installed OpenMPI/CUDA/NCCL")
     return 0
 
 

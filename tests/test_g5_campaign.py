@@ -83,9 +83,7 @@ def _physical_record(gpu_count: int) -> dict[str, object]:
             "rows": [
                 {
                     "gpu": f"GPU{index}",
-                    "links": [
-                        "X" if index == peer else "NV18" for peer in range(gpu_count)
-                    ],
+                    "links": ["X" if index == peer else "NV18" for peer in range(gpu_count)],
                     "cpu_affinity": device["cpu_affinity"],
                     "numa_node": index,
                 }
@@ -218,9 +216,7 @@ def test_coordinate_matrix_is_deterministic_and_complete() -> None:
         "scenario_aware",
         "nonzero_balanced",
     }
-    assert {
-        item.scenarios for item in first if item.scaling == "weak"
-    } == {8, 16, 32, 64}
+    assert {item.scenarios for item in first if item.scaling == "weak"} == {8, 16, 32, 64}
 
 
 def test_one_monolithic_reference_can_match_all_distributed_gpu_counts() -> None:
@@ -239,9 +235,12 @@ def test_one_monolithic_reference_can_match_all_distributed_gpu_counts() -> None
     ]
     assert len({item["run_id"] for item in manifests}) == 1
     assert manifests[0]["run_id"] != _manifest(1)["run_id"]
-    assert manifests[0]["comparison"]["monolithic_reference"][
-        "reference_for_gpu_counts"
-    ] == [1, 2, 4, 8]
+    assert manifests[0]["comparison"]["monolithic_reference"]["reference_for_gpu_counts"] == [
+        1,
+        2,
+        4,
+        8,
+    ]
 
 
 @pytest.mark.parametrize("gpu_count", [1, 2, 4, 8])
@@ -348,9 +347,7 @@ def test_gpu_power_samples_are_integrated_without_spanning_large_gaps(tmp_path: 
 
 def test_campaign_records_validate_against_frozen_schema() -> None:
     schema = json.loads(
-        (ROOT / "experiments" / "schema" / "g5_campaign.schema.json").read_text(
-            encoding="utf-8"
-        )
+        (ROOT / "experiments" / "schema" / "g5_campaign.schema.json").read_text(encoding="utf-8")
     )
     validator = Draft202012Validator(schema)
     preflight = _physical_record(2)

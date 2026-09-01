@@ -796,8 +796,7 @@ class ResultRecord:
             raise ValueError("result optimality gap is inconsistent with its bounds")
         no_incumbent = {"infeasible", "unsupported"}
         if self.status in no_incumbent and any(
-            value is not None
-            for value in (self.incumbent, self.lower_bound, self.optimality_gap)
+            value is not None for value in (self.incumbent, self.lower_bound, self.optimality_gap)
         ):
             raise ValueError(f"{self.status} result may not contain incumbent bounds")
         terminal = {
@@ -817,9 +816,7 @@ class ResultRecord:
         completed = self.telemetry["completed"]
         if (
             completed
-            != self.telemetry["feasible"]
-            + self.telemetry["failed"]
-            + self.telemetry["cancelled"]
+            != self.telemetry["feasible"] + self.telemetry["failed"] + self.telemetry["cancelled"]
             or completed > submitted
         ):
             raise ValueError("result telemetry counters are inconsistent")
@@ -831,9 +828,7 @@ class ResultRecord:
             else {
                 "accepted": self.certification.accepted,
                 "checks": (
-                    None
-                    if self.certification.checks is None
-                    else asdict(self.certification.checks)
+                    None if self.certification.checks is None else asdict(self.certification.checks)
                 ),
                 "backend_identifier": self.certification.backend_identifier,
                 "diagnostic": self.certification.diagnostic,

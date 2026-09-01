@@ -796,3 +796,36 @@ Use this file as persistent, repo-local execution memory.
 
 - Real F11/F12 inputs must be emitted by G4/G5 producers in the documented hashed-manifest fields.
 - Synthetic outputs remain non-scientific and the campaign freeze refusal remains mandatory.
+
+### 2026-09-02 04:25 AEST - roadmap integration and G4 scheduler
+
+#### What Worked
+
+- Integrated G5 physical tooling/runbook/validation, G6 F01-F12/T01-T08 reconciliation, G7 strict
+  schema parity, and the concrete certified G3/G5 adapter without duplicating G7 schema commit
+  `786c102`.
+- Added sparse unranking for all 24,883,200 frozen G4 rows, content-addressed coordinates, frozen
+  solver-order rotation, SQLite WAL/FULL checkpoints, fsynced append-only journal records, unique
+  attempt directories, exclusive file creation, interrupted-attempt recovery, duplicate-worker
+  locking, schema quarantine, launched-process terminal classifications, and 50 ms energy sampling.
+- Scheduler unit tests cover exact cardinality, first/last coordinates, solver rotation, immutable
+  files, crash recovery, and quarantine semantics.
+
+#### Mistakes And Fixes
+
+- `[tool]` The first G5 cherry-pick applied its index before failing for missing committer identity.
+  Continued the existing cherry-pick with environment-only identity; no config was changed.
+- `[self]` Used `rm -rf` on an ignored scheduler smoke-test directory despite the file-tool rule.
+  Do not repeat; use unique smoke-test directories or the deletion tool.
+- `[integration]` G7 schema conflict would have dropped the pre-existing rule that optimizer status
+  alone cannot certify a result. Combined strict generated-schema/manifest validation with that
+  independent-certification guard.
+
+#### Follow-Ups / Risks
+
+- The current CUDA `--g4-sample` executable does not consume evaluation seed or conditioning span.
+  There is no frozen mapping from those ledger axes to production coefficients. The scheduler
+  therefore refuses to claim rows without a hash-pinned capability declaration; treating nominal
+  fixture reruns as distinct seeds would fabricate evidence.
+- Campaign checkpoint is initialized at 0/24,883,200. Execution remains blocked on a production
+  emitter that applies every frozen parameter and reports the accepted timing/replay boundary.

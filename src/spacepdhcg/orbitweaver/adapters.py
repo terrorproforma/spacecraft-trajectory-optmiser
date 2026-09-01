@@ -138,9 +138,9 @@ class G3TrajectoryOracleAdapter:
         self._factory = factory
         self._maximum_workspaces = maximum_workspaces
         self._maximum_warm_tokens = maximum_warm_tokens
-        self._workspaces: OrderedDict[
-            tuple[TopologyKey, Ownership], G3PersistentScvxDriver
-        ] = OrderedDict()
+        self._workspaces: OrderedDict[tuple[TopologyKey, Ownership], G3PersistentScvxDriver] = (
+            OrderedDict()
+        )
         self._warm: OrderedDict[int, _WarmRecord] = OrderedDict()
         self._next_token = 1
         self.numeric_updates = 0
@@ -211,9 +211,7 @@ class G3TrajectoryOracleAdapter:
         try:
             driver = self._driver(topology, owner)
         except _TopologyMismatch as error:
-            return [
-                _failure(item, ArcStatus.TOPOLOGY_MISMATCH, str(error)) for item in requests
-            ]
+            return [_failure(item, ArcStatus.TOPOLOGY_MISMATCH, str(error)) for item in requests]
         output: list[ArcResult] = []
         for request in requests:
             if cancelled.is_set():
@@ -227,17 +225,13 @@ class G3TrajectoryOracleAdapter:
                 solve = driver.solve(request, cancelled)
                 output.append(self._convert(request, solve))
             except _WarmIncompatible as error:
-                output.append(
-                    _failure(request, ArcStatus.WARM_START_INCOMPATIBLE, str(error))
-                )
+                output.append(_failure(request, ArcStatus.WARM_START_INCOMPATIBLE, str(error)))
             except MemoryError as error:
                 output.append(_failure(request, ArcStatus.OOM, str(error) or "G3 OOM"))
             except TimeoutError as error:
                 output.append(_failure(request, ArcStatus.TIMEOUT, str(error) or "G3 timeout"))
             except NotImplementedError as error:
-                output.append(
-                    _failure(request, ArcStatus.UNSUPPORTED, str(error) or "unsupported")
-                )
+                output.append(_failure(request, ArcStatus.UNSUPPORTED, str(error) or "unsupported"))
             except (ArithmeticError, FloatingPointError) as error:
                 output.append(
                     _failure(
@@ -424,9 +418,7 @@ class LogicalCollective:
     def __init__(self) -> None:
         self.calls: list[dict[str, int | str]] = []
 
-    def synchronize_status(
-        self, rank_status: Mapping[int, CollectiveStatus]
-    ) -> CollectiveStatus:
+    def synchronize_status(self, rank_status: Mapping[int, CollectiveStatus]) -> CollectiveStatus:
         order = {
             CollectiveStatus.HEALTHY: 0,
             CollectiveStatus.CANCELLED: 1,
@@ -520,8 +512,7 @@ class G5Restart:
             "partition_fingerprint": self.partition_fingerprint,
             "completed_ids": list(self.completed_ids),
             "rank_warm_tokens": {
-                str(rank): list(tokens)
-                for rank, tokens in sorted(self.rank_warm_tokens.items())
+                str(rank): list(tokens) for rank, tokens in sorted(self.rank_warm_tokens.items())
             },
         }
         temporary = path.with_suffix(path.suffix + ".tmp")
@@ -545,10 +536,7 @@ class G5Restart:
             payload["schema_version"],
             payload["partition_fingerprint"],
             tuple(payload["completed_ids"]),
-            {
-                int(rank): tuple(tokens)
-                for rank, tokens in payload["rank_warm_tokens"].items()
-            },
+            {int(rank): tuple(tokens) for rank, tokens in payload["rank_warm_tokens"].items()},
         )
         result.validate(partition)
         return result
@@ -736,11 +724,7 @@ class OrbitWeaverAdapterFlow:
         }
         aggregate_arcs: dict[tuple[int, int], ArcResult] = {}
         for key, risk in risk_by_arc.items():
-            members = [
-                item
-                for item in execution.results
-                if parents[item.deterministic_id] == key
-            ]
+            members = [item for item in execution.results if parents[item.deterministic_id] == key]
             if not risk.feasible:
                 continue
             template = members[0]
@@ -835,9 +819,7 @@ def flow_result_record(
         incumbent=flow.master.cost if flow.master.certified else None,
         lower_bound=flow.master.lower_bound if flow.master.certified else None,
         optimality_gap=(
-            max(0.0, flow.master.cost - flow.master.lower_bound)
-            if flow.master.certified
-            else None
+            max(0.0, flow.master.cost - flow.master.lower_bound) if flow.master.certified else None
         ),
         certified=flow.master.certified,
         certification=certification,

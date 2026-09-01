@@ -97,9 +97,7 @@ class FixtureFactory:
         self.drivers: list[DeterministicG3Fixture] = []
         self.mismatch = False
 
-    def __call__(
-        self, topology: TopologyKey, owner: Ownership
-    ) -> DeterministicG3Fixture:
+    def __call__(self, topology: TopologyKey, owner: Ownership) -> DeterministicG3Fixture:
         driver = DeterministicG3Fixture(topology, owner)
         if self.mismatch:
             driver.topology_fingerprint += 1
@@ -182,9 +180,7 @@ def test_g3_reuses_workspace_updates_values_and_warm_state() -> None:
 def test_g3_explicit_failure_and_incompatibility_classification() -> None:
     factory = FixtureFactory()
     adapter = G3TrajectoryOracleAdapter(factory)
-    token = scheduler(adapter).run(
-        [arc(1, ArcFidelity.COARSE_CONVEX, 11, 8)]
-    )[0].warm_token
+    token = scheduler(adapter).run([arc(1, ArcFidelity.COARSE_CONVEX, 11, 8)])[0].warm_token
     incompatible = arc(
         2,
         ArcFidelity.REFINED_SCVX,
@@ -223,8 +219,7 @@ def test_g3_explicit_failure_and_incompatibility_classification() -> None:
 
 def test_g5_partition_restart_and_backpressure(tmp_path: Path) -> None:
     work = [
-        G5WorkItem(100 + index, index // 4, index // 2, index % 2, index + 1)
-        for index in range(8)
+        G5WorkItem(100 + index, index // 4, index // 2, index % 2, index + 1) for index in range(8)
     ]
     first = G5Partition.build(work, (2, 5, 7))
     second = G5Partition.build(reversed(work), (2, 5, 7))
@@ -304,9 +299,7 @@ def test_full_coarse_refined_scenario_master_certification_flow() -> None:
             warm=result.warm_token,
         )
 
-    def scenarios(
-        request: ArcRequest, result: object
-    ) -> list[tuple[ArcRequest, float]]:
+    def scenarios(request: ArcRequest, result: object) -> list[tuple[ArcRequest, float]]:
         return [
             (
                 arc(

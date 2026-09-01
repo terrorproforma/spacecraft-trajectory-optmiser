@@ -388,3 +388,24 @@
 - Follow-up notes / risks:
   - G4 must supply paired timing repeats and F11 trial evidence; G5 must supply F12 risk-mode
     iteration evidence. No real scientific result or G6 PASS was claimed.
+
+## 2026-09-02 04:25 AEST
+
+- Task summary:
+  - Integrated completed G5/G6/G7 roadmap code and implemented a fail-closed, crash-safe scheduler
+    for the full frozen G4 ledger.
+- Changes:
+  - Integrated source commits `f6d4979`, `d24c987`, `7799742`, `34e1fbe`, `bf9d10a`, and
+    `887450c`; skipped equivalent G7 schema parent `786c102`.
+  - Preserved G4 QOCO/globalization semantics and merged memory histories additively.
+  - Added content-addressed coordinate unranking, frozen solver rotation, SQLite checkpoints,
+    append-only fsynced journaling, immutable attempt directories, crash recovery, process locking,
+    record quarantine, actual process terminal classifications, and energy gap metrics.
+- Validation:
+  - Scheduler tests passed 3/3; focused integrated G5/G6/G7 tests passed.
+  - Scheduler initialization reports exactly 24,883,200 total and remaining rows.
+- Follow-up notes / risks:
+  - Campaign launch is fail-closed at 0 completed because the current CUDA executable does not apply
+    the frozen evaluation-seed or conditioning axes. No row was falsely executed or classified.
+  - A production parameter emitter/capability record is required before the durable GPU worker may
+    claim its first coordinate.

@@ -145,9 +145,7 @@ G7_CONFIG_SCHEMA = {
         "maximum_buffered_arcs": {"type": "integer", "minimum": 1},
         "maximum_workspace_bytes": {"type": "integer", "minimum": 1},
         "top_k": {"type": "integer", "minimum": 1},
-        "risk_measure": {
-            "enum": ["expected", "worst_case", "cvar_0.9", "cvar_0.99"]
-        },
+        "risk_measure": {"enum": ["expected", "worst_case", "cvar_0.9", "cvar_0.99"]},
         "certification_tolerance": {"type": "number", "exclusiveMinimum": 0},
     },
 }
@@ -470,9 +468,7 @@ def _matches_type(instance: Any, expected: str) -> bool:
 
 
 def _is_array(instance: Any) -> bool:
-    return isinstance(instance, Sequence) and not isinstance(
-        instance, (str, bytes, bytearray)
-    )
+    return isinstance(instance, Sequence) and not isinstance(instance, (str, bytes, bytearray))
 
 
 def _freeze(value: Any) -> Any:
