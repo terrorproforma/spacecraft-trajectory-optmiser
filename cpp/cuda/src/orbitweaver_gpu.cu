@@ -486,13 +486,23 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_evaluate_async(
     }
     *workspace->cancelled = 0;
     workspace->counters[0] = workspace->counters[1] = 0U;
-    auto status = cudaMemcpyAsync(
+    // Value-initialising each result in the kernel does not define ABI padding bytes.
+    // Clear the full transfer region so device-to-host copies are initcheck-clean.
+    auto status = cudaMemsetAsync(
+        workspace->results,
+        0,
+        output_count * sizeof(*results),
+        workspace->stream
+    );
+    if (status == cudaSuccess) {
+        status = cudaMemcpyAsync(
         workspace->requests,
         requests,
         request_count * sizeof(*requests),
         cudaMemcpyHostToDevice,
         workspace->stream
-    );
+        );
+    }
     if (status == cudaSuccess) {
         constexpr std::uint32_t threads = 128U;
         const auto blocks =

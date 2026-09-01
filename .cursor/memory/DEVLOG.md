@@ -409,3 +409,7 @@
     the frozen evaluation-seed or conditioning axes. No row was falsely executed or classified.
   - A production parameter emitter/capability record is required before the durable GPU worker may
     claim its first coordinate.
+  - Current-head initcheck exposed 12 uninitialized Lambert result-padding bytes copied from device
+    to host. Zeroing the full output transfer region before kernel field assignment fixed the ABI
+    padding defect; current OrbitWeaver/G5 one-rank memcheck, racecheck, initcheck, and synccheck are
+    clean.

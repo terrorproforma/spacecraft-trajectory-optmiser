@@ -829,3 +829,7 @@ Use this file as persistent, repo-local execution memory.
   fixture reruns as distinct seeds would fabricate evidence.
 - Campaign checkpoint is initialized at 0/24,883,200. Execution remains blocked on a production
   emitter that applies every frozen parameter and reports the accepted timing/replay boundary.
+- Current-head OrbitWeaver initcheck initially found 12 uninitialized device-to-host bytes in
+  Lambert result ABI padding. Kernel field assignment cannot define padding; zeroing the complete
+  result transfer region before the kernel removed all 12 errors. OrbitWeaver and G5 one-rank
+  memcheck, racecheck, initcheck, and synccheck now each report zero errors/hazards.
