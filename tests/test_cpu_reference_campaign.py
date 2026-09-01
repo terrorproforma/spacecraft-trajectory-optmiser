@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 
@@ -8,6 +9,16 @@ def _module():
     root = Path(__file__).resolve().parents[1]
     path = root / "scripts" / "cpu" / "finalize_reference_campaign.py"
     specification = importlib.util.spec_from_file_location("cpu_reference_campaign", path)
+    assert specification is not None and specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
+def _matrix_module():
+    root = Path(__file__).resolve().parents[1]
+    path = root / "scripts" / "cpu" / "run_supported_matrix.py"
+    specification = importlib.util.spec_from_file_location("run_supported_matrix", path)
     assert specification is not None and specification.loader is not None
     module = importlib.util.module_from_spec(specification)
     specification.loader.exec_module(module)
@@ -60,3 +71,37 @@ def test_chart_source_contains_required_provenance() -> None:
     assert source["axes"][0]["unit"] == "count"
     assert source["series_legend"] == ["series"]
     assert source["transformation_aggregation_caption"]
+
+
+def test_supported_matrix_driver_expands_same_frozen_inventory(tmp_path: Path) -> None:
+    module = _matrix_module()
+    root = Path(__file__).resolve().parents[1]
+    paper1 = json.loads((root / "benchmarks" / "paper1_matrix.json").read_text())
+    paper2 = json.loads((root / "benchmarks" / "paper2_matrix.json").read_text())
+    coordinates = module._coordinates(paper1, "paper1") + module._coordinates(paper2, "paper2")
+    assert len(coordinates) == 16_324
+    assert len({item["coordinate_id"] for item in coordinates}) == len(coordinates)
+
+    module._OUTPUT = tmp_path
+    module._ENVIRONMENT_SHA256 = "0" * 64
+    module._SCHEMA = json.loads(
+        (root / "experiments/schema/cpu_reference_result.schema.json").read_text()
+    )
+    coordinate = next(
+        item
+        for item in coordinates
+        if item["family"] == "P1-A-banded"
+        and item["parameters"]
+        == {
+            "intervals": 10,
+            "state_dimensions": 4,
+            "control_dimensions": 3,
+            "control_sets": "box",
+            "weight_log10_spans": 0.0,
+            "seeds": 17,
+        }
+    )
+    result = module._banded(coordinate)
+    assert result["disposition"] == "executed"
+    assert result["quality"]["qualified"]
+    assert result["quality"]["canonical_natural_residual"] <= 1.0e-8

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/cpu_reference_result.schema.json",
+  "title": "CPU/reference matrix coordinate result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "coordinate_id",
+    "programme",
+    "family",
+    "parameters",
+    "disposition",
+    "reason",
+    "repository_commit",
+    "command",
+    "environment_sha256",
+    "implementation",
+    "dimensions",
+    "quality",
+    "work",
+    "timing",
+    "resources",
+    "repeats",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "coordinate_id": {"type": "string", "pattern": "^[0-9a-f]{24}$"},
+    "programme": {"enum": ["paper1", "paper2"]},
+    "family": {"type": "string", "minLength": 1},
+    "parameters": {"type": "object"},
+    "disposition": {
+      "enum": [
+        "executed",
+        "unqualified",
+        "timeout",
+        "oom",
+        "numerical",
+        "infeasible",
+        "unsupported",
+        "failed"
+      ]
+    },
+    "reason": {"type": "string", "minLength": 1},
+    "repository_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "command": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string"}
+    },
+    "environment_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "implementation": {
+      "type": "object",
+      "required": ["identifier", "evidence_level"],
+      "properties": {
+        "identifier": {"type": "string", "minLength": 1},
+        "evidence_level": {
+          "enum": [
+            "exact_known_optimum",
+            "cpu_solver_and_replay",
+            "native_reference_replay",
+            "risk_reference",
+            "component_contract",
+            "unsupported"
+          ]
+        }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "required": [
+        "intervals",
+        "scenarios",
+        "variables",
+        "scalar_rows",
+        "affine_rows",
+        "q_nonzeros",
+        "a_nonzeros",
+        "f_nonzeros",
+        "cone_inventory"
+      ]
+    },
+    "quality": {
+      "type": "object",
+      "required": [
+        "solver_status",
+        "objective",
+        "canonical_primal_residual",
+        "canonical_dual_residual",
+        "canonical_natural_residual",
+        "canonical_cone_residual",
+        "dynamics_residual",
+        "path_residual",
+        "terminal_residual",
+        "continuous_time_violation",
+        "virtual_control_residual",
+        "nonanticipativity_residual",
+        "risk_epigraph_residual",
+        "certified",
+        "qualified"
+      ]
+    },
+    "work": {
+      "type": "object",
+      "required": [
+        "outer_iterations",
+        "inner_iterations",
+        "accepted_steps",
+        "rejected_steps",
+        "forcing_satisfied",
+        "polish_used"
+      ]
+    },
+    "timing": {
+      "type": "object",
+      "required": [
+        "wall_seconds",
+        "median_seconds",
+        "q1_seconds",
+        "q3_seconds",
+        "minimum_seconds",
+        "maximum_seconds"
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "required": [
+        "peak_host_bytes",
+        "peak_device_bytes",
+        "timeout_seconds",
+        "memory_limit_bytes"
+      ]
+    },
+    "repeats": {
+      "type": "object",
+      "required": ["warmups", "measured", "durations_seconds"]
+    },
+    "artifacts": {
+      "type": "object",
+      "required": ["result", "stdout", "stderr"],
+      "properties": {
+        "result": {"type": "string"},
+        "stdout": {"type": "string"},
+        "stderr": {"type": "string"}
+      }
+    }
+  }
+}
