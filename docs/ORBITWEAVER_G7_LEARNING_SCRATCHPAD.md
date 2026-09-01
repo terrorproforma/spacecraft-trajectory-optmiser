@@ -29,3 +29,16 @@
 - Final G4 policy manifest fields to include in the G7 run manifest.
 - Whether G5 exposes deterministic reductions as a runtime mode or build option.
 - Physical multi-GPU machine topology and the approved Paper 2 campaign commit.
+
+## Schema audit lessons
+
+- Dataclass validation and hand-maintained JSON schemas drift unless one is generated from
+  the other.
+- Python equality treats `True == 1`; JSON Schema does not. Constant/enum validation needs
+  JSON-type-aware equality.
+- Python's JSON reader accepts `NaN` and infinity by default even though they are not
+  standard JSON. Record readers must reject `parse_constant`.
+- A schema-valid record can still be semantically invalid: gaps, bounds, telemetry totals,
+  manifest hashes, seeds and repeat indices require cross-field checks.
+- OOM, timeout and censored records can legitimately retain partial incumbents, but cannot
+  be marked certified and must retain an explicit matching failure.
