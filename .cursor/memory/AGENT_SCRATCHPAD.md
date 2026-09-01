@@ -61,3 +61,35 @@ Use this file as persistent, repo-local execution memory.
 
 - The G3 implementation is committed and G4 is authorised.
 - Nsight under WSL previously omitted kernel and GPU-memory records; retain this negative result.
+
+### 2026-09-01 17:30 AEST - Gate G4 qualification
+
+#### Task Summary
+
+- Froze G4 policy, pinned and executed QOCO-GPU, added per-outer forcing/fingerprint/work telemetry,
+  and ran nontrivial P1-C/P1-D/P1-E qualification starts.
+
+#### Mistakes And Fixes
+
+- `[self]` Launched tests concurrently with the first power campaign. Preserved that contaminated
+  run as negative evidence, excluded it, and reran the campaign in isolation.
+- `[tool]` PowerShell expanded Bash loop variables and the login shell omitted CUDA tools from
+  `PATH`. Replaced loops with explicit commands and absolute tool paths.
+- `[self]` Tightened the legacy G3 production fixture to the G4 floor, causing one regression.
+  Restored the G3 `1e-6` fixture while retaining the frozen G4 `1e-8` policy.
+
+#### What Worked
+
+- QOCO-GPU commit `09f0495` built for `sm_120` on CUDA 12.8 with cuDSS 0.7.1.6 and executed a real
+  CUDA SOCP smoke solve.
+- Device-side numeric fingerprints were identical across rejected under-solved re-solves, and all
+  four Compute Sanitizer tools remained clean.
+
+#### Follow-Ups / Risks
+
+- G4 is FAIL/unresolved and G5 is not authorised.
+- Nontrivial references expose that the device outer driver does not update every
+  reference/trust/penalty coefficient. Fix this before restarting primary H5.
+- The pinned QOCO API has primal-only warm start; H6 needs an audited dual-capable adapter or an
+  explicit primal-only hybrid hypothesis revision before a future preregistration.
+- WSL power sampling showed 1.86-1.94 second gaps despite a 50 ms request; energy is diagnostic.

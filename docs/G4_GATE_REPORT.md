@@ -1,0 +1,128 @@
+# Gate G4 report — adaptive and hybrid matched-quality study
+
+Status date: **2026-09-01**  
+Decision: **FAIL**  
+H5: **unresolved**  
+H6: **unresolved**  
+G5 authorised: **no**
+
+## Scope and frozen policy
+
+The G4 policy was frozen before evaluation in commit `8f318b9`. The machine-readable contract is
+`benchmarks/g4_policy.json`; it fixes all six required modes, forcing and re-solve rules, trust
+policy, warm-start and scaling modes, recovery inclusion, quality tiers, tuning/evaluation split,
+the full Paper 1 family matrix, H5/H6 thresholds, bootstrap seed/method, solver-order seed, timeout
+handling, and 50 ms GPU power sampling.
+
+Implementation and qualification telemetry were committed in `509d9dd`; the G3 compatibility
+tolerance correction is `b70bf15`. Evaluation was run from the clean full commit
+`b70bf15f3fc84c6ed9138df4cf466a3907c51e06`.
+
+## GPU interior-point baseline
+
+The pinned baseline is QOCO-GPU commit `09f049597deef2a7ead15b3da19a9456ff7d4e53`
+(reported version 0.3.2), tree `c85fe82f71a67921868fc761c242de11ac46f4a2`, with
+`nvidia-cudss-cu12==0.7.1.6`, CUDA 12.8.93, `sm_120`, float64, and sparse direct cuDSS
+factorisation. Its native form is
+
+\[
+ \min_x \tfrac12 x^T P x+c^Tx,\qquad Ax=b,\qquad h-Gx\in
+ \mathbb R_+^l\times\prod_i\mathcal Q_i.
+\]
+
+This supports the required quadratic objective, equalities, nonnegative rows, and SOCs. Exact box
+splitting and an orthonormal rotated-SOC-to-SOC conversion are declared in the lock. QOCO exposes
+`qoco_set_x0` for an unequilibrated primal start, but exposes no dual warm-start API.
+
+The pinned source built and its CUDA/cuDSS demo executed on the RTX 5090 in six IPM iterations with
+objective 4.042, native primal residual `1.413e-8`, and native dual residual `8.258e-9`. This is
+availability evidence only. No production trajectory CQP was executed through QOCO, so neither a
+pure-IPM trajectory comparison nor a hybrid timing claim is made. The missing production adapter
+and unavailable dual handoff make H6 unresolved.
+
+## Qualification result
+
+The first nontrivial tight-quality coordinate in each required nonlinear family failed the
+matched-quality prerequisite. The campaign therefore stopped before timing the full matrix:
+unqualified trajectories may not enter H5/H6 speed comparisons.
+
+| Family | Coordinate | Canonical residual | Terminal residual | SCvx time (s) | GPU energy (J) |
+|---|---:|---:|---:|---:|---:|
+| P1-C 3-DoF | N=20, dispersion=0.01 | `5.674e-4` | `1.000` | `35.771` | `4002.01` |
+| P1-D 6-DoF | N=20, dispersion=0.05 | `1.480e-1` | `4.990` | `70.501` | `7981.64` |
+| P1-E low-thrust | N=100, dispersion=0.01 | `4.731e-1` | `70.800` | `164.240` | `18665.82` |
+
+All three samples:
+
+- returned no accepted step and ended at the outer-iteration limit;
+- violated the requested forcing threshold after the identical-CQP re-solve;
+- retained matching 64-bit numeric CQP fingerprints across the re-solve;
+- reported zero post-create topology allocations and zero hidden CPU fallback;
+- were excluded from all performance claims.
+
+The root cause is architectural, not a threshold choice. The G3 outer driver updates dynamics
+linearisation entries, but it does not yet regenerate every reference-dependent objective,
+constraint, trust-region, virtual-control, and exact-penalty coefficient required by a displaced
+nonlinear reference. G3's steady reference parity fixtures did not expose this. For nontrivial G4
+starts, the candidate worsens nonlinear merit and is correctly rejected.
+
+The compact coverage ledger retains 1,080 family/interval/policy/warm-start/quality coordinates.
+Unexecuted first-order coordinates are explicitly censored after qualification failure. Pure-IPM
+and hybrid coordinates are explicitly unsupported because no production adapter execution exists;
+the QOCO smoke run is not relabelled as a trajectory result.
+
+## H5 and H6 decisions
+
+### H5 — unresolved
+
+There are zero matched-quality nontrivial family samples and therefore no valid five-repeat paired
+bootstrap, no two-family support region, and no sustained three-coordinate boundary. Adaptive
+forcing cannot be supported or rejected from unqualified trajectories.
+
+### H6 — unresolved
+
+There is no archived production QOCO trajectory solve or qualified PDHCG-to-QOCO handoff. The
+pinned baseline accepts primal starts but not dual starts. No Pareto-frontier or time-advantage
+claim is permitted.
+
+## Timing and energy limitations
+
+Power was sampled with `nvidia-smi` over each isolated benchmark process boundary. The traces are
+GPU-only and no idle subtraction was applied. WSL delivered maximum sampling gaps of 1.938 s,
+1.930 s, and 1.862 s despite the requested 50 ms cadence, so the integrated energies above are
+diagnostic only. Display/shared-machine isolation was not established.
+
+An earlier qualification directory is preserved as negative evidence because other GPU tests ran
+concurrently with its power traces. It is excluded from energy conclusions.
+
+## Build, test, and sanitizer status
+
+- Ruff: passed.
+- Python: 98/98 tests passed.
+- CUDA/native Release: 52/52 tests passed.
+- CUDA/native Debug: 52/52 tests passed.
+- G3 production regression: passed at the original `1e-6` contract.
+- Compute Sanitizer on the modified telemetry/outer lifecycle:
+  - memcheck: 0 errors;
+  - racecheck: 0 hazards, 0 errors, 0 warnings;
+  - synccheck: 0 errors;
+  - initcheck: 0 errors.
+
+The sanitizer runs validate telemetry allocation, hashing, stream use, and lifetime behavior. They
+do not qualify the failed nonlinear trajectories.
+
+## Criterion-by-criterion decision
+
+1. Policies frozen before evaluation: **PASS**.
+2. Mathematically valid GPU IPM pinned and executable: **PASS** for baseline availability.
+3. Production pure-IPM trajectory execution: **FAIL**.
+4. Audited primal/dual hybrid conversion: **FAIL**; primal only is available upstream.
+5. Per-outer policy telemetry and identical-CQP re-solve audit: **PASS**.
+6. Matched final nonlinear quality: **FAIL**.
+7. H5 resolved under preregistered rules: **FAIL / unresolved**.
+8. H6 resolved under preregistered rules: **FAIL / unresolved**.
+9. Full primary matrix and repeat/instance count: **FAIL**; censored after qualification failure.
+10. Affected tests and four sanitizer tools: **PASS**.
+11. Negative, unsupported, and censored records retained: **PASS**.
+
+Gate G4 therefore **does not pass**, and Gate G5 is **not authorised**.
