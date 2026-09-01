@@ -28,6 +28,7 @@ import numpy as np
 from spacepdhcg.benchmarks.cw_repeat import run_benchmark as run_hcw_box
 from spacepdhcg.benchmarks.cw_socp_repeat import run_benchmark as run_hcw_soc
 from spacepdhcg.benchmarks.powered_descent_scvx import run as run_pd3
+from spacepdhcg.benchmarks.robust_powered_descent_cqp import run as run_robust_pd3
 from spacepdhcg.benchmarks.trajectory_banded import (
     TrajectoryBandedConfig,
     TrajectoryBandedFixture,
@@ -418,15 +419,17 @@ def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
         {
             **_null_quality(str(payload["status"])),
             "objective": float(payload["final_merit"]),
-            "canonical_primal_residual": residual,
-            "canonical_dual_residual": (None if polish is None else float(polish["dual_residual"])),
+            "canonical_primal_residual": (
+                residual if polish is None else float(polish["independent_primal_residual"])
+            ),
+            "canonical_dual_residual": (
+                None if polish is None else float(polish["independent_dual_residual"])
+            ),
             "canonical_natural_residual": (
-                None
-                if polish is None
-                else max(
-                    float(polish["primal_residual"]),
-                    float(polish["dual_residual"]),
-                )
+                None if polish is None else float(polish["independent_natural_residual"])
+            ),
+            "canonical_cone_residual": (
+                None if polish is None else float(polish["independent_cone_residual"])
             ),
             "dynamics_residual": float(payload["final_dynamics_residual"]),
             "path_residual": float(payload["final_path_residual"]),
@@ -546,6 +549,107 @@ def _robust(coordinate: dict[str, Any]) -> dict[str, Any]:
     else:
         measure = RiskMeasure.CVAR
         alpha = float(risk_name.split("_", 1)[1])
+    if measure in {RiskMeasure.EXPECTED, RiskMeasure.WORST_CASE, RiskMeasure.CVAR}:
+        started = time.perf_counter()
+        durations = []
+        payload = None
+        for repeat in range(WARMUPS + MEASURED):
+            begin = time.perf_counter()
+            payload = run_robust_pd3(
+                scenarios=scenarios,
+                intervals=intervals,
+                gravity_spread=0.02,
+                tolerance=1.0e-7,
+                common_prefix_fraction=float(parameters["common_prefix_fractions"]),
+            )
+            elapsed = time.perf_counter() - begin
+            if repeat >= WARMUPS:
+                durations.append(elapsed)
+        assert payload is not None
+        outcomes = [
+            ScenarioOutcome(
+                scenario,
+                1.0 / scenarios,
+                float(objective),
+                0.0,
+                (),
+                ArcStatus.FEASIBLE,
+            )
+            for scenario, objective in enumerate(payload["local_objectives"])
+        ]
+        risk_result = aggregate_risk(outcomes, measure, cvar_alpha=alpha)
+        maximum = max(
+            float(payload["independent_primal_residual"]),
+            float(payload["independent_dual_residual"]),
+            float(payload["independent_natural_residual"]),
+            float(payload["maximum_nonlinear_dynamics_defect"]),
+            float(payload["maximum_nonlinear_path_violation"]),
+            float(payload["maximum_nonlinear_terminal_error"]),
+            float(payload["nonanticipativity_violation"]),
+        )
+        expected_objective_error = abs(
+            float(payload["objective"]) - float(payload["expected_objective_recomputed"])
+        )
+        risk_objective_error = abs(float(payload["objective"]) - risk_result.objective)
+        qualified = (
+            measure is RiskMeasure.EXPECTED
+            and maximum <= 1.0e-5
+            and expected_objective_error <= 1.0e-7
+            and risk_objective_error <= 1.0e-7
+        )
+        return _base(
+            coordinate,
+            "executed" if qualified else "numerical",
+            "full monolithic robust Clarabel CQP, expanded-form KKT audit, scenario nonlinear "
+            "replay, prefix non-anticipativity, and requested risk evaluation; worst/CVaR remain "
+            "numerical because the solved CQP objective is expected cost",
+            "ScenarioCQPBundle+PersistentClarabel",
+            "cpu_solver_and_replay",
+            _dimensions(
+                intervals,
+                scenarios,
+                variables=int(payload["variables"]),
+                scalar_rows=int(payload["scalar_rows"]),
+                affine_rows=int(payload["affine_rows"]),
+                cones={"scenario_soc": scenarios * intervals},
+            ),
+            {
+                **_null_quality(str(payload["status"])),
+                "objective": risk_result.objective,
+                "canonical_primal_residual": float(payload["independent_primal_residual"]),
+                "canonical_dual_residual": float(payload["independent_dual_residual"]),
+                "canonical_natural_residual": float(payload["independent_natural_residual"]),
+                "canonical_cone_residual": float(payload["independent_cone_residual"]),
+                "dynamics_residual": float(payload["maximum_nonlinear_dynamics_defect"]),
+                "path_residual": float(payload["maximum_nonlinear_path_violation"]),
+                "terminal_residual": float(payload["maximum_nonlinear_terminal_error"]),
+                "continuous_time_violation": float(payload["maximum_nonlinear_path_violation"]),
+                "virtual_control_residual": float(payload["maximum_virtual_control"]),
+                "nonanticipativity_residual": float(payload["nonanticipativity_violation"]),
+                "risk_epigraph_residual": max(
+                    expected_objective_error,
+                    risk_objective_error,
+                ),
+                "certified": qualified,
+                "qualified": qualified,
+            },
+            {
+                **_null_work(),
+                "outer_iterations": 0,
+                "inner_iterations": int(payload["iterations"]),
+                "accepted_steps": 0,
+                "rejected_steps": 0,
+                "forcing_satisfied": qualified,
+                "polish_used": False,
+            },
+            durations,
+            time.perf_counter() - started,
+            [
+                "python",
+                "ScenarioCQPBundle+PersistentClarabel",
+                json.dumps(parameters, sort_keys=True),
+            ],
+        )
     started = time.perf_counter()
     durations = []
     result = None

@@ -74,6 +74,7 @@ def run(
             verbose=False,
         )
         polish = polish_backend.solve()
+        audit = polish_backend.independent_residuals(polish.primal)
         diagnostics = subproblem.diagnostics(polish.primal, problem.values)
         polish_payload = {
             "status": polish.status,
@@ -81,6 +82,11 @@ def run(
             "objective": polish.objective,
             "primal_residual": polish.primal_residual,
             "dual_residual": polish.dual_residual,
+            "independent_primal_residual": audit.primal,
+            "independent_dual_residual": audit.dual,
+            "independent_natural_residual": audit.natural,
+            "independent_cone_residual": audit.cone,
+            "independent_complementarity": audit.complementarity,
             "residual_qualified": residual_qualified(
                 polish,
                 tolerance=max(min(tolerance, 1.0e-8), 2.0e-8),

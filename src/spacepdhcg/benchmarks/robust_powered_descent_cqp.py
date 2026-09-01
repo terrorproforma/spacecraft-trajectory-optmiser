@@ -27,11 +27,14 @@ def run(
     intervals: int,
     gravity_spread: float,
     tolerance: float,
+    common_prefix_fraction: float = 1.0,
 ) -> dict[str, object]:
     if scenarios <= 0:
         raise ValueError("scenarios must be positive")
     if not 0.0 <= gravity_spread < 0.5:
         raise ValueError("gravity_spread must lie in [0, 0.5)")
+    if not 0.0 <= common_prefix_fraction <= 1.0:
+        raise ValueError("common_prefix_fraction must lie in [0, 1]")
 
     step_seconds = 2.0
     initial = np.asarray([8.0, -4.0, 60.0, 0.0, 0.0, -4.5, 2_000.0])
@@ -51,6 +54,7 @@ def run(
         np.zeros(1) if scenarios == 1 else np.linspace(-gravity_spread, gravity_spread, scenarios)
     )
     subproblems = []
+    models = []
     local_values = []
     for delta in deltas:
         gravity = nominal_model.config.gravity_vector.copy()
@@ -71,6 +75,7 @@ def run(
             shared_reference_controls,
             step_seconds,
         )
+        models.append(model)
         subproblems.append(subproblem)
         local_values.append(
             subproblem.values(
@@ -84,7 +89,12 @@ def run(
         )
 
     first = subproblems[0]
-    tree = ScenarioTree.common_open_loop(scenarios, intervals)
+    common_prefix = round(intervals * common_prefix_fraction)
+    tree = ScenarioTree.common_open_loop(
+        scenarios,
+        intervals,
+        common_prefix=common_prefix,
+    )
     bundle = ScenarioCQPBundle(
         tree,
         first.structure,
@@ -102,6 +112,7 @@ def run(
         verbose=False,
     )
     solution = solver.solve()
+    audit = solver.independent_residuals(solution.primal)
     if not residual_qualified(solution, tolerance=max(tolerance, 2.0e-8)):
         raise RuntimeError(
             "robust CQP failed residual qualification with "
@@ -124,6 +135,25 @@ def run(
         subproblem.decode(local)[1]
         for subproblem, local in zip(subproblems, decoded.local, strict=True)
     ]
+    maximum_nonlinear_dynamics_defect = 0.0
+    maximum_nonlinear_path_violation = 0.0
+    maximum_nonlinear_terminal_error = 0.0
+    for model, subproblem, local in zip(models, subproblems, decoded.local, strict=True):
+        states, scenario_controls, _, _ = subproblem.decode(local)
+        rollout = model.rollout(initial, scenario_controls, step_seconds)
+        maximum_nonlinear_dynamics_defect = max(
+            maximum_nonlinear_dynamics_defect,
+            float(np.max(np.abs(states - rollout), initial=0.0)),
+        )
+        maximum_nonlinear_path_violation = max(
+            maximum_nonlinear_path_violation,
+            model.path_diagnostics(rollout, scenario_controls).maximum_violation,
+        )
+        maximum_nonlinear_terminal_error = max(
+            maximum_nonlinear_terminal_error,
+            float(np.max(np.abs(rollout[-1, :3] - target_position), initial=0.0)),
+            float(np.max(np.abs(rollout[-1, 3:6] - target_velocity), initial=0.0)),
+        )
     maximum_pairwise_control_difference = 0.0
     for controls_a in controls:
         for controls_b in controls:
@@ -139,6 +169,8 @@ def run(
         "scenarios": scenarios,
         "intervals": intervals,
         "gravity_spread": gravity_spread,
+        "common_prefix_fraction": common_prefix_fraction,
+        "common_prefix_intervals": common_prefix,
         "variables": problem.structure.n_variables,
         "scalar_rows": problem.structure.n_constraints,
         "affine_rows": problem.structure.n_affine_constraints,
@@ -148,6 +180,7 @@ def run(
             decoded.local,
             local_values,
         ),
+        "local_objectives": [float(value) for value in objectives],
         "local_objective_min": float(np.min(objectives)),
         "local_objective_max": float(np.max(objectives)),
         "nonanticipativity_violation": bundle.maximum_nonanticipativity_violation(solution.primal),
@@ -162,8 +195,16 @@ def run(
         "maximum_virtual_control": max(
             diagnostic.virtual_control_inf for diagnostic in diagnostics
         ),
+        "maximum_nonlinear_dynamics_defect": maximum_nonlinear_dynamics_defect,
+        "maximum_nonlinear_path_violation": maximum_nonlinear_path_violation,
+        "maximum_nonlinear_terminal_error": maximum_nonlinear_terminal_error,
         "primal_residual": solution.primal_residual,
         "dual_residual": solution.dual_residual,
+        "independent_primal_residual": audit.primal,
+        "independent_dual_residual": audit.dual,
+        "independent_natural_residual": audit.natural,
+        "independent_cone_residual": audit.cone,
+        "independent_complementarity": audit.complementarity,
         "iterations": solution.iterations,
         "setup_seconds": solver.setup_seconds,
         "solve_seconds": solution.solve_seconds,
@@ -176,12 +217,14 @@ def main() -> None:
     parser.add_argument("--intervals", type=int, default=6)
     parser.add_argument("--gravity-spread", type=float, default=0.02)
     parser.add_argument("--tolerance", type=float, default=1.0e-7)
+    parser.add_argument("--common-prefix-fraction", type=float, default=1.0)
     arguments = parser.parse_args()
     payload = run(
         scenarios=arguments.scenarios,
         intervals=arguments.intervals,
         gravity_spread=arguments.gravity_spread,
         tolerance=arguments.tolerance,
+        common_prefix_fraction=arguments.common_prefix_fraction,
     )
     print(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False))
 

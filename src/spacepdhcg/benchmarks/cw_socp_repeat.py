@@ -11,7 +11,6 @@ from typing import Any
 import numpy as np
 
 from spacepdhcg.backends import PersistentClarabel
-from spacepdhcg.cqp import CanonicalCQP, independent_canonical_residuals
 from spacepdhcg.models import CWRendezvousConfig, CWRendezvousProblem, ThrustConstraint
 
 
@@ -93,11 +92,7 @@ def run_benchmark(
         if not solution.solved:
             raise RuntimeError(f"Clarabel failed with status {solution.status!r}")
         diagnostics = problem.diagnostics(solution.primal, initial, target)
-        audit = independent_canonical_residuals(
-            CanonicalCQP(problem.structure, values),
-            solution.primal,
-            solution.dual,
-        )
+        audit = backend.independent_residuals(solution.primal)
         if not diagnostics.feasible(max(1.0e-5, 10.0 * tolerance)):
             raise RuntimeError(f"trajectory failed independent checks: {diagnostics}")
 
