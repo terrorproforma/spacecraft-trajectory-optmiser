@@ -96,6 +96,20 @@ if(BUILD_TESTING AND SPACEPDHCG_BUILD_NATIVE_TESTS)
     endforeach()
 endif()
 
+add_executable(spacepdhcg_cpu_reference_emitter tools/cpu_reference_emitter.cpp)
+target_link_libraries(spacepdhcg_cpu_reference_emitter PRIVATE spacepdhcg_interface)
+spacepdhcg_apply_native_options(spacepdhcg_cpu_reference_emitter)
+if(BUILD_TESTING)
+    add_test(
+        NAME spacepdhcg_cpu_reference_pd6_emitter
+        COMMAND spacepdhcg_cpu_reference_emitter pd6 20 0.05 0.05 false
+    )
+    add_test(
+        NAME spacepdhcg_cpu_reference_low_thrust_emitter
+        COMMAND spacepdhcg_cpu_reference_emitter low-thrust 100 0.25 radius_raise
+    )
+endif()
+
 if(SPACEPDHCG_BUILD_CUDA)
     add_subdirectory(cuda)
 endif()
