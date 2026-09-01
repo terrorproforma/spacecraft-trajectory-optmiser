@@ -1470,6 +1470,7 @@ IntegrationResult run_resident_sequence(
         std::mutex deadline_mutex;
         std::condition_variable deadline_condition;
         bool solve_finished = false;
+        std::atomic_bool deadline_fired{false};
         std::thread deadline_thread;
         if (g4_deadline_seconds > 0.0) {
             const auto invocation_deadline = g4_deadline;
@@ -1480,6 +1481,7 @@ IntegrationResult run_resident_sequence(
                         invocation_deadline,
                         [&]() { return solve_finished; }
                     )) {
+                    deadline_fired.store(true, std::memory_order_release);
                     static_cast<void>(
                         spacepdhcg_cuda_scvx_driver_cancel(driver)
                     );
@@ -1500,6 +1502,9 @@ IntegrationResult run_resident_sequence(
             }
             deadline_condition.notify_one();
             deadline_thread.join();
+        }
+        if (deadline_fired.load(std::memory_order_acquire)) {
+            outer.status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
         }
         if (qoco_unavailable_mode) {
             test::require(
@@ -2246,7 +2251,8 @@ IntegrationResult run_resident_sequence(
                 );
             }
             const bool qualified =
-                outer.outer_iterations > 0U
+                outer.status == SPACEPDHCG_CUDA_SCVX_CONVERGED
+                && outer.outer_iterations > 0U
                 && outer.canonical_residual <= g4_quality_tolerance
                 && outer.dynamics_defect <= g4_quality_tolerance
                 && independent_path <= g4_quality_tolerance
