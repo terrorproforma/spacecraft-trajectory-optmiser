@@ -141,20 +141,24 @@ Gate G4 therefore **does not pass**, and Gate G5 is **not authorised**.
 
 ## Evidence
 
-Corrective qualification after the fixed-pattern update implementation:
+Clean corrective qualification after the fixed-pattern update implementation:
 
-- `results/gpu/g4/qualification/g4-20260901-f21f93d-corrective2/`
-- execution commit recorded by the manifest: `f21f93d7b3451f9936f0692fd2fb05554fc8e25a`
-- manifest SHA-256: `88822129ffd45e97cdda7669a1ecf7b7b1a529cb94a84d842f6f896ee261bcba`
-- decision SHA-256: `cca02859b3c29b9aab1da75a07eee29dc78bca3b444d8067e4190ba1cda79f1b`
+- `results/gpu/g4/qualification/g4-20260901-2cbebb3-clean-corrective/`
+- execution commit recorded by the manifest:
+  `2cbebb3b1b66666e6dc95e879260174b32abf22e`
+- manifest SHA-256: `fe218070ec0332a3747e9a1f3f6c5705f79c313810d3bb070d3314d48adcd49c`
+- decision SHA-256: `d7143c2cc338423a21c0cf606aa71b84812bc784f26efd7e0c30fd8821a09744`
 - coverage SHA-256: `ed06f436c410660eb9dc0abc76847c5ab7dae8a6a4603697bad5dbe9608815bc`
+- corrected canonical residuals: P1-C `5.654e-4`, P1-D `1.283e-2`,
+  P1-E `1.369e-2`;
 - corrected scaled terminal residuals: P1-C `1.000e-3`, P1-D `5.243e-2`,
   P1-E `7.080e-2`; qualified samples: 0/3; forcing failures: 3/3.
 
 This corrective directory supplements rather than replaces the frozen original failure archive.
-Its second execution fixed the distinct initial-boundary/reference mismatch exposed by a
-non-unit displaced 6-DoF quaternion; the aborted first corrective directory is retained as
-additional negative evidence.
+The earlier `g4-20260901-f21f93d-corrective2` directory was produced while the final
+initial-boundary fix was still uncommitted and is retained only as contaminated negative evidence,
+not clean qualification evidence. That fix was committed as `2cbebb3` before this rerun. The
+aborted first corrective directory is likewise retained as additional negative evidence.
 
 Primary isolated qualification archive:
 

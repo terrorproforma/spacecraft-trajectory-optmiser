@@ -125,6 +125,10 @@ Use this file as persistent, repo-local execution memory.
   a second reference update. After the update fix, P1-C still fails because PDHCG returns a poor
   CQP candidate and eventually exhausts the trust region.
 - G3's nominal trajectory parity was materially weaker than displaced-start outer-loop parity;
-  the G3 report must be corrected and resealed before claiming the affected coverage.
+  the G3 report was amended and the affected displaced-start coverage is no longer claimed.
 - G4 remains FAIL and G5 remains unauthorised pending an accurate QOCO-GPU adapter or another
   production solver correction that passes frozen matched-quality criteria.
+- The first nominally complete corrective archive was built with the final initial-boundary fix
+  still uncommitted. Preserved it as contaminated evidence, committed the fix as `2cbebb3`, and
+  reran the frozen three-sample qualification from a clean tree. All three samples remained
+  unqualified, so no H5/H6 matrix was started.
