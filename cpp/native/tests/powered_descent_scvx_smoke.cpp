@@ -89,7 +89,7 @@ std::vector<double> encode_reference(
         static_cast<std::size_t>(transcription.layout().variables()),
         0.0
     );
-    for (native::Index node = 0; node <= transcription.config().intervals; ++node) {
+    for (spacepdhcg::Index node = 0; node <= transcription.config().intervals; ++node) {
         const auto offset = static_cast<std::size_t>(transcription.layout().state_offset(node));
         std::copy(
             reference.states[static_cast<std::size_t>(node)].begin(),
@@ -97,7 +97,7 @@ std::vector<double> encode_reference(
             decision.begin() + static_cast<std::ptrdiff_t>(offset)
         );
     }
-    for (native::Index interval = 0;
+    for (spacepdhcg::Index interval = 0;
          interval < transcription.config().intervals;
          ++interval) {
         const auto offset = static_cast<std::size_t>(

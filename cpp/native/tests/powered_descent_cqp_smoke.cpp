@@ -60,7 +60,7 @@ void test_reference_interpolation_and_fixed_topology() {
         static_cast<std::size_t>(transcription.layout().variables()),
         0.0
     );
-    for (native::Index node = 0; node <= config.intervals; ++node) {
+    for (spacepdhcg::Index node = 0; node <= config.intervals; ++node) {
         const auto offset = static_cast<std::size_t>(transcription.layout().state_offset(node));
         std::copy(
             states[static_cast<std::size_t>(node)].begin(),
@@ -68,7 +68,7 @@ void test_reference_interpolation_and_fixed_topology() {
             decision.begin() + static_cast<std::ptrdiff_t>(offset)
         );
     }
-    for (native::Index interval = 0; interval < config.intervals; ++interval) {
+    for (spacepdhcg::Index interval = 0; interval < config.intervals; ++interval) {
         const auto offset =
             static_cast<std::size_t>(transcription.layout().control_offset(interval));
         std::copy(

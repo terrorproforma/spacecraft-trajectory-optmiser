@@ -111,6 +111,8 @@ class AdaptiveForcingRule {
             throw std::invalid_argument("finite agreement is required when supplied");
         }
 
+        const bool agreement_supports_polish = agreement.value_or(1.0) >= 0.8;
+
         const double measure = std::max(residual.feasibility(), config_.residual_floor);
         const double raw =
             config_.forcing_coefficient * std::pow(measure, config_.forcing_exponent);
@@ -131,7 +133,7 @@ class AdaptiveForcingRule {
         } else if (
             measure <= config_.polish_threshold &&
             accepted_streak >= config_.minimum_polish_streak &&
-            (!agreement.has_value() || *agreement >= 0.8)
+            agreement_supports_polish
         ) {
             phase = SolvePhase::polish;
             iteration_limit = config_.polish_iteration_limit;

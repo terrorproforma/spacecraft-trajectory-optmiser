@@ -38,7 +38,7 @@ void test_tree_and_operator() {
     const auto operator_matrix = layout.nonanticipativity_operator();
     require(operator_matrix.rows == 32,
             "non-anticipativity matrix row count is wrong");
-    require(operator_matrix.columns == static_cast<native::Index>(layout.total_variables()),
+    require(operator_matrix.columns == static_cast<spacepdhcg::Index>(layout.total_variables()),
             "non-anticipativity matrix column count is wrong");
     require(operator_matrix.nonzeros() == 64,
             "non-anticipativity matrix sparsity is wrong");

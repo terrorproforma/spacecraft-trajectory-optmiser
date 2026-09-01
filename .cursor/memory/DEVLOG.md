@@ -122,3 +122,24 @@
 - Follow-ups / risks:
   - The dedicated short RTX `device_scvx_qoco_handback_test` is compiled but unrun while the GPU is
     reserved. No performance, energy, or matrix run was performed.
+
+## 2026-09-01 21:15 AEST
+
+- Task summary:
+  - Integrated and repaired the complete standalone `cpp/native` implementation/test inventory.
+- Changes:
+  - Added eight previously omitted implementation files to `spacepdhcg_native_core` and registered
+    all seven existing smokes plus a new six-DoF smoke as explicit CTest targets.
+  - Added native-core sanitizer controls and GCC/Clang Release, Debug, and ASan/UBSan CI coverage.
+  - Fixed the explicit-constructor warning, optional-agreement warning, nodiscard checks, stale test
+    namespace assumptions, and robust CVaR/base-layout test mismatch without changing the C ABI.
+  - Ignored `build-*/` outputs to prevent generated CTest/compiler files entering source archives.
+- Validation:
+  - Native inventory: 8/8 in Release, 8/8 in Debug, 8/8 under ASan/UBSan, all with Werror.
+  - Existing top-level Release/Debug/ASan suites: 41/41 each; core 5/5; all-native 41/41;
+    CMake consumer 1/1; Ruff clean; Python 142 passed with 3 optional QOCO skips; parity 1/1.
+  - Editable, native wheel, sdist, wheel consumer, and sdist consumer import/ABI checks passed.
+- Follow-up notes / risks:
+  - No code was classified obsolete: commit history and dedicated native CI establish this as an
+    active parallel native-core API. Conceptual overlap with newer headers is not replacement proof.
+  - GPU tests and measured benchmarks were intentionally not run.

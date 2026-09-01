@@ -362,3 +362,37 @@ Use this file as persistent, repo-local execution memory.
 - `[user]` Do not run the new CUDA handback executable, measured performance, energy, or matrix
   work until the single RTX 5090 is explicitly free for serialized correctness validation.
 - The short `device_scvx_qoco_handback_test` still needs one serialized RTX correctness run.
+
+### 2026-09-01 21:15 AEST - Complete native inventory integration
+
+#### Task Summary
+
+- Audited every previously unconfigured `cpp/native` source, header, and test and confirmed the
+  inventory is active intended code from sequential native feature commits, not obsolete duplicates.
+- Added all implementations and eight explicit smoke targets to the standalone native-core build,
+  including new six-DoF Jacobian/rollout coverage and Debug/Release/sanitizer CI configurations.
+
+#### Mistakes And Fixes
+
+- `[prior implementation]` The original standalone CMake target remained frozen at its first three
+  sources while later native features accumulated outside all configured targets. Made source and
+  test inventories explicit so omission is reviewable.
+- `[prior test]` The robust-CQP smoke passed CVaR tail variables to the base block-arrow validator.
+  Restricted that check to the block-arrow prefix while retaining full-vector robust diagnostics.
+- `[tool]` The first package rebuild swept the unignored `build-native/` tree into the sdist and
+  raced a transient CTest checkpoint. Added `build-*/` to ignore generated matrix trees; the clean
+  sdist shrank from tens of MB to under 1 MB and fresh source installation passed.
+- `[self]` A non-unit initial quaternion made the first new six-DoF path assertion invalid. Normalised
+  the fixture before evaluating analytic Jacobians and rollout/path invariants.
+
+#### What Worked
+
+- All eight native-core tests pass in Release, Debug, and ASan/UBSan with warnings as errors.
+- Existing C ABI symbol names/version remain unchanged; complete Python/native/package matrices pass.
+
+#### Guardrails For Next Session
+
+- Any new `cpp/native/src` implementation must be added to `spacepdhcg_native_core` with an explicit
+  CTest target; run all three native-core configurations before handoff.
+- Keep isolated build directories matched by `.gitignore` so scikit-build sdists cannot ingest live
+  compiler or CTest output.

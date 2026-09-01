@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
+#include <span>
 #include <vector>
 
 namespace native = spacepdhcg::native;
@@ -118,7 +119,11 @@ void test_expected_and_epigraph_risks() {
     require(std::abs(decoded_objectives[0] - local_objective) < 1.0e-13 &&
                 std::abs(decoded_objectives[1] - local_objective) < 1.0e-13,
             "decoded local objectives are wrong");
-    require(assembler.block_arrow().nonanticipativity_violation(cvar_primal) < 1.0e-14,
+    const auto base_decision = std::span<const double>{cvar_primal}.first(
+        assembler.block_arrow().total_variables()
+    );
+    require(
+        assembler.block_arrow().nonanticipativity_violation(base_decision) < 1.0e-14,
             "robust primal violates shared controls");
 }
 
