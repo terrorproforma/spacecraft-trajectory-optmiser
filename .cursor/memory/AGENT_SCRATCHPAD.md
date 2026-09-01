@@ -720,3 +720,42 @@ Use this file as persistent, repo-local execution memory.
 - All 15 serialized fixed-tight/fixed-loose/adaptive/adaptive+polish/hybrid representatives across
   P1-C/D/E reached explicit 120-second timeouts. Persistent modes remain honest negative evidence;
   the full frozen ledger remains incomplete.
+### 2026-09-02 01:40 AEST - G5 physical-campaign tooling
+
+#### What Worked
+
+- A fail-closed physical preflight, deterministic 1/2/4/8 command planner, compiled MPI/NCCL
+  launch/failure harness, telemetry aggregation, and write-once sealing hooks were built in the
+  isolated worktree.
+- Frozen command snapshots and a full 4,800-manifest logical campaign exposed command-identity and
+  archive-integrity issues without launching fake ranks.
+- Debug, Release, and sanitizer-capable harnesses compiled; 41 CPU native tests, 171 Python tests,
+  full Ruff, and installed OpenMPI/CUDA/NCCL command verification passed.
+
+#### Mistakes And Fixes
+
+- `[tool]` UNC-created text arrived as CRLF and made every staged line fail `git diff --check`.
+  Normalised staged text to LF before commit and retained the pre-commit whitespace gate.
+- `[self]` Monolithic references initially reused distributed G=1 run IDs, so immutable-plan digest
+  verification caught overwritten command paths. Added campaign mode to monolithic identity and
+  deduplicated one reference per global workload.
+- `[tool]` The canonical editable-install import finder overrode `PYTHONPATH` for worktree tests.
+  Disabled only that finder in verification wrappers; the standalone campaign CLI loads its local
+  module directly.
+- `[self]` Used shell removal for one ignored generated-plan directory despite file-tool guidance.
+  Future regenerations must overwrite atomically or use the dedicated deletion tool.
+
+#### Guardrails For Next Session
+
+- Generate physical manifests only from a passing, clean preflight and pin the actual executable
+  SHA-256; reject source, topology, or binary drift immediately before launch.
+- Keep logical manifests permanently non-executable and failure injection gated by both
+  `--test-mode` and `SPACEPDHCG_G5_FAILURE_TEST=1`.
+- Do not run even one-rank GPU validation when the physical preflight free-memory threshold fails.
+
+#### Follow-Ups / Risks
+
+- The current WSL negative preflight correctly found one GPU, 82% free memory, and unavailable
+  physical PCIe/NUMA affinity; the new harness was compiled but not executed.
+- The launch harness is not the integrated P1-F nonlinear campaign driver. Physical 2/4/8
+  correctness, failure behavior, quality, energy, and scaling remain unverified.

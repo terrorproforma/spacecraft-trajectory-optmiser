@@ -345,3 +345,27 @@
     records, not evidence of hybrid eligibility.
   - The complete matrix ledger, H5/H6, corrected measured timing/energy, and final archive sealing
     remain pending.
+## 2026-09-02 01:40 AEST
+
+- Task summary:
+  - Built physical 2/4/8-GPU preflight, launch, evidence, failure-injection, archive, CI, and runbook
+    tooling without executing or claiming multi-GPU validation.
+- Changes:
+  - Added fail-closed GPU/topology/toolchain/build capture and deterministic PCI/CPU/NUMA/NIC rank
+    bindings.
+  - Added 4,800-coordinate strong/weak logical plan generation, monolithic references, exact command
+    manifests, schema snapshots, failure classifiers, GPU power/memory sampling, and partial logs.
+  - Added compiled launch/failure harness modes for rank/MPI/order/cancel/checkpoint/topology/device/
+    timeout paths and write-once reproducible archive seals.
+- Validation:
+  - Focused campaign/tooling tests passed 34/34; full Python passed 171 with three optional QOCO
+    skips; full Ruff passed.
+  - CPU warnings-as-errors build passed 41/41 CTests.
+  - Debug, Release, and sanitizer-capable physical harness targets compiled.
+  - All 4,800 logical commands validated against installed OpenMPI 4.1.2, CUDA 12.8, and NCCL
+    2.26.2 without launching ranks.
+- Follow-up notes / risks:
+  - Negative WSL preflight correctly rejected physical execution: only one GPU, 82% free memory, and
+    no physical PCIe/NUMA affinity. No new GPU runtime or scaling measurement was run.
+  - The harness validates launch/collectives/failures only. P1-F integration and all physical
+    2/4/8 correctness, quality, failure, energy, and scaling evidence remain required.
