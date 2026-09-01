@@ -123,11 +123,12 @@ Completed without weakening warnings:
 - logical 1/2/4/8-rank contracts passed in Debug, Release, and sanitized builds;
 - G5 JSON Schema Draft 2020-12 validation and adversarial claim/telemetry tests: 6 passed;
 - Ruff check for the G5 schema tests passed;
-- idle-GPU Release one-rank MPI/NCCL/CUDA CTest passed before the final status-telemetry and
-  cancellation assertions were added; the final binary recompiled but its post-change rerun remains
-  deferred by G4 GPU ownership;
+- idle-GPU final-HEAD Release one-rank MPI/NCCL/CUDA CTest passed, including status telemetry and
+  terminal cancellation assertions;
 - Debug one-rank Compute Sanitizer memcheck reported zero errors and zero leaked bytes;
-- Debug one-rank Compute Sanitizer racecheck reported zero hazards.
+- Debug one-rank Compute Sanitizer racecheck reported zero hazards;
+- Debug one-rank initcheck without third-party unused-pool reporting and synccheck each reported
+  zero errors.
 
 Logical-rank coverage includes deterministic ownership/load, weighted-versus-nonzero partitioning,
 shared-arrowhead algebra, non-anticipativity, expected/worst/CVaR reductions, residual reductions,
@@ -137,12 +138,10 @@ incompatibility, topology mutation, warm ownership, and required telemetry field
 ## One-GPU verification boundary
 
 `g5_one_rank_runtime_test` is compiled in Debug, Release, and sanitizer-capable build trees. An
-idle-GPU Release run passed on the RTX 5090 with exactly one MPI rank and emitted a schema-shaped
-record with `world_size=1`, `device=0`, deterministic one-stream mode, six device collective
-classes, zero estimated wire bytes, and `multi_gpu_scaling_verified=false`. The subsequent compact
-MPI status-collective telemetry and terminal cancellation assertions compiled in all build modes,
-but G4 resumed GPU ownership before that final binary could be rerun. Therefore final-HEAD one-rank
-execution remains explicitly outstanding. The target
+idle-GPU final-HEAD Release run passed on the RTX 5090 with exactly one MPI rank and emitted a
+schema-shaped record with `world_size=1`, `device=0`, deterministic one-stream mode, six device
+collective classes plus compact MPI status telemetry, zero estimated wire bytes, and
+`multi_gpu_scaling_verified=false`. The target
 exercises one real MPI rank, one NCCL communicator, CUDA Q/A/F forward/transpose products, SOC
 projection, device reductions, stream-event ordering, a real persistent G2 scenario solve,
 full-state checkpoint/restore/warm start, scaling refresh, residual calculation, and the frozen G5
@@ -159,9 +158,11 @@ bash scripts/gpu/run_g5_build_matrix.sh
 ```
 
 The script checks `nvidia-smi --query-compute-apps=pid` and defers rather than contending with G4.
-Memcheck and racecheck completed cleanly during an idle interval. Initcheck and synccheck, plus the
-actual overlap-stream path and the final-HEAD one-rank rerun, remain deferred because G4 resumed GPU
-ownership before those serialized checks started.
+Memcheck, racecheck, initcheck, and synccheck completed cleanly during idle intervals. Initcheck with
+`--track-unused-memory` is not clean: it reports NCCL 2.26.2's own 2 MiB internal communication
+pools as mostly unused, with all allocation backtraces inside `libnccl.so.2`; no uninitialized
+SpacePDHCG access was reported. The actual two-stream overlap execution remains deferred to physical
+multi-GPU validation.
 
 ## Exact physical validation still required
 

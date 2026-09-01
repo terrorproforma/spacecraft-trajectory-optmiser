@@ -439,7 +439,8 @@ Use this file as persistent, repo-local execution memory.
 
 #### Follow-Ups / Risks
 
-- Initcheck, synccheck, actual overlap-stream execution, the final-HEAD one-rank rerun, and every
-  physical 2/4/8-GPU test remain deferred; ordinary OpenMPI rank loss is fatal rather than
-  ULFM-recoverable.
+- Final-HEAD one-rank, memcheck, racecheck, initcheck, and synccheck are clean. Initcheck
+  `--track-unused-memory` separately flags NCCL's internal 2 MiB pools.
+- Actual overlap-stream execution and every physical 2/4/8-GPU test remain deferred; ordinary
+  OpenMPI rank loss is fatal rather than ULFM-recoverable.
 - Later G4/P1 fixes must be cherry-picked and the full G5 build/one-rank matrix rerun.
