@@ -949,3 +949,90 @@ Use this file as persistent, repo-local execution memory.
   executor required for a tractable full campaign.
 - The old campaign remains authoritative and active. Six rows were terminal and one was running at
   recovery; no migration or competing GPU process was launched.
+### 2026-09-01 23:00 AEST - P1-C globalization and trust audit
+
+#### What Worked
+
+- Four unchanged-reference PDHCG attempts exercised radii `1, 0.5, 0.25, 0.125`; all were
+  rejected and produced distinct numeric fingerprints while each same-CQP resolve fingerprint
+  matched. This proves the device loop does retry when its attempt budget exceeds one.
+- The accurate radius-1 replay is inside the weighted trust region: maximum step fraction
+  `0.5629445645`, maximum stage trust distance `0`, terminal trust distance `0`. The nonlinear
+  merit blow-up is model disagreement, not a trust-cone sign, offset, or scale defect.
+- The pure-QOCO reference owner now retains one backend across numeric updates and closes it
+  transactionally. Its nonlinear lifecycle converges in two accepted steps with one creation,
+  one update, two solves, terminal residual `2.15e-13`, and ratios approaching one.
+
+#### Mistakes And Fixes
+
+- `[prior implementation]` The Python nonlinear owner constructed and leaked a backend for every
+  candidate and resolve. It now updates one persistent QOCO workspace; fixed-settings Clarabel is
+  rebuilt only when requested solve settings change.
+- `[prior implementation]` Python restoration/convergence conflated trajectory step with
+  feasibility and shrank an already converged retained reference. Feasibility and step criteria
+  are now evaluated separately, matching the resident device owner.
+- `[self]` Parallel Debug/Release CTest runs contended for the GPU and timed out the 180-second
+  production test. Reran the 51 short tests per configuration separately; all passed, and the
+  production outer regression had already passed alone.
+
+#### Follow-Ups / Risks
+
+- Fixed/adaptive PDHCG remain honestly negative for displaced P1-C: four attempts accepted zero
+  steps and ended at radius `0.0625`. Do not claim G4 PASS from the pure-QOCO reference script.
+- QOCO-GPU returned materially different near-optimal radius-1 candidates across cold executions;
+  preserve the exact output and forcing qualification for every handback.
+- The integrated C++ G4 fixture still receives its attempt budget from the command line. Passing
+  `outer-iterations=1` is a one-candidate run and is not valid globalization qualification.
+
+### 2026-09-01 23:20 AEST - Globalization integration and format closure
+
+#### What Worked
+
+- Cherry-picked exact P1-C globalization source `ee2baa5826469a114ffbf4b8d6c2a99416cd2868`
+  after the integrated G4-G7 head and preserved both append-only histories and all shared metrics.
+- Ruff formatted all 45 outstanding files; an AST comparison proved all 44 Python edits were
+  semantic no-ops, and the only non-Python edit was one formatter-required blank line.
+- Full/focused Python, QOCO CPU ABI, native Release/Debug/ASan, standalone inventory, all three
+  `sm_120` CUDA/G5 builds, wheel/CLI/ABI, and CMake consumer validation passed without GPU execution.
+
+#### Mistakes And Fixes
+
+- `[integration]` P1-C added a trust-radius argument to shared metric replay while the previously
+  integrated QOCO handback call retained the old ordering. Passed `candidate->trust_radius` and
+  rebuilt all CUDA configurations with warnings as errors.
+- `[tool]` `uv run` created an unrequested root `uv.lock`; removed that generated artifact before
+  final status instead of committing it.
+
+#### Follow-Ups / Risks
+
+- Resident fixed/adaptive PDHCG remains negative for displaced P1-C, and G5 remains unauthorized.
+- The canonical C++ pure-QOCO RK4 campaign owner is still a separate in-progress dependency.
+- GPU correctness, sanitizer, one-rank MPI/NCCL, and measured qualification remain deliberately
+  deferred until the device is free and those runs can be serialized.
+
+### 2026-09-02 01:15 AEST - CPU reference campaign closure
+
+#### What Worked
+
+- Expanded all 16,324 frozen family coordinates without changing matrix selections: 13,676 Paper 1
+  and 2,648 Paper 2 coordinates.
+- Ran all 43 top-level host fixtures and all eight standalone native-core fixtures with CUDA
+  visibility disabled; all passed. The full Python suite passed 177 tests with three explicit
+  optional QOCO skips.
+- G6 built F01-F08/T01-T06 from real censored fixture envelopes, retained every archived failure,
+  and reproduced all 52 generated files byte-for-byte.
+
+#### Mistakes And Fixes
+
+- `[tool]` The commit was not reachable from the Windows canonical repository or GitHub refs.
+  Located the still-live WSL integration object and created the requested worktree from the exact
+  immutable commit without fetching into or modifying the canonical checkout.
+- `[self]` The frozen matrices specify far more coordinates than the commit can emit as complete
+  measured evidence. Classified those coordinates explicitly as `unrun` or `unsupported`; did not
+  infer residuals, fabricate timings, or relabel component fixtures as full matrix runs.
+
+#### Guardrails For Next Session
+
+- Native smoke success is component correctness, not independently replayed Paper 1 qualification.
+- Keep null canonical/nonlinear maxima null until production matrix drivers emit those values.
+- Do not use the generated censored G6 bundle to assert G4, G5, GPU, or scaling claims.
