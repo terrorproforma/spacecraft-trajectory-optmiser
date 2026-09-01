@@ -361,10 +361,28 @@ class PersistentExecutor:
         }
         if len(responses) != len(commands):
             raise G4ContractError("batch contains duplicate coordinate identities")
-        self.process.stdin.write(f"batch\t{len(commands)}\n")
-        for command in commands:
-            self.process.stdin.write("\t".join(command[1:]) + "\n")
-        self.process.stdin.flush()
+        payload = f"batch\t{len(commands)}\n" + "".join(
+            "\t".join(command[1:]) + "\n" for command in commands
+        )
+        for write_attempt in range(2):
+            self.ensure_ready()
+            assert self.process.stdin is not None
+            try:
+                self.process.stdin.write(payload)
+                self.process.stdin.flush()
+                break
+            except BrokenPipeError:
+                self._stop()
+                if write_attempt == 1:
+                    for response in responses.values():
+                        response["stdout"] = ""
+                    return (
+                        responses,
+                        "",
+                        "persistent executor pipe closed before batch acceptance",
+                        self.generation,
+                        self.cuda_startup_seconds,
+                    )
         deadline = time.monotonic() + timeout_seconds + 5.0
         shared_lines: list[str] = []
         batch_complete = False
@@ -577,6 +595,10 @@ def validate_success(
         return False, f"runtime coordinate mismatch: expected {expected!r}, observed {observed!r}"
     if not isinstance(sample.get("qualified"), bool):
         return False, "sample qualification is missing"
+    if sample.get("status") != 4 and (
+        not isinstance(sample.get("outer_iterations"), int) or sample["outer_iterations"] <= 0
+    ):
+        return False, "non-timeout sample did not execute an outer iteration"
     axis = axes[0]
     axis_expected = {
         "coordinate_id": claim.coordinate_id,
@@ -968,6 +990,7 @@ def main() -> int:
             row_deadline_seconds=timeout_seconds,
         )
         try:
+            stalled_batches = 0
             while arguments.max_runs is None or completed < arguments.max_runs:
                 remaining_limit = (
                     arguments.batch_size
@@ -1000,7 +1023,12 @@ def main() -> int:
                         )
                 completed += progress
                 if progress == 0:
+                    stalled_batches += 1
                     executor.ensure_ready()
+                    if stalled_batches >= 3:
+                        raise G4ContractError("three consecutive batches made no terminal progress")
+                else:
+                    stalled_batches = 0
         finally:
             executor.close()
             fcntl.flock(lock_descriptor, fcntl.LOCK_UN)

@@ -1472,11 +1472,12 @@ IntegrationResult run_resident_sequence(
         bool solve_finished = false;
         std::thread deadline_thread;
         if (g4_deadline_seconds > 0.0) {
-            deadline_thread = std::thread([&]() {
+            const auto invocation_deadline = g4_deadline;
+            deadline_thread = std::thread([&, invocation_deadline]() {
                 std::unique_lock lock(deadline_mutex);
                 if (!deadline_condition.wait_until(
                         lock,
-                        g4_deadline,
+                        invocation_deadline,
                         [&]() { return solve_finished; }
                     )) {
                     static_cast<void>(
@@ -2245,7 +2246,8 @@ IntegrationResult run_resident_sequence(
                 );
             }
             const bool qualified =
-                outer.canonical_residual <= g4_quality_tolerance
+                outer.outer_iterations > 0U
+                && outer.canonical_residual <= g4_quality_tolerance
                 && outer.dynamics_defect <= g4_quality_tolerance
                 && independent_path <= g4_quality_tolerance
                 && independent_terminal <= g4_quality_tolerance
@@ -2256,6 +2258,7 @@ IntegrationResult run_resident_sequence(
                 "{\"case\":\"g4_sample\",\"coordinate_id\":\"%s\","
                 "\"family\":\"%s\","
                 "\"policy\":\"%s\",\"intervals\":%zu,\"status\":%d,"
+                "\"outer_iterations\":%u,"
                 "\"trust_class\":%.17g,\"transfer_class\":\"%s\","
                 "\"qualified\":%s,\"quality_tolerance\":%.17g,"
                 "\"canonical_residual\":%.17g,\"objective\":%.17g,"
@@ -2291,6 +2294,7 @@ IntegrationResult run_resident_sequence(
                 g4_policy.c_str(),
                 intervals,
                 static_cast<int>(outer.status),
+                outer.outer_iterations,
                 dynamics_config.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST
                     ? g4_family_class
                     : 0.0,
