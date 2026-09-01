@@ -1,0 +1,77 @@
+{
+  "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-checkpoint-v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "completed_arc_ids": {
+      "items": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "completed_batches": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "incumbent": {
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "lower_bound": {
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "paper2_matrix_sha256": {
+      "const": "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+    },
+    "repeat_index": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "run_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "seed": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "warm_tokens": {
+      "items": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "manifest_sha256",
+    "paper2_matrix_sha256",
+    "seed",
+    "repeat_index",
+    "completed_batches",
+    "incumbent",
+    "lower_bound",
+    "completed_arc_ids",
+    "warm_tokens"
+  ],
+  "title": "OrbitWeaver G7 checkpoint",
+  "type": "object"
+}

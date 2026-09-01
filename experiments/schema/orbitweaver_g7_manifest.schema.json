@@ -1,36 +1,24 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-manifest-v1.json",
-  "title": "OrbitWeaver G7 run manifest",
-  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "required": [
-    "schema_version",
-    "run_id",
-    "repository_commit",
-    "seed",
-    "backend",
-    "ownership",
-    "device_ids",
-    "config_sha256",
-    "paper2_matrix_sha256",
-    "evidence_level"
-  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "run_id": {"type": "string", "minLength": 1},
-    "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-    "seed": {"type": "integer", "minimum": 0},
-    "backend": {"type": "string", "minLength": 1},
-    "ownership": {"enum": ["single_gpu", "logical_rank_mock", "g5_distributed"]},
-    "device_ids": {
-      "type": "array",
-      "minItems": 1,
-      "items": {"type": "integer", "minimum": 0}
+    "backend": {
+      "minLength": 1,
+      "type": "string"
     },
-    "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "paper2_matrix_sha256": {
-      "const": "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+    "config_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "device_ids": {
+      "items": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
     },
     "evidence_level": {
       "enum": [
@@ -39,6 +27,121 @@
         "one_gpu_correctness_tested",
         "physical_multi_gpu_tested"
       ]
+    },
+    "hardware": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu": {
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gpus": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "os": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "os",
+        "cpu",
+        "gpus"
+      ],
+      "type": "object"
+    },
+    "ownership": {
+      "enum": [
+        "single_gpu",
+        "logical_rank_mock",
+        "g5_distributed"
+      ]
+    },
+    "paper2_matrix_sha256": {
+      "const": "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+    },
+    "repeat_count": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "repository_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "run_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "seed": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "toolchain": {
+      "additionalProperties": false,
+      "properties": {
+        "cmake": {
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "compiler": {
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cuda": {
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "python": {
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "python",
+        "compiler",
+        "cmake",
+        "cuda"
+      ],
+      "type": "object"
     }
-  }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "repository_commit",
+    "seed",
+    "repeat_count",
+    "backend",
+    "ownership",
+    "device_ids",
+    "config_sha256",
+    "paper2_matrix_sha256",
+    "toolchain",
+    "hardware",
+    "evidence_level"
+  ],
+  "title": "OrbitWeaver G7 run manifest",
+  "type": "object"
 }

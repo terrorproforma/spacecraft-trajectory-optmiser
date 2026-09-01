@@ -24,3 +24,19 @@
 - Used the worktree-local Python environment to avoid the canonical editable-install hook.
 - Replaced release-disabled test assertions where Werror exposed unused variables.
 - Pinned the benchmark loader to the byte-exact worktree matrix hash.
+
+## 2026-09-02 schema audit
+
+- Confirmed Python manifests had drifted from their JSON schema by omitting the required
+  Paper 2 matrix hash.
+- Moved config, manifest, checkpoint and result schemas into one in-package authority and
+  added deterministic schema generation/check mode.
+- Added strict record read/write paths with atomic output, finite JSON enforcement,
+  nested unknown-field rejection and manifest pin/repeat cross-checks.
+- Expanded terminal status semantics for failed, censored, unsupported, OOM, timeout,
+  infeasible and cancelled records while retaining partial bounds where valid.
+- Added repository/config/matrix, toolchain, hardware, seed and repeat capture.
+- Added round-trip, adversarial and seeded differential schema tests.
+- Built and installed the wheel, ran its CLI, generated a pinned manifest and validated it
+  independently with Draft 2020-12 `jsonschema`.
+- Ran no GPU timing, energy, throughput or multi-GPU experiment.

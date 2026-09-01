@@ -89,7 +89,11 @@ Schemas:
 
 - `experiments/schema/orbitweaver_g7_config.schema.json`;
 - `experiments/schema/orbitweaver_g7_manifest.schema.json`;
+- `experiments/schema/orbitweaver_g7_checkpoint.schema.json`;
 - `experiments/schema/orbitweaver_g7_result.schema.json`.
+
+These are generated from `spacepdhcg.orbitweaver.contracts`; see
+`docs/ORBITWEAVER_G7_SCHEMA_CONTRACT.md`.
 
 The frozen `benchmarks/paper2_matrix.json` SHA-256 is
 `78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2`.
