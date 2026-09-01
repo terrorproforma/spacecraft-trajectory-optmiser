@@ -70,8 +70,9 @@ quaternion linearisation, and nonlinear dynamics.
 The corrective rerun found two additional production defects: nonlinear merit used unscaled
 magnitudes inconsistent with the CPU SCvx policy, and an identical-CQP refined re-solve updated
 telemetry but acceptance still evaluated the stale pre-refinement primal. Both are corrected, and
-all four fixtures now compare every CPU/device numerical vector within `5e-12` while changing trust
-radii and exact-penalty weights in place. Even after those fixes, displaced P1-C remains
+all four fixtures compare every CPU/device numerical vector with maximum absolute difference
+`1.8118839761882555e-13` (contract `5e-12`) while changing trust radii and exact-penalty weights
+in place. Even after those fixes, displaced P1-C remains
 unqualified: a 15-outer fixed-loose diagnostic accepted one step after eight trust reductions but
 ended at the minimum radius with scaled dynamics `1.705e-3`, terminal `8.092e-4`, and virtual
 control `2.000e-3`. This is retained as new negative evidence, not as a replacement for the frozen

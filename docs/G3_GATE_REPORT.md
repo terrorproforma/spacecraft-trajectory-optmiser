@@ -12,7 +12,8 @@ difference. It did not verify coefficient evolution after an accepted displaced 
 
 The corrective implementation now updates reference tracking objectives, trust-cone centres and
 radii, exact-penalty epigraph costs, low-thrust radial halfspaces, 6-DoF quaternion linearisations,
-and nonlinear dynamics in place. Direct CPU/device coefficient parity is within `5e-12`, but the
+and nonlinear dynamics in place. Direct CPU/device coefficient parity has maximum absolute
+difference `1.8118839761882555e-13` (contract `5e-12`), but the
 frozen displaced-start outer-loop qualification remains above matched-quality tolerances because
 the current PDHCG production solve eventually exhausts the trust region. Therefore this amendment
 does not reseal G3 as a displaced-start PASS, and it does not authorise G5.

@@ -1827,16 +1827,24 @@ int main(const int argc, char** argv) {
             low_thrust.cpu_gpu_trajectory_max,
             pd6.cpu_gpu_trajectory_max,
         });
+        const double maximum_coefficient_difference = std::max({
+            hcw.coefficient_parity_max,
+            pd3.coefficient_parity_max,
+            low_thrust.coefficient_parity_max,
+            pd6.coefficient_parity_max,
+        });
         std::printf(
             "{\"case\":\"production_outer_all\",\"families\":4,"
             "\"maximum_canonical\":%.9g,\"maximum_nonlinear\":%.9g,"
             "\"maximum_trajectory_difference\":%.9g,"
+            "\"maximum_coefficient_difference\":%.17g,"
             "\"hidden_cpu_fallback\":false,"
             "\"topology_allocations_after_create\":0,"
             "\"topology_copies_after_create\":0}\n",
             maximum_canonical,
             maximum_nonlinear,
-            maximum_trajectory_difference
+            maximum_trajectory_difference,
+            maximum_coefficient_difference
         );
         const double quality_tolerance =
             mode == "--production-outer-sanitizer" ? 1.0e-2 : 1.0e-6;
