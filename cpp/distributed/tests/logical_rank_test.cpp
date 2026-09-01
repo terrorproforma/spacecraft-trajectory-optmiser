@@ -1,4 +1,5 @@
 #include "spacepdhcg/distributed/risk.hpp"
+#include "spacepdhcg/distributed/orbitweaver_g5_adapter.hpp"
 #include "spacepdhcg/distributed/runtime.hpp"
 #include "spacepdhcg/distributed/scenario_layout.hpp"
 
@@ -17,6 +18,7 @@
 
 namespace g5 = spacepdhcg::distributed::g5;
 namespace distributed = spacepdhcg::distributed;
+namespace g7 = spacepdhcg::orbitweaver::g7;
 
 namespace {
 
@@ -131,6 +133,43 @@ void test_partition_contracts() {
         full_model_imbalance(aware, comparison) < full_model_imbalance(generic, comparison),
         "scenario-aware comparison did not improve the predicted full-work balance"
     );
+}
+
+void test_orbitweaver_rank_local_ownership() {
+    const std::vector<std::size_t> devices{3U, 7U, 11U};
+    std::vector<g7::G5ArcPartitionMetadata> items{};
+    for (std::size_t identifier = 0U; identifier < 12U; ++identifier) {
+        auto work = g5::ScenarioWork{};
+        work.q_nonzeros = 10U + identifier;
+        work.time_nodes = 4U + identifier % 3U;
+        work.replay_work = 2U + identifier;
+        items.push_back({
+            100U + identifier,
+            identifier / 6U,
+            (identifier / 3U) % 2U,
+            identifier % 3U,
+            work,
+        });
+    }
+    const auto first = g7::partition_g5_orbitweaver_arcs(items, devices);
+    const auto second = g7::partition_g5_orbitweaver_arcs(items, devices);
+    require(
+        first.scenario_plan.fingerprint == second.scenario_plan.fingerprint
+            && first.owners == second.owners,
+        "OrbitWeaver G5 ownership is nondeterministic"
+    );
+    g7::G5RankLocalOwnershipAdapter ownership(first);
+    for (const auto& item : items) {
+        g7::ScheduledArc arc{};
+        arc.deterministic_id = item.deterministic_id;
+        arc.route_index = item.route_index;
+        arc.trajectory_arc_index = item.trajectory_arc_index;
+        arc.scenario_index = item.scenario_index;
+        require(
+            ownership.owner(arc, 999U) == first.owners.at(item.deterministic_id),
+            "OrbitWeaver G5 owner changed with batch sequence"
+        );
+    }
 }
 
 void test_arrowhead_and_nonanticipativity() {
@@ -366,6 +405,7 @@ void test_telemetry_schema_contract() {
 int main() {
     try {
         test_partition_contracts();
+        test_orbitweaver_rank_local_ownership();
         test_arrowhead_and_nonanticipativity();
         test_risk_and_residual_reductions();
         test_ordering_failure_and_cancellation();

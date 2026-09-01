@@ -66,6 +66,8 @@ class Backend:
                 terminal_error=0.0,
                 path_violation=0.0,
                 uncertainty_violation=0.0,
+                canonical_residual=0.0,
+                replay_residual=0.0,
                 warm_token=100 + item.deterministic_id,
             )
             for item in requests
@@ -80,8 +82,8 @@ def test_scheduler_groups_bounds_and_retains_failures() -> None:
     )
     results = scheduler.run([request(3, 22), request(2), request(1)])
     assert [item.deterministic_id for item in results] == [1, 2, 3]
-    assert scheduler.telemetry.batches == 2
-    assert scheduler.telemetry.estimated_peak_buffer_bytes == 128
+    assert scheduler.telemetry.batches == 3
+    assert scheduler.telemetry.estimated_peak_buffer_bytes == 64
     selected = deterministic_top_k(results, 3)
     assert [item.deterministic_id for item in selected] == [1, 2, 3]
     assert selected[-1].status is ArcStatus.INFEASIBLE
