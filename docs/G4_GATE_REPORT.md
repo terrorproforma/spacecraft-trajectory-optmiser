@@ -141,6 +141,21 @@ Gate G4 therefore **does not pass**, and Gate G5 is **not authorised**.
 
 ## Evidence
 
+Corrective qualification after the fixed-pattern update implementation:
+
+- `results/gpu/g4/qualification/g4-20260901-f21f93d-corrective2/`
+- execution commit recorded by the manifest: `f21f93d7b3451f9936f0692fd2fb05554fc8e25a`
+- manifest SHA-256: `88822129ffd45e97cdda7669a1ecf7b7b1a529cb94a84d842f6f896ee261bcba`
+- decision SHA-256: `cca02859b3c29b9aab1da75a07eee29dc78bca3b444d8067e4190ba1cda79f1b`
+- coverage SHA-256: `ed06f436c410660eb9dc0abc76847c5ab7dae8a6a4603697bad5dbe9608815bc`
+- corrected scaled terminal residuals: P1-C `1.000e-3`, P1-D `5.243e-2`,
+  P1-E `7.080e-2`; qualified samples: 0/3; forcing failures: 3/3.
+
+This corrective directory supplements rather than replaces the frozen original failure archive.
+Its second execution fixed the distinct initial-boundary/reference mismatch exposed by a
+non-unit displaced 6-DoF quaternion; the aborted first corrective directory is retained as
+additional negative evidence.
+
 Primary isolated qualification archive:
 
 - `results/gpu/g4/qualification/g4-20260901T072000Z-b70bf15-isolated.tar.gz`

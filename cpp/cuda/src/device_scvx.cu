@@ -917,6 +917,7 @@ __global__ void update_scvx_numeric_kernel(
     auto* scalar_lower = view_pointer<double>(problem.numeric.scalar_lower);
     auto* scalar_upper = view_pointer<double>(problem.numeric.scalar_upper);
     auto* affine_offset = view_pointer<double>(problem.numeric.affine_offset);
+    const auto* initial = view_pointer<const double>(problem.initial_state);
     const auto* target = view_pointer<const double>(problem.target_state);
     const size_t state_elements =
         (problem.intervals + 1U) * problem.state_dimension;
@@ -931,7 +932,7 @@ __global__ void update_scvx_numeric_kernel(
             const double fraction =
                 static_cast<double>(node)
                 / static_cast<double>(problem.intervals);
-            reference = (1.0 - fraction) * states[component]
+            reference = (1.0 - fraction) * initial[component]
                 + fraction * target[component];
         }
         c[view_pointer<const int>(problem.state_variable_indices)[index]] =
@@ -947,8 +948,8 @@ __global__ void update_scvx_numeric_kernel(
     for (size_t component = 0U;
          component < problem.state_dimension;
          ++component) {
-        scalar_lower[component] = states[component];
-        scalar_upper[component] = states[component];
+        scalar_lower[component] = initial[component];
+        scalar_upper[component] = initial[component];
     }
     for (size_t component = 0U; component < terminal_dimension; ++component) {
         scalar_lower[update.terminal_row_start + component] = target[component];

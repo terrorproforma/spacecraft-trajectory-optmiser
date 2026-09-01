@@ -77,6 +77,7 @@ typedef struct spacepdhcg_cuda_scvx_problem {
     spacepdhcg_accelerator_buffer_view virtual_variable_indices;
     spacepdhcg_accelerator_buffer_view reference_states;
     spacepdhcg_accelerator_buffer_view reference_controls;
+    spacepdhcg_accelerator_buffer_view initial_state;
     spacepdhcg_accelerator_buffer_view target_state;
     spacepdhcg_cuda_scvx_numeric_update numeric_update;
 } spacepdhcg_cuda_scvx_problem;

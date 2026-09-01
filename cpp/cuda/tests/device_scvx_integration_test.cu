@@ -458,6 +458,7 @@ IntegrationResult run_resident_sequence(
     const core::NumericValues& values,
     const std::vector<double>& reference_states,
     const std::vector<double>& reference_controls,
+    const std::vector<double>& initial_state,
     const std::vector<double>& target_state,
     const DynamicsMaps& maps,
     const std::size_t intervals,
@@ -570,6 +571,7 @@ IntegrationResult run_resident_sequence(
     test::CudaBuffer<int> quaternion_position_buffer(
         quaternion_positions.size(), false
     );
+    test::CudaBuffer<double> initial(StateDimension, false);
     test::CudaBuffer<double> target(StateDimension, false);
     states.upload(reference_states, problem.stream);
     controls.upload(reference_controls, problem.stream);
@@ -583,6 +585,7 @@ IntegrationResult run_resident_sequence(
     q_positions.upload(q_diagonal_positions, problem.stream);
     radial_position_buffer.upload(radial_positions, problem.stream);
     quaternion_position_buffer.upload(quaternion_positions, problem.stream);
+    initial.upload(initial_state, problem.stream);
     target.upload(target_state, problem.stream);
     const auto rw64 = [](auto& buffer) {
         return test::view(
@@ -702,6 +705,7 @@ IntegrationResult run_resident_sequence(
                 : ro32(virtual_variables),
             rw64(states),
             rw64(controls),
+            ro64(initial),
             ro64(target),
             numeric_update,
         };
@@ -772,10 +776,17 @@ IntegrationResult run_resident_sequence(
         compare(
             problem.variable_upper.download(problem.stream), expected.variable_upper
         );
-        test::require(
-            coefficient_parity_max <= 5.0e-12,
-            "device coefficient update diverged from CPU transcription"
-        );
+        if (coefficient_parity_max > 5.0e-12) {
+            std::fprintf(
+                stderr,
+                "coefficient parity maximum %.17g exceeds 5e-12\n",
+                coefficient_parity_max
+            );
+            test::require(
+                false,
+                "device coefficient update diverged from CPU transcription"
+            );
+        }
         if (!maps.virtual_variables.empty()) {
             test::status_require(
                 spacepdhcg_cuda_scvx_update_numeric_async(
@@ -1402,6 +1413,7 @@ IntegrationResult run_hcw() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(initial.begin(), initial.end()),
         std::vector<double>(target.begin(), target.end()),
         maps,
         config.intervals,
@@ -1467,6 +1479,7 @@ IntegrationResult run_pd3() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(initial.begin(), initial.end()),
         std::vector<double>(nominal_states.back().begin(), nominal_states.back().end()),
         maps,
         config.intervals,
@@ -1530,6 +1543,7 @@ IntegrationResult run_low_thrust() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(initial.begin(), initial.end()),
         std::vector<double>(nominal_states.back().begin(), nominal_states.back().end()),
         maps,
         config.intervals,
@@ -1597,6 +1611,7 @@ IntegrationResult run_pd6() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(initial.begin(), initial.end()),
         std::vector<double>(nominal_states.back().begin(), nominal_states.back().end()),
         maps,
         config.intervals,
