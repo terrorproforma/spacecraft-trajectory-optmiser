@@ -545,3 +545,29 @@ Use this file as persistent, repo-local execution memory.
   preserve the exact output and forcing qualification for every handback.
 - The integrated C++ G4 fixture still receives its attempt budget from the command line. Passing
   `outer-iterations=1` is a one-candidate run and is not valid globalization qualification.
+
+### 2026-09-01 23:20 AEST - Globalization integration and format closure
+
+#### What Worked
+
+- Cherry-picked exact P1-C globalization source `ee2baa5826469a114ffbf4b8d6c2a99416cd2868`
+  after the integrated G4-G7 head and preserved both append-only histories and all shared metrics.
+- Ruff formatted all 45 outstanding files; an AST comparison proved all 44 Python edits were
+  semantic no-ops, and the only non-Python edit was one formatter-required blank line.
+- Full/focused Python, QOCO CPU ABI, native Release/Debug/ASan, standalone inventory, all three
+  `sm_120` CUDA/G5 builds, wheel/CLI/ABI, and CMake consumer validation passed without GPU execution.
+
+#### Mistakes And Fixes
+
+- `[integration]` P1-C added a trust-radius argument to shared metric replay while the previously
+  integrated QOCO handback call retained the old ordering. Passed `candidate->trust_radius` and
+  rebuilt all CUDA configurations with warnings as errors.
+- `[tool]` `uv run` created an unrequested root `uv.lock`; removed that generated artifact before
+  final status instead of committing it.
+
+#### Follow-Ups / Risks
+
+- Resident fixed/adaptive PDHCG remains negative for displaced P1-C, and G5 remains unauthorized.
+- The canonical C++ pure-QOCO RK4 campaign owner is still a separate in-progress dependency.
+- GPU correctness, sanitizer, one-rank MPI/NCCL, and measured qualification remain deliberately
+  deferred until the device is free and those runs can be serialized.

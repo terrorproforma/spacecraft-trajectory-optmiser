@@ -240,3 +240,23 @@
   - G4 remains FAIL for the resident PDHCG policies and G5 remains unauthorized.
   - A one-attempt G4 invocation is not globalization evidence; branch integration must run a
     multi-attempt policy budget and wire pure QOCO into the canonical C++ RK4 campaign owner.
+
+## 2026-09-01 23:20 AEST
+
+- Task summary:
+  - Integrated completed P1-C globalization into the combined G4-G7 branch and made the repository
+    Ruff-format clean without running GPU workloads.
+- Changes:
+  - Preserved additive CUDA metrics and histories while cherry-picking
+    `ee2baa5826469a114ffbf4b8d6c2a99416cd2868`.
+  - Formatted 45 files mechanically; verified AST identity for all 44 Python files.
+  - Corrected the integration-only QOCO handback call to pass its candidate trust radius into the
+    P1-C-expanded metric replay signature.
+- Validation:
+  - Ruff lint/format passed; full Python passed 175 with three optional skips; focused G4-G7 plus
+    pinned QOCO CPU ABI/handback passed 85.
+  - Native Release/Debug/ASan passed 43/43 each; standalone inventory passed 8/8 each.
+  - CUDA/G5 Release, Debug, and sanitizer-capable `sm_120` builds passed; logical-rank tests passed.
+  - CPU/CUDA QOCO builds, wheel ABI and both CLIs, and CMake consumer passed.
+- Follow-up notes / risks:
+  - C++ pure-QOCO RK4 campaign ownership remains in progress; no GPU or measured claim was made.

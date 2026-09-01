@@ -2954,6 +2954,7 @@ spacepdhcg_cuda_scvx_driver_handback_qoco(
         driver->candidate_states,
         driver->candidate_controls,
         true,
+        candidate->trust_radius,
         native,
         &result->replay_seconds,
         &ignored_d2h_seconds
