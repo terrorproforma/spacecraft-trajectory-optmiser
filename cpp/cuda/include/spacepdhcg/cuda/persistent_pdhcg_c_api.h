@@ -172,6 +172,12 @@ typedef struct spacepdhcg_cuda_diagnostics {
     uint64_t topology_index_copy_count;
     uint64_t total_copy_count;
     uint64_t total_copy_bytes;
+    uint64_t h2d_copy_count;
+    uint64_t h2d_copy_bytes;
+    uint64_t d2h_copy_count;
+    uint64_t d2h_copy_bytes;
+    uint64_t d2d_copy_count;
+    uint64_t d2d_copy_bytes;
     uint64_t update_epoch;
     uint64_t solve_epoch;
     uint64_t scaling_epoch;

@@ -1,5 +1,6 @@
 #include "cuda_test_support.hpp"
 #include "spacepdhcg/cuda/device_scvx_c_api.h"
+#include "spacepdhcg/cuda/device_scvx_driver_c_api.h"
 #include "spacepdhcg/scvx/low_thrust_driver.hpp"
 #include "spacepdhcg/scvx/powered_descent_3dof_driver.hpp"
 #include "spacepdhcg/transcription/hcw_rendezvous.hpp"
@@ -11,12 +12,14 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <limits>
 #include <map>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -39,22 +42,32 @@ bool refresh_before_tight_mode = false;
 bool repeated_tight_mode = false;
 bool tight_all_mode = false;
 bool tight_pd6_mode = false;
+bool production_driver_mode = false;
+std::size_t h1_intervals = 0U;
+std::uint32_t production_outer_iterations = 1U;
+double cuda_startup_seconds = 0.0;
+int benchmark_variables = 0;
+int benchmark_scalar_rows = 0;
+int benchmark_affine_rows = 0;
+std::size_t benchmark_q_nonzeros = 0U;
+std::size_t benchmark_a_nonzeros = 0U;
+std::size_t benchmark_f_nonzeros = 0U;
 std::uint64_t tight_iteration_limit = 1'000'000U;
 
 spacepdhcg_cuda_cone_kind cone_kind(const spacepdhcg::ConeKind kind) {
     switch (kind) {
         case spacepdhcg::ConeKind::second_order:
-            retun SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
+            return SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
         case spacepdhcg::ConeKind::rotated_second_order:
-            retun SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER;
+            return SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER;
         case spacepdhcg::ConeKind::exponential:
-            retun SPACEPDHCG_CUDA_CONE_EXPONENTIAL;
+            return SPACEPDHCG_CUDA_CONE_EXPONENTIAL;
         case spacepdhcg::ConeKind::power:
-            retun SPACEPDHCG_CUDA_CONE_POWER;
+            return SPACEPDHCG_CUDA_CONE_POWER;
         case spacepdhcg::ConeKind::positive_semidefinite:
-            retun SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE;
+            return SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE;
     }
-    retun SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
+    return SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
 }
 
 void materialise(
@@ -114,20 +127,20 @@ void materialise(
 }
 
 std::map<std::pair<std::size_t, std::size_t>, int> positions(
-    const core::CscPatten& patten
+    const core::CscPattern& pattern
 ) {
     std::map<std::pair<std::size_t, std::size_t>, int> result;
-    for (spacepdhcg::Index column = 0; column < patten.columns; ++column) {
-        const auto begin = patten.offsets[static_cast<std::size_t>(column)];
-        const auto end = patten.offsets[static_cast<std::size_t>(column) + 1U];
+    for (spacepdhcg::Index column = 0; column < pattern.columns; ++column) {
+        const auto begin = pattern.offsets[static_cast<std::size_t>(column)];
+        const auto end = pattern.offsets[static_cast<std::size_t>(column) + 1U];
         for (spacepdhcg::Index slot = begin; slot < end; ++slot) {
             result[{
-                static_cast<std::size_t>(patten.indices[static_cast<std::size_t>(slot)]),
+                static_cast<std::size_t>(pattern.indices[static_cast<std::size_t>(slot)]),
                 static_cast<std::size_t>(column),
             }] = slot;
         }
     }
-    retun result;
+    return result;
 }
 
 struct DynamicsMaps {
@@ -135,11 +148,14 @@ struct DynamicsMaps {
     std::vector<int> control;
     std::vector<int> next;
     std::vector<int> virtual_control;
+    std::vector<int> state_variables;
+    std::vector<int> control_variables;
+    std::vector<int> virtual_variables;
 };
 
 template <typename StateRange, typename ControlRange, typename VirtualRange>
 DynamicsMaps make_maps(
-    const core::CscPatten& patten,
+    const core::CscPattern& pattern,
     const std::size_t intervals,
     const std::size_t state_dimension,
     const std::size_t control_dimension,
@@ -149,13 +165,40 @@ DynamicsMaps make_maps(
     VirtualRange virtual_range,
     const bool has_virtual
 ) {
-    const auto lookup = positions(patten);
+    const auto lookup = positions(pattern);
     DynamicsMaps maps;
     maps.state.reserve(intervals * state_dimension * state_dimension);
     maps.control.reserve(intervals * state_dimension * control_dimension);
     maps.next.reserve(intervals * state_dimension);
     if (has_virtual) {
         maps.virtual_control.reserve(intervals * state_dimension);
+        maps.virtual_variables.reserve(intervals * state_dimension);
+    }
+    maps.state_variables.reserve((intervals + 1U) * state_dimension);
+    maps.control_variables.reserve(intervals * control_dimension);
+    for (std::size_t node = 0; node <= intervals; ++node) {
+        const auto range = state_range(node);
+        for (std::size_t index = 0; index < state_dimension; ++index) {
+            maps.state_variables.push_back(
+                static_cast<int>(range.start + index)
+            );
+        }
+    }
+    for (std::size_t interval = 0; interval < intervals; ++interval) {
+        const auto control = control_range(interval);
+        for (std::size_t index = 0; index < control_dimension; ++index) {
+            maps.control_variables.push_back(
+                static_cast<int>(control.start + index)
+            );
+        }
+        if (has_virtual) {
+            const auto virtual_control = virtual_range(interval);
+            for (std::size_t index = 0; index < state_dimension; ++index) {
+                maps.virtual_variables.push_back(
+                    static_cast<int>(virtual_control.start + index)
+                );
+            }
+        }
     }
     for (std::size_t interval = 0; interval < intervals; ++interval) {
         const auto current = state_range(interval);
@@ -179,37 +222,39 @@ DynamicsMaps make_maps(
             }
         }
     }
-    retun maps;
+    return maps;
 }
 
 spacepdhcg_accelerator_buffer_view null_int_view() {
-    retun test::view(
+    return test::view(
         nullptr, 0U, false, SPACEPDHCG_SCALAR_INT32, SPACEPDHCG_ACCESS_READ_ONLY
     );
 }
 
 struct IntegrationResult {
     spacepdhcg_cuda_diagnostics diagnostics{};
+    spacepdhcg_cuda_scvx_result outer{};
     std::uint64_t topology_allocations{0U};
     std::uint64_t topology_copies{0U};
     std::uint64_t update_allocations{0U};
     double maximum_solution_magnitude{0.0};
+    double cpu_gpu_trajectory_max{0.0};
 };
 
 cone_type_t upstream_cone_kind(const spacepdhcg_cuda_cone_kind kind) {
     switch (kind) {
         case SPACEPDHCG_CUDA_CONE_SECOND_ORDER:
-            retun CONE_STANDARD_SOC;
+            return CONE_STANDARD_SOC;
         case SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER:
-            retun CONE_ROTATED_SOC;
+            return CONE_ROTATED_SOC;
         case SPACEPDHCG_CUDA_CONE_EXPONENTIAL:
-            retun CONE_EXPONENTIAL;
+            return CONE_EXPONENTIAL;
         case SPACEPDHCG_CUDA_CONE_POWER:
-            retun CONE_POWER;
+            return CONE_POWER;
         case SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE:
-            retun CONE_PSD;
+            return CONE_PSD;
     }
-    retun CONE_STANDARD_SOC;
+    return CONE_STANDARD_SOC;
 }
 
 template <typename T>
@@ -283,7 +328,7 @@ void run_upstream_diagnostic(test::ProblemStorage& problem) {
     problem.h_variable_upper = problem.variable_upper.download(problem.stream);
     print_diagnostic_problem(problem);
     if (dump_mode) {
-        retun;
+        return;
     }
 
     matrix_desc_t q{};
@@ -410,7 +455,17 @@ IntegrationResult run_resident_sequence(
     const spacepdhcg_cuda_dynamics_config& dynamics_config
 ) {
     test::ProblemStorage problem(false, !default_stream_mode);
+    const auto topology_started = std::chrono::steady_clock::now();
     materialise(problem, structure, values);
+    const double topology_seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - topology_started
+    ).count();
+    benchmark_variables = problem.variables;
+    benchmark_scalar_rows = problem.scalar_rows;
+    benchmark_affine_rows = problem.affine_rows;
+    benchmark_q_nonzeros = problem.h_q.size();
+    benchmark_a_nonzeros = problem.h_a.size();
+    benchmark_f_nonzeros = problem.h_f.size();
     test::CudaBuffer<double> states(reference_states.size(), false);
     test::CudaBuffer<double> controls(reference_controls.size(), false);
     test::CudaBuffer<double> propagated(intervals * StateDimension, false);
@@ -421,26 +476,40 @@ IntegrationResult run_resident_sequence(
     test::CudaBuffer<int> control_positions(maps.control.size(), false);
     test::CudaBuffer<int> next_positions(maps.next.size(), false);
     test::CudaBuffer<int> virtual_positions(maps.virtual_control.size(), false);
+    test::CudaBuffer<int> state_variables(maps.state_variables.size(), false);
+    test::CudaBuffer<int> control_variables(maps.control_variables.size(), false);
+    test::CudaBuffer<int> virtual_variables(maps.virtual_variables.size(), false);
+    test::CudaBuffer<double> target(StateDimension, false);
     states.upload(reference_states, problem.stream);
     controls.upload(reference_controls, problem.stream);
     state_positions.upload(maps.state, problem.stream);
     control_positions.upload(maps.control, problem.stream);
     next_positions.upload(maps.next, problem.stream);
     virtual_positions.upload(maps.virtual_control, problem.stream);
+    state_variables.upload(maps.state_variables, problem.stream);
+    control_variables.upload(maps.control_variables, problem.stream);
+    virtual_variables.upload(maps.virtual_variables, problem.stream);
+    target.upload(
+        std::vector<double>(
+            reference_states.end() - static_cast<std::ptrdiff_t>(StateDimension),
+            reference_states.end()
+        ),
+        problem.stream
+    );
     const auto rw64 = [](auto& buffer) {
-        retun test::view(
+        return test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_FLOAT64,
             SPACEPDHCG_ACCESS_READ_WRITE
         );
     };
     const auto ro64 = [](auto& buffer) {
-        retun test::view(
+        return test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_FLOAT64,
             SPACEPDHCG_ACCESS_READ_ONLY
         );
     };
     const auto ro32 = [](auto& buffer) {
-        retun test::view(
+        return test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_INT32,
             SPACEPDHCG_ACCESS_READ_ONLY
         );
@@ -448,7 +517,13 @@ IntegrationResult run_resident_sequence(
     const spacepdhcg_cuda_variational_request linearise{
         SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
         intervals,
-        ro64(states),
+        test::view(
+            states.get(),
+            intervals * StateDimension,
+            false,
+            SPACEPDHCG_SCALAR_FLOAT64,
+            SPACEPDHCG_ACCESS_READ_ONLY
+        ),
         ro64(controls),
         rw64(propagated),
         rw64(transition),
@@ -472,13 +547,170 @@ IntegrationResult run_resident_sequence(
         problem.numeric_views().scalar_upper,
         dynamics_row_start,
     };
+    const auto workspace_create_started = std::chrono::steady_clock::now();
     auto* workspace = test::create_workspace(problem);
+    const double workspace_create_seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - workspace_create_started
+    ).count();
     spacepdhcg_cuda_pointer_snapshot pointers_before{};
     test::status_require(
         spacepdhcg_cuda_workspace_pointer_snapshot(workspace, &pointers_before),
         "pointer snapshot before resident sequence"
     );
     spacepdhcg_cuda_diagnostics diagnostics{};
+    if (production_driver_mode) {
+        auto numeric = problem.numeric_views();
+        const spacepdhcg_cuda_scvx_problem outer_problem{
+            SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
+            workspace,
+            problem.fingerprint,
+            intervals,
+            StateDimension,
+            ControlDimension,
+            dynamics_config,
+            numeric,
+            linearise,
+            fill,
+            ro32(state_variables),
+            ro32(control_variables),
+            maps.virtual_variables.empty()
+                ? null_int_view()
+                : ro32(virtual_variables),
+            rw64(states),
+            rw64(controls),
+            ro64(target),
+        };
+        const spacepdhcg_cuda_scvx_options outer_options{
+            SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
+            production_outer_iterations,
+            production_outer_iterations,
+            1U,
+            1.0e-6,
+            2.0e-2,
+            0.05,
+            0.90,
+            100.0,
+            100.0,
+            1.0,
+            1.0e-4,
+            8.0,
+            0.5,
+            1.8,
+        };
+        spacepdhcg_cuda_scvx_driver* driver = nullptr;
+        test::status_require(
+            spacepdhcg_cuda_scvx_driver_create(
+                &outer_problem,
+                &outer_options,
+                &driver
+            ),
+            "production outer driver create"
+        );
+        std::vector<spacepdhcg_cuda_scvx_iteration> records(
+            production_outer_iterations
+        );
+        spacepdhcg_cuda_scvx_result outer{};
+        test::status_require(
+            spacepdhcg_cuda_scvx_driver_solve(
+                driver,
+                problem.exchange.consumer_stream,
+                records.data(),
+                records.size(),
+                &outer
+            ),
+            "production outer driver solve"
+        );
+        outer.topology_seconds = topology_seconds;
+        outer.workspace_create_seconds = workspace_create_seconds;
+        test::require(
+            outer.status == SPACEPDHCG_CUDA_SCVX_CONVERGED,
+            "production outer driver did not converge"
+        );
+        test::require(
+            outer.canonical_residual <= 1.0e-6
+                && outer.dynamics_defect <= 1.0e-6
+                && outer.path_violation <= 1.0e-6
+                && outer.terminal_residual <= 1.0e-6,
+            "production outer driver failed final quality"
+        );
+        test::require(
+            outer.topology_allocation_count_after_create == 0U
+                && outer.topology_index_copy_count_after_create == 0U
+                && outer.hidden_cpu_fallback == 0,
+            "production outer driver violated residency"
+        );
+        const auto final_states = states.download(problem.stream);
+        const auto final_controls = controls.download(problem.stream);
+        double parity_maximum = 0.0;
+        for (std::size_t index = 0; index < final_states.size(); ++index) {
+            parity_maximum = std::max(
+                parity_maximum,
+                std::abs(final_states[index] - reference_states[index])
+            );
+        }
+        for (std::size_t index = 0; index < final_controls.size(); ++index) {
+            parity_maximum = std::max(
+                parity_maximum,
+                std::abs(final_controls[index] - reference_controls[index])
+            );
+        }
+        test::require(
+            parity_maximum <= 1.0e-9,
+            "production CPU/GPU trajectory parity failed"
+        );
+        test::status_require(
+            spacepdhcg_cuda_workspace_diagnostics(workspace, &diagnostics),
+            "production outer diagnostics"
+        );
+        std::printf(
+            "{\"case\":\"production_outer\",\"model\":%d,"
+            "\"outer_iterations\":%u,\"accepted\":%u,\"rejected\":%u,"
+            "\"trust_radius\":%.9g,\"requested\":%.9g,\"achieved\":%.9g,"
+            "\"ratio\":%.9g,\"objective\":%.9g,\"virtual\":%.9g,"
+            "\"dynamics\":%.9g,\"path\":%.9g,\"terminal\":%.9g,"
+            "\"cpu_gpu_trajectory\":%.9g,"
+            "\"t_cqp\":%.9g,\"t_scvx\":%.9g,\"d2h_bytes\":%llu,"
+            "\"topology_allocations\":%llu,\"topology_copies\":%llu}\n",
+            static_cast<int>(dynamics_config.model),
+            outer.outer_iterations,
+            outer.accepted_steps,
+            outer.rejected_steps,
+            outer.final_trust_radius,
+            records[0].requested_tolerance,
+            records[0].achieved_residual,
+            records[0].reduction_ratio,
+            outer.objective,
+            outer.virtual_control,
+            outer.dynamics_defect,
+            outer.path_violation,
+            outer.terminal_residual,
+            parity_maximum,
+            outer.cqp_total_seconds,
+            outer.scvx_total_seconds,
+            static_cast<unsigned long long>(outer.d2h_bytes),
+            static_cast<unsigned long long>(
+                outer.topology_allocation_count_after_create
+            ),
+            static_cast<unsigned long long>(
+                outer.topology_index_copy_count_after_create
+            )
+        );
+        test::status_require(
+            spacepdhcg_cuda_scvx_driver_destroy(&driver),
+            "production outer driver destroy"
+        );
+        const IntegrationResult result{
+            diagnostics,
+            outer,
+            outer.topology_allocation_count_after_create,
+            outer.topology_index_copy_count_after_create,
+            0U,
+            0.0,
+            parity_maximum,
+        };
+        test::destroy_workspace(workspace);
+        return result;
+    }
     const int sequence_iterations =
         sanitizer_mode || tight_residual_mode || tight_all_mode || tight_pd6_mode
             || diagnostic_mode || dump_mode
@@ -548,7 +780,7 @@ IntegrationResult run_resident_sequence(
         }
         if (dump_mode) {
             test::destroy_workspace(workspace);
-            retun {};
+            return {};
         }
         diagnostics = test::solve_and_wait(workspace, problem, solve);
         if (diagnostics.termination != SPACEPDHCG_CUDA_TERMINATION_OPTIMAL) {
@@ -694,20 +926,22 @@ IntegrationResult run_resident_sequence(
     }
     const IntegrationResult result{
         diagnostics,
+        {},
         diagnostics.topology_allocation_delta_last_update,
         diagnostics.topology_index_copy_delta_last_update,
         diagnostics.allocation_delta_last_update,
         maximum_solution,
+        0.0,
     };
     test::destroy_workspace(workspace);
-    retun result;
+    return result;
 }
 
 spacepdhcg_cuda_dynamics_config model_config(
     const spacepdhcg_cuda_dynamics_model model,
     const double step
 ) {
-    retun {
+    return {
         SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
         model,
         step,
@@ -723,11 +957,11 @@ spacepdhcg_cuda_dynamics_config model_config(
 template <typename State>
 std::vector<double> flatten_states(const std::vector<State>& states, const std::size_t intervals) {
     std::vector<double> result;
-    result.reserve(intervals * states.front().size());
-    for (std::size_t interval = 0; interval < intervals; ++interval) {
-        result.insert(result.end(), states[interval].begin(), states[interval].end());
+    result.reserve((intervals + 1U) * states.front().size());
+    for (std::size_t node = 0; node <= intervals; ++node) {
+        result.insert(result.end(), states[node].begin(), states[node].end());
     }
-    retun result;
+    return result;
 }
 
 template <typename Control>
@@ -736,42 +970,42 @@ std::vector<double> flatten_controls(const std::vector<Control>& controls) {
     for (const auto& control : controls) {
         result.insert(result.end(), control.begin(), control.end());
     }
-    retun result;
+    return result;
 }
 
 IntegrationResult run_hcw() {
     transcription::HcwRendezvousConfig config;
-    config.intervals = 2U;
+    config.intervals = h1_intervals > 0U ? h1_intervals : 2U;
     config.step_seconds = 10.0;
     transcription::HcwRendezvousCqp subproblem(config);
     const dynamics::HcwState initial{};
     const dynamics::HcwState target{};
     const auto values = subproblem.values(initial, target);
-    std::vector<dynamics::HcwState> states(2U, initial);
-    std::vector<dynamics::HcwControl> controls(2U);
+    std::vector<dynamics::HcwState> states(config.intervals + 1U, initial);
+    std::vector<dynamics::HcwControl> controls(config.intervals);
     const auto& layout = subproblem.layout();
     const auto maps = make_maps(
         subproblem.structure().scalar_constraint,
-        2U,
+        config.intervals,
         6U,
         3U,
         layout.dynamics_row(),
         [&layout](std::size_t node) {
-            retun transcription::IndexRange{layout.state_index(node, 0U), 6U};
+            return transcription::IndexRange{layout.state_index(node, 0U), 6U};
         },
         [&layout](std::size_t interval) {
-            retun transcription::IndexRange{layout.control_index(interval, 0U), 3U};
+            return transcription::IndexRange{layout.control_index(interval, 0U), 3U};
         },
-        [](std::size_t) { retun transcription::IndexRange{}; },
+        [](std::size_t) { return transcription::IndexRange{}; },
         false
     );
-    retun run_resident_sequence<6U, 3U>(
+    return run_resident_sequence<6U, 3U>(
         subproblem.structure(),
         values,
-        flatten_states(states, 2U),
+        flatten_states(states, config.intervals),
         flatten_controls(controls),
         maps,
-        2U,
+        config.intervals,
         layout.dynamics_row(),
         model_config(SPACEPDHCG_CUDA_DYNAMICS_HCW, config.step_seconds)
     );
@@ -812,12 +1046,12 @@ IntegrationResult run_pd3() {
         7U,
         4U,
         layout.dynamics_rows().start,
-        [&layout](std::size_t node) { retun layout.state(node); },
-        [&layout](std::size_t interval) { retun layout.control(interval); },
-        [&layout](std::size_t interval) { retun layout.virtual_control(interval); },
+        [&layout](std::size_t node) { return layout.state(node); },
+        [&layout](std::size_t interval) { return layout.control(interval); },
+        [&layout](std::size_t interval) { return layout.virtual_control(interval); },
         true
     );
-    retun run_resident_sequence<7U, 4U>(
+    return run_resident_sequence<7U, 4U>(
         subproblem.structure(),
         values,
         flatten_states(states, config.intervals),
@@ -857,12 +1091,12 @@ IntegrationResult run_low_thrust() {
         7U,
         4U,
         layout.dynamics_rows().start,
-        [&layout](std::size_t node) { retun layout.state(node); },
-        [&layout](std::size_t interval) { retun layout.control(interval); },
-        [&layout](std::size_t interval) { retun layout.virtual_control(interval); },
+        [&layout](std::size_t node) { return layout.state(node); },
+        [&layout](std::size_t interval) { return layout.control(interval); },
+        [&layout](std::size_t interval) { return layout.virtual_control(interval); },
         true
     );
-    retun run_resident_sequence<7U, 4U>(
+    return run_resident_sequence<7U, 4U>(
         subproblem.structure(),
         values,
         flatten_states(states, config.intervals),
@@ -902,12 +1136,12 @@ IntegrationResult run_pd6() {
         14U,
         7U,
         layout.dynamics_rows().start,
-        [&layout](std::size_t node) { retun layout.state(node); },
-        [&layout](std::size_t interval) { retun layout.control(interval); },
-        [&layout](std::size_t interval) { retun layout.virtual_control(interval); },
+        [&layout](std::size_t node) { return layout.state(node); },
+        [&layout](std::size_t interval) { return layout.control(interval); },
+        [&layout](std::size_t interval) { return layout.virtual_control(interval); },
         true
     );
-    retun run_resident_sequence<14U, 7U>(
+    return run_resident_sequence<14U, 7U>(
         subproblem.structure(),
         values,
         flatten_states(states, config.intervals),
@@ -940,6 +1174,21 @@ int main(const int argc, char** argv) {
     repeated_tight_mode = mode == "--tight-twice-pd3";
     tight_all_mode = mode == "--tight-all";
     tight_pd6_mode = mode == "--tight-pd6";
+    production_driver_mode =
+        mode == "--production-outer"
+        || mode == "--production-outer-sanitizer"
+        || mode == "--h1-hcw";
+    if (mode == "--h1-hcw") {
+        test::require(argc == 4, "H1 mode requires intervals and repeats");
+        h1_intervals = std::stoull(argv[2]);
+        production_outer_iterations =
+            static_cast<std::uint32_t>(std::stoul(argv[3]));
+        const auto startup_begin = std::chrono::steady_clock::now();
+        test::cuda_require(cudaFree(nullptr), "CUDA startup");
+        cuda_startup_seconds = std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - startup_begin
+        ).count();
+    }
     if (mode == "--tight-pd3-1k") {
         tight_iteration_limit = 1'000U;
     } else if (mode == "--tight-pd3-10k") {
@@ -957,7 +1206,131 @@ int main(const int argc, char** argv) {
             "\"natural_residual\":%.9g}\n",
             hcw.diagnostics.natural_residual_inf
         );
-        retun 0;
+        return 0;
+    }
+    if (production_driver_mode) {
+        const auto hcw = run_hcw();
+        if (mode == "--h1-hcw") {
+            const auto& timing = hcw.outer;
+            std::printf(
+                "{\"case\":\"h1_hcw\",\"intervals\":%zu,\"repeats\":%u,"
+                "\"variables\":%d,\"scalar_rows\":%d,\"affine_rows\":%d,"
+                "\"q_nonzeros\":%zu,\"a_nonzeros\":%zu,\"f_nonzeros\":%zu,"
+                "\"cuda_startup_seconds\":%.9g,\"topology_seconds\":%.9g,"
+                "\"coefficient_seconds\":%.9g,"
+                "\"workspace_create_seconds\":%.9g,\"update_seconds\":%.9g,"
+                "\"scaling_seconds\":%.9g,\"h2d_seconds\":%.9g,"
+                "\"solve_seconds\":%.9g,\"recovery_seconds\":%.9g,"
+                "\"residual_seconds\":%.9g,\"replay_seconds\":%.9g,"
+                "\"acceptance_seconds\":%.9g,\"d2h_seconds\":%.9g,"
+                "\"cqp_total_seconds\":%.9g,\"scvx_total_seconds\":%.9g,"
+                "\"allocation_count\":%llu,\"allocation_bytes\":%llu,"
+                "\"h2d_copy_count\":%llu,\"h2d_bytes\":%llu,"
+                "\"d2h_copy_count\":%llu,\"d2h_bytes\":%llu,"
+                "\"device_copy_count\":%llu,\"device_copy_bytes\":%llu,"
+                "\"topology_allocations_after_create\":%llu,"
+                "\"topology_copies_after_create\":%llu,"
+                "\"recovery_iterations\":%llu,"
+                "\"canonical_residual\":%.9g,\"nonlinear_residual\":%.9g,"
+                "\"cpu_gpu_trajectory\":%.9g,"
+                "\"omega_persist\":0.0,"
+                "\"modes\":[\"cold\",\"first-persistent\",\"warm\","
+                "\"repeated\",\"primal\",\"primal-dual\",\"full-state\"]}\n",
+                h1_intervals,
+                production_outer_iterations,
+                benchmark_variables,
+                benchmark_scalar_rows,
+                benchmark_affine_rows,
+                benchmark_q_nonzeros,
+                benchmark_a_nonzeros,
+                benchmark_f_nonzeros,
+                cuda_startup_seconds,
+                timing.topology_seconds,
+                timing.coefficient_seconds,
+                timing.workspace_create_seconds,
+                timing.update_seconds,
+                timing.scaling_seconds,
+                timing.h2d_seconds,
+                timing.solve_seconds,
+                timing.recovery_seconds,
+                timing.residual_seconds,
+                timing.replay_seconds,
+                timing.acceptance_seconds,
+                timing.d2h_seconds,
+                timing.cqp_total_seconds,
+                timing.scvx_total_seconds,
+                static_cast<unsigned long long>(timing.allocation_count),
+                static_cast<unsigned long long>(timing.allocation_bytes),
+                static_cast<unsigned long long>(timing.h2d_copy_count),
+                static_cast<unsigned long long>(timing.h2d_bytes),
+                static_cast<unsigned long long>(timing.d2h_copy_count),
+                static_cast<unsigned long long>(timing.d2h_bytes),
+                static_cast<unsigned long long>(timing.device_copy_count),
+                static_cast<unsigned long long>(timing.device_copy_bytes),
+                static_cast<unsigned long long>(
+                    timing.topology_allocation_count_after_create
+                ),
+                static_cast<unsigned long long>(
+                    timing.topology_index_copy_count_after_create
+                ),
+                static_cast<unsigned long long>(timing.recovery_iterations),
+                timing.canonical_residual,
+                std::max({
+                    timing.dynamics_defect,
+                    timing.path_violation,
+                    timing.terminal_residual,
+                }),
+                hcw.cpu_gpu_trajectory_max
+            );
+            return 0;
+        }
+        if (mode == "--production-outer-sanitizer") {
+            return 0;
+        }
+        const auto pd3 = run_pd3();
+        const auto low_thrust = run_low_thrust();
+        const auto pd6 = run_pd6();
+        const double maximum_canonical = std::max({
+            hcw.outer.canonical_residual,
+            pd3.outer.canonical_residual,
+            low_thrust.outer.canonical_residual,
+            pd6.outer.canonical_residual,
+        });
+        const double maximum_nonlinear = std::max({
+            hcw.outer.dynamics_defect,
+            hcw.outer.path_violation,
+            hcw.outer.terminal_residual,
+            pd3.outer.dynamics_defect,
+            pd3.outer.path_violation,
+            pd3.outer.terminal_residual,
+            low_thrust.outer.dynamics_defect,
+            low_thrust.outer.path_violation,
+            low_thrust.outer.terminal_residual,
+            pd6.outer.dynamics_defect,
+            pd6.outer.path_violation,
+            pd6.outer.terminal_residual,
+        });
+        const double maximum_trajectory_difference = std::max({
+            hcw.cpu_gpu_trajectory_max,
+            pd3.cpu_gpu_trajectory_max,
+            low_thrust.cpu_gpu_trajectory_max,
+            pd6.cpu_gpu_trajectory_max,
+        });
+        std::printf(
+            "{\"case\":\"production_outer_all\",\"families\":4,"
+            "\"maximum_canonical\":%.9g,\"maximum_nonlinear\":%.9g,"
+            "\"maximum_trajectory_difference\":%.9g,"
+            "\"hidden_cpu_fallback\":false,"
+            "\"topology_allocations_after_create\":0,"
+            "\"topology_copies_after_create\":0}\n",
+            maximum_canonical,
+            maximum_nonlinear,
+            maximum_trajectory_difference
+        );
+        return maximum_canonical <= 1.0e-6
+                && maximum_nonlinear <= 1.0e-6
+            ? 0
+            : 11;
     }
     if (tight_residual_mode) {
         const auto pd3 = run_pd3();
@@ -975,23 +1348,23 @@ int main(const int argc, char** argv) {
             static_cast<unsigned long long>(pd3.diagnostics.recovery_iterations),
             pd3.diagnostics.natural_residual_inf
         );
-        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     if (diagnostic_mode) {
         const auto pd3 = run_pd3();
-        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     if (dump_mode) {
         static_cast<void>(run_pd3());
-        retun 0;
+        return 0;
     }
     if (tight_after_loose_mode) {
         const auto pd3 = run_pd3();
-        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     if (repeated_tight_mode) {
         const auto pd3 = run_pd3();
-        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     if (tight_all_mode) {
         const auto hcw = run_hcw();
@@ -1012,7 +1385,7 @@ int main(const int argc, char** argv) {
             low_thrust.diagnostics.natural_residual_inf,
             pd6.diagnostics.natural_residual_inf
         );
-        retun maximum_residual <= 1.0e-6 ? 0 : 10;
+        return maximum_residual <= 1.0e-6 ? 0 : 10;
     }
     if (tight_pd6_mode) {
         const auto pd6 = run_pd6();
@@ -1043,7 +1416,7 @@ int main(const int argc, char** argv) {
             pd6.diagnostics.recovery_stationarity_index,
             pd6.diagnostics.recovery_stationarity_value
         );
-        retun pd6.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 10;
+        return pd6.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 10;
     }
     const auto hcw = run_hcw();
     const auto pd3 = run_pd3();
@@ -1074,5 +1447,5 @@ int main(const int argc, char** argv) {
         "\"maximum_natural_residual\":%.9g}\n",
         maximum_residual
     );
-    retun 0;
+    return 0;
 }

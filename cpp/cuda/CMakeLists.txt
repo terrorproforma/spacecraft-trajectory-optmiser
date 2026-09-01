@@ -220,6 +220,16 @@ if(BUILD_TESTING)
             add_test(NAME "${test_name}" COMMAND "${test_name}")
         endif()
         set_tests_properties("${test_name}" PROPERTIES TIMEOUT 180)
+        if(test_name STREQUAL "device_scvx_integration_test")
+            add_test(
+                NAME device_scvx_production_test
+                COMMAND "${test_name}" --production-outer
+            )
+            set_tests_properties(
+                device_scvx_production_test
+                PROPERTIES TIMEOUT 180
+            )
+        endif()
     endforeach()
 endif()
 

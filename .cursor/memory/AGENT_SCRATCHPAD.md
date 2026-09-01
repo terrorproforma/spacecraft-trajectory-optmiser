@@ -23,6 +23,7 @@ Use this file as persistent, repo-local execution memory.
 - `[tool]` Canonical CUDA work runs through WSL Ubuntu-22.04 with CUDA 12.8 and an RTX 5090.
 - `[self]` Treat missing production drivers and harnesses as implementation scope, not blockers.
 - `[self]` Preserve machine-readable failures and censored benchmark points; report matched end-to-end nonlinear quality.
+- `[self]` Never use backslash-sensitive Perl through PowerShell/WSL for line endings; it changed `return`/`pattern` tokens. Use PowerShell `ReadAllText().Replace("`r`n", "`n")`, then rebuild.
 
 ## Session Entries
 

@@ -2640,6 +2640,12 @@ struct spacepdhcg_cuda_workspace {
     std::uint64_t topology_index_copy_count{0};
     std::uint64_t total_copy_count{0};
     std::uint64_t total_copy_bytes{0};
+    std::uint64_t h2d_copy_count{0};
+    std::uint64_t h2d_copy_bytes{0};
+    std::uint64_t d2h_copy_count{0};
+    std::uint64_t d2h_copy_bytes{0};
+    std::uint64_t d2d_copy_count{0};
+    std::uint64_t d2d_copy_bytes{0};
     std::uint64_t update_epoch{0};
     std::uint64_t solve_epoch{0};
     std::uint64_t scaling_epoch{0};
@@ -2720,6 +2726,40 @@ spacepdhcg_cuda_status copy_async(
     }
     ++workspace->total_copy_count;
     workspace->total_copy_bytes += bytes;
+    cudaMemcpyKind effective_kind = kind;
+    if (kind == cudaMemcpyDefault) {
+        cudaPointerAttributes source_attributes{};
+        cudaPointerAttributes destination_attributes{};
+        const auto source_status =
+            cudaPointerGetAttributes(&source_attributes, source);
+        const auto destination_status =
+            cudaPointerGetAttributes(&destination_attributes, destination);
+        if (source_status == cudaSuccess && destination_status == cudaSuccess) {
+            const bool source_device =
+                source_attributes.type == cudaMemoryTypeDevice
+                || source_attributes.type == cudaMemoryTypeManaged;
+            const bool destination_device =
+                destination_attributes.type == cudaMemoryTypeDevice
+                || destination_attributes.type == cudaMemoryTypeManaged;
+            effective_kind = source_device && destination_device
+                ? cudaMemcpyDeviceToDevice
+                : (source_device
+                       ? cudaMemcpyDeviceToHost
+                       : cudaMemcpyHostToDevice);
+        } else {
+            static_cast<void>(cudaGetLastError());
+        }
+    }
+    if (effective_kind == cudaMemcpyHostToDevice) {
+        ++workspace->h2d_copy_count;
+        workspace->h2d_copy_bytes += bytes;
+    } else if (effective_kind == cudaMemcpyDeviceToHost) {
+        ++workspace->d2h_copy_count;
+        workspace->d2h_copy_bytes += bytes;
+    } else if (effective_kind == cudaMemcpyDeviceToDevice) {
+        ++workspace->d2d_copy_count;
+        workspace->d2d_copy_bytes += bytes;
+    }
     if (topology_index) {
         ++workspace->topology_index_copy_count;
     }
@@ -4012,6 +4052,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_diagnostics(
     diagnostics->topology_index_copy_count = workspace->topology_index_copy_count;
     diagnostics->total_copy_count = workspace->total_copy_count;
     diagnostics->total_copy_bytes = workspace->total_copy_bytes;
+    diagnostics->h2d_copy_count = workspace->h2d_copy_count;
+    diagnostics->h2d_copy_bytes = workspace->h2d_copy_bytes;
+    diagnostics->d2h_copy_count = workspace->d2h_copy_count;
+    diagnostics->d2h_copy_bytes = workspace->d2h_copy_bytes;
+    diagnostics->d2d_copy_count = workspace->d2d_copy_count;
+    diagnostics->d2d_copy_bytes = workspace->d2d_copy_bytes;
     diagnostics->update_epoch = workspace->update_epoch;
     diagnostics->solve_epoch = workspace->solve_epoch;
     diagnostics->scaling_epoch = workspace->scaling_epoch;
