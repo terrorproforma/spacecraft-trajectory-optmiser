@@ -116,7 +116,19 @@ def test_scenario_expansion_and_checkpoint_restart(tmp_path: Path) -> None:
     )
     assert [item.scenario_index for item in expanded] == [0, 1, 2]
     assert all(item.fidelity is ArcFidelity.ROBUST_SCVX for item in expanded)
-    checkpoint = Checkpoint(1, 42, 2, 4.0, 1.0, (1, 2), (101,))
+    checkpoint = Checkpoint(
+        1,
+        "test",
+        "a" * 64,
+        "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2",
+        42,
+        0,
+        2,
+        4.0,
+        1.0,
+        (1, 2),
+        (101,),
+    )
     path = tmp_path / "checkpoint.json"
     checkpoint.write(path)
     assert Checkpoint.read(path) == checkpoint

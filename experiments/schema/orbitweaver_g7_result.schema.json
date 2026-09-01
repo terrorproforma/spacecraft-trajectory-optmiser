@@ -1,11 +1,376 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-result-v1.json",
-  "title": "OrbitWeaver G7 result",
-  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "converged"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "incumbent": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "lower_bound": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "optimality_gap": {
+            "minimum": 0,
+            "type": "number"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "infeasible",
+              "cancelled",
+              "failed",
+              "censored",
+              "unsupported",
+              "oom",
+              "timeout"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "certification": {
+            "type": "null"
+          },
+          "certified": {
+            "const": false
+          },
+          "failures": {
+            "minItems": 1,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "certified": {
+            "const": true
+          }
+        },
+        "required": [
+          "certified"
+        ]
+      },
+      "then": {
+        "properties": {
+          "certification": {
+            "properties": {
+              "accepted": {
+                "const": true
+              },
+              "checks": {
+                "additionalProperties": false,
+                "properties": {
+                  "dynamics_defect": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "integration_error": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "path_violation": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "terminal_error": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "uncertainty_violation": {
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "dynamics_defect",
+                  "path_violation",
+                  "terminal_error",
+                  "uncertainty_violation",
+                  "integration_error"
+                ],
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "incumbent": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "lower_bound": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "converged",
+              "iteration_limit"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "certification": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted": {
+          "type": "boolean"
+        },
+        "backend_identifier": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "checks": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "dynamics_defect": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "integration_error": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "path_violation": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "terminal_error": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "uncertainty_violation": {
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "dynamics_defect",
+                "path_violation",
+                "terminal_error",
+                "uncertainty_violation",
+                "integration_error"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diagnostic": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "accepted",
+        "checks",
+        "backend_identifier",
+        "diagnostic"
+      ],
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "certified": {
+      "type": "boolean"
+    },
+    "failures": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "deterministic_id": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "diagnostic": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "infeasible",
+              "cancelled",
+              "failed",
+              "censored",
+              "unsupported",
+              "oom",
+              "timeout"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "diagnostic",
+          "deterministic_id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "incumbent": {
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "lower_bound": {
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "optimality_gap": {
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "paper2_matrix_sha256": {
+      "const": "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+    },
+    "repeat_index": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "run_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "seed": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "converged",
+        "iteration_limit",
+        "infeasible",
+        "cancelled",
+        "failed",
+        "censored",
+        "unsupported",
+        "oom",
+        "timeout"
+      ]
+    },
+    "telemetry": {
+      "additionalProperties": false,
+      "properties": {
+        "batches": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cancelled": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "completed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "estimated_peak_buffer_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "failed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "feasible": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "group_batches": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "maximum_observed_batch": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ownership_batches": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "submitted": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "submitted",
+        "completed",
+        "feasible",
+        "failed",
+        "cancelled",
+        "batches",
+        "maximum_observed_batch",
+        "estimated_peak_buffer_bytes",
+        "group_batches",
+        "ownership_batches"
+      ],
+      "type": "object"
+    }
+  },
   "required": [
     "schema_version",
     "run_id",
+    "manifest_sha256",
+    "paper2_matrix_sha256",
+    "seed",
+    "repeat_index",
     "status",
     "incumbent",
     "lower_bound",
@@ -15,24 +380,6 @@
     "telemetry",
     "failures"
   ],
-  "properties": {
-    "schema_version": {"const": 1},
-    "run_id": {"type": "string", "minLength": 1},
-    "status": {
-      "enum": ["converged", "iteration_limit", "infeasible", "cancelled", "failed"]
-    },
-    "incumbent": {"type": ["number", "null"], "minimum": 0},
-    "lower_bound": {"type": ["number", "null"], "minimum": 0},
-    "optimality_gap": {"type": ["number", "null"], "minimum": 0},
-    "certified": {"type": "boolean"},
-    "certification": {"type": ["object", "null"]},
-    "telemetry": {"type": "object"},
-    "failures": {"type": "array", "items": {"type": "object"}}
-  },
-  "allOf": [
-    {
-      "if": {"properties": {"certified": {"const": true}}},
-      "then": {"properties": {"certification": {"type": "object"}}}
-    }
-  ]
+  "title": "OrbitWeaver G7 result",
+  "type": "object"
 }

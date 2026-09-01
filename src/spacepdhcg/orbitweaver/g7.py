@@ -6,6 +6,9 @@ import hashlib
 import json
 import math
 import os
+import platform
+import subprocess
+import sys
 import tempfile
 import threading
 from collections.abc import Iterable, Sequence
@@ -14,7 +17,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
-PAPER2_MATRIX_SHA256 = "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+from .contracts import PAPER2_MATRIX_SHA256, validate_named
 
 
 class ArcFidelity(StrEnum):
@@ -522,52 +525,79 @@ class IndependentCertifier:
 @dataclass(frozen=True, slots=True)
 class Checkpoint:
     schema_version: int
+    run_id: str
+    manifest_sha256: str
+    paper2_matrix_sha256: str
     seed: int
+    repeat_index: int
     completed_batches: int
     incumbent: float | None
     lower_bound: float | None
     completed_arc_ids: tuple[int, ...]
     warm_tokens: tuple[int, ...]
 
-    def validate(self) -> None:
-        if (
-            self.schema_version != 1
-            or self.seed < 0
-            or self.completed_batches < 0
-            or tuple(sorted(set(self.completed_arc_ids))) != self.completed_arc_ids
-        ):
+    def validate(self, manifest: RunManifest | None = None) -> None:
+        validate_named(self.to_dict(), "checkpoint")
+        if tuple(sorted(self.completed_arc_ids)) != self.completed_arc_ids:
             raise ValueError("invalid deterministic checkpoint")
+        if (
+            self.incumbent is not None
+            and self.lower_bound is not None
+            and self.lower_bound > self.incumbent
+        ):
+            raise ValueError("checkpoint lower bound exceeds incumbent")
+        if manifest is not None:
+            manifest.validate()
+            if (
+                self.run_id != manifest.run_id
+                or self.manifest_sha256 != manifest.sha256()
+                or self.paper2_matrix_sha256 != manifest.paper2_matrix_sha256
+                or self.seed != manifest.seed
+                or self.repeat_index >= manifest.repeat_count
+            ):
+                raise ValueError("checkpoint seed/repeat/pins disagree with manifest")
 
-    def write(self, path: str | Path) -> None:
-        self.validate()
-        destination = Path(path)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        descriptor, temporary = tempfile.mkstemp(dir=destination.parent)
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-                json.dump(asdict(self), stream, sort_keys=True, separators=(",", ":"))
-                stream.write("\n")
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.replace(temporary, destination)
-        except BaseException:
-            Path(temporary).unlink(missing_ok=True)
-            raise
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **asdict(self),
+            "completed_arc_ids": list(self.completed_arc_ids),
+            "warm_tokens": list(self.warm_tokens),
+        }
+
+    def write(self, path: str | Path, manifest: RunManifest | None = None) -> None:
+        self.validate(manifest)
+        _write_json(path, self.to_dict())
 
     @classmethod
-    def read(cls, path: str | Path) -> Checkpoint:
-        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    def from_dict(
+        cls,
+        value: dict[str, Any],
+        manifest: RunManifest | None = None,
+    ) -> Checkpoint:
+        validate_named(value, "checkpoint")
         result = cls(
-            value["schema_version"],
-            value["seed"],
-            value["completed_batches"],
-            value["incumbent"],
-            value["lower_bound"],
-            tuple(value["completed_arc_ids"]),
-            tuple(value["warm_tokens"]),
+            schema_version=value["schema_version"],
+            run_id=value["run_id"],
+            manifest_sha256=value["manifest_sha256"],
+            paper2_matrix_sha256=value["paper2_matrix_sha256"],
+            seed=value["seed"],
+            repeat_index=value["repeat_index"],
+            completed_batches=value["completed_batches"],
+            incumbent=value["incumbent"],
+            lower_bound=value["lower_bound"],
+            completed_arc_ids=tuple(value["completed_arc_ids"]),
+            warm_tokens=tuple(value["warm_tokens"]),
         )
-        result.validate()
+        result.validate(manifest)
         return result
+
+    @classmethod
+    def read(
+        cls,
+        path: str | Path,
+        manifest: RunManifest | None = None,
+    ) -> Checkpoint:
+        return cls.from_dict(_read_json_object(path), manifest)
 
 
 @dataclass(frozen=True, slots=True)
@@ -580,33 +610,129 @@ class RunManifest:
     ownership: str
     device_ids: tuple[int, ...]
     config_sha256: str
+    paper2_matrix_sha256: str
+    repeat_count: int
+    toolchain: dict[str, str | None]
+    hardware: dict[str, Any]
     evidence_level: str = "implemented_compiled"
 
     def validate(self) -> None:
-        levels = {
-            "implemented_compiled",
-            "cpu_correctness_tested",
-            "one_gpu_correctness_tested",
-            "physical_multi_gpu_tested",
+        validate_named(self.to_dict(), "manifest")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "run_id": self.run_id,
+            "repository_commit": self.repository_commit,
+            "seed": self.seed,
+            "repeat_count": self.repeat_count,
+            "backend": self.backend,
+            "ownership": self.ownership,
+            "device_ids": list(self.device_ids),
+            "config_sha256": self.config_sha256,
+            "paper2_matrix_sha256": self.paper2_matrix_sha256,
+            "toolchain": dict(self.toolchain),
+            "hardware": dict(self.hardware),
+            "evidence_level": self.evidence_level,
         }
-        if (
-            self.schema_version != 1
-            or not self.run_id
-            or len(self.repository_commit) != 40
-            or self.seed < 0
-            or not self.backend
-            or not self.ownership
-            or not self.device_ids
-            or len(self.config_sha256) != 64
-            or self.evidence_level not in levels
-        ):
-            raise ValueError("invalid G7 run manifest")
+
+    def write(self, path: str | Path) -> None:
+        self.validate()
+        _write_json(path, self.to_dict())
+
+    def sha256(self) -> str:
+        self.validate()
+        return hashlib.sha256(_canonical_json(self.to_dict()).encode()).hexdigest()
+
+    @classmethod
+    def from_dict(cls, value: dict[str, Any]) -> RunManifest:
+        validate_named(value, "manifest")
+        result = cls(
+            schema_version=value["schema_version"],
+            run_id=value["run_id"],
+            repository_commit=value["repository_commit"],
+            seed=value["seed"],
+            backend=value["backend"],
+            ownership=value["ownership"],
+            device_ids=tuple(value["device_ids"]),
+            config_sha256=value["config_sha256"],
+            paper2_matrix_sha256=value["paper2_matrix_sha256"],
+            repeat_count=value["repeat_count"],
+            toolchain=dict(value["toolchain"]),
+            hardware=dict(value["hardware"]),
+            evidence_level=value["evidence_level"],
+        )
+        result.validate()
+        return result
+
+    @classmethod
+    def read(cls, path: str | Path) -> RunManifest:
+        return cls.from_dict(_read_json_object(path))
+
+    @classmethod
+    def capture(
+        cls,
+        *,
+        run_id: str,
+        repository: str | Path,
+        config_path: str | Path,
+        matrix_path: str | Path,
+        backend: str,
+        ownership: str,
+        device_ids: Sequence[int],
+        evidence_level: str = "implemented_compiled",
+    ) -> RunManifest:
+        config_raw = Path(config_path).read_bytes()
+        config = json.loads(config_raw)
+        validate_named(config, "config")
+        load_frozen_paper2_matrix(matrix_path)
+        repository_path = Path(repository).resolve()
+        commit = _command(["git", "-C", str(repository_path), "rev-parse", "HEAD"])
+        if commit is None:
+            raise ValueError("unable to capture repository commit")
+        gpu_text = _command(
+            [
+                "nvidia-smi",
+                "--query-gpu=name,uuid,compute_cap,driver_version",
+                "--format=csv,noheader",
+            ]
+        )
+        result = cls(
+            schema_version=1,
+            run_id=run_id,
+            repository_commit=commit,
+            seed=config["seed"],
+            backend=backend,
+            ownership=ownership,
+            device_ids=tuple(device_ids),
+            config_sha256=hashlib.sha256(config_raw).hexdigest(),
+            paper2_matrix_sha256=PAPER2_MATRIX_SHA256,
+            repeat_count=config["repeat_count"],
+            toolchain={
+                "python": sys.version.split()[0],
+                "compiler": _first_line(_command(["c++", "--version"])),
+                "cmake": _first_line(_command(["cmake", "--version"])),
+                "cuda": _first_line(_command(["nvcc", "--version"])),
+            },
+            hardware={
+                "os": platform.platform(),
+                "cpu": platform.processor() or None,
+                "gpus": [] if gpu_text is None else gpu_text.splitlines(),
+            },
+            evidence_level=evidence_level,
+        )
+        result.validate()
+        return result
 
 
 @dataclass(frozen=True, slots=True)
 class ResultRecord:
     schema_version: int
     run_id: str
+    manifest_sha256: str
+    paper2_matrix_sha256: str
+    seed: int
+    repeat_index: int
     status: str
     incumbent: float | None
     lower_bound: float | None
@@ -616,19 +742,209 @@ class ResultRecord:
     telemetry: dict[str, Any]
     failures: tuple[dict[str, Any], ...]
 
-    def validate(self) -> None:
-        if self.schema_version != 1 or not self.run_id or not self.status:
-            raise ValueError("invalid G7 result header")
-        if self.certified and (
-            self.certification is None or not self.certification.accepted
-        ):
-            raise ValueError("optimizer status alone may not certify a result")
+    def validate(self, manifest: RunManifest | None = None) -> None:
+        payload = self.to_dict()
+        validate_named(payload, "result")
+        if manifest is not None:
+            manifest.validate()
+            if (
+                self.run_id != manifest.run_id
+                or self.manifest_sha256 != manifest.sha256()
+                or self.paper2_matrix_sha256 != manifest.paper2_matrix_sha256
+                or self.seed != manifest.seed
+                or self.repeat_index >= manifest.repeat_count
+            ):
+                raise ValueError("result seed/repeat/pin fields disagree with manifest")
         if (
             self.incumbent is not None
             and self.lower_bound is not None
             and self.lower_bound > self.incumbent
         ):
             raise ValueError("result lower bound exceeds incumbent")
+        expected_gap = (
+            None
+            if self.incumbent is None or self.lower_bound is None
+            else max(0.0, self.incumbent - self.lower_bound)
+        )
+        if (self.optimality_gap is None) != (expected_gap is None) or (
+            expected_gap is not None
+            and not math.isclose(
+                self.optimality_gap,
+                expected_gap,
+                rel_tol=1.0e-12,
+                abs_tol=1.0e-12,
+            )
+        ):
+            raise ValueError("result optimality gap is inconsistent with its bounds")
+        no_incumbent = {"infeasible", "unsupported"}
+        if self.status in no_incumbent and any(
+            value is not None
+            for value in (self.incumbent, self.lower_bound, self.optimality_gap)
+        ):
+            raise ValueError(f"{self.status} result may not contain incumbent bounds")
+        terminal = {
+            "infeasible",
+            "cancelled",
+            "failed",
+            "censored",
+            "unsupported",
+            "oom",
+            "timeout",
+        }
+        if self.status in terminal and not any(
+            failure["status"] == self.status for failure in self.failures
+        ):
+            raise ValueError("terminal status requires a matching failure record")
+        submitted = self.telemetry["submitted"]
+        completed = self.telemetry["completed"]
+        if (
+            completed
+            != self.telemetry["feasible"]
+            + self.telemetry["failed"]
+            + self.telemetry["cancelled"]
+            or completed > submitted
+        ):
+            raise ValueError("result telemetry counters are inconsistent")
+
+    def to_dict(self) -> dict[str, Any]:
+        certification = (
+            None
+            if self.certification is None
+            else {
+                "accepted": self.certification.accepted,
+                "checks": (
+                    None
+                    if self.certification.checks is None
+                    else asdict(self.certification.checks)
+                ),
+                "backend_identifier": self.certification.backend_identifier,
+                "diagnostic": self.certification.diagnostic,
+            }
+        )
+        return {
+            "schema_version": self.schema_version,
+            "run_id": self.run_id,
+            "manifest_sha256": self.manifest_sha256,
+            "paper2_matrix_sha256": self.paper2_matrix_sha256,
+            "seed": self.seed,
+            "repeat_index": self.repeat_index,
+            "status": self.status,
+            "incumbent": self.incumbent,
+            "lower_bound": self.lower_bound,
+            "optimality_gap": self.optimality_gap,
+            "certified": self.certified,
+            "certification": certification,
+            "telemetry": dict(self.telemetry),
+            "failures": [dict(value) for value in self.failures],
+        }
+
+    def write(self, path: str | Path, manifest: RunManifest | None = None) -> None:
+        self.validate(manifest)
+        _write_json(path, self.to_dict())
+
+    @classmethod
+    def from_dict(
+        cls,
+        value: dict[str, Any],
+        manifest: RunManifest | None = None,
+    ) -> ResultRecord:
+        validate_named(value, "result")
+        raw_certification = value["certification"]
+        certification = None
+        if raw_certification is not None:
+            raw_checks = raw_certification["checks"]
+            checks = None if raw_checks is None else CertificationChecks(**raw_checks)
+            certification = CertificationRecord(
+                raw_certification["accepted"],
+                checks,
+                raw_certification["backend_identifier"],
+                raw_certification["diagnostic"],
+            )
+        result = cls(
+            schema_version=value["schema_version"],
+            run_id=value["run_id"],
+            manifest_sha256=value["manifest_sha256"],
+            paper2_matrix_sha256=value["paper2_matrix_sha256"],
+            seed=value["seed"],
+            repeat_index=value["repeat_index"],
+            status=value["status"],
+            incumbent=value["incumbent"],
+            lower_bound=value["lower_bound"],
+            optimality_gap=value["optimality_gap"],
+            certified=value["certified"],
+            certification=certification,
+            telemetry=dict(value["telemetry"]),
+            failures=tuple(dict(item) for item in value["failures"]),
+        )
+        result.validate(manifest)
+        return result
+
+    @classmethod
+    def read(
+        cls,
+        path: str | Path,
+        manifest: RunManifest | None = None,
+    ) -> ResultRecord:
+        return cls.from_dict(_read_json_object(path), manifest)
+
+
+def _canonical_json(value: dict[str, Any]) -> str:
+    return json.dumps(
+        value,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _write_json(path: str | Path, value: dict[str, Any]) -> None:
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(
+        prefix=f".{destination.name}.",
+        dir=destination.parent,
+    )
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(_canonical_json(value))
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, destination)
+    except BaseException:
+        Path(temporary).unlink(missing_ok=True)
+        raise
+
+
+def _read_json_object(path: str | Path) -> dict[str, Any]:
+    value = json.loads(
+        Path(path).read_text(encoding="utf-8"),
+        parse_constant=lambda token: (_ for _ in ()).throw(
+            ValueError(f"non-finite JSON constant {token}")
+        ),
+    )
+    if not isinstance(value, dict):
+        raise ValueError("G7 record must be a JSON object")
+    return value
+
+
+def _command(arguments: list[str]) -> str | None:
+    try:
+        completed = subprocess.run(
+            arguments,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=10.0,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return None
+    value = completed.stdout.strip()
+    return value or None
+
+
+def _first_line(value: str | None) -> str | None:
+    return None if value is None else value.splitlines()[0]
 
 
 def expand_promising_scenarios(
