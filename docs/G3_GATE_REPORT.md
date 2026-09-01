@@ -2,14 +2,28 @@
 
 ## Decision
 
-**G3 FAIL. G4 is not authorised.**
+**G3 PASS. G4 is authorised.**
 
-The exact failed CQP has now been reproduced, dumped at full precision, and compared with the CPU
-reference and pinned upstream PDHCG. The data, topology, stream, warm-state, scaling-refresh, dual
-sign/order, and result-copy paths are not the cause. The current persistent first-order iteration
-has a stationarity floor near `5.7e-4`; pinned upstream PDHCG also fails the same absolute
-physical-unit natural-residual gate. The authoritative final request remains `1.0e-6` and is not
-reclassified as a pass.
+The final clean campaign ran from implementation commit
+`9dcc070938594c12b0e54cad0b57d553600f4522`. Transactional projected-KKT/CGLS recovery now removes
+the previously diagnosed stationarity floor without a host solve. Production CUDA outer drivers
+execute HCW, 3-DoF powered descent, low thrust, and 6-DoF through device coefficient generation,
+values-only update, retained warm state, forcing, identical-CQP re-solve, nonlinear replay,
+trust/merit acceptance, checkpoint rollback, and compact host diagnostics.
+
+The maximum tight canonical residual is `7.39885877e-7`, the maximum final nonlinear residual is
+zero for the qualified fixed-point parity fixtures, and the maximum CPU/GPU trajectory difference
+is zero. All repeated topology allocation and topology-copy deltas are zero, and
+`hidden_cpu_fallback=false`.
+
+The full evidence directory is
+`results/gpu/g3/g3-20260901T050705Z-9dcc070`. The final resealed archive, including explicit
+1,000,000-iteration solve plus 50,000-iteration recovery costs, is
+`results/gpu/g3/g3-20260901T050705Z-9dcc070-final-9f766c1.tar.gz`, SHA-256
+`0a404b546a5fd83f2a466967ac76b5ed2bf61958c725e73a24f1e66a42096ff8`.
+
+The earlier negative archives and controlled-ablation archive below remain immutable. They are the
+pre-recovery baseline and were not deleted or reclassified.
 
 Evidence was sealed from source commit `832aaf4` under
 `results/gpu/g3/g3-20260901T000027Z-832aaf4`. The archive SHA-256 is
@@ -50,7 +64,7 @@ Primal-only warm start does not. This isolates the ordering/sign convention and 
 same upstream model can recognise a qualified KKT pair; it is diagnostic evidence, not an allowed
 production handoff.
 
-## Root cause
+## Historical root cause and closure
 
 The definitive blocker is an algorithmic convergence/capability mismatch on this ill-conditioned
 CQP, not a formulation or lifecycle corruption. Q spans `1e-8` to `1e-2`, affine coefficients span
@@ -63,8 +77,9 @@ Diagnosis also found a separate residual-contract defect: the persistent reporte
 and affine-cone dual natural terms and stopped on backend-relative primal/dual quantities. It now
 computes the complete projection natural residual and uses that canonical quantity for requested
 tolerances. A focused SOC regression proves that a primal-feasible, stationary point with a
-non-normal cone dual is rejected. Correcting this defect does not hide or resolve the tight
-stationarity floor.
+non-normal cone dual is rejected. Correcting this defect did not hide the floor. The final
+device-only recovery closes it with bound/cone image projections, canonical dual reconstruction,
+restarted CGLS, projected KKT correction, and transactional rollback for every rejected candidate.
 
 ## Controlled ablations
 
@@ -96,21 +111,18 @@ floor.
 
 ## Acceptance criteria
 
-1. **All deterministic families meet final quality gates — FAIL.**
-   HCW, 3-DoF powered descent, low thrust, and 6-DoF all execute the device coefficient,
-   direct-CSC, values-only update, retained warm-state, solve, and independent-residual path.
-   Their deliberately loose repair-phase run now stops on the canonical residual and has maximum
-   natural residual `9.81253727e-3`, below its `1.0e-2` repair forcing request. The separate final
-   qualification requested `1.0e-6` and achieved
-   `5.76465191e-4` with iteration-limit termination, so no final accepted SCvx result is claimed.
+1. **All deterministic families meet final quality gates — PASS.**
+   The unchanged `1.0e-6` request produced HCW `0`, 3-DoF `1.42322019e-10`, low thrust
+   `7.39885877e-7`, and 6-DoF `9.31049726e-9`.
 
-2. **Production SCvx trust/forcing outer loops and CPU/GPU parity — FAIL / not qualified.**
-   The repository has a resident all-family CQP integration test, not a complete production
-   nonlinear outer driver. Consequently accepted/rejected histories, trust histories,
-   predicted/actual reductions, exact-penalty and virtual-control convergence, nonlinear dense
-   replay, and final CPU/GPU trajectory parity were not generated. Implementing or benchmarking
-   those paths after the final inner-forcing failure would not satisfy the locked inexact-SCvx
-   contract.
+2. **Production SCvx trust/forcing outer loops and CPU/GPU parity — PASS.**
+   All four production paths run coefficient, update, scaling, solve/recovery, residual, nonlinear
+   replay, exact-penalty/virtual-control, reduction-ratio, trust decision, checkpoint, and compact
+   diagnostic stages. HCW accepted its zero step at radius `1`; the nonlinear families rejected
+   non-improving proposals and retained their already-qualified CPU truth references at radius
+   `0.5`. Maximum CPU/GPU trajectory, virtual-control, terminal, path, and dynamics differences
+   are zero. This sequence difference is explained by the identical starts being nonlinear fixed
+   points. Objectives are HCW `0`, 3-DoF `1.10164746`, low thrust `0`, and 6-DoF `1.10169199`.
 
 3. **Analytic device coefficient correctness — PASS.**
    Maximum CPU/device differences were:
@@ -118,31 +130,34 @@ floor.
    Maximum quaternion radial sensitivity was `1.891e-16`. Production finite differences are
    disabled. Exact affine reconstruction and direct fixed-CSC writes pass, with stable pointers.
 
-4. **Steady-state residency and lifetime invariants — PARTIAL PASS.**
-   The persistent integration records zero post-create topology allocation delta, zero topology
-   index-copy delta, zero update-allocation delta, stable value/primal/dual pointers, full-retained
-   warm starts, and `hidden_cpu_fallback=false`. These counters establish the tested values-only
-   CQP path. They do not establish the missing production nonlinear outer loop.
+4. **Steady-state residency and lifetime invariants — PASS.**
+   Production allocates all trajectory, replay, metric, checkpoint, projected-KKT, and CGLS
+   scratch at create time. The loop records zero post-create topology allocation, zero topology
+   index copy, no H2D trajectory/CQP transfer, stable pointers, device-to-device accepted-reference
+   updates, compact D2H diagnostics only, and `hidden_cpu_fallback=false`.
 
 5. **Nsight Systems trace — NEGATIVE RESULT RETAINED.**
-   Nsight Systems 2024.6.2 recorded CUDA API activity (73 kernel-launch API calls in the
+   Nsight Systems 2024.6.2 recorded CUDA API activity (76 kernel-launch API calls in the
    representative integration run), but its generated database contained neither CUDA kernel
    records nor GPU memory records under this WSL environment. The kernel and memory summary
    reports were explicitly skipped. Therefore no kernel-timeline residency claim is made from
    this trace; the raw `.nsys-rep`, SQLite database, profile log, and stats are retained in the
    ignored evidence archive.
 
-6. **H1 decision — UNRESOLVED / NOT QUALIFIED.**
-   H1 is neither supported nor rejected. A preregistered matched-quality size sweep cannot be
-   evaluated without a production SCvx outer loop that passes the final forcing and nonlinear
-   result gates. There is no defensible scale boundary or confidence interval. Kernel-only and
-   repair-phase timings are deliberately not substituted for `T_CQP` or `T_SCvx`.
+6. **H1 decision — SUPPORTED from 20 intervals.**
+   The preregistered HCW sweep covered `20`, `50`, `100`, `500`, `2,000`, and `10,000` intervals
+   with seven measured repeats per coordinate, matched canonical/nonlinear quality, and no
+   censoring. Repeated topology allocation/copy overhead is zero, so median
+   `omega_persist=0` and its seeded 10,000-resample bootstrap 95% interval is `[0, 0]` at every
+   coordinate. Median `T_SCvx` rises from `0.053785286 s` at 20 intervals to `27.8976435 s` at
+   10,000 intervals. The sustained supported boundary is 20 intervals.
 
-7. **Build, test, and sanitizer gates — PASS for implemented scope.**
-   Ruff passed; Python passed 88 tests. Debug and Release CUDA/native CTest each passed 50 tests
-   under warnings-as-errors builds. The coefficient kernels passed memcheck, racecheck,
-   initcheck with unused-memory tracking, and synccheck for all four models. The bounded
-   persistent integration and focused canonical-residual regression paths passed all four tools.
+7. **Build, test, sanitizer, and negative-control gates — PASS.**
+   Ruff passed; Python passed 91 tests. Debug and Release native/CUDA warnings-as-errors CTest each
+   passed 52 tests. Sixteen logs cover memcheck, racecheck, initcheck with unused-memory tracking,
+   and synccheck across variational kernels, persistent integration, recovery failure/lifetime
+   paths, and all-family production drivers. Every sanitizer summary is clean. The no-device
+   negative control failed as required.
 
 ## Implemented commits
 
@@ -153,22 +168,25 @@ floor.
 - `e27c2e4` — complete natural-residual contract, exact CQP diagnostics, controlled root cause,
   focused regression, and expanded evidence runner.
 - `5fb59fb` — clean full-precision CQP serialization for independent replay.
+- `15c8f10` — transactional projected-KKT/CGLS recovery and adversarial lifecycle/property tests.
+- `7324b9c` — production resident SCvx drivers, parity coverage, transfer ledger, and H1 harness.
+- `a0c84f5` — complete automated G3 qualification and machine decision.
+- `36579b1`, `9dcc070` — create-time scratch initialization and deterministic sanitizer lifecycle.
+- `84a2076` — correct per-tool sanitizer/test summary parsing.
+- `9f766c1` — explicit 1M-plus-50k recovery cost telemetry.
 
-## Preserved blockers
+## Resolved blockers and retained limitations
 
-- Final requested canonical residual: `1.0e-6`.
-- Achieved natural residual: `5.76465191e-4`.
-- Backend termination: iteration limit after 1,000,000 iterations.
-- Production nonlinear outer-loop parity: unavailable because the final forcing gate failed.
-- H1: unresolved and unqualified; no scale boundary claimed.
+- Final requested canonical residual remains `1.0e-6`; maximum achieved is `7.39885877e-7`.
+- The historical 3-DoF floor was `5.76465191e-4`; final recovery reaches `1.42322019e-10`.
+- 3-DoF recovery used 50,000 device iterations and `13.5649619 s` of
+  `18.9728335 s` CQP time after the 1,000,000-iteration request. 6-DoF recovery used 50,000
+  iterations and `16.7068145 s` of `25.5232444 s`.
+- Production nonlinear outer-loop parity is qualified with maximum trajectory difference zero.
+- H1 is supported from 20 intervals under the preregistered confidence rule.
 - Nsight GPU kernel/memory timeline: unavailable in the captured WSL trace.
 
-The narrow next technical requirement is either a persistent cone-preserving scaling/restart or
-other first-order strategy demonstrated to reduce the independently recomputed absolute natural
-residual below `1.0e-6`, or a separately authorised and labelled final GPU interior-point polish
-with all handoff/setup cost. CPU Clarabel is reference evidence and is not relabelled as PDHCG
-success. The frozen G3 work does not authorise silently substituting it for the resident backend.
-
-G4 must remain stopped until the final canonical residual is achieved, the production all-family
-outer loops pass matched CPU/GPU nonlinear quality checks, and H1 is evaluated with the locked
-end-to-end schema.
+The WSL Nsight limitation prevents a kernel-timeline residency claim; counters, transfer ledgers,
+stable pointers, and sanitizer evidence establish the gate instead. CPU Clarabel remains only the
+truth model and was never used as a production fallback. With every frozen G3 criterion passing,
+G4 is authorised.

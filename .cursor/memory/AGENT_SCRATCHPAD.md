@@ -31,14 +31,33 @@ Use this file as persistent, repo-local execution memory.
 
 #### Task Summary
 
-- Finish recovery, production CUDA SCvx drivers, parity, H1, qualification, evidence, and gate report.
+- Delivered device-only recovery, four production CUDA SCvx drivers, parity, H1, qualification,
+  sealed evidence, and the passing G3 report.
+
+#### Mistakes And Fixes
+
+- `[self]` A backslash-sensitive line-ending command changed `return` and `pattern` tokens.
+  The warnings-as-errors build detected it; repaired tokens, recorded the PowerShell-only
+  normalization rule, and rebuilt all targets.
+- `[tool]` Initcheck found recovery/scaling allocations unused on bounded paths. Zero-initialized
+  every create-time scratch allocation and reran all four sanitizer tools.
+- `[self]` The first summary parser treated racecheck wording and “0 tests failed” incorrectly.
+  Preserved the original archive, fixed parser-specific positive markers, and resealed all raw
+  evidence with correction provenance.
+
+#### What Worked
+
+- Projected KKT correction after device CGLS reduced 6-DoF stationarity below `1e-6` while
+  transactional rollback kept rejected recovery bit-identical to the pre-recovery PDHG iterate.
+- A schema-validated six-size H1 sweep with seven repeats and seeded bootstrap retained every point.
 
 #### Guardrails For Next Session
 
 - Re-read the frozen roadmap sections 9-10 and existing native contracts before broad CUDA edits.
 - Verify recovery and outer-loop lifecycle under all four Compute Sanitizer tools.
+- Treat each sanitizer tool's clean summary text separately; racecheck does not use `ERROR SUMMARY`.
 
 #### Follow-Ups / Risks
 
-- Existing projected KKT/CGLS recovery is uncommitted and requires review before extension.
+- The G3 implementation is committed and G4 is authorised.
 - Nsight under WSL previously omitted kernel and GPU-memory records; retain this negative result.
