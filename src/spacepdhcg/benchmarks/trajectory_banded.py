@@ -229,43 +229,81 @@ class TrajectoryBandedFixture:
         )
         quadratic = sp.diags(np.power(10.0, exponents), format="csc")
 
-        scalar = sp.lil_matrix(
-            (layout.n_scalar_constraints, layout.n_variables),
-            dtype=np.float64,
+        nx = self.config.state_dimension
+        nu = self.config.control_dimension
+        intervals = self.config.intervals
+        dynamics_nonzeros = intervals * (nx * nx + nx + nx * nu)
+        box_nonzeros = (
+            intervals * nu if self.config.control_constraint is BandedControlConstraint.BOX else 0
         )
-        scalar[layout.initial_rows, layout.state_slice(0)] = np.eye(self.config.state_dimension)
+        nonzeros = 2 * nx + dynamics_nonzeros + box_nonzeros
+        rows = np.empty(nonzeros, dtype=np.int64)
+        columns = np.empty(nonzeros, dtype=np.int64)
+        data = np.empty(nonzeros, dtype=np.float64)
+        cursor = 0
+
+        initial = np.arange(nx, dtype=np.int64)
+        rows[cursor : cursor + nx] = initial
+        columns[cursor : cursor + nx] = initial
+        data[cursor : cursor + nx] = 1.0
+        cursor += nx
+        dense_rows = np.repeat(initial, nx)
+        dense_columns = np.tile(initial, nx)
+        control_columns = np.tile(np.arange(nu, dtype=np.int64), nx)
+        control_rows = np.repeat(initial, nu)
         for interval in range(self.config.intervals):
-            start = layout.dynamics_rows.start + interval * self.config.state_dimension
-            rows = slice(start, start + self.config.state_dimension)
-            scalar[rows, layout.state_slice(interval)] = -self.dynamics[interval]
-            scalar[rows, layout.state_slice(interval + 1)] = np.eye(self.config.state_dimension)
-            scalar[rows, layout.control_slice(interval)] = -self.control_maps[interval]
-        scalar[layout.terminal_rows, layout.state_slice(self.config.intervals)] = np.eye(
-            self.config.state_dimension
-        )
-        if self.config.control_constraint is BandedControlConstraint.BOX:
-            scalar[layout.control_rows, layout.state_variable_count :] = sp.eye(
-                layout.control_variable_count,
-                format="csc",
+            row_start = layout.dynamics_rows.start + interval * nx
+            state_start = interval * nx
+            count = nx * nx
+            rows[cursor : cursor + count] = row_start + dense_rows
+            columns[cursor : cursor + count] = state_start + dense_columns
+            data[cursor : cursor + count] = -self.dynamics[interval].reshape(-1)
+            cursor += count
+            rows[cursor : cursor + nx] = row_start + initial
+            columns[cursor : cursor + nx] = state_start + nx + initial
+            data[cursor : cursor + nx] = 1.0
+            cursor += nx
+            count = nx * nu
+            rows[cursor : cursor + count] = row_start + control_rows
+            columns[cursor : cursor + count] = (
+                layout.state_variable_count + interval * nu + control_columns
             )
-        scalar_result = scalar.tocsc()
+            data[cursor : cursor + count] = -self.control_maps[interval].reshape(-1)
+            cursor += count
+
+        rows[cursor : cursor + nx] = layout.terminal_rows.start + initial
+        columns[cursor : cursor + nx] = intervals * nx + initial
+        data[cursor : cursor + nx] = 1.0
+        cursor += nx
+        if self.config.control_constraint is BandedControlConstraint.BOX:
+            controls = np.arange(intervals * nu, dtype=np.int64)
+            rows[cursor : cursor + controls.size] = layout.control_rows.start + controls
+            columns[cursor : cursor + controls.size] = layout.state_variable_count + controls
+            data[cursor : cursor + controls.size] = 1.0
+            cursor += controls.size
+        if cursor != nonzeros:
+            raise AssertionError("trajectory sparse assembly count mismatch")
+        scalar_result = sp.coo_matrix(
+            (data, (rows, columns)),
+            shape=(layout.n_scalar_constraints, layout.n_variables),
+            dtype=np.float64,
+        ).tocsc()
         scalar_result.sum_duplicates()
         scalar_result.sort_indices()
 
         if self.config.control_constraint is BandedControlConstraint.SECOND_ORDER_CONE:
-            slots = self.config.control_dimension + 1
-            affine = sp.lil_matrix(
-                (layout.n_affine_cone_rows, layout.n_variables),
+            slots = nu + 1
+            controls = np.arange(intervals * nu, dtype=np.int64)
+            affine_rows = (controls // nu) * slots + controls % nu
+            affine_columns = layout.state_variable_count + controls
+            affine_result = sp.coo_matrix(
+                (
+                    np.ones(controls.size, dtype=np.float64),
+                    (affine_rows, affine_columns),
+                ),
+                shape=(layout.n_affine_cone_rows, layout.n_variables),
                 dtype=np.float64,
-            )
-            for interval in range(self.config.intervals):
-                start = interval * slots
-                affine[
-                    start : start + self.config.control_dimension,
-                    layout.control_slice(interval),
-                ] = np.eye(self.config.control_dimension)
-            affine_result = affine.tocsc()
-            affine_result.sum_duplicates()
+            ).tocsc()
             affine_result.sort_indices()
         else:
             affine_result = None

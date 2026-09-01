@@ -19,6 +19,11 @@ launched process reaches the declared wall limit; its start event and any partia
 retained. Previous preflight timeout predictions are preserved in the earlier archive but are not
 eligible as final execution evidence.
 
+Large P1-A and P1-B sparse matrices are assembled directly in COO/CSC form. Assigning a sparse
+identity through a SciPy LIL slice is prohibited because SciPy densifies the right-hand side first
+(913 GiB for the largest P1-A control block). P1-C preserves a 40-second physical horizon as `N`
+changes instead of holding the step duration fixed.
+
 ## Evidence interpretation
 
 `executed` is reserved for a record with complete independently recomputed quality fields. A

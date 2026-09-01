@@ -238,40 +238,76 @@ class CWRendezvousProblem:
         quadratic = sp.diags(diagonal, format="csc")
 
         layout = self.layout
-        constraint = sp.lil_matrix(
-            (layout.n_constraints, layout.n_variables),
-            dtype=np.float64,
+        intervals = self.config.intervals
+        dynamics_nonzeros = intervals * (NX * NX + NX + NX * NU)
+        box_nonzeros = (
+            intervals * NU if self.config.thrust_constraint is ThrustConstraint.BOX else 0
         )
-        constraint[layout.initial_rows, layout.state_slice(0)] = np.eye(NX)
-
-        dynamics_start = layout.dynamics_rows.start
+        nonzeros = 2 * NX + dynamics_nonzeros + box_nonzeros
+        rows = np.empty(nonzeros, dtype=np.int64)
+        columns = np.empty(nonzeros, dtype=np.int64)
+        data = np.empty(nonzeros, dtype=np.float64)
+        cursor = 0
+        state_indices = np.arange(NX, dtype=np.int64)
+        rows[cursor : cursor + NX] = state_indices
+        columns[cursor : cursor + NX] = state_indices
+        data[cursor : cursor + NX] = 1.0
+        cursor += NX
+        dense_rows = np.repeat(state_indices, NX)
+        dense_columns = np.tile(state_indices, NX)
+        control_rows = np.repeat(state_indices, NU)
+        control_columns = np.tile(np.arange(NU, dtype=np.int64), NX)
         for interval in range(self.config.intervals):
-            rows = slice(dynamics_start + interval * NX, dynamics_start + (interval + 1) * NX)
-            constraint[rows, layout.state_slice(interval)] = -self.ad
-            constraint[rows, layout.state_slice(interval + 1)] = np.eye(NX)
-            constraint[rows, layout.control_slice(interval)] = -self.bd
-
-        constraint[layout.terminal_rows, layout.state_slice(self.config.intervals)] = np.eye(NX)
-        if self.config.thrust_constraint is ThrustConstraint.BOX:
-            constraint[layout.control_rows, layout.state_variable_count :] = sp.eye(
-                layout.control_variable_count,
-                format="csc",
+            row_start = layout.dynamics_rows.start + interval * NX
+            state_start = interval * NX
+            count = NX * NX
+            rows[cursor : cursor + count] = row_start + dense_rows
+            columns[cursor : cursor + count] = state_start + dense_columns
+            data[cursor : cursor + count] = -self.ad.reshape(-1)
+            cursor += count
+            rows[cursor : cursor + NX] = row_start + state_indices
+            columns[cursor : cursor + NX] = state_start + NX + state_indices
+            data[cursor : cursor + NX] = 1.0
+            cursor += NX
+            count = NX * NU
+            rows[cursor : cursor + count] = row_start + control_rows
+            columns[cursor : cursor + count] = (
+                layout.state_variable_count + interval * NU + control_columns
             )
-
-        scalar = constraint.tocsc()
+            data[cursor : cursor + count] = -self.bd.reshape(-1)
+            cursor += count
+        rows[cursor : cursor + NX] = layout.terminal_rows.start + state_indices
+        columns[cursor : cursor + NX] = intervals * NX + state_indices
+        data[cursor : cursor + NX] = 1.0
+        cursor += NX
+        if self.config.thrust_constraint is ThrustConstraint.BOX:
+            controls = np.arange(intervals * NU, dtype=np.int64)
+            rows[cursor : cursor + controls.size] = layout.control_rows.start + controls
+            columns[cursor : cursor + controls.size] = layout.state_variable_count + controls
+            data[cursor : cursor + controls.size] = 1.0
+            cursor += controls.size
+        if cursor != nonzeros:
+            raise AssertionError("HCW sparse assembly count mismatch")
+        scalar = sp.coo_matrix(
+            (data, (rows, columns)),
+            shape=(layout.n_constraints, layout.n_variables),
+            dtype=np.float64,
+        ).tocsc()
         scalar.sum_duplicates()
         scalar.sort_indices()
 
         if self.config.thrust_constraint is ThrustConstraint.SECOND_ORDER_CONE:
-            affine = sp.lil_matrix(
-                (layout.n_affine_constraints, layout.n_variables),
+            controls = np.arange(intervals * NU, dtype=np.int64)
+            affine_rows = (controls // NU) * SOC_SLOTS + controls % NU
+            affine_columns = layout.state_variable_count + controls
+            affine_result = sp.coo_matrix(
+                (
+                    np.ones(controls.size, dtype=np.float64),
+                    (affine_rows, affine_columns),
+                ),
+                shape=(layout.n_affine_constraints, layout.n_variables),
                 dtype=np.float64,
-            )
-            for interval in range(self.config.intervals):
-                start = interval * SOC_SLOTS
-                affine[start : start + NU, layout.control_slice(interval)] = np.eye(NU)
-            affine_result = affine.tocsc()
-            affine_result.sum_duplicates()
+            ).tocsc()
             affine_result.sort_indices()
         else:
             affine_result = None
