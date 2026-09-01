@@ -164,6 +164,28 @@ pools as mostly unused, with all allocation backtraces inside `libnccl.so.2`; no
 SpacePDHCG access was reported. The actual two-stream overlap execution remains deferred to physical
 multi-GPU validation.
 
+## Physical-campaign tooling built, not physically validated
+
+The branch now contains fail-closed physical execution tooling:
+
+- `scripts/gpu/g5_campaign.py` captures GPU UUID/model/memory, clocks/power/ECC/MIG/compute mode,
+  NVLink/NVSwitch/PCIe topology, CPU/NUMA/NIC locality, active processes, exact CUDA/NCCL/MPI
+  versions, clean source/upstream pins, and CMake/binary hashes.
+- `src/spacepdhcg/experiments/g5_campaign.py` generates deterministic PCI-ordered
+  rank-to-GPU/CPU/NIC bindings, strong/weak scenario matrices, scenario-aware/generic comparisons,
+  matched monolithic references, guarded failure plans, and partial-safe evidence.
+- `g5_physical_validation_harness` is a compiled MPI/NCCL launch/ownership/collective harness with
+  explicit-test-only rank failure, communicator status, ordering, cancellation, checkpoint/restart,
+  topology/device mismatch, and timeout paths.
+- `scripts/gpu/seal_g5_evidence.py` creates write-once reproducible archives and SHA-256 seal
+  descriptors; `docs/G5_PHYSICAL_EXECUTION_RUNBOOK.md` defines prerequisites and execution order.
+- Logical command/schema snapshots cover 1/2/4/8 ranks. Logical manifests are permanently marked
+  non-executable, and all generated evidence keeps qualification/scaling claims false.
+
+The harness is not the full robust P1-F trajectory driver and cannot establish H2/H3/H4. The
+physical campaign must point the same launch/evidence contract at the integrated scenario solver
+before scientific scaling runs.
+
 ## Exact physical validation still required
 
 Physical 2/4/8-GPU work remains fully deferred. Before any G5 acceptance statement:
