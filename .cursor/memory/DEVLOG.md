@@ -286,3 +286,27 @@
   - Paper 2 has 1,640 component-backed `unrun` coordinates and 1,008 unsupported P2-D/P2-E
     full-mission coordinates; all 43 implemented native component fixtures passed.
   - No GPU API, executable, sampler, timing, or energy path was used.
+
+## 2026-09-02 02:05 AEST
+
+- Task summary:
+  - Executed and retained a bounded CPU/reference disposition for every frozen Paper 1/Paper 2
+    matrix coordinate without GPU use.
+- Changes:
+  - Added a complete coordinate result schema, checkpointed parallel campaign, native corrected
+    6-DoF/low-thrust emitters, independent validators, deterministic diagnostics, and dashboard.
+  - Parameterized HCW numerical update magnitude and P1-C initial dispersion/final Clarabel polish.
+  - Fixed P1-D to preserve its 10-second physical horizon and replaced a P2 scale cap with explicit
+    timeout retention.
+- Validation:
+  - Exact coverage: 16,324 records, zero schema errors/missing/duplicates.
+  - Dispositions: 6,912 executed/qualified, 2,844 unqualified, 5,560 timeouts, 1,008 unsupported.
+  - Ruff and format passed for 143 files; Python passed 180 with three optional QOCO skips.
+  - Native host passed 45/45; standalone native core passed 8/8.
+  - Semantic source SHA-256:
+    `54a732bfeba826ffc7b95a5c4bfc5adf9eaf5689f74a694085eec3a02ed352bb`.
+- Follow-up notes / risks:
+  - Unqualified records prove only the explicitly named component/reference computation; they are
+    not complete publication evidence.
+  - Remaining CPU gaps are native P1-D/P1-E optimizer residual ownership, full robust P1-F solves,
+    and parameterized physical Paper 2 mission optimization.
