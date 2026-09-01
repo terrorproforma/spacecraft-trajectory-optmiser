@@ -1059,6 +1059,17 @@ IntegrationResult run_resident_sequence(
             ),
             "production outer driver solve"
         );
+        spacepdhcg_cuda_scvx_path_inventory path_inventory{};
+        test::status_require(
+            spacepdhcg_cuda_scvx_driver_path_inventory(
+                driver, &path_inventory
+            ),
+            "production outer path inventory"
+        );
+        test::require(
+            path_inventory.abi_version == SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
+            "production outer path inventory ABI mismatch"
+        );
         outer.topology_seconds = topology_seconds;
         outer.workspace_create_seconds = workspace_create_seconds;
         const double quality_tolerance = sanitizer_mode ? 1.0e-2 : 1.0e-6;
@@ -1181,9 +1192,9 @@ IntegrationResult run_resident_sequence(
             outer.dynamics_defect,
             outer.path_violation,
             outer.terminal_residual,
-            outer.path_thrust_violation,
-            outer.path_mass_violation,
-            outer.path_altitude_violation,
+            path_inventory.thrust_violation,
+            path_inventory.mass_violation,
+            path_inventory.altitude_violation,
             parity_maximum,
             outer.cqp_total_seconds,
             outer.scvx_total_seconds,
@@ -1372,9 +1383,9 @@ IntegrationResult run_resident_sequence(
                 outer.dynamics_defect,
                 outer.path_violation,
                 outer.terminal_residual,
-                outer.path_thrust_violation,
-                outer.path_mass_violation,
-                outer.path_altitude_violation,
+                path_inventory.thrust_violation,
+                path_inventory.mass_violation,
+                path_inventory.altitude_violation,
                 outer.virtual_control,
                 parity_maximum,
                 outer.cqp_total_seconds,

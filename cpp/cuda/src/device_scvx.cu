@@ -1458,6 +1458,7 @@ struct spacepdhcg_cuda_scvx_driver {
     unsigned long long* device_numeric_fingerprint{nullptr};
     unsigned long long* host_numeric_fingerprint{nullptr};
     double* primal{nullptr};
+    spacepdhcg_cuda_scvx_path_inventory path_inventory{};
     size_t checkpoint_elements{0U};
     cudaEvent_t timer_start{nullptr};
     cudaEvent_t timer_stop{nullptr};
@@ -2518,9 +2519,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         : last_diagnostics.natural_residual_inf;
     result->dynamics_defect = current.dynamics;
     result->path_violation = current.path;
-    result->path_thrust_violation = current.path_thrust;
-    result->path_mass_violation = current.path_mass;
-    result->path_altitude_violation = current.path_altitude;
+    driver->path_inventory = spacepdhcg_cuda_scvx_path_inventory{
+        SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
+        current.path_thrust,
+        current.path_mass,
+        current.path_altitude,
+    };
     result->terminal_residual = current.terminal;
     result->virtual_control = current.virtual_control;
     result->trajectory_step = current.step;
@@ -2554,6 +2558,17 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     result->topology_index_copy_count_after_create =
         last_diagnostics.topology_index_copy_delta_last_update;
     result->hidden_cpu_fallback = last_diagnostics.hidden_cpu_fallback;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_path_inventory(
+    const spacepdhcg_cuda_scvx_driver* driver,
+    spacepdhcg_cuda_scvx_path_inventory* inventory
+) {
+    if (driver == nullptr || inventory == nullptr) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    *inventory = driver->path_inventory;
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 

@@ -197,9 +197,6 @@ typedef struct spacepdhcg_cuda_scvx_result {
     double canonical_residual;
     double dynamics_defect;
     double path_violation;
-    double path_thrust_violation;
-    double path_mass_violation;
-    double path_altitude_violation;
     double terminal_residual;
     double virtual_control;
     double trajectory_step;
@@ -233,6 +230,13 @@ typedef struct spacepdhcg_cuda_scvx_result {
     int32_t used_declared_stream;
 } spacepdhcg_cuda_scvx_result;
 
+typedef struct spacepdhcg_cuda_scvx_path_inventory {
+    uint32_t abi_version;
+    double thrust_violation;
+    double mass_violation;
+    double altitude_violation;
+} spacepdhcg_cuda_scvx_path_inventory;
+
 spacepdhcg_cuda_status spacepdhcg_cuda_scvx_update_numeric_async(
     const spacepdhcg_cuda_scvx_problem* problem,
     double trust_radius,
@@ -256,6 +260,11 @@ spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
 
 spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_cancel(
     spacepdhcg_cuda_scvx_driver* driver
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_path_inventory(
+    const spacepdhcg_cuda_scvx_driver* driver,
+    spacepdhcg_cuda_scvx_path_inventory* inventory
 );
 
 spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_destroy(
