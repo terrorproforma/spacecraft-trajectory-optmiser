@@ -116,3 +116,11 @@ numeric update, accepted both nonzero steps, produced ratios
 The corresponding Python oracle ratios were `0.999896705/0.999998180` with
 terminal residual `2.149e-13`. No performance, energy, or full frozen matrix
 result is implied by these short correctness runs.
+
+Unified-roadmap repeat testing retained an important negative result. Although individual P1-C
+runs and all four core Compute Sanitizer modes reproduced the two-accept result, a seven-repeat
+process-boundary sequence passed only three times. Failed runs missed the independent canonical
+forcing gate on the first QOCO solve and correctly rejected the candidate; they were not promoted
+to successful measurements. Consequently the repeat timing and GPU-only `nvidia-smi` energy
+samples are diagnostic only, and native QOCO repeatability remains a blocker for primary G4
+evidence.

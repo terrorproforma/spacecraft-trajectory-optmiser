@@ -611,3 +611,35 @@ Use this file as persistent, repo-local execution memory.
 - The canonical C++ pure-QOCO RK4 campaign owner is still a separate in-progress dependency.
 - GPU correctness, sanitizer, one-rank MPI/NCCL, and measured qualification remain deliberately
   deferred until the device is free and those runs can be serialized.
+
+### 2026-09-02 01:45 AEST - Unified native-QOCO GPU validation
+
+#### What Worked
+
+- Skipped rewritten dependency commits `99abb9e`/`e191a0d` after patch-ID and range-diff review,
+  then integrated only unique native owner `56fb6d6` as `c89d5ba`.
+- Preserved OrbitWeaver and native-QOCO sources in CMake, and combined QOCO unavailable/persistence
+  assertions with the G4-G7 path-inventory test seam.
+- Native P1-C reproduced the known two-accept result; P1-D reached matched quality after the
+  two-accept/rollback prefix; P1-E honestly exhausted trust without reference mutation.
+- Persistent/recovery, QOCO mapping, all four core sanitizer modes, one-rank G5, one-GPU G7, and G6
+  synthetic reproducibility checks completed.
+
+#### Mistakes And Fixes
+
+- `[shell]` A quoted CTest regular expression was stripped across PowerShell/WSL and interpreted as
+  shell pipes. Replaced it with explicit serial exact-name CTest invocations.
+- `[test-lifetime]` P1-C assertions ran before driver teardown, so an honest failed repeat appeared
+  as a large leak under memcheck. Moved result assertions after driver destruction; the clean rerun
+  reported zero leaked bytes and zero memcheck errors.
+- `[measurement]` Process-boundary `nvidia-smi` polling perturbed scheduling and produced large
+  sampling gaps. Retain those traces as diagnostic only; never use them as primary energy evidence.
+
+#### Follow-Ups / Risks
+
+- Native P1-C repeatability is not qualified: only three of seven measured process repeats passed
+  the independent forcing/lifecycle assertion.
+- P1-E and persistent-PDHCG modes remain unqualified or timed out; the 24,883,200-row frozen ledger
+  is mostly unrun. H5/H6 remain unresolved and G4 remains failed.
+- G5 still lacks physical 2/4/8-GPU evidence; G6 must refuse real freeze; G7 remains one-GPU
+  implementation correctness only.

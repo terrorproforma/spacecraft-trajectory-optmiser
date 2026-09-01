@@ -209,3 +209,37 @@ Preserved contaminated preliminary archive:
 The isolated archive contains the exact execution commit, policy and solver-lock hashes, commands,
 environment, raw outer-iteration diagnostics, power traces, compact 1,080-coordinate coverage
 ledger, QOCO build/smoke logs, test logs, all sanitizer logs, decision record, and artifact index.
+
+## Unified-roadmap native-QOCO validation
+
+The final native QOCO owner was integrated into the unified G4-G7 tree and validated serially on
+the RTX 5090. P1-C reproduced the expected two accepted steps in individual correctness runs
+(`0.999931728/0.999998351`, terminal `1.230e-13`, canonical `1.303e-11`). Compute Sanitizer
+memcheck, racecheck, initcheck, and synccheck each produced a zero-error run. Initcheck with
+third-party unused-memory tracking additionally reported only cuDSS/cuBLAS internal reserved
+buffers; that diagnostic is retained and is not promoted to a SpacePDHCG uninitialized-access
+claim.
+
+The longer nonlinear lifecycle results do not pass G4:
+
+- P1-D pure QOCO preserved the two-accept/one-rollback prefix, complete quaternion/path inventory,
+  and transactional reference semantics. Continuing for 100 attempts reached matched final quality
+  (canonical `1.053e-11`, terminal `9.736e-12`) with 24 accepts and three explicit rollback
+  rejections; 12 accepts and all three rejections occurred in the first 15 attempts.
+- P1-E `radius_raise` at frozen trust coordinate `0.25` rejected all 12 candidates, retained the
+  immutable initial reference, and honestly exhausted the trust radius at `1e-4`; final terminal
+  residual remained `2.989e-5`. No malformed 70-km pseudo-dispersion was used.
+- At the representative tight coordinate, fixed-tight timed out for P1-C and P1-D; fixed-loose,
+  adaptive, and adaptive+polish were unqualified for both. All four persistent-PDHCG P1-E modes
+  timed out at the frozen 600-second sample limit.
+- A seven-repeat process-boundary P1-C pure-QOCO measurement passed only 3/7. Failed runs returned
+  a QOCO status but missed the independent forcing gate on the first solve, then correctly followed
+  the rejection lifecycle. The measured timing and GPU-only energy are therefore not primary
+  evidence. `nvidia-smi` polling also exceeded the requested 50-ms interval under load.
+- Hybrid remains ineligible where persistent PDHCG misses the `1e-6` handoff qualification; no
+  adaptive execution is relabelled as hybrid.
+
+The expanded frozen Cartesian ledger contains 24,883,200 rows. The required seven measured
+repeats, two warm-ups, 20 evaluation instances, all coordinates, and portable immutable artifacts
+are incomplete. H5 and H6 remain **unresolved**, Gate G4 remains **FAIL**, and these results do not
+authorise physical G5 acceptance or Paper 1 freeze.

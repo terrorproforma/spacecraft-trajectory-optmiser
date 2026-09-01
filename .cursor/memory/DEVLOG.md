@@ -284,3 +284,34 @@
   - CPU/CUDA QOCO builds, wheel ABI and both CLIs, and CMake consumer passed.
 - Follow-up notes / risks:
   - C++ pure-QOCO RK4 campaign ownership remains in progress; no GPU or measured claim was made.
+
+## 2026-09-02 01:45 AEST
+
+- Task summary:
+  - Integrated final native QOCO ownership and ran serialized unified G3-G7 GPU validation.
+- Changes:
+  - Applied unique source `56fb6d6792bfd73760efd0c7217da7cf950a64ae` as `c89d5ba`; skipped
+    rewritten dependencies `99abb9e`/`e191a0d` because their P1-C semantics were already present.
+  - Resolved CMake and CUDA-test conflicts additively, preserving native QOCO, OrbitWeaver, complete
+    path inventory, unavailable-library classification, persistent reuse, and timing assertions.
+  - Moved P1-C assertions after driver destruction so failed qualification repeats still release
+    QOCO/cuDSS resources and emit complete diagnostics.
+  - Updated G3/G4/G5/G6/G7 status documents without promoting implementation checks to acceptance.
+- Validation:
+  - Ruff and full Python passed (`175 passed, 3 skipped`); native Release/Debug/ASan passed 43/43
+    and standalone inventory passed 8/8 in each build; all three CUDA matrices compiled.
+  - P1-C individual native pure-QOCO correctness reproduced two accepts and terminal `1.230e-13`.
+    P1-D finished at canonical `1.053e-11`, terminal `9.736e-12`, with 24 accepts/3 rejections.
+    P1-E rejected 12/12 and exhausted trust at `1e-4`, retaining terminal `2.989e-5`.
+  - QOCO GPU mapping passed 15/15 plus 3/3 canonical-reference tests. Core memcheck, racecheck,
+    initcheck, and synccheck each reached zero errors; unused-memory tracking flags only third-party
+    cuDSS/cuBLAS reserved buffers.
+  - G5 one-rank MPI/NCCL and G7 one-GPU callback/route tests passed. G6 synthetic output was
+    byte-reproducible across 52 files and freeze refusal passed.
+- Follow-up notes / risks:
+  - P1-C measured repeat correctness was 3/7, invalidating primary timing/energy inference.
+  - Persistent-PDHCG representative modes were unqualified or timed out; P1-E all four modes timed
+    out. The complete 24,883,200-row G4 ledger is not executed, H5/H6 remain unresolved, and G4
+    remains failed.
+  - No physical G5 2/4/8-GPU evidence, portable immutable archive, Paper 1 freeze, G7 scaling, or
+    Paper 2 claim exists.

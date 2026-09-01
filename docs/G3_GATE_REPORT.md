@@ -204,3 +204,12 @@ The WSL Nsight limitation prevents a kernel-timeline residency claim; counters, 
 stable pointers, and sanitizer evidence establish the gate instead. CPU Clarabel remains only the
 truth model and was never used as a production fallback. With every frozen G3 criterion passing,
 G4 is authorised.
+
+## Unified-roadmap regression
+
+After native QOCO, G5, G6, and G7 integration, the Release persistent CW, persistent SOC,
+production SCvx, and recovery GPU regressions all passed serially. The G7 one-GPU test also
+exercised the concrete G3 backend callback/route seam. Native-QOCO P1-C produced clean memcheck,
+racecheck, initcheck, and synccheck runs; a separate initcheck unused-pool diagnostic is attributed
+to third-party cuDSS/cuBLAS allocations. These integration checks preserve the G3 implementation
+status but do not replace the original frozen G3 evidence archive.

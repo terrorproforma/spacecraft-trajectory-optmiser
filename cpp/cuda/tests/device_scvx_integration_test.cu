@@ -1185,27 +1185,6 @@ IntegrationResult run_resident_sequence(
                     && outer.qoco_solve_seconds > 0.0,
                 "pure QOCO timing accounting is incomplete"
             );
-            if (g4_family == "P1-C-pd3"
-                && production_outer_iterations >= 2U) {
-                test::require(
-                    outer.accepted_steps == 2U,
-                    "P1-C pure QOCO must reproduce two accepted steps"
-                );
-                test::require(
-                    outer.terminal_residual <= g4_quality_tolerance,
-                    "P1-C pure QOCO terminal residual missed frozen quality"
-                );
-                test::require(
-                    std::abs(records[0].reduction_ratio - 0.999897) <= 5.0e-3
-                        && std::abs(records[1].reduction_ratio - 0.999998)
-                            <= 5.0e-3,
-                    "P1-C native ratios differ from the Python oracle"
-                );
-                test::require(
-                    outer.qoco_dual_discarded == 1,
-                    "P1-C second solve must report primal-only dual discard"
-                );
-            }
         }
         spacepdhcg_cuda_scvx_path_inventory path_inventory{};
         test::status_require(
@@ -1928,6 +1907,43 @@ IntegrationResult run_resident_sequence(
             spacepdhcg_cuda_scvx_driver_destroy(&driver),
             "production outer driver destroy"
         );
+        if (g4_policy == "pure-gpu-ipm"
+            && g4_family == "P1-C-pd3"
+            && production_outer_iterations >= 2U) {
+            std::fprintf(
+                stderr,
+                "P1-C native QOCO diagnostic: status=%d outer=%u "
+                "accepted=%u rejected=%u terminal=%.17g canonical=%.17g "
+                "qoco_failure=%d ratios=%.17g/%.17g\n",
+                static_cast<int>(outer.status),
+                outer.outer_iterations,
+                outer.accepted_steps,
+                outer.rejected_steps,
+                outer.terminal_residual,
+                outer.canonical_residual,
+                static_cast<int>(outer.qoco_failure),
+                records[0].reduction_ratio,
+                records[1].reduction_ratio
+            );
+            test::require(
+                outer.accepted_steps == 2U,
+                "P1-C pure QOCO must reproduce two accepted steps"
+            );
+            test::require(
+                outer.terminal_residual <= g4_quality_tolerance,
+                "P1-C pure QOCO terminal residual missed frozen quality"
+            );
+            test::require(
+                std::abs(records[0].reduction_ratio - 0.999897) <= 5.0e-3
+                    && std::abs(records[1].reduction_ratio - 0.999998)
+                        <= 5.0e-3,
+                "P1-C native ratios differ from the Python oracle"
+            );
+            test::require(
+                outer.qoco_dual_discarded == 1,
+                "P1-C second solve must report primal-only dual discard"
+            );
+        }
         const IntegrationResult result{
             diagnostics,
             outer,

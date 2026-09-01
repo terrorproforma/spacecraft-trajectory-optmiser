@@ -188,6 +188,14 @@ Physical 2/4/8-GPU work remains fully deferred. Before any G5 acceptance stateme
 Only those physical results can complete Gate G5. This implementation document is not acceptance or
 scaling evidence.
 
+## Unified-roadmap one-rank rerun
+
+The integrated Release `sm_120` target passed `g5_one_rank_mpi_nccl_cuda` serially on the RTX 5090.
+This confirms that native QOCO and G7 integration did not break the one-rank MPI/NCCL/CUDA
+implementation seam. It remains `world_size=1` implementation validation only:
+`multi_gpu_scaling_verified=false`. No 2/4/8-GPU result, physical partition comparison, overlap
+measurement, or H2/H3/H4 decision was produced, so Gate G5 remains physically unaccepted.
+
 ## Integration guidance
 
 Keep this branch isolated until G4/P1 corrections are stable. Integrate later fixes by cherry-picking

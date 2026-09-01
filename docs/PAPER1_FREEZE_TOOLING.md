@@ -134,3 +134,12 @@ The G5 producer must supply the complete P1-F matrix and all negative evidence w
 
 If G5 remains unauthorised or unexecuted, its configured coordinates remain incomplete and real
 freeze correctly refuses.
+
+## Unified-roadmap validation
+
+The synthetic campaign rebuilt byte-reproducibly (`52` files) and exercised all product and H1-H6
+decision paths. The freeze command refused the labelled synthetic campaign as required. The
+available unified evidence is also insufficient for a real campaign configuration: G4 has
+incomplete repeat/instance coverage and unresolved H5/H6, while G5 has only one-rank
+implementation evidence and no portable physical 2/4/8-GPU archive. Paper 1 is therefore not
+frozen.

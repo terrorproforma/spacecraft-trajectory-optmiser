@@ -24,3 +24,11 @@
 - Used the worktree-local Python environment to avoid the canonical editable-install hook.
 - Replaced release-disabled test assertions where Werror exposed unused variables.
 - Pinned the benchmark loader to the byte-exact worktree matrix hash.
+
+## Unified-roadmap serialized validation
+
+- Rebuilt the unified Release, Debug, and sanitizer-capable CUDA targets for `sm_120`.
+- Passed the Release one-GPU OrbitWeaver test on the RTX 5090 after native-QOCO integration.
+- Exercised the concrete persistent G3 backend callback and route-result propagation seam.
+- Retained the boundary: this is one-GPU correctness only. No physical multi-GPU scaling,
+  complete route campaign, energy claim, G7 acceptance, or Paper 2 claim is made.
