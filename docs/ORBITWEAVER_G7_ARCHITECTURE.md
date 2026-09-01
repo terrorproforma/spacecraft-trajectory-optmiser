@@ -2,9 +2,9 @@
 
 ## Scope and evidence rule
 
-G7 composes the existing OrbitWeaver CPU truth models and public G2/G3 persistent
-single-GPU APIs. It does not import the uncommitted G5 implementation. This branch
-contains implementation and bounded correctness evidence only. It makes no throughput,
+G7 composes the existing OrbitWeaver CPU truth models, the public G3 persistent
+single-GPU API, and the integrated public G5 ownership/runtime API. This branch contains
+implementation and bounded CPU/logical-rank correctness evidence only. It makes no throughput,
 energy, scaling, tractability, optimality, or Paper 2 completion claim.
 
 Evidence labels are intentionally separate:
@@ -24,18 +24,22 @@ Logical-rank mocks test ownership and ordering only. They must never emit the fi
    statuses remain explicit.
 3. Coarse convex jobs are grouped by topology fingerprint, fidelity, node count and
    scenario count.
-4. `PersistentArcCallbackBackend` owns the public G3 workspace/SCvx driver lifecycle.
-   The G7 scheduler never reconstructs topology and never inspects solver internals.
+4. `G3PersistentTrajectoryAdapter` owns one bounded public G3 device-SCvx driver per
+   topology/fidelity/rank/device key. `G3ArcBinding` updates fixed device numerical buffers
+   in place; G7 never reconstructs topology or inspects solver internals.
 5. Stable top-K uses `(feasible rank, cost, lower bound, deterministic ID)`.
    Failures remain in the result stream unless a caller explicitly filters them.
-6. Warm tokens are carried in arc requests/results between coarse and refined stages.
-   Existing `LowThrustWarmStartStore` remains the compatibility authority.
+6. Opaque warm tokens are carried between coarse and refined stages. Endpoint, model,
+   spacecraft and scenario compatibility is checked before the target G3 driver explicitly
+   accepts any interval remeshing. Missing, stale and incompatible tokens remain explicit.
 7. Adaptive fidelity changes requested fidelity/node count without changing deterministic
    parent identity. Existing dynamic-discretisation code remains the route-time refinement
    authority.
-8. Promising parents expand in parent/scenario order. Expected, worst-case and CVaR
-   aggregation validates probabilities, lower bounds and non-anticipative control prefixes.
-9. Existing route-master/column-generation code consumes arc costs and lower bounds.
+8. Promising parents expand in parent/scenario order. `G5RankLocalOwnershipAdapter` freezes
+   deterministic route/arc/scenario ownership; expected, worst-case and CVaR aggregation
+   validates probabilities, lower bounds and non-anticipative control prefixes.
+9. Route columns are built from returned arc costs/lower bounds, then independently
+   certified. Uncertified combinations cannot become route-master incumbents.
    Its incumbent, restricted-master lower bound, reduced-cost closure and failure semantics
    remain authoritative.
 10. Checkpoints store schema version, seed, completed batches, incumbent/bound, sorted arc
@@ -56,9 +60,11 @@ Logical-rank mocks test ownership and ordering only. They must never emit the fi
 - cancellation and backend-exception conversion to retained result records;
 - per-group and per-rank/device telemetry.
 
-`SingleDeviceOwnership` is the production ownership policy on this branch.
-`LogicalRankOwnership` is a deterministic test mock. G5 will provide an ownership policy
-and backend whose rank-local driver/communicator lifecycle is persistent.
+`SingleDeviceOwnership` remains the one-device policy. `G5RankLocalOwnershipAdapter` is the
+production G5 policy and validates frozen route/arc/scenario metadata before dispatch.
+`G5RankLocalArcBackend` verifies local MPI rank/device ownership, wraps rank-local persistent
+G3 drivers, synchronizes cancellation/failure status and exposes G5 collective telemetry.
+`LogicalRankOwnership` and `LogicalCollective` are CPU test fixtures only.
 
 ## APIs and targets
 
@@ -77,11 +83,20 @@ CUDA:
 - `spacepdhcg_orbitweaver_lambert_evaluate_async`;
 - `orbitweaver_gpu_test`;
 - shared target `spacepdhcg_cuda`.
+- `spacepdhcg/cuda/orbitweaver_g3_adapter.hpp`, compiled against the public G3 C API.
+
+Distributed:
+
+- `spacepdhcg/distributed/orbitweaver_g5_adapter.hpp`;
+- deterministic scenario-aware route/arc/scenario partition metadata;
+- rank-local G3 delegation, cancellation/failure propagation, checkpoint compatibility
+  through public G5 fingerprints, and collective telemetry.
 
 Python:
 
 - `spacepdhcg.orbitweaver`;
-- `BoundedScheduler`, ownership policies, top-K, risk, scenario expansion,
+- `G3TrajectoryOracleAdapter`, `G5DistributedAdapter`, bounded schedulers, deterministic
+  ownership, top-K, risk, scenario expansion, certified route master,
   checkpoints, run/result records and frozen matrix loader;
 - `spacepdhcg-orbitweaver-g7 validate-config|validate-matrix`.
 
@@ -100,24 +115,25 @@ The frozen `benchmarks/paper2_matrix.json` SHA-256 is
 
 ## Current evidence
 
-At the branch implementation point:
+At this adapter branch implementation point:
 
 - native Debug + ASan/UBSan + Werror configured and compiled;
 - native Release + Werror configured and compiled;
-- CUDA 12.8 Debug and Release configured for `sm_120` and compiled;
-- CPU G7/C ABI tests passed;
-- Python contract tests passed in the isolated worktree environment;
-- actual RTX 5090 Debug and Release Lambert CUDA/CPU parity tests passed.
+- CUDA 12.8 and G5 Debug/Release targets configured for `sm_120` and compiled;
+- CPU native, Python schema, deterministic fixture and logical-rank adapter tests passed;
+- the existing CPU low-thrust G3 reference/oracle smoke tests passed.
 
-This one-GPU test covers deterministic fixed-layout Lambert evaluation. It does not qualify
-the full coarse/refined/robust route path as one-GPU-correctness-tested.
+No GPU executable was run for this adapter branch. In particular, compilation does not
+qualify the full coarse/refined/scenario/pricing/master/certification path as
+`one_gpu_correctness_tested`.
 
 ## Deferred validation
 
 Deferred until prerequisite branches and physical hardware evidence exist:
 
 - G4 matched-quality policy evidence and H5/H6 decisions;
-- G5 one-rank equivalence, NCCL ownership, collective correctness and sanitizer evidence;
+- one-GPU coarse/refined/scenario/route replay against independent CPU truth;
+- G5 one-rank CUDA/NCCL equivalence and device checkpoint restore;
 - physical 2/4/8-GPU runs;
 - route × scenario strong/weak scaling;
 - throughput, energy, memory-crossover and tractability-frontier measurements;
@@ -126,16 +142,18 @@ Deferred until prerequisite branches and physical hardware evidence exist:
 
 ## Exact integration order
 
-1. Merge the stable G4 implementation/evidence branch into its integration branch.
-2. Rebase this G7 branch onto that stable G4 merge commit and rerun native/CUDA matrices.
-3. Merge the stable G5 public ownership/backend interfaces (not implementation snapshots).
-4. Implement a G5 `ArcBatchBackend` adapter using rank-local persistent G3 drivers and
-   communicator ownership.
-5. Run one-rank G5 versus monolithic G3/CPU truth, including non-anticipativity and risk.
-6. Run CUDA sanitizer/race/lifetime checks.
-7. Run physical multi-GPU correctness; only then run registered scaling experiments.
-8. Freeze G4-G6 evidence and the Paper 2 matrix before any G7 performance campaign.
-9. Promote only independently certified route incumbents into Paper 2 result records.
+1. Merge final native QOCO/P1 changes, retaining the public G3 C API used by
+   `G3PersistentTrajectoryAdapter`; resolve only binding construction if the final public
+   problem descriptor changes.
+2. Merge this branch after G3/QOCO so its adapter and strict `bf9d10` record contracts see
+   the final public ABI.
+3. Rebuild native/CUDA/G5 Debug/Release/Werror matrices and rerun CPU/logical tests.
+4. Run one-GPU coarse/refined/scenario/pricing/master/certification correctness against
+   independent CPU replay.
+5. Run G5 one-rank equivalence, then CUDA sanitizer/race/lifetime checks.
+6. Run physical multi-GPU correctness; only then run preregistered scaling experiments.
+7. Freeze G4-G6 evidence and the Paper 2 matrix before any G7 performance campaign.
+8. Promote only independently certified route incumbents into Paper 2 result records.
 
 Merge conflicts should resolve in favour of the public G3/G5 ABI versions from their stable
 branches; G7 adapts at `PersistentArcCallbackBackend` and the ownership policy, not by

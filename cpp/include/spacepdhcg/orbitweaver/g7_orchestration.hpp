@@ -27,8 +27,13 @@ enum class ArcExecutionStatus : std::uint8_t {
     infeasible,
     unsupported,
     invalid_input,
+    warm_start_incompatible,
+    topology_mismatch,
     numerical_failure,
     backend_failure,
+    timeout,
+    out_of_memory,
+    censored,
     cancelled,
     certification_rejected,
 };
@@ -69,6 +74,13 @@ struct ScheduledArc {
     }
 };
 
+struct ArcQuality {
+    double canonical_residual{std::numeric_limits<double>::infinity()};
+    double replay_residual{std::numeric_limits<double>::infinity()};
+    double path_violation{std::numeric_limits<double>::infinity()};
+    double terminal_error{std::numeric_limits<double>::infinity()};
+};
+
 struct ArcExecution {
     std::uint64_t deterministic_id{0U};
     ArcExecutionStatus status{ArcExecutionStatus::backend_failure};
@@ -77,6 +89,7 @@ struct ArcExecution {
     std::size_t owner_device{0U};
     std::size_t batch_sequence{0U};
     std::string diagnostic{};
+    ArcQuality quality{};
 
     [[nodiscard]] bool feasible() const noexcept {
         return status == ArcExecutionStatus::feasible && solution.feasible;
@@ -86,6 +99,7 @@ struct ArcExecution {
 struct Ownership {
     std::size_t rank{0U};
     std::size_t device{0U};
+    [[nodiscard]] bool operator==(const Ownership&) const noexcept = default;
     [[nodiscard]] bool operator<(const Ownership& other) const noexcept {
         return std::tie(rank, device) < std::tie(other.rank, other.device);
     }
@@ -122,10 +136,10 @@ class LogicalRankOwnership final : public OwnershipPolicy {
     }
     [[nodiscard]] Ownership owner(
         const ScheduledArc& arc,
-        const std::size_t batch
+        std::size_t
     ) const override {
         const auto rank =
-            static_cast<std::size_t>((arc.deterministic_id + batch) % devices_.size());
+            static_cast<std::size_t>(arc.deterministic_id % devices_.size());
         return {rank, devices_[rank]};
     }
 
@@ -228,11 +242,19 @@ class BoundedArcScheduler {
         for (const auto& arc : arcs) {
             arc.validate();
         }
-        std::stable_sort(arcs.begin(), arcs.end(), [](const auto& left, const auto& right) {
+        std::stable_sort(arcs.begin(), arcs.end(), [this](const auto& left, const auto& right) {
             if (left.group < right.group) {
                 return true;
             }
             if (right.group < left.group) {
+                return false;
+            }
+            const auto left_owner = ownership_->owner(left, 0U);
+            const auto right_owner = ownership_->owner(right, 0U);
+            if (left_owner < right_owner) {
+                return true;
+            }
+            if (right_owner < left_owner) {
                 return false;
             }
             return left.deterministic_id < right.deterministic_id;
@@ -240,8 +262,11 @@ class BoundedArcScheduler {
         std::vector<ArcExecution> output{};
         for (std::size_t cursor = 0U, sequence = 0U; cursor < arcs.size(); ++sequence) {
             const auto group = arcs[cursor].group;
+            const auto owner = ownership_->owner(arcs[cursor], 0U);
             auto group_end = cursor;
-            while (group_end < arcs.size() && same_group(group, arcs[group_end].group)) {
+            while (group_end < arcs.size()
+                   && same_group(group, arcs[group_end].group)
+                   && ownership_->owner(arcs[group_end], 0U) == owner) {
                 ++group_end;
             }
             const auto count = std::min(config_.maximum_batch_size, group_end - cursor);
@@ -249,7 +274,6 @@ class BoundedArcScheduler {
                 arcs.begin() + static_cast<std::ptrdiff_t>(cursor),
                 arcs.begin() + static_cast<std::ptrdiff_t>(cursor + count)
             );
-            const auto owner = ownership_->owner(batch.front(), sequence);
             auto evaluated = invoke(group, batch, owner);
             for (std::size_t index = 0U; index < batch.size(); ++index) {
                 auto& result = evaluated[index];

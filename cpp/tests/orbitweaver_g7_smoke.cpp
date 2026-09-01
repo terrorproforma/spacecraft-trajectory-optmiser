@@ -87,7 +87,7 @@ int main() {
     const auto executions =
         scheduler.run({request(3U, 22U), request(2U, 11U), request(1U, 11U)});
     assert(executions.size() == 3U && executions[0].deterministic_id == 1U);
-    assert(scheduler.telemetry().batches == 2U);
+    assert(scheduler.telemetry().batches == 3U);
     const auto selected = g7::deterministic_top_k(executions, 3U);
     assert(selected[0].deterministic_id == 2U);
     assert(selected[2].status == g7::ArcExecutionStatus::infeasible);

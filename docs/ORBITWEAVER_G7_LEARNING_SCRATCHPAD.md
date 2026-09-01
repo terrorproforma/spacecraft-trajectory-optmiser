@@ -25,9 +25,8 @@
 
 ## Remaining questions for stable branch integration
 
-- Exact G5 adapter type names and rank-local cancellation propagation.
 - Final G4 policy manifest fields to include in the G7 run manifest.
-- Whether G5 exposes deterministic reductions as a runtime mode or build option.
+- Whether final native QOCO/P1 changes alter G3 public problem-binding construction.
 - Physical multi-GPU machine topology and the approved Paper 2 campaign commit.
 
 ## Schema audit lessons
@@ -42,3 +41,18 @@
   manifest hashes, seeds and repeat indices require cross-field checks.
 - OOM, timeout and censored records can legitimately retain partial incumbents, but cannot
   be marked certified and must retain an explicit matching failure.
+
+## G3/G5 adapter lessons
+
+- Topology grouping alone is insufficient for distributed execution: batches must also be
+  homogeneous in frozen rank/device ownership.
+- Warm-token identity is not warm-state compatibility. Endpoint/model/scenario metadata and
+  target-driver remeshing acceptance are both required.
+- A persistent driver can be safely reused only when arc bindings update fixed numerical
+  buffers in place and revalidate the public topology fingerprint before every solve.
+- Canonical residual, independent nonlinear replay, path inventory and terminal error are
+  separate evidence; no single optimizer status substitutes for them.
+- Route-master promotion must happen after independent certification, while pricing may use
+  real feasible arc costs and valid lower bounds.
+- Logical collectives establish deterministic partition/status interfaces only, never
+  physical communication or scaling evidence.

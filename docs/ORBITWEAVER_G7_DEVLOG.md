@@ -40,3 +40,30 @@
 - Built and installed the wheel, ran its CLI, generated a pinned manifest and validated it
   independently with Draft 2020-12 `jsonschema`.
 - Ran no GPU timing, energy, throughput or multi-GPU experiment.
+
+## 2026-09-02 G3/G5 concrete adapters
+
+- Created the isolated `feat/orbitweaver-g3-g5-adapter` worktree from unified commit
+  `e95b902d718ceaf05523e469cbe21945013c2f41`.
+- Cherry-picked only schema-parity commit
+  `bf9d10af541c995f1bdcd10b031486cff6b4351e`; retained the integrated original G7 code.
+- Added a bounded Python G3 adapter with persistent topology/rank/device workspaces,
+  in-place numerical updates, opaque compatible warm states, separate canonical/replay/path/
+  terminal diagnostics and explicit failure/censor classifications.
+- Added the C++ `G3PersistentTrajectoryAdapter` over the public device-SCvx C API.
+- Added deterministic G5 route/arc/scenario partitioning, rank-local ownership/backend
+  adapters, checkpoint compatibility, status propagation and collective telemetry surfaces.
+- Connected scenario risk results to route columns using real returned costs/lower bounds;
+  only independently certified route combinations may become incumbents.
+- Added deterministic fixture tests for the full coarse/refined/scenario/master/certification
+  path and failure modes. Fixtures are labelled non-evidence.
+- Added logical-rank ownership coverage and a CUDA compile/link contract test.
+- Validation:
+  - native Debug ASan/UBSan/Werror: 43/43 CPU tests passed;
+  - native Release Werror: 43/43 CPU tests passed;
+  - CUDA 12.8 + G5 Debug/Release compiled for `sm_120`;
+  - G5 logical-rank contract passed in Debug and Release;
+  - adapter/schema Python selection: 40 passed;
+  - Ruff and generated-schema checks passed.
+- Kept all GPU executables, energy collection and physical multi-GPU runs disabled while
+  shared validation remained active.

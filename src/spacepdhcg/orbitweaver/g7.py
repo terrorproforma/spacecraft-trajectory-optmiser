@@ -34,8 +34,13 @@ class ArcStatus(StrEnum):
     INFEASIBLE = "infeasible"
     UNSUPPORTED = "unsupported"
     INVALID_INPUT = "invalid_input"
+    WARM_START_INCOMPATIBLE = "warm_start_incompatible"
+    TOPOLOGY_MISMATCH = "topology_mismatch"
     NUMERICAL_FAILURE = "numerical_failure"
     BACKEND_FAILURE = "backend_failure"
+    TIMEOUT = "timeout"
+    OOM = "oom"
+    CENSORED = "censored"
     CANCELLED = "cancelled"
     CERTIFICATION_REJECTED = "certification_rejected"
 
@@ -117,6 +122,9 @@ class ArcResult:
     terminal_error: float = math.inf
     path_violation: float = math.inf
     uncertainty_violation: float = math.inf
+    canonical_residual: float = math.inf
+    replay_residual: float = math.inf
+    nonanticipative_controls: tuple[float, ...] = ()
     warm_token: int | None = None
     owner_rank: int = 0
     owner_device: int = 0
@@ -142,6 +150,8 @@ class ArcResult:
             self.terminal_error,
             self.path_violation,
             self.uncertainty_violation,
+            self.canonical_residual,
+            self.replay_residual,
         )
         if (
             not all(math.isfinite(value) and value >= 0.0 for value in values)
@@ -186,7 +196,8 @@ class LogicalRankOwnership:
             raise ValueError("logical ownership needs devices")
 
     def owner(self, request: ArcRequest, batch: int) -> Ownership:
-        rank = (request.deterministic_id + batch) % len(self.devices)
+        del batch
+        rank = request.deterministic_id % len(self.devices)
         return Ownership(rank, self.devices[rank])
 
 
@@ -278,19 +289,30 @@ class BoundedScheduler:
             raise BufferError("G7 scheduler backpressure limit exceeded")
         for request in pending:
             request.validate()
-        pending.sort(key=lambda item: (item.topology, item.deterministic_id))
+        pending.sort(
+            key=lambda item: (
+                item.topology,
+                self.ownership.owner(item, 0).rank,
+                self.ownership.owner(item, 0).device,
+                item.deterministic_id,
+            )
+        )
         self.telemetry = SchedulerTelemetry(submitted=len(pending))
         output: list[ArcResult] = []
         cursor = 0
         sequence = 0
         while cursor < len(pending):
             topology = pending[cursor].topology
+            owner = self.ownership.owner(pending[cursor], 0)
             group_end = cursor
-            while group_end < len(pending) and pending[group_end].topology == topology:
+            while (
+                group_end < len(pending)
+                and pending[group_end].topology == topology
+                and self.ownership.owner(pending[group_end], 0) == owner
+            ):
                 group_end += 1
             stop = min(cursor + self.config.maximum_batch_size, group_end)
             batch = pending[cursor:stop]
-            owner = self.ownership.owner(batch[0], sequence)
             evaluated = self._evaluate(topology, batch, owner)
             for request, result in zip(batch, evaluated, strict=True):
                 result.owner_rank = owner.rank
