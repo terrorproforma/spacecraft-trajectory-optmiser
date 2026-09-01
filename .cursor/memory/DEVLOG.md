@@ -260,3 +260,29 @@
   - CPU/CUDA QOCO builds, wheel ABI and both CLIs, and CMake consumer passed.
 - Follow-up notes / risks:
   - C++ pure-QOCO RK4 campaign ownership remains in progress; no GPU or measured claim was made.
+
+## 2026-09-02 01:15 AEST
+
+- Task summary:
+  - Ran the isolated CPU/reference inventory and component-fixture campaign from frozen commit
+    `e95b902d718ceaf05523e469cbe21945013c2f41`.
+- Changes:
+  - Added a fail-closed CPU campaign finalizer that expands both frozen matrices, archives native
+    JUnit and Python logs, validates censored Paper 1 records, builds G6 F01-F08/T01-T06 sources,
+    renders provenance-complete diagnostics, verifies hashes twice, and emits a Canvas-ready
+    dashboard JSON.
+  - Added tests locking the 16,324-coordinate cardinality and chart provenance contract.
+- Validation:
+  - Ruff lint/format passed for all 140 Python files.
+  - Python: 177 passed, three optional pinned-QOCO skips.
+  - Top-level host native: 43/43; standalone native core: 8/8.
+  - G6: 52 files reproduced byte-for-byte, aggregate
+    `41f7818ef8f50d1d010a935ad5b2eef03f10aed6b5610e85e117ed9343d0c0ed`.
+  - Diagnostic rendering digest matched twice:
+    `ef14819333f90d0f68dde7920f0976b328976bdeb53c394ba8e2d8ff8e44030e`.
+- Follow-up notes / risks:
+  - All 13,676 Paper 1 matrix coordinates remain explicit `unrun` because this commit has no full
+    production emitter for the frozen residual/replay/repeat/resource contract.
+  - Paper 2 has 1,640 component-backed `unrun` coordinates and 1,008 unsupported P2-D/P2-E
+    full-mission coordinates; all 43 implemented native component fixtures passed.
+  - No GPU API, executable, sampler, timing, or energy path was used.

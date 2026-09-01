@@ -571,3 +571,30 @@ Use this file as persistent, repo-local execution memory.
 - The canonical C++ pure-QOCO RK4 campaign owner is still a separate in-progress dependency.
 - GPU correctness, sanitizer, one-rank MPI/NCCL, and measured qualification remain deliberately
   deferred until the device is free and those runs can be serialized.
+
+### 2026-09-02 01:15 AEST - CPU reference campaign closure
+
+#### What Worked
+
+- Expanded all 16,324 frozen family coordinates without changing matrix selections: 13,676 Paper 1
+  and 2,648 Paper 2 coordinates.
+- Ran all 43 top-level host fixtures and all eight standalone native-core fixtures with CUDA
+  visibility disabled; all passed. The full Python suite passed 177 tests with three explicit
+  optional QOCO skips.
+- G6 built F01-F08/T01-T06 from real censored fixture envelopes, retained every archived failure,
+  and reproduced all 52 generated files byte-for-byte.
+
+#### Mistakes And Fixes
+
+- `[tool]` The commit was not reachable from the Windows canonical repository or GitHub refs.
+  Located the still-live WSL integration object and created the requested worktree from the exact
+  immutable commit without fetching into or modifying the canonical checkout.
+- `[self]` The frozen matrices specify far more coordinates than the commit can emit as complete
+  measured evidence. Classified those coordinates explicitly as `unrun` or `unsupported`; did not
+  infer residuals, fabricate timings, or relabel component fixtures as full matrix runs.
+
+#### Guardrails For Next Session
+
+- Native smoke success is component correctness, not independently replayed Paper 1 qualification.
+- Keep null canonical/nonlinear maxima null until production matrix drivers emit those values.
+- Do not use the generated censored G6 bundle to assert G4, G5, GPU, or scaling claims.
