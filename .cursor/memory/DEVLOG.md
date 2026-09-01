@@ -785,3 +785,26 @@
     not complete publication evidence.
   - Remaining CPU gaps are native P1-D/P1-E optimizer residual ownership, full robust P1-F solves,
     and parameterized physical Paper 2 mission optimization.
+
+## 2026-09-02 09:50 AEST
+
+- Task summary:
+  - Recovered the interrupted live run and completed/validated all 16,324 exact coordinates.
+- Changes:
+  - Added complete Clarabel KKT and robust nonlinear replay ownership in prior campaign commits.
+  - Reduced checkpoint cadence to 25 and guaranteed a final checkpoint.
+  - Preserved completion timestamps during replay rendering and documented the exact Paper 2
+    physical-instance contract gap.
+- Validation:
+  - Final dispositions: 12,148 executed, 384 failed, 259 numerical, 645 actual timeouts, 1,880
+    unqualified, and 1,008 unsupported.
+  - Matrix coverage/schema passed; 184 Python tests passed with three optional QOCO skips; Ruff
+    passed; native CPU tests passed 45/45.
+  - Semantic SHA-256:
+    `649c7e00106e4d10bd9c960e6de36f837a8dd2dc1ea9118d704dbf63e9756f18`.
+  - Two independent render finalizations matched:
+    `41c2a80f409898381ce3e2cd76697239f199d2da3eb42a6a781873e5cedaefe1`.
+- Follow-up notes / risks:
+  - P1-C/D/E/F and Paper 2 physical-route publication evidence remains fail-closed where complete
+    solver/formulation or physical benchmark inputs do not exist.
+  - GPU timing, energy, and 2/4/8-GPU collective telemetry remain hardware-only.
