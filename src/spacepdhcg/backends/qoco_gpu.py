@@ -8,6 +8,7 @@ qualified with CPU-only tests before scarce GPU execution is scheduled.
 from __future__ import annotations
 
 import ctypes as ct
+import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -79,6 +80,14 @@ class QOCOSetupError(QOCOAdapterError):
 
 class QOCOSolveError(QOCOAdapterError):
     """Raised when the QOCO API fails before returning a solver status."""
+
+
+class QOCOHybridIneligibleError(QOCOAdapterError):
+    """Raised before QOCO when the PDHCG handoff fails the frozen gate."""
+
+    def __init__(self, report: HybridRunReport) -> None:
+        self.report = report
+        super().__init__(report.reason)
 
 
 @dataclass(frozen=True, slots=True)
@@ -250,6 +259,28 @@ class _QOCOAPI(Protocol):
 
 def _maximum(values: NDArray[np.floating[Any]]) -> float:
     return 0.0 if values.size == 0 else float(np.max(values))
+
+
+def canonical_numeric_fingerprint(values: CQPValues) -> str:
+    """Hash every canonical numeric array in fixed field order."""
+
+    digest = hashlib.sha256()
+    for name in (
+        "quadratic",
+        "constraint",
+        "linear",
+        "lower",
+        "upper",
+        "affine_cone",
+        "affine_offset",
+        "variable_lower",
+        "variable_upper",
+    ):
+        array = np.ascontiguousarray(getattr(values, name), dtype="<f8")
+        digest.update(name.encode("ascii"))
+        digest.update(array.size.to_bytes(8, "little"))
+        digest.update(array.tobytes())
+    return digest.hexdigest()
 
 
 def _bound_signature(lower: FloatArray, upper: FloatArray) -> tuple[str, ...]:
@@ -1030,6 +1061,21 @@ class QOCOGPU:
             raise QOCOSolveError(f"QOCO result cannot be handed back ({failure})")
         return solution, handback(solution)
 
+    def solve_outer_candidate(
+        self,
+        owner: Any,
+        context: Any,
+        *,
+        tolerance: float | None = None,
+        iteration_limit: int | None = None,
+    ) -> tuple[CQPSolution, Any]:
+        """Solve and execute the production pure-GPU-IPM nonlinear handback."""
+
+        from spacepdhcg.backends.qoco_handback import handback_qoco_candidate
+
+        solution = self.solve(tolerance=tolerance, iteration_limit=iteration_limit)
+        return solution, handback_qoco_candidate(self, solution, owner, context)
+
     def close(self) -> None:
         if not self._closed:
             self._api.cleanup(self._handle)
@@ -1057,7 +1103,16 @@ class HybridRunReport:
     pdhcg_seconds: float
     polish_seconds: float
     warm_start: WarmStartReport
-    qoco: QOCORunReport
+    qoco: QOCORunReport | None
+    eligible: bool
+    disposition: str
+    reason: str
+    independent_primal_residual: float
+    reported_primal_residual: float
+    reported_dual_residual: float
+    dual_disposition: str
+    cqp_numeric_fingerprint: str
+    fingerprint_match: bool
 
 
 class PDHCGQOCOHybrid:
@@ -1067,7 +1122,11 @@ class PDHCGQOCOHybrid:
         self,
         pdhcg: Any,
         qoco: QOCOGPU,
+        *,
+        handoff_tolerance: float = 1.0e-6,
     ) -> None:
+        if handoff_tolerance <= 0.0:
+            raise ValueError("handoff_tolerance must be positive")
         if pdhcg.structure is not qoco.structure and pdhcg.structure != qoco.structure:
             raise ValueError("PDHCG and QOCO must own the same canonical structure")
         self.pdhcg = pdhcg
@@ -1077,6 +1136,7 @@ class PDHCGQOCOHybrid:
         self.update_count = 0
         self.warm_start_count = 0
         self.solve_count = 0
+        self.handoff_tolerance = float(handoff_tolerance)
         self.last_report: HybridRunReport | None = None
 
     def update(self, values: CQPValues) -> None:
@@ -1105,10 +1165,78 @@ class PDHCGQOCOHybrid:
             tolerance=tolerance,
             iteration_limit=iteration_limit,
         )
-        if pdhcg_result.solved:
-            self.qoco.warm_start(pdhcg_result.primal, pdhcg_result.dual)
-        else:
+        independent_primal = canonical_primal_residual(
+            self.qoco._current,
+            pdhcg_result.primal,
+        )
+        qoco_fingerprint = canonical_numeric_fingerprint(self.qoco.current_values)
+        predictor_values = getattr(
+            self.pdhcg,
+            "current_values",
+            getattr(self.pdhcg, "values", None),
+        )
+        predictor_fingerprint = (
+            canonical_numeric_fingerprint(predictor_values)
+            if isinstance(predictor_values, CQPValues)
+            else None
+        )
+        fingerprint_match = predictor_fingerprint == qoco_fingerprint
+        finite_dual = bool(
+            pdhcg_result.dual.shape == (self.structure.n_duals,)
+            and np.all(np.isfinite(pdhcg_result.dual))
+        )
+        eligible = bool(
+            pdhcg_result.solved
+            and finite_dual
+            and fingerprint_match
+            and independent_primal <= self.handoff_tolerance
+            and pdhcg_result.primal_residual <= self.handoff_tolerance
+            and pdhcg_result.dual_residual <= self.handoff_tolerance
+        )
+        if not eligible:
             self.qoco.clear_warm_start()
+            failures: list[str] = []
+            if not pdhcg_result.solved:
+                failures.append("PDHCG did not solve")
+            if independent_primal > self.handoff_tolerance:
+                failures.append("independent primal residual exceeds gate")
+            if pdhcg_result.primal_residual > self.handoff_tolerance:
+                failures.append("reported primal residual exceeds gate")
+            if pdhcg_result.dual_residual > self.handoff_tolerance:
+                failures.append("reported dual residual exceeds gate")
+            if not finite_dual:
+                failures.append("dual is non-finite or has the wrong ordering")
+            if not fingerprint_match:
+                failures.append("PDHCG and QOCO CQP fingerprints differ")
+            warm = WarmStartReport(
+                requested=True,
+                primal_qualified=False,
+                primal_accepted=False,
+                primal_residual=independent_primal,
+                dual_requested=True,
+                dual_discarded=True,
+                reason="hybrid ineligible before QOCO: "
+                + "; ".join(failures)
+                + "; dual discarded because QOCO is primal-only",
+            )
+            self.last_report = HybridRunReport(
+                pdhcg_status=pdhcg_result.status,
+                pdhcg_seconds=pdhcg_result.solve_seconds,
+                polish_seconds=0.0,
+                warm_start=warm,
+                qoco=None,
+                eligible=False,
+                disposition="ineligible",
+                reason=warm.reason,
+                independent_primal_residual=independent_primal,
+                reported_primal_residual=pdhcg_result.primal_residual,
+                reported_dual_residual=pdhcg_result.dual_residual,
+                dual_disposition="discarded-unsupported-by-pinned-qoco",
+                cqp_numeric_fingerprint=qoco_fingerprint,
+                fingerprint_match=fingerprint_match,
+            )
+            raise QOCOHybridIneligibleError(self.last_report)
+        self.qoco.warm_start(pdhcg_result.primal, pdhcg_result.dual)
         polish_start = perf_counter()
         qoco_result = self.qoco.solve(
             tolerance=tolerance,
@@ -1124,6 +1252,15 @@ class PDHCGQOCOHybrid:
             polish_seconds=polish_seconds,
             warm_start=self.qoco.last_report.warm_start,
             qoco=self.qoco.last_report,
+            eligible=True,
+            disposition="eligible-primal-only-polish",
+            reason="PDHCG handoff passed the frozen quality gate; dual discarded",
+            independent_primal_residual=independent_primal,
+            reported_primal_residual=pdhcg_result.primal_residual,
+            reported_dual_residual=pdhcg_result.dual_residual,
+            dual_disposition="discarded-unsupported-by-pinned-qoco",
+            cqp_numeric_fingerprint=qoco_fingerprint,
+            fingerprint_match=True,
         )
         if handback is None:
             return qoco_result
@@ -1135,6 +1272,36 @@ class PDHCGQOCOHybrid:
 
     def close(self) -> None:
         self.qoco.close()
+
+    def solve_outer_candidate(
+        self,
+        owner: Any,
+        context: Any,
+        *,
+        tolerance: float | None = None,
+        iteration_limit: int | None = None,
+    ) -> tuple[CQPSolution, Any]:
+        """Run a qualified predictor/polish and its distinct hybrid handback."""
+
+        from spacepdhcg.backends.qoco_handback import (
+            QOCOSolverMode,
+            handback_qoco_candidate,
+        )
+
+        solution = self.solve(tolerance=tolerance, iteration_limit=iteration_limit)
+        if not isinstance(solution, CQPSolution):
+            raise AssertionError("hybrid solve unexpectedly returned a callback result")
+        if self.last_report is None:
+            raise AssertionError("hybrid solve completed without a report")
+        record = handback_qoco_candidate(
+            self.qoco,
+            solution,
+            owner,
+            context,
+            mode=QOCOSolverMode.HYBRID_PDHCG_IPM,
+            predictor_seconds=self.last_report.pdhcg_seconds,
+        )
+        return solution, record
 
     def __enter__(self) -> PDHCGQOCOHybrid:
         return self

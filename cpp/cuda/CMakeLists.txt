@@ -229,9 +229,14 @@ if(BUILD_TESTING)
                 NAME device_scvx_p1d_path_audit_test
                 COMMAND "${test_name}" --p1d-path-audit
             )
+            add_test(
+                NAME device_scvx_qoco_handback_test
+                COMMAND "${test_name}" --qoco-handback
+            )
             set_tests_properties(
                 device_scvx_production_test
                 device_scvx_p1d_path_audit_test
+                device_scvx_qoco_handback_test
                 PROPERTIES TIMEOUT 180
             )
         endif()

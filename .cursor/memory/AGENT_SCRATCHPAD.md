@@ -330,3 +330,35 @@ Use this file as persistent, repo-local execution memory.
   pure-GPU IPM CQP solve qualifies.
 - Do not route the unqualified PDHCG primal to the hybrid backend. A production nonlinear QOCO
   handback/acceptance owner is still required before P1-D can produce qualified outer evidence.
+
+### 2026-09-01 22:30 AEST - Production QOCO nonlinear handback
+
+#### Task Summary
+
+- Added pure-QOCO and qualified-hybrid candidate transfer into the resident CUDA nonlinear replay
+  and frozen outer acceptance path for HCW, P1-C, corrected P1-D, and P1-E.
+- Added pre-QOCO hybrid quality/fingerprint gating and explicit primal-only dual disposition.
+
+#### Mistakes And Fixes
+
+- `[tool]` Directly cherry-picking P1-D onto the older isolated base exposed conflicts because the
+  correction's parent was integrated `a33e950`. Merged that exact integrated baseline first, then
+  cherry-picked both requested corrections cleanly in order.
+- `[tool]` The canonical editable-install finder overrode `PYTHONPATH`. Removed only that finder in
+  an ephemeral test launcher so tests imported the isolated worktree.
+- `[self]` Initially exposed the native handback without a dedicated executable fixture. Added
+  `--qoco-handback` coverage that requires a device replay and an outer accept/reject decision.
+
+#### What Worked
+
+- Changed Python coverage passed 156 tests including pinned CPU QOCO and native C ABI checks.
+- All 41 host native tests passed; both changed CUDA translation units compile for `sm_120`.
+- Negative coverage prevents QOCO execution after an ineligible PDHCG predictor and rejects stale
+  CQP fingerprints, ordering mismatch, hidden CPU replay, and adverse nonlinear merit.
+
+#### Guardrails And Follow-Ups
+
+- `[user]` Keep `pure-gpu-ipm` and `hybrid-pdhcg-ipm` labels and timing records distinct.
+- `[user]` Do not run the new CUDA handback executable, measured performance, energy, or matrix
+  work until the single RTX 5090 is explicitly free for serialized correctness validation.
+- The short `device_scvx_qoco_handback_test` still needs one serialized RTX correctness run.

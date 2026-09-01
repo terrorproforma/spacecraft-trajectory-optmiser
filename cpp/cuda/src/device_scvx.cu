@@ -795,6 +795,14 @@ struct ScvxMetrics {
     double terminal;
     double virtual_control;
     double step;
+    double thrust;
+    double torque;
+    double pointing;
+    double mass;
+    double altitude;
+    double glide_slope;
+    double angular_rate;
+    double quaternion;
 };
 
 template <int Model, int StateDimension, int ControlDimension>
@@ -1213,6 +1221,7 @@ __global__ void scvx_metrics_kernel(
                 / maximum_thrust;
             const double thrust_path =
                 fmax(normalised_thrust_violation, throttle_violation);
+            result.thrust = fmax(result.thrust, normalised_thrust_violation);
             result.path = fmax(result.path, normalised_thrust_violation);
             result.path = fmax(result.path, throttle_violation);
             result.path_thrust = fmax(result.path_thrust, thrust_path);
@@ -1233,6 +1242,8 @@ __global__ void scvx_metrics_kernel(
                     0.0,
                     update.tilt_cosine * control[6] - control[2]
                 ) / update.maximum_thrust;
+                result.torque = fmax(result.torque, torque_violation);
+                result.pointing = fmax(result.pointing, pointing_violation);
                 result.path = fmax(
                     result.path,
                     fmax(torque_violation, pointing_violation)
@@ -1266,8 +1277,80 @@ __global__ void scvx_metrics_kernel(
                 actual_mass_violation
             );
             result.path_mass = fmax(result.path_mass, actual_mass_violation);
+            result.mass = fmax(result.mass, actual_mass_violation);
             actual_path_sum += actual_mass_violation;
             model_path_sum += model_mass_violation;
+            if (model
+                == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF) {
+                const double* actual_state =
+                    replay + node * state_dimension;
+                const double* model_state =
+                    states + node * state_dimension;
+                const double position_scale = fmax(
+                    update.state_trust_scales[0],
+                    fmax(
+                        update.state_trust_scales[1],
+                        update.state_trust_scales[2]
+                    )
+                );
+                const double actual_altitude =
+                    fmax(0.0, -actual_state[2]) * position_scale;
+                const double model_altitude =
+                    fmax(0.0, -model_state[2]) * position_scale;
+                const double actual_glide = fmax(
+                    0.0,
+                    hypot(actual_state[0], actual_state[1])
+                        - update.glide_slope_tangent * actual_state[2]
+                ) * position_scale;
+                const double model_glide = fmax(
+                    0.0,
+                    hypot(model_state[0], model_state[1])
+                        - update.glide_slope_tangent * model_state[2]
+                ) * position_scale;
+                result.altitude = fmax(result.altitude, actual_altitude);
+                result.glide_slope = fmax(result.glide_slope, actual_glide);
+                result.path = fmax(
+                    result.path,
+                    fmax(actual_altitude, actual_glide)
+                );
+                actual_path_sum += actual_altitude + actual_glide;
+                model_path_sum += model_altitude + model_glide;
+            } else if (model
+                       == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
+                const double* actual_state =
+                    replay + node * state_dimension;
+                const double* model_state =
+                    states + node * state_dimension;
+                const double position_scale = fmax(
+                    update.state_trust_scales[0],
+                    fmax(
+                        update.state_trust_scales[1],
+                        update.state_trust_scales[2]
+                    )
+                );
+                const double actual_radius = sqrt(
+                    actual_state[0] * actual_state[0]
+                    + actual_state[1] * actual_state[1]
+                    + actual_state[2] * actual_state[2]
+                );
+                const double model_radius = sqrt(
+                    model_state[0] * model_state[0]
+                    + model_state[1] * model_state[1]
+                    + model_state[2] * model_state[2]
+                );
+                const double actual_altitude = fmax(
+                    0.0,
+                    update.minimum_radius - actual_radius
+                ) * position_scale;
+                const double model_altitude = fmax(
+                    0.0,
+                    update.minimum_radius - model_radius
+                ) * position_scale;
+                result.altitude = fmax(result.altitude, actual_altitude);
+                result.path = fmax(result.path, actual_altitude);
+                actual_path_sum += actual_altitude;
+                model_path_sum += model_altitude;
+            }
             if (model
                 == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
                 const double* actual_state =
@@ -1329,6 +1412,9 @@ __global__ void scvx_metrics_kernel(
                         fmax(actual_glide, actual_rate)
                     )
                 );
+                result.altitude = fmax(result.altitude, actual_altitude);
+                result.glide_slope = fmax(result.glide_slope, actual_glide);
+                result.angular_rate = fmax(result.angular_rate, actual_rate);
                 actual_path_sum +=
                     actual_altitude + actual_glide + actual_rate;
                 model_path_sum += model_altitude + model_glide + model_rate;
@@ -1375,6 +1461,10 @@ __global__ void scvx_metrics_kernel(
             }
             result.path = fmax(
                 result.path,
+                fabs(sqrt(norm_squared) - 1.0)
+            );
+            result.quaternion = fmax(
+                result.quaternion,
                 fabs(sqrt(norm_squared) - 1.0)
             );
             double model_norm_squared = 0.0;
@@ -2708,6 +2798,231 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_path_inventory(
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     *inventory = driver->path_inventory;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+extern "C" spacepdhcg_cuda_status
+spacepdhcg_cuda_scvx_driver_handback_qoco(
+    spacepdhcg_cuda_scvx_driver* driver,
+    const spacepdhcg_cuda_qoco_candidate* candidate,
+    const spacepdhcg_accelerator_stream stream,
+    spacepdhcg_cuda_qoco_handback_result* result
+) {
+    if (driver == nullptr || candidate == nullptr || result == nullptr
+        || candidate->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || stream.device.type != SPACEPDHCG_DEVICE_CUDA
+        || stream.device.id != driver->problem.reference_states.device.id) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    std::memset(result, 0, sizeof(*result));
+    result->abi_version = SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
+    result->mode = candidate->mode;
+    result->dual_discarded = candidate->dual_discarded;
+    result->trust_radius_before = candidate->trust_radius;
+    result->trust_radius_after = candidate->trust_radius;
+    result->trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_RETAIN;
+    result->conversion_seconds = candidate->conversion_seconds;
+    result->setup_seconds = candidate->setup_seconds;
+    result->polish_seconds = candidate->polish_seconds;
+    result->hidden_cpu_fallback = 0;
+
+    if (candidate->mode == SPACEPDHCG_CUDA_QOCO_HYBRID_PDHCG_IPM
+        && candidate->hybrid_handoff_eligible == 0) {
+        result->disposition =
+            SPACEPDHCG_CUDA_QOCO_HANDBACK_HYBRID_INELIGIBLE;
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
+    if (candidate->qoco_solved == 0
+        || !std::isfinite(candidate->canonical_primal_residual)
+        || !std::isfinite(candidate->canonical_dual_residual)
+        || !(candidate->quality_tolerance > 0.0)
+        || candidate->canonical_primal_residual > candidate->quality_tolerance
+        || candidate->canonical_dual_residual > candidate->quality_tolerance) {
+        result->disposition =
+            SPACEPDHCG_CUDA_QOCO_HANDBACK_CQP_UNQUALIFIED;
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
+    const size_t primal_elements =
+        driver->problem.numeric.linear_objective.elements;
+    const size_t dual_elements =
+        driver->problem.numeric.scalar_lower.elements
+        + driver->problem.numeric.affine_offset.elements;
+    if (candidate->canonical_primal_host == nullptr
+        || candidate->canonical_dual_host == nullptr
+        || candidate->primal_elements != primal_elements
+        || candidate->dual_elements != dual_elements
+        || candidate->topology_fingerprint
+            != driver->problem.topology_fingerprint) {
+        result->disposition =
+            SPACEPDHCG_CUDA_QOCO_HANDBACK_PERMUTATION_MISMATCH;
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
+    result->permutation_match = 1;
+    const auto native =
+        reinterpret_cast<cudaStream_t>(stream.native_handle);
+    uint64_t numeric_fingerprint = 0U;
+    auto api_status = collect_numeric_fingerprint(
+        driver,
+        native,
+        &numeric_fingerprint
+    );
+    if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+        return api_status;
+    }
+    result->cqp_numeric_fingerprint = numeric_fingerprint;
+    result->fingerprint_match =
+        numeric_fingerprint == candidate->cqp_numeric_fingerprint ? 1 : 0;
+    if (result->fingerprint_match == 0) {
+        result->disposition =
+            SPACEPDHCG_CUDA_QOCO_HANDBACK_STALE_CQP;
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
+
+    auto cuda_status = cudaEventRecord(driver->timer_start, native);
+    if (cuda_status != cudaSuccess) {
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    }
+    cuda_status = cudaMemcpyAsync(
+        driver->primal,
+        candidate->canonical_primal_host,
+        primal_elements * sizeof(double),
+        cudaMemcpyHostToDevice,
+        native
+    );
+    if (cuda_status == cudaSuccess) {
+        cuda_status = cudaMemcpyAsync(
+            driver->dual,
+            candidate->canonical_dual_host,
+            dual_elements * sizeof(double),
+            cudaMemcpyHostToDevice,
+            native
+        );
+    }
+    if (cuda_status != cudaSuccess) {
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    }
+    api_status = time_stop(
+        driver,
+        native,
+        &result->transfer_seconds
+    );
+    if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+        return api_status;
+    }
+    result->h2d_bytes =
+        (primal_elements + dual_elements) * sizeof(double);
+    const size_t state_elements =
+        (driver->problem.intervals + 1U) * driver->problem.state_dimension;
+    const size_t control_elements =
+        driver->problem.intervals * driver->problem.control_dimension;
+    gather_scvx_candidate_kernel<<<1, 256, 0, native>>>(
+        driver->primal,
+        view_pointer<const int>(driver->problem.state_variable_indices),
+        view_pointer<const int>(driver->problem.control_variable_indices),
+        driver->candidate_states,
+        driver->candidate_controls,
+        state_elements,
+        control_elements
+    );
+    if (cudaGetLastError() != cudaSuccess) {
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    }
+    double ignored_d2h_seconds = 0.0;
+    api_status = collect_metrics(
+        driver,
+        driver->candidate_states,
+        driver->candidate_controls,
+        true,
+        native,
+        &result->replay_seconds,
+        &ignored_d2h_seconds
+    );
+    if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+        return api_status;
+    }
+    result->device_replay = 1;
+    const ScvxMetrics metrics = *driver->host_metrics;
+    const auto acceptance_started = std::chrono::steady_clock::now();
+    result->objective = metrics.objective;
+    result->dynamics_residual = metrics.dynamics;
+    result->path_residual = metrics.path;
+    result->terminal_residual = metrics.terminal;
+    result->virtual_control_residual = metrics.virtual_control;
+    result->trajectory_step = metrics.step;
+    result->thrust_violation = metrics.thrust;
+    result->torque_violation = metrics.torque;
+    result->pointing_violation = metrics.pointing;
+    result->mass_violation = metrics.mass;
+    result->altitude_violation = metrics.altitude;
+    result->glide_slope_violation = metrics.glide_slope;
+    result->angular_rate_violation = metrics.angular_rate;
+    result->quaternion_violation = metrics.quaternion;
+    result->predicted_reduction = std::max(
+        1.0e-12,
+        candidate->current_merit - metrics.model_merit
+    );
+    result->actual_reduction =
+        candidate->current_merit - metrics.merit;
+    result->reduction_ratio =
+        result->actual_reduction / result->predicted_reduction;
+    const bool restoration = maximum_outer_residual(metrics)
+        <= driver->options.restoration_reduction
+            * candidate->current_outer_residual;
+    const bool accepted =
+        (result->actual_reduction > 1.0e-10
+         && std::isfinite(result->reduction_ratio)
+         && result->reduction_ratio
+            >= driver->options.acceptance_threshold)
+        || restoration;
+    result->accepted = accepted ? 1 : 0;
+    result->restoration_accepted = accepted && restoration ? 1 : 0;
+    if (accepted) {
+        cuda_status = cudaMemcpyAsync(
+            view_pointer<double>(driver->problem.reference_states),
+            driver->replay_states,
+            state_elements * sizeof(double),
+            cudaMemcpyDeviceToDevice,
+            native
+        );
+        if (cuda_status == cudaSuccess) {
+            cuda_status = cudaMemcpyAsync(
+                view_pointer<double>(driver->problem.reference_controls),
+                driver->candidate_controls,
+                control_elements * sizeof(double),
+                cudaMemcpyDeviceToDevice,
+                native
+            );
+        }
+        if (cuda_status != cudaSuccess
+            || cudaStreamSynchronize(native) != cudaSuccess) {
+            return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        }
+        result->disposition =
+            SPACEPDHCG_CUDA_QOCO_HANDBACK_ACCEPTED;
+        if (result->reduction_ratio
+                >= driver->options.strong_agreement_threshold
+            && metrics.step
+                >= driver->options.near_boundary_fraction
+                    * std::max(1.0e-12, candidate->trust_radius)) {
+            result->trust_radius_after = std::min(
+                driver->options.maximum_trust_radius,
+                driver->options.expansion_factor * candidate->trust_radius
+            );
+            result->trust_action =
+                SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND;
+        }
+    } else {
+        result->disposition =
+            SPACEPDHCG_CUDA_QOCO_HANDBACK_NONLINEAR_REJECTED;
+        result->trust_radius_after = std::max(
+            driver->options.minimum_trust_radius,
+            driver->options.shrink_factor * candidate->trust_radius
+        );
+        result->trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_SHRINK;
+    }
+    result->acceptance_seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - acceptance_started
+    ).count();
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 

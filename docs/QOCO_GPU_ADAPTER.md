@@ -47,13 +47,35 @@ recomputed independently in original, unequilibrated canonical coordinates.
 
 ## Hybrid handoff
 
-`PDHCGQOCOHybrid` runs a PDHCG backend first and offers a solved, finite
-primal to QOCO. Qualification records the canonical primal residual and
-whether the start was accepted. QOCO exposes no dual-start API, so a supplied
-PDHCG dual is always discarded and reported as such. The QOCO result is
+`PDHCGQOCOHybrid` runs a PDHCG backend first and applies the frozen `1e-6`
+handoff gate before calling QOCO. Both reported PDHCG residuals, an
+independently recomputed canonical primal residual, finite canonical ordering,
+and the exact final CQP numeric fingerprint must pass. An ineligible predictor
+raises `QOCOHybridIneligibleError` with a complete `HybridRunReport`; QOCO is
+not run and the result is not labelled hybrid. QOCO exposes no dual-start API,
+so a supplied PDHCG dual is always discarded and reported as
+`discarded-unsupported-by-pinned-qoco`. The QOCO result is
 converted back to canonical primal/dual ordering before optional nonlinear
 handback. Failed QOCO results are returned with a failure classification, and
 `solve_and_handback` refuses to pass a failed result to the nonlinear owner.
+
+## Nonlinear candidate handback
+
+`handback_qoco_candidate` keeps pure `pure-gpu-ipm` and qualified
+`hybrid-pdhcg-ipm` records distinct. It rechecks independent canonical QOCO
+quality and the exact CQP/topology fingerprints before invoking a
+`DeviceNonlinearOwner`. The owner must prove canonical identity ordering,
+device replay, complete family path inventory, and zero hidden CPU fallback.
+
+The native `spacepdhcg_cuda_scvx_driver_handback_qoco` C ABI copies canonical
+primal and dual vectors to the resident workspace, gathers state/control
+trajectories, and evaluates RK4 dynamics, path, terminal, virtual-control and
+quaternion metrics on the declared CUDA stream. It applies the same frozen
+predicted/actual reduction, restoration, trust shrink/retain/expand, and
+transactional commit rules as the production outer driver. Rejected
+candidates leave the resident nonlinear reference unchanged. Conversion,
+setup, polish, host-to-device transfer, replay, and acceptance costs are
+reported separately.
 
 ## Serialized GPU validation
 
@@ -64,5 +86,7 @@ dual discard. The CUDA runtime requires both `build/qoco-cudss-lib` and the pinn
 `nvidia/cu12/lib` directory on `LD_LIBRARY_PATH`; omitting them is correctly classified as setup
 failure rather than solver evidence.
 
-This validates the adapter and CUDA ABI, not the nonlinear P1-C/P1-D/P1-E outer loops or a G4
-performance claim. A qualified nonlinear handback remains prerequisite to the unchanged matrix.
+This validates the original adapter and CUDA ABI, not the new nonlinear
+handback. The dedicated short `device_scvx_qoco_handback_test` remains deferred
+until the single RTX 5090 is free. No performance, energy, or full frozen
+matrix result is implied by the compile/static coverage.

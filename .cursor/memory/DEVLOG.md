@@ -102,3 +102,23 @@
     rejected by the frozen `1e-6` hybrid handoff gate.
   - QOCO evidence is valid only as `pure-gpu-ipm`; fixed-tight PDHCG still has zero qualified
     accepted outer steps. Production nonlinear QOCO handback remains a separate dependency.
+
+## 2026-09-01 22:30 AEST
+
+- What changed:
+  - Aligned the isolated QOCO branch with integrated G4 commit `a33e950`, then cherry-picked the
+    corrected P1-D lifecycle and terminal-quaternion commits in the requested order.
+  - Added native canonical primal/dual transfer, family-complete device nonlinear replay,
+    fingerprint/permutation checks, frozen merit/trust acceptance, and transactional handback.
+  - Added a strict pre-QOCO PDHCG gate; the known `2.818e-2` predictor remains explicitly
+    ineligible and cannot be relabelled hybrid.
+  - Added distinct pure/hybrid labels, timing and dual-disposition records plus HCW/P1-C/P1-D/P1-E
+    and negative handback fixtures.
+- Validation:
+  - 156 Python tests passed with pinned CPU QOCO and the host native library.
+  - Release host build and 41/41 CTest tests passed.
+  - `device_scvx.cu` and its integration fixture compiled with CUDA 12.8 for `sm_120`.
+  - Changed Python files pass Ruff lint and format checks; `git diff --check` passes.
+- Follow-ups / risks:
+  - The dedicated short RTX `device_scvx_qoco_handback_test` is compiled but unrun while the GPU is
+    reserved. No performance, energy, or matrix run was performed.

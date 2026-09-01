@@ -50,6 +50,7 @@ bool g4_sample_mode = false;
 bool g4_diagnostic_mode = false;
 bool p1d_path_audit_mode = false;
 bool p1d_diagnostic_mode = false;
+bool qoco_handback_mode = false;
 std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
@@ -716,7 +717,20 @@ IntegrationResult run_resident_sequence(
         numeric_update.fuel_weight = fuel_weight;
         numeric_update.virtual_l1_weight = virtual_l1_weight;
         if (dynamics_config.model
-            == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
+            == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF) {
+            const dynamics::PoweredDescent3DofModel physical_model{};
+            const auto& physical = physical_model.config();
+            numeric_update.maximum_thrust = physical.maximum_thrust;
+            numeric_update.glide_slope_tangent =
+                physical.glide_slope_tangent();
+        } else if (dynamics_config.model
+                   == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
+            const dynamics::LowThrustTwoBodyModel physical_model{};
+            const auto& physical = physical_model.config();
+            numeric_update.maximum_thrust = physical.maximum_thrust;
+            numeric_update.minimum_radius = physical.minimum_radius;
+        } else if (dynamics_config.model
+                   == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
             const dynamics::PoweredDescent6DofModel physical_model{};
             const auto& physical =
                 physical_model.config();
@@ -1134,6 +1148,113 @@ IntegrationResult run_resident_sequence(
             path_inventory.abi_version == SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
             "production outer path inventory ABI mismatch"
         );
+        if (qoco_handback_mode) {
+            const auto canonical_primal = problem.primal.download(problem.stream);
+            const auto canonical_dual = problem.dual.download(problem.stream);
+            const auto& final_iteration =
+                records[outer.outer_iterations - 1U];
+            const double outer_residual = std::max({
+                outer.dynamics_defect,
+                outer.path_violation,
+                outer.terminal_residual,
+                outer.virtual_control,
+            });
+            const spacepdhcg_cuda_qoco_candidate candidate{
+                SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
+                SPACEPDHCG_CUDA_QOCO_PURE_GPU_IPM,
+                canonical_primal.data(),
+                canonical_primal.size(),
+                canonical_dual.data(),
+                canonical_dual.size(),
+                problem.fingerprint,
+                final_iteration.cqp_numeric_fingerprint,
+                outer.canonical_residual,
+                outer.canonical_residual,
+                std::max(1.0e-8, 1.01 * outer.canonical_residual),
+                outer.final_trust_radius,
+                outer.objective
+                    + 100.0
+                        * (outer.path_violation + outer.terminal_residual),
+                outer_residual,
+                1,
+                1,
+                0,
+                1.0e-4,
+                2.0e-4,
+                3.0e-4,
+            };
+            spacepdhcg_cuda_qoco_handback_result handback{};
+            test::status_require(
+                spacepdhcg_cuda_scvx_driver_handback_qoco(
+                    driver,
+                    &candidate,
+                    problem.exchange.consumer_stream,
+                    &handback
+                ),
+                "QOCO candidate nonlinear handback"
+            );
+            test::require(
+                handback.device_replay == 1
+                    && handback.hidden_cpu_fallback == 0,
+                "QOCO handback did not use the native device replay"
+            );
+            test::require(
+                handback.fingerprint_match == 1
+                    && handback.permutation_match == 1,
+                "QOCO handback fingerprint/permutation mismatch"
+            );
+            test::require(
+                handback.disposition
+                        == SPACEPDHCG_CUDA_QOCO_HANDBACK_ACCEPTED
+                    || handback.disposition
+                        == SPACEPDHCG_CUDA_QOCO_HANDBACK_NONLINEAR_REJECTED,
+                "QOCO handback did not make an outer acceptance decision"
+            );
+            test::require(
+                std::isfinite(handback.quaternion_violation)
+                    && std::isfinite(handback.terminal_residual)
+                    && std::isfinite(handback.reduction_ratio),
+                "QOCO handback omitted P1-D nonlinear quality"
+            );
+            auto ineligible = candidate;
+            ineligible.mode =
+                SPACEPDHCG_CUDA_QOCO_HYBRID_PDHCG_IPM;
+            ineligible.hybrid_handoff_eligible = 0;
+            spacepdhcg_cuda_qoco_handback_result hybrid{};
+            test::status_require(
+                spacepdhcg_cuda_scvx_driver_handback_qoco(
+                    driver,
+                    &ineligible,
+                    problem.exchange.consumer_stream,
+                    &hybrid
+                ),
+                "ineligible hybrid handback"
+            );
+            test::require(
+                hybrid.disposition
+                        == SPACEPDHCG_CUDA_QOCO_HANDBACK_HYBRID_INELIGIBLE
+                    && hybrid.device_replay == 0,
+                "ineligible hybrid reached QOCO nonlinear replay"
+            );
+            std::printf(
+                "{\"case\":\"qoco_handback\",\"family\":\"P1-D-pd6\","
+                "\"mode\":\"pure-gpu-ipm\",\"accepted\":%d,"
+                "\"fingerprint_match\":%d,\"permutation_match\":%d,"
+                "\"device_replay\":%d,\"hidden_cpu_fallback\":%d,"
+                "\"quaternion\":%.17g,\"terminal\":%.17g,"
+                "\"predicted\":%.17g,\"actual\":%.17g,\"ratio\":%.17g}\n",
+                handback.accepted,
+                handback.fingerprint_match,
+                handback.permutation_match,
+                handback.device_replay,
+                handback.hidden_cpu_fallback,
+                handback.quaternion_violation,
+                handback.terminal_residual,
+                handback.predicted_reduction,
+                handback.actual_reduction,
+                handback.reduction_ratio
+            );
+        }
         outer.topology_seconds = topology_seconds;
         outer.workspace_create_seconds = workspace_create_seconds;
         const double quality_tolerance = sanitizer_mode ? 1.0e-2 : 1.0e-6;
@@ -2322,6 +2443,19 @@ int main(const int argc, char** argv) {
         || mode == "--p1d-path-audit"
         || mode == "--dump-p1d"
         || mode == "--diagnose-p1d";
+    if (mode == "--qoco-handback") {
+        production_driver_mode = true;
+        qoco_handback_mode = true;
+        g4_sample_mode = true;
+        g4_family = "P1-D-pd6";
+        g4_intervals = 2U;
+        g4_policy = "fixed-tight";
+        g4_quality_tier = "ipm";
+        g4_quality_tolerance = 1.0e-8;
+        g4_dispersion = 0.05;
+        g4_secondary_dispersion = 0.05;
+        production_outer_iterations = 1U;
+    }
     if (mode == "--diagnose-p1d") {
         p1d_diagnostic_mode = true;
         g4_sample_mode = true;

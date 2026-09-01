@@ -42,6 +42,20 @@ typedef enum spacepdhcg_cuda_scvx_trust_action {
     SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND = 2
 } spacepdhcg_cuda_scvx_trust_action;
 
+typedef enum spacepdhcg_cuda_qoco_mode {
+    SPACEPDHCG_CUDA_QOCO_PURE_GPU_IPM = 0,
+    SPACEPDHCG_CUDA_QOCO_HYBRID_PDHCG_IPM = 1
+} spacepdhcg_cuda_qoco_mode;
+
+typedef enum spacepdhcg_cuda_qoco_handback_disposition {
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_ACCEPTED = 0,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_NONLINEAR_REJECTED = 1,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_CQP_UNQUALIFIED = 2,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_HYBRID_INELIGIBLE = 3,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_PERMUTATION_MISMATCH = 4,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_STALE_CQP = 5
+} spacepdhcg_cuda_qoco_handback_disposition;
+
 typedef struct spacepdhcg_cuda_scvx_numeric_update {
     uint32_t abi_version;
     spacepdhcg_accelerator_buffer_view quadratic_diagonal_positions;
@@ -64,6 +78,7 @@ typedef struct spacepdhcg_cuda_scvx_numeric_update {
     double maximum_angular_rate;
     double tilt_cosine;
     double glide_slope_tangent;
+    double minimum_radius;
 } spacepdhcg_cuda_scvx_numeric_update;
 
 typedef struct spacepdhcg_cuda_scvx_problem {
@@ -242,6 +257,70 @@ typedef struct spacepdhcg_cuda_scvx_path_inventory {
     double altitude_violation;
 } spacepdhcg_cuda_scvx_path_inventory;
 
+typedef struct spacepdhcg_cuda_qoco_candidate {
+    uint32_t abi_version;
+    spacepdhcg_cuda_qoco_mode mode;
+    const double* canonical_primal_host;
+    size_t primal_elements;
+    const double* canonical_dual_host;
+    size_t dual_elements;
+    uint64_t topology_fingerprint;
+    uint64_t cqp_numeric_fingerprint;
+    double canonical_primal_residual;
+    double canonical_dual_residual;
+    double quality_tolerance;
+    double trust_radius;
+    double current_merit;
+    double current_outer_residual;
+    int32_t qoco_solved;
+    int32_t hybrid_handoff_eligible;
+    int32_t dual_discarded;
+    double conversion_seconds;
+    double setup_seconds;
+    double polish_seconds;
+} spacepdhcg_cuda_qoco_candidate;
+
+typedef struct spacepdhcg_cuda_qoco_handback_result {
+    uint32_t abi_version;
+    spacepdhcg_cuda_qoco_mode mode;
+    spacepdhcg_cuda_qoco_handback_disposition disposition;
+    int32_t accepted;
+    int32_t restoration_accepted;
+    int32_t fingerprint_match;
+    int32_t permutation_match;
+    int32_t device_replay;
+    int32_t hidden_cpu_fallback;
+    int32_t dual_discarded;
+    spacepdhcg_cuda_scvx_trust_action trust_action;
+    double trust_radius_before;
+    double trust_radius_after;
+    double predicted_reduction;
+    double actual_reduction;
+    double reduction_ratio;
+    double objective;
+    double dynamics_residual;
+    double path_residual;
+    double terminal_residual;
+    double virtual_control_residual;
+    double trajectory_step;
+    double thrust_violation;
+    double torque_violation;
+    double pointing_violation;
+    double mass_violation;
+    double altitude_violation;
+    double glide_slope_violation;
+    double angular_rate_violation;
+    double quaternion_violation;
+    uint64_t cqp_numeric_fingerprint;
+    double conversion_seconds;
+    double setup_seconds;
+    double polish_seconds;
+    double transfer_seconds;
+    double replay_seconds;
+    double acceptance_seconds;
+    uint64_t h2d_bytes;
+} spacepdhcg_cuda_qoco_handback_result;
+
 spacepdhcg_cuda_status spacepdhcg_cuda_scvx_update_numeric_async(
     const spacepdhcg_cuda_scvx_problem* problem,
     double trust_radius,
@@ -261,6 +340,13 @@ spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     spacepdhcg_cuda_scvx_iteration* iterations,
     size_t iteration_capacity,
     spacepdhcg_cuda_scvx_result* result
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_handback_qoco(
+    spacepdhcg_cuda_scvx_driver* driver,
+    const spacepdhcg_cuda_qoco_candidate* candidate,
+    spacepdhcg_accelerator_stream stream,
+    spacepdhcg_cuda_qoco_handback_result* result
 );
 
 spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_cancel(
