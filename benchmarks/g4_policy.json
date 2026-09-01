@@ -8,6 +8,7 @@
     "fixed-tight": {
       "backend": "spacepdhcg-persistent",
       "inner_tolerance": 1e-08,
+      "inner_tolerance_rule": "selected-quality-tier",
       "inner_iteration_limit": 1000000,
       "final_polish": false
     },
@@ -129,6 +130,20 @@
     "objective_practical_equivalence_relative": 1e-04,
     "virtual_control_tolerance": 1e-06,
     "continuous_time_tolerance": 1e-06,
+    "required_path_inventory": {
+      "P1-C-pd3": ["thrust", "mass", "altitude", "glide_slope"],
+      "P1-D-pd6": [
+        "thrust",
+        "torque",
+        "pointing",
+        "mass",
+        "altitude",
+        "glide_slope",
+        "angular_rate",
+        "quaternion"
+      ],
+      "P1-E-low-thrust": ["thrust", "mass", "altitude"]
+    },
     "unqualified_results_support_claims": false
   },
   "tuning_evaluation_split": {
@@ -154,7 +169,11 @@
       349,
       389,
       431,
-      479
+      479,
+      521,
+      569,
+      617,
+      659
     ],
     "evaluation_may_not_change_policy": true
   },
@@ -182,6 +201,7 @@
     },
     "conditioning_log10_spans": [0.0, 2.0, 4.0, 8.0],
     "quality_tiers": ["coarse", "medium", "tight", "ipm"],
+    "scaling_modes": ["always_refresh", "reuse", "refresh_if_needed"],
     "warm_start_modes": ["cold", "primal", "primal_dual"],
     "measured_repeats": 7,
     "warmup_repeats": 2,

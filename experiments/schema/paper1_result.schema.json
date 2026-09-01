@@ -63,13 +63,43 @@
             "unsupported",
             "oom",
             "timeout",
+            "numerical",
+            "infeasible",
+            "unrun",
             "failed"
           ]
         },
         "hardware_id": {"type": ["string", "null"]},
         "precision": {"enum": ["float32", "float64", "mixed", null]},
         "warm_start": {"type": ["boolean", "null"]},
-        "cold_start": {"type": ["boolean", "null"]}
+        "cold_start": {"type": ["boolean", "null"]},
+        "gate": {"enum": ["G4", null]},
+        "campaign": {"type": ["string", "null"]},
+        "quality_tier": {"enum": ["coarse", "medium", "tight", "ipm", null]},
+        "conditioning": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "scaling_mode": {
+          "enum": ["always_refresh", "reuse", "refresh_if_needed", null]
+        },
+        "warm_mode": {"enum": ["cold", "primal", "primal_dual", null]},
+        "seed": {"type": ["integer", "null"], "minimum": 0},
+        "repeat_kind": {"enum": ["warmup", "measured", null]},
+        "repeat": {"type": ["integer", "null"], "minimum": 0},
+        "solver_order": {"type": ["integer", "null"], "minimum": 0},
+        "failure_class": {
+          "enum": [
+            "none",
+            "unsupported",
+            "oom",
+            "timeout",
+            "numerical",
+            "infeasible",
+            "max_iterations",
+            "unrun",
+            "evidence",
+            null
+          ]
+        },
+        "failure_reason": {"type": ["string", "null"]}
       }
     },
     "dimensions": {
@@ -106,7 +136,12 @@
           "additionalProperties": {"type": "integer", "minimum": 0}
         },
         "topology_bytes": {"type": ["integer", "null"], "minimum": 0},
-        "numeric_bytes": {"type": ["integer", "null"], "minimum": 0}
+        "numeric_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "dispersion_class": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "attitude_class": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "rate_class": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "transfer_class": {"type": ["string", "null"]},
+        "trust_class": {"$ref": "#/$defs/nonnegativeOrNull"}
       }
     },
     "quality": {
@@ -145,7 +180,28 @@
         "risk_epigraph_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
         "ct_error_estimate": {"$ref": "#/$defs/nonnegativeOrNull"},
         "requested_tolerance": {"$ref": "#/$defs/nonnegativeOrNull"},
-        "achieved_residual": {"$ref": "#/$defs/nonnegativeOrNull"}
+        "achieved_residual": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "continuous_time_violation": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "solver_status": {
+          "enum": [
+            "converged",
+            "max_iterations",
+            "numerical_failure",
+            "infeasible",
+            "unsupported",
+            null
+          ]
+        },
+        "convergence_criteria_met": {"type": ["boolean", "null"]},
+        "objective_equivalent": {"type": ["boolean", "null"]},
+        "matched_quality_state": {"enum": ["matched", "unqualified", null]},
+        "independent_replay": {"type": ["boolean", "null"]},
+        "path_inventory_complete": {"type": ["boolean", "null"]},
+        "uses_solver_cached_residuals": {"type": ["boolean", "null"]},
+        "path_inventory": {
+          "type": ["object", "null"],
+          "additionalProperties": {"$ref": "#/$defs/pathCheck"}
+        }
       }
     },
     "timing": {
@@ -182,7 +238,23 @@
         "collective_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
         "cqp_total_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
         "scvx_total_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
-        "accepted_trajectory_seconds": {"$ref": "#/$defs/nonnegativeOrNull"}
+        "accepted_trajectory_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "recovery_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "hybrid_conversion_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "hybrid_setup_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "polish_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "cuda_startup_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "cuda_startup_included": {"type": ["boolean", "null"]},
+        "accepted_trajectory_count": {"type": ["integer", "null"], "minimum": 1},
+        "accepted_timing_boundary": {"type": ["string", "null"]},
+        "cqp_total_identity": {
+          "type": ["array", "null"],
+          "items": {"type": "string"}
+        },
+        "scvx_total_identity": {
+          "type": ["array", "null"],
+          "items": {"type": "string"}
+        }
       }
     },
     "work": {
@@ -238,7 +310,16 @@
           "minimum": 0
         },
         "load_imbalance": {"$ref": "#/$defs/nonnegativeOrNull"},
-        "throughput_per_second": {"$ref": "#/$defs/nonnegativeOrNull"}
+        "throughput_per_second": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "energy_scope": {"enum": ["GPU-only", null]},
+        "energy_sampling_interval_milliseconds": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "energy_maximum_gap_seconds": {"$ref": "#/$defs/nonnegativeOrNull"},
+        "energy_sampling_gaps": {"type": ["boolean", "null"]},
+        "energy_valid": {"type": ["boolean", "null"]},
+        "shared_or_display_gpu": {"type": ["boolean", "null"]}
       }
     },
     "aggregation": {
@@ -268,7 +349,10 @@
         "coefficient_of_variation": {"$ref": "#/$defs/nonnegativeOrNull"},
         "censored_count": {"type": "integer", "minimum": 0},
         "bootstrap_low": {"$ref": "#/$defs/finiteOrNull"},
-        "bootstrap_high": {"$ref": "#/$defs/finiteOrNull"}
+        "bootstrap_high": {"$ref": "#/$defs/finiteOrNull"},
+        "instance_count": {"type": ["integer", "null"], "minimum": 0},
+        "evaluation_seed_count": {"type": ["integer", "null"], "minimum": 0},
+        "paired_bootstrap_samples": {"type": ["integer", "null"], "minimum": 0}
       }
     },
     "artifacts": {
@@ -286,11 +370,129 @@
         "energy_trace": {"$ref": "#/$defs/artifactOrNull"}
       }
     },
+    "g4": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_sha256",
+        "runtime_requested",
+        "runtime_actual",
+        "outer_iterations",
+        "hybrid_permutation",
+        "hybrid_dual_disposition"
+      ],
+      "properties": {
+        "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "runtime_requested": {"$ref": "#/$defs/g4Runtime"},
+        "runtime_actual": {"$ref": "#/$defs/g4Runtime"},
+        "outer_iterations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/g4OuterIteration"}
+        },
+        "hybrid_permutation": {
+          "type": ["array", "null"],
+          "items": {"type": "integer", "minimum": 0}
+        },
+        "hybrid_dual_disposition": {
+          "enum": ["transferred", "discarded-unsupported", "not-produced", null]
+        }
+      }
+    },
     "notes": {
       "type": "array",
       "items": {"type": "string"}
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "gate": {"const": "G4"},
+              "campaign": {"const": "g4-primary"}
+            },
+            "required": ["gate", "campaign"]
+          }
+        }
+      },
+      "then": {
+        "required": ["g4"],
+        "properties": {
+          "identity": {
+            "required": [
+              "gate",
+              "campaign",
+              "quality_tier",
+              "conditioning",
+              "scaling_mode",
+              "warm_mode",
+              "seed",
+              "repeat_kind",
+              "repeat",
+              "solver_order",
+              "failure_class",
+              "failure_reason"
+            ]
+          },
+          "quality": {
+            "required": [
+              "continuous_time_violation",
+              "solver_status",
+              "convergence_criteria_met",
+              "objective_equivalent",
+              "matched_quality_state",
+              "independent_replay",
+              "path_inventory_complete",
+              "uses_solver_cached_residuals",
+              "path_inventory"
+            ]
+          },
+          "timing": {
+            "required": [
+              "accepted_trajectory_seconds",
+              "recovery_seconds",
+              "hybrid_conversion_seconds",
+              "hybrid_setup_seconds",
+              "polish_seconds",
+              "cuda_startup_seconds",
+              "cuda_startup_included",
+              "accepted_trajectory_count",
+              "accepted_timing_boundary",
+              "cqp_total_identity",
+              "scvx_total_identity"
+            ]
+          },
+          "resources": {
+            "required": [
+              "energy_scope",
+              "energy_sampling_interval_milliseconds",
+              "energy_maximum_gap_seconds",
+              "energy_sampling_gaps",
+              "energy_valid",
+              "shared_or_display_gpu"
+            ]
+          },
+          "aggregation": {
+            "required": [
+              "instance_count",
+              "evaluation_seed_count",
+              "paired_bootstrap_samples"
+            ]
+          },
+          "artifacts": {
+            "properties": {
+              "manifest": {"$ref": "#/$defs/g4Artifact"},
+              "raw": {"$ref": "#/$defs/g4Artifact"},
+              "stdout": {"$ref": "#/$defs/g4Artifact"},
+              "stderr": {"$ref": "#/$defs/g4Artifact"}
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "finiteOrNull": {
       "type": ["number", "null"]
@@ -305,7 +507,89 @@
       "required": ["location", "sha256"],
       "properties": {
         "location": {"type": "string", "minLength": 1},
-        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "immutable_uri": {"type": "string", "minLength": 1},
+        "internal_index_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "portable": {"type": "boolean"}
+      }
+    },
+    "g4Artifact": {
+      "allOf": [
+        {"$ref": "#/$defs/artifact"},
+        {
+          "required": ["immutable_uri", "internal_index_sha256", "portable"]
+        }
+      ]
+    },
+    "g4Runtime": {
+      "type": "object",
+      "required": ["policy", "quality_tier", "scaling_mode", "warm_mode"],
+      "properties": {
+        "policy": {"type": "string", "minLength": 1},
+        "quality_tier": {"enum": ["coarse", "medium", "tight", "ipm"]},
+        "scaling_mode": {"enum": ["always_refresh", "reuse", "refresh_if_needed"]},
+        "warm_mode": {"enum": ["cold", "primal", "primal_dual"]}
+      }
+    },
+    "g4OuterIteration": {
+      "type": "object",
+      "required": [
+        "phase",
+        "requested_tolerance",
+        "achieved_residual",
+        "forcing_satisfied",
+        "trust_before",
+        "trust_after",
+        "trust_action",
+        "re_solved",
+        "cqp_fingerprint",
+        "resolve_fingerprint",
+        "fingerprint_match",
+        "scaling_refreshed",
+        "predicted_reduction",
+        "actual_reduction",
+        "reduction_ratio",
+        "scaling_min",
+        "scaling_max",
+        "warm_mode_actual",
+        "recovery_reason",
+        "polish_handoff",
+        "accepted"
+      ],
+      "properties": {
+        "phase": {"enum": ["repair", "progress", "refinement", "polish"]},
+        "requested_tolerance": {"type": "number", "minimum": 0},
+        "achieved_residual": {"type": "number", "minimum": 0},
+        "forcing_satisfied": {"type": "boolean"},
+        "trust_before": {"type": "number", "minimum": 0},
+        "trust_after": {"type": "number", "minimum": 0},
+        "trust_action": {"enum": ["retain", "shrink", "expand"]},
+        "re_solved": {"type": "boolean"},
+        "cqp_fingerprint": {"type": "string", "minLength": 1},
+        "resolve_fingerprint": {"type": "string", "minLength": 1},
+        "fingerprint_match": {"type": "boolean"},
+        "scaling_refreshed": {"type": "boolean"},
+        "predicted_reduction": {"type": "number", "minimum": 0},
+        "actual_reduction": {"type": "number"},
+        "reduction_ratio": {"type": "number"},
+        "scaling_min": {"type": "number", "minimum": 0},
+        "scaling_max": {"type": "number", "minimum": 0},
+        "warm_mode_actual": {"enum": ["cold", "primal", "primal_dual"]},
+        "recovery_reason": {"type": "string", "minLength": 1},
+        "polish_handoff": {"type": "boolean"},
+        "accepted": {"type": "boolean"}
+      }
+    },
+    "pathCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["violation", "independent"],
+      "properties": {
+        "violation": {"type": "number", "minimum": 0},
+        "independent": {"type": "boolean"}
       }
     },
     "artifactOrNull": {

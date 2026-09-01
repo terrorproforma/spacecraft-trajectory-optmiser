@@ -1,5 +1,7 @@
 #pragma once
 
+#include "spacepdhcg/scvx/g4_policy.generated.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -47,24 +49,25 @@ struct ForcingDecision {
 };
 
 struct ForcingRuleConfig {
-    double minimum_tolerance{1.0e-8};
-    double maximum_tolerance{1.0e-2};
-    double forcing_coefficient{0.25};
-    double forcing_exponent{1.25};
+    double minimum_tolerance{g4_policy::epsilon_floor};
+    double maximum_tolerance{g4_policy::epsilon_max};
+    double forcing_coefficient{g4_policy::coefficient};
+    double forcing_exponent{g4_policy::alpha};
+    double forcing_contraction{g4_policy::gamma};
     double residual_floor{1.0e-12};
     double repair_threshold{2.5e-1};
     double refinement_threshold{2.0e-2};
     double polish_threshold{5.0e-4};
-    double repair_tolerance{1.0e-2};
-    double progress_tolerance{2.0e-3};
-    double refinement_tolerance{1.0e-5};
-    double polish_tolerance{1.0e-8};
-    double resolve_factor{0.1};
-    double residual_overshoot_factor{1.5};
-    std::size_t repair_iteration_limit{5'000U};
-    std::size_t progress_iteration_limit{25'000U};
-    std::size_t refinement_iteration_limit{100'000U};
-    std::size_t polish_iteration_limit{1'000'000U};
+    double repair_tolerance{g4_policy::repair_ceiling};
+    double progress_tolerance{g4_policy::progress_ceiling};
+    double refinement_tolerance{g4_policy::refinement_ceiling};
+    double polish_tolerance{g4_policy::polish_ceiling};
+    double resolve_factor{g4_policy::resolve_refinement_factor};
+    double residual_overshoot_factor{g4_policy::resolve_trigger_multiple};
+    std::size_t repair_iteration_limit{g4_policy::repair_iterations};
+    std::size_t progress_iteration_limit{g4_policy::progress_iterations};
+    std::size_t refinement_iteration_limit{g4_policy::refinement_iterations};
+    std::size_t polish_iteration_limit{g4_policy::polish_iterations};
     std::size_t polish_accepted_streak{3U};
 
     void validate() const {
@@ -75,6 +78,7 @@ struct ForcingRuleConfig {
         }
         require_positive(forcing_coefficient, "forcing coefficient must be positive");
         require_positive(forcing_exponent, "forcing exponent must be positive");
+        require_positive(forcing_contraction, "forcing contraction must be positive");
         require_positive(residual_floor, "residual floor must be positive");
         require_positive(repair_threshold, "repair threshold must be positive");
         require_positive(refinement_threshold, "refinement threshold must be positive");
@@ -253,6 +257,17 @@ class FixedForcingRule {
     std::size_t iteration_limit_{100'000U};
 };
 
+enum class QualityTier : std::size_t {
+    coarse = 0U,
+    medium = 1U,
+    tight = 2U,
+    ipm = 3U,
+};
+
+[[nodiscard]] inline constexpr double quality_tolerance(QualityTier tier) {
+    return g4_policy::quality_tolerances.at(static_cast<std::size_t>(tier));
+}
+
 enum class TrustAction {
     retain,
     shrink,
@@ -260,14 +275,14 @@ enum class TrustAction {
 };
 
 struct TrustRegionConfig {
-    double initial_radius{1.0};
-    double minimum_radius{1.0e-4};
-    double maximum_radius{8.0};
-    double shrink_factor{0.5};
-    double expansion_factor{1.8};
-    double poor_agreement{0.10};
-    double strong_agreement{0.75};
-    double boundary_fraction{0.80};
+    double initial_radius{g4_policy::trust_initial};
+    double minimum_radius{g4_policy::trust_minimum};
+    double maximum_radius{g4_policy::trust_maximum};
+    double shrink_factor{g4_policy::trust_shrink};
+    double expansion_factor{g4_policy::trust_expand};
+    double poor_agreement{g4_policy::trust_acceptance};
+    double strong_agreement{g4_policy::trust_strong_agreement};
+    double boundary_fraction{g4_policy::trust_boundary_fraction};
 
     void validate() const {
         require_positive(initial_radius, "initial trust radius must be positive");

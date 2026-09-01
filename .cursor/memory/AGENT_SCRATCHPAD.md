@@ -132,3 +132,40 @@ Use this file as persistent, repo-local execution memory.
   still uncommitted. Preserved it as contaminated evidence, committed the fix as `2cbebb3`, and
   reran the frozen three-sample qualification from a clean tree. All three samples remained
   unqualified, so no H5/H6 matrix was started.
+
+### 2026-09-01 18:45 AEST - Audited G4 harness contracts
+
+#### Task Summary
+
+- Implemented locked policy generation, matched-quality qualification, full coverage, H5/H6
+  decisions, G4 schema semantics, timing identities, and portable-evidence verification in the
+  isolated `exp/g4-harness-parallel` worktree.
+
+#### Mistakes And Fixes
+
+- `[tool]` The WSL system Python lacked pytest/Ruff/CMake. Used ephemeral `uv run --no-project`
+  tools and the isolated CPU build directory; no canonical environment was modified.
+- `[tool]` PowerShell could not pass its provider-qualified UNC working path to .NET file APIs.
+  Used byte-safe Python normalization and then matched each tracked file's committed line-ending
+  convention before regenerating the policy hash/header.
+- `[self]` The first G4 schema fixture retained legacy residuals above the tight tier. The stricter
+  semantic validator exposed it; corrected the fixture instead of weakening the tier.
+
+#### What Worked
+
+- The generated C++ header and SHA-256 lock make JSON/C++ policy drift fatal.
+- Adversarial tests cover max-iteration false positives, objective/continuous-time/path omissions,
+  policy drift, ledger gaps, timing sums, decision states, and artifact tampering.
+- Full CPU validation passed: Ruff, 127 pytest tests, and 41 native CTest smokes.
+
+#### Guardrails For Next Session
+
+- Do not classify current CUDA G4 output as qualified until it reports requested/actual runtime
+  policy and consumes the generated configuration.
+- Keep QOCO/hybrid conversion telemetry compatible with the primary-G4 schema's permutation,
+  dual-disposition, and conversion/setup/polish timing fields.
+
+#### Follow-Ups / Risks
+
+- CUDA executable integration remains for the CUDA worker; this branch intentionally contains no
+  CUDA numeric-update edits and made no GPU performance claim.

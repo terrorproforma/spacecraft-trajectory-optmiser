@@ -5,10 +5,12 @@ import json
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 
 from spacepdhcg.experiments import (
     Paper1ResultError,
     read_paper1_result,
+    timing_from_components,
     validate_paper1_result,
     write_paper1_result,
 )
@@ -139,6 +141,117 @@ def valid_result() -> dict[str, object]:
     }
 
 
+def valid_g4_result() -> dict[str, object]:
+    payload = valid_result()
+    payload["identity"].update(  # type: ignore[union-attr]
+        gate="G4",
+        campaign="g4-primary",
+        quality_tier="tight",
+        conditioning=2.0,
+        scaling_mode="refresh_if_needed",
+        warm_mode="primal",
+        seed=59,
+        repeat_kind="measured",
+        repeat=0,
+        solver_order=2,
+        failure_class="none",
+        failure_reason=None,
+    )
+    payload["quality"].update(  # type: ignore[union-attr]
+        dynamics_residual=1e-7,
+        path_residual=1e-7,
+        terminal_residual=1e-7,
+        continuous_time_violation=1e-7,
+        solver_status="converged",
+        convergence_criteria_met=True,
+        objective_equivalent=True,
+        matched_quality_state="matched",
+        independent_replay=True,
+        path_inventory_complete=True,
+        uses_solver_cached_residuals=False,
+        path_inventory={
+            name: {"violation": 1e-7, "independent": True}
+            for name in ("thrust", "mass", "altitude", "glide_slope")
+        },
+    )
+    payload["timing"] = {
+        "topology_seconds": 0.0,
+        **timing_from_components(
+            {
+                "coefficient_seconds": 0.01,
+                "update_seconds": 0.001,
+                "scaling_seconds": 0.0002,
+                "h2d_seconds": 0.0001,
+                "solve_seconds": 0.02,
+                "recovery_seconds": 0.001,
+                "residual_seconds": 0.001,
+                "replay_seconds": 0.003,
+                "acceptance_seconds": 0.0001,
+                "d2h_seconds": 0.0001,
+            }
+        ),
+    }
+    payload["resources"].update(  # type: ignore[union-attr]
+        energy_scope="GPU-only",
+        energy_sampling_interval_milliseconds=50,
+        energy_maximum_gap_seconds=0.05,
+        energy_sampling_gaps=False,
+        energy_valid=True,
+        shared_or_display_gpu=False,
+    )
+    payload["aggregation"].update(  # type: ignore[union-attr]
+        instance_count=20,
+        evaluation_seed_count=20,
+        paired_bootstrap_samples=10_000,
+    )
+    for artifact in payload["artifacts"].values():  # type: ignore[union-attr]
+        if artifact is not None:
+            artifact.update(
+                immutable_uri="https://artifacts.example.invalid/run/content",
+                internal_index_sha256=_SHA256,
+                portable=True,
+            )
+    runtime = {
+        "policy": "adaptive+polish",
+        "quality_tier": "tight",
+        "scaling_mode": "refresh_if_needed",
+        "warm_mode": "primal",
+    }
+    payload["g4"] = {
+        "policy_sha256": _SHA256,
+        "runtime_requested": copy.deepcopy(runtime),
+        "runtime_actual": copy.deepcopy(runtime),
+        "outer_iterations": [
+            {
+                "phase": "polish",
+                "requested_tolerance": 1e-8,
+                "achieved_residual": 1e-8,
+                "forcing_satisfied": True,
+                "trust_before": 1.0,
+                "trust_after": 1.8,
+                "trust_action": "expand",
+                "re_solved": False,
+                "cqp_fingerprint": "abc",
+                "resolve_fingerprint": "abc",
+                "fingerprint_match": True,
+                "scaling_refreshed": True,
+                "predicted_reduction": 1.0,
+                "actual_reduction": 0.9,
+                "reduction_ratio": 0.9,
+                "scaling_min": 0.1,
+                "scaling_max": 10.0,
+                "warm_mode_actual": "primal",
+                "recovery_reason": "not-required",
+                "polish_handoff": True,
+                "accepted": True,
+            }
+        ],
+        "hybrid_permutation": None,
+        "hybrid_dual_disposition": None,
+    }
+    return payload
+
+
 def test_valid_result_round_trip(tmp_path: Path) -> None:
     payload = valid_result()
     validate_paper1_result(payload)
@@ -194,4 +307,68 @@ def test_scientific_nan_is_rejected_before_serialisation() -> None:
     payload = valid_result()
     payload["quality"]["objective"] = float("nan")  # type: ignore[index]
     with pytest.raises(Paper1ResultError, match="must be finite"):
+        validate_paper1_result(payload)
+
+
+def test_primary_g4_result_passes_schema_and_semantic_contract() -> None:
+    payload = valid_g4_result()
+    schema = json.loads(
+        (Path(__file__).parents[1] / "experiments/schema/paper1_result.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    Draft202012Validator.check_schema(schema)
+    Draft202012Validator(schema).validate(payload)
+    validate_paper1_result(payload)
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "message"),
+    [
+        ("identity", "quality_tier", "missing required keys"),
+        ("quality", "continuous_time_violation", "missing required keys"),
+        ("timing", "recovery_seconds", "missing required keys"),
+        ("resources", "energy_valid", "missing required keys"),
+        ("aggregation", "instance_count", "missing required keys"),
+        ("g4", "outer_iterations", "missing required keys"),
+    ],
+)
+def test_primary_g4_schema_gaps_are_rejected(
+    section: str, field: str, message: str
+) -> None:
+    payload = valid_g4_result()
+    del payload[section][field]  # type: ignore[index]
+    with pytest.raises(Paper1ResultError, match=message):
+        validate_paper1_result(payload)
+
+
+def test_nonportable_local_evidence_cannot_be_qualified() -> None:
+    payload = valid_g4_result()
+    payload["artifacts"]["raw"].update(  # type: ignore[index]
+        immutable_uri="file:///tmp/raw.tar",
+        portable=False,
+    )
+    with pytest.raises(Paper1ResultError, match="not portable"):
+        validate_paper1_result(payload)
+
+    payload["identity"].update(  # type: ignore[union-attr]
+        status="unqualified",
+        failure_class="evidence",
+        failure_reason="raw evidence is local-only",
+    )
+    payload["quality"].update(  # type: ignore[union-attr]
+        qualified=False,
+        matched_quality_state="unqualified",
+    )
+    validate_paper1_result(payload)
+
+
+def test_primary_g4_semantics_reject_false_quality_flags() -> None:
+    payload = valid_g4_result()
+    payload["quality"]["reference_objective"] = 99.0  # type: ignore[index]
+    with pytest.raises(Paper1ResultError, match="not practically equivalent"):
+        validate_paper1_result(payload)
+    payload = valid_g4_result()
+    payload["quality"]["path_inventory"]["thrust"]["violation"] = 1e-2  # type: ignore[index]
+    with pytest.raises(Paper1ResultError, match="path inventory check thrust"):
         validate_paper1_result(payload)
