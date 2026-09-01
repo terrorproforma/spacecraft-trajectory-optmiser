@@ -82,3 +82,23 @@
     performance claim is made.
   - Cherry-picking may require additive conflict resolution in shared CUDA outer-driver/test code
     and these append-only memory files if P1-C lands first.
+
+## 2026-09-01 21:50 AEST
+
+- Task summary:
+  - Diagnosed the exact frozen P1-D forcing failure against Clarabel and pinned QOCO-GPU.
+- Changes:
+  - Removed the contradictory terminal quaternion tangent equation numerically while preserving
+    the fixed CSC topology and CPU/CUDA coefficient parity.
+  - Added exact P1-D CQP dump, bounded PDHCG iterate dump, active-set conditioning, canonical
+    reference comparison, and explicit QOCO handoff qualification diagnostics.
+- Validation:
+  - Pre-fix Clarabel status was `PrimalInfeasible`; corrected Clarabel status is `Solved`.
+  - Pinned QOCO-GPU solved in 20 iterations at canonical primal `1.091e-12` and dual `7.006e-12`.
+  - Focused Release/Debug builds, 6-DoF transcription tests, recovery lifecycle/randomized tests,
+    P1-D path audit, sanitizer modes, Ruff, and QOCO adapter tests passed.
+- Follow-up notes / risks:
+  - PDHCG remains unqualified at 300k iterations (`2.818e-2` natural residual), so its primal is
+    rejected by the frozen `1e-6` hybrid handoff gate.
+  - QOCO evidence is valid only as `pure-gpu-ipm`; fixed-tight PDHCG still has zero qualified
+    accepted outer steps. Production nonlinear QOCO handback remains a separate dependency.

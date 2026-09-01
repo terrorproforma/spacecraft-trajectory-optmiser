@@ -290,3 +290,43 @@ Use this file as persistent, repo-local execution memory.
 - Fixed-tight P1-D recovery triggers but exhausts and rolls back; no recovery is falsely committed.
 - The remaining qualification blocker is solver/CQP accuracy and acceptance, not the displaced
   coordinate construction. Do not start measured G4 timing or energy work.
+
+### 2026-09-01 21:50 AEST - P1-D forcing root-cause correction
+
+#### Task Summary
+
+- Dumped the exact frozen `N=20`, attitude `0.05`, angular-rate `0.05` CQP and compared it with
+  CPU Clarabel, persistent CUDA PDHCG, and pinned QOCO-GPU.
+- Corrected the terminal quaternion transcription so an exact fixed target is not simultaneously
+  constrained to a tangent plane about a different displaced reference.
+- Added reproducible P1-D dump/diagnostic modes, active-Jacobian conditioning analysis, canonical
+  QOCO residual reporting, and explicit hybrid handoff qualification.
+
+#### Root Cause And Evidence
+
+- The pre-fix CQP was mathematically infeasible, not merely difficult: Clarabel returned
+  `PrimalInfeasible`. The fixed terminal quaternion and displaced-reference tangent equality
+  require both `q=q_target` and `q_reference^T q=1`, which conflict whenever the references differ.
+- The terminal tangent row now remains in the fixed CSC topology but is numerically `0 == 0`.
+  Clarabel then solves in 48 iterations; pinned QOCO-GPU solves in 20 iterations with independently
+  mapped canonical primal `1.091e-12` and dual `7.006e-12`.
+- The feasible active Jacobian is still ill-conditioned (`9.82e5`) and rank-deficient by 20 rows
+  because zero-virtual epigraph faces are simultaneously active. At 300k iterations PDHCG remains
+  at natural/scalar `2.818e-2`, stationarity `2.763e-2`; its primal therefore fails the frozen
+  `1e-6` hybrid handoff gate and must not be called a QOCO polish.
+
+#### What Worked
+
+- CPU/device terminal-row updates remain coefficient-identical and topology-preserving.
+- Release and Debug focused builds passed. Recovery rollback, singular/invalid-cone handling,
+  stream/warm/checkpoint lifecycle, randomized properties, path injection, and sanitizer modes
+  passed without committing a failed recovery.
+- QOCO-GPU's exact canonical solve qualifies only under the frozen `pure-gpu-ipm` label. The
+  current fixed-tight PDHCG policy still cannot claim an accepted nonlinear outer step.
+
+#### Guardrails
+
+- Do not report the corrected CQP as fixed-tight PDHCG-qualified; only the separately labelled
+  pure-GPU IPM CQP solve qualifies.
+- Do not route the unqualified PDHCG primal to the hybrid backend. A production nonlinear QOCO
+  handback/acceptance owner is still required before P1-D can produce qualified outer evidence.

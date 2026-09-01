@@ -49,6 +49,7 @@ bool production_driver_mode = false;
 bool g4_sample_mode = false;
 bool g4_diagnostic_mode = false;
 bool p1d_path_audit_mode = false;
+bool p1d_diagnostic_mode = false;
 std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
@@ -986,6 +987,53 @@ IntegrationResult run_resident_sequence(
                 ),
                 "restore initial numeric coefficients"
             );
+        }
+        if (dump_mode) {
+            run_upstream_diagnostic(problem);
+            test::destroy_workspace(workspace);
+            return {};
+        }
+        if (p1d_diagnostic_mode) {
+            auto updated = problem.numeric_views();
+            test::status_require(
+                spacepdhcg_cuda_workspace_update_async(
+                    workspace,
+                    problem.fingerprint,
+                    &updated,
+                    problem.exchange.consumer_stream
+                ),
+                "P1-D diagnostic numeric update"
+            );
+            const auto diagnostic = test::solve_and_wait(
+                workspace,
+                problem,
+                test::solve_options(1.0e-6, 300'000U)
+            );
+            std::printf(
+                "{\"case\":\"p1d_recovery_diagnostic\","
+                "\"termination\":%d,\"iterations\":%llu,"
+                "\"natural\":%.17g,\"stationarity\":%.17g,"
+                "\"scalar\":%.17g,\"box\":%.17g,\"cone\":%.17g,"
+                "\"complementarity\":%.17g}\n",
+                static_cast<int>(diagnostic.termination),
+                static_cast<unsigned long long>(diagnostic.iterations),
+                diagnostic.natural_residual_inf,
+                diagnostic.stationarity_inf,
+                diagnostic.scalar_primal_violation_inf,
+                diagnostic.box_violation_inf,
+                diagnostic.affine_cone_distance_inf,
+                diagnostic.complementarity_inf
+            );
+            print_diagnostic_vector(
+                "persistent_primal",
+                problem.primal.download(problem.stream)
+            );
+            print_diagnostic_vector(
+                "persistent_dual",
+                problem.dual.download(problem.stream)
+            );
+            test::destroy_workspace(workspace);
+            return {};
         }
         spacepdhcg_cuda_scvx_options outer_options{
             SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
@@ -2271,7 +2319,32 @@ int main(const int argc, char** argv) {
         || mode == "--h1-hcw"
         || mode == "--g4-sample"
         || mode == "--g4-diagnose"
-        || mode == "--p1d-path-audit";
+        || mode == "--p1d-path-audit"
+        || mode == "--dump-p1d"
+        || mode == "--diagnose-p1d";
+    if (mode == "--diagnose-p1d") {
+        p1d_diagnostic_mode = true;
+        g4_sample_mode = true;
+        g4_family = "P1-D-pd6";
+        g4_intervals = 20U;
+        g4_dispersion = 0.05;
+        g4_secondary_dispersion = 0.05;
+    }
+    if (mode == "--dump-p1d") {
+        dump_mode = true;
+        g4_sample_mode = true;
+        g4_family = "P1-D-pd6";
+        g4_intervals = 20U;
+        g4_policy = "fixed-tight";
+        g4_quality_tier = "tight";
+        g4_scaling_mode = "refresh_if_needed";
+        g4_warm_mode = "primal_dual";
+        g4_warm_start = SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL;
+        g4_quality_tolerance = 1.0e-6;
+        g4_dispersion = 0.05;
+        g4_secondary_dispersion = 0.05;
+        production_outer_iterations = 1U;
+    }
     if (mode == "--p1d-path-audit") {
         p1d_path_audit_mode = true;
         g4_sample_mode = true;

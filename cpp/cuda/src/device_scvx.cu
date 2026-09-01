@@ -1032,6 +1032,15 @@ __global__ void update_scvx_numeric_kernel(
         const auto* positions =
             view_pointer<const int>(update.quaternion_positions);
         for (size_t node = 0U; node <= problem.intervals; ++node) {
+            const size_t row = update.quaternion_row_start + node;
+            if (node == problem.intervals) {
+                for (size_t component = 0U; component < 4U; ++component) {
+                    scalar[positions[4U * node + component]] = 0.0;
+                }
+                scalar_lower[row] = 0.0;
+                scalar_upper[row] = 0.0;
+                continue;
+            }
             const double* quaternion =
                 states + node * problem.state_dimension + 6U;
             double norm_squared = 0.0;
@@ -1040,7 +1049,6 @@ __global__ void update_scvx_numeric_kernel(
                     2.0 * quaternion[component];
                 norm_squared += quaternion[component] * quaternion[component];
             }
-            const size_t row = update.quaternion_row_start + node;
             scalar_lower[row] = 1.0 + norm_squared;
             scalar_upper[row] = 1.0 + norm_squared;
         }

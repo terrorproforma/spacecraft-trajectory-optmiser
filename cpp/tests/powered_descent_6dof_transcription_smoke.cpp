@@ -115,6 +115,55 @@ int main() {
         states.back(),
         0.37
     );
+    const auto coefficient = [&subproblem, &displaced_values](
+        const std::size_t row,
+        const std::size_t column
+    ) {
+        const auto& pattern = subproblem.structure().scalar_constraint;
+        for (auto index = pattern.offsets[column];
+             index < pattern.offsets[column + 1U];
+             ++index) {
+            if (pattern.indices[static_cast<std::size_t>(index)]
+                == static_cast<int>(row)) {
+                return displaced_values.scalar_constraint[
+                    static_cast<std::size_t>(index)
+                ];
+            }
+        }
+        return 0.0;
+    };
+    const auto quaternion_rows = subproblem.layout().quaternion_rows();
+    const auto terminal_quaternion_row =
+        quaternion_rows.start + config.intervals;
+    const auto terminal_state = subproblem.layout().state(config.intervals);
+    for (std::size_t component = 0U; component < 4U; ++component) {
+        if (coefficient(
+                terminal_quaternion_row,
+                terminal_state.start + 6U + component
+            ) != 0.0) {
+            return 4;
+        }
+    }
+    if (displaced_values.scalar_lower[terminal_quaternion_row] != 0.0
+        || displaced_values.scalar_upper[terminal_quaternion_row] != 0.0) {
+        return 4;
+    }
+    const auto interior_row = quaternion_rows.start;
+    const auto interior_state = subproblem.layout().state(0U);
+    double interior_coefficient_maximum = 0.0;
+    for (std::size_t component = 0U; component < 4U; ++component) {
+        interior_coefficient_maximum = std::max(
+            interior_coefficient_maximum,
+            std::abs(coefficient(
+                interior_row,
+                interior_state.start + 6U + component
+            ))
+        );
+    }
+    if (interior_coefficient_maximum <= 0.0
+        || displaced_values.scalar_lower[interior_row] <= 0.0) {
+        return 4;
+    }
     if (!equal_values(nominal_values.quadratic, displaced_values.quadratic)
         || !equal_values(nominal_values.affine_cone, displaced_values.affine_cone)
         || !equal_values(
