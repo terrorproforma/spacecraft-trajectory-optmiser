@@ -436,3 +436,37 @@
 - Follow-up notes / risks:
   - Final full validation, immutable commit, generated capability, complete pilot and new
     commit-pinned campaign launch remain required before any G4 evidence claim.
+
+## 2026-09-02 10:00 AEST
+
+- Task summary:
+  - Corrected audited G4 execution contracts and preregistered a separate H5/H6 claim-resolution
+    core without running GPU work or reducing the frozen matrix.
+- Changes:
+  - Added a hash-pinned family×policy×axis applicability contract with exact executable,
+    not-applicable, unsupported, QOCO dual-discard, and hybrid-handoff semantics.
+  - Corrected physical instance and solver-order identity to include every applicable physical
+    class and all order-relevant axes.
+  - Changed the campaign scheduler to 2,764,800 persistent groups containing two same-session
+    warm-ups and seven measurements, with separate raw attempt records and strict measured
+    `paper1_result` validation.
+  - Added exact `hybrid_handoff_ineligible`, `not_applicable`, and `unsupported` dispositions to
+    schemas, semantic validation, decisions, and product failure retention.
+  - Added actual-launch enforcement for timeout/OOM and a publication guard against claim-core
+    substitution.
+  - Added the pinned 360-group, 3,240-invocation P1-E/P1-C H5/H6 core and a CPU-only schedule
+    inspection command.
+- Validation:
+  - Full relevant Python/schema suite: 101 passed.
+  - Focused persistent capability/group suite after final changes: 29 passed.
+  - Full repository Ruff check and format check passed.
+  - Claim-core planner reported hash
+    `40dc217467ffe32e919d4f901943e0200f69e302cf57cd15ccdfa88bfa0c8d0b`,
+    360 groups, 720 warm-ups, 2,520 measurements, and 3,240 total invocations.
+  - No GPU workload was launched.
+- Follow-up notes / risks:
+  - The batched native executor must implement `--g4-session` and emit the declared nine-attempt
+    protocol before a grouped campaign can run.
+  - Initialize a new grouped checkpoint after integration; do not mutate or reuse active
+    row-oriented campaign checkpoints.
+  - The claim core may resolve only H5/H6 and cannot populate full Paper 1 regime figures/tables.

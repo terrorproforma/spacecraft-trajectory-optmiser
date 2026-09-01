@@ -136,3 +136,32 @@ def test_h6_rejected_mixed_and_unresolved() -> None:
     result = decide_h6(unresolved, _policy())
     assert result["decision"] == "unresolved"
     assert result["censored_coordinates"] == 1
+
+
+def test_exact_nonwinner_dispositions_are_never_decision_eligible() -> None:
+    for disposition in (
+        "hybrid_handoff_ineligible",
+        "not_applicable",
+        "unsupported",
+    ):
+        h5 = [
+            _h5_row(
+                family,
+                scale,
+                0.50,
+                disposition=disposition,
+            )
+            for family in ("P1-C-pd3", "P1-E-low-thrust")
+            for scale in (20, 50, 100)
+        ]
+        assert decide_h5(h5, _policy())["decision"] == "unresolved"
+        h6 = [
+            _h6_row(
+                "P1-E-low-thrust",
+                scale,
+                0.50,
+                disposition=disposition,
+            )
+            for scale in (100, 500, 2000)
+        ]
+        assert decide_h6(h6, _policy())["decision"] == "unresolved"

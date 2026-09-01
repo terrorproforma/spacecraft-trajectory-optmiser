@@ -22,6 +22,12 @@ from .g4 import (
     G4ContractError,
     coverage_count,
 )
+from .g4_execution_contract import (
+    ExecutionGroup,
+    make_execution_group,
+    physical_instance_id,
+    solver_rotation,
+)
 
 SCHEMA_VERSION: Final = 1
 TERMINAL_STATES: Final = ("completed", "quarantined")
@@ -109,12 +115,7 @@ def coordinate_at(policy: Mapping[str, Any], ordinal: int) -> dict[str, Any]:
         selected.append(dimension[index])
     policy_name, quality, conditioning, scaling, warm, seed, repeat = reversed(selected)
     repeat_kind, repeat_index = repeat
-    order_material = (
-        f"{policy['randomisation']['solver_order_seed']}:{family}:{intervals}:"
-        f"{quality}:{conditioning}:{scaling}:{warm}:{seed}:{repeat_kind}:{repeat_index}"
-    )
-    rotation = int(hashlib.sha256(order_material.encode()).hexdigest()[:8], 16)
-    return {
+    base = {
         "schema_version": SCHEMA_VERSION,
         "ordinal": ordinal,
         "family": family,
@@ -127,11 +128,49 @@ def coordinate_at(policy: Mapping[str, Any], ordinal: int) -> dict[str, Any]:
         "warm_mode": warm,
         **classes,
         "seed": seed,
-        "instance": f"{family}-seed-{seed}",
         "repeat_kind": repeat_kind,
         "repeat": repeat_index,
-        "solver_order": (POLICY_NAMES.index(policy_name) + rotation) % len(POLICY_NAMES),
     }
+    base["instance"] = physical_instance_id(base)
+    rotation = solver_rotation(int(policy["randomisation"]["solver_order_seed"]), base)
+    base["solver_order"] = (POLICY_NAMES.index(policy_name) + rotation) % len(POLICY_NAMES)
+    return base
+
+
+def execution_group_count(policy: Mapping[str, Any]) -> int:
+    """Return persistent tasks without changing the frozen logical row count."""
+
+    attempts = policy["matrix"]["warmup_repeats"] + policy["matrix"]["measured_repeats"]
+    if attempts != 9:
+        raise G4ContractError("G4 execution groups require exactly 2 warmups and 7 measurements")
+    return coverage_count(policy) // attempts
+
+
+def execution_group_at(policy: Mapping[str, Any], ordinal: int) -> ExecutionGroup:
+    """Unrank one same-process, same-workspace nine-attempt task."""
+
+    total = execution_group_count(policy)
+    if ordinal < 0 or ordinal >= total:
+        raise IndexError(f"G4 execution-group ordinal {ordinal} outside [0, {total})")
+    return make_execution_group(coordinate_at(policy, ordinal * 9))
+
+
+def scheduled_group_ordinal_at(policy: Mapping[str, Any], schedule_index: int) -> int:
+    """Rotate policies while retaining all nine attempts in one task."""
+
+    total = execution_group_count(policy)
+    if schedule_index < 0 or schedule_index >= total:
+        raise IndexError(f"G4 group schedule index {schedule_index} outside [0, {total})")
+    policies = len(POLICY_NAMES)
+    nonpolicy_count = total // (len(_family_coordinates(policy)) * policies)
+    family_index, within_family = divmod(schedule_index, nonpolicy_count * policies)
+    nonpolicy_index, solver_slot = divmod(within_family, policies)
+    provisional = family_index * nonpolicy_count * policies + nonpolicy_index
+    rotation = execution_group_at(policy, provisional).coordinate["solver_order"]
+    policy_index = (solver_slot - rotation) % policies
+    return (
+        family_index * nonpolicy_count * policies + policy_index * nonpolicy_count + nonpolicy_index
+    )
 
 
 def scheduled_ordinal_at(policy: Mapping[str, Any], schedule_index: int) -> int:
@@ -181,12 +220,15 @@ class CampaignStore:
         policy: Mapping[str, Any],
         policy_sha256: str,
         source_commit: str,
+        *,
+        grouped: bool = False,
     ) -> None:
         self.root = root
         self.policy = policy
         self.policy_sha256 = policy_sha256
         self.source_commit = source_commit
-        self.total = coverage_count(policy)
+        self.grouped = grouped
+        self.total = execution_group_count(policy) if grouped else coverage_count(policy)
         root.mkdir(parents=True, exist_ok=True)
         self.database = sqlite3.connect(root / "checkpoint.sqlite3", timeout=30.0)
         self.database.row_factory = sqlite3.Row
@@ -228,6 +270,7 @@ class CampaignStore:
         )
         expected = {
             "schema_version": str(SCHEMA_VERSION),
+            "schedule_kind": "execution_groups" if self.grouped else "logical_rows",
             "policy_sha256": self.policy_sha256,
             "source_commit": self.source_commit,
             "total_rows": str(self.total),
@@ -286,18 +329,21 @@ class CampaignStore:
                 if ordinal >= self.total:
                     return None
                 schedule_index = ordinal
-                ordinal = scheduled_ordinal_at(self.policy, schedule_index)
-                coordinate = coordinate_at(self.policy, ordinal)
-                identifier = coordinate_id(coordinate)
+                ordinal = (
+                    scheduled_group_ordinal_at(self.policy, schedule_index)
+                    if self.grouped
+                    else scheduled_ordinal_at(self.policy, schedule_index)
+                )
+                coordinate, identifier = self._coordinate_and_id(ordinal)
                 self.database.execute(
                     "UPDATE metadata SET value = ? WHERE key = 'next_ordinal'",
                     (str(schedule_index + 1),),
                 )
             else:
                 ordinal = int(running["ordinal"])
-                coordinate = coordinate_at(self.policy, ordinal)
+                coordinate, expected_identifier = self._coordinate_and_id(ordinal)
                 identifier = str(running["coordinate_id"])
-                if coordinate_id(coordinate) != identifier:
+                if expected_identifier != identifier:
                     raise G4ContractError("checkpoint coordinate content address drift")
                 self.database.execute(
                     """
@@ -357,6 +403,27 @@ class CampaignStore:
             }
         )
         return claim
+
+    def _coordinate_and_id(self, ordinal: int) -> tuple[dict[str, Any], str]:
+        if not self.grouped:
+            coordinate = coordinate_at(self.policy, ordinal)
+            return coordinate, coordinate_id(coordinate)
+        group = execution_group_at(self.policy, ordinal)
+        coordinate = {
+            "schema_version": "1.0.0",
+            "record_kind": "execution_group",
+            "group_id": group.group_id,
+            "physical_instance_id": group.physical_instance_id,
+            "coordinate": group.coordinate,
+            "process_contract": {
+                "processes": 1,
+                "persistent_session": True,
+                "persistent_workspace": True,
+                "policy_reset_between_attempts": True,
+            },
+            "attempts": list(group.attempts),
+        }
+        return coordinate, group.group_id
 
     def finish(
         self,

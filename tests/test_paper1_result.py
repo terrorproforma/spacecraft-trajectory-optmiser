@@ -368,3 +368,62 @@ def test_primary_g4_semantics_reject_false_quality_flags() -> None:
     payload["quality"]["path_inventory"]["thrust"]["violation"] = 1e-2  # type: ignore[index]
     with pytest.raises(Paper1ResultError, match="path inventory check thrust"):
         validate_paper1_result(payload)
+
+
+@pytest.mark.parametrize("status", ["not_applicable", "unsupported"])
+def test_primary_g4_static_terminal_dispositions_are_strict_and_timed(status: str) -> None:
+    payload = valid_g4_result()
+    payload["identity"].update(  # type: ignore[union-attr]
+        status=status,
+        failure_class=status,
+        failure_reason=f"authoritative {status} reason",
+    )
+    payload["quality"].update(  # type: ignore[union-attr]
+        qualified=False,
+        solver_status=status,
+        matched_quality_state="unqualified",
+    )
+    payload["g4"]["outer_iterations"] = []  # type: ignore[index]
+    validate_paper1_result(payload)
+    payload["timing"]["cqp_total_seconds"] = None  # type: ignore[index]
+    with pytest.raises(Paper1ResultError, match=r"must be numeric|requires explicit timing"):
+        validate_paper1_result(payload)
+
+
+def test_hybrid_handoff_ineligible_is_not_max_iterations_or_unsupported() -> None:
+    payload = valid_g4_result()
+    payload["identity"].update(  # type: ignore[union-attr]
+        solver="hybrid-pdhcg-ipm",
+        policy="hybrid-pdhcg-ipm",
+        status="hybrid_handoff_ineligible",
+        failure_class="hybrid_handoff_ineligible",
+        failure_reason="construction residual exceeded the frozen 1e-6 handoff gate",
+    )
+    payload["quality"].update(  # type: ignore[union-attr]
+        qualified=False,
+        solver_status="hybrid_handoff_ineligible",
+        matched_quality_state="unqualified",
+    )
+    for name in ("runtime_requested", "runtime_actual"):
+        payload["g4"][name]["policy"] = "hybrid-pdhcg-ipm"  # type: ignore[index]
+    payload["g4"].update(  # type: ignore[union-attr]
+        hybrid_permutation=[0, 1],
+        hybrid_dual_disposition="discarded_unsupported",
+    )
+    validate_paper1_result(payload)
+
+
+def test_raw_measured_result_scope_is_strict_but_not_a_publication_aggregate() -> None:
+    payload = valid_g4_result()
+    payload["identity"]["record_scope"] = "measured_attempt"  # type: ignore[index]
+    payload["aggregation"].update(  # type: ignore[union-attr]
+        warmup_repeats=0,
+        measured_repeats=1,
+        instance_count=1,
+        evaluation_seed_count=1,
+        paired_bootstrap_samples=0,
+    )
+    validate_paper1_result(payload)
+    payload["aggregation"]["measured_repeats"] = 7  # type: ignore[index]
+    with pytest.raises(Paper1ResultError, match="0 warmups and 1 measured"):
+        validate_paper1_result(payload)

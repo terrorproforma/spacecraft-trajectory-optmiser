@@ -37,6 +37,8 @@ FAILURE_MARKERS: Final = {
     "numerical": "numerical failure",
     "failed": "failed quality gate",
     "unqualified": "failed quality gate",
+    "hybrid_handoff_ineligible": "hybrid handoff ineligible",
+    "not_applicable": "not applicable",
     "unsupported": "unsupported",
     "infeasible": "infeasible",
     "unrun": "not run",
@@ -1843,6 +1845,24 @@ def build_products(
     """Build all and only frozen F01-F12/T01-T08 products."""
 
     ordered = _ordered_runs(runs)
+    claim_core_runs = [
+        run.run_id
+        for run in ordered
+        if run.manifest.experiment.get("campaign_kind") == "h5_h6_claim_resolution_core"
+    ]
+    if claim_core_runs:
+        raise AggregationError(
+            "H5/H6 claim-core evidence cannot populate full Paper 1 regime figures/tables: "
+            + ", ".join(claim_core_runs)
+        )
+    measured_attempts = [
+        run.run_id for run in ordered if _identity(run).get("record_scope") == "measured_attempt"
+    ]
+    if measured_attempts:
+        raise AggregationError(
+            "raw measured attempts must be aggregated into publication records first: "
+            + ", ".join(measured_attempts)
+        )
     if set(decisions) != {f"H{index}" for index in range(1, 7)}:
         raise AggregationError("product build requires complete H1-H6 decision records")
     output = Path(output_directory)
