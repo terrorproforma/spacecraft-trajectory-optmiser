@@ -169,3 +169,26 @@ Use this file as persistent, repo-local execution memory.
 
 - CUDA executable integration remains for the CUDA worker; this branch intentionally contains no
   CUDA numeric-update edits and made no GPU performance claim.
+
+### 2026-09-01 19:55 AEST - G4 workstream integration
+
+#### What Worked
+
+- Exact QOCO and harness commits cherry-picked; the only conflict was additive scratchpad history.
+- Pinned QOCO CUDA/cuDSS passed exact trajectory QP/SOCP, update, warm-primal, residual, and
+  explicit dual-discard tests on RTX 5090.
+- CUDA now consumes the generated policy hash and frozen numeric policy rather than shadow constants.
+
+#### Mistakes And Fixes
+
+- `[tool]` Initial QOCO execution omitted the package's `nvidia/cu12/lib` runtime directory.
+  Added the pinned cuDSS directory and shim to `LD_LIBRARY_PATH`; all 18 tests then passed.
+- `[self]` A 15-outer displaced diagnostic was too expensive for interactive qualification and
+  exceeded 30 minutes. Terminated it, retained the timeout, and did not count it as matrix evidence.
+
+#### Follow-Ups / Risks
+
+- P1-C still fails the frozen forcing test after an identical-CQP re-solve, so matched quality
+  remains the authoritative blocker. Do not execute or claim the full matrix.
+- The Python QOCO adapter has a valid primal-only handoff, but the nonlinear G4 family owners still
+  need an end-to-end handback before H6 can be decided.

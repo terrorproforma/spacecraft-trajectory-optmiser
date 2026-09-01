@@ -55,15 +55,14 @@ converted back to canonical primal/dual ordering before optional nonlinear
 handback. Failed QOCO results are returned with a failure classification, and
 `solve_and_handback` refuses to pass a failed result to the nonlinear owner.
 
-## Serialized GPU validation still required
+## Serialized GPU validation
 
-CPU/static tests validate conversion, ownership, the C ABI, same-pattern
-updates, warm-start routing, residuals, and agreement with Clarabel. They do
-not qualify the CUDA backend or any G4 performance claim. Once the single RTX
-5090 is available, run the existing pinned build script and then serialize:
+The pinned CUDA/cuDSS library was loaded on the RTX 5090 and the adapter's 18-test
+qualification passed. It includes exact trajectory QP and SOCP agreement with Clarabel,
+same-pattern updates, cold and accepted-primal warm solves, independent residuals, and explicit
+dual discard. The CUDA runtime requires both `build/qoco-cudss-lib` and the pinned
+`nvidia/cu12/lib` directory on `LD_LIBRARY_PATH`; omitting them is correctly classified as setup
+failure rather than solver evidence.
 
-1. one production trajectory QP and one SOCP through `QOCOGPU`;
-2. one cold and one accepted-primal warm solve;
-3. one PDHCG-to-QOCO hybrid polish with dual-discard evidence;
-4. failure-path checks for CUDA/cuDSS loading and device OOM;
-5. only after matched nonlinear quality, the unchanged G4 policy matrix.
+This validates the adapter and CUDA ABI, not the nonlinear P1-C/P1-D/P1-E outer loops or a G4
+performance claim. A qualified nonlinear handback remains prerequisite to the unchanged matrix.

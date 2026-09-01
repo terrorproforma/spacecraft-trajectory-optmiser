@@ -98,6 +98,8 @@ typedef struct spacepdhcg_cuda_scvx_options {
     double maximum_trust_radius;
     double shrink_factor;
     double expansion_factor;
+    double strong_agreement_threshold;
+    double near_boundary_fraction;
     double fixed_inner_tolerance;
     uint64_t fixed_inner_iteration_limit;
     spacepdhcg_cuda_scvx_policy policy;
@@ -108,6 +110,17 @@ typedef struct spacepdhcg_cuda_scvx_options {
     double adaptive_coefficient;
     double adaptive_alpha;
     double adaptive_gamma;
+    double repair_tolerance_ceiling;
+    double progress_tolerance_ceiling;
+    double refinement_tolerance_ceiling;
+    double polish_tolerance_ceiling;
+    uint64_t repair_iteration_limit;
+    uint64_t progress_iteration_limit;
+    uint64_t refinement_iteration_limit;
+    uint64_t polish_iteration_limit;
+    double resolve_trigger_multiple;
+    double resolve_refinement_factor;
+    double resolve_minimum_tolerance;
     double final_polish_tolerance;
     uint64_t final_polish_iteration_limit;
 } spacepdhcg_cuda_scvx_options;

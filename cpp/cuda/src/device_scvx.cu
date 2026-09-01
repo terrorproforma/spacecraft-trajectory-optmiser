@@ -1367,26 +1367,30 @@ spacepdhcg_cuda_scvx_phase forcing_phase(
         })
     );
     if (!std::isfinite(residual) || residual > 2.5e-1) {
-        options->optimality_tolerance = std::min(1.0e-2, requested);
+        options->optimality_tolerance =
+            std::min(policy.repair_tolerance_ceiling, requested);
         options->feasibility_tolerance = options->optimality_tolerance;
-        options->iteration_limit = 5'000U;
+        options->iteration_limit = policy.repair_iteration_limit;
         return SPACEPDHCG_CUDA_SCVX_REPAIR;
     }
     if (residual > 2.0e-2) {
-        options->optimality_tolerance = std::min(2.0e-3, requested);
+        options->optimality_tolerance =
+            std::min(policy.progress_tolerance_ceiling, requested);
         options->feasibility_tolerance = options->optimality_tolerance;
-        options->iteration_limit = 25'000U;
+        options->iteration_limit = policy.progress_iteration_limit;
         return SPACEPDHCG_CUDA_SCVX_PROGRESS;
     }
     if (residual > 5.0e-4) {
-        options->optimality_tolerance = std::min(1.0e-5, requested);
+        options->optimality_tolerance =
+            std::min(policy.refinement_tolerance_ceiling, requested);
         options->feasibility_tolerance = options->optimality_tolerance;
-        options->iteration_limit = 100'000U;
+        options->iteration_limit = policy.refinement_iteration_limit;
         return SPACEPDHCG_CUDA_SCVX_REFINEMENT;
     }
-    options->optimality_tolerance = requested;
-    options->feasibility_tolerance = requested;
-    options->iteration_limit = 1'000'000U;
+    options->optimality_tolerance =
+        std::min(policy.polish_tolerance_ceiling, requested);
+    options->feasibility_tolerance = options->optimality_tolerance;
+    options->iteration_limit = policy.polish_iteration_limit;
     return SPACEPDHCG_CUDA_SCVX_POLISH;
 }
 
@@ -1703,6 +1707,46 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
         || result->options.adaptive_gamma >= 1.0) {
         result->options.adaptive_gamma = 0.6;
     }
+    if (!(result->options.repair_tolerance_ceiling > 0.0)) {
+        result->options.repair_tolerance_ceiling = 1.0e-2;
+    }
+    if (!(result->options.progress_tolerance_ceiling > 0.0)) {
+        result->options.progress_tolerance_ceiling = 2.0e-3;
+    }
+    if (!(result->options.refinement_tolerance_ceiling > 0.0)) {
+        result->options.refinement_tolerance_ceiling = 1.0e-5;
+    }
+    if (!(result->options.polish_tolerance_ceiling > 0.0)) {
+        result->options.polish_tolerance_ceiling = 1.0e-8;
+    }
+    if (result->options.repair_iteration_limit == 0U) {
+        result->options.repair_iteration_limit = 5'000U;
+    }
+    if (result->options.progress_iteration_limit == 0U) {
+        result->options.progress_iteration_limit = 25'000U;
+    }
+    if (result->options.refinement_iteration_limit == 0U) {
+        result->options.refinement_iteration_limit = 100'000U;
+    }
+    if (result->options.polish_iteration_limit == 0U) {
+        result->options.polish_iteration_limit = 1'000'000U;
+    }
+    if (!(result->options.resolve_trigger_multiple > 0.0)) {
+        result->options.resolve_trigger_multiple = 5.0;
+    }
+    if (!(result->options.resolve_refinement_factor > 0.0)
+        || result->options.resolve_refinement_factor >= 1.0) {
+        result->options.resolve_refinement_factor = 0.1;
+    }
+    if (!(result->options.resolve_minimum_tolerance > 0.0)) {
+        result->options.resolve_minimum_tolerance = 1.0e-8;
+    }
+    if (!(result->options.strong_agreement_threshold > 0.0)) {
+        result->options.strong_agreement_threshold = 0.75;
+    }
+    if (!(result->options.near_boundary_fraction > 0.0)) {
+        result->options.near_boundary_fraction = 0.8;
+    }
     if (!(result->options.final_polish_tolerance > 0.0)) {
         result->options.final_polish_tolerance = 1.0e-8;
     }
@@ -2000,14 +2044,20 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             &solve_options
         );
         if (driver->options.policy == SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT) {
-            solve_options.optimality_tolerance = 1.0e-8;
-            solve_options.feasibility_tolerance = 1.0e-8;
-            solve_options.iteration_limit = 1'000'000U;
+            solve_options.optimality_tolerance =
+                driver->options.fixed_inner_tolerance;
+            solve_options.feasibility_tolerance =
+                driver->options.fixed_inner_tolerance;
+            solve_options.iteration_limit =
+                driver->options.fixed_inner_iteration_limit;
         } else if (driver->options.policy
                    == SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE) {
-            solve_options.optimality_tolerance = 1.0e-3;
-            solve_options.feasibility_tolerance = 1.0e-3;
-            solve_options.iteration_limit = 25'000U;
+            solve_options.optimality_tolerance =
+                driver->options.fixed_inner_tolerance;
+            solve_options.feasibility_tolerance =
+                driver->options.fixed_inner_tolerance;
+            solve_options.iteration_limit =
+                driver->options.fixed_inner_iteration_limit;
         } else if (driver->options.fixed_inner_tolerance > 0.0) {
             solve_options.optimality_tolerance =
                 driver->options.fixed_inner_tolerance;
@@ -2106,7 +2156,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         bool resolve_fingerprint_match = true;
         if (!accepted
             && last_diagnostics.natural_residual_inf
-                > 5.0 * solve_options.optimality_tolerance) {
+                > driver->options.resolve_trigger_multiple
+                    * solve_options.optimality_tolerance) {
             for (uint32_t resolve = 0;
                  resolve < driver->options.maximum_resolves_per_iteration;
                  ++resolve) {
@@ -2127,8 +2178,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
                 }
                 solve_options.optimality_tolerance = std::max(
-                    1.0e-8,
-                    0.1 * solve_options.optimality_tolerance
+                    driver->options.resolve_minimum_tolerance,
+                    driver->options.resolve_refinement_factor
+                        * solve_options.optimality_tolerance
                 );
                 solve_options.feasibility_tolerance =
                     solve_options.optimality_tolerance;
@@ -2173,7 +2225,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 ++result->resolved_steps;
                 result->inner_iterations += last_diagnostics.iterations;
                 if (last_diagnostics.natural_residual_inf
-                    <= 5.0 * solve_options.optimality_tolerance) {
+                    <= driver->options.resolve_trigger_multiple
+                        * solve_options.optimality_tolerance) {
                     break;
                 }
             }
@@ -2250,9 +2303,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 (state_elements + control_elements) * sizeof(double);
             current = candidate;
             ++result->accepted_steps;
-            if (ratio >= 0.75
+            if (ratio >= driver->options.strong_agreement_threshold
                 && candidate.step
-                    >= 0.8 * std::max(1.0e-12, trust_radius)) {
+                    >= driver->options.near_boundary_fraction
+                        * std::max(1.0e-12, trust_radius)) {
                 trust_radius = std::min(
                     driver->options.maximum_trust_radius,
                     driver->options.expansion_factor * trust_radius
@@ -2312,7 +2366,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 : driver->options.warm_start_mode,
             last_diagnostics.recovery_outcome_reason,
             last_diagnostics.natural_residual_inf
-                    <= 5.0 * solve_options.optimality_tolerance
+                    <= driver->options.resolve_trigger_multiple
+                        * solve_options.optimality_tolerance
                 ? 1
                 : 0,
             driver->options.policy == SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH

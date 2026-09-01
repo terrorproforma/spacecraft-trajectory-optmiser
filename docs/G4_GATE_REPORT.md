@@ -128,8 +128,10 @@ do not qualify the failed nonlinear trajectories.
 
 1. Policies frozen before evaluation: **PASS**.
 2. Mathematically valid GPU IPM pinned and executable: **PASS** for baseline availability.
-3. Production pure-IPM trajectory execution: **FAIL**.
-4. Audited primal/dual hybrid conversion: **FAIL**; primal only is available upstream.
+3. Production pure-IPM trajectory execution: **PASS** for exact HCW trajectory QP/SOCP adapter
+   correctness on RTX 5090; **FAIL** for the required nonlinear P1-C/P1-D/P1-E executions.
+4. Audited hybrid conversion: **PASS** for qualified primal handoff with explicit dual discard;
+   **FAIL** for a matched-quality nonlinear G4 handback.
 5. Per-outer policy telemetry and identical-CQP re-solve audit: **PASS**.
 6. Matched final nonlinear quality: **FAIL**.
 7. H5 resolved under preregistered rules: **FAIL / unresolved**.
@@ -139,6 +141,25 @@ do not qualify the failed nonlinear trajectories.
 11. Negative, unsupported, and censored records retained: **PASS**.
 
 Gate G4 therefore **does not pass**, and Gate G5 is **not authorised**.
+
+## Integrated harness and adapter follow-up
+
+The audited harness commits and pinned-QOCO adapter were integrated after the corrective campaign.
+The CUDA outer executable now rejects a mismatched generated policy SHA, consumes quality-tier
+fixed-tight tolerances, scaling and warm modes, and the frozen adaptive phase, re-solve, polish,
+and trust parameters instead of duplicating those constants. Requested and actual runtime values
+are emitted separately.
+
+Serialized RTX 5090 adapter validation passed 18/18 tests, including exact trajectory QP and SOCP
+agreement with Clarabel, persistent same-pattern update, accepted primal warm start, independent
+canonical residuals, and explicit discard of the unsupported dual start. This closes the adapter
+ABI/runtime gap but does not convert the failed nonlinear qualification into a pass. An integrated
+one-outer P1-C diagnostic under policy SHA
+`9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024`
+reproduced canonical residual `5.653990342580073e-4`, terminal residual `1e-3`, identical-CQP
+re-solve fingerprint, no accepted step, and forcing failure. A 15-outer diagnostic exceeded
+30 minutes before completion and was terminated and retained as timeout evidence; it is not
+reported as an executed matrix point. H5 and H6 therefore remain unresolved.
 
 ## Evidence
 

@@ -18,12 +18,19 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_pinned_qoco_c_abi_matches_cpu_clarabel_reference() -> None:
+@pytest.mark.parametrize(
+    "thrust_constraint",
+    [ThrustConstraint.BOX, ThrustConstraint.SECOND_ORDER_CONE],
+    ids=["trajectory-qp", "trajectory-socp"],
+)
+def test_pinned_qoco_c_abi_matches_cpu_clarabel_reference(
+    thrust_constraint: ThrustConstraint,
+) -> None:
     library = Path(QOCO_LIBRARY or "")
     problem_model = CWRendezvousProblem(
         CWRendezvousConfig(
             intervals=3,
-            thrust_constraint=ThrustConstraint.SECOND_ORDER_CONE,
+            thrust_constraint=thrust_constraint,
         )
     )
     problem = problem_model.canonical(

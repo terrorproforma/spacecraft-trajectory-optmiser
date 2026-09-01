@@ -1,6 +1,7 @@
 #include "cuda_test_support.hpp"
 #include "spacepdhcg/cuda/device_scvx_c_api.h"
 #include "spacepdhcg/cuda/device_scvx_driver_c_api.h"
+#include "spacepdhcg/scvx/g4_policy.generated.hpp"
 #include "spacepdhcg/scvx/low_thrust_driver.hpp"
 #include "spacepdhcg/scvx/powered_descent_3dof_driver.hpp"
 #include "spacepdhcg/transcription/hcw_rendezvous.hpp"
@@ -29,6 +30,7 @@ namespace test = spacepdhcg::cuda::test;
 namespace core = spacepdhcg::core;
 namespace dynamics = spacepdhcg::dynamics;
 namespace transcription = spacepdhcg::transcription;
+namespace frozen_g4 = spacepdhcg::scvx::g4_policy;
 
 namespace {
 
@@ -48,6 +50,9 @@ std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
 std::string g4_policy{"adaptive"};
+std::string g4_quality_tier{"tight"};
+std::string g4_scaling_mode{"refresh_if_needed"};
+std::string g4_warm_mode{"primal_dual"};
 spacepdhcg_cuda_warm_start_mode g4_warm_start =
     SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED;
 double g4_quality_tolerance = 1.0e-6;
@@ -639,7 +644,18 @@ IntegrationResult run_resident_sequence(
         dynamics_row_start,
     };
     const auto workspace_create_started = std::chrono::steady_clock::now();
-    auto* workspace = test::create_workspace(problem);
+    auto create_options = test::create_options();
+    if (g4_sample_mode) {
+        if (g4_scaling_mode == "always_refresh") {
+            create_options.scaling_mode = SPACEPDHCG_CUDA_SCALING_ALWAYS_REFRESH;
+        } else if (g4_scaling_mode == "reuse") {
+            create_options.scaling_mode = SPACEPDHCG_CUDA_SCALING_REUSE;
+        } else {
+            create_options.scaling_mode =
+                SPACEPDHCG_CUDA_SCALING_REFRESH_IF_NEEDED;
+        }
+    }
+    auto* workspace = test::create_workspace(problem, create_options);
     const double workspace_create_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - workspace_create_started
     ).count();
@@ -860,6 +876,8 @@ IntegrationResult run_resident_sequence(
             8.0,
             0.5,
             1.8,
+            frozen_g4::trust_strong_agreement,
+            frozen_g4::trust_boundary_fraction,
             sanitizer_mode ? 1.0e-2 : 0.0,
             sanitizer_mode ? 5'000U : 0U,
             SPACEPDHCG_CUDA_SCVX_ADAPTIVE,
@@ -870,6 +888,17 @@ IntegrationResult run_resident_sequence(
             0.2,
             0.5,
             0.6,
+            frozen_g4::repair_ceiling,
+            frozen_g4::progress_ceiling,
+            frozen_g4::refinement_ceiling,
+            frozen_g4::polish_ceiling,
+            frozen_g4::repair_iterations,
+            frozen_g4::progress_iterations,
+            frozen_g4::refinement_iterations,
+            frozen_g4::polish_iterations,
+            frozen_g4::resolve_trigger_multiple,
+            frozen_g4::resolve_refinement_factor,
+            frozen_g4::resolve_minimum_tolerance,
             1.0e-8,
             1'000'000U,
         };
@@ -878,8 +907,15 @@ IntegrationResult run_resident_sequence(
             outer_options.convergence_tolerance = g4_quality_tolerance;
             if (g4_policy == "fixed-tight") {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT;
+                outer_options.fixed_inner_tolerance = g4_quality_tolerance;
+                outer_options.fixed_inner_iteration_limit =
+                    frozen_g4::polish_iterations;
             } else if (g4_policy == "fixed-loose") {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE;
+                outer_options.fixed_inner_tolerance =
+                    frozen_g4::epsilon_max;
+                outer_options.fixed_inner_iteration_limit =
+                    frozen_g4::progress_iterations;
             } else if (g4_policy == "adaptive+polish") {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH;
             } else {
@@ -995,6 +1031,38 @@ IntegrationResult run_resident_sequence(
             )
         );
         if (g4_sample_mode) {
+            std::printf(
+                "{\"case\":\"g4_runtime\","
+                "\"policy_sha256\":\"%.*s\","
+                "\"requested\":{\"policy\":\"%s\",\"quality_tier\":\"%s\","
+                "\"quality_tolerance\":%.17g,\"scaling_mode\":\"%s\","
+                "\"warm_start_mode\":\"%s\"},"
+                "\"actual\":{\"policy\":\"%s\",\"quality_tier\":\"%s\","
+                "\"quality_tolerance\":%.17g,\"scaling_mode\":\"%s\","
+                "\"warm_start_mode\":\"%s\","
+                "\"resolve_trigger_multiple\":%.17g,"
+                "\"resolve_refinement_factor\":%.17g,"
+                "\"resolve_minimum_tolerance\":%.17g,"
+                "\"maximum_resolves\":%u,"
+                "\"polish_tolerance_ceiling\":%.17g}}\n",
+                static_cast<int>(frozen_g4::sha256.size()),
+                frozen_g4::sha256.data(),
+                g4_policy.c_str(),
+                g4_quality_tier.c_str(),
+                g4_quality_tolerance,
+                g4_scaling_mode.c_str(),
+                g4_warm_mode.c_str(),
+                g4_policy.c_str(),
+                g4_quality_tier.c_str(),
+                g4_quality_tolerance,
+                g4_scaling_mode.c_str(),
+                g4_warm_mode.c_str(),
+                outer_options.resolve_trigger_multiple,
+                outer_options.resolve_refinement_factor,
+                outer_options.resolve_minimum_tolerance,
+                outer_options.maximum_resolves_per_iteration,
+                outer_options.polish_tolerance_ceiling
+            );
             for (std::size_t index = 0U; index < outer.outer_iterations; ++index) {
                 const auto& record = records[index];
                 std::printf(
@@ -1658,14 +1726,16 @@ int main(const int argc, char** argv) {
         || mode == "--g4-sample";
     if (mode == "--g4-sample") {
         test::require(
-            argc == 9,
-            "G4 mode requires family intervals policy warm quality outer-iterations dispersion"
+            argc == 12,
+            "G4 mode requires family intervals policy warm quality "
+            "outer-iterations dispersion quality-tier scaling-mode policy-sha256"
         );
         g4_sample_mode = true;
         g4_family = argv[2];
         g4_intervals = std::stoull(argv[3]);
         g4_policy = argv[4];
         const std::string_view warm = argv[5];
+        g4_warm_mode = argv[5];
         if (warm == "cold") {
             g4_warm_start = SPACEPDHCG_CUDA_WARM_START_NONE;
         } else if (warm == "primal") {
@@ -1679,6 +1749,18 @@ int main(const int argc, char** argv) {
         production_outer_iterations =
             static_cast<std::uint32_t>(std::stoul(argv[7]));
         g4_dispersion = std::stod(argv[8]);
+        g4_quality_tier = argv[9];
+        g4_scaling_mode = argv[10];
+        test::require(
+            std::string_view(argv[11]) == frozen_g4::sha256,
+            "G4 runtime policy SHA-256 differs from generated policy"
+        );
+        test::require(
+            g4_scaling_mode == "always_refresh"
+                || g4_scaling_mode == "reuse"
+                || g4_scaling_mode == "refresh_if_needed",
+            "unknown G4 scaling mode"
+        );
     }
     if (mode == "--h1-hcw") {
         test::require(argc == 4, "H1 mode requires intervals and repeats");
