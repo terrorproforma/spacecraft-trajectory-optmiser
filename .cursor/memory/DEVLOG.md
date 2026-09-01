@@ -493,3 +493,25 @@
   - Initialize a new grouped checkpoint after integration; do not mutate or reuse active
     row-oriented campaign checkpoints.
   - The claim core may resolve only H5/H6 and cannot populate full Paper 1 regime figures/tables.
+## 2026-09-02 06:52 AEST
+
+- Task summary:
+  - Profiled the active G4 campaign and built the first fail-closed persistent execution layer in
+    an isolated worktree.
+- Changes:
+  - Added a long-lived native CUDA request/result server and thread-safe in-process cancellation.
+  - Replaced subprocess power polling with direct NVML, synchronized boundary samples and optional
+    CPU affinity.
+  - Added content-addressed compressed stdout retention and exact-once locked SQLite migration.
+  - Added detailed native timing fields, recovery tests, and a bottleneck/launch-gate document.
+- Validation:
+  - Focused scheduler/executor tests passed 8/8; Ruff and `git diff --check` passed.
+  - CUDA 12.8 RTX 5090 Release and Debug targets built successfully before the final deadline
+    patch and were queued for rebuild afterward.
+  - Direct NVML test: 41 samples, 0.057374 s maximum gap, valid cadence, no sampler errors.
+- Follow-up notes / risks:
+  - The current server retains one CUDA context but does not yet retain workspaces across rows.
+    Migration remains blocked on workspace batching, full equivalence, sanitizer completion and a
+    representative pilot.
+  - The active integration campaign was preserved; at recovery it had 6 completed and 1 running
+    row out of 24,883,200.

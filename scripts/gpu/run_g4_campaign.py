@@ -4,11 +4,15 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
 import fcntl
+import gzip
 import hashlib
 import json
 import math
 import os
+import queue
+import sqlite3
 import subprocess
 import sys
 import threading
@@ -119,44 +123,101 @@ def load_capabilities(
     return value
 
 
+class NvmlPower:
+    """Minimal direct NVML binding; avoids a subprocess per power sample."""
+
+    def __init__(self, library: str | None = None, device_index: int = 0) -> None:
+        candidates = (
+            library,
+            "/usr/lib/wsl/lib/libnvidia-ml.so.1",
+            "libnvidia-ml.so.1",
+        )
+        last_error: OSError | None = None
+        for candidate in candidates:
+            if candidate is None:
+                continue
+            try:
+                self.library = ctypes.CDLL(candidate)
+                break
+            except OSError as error:
+                last_error = error
+        else:
+            raise G4ContractError(f"NVML library unavailable: {last_error}")
+        self.library.nvmlInit_v2.restype = ctypes.c_int
+        self.library.nvmlDeviceGetHandleByIndex_v2.argtypes = [
+            ctypes.c_uint,
+            ctypes.POINTER(ctypes.c_void_p),
+        ]
+        self.library.nvmlDeviceGetHandleByIndex_v2.restype = ctypes.c_int
+        self.library.nvmlDeviceGetPowerUsage.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_uint),
+        ]
+        self.library.nvmlDeviceGetPowerUsage.restype = ctypes.c_int
+        if self.library.nvmlInit_v2() != 0:
+            raise G4ContractError("NVML initialization failed")
+        self.handle = ctypes.c_void_p()
+        if self.library.nvmlDeviceGetHandleByIndex_v2(
+            device_index, ctypes.byref(self.handle)
+        ) != 0:
+            raise G4ContractError(f"NVML device {device_index} unavailable")
+
+    def watts(self) -> float:
+        milliwatts = ctypes.c_uint()
+        status = self.library.nvmlDeviceGetPowerUsage(
+            self.handle, ctypes.byref(milliwatts)
+        )
+        if status != 0:
+            raise RuntimeError(f"NVML power query failed with status {status}")
+        return milliwatts.value / 1000.0
+
+
 class EnergySampler:
-    def __init__(self, nvidia_smi: str, interval_seconds: float = 0.05) -> None:
-        self.nvidia_smi = nvidia_smi
+    def __init__(
+        self,
+        power: NvmlPower,
+        interval_seconds: float = 0.05,
+        cpu_core: int | None = None,
+    ) -> None:
+        self.power = power
         self.interval_seconds = interval_seconds
+        self.cpu_core = cpu_core
         self.samples: list[tuple[float, float]] = []
         self.errors: list[str] = []
         self._stop = threading.Event()
+        self._first_sample = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
 
     def _run(self) -> None:
+        if self.cpu_core is not None and hasattr(os, "sched_setaffinity"):
+            try:
+                os.sched_setaffinity(threading.get_native_id(), {self.cpu_core})
+            except OSError as error:
+                self.errors.append(f"sampler affinity: {error}")
         while not self._stop.is_set():
             started = time.monotonic()
-            result = subprocess.run(
-                [
-                    self.nvidia_smi,
-                    "--query-gpu=power.draw",
-                    "--format=csv,noheader,nounits",
-                    "--id=0",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            timestamp = time.monotonic()
-            if result.returncode == 0:
-                try:
-                    self.samples.append((timestamp, float(result.stdout.splitlines()[0])))
-                except (IndexError, ValueError) as error:
-                    self.errors.append(str(error))
-            else:
-                self.errors.append(result.stderr.strip() or f"nvidia-smi exit {result.returncode}")
+            try:
+                watts = self.power.watts()
+                self.samples.append((time.monotonic(), watts))
+            except RuntimeError as error:
+                self.errors.append(str(error))
+            finally:
+                self._first_sample.set()
             self._stop.wait(max(0.0, self.interval_seconds - (time.monotonic() - started)))
 
     def start(self) -> None:
         self._thread.start()
+        if not self._first_sample.wait(timeout=5.0):
+            raise G4ContractError("NVML sampler did not produce its boundary sample")
 
     def finish(self) -> dict[str, Any]:
         self._stop.set()
         self._thread.join()
+        try:
+            watts = self.power.watts()
+            self.samples.append((time.monotonic(), watts))
+        except RuntimeError as error:
+            self.errors.append(str(error))
         gaps = [
             right[0] - left[0] for left, right in zip(self.samples, self.samples[1:], strict=False)
         ]
@@ -166,7 +227,7 @@ class EnergySampler:
         )
         maximum_gap = max(gaps) if gaps else None
         return {
-            "source": "nvidia-smi",
+            "source": "nvml-c-api",
             "scope": "GPU-only",
             "sampling_interval_seconds": self.interval_seconds,
             "sample_count": len(self.samples),
@@ -176,6 +237,209 @@ class EnergySampler:
             "errors": self.errors,
             "shared_display_gpu": True,
         }
+
+
+class PersistentExecutor:
+    """One long-lived process and CUDA context for sequential independent rows."""
+
+    def __init__(
+        self,
+        executable: Path,
+        environment: dict[str, str],
+        row_deadline_seconds: int = 600,
+    ) -> None:
+        self.executable = executable
+        self.environment = environment
+        self.row_deadline_seconds = row_deadline_seconds
+        self.generation = 0
+        self.cuda_startup_seconds = 0.0
+        self._stdout: queue.Queue[str | None] = queue.Queue()
+        self._stderr: queue.Queue[str] = queue.Queue()
+        self._start()
+
+    @staticmethod
+    def _read_lines(stream: Any, output: queue.Queue[Any], sentinel: bool) -> None:
+        try:
+            for line in stream:
+                output.put(line)
+        finally:
+            if sentinel:
+                output.put(None)
+
+    def _start(self) -> None:
+        self.generation += 1
+        self._stdout = queue.Queue()
+        self._stderr = queue.Queue()
+        self.process = subprocess.Popen(
+            [
+                str(self.executable),
+                "--g4-server",
+                str(self.row_deadline_seconds),
+            ],
+            env=self.environment,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+        )
+        assert self.process.stdout is not None and self.process.stderr is not None
+        threading.Thread(
+            target=self._read_lines,
+            args=(self.process.stdout, self._stdout, True),
+            daemon=True,
+        ).start()
+        threading.Thread(
+            target=self._read_lines,
+            args=(self.process.stderr, self._stderr, False),
+            daemon=True,
+        ).start()
+        ready = self._stdout.get(timeout=60.0)
+        if ready is None:
+            raise G4ContractError("persistent executor exited during CUDA startup")
+        record = json.loads(ready)
+        if record.get("case") != "g4_server_ready":
+            raise G4ContractError(f"invalid persistent executor handshake: {record!r}")
+        self.cuda_startup_seconds = float(record["cuda_startup_seconds"])
+
+    def _stop(self) -> None:
+        if self.process.poll() is None:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5.0)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait(timeout=5.0)
+
+    def ensure_ready(self) -> None:
+        if self.process.poll() is not None:
+            self._start()
+
+    def execute(
+        self, command: list[str], timeout_seconds: int
+    ) -> tuple[str, str, int, bool, int, float]:
+        self.ensure_ready()
+        assert self.process.stdin is not None
+        self.process.stdin.write("\t".join(command[1:]) + "\n")
+        self.process.stdin.flush()
+        deadline = time.monotonic() + timeout_seconds + 5.0
+        lines: list[str] = []
+        timeout = False
+        returncode = 0
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0.0:
+                timeout = True
+                returncode = 124
+                self._stop()
+                break
+            try:
+                line = self._stdout.get(timeout=remaining)
+            except queue.Empty:
+                timeout = True
+                returncode = 124
+                self._stop()
+                break
+            if line is None:
+                returncode = self.process.wait()
+                break
+            try:
+                record = json.loads(line.replace("-inf", "-Infinity"))
+            except json.JSONDecodeError:
+                lines.append(line)
+                continue
+            if record.get("case") == "g4_server_result":
+                if record.get("coordinate_id") != command[18]:
+                    raise G4ContractError("persistent executor response identity mismatch")
+                returncode = int(record["returncode"])
+                break
+            lines.append(line)
+        stderr: list[str] = []
+        while True:
+            try:
+                stderr.append(self._stderr.get_nowait())
+            except queue.Empty:
+                break
+        generation = self.generation
+        startup = self.cuda_startup_seconds
+        return "".join(lines), "".join(stderr), returncode, timeout, generation, startup
+
+    def close(self) -> None:
+        if self.process.poll() is None and self.process.stdin is not None:
+            try:
+                self.process.stdin.write("cancel\n")
+                self.process.stdin.flush()
+                self.process.wait(timeout=5.0)
+            except (BrokenPipeError, subprocess.TimeoutExpired):
+                self._stop()
+
+
+def archive_stdout(root: Path, stdout: str) -> tuple[str, int]:
+    payload = stdout.encode()
+    digest = hashlib.sha256(payload).hexdigest()
+    target = root / "objects" / "sha256" / digest[:2] / f"{digest}.jsonl.gz"
+    if not target.exists():
+        compressed = gzip.compress(payload, compresslevel=6, mtime=0)
+        try:
+            atomic_create(target, compressed)
+        except FileExistsError:
+            pass
+    return digest, len(payload)
+
+
+def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
+    """Import completed evidence only while the source GPU lock is unowned."""
+
+    lock_descriptor = os.open(source / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        try:
+            fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise G4ContractError("source campaign worker is still active") from error
+        database = sqlite3.connect(
+            f"file:{source / 'checkpoint.sqlite3'}?mode=ro", uri=True
+        )
+        database.row_factory = sqlite3.Row
+        metadata = {
+            row["key"]: row["value"]
+            for row in database.execute("SELECT key, value FROM metadata")
+        }
+        if metadata.get("policy_sha256") != store.policy_sha256:
+            raise G4ContractError("source campaign policy hash mismatch")
+        if metadata.get("total_rows") != str(store.total):
+            raise G4ContractError("source campaign cardinality mismatch")
+        imported = 0
+        already_present = 0
+        rows = database.execute(
+            """
+            SELECT c.ordinal, c.coordinate_id, c.state, a.attempt_id,
+                   a.disposition, a.reason, a.run_directory
+            FROM coordinates AS c
+            JOIN attempts AS a ON a.attempt_id = c.latest_attempt_id
+            WHERE c.state IN ('completed', 'quarantined')
+            ORDER BY c.ordinal
+            """
+        )
+        for row in rows:
+            run_directory = Path(row["run_directory"])
+            changed = store.import_terminal(
+                ordinal=int(row["ordinal"]),
+                identifier=str(row["coordinate_id"]),
+                state=str(row["state"]),
+                disposition=str(row["disposition"]),
+                reason=str(row["reason"]),
+                coordinate_payload=(run_directory / "coordinate.json").read_bytes(),
+                result_payload=(run_directory / "result.json").read_bytes(),
+                source_campaign=str(source),
+                source_attempt_id=str(row["attempt_id"]),
+            )
+            imported += int(changed)
+            already_present += int(not changed)
+        database.close()
+        return {"imported": imported, "already_present": already_present}
+    finally:
+        fcntl.flock(lock_descriptor, fcntl.LOCK_UN)
+        os.close(lock_descriptor)
 
 
 def command_for(
@@ -491,12 +755,13 @@ def execute(
     store: CampaignStore,
     claim: Claim,
     executable: Path,
+    executor: PersistentExecutor,
+    power: NvmlPower,
     policy_sha256: str,
     matrix_sha256: str,
     capability_sha256: str,
     timeout_seconds: int,
-    nvidia_smi: str,
-    environment: dict[str, str],
+    sampler_cpu_core: int | None,
 ) -> None:
     command = command_for(
         executable,
@@ -507,51 +772,28 @@ def execute(
     )
     run_directory = store.root / "runs" / claim.coordinate_id / claim.attempt_id
     atomic_create(run_directory / "command.json", json.dumps(command).encode() + b"\n")
-    run_environment = dict(environment)
-    run_environment.update(
-        {
-            "SPACEPDHCG_G4_COORDINATE_ID": claim.coordinate_id,
-            "SPACEPDHCG_G4_EVALUATION_SEED": str(claim.coordinate["seed"]),
-            "SPACEPDHCG_G4_CONDITIONING_LOG10": str(claim.coordinate["conditioning"]),
-            "SPACEPDHCG_G4_SOLVER_ORDER": str(claim.coordinate["solver_order"]),
-        }
-    )
-    sampler = EnergySampler(nvidia_smi)
+    executor.ensure_ready()
+    sampler = EnergySampler(power, cpu_core=sampler_cpu_core)
     started = time.monotonic()
     sampler.start()
-    timeout = False
-    try:
-        process = subprocess.run(
-            command,
-            env=run_environment,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
-        )
-        stdout = process.stdout
-        stderr = process.stderr
-        returncode = process.returncode
-    except subprocess.TimeoutExpired as error:
-        stdout = error.stdout or ""
-        stderr = error.stderr or ""
-        if isinstance(stdout, bytes):
-            stdout = stdout.decode(errors="replace")
-        if isinstance(stderr, bytes):
-            stderr = stderr.decode(errors="replace")
-        returncode = 124
-        timeout = True
+    stdout, stderr, returncode, timeout, generation, startup_seconds = executor.execute(
+        command, timeout_seconds
+    )
     elapsed = time.monotonic() - started
     energy = sampler.finish()
-    atomic_create(run_directory / "stdout.jsonl", stdout.encode())
+    stdout_sha256, stdout_bytes = archive_stdout(store.root, stdout)
     atomic_create(run_directory / "stderr.log", stderr.encode())
+    try:
+        records = parse_records(stdout)
+    except (json.JSONDecodeError, ValueError):
+        records = []
     if timeout:
         disposition, failure, valid, reason = (
             "timeout",
             "timeout",
             True,
-            "launched process exceeded the frozen timeout",
+            "persistent executor exceeded the frozen actual-execution timeout",
         )
-        records: list[dict[str, Any]] = []
     elif returncode != 0:
         lowered = stderr.lower()
         if returncode in {137, -9} or "out of memory" in lowered:
@@ -560,10 +802,9 @@ def execute(
             disposition, failure = "unsupported", "unsupported"
         else:
             disposition, failure = "numerical", "numerical"
-        valid, reason, records = True, f"launched process exited {returncode}", []
+        valid, reason = True, f"persistent executor exited {returncode}"
     else:
         try:
-            records = parse_records(stdout)
             valid, reason = validate_success(
                 claim,
                 records,
@@ -574,8 +815,12 @@ def execute(
         except (G4ContractError, json.JSONDecodeError, ValueError) as error:
             records, valid, reason = [], False, f"invalid executor records: {error}"
         sample = next((record for record in records if record.get("case") == "g4_sample"), {})
-        disposition = "qualified" if sample.get("qualified") is True else "unqualified"
-        failure = "none" if disposition == "qualified" else "max_iterations"
+        if sample.get("status") == 4:
+            disposition, failure = "timeout", "timeout"
+            reason = "in-process deadline retained final residual and progress records"
+        else:
+            disposition = "qualified" if sample.get("qualified") is True else "unqualified"
+            failure = "none" if disposition == "qualified" else "max_iterations"
     record = {
         **claim.coordinate,
         "coordinate_id": claim.coordinate_id,
@@ -587,7 +832,20 @@ def execute(
         "failure_class": failure,
         "reason": reason,
         "energy": energy,
-        "records": records,
+        "executor": {
+            "mode": "persistent-g4-server",
+            "generation": generation,
+            "cuda_startup_seconds": startup_seconds,
+            "cuda_startup_in_timing_boundary": False,
+        },
+        "stdout_object_sha256": stdout_sha256,
+        "stdout_uncompressed_bytes": stdout_bytes,
+        "records": [
+            record for record in records if record.get("case") != "g4_iteration"
+        ],
+        "progress_record_count": sum(
+            record.get("case") == "g4_iteration" for record in records
+        ),
     }
     store.finish(
         claim,
@@ -600,12 +858,15 @@ def execute(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("init", "status", "run"))
+    parser.add_argument("action", choices=("init", "migrate", "status", "run"))
     parser.add_argument("--repository", type=Path, default=REPOSITORY)
     parser.add_argument("--campaign", type=Path, required=True)
     parser.add_argument("--executable", type=Path)
     parser.add_argument("--capabilities", type=Path)
     parser.add_argument("--max-runs", type=int)
+    parser.add_argument("--source-campaign", type=Path)
+    parser.add_argument("--nvml-library")
+    parser.add_argument("--sampler-cpu-core", type=int)
     parser.add_argument("--nvidia-smi", default="nvidia-smi")
     arguments = parser.parse_args()
     repository = arguments.repository.resolve()
@@ -638,6 +899,14 @@ def main() -> int:
         if arguments.action == "init":
             print(json.dumps(store.status(), sort_keys=True))
             return 0
+        if arguments.action == "migrate":
+            if arguments.source_campaign is None:
+                raise G4ContractError("migrate requires --source-campaign")
+            migration = migrate_terminal_rows(
+                store, arguments.source_campaign.resolve()
+            )
+            print(json.dumps({**store.status(), **migration}, sort_keys=True))
+            return 0
         if arguments.executable is None or arguments.capabilities is None:
             raise G4ContractError("run requires --executable and --capabilities")
         executable = arguments.executable.resolve()
@@ -656,6 +925,13 @@ def main() -> int:
         except BlockingIOError as error:
             raise G4ContractError("another measured GPU worker owns this campaign") from error
         completed = 0
+        power = NvmlPower(arguments.nvml_library)
+        timeout_seconds = int(policy["matrix"]["timeout_seconds_per_sample"])
+        executor = PersistentExecutor(
+            executable,
+            dict(os.environ),
+            row_deadline_seconds=timeout_seconds,
+        )
         try:
             while arguments.max_runs is None or completed < arguments.max_runs:
                 claim = store.claim()
@@ -665,15 +941,17 @@ def main() -> int:
                     store,
                     claim,
                     executable,
+                    executor,
+                    power,
                     policy_sha256,
                     matrix_sha256,
                     capability_sha256,
-                    int(policy["matrix"]["timeout_seconds_per_sample"]),
-                    arguments.nvidia_smi,
-                    dict(os.environ),
+                    timeout_seconds,
+                    arguments.sampler_cpu_core,
                 )
                 completed += 1
         finally:
+            executor.close()
             fcntl.flock(lock_descriptor, fcntl.LOCK_UN)
             os.close(lock_descriptor)
         print(json.dumps(store.status(), sort_keys=True))

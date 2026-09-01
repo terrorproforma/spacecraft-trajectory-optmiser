@@ -325,20 +325,29 @@ class CampaignStore:
                 next_row = self.database.execute(
                     "SELECT value FROM metadata WHERE key = 'next_ordinal'"
                 ).fetchone()
-                ordinal = int(next_row["value"])
-                if ordinal >= self.total:
-                    return None
-                schedule_index = ordinal
-                ordinal = (
-                    scheduled_group_ordinal_at(self.policy, schedule_index)
-                    if self.grouped
-                    else scheduled_ordinal_at(self.policy, schedule_index)
-                )
+                schedule_index = int(next_row["value"])
+                while True:
+                    if schedule_index >= self.total:
+                        return None
+                    ordinal = (
+                        scheduled_group_ordinal_at(self.policy, schedule_index)
+                        if self.grouped
+                        else scheduled_ordinal_at(self.policy, schedule_index)
+                    )
+                    schedule_index += 1
+                    self.database.execute(
+                        "UPDATE metadata SET value = ? WHERE key = 'next_ordinal'",
+                        (str(schedule_index),),
+                    )
+                    if (
+                        self.database.execute(
+                            "SELECT 1 FROM coordinates WHERE ordinal = ?",
+                            (ordinal,),
+                        ).fetchone()
+                        is None
+                    ):
+                        break
                 coordinate, identifier = self._coordinate_and_id(ordinal)
-                self.database.execute(
-                    "UPDATE metadata SET value = ? WHERE key = 'next_ordinal'",
-                    (str(schedule_index + 1),),
-                )
             else:
                 ordinal = int(running["ordinal"])
                 coordinate, expected_identifier = self._coordinate_and_id(ordinal)
@@ -424,6 +433,93 @@ class CampaignStore:
             "attempts": list(group.attempts),
         }
         return coordinate, group.group_id
+
+    def import_terminal(
+        self,
+        *,
+        ordinal: int,
+        identifier: str,
+        state: str,
+        disposition: str,
+        reason: str,
+        coordinate_payload: bytes,
+        result_payload: bytes,
+        source_campaign: str,
+        source_attempt_id: str,
+    ) -> bool:
+        """Import one immutable terminal attempt without changing row identity."""
+
+        if state not in TERMINAL_STATES:
+            raise G4ContractError("only terminal campaign rows may be imported")
+        coordinate, expected_identifier = self._coordinate_and_id(ordinal)
+        if expected_identifier != identifier:
+            raise G4ContractError("imported coordinate differs from frozen ledger")
+        if _canonical_json(coordinate) + b"\n" != coordinate_payload:
+            raise G4ContractError("imported coordinate payload is not canonical")
+        now = self._now()
+        attempt_id = f"import-{uuid.uuid4().hex}"
+        run_directory = self.root / "runs" / identifier / attempt_id
+        with self.database:
+            existing = self.database.execute(
+                "SELECT state FROM coordinates WHERE ordinal = ?", (ordinal,)
+            ).fetchone()
+            if existing is not None:
+                return False
+            run_directory.mkdir(parents=True, exist_ok=False)
+            atomic_create(run_directory / "coordinate.json", coordinate_payload)
+            atomic_create(run_directory / "result.json", result_payload)
+            atomic_create(
+                run_directory / "migration.json",
+                _canonical_json(
+                    {
+                        "source_campaign": source_campaign,
+                        "source_attempt_id": source_attempt_id,
+                        "imported_at": now,
+                    }
+                )
+                + b"\n",
+            )
+            self.database.execute(
+                """
+                INSERT INTO coordinates(
+                    ordinal, coordinate_id, state, latest_attempt_id, updated_at
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                (ordinal, identifier, state, attempt_id, now),
+            )
+            self.database.execute(
+                """
+                INSERT INTO attempts(
+                    attempt_id, ordinal, coordinate_id, state, started_at,
+                    finished_at, run_directory, disposition, reason
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    attempt_id,
+                    ordinal,
+                    identifier,
+                    state,
+                    now,
+                    now,
+                    str(run_directory),
+                    disposition,
+                    reason,
+                ),
+            )
+        self._journal(
+            {
+                "event": "imported",
+                "at": now,
+                "ordinal": ordinal,
+                "coordinate_id": identifier,
+                "attempt_id": attempt_id,
+                "source_campaign": source_campaign,
+                "source_attempt_id": source_attempt_id,
+                "state": state,
+                "disposition": disposition,
+            }
+        )
+        return True
 
     def finish(
         self,
