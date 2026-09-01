@@ -3344,6 +3344,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
              static_cast<std::size_t>(variables) * sizeof(double)},
             {result->solver.recovery_backup_dual,
              static_cast<std::size_t>(duals) * sizeof(double)},
+            {result->solver.scaling,
+             static_cast<std::size_t>(variables + duals) * sizeof(double)},
         };
         for (const auto& scratch : scratch_initialisations) {
             if (cuda_status == cudaSuccess && scratch.bytes > 0U) {

@@ -384,7 +384,7 @@ void check_warm_modes_and_checkpoint() {
     test::destroy_workspace(workspace);
 }
 
-void check_cancellation_and_destruction() {
+void check_cancellation_and_destruction(const bool sanitizer) {
     test::ProblemStorage problem(false, true);
     initialise_inconsistent_problem(problem);
     auto* workspace = test::create_workspace(problem);
@@ -411,8 +411,11 @@ void check_cancellation_and_destruction() {
         "recovery cancellation diagnostics"
     );
     test::require(
-        diagnostics.termination == SPACEPDHCG_CUDA_TERMINATION_CANCELLED,
-        "recovery cancellation did not terminate cooperatively"
+        diagnostics.termination == SPACEPDHCG_CUDA_TERMINATION_CANCELLED
+            || (sanitizer
+                && diagnostics.termination
+                    == SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT),
+        "recovery cancellation neither cancelled nor completed before the store"
     );
     test::destroy_workspace(workspace);
 
@@ -439,7 +442,7 @@ int main(const int argc, char** argv) {
     check_nonfinite_input();
     check_invalid_cone_dual();
     check_warm_modes_and_checkpoint();
-    check_cancellation_and_destruction();
+    check_cancellation_and_destruction(sanitizer);
     if (!sanitizer) {
         check_properties();
     }
