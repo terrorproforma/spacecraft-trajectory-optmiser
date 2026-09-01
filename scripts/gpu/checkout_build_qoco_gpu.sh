@@ -10,6 +10,7 @@ TREE="c85fe82f71a67921868fc761c242de11ac46f4a2"
 CUDSS_VERSION="0.7.1.6"
 CUDSS_ROOT="${VENV}/lib/python3.12/site-packages/nvidia/cu12"
 SHIM="${ROOT}/build/qoco-cudss-lib"
+PATCH="${ROOT}/scripts/gpu/qoco_absolute_kkt_stopping.patch"
 
 if [[ ! -x "${VENV}/bin/python" || ! -x "${VENV}/bin/cmake" ]]; then
   echo "G4 QOCO build requires the repository .venv with Python and CMake" >&2
@@ -25,7 +26,6 @@ git -C "${SOURCE}" submodule update --init --recursive
 
 actual_commit="$(git -C "${SOURCE}" rev-parse HEAD)"
 actual_tree="$(git -C "${SOURCE}" rev-parse 'HEAD^{tree}')"
-dirty="$(git -C "${SOURCE}" status --porcelain=v1)"
 [[ "${actual_commit}" == "${COMMIT}" ]] || {
   echo "QOCO commit mismatch: ${actual_commit}" >&2
   exit 3
@@ -34,10 +34,15 @@ dirty="$(git -C "${SOURCE}" status --porcelain=v1)"
   echo "QOCO tree mismatch: ${actual_tree}" >&2
   exit 4
 }
-[[ -z "${dirty}" ]] || {
-  echo "QOCO checkout is dirty" >&2
+if git -C "${SOURCE}" apply --reverse --check "${PATCH}" 2>/dev/null; then
+  :
+elif [[ -z "$(git -C "${SOURCE}" status --porcelain=v1)" ]]; then
+  git -C "${SOURCE}" apply --check "${PATCH}"
+  git -C "${SOURCE}" apply "${PATCH}"
+else
+  echo "QOCO checkout has changes other than the declared stopping patch" >&2
   exit 5
-}
+fi
 
 installed_cudss="$("${VENV}/bin/python" -c \
   'from importlib.metadata import version; print(version("nvidia-cudss-cu12"))' \

@@ -52,6 +52,7 @@ bool p1d_path_audit_mode = false;
 bool p1d_diagnostic_mode = false;
 bool qoco_handback_mode = false;
 bool qoco_unavailable_mode = false;
+bool p1c_qoco_repeatability_mode = false;
 std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
@@ -1062,7 +1063,7 @@ IntegrationResult run_resident_sequence(
             0.05,
             0.90,
             100.0,
-            100.0,
+            virtual_l1_weight,
             1.0,
             1.0e-4,
             8.0,
@@ -2341,9 +2342,6 @@ IntegrationResult run_low_thrust() {
     config.intervals = g4_intervals > 0U ? g4_intervals : 2U;
     config.step_seconds = 1.0;
     config.discretisation = transcription::DiscretisationMethod::rk4_variational;
-    config.virtual_l1_weight = 10.0;
-    config.virtual_quadratic_weight = 1.0e-3;
-    config.virtual_epigraph_regularisation = 1.0e-3;
     if (g4_sample_mode) {
         config.trust_radius = g4_family_class;
     }
@@ -2554,8 +2552,21 @@ int main(const int argc, char** argv) {
         || mode == "--g4-diagnose"
         || mode == "--p1d-path-audit"
         || mode == "--dump-p1d"
+        || mode == "--dump-p1e"
         || mode == "--diagnose-p1d"
+        || mode == "--p1c-qoco-repeatability"
         || mode == "--qoco-unavailable";
+    if (mode == "--p1c-qoco-repeatability") {
+        p1c_qoco_repeatability_mode = true;
+        g4_sample_mode = true;
+        g4_family = "P1-C-pd3";
+        g4_intervals = 20U;
+        g4_policy = "pure-gpu-ipm";
+        g4_quality_tier = "ipm";
+        g4_quality_tolerance = 1.0e-8;
+        g4_family_class = 0.01;
+        production_outer_iterations = 2U;
+    }
     if (mode == "--qoco-unavailable") {
         qoco_unavailable_mode = true;
         g4_sample_mode = true;
@@ -2601,6 +2612,21 @@ int main(const int argc, char** argv) {
         g4_quality_tolerance = 1.0e-6;
         g4_dispersion = 0.05;
         g4_secondary_dispersion = 0.05;
+        production_outer_iterations = 1U;
+    }
+    if (mode == "--dump-p1e") {
+        dump_mode = true;
+        g4_sample_mode = true;
+        g4_family = "P1-E-low-thrust";
+        g4_intervals = 100U;
+        g4_policy = "pure-gpu-ipm";
+        g4_quality_tier = "ipm";
+        g4_scaling_mode = "refresh_if_needed";
+        g4_warm_mode = "primal_dual";
+        g4_warm_start = SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL;
+        g4_quality_tolerance = 1.0e-8;
+        g4_family_class = 0.25;
+        g4_transfer_class = "radius_raise";
         production_outer_iterations = 1U;
     }
     if (mode == "--p1d-path-audit") {
@@ -2716,6 +2742,29 @@ int main(const int argc, char** argv) {
     if (production_driver_mode) {
         if (g4_sample_mode) {
             if (g4_family == "P1-C-pd3") {
+                if (p1c_qoco_repeatability_mode) {
+                    constexpr std::uint32_t repeats = 7U;
+                    for (std::uint32_t repeat = 0U; repeat < repeats; ++repeat) {
+                        const auto result = run_pd3();
+                        test::require(
+                            result.outer.status
+                                    == SPACEPDHCG_CUDA_SCVX_CONVERGED
+                                && result.outer.accepted_steps == 2U
+                                && result.outer.terminal_residual
+                                    <= g4_quality_tolerance,
+                            "P1-C pure QOCO repeat changed qualification"
+                        );
+                    }
+                    std::printf(
+                        "{\"case\":\"p1c_qoco_repeatability\","
+                        "\"repeats\":%u,\"qualified\":%u,"
+                        "\"outer_attempt_budget\":%u}\n",
+                        repeats,
+                        repeats,
+                        production_outer_iterations
+                    );
+                    return 0;
+                }
                 static_cast<void>(run_pd3());
             } else if (g4_family == "P1-D-pd6") {
                 static_cast<void>(run_pd6());

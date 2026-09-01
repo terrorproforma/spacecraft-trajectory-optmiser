@@ -240,6 +240,10 @@ if(BUILD_TESTING)
                 COMMAND "${test_name}" --qoco-handback
             )
             add_test(
+                NAME device_scvx_p1c_qoco_repeatability_test
+                COMMAND "${test_name}" --p1c-qoco-repeatability
+            )
+            add_test(
                 NAME device_scvx_qoco_unavailable_test
                 COMMAND
                     "${CMAKE_COMMAND}" -E env
@@ -250,8 +254,9 @@ if(BUILD_TESTING)
                 device_scvx_production_test
                 device_scvx_p1d_path_audit_test
                 device_scvx_qoco_handback_test
+                device_scvx_p1c_qoco_repeatability_test
                 device_scvx_qoco_unavailable_test
-                PROPERTIES TIMEOUT 180
+                PROPERTIES TIMEOUT 300
             )
         endif()
     endforeach()

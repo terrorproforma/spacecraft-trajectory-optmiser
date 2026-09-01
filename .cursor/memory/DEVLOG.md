@@ -315,3 +315,33 @@
     remains failed.
   - No physical G5 2/4/8-GPU evidence, portable immutable archive, Paper 1 freeze, G7 scaling, or
     Paper 2 claim exists.
+
+## 2026-09-02 03:00 AEST
+
+- Task summary:
+  - Fixed absolute-feasibility stopping for pinned QOCO and corrected P1-E penalty ownership,
+    restoring repeatable P1-C and reachable P1-E globalization without changing G4 gates.
+- Changes:
+  - Added a declared, hash-base-checked QOCO patch requiring primal and dual residuals to meet
+    `abstol`; gap retains QOCO's relative stopping semantics.
+  - Added low-thrust-specific KKT regularization/refinement needed to reach the absolute gate.
+  - Passed the driver-owned virtual penalty into numeric updates and removed powered-descent
+    penalty overrides from the low-thrust fixture.
+  - Added a seven-repeat P1-C regression at the actual frozen 0.01 coordinate and a P1-E CQP dump
+    mode for independent-solver comparison.
+- Validation:
+  - P1-C passed 56/56 independent repeats with two accepts each, canonical residual
+    `1.67e-13..3.30e-12`, and terminal residual `8.32e-14..1.79e-13`.
+  - On the identical frozen P1-E CQP, Clarabel reached primal residual `2.91e-15`; CPU and GPU QOCO
+    matched near `3.024e-7` before the fix, proving reachability and ruling out a CUDA-only cause.
+  - Corrected P1-E passed 7/7, each with two accepted nonzero steps and terminal residual
+    `3.13e-13..3.52e-11`.
+- Follow-up notes / risks:
+  - Absolute dual stopping removed a separate P1-D premature-success mode (`dres ~= 1.7e-2`);
+    the final P1-D repeat set passed 7/7 with 24-25 accepts and 4-9 explicit rejections.
+  - Post-fix memcheck, racecheck, initcheck, and synccheck each reported zero errors/hazards.
+  - All 15 serialized P1-C/D/E representatives for fixed-tight, fixed-loose, adaptive,
+    adaptive+polish, and hybrid reached explicit 120-second timeouts. These are retained negative
+    records, not evidence of hybrid eligibility.
+  - The complete matrix ledger, H5/H6, corrected measured timing/energy, and final archive sealing
+    remain pending.

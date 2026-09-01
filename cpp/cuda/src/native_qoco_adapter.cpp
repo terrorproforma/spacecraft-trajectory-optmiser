@@ -801,8 +801,14 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     auto p = result->formulation.p.abi();
     auto a = result->formulation.a.abi();
     auto g = result->formulation.g.abi();
+    const bool low_thrust =
+        problem->dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST;
+    // Low-thrust mass-flow equalities are much smaller than the virtual
+    // penalty scale, so they require less KKT bias and tighter refinement.
     SettingsAbi settings{
-        200, 0, 5, 1.0e-6, 1.0e-13, 1.0e-8, 1.0e-13, 1.0e-11,
+        200, 0, low_thrust ? 20 : 5, low_thrust ? 1.0e-12 : 1.0e-6,
+        1.0e-13, low_thrust ? 1.0e-13 : 1.0e-8, 1.0e-13,
+        low_thrust ? 1.0e-13 : 1.0e-11,
         1.0e-8, 1.0e-8, 1.0e-5, 1.0e-5, 0,
     };
     const auto setup_start = std::chrono::steady_clock::now();

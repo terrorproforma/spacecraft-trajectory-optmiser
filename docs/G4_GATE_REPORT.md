@@ -220,24 +220,31 @@ third-party unused-memory tracking additionally reported only cuDSS/cuBLAS inter
 buffers; that diagnostic is retained and is not promoted to a SpacePDHCG uninitialized-access
 claim.
 
-The longer nonlinear lifecycle results do not pass G4:
+The repeatability/globalization correction establishes the pure-QOCO correctness prerequisite but
+does not by itself pass G4:
 
-- P1-D pure QOCO preserved the two-accept/one-rollback prefix, complete quaternion/path inventory,
-  and transactional reference semantics. Continuing for 100 attempts reached matched final quality
-  (canonical `1.053e-11`, terminal `9.736e-12`) with 24 accepts and three explicit rollback
-  rejections; 12 accepts and all three rejections occurred in the first 15 attempts.
-- P1-E `radius_raise` at frozen trust coordinate `0.25` rejected all 12 candidates, retained the
-  immutable initial reference, and honestly exhausted the trust radius at `1e-4`; final terminal
-  residual remained `2.989e-5`. No malformed 70-km pseudo-dispersion was used.
-- At the representative tight coordinate, fixed-tight timed out for P1-C and P1-D; fixed-loose,
-  adaptive, and adaptive+polish were unqualified for both. All four persistent-PDHCG P1-E modes
-  timed out at the frozen 600-second sample limit.
-- A seven-repeat process-boundary P1-C pure-QOCO measurement passed only 3/7. Failed runs returned
-  a QOCO status but missed the independent forcing gate on the first solve, then correctly followed
-  the rejection lifecycle. The measured timing and GPU-only energy are therefore not primary
-  evidence. `nvidia-smi` polling also exceeded the requested 50-ms interval under load.
-- Hybrid remains ineligible where persistent PDHCG misses the `1e-6` handoff qualification; no
-  adaptive execution is relabelled as hybrid.
+- Pinned QOCO's relative stopping scale admitted absolute KKT residuals above the frozen forcing
+  gate when virtual penalties or dual magnitudes were large. A declared patch now requires primal
+  and dual residuals to meet `abstol` while retaining QOCO's relative gap test.
+- P1-C passed 56/56 independent frozen-coordinate repeats. Every run accepted two steps; canonical
+  residual ranged `1.638e-13..5.078e-13` and terminal residual
+  `8.319e-14..1.788e-13`.
+- P1-D passed 7/7 100-attempt repeats with complete quaternion/path inventory and transactional
+  rollback. Runs accepted 24-25 steps, rejected 4-9 candidates, and ended with canonical residual
+  `5.015e-12..1.074e-11` and terminal residual `2.772e-12..1.580e-11`.
+- P1-E `radius_raise` at frozen trust coordinate `0.25` was independently proven reachable:
+  Clarabel solved the identical dumped CQP to primal residual `2.907e-15`, while pre-fix CPU and
+  GPU QOCO matched near `3.024e-7`. Penalty ownership and low-thrust KKT refinement were corrected.
+  P1-E then passed 7/7, with two accepted nonzero steps per run, canonical residual at most
+  `5.178e-9`, and terminal residual `8.260e-14..3.253e-12`.
+- Post-fix representative checks retained the persistent negatives: fixed-tight, fixed-loose,
+  adaptive, adaptive+polish, and hybrid each hit an explicit 120-second process timeout for
+  P1-C, P1-D, and P1-E. Earlier unqualified and 600-second P1-E timeout records remain preserved;
+  no timed-out adaptive execution is relabelled as hybrid.
+- Earlier 3/7 timing/energy remains non-primary evidence and is retained rather than overwritten.
+  No corrected measured campaign is inferred from correctness-only stress runs. `nvidia-smi`
+  polling also exceeded the requested 50-ms interval under load.
+- Hybrid remains ineligible where persistent PDHCG misses the `1e-6` handoff qualification.
 
 The expanded frozen Cartesian ledger contains 24,883,200 rows. The required seven measured
 repeats, two warm-ups, 20 evaluation instances, all coordinates, and portable immutable artifacts

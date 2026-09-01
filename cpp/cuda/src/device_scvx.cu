@@ -2239,7 +2239,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             api_status = spacepdhcg_cuda_scvx_update_numeric_async(
                 &driver->problem,
                 trust_radius,
-                driver->problem.numeric_update.virtual_l1_weight,
+                driver->options.virtual_penalty,
                 stream
             );
         }

@@ -643,3 +643,80 @@ Use this file as persistent, repo-local execution memory.
   is mostly unrun. H5/H6 remain unresolved and G4 remains failed.
 - G5 still lacks physical 2/4/8-GPU evidence; G6 must refuse real freeze; G7 remains one-GPU
   implementation correctness only.
+
+### 2026-09-02 02:25 AEST - G4 repeatability diagnosis
+
+#### What Worked
+
+- A 50-process frozen P1-C baseline reproduced the failure at useful scale: 30 qualified and 20
+  failed. Every failure was an honest first-solve forcing miss (`natural ~= 2.0e-7`) followed by
+  a qualified radius-0.5 solve; there were no timeouts, driver errors, topology changes, or leaked
+  reference updates.
+- Enabling cuDSS deterministic mode and CUDA/cuBLAS launch controls did not change the two-cluster
+  behavior. Tightening iterative refinement and changing equality regularization also did not
+  remove it. A one-cold-retry experiment improved classification to 42/50 but remained inadequate.
+- Allowing the declared globalization lifecycle a third outer attempt produced 10/10 qualified
+  trials before the final settings check; the rejected inaccurate solve is recoverable by the
+  existing trust shrink rather than by relabeling it.
+- P1-E inspection found a concrete shared-owner defect: the CQP numeric update used the
+  transcription's initial virtual penalty while merit used a different driver-option penalty.
+  The CUDA fixture also overwrote low-thrust's unit-aware default `1e6` virtual penalty with the
+  powered-descent value `10`. The owner now uses one declared penalty and the low-thrust fixture
+  retains its model default.
+
+#### Mistakes And Fixes
+
+- `[hypothesis]` cuDSS `CUDSS_CONFIG_DETERMINISTIC_MODE` was tested in the ignored pinned checkout
+  but did not improve pass rate (31/50); it was removed rather than being presented as a fix.
+- `[hypothesis]` One hidden cold QOCO retry improved but did not eliminate failures (42/50); the
+  adapter experiment was reverted because the preregistered outer lifecycle should own recovery.
+
+#### Follow-Ups / Risks
+
+- Complete the final 50-100 P1-C stress with a three-attempt globalization budget and add an
+  all-repeats classification regression.
+- P1-E remains rejected after the penalty consistency fix; compare the exact reachable decision
+  against QOCO/Clarabel and inspect candidate control/state mapping before changing scheduling.
+
+### 2026-09-02 03:00 AEST - strict QOCO feasibility stopping
+
+#### What Worked
+
+- The first P1-C repeat regression accidentally assigned `g4_dispersion` although P1-C reads
+  `g4_family_class`; that exercised the nominal zero-displacement coordinate. Correcting the field
+  restored the frozen 0.01 coordinate and the original two-attempt budget.
+- The remaining P1-C classification split was QOCO stopping semantics, not leaked owner state:
+  QOCO allowed primal feasibility to scale with large problem data although the G4 gate is an
+  absolute canonical residual. Requiring QOCO's primal stopping test (including inaccurate/best
+  iterate classification) to satisfy `abstol` produced 56/56 qualified independent repeats. Every
+  run accepted two steps; achieved residual ranged `1.67e-13..3.30e-12`, terminal residual
+  `8.32e-14..1.79e-13`, and first acceptance ratio `0.999931728..0.999931732`.
+- Identical dumped P1-E CQP evidence proved reachability and isolated the same scaling failure.
+  Clarabel solved at primal `2.91e-15` with nonzero controls (`control_inf=0.150308`,
+  `throttle_sum=15.000007`); CPU and GPU QOCO both stopped near `3.024e-7` with effectively zero
+  controls. The matching CPU/GPU result rules out CUDA nondeterminism.
+- Strict absolute primal stopping plus low-thrust-specific KKT regularization/refinement
+  (`reg_A=reg_dynamic=1e-13`, 20 refinement iterations, `1e-12` refinement tolerance) produced
+  7/7 reachable P1-E qualifications. Each accepted two nonzero steps; final terminal residuals
+  ranged `3.13e-13..3.52e-11`.
+
+#### Mistakes And Fixes
+
+- `[mistake]` A P1-D correctness run was briefly started while the P1-C stress was active. It was
+  terminated immediately and excluded; all retained evidence runs are serialized.
+- `[hypothesis]` Tightening relative tolerance alone did not help because large virtual-penalty
+  data made the relative primal threshold approximately `3e-7`. Forcing every stopping component
+  to absolute tolerance caused gap-related numerical failure; the durable patch tightens primal
+  and dual feasibility while preserving the relative gap check.
+
+#### Follow-Ups / Risks
+
+- Finish seven serialized P1-D repeats and run QOCO mapping/unit tests against the declared patch.
+- The strict stopping change is carried as a checked patch against pinned QOCO commit
+  `09f049597deef2a7ead15b3da19a9456ff7d4e53`; the build script rejects undeclared upstream dirt.
+- A first final P1-D repeat set exposed QOCO relative dual stopping: one run was classified solved
+  at `dres ~= 1.7e-2` and exhausted trust. Extending the same absolute rule to dual residuals
+  produced 7/7 qualified repeats with 24-25 accepts and 4-9 rejections.
+- All 15 serialized fixed-tight/fixed-loose/adaptive/adaptive+polish/hybrid representatives across
+  P1-C/D/E reached explicit 120-second timeouts. Persistent modes remain honest negative evidence;
+  the full frozen ledger remains incomplete.
