@@ -2,6 +2,7 @@
 #include "spacepdhcg/cuda/device_scvx_c_api.h"
 #include "spacepdhcg/cuda/device_scvx_driver_c_api.h"
 #include "spacepdhcg/scvx/g4_policy.generated.hpp"
+#include "spacepdhcg/scvx/low_thrust_benchmark.hpp"
 #include "spacepdhcg/scvx/low_thrust_driver.hpp"
 #include "spacepdhcg/scvx/powered_descent_3dof_driver.hpp"
 #include "spacepdhcg/transcription/hcw_rendezvous.hpp"
@@ -57,7 +58,8 @@ std::string g4_warm_mode{"primal_dual"};
 spacepdhcg_cuda_warm_start_mode g4_warm_start =
     SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED;
 double g4_quality_tolerance = 1.0e-6;
-double g4_dispersion = 0.0;
+double g4_family_class = 0.0;
+std::string g4_transfer_class{"not_applicable"};
 std::uint32_t production_outer_iterations = 1U;
 double cuda_startup_seconds = 0.0;
 int benchmark_variables = 0;
@@ -473,7 +475,12 @@ IntegrationResult run_resident_sequence(
     const std::vector<double>& state_trust_scales,
     const std::vector<double>& control_trust_scales,
     const double fuel_weight,
-    const double virtual_l1_weight
+    const double virtual_l1_weight,
+    const core::NumericValues* displaced_values = nullptr,
+    const std::vector<double>* displaced_states = nullptr,
+    const std::vector<double>* displaced_controls = nullptr,
+    const std::vector<double>* displaced_initial = nullptr,
+    const std::vector<double>* displaced_target = nullptr
 ) {
     test::ProblemStorage problem(false, !default_stream_mode);
     const auto topology_started = std::chrono::steady_clock::now();
@@ -726,6 +733,11 @@ IntegrationResult run_resident_sequence(
             ro64(target),
             numeric_update,
         };
+        const double initial_numeric_trust =
+            g4_sample_mode
+                    && dynamics_config.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST
+                ? g4_family_class
+                : 1.0;
         test::status_require(
             spacepdhcg_cuda_variational_rk4_async(
                 &dynamics_config, &linearise, problem.exchange.consumer_stream
@@ -741,7 +753,7 @@ IntegrationResult run_resident_sequence(
         test::status_require(
             spacepdhcg_cuda_scvx_update_numeric_async(
                 &outer_problem,
-                1.0,
+                initial_numeric_trust,
                 virtual_l1_weight,
                 problem.exchange.consumer_stream
             ),
@@ -793,6 +805,104 @@ IntegrationResult run_resident_sequence(
         compare(
             problem.variable_upper.download(problem.stream), expected.variable_upper
         );
+        if (displaced_values != nullptr
+            || displaced_states != nullptr
+            || displaced_controls != nullptr
+            || displaced_initial != nullptr
+            || displaced_target != nullptr) {
+            test::require(
+                displaced_values != nullptr
+                    && displaced_states != nullptr
+                    && displaced_controls != nullptr
+                    && displaced_initial != nullptr
+                    && displaced_target != nullptr,
+                "displaced coefficient audit requires complete inputs"
+            );
+            states.upload(*displaced_states, problem.stream);
+            controls.upload(*displaced_controls, problem.stream);
+            initial.upload(*displaced_initial, problem.stream);
+            target.upload(*displaced_target, problem.stream);
+            test::status_require(
+                spacepdhcg_cuda_variational_rk4_async(
+                    &dynamics_config, &linearise, problem.exchange.consumer_stream
+                ),
+                "displaced coefficient variational update"
+            );
+            test::status_require(
+                spacepdhcg_cuda_fill_dynamics_csc_async(
+                    &fill, problem.exchange.consumer_stream
+                ),
+                "displaced coefficient dynamics fill"
+            );
+            test::status_require(
+                spacepdhcg_cuda_scvx_update_numeric_async(
+                    &outer_problem,
+                    0.37,
+                    virtual_l1_weight,
+                    problem.exchange.consumer_stream
+                ),
+                "displaced full numeric update"
+            );
+            test::cuda_require(
+                cudaStreamSynchronize(problem.stream),
+                "displaced coefficient synchronization"
+            );
+            compare(problem.q.download(problem.stream), displaced_values->quadratic);
+            compare(
+                problem.a.download(problem.stream),
+                displaced_values->scalar_constraint
+            );
+            compare(problem.f.download(problem.stream), displaced_values->affine_cone);
+            compare(
+                problem.c.download(problem.stream),
+                displaced_values->linear_objective
+            );
+            compare(
+                problem.scalar_lower.download(problem.stream),
+                displaced_values->scalar_lower
+            );
+            compare(
+                problem.scalar_upper.download(problem.stream),
+                displaced_values->scalar_upper
+            );
+            compare(
+                problem.affine_offset.download(problem.stream),
+                displaced_values->affine_offset
+            );
+            compare(
+                problem.variable_lower.download(problem.stream),
+                displaced_values->variable_lower
+            );
+            compare(
+                problem.variable_upper.download(problem.stream),
+                displaced_values->variable_upper
+            );
+            states.upload(reference_states, problem.stream);
+            controls.upload(reference_controls, problem.stream);
+            initial.upload(initial_state, problem.stream);
+            target.upload(target_state, problem.stream);
+            test::status_require(
+                spacepdhcg_cuda_variational_rk4_async(
+                    &dynamics_config, &linearise, problem.exchange.consumer_stream
+                ),
+                "restore reference coefficient variational update"
+            );
+            test::status_require(
+                spacepdhcg_cuda_fill_dynamics_csc_async(
+                    &fill, problem.exchange.consumer_stream
+                ),
+                "restore reference coefficient dynamics fill"
+            );
+            test::status_require(
+                spacepdhcg_cuda_scvx_update_numeric_async(
+                    &outer_problem,
+                    initial_numeric_trust,
+                    virtual_l1_weight,
+                    problem.exchange.consumer_stream
+                ),
+                "restore reference full numeric update"
+            );
+        }
         if (coefficient_parity_max > 5.0e-12) {
             std::fprintf(
                 stderr,
@@ -854,7 +964,7 @@ IntegrationResult run_resident_sequence(
             test::status_require(
                 spacepdhcg_cuda_scvx_update_numeric_async(
                     &outer_problem,
-                    1.0,
+                    initial_numeric_trust,
                     virtual_l1_weight,
                     problem.exchange.consumer_stream
                 ),
@@ -904,6 +1014,9 @@ IntegrationResult run_resident_sequence(
             1'000'000U,
         };
         if (g4_sample_mode) {
+            if (dynamics_config.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
+                outer_options.initial_trust_radius = g4_family_class;
+            }
             outer_options.warm_start_mode = g4_warm_start;
             outer_options.convergence_tolerance = g4_quality_tolerance;
             if (g4_policy == "fixed-tight") {
@@ -1048,6 +1161,8 @@ IntegrationResult run_resident_sequence(
             "\"trust_radius\":%.9g,\"requested\":%.9g,\"achieved\":%.9g,"
             "\"ratio\":%.9g,\"objective\":%.9g,\"virtual\":%.9g,"
             "\"dynamics\":%.9g,\"path\":%.9g,\"terminal\":%.9g,"
+            "\"path_thrust\":%.9g,\"path_mass\":%.9g,"
+            "\"path_altitude\":%.9g,"
             "\"cpu_gpu_trajectory\":%.9g,"
             "\"t_cqp\":%.9g,\"t_scvx\":%.9g,"
             "\"recovery_seconds\":%.9g,\"recovery_iterations\":%llu,"
@@ -1066,6 +1181,9 @@ IntegrationResult run_resident_sequence(
             outer.dynamics_defect,
             outer.path_violation,
             outer.terminal_residual,
+            outer.path_thrust_violation,
+            outer.path_mass_violation,
+            outer.path_altitude_violation,
             parity_maximum,
             outer.cqp_total_seconds,
             outer.scvx_total_seconds,
@@ -1226,9 +1344,12 @@ IntegrationResult run_resident_sequence(
             std::printf(
                 "{\"case\":\"g4_sample\",\"family\":\"%s\","
                 "\"policy\":\"%s\",\"intervals\":%zu,\"status\":%d,"
+                "\"trust_class\":%.17g,\"transfer_class\":\"%s\","
                 "\"qualified\":%s,\"quality_tolerance\":%.17g,"
                 "\"canonical_residual\":%.17g,\"objective\":%.17g,"
                 "\"dynamics\":%.17g,\"path\":%.17g,\"terminal\":%.17g,"
+                "\"path_inventory\":{\"thrust\":%.17g,\"mass\":%.17g,"
+                "\"altitude\":%.17g},"
                 "\"virtual\":%.17g,\"trajectory_difference\":%.17g,"
                 "\"cqp_seconds\":%.17g,\"scvx_seconds\":%.17g,"
                 "\"recovery_seconds\":%.17g,\"recovery_iterations\":%llu,"
@@ -1240,6 +1361,10 @@ IntegrationResult run_resident_sequence(
                 g4_policy.c_str(),
                 intervals,
                 static_cast<int>(outer.status),
+                dynamics_config.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST
+                    ? g4_family_class
+                    : 0.0,
+                g4_transfer_class.c_str(),
                 qualified ? "true" : "false",
                 g4_quality_tolerance,
                 outer.canonical_residual,
@@ -1247,6 +1372,9 @@ IntegrationResult run_resident_sequence(
                 outer.dynamics_defect,
                 outer.path_violation,
                 outer.terminal_residual,
+                outer.path_thrust_violation,
+                outer.path_mass_violation,
+                outer.path_altitude_violation,
                 outer.virtual_control,
                 parity_maximum,
                 outer.cqp_total_seconds,
@@ -1609,9 +1737,9 @@ IntegrationResult run_pd3() {
     const auto nominal_states =
         subproblem.model().rollout(initial, controls, config.step_seconds);
     if (g4_sample_mode) {
-        initial[0] += 10.0 * g4_dispersion;
-        initial[2] += 100.0 * g4_dispersion;
-        initial[3] -= 5.0 * g4_dispersion;
+        initial[0] += 10.0 * g4_family_class;
+        initial[2] += 100.0 * g4_family_class;
+        initial[3] -= 5.0 * g4_family_class;
     }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
     const std::array<double, 3U> target_position{
@@ -1667,6 +1795,9 @@ IntegrationResult run_low_thrust() {
     config.virtual_l1_weight = 10.0;
     config.virtual_quadratic_weight = 1.0e-3;
     config.virtual_epigraph_regularisation = 1.0e-3;
+    if (g4_sample_mode) {
+        config.trust_radius = g4_family_class;
+    }
     transcription::LowThrustSubproblem subproblem(
         dynamics::LowThrustTwoBodyModel{}, config
     );
@@ -1677,15 +1808,49 @@ IntegrationResult run_low_thrust() {
         config.intervals,
         {0.0, 0.0, 0.0, 0.0}
     );
-    const auto nominal_states =
-        subproblem.model().rollout(initial, controls, config.step_seconds);
-    if (g4_sample_mode) {
-        initial[0] *= 1.0 + g4_dispersion;
-        initial[4] *= 1.0 - 0.5 * g4_dispersion;
-    }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
+    auto target = states.back();
+    if (g4_sample_mode) {
+        const auto transfer = spacepdhcg::scvx::make_low_thrust_transfer_target(
+            subproblem.model(),
+            initial,
+            config.intervals,
+            config.step_seconds,
+            spacepdhcg::scvx::low_thrust_transfer_class(g4_transfer_class)
+        );
+        target = transfer.first.back();
+    }
     const auto values = subproblem.values(
-        states, controls, initial, nominal_states.back()
+        states, controls, initial, target
+    );
+    auto displaced_initial = initial;
+    displaced_initial[0U] += 2.0;
+    displaced_initial[4U] -= 1.0e-3;
+    const auto displaced_reference =
+        spacepdhcg::scvx::make_low_thrust_transfer_target(
+            subproblem.model(),
+            displaced_initial,
+            config.intervals,
+            config.step_seconds,
+            spacepdhcg::scvx::LowThrustTransferClass::combined
+        );
+    const auto displaced_target = displaced_reference.first.back();
+    const auto displaced_values = subproblem.values(
+        displaced_reference.first,
+        displaced_reference.second,
+        displaced_initial,
+        displaced_target,
+        0.37
+    );
+    const auto displaced_flat_states =
+        flatten_states(displaced_reference.first, config.intervals);
+    const auto displaced_flat_controls =
+        flatten_controls(displaced_reference.second);
+    const std::vector<double> displaced_initial_vector(
+        displaced_initial.begin(), displaced_initial.end()
+    );
+    const std::vector<double> displaced_target_vector(
+        displaced_target.begin(), displaced_target.end()
     );
     const auto& layout = subproblem.layout();
     const auto maps = make_maps(
@@ -1705,7 +1870,7 @@ IntegrationResult run_low_thrust() {
         flatten_states(states, config.intervals),
         flatten_controls(controls),
         std::vector<double>(initial.begin(), initial.end()),
-        std::vector<double>(nominal_states.back().begin(), nominal_states.back().end()),
+        std::vector<double>(target.begin(), target.end()),
         maps,
         config.intervals,
         layout.dynamics_rows().start,
@@ -1717,7 +1882,12 @@ IntegrationResult run_low_thrust() {
             config.control_trust_scales.begin(), config.control_trust_scales.end()
         ),
         config.fuel_weight,
-        config.virtual_l1_weight
+        config.virtual_l1_weight,
+        &displaced_values,
+        &displaced_flat_states,
+        &displaced_flat_controls,
+        &displaced_initial_vector,
+        &displaced_target_vector
     );
 }
 
@@ -1746,10 +1916,10 @@ IntegrationResult run_pd6() {
     const auto nominal_states =
         subproblem.model().rollout(initial, controls, config.step_seconds);
     if (g4_sample_mode) {
-        initial[0] += 10.0 * g4_dispersion;
-        initial[2] += 100.0 * g4_dispersion;
-        initial[7] += g4_dispersion;
-        initial[10] += 0.1 * g4_dispersion;
+        initial[0] += 10.0 * g4_family_class;
+        initial[2] += 100.0 * g4_family_class;
+        initial[7] += g4_family_class;
+        initial[10] += 0.1 * g4_family_class;
     }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
     const auto values = subproblem.values(
@@ -1820,9 +1990,10 @@ int main(const int argc, char** argv) {
         || mode == "--g4-diagnose";
     if (mode == "--g4-sample" || mode == "--g4-diagnose") {
         test::require(
-            argc == 12,
+            argc == 13,
             "G4 mode requires family intervals policy warm quality "
-            "outer-iterations dispersion quality-tier scaling-mode policy-sha256"
+            "outer-iterations family-class transfer-class quality-tier "
+            "scaling-mode policy-sha256"
         );
         g4_sample_mode = true;
         g4_diagnostic_mode = mode == "--g4-diagnose";
@@ -1843,13 +2014,29 @@ int main(const int argc, char** argv) {
         g4_quality_tolerance = std::stod(argv[6]);
         production_outer_iterations =
             static_cast<std::uint32_t>(std::stoul(argv[7]));
-        g4_dispersion = std::stod(argv[8]);
-        g4_quality_tier = argv[9];
-        g4_scaling_mode = argv[10];
+        g4_family_class = std::stod(argv[8]);
+        g4_transfer_class = argv[9];
+        g4_quality_tier = argv[10];
+        g4_scaling_mode = argv[11];
         test::require(
-            std::string_view(argv[11]) == frozen_g4::sha256,
+            std::string_view(argv[12]) == frozen_g4::sha256,
             "G4 runtime policy SHA-256 differs from generated policy"
         );
+        if (g4_family == "P1-E-low-thrust") {
+            static_cast<void>(
+                spacepdhcg::scvx::low_thrust_transfer_class(g4_transfer_class)
+            );
+            test::require(
+                g4_family_class == 0.25 || g4_family_class == 0.5
+                    || g4_family_class == 1.0 || g4_family_class == 2.0,
+                "P1-E trust radius is outside the frozen matrix"
+            );
+        } else {
+            test::require(
+                g4_transfer_class == "not_applicable",
+                "non-P1-E family may not report a transfer class"
+            );
+        }
         test::require(
             g4_scaling_mode == "always_refresh"
                 || g4_scaling_mode == "reuse"

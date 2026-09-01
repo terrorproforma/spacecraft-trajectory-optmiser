@@ -57,3 +57,28 @@
     regression pass.
 - Follow-up notes / risks:
   - G4 remains failed. No H5/H6 matrix or G5 work was started.
+
+## 2026-09-01 20:55 AEST
+
+- Task summary:
+  - Corrected the isolated P1-E displaced-reference qualification path without changing frozen
+    policy, tolerances, matrix coordinates, or solver targets.
+- Changes:
+  - Replaced the invalid P1-E dispersion input with exact trust-radius/transfer-class parsing and
+    deterministic reachable two-body low-thrust transfer targets.
+  - Replayed from the immutable initial condition and added independent throttle, mass, and
+    minimum-radius inventory telemetry.
+  - Added all-vector displaced CPU/GPU coefficient and boundary parity, fixed-topology checks,
+    adversarial accepted/rejected iterations, terminal reduction, and injected path violations.
+- Validation:
+  - Adversarial radius raise: 2 accepted steps, step fraction `0.84855828091422303`, scaled terminal
+    error `1.7430149824386731e-3 -> 0`.
+  - Short GPU production/recovery tests passed; maximum coefficient difference
+    `2.7599450502791001e-13`, no topology allocation/copy, no hidden CPU fallback.
+  - Full host suite: 41/41; full Python suite: 142 passed, 3 optional QOCO skips.
+- Follow-up notes / risks:
+  - The committed N=100/dispersion=0.01 P1-E failure is not a valid frozen coordinate. A corrected
+    N=100 solve exceeded the short shared-GPU limit and was stopped, so no full qualification or
+    performance claim is made.
+  - Cherry-picking may require additive conflict resolution in shared CUDA outer-driver/test code
+    and these append-only memory files if P1-C lands first.

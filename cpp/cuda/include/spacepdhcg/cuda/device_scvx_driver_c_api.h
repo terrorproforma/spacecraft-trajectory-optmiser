@@ -197,6 +197,9 @@ typedef struct spacepdhcg_cuda_scvx_result {
     double canonical_residual;
     double dynamics_defect;
     double path_violation;
+    double path_thrust_violation;
+    double path_mass_violation;
+    double path_altitude_violation;
     double terminal_residual;
     double virtual_control;
     double trajectory_step;

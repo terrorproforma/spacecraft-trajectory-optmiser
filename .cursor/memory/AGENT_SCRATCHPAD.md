@@ -218,3 +218,38 @@ Use this file as persistent, repo-local execution memory.
 
 - G4 remains FAIL and G5 remains unauthorized. The remaining defect is the projected-KKT primal/
   active-set recovery algorithm on larger L1-epigraph CQPs, not trigger, fingerprint, or reporting.
+
+### 2026-09-01 20:55 AEST - P1-E displaced qualification correction
+
+#### Task Summary
+
+- Corrected P1-E qualification to use its frozen low-thrust trust-radius and transfer-class
+  coordinates instead of the generic powered-descent dispersion argument.
+- Added deterministic reachable low-thrust transfer targets, full displaced CPU/device numeric
+  parity, independent radius/throttle replay checks, and adversarial accepted-step coverage.
+
+#### Mistakes And Fixes
+
+- `[self]` The first adversarial transfer test generated an RK4 target while its CPU driver retained
+  Euler replay. Set the fixture transcription to RK4 variational so target generation, CQP
+  linearisation, and nonlinear replay use the same model.
+- `[tool]` A frozen N=100 GPU solve exceeded the short shared-GPU boundary. Stopped it after 116
+  seconds and retained no qualification claim; used the short production/recovery tests instead.
+- `[tool]` A temporary `_upstream` symlink invalidated one git-ignore test. Removed it before final
+  validation and reran the complete Python suite with the isolated native library.
+
+#### What Worked
+
+- The radius-raise adversarial case accepted two nonzero steps at trust radius 0.25 and reduced
+  scaled terminal error from `1.7430149824386731e-3` to zero.
+- All nine numeric arrays (`Q/A/F/c/l/u/bK`, including variable bounds) matched displaced CPU truth
+  on GPU to `2.7599450502791001e-13`, with fixed topology and no hidden CPU fallback.
+- Short GPU recovery retained deterministic rollback/commit, all warm modes, and independent
+  residual checks; 41 native and 142 Python tests passed.
+
+#### Follow-Ups / Risks
+
+- The original P1-E archive is malformed negative evidence, not a frozen matrix coordinate:
+  `dispersion=0.01` is not defined for P1-E and produced an unreachable 70.8 km return in 100 s.
+- `device_scvx.cu` and its integration test are shared cherry-pick surfaces with P1-C; resolve
+  additively, retaining P1-C solver work and P1-E initial-state replay/path inventory changes.

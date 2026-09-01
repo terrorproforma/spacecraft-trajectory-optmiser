@@ -789,6 +789,9 @@ struct ScvxMetrics {
     double model_merit;
     double dynamics;
     double path;
+    double path_thrust;
+    double path_mass;
+    double path_altitude;
     double terminal;
     double virtual_control;
     double step;
@@ -1085,6 +1088,7 @@ __global__ void scvx_metrics_kernel(
     const double feasibility_penalty,
     const double virtual_penalty,
     const spacepdhcg_cuda_scvx_numeric_update update,
+    const double* scalar_lower,
     const double* variable_lower,
     const double* variable_upper,
     const int* state_variable_indices,
@@ -1196,9 +1200,16 @@ __global__ void scvx_metrics_kernel(
             const double maximum_thrust = variable_upper[sigma_variable];
             const double normalised_thrust_violation =
                 thrust_violation / maximum_thrust;
+            const double throttle_violation =
+                fmax(0.0, control[sigma_index] - maximum_thrust)
+                / maximum_thrust;
+            const double thrust_path =
+                fmax(normalised_thrust_violation, throttle_violation);
             result.path = fmax(result.path, normalised_thrust_violation);
-            actual_path_sum += normalised_thrust_violation;
-            model_path_sum += normalised_thrust_violation;
+            result.path = fmax(result.path, throttle_violation);
+            result.path_thrust = fmax(result.path_thrust, thrust_path);
+            actual_path_sum += normalised_thrust_violation + throttle_violation;
+            model_path_sum += normalised_thrust_violation + throttle_violation;
             result.objective += control[sigma_index]
                 / (static_cast<double>(intervals) * maximum_thrust);
         }
@@ -1224,8 +1235,39 @@ __global__ void scvx_metrics_kernel(
                 result.path,
                 actual_mass_violation
             );
+            result.path_mass = fmax(result.path_mass, actual_mass_violation);
             actual_path_sum += actual_mass_violation;
             model_path_sum += model_mass_violation;
+        }
+    }
+    if (model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
+        const double minimum_radius = scalar_lower[update.radial_row_start];
+        const double position_scale = fmax(
+            update.state_trust_scales[0U],
+            fmax(update.state_trust_scales[1U], update.state_trust_scales[2U])
+        );
+        for (size_t node = 0U; node <= intervals; ++node) {
+            const double* actual_state = replay + node * state_dimension;
+            const double* model_state = states + node * state_dimension;
+            const double actual_radius = sqrt(
+                actual_state[0U] * actual_state[0U]
+                + actual_state[1U] * actual_state[1U]
+                + actual_state[2U] * actual_state[2U]
+            );
+            const double model_radius = sqrt(
+                model_state[0U] * model_state[0U]
+                + model_state[1U] * model_state[1U]
+                + model_state[2U] * model_state[2U]
+            );
+            const double actual_altitude_violation =
+                fmax(0.0, minimum_radius - actual_radius) * position_scale;
+            const double model_altitude_violation =
+                fmax(0.0, minimum_radius - model_radius) * position_scale;
+            result.path = fmax(result.path, actual_altitude_violation);
+            result.path_altitude =
+                fmax(result.path_altitude, actual_altitude_violation);
+            actual_path_sum += actual_altitude_violation;
+            model_path_sum += model_altitude_violation;
         }
     }
     if (model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
@@ -1506,7 +1548,7 @@ spacepdhcg_cuda_status collect_metrics(
     auto api_status = launch_replay(
         driver->problem.dynamics,
         driver->problem.intervals,
-        view_pointer<const double>(driver->problem.reference_states),
+        view_pointer<const double>(driver->problem.initial_state),
         controls,
         driver->replay_states,
         stream
@@ -1537,6 +1579,7 @@ spacepdhcg_cuda_status collect_metrics(
         driver->options.feasibility_penalty,
         driver->options.virtual_penalty,
         driver->problem.numeric_update,
+        view_pointer<const double>(driver->problem.numeric.scalar_lower),
         view_pointer<const double>(driver->problem.numeric.variable_lower),
         view_pointer<const double>(driver->problem.numeric.variable_upper),
         view_pointer<const int>(driver->problem.state_variable_indices),
@@ -2475,6 +2518,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         : last_diagnostics.natural_residual_inf;
     result->dynamics_defect = current.dynamics;
     result->path_violation = current.path;
+    result->path_thrust_violation = current.path_thrust;
+    result->path_mass_violation = current.path_mass;
+    result->path_altitude_violation = current.path_altitude;
     result->terminal_residual = current.terminal;
     result->virtual_control = current.virtual_control;
     result->trajectory_step = current.step;

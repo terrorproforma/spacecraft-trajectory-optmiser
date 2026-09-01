@@ -1,7 +1,8 @@
-#include "spacepdhcg/scvx/low_thrust_driver.hpp"
+#include "spacepdhcg/scvx/low_thrust_benchmark.hpp"
 
 #include <cmath>
 #include <cstddef>
+#include <cstdio>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -87,6 +88,44 @@ class EchoPersistentBackend final : public spacepdhcg::core::HostPersistentBacke
     std::size_t update_count_{0U};
 };
 
+std::vector<double> exact_transfer_decision(
+    const spacepdhcg::transcription::LowThrustSubproblem& subproblem,
+    const spacepdhcg::core::NumericValues& values,
+    const std::vector<spacepdhcg::dynamics::LowThrustState>& states,
+    const std::vector<spacepdhcg::dynamics::LowThrustControl>& controls
+) {
+    auto decision = subproblem.reference_decision(states, controls);
+    const auto& pattern = subproblem.structure().scalar_constraint;
+    const auto& layout = subproblem.layout();
+    for (std::size_t interval = 0U; interval < layout.intervals; ++interval) {
+        for (std::size_t component = 0U; component < 7U; ++component) {
+            const auto row = layout.dynamics_rows().start + 7U * interval + component;
+            double left_hand_side{0.0};
+            for (spacepdhcg::Index column = 0; column < pattern.columns; ++column) {
+                const auto begin =
+                    static_cast<std::size_t>(pattern.offsets[static_cast<std::size_t>(column)]);
+                const auto end = static_cast<std::size_t>(
+                    pattern.offsets[static_cast<std::size_t>(column) + 1U]
+                );
+                for (auto slot = begin; slot < end; ++slot) {
+                    if (static_cast<std::size_t>(pattern.indices[slot]) == row) {
+                        left_hand_side +=
+                            values.scalar_constraint[slot]
+                            * decision[static_cast<std::size_t>(column)];
+                    }
+                }
+            }
+            const auto virtual_variable =
+                layout.virtual_control(interval).start + component;
+            const auto virtual_value = left_hand_side - values.scalar_lower[row];
+            decision[virtual_variable] = virtual_value;
+            decision[layout.epigraph(interval).start + component] =
+                std::abs(virtual_value);
+        }
+    }
+    return decision;
+}
+
 }  // namespace
 
 int main() {
@@ -166,5 +205,139 @@ int main() {
         || decoded.virtual_controls.size() != controls.size()) {
         return 5;
     }
+
+    constexpr std::array<std::string_view, 4U> frozen_classes{
+        "coast_reference",
+        "radius_raise",
+        "plane_change",
+        "combined",
+    };
+    for (const auto name : frozen_classes) {
+        const auto transfer_class =
+            spacepdhcg::scvx::low_thrust_transfer_class(name);
+        if (spacepdhcg::scvx::low_thrust_transfer_class_name(transfer_class) != name) {
+            return 6;
+        }
+        const auto transfer = spacepdhcg::scvx::make_low_thrust_transfer_target(
+            model,
+            initial,
+            config.intervals,
+            config.step_seconds,
+            transfer_class
+        );
+        if (transfer.first.size() != config.intervals + 1U
+            || transfer.second.size() != config.intervals
+            || model.path_diagnostics(transfer.first, transfer.second).maximum_violation()
+                   > 1.0e-12) {
+            return 7;
+        }
+    }
+
+    const auto transfer = spacepdhcg::scvx::make_low_thrust_transfer_target(
+        model,
+        initial,
+        config.intervals,
+        config.step_seconds,
+        spacepdhcg::scvx::LowThrustTransferClass::radius_raise
+    );
+    auto transfer_config = config;
+    transfer_config.trust_radius = 0.25;
+    transfer_config.discretisation =
+        spacepdhcg::transcription::DiscretisationMethod::rk4_variational;
+    const LowThrustSubproblem transfer_subproblem(model, transfer_config);
+    const auto transfer_values = transfer_subproblem.values(
+        states,
+        controls,
+        initial,
+        transfer.first.back(),
+        transfer_config.trust_radius
+    );
+    const auto transfer_primal = exact_transfer_decision(
+        transfer_subproblem,
+        transfer_values,
+        transfer.first,
+        transfer.second
+    );
+    const auto transfer_diagnostics =
+        transfer_subproblem.diagnostics(transfer_primal, transfer_values);
+    if (transfer_diagnostics.maximum_violation() > 1.0e-9) {
+        return 8;
+    }
+    const auto transfer_counters = std::make_shared<BackendCounters>();
+    const auto transfer_factory =
+        [transfer_primal, transfer_counters](spacepdhcg::core::FixedCQP problem) {
+            return std::make_unique<EchoPersistentBackend>(
+                std::move(problem),
+                transfer_primal,
+                transfer_counters
+            );
+        };
+    NativeLowThrustOuterConfig transfer_outer{};
+    transfer_outer.maximum_iterations = 2U;
+    transfer_outer.minimum_iterations = 2U;
+    NativeLowThrustScvxDriver transfer_driver(
+        transfer_subproblem,
+        transfer_factory,
+        transfer_outer
+    );
+    const auto transfer_result = transfer_driver.solve(
+        initial,
+        transfer.first.back(),
+        std::make_pair(states, controls)
+    );
+    if (transfer_result.accepted_iterations == 0U) {
+        return 9;
+    }
+    if (transfer_result.iterations.empty()
+        || !transfer_result.iterations.front().accepted) {
+        return 10;
+    }
+    if (transfer_result.iterations.front().step_fraction <= 0.0) {
+        return 11;
+    }
+    double initial_terminal_error{0.0};
+    for (std::size_t component = 0U; component < 6U; ++component) {
+        initial_terminal_error = std::max(
+            initial_terminal_error,
+            std::abs(
+                (states.back()[component] - transfer.first.back()[component])
+                * transfer_config.state_trust_scales[component]
+            )
+        );
+    }
+    if (transfer_result.iterations.front().residual.terminal
+        >= initial_terminal_error) {
+        return 12;
+    }
+
+    auto violating_states = states;
+    auto violating_controls = controls;
+    violating_controls.front() = {2.0, 0.0, 0.0, 0.5};
+    violating_states[1U][6U] = model.config().minimum_mass - 1.0;
+    violating_states[2U][0U] = model.config().minimum_radius - 1.0;
+    violating_states[2U][1U] = 0.0;
+    violating_states[2U][2U] = 0.0;
+    const auto path = model.path_diagnostics(violating_states, violating_controls);
+    if (!(path.thrust_epigraph > 0.0)
+        || !(path.minimum_mass > 0.0)
+        || !(path.minimum_radius > 0.0)) {
+        return 13;
+    }
+    violating_controls.front() = {0.0, 0.0, 0.0, 2.0};
+    if (!(model.path_diagnostics(violating_states, violating_controls).throttle_upper
+          > 0.0)) {
+        return 14;
+    }
+    std::printf(
+        "{\"case\":\"p1e_displaced_acceptance\","
+        "\"transfer\":\"radius_raise\",\"trust_radius\":0.25,"
+        "\"accepted_steps\":%zu,\"first_step_fraction\":%.17g,"
+        "\"terminal_before\":%.17g,\"terminal_after\":%.17g,"
+        "\"path_injections_detected\":true}\n",
+        transfer_result.accepted_iterations,
+        transfer_result.iterations.front().step_fraction,
+        initial_terminal_error,
+        transfer_result.residual.terminal
+    );
     return 0;
 }
