@@ -1,9 +1,9 @@
 # Gate G4 report — adaptive and hybrid matched-quality study
 
-Status date: **2026-09-01**  
-Decision: **FAIL**  
-H5: **unresolved**  
-H6: **unresolved**  
+Status date: **2026-09-01**
+Decision: **FAIL**
+H5: **unresolved**
+H6: **unresolved**
 G5 authorised: **no**
 
 ## Scope and frozen policy
@@ -126,3 +126,21 @@ do not qualify the failed nonlinear trajectories.
 11. Negative, unsupported, and censored records retained: **PASS**.
 
 Gate G4 therefore **does not pass**, and Gate G5 is **not authorised**.
+
+## Evidence
+
+Primary isolated qualification archive:
+
+- `results/gpu/g4/qualification/g4-20260901T072000Z-b70bf15-isolated.tar.gz`
+- SHA-256: `2bda322a9f85d59c870aeb244dd5b2c64a23ef5f38a706eb2b9a4d051baae5c8`
+- evidence-index SHA-256:
+  `84db411403dbde4871011e8d3fbf4d85e1534d44e2f53698ab724e007678f7d7`
+
+Preserved contaminated preliminary archive:
+
+- `results/gpu/g4/qualification/g4-20260901T070000Z-509d9dd-contaminated.tar.gz`
+- SHA-256: `cac80c4fa5bb6797a36f94cfeac91d5b8d79469e2c739f911f8503a98d9e876d`
+
+The isolated archive contains the exact execution commit, policy and solver-lock hashes, commands,
+environment, raw outer-iteration diagnostics, power traces, compact 1,080-coordinate coverage
+ledger, QOCO build/smoke logs, test logs, all sanitizer logs, decision record, and artifact index.
