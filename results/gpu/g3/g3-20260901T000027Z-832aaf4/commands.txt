@@ -1,0 +1,21 @@
+.venv/bin/ruff check . 
+.venv/bin/pytest -q 
+.venv/bin/cmake -S cpp -B build/g3-evidence-cuda-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=120 
+.venv/bin/cmake --build build/g3-evidence-cuda-debug --parallel 4 
+env LD_LIBRARY_PATH=build/g3-evidence-cuda-debug/cuda:/usr/local/cuda-12.8/lib64 .venv/bin/ctest --test-dir build/g3-evidence-cuda-debug --output-on-failure 
+.venv/bin/cmake -S cpp -B build/g3-evidence-cuda-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=120 
+.venv/bin/cmake --build build/g3-evidence-cuda-release --parallel 4 
+env LD_LIBRARY_PATH=build/g3-evidence-cuda-release/cuda:/usr/local/cuda-12.8/lib64 .venv/bin/ctest --test-dir build/g3-evidence-cuda-release --output-on-failure 
+build/g3-evidence-cuda-debug/cuda-tests/device_variational_test 
+build/g3-evidence-cuda-debug/cuda-tests/device_scvx_integration_test 
+build/g3-evidence-cuda-debug/cuda-tests/device_scvx_integration_test --tight-pd3 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --error-exitcode 91 build/g3-evidence-cuda-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --error-exitcode 92 build/g3-evidence-cuda-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool racecheck --error-exitcode 91 build/g3-evidence-cuda-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool racecheck --error-exitcode 92 build/g3-evidence-cuda-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool synccheck --error-exitcode 91 build/g3-evidence-cuda-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool synccheck --error-exitcode 92 build/g3-evidence-cuda-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool initcheck --track-unused-memory --error-exitcode 93 build/g3-evidence-cuda-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool initcheck --track-unused-memory --error-exitcode 94 build/g3-evidence-cuda-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+nsys profile --trace=cuda\,osrt --sample=none --cpuctxsw=none --force-overwrite=true --output=results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx build/g3-evidence-cuda-debug/cuda-tests/device_scvx_integration_test 
+nsys stats --report cuda_api_sum\,cuda_gpu_kern_sum\,cuda_gpu_mem_time_sum results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.nsys-rep 
