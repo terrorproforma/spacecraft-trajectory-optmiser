@@ -1,0 +1,224 @@
+{
+  "schema_version": "1.0.0",
+  "gate": "G4",
+  "freeze_status": "primary-evaluation parameters; changes require a new campaign",
+  "source_gate_commit": "fa59182219a39160a8507e54b4ceaf987516b170",
+  "precision": "float64",
+  "policies": {
+    "fixed-tight": {
+      "backend": "spacepdhcg-persistent",
+      "inner_tolerance": 1e-08,
+      "inner_iteration_limit": 1000000,
+      "final_polish": false
+    },
+    "fixed-loose": {
+      "backend": "spacepdhcg-persistent",
+      "inner_tolerance": 0.001,
+      "inner_iteration_limit": 25000,
+      "final_polish": false
+    },
+    "adaptive": {
+      "backend": "spacepdhcg-persistent",
+      "epsilon_max": 0.001,
+      "epsilon_floor": 1e-08,
+      "epsilon_0": 0.001,
+      "coefficient": 0.2,
+      "alpha": 0.5,
+      "gamma": 0.6,
+      "phase_ceilings": {
+        "repair": 0.01,
+        "progress": 0.002,
+        "refinement": 1e-05,
+        "polish": 1e-08
+      },
+      "phase_iteration_limits": {
+        "repair": 5000,
+        "progress": 25000,
+        "refinement": 100000,
+        "polish": 1000000
+      },
+      "final_polish": false
+    },
+    "adaptive+polish": {
+      "backend": "spacepdhcg-persistent",
+      "inherits": "adaptive",
+      "polish_backend": "spacepdhcg-persistent",
+      "polish_tolerance": 1e-08,
+      "polish_iteration_limit": 1000000,
+      "final_polish": true
+    },
+    "pure-gpu-ipm": {
+      "backend": "qoco-gpu",
+      "absolute_tolerance": 1e-08,
+      "relative_tolerance": 1e-08,
+      "maximum_iterations": 200,
+      "ruiz_iterations": 0,
+      "iterative_refinement_tolerance": 1e-06,
+      "warm_start_capability": "primal-only"
+    },
+    "hybrid-pdhcg-ipm": {
+      "backend": "hybrid-pdhcg-ipm",
+      "construction_policy": "adaptive",
+      "polish_backend": "qoco-gpu",
+      "handoff_qualification_tolerance": 1e-06,
+      "absolute_tolerance": 1e-08,
+      "relative_tolerance": 1e-08,
+      "maximum_iterations": 200,
+      "dual_warm_start_capability": "unsupported-by-pinned-qoco",
+      "discarded_dual_must_be_recorded": true
+    }
+  },
+  "resolve_policy": {
+    "maximum_resolves_per_outer_iteration": 1,
+    "trigger_multiple_of_requested_tolerance": 5.0,
+    "refinement_factor": 0.1,
+    "minimum_resolve_tolerance": 1e-08,
+    "require_identical_numeric_cqp_fingerprint": true,
+    "shrink_only_after_resolve": true
+  },
+  "trust_policy": {
+    "acceptance_threshold": 0.05,
+    "restoration_reduction": 0.9,
+    "initial_radius": 1.0,
+    "minimum_radius": 0.0001,
+    "maximum_radius": 8.0,
+    "shrink_factor": 0.5,
+    "expansion_factor": 1.8,
+    "strong_agreement": 0.75,
+    "near_boundary_fraction": 0.8
+  },
+  "warm_start_modes": [
+    "cold",
+    "primal",
+    "primal_dual"
+  ],
+  "warm_start_mapping": {
+    "primal": "identity variable ordering in original unequilibrated scaling",
+    "scalar_dual": "lower-minus-upper canonical normal mapped to QOCO equality/nonnegative rows",
+    "soc_dual": "canonical normal is sign-reversed into QOCO h-Gx cone convention",
+    "rotated_soc": "orthonormal rotated-SOC to SOC map; transformed dimensions recorded",
+    "qualification": "independent canonical residual and cone-membership check before solve"
+  },
+  "scaling_policy": {
+    "modes": [
+      "always_refresh",
+      "reuse",
+      "refresh_if_needed"
+    ],
+    "primary": "refresh_if_needed",
+    "refresh_condition_ratio": 100.0,
+    "record_extrema": true
+  },
+  "recovery_policy": {
+    "enabled": true,
+    "projected_kkt_cgls": true,
+    "transactional_rollback": true,
+    "maximum_iterations": 50000,
+    "include_in_end_to_end_time": true
+  },
+  "quality_tiers": {
+    "coarse": 0.001,
+    "medium": 0.0001,
+    "tight": 1e-06,
+    "ipm": 1e-08
+  },
+  "matched_quality": {
+    "canonical_multiplier": 1.0,
+    "nonlinear_multiplier": 1.0,
+    "objective_practical_equivalence_absolute": 1e-06,
+    "objective_practical_equivalence_relative": 1e-04,
+    "virtual_control_tolerance": 1e-06,
+    "continuous_time_tolerance": 1e-06,
+    "unqualified_results_support_claims": false
+  },
+  "tuning_evaluation_split": {
+    "tuning_seeds": [
+      17,
+      23,
+      31,
+      47
+    ],
+    "evaluation_seeds": [
+      59,
+      71,
+      89,
+      101,
+      127,
+      149,
+      173,
+      197,
+      223,
+      251,
+      281,
+      313,
+      349,
+      389,
+      431,
+      479
+    ],
+    "evaluation_may_not_change_policy": true
+  },
+  "matrix": {
+    "families": {
+      "P1-C-pd3": {
+        "intervals": [20, 50, 100, 500, 2000],
+        "dispersion_classes": [0.0, 0.01, 0.05, 0.1]
+      },
+      "P1-D-pd6": {
+        "intervals": [20, 50, 100, 500, 2000],
+        "attitude_dispersion_radians": [0.0, 0.05, 0.2, 0.5],
+        "angular_rate_dispersion": [0.0, 0.05, 0.2]
+      },
+      "P1-E-low-thrust": {
+        "intervals": [100, 500, 2000, 10000, 50000],
+        "trust_radii": [0.25, 0.5, 1.0, 2.0],
+        "transfer_classes": [
+          "coast_reference",
+          "radius_raise",
+          "plane_change",
+          "combined"
+        ]
+      }
+    },
+    "conditioning_log10_spans": [0.0, 2.0, 4.0, 8.0],
+    "quality_tiers": ["coarse", "medium", "tight", "ipm"],
+    "warm_start_modes": ["cold", "primal", "primal_dual"],
+    "measured_repeats": 7,
+    "warmup_repeats": 2,
+    "randomised_instances_per_coordinate": 20,
+    "timeout_seconds_per_sample": 600
+  },
+  "randomisation": {
+    "solver_order_seed": 20260901,
+    "rotate_solver_order_per_coordinate": true
+  },
+  "statistics": {
+    "primary": "paired median",
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260901,
+    "confidence": 0.95,
+    "sustained_coordinates": 3
+  },
+  "energy": {
+    "source": "nvidia-smi",
+    "sampling_interval_milliseconds": 50,
+    "integration": "trapezoidal over benchmark process boundary",
+    "idle_subtraction": false,
+    "scope": "GPU-only",
+    "sampling_gaps_must_be_reported": true,
+    "shared_or_display_gpu_must_be_reported": true
+  },
+  "decision_thresholds": {
+    "H5": {
+      "supported_minimum_time_reduction": 0.15,
+      "rejected_minimum_slowdown": 0.1,
+      "maximum_failure_rate_increase": 0.02,
+      "minimum_supported_families": 2
+    },
+    "H6": {
+      "maximum_hybrid_to_ipm_residual_factor": 2.0,
+      "supported_minimum_time_reduction": 0.1,
+      "minimum_unpolished_residual_decades": 1.0
+    }
+  }
+}
