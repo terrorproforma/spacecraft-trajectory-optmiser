@@ -48,6 +48,7 @@ bool tight_all_mode = false;
 bool tight_pd6_mode = false;
 bool production_driver_mode = false;
 bool g4_sample_mode = false;
+bool g4_probe_mode = false;
 bool g4_diagnostic_mode = false;
 bool p1d_path_audit_mode = false;
 bool p1d_diagnostic_mode = false;
@@ -1288,6 +1289,69 @@ IntegrationResult run_resident_sequence(
             ),
             "production outer driver create"
         );
+        if (g4_probe_mode) {
+            std::printf(
+                "{\"case\":\"g4_axis_probe\",\"coordinate_id\":\"%s\","
+                "\"policy_sha256\":\"%.*s\",\"matrix_sha256\":\"%s\","
+                "\"capability_sha256\":\"%s\",\"family\":\"%s\","
+                "\"intervals\":%zu,\"policy\":\"%s\",\"policy_code\":%d,"
+                "\"quality_tier\":\"%s\",\"quality_tolerance\":%.17g,"
+                "\"conditioning_log10_span\":%.17g,"
+                "\"scaling_mode\":\"%s\",\"scaling_code\":%d,"
+                "\"warm_start_mode\":\"%s\",\"warm_start_code\":%d,"
+                "\"dispersion_class\":%.17g,\"attitude_class\":%.17g,"
+                "\"rate_class\":%.17g,\"trust_class\":%.17g,"
+                "\"transfer_class\":\"%s\",\"evaluation_seed\":%llu,"
+                "\"instance\":\"%s-seed-%llu\",\"repeat_kind\":\"%s\","
+                "\"repeat\":%u,\"solver_order\":%u,"
+                "\"instance_hash\":\"%016llx\",\"problem_hash\":\"%016llx\","
+                "\"coefficient_hash\":\"%016llx\","
+                "\"condition_factor_min\":%.17g,"
+                "\"condition_factor_max\":%.17g,"
+                "\"conditioned_coefficient_ratio\":%.17g,"
+                "\"coefficient_parity_maximum\":%.17g}\n",
+                g4_coordinate_id.c_str(),
+                static_cast<int>(frozen_g4::sha256.size()),
+                frozen_g4::sha256.data(),
+                g4_matrix_sha256.c_str(),
+                g4_capability_sha256.c_str(),
+                g4_family.c_str(),
+                intervals,
+                g4_policy.c_str(),
+                static_cast<int>(outer_options.policy),
+                g4_quality_tier.c_str(),
+                g4_quality_tolerance,
+                g4_conditioning_log10_span,
+                g4_scaling_mode.c_str(),
+                static_cast<int>(create_options.scaling_mode),
+                g4_warm_mode.c_str(),
+                static_cast<int>(outer_options.warm_start_mode),
+                g4_family == "P1-C-pd3" ? g4_family_class : 0.0,
+                g4_family == "P1-D-pd6" ? g4_dispersion : 0.0,
+                g4_family == "P1-D-pd6" ? g4_secondary_dispersion : 0.0,
+                g4_family == "P1-E-low-thrust" ? g4_family_class : 0.0,
+                g4_transfer_class.c_str(),
+                static_cast<unsigned long long>(g4_evaluation_seed),
+                g4_family.c_str(),
+                static_cast<unsigned long long>(g4_evaluation_seed),
+                g4_repeat_kind.c_str(),
+                g4_repeat_index,
+                g4_solver_order,
+                static_cast<unsigned long long>(g4_instance_hash),
+                static_cast<unsigned long long>(g4_problem_hash),
+                static_cast<unsigned long long>(g4_coefficient_hash),
+                g4_condition_factor_min,
+                g4_condition_factor_max,
+                g4_conditioned_coefficient_ratio,
+                coefficient_parity_max
+            );
+            test::status_require(
+                spacepdhcg_cuda_scvx_driver_destroy(&driver),
+                "G4 axis-probe driver destroy"
+            );
+            test::destroy_workspace(workspace);
+            return {};
+        }
         std::vector<spacepdhcg_cuda_scvx_iteration> records(
             production_outer_iterations
         );
@@ -2841,6 +2905,7 @@ int main(const int argc, char** argv) {
         || mode == "--production-outer-sanitizer"
         || mode == "--h1-hcw"
         || mode == "--g4-sample"
+        || mode == "--g4-axis-probe"
         || mode == "--g4-diagnose"
         || mode == "--p1d-path-audit"
         || mode == "--dump-p1d"
@@ -2936,7 +3001,8 @@ int main(const int argc, char** argv) {
         g4_secondary_dispersion = 0.01;
         production_outer_iterations = 2U;
     }
-    if (mode == "--g4-sample" || mode == "--g4-diagnose") {
+    if (mode == "--g4-sample" || mode == "--g4-axis-probe"
+        || mode == "--g4-diagnose") {
         test::require(
             argc == 21,
             "G4 mode requires family intervals policy warm quality "
@@ -2946,6 +3012,7 @@ int main(const int argc, char** argv) {
             "capability-sha256"
         );
         g4_sample_mode = true;
+        g4_probe_mode = mode == "--g4-axis-probe";
         g4_diagnostic_mode = mode == "--g4-diagnose";
         g4_family = argv[2];
         g4_intervals = std::stoull(argv[3]);

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import subprocess
 import sys
@@ -20,7 +21,6 @@ from run_g4_campaign import (  # noqa: E402
     load_capabilities,
     locked_policy,
     parse_records,
-    validate_success,
 )
 
 from spacepdhcg.experiments.g4 import (  # noqa: E402
@@ -108,7 +108,81 @@ def coordinates(policy: dict[str, Any]) -> list[dict[str, Any]]:
     cross_seed["seed"] = seeds[1]
     cross_seed["instance"] = f"{cross_seed['family']}-seed-{cross_seed['seed']}"
     result.append(cross_seed)
+    mode_variant = dict(result[0])
+    mode_variant.update(
+        {
+            "ordinal": len(result),
+            "policy": "hybrid-pdhcg-ipm",
+            "quality_tier": "medium",
+            "quality_tolerance": policy["quality_tiers"]["medium"],
+            "scaling_mode": "reuse",
+            "warm_mode": "cold",
+            "repeat_kind": "measured",
+            "solver_order": 5,
+        }
+    )
+    result.append(mode_variant)
+    condition_variant = dict(result[0])
+    condition_variant.update({"ordinal": len(result), "conditioning": 8.0})
+    result.append(condition_variant)
+    class_variant = dict(result[0])
+    class_variant.update(
+        {
+            "ordinal": len(result),
+            "dispersion_class": policy["matrix"]["families"]["P1-C-pd3"]["dispersion_classes"][1],
+        }
+    )
+    result.append(class_variant)
     return result
+
+
+def validate_probe(
+    claim: Claim,
+    records: list[dict[str, Any]],
+    policy_sha256: str,
+    matrix_sha256: str,
+    capability_sha256: str,
+) -> tuple[bool, str, dict[str, Any]]:
+    probes = [record for record in records if record.get("case") == "g4_axis_probe"]
+    if len(probes) != 1:
+        return False, "executor did not emit exactly one axis-probe record", {}
+    probe = probes[0]
+    coordinate = claim.coordinate
+    expected = {
+        "coordinate_id": claim.coordinate_id,
+        "policy_sha256": policy_sha256,
+        "matrix_sha256": matrix_sha256,
+        "capability_sha256": capability_sha256,
+        "family": coordinate["family"],
+        "intervals": coordinate["intervals"],
+        "policy": coordinate["policy"],
+        "quality_tier": coordinate["quality_tier"],
+        "quality_tolerance": coordinate["quality_tolerance"],
+        "conditioning_log10_span": coordinate["conditioning"],
+        "scaling_mode": coordinate["scaling_mode"],
+        "warm_start_mode": coordinate["warm_mode"],
+        "dispersion_class": coordinate.get("dispersion_class", 0.0),
+        "attitude_class": coordinate.get("attitude_class", 0.0),
+        "rate_class": coordinate.get("rate_class", 0.0),
+        "trust_class": coordinate.get("trust_class", 0.0),
+        "transfer_class": coordinate.get("transfer_class", "not_applicable"),
+        "evaluation_seed": coordinate["seed"],
+        "instance": coordinate["instance"],
+        "repeat_kind": coordinate["repeat_kind"],
+        "repeat": coordinate["repeat"],
+        "solver_order": coordinate["solver_order"],
+    }
+    if {key: probe.get(key) for key in expected} != expected:
+        return False, "axis-probe requested/applied values disagree", probe
+    if probe.get("coefficient_parity_maximum", math.inf) > 1.0e-10:
+        return False, "axis-probe CPU/GPU coefficient parity failed", probe
+    if not math.isclose(
+        probe["condition_factor_max"] / probe["condition_factor_min"],
+        10.0 ** coordinate["conditioning"],
+        rel_tol=1.0e-12,
+    ):
+        return False, "axis-probe conditioning span mismatch", probe
+    return True, "strict axis-probe record validated", probe
 
 
 def main() -> int:
@@ -148,7 +222,8 @@ def main() -> int:
             matrix_sha256,
             capability_sha256,
         )
-        command[7] = "2"
+        command[1] = "--g4-axis-probe"
+        command[7] = "1"
         process = subprocess.run(
             command,
             env=environment,
@@ -157,16 +232,12 @@ def main() -> int:
             timeout=arguments.timeout,
         )
         records = parse_records(process.stdout)
-        valid, reason = validate_success(
+        valid, reason, axis = validate_probe(
             claim,
             records,
             policy_sha256,
             matrix_sha256,
             capability_sha256,
-        )
-        axis = next(
-            (record for record in records if record.get("case") == "g4_axis_application"),
-            {},
         )
         outcomes.append(
             {
@@ -181,17 +252,40 @@ def main() -> int:
                 "condition_factor_min": axis.get("condition_factor_min"),
                 "condition_factor_max": axis.get("condition_factor_max"),
                 "coefficient_parity_maximum": axis.get("coefficient_parity_maximum"),
+                "policy_code": axis.get("policy_code"),
+                "scaling_code": axis.get("scaling_code"),
+                "warm_start_code": axis.get("warm_start_code"),
                 "stderr": process.stderr,
             }
         )
         if process.returncode != 0 or not valid:
             raise SystemExit(f"pilot coordinate {identifier} failed: {reason}")
-    first, replay, cross_seed = outcomes[0], outcomes[-2], outcomes[-1]
+    first = outcomes[0]
+    replay, cross_seed, mode_variant, condition_variant, class_variant = outcomes[-5:]
     hash_names = ("instance_hash", "problem_hash", "coefficient_hash")
     if any(first[name] != replay[name] for name in hash_names):
         raise SystemExit("same-seed exact replay changed numerical hashes")
     if first["instance_hash"] == cross_seed["instance_hash"]:
         raise SystemExit("different evaluation seeds shared an instance hash")
+    if any(first[name] != mode_variant[name] for name in hash_names):
+        raise SystemExit("solver/runtime modes changed canonical problem hashes")
+    if (
+        first["instance_hash"] != condition_variant["instance_hash"]
+        or first["coefficient_hash"] == condition_variant["coefficient_hash"]
+        or first["problem_hash"] == condition_variant["problem_hash"]
+    ):
+        raise SystemExit("conditioning did not isolate the intended coefficient transform")
+    if first["instance_hash"] == class_variant["instance_hash"]:
+        raise SystemExit("family-class change did not alter physical instance")
+    policy_codes = {row["coordinate"]["policy"]: row["policy_code"] for row in outcomes}
+    scaling_codes = {row["coordinate"]["scaling_mode"]: row["scaling_code"] for row in outcomes}
+    warm_codes = {row["coordinate"]["warm_mode"]: row["warm_start_code"] for row in outcomes}
+    if len(set(policy_codes.values())) != len(POLICY_NAMES):
+        raise SystemExit("policy names did not map to distinct runtime policies")
+    if len(set(scaling_codes.values())) != len(SCALING_MODES):
+        raise SystemExit("scaling names did not map to distinct runtime modes")
+    if len(set(warm_codes.values())) != len(WARM_MODES):
+        raise SystemExit("warm-start names did not map to distinct runtime modes")
     report = {
         "schema_version": 1,
         "source_commit": source_commit,
@@ -210,6 +304,12 @@ def main() -> int:
         },
         "same_seed_exact_replay": True,
         "cross_seed_distinct": True,
+        "runtime_modes_problem_invariant": True,
+        "conditioning_isolated": True,
+        "family_class_distinct": True,
+        "policy_codes": policy_codes,
+        "scaling_codes": scaling_codes,
+        "warm_start_codes": warm_codes,
         "outcomes": outcomes,
     }
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
