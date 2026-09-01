@@ -79,6 +79,19 @@ typedef enum spacepdhcg_cuda_termination {
     SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE = 4
 } spacepdhcg_cuda_termination;
 
+typedef enum spacepdhcg_cuda_recovery_reason {
+    SPACEPDHCG_CUDA_RECOVERY_NOT_TRIGGERED = 0,
+    SPACEPDHCG_CUDA_RECOVERY_TIGHT_ITERATION_LIMIT = 1,
+    SPACEPDHCG_CUDA_RECOVERY_QUALIFIED = 2,
+    SPACEPDHCG_CUDA_RECOVERY_UNSUPPORTED_CONE = 3,
+    SPACEPDHCG_CUDA_RECOVERY_NONFINITE_INPUT = 4,
+    SPACEPDHCG_CUDA_RECOVERY_ZERO_CURVATURE = 5,
+    SPACEPDHCG_CUDA_RECOVERY_INCONSISTENT_ACTIVE_SET = 6,
+    SPACEPDHCG_CUDA_RECOVERY_DUAL_INFEASIBLE = 7,
+    SPACEPDHCG_CUDA_RECOVERY_EXHAUSTED = 8,
+    SPACEPDHCG_CUDA_RECOVERY_CANCELLED = 9
+} spacepdhcg_cuda_recovery_reason;
+
 typedef struct spacepdhcg_cuda_cone_descriptor {
     spacepdhcg_cuda_cone_kind kind;
     int32_t start;
@@ -172,6 +185,20 @@ typedef struct spacepdhcg_cuda_diagnostics {
     int32_t scaling_refreshed;
     int32_t used_declared_stream;
     int32_t hidden_cpu_fallback;
+    uint64_t recovery_count;
+    uint64_t recovery_rejected_count;
+    uint64_t recovery_iterations;
+    uint64_t recovery_attempt_count;
+    spacepdhcg_cuda_recovery_reason recovery_trigger_reason;
+    spacepdhcg_cuda_recovery_reason recovery_outcome_reason;
+    double recovery_seconds;
+    double recovery_initial_residual;
+    double recovery_final_residual;
+    double recovery_final_primal_residual;
+    double recovery_final_stationarity;
+    double recovery_final_complementarity;
+    int32_t recovery_stationarity_index;
+    double recovery_stationarity_value;
 } spacepdhcg_cuda_diagnostics;
 
 typedef struct spacepdhcg_cuda_pointer_snapshot {

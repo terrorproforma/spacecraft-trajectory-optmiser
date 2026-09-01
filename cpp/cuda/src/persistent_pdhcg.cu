@@ -166,6 +166,14 @@ struct DeviceProblem {
     double* affine_product;
     double* gradient;
     double* cone_scratch;
+    double* average_primal;
+    double* average_dual;
+    double* recovery_direction_dual;
+    double* recovery_coefficients;
+    double* recovery_row_values;
+    double* recovery_scalars;
+    double* recovery_backup_primal;
+    double* recovery_backup_dual;
     double* scaling;
     const DeviceCone* affine_cones;
     int affine_cone_count;
@@ -189,6 +197,9 @@ struct DeviceControl {
     double dual_step;
     int force_scaling_refresh;
     int scaling_refreshed;
+    std::uint64_t recovery_count;
+    std::uint64_t recovery_rejected_count;
+    std::uint64_t recovery_attempt_count;
 };
 
 struct DeviceReport {
@@ -209,6 +220,19 @@ struct DeviceReport {
     double scaling_max;
     std::uint64_t scaling_reuse_count;
     int scaling_refreshed;
+    std::uint64_t recovery_count;
+    std::uint64_t recovery_rejected_count;
+    std::uint64_t recovery_iterations;
+    std::uint64_t recovery_attempt_count;
+    int recovery_trigger_reason;
+    int recovery_outcome_reason;
+    double recovery_initial_residual;
+    double recovery_final_residual;
+    double recovery_final_primal_residual;
+    double recovery_final_stationarity;
+    double recovery_final_complementarity;
+    int recovery_stationarity_index;
+    double recovery_stationarity_value;
 };
 
 struct NumericPointers {
@@ -437,17 +461,6 @@ __global__ void initialise_control_kernel(DeviceControl* control, DeviceProblem*
     if (blockIdx.x != 0 || threadIdx.x != 0) {
         return;
     }
-    double q_norm_squared = 0.0;
-    double operator_norm_squared = 0.0;
-    for (int index = 0; index < problem->q_nonzeros; ++index) {
-        q_norm_squared += problem->q[index] * problem->q[index];
-    }
-    for (int index = 0; index < problem->a_nonzeros; ++index) {
-        operator_norm_squared += problem->a[index] * problem->a[index];
-    }
-    for (int index = 0; index < problem->f_nonzeros; ++index) {
-        operator_norm_squared += problem->f[index] * problem->f[index];
-    }
     const bool threshold_refresh =
         control->coefficient_change_max > control->matrix_change_threshold;
     const bool budget_refresh =
@@ -458,11 +471,313 @@ __global__ void initialise_control_kernel(DeviceControl* control, DeviceProblem*
         || (control->scaling_mode == SPACEPDHCG_CUDA_SCALING_REFRESH_IF_NEEDED
             && (threshold_refresh || budget_refresh));
     if (refresh || !(control->primal_step > 0.0) || !(control->dual_step > 0.0)) {
-        const double q_norm = sqrt(q_norm_squared);
-        const double operator_norm = sqrt(operator_norm_squared);
-        const double denominator = fmax(1.0, q_norm + operator_norm + 1.0);
+        double* const variable_scale = problem->scaling;
+        double* const row_scale = problem->scaling + problem->variables;
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            variable_scale[variable] = 1.0;
+        }
+        for (int row = 0; row < problem->scalar_rows + problem->affine_rows; ++row) {
+            row_scale[row] = 1.0;
+        }
+        // Ten cone-preserving Ruiz passes match the fixed-pattern upstream policy.
+        // The existing product buffers are safe create-time scratch before solve.
+        for (int pass = 0; pass < 10; ++pass) {
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                problem->previous_primal[variable] = 0.0;
+            }
+            for (int row = 0; row < problem->scalar_rows; ++row) {
+                problem->scalar_product[row] = 0.0;
+            }
+            for (int row = 0; row < problem->affine_rows; ++row) {
+                problem->affine_product[row] = 0.0;
+            }
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                for (int index = problem->scalar_rows > 0
+                         ? problem->a_offsets[variable]
+                         : 0;
+                     index < (problem->scalar_rows > 0
+                         ? problem->a_offsets[variable + 1]
+                         : 0);
+                     ++index) {
+                    const int row = problem->a_indices[index];
+                    const double value = device_abs(
+                        problem->a[index]
+                        / (row_scale[row] * variable_scale[variable])
+                    );
+                    problem->previous_primal[variable] =
+                        fmax(problem->previous_primal[variable], value);
+                    problem->scalar_product[row] =
+                        fmax(problem->scalar_product[row], value);
+                }
+                for (int index = problem->affine_rows > 0
+                         ? problem->f_offsets[variable]
+                         : 0;
+                     index < (problem->affine_rows > 0
+                         ? problem->f_offsets[variable + 1]
+                         : 0);
+                     ++index) {
+                    const int row = problem->f_indices[index];
+                    const double value = device_abs(
+                        problem->f[index]
+                        / (
+                            row_scale[problem->scalar_rows + row]
+                            * variable_scale[variable]
+                        )
+                    );
+                    problem->previous_primal[variable] =
+                        fmax(problem->previous_primal[variable], value);
+                    problem->affine_product[row] =
+                        fmax(problem->affine_product[row], value);
+                }
+            }
+            for (int cone_index = 0;
+                 cone_index < problem->variable_cone_count;
+                 ++cone_index) {
+                const DeviceCone cone = problem->variable_cones[cone_index];
+                const int length = cone.vector_dimension + 2;
+                double block_maximum = 0.0;
+                for (int slot = cone.start; slot < cone.start + length; ++slot) {
+                    block_maximum =
+                        fmax(block_maximum, problem->previous_primal[slot]);
+                }
+                for (int slot = cone.start; slot < cone.start + length; ++slot) {
+                    problem->previous_primal[slot] = block_maximum;
+                }
+            }
+            for (int cone_index = 0;
+                 cone_index < problem->affine_cone_count;
+                 ++cone_index) {
+                const DeviceCone cone = problem->affine_cones[cone_index];
+                const int length = cone.vector_dimension + 2;
+                double block_maximum = 0.0;
+                for (int slot = cone.start; slot < cone.start + length; ++slot) {
+                    block_maximum =
+                        fmax(block_maximum, problem->affine_product[slot]);
+                }
+                for (int slot = cone.start; slot < cone.start + length; ++slot) {
+                    problem->affine_product[slot] = block_maximum;
+                }
+            }
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                const double factor = problem->previous_primal[variable] > 1.0e-12
+                    ? sqrt(problem->previous_primal[variable])
+                    : 1.0;
+                variable_scale[variable] *= factor;
+            }
+            for (int row = 0; row < problem->scalar_rows; ++row) {
+                const double factor = problem->scalar_product[row] > 1.0e-12
+                    ? sqrt(problem->scalar_product[row])
+                    : 1.0;
+                row_scale[row] *= factor;
+            }
+            for (int row = 0; row < problem->affine_rows; ++row) {
+                const double factor = problem->affine_product[row] > 1.0e-12
+                    ? sqrt(problem->affine_product[row])
+                    : 1.0;
+                row_scale[problem->scalar_rows + row] *= factor;
+            }
+        }
+        double bound_norm_squared = 0.0;
+        for (int row = 0; row < problem->scalar_rows; ++row) {
+            const double scale = row_scale[row];
+            if (isfinite(problem->scalar_lower[row])
+                && problem->scalar_lower[row] != problem->scalar_upper[row]) {
+                const double value = problem->scalar_lower[row] / scale;
+                bound_norm_squared += value * value;
+            }
+            if (isfinite(problem->scalar_upper[row])) {
+                const double value = problem->scalar_upper[row] / scale;
+                bound_norm_squared += value * value;
+            }
+        }
+        for (int row = 0; row < problem->affine_rows; ++row) {
+            const double value =
+                problem->affine_offset[row]
+                / row_scale[problem->scalar_rows + row];
+            bound_norm_squared += value * value;
+        }
+        double objective_norm_squared = 0.0;
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            const double value = problem->c[variable] / variable_scale[variable];
+            objective_norm_squared += value * value;
+        }
+        const double bound_scale = 1.0 / (sqrt(bound_norm_squared) + 1.0);
+        const double objective_scale = 1.0 / (sqrt(objective_norm_squared) + 1.0);
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            problem->gradient[variable] = 0.0;
+        }
+        double operator_norm_squared = 0.0;
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            for (int index = problem->q_offsets[variable];
+                 index < problem->q_offsets[variable + 1];
+                 ++index) {
+                const int row = problem->q_indices[index];
+                const double value =
+                    problem->q[index] * objective_scale
+                    / (
+                        variable_scale[row] * variable_scale[variable]
+                        * bound_scale
+                    );
+                problem->gradient[row] += device_abs(value);
+            }
+            for (int index = problem->scalar_rows > 0
+                     ? problem->a_offsets[variable]
+                     : 0;
+                 index < (problem->scalar_rows > 0
+                     ? problem->a_offsets[variable + 1]
+                     : 0);
+                 ++index) {
+                const int row = problem->a_indices[index];
+                const double value =
+                    problem->a[index]
+                    / (row_scale[row] * variable_scale[variable]);
+                operator_norm_squared += value * value;
+            }
+            for (int index = problem->affine_rows > 0
+                     ? problem->f_offsets[variable]
+                     : 0;
+                 index < (problem->affine_rows > 0
+                     ? problem->f_offsets[variable + 1]
+                     : 0);
+                 ++index) {
+                const int row = problem->f_indices[index];
+                const double value =
+                    problem->f[index]
+                    / (
+                        row_scale[problem->scalar_rows + row]
+                        * variable_scale[variable]
+                    );
+                operator_norm_squared += value * value;
+            }
+        }
+        double q_norm = 0.0;
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            q_norm = fmax(q_norm, problem->gradient[variable]);
+            problem->previous_primal[variable] =
+                1.0 / sqrt(static_cast<double>(problem->variables));
+        }
+        double operator_norm = sqrt(operator_norm_squared);
+        for (int pass = 0; pass < 20; ++pass) {
+            for (int row = 0; row < problem->scalar_rows; ++row) {
+                problem->scalar_product[row] = 0.0;
+            }
+            for (int row = 0; row < problem->affine_rows; ++row) {
+                problem->affine_product[row] = 0.0;
+            }
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                const double x = problem->previous_primal[variable];
+                for (int index = problem->scalar_rows > 0
+                         ? problem->a_offsets[variable]
+                         : 0;
+                     index < (problem->scalar_rows > 0
+                         ? problem->a_offsets[variable + 1]
+                         : 0);
+                     ++index) {
+                    const int row = problem->a_indices[index];
+                    problem->scalar_product[row] +=
+                        problem->a[index] * x
+                        / (row_scale[row] * variable_scale[variable]);
+                }
+                for (int index = problem->affine_rows > 0
+                         ? problem->f_offsets[variable]
+                         : 0;
+                     index < (problem->affine_rows > 0
+                         ? problem->f_offsets[variable + 1]
+                         : 0);
+                     ++index) {
+                    const int row = problem->f_indices[index];
+                    problem->affine_product[row] +=
+                        problem->f[index] * x
+                        / (
+                            row_scale[problem->scalar_rows + row]
+                            * variable_scale[variable]
+                        );
+                }
+            }
+            double row_norm_squared = 0.0;
+            for (int row = 0; row < problem->scalar_rows; ++row) {
+                row_norm_squared +=
+                    problem->scalar_product[row] * problem->scalar_product[row];
+            }
+            for (int row = 0; row < problem->affine_rows; ++row) {
+                row_norm_squared +=
+                    problem->affine_product[row] * problem->affine_product[row];
+            }
+            const double row_norm = sqrt(row_norm_squared);
+            if (!(row_norm > 1.0e-12)) {
+                operator_norm = 0.0;
+                break;
+            }
+            for (int row = 0; row < problem->scalar_rows; ++row) {
+                problem->scalar_product[row] /= row_norm;
+            }
+            for (int row = 0; row < problem->affine_rows; ++row) {
+                problem->affine_product[row] /= row_norm;
+            }
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                double value = 0.0;
+                for (int index = problem->scalar_rows > 0
+                         ? problem->a_offsets[variable]
+                         : 0;
+                     index < (problem->scalar_rows > 0
+                         ? problem->a_offsets[variable + 1]
+                         : 0);
+                     ++index) {
+                    const int row = problem->a_indices[index];
+                    value +=
+                        problem->a[index] * problem->scalar_product[row]
+                        / (row_scale[row] * variable_scale[variable]);
+                }
+                for (int index = problem->affine_rows > 0
+                         ? problem->f_offsets[variable]
+                         : 0;
+                     index < (problem->affine_rows > 0
+                         ? problem->f_offsets[variable + 1]
+                         : 0);
+                     ++index) {
+                    const int row = problem->f_indices[index];
+                    value +=
+                        problem->f[index] * problem->affine_product[row]
+                        / (
+                            row_scale[problem->scalar_rows + row]
+                            * variable_scale[variable]
+                        );
+                }
+                problem->gradient[variable] = value;
+            }
+            double variable_norm_squared = 0.0;
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                variable_norm_squared +=
+                    problem->gradient[variable] * problem->gradient[variable];
+            }
+            operator_norm = sqrt(variable_norm_squared);
+            if (!(operator_norm > 1.0e-12)) {
+                break;
+            }
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                problem->previous_primal[variable] =
+                    problem->gradient[variable] / operator_norm;
+            }
+        }
+        const double denominator = fmax(1.0, q_norm + operator_norm);
         control->primal_step = 0.9 / denominator;
-        control->dual_step = 0.9 / fmax(1.0, operator_norm + 1.0);
+        control->dual_step = 0.9 / fmax(1.0, operator_norm);
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            problem->scaling[variable] =
+                objective_scale
+                / (
+                    variable_scale[variable] * variable_scale[variable]
+                    * bound_scale
+                );
+        }
+        for (int row = 0; row < problem->scalar_rows + problem->affine_rows; ++row) {
+            problem->scaling[problem->variables + row] =
+                bound_scale
+                / (
+                    row_scale[row] * row_scale[row]
+                    * objective_scale
+                );
+        }
         control->scaling_reuse_count = 0;
         control->scaling_refreshed = 1;
     } else {
@@ -586,15 +901,36 @@ __device__ void evaluate_report(
                 project_interval(x, problem->variable_lower[variable], problem->variable_upper[variable]);
             box_violation = fmax(box_violation, device_abs(x - projection));
             const double gradient = problem->gradient[variable] + problem->c[variable];
-            const double natural = x
-                - project_interval(
-                    x - gradient,
-                    problem->variable_lower[variable],
-                    problem->variable_upper[variable]
-                );
-            stationarity = fmax(stationarity, device_abs(natural));
+            problem->average_primal[variable] = project_interval(
+                x - gradient,
+                problem->variable_lower[variable],
+                problem->variable_upper[variable]
+            );
             objective += problem->c[variable] * x
                 + 0.5 * x * problem->gradient[variable];
+        }
+        project_cone_blocks(
+            problem->average_primal,
+            problem->variable_cones,
+            problem->variable_cone_count
+        );
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            stationarity = fmax(
+                stationarity,
+                device_abs(problem->primal[variable] - problem->average_primal[variable])
+            );
+            problem->average_primal[variable] = problem->primal[variable];
+        }
+        project_cone_blocks(
+            problem->average_primal,
+            problem->variable_cones,
+            problem->variable_cone_count
+        );
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            box_violation = fmax(
+                box_violation,
+                device_abs(problem->primal[variable] - problem->average_primal[variable])
+            );
         }
 
         for (int row = 0; row < problem->affine_rows; ++row) {
@@ -683,6 +1019,10 @@ __device__ void evaluate_report(
         report->scaling_max = scaling_max;
         report->scaling_reuse_count = control->scaling_reuse_count;
         report->scaling_refreshed = control->scaling_refreshed;
+        report->recovery_count = control->recovery_count;
+        report->recovery_rejected_count = control->recovery_rejected_count;
+        report->recovery_attempt_count = control->recovery_attempt_count;
+        report->recovery_final_residual = natural_residual;
     }
     __syncthreads();
 }
@@ -698,6 +1038,16 @@ __global__ void solve_kernel(
     if (threadIdx.x == 0) {
         report->termination = SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT;
         report->iterations = 0;
+        report->recovery_iterations = 0U;
+        report->recovery_trigger_reason = SPACEPDHCG_CUDA_RECOVERY_NOT_TRIGGERED;
+        report->recovery_outcome_reason = SPACEPDHCG_CUDA_RECOVERY_NOT_TRIGGERED;
+        report->recovery_initial_residual = 0.0;
+        report->recovery_final_residual = 0.0;
+        report->recovery_final_primal_residual = 0.0;
+        report->recovery_final_stationarity = 0.0;
+        report->recovery_final_complementarity = 0.0;
+        report->recovery_stationarity_index = -1;
+        report->recovery_stationarity_value = 0.0;
         atomicExch(&should_stop, 0);
         atomicExch(&cancelled, 0);
     }
@@ -707,8 +1057,14 @@ __global__ void solve_kernel(
     const double dual_step = control->dual_step;
     const unsigned int check_frequency =
         control->residual_check_frequency == 0U ? 1U : control->residual_check_frequency;
+    const bool recovery_enabled =
+        control->iteration_limit >= 350'000U
+        && fmin(control->feasibility_tolerance, control->optimality_tolerance)
+            <= 1.0e-6;
+    const std::uint64_t pdhg_limit =
+        recovery_enabled ? 300'000U : control->iteration_limit;
 
-    for (std::uint64_t iteration = 1; iteration <= control->iteration_limit; ++iteration) {
+    for (std::uint64_t iteration = 1; iteration <= pdhg_limit; ++iteration) {
         if (threadIdx.x == 0 && *cancellation != 0) {
             atomicExch(&cancelled, 1);
             atomicExch(&should_stop, 1);
@@ -741,20 +1097,27 @@ __global__ void solve_kernel(
 
         for (int row = threadIdx.x; row < problem->scalar_rows; row += blockDim.x) {
             const double value =
-                problem->dual[row] + dual_step * problem->scalar_product[row];
+                problem->dual[row]
+                + dual_step
+                    * problem->scaling[problem->variables + row]
+                    * problem->scalar_product[row];
+            const double row_step =
+                dual_step * problem->scaling[problem->variables + row];
             const double projected = project_interval(
-                value / dual_step,
+                value / row_step,
                 problem->scalar_lower[row],
                 problem->scalar_upper[row]
             );
-            problem->dual[row] = value - dual_step * projected;
+            problem->dual[row] = value - row_step * projected;
         }
         for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
             const int dual_row = problem->scalar_rows + row;
+            const double row_step =
+                dual_step * problem->scaling[problem->variables + dual_row];
             const double value =
-                problem->dual[dual_row] + dual_step * problem->affine_product[row];
+                problem->dual[dual_row] + row_step * problem->affine_product[row];
             problem->cone_scratch[row] =
-                value / dual_step + problem->affine_offset[row];
+                value / row_step + problem->affine_offset[row];
         }
         __syncthreads();
         if (threadIdx.x == 0) {
@@ -767,11 +1130,13 @@ __global__ void solve_kernel(
         __syncthreads();
         for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
             const int dual_row = problem->scalar_rows + row;
+            const double row_step =
+                dual_step * problem->scaling[problem->variables + dual_row];
             const double value =
-                problem->dual[dual_row] + dual_step * problem->affine_product[row];
+                problem->dual[dual_row] + row_step * problem->affine_product[row];
             problem->dual[dual_row] =
                 value
-                - dual_step
+                - row_step
                     * (problem->cone_scratch[row] - problem->affine_offset[row]);
         }
         __syncthreads();
@@ -791,9 +1156,11 @@ __global__ void solve_kernel(
         for (int variable = threadIdx.x; variable < problem->variables; variable += blockDim.x) {
             const double previous = problem->primal[variable];
             problem->previous_primal[variable] = previous;
+            const double variable_step =
+                primal_step * problem->scaling[variable];
             problem->primal[variable] = project_interval(
                 previous
-                    - primal_step
+                    - variable_step
                         * (problem->gradient[variable] + problem->c[variable]),
                 problem->variable_lower[variable],
                 problem->variable_upper[variable]
@@ -815,7 +1182,7 @@ __global__ void solve_kernel(
         __syncthreads();
 
         if (iteration == 1U || iteration % check_frequency == 0U
-            || iteration == control->iteration_limit) {
+            || iteration == pdhg_limit) {
             evaluate_report(problem, control, report, iteration);
             if (threadIdx.x == 0) {
                 if (!isfinite(report->objective)
@@ -842,6 +1209,1107 @@ __global__ void solve_kernel(
     }
     if (threadIdx.x == 0 && atomicAdd(&cancelled, 0) != 0) {
         report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+    }
+}
+
+__device__ void recovery_project_image(
+    DeviceProblem* problem,
+    const bool affine,
+    const int cgls_iterations
+) {
+    const int rows = affine ? problem->affine_rows : problem->scalar_rows;
+    const int* offsets = affine ? problem->f_offsets : problem->a_offsets;
+    const int* indices = affine ? problem->f_indices : problem->a_indices;
+    const double* values = affine ? problem->f : problem->a;
+    double* product = affine ? problem->affine_product : problem->scalar_product;
+    double* residual = problem->average_dual;
+    zero_vector(problem->average_primal, problem->variables);
+    zero_vector(problem->gradient, problem->variables);
+    __syncthreads();
+    csc_transpose_multiply(
+        problem->variables,
+        offsets,
+        indices,
+        values,
+        residual,
+        problem->gradient
+    );
+    __syncthreads();
+    for (int variable = threadIdx.x;
+         variable < problem->variables;
+         variable += blockDim.x) {
+        problem->previous_primal[variable] = problem->gradient[variable];
+    }
+    if (threadIdx.x == 0) {
+        double gamma = 0.0;
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            gamma += problem->gradient[variable] * problem->gradient[variable];
+        }
+        problem->recovery_scalars[0] = gamma;
+    }
+    __syncthreads();
+    for (int iteration = 0; iteration < cgls_iterations; ++iteration) {
+        zero_vector(product, rows);
+        __syncthreads();
+        csc_multiply(
+            problem->variables,
+            offsets,
+            indices,
+            values,
+            problem->previous_primal,
+            product
+        );
+        __syncthreads();
+        if (threadIdx.x == 0) {
+            double denominator = 0.0;
+            for (int row = 0; row < rows; ++row) {
+                denominator += product[row] * product[row];
+            }
+            problem->recovery_scalars[1] =
+                denominator > 1.0e-30
+                ? problem->recovery_scalars[0] / denominator
+                : 0.0;
+        }
+        __syncthreads();
+        const double alpha = problem->recovery_scalars[1];
+        for (int variable = threadIdx.x;
+             variable < problem->variables;
+             variable += blockDim.x) {
+            problem->average_primal[variable] +=
+                alpha * problem->previous_primal[variable];
+        }
+        for (int row = threadIdx.x; row < rows; row += blockDim.x) {
+            residual[row] -= alpha * product[row];
+        }
+        zero_vector(problem->gradient, problem->variables);
+        __syncthreads();
+        csc_transpose_multiply(
+            problem->variables,
+            offsets,
+            indices,
+            values,
+            residual,
+            problem->gradient
+        );
+        __syncthreads();
+        if (threadIdx.x == 0) {
+            double next_gamma = 0.0;
+            for (int variable = 0; variable < problem->variables; ++variable) {
+                next_gamma +=
+                    problem->gradient[variable] * problem->gradient[variable];
+            }
+            problem->recovery_scalars[2] =
+                problem->recovery_scalars[0] > 1.0e-30
+                ? next_gamma / problem->recovery_scalars[0]
+                : 0.0;
+            problem->recovery_scalars[0] = next_gamma;
+        }
+        __syncthreads();
+        const double beta = problem->recovery_scalars[2];
+        for (int variable = threadIdx.x;
+             variable < problem->variables;
+             variable += blockDim.x) {
+            problem->previous_primal[variable] =
+                problem->gradient[variable]
+                + beta * problem->previous_primal[variable];
+        }
+        __syncthreads();
+        if (problem->recovery_scalars[0] <= 1.0e-28) {
+            break;
+        }
+    }
+    for (int variable = threadIdx.x;
+         variable < problem->variables;
+         variable += blockDim.x) {
+        problem->primal[variable] += problem->average_primal[variable];
+        problem->primal[variable] = project_interval(
+            problem->primal[variable],
+            problem->variable_lower[variable],
+            problem->variable_upper[variable]
+        );
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        project_cone_blocks(
+            problem->primal,
+            problem->variable_cones,
+            problem->variable_cone_count
+        );
+    }
+    __syncthreads();
+}
+
+__device__ void recovery_scalar_projection(DeviceProblem* problem) {
+    zero_vector(problem->scalar_product, problem->scalar_rows);
+    __syncthreads();
+    csc_multiply(
+        problem->variables,
+        problem->a_offsets,
+        problem->a_indices,
+        problem->a,
+        problem->primal,
+        problem->scalar_product
+    );
+    __syncthreads();
+    for (int row = threadIdx.x; row < problem->scalar_rows; row += blockDim.x) {
+        const double value = problem->scalar_product[row];
+        problem->average_dual[row] =
+            project_interval(
+                value,
+                problem->scalar_lower[row],
+                problem->scalar_upper[row]
+            )
+            - value;
+    }
+    __syncthreads();
+    recovery_project_image(problem, false, 48);
+}
+
+__device__ void recovery_affine_projection(DeviceProblem* problem) {
+    zero_vector(problem->affine_product, problem->affine_rows);
+    __syncthreads();
+    csc_multiply(
+        problem->variables,
+        problem->f_offsets,
+        problem->f_indices,
+        problem->f,
+        problem->primal,
+        problem->affine_product
+    );
+    __syncthreads();
+    for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
+        const double value =
+            problem->affine_product[row] + problem->affine_offset[row];
+        problem->cone_scratch[row] = value;
+        problem->average_dual[row] = value;
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        project_cone_blocks(
+            problem->cone_scratch,
+            problem->affine_cones,
+            problem->affine_cone_count
+        );
+    }
+    __syncthreads();
+    for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
+        problem->average_dual[row] =
+            problem->cone_scratch[row] - problem->average_dual[row];
+    }
+    __syncthreads();
+    recovery_project_image(problem, true, 48);
+}
+
+__device__ void recovery_active_cone_projection(DeviceProblem* problem) {
+    zero_vector(problem->affine_product, problem->affine_rows);
+    __syncthreads();
+    csc_multiply(
+        problem->variables,
+        problem->f_offsets,
+        problem->f_indices,
+        problem->f,
+        problem->primal,
+        problem->affine_product
+    );
+    __syncthreads();
+    zero_vector(problem->average_dual, problem->affine_rows);
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        for (int cone_index = 0;
+             cone_index < problem->affine_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->affine_cones[cone_index];
+            if (cone.kind != SPACEPDHCG_CUDA_CONE_SECOND_ORDER) {
+                continue;
+            }
+            const int last = cone.start + cone.vector_dimension + 1;
+            double spatial_norm_squared = 0.0;
+            double scale = 1.0;
+            for (int slot = cone.start; slot < last; ++slot) {
+                const double value =
+                    problem->affine_product[slot]
+                    + problem->affine_offset[slot];
+                spatial_norm_squared += value * value;
+                scale = fmax(scale, device_abs(value));
+            }
+            const double radius =
+                problem->affine_product[last] + problem->affine_offset[last];
+            const double spatial_norm = sqrt(spatial_norm_squared);
+            scale = fmax(scale, device_abs(radius));
+            if (radius - spatial_norm <= 1.0e-6 * scale) {
+                problem->average_dual[last] = spatial_norm - radius;
+            }
+        }
+    }
+    __syncthreads();
+    recovery_project_image(problem, true, 48);
+}
+
+__device__ bool recovery_scalar_active(
+    const DeviceProblem* problem,
+    const int row,
+    int* sign
+) {
+    const double value = problem->recovery_row_values[row];
+    const double lower = problem->scalar_lower[row];
+    const double upper = problem->scalar_upper[row];
+    if (isfinite(lower) && isfinite(upper) && lower == upper) {
+        *sign = 1;
+        return true;
+    }
+    double scale = fmax(1.0, device_abs(value));
+    if (isfinite(lower)) {
+        scale = fmax(scale, device_abs(lower));
+    }
+    if (isfinite(upper)) {
+        scale = fmax(scale, device_abs(upper));
+    }
+    if (isfinite(upper) && upper - value <= 1.0e-6 * scale) {
+        *sign = 1;
+        return true;
+    }
+    if (isfinite(lower) && value - lower <= 1.0e-6 * scale) {
+        *sign = -1;
+        return true;
+    }
+    *sign = 0;
+    return false;
+}
+
+__device__ bool recovery_soc_normal(
+    const DeviceProblem* problem,
+    const DeviceCone cone,
+    double* spatial_norm
+) {
+    if (cone.kind != SPACEPDHCG_CUDA_CONE_SECOND_ORDER) {
+        return false;
+    }
+    const int row_offset = problem->scalar_rows;
+    const int last = cone.start + cone.vector_dimension + 1;
+    double norm_squared = 0.0;
+    double scale = 1.0;
+    for (int slot = cone.start; slot < last; ++slot) {
+        const double value = problem->recovery_row_values[row_offset + slot];
+        norm_squared += value * value;
+        scale = fmax(scale, device_abs(value));
+    }
+    const double radius = problem->recovery_row_values[row_offset + last];
+    *spatial_norm = sqrt(norm_squared);
+    scale = fmax(scale, device_abs(radius));
+    return *spatial_norm > 1.0e-12
+        && radius - *spatial_norm <= 1.0e-6 * scale;
+}
+
+__device__ bool recovery_soc_apex(
+    const DeviceProblem* problem,
+    const DeviceCone cone
+) {
+    if (cone.kind != SPACEPDHCG_CUDA_CONE_SECOND_ORDER) {
+        return false;
+    }
+    const int row_offset = problem->scalar_rows;
+    const int end = cone.start + cone.vector_dimension + 2;
+    double maximum = 0.0;
+    for (int slot = cone.start; slot < end; ++slot) {
+        maximum = fmax(
+            maximum,
+            device_abs(problem->recovery_row_values[row_offset + slot])
+        );
+    }
+    return maximum <= 1.0e-9;
+}
+
+__device__ bool recovery_variable_active(
+    const DeviceProblem* problem,
+    const int variable,
+    int* sign,
+    bool* fixed
+) {
+    const double value = problem->primal[variable];
+    const double lower = problem->variable_lower[variable];
+    const double upper = problem->variable_upper[variable];
+    *fixed = isfinite(lower) && isfinite(upper) && lower == upper;
+    if (*fixed) {
+        *sign = 1;
+        return true;
+    }
+    double scale = fmax(1.0, device_abs(value));
+    if (isfinite(lower)) {
+        scale = fmax(scale, device_abs(lower));
+    }
+    if (isfinite(upper)) {
+        scale = fmax(scale, device_abs(upper));
+    }
+    if (isfinite(upper) && upper - value <= 1.0e-6 * scale) {
+        *sign = 1;
+        return true;
+    }
+    if (isfinite(lower) && value - lower <= 1.0e-6 * scale) {
+        *sign = -1;
+        return true;
+    }
+    *sign = 0;
+    return false;
+}
+
+__device__ bool recovery_variable_in_cone(
+    const DeviceProblem* problem,
+    const int variable
+) {
+    for (int cone_index = 0;
+         cone_index < problem->variable_cone_count;
+         ++cone_index) {
+        const DeviceCone cone = problem->variable_cones[cone_index];
+        const int end = cone.start + cone.vector_dimension + 2;
+        if (variable >= cone.start && variable < end) {
+            return true;
+        }
+    }
+    return false;
+}
+
+__device__ bool recovery_variable_soc_normal(
+    const DeviceProblem* problem,
+    const DeviceCone cone,
+    const int variable,
+    double* normal
+) {
+    if (cone.kind != SPACEPDHCG_CUDA_CONE_SECOND_ORDER) {
+        return false;
+    }
+    const int last = cone.start + cone.vector_dimension + 1;
+    double norm_squared = 0.0;
+    double scale = 1.0;
+    for (int slot = cone.start; slot < last; ++slot) {
+        const double value = problem->primal[slot];
+        norm_squared += value * value;
+        scale = fmax(scale, device_abs(value));
+    }
+    const double spatial_norm = sqrt(norm_squared);
+    const double radius = problem->primal[last];
+    scale = fmax(scale, device_abs(radius));
+    if (!(spatial_norm > 1.0e-12)
+        || radius - spatial_norm > 1.0e-6 * scale) {
+        return false;
+    }
+    *normal = variable < last
+        ? problem->primal[variable] / spatial_norm
+        : -1.0;
+    return true;
+}
+
+__device__ void recovery_dual_map_to_stationarity(
+    DeviceProblem* problem,
+    const double* coefficients,
+    double* result
+) {
+    for (int row = threadIdx.x; row < problem->scalar_rows; row += blockDim.x) {
+        int sign = 0;
+        problem->scalar_product[row] =
+            recovery_scalar_active(problem, row, &sign)
+            ? static_cast<double>(sign) * coefficients[row]
+            : 0.0;
+    }
+    for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
+        problem->affine_product[row] = 0.0;
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        for (int cone_index = 0;
+             cone_index < problem->affine_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->affine_cones[cone_index];
+            double spatial_norm = 0.0;
+            if (!recovery_soc_normal(problem, cone, &spatial_norm)) {
+                continue;
+            }
+            const int last = cone.start + cone.vector_dimension + 1;
+            const double coefficient =
+                coefficients[problem->scalar_rows + cone.start];
+            for (int slot = cone.start; slot < last; ++slot) {
+                problem->affine_product[slot] =
+                    coefficient
+                    * problem->recovery_row_values[problem->scalar_rows + slot]
+                    / spatial_norm;
+            }
+            problem->affine_product[last] = -coefficient;
+        }
+    }
+    zero_vector(result, problem->variables);
+    __syncthreads();
+    csc_transpose_multiply(
+        problem->variables,
+        problem->a_offsets,
+        problem->a_indices,
+        problem->a,
+        problem->scalar_product,
+        result
+    );
+    csc_transpose_multiply(
+        problem->variables,
+        problem->f_offsets,
+        problem->f_indices,
+        problem->f,
+        problem->affine_product,
+        result
+    );
+    __syncthreads();
+    const int variable_offset = problem->scalar_rows + problem->affine_rows;
+    for (int variable = threadIdx.x;
+         variable < problem->variables;
+         variable += blockDim.x) {
+        int sign = 0;
+        bool fixed = false;
+        if (!recovery_variable_in_cone(problem, variable)
+            && recovery_variable_active(problem, variable, &sign, &fixed)) {
+            result[variable] +=
+                static_cast<double>(sign)
+                * coefficients[variable_offset + variable];
+        }
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        for (int cone_index = 0;
+             cone_index < problem->variable_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->variable_cones[cone_index];
+            const double coefficient =
+                coefficients[variable_offset + cone.start];
+            for (int variable = cone.start;
+                 variable < cone.start + cone.vector_dimension + 2;
+                 ++variable) {
+                double normal = 0.0;
+                if (recovery_variable_soc_normal(
+                        problem, cone, variable, &normal
+                    )) {
+                    result[variable] += coefficient * normal;
+                }
+            }
+        }
+    }
+    __syncthreads();
+}
+
+__device__ void recovery_dual_adjoint(
+    DeviceProblem* problem,
+    const double* residual,
+    double* result
+) {
+    zero_vector(problem->scalar_product, problem->scalar_rows);
+    zero_vector(problem->affine_product, problem->affine_rows);
+    __syncthreads();
+    csc_multiply(
+        problem->variables,
+        problem->a_offsets,
+        problem->a_indices,
+        problem->a,
+        residual,
+        problem->scalar_product
+    );
+    csc_multiply(
+        problem->variables,
+        problem->f_offsets,
+        problem->f_indices,
+        problem->f,
+        residual,
+        problem->affine_product
+    );
+    __syncthreads();
+    for (int row = threadIdx.x; row < problem->scalar_rows; row += blockDim.x) {
+        int sign = 0;
+        result[row] =
+            recovery_scalar_active(problem, row, &sign)
+            ? static_cast<double>(sign) * problem->scalar_product[row]
+            : 0.0;
+    }
+    for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
+        result[problem->scalar_rows + row] = 0.0;
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        for (int cone_index = 0;
+             cone_index < problem->affine_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->affine_cones[cone_index];
+            double spatial_norm = 0.0;
+            if (!recovery_soc_normal(problem, cone, &spatial_norm)) {
+                continue;
+            }
+            const int last = cone.start + cone.vector_dimension + 1;
+            double value = -problem->affine_product[last];
+            for (int slot = cone.start; slot < last; ++slot) {
+                value +=
+                    problem->recovery_row_values[problem->scalar_rows + slot]
+                    * problem->affine_product[slot]
+                    / spatial_norm;
+            }
+            result[problem->scalar_rows + cone.start] = value;
+        }
+    }
+    __syncthreads();
+    const int variable_offset = problem->scalar_rows + problem->affine_rows;
+    for (int variable = threadIdx.x;
+         variable < problem->variables;
+         variable += blockDim.x) {
+        int sign = 0;
+        bool fixed = false;
+        result[variable_offset + variable] =
+            !recovery_variable_in_cone(problem, variable)
+                && recovery_variable_active(problem, variable, &sign, &fixed)
+            ? static_cast<double>(sign) * residual[variable]
+            : 0.0;
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        for (int cone_index = 0;
+             cone_index < problem->variable_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->variable_cones[cone_index];
+            double value = 0.0;
+            bool active = false;
+            for (int variable = cone.start;
+                 variable < cone.start + cone.vector_dimension + 2;
+                 ++variable) {
+                double normal = 0.0;
+                if (recovery_variable_soc_normal(
+                        problem, cone, variable, &normal
+                    )) {
+                    active = true;
+                    value += normal * residual[variable];
+                }
+            }
+            if (active) {
+                result[variable_offset + cone.start] = value;
+            }
+        }
+    }
+    __syncthreads();
+}
+
+__device__ bool recovery_reconstruct_dual(DeviceProblem* problem) {
+    zero_vector(problem->scalar_product, problem->scalar_rows);
+    zero_vector(problem->affine_product, problem->affine_rows);
+    zero_vector(problem->gradient, problem->variables);
+    __syncthreads();
+    csc_multiply(
+        problem->variables,
+        problem->a_offsets,
+        problem->a_indices,
+        problem->a,
+        problem->primal,
+        problem->scalar_product
+    );
+    csc_multiply(
+        problem->variables,
+        problem->f_offsets,
+        problem->f_indices,
+        problem->f,
+        problem->primal,
+        problem->affine_product
+    );
+    csc_multiply(
+        problem->variables,
+        problem->q_offsets,
+        problem->q_indices,
+        problem->q,
+        problem->primal,
+        problem->gradient
+    );
+    __syncthreads();
+    for (int row = threadIdx.x; row < problem->scalar_rows; row += blockDim.x) {
+        problem->recovery_row_values[row] = problem->scalar_product[row];
+    }
+    for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
+        problem->recovery_row_values[problem->scalar_rows + row] =
+            problem->affine_product[row] + problem->affine_offset[row];
+    }
+    for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
+        problem->cone_scratch[row] =
+            -problem->dual[problem->scalar_rows + row];
+        problem->dual[problem->scalar_rows + row] = 0.0;
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        for (int cone_index = 0;
+             cone_index < problem->affine_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->affine_cones[cone_index];
+            if (!recovery_soc_apex(problem, cone)) {
+                continue;
+            }
+            project_standard_soc(
+                problem->cone_scratch,
+                cone.start,
+                cone.vector_dimension + 2
+            );
+            const int end = cone.start + cone.vector_dimension + 2;
+            for (int slot = cone.start; slot < end; ++slot) {
+                problem->dual[problem->scalar_rows + slot] =
+                    -problem->cone_scratch[slot];
+            }
+        }
+    }
+    __syncthreads();
+    csc_transpose_multiply(
+        problem->variables,
+        problem->f_offsets,
+        problem->f_indices,
+        problem->f,
+        problem->dual + problem->scalar_rows,
+        problem->gradient
+    );
+    __syncthreads();
+    for (int variable = threadIdx.x;
+         variable < problem->variables;
+         variable += blockDim.x) {
+        problem->average_primal[variable] =
+            -problem->gradient[variable] - problem->c[variable];
+    }
+    const int duals = problem->scalar_rows + problem->affine_rows;
+    const int coefficients = duals + problem->variables;
+    zero_vector(problem->recovery_coefficients, coefficients);
+    __syncthreads();
+    // Restart CGLS from the current stationarity residual.  Fixed-pattern
+    // trajectory CQPs can be strongly rank-deficient, so finite-precision
+    // conjugacy may be exhausted well before the nominal dimension bound.
+    for (int restart = 0; restart < 8; ++restart) {
+        recovery_dual_adjoint(
+            problem,
+            problem->average_primal,
+            problem->average_dual
+        );
+        for (int index = threadIdx.x; index < coefficients; index += blockDim.x) {
+            problem->recovery_direction_dual[index] = problem->average_dual[index];
+        }
+        if (threadIdx.x == 0) {
+            double gamma = 0.0;
+            for (int index = 0; index < coefficients; ++index) {
+                gamma +=
+                    problem->average_dual[index] * problem->average_dual[index];
+            }
+            problem->recovery_scalars[0] = gamma;
+        }
+        __syncthreads();
+        for (int iteration = 0; iteration < 2 * coefficients; ++iteration) {
+            recovery_dual_map_to_stationarity(
+                problem,
+                problem->recovery_direction_dual,
+                problem->gradient
+            );
+            if (threadIdx.x == 0) {
+                double denominator = 0.0;
+                for (int variable = 0; variable < problem->variables; ++variable) {
+                    denominator +=
+                        problem->gradient[variable] * problem->gradient[variable];
+                }
+                problem->recovery_scalars[1] =
+                    denominator > 1.0e-30
+                    ? problem->recovery_scalars[0] / denominator
+                    : 0.0;
+            }
+            __syncthreads();
+            const double alpha = problem->recovery_scalars[1];
+            for (int index = threadIdx.x;
+                 index < coefficients;
+                 index += blockDim.x) {
+                problem->recovery_coefficients[index] +=
+                    alpha * problem->recovery_direction_dual[index];
+            }
+            for (int variable = threadIdx.x;
+                 variable < problem->variables;
+                 variable += blockDim.x) {
+                problem->average_primal[variable] -=
+                    alpha * problem->gradient[variable];
+            }
+            __syncthreads();
+            recovery_dual_adjoint(
+                problem,
+                problem->average_primal,
+                problem->average_dual
+            );
+            if (threadIdx.x == 0) {
+                double next_gamma = 0.0;
+                for (int index = 0; index < coefficients; ++index) {
+                    next_gamma +=
+                        problem->average_dual[index]
+                        * problem->average_dual[index];
+                }
+                problem->recovery_scalars[2] =
+                    problem->recovery_scalars[0] > 1.0e-30
+                    ? next_gamma / problem->recovery_scalars[0]
+                    : 0.0;
+                problem->recovery_scalars[0] = next_gamma;
+            }
+            __syncthreads();
+            const double beta = problem->recovery_scalars[2];
+            for (int index = threadIdx.x;
+                 index < coefficients;
+                 index += blockDim.x) {
+                problem->recovery_direction_dual[index] =
+                    problem->average_dual[index]
+                    + beta * problem->recovery_direction_dual[index];
+            }
+            __syncthreads();
+            if (problem->recovery_scalars[0] <= 1.0e-28) {
+                break;
+            }
+        }
+    }
+    if (threadIdx.x == 0) {
+        problem->recovery_scalars[3] = 1.0;
+        for (int row = 0; row < problem->scalar_rows; ++row) {
+            int sign = 0;
+            if (!recovery_scalar_active(problem, row, &sign)) {
+                problem->dual[row] = 0.0;
+            } else if (
+                !(isfinite(problem->scalar_lower[row])
+                    && isfinite(problem->scalar_upper[row])
+                    && problem->scalar_lower[row] == problem->scalar_upper[row])
+                && problem->recovery_coefficients[row] < -1.0e-8
+            ) {
+                problem->recovery_scalars[3] = 0.0;
+            } else {
+                problem->dual[row] =
+                    problem->recovery_coefficients[row]
+                    * static_cast<double>(sign);
+            }
+        }
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            int sign = 0;
+            bool fixed = false;
+            if (!recovery_variable_in_cone(problem, variable)
+                && recovery_variable_active(problem, variable, &sign, &fixed)
+                && !fixed
+                && problem->recovery_coefficients[duals + variable] < -1.0e-8) {
+                problem->recovery_scalars[3] = 0.0;
+            }
+        }
+        for (int cone_index = 0;
+             cone_index < problem->variable_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->variable_cones[cone_index];
+            double normal = 0.0;
+            if (recovery_variable_soc_normal(
+                    problem, cone, cone.start, &normal
+                )
+                && problem->recovery_coefficients[duals + cone.start] < -1.0e-8) {
+                problem->recovery_scalars[3] = 0.0;
+            }
+        }
+        for (int row = 0; row < problem->affine_rows; ++row) {
+            problem->affine_product[row] =
+                problem->dual[problem->scalar_rows + row];
+        }
+        for (int cone_index = 0;
+             cone_index < problem->affine_cone_count;
+             ++cone_index) {
+            const DeviceCone cone = problem->affine_cones[cone_index];
+            double spatial_norm = 0.0;
+            if (!recovery_soc_normal(problem, cone, &spatial_norm)) {
+                continue;
+            }
+            const int coefficient_index = problem->scalar_rows + cone.start;
+            const double coefficient =
+                problem->recovery_coefficients[coefficient_index];
+            if (coefficient < -1.0e-8) {
+                problem->recovery_scalars[3] = 0.0;
+                continue;
+            }
+            const int last = cone.start + cone.vector_dimension + 1;
+            for (int slot = cone.start; slot < last; ++slot) {
+                problem->affine_product[slot] +=
+                    fmax(0.0, coefficient)
+                    * problem->recovery_row_values[problem->scalar_rows + slot]
+                    / spatial_norm;
+            }
+            problem->affine_product[last] -= fmax(0.0, coefficient);
+        }
+        for (int row = 0; row < problem->affine_rows; ++row) {
+            problem->dual[problem->scalar_rows + row] =
+                problem->affine_product[row];
+        }
+    }
+    __syncthreads();
+    return problem->recovery_scalars[3] != 0.0;
+}
+
+__global__ void recovery_kernel(
+    DeviceProblem* problem,
+    DeviceControl* control,
+    DeviceReport* report,
+    volatile int* cancellation
+) {
+    if (report->termination != SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT
+        || control->iteration_limit < 350'000U
+        || fmin(control->feasibility_tolerance, control->optimality_tolerance)
+            > 1.0e-6
+        || *cancellation != 0) {
+        return;
+    }
+    if (threadIdx.x == 0) {
+        ++control->recovery_attempt_count;
+        report->recovery_attempt_count = control->recovery_attempt_count;
+        report->recovery_trigger_reason =
+            SPACEPDHCG_CUDA_RECOVERY_TIGHT_ITERATION_LIMIT;
+        report->recovery_outcome_reason =
+            SPACEPDHCG_CUDA_RECOVERY_EXHAUSTED;
+        report->recovery_initial_residual = report->natural_residual_inf;
+        bool supported = true;
+        for (int cone_index = 0;
+             cone_index < problem->affine_cone_count;
+             ++cone_index) {
+            const int kind = problem->affine_cones[cone_index].kind;
+            supported = supported
+                && (kind == SPACEPDHCG_CUDA_CONE_SECOND_ORDER
+                    || kind == SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER);
+        }
+        for (int cone_index = 0;
+             cone_index < problem->variable_cone_count;
+             ++cone_index) {
+            const int kind = problem->variable_cones[cone_index].kind;
+            supported = supported
+                && kind == SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
+        }
+        if (!supported) {
+            report->recovery_outcome_reason =
+                SPACEPDHCG_CUDA_RECOVERY_UNSUPPORTED_CONE;
+        }
+        double q_row_maximum = 0.0;
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            double row_sum = 0.0;
+            for (int index = problem->q_offsets[variable];
+                 index < problem->q_offsets[variable + 1];
+                 ++index) {
+                row_sum += device_abs(problem->q[index]);
+            }
+            q_row_maximum = fmax(q_row_maximum, row_sum);
+        }
+        problem->recovery_scalars[3] =
+            supported && q_row_maximum > 1.0e-12
+            ? 0.9 / q_row_maximum
+            : 0.0;
+        if (supported && !(q_row_maximum > 1.0e-12)) {
+            report->recovery_outcome_reason =
+                SPACEPDHCG_CUDA_RECOVERY_ZERO_CURVATURE;
+        }
+    }
+    __syncthreads();
+    if (!(problem->recovery_scalars[3] > 0.0)) {
+        return;
+    }
+    for (int variable = threadIdx.x;
+         variable < problem->variables;
+         variable += blockDim.x) {
+        problem->recovery_backup_primal[variable] = problem->primal[variable];
+    }
+    const int duals = problem->scalar_rows + problem->affine_rows;
+    for (int row = threadIdx.x; row < duals; row += blockDim.x) {
+        problem->recovery_backup_dual[row] = problem->dual[row];
+    }
+    __syncthreads();
+    for (int outer = 0; outer < 50'000; ++outer) {
+        if (*cancellation != 0) {
+            break;
+        }
+        zero_vector(problem->gradient, problem->variables);
+        __syncthreads();
+        csc_multiply(
+            problem->variables,
+            problem->q_offsets,
+            problem->q_indices,
+            problem->q,
+            problem->primal,
+            problem->gradient
+        );
+        __syncthreads();
+        for (int variable = threadIdx.x;
+             variable < problem->variables;
+             variable += blockDim.x) {
+            double diagonal = 0.0;
+            for (int index = problem->q_offsets[variable];
+                 index < problem->q_offsets[variable + 1];
+                 ++index) {
+                if (problem->q_indices[index] == variable) {
+                    diagonal += device_abs(problem->q[index]);
+                }
+            }
+            const double step = 0.9 / sqrt(
+                fmax(1.0e-12, diagonal)
+                / fmax(1.0e-12, problem->recovery_scalars[3] / 0.9)
+            );
+            problem->primal[variable] = project_interval(
+                problem->primal[variable]
+                    - step * (problem->gradient[variable] + problem->c[variable]),
+                problem->variable_lower[variable],
+                problem->variable_upper[variable]
+            );
+        }
+        __syncthreads();
+        if (threadIdx.x == 0) {
+            project_cone_blocks(
+                problem->primal,
+                problem->variable_cones,
+                problem->variable_cone_count
+            );
+        }
+        __syncthreads();
+        recovery_scalar_projection(problem);
+        recovery_affine_projection(problem);
+    }
+    if (*cancellation != 0) {
+        for (int variable = threadIdx.x;
+             variable < problem->variables;
+             variable += blockDim.x) {
+            problem->primal[variable] = problem->recovery_backup_primal[variable];
+        }
+        for (int row = threadIdx.x; row < duals; row += blockDim.x) {
+            problem->dual[row] = problem->recovery_backup_dual[row];
+        }
+        __syncthreads();
+        evaluate_report(problem, control, report, control->iteration_limit);
+        if (threadIdx.x == 0) {
+            report->recovery_count = control->recovery_count;
+            report->recovery_rejected_count = control->recovery_rejected_count;
+            report->recovery_iterations = 0U;
+            report->recovery_outcome_reason =
+                SPACEPDHCG_CUDA_RECOVERY_CANCELLED;
+            report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+        }
+        return;
+    }
+    for (int iteration = 0; iteration < 100; ++iteration) {
+        recovery_scalar_projection(problem);
+        recovery_active_cone_projection(problem);
+    }
+    bool accepted = false;
+    __shared__ int kkt_converged;
+    for (int refinement = 0; refinement < 32; ++refinement) {
+        accepted = recovery_reconstruct_dual(problem);
+        evaluate_report(problem, control, report, control->iteration_limit);
+        if (threadIdx.x == 0) {
+            kkt_converged = accepted
+                && isfinite(report->natural_residual_inf)
+                && report->natural_residual_inf
+                    <= fmin(
+                        control->feasibility_tolerance,
+                        control->optimality_tolerance
+                    );
+        }
+        __syncthreads();
+        if (kkt_converged != 0) {
+            break;
+        }
+        for (int variable = threadIdx.x;
+             variable < problem->variables;
+             variable += blockDim.x) {
+            double diagonal = 0.0;
+            for (int index = problem->q_offsets[variable];
+                 index < problem->q_offsets[variable + 1];
+                 ++index) {
+                if (problem->q_indices[index] == variable) {
+                    diagonal += device_abs(problem->q[index]);
+                }
+            }
+            const double reduced_gradient =
+                problem->gradient[variable] + problem->c[variable];
+            const double maximum_change =
+                0.05 * fmax(1.0, device_abs(problem->primal[variable]));
+            const double change = fmin(
+                maximum_change,
+                fmax(
+                    -maximum_change,
+                    -reduced_gradient / fmax(1.0e-6, diagonal)
+                )
+            );
+            problem->primal[variable] = project_interval(
+                problem->primal[variable] + change,
+                problem->variable_lower[variable],
+                problem->variable_upper[variable]
+            );
+        }
+        __syncthreads();
+        if (threadIdx.x == 0) {
+            project_cone_blocks(
+                problem->primal,
+                problem->variable_cones,
+                problem->variable_cone_count
+            );
+        }
+        __syncthreads();
+        for (int projection = 0; projection < 100; ++projection) {
+            recovery_scalar_projection(problem);
+            recovery_active_cone_projection(problem);
+        }
+    }
+    accepted = recovery_reconstruct_dual(problem);
+    evaluate_report(problem, control, report, control->iteration_limit);
+    __shared__ int qualified;
+    if (threadIdx.x == 0) {
+        problem->recovery_scalars[2] = report->natural_residual_inf;
+        report->recovery_final_primal_residual = fmax(
+            report->scalar_primal_violation_inf,
+            fmax(report->box_violation_inf, report->affine_cone_distance_inf)
+        );
+        report->recovery_final_stationarity = report->stationarity_inf;
+        report->recovery_final_complementarity = report->complementarity_inf;
+        report->recovery_stationarity_index = -1;
+        report->recovery_stationarity_value = 0.0;
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            const double reduced_gradient =
+                problem->gradient[variable] + problem->c[variable];
+            const double natural = problem->primal[variable]
+                - project_interval(
+                    problem->primal[variable] - reduced_gradient,
+                    problem->variable_lower[variable],
+                    problem->variable_upper[variable]
+                );
+            if (device_abs(natural)
+                > device_abs(report->recovery_stationarity_value)) {
+                report->recovery_stationarity_index = variable;
+                report->recovery_stationarity_value = natural;
+            }
+        }
+        qualified = accepted
+            && isfinite(report->natural_residual_inf)
+            && report->natural_residual_inf
+                <= fmin(
+                    control->feasibility_tolerance,
+                    control->optimality_tolerance
+                );
+        if (qualified != 0) {
+            ++control->recovery_count;
+            report->recovery_outcome_reason =
+                SPACEPDHCG_CUDA_RECOVERY_QUALIFIED;
+        } else {
+            ++control->recovery_rejected_count;
+            report->recovery_outcome_reason = accepted
+                ? SPACEPDHCG_CUDA_RECOVERY_EXHAUSTED
+                : SPACEPDHCG_CUDA_RECOVERY_DUAL_INFEASIBLE;
+        }
+    }
+    __syncthreads();
+    if (qualified == 0) {
+        for (int variable = threadIdx.x;
+             variable < problem->variables;
+             variable += blockDim.x) {
+            problem->primal[variable] = problem->recovery_backup_primal[variable];
+        }
+        for (int row = threadIdx.x; row < duals; row += blockDim.x) {
+            problem->dual[row] = problem->recovery_backup_dual[row];
+        }
+        __syncthreads();
+        evaluate_report(problem, control, report, control->iteration_limit);
+    }
+    if (threadIdx.x == 0) {
+        report->recovery_count = control->recovery_count;
+        report->recovery_rejected_count = control->recovery_rejected_count;
+        report->recovery_iterations = 50'000U;
+        report->recovery_attempt_count = control->recovery_attempt_count;
+        report->recovery_final_residual = problem->recovery_scalars[2];
+        report->termination =
+            qualified != 0
+            ? SPACEPDHCG_CUDA_TERMINATION_OPTIMAL
+            : SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT;
     }
 }
 
@@ -1167,6 +2635,7 @@ struct spacepdhcg_cuda_workspace {
     StreamEvent completion{};
     TimingEvents update_timer{};
     TimingEvents solve_timer{};
+    TimingEvents recovery_timer{};
     LastOperation last_operation{LastOperation::none};
     std::uint64_t topology_index_copy_count{0};
     std::uint64_t total_copy_count{0};
@@ -1181,6 +2650,7 @@ struct spacepdhcg_cuda_workspace {
     double update_seconds{0.0};
     double scaling_seconds{0.0};
     double solve_seconds{0.0};
+    double recovery_seconds{0.0};
 };
 
 namespace {
@@ -1424,6 +2894,10 @@ void finish_solve(spacepdhcg_cuda_workspace* workspace) {
         workspace->state = SPACEPDHCG_CUDA_SOLVED;
     }
     workspace->solve_seconds = workspace->solve_timer.elapsed_seconds();
+    workspace->recovery_seconds =
+        workspace->host_report->recovery_attempt_count > 0U
+        ? workspace->recovery_timer.elapsed_seconds()
+        : 0.0;
     if (workspace->host_report->scaling_refreshed != 0) {
         ++workspace->scaling_epoch;
     }
@@ -1754,6 +3228,14 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
         SPACEPDHCG_ALLOC(result->solver.affine_product, affine_rows, double, AllocationCategory::residual)
         SPACEPDHCG_ALLOC(result->solver.gradient, variables, double, AllocationCategory::residual)
         SPACEPDHCG_ALLOC(result->solver.cone_scratch, affine_rows, double, AllocationCategory::cone)
+        SPACEPDHCG_ALLOC(result->solver.average_primal, variables, double, AllocationCategory::iterate)
+        SPACEPDHCG_ALLOC(result->solver.average_dual, duals + variables, double, AllocationCategory::iterate)
+        SPACEPDHCG_ALLOC(result->solver.recovery_direction_dual, duals + variables, double, AllocationCategory::iterate)
+        SPACEPDHCG_ALLOC(result->solver.recovery_coefficients, duals + variables, double, AllocationCategory::iterate)
+        SPACEPDHCG_ALLOC(result->solver.recovery_row_values, duals, double, AllocationCategory::residual)
+        SPACEPDHCG_ALLOC(result->solver.recovery_scalars, 4, double, AllocationCategory::residual)
+        SPACEPDHCG_ALLOC(result->solver.recovery_backup_primal, variables, double, AllocationCategory::iterate)
+        SPACEPDHCG_ALLOC(result->solver.recovery_backup_dual, duals, double, AllocationCategory::iterate)
         SPACEPDHCG_ALLOC(result->solver.scaling, variables + duals, double, AllocationCategory::scaling)
         SPACEPDHCG_ALLOC(result->affine_cones, structure->affine_cone_count, DeviceCone, AllocationCategory::cone)
         SPACEPDHCG_ALLOC(result->variable_cones, structure->variable_cone_count, DeviceCone, AllocationCategory::cone)
@@ -1934,6 +3416,14 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             result->solver.affine_product,
             result->solver.gradient,
             result->solver.cone_scratch,
+            result->solver.average_primal,
+            result->solver.average_dual,
+            result->solver.recovery_direction_dual,
+            result->solver.recovery_coefficients,
+            result->solver.recovery_row_values,
+            result->solver.recovery_scalars,
+            result->solver.recovery_backup_primal,
+            result->solver.recovery_backup_dual,
             result->solver.scaling,
             result->affine_cones,
             static_cast<int>(structure->affine_cone_count),
@@ -1960,6 +3450,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             0.0,
             1,
             1,
+            0U,
+            0U,
+            0U,
         };
         status = copy_async(
             result,
@@ -2048,7 +3541,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
         if (cuda_status != cudaSuccess
             || result->completion.create() != cudaSuccess
             || result->update_timer.create() != cudaSuccess
-            || result->solve_timer.create() != cudaSuccess) {
+            || result->solve_timer.create() != cudaSuccess
+            || result->recovery_timer.create() != cudaSuccess) {
             status = cuda_failure(result, cudaGetLastError(), "CUDA stream/event creation");
             cleanup_workspace(result);
             delete result;
@@ -2334,6 +3828,20 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
         workspace->report,
         workspace->solver.cancellation
     );
+    cuda_status = workspace->recovery_timer.begin(cuda_stream);
+    if (cuda_status != cudaSuccess) {
+        return cuda_failure(workspace, cuda_status, "recovery timing start");
+    }
+    recovery_kernel<<<1, kThreads, 0, cuda_stream>>>(
+        workspace->device_problem,
+        workspace->control,
+        workspace->report,
+        workspace->solver.cancellation
+    );
+    cuda_status = workspace->recovery_timer.end(cuda_stream);
+    if (cuda_status != cudaSuccess) {
+        return cuda_failure(workspace, cuda_status, "recovery timing stop");
+    }
     cuda_status = cudaGetLastError();
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "persistent solve kernel launch");
@@ -2460,6 +3968,36 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_diagnostics(
         diagnostics->scaling_reuse_count =
             workspace->host_report->scaling_reuse_count;
         diagnostics->scaling_refreshed = workspace->host_report->scaling_refreshed;
+        diagnostics->recovery_count = workspace->host_report->recovery_count;
+        diagnostics->recovery_rejected_count =
+            workspace->host_report->recovery_rejected_count;
+        diagnostics->recovery_iterations =
+            workspace->host_report->recovery_iterations;
+        diagnostics->recovery_attempt_count =
+            workspace->host_report->recovery_attempt_count;
+        diagnostics->recovery_trigger_reason =
+            static_cast<spacepdhcg_cuda_recovery_reason>(
+                workspace->host_report->recovery_trigger_reason
+            );
+        diagnostics->recovery_outcome_reason =
+            static_cast<spacepdhcg_cuda_recovery_reason>(
+                workspace->host_report->recovery_outcome_reason
+            );
+        diagnostics->recovery_seconds = workspace->recovery_seconds;
+        diagnostics->recovery_initial_residual =
+            workspace->host_report->recovery_initial_residual;
+        diagnostics->recovery_final_residual =
+            workspace->host_report->recovery_final_residual;
+        diagnostics->recovery_final_primal_residual =
+            workspace->host_report->recovery_final_primal_residual;
+        diagnostics->recovery_final_stationarity =
+            workspace->host_report->recovery_final_stationarity;
+        diagnostics->recovery_final_complementarity =
+            workspace->host_report->recovery_final_complementarity;
+        diagnostics->recovery_stationarity_index =
+            workspace->host_report->recovery_stationarity_index;
+        diagnostics->recovery_stationarity_value =
+            workspace->host_report->recovery_stationarity_value;
     }
     diagnostics->update_seconds = workspace->update_seconds;
     diagnostics->scaling_seconds = workspace->scaling_seconds;

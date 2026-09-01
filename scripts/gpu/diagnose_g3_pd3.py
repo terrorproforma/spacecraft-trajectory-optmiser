@@ -273,12 +273,7 @@ def evaluate(
     for cone in structure.affine_cones:
         complementarity = max(
             complementarity,
-            abs(
-                float(
-                    cone_dual[cone.start : cone.stop]
-                    @ cone_value[cone.start : cone.stop]
-                )
-            ),
+            abs(float(cone_dual[cone.start : cone.stop] @ cone_value[cone.start : cone.stop])),
         )
     dual_cone_distance = cone_dual + _project_cones(
         -cone_dual,
@@ -316,7 +311,8 @@ def evaluate(
     controls = primal[21:29].reshape(2, 4)
     nonlinear_defect = np.vstack(
         [
-            states[index + 1] - _rk4_step(
+            states[index + 1]
+            - _rk4_step(
                 PoweredDescent3DOFModel(),
                 states[index],
                 controls[index],
@@ -327,8 +323,7 @@ def evaluate(
     )
     return IndependentQuality(
         objective=objective,
-        objective_error_from_cpu=abs(objective - cpu_objective)
-        / max(1.0, abs(cpu_objective)),
+        objective_error_from_cpu=abs(objective - cpu_objective) / max(1.0, abs(cpu_objective)),
         scalar_primal_inf=_maximum_absolute(scalar_violation),
         box_primal_inf=_maximum_absolute(box_violation),
         cone_primal_inf=_maximum_absolute(cone_violation),
@@ -339,12 +334,8 @@ def evaluate(
         relative_natural_inf=relative_natural,
         complementarity_inf=complementarity,
         dual_cone_distance_inf=_maximum_absolute(dual_cone_distance),
-        initial_inf=_maximum_absolute(
-            scalar_value[initial_rows] - values.lower[initial_rows]
-        ),
-        terminal_inf=_maximum_absolute(
-            scalar_value[terminal_rows] - values.lower[terminal_rows]
-        ),
+        initial_inf=_maximum_absolute(scalar_value[initial_rows] - values.lower[initial_rows]),
+        terminal_inf=_maximum_absolute(scalar_value[terminal_rows] - values.lower[terminal_rows]),
         linearised_dynamics_inf=_maximum_absolute(
             scalar_value[dynamics_rows] - values.lower[dynamics_rows]
         ),

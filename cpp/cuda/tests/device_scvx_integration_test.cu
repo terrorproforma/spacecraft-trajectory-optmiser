@@ -37,22 +37,24 @@ bool tight_after_loose_mode = false;
 bool default_stream_mode = false;
 bool refresh_before_tight_mode = false;
 bool repeated_tight_mode = false;
+bool tight_all_mode = false;
+bool tight_pd6_mode = false;
 std::uint64_t tight_iteration_limit = 1'000'000U;
 
 spacepdhcg_cuda_cone_kind cone_kind(const spacepdhcg::ConeKind kind) {
     switch (kind) {
         case spacepdhcg::ConeKind::second_order:
-            return SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
+            retun SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
         case spacepdhcg::ConeKind::rotated_second_order:
-            return SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER;
+            retun SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER;
         case spacepdhcg::ConeKind::exponential:
-            return SPACEPDHCG_CUDA_CONE_EXPONENTIAL;
+            retun SPACEPDHCG_CUDA_CONE_EXPONENTIAL;
         case spacepdhcg::ConeKind::power:
-            return SPACEPDHCG_CUDA_CONE_POWER;
+            retun SPACEPDHCG_CUDA_CONE_POWER;
         case spacepdhcg::ConeKind::positive_semidefinite:
-            return SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE;
+            retun SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE;
     }
-    return SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
+    retun SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
 }
 
 void materialise(
@@ -112,20 +114,20 @@ void materialise(
 }
 
 std::map<std::pair<std::size_t, std::size_t>, int> positions(
-    const core::CscPattern& pattern
+    const core::CscPatten& patten
 ) {
     std::map<std::pair<std::size_t, std::size_t>, int> result;
-    for (spacepdhcg::Index column = 0; column < pattern.columns; ++column) {
-        const auto begin = pattern.offsets[static_cast<std::size_t>(column)];
-        const auto end = pattern.offsets[static_cast<std::size_t>(column) + 1U];
+    for (spacepdhcg::Index column = 0; column < patten.columns; ++column) {
+        const auto begin = patten.offsets[static_cast<std::size_t>(column)];
+        const auto end = patten.offsets[static_cast<std::size_t>(column) + 1U];
         for (spacepdhcg::Index slot = begin; slot < end; ++slot) {
             result[{
-                static_cast<std::size_t>(pattern.indices[static_cast<std::size_t>(slot)]),
+                static_cast<std::size_t>(patten.indices[static_cast<std::size_t>(slot)]),
                 static_cast<std::size_t>(column),
             }] = slot;
         }
     }
-    return result;
+    retun result;
 }
 
 struct DynamicsMaps {
@@ -137,7 +139,7 @@ struct DynamicsMaps {
 
 template <typename StateRange, typename ControlRange, typename VirtualRange>
 DynamicsMaps make_maps(
-    const core::CscPattern& pattern,
+    const core::CscPatten& patten,
     const std::size_t intervals,
     const std::size_t state_dimension,
     const std::size_t control_dimension,
@@ -147,7 +149,7 @@ DynamicsMaps make_maps(
     VirtualRange virtual_range,
     const bool has_virtual
 ) {
-    const auto lookup = positions(pattern);
+    const auto lookup = positions(patten);
     DynamicsMaps maps;
     maps.state.reserve(intervals * state_dimension * state_dimension);
     maps.control.reserve(intervals * state_dimension * control_dimension);
@@ -177,11 +179,11 @@ DynamicsMaps make_maps(
             }
         }
     }
-    return maps;
+    retun maps;
 }
 
 spacepdhcg_accelerator_buffer_view null_int_view() {
-    return test::view(
+    retun test::view(
         nullptr, 0U, false, SPACEPDHCG_SCALAR_INT32, SPACEPDHCG_ACCESS_READ_ONLY
     );
 }
@@ -197,17 +199,17 @@ struct IntegrationResult {
 cone_type_t upstream_cone_kind(const spacepdhcg_cuda_cone_kind kind) {
     switch (kind) {
         case SPACEPDHCG_CUDA_CONE_SECOND_ORDER:
-            return CONE_STANDARD_SOC;
+            retun CONE_STANDARD_SOC;
         case SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER:
-            return CONE_ROTATED_SOC;
+            retun CONE_ROTATED_SOC;
         case SPACEPDHCG_CUDA_CONE_EXPONENTIAL:
-            return CONE_EXPONENTIAL;
+            retun CONE_EXPONENTIAL;
         case SPACEPDHCG_CUDA_CONE_POWER:
-            return CONE_POWER;
+            retun CONE_POWER;
         case SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE:
-            return CONE_PSD;
+            retun CONE_PSD;
     }
-    return CONE_STANDARD_SOC;
+    retun CONE_STANDARD_SOC;
 }
 
 template <typename T>
@@ -281,7 +283,7 @@ void run_upstream_diagnostic(test::ProblemStorage& problem) {
     problem.h_variable_upper = problem.variable_upper.download(problem.stream);
     print_diagnostic_problem(problem);
     if (dump_mode) {
-        return;
+        retun;
     }
 
     matrix_desc_t q{};
@@ -426,19 +428,19 @@ IntegrationResult run_resident_sequence(
     next_positions.upload(maps.next, problem.stream);
     virtual_positions.upload(maps.virtual_control, problem.stream);
     const auto rw64 = [](auto& buffer) {
-        return test::view(
+        retun test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_FLOAT64,
             SPACEPDHCG_ACCESS_READ_WRITE
         );
     };
     const auto ro64 = [](auto& buffer) {
-        return test::view(
+        retun test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_FLOAT64,
             SPACEPDHCG_ACCESS_READ_ONLY
         );
     };
     const auto ro32 = [](auto& buffer) {
-        return test::view(
+        retun test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_INT32,
             SPACEPDHCG_ACCESS_READ_ONLY
         );
@@ -478,7 +480,10 @@ IntegrationResult run_resident_sequence(
     );
     spacepdhcg_cuda_diagnostics diagnostics{};
     const int sequence_iterations =
-        sanitizer_mode || diagnostic_mode || dump_mode ? 1 : 2;
+        sanitizer_mode || tight_residual_mode || tight_all_mode || tight_pd6_mode
+            || diagnostic_mode || dump_mode
+        ? 1
+        : 2;
     for (int iteration = 0; iteration < sequence_iterations; ++iteration) {
         test::status_require(
             spacepdhcg_cuda_variational_rk4_async(
@@ -531,7 +536,8 @@ IntegrationResult run_resident_sequence(
             ? test::solve_options(1.0e-2, 5'000U)
             : (dump_mode
                    ? test::solve_options(1.0e-6, 1U)
-            : ((tight_residual_mode || diagnostic_mode || repeated_tight_mode
+            : ((tight_residual_mode || tight_all_mode || tight_pd6_mode
+                || diagnostic_mode || repeated_tight_mode
                 || (tight_after_loose_mode && iteration > 0))
                    ? test::solve_options(1.0e-6, tight_iteration_limit)
                    : (tight_after_loose_mode
@@ -542,23 +548,37 @@ IntegrationResult run_resident_sequence(
         }
         if (dump_mode) {
             test::destroy_workspace(workspace);
-            return {};
+            retun {};
         }
         diagnostics = test::solve_and_wait(workspace, problem, solve);
         if (diagnostics.termination != SPACEPDHCG_CUDA_TERMINATION_OPTIMAL) {
-            if (tight_residual_mode || diagnostic_mode || dump_mode
+            if (tight_residual_mode || tight_all_mode || tight_pd6_mode
+                || diagnostic_mode || dump_mode
                 || tight_after_loose_mode || repeated_tight_mode) {
                 std::fprintf(
                     stderr,
                     "{\"case\":\"tight_final_residual\",\"termination\":%d,"
                     "\"iterations\":%llu,\"requested\":1e-6,"
                     "\"relative_primal\":%.9g,\"relative_dual\":%.9g,"
-                    "\"natural_residual\":%.9g}\n",
+                    "\"natural_residual\":%.9g,\"recovery_attempts\":%llu,"
+                    "\"recovery_accepted\":%llu,\"recovery_rejected\":%llu,"
+                    "\"recovery_outcome\":%d,\"recovery_initial\":%.9g,"
+                    "\"recovery_final\":%.9g}\n",
                     static_cast<int>(diagnostics.termination),
                     static_cast<unsigned long long>(diagnostics.iterations),
                     diagnostics.relative_primal_residual,
                     diagnostics.relative_dual_residual,
-                    diagnostics.natural_residual_inf
+                    diagnostics.natural_residual_inf,
+                    static_cast<unsigned long long>(
+                        diagnostics.recovery_attempt_count
+                    ),
+                    static_cast<unsigned long long>(diagnostics.recovery_count),
+                    static_cast<unsigned long long>(
+                        diagnostics.recovery_rejected_count
+                    ),
+                    static_cast<int>(diagnostics.recovery_outcome_reason),
+                    diagnostics.recovery_initial_residual,
+                    diagnostics.recovery_final_residual
                 );
                 if (repeated_tight_mode && iteration == 0) {
                     continue;
@@ -637,6 +657,16 @@ IntegrationResult run_resident_sequence(
         "persistent workspace pointers changed"
     );
     test::require(diagnostics.hidden_cpu_fallback == 0, "hidden CPU fallback detected");
+    if (tight_residual_mode && tight_iteration_limit >= 350'000U) {
+        test::require(
+            diagnostics.recovery_count > 0U,
+            "tight solve did not record GPU recovery"
+        );
+        test::require(
+            diagnostics.recovery_rejected_count == 0U,
+            "tight solve rejected GPU recovery"
+        );
+    }
     test::require(
         diagnostics.topology_allocation_delta_last_update == 0U,
         "post-create topology allocation detected"
@@ -650,7 +680,7 @@ IntegrationResult run_resident_sequence(
         "steady-state allocation detected"
     );
     const auto solution = problem.primal.download(problem.stream);
-    if (diagnostic_mode) {
+    if (diagnostic_mode || tight_residual_mode) {
         print_diagnostic_vector("persistent_primal", solution);
         print_diagnostic_vector(
             "persistent_dual",
@@ -670,14 +700,14 @@ IntegrationResult run_resident_sequence(
         maximum_solution,
     };
     test::destroy_workspace(workspace);
-    return result;
+    retun result;
 }
 
 spacepdhcg_cuda_dynamics_config model_config(
     const spacepdhcg_cuda_dynamics_model model,
     const double step
 ) {
-    return {
+    retun {
         SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
         model,
         step,
@@ -697,7 +727,7 @@ std::vector<double> flatten_states(const std::vector<State>& states, const std::
     for (std::size_t interval = 0; interval < intervals; ++interval) {
         result.insert(result.end(), states[interval].begin(), states[interval].end());
     }
-    return result;
+    retun result;
 }
 
 template <typename Control>
@@ -706,7 +736,7 @@ std::vector<double> flatten_controls(const std::vector<Control>& controls) {
     for (const auto& control : controls) {
         result.insert(result.end(), control.begin(), control.end());
     }
-    return result;
+    retun result;
 }
 
 IntegrationResult run_hcw() {
@@ -727,15 +757,15 @@ IntegrationResult run_hcw() {
         3U,
         layout.dynamics_row(),
         [&layout](std::size_t node) {
-            return transcription::IndexRange{layout.state_index(node, 0U), 6U};
+            retun transcription::IndexRange{layout.state_index(node, 0U), 6U};
         },
         [&layout](std::size_t interval) {
-            return transcription::IndexRange{layout.control_index(interval, 0U), 3U};
+            retun transcription::IndexRange{layout.control_index(interval, 0U), 3U};
         },
-        [](std::size_t) { return transcription::IndexRange{}; },
+        [](std::size_t) { retun transcription::IndexRange{}; },
         false
     );
-    return run_resident_sequence<6U, 3U>(
+    retun run_resident_sequence<6U, 3U>(
         subproblem.structure(),
         values,
         flatten_states(states, 2U),
@@ -782,12 +812,12 @@ IntegrationResult run_pd3() {
         7U,
         4U,
         layout.dynamics_rows().start,
-        [&layout](std::size_t node) { return layout.state(node); },
-        [&layout](std::size_t interval) { return layout.control(interval); },
-        [&layout](std::size_t interval) { return layout.virtual_control(interval); },
+        [&layout](std::size_t node) { retun layout.state(node); },
+        [&layout](std::size_t interval) { retun layout.control(interval); },
+        [&layout](std::size_t interval) { retun layout.virtual_control(interval); },
         true
     );
-    return run_resident_sequence<7U, 4U>(
+    retun run_resident_sequence<7U, 4U>(
         subproblem.structure(),
         values,
         flatten_states(states, config.intervals),
@@ -827,12 +857,12 @@ IntegrationResult run_low_thrust() {
         7U,
         4U,
         layout.dynamics_rows().start,
-        [&layout](std::size_t node) { return layout.state(node); },
-        [&layout](std::size_t interval) { return layout.control(interval); },
-        [&layout](std::size_t interval) { return layout.virtual_control(interval); },
+        [&layout](std::size_t node) { retun layout.state(node); },
+        [&layout](std::size_t interval) { retun layout.control(interval); },
+        [&layout](std::size_t interval) { retun layout.virtual_control(interval); },
         true
     );
-    return run_resident_sequence<7U, 4U>(
+    retun run_resident_sequence<7U, 4U>(
         subproblem.structure(),
         values,
         flatten_states(states, config.intervals),
@@ -872,12 +902,12 @@ IntegrationResult run_pd6() {
         14U,
         7U,
         layout.dynamics_rows().start,
-        [&layout](std::size_t node) { return layout.state(node); },
-        [&layout](std::size_t interval) { return layout.control(interval); },
-        [&layout](std::size_t interval) { return layout.virtual_control(interval); },
+        [&layout](std::size_t node) { retun layout.state(node); },
+        [&layout](std::size_t interval) { retun layout.control(interval); },
+        [&layout](std::size_t interval) { retun layout.virtual_control(interval); },
         true
     );
-    return run_resident_sequence<14U, 7U>(
+    retun run_resident_sequence<14U, 7U>(
         subproblem.structure(),
         values,
         flatten_states(states, config.intervals),
@@ -908,6 +938,8 @@ int main(const int argc, char** argv) {
     default_stream_mode = mode == "--tight-pd3-default-stream";
     refresh_before_tight_mode = mode == "--tight-after-loose-refresh-pd3";
     repeated_tight_mode = mode == "--tight-twice-pd3";
+    tight_all_mode = mode == "--tight-all";
+    tight_pd6_mode = mode == "--tight-pd6";
     if (mode == "--tight-pd3-1k") {
         tight_iteration_limit = 1'000U;
     } else if (mode == "--tight-pd3-10k") {
@@ -925,7 +957,7 @@ int main(const int argc, char** argv) {
             "\"natural_residual\":%.9g}\n",
             hcw.diagnostics.natural_residual_inf
         );
-        return 0;
+        retun 0;
     }
     if (tight_residual_mode) {
         const auto pd3 = run_pd3();
@@ -933,30 +965,85 @@ int main(const int argc, char** argv) {
             "{\"case\":\"tight_final_residual\",\"termination\":%d,"
             "\"iterations\":%llu,\"requested\":1e-6,"
             "\"relative_primal\":%.9g,\"relative_dual\":%.9g,"
+            "\"recovery_count\":%llu,\"recovery_iterations\":%llu,"
             "\"natural_residual\":%.9g}\n",
             static_cast<int>(pd3.diagnostics.termination),
             static_cast<unsigned long long>(pd3.diagnostics.iterations),
             pd3.diagnostics.relative_primal_residual,
             pd3.diagnostics.relative_dual_residual,
+            static_cast<unsigned long long>(pd3.diagnostics.recovery_count),
+            static_cast<unsigned long long>(pd3.diagnostics.recovery_iterations),
             pd3.diagnostics.natural_residual_inf
         );
-        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     if (diagnostic_mode) {
         const auto pd3 = run_pd3();
-        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     if (dump_mode) {
         static_cast<void>(run_pd3());
-        return 0;
+        retun 0;
     }
     if (tight_after_loose_mode) {
         const auto pd3 = run_pd3();
-        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     if (repeated_tight_mode) {
         const auto pd3 = run_pd3();
-        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+        retun pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
+    }
+    if (tight_all_mode) {
+        const auto hcw = run_hcw();
+        const auto pd3 = run_pd3();
+        const auto low_thrust = run_low_thrust();
+        const auto pd6 = run_pd6();
+        const auto maximum_residual = std::max({
+            hcw.diagnostics.natural_residual_inf,
+            pd3.diagnostics.natural_residual_inf,
+            low_thrust.diagnostics.natural_residual_inf,
+            pd6.diagnostics.natural_residual_inf,
+        });
+        std::printf(
+            "{\"case\":\"tight_all\",\"hcw\":%.9g,\"pd3\":%.9g,"
+            "\"low_thrust\":%.9g,\"pd6\":%.9g}\n",
+            hcw.diagnostics.natural_residual_inf,
+            pd3.diagnostics.natural_residual_inf,
+            low_thrust.diagnostics.natural_residual_inf,
+            pd6.diagnostics.natural_residual_inf
+        );
+        retun maximum_residual <= 1.0e-6 ? 0 : 10;
+    }
+    if (tight_pd6_mode) {
+        const auto pd6 = run_pd6();
+        std::printf(
+            "{\"case\":\"tight_pd6\",\"natural\":%.9g,\"stationarity\":%.9g,"
+            "\"recovery_attempts\":%llu,\"recovery_accepted\":%llu,"
+            "\"recovery_rejected\":%llu,\"recovery_outcome\":%d,"
+            "\"recovery_initial\":%.9g,\"recovery_final\":%.9g,"
+            "\"recovery_primal\":%.9g,\"recovery_stationarity\":%.9g,"
+            "\"recovery_complementarity\":%.9g,"
+            "\"recovery_stationarity_index\":%d,"
+            "\"recovery_stationarity_value\":%.9g}\n",
+            pd6.diagnostics.natural_residual_inf,
+            pd6.diagnostics.stationarity_inf,
+            static_cast<unsigned long long>(
+                pd6.diagnostics.recovery_attempt_count
+            ),
+            static_cast<unsigned long long>(pd6.diagnostics.recovery_count),
+            static_cast<unsigned long long>(
+                pd6.diagnostics.recovery_rejected_count
+            ),
+            static_cast<int>(pd6.diagnostics.recovery_outcome_reason),
+            pd6.diagnostics.recovery_initial_residual,
+            pd6.diagnostics.recovery_final_residual,
+            pd6.diagnostics.recovery_final_primal_residual,
+            pd6.diagnostics.recovery_final_stationarity,
+            pd6.diagnostics.recovery_final_complementarity,
+            pd6.diagnostics.recovery_stationarity_index,
+            pd6.diagnostics.recovery_stationarity_value
+        );
+        retun pd6.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 10;
     }
     const auto hcw = run_hcw();
     const auto pd3 = run_pd3();
@@ -987,5 +1074,5 @@ int main(const int argc, char** argv) {
         "\"maximum_natural_residual\":%.9g}\n",
         maximum_residual
     );
-    return 0;
+    retun 0;
 }

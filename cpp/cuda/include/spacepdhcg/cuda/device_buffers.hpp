@@ -38,6 +38,14 @@ struct DeviceState {
     double* affine_product{nullptr};
     double* gradient{nullptr};
     double* cone_scratch{nullptr};
+    double* average_primal{nullptr};
+    double* average_dual{nullptr};
+    double* recovery_direction_dual{nullptr};
+    double* recovery_coefficients{nullptr};
+    double* recovery_row_values{nullptr};
+    double* recovery_scalars{nullptr};
+    double* recovery_backup_primal{nullptr};
+    double* recovery_backup_dual{nullptr};
     double* scaling{nullptr};
     void* control{nullptr};
     void* diagnostics{nullptr};
