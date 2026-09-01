@@ -21,10 +21,38 @@
     "censored_run_ids",
     "notes"
   ],
+  "anyOf": [
+    {
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "outcome": {"enum": ["supported", "rejected", "mixed", "unresolved"]}
+      },
+      "not": {"required": ["campaign_scope_id"]}
+    },
+    {
+      "required": ["campaign_scope_id"],
+      "properties": {
+        "schema_version": {"const": "1.1.0"},
+        "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]},
+        "outcome": {
+          "enum": [
+            "supported",
+            "rejected",
+            "mixed",
+            "unresolved",
+            "deferred-not-in-scope"
+          ]
+        }
+      }
+    }
+  ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]},
     "hypothesis": {"enum": ["H1", "H2", "H3", "H4", "H5", "H6"]},
-    "outcome": {"enum": ["supported", "rejected", "mixed", "unresolved"]},
+    "outcome": {
+      "enum": ["supported", "rejected", "mixed", "unresolved", "deferred-not-in-scope"]
+    },
     "input_run_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
     "comparison_coordinates": {"type": "array", "items": {"type": "object"}},
     "practical_threshold": {"type": "object"},

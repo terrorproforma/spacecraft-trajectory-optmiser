@@ -62,6 +62,7 @@ def create_manifest(args: argparse.Namespace) -> int:
         ownership=args.ownership,
         device_ids=tuple(args.device_id),
         evidence_level=args.evidence_level,
+        campaign_scope_id=args.campaign_scope_id,
     )
     manifest.write(args.output)
     print(json.dumps({"valid": True, "manifest_sha256": manifest.sha256()}))
@@ -113,6 +114,11 @@ def main() -> int:
         choices=["single_gpu", "logical_rank_mock", "g5_distributed"],
     )
     create.add_argument("--device-id", action="append", required=True, type=int)
+    create.add_argument(
+        "--campaign-scope-id",
+        default="single-gpu-v1",
+        choices=["single-gpu-v1", "full-multi-gpu-v1"],
+    )
     create.add_argument(
         "--evidence-level",
         default="implemented_compiled",

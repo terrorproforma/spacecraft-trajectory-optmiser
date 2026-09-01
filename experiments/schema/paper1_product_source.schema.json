@@ -16,8 +16,22 @@
     "aggregation",
     "run_ids"
   ],
+  "anyOf": [
+    {
+      "properties": {"schema_version": {"const": "1.0.0"}},
+      "not": {"required": ["campaign_scope_id"]}
+    },
+    {
+      "required": ["campaign_scope_id"],
+      "properties": {
+        "schema_version": {"const": "1.1.0"},
+        "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]}
+      }
+    }
+  ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]},
     "product_id": {
       "enum": [
         "F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08",

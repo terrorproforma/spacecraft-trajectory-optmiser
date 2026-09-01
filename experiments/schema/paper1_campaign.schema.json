@@ -16,8 +16,22 @@
     "solver_locks",
     "claims"
   ],
+  "anyOf": [
+    {
+      "properties": {"schema_version": {"const": "1.0.0"}},
+      "not": {"required": ["campaign_scope_id"]}
+    },
+    {
+      "required": ["campaign_scope_id"],
+      "properties": {
+        "schema_version": {"const": "1.1.0"},
+        "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]}
+      }
+    }
+  ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]},
     "campaign_id": {"type": "string", "minLength": 1},
     "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "synthetic": {"type": "boolean"},
@@ -70,7 +84,6 @@
     },
     "claims": {
       "type": "array",
-      "minItems": 1,
       "items": {"type": "string", "minLength": 1}
     }
   }

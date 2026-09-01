@@ -13,11 +13,13 @@ import pytest
 
 from spacepdhcg.orbitweaver import (
     PAPER2_MATRIX_SHA256,
+    SINGLE_GPU_G7_STAGES,
     CertificationChecks,
     CertificationRecord,
     Checkpoint,
     ResultRecord,
     RunManifest,
+    single_gpu_completion_record,
 )
 from spacepdhcg.orbitweaver.contracts import (
     FAILURE_STATUSES,
@@ -144,6 +146,38 @@ def test_manifest_round_trip_requires_exact_matrix_hash(tmp_path: Path) -> None:
     payload["unknown"] = True
     with pytest.raises((ValueError, ContractError)):
         RunManifest.from_dict(payload)
+
+
+def test_scoped_manifest_and_single_gpu_completion_semantics() -> None:
+    legacy = manifest()
+    scoped = replace(
+        legacy,
+        schema_version=2,
+        campaign_scope_id="single-gpu-v1",
+        evidence_level="one_gpu_correctness_tested",
+    )
+    scoped.validate()
+    completion = single_gpu_completion_record(
+        scoped,
+        [result(scoped)],
+        SINGLE_GPU_G7_STAGES,
+    )
+    assert completion["status"] == "complete-in-scope"
+    assert completion["campaign_scope_id"] == "single-gpu-v1"
+    assert "physical multi-GPU scaling" in completion["deferred_claims"]
+
+    with pytest.raises(ValueError, match="cross-scope"):
+        replace(scoped, ownership="g5_distributed", device_ids=(0, 1)).validate()
+    with pytest.raises(ValueError, match="cross-scope"):
+        replace(scoped, evidence_level="physical_multi_gpu_tested").validate()
+    with pytest.raises(ValueError, match="stage inventory"):
+        single_gpu_completion_record(scoped, [result(scoped)], {"coarse_convex"})
+    with pytest.raises(ValueError, match="independently certified"):
+        single_gpu_completion_record(
+            scoped,
+            [result(scoped, status="timeout", certified=False)],
+            SINGLE_GPU_G7_STAGES,
+        )
 
 
 def test_checkpoint_round_trip_and_manifest_pin_mismatches(tmp_path: Path) -> None:

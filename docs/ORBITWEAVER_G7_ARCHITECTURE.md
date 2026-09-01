@@ -7,6 +7,11 @@ single-GPU API, and the integrated public G5 ownership/runtime API. This branch 
 implementation and bounded CPU/logical-rank correctness evidence only. It makes no throughput,
 energy, scaling, tractability, optimality, or Paper 2 completion claim.
 
+Roadmap scope update (2026-09-02): `single-gpu-v1` makes the complete one-GPU
+coarse/refined/scenario/pricing/master/certification/visualisation flow active. Physical 2/4/8-GPU
+ownership, throughput, energy, memory-crossover, and tractability-frontier studies remain
+`deferred-not-in-scope`; the G5 adapter is preserved for that later campaign.
+
 Evidence labels are intentionally separate:
 
 - `implemented_compiled`: a target configured and compiled;
@@ -127,17 +132,21 @@ No GPU executable was run for this adapter branch. In particular, compilation do
 qualify the full coarse/refined/scenario/pricing/master/certification path as
 `one_gpu_correctness_tested`.
 
-## Deferred validation
+## Active and deferred validation
 
-Deferred until prerequisite branches and physical hardware evidence exist:
+Active for `single-gpu-v1`:
 
 - G4 matched-quality policy evidence and H5/H6 decisions;
 - one-GPU coarse/refined/scenario/route replay against independent CPU truth;
 - G5 one-rank CUDA/NCCL equivalence and device checkpoint restore;
+- one-GPU pricing/restricted-master integration, independent certification, and visualisation.
+
+Deferred to the physical multi-GPU backlog:
+
 - physical 2/4/8-GPU runs;
 - route × scenario strong/weak scaling;
 - throughput, energy, memory-crossover and tractability-frontier measurements;
-- complete Paper 2 matrix runs and statistical decisions;
+- distributed Paper 2 matrix runs and statistical scaling decisions;
 - claims of global route optimality outside exact small-instance truth models.
 
 ## Exact integration order

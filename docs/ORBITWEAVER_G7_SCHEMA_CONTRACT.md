@@ -15,6 +15,11 @@ compare the dependency-free validator with Draft 2020-12 `jsonschema`.
 
 ## Pins and repeat identity
 
+Historical schema-v1 manifests remain readable and implicitly belong to the original full
+campaign. New schema-v2 manifests record `campaign_scope_id`. A `single-gpu-v1` manifest requires
+`ownership=single_gpu`, exactly one device, and cannot use the
+`physical_multi_gpu_tested` evidence level.
+
 Every manifest records:
 
 - exact 40-character repository commit;
@@ -67,3 +72,11 @@ or scaling evidence.
 
 No field in these records constitutes throughput, scaling, energy, optimality or physical
 multi-GPU evidence by itself.
+
+## `single-gpu-v1` completion
+
+`single_gpu_completion_record` requires complete coarse-convex, refined-SCvx, scenario,
+pricing/master, independent-certification, and visualisation stages. All supplied result records
+must be converged or iteration-limited and independently certified. Its
+`complete-in-scope` status expressly defers physical scaling, distributed route-by-scenario
+scaling, energy, memory-crossover, throughput, and tractability-frontier claims.

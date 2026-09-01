@@ -8,6 +8,11 @@ Spacecraft Trajectory Optimisation**
 No numerical performance result is asserted in this outline. Bracketed fields are populated only
 from benchmark artifacts satisfying `docs/BENCHMARK_PROTOCOL.md`.
 
+Scope status: the active manuscript build is `single-gpu-v1`. It may populate only the
+scope-tagged one-GPU products and H1/H2/H3/H5/H6 claims. The multi-GPU title wording, contribution
+C section, robust-scaling result structure, F07/F12/T06 products, and H4 claim below are preserved
+as the historical full-paper plan and are deferred—not silently removed or presented as tested.
+
 # Abstract structure
 
 1. Spacecraft SCvx repeatedly solves same-topology conic quadratic subproblems.
@@ -183,7 +188,7 @@ Fixed versus adaptive versus adaptive-plus-polish.
 ## 8.5 Robust scaling
 
 Scenario count, GPU count, communication time, load imbalance, memory, and accepted trajectory
-throughput.
+throughput. **Deferred in `single-gpu-v1`; do not populate from logical/one-rank evidence.**
 
 ## 8.6 Regime map
 

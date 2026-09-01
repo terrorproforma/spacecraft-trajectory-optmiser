@@ -17,6 +17,7 @@ from .decisions import paired_bootstrap
 from .evidence import ArchivedRun, canonical_json_bytes, write_canonical_json
 
 FIGURE_SCHEMA_VERSION: Final = "1.0.0"
+SCOPED_FIGURE_SCHEMA_VERSION: Final = "1.1.0"
 TIMING_COMPONENTS: Final = (
     "topology_seconds",
     "coefficient_seconds",
@@ -1839,18 +1840,32 @@ def build_products(
     *,
     decisions: Mapping[str, Mapping[str, Any]],
     synthetic: bool = False,
+    campaign_scope_id: str | None = None,
+    included_product_ids: Sequence[str] | None = None,
+    deferred_product_ids: Sequence[str] = (),
 ) -> dict[str, Any]:
-    """Build all and only frozen F01-F12/T01-T08 products."""
+    """Build the frozen products included by a versioned campaign scope."""
 
     ordered = _ordered_runs(runs)
     if set(decisions) != {f"H{index}" for index in range(1, 7)}:
         raise AggregationError("product build requires complete H1-H6 decision records")
+    all_products = (*FIGURES, *TABLES)
+    known_ids = {product.product_id for product in all_products}
+    included_ids = known_ids if included_product_ids is None else set(included_product_ids)
+    deferred_ids = set(deferred_product_ids)
+    if included_ids | deferred_ids != known_ids or included_ids & deferred_ids:
+        raise AggregationError("scope must classify every frozen product exactly once")
     output = Path(output_directory)
     output.mkdir(parents=True, exist_ok=True)
     products: list[dict[str, Any]] = []
     for product in FIGURES:
+        if product.product_id not in included_ids:
+            continue
         source = FIGURE_BUILDERS[product.product_id](product, ordered)
         source["synthetic"] = synthetic
+        if campaign_scope_id is not None:
+            source["schema_version"] = SCOPED_FIGURE_SCHEMA_VERSION
+            source["campaign_scope_id"] = campaign_scope_id
         stem = f"fig{product.product_id[1:]}_{product.slug}"
         source_path = write_canonical_json(output / f"{stem}.json", source)
         pdf_path, png_path = output / f"{stem}.pdf", output / f"{stem}.png"
@@ -1865,6 +1880,8 @@ def build_products(
             }
         )
     for product in TABLES:
+        if product.product_id not in included_ids:
+            continue
         columns, rows = _table_rows(product.product_id, ordered, decisions)
         contributing_ids = {run_id for row in rows for run_id in str(row[0]).split("|") if run_id}
         contributing_runs = [run for run in ordered if run.run_id in contributing_ids]
@@ -1881,6 +1898,9 @@ def build_products(
                 "rows": rows,
             }
         )
+        if campaign_scope_id is not None:
+            source["schema_version"] = SCOPED_FIGURE_SCHEMA_VERSION
+            source["campaign_scope_id"] = campaign_scope_id
         stem = f"tab{product.product_id[1:]}_{product.slug}"
         source_path = write_canonical_json(output / f"{stem}.json", source)
         csv_path, tex_path = output / f"{stem}.csv", output / f"{stem}.tex"
@@ -1896,9 +1916,24 @@ def build_products(
             }
         )
     manifest = {
-        "schema_version": FIGURE_SCHEMA_VERSION,
+        "schema_version": (
+            FIGURE_SCHEMA_VERSION if campaign_scope_id is None else SCOPED_FIGURE_SCHEMA_VERSION
+        ),
         "synthetic": synthetic,
-        "product_ids": [product.product_id for product in (*FIGURES, *TABLES)],
+        "product_ids": [
+            product.product_id for product in all_products if product.product_id in included_ids
+        ],
+        "deferred_products": [
+            {
+                "product_id": product.product_id,
+                "status": "deferred-not-in-scope",
+                "reason": (
+                    "Requires physical multi-GPU evidence excluded by the versioned campaign scope."
+                ),
+            }
+            for product in all_products
+            if product.product_id in deferred_ids
+        ],
         "products": products,
         "source_digest": __import__("hashlib")
         .sha256(
@@ -1911,5 +1946,7 @@ def build_products(
         )
         .hexdigest(),
     }
+    if campaign_scope_id is not None:
+        manifest["campaign_scope_id"] = campaign_scope_id
     write_canonical_json(output / "build-manifest.json", manifest)
     return manifest

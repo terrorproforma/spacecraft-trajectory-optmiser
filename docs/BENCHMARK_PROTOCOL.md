@@ -14,11 +14,17 @@ parameters, correctness checks, and complete timing breakdown are stored togethe
 No GPU or multi-GPU performance claim exists until the pinned workflows have run on recorded
 hardware and the returned trajectories pass independent checks.
 
+Every new campaign/product must also record a versioned `campaign_scope_id`. Evidence from
+`full-multi-gpu-v1` and `single-gpu-v1` may not be combined into one claim or silently filtered.
+Under `single-gpu-v1`, physical scaling products and H4 are explicitly deferred, not unresolved or
+supported by one-rank/logical evidence.
+
 # Reproducibility record
 
 Every run must record:
 
 - SpacePDHCG repository commit;
+- campaign scope ID and versioned scope-record path;
 - upstream PDHCG repository and exact commit;
 - every comparison solver name, version, commit, and build flags;
 - operating system and kernel;

@@ -17,6 +17,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
+from spacepdhcg.campaign_scope import (
+    ACTIVE_SINGLE_GPU_SCOPE_ID,
+    HISTORICAL_FULL_SCOPE_ID,
+    SCOPE_IDS,
+)
+
 from .contracts import PAPER2_MATRIX_SHA256, validate_named
 
 
@@ -631,12 +637,34 @@ class RunManifest:
     toolchain: dict[str, str | None]
     hardware: dict[str, Any]
     evidence_level: str = "implemented_compiled"
+    campaign_scope_id: str | None = None
 
     def validate(self) -> None:
         validate_named(self.to_dict(), "manifest")
+        if self.schema_version == 1:
+            if self.campaign_scope_id is not None:
+                raise ValueError("historical G7 manifest may not override campaign scope")
+        elif self.schema_version == 2:
+            if self.campaign_scope_id not in SCOPE_IDS:
+                raise ValueError("scoped G7 manifest requires a known campaign scope")
+        else:
+            raise ValueError("unsupported G7 manifest schema version")
+        if self.campaign_scope_id == ACTIVE_SINGLE_GPU_SCOPE_ID and (
+            self.ownership != "single_gpu"
+            or len(self.device_ids) != 1
+            or self.evidence_level == "physical_multi_gpu_tested"
+        ):
+            raise ValueError("single-gpu-v1 manifest contains cross-scope physical evidence")
+        if (
+            self.campaign_scope_id == HISTORICAL_FULL_SCOPE_ID
+            and self.ownership == "g5_distributed"
+            and len(self.device_ids) < 2
+            and self.evidence_level == "physical_multi_gpu_tested"
+        ):
+            raise ValueError("physical multi-GPU evidence requires at least two devices")
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        result = {
             "schema_version": self.schema_version,
             "run_id": self.run_id,
             "repository_commit": self.repository_commit,
@@ -651,6 +679,9 @@ class RunManifest:
             "hardware": dict(self.hardware),
             "evidence_level": self.evidence_level,
         }
+        if self.campaign_scope_id is not None:
+            result["campaign_scope_id"] = self.campaign_scope_id
+        return result
 
     def write(self, path: str | Path) -> None:
         self.validate()
@@ -677,6 +708,7 @@ class RunManifest:
             toolchain=dict(value["toolchain"]),
             hardware=dict(value["hardware"]),
             evidence_level=value["evidence_level"],
+            campaign_scope_id=value.get("campaign_scope_id"),
         )
         result.validate()
         return result
@@ -697,6 +729,7 @@ class RunManifest:
         ownership: str,
         device_ids: Sequence[int],
         evidence_level: str = "implemented_compiled",
+        campaign_scope_id: str = ACTIVE_SINGLE_GPU_SCOPE_ID,
     ) -> RunManifest:
         config_raw = Path(config_path).read_bytes()
         config = json.loads(config_raw)
@@ -714,7 +747,7 @@ class RunManifest:
             ]
         )
         result = cls(
-            schema_version=1,
+            schema_version=2,
             run_id=run_id,
             repository_commit=commit,
             seed=config["seed"],
@@ -736,6 +769,7 @@ class RunManifest:
                 "gpus": [] if gpu_text is None else gpu_text.splitlines(),
             },
             evidence_level=evidence_level,
+            campaign_scope_id=campaign_scope_id,
         )
         result.validate()
         return result
@@ -899,6 +933,61 @@ class ResultRecord:
         manifest: RunManifest | None = None,
     ) -> ResultRecord:
         return cls.from_dict(_read_json_object(path), manifest)
+
+
+SINGLE_GPU_G7_STAGES = frozenset(
+    {
+        "coarse_convex",
+        "refined_scvx",
+        "scenario",
+        "pricing_master",
+        "certification",
+        "visualisation",
+    }
+)
+
+
+def single_gpu_completion_record(
+    manifest: RunManifest,
+    records: Iterable[ResultRecord],
+    completed_stages: Iterable[str],
+) -> dict[str, Any]:
+    """Accept one-GPU G7 completion without implying deferred scaling evidence."""
+
+    manifest.validate()
+    if manifest.campaign_scope_id != ACTIVE_SINGLE_GPU_SCOPE_ID:
+        raise ValueError("one-GPU completion requires campaign scope single-gpu-v1")
+    stages = frozenset(completed_stages)
+    missing = sorted(SINGLE_GPU_G7_STAGES - stages)
+    unknown = sorted(stages - SINGLE_GPU_G7_STAGES)
+    if missing or unknown:
+        raise ValueError(f"G7 stage inventory invalid; missing={missing}, unknown={unknown}")
+    ordered = sorted(records, key=lambda item: item.repeat_index)
+    if not ordered:
+        raise ValueError("G7 completion requires result records")
+    for record in ordered:
+        record.validate(manifest)
+        if record.status not in {"converged", "iteration_limit"} or not record.certified:
+            raise ValueError("G7 completion requires independently certified one-GPU results")
+    return {
+        "schema_version": "1.0.0",
+        "campaign_scope_id": ACTIVE_SINGLE_GPU_SCOPE_ID,
+        "status": "complete-in-scope",
+        "completed_stages": sorted(stages),
+        "run_id": manifest.run_id,
+        "result_count": len(ordered),
+        "deferred_claims": [
+            "physical multi-GPU scaling",
+            "distributed route-by-scenario scaling",
+            "energy reduction",
+            "memory crossover",
+            "throughput or tractability-frontier improvement",
+        ],
+        "statement": (
+            "One-GPU correctness and simulation completion only; no physical scaling, "
+            "energy, crossover, or throughput claim."
+        ),
+    }
 
 
 def _canonical_json(value: dict[str, Any]) -> str:

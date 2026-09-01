@@ -8,6 +8,11 @@ Missions**
 Paper 2 treats SpacePDHCG as a stable continuous trajectory oracle. It does not depend on a
 particular solver implementation above the oracle contract.
 
+Current status: `single-gpu-v1` covers complete one-GPU coarse/refined/scenario/pricing-master/
+certification simulations and trajectory/mission visualisation. Physical route-by-scenario
+scaling, energy, crossover, and tractability-frontier claims remain in the deferred multi-GPU
+backlog. Completing the one-GPU flow does not complete the full Paper 2 experiment matrix.
+
 # Core problem
 
 Optimise:
@@ -157,7 +162,7 @@ Candidate routes × scenarios × GPU count, final risk, and mission feasibility.
 4. Candidate screening/refinement funnel.
 5. Cache and warm-start effectiveness.
 6. Multi-spacecraft scaling.
-7. Robust route × scenario scaling.
+7. Robust route × scenario scaling. **Deferred physical multi-GPU result.**
 8. Final mission examples and certified trajectories.
 
 # 10. Mission demonstrations

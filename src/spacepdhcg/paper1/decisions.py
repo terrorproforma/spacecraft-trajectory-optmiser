@@ -11,9 +11,15 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final
 
+from spacepdhcg.campaign_scope import (
+    CampaignScopeError,
+    scope_definition,
+)
+
 from .evidence import ArchivedRun, write_canonical_json
 
 DECISION_SCHEMA_VERSION: Final = "1.0.0"
+SCOPED_DECISION_SCHEMA_VERSION: Final = "1.1.0"
 BOOTSTRAP_SAMPLES: Final = 10_000
 BOOTSTRAP_SEEDS: Final = {
     "H1": 6101,
@@ -23,7 +29,8 @@ BOOTSTRAP_SEEDS: Final = {
     "H5": 6105,
     "H6": 6106,
 }
-OUTCOMES: Final = frozenset({"supported", "rejected", "mixed", "unresolved"})
+SCIENTIFIC_OUTCOMES: Final = frozenset({"supported", "rejected", "mixed", "unresolved"})
+OUTCOMES: Final = SCIENTIFIC_OUTCOMES | {"deferred-not-in-scope"}
 
 
 class DecisionError(ValueError):
@@ -187,7 +194,7 @@ def _record(
     censored: Sequence[str],
     notes: Sequence[str],
 ) -> dict[str, Any]:
-    if outcome not in OUTCOMES:
+    if outcome not in SCIENTIFIC_OUTCOMES:
         raise DecisionError(f"invalid outcome {outcome}")
     run_ids = sorted(
         {
@@ -719,12 +726,27 @@ def validate_decision(record: Mapping[str, Any]) -> None:
         "censored_run_ids",
         "notes",
     }
+    version = record.get("schema_version")
+    if version == SCOPED_DECISION_SCHEMA_VERSION:
+        required.add("campaign_scope_id")
+    elif version != DECISION_SCHEMA_VERSION:
+        raise DecisionError("unsupported decision schema")
     missing, unknown = sorted(required - set(record)), sorted(set(record) - required)
     if missing or unknown:
         raise DecisionError(f"decision fields invalid; missing={missing}, unknown={unknown}")
     hypothesis = record["hypothesis"]
     if hypothesis not in DECIDERS or record["outcome"] not in OUTCOMES:
         raise DecisionError("decision hypothesis/outcome is invalid")
+    if version == SCOPED_DECISION_SCHEMA_VERSION:
+        try:
+            scope = scope_definition(record["campaign_scope_id"])
+        except CampaignScopeError as error:
+            raise DecisionError(str(error)) from error
+        deferred = hypothesis in scope["deferred_hypotheses"]
+        if deferred != (record["outcome"] == "deferred-not-in-scope"):
+            raise DecisionError("decision outcome crosses the declared campaign scope")
+    elif record["outcome"] == "deferred-not-in-scope":
+        raise DecisionError("historical decisions cannot use a scoped deferred outcome")
     if record["bootstrap_seed"] != BOOTSTRAP_SEEDS[hypothesis]:
         raise DecisionError("decision bootstrap seed differs from preregistration")
     if record["bootstrap_samples"] != BOOTSTRAP_SAMPLES:
@@ -738,18 +760,44 @@ def validate_decision(record: Mapping[str, Any]) -> None:
         raise DecisionError("decision confidence interval must have two entries")
 
 
-def build_decisions(runs: Iterable[ArchivedRun], output_directory: str | Path) -> dict[str, Any]:
+def build_decisions(
+    runs: Iterable[ArchivedRun],
+    output_directory: str | Path,
+    *,
+    campaign_scope_id: str | None = None,
+) -> dict[str, Any]:
     ordered = tuple(sorted(runs, key=lambda run: run.run_id))
     output = Path(output_directory)
     output.mkdir(parents=True, exist_ok=True)
+    scope = None if campaign_scope_id is None else scope_definition(campaign_scope_id)
     records = []
     for hypothesis, decider in DECIDERS.items():
         record = decider(ordered)
+        if scope is not None:
+            record["schema_version"] = SCOPED_DECISION_SCHEMA_VERSION
+            record["campaign_scope_id"] = campaign_scope_id
+            if hypothesis in scope["deferred_hypotheses"]:
+                record.update(
+                    {
+                        "outcome": "deferred-not-in-scope",
+                        "input_run_ids": [],
+                        "comparison_coordinates": [],
+                        "point_estimate": None,
+                        "confidence_interval_95": [None, None],
+                        "censored_run_ids": [],
+                        "notes": [
+                            f"{hypothesis} requires physical multi-GPU evidence and is "
+                            f"deferred by {campaign_scope_id}; no scientific decision was made."
+                        ],
+                    }
+                )
         validate_decision(record)
         write_canonical_json(output / f"{hypothesis.lower()}-decision.json", record)
         records.append(record)
     index = {
-        "schema_version": DECISION_SCHEMA_VERSION,
+        "schema_version": (
+            DECISION_SCHEMA_VERSION if campaign_scope_id is None else SCOPED_DECISION_SCHEMA_VERSION
+        ),
         "decisions": [
             {
                 "hypothesis": record["hypothesis"],
@@ -762,5 +810,7 @@ def build_decisions(runs: Iterable[ArchivedRun], output_directory: str | Path) -
             for record in records
         ],
     }
+    if campaign_scope_id is not None:
+        index["campaign_scope_id"] = campaign_scope_id
     write_canonical_json(output / "decision-index.json", index)
     return index
