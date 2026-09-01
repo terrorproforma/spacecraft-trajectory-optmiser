@@ -29,6 +29,19 @@ typedef enum spacepdhcg_cuda_scvx_phase {
     SPACEPDHCG_CUDA_SCVX_POLISH = 3
 } spacepdhcg_cuda_scvx_phase;
 
+typedef enum spacepdhcg_cuda_scvx_policy {
+    SPACEPDHCG_CUDA_SCVX_ADAPTIVE = 0,
+    SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT = 1,
+    SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE = 2,
+    SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH = 3
+} spacepdhcg_cuda_scvx_policy;
+
+typedef enum spacepdhcg_cuda_scvx_trust_action {
+    SPACEPDHCG_CUDA_SCVX_TRUST_RETAIN = 0,
+    SPACEPDHCG_CUDA_SCVX_TRUST_SHRINK = 1,
+    SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND = 2
+} spacepdhcg_cuda_scvx_trust_action;
+
 typedef struct spacepdhcg_cuda_scvx_problem {
     uint32_t abi_version;
     spacepdhcg_cuda_workspace* workspace;
@@ -66,6 +79,16 @@ typedef struct spacepdhcg_cuda_scvx_options {
     double expansion_factor;
     double fixed_inner_tolerance;
     uint64_t fixed_inner_iteration_limit;
+    spacepdhcg_cuda_scvx_policy policy;
+    spacepdhcg_cuda_warm_start_mode warm_start_mode;
+    double adaptive_epsilon_max;
+    double adaptive_epsilon_floor;
+    double adaptive_epsilon_0;
+    double adaptive_coefficient;
+    double adaptive_alpha;
+    double adaptive_gamma;
+    double final_polish_tolerance;
+    uint64_t final_polish_iteration_limit;
 } spacepdhcg_cuda_scvx_options;
 
 typedef struct spacepdhcg_cuda_scvx_iteration {
@@ -90,6 +113,21 @@ typedef struct spacepdhcg_cuda_scvx_iteration {
     int32_t re_solved;
     int32_t scaling_refreshed;
     int32_t recovery_used;
+    double native_primal_residual;
+    double native_dual_residual;
+    double complementarity_residual;
+    double scaling_min;
+    double scaling_max;
+    uint64_t matvecs;
+    uint64_t cone_projections;
+    uint64_t cqp_numeric_fingerprint;
+    uint64_t resolve_numeric_fingerprint;
+    int32_t resolve_fingerprint_match;
+    spacepdhcg_cuda_scvx_trust_action trust_action;
+    spacepdhcg_cuda_warm_start_mode warm_start_mode;
+    spacepdhcg_cuda_recovery_reason recovery_reason;
+    int32_t forcing_satisfied;
+    int32_t final_polish_handoff;
 } spacepdhcg_cuda_scvx_iteration;
 
 typedef struct spacepdhcg_cuda_scvx_result {

@@ -1080,32 +1080,76 @@ spacepdhcg_cuda_status launch_replay(
         : SPACEPDHCG_CUDA_RUNTIME_ERROR;
 }
 
+__device__ unsigned long long mix_numeric_word(
+    unsigned long long value,
+    const unsigned long long index
+) {
+    value ^= index + 0x9e3779b97f4a7c15ULL + (value << 6U) + (value >> 2U);
+    value ^= value >> 30U;
+    value *= 0xbf58476d1ce4e5b9ULL;
+    value ^= value >> 27U;
+    value *= 0x94d049bb133111ebULL;
+    return value ^ (value >> 31U);
+}
+
+__global__ void hash_numeric_kernel(
+    const double* values,
+    const size_t elements,
+    const unsigned long long tag,
+    unsigned long long* fingerprint
+) {
+    unsigned long long local = 0ULL;
+    for (size_t index = blockIdx.x * blockDim.x + threadIdx.x;
+         index < elements;
+         index += blockDim.x * gridDim.x) {
+        local ^= mix_numeric_word(
+            static_cast<unsigned long long>(__double_as_longlong(values[index])),
+            tag ^ static_cast<unsigned long long>(index)
+        );
+    }
+    atomicXor(fingerprint, local);
+}
+
 spacepdhcg_cuda_scvx_phase forcing_phase(
     const double residual,
+    const uint32_t outer_iteration,
+    const spacepdhcg_cuda_scvx_options& policy,
     spacepdhcg_cuda_solve_options* options
 ) {
     options->abi_version = SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
     options->residual_check_frequency = 25U;
+    const double residual_target = policy.adaptive_coefficient
+        * std::pow(std::max(0.0, residual), 1.0 + policy.adaptive_alpha);
+    const double geometric_target = policy.adaptive_epsilon_0
+        * std::pow(policy.adaptive_gamma, static_cast<double>(outer_iteration));
+    const double requested = std::max(
+        policy.adaptive_epsilon_floor,
+        std::min({
+            policy.adaptive_epsilon_max,
+            residual_target,
+            geometric_target,
+        })
+    );
     if (!std::isfinite(residual) || residual > 2.5e-1) {
-        options->optimality_tolerance = 1.0e-2;
-        options->feasibility_tolerance = 1.0e-2;
+        options->optimality_tolerance = std::min(1.0e-2, requested);
+        options->feasibility_tolerance = options->optimality_tolerance;
         options->iteration_limit = 5'000U;
         return SPACEPDHCG_CUDA_SCVX_REPAIR;
     }
     if (residual > 2.0e-2) {
-        options->optimality_tolerance = 2.0e-3;
-        options->feasibility_tolerance = 2.0e-3;
+        options->optimality_tolerance = std::min(2.0e-3, requested);
+        options->feasibility_tolerance = options->optimality_tolerance;
         options->iteration_limit = 25'000U;
         return SPACEPDHCG_CUDA_SCVX_PROGRESS;
     }
     if (residual > 5.0e-4) {
-        options->optimality_tolerance = 1.0e-5;
-        options->feasibility_tolerance = 1.0e-5;
+        options->optimality_tolerance = std::min(1.0e-5, requested);
+        options->feasibility_tolerance = options->optimality_tolerance;
         options->iteration_limit = 100'000U;
         return SPACEPDHCG_CUDA_SCVX_REFINEMENT;
     }
-    options->optimality_tolerance = 1.0e-6;
-    options->feasibility_tolerance = 1.0e-6;
+    options->optimality_tolerance = requested;
+    options->feasibility_tolerance = requested;
     options->iteration_limit = 1'000'000U;
     return SPACEPDHCG_CUDA_SCVX_POLISH;
 }
@@ -1130,6 +1174,8 @@ struct spacepdhcg_cuda_scvx_driver {
     double* checkpoint{nullptr};
     ScvxMetrics* device_metrics{nullptr};
     ScvxMetrics* host_metrics{nullptr};
+    unsigned long long* device_numeric_fingerprint{nullptr};
+    unsigned long long* host_numeric_fingerprint{nullptr};
     double* primal{nullptr};
     size_t checkpoint_elements{0U};
     cudaEvent_t timer_start{nullptr};
@@ -1152,11 +1198,13 @@ void destroy_driver_storage(spacepdhcg_cuda_scvx_driver* driver) {
     static_cast<void>(cudaEventDestroy(driver->timer_start));
     static_cast<void>(cudaEventDestroy(driver->timer_stop));
     static_cast<void>(cudaFreeHost(driver->host_metrics));
+    static_cast<void>(cudaFreeHost(driver->host_numeric_fingerprint));
     static_cast<void>(cudaFree(driver->candidate_states));
     static_cast<void>(cudaFree(driver->candidate_controls));
     static_cast<void>(cudaFree(driver->replay_states));
     static_cast<void>(cudaFree(driver->checkpoint));
     static_cast<void>(cudaFree(driver->device_metrics));
+    static_cast<void>(cudaFree(driver->device_numeric_fingerprint));
 }
 
 spacepdhcg_cuda_status allocate_driver(
@@ -1274,6 +1322,62 @@ spacepdhcg_cuda_status collect_metrics(
     return time_stop(driver, stream, d2h_seconds);
 }
 
+spacepdhcg_cuda_status collect_numeric_fingerprint(
+    spacepdhcg_cuda_scvx_driver* driver,
+    const cudaStream_t stream,
+    uint64_t* fingerprint
+) {
+    if (cudaMemsetAsync(
+            driver->device_numeric_fingerprint,
+            0,
+            sizeof(unsigned long long),
+            stream
+        ) != cudaSuccess) {
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    }
+    const spacepdhcg_accelerator_buffer_view views[] = {
+        driver->problem.numeric.quadratic,
+        driver->problem.numeric.scalar_constraint,
+        driver->problem.numeric.affine_cone,
+        driver->problem.numeric.linear_objective,
+        driver->problem.numeric.scalar_lower,
+        driver->problem.numeric.scalar_upper,
+        driver->problem.numeric.affine_offset,
+        driver->problem.numeric.variable_lower,
+        driver->problem.numeric.variable_upper,
+    };
+    for (size_t view_index = 0U; view_index < std::size(views); ++view_index) {
+        if (views[view_index].elements == 0U) {
+            continue;
+        }
+        const auto blocks = static_cast<unsigned int>(std::min<size_t>(
+            256U,
+            (views[view_index].elements + 255U) / 256U
+        ));
+        hash_numeric_kernel<<<blocks, 256, 0, stream>>>(
+            view_pointer<const double>(views[view_index]),
+            views[view_index].elements,
+            0x100000001b3ULL * static_cast<unsigned long long>(view_index + 1U),
+            driver->device_numeric_fingerprint
+        );
+    }
+    if (cudaGetLastError() != cudaSuccess
+        || cudaMemcpyAsync(
+            driver->host_numeric_fingerprint,
+            driver->device_numeric_fingerprint,
+            sizeof(unsigned long long),
+            cudaMemcpyDeviceToHost,
+            stream
+        ) != cudaSuccess
+        || cudaStreamSynchronize(stream) != cudaSuccess) {
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    }
+    ++driver->d2h_copy_count;
+    driver->d2h_bytes += sizeof(unsigned long long);
+    *fingerprint = static_cast<uint64_t>(*driver->host_numeric_fingerprint);
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
 }  // namespace
 
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
@@ -1306,6 +1410,31 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
     }
     result->problem = *problem;
     result->options = *options;
+    if (!(result->options.adaptive_epsilon_max > 0.0)) {
+        result->options.adaptive_epsilon_max = 1.0e-3;
+    }
+    if (!(result->options.adaptive_epsilon_floor > 0.0)) {
+        result->options.adaptive_epsilon_floor = 1.0e-8;
+    }
+    if (!(result->options.adaptive_epsilon_0 > 0.0)) {
+        result->options.adaptive_epsilon_0 = 1.0e-3;
+    }
+    if (!(result->options.adaptive_coefficient > 0.0)) {
+        result->options.adaptive_coefficient = 0.2;
+    }
+    if (!(result->options.adaptive_alpha > 0.0)) {
+        result->options.adaptive_alpha = 0.5;
+    }
+    if (!(result->options.adaptive_gamma > 0.0)
+        || result->options.adaptive_gamma >= 1.0) {
+        result->options.adaptive_gamma = 0.6;
+    }
+    if (!(result->options.final_polish_tolerance > 0.0)) {
+        result->options.final_polish_tolerance = 1.0e-8;
+    }
+    if (result->options.final_polish_iteration_limit == 0U) {
+        result->options.final_polish_iteration_limit = 1'000'000U;
+    }
     spacepdhcg_cuda_pointer_snapshot pointers{};
     auto api_status = spacepdhcg_cuda_workspace_pointer_snapshot(
         problem->workspace,
@@ -1342,6 +1471,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
          state_elements * sizeof(double)},
         {reinterpret_cast<void**>(&result->checkpoint), checkpoint_bytes},
         {reinterpret_cast<void**>(&result->device_metrics), sizeof(ScvxMetrics)},
+        {reinterpret_cast<void**>(&result->device_numeric_fingerprint),
+         sizeof(unsigned long long)},
     };
     for (const auto& request : requests) {
         api_status = allocate_driver(
@@ -1369,6 +1500,20 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
     }
     ++result->allocation_count;
     result->allocation_bytes += sizeof(ScvxMetrics);
+    cuda_status = cudaHostAlloc(
+        reinterpret_cast<void**>(&result->host_numeric_fingerprint),
+        sizeof(unsigned long long),
+        cudaHostAllocPortable
+    );
+    if (cuda_status != cudaSuccess) {
+        destroy_driver_storage(result);
+        delete result;
+        return cuda_status == cudaErrorMemoryAllocation
+            ? SPACEPDHCG_CUDA_OUT_OF_MEMORY
+            : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    }
+    ++result->allocation_count;
+    result->allocation_bytes += sizeof(unsigned long long);
     cuda_status = cudaEventCreate(&result->timer_start);
     if (cuda_status == cudaSuccess) {
         cuda_status = cudaEventCreate(&result->timer_stop);
@@ -1456,6 +1601,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         return api_status;
     }
     ScvxMetrics current = *driver->host_metrics;
+    const double initial_outer_residual = maximum_outer_residual(current);
     double trust_radius = driver->options.initial_trust_radius;
     spacepdhcg_cuda_diagnostics last_diagnostics{};
 
@@ -1537,10 +1683,20 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
             return api_status;
         }
+        uint64_t numeric_fingerprint = 0U;
+        api_status = collect_numeric_fingerprint(
+            driver,
+            native,
+            &numeric_fingerprint
+        );
+        if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+            result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
+            return api_status;
+        }
         if (outer > 0U) {
             api_status = spacepdhcg_cuda_workspace_warm_start_async(
                 driver->problem.workspace,
-                SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,
+                driver->options.warm_start_mode,
                 nullptr,
                 stream
             );
@@ -1557,9 +1713,20 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         spacepdhcg_cuda_solve_options solve_options{};
         const auto phase = forcing_phase(
             maximum_outer_residual(current),
+            outer,
+            driver->options,
             &solve_options
         );
-        if (driver->options.fixed_inner_tolerance > 0.0) {
+        if (driver->options.policy == SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT) {
+            solve_options.optimality_tolerance = 1.0e-8;
+            solve_options.feasibility_tolerance = 1.0e-8;
+            solve_options.iteration_limit = 1'000'000U;
+        } else if (driver->options.policy
+                   == SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE) {
+            solve_options.optimality_tolerance = 1.0e-3;
+            solve_options.feasibility_tolerance = 1.0e-3;
+            solve_options.iteration_limit = 25'000U;
+        } else if (driver->options.fixed_inner_tolerance > 0.0) {
             solve_options.optimality_tolerance =
                 driver->options.fixed_inner_tolerance;
             solve_options.feasibility_tolerance =
@@ -1653,12 +1820,30 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                  && ratio >= driver->options.acceptance_threshold)
                 || restoration);
         bool re_solved = false;
+        uint64_t resolve_numeric_fingerprint = numeric_fingerprint;
+        bool resolve_fingerprint_match = true;
         if (!accepted
             && last_diagnostics.natural_residual_inf
                 > 1.5 * solve_options.optimality_tolerance) {
             for (uint32_t resolve = 0;
                  resolve < driver->options.maximum_resolves_per_iteration;
                  ++resolve) {
+                api_status = collect_numeric_fingerprint(
+                    driver,
+                    native,
+                    &resolve_numeric_fingerprint
+                );
+                if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
+                    result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
+                    return api_status;
+                }
+                resolve_fingerprint_match =
+                    resolve_fingerprint_match
+                    && resolve_numeric_fingerprint == numeric_fingerprint;
+                if (!resolve_fingerprint_match) {
+                    result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
+                    return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+                }
                 solve_options.optimality_tolerance = std::max(
                     1.0e-8,
                     0.1 * solve_options.optimality_tolerance
@@ -1712,6 +1897,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             }
         }
         const double radius_before = trust_radius;
+        auto trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_RETAIN;
         if (accepted) {
             cuda_status = cudaMemcpyAsync(
                 view_pointer<double>(driver->problem.reference_states),
@@ -1744,6 +1930,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     driver->options.maximum_trust_radius,
                     driver->options.expansion_factor * trust_radius
                 );
+                trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND;
             }
         } else {
             ++result->rejected_steps;
@@ -1751,6 +1938,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 driver->options.minimum_trust_radius,
                 driver->options.shrink_factor * trust_radius
             );
+            trust_action = SPACEPDHCG_CUDA_SCVX_TRUST_SHRINK;
         }
         result->acceptance_seconds += std::chrono::duration<double>(
             std::chrono::steady_clock::now() - acceptance_started
@@ -1777,13 +1965,42 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             re_solved ? 1 : 0,
             last_diagnostics.scaling_refreshed,
             last_diagnostics.recovery_count > 0U ? 1 : 0,
+            last_diagnostics.relative_primal_residual,
+            last_diagnostics.relative_dual_residual,
+            last_diagnostics.complementarity_inf,
+            last_diagnostics.scaling_min,
+            last_diagnostics.scaling_max,
+            6U * (
+                last_diagnostics.iterations
+                + last_diagnostics.recovery_iterations
+            ),
+            2U * last_diagnostics.iterations
+                + last_diagnostics.recovery_iterations,
+            numeric_fingerprint,
+            resolve_numeric_fingerprint,
+            resolve_fingerprint_match ? 1 : 0,
+            trust_action,
+            outer == 0U
+                ? SPACEPDHCG_CUDA_WARM_START_NONE
+                : driver->options.warm_start_mode,
+            last_diagnostics.recovery_outcome_reason,
+            last_diagnostics.natural_residual_inf
+                    <= 1.5 * solve_options.optimality_tolerance
+                ? 1
+                : 0,
+            driver->options.policy == SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH
+                    && phase == SPACEPDHCG_CUDA_SCVX_POLISH
+                ? 1
+                : 0,
         };
         result->outer_iterations = outer + 1U;
         if (outer + 1U >= driver->options.minimum_outer_iterations
             && maximum_outer_residual(current)
                 <= driver->options.convergence_tolerance
-            && (current.step <= driver->options.step_tolerance
-                || result->accepted_steps == 0U)) {
+            && current.step <= driver->options.step_tolerance
+            && (result->accepted_steps > 0U
+                || initial_outer_residual
+                    <= driver->options.convergence_tolerance)) {
             result->status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
             break;
         }

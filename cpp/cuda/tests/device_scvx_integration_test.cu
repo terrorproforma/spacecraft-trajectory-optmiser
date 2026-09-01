@@ -43,7 +43,15 @@ bool repeated_tight_mode = false;
 bool tight_all_mode = false;
 bool tight_pd6_mode = false;
 bool production_driver_mode = false;
+bool g4_sample_mode = false;
 std::size_t h1_intervals = 0U;
+std::size_t g4_intervals = 0U;
+std::string g4_family;
+std::string g4_policy{"adaptive"};
+spacepdhcg_cuda_warm_start_mode g4_warm_start =
+    SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED;
+double g4_quality_tolerance = 1.0e-6;
+double g4_dispersion = 0.0;
 std::uint32_t production_outer_iterations = 1U;
 double cuda_startup_seconds = 0.0;
 int benchmark_variables = 0;
@@ -449,6 +457,7 @@ IntegrationResult run_resident_sequence(
     const core::NumericValues& values,
     const std::vector<double>& reference_states,
     const std::vector<double>& reference_controls,
+    const std::vector<double>& target_state,
     const DynamicsMaps& maps,
     const std::size_t intervals,
     const std::size_t dynamics_row_start,
@@ -489,13 +498,7 @@ IntegrationResult run_resident_sequence(
     state_variables.upload(maps.state_variables, problem.stream);
     control_variables.upload(maps.control_variables, problem.stream);
     virtual_variables.upload(maps.virtual_variables, problem.stream);
-    target.upload(
-        std::vector<double>(
-            reference_states.end() - static_cast<std::ptrdiff_t>(StateDimension),
-            reference_states.end()
-        ),
-        problem.stream
-    );
+    target.upload(target_state, problem.stream);
     const auto rw64 = [](auto& buffer) {
         return test::view(
             buffer.get(), buffer.size(), false, SPACEPDHCG_SCALAR_FLOAT64,
@@ -580,7 +583,7 @@ IntegrationResult run_resident_sequence(
             rw64(controls),
             ro64(target),
         };
-        const spacepdhcg_cuda_scvx_options outer_options{
+        spacepdhcg_cuda_scvx_options outer_options{
             SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
             production_outer_iterations,
             production_outer_iterations,
@@ -598,7 +601,30 @@ IntegrationResult run_resident_sequence(
             1.8,
             sanitizer_mode ? 1.0e-2 : 0.0,
             sanitizer_mode ? 5'000U : 0U,
+            SPACEPDHCG_CUDA_SCVX_ADAPTIVE,
+            SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,
+            1.0e-3,
+            1.0e-8,
+            1.0e-3,
+            0.2,
+            0.5,
+            0.6,
+            1.0e-8,
+            1'000'000U,
         };
+        if (g4_sample_mode) {
+            outer_options.warm_start_mode = g4_warm_start;
+            outer_options.convergence_tolerance = g4_quality_tolerance;
+            if (g4_policy == "fixed-tight") {
+                outer_options.policy = SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT;
+            } else if (g4_policy == "fixed-loose") {
+                outer_options.policy = SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE;
+            } else if (g4_policy == "adaptive+polish") {
+                outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH;
+            } else {
+                outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE;
+            }
+        }
         spacepdhcg_cuda_scvx_driver* driver = nullptr;
         test::status_require(
             spacepdhcg_cuda_scvx_driver_create(
@@ -624,18 +650,20 @@ IntegrationResult run_resident_sequence(
         );
         outer.topology_seconds = topology_seconds;
         outer.workspace_create_seconds = workspace_create_seconds;
-        test::require(
-            outer.status == SPACEPDHCG_CUDA_SCVX_CONVERGED,
-            "production outer driver did not converge"
-        );
         const double quality_tolerance = sanitizer_mode ? 1.0e-2 : 1.0e-6;
-        test::require(
-            outer.canonical_residual <= quality_tolerance
-                && outer.dynamics_defect <= quality_tolerance
-                && outer.path_violation <= quality_tolerance
-                && outer.terminal_residual <= quality_tolerance,
-            "production outer driver failed final quality"
-        );
+        if (!g4_sample_mode) {
+            test::require(
+                outer.status == SPACEPDHCG_CUDA_SCVX_CONVERGED,
+                "production outer driver did not converge"
+            );
+            test::require(
+                outer.canonical_residual <= quality_tolerance
+                    && outer.dynamics_defect <= quality_tolerance
+                    && outer.path_violation <= quality_tolerance
+                    && outer.terminal_residual <= quality_tolerance,
+                "production outer driver failed final quality"
+            );
+        }
         test::require(
             outer.topology_allocation_count_after_create == 0U
                 && outer.topology_index_copy_count_after_create == 0U
@@ -657,10 +685,12 @@ IntegrationResult run_resident_sequence(
                 std::abs(final_controls[index] - reference_controls[index])
             );
         }
-        test::require(
-            parity_maximum <= 1.0e-9,
-            "production CPU/GPU trajectory parity failed"
-        );
+        if (!g4_sample_mode) {
+            test::require(
+                parity_maximum <= 1.0e-9,
+                "production CPU/GPU trajectory parity failed"
+            );
+        }
         test::status_require(
             spacepdhcg_cuda_workspace_diagnostics(workspace, &diagnostics),
             "production outer diagnostics"
@@ -703,6 +733,108 @@ IntegrationResult run_resident_sequence(
                 outer.topology_index_copy_count_after_create
             )
         );
+        if (g4_sample_mode) {
+            for (std::size_t index = 0U; index < outer.outer_iterations; ++index) {
+                const auto& record = records[index];
+                std::printf(
+                    "{\"case\":\"g4_iteration\",\"family\":\"%s\","
+                    "\"policy\":\"%s\",\"intervals\":%zu,\"outer\":%u,"
+                    "\"phase\":%d,\"requested\":%.17g,\"achieved\":%.17g,"
+                    "\"native_primal\":%.17g,\"native_dual\":%.17g,"
+                    "\"complementarity\":%.17g,\"inner_iterations\":%llu,"
+                    "\"matvecs\":%llu,\"cone_projections\":%llu,"
+                    "\"re_solved\":%d,\"cqp_fingerprint\":\"%016llx\","
+                    "\"resolve_fingerprint\":\"%016llx\","
+                    "\"resolve_fingerprint_match\":%d,\"trust_action\":%d,"
+                    "\"trust_before\":%.17g,\"trust_after\":%.17g,"
+                    "\"predicted\":%.17g,\"actual\":%.17g,\"ratio\":%.17g,"
+                    "\"scaling_refreshed\":%d,\"scaling_min\":%.17g,"
+                    "\"scaling_max\":%.17g,\"warm_start\":%d,"
+                    "\"recovery_mode\":%d,\"forcing_satisfied\":%d,"
+                    "\"final_polish_handoff\":%d,\"accepted\":%d}\n",
+                    g4_family.c_str(),
+                    g4_policy.c_str(),
+                    intervals,
+                    record.outer_iteration,
+                    static_cast<int>(record.phase),
+                    record.requested_tolerance,
+                    record.achieved_residual,
+                    record.native_primal_residual,
+                    record.native_dual_residual,
+                    record.complementarity_residual,
+                    static_cast<unsigned long long>(record.inner_iterations),
+                    static_cast<unsigned long long>(record.matvecs),
+                    static_cast<unsigned long long>(record.cone_projections),
+                    record.re_solved,
+                    static_cast<unsigned long long>(
+                        record.cqp_numeric_fingerprint
+                    ),
+                    static_cast<unsigned long long>(
+                        record.resolve_numeric_fingerprint
+                    ),
+                    record.resolve_fingerprint_match,
+                    static_cast<int>(record.trust_action),
+                    record.trust_radius_before,
+                    record.trust_radius_after,
+                    record.predicted_reduction,
+                    record.actual_reduction,
+                    record.reduction_ratio,
+                    record.scaling_refreshed,
+                    record.scaling_min,
+                    record.scaling_max,
+                    static_cast<int>(record.warm_start_mode),
+                    static_cast<int>(record.recovery_reason),
+                    record.forcing_satisfied,
+                    record.final_polish_handoff,
+                    record.accepted
+                );
+            }
+            const bool qualified =
+                outer.canonical_residual <= g4_quality_tolerance
+                && outer.dynamics_defect <= g4_quality_tolerance
+                && outer.path_violation <= g4_quality_tolerance
+                && outer.terminal_residual <= g4_quality_tolerance
+                && outer.virtual_control <= g4_quality_tolerance;
+            std::printf(
+                "{\"case\":\"g4_sample\",\"family\":\"%s\","
+                "\"policy\":\"%s\",\"intervals\":%zu,\"status\":%d,"
+                "\"qualified\":%s,\"quality_tolerance\":%.17g,"
+                "\"canonical_residual\":%.17g,\"objective\":%.17g,"
+                "\"dynamics\":%.17g,\"path\":%.17g,\"terminal\":%.17g,"
+                "\"virtual\":%.17g,\"trajectory_difference\":%.17g,"
+                "\"cqp_seconds\":%.17g,\"scvx_seconds\":%.17g,"
+                "\"recovery_seconds\":%.17g,\"recovery_iterations\":%llu,"
+                "\"inner_iterations\":%llu,\"h2d_bytes\":%llu,"
+                "\"d2h_bytes\":%llu,\"peak_device_bytes\":%llu,"
+                "\"topology_allocations_after_create\":%llu,"
+                "\"hidden_cpu_fallback\":%d}\n",
+                g4_family.c_str(),
+                g4_policy.c_str(),
+                intervals,
+                static_cast<int>(outer.status),
+                qualified ? "true" : "false",
+                g4_quality_tolerance,
+                outer.canonical_residual,
+                outer.objective,
+                outer.dynamics_defect,
+                outer.path_violation,
+                outer.terminal_residual,
+                outer.virtual_control,
+                parity_maximum,
+                outer.cqp_total_seconds,
+                outer.scvx_total_seconds,
+                outer.recovery_seconds,
+                static_cast<unsigned long long>(outer.recovery_iterations),
+                static_cast<unsigned long long>(outer.inner_iterations),
+                static_cast<unsigned long long>(outer.h2d_bytes),
+                static_cast<unsigned long long>(outer.d2h_bytes),
+                static_cast<unsigned long long>(diagnostics.peak_active_bytes),
+                static_cast<unsigned long long>(
+                    outer.topology_allocation_count_after_create
+                ),
+                outer.hidden_cpu_fallback
+            );
+        }
         test::status_require(
             spacepdhcg_cuda_scvx_driver_destroy(&driver),
             "production outer driver destroy"
@@ -1012,6 +1144,7 @@ IntegrationResult run_hcw() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(target.begin(), target.end()),
         maps,
         config.intervals,
         layout.dynamics_row(),
@@ -1021,7 +1154,7 @@ IntegrationResult run_hcw() {
 
 IntegrationResult run_pd3() {
     transcription::PoweredDescentScvxConfig config;
-    config.intervals = 2U;
+    config.intervals = g4_intervals > 0U ? g4_intervals : 2U;
     config.step_seconds = 0.25;
     config.discretisation = transcription::DiscretisationMethod::rk4_variational;
     config.virtual_l1_weight = 10.0;
@@ -1030,19 +1163,27 @@ IntegrationResult run_pd3() {
     transcription::PoweredDescent3DofSubproblem subproblem(
         dynamics::PoweredDescent3DofModel{}, config
     );
-    const dynamics::PoweredDescentState initial{
+    dynamics::PoweredDescentState initial{
         0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 2'000.0
     };
-    const std::vector<dynamics::PoweredDescentControl> controls{
-        {0.0, 0.0, 7'422.0, 7'422.0},
-        {0.0, 0.0, 7'421.5, 7'421.5},
-    };
+    std::vector<dynamics::PoweredDescentControl> controls(config.intervals);
+    for (std::size_t interval = 0U; interval < config.intervals; ++interval) {
+        const double thrust = 7'422.0 - 0.5 * static_cast<double>(interval);
+        controls[interval] = {0.0, 0.0, thrust, thrust};
+    }
+    const auto nominal_states =
+        subproblem.model().rollout(initial, controls, config.step_seconds);
+    if (g4_sample_mode) {
+        initial[0] += 10.0 * g4_dispersion;
+        initial[2] += 100.0 * g4_dispersion;
+        initial[3] -= 5.0 * g4_dispersion;
+    }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
     const std::array<double, 3U> target_position{
-        states.back()[0], states.back()[1], states.back()[2]
+        nominal_states.back()[0], nominal_states.back()[1], nominal_states.back()[2]
     };
     const std::array<double, 3U> target_velocity{
-        states.back()[3], states.back()[4], states.back()[5]
+        nominal_states.back()[3], nominal_states.back()[4], nominal_states.back()[5]
     };
     const auto values = subproblem.values(
         states, controls, initial, target_position, target_velocity
@@ -1064,6 +1205,7 @@ IntegrationResult run_pd3() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(nominal_states.back().begin(), nominal_states.back().end()),
         maps,
         config.intervals,
         layout.dynamics_rows().start,
@@ -1075,7 +1217,7 @@ IntegrationResult run_pd3() {
 
 IntegrationResult run_low_thrust() {
     transcription::LowThrustScvxConfig config;
-    config.intervals = 2U;
+    config.intervals = g4_intervals > 0U ? g4_intervals : 2U;
     config.step_seconds = 1.0;
     config.discretisation = transcription::DiscretisationMethod::rk4_variational;
     config.virtual_l1_weight = 10.0;
@@ -1084,14 +1226,23 @@ IntegrationResult run_low_thrust() {
     transcription::LowThrustSubproblem subproblem(
         dynamics::LowThrustTwoBodyModel{}, config
     );
-    const dynamics::LowThrustState initial{
+    dynamics::LowThrustState initial{
         7'000.0, 0.0, 0.0, 0.0, 7.546, 0.0, 500.0
     };
-    const std::vector<dynamics::LowThrustControl> controls{
-        {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}
-    };
+    const std::vector<dynamics::LowThrustControl> controls(
+        config.intervals,
+        {0.0, 0.0, 0.0, 0.0}
+    );
+    const auto nominal_states =
+        subproblem.model().rollout(initial, controls, config.step_seconds);
+    if (g4_sample_mode) {
+        initial[0] *= 1.0 + g4_dispersion;
+        initial[4] *= 1.0 - 0.5 * g4_dispersion;
+    }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
-    const auto values = subproblem.values(states, controls, initial, states.back());
+    const auto values = subproblem.values(
+        states, controls, initial, nominal_states.back()
+    );
     const auto& layout = subproblem.layout();
     const auto maps = make_maps(
         subproblem.structure().scalar_constraint,
@@ -1109,6 +1260,7 @@ IntegrationResult run_low_thrust() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(nominal_states.back().begin(), nominal_states.back().end()),
         maps,
         config.intervals,
         layout.dynamics_rows().start,
@@ -1118,7 +1270,7 @@ IntegrationResult run_low_thrust() {
 
 IntegrationResult run_pd6() {
     transcription::PoweredDescent6DofScvxConfig config;
-    config.intervals = 2U;
+    config.intervals = g4_intervals > 0U ? g4_intervals : 2U;
     config.step_seconds = 0.05;
     config.discretisation = transcription::DiscretisationMethod::rk4_variational;
     config.virtual_l1_weight = 10.0;
@@ -1127,16 +1279,29 @@ IntegrationResult run_pd6() {
     transcription::PoweredDescent6DofSubproblem subproblem(
         dynamics::PoweredDescent6DofModel{}, config
     );
-    const dynamics::PoweredDescent6DofState initial{
+    dynamics::PoweredDescent6DofState initial{
         0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 2'000.0,
     };
-    const std::vector<dynamics::PoweredDescent6DofControl> controls{
-        {0.0, 0.0, 7'422.0, 0.0, 0.0, 0.0, 7'422.0},
-        {0.0, 0.0, 7'421.8, 0.0, 0.0, 0.0, 7'421.8},
-    };
+    std::vector<dynamics::PoweredDescent6DofControl> controls(config.intervals);
+    for (std::size_t interval = 0U; interval < config.intervals; ++interval) {
+        const double thrust = 7'422.0 - 0.2 * static_cast<double>(interval);
+        controls[interval] = {
+            0.0, 0.0, thrust, 0.0, 0.0, 0.0, thrust
+        };
+    }
+    const auto nominal_states =
+        subproblem.model().rollout(initial, controls, config.step_seconds);
+    if (g4_sample_mode) {
+        initial[0] += 10.0 * g4_dispersion;
+        initial[2] += 100.0 * g4_dispersion;
+        initial[7] += g4_dispersion;
+        initial[10] += 0.1 * g4_dispersion;
+    }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
-    const auto values = subproblem.values(states, controls, initial, states.back());
+    const auto values = subproblem.values(
+        states, controls, initial, nominal_states.back()
+    );
     const auto& layout = subproblem.layout();
     const auto maps = make_maps(
         subproblem.structure().scalar_constraint,
@@ -1154,6 +1319,7 @@ IntegrationResult run_pd6() {
         values,
         flatten_states(states, config.intervals),
         flatten_controls(controls),
+        std::vector<double>(nominal_states.back().begin(), nominal_states.back().end()),
         maps,
         config.intervals,
         layout.dynamics_rows().start,
@@ -1187,7 +1353,32 @@ int main(const int argc, char** argv) {
     production_driver_mode =
         mode == "--production-outer"
         || mode == "--production-outer-sanitizer"
-        || mode == "--h1-hcw";
+        || mode == "--h1-hcw"
+        || mode == "--g4-sample";
+    if (mode == "--g4-sample") {
+        test::require(
+            argc == 9,
+            "G4 mode requires family intervals policy warm quality outer-iterations dispersion"
+        );
+        g4_sample_mode = true;
+        g4_family = argv[2];
+        g4_intervals = std::stoull(argv[3]);
+        g4_policy = argv[4];
+        const std::string_view warm = argv[5];
+        if (warm == "cold") {
+            g4_warm_start = SPACEPDHCG_CUDA_WARM_START_NONE;
+        } else if (warm == "primal") {
+            g4_warm_start = SPACEPDHCG_CUDA_WARM_START_PRIMAL;
+        } else if (warm == "primal_dual") {
+            g4_warm_start = SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL;
+        } else {
+            test::require(false, "unknown G4 warm-start mode");
+        }
+        g4_quality_tolerance = std::stod(argv[6]);
+        production_outer_iterations =
+            static_cast<std::uint32_t>(std::stoul(argv[7]));
+        g4_dispersion = std::stod(argv[8]);
+    }
     if (mode == "--h1-hcw") {
         test::require(argc == 4, "H1 mode requires intervals and repeats");
         h1_intervals = std::stoull(argv[2]);
@@ -1219,6 +1410,18 @@ int main(const int argc, char** argv) {
         return 0;
     }
     if (production_driver_mode) {
+        if (g4_sample_mode) {
+            if (g4_family == "P1-C-pd3") {
+                static_cast<void>(run_pd3());
+            } else if (g4_family == "P1-D-pd6") {
+                static_cast<void>(run_pd6());
+            } else if (g4_family == "P1-E-low-thrust") {
+                static_cast<void>(run_low_thrust());
+            } else {
+                test::require(false, "unknown G4 family");
+            }
+            return 0;
+        }
         const auto hcw = run_hcw();
         if (mode == "--h1-hcw") {
             const auto& timing = hcw.outer;
