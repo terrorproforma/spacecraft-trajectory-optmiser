@@ -253,3 +253,40 @@ Use this file as persistent, repo-local execution memory.
   `dispersion=0.01` is not defined for P1-E and produced an unreachable 70.8 km return in 100 s.
 - `device_scvx.cu` and its integration test are shared cherry-pick surfaces with P1-C; resolve
   additively, retaining P1-C solver work and P1-E initial-state replay/path inventory changes.
+
+### 2026-09-01 21:00 AEST - P1-D displaced-reference qualification
+
+#### Task Summary
+
+- Corrected the P1-D runtime coordinate to the frozen Cartesian attitude/rate pair and removed the
+  unrelated position/altitude perturbation.
+- Added complete independent P1-D path inventory, final-reference CPU/device coefficient parity,
+  and a two-iteration device warm-state/path audit.
+- Fixed the shared outer driver to retain device warm state without passing a null external iterate
+  payload and to run independent residual kernels after every initial/refined solve.
+
+#### Mistakes And Fixes
+
+- `[prior implementation]` Added a quaternion component and then let rollout normalise only the
+  reference copy. The initial boundary remained non-unit and conflicted with the node-zero
+  quaternion tangent equality. Construct the unit quaternion from the frozen angle before rollout.
+- `[prior implementation]` Collapsed two frozen P1-D axes into one generic dispersion, scaling rate
+  by 0.1 and adding position offsets not present in the preregistered matrix.
+- `[self]` First inserted the boundary/reference assertion in the low-thrust fixture because of a
+  repeated rollout snippet. Diff review caught it and moved it into P1-D before validation.
+
+#### What Worked
+
+- Every final P1-D `Q/A/F/c/l/u/bK` and variable-bound vector matches the CPU transcription within
+  `5e-12`; topology is unchanged under displaced references, trust changes, and penalty changes.
+- Injected pointing violation `5.7735026918962581e-2` agrees between CUDA and independent CPU
+  replay; two outer iterations retain the requested primal-dual warm-state semantics.
+- The corrected frozen `(attitude=0.05 rad, angular-rate=0.05)` sample has exact CPU/GPU replay and
+  complete path inventory, but remains unqualified at canonical `1.283289053981207e-2`, terminal
+  `5e-2`, and zero accepted steps.
+
+#### Follow-Ups / Risks
+
+- Fixed-tight P1-D recovery triggers but exhausts and rolls back; no recovery is falsely committed.
+- The remaining qualification blocker is solver/CQP accuracy and acceptance, not the displaced
+  coordinate construction. Do not start measured G4 timing or energy work.

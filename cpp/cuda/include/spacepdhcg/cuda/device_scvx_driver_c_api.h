@@ -59,6 +59,11 @@ typedef struct spacepdhcg_cuda_scvx_numeric_update {
     double control_trust_scales[7];
     double fuel_weight;
     double virtual_l1_weight;
+    double maximum_thrust;
+    double maximum_torque;
+    double maximum_angular_rate;
+    double tilt_cosine;
+    double glide_slope_tangent;
 } spacepdhcg_cuda_scvx_numeric_update;
 
 typedef struct spacepdhcg_cuda_scvx_problem {

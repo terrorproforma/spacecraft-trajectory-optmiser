@@ -96,8 +96,80 @@ int main() {
     }
     const auto diagnostics = model.path_diagnostics(states, controls);
     if (diagnostics.quaternion_norm_error > 1.0e-8 || diagnostics.torque > 1.0e-9
+        || diagnostics.pointing > 1.0e-9 || diagnostics.glide_slope > 1.0e-9
         || diagnostics.throttle_upper > 1.0e-9) {
         return 4;
+    }
+    auto violated_states = states;
+    auto violated_controls = controls;
+    violated_states[3U][0U] = 200.0;
+    violated_states[3U][2U] = 1.0;
+    violated_controls[4U][2U] = 0.0;
+    violated_controls[4U][6U] = 1'000.0;
+    const auto violations = model.path_diagnostics(
+        violated_states,
+        violated_controls
+    );
+    if (violations.glide_slope < 190.0 || violations.pointing < 800.0) {
+        return 5;
+    }
+
+    const PoweredDescent6DofState qualification_initial{
+        0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 2'000.0,
+    };
+    const PoweredDescent6DofControl qualification_control{
+        0.0, 0.0, 7'422.0, 0.0, 0.0, 0.0, 7'422.0,
+    };
+    PoweredDescent6DofState displaced = qualification_initial;
+    constexpr double attitude_dispersion = 0.05;
+    constexpr double rate_dispersion = 0.05;
+    displaced[6U] = std::cos(0.5 * attitude_dispersion);
+    displaced[7U] = std::sin(0.5 * attitude_dispersion);
+    displaced[8U] = 0.0;
+    displaced[9U] = 0.0;
+    displaced[10U] = rate_dispersion;
+    displaced[11U] = 0.0;
+    displaced[12U] = 0.0;
+    std::vector<PoweredDescent6DofControl> reference_controls(
+        20U,
+        qualification_control
+    );
+    auto half_step_controls = reference_controls;
+    auto full_step_controls = reference_controls;
+    for (std::size_t interval = 0U; interval < reference_controls.size(); ++interval) {
+        const double full_torque = interval < 10U ? -875.0 : 625.0;
+        half_step_controls[interval][3U] = 0.5 * full_torque;
+        full_step_controls[interval][3U] = full_torque;
+    }
+    const auto target = model.rollout(
+        qualification_initial,
+        reference_controls,
+        0.05
+    ).back();
+    const auto reference_final =
+        model.rollout(displaced, reference_controls, 0.05).back();
+    const auto half_step_final =
+        model.rollout(displaced, half_step_controls, 0.05).back();
+    const auto full_step_final =
+        model.rollout(displaced, full_step_controls, 0.05).back();
+    const auto terminal_error = [&target](const PoweredDescent6DofState& value) {
+        double maximum = 0.0;
+        for (std::size_t component = 0U; component < 13U; ++component) {
+            maximum = std::max(
+                maximum,
+                std::abs(value[component] - target[component])
+            );
+        }
+        return maximum;
+    };
+    const double initial_error = terminal_error(reference_final);
+    const double first_accepted_error = terminal_error(half_step_final);
+    const double second_accepted_error = terminal_error(full_step_final);
+    if (!(first_accepted_error < initial_error)
+        || !(second_accepted_error < first_accepted_error)
+        || std::abs(full_step_controls.front()[3U]) <= 0.0) {
+        return 6;
     }
     return 0;
 }

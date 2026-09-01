@@ -48,6 +48,7 @@ bool tight_pd6_mode = false;
 bool production_driver_mode = false;
 bool g4_sample_mode = false;
 bool g4_diagnostic_mode = false;
+bool p1d_path_audit_mode = false;
 std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
@@ -60,6 +61,8 @@ spacepdhcg_cuda_warm_start_mode g4_warm_start =
 double g4_quality_tolerance = 1.0e-6;
 double g4_family_class = 0.0;
 std::string g4_transfer_class{"not_applicable"};
+double g4_dispersion = 0.0;
+double g4_secondary_dispersion = 0.0;
 std::uint32_t production_outer_iterations = 1U;
 double cuda_startup_seconds = 0.0;
 int benchmark_variables = 0;
@@ -711,6 +714,19 @@ IntegrationResult run_resident_sequence(
         );
         numeric_update.fuel_weight = fuel_weight;
         numeric_update.virtual_l1_weight = virtual_l1_weight;
+        if (dynamics_config.model
+            == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
+            const dynamics::PoweredDescent6DofModel physical_model{};
+            const auto& physical =
+                physical_model.config();
+            numeric_update.maximum_thrust = physical.maximum_thrust;
+            numeric_update.maximum_torque = physical.maximum_torque;
+            numeric_update.maximum_angular_rate =
+                physical.maximum_angular_rate;
+            numeric_update.tilt_cosine = physical.tilt_cosine();
+            numeric_update.glide_slope_tangent =
+                physical.glide_slope_tangent();
+        }
         const spacepdhcg_cuda_scvx_problem outer_problem{
             SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,
             workspace,
@@ -1094,22 +1110,226 @@ IntegrationResult run_resident_sequence(
         );
         const auto final_states = states.download(problem.stream);
         const auto final_controls = controls.download(problem.stream);
-        double parity_maximum = 0.0;
+        double retained_change_maximum = 0.0;
         for (std::size_t index = 0; index < final_states.size(); ++index) {
-            parity_maximum = std::max(
-                parity_maximum,
+            retained_change_maximum = std::max(
+                retained_change_maximum,
                 std::abs(final_states[index] - reference_states[index])
             );
         }
         for (std::size_t index = 0; index < final_controls.size(); ++index) {
-            parity_maximum = std::max(
-                parity_maximum,
+            retained_change_maximum = std::max(
+                retained_change_maximum,
                 std::abs(final_controls[index] - reference_controls[index])
             );
         }
+        double replay_parity_maximum = 0.0;
+        double independent_path = outer.path_violation;
+        double independent_terminal = outer.terminal_residual;
+        std::array<double, 8U> independent_path_inventory{};
+        if constexpr (StateDimension == 14U && ControlDimension == 7U) {
+            dynamics::PoweredDescent6DofState cpu_initial{};
+            std::copy(
+                initial_state.begin(),
+                initial_state.end(),
+                cpu_initial.begin()
+            );
+            std::vector<dynamics::PoweredDescent6DofControl> cpu_controls(
+                intervals
+            );
+            for (std::size_t interval = 0U; interval < intervals; ++interval) {
+                std::copy_n(
+                    final_controls.begin()
+                        + static_cast<std::ptrdiff_t>(
+                            interval * ControlDimension
+                        ),
+                    ControlDimension,
+                    cpu_controls[interval].begin()
+                );
+            }
+            const dynamics::PoweredDescent6DofModel cpu_model{};
+            const auto cpu_replay = cpu_model.rollout(
+                cpu_initial,
+                cpu_controls,
+                dynamics_config.step_seconds
+            );
+            for (std::size_t node = 0U; node <= intervals; ++node) {
+                for (std::size_t component = 0U;
+                     component < StateDimension;
+                     ++component) {
+                    replay_parity_maximum = std::max(
+                        replay_parity_maximum,
+                        std::abs(
+                            cpu_replay[node][component]
+                            - final_states[
+                                node * StateDimension + component
+                            ]
+                        )
+                    );
+                }
+            }
+            const auto path = cpu_model.path_diagnostics(
+                cpu_replay,
+                cpu_controls
+            );
+            const auto& physical = cpu_model.config();
+            const double position_scale = std::max({
+                state_trust_scales[0U],
+                state_trust_scales[1U],
+                state_trust_scales[2U],
+            });
+            const double angular_rate_scale = std::max({
+                state_trust_scales[10U],
+                state_trust_scales[11U],
+                state_trust_scales[12U],
+            });
+            independent_path_inventory = {
+                std::max({
+                    path.thrust_epigraph,
+                    path.throttle_lower,
+                    path.throttle_upper,
+                }) / physical.maximum_thrust,
+                path.torque / physical.maximum_torque,
+                path.pointing / physical.maximum_thrust,
+                path.minimum_mass * state_trust_scales[13U],
+                path.altitude * position_scale,
+                path.glide_slope * position_scale,
+                path.angular_rate * angular_rate_scale,
+                path.quaternion_norm_error,
+            };
+            independent_path = *std::max_element(
+                independent_path_inventory.begin(),
+                independent_path_inventory.end()
+            );
+            independent_terminal = 0.0;
+            for (std::size_t component = 0U; component < 13U; ++component) {
+                independent_terminal = std::max(
+                    independent_terminal,
+                    std::abs(
+                        cpu_replay.back()[component] - target_state[component]
+                    ) * state_trust_scales[component]
+                );
+            }
+            test::status_require(
+                spacepdhcg_cuda_variational_rk4_async(
+                    &dynamics_config,
+                    &linearise,
+                    problem.exchange.consumer_stream
+                ),
+                "final P1-D variational coefficient update"
+            );
+            test::status_require(
+                spacepdhcg_cuda_fill_dynamics_csc_async(
+                    &fill,
+                    problem.exchange.consumer_stream
+                ),
+                "final P1-D dynamics coefficient fill"
+            );
+            test::status_require(
+                spacepdhcg_cuda_scvx_update_numeric_async(
+                    &outer_problem,
+                    outer.final_trust_radius,
+                    virtual_l1_weight,
+                    problem.exchange.consumer_stream
+                ),
+                "final P1-D numeric coefficient update"
+            );
+            test::cuda_require(
+                cudaStreamSynchronize(problem.stream),
+                "final P1-D coefficient synchronization"
+            );
+            std::vector<dynamics::PoweredDescent6DofState> cpu_reference(
+                intervals + 1U
+            );
+            for (std::size_t node = 0U; node <= intervals; ++node) {
+                std::copy_n(
+                    final_states.begin()
+                        + static_cast<std::ptrdiff_t>(node * StateDimension),
+                    StateDimension,
+                    cpu_reference[node].begin()
+                );
+            }
+            transcription::PoweredDescent6DofScvxConfig cpu_config;
+            cpu_config.intervals = intervals;
+            cpu_config.step_seconds = dynamics_config.step_seconds;
+            cpu_config.discretisation =
+                transcription::DiscretisationMethod::rk4_variational;
+            cpu_config.virtual_l1_weight = virtual_l1_weight;
+            cpu_config.virtual_quadratic_weight = 1.0e-3;
+            cpu_config.virtual_epigraph_regularisation = 1.0e-3;
+            cpu_config.fuel_weight = fuel_weight;
+            std::copy(
+                state_trust_scales.begin(),
+                state_trust_scales.end(),
+                cpu_config.state_trust_scales.begin()
+            );
+            std::copy(
+                control_trust_scales.begin(),
+                control_trust_scales.end(),
+                cpu_config.control_trust_scales.begin()
+            );
+            const transcription::PoweredDescent6DofSubproblem cpu_subproblem(
+                cpu_model,
+                cpu_config
+            );
+            dynamics::PoweredDescent6DofState cpu_target{};
+            std::copy(target_state.begin(), target_state.end(), cpu_target.begin());
+            expected = cpu_subproblem.values(
+                cpu_reference,
+                cpu_controls,
+                cpu_initial,
+                cpu_target,
+                outer.final_trust_radius
+            );
+            compare(problem.q.download(problem.stream), expected.quadratic);
+            compare(problem.a.download(problem.stream), expected.scalar_constraint);
+            compare(problem.f.download(problem.stream), expected.affine_cone);
+            compare(problem.c.download(problem.stream), expected.linear_objective);
+            compare(
+                problem.scalar_lower.download(problem.stream),
+                expected.scalar_lower
+            );
+            compare(
+                problem.scalar_upper.download(problem.stream),
+                expected.scalar_upper
+            );
+            compare(
+                problem.affine_offset.download(problem.stream),
+                expected.affine_offset
+            );
+            compare(
+                problem.variable_lower.download(problem.stream),
+                expected.variable_lower
+            );
+            compare(
+                problem.variable_upper.download(problem.stream),
+                expected.variable_upper
+            );
+            test::require(
+                coefficient_parity_max <= 5.0e-12,
+                "final P1-D CPU/device coefficients diverged"
+            );
+            if (p1d_path_audit_mode) {
+                test::require(
+                    independent_path_inventory[2U] > 5.0e-2,
+                    "injected P1-D pointing violation was not detected"
+                );
+                test::require(
+                    std::abs(outer.path_violation - independent_path)
+                        <= 5.0e-12,
+                    "CUDA and independent P1-D path checks diverged"
+                );
+                test::require(
+                    outer.outer_iterations == 2U
+                        && records[1U].warm_start_mode
+                            == SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL,
+                    "P1-D multi-iteration warm state was not retained"
+                );
+            }
+        }
         if (!g4_sample_mode) {
             test::require(
-                parity_maximum <= 1.0e-9,
+                replay_parity_maximum <= 1.0e-9,
                 "production CPU/GPU trajectory parity failed"
             );
         }
@@ -1175,6 +1395,7 @@ IntegrationResult run_resident_sequence(
             "\"path_thrust\":%.9g,\"path_mass\":%.9g,"
             "\"path_altitude\":%.9g,"
             "\"cpu_gpu_trajectory\":%.9g,"
+            "\"cpu_gpu_replay\":%.9g,\"retained_change\":%.9g,"
             "\"t_cqp\":%.9g,\"t_scvx\":%.9g,"
             "\"recovery_seconds\":%.9g,\"recovery_iterations\":%llu,"
             "\"inner_iterations\":%llu,\"d2h_bytes\":%llu,"
@@ -1190,12 +1411,14 @@ IntegrationResult run_resident_sequence(
             outer.objective,
             outer.virtual_control,
             outer.dynamics_defect,
-            outer.path_violation,
-            outer.terminal_residual,
+            independent_path,
+            independent_terminal,
             path_inventory.thrust_violation,
             path_inventory.mass_violation,
             path_inventory.altitude_violation,
-            parity_maximum,
+            replay_parity_maximum,
+            replay_parity_maximum,
+            retained_change_maximum,
             outer.cqp_total_seconds,
             outer.scvx_total_seconds,
             outer.recovery_seconds,
@@ -1210,6 +1433,20 @@ IntegrationResult run_resident_sequence(
             )
         );
         if (g4_sample_mode) {
+            const double primary_coordinate =
+                g4_family == "P1-D-pd6" ? g4_dispersion : g4_family_class;
+            std::printf(
+                "{\"case\":\"g4_coordinate\",\"family\":\"%s\","
+                "\"primary_dispersion\":%.17g,"
+                "\"secondary_dispersion\":%.17g,"
+                "\"attitude_dispersion_radians\":%.17g,"
+                "\"angular_rate_dispersion\":%.17g}\n",
+                g4_family.c_str(),
+                primary_coordinate,
+                g4_family == "P1-D-pd6" ? g4_secondary_dispersion : 0.0,
+                g4_family == "P1-D-pd6" ? g4_dispersion : 0.0,
+                g4_family == "P1-D-pd6" ? g4_secondary_dispersion : 0.0
+            );
             std::printf(
                 "{\"case\":\"g4_runtime\","
                 "\"policy_sha256\":\"%.*s\","
@@ -1242,6 +1479,26 @@ IntegrationResult run_resident_sequence(
                 outer_options.maximum_resolves_per_iteration,
                 outer_options.polish_tolerance_ceiling
             );
+            if constexpr (StateDimension == 14U && ControlDimension == 7U) {
+                std::printf(
+                    "{\"case\":\"g4_path_inventory\","
+                    "\"family\":\"P1-D-pd6\",\"independent\":true,"
+                    "\"thrust\":%.17g,\"torque\":%.17g,"
+                    "\"pointing\":%.17g,\"mass\":%.17g,"
+                    "\"altitude\":%.17g,\"glide_slope\":%.17g,"
+                    "\"angular_rate\":%.17g,\"quaternion\":%.17g,"
+                    "\"complete\":true,\"cpu_gpu_replay\":%.17g}\n",
+                    independent_path_inventory[0U],
+                    independent_path_inventory[1U],
+                    independent_path_inventory[2U],
+                    independent_path_inventory[3U],
+                    independent_path_inventory[4U],
+                    independent_path_inventory[5U],
+                    independent_path_inventory[6U],
+                    independent_path_inventory[7U],
+                    replay_parity_maximum
+                );
+            }
             for (std::size_t index = 0U; index < outer.outer_iterations; ++index) {
                 const auto& record = records[index];
                 std::printf(
@@ -1349,8 +1606,8 @@ IntegrationResult run_resident_sequence(
             const bool qualified =
                 outer.canonical_residual <= g4_quality_tolerance
                 && outer.dynamics_defect <= g4_quality_tolerance
-                && outer.path_violation <= g4_quality_tolerance
-                && outer.terminal_residual <= g4_quality_tolerance
+                && independent_path <= g4_quality_tolerance
+                && independent_terminal <= g4_quality_tolerance
                 && outer.virtual_control <= g4_quality_tolerance;
             std::printf(
                 "{\"case\":\"g4_sample\",\"family\":\"%s\","
@@ -1381,13 +1638,13 @@ IntegrationResult run_resident_sequence(
                 outer.canonical_residual,
                 outer.objective,
                 outer.dynamics_defect,
-                outer.path_violation,
-                outer.terminal_residual,
+                independent_path,
+                independent_terminal,
                 path_inventory.thrust_violation,
                 path_inventory.mass_violation,
                 path_inventory.altitude_violation,
                 outer.virtual_control,
-                parity_maximum,
+                retained_change_maximum,
                 outer.cqp_total_seconds,
                 outer.scvx_total_seconds,
                 outer.recovery_seconds,
@@ -1414,7 +1671,7 @@ IntegrationResult run_resident_sequence(
             0U,
             0.0,
             coefficient_parity_max,
-            parity_maximum,
+            replay_parity_maximum,
         };
         test::destroy_workspace(workspace);
         return result;
@@ -1924,15 +2181,30 @@ IntegrationResult run_pd6() {
             0.0, 0.0, thrust, 0.0, 0.0, 0.0, thrust
         };
     }
+    if (p1d_path_audit_mode) {
+        controls.front()[2U] = 0.0;
+        controls.front()[6U] = 1'000.0;
+    }
     const auto nominal_states =
         subproblem.model().rollout(initial, controls, config.step_seconds);
     if (g4_sample_mode) {
-        initial[0] += 10.0 * g4_family_class;
-        initial[2] += 100.0 * g4_family_class;
-        initial[7] += g4_family_class;
-        initial[10] += 0.1 * g4_family_class;
+        const double half_angle = 0.5 * g4_dispersion;
+        initial[6] = std::cos(half_angle);
+        initial[7] = std::sin(half_angle);
+        initial[8] = 0.0;
+        initial[9] = 0.0;
+        initial[10] += g4_secondary_dispersion;
     }
     const auto states = subproblem.model().rollout(initial, controls, config.step_seconds);
+    if (g4_sample_mode) {
+        for (std::size_t component = 0U; component < initial.size(); ++component) {
+            test::require(
+                std::abs(states.front()[component] - initial[component])
+                    <= 1.0e-14,
+                "P1-D initial boundary differs from the normalised reference"
+            );
+        }
+    }
     const auto values = subproblem.values(
         states, controls, initial, nominal_states.back()
     );
@@ -1998,13 +2270,29 @@ int main(const int argc, char** argv) {
         || mode == "--production-outer-sanitizer"
         || mode == "--h1-hcw"
         || mode == "--g4-sample"
-        || mode == "--g4-diagnose";
+        || mode == "--g4-diagnose"
+        || mode == "--p1d-path-audit";
+    if (mode == "--p1d-path-audit") {
+        p1d_path_audit_mode = true;
+        g4_sample_mode = true;
+        g4_family = "P1-D-pd6";
+        g4_intervals = 2U;
+        g4_policy = "fixed-loose";
+        g4_quality_tier = "coarse";
+        g4_scaling_mode = "reuse";
+        g4_warm_mode = "primal_dual";
+        g4_warm_start = SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL;
+        g4_quality_tolerance = 1.0e-3;
+        g4_dispersion = 0.01;
+        g4_secondary_dispersion = 0.01;
+        production_outer_iterations = 2U;
+    }
     if (mode == "--g4-sample" || mode == "--g4-diagnose") {
         test::require(
             argc == 13,
             "G4 mode requires family intervals policy warm quality "
-            "outer-iterations family-class transfer-class quality-tier "
-            "scaling-mode policy-sha256"
+            "outer-iterations family-coordinate-1 family-coordinate-2 "
+            "quality-tier scaling-mode policy-sha256"
         );
         g4_sample_mode = true;
         g4_diagnostic_mode = mode == "--g4-diagnose";
@@ -2025,8 +2313,13 @@ int main(const int argc, char** argv) {
         g4_quality_tolerance = std::stod(argv[6]);
         production_outer_iterations =
             static_cast<std::uint32_t>(std::stoul(argv[7]));
-        g4_family_class = std::stod(argv[8]);
-        g4_transfer_class = argv[9];
+        if (g4_family == "P1-D-pd6") {
+            g4_dispersion = std::stod(argv[8]);
+            g4_secondary_dispersion = std::stod(argv[9]);
+        } else {
+            g4_family_class = std::stod(argv[8]);
+            g4_transfer_class = argv[9];
+        }
         g4_quality_tier = argv[10];
         g4_scaling_mode = argv[11];
         test::require(
@@ -2048,6 +2341,10 @@ int main(const int argc, char** argv) {
                 "non-P1-E family may not report a transfer class"
             );
         }
+        test::require(
+            g4_family == "P1-D-pd6" || g4_secondary_dispersion == 0.0,
+            "secondary dispersion is only defined for P1-D-pd6"
+        );
         test::require(
             g4_scaling_mode == "always_refresh"
                 || g4_scaling_mode == "reuse"

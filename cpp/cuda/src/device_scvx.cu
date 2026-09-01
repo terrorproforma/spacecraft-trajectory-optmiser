@@ -1210,6 +1210,28 @@ __global__ void scvx_metrics_kernel(
             result.path_thrust = fmax(result.path_thrust, thrust_path);
             actual_path_sum += normalised_thrust_violation + throttle_violation;
             model_path_sum += normalised_thrust_violation + throttle_violation;
+            if (model
+                == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
+                const double torque_norm = sqrt(
+                    control[3] * control[3]
+                    + control[4] * control[4]
+                    + control[5] * control[5]
+                );
+                const double torque_violation = fmax(
+                    0.0,
+                    torque_norm - update.maximum_torque
+                ) / update.maximum_torque;
+                const double pointing_violation = fmax(
+                    0.0,
+                    update.tilt_cosine * control[6] - control[2]
+                ) / update.maximum_thrust;
+                result.path = fmax(
+                    result.path,
+                    fmax(torque_violation, pointing_violation)
+                );
+                actual_path_sum += torque_violation + pointing_violation;
+                model_path_sum += torque_violation + pointing_violation;
+            }
             result.objective += control[sigma_index]
                 / (static_cast<double>(intervals) * maximum_thrust);
         }
@@ -1238,6 +1260,71 @@ __global__ void scvx_metrics_kernel(
             result.path_mass = fmax(result.path_mass, actual_mass_violation);
             actual_path_sum += actual_mass_violation;
             model_path_sum += model_mass_violation;
+            if (model
+                == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
+                const double* actual_state =
+                    replay + node * state_dimension;
+                const double* model_state =
+                    states + node * state_dimension;
+                const double position_scale = fmax(
+                    update.state_trust_scales[0],
+                    fmax(
+                        update.state_trust_scales[1],
+                        update.state_trust_scales[2]
+                    )
+                );
+                const double angular_rate_scale = fmax(
+                    update.state_trust_scales[10],
+                    fmax(
+                        update.state_trust_scales[11],
+                        update.state_trust_scales[12]
+                    )
+                );
+                const double actual_altitude = fmax(
+                    0.0,
+                    -actual_state[2]
+                ) * position_scale;
+                const double model_altitude = fmax(
+                    0.0,
+                    -model_state[2]
+                ) * position_scale;
+                const double actual_glide = fmax(
+                    0.0,
+                    hypot(actual_state[0], actual_state[1])
+                        - update.glide_slope_tangent * actual_state[2]
+                ) * position_scale;
+                const double model_glide = fmax(
+                    0.0,
+                    hypot(model_state[0], model_state[1])
+                        - update.glide_slope_tangent * model_state[2]
+                ) * position_scale;
+                const double actual_rate = fmax(
+                    0.0,
+                    sqrt(
+                        actual_state[10] * actual_state[10]
+                        + actual_state[11] * actual_state[11]
+                        + actual_state[12] * actual_state[12]
+                    ) - update.maximum_angular_rate
+                ) * angular_rate_scale;
+                const double model_rate = fmax(
+                    0.0,
+                    sqrt(
+                        model_state[10] * model_state[10]
+                        + model_state[11] * model_state[11]
+                        + model_state[12] * model_state[12]
+                    ) - update.maximum_angular_rate
+                ) * angular_rate_scale;
+                result.path = fmax(
+                    result.path,
+                    fmax(
+                        actual_altitude,
+                        fmax(actual_glide, actual_rate)
+                    )
+                );
+                actual_path_sum +=
+                    actual_altitude + actual_glide + actual_rate;
+                model_path_sum += model_altitude + model_glide + model_rate;
+            }
         }
     }
     if (model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
@@ -1459,6 +1546,7 @@ struct spacepdhcg_cuda_scvx_driver {
     unsigned long long* host_numeric_fingerprint{nullptr};
     double* primal{nullptr};
     spacepdhcg_cuda_scvx_path_inventory path_inventory{};
+    double* dual{nullptr};
     size_t checkpoint_elements{0U};
     cudaEvent_t timer_start{nullptr};
     cudaEvent_t timer_stop{nullptr};
@@ -1721,7 +1809,14 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
         || options->minimum_trust_radius > options->initial_trust_radius
         || options->initial_trust_radius > options->maximum_trust_radius
         || (options->fixed_inner_tolerance > 0.0
-            && options->fixed_inner_iteration_limit == 0U)) {
+            && options->fixed_inner_iteration_limit == 0U)
+        || (problem->dynamics.model
+                == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
+            && (!(problem->numeric_update.maximum_thrust > 0.0)
+                || !(problem->numeric_update.maximum_torque > 0.0)
+                || !(problem->numeric_update.maximum_angular_rate > 0.0)
+                || !(problem->numeric_update.tilt_cosine > 0.0)
+                || !(problem->numeric_update.glide_slope_tangent > 0.0)))) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     *driver = nullptr;
@@ -1806,6 +1901,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
         return api_status;
     }
     result->primal = reinterpret_cast<double*>(pointers.primal);
+    result->dual = reinterpret_cast<double*>(pointers.dual);
     size_t checkpoint_bytes = 0U;
     api_status = spacepdhcg_cuda_workspace_checkpoint_bytes(
         problem->workspace,
@@ -2063,9 +2159,28 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             return api_status;
         }
         if (outer > 0U) {
+            const auto requested_warm_start = driver->options.warm_start_mode;
+            if (requested_warm_start == SPACEPDHCG_CUDA_WARM_START_PRIMAL) {
+                const size_t dual_elements =
+                    driver->problem.numeric.scalar_lower.elements
+                    + driver->problem.numeric.affine_offset.elements;
+                if (cudaMemsetAsync(
+                        driver->dual,
+                        0,
+                        dual_elements * sizeof(double),
+                        native
+                    ) != cudaSuccess) {
+                    result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
+                    return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+                }
+            }
+            const auto resident_warm_start =
+                requested_warm_start == SPACEPDHCG_CUDA_WARM_START_NONE
+                ? SPACEPDHCG_CUDA_WARM_START_NONE
+                : SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED;
             api_status = spacepdhcg_cuda_workspace_warm_start_async(
                 driver->problem.workspace,
-                driver->options.warm_start_mode,
+                resident_warm_start,
                 nullptr,
                 stream
             );
@@ -2114,6 +2229,17 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             &solve_options,
             stream
         );
+        if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+            api_status = spacepdhcg_cuda_workspace_wait(
+                driver->problem.workspace
+            );
+        }
+        if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+            api_status = spacepdhcg_cuda_workspace_residuals_async(
+                driver->problem.workspace,
+                stream
+            );
+        }
         if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
             api_status = spacepdhcg_cuda_workspace_wait(
                 driver->problem.workspace
@@ -2258,6 +2384,17 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     );
                 }
                 if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                    api_status = spacepdhcg_cuda_workspace_residuals_async(
+                        driver->problem.workspace,
+                        stream
+                    );
+                }
+                if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                    api_status = spacepdhcg_cuda_workspace_wait(
+                        driver->problem.workspace
+                    );
+                }
+                if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
                     api_status = spacepdhcg_cuda_workspace_diagnostics(
                         driver->problem.workspace,
                         &last_diagnostics
@@ -2269,16 +2406,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 }
                 re_solved = true;
                 ++result->resolved_steps;
+                result->solve_seconds += last_diagnostics.solve_seconds;
+                result->recovery_seconds += last_diagnostics.recovery_seconds;
+                result->residual_seconds += last_diagnostics.residual_seconds;
                 result->inner_iterations += last_diagnostics.iterations;
-                result->solve_seconds += std::max(
-                    0.0,
-                    last_diagnostics.solve_seconds
-                        - last_diagnostics.recovery_seconds
-                );
-                result->recovery_seconds +=
-                    last_diagnostics.recovery_seconds;
-                result->residual_seconds +=
-                    last_diagnostics.residual_seconds;
                 result->recovery_iterations +=
                     last_diagnostics.recovery_iterations;
                 if (last_diagnostics.natural_residual_inf

@@ -225,8 +225,13 @@ if(BUILD_TESTING)
                 NAME device_scvx_production_test
                 COMMAND "${test_name}" --production-outer
             )
+            add_test(
+                NAME device_scvx_p1d_path_audit_test
+                COMMAND "${test_name}" --p1d-path-audit
+            )
             set_tests_properties(
                 device_scvx_production_test
+                device_scvx_p1d_path_audit_test
                 PROPERTIES TIMEOUT 180
             )
         endif()
