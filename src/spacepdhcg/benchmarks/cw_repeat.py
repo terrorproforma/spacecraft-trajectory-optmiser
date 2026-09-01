@@ -11,6 +11,7 @@ from typing import Any
 import numpy as np
 
 from spacepdhcg.backends import PersistentOSQP
+from spacepdhcg.cqp import CanonicalCQP, independent_canonical_residuals
 from spacepdhcg.models import CWRendezvousConfig, CWRendezvousProblem
 
 
@@ -71,6 +72,10 @@ def run_benchmark(
     iterations: list[int] = []
     terminal_errors: list[float] = []
     dynamics_defects: list[float] = []
+    canonical_primals: list[float] = []
+    canonical_duals: list[float] = []
+    canonical_naturals: list[float] = []
+    objectives: list[float] = []
     previous = None
 
     for initial, target in zip(initial_states, target_states, strict=True):
@@ -86,6 +91,11 @@ def run_benchmark(
         if not solution.solved:
             raise RuntimeError(f"OSQP failed with status {solution.status!r}")
         diagnostics = problem.diagnostics(solution.primal, initial, target)
+        audit = independent_canonical_residuals(
+            CanonicalCQP(problem.structure, values),
+            solution.primal,
+            solution.dual,
+        )
         if not diagnostics.feasible(max(1.0e-5, 10.0 * tolerance)):
             raise RuntimeError(f"trajectory failed independent checks: {diagnostics}")
 
@@ -93,6 +103,10 @@ def run_benchmark(
         iterations.append(solution.iterations)
         terminal_errors.append(diagnostics.terminal_error_inf)
         dynamics_defects.append(diagnostics.dynamics_defect_inf)
+        canonical_primals.append(audit.primal)
+        canonical_duals.append(audit.dual)
+        canonical_naturals.append(audit.natural)
+        objectives.append(solution.objective)
         previous = solution
 
     return {
@@ -109,6 +123,10 @@ def run_benchmark(
         "mean_iterations": fmean(iterations),
         "maximum_terminal_error": max(terminal_errors),
         "maximum_dynamics_defect": max(dynamics_defects),
+        "maximum_canonical_primal_residual": max(canonical_primals),
+        "maximum_canonical_dual_residual": max(canonical_duals),
+        "maximum_canonical_natural_residual": max(canonical_naturals),
+        "maximum_objective": max(objectives),
         "workspace_updates": backend.update_count,
         "explicit_warm_starts": backend.warm_start_count,
         "seed": seed,

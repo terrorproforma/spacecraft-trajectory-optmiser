@@ -159,3 +159,35 @@ def test_coordinate_specific_benchmark_inputs_are_validated() -> None:
             tolerance=1.0e-3,
             initial_dispersion_scale=-1.0,
         )
+
+
+def test_hcw_cpu_reference_emits_finite_independent_kkt_residuals() -> None:
+    result = run_hcw_box(
+        repeats=2,
+        intervals=20,
+        tolerance=1.0e-8,
+        update_magnitude=0.0,
+    )
+    assert result["maximum_canonical_primal_residual"] <= 1.0e-7
+    assert result["maximum_canonical_dual_residual"] <= 1.0e-7
+    assert result["maximum_canonical_natural_residual"] <= 1.0e-7
+
+
+def test_hcw_matrix_coordinate_is_fully_qualified(tmp_path: Path) -> None:
+    module = _matrix_module()
+    module._OUTPUT = tmp_path
+    module._ENVIRONMENT_SHA256 = "0" * 64
+    coordinate = {
+        "coordinate_id": "1" * 24,
+        "programme": "paper1",
+        "family": "P1-B-hcw",
+        "parameters": {
+            "intervals": 20,
+            "control_sets": "box",
+            "update_magnitudes": 0.0,
+        },
+    }
+    result = module._hcw(coordinate)
+    assert result["disposition"] == "executed"
+    assert result["quality"]["qualified"]
+    assert result["quality"]["canonical_natural_residual"] <= 1.0e-7

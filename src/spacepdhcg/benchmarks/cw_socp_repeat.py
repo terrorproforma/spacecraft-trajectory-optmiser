@@ -11,6 +11,7 @@ from typing import Any
 import numpy as np
 
 from spacepdhcg.backends import PersistentClarabel
+from spacepdhcg.cqp import CanonicalCQP, independent_canonical_residuals
 from spacepdhcg.models import CWRendezvousConfig, CWRendezvousProblem, ThrustConstraint
 
 
@@ -77,15 +78,26 @@ def run_benchmark(
     terminal_errors: list[float] = []
     dynamics_defects: list[float] = []
     control_violations: list[float] = []
+    canonical_primals: list[float] = []
+    canonical_duals: list[float] = []
+    canonical_naturals: list[float] = []
+    canonical_cones: list[float] = []
+    objectives: list[float] = []
 
     for initial, target in zip(initial_states, target_states, strict=True):
         start = perf_counter()
-        backend.update(problem.values(initial, target))
+        values = problem.values(initial, target)
+        backend.update(values)
         update_times.append(perf_counter() - start)
         solution = backend.solve()
         if not solution.solved:
             raise RuntimeError(f"Clarabel failed with status {solution.status!r}")
         diagnostics = problem.diagnostics(solution.primal, initial, target)
+        audit = independent_canonical_residuals(
+            CanonicalCQP(problem.structure, values),
+            solution.primal,
+            solution.dual,
+        )
         if not diagnostics.feasible(max(1.0e-5, 10.0 * tolerance)):
             raise RuntimeError(f"trajectory failed independent checks: {diagnostics}")
 
@@ -94,6 +106,11 @@ def run_benchmark(
         terminal_errors.append(diagnostics.terminal_error_inf)
         dynamics_defects.append(diagnostics.dynamics_defect_inf)
         control_violations.append(diagnostics.control_violation_inf)
+        canonical_primals.append(audit.primal)
+        canonical_duals.append(audit.dual)
+        canonical_naturals.append(audit.natural)
+        canonical_cones.append(audit.cone)
+        objectives.append(solution.objective)
 
     return {
         "backend": "Clarabel persistent CPU conic reference",
@@ -112,6 +129,11 @@ def run_benchmark(
         "maximum_terminal_error": max(terminal_errors),
         "maximum_dynamics_defect": max(dynamics_defects),
         "maximum_control_violation": max(control_violations),
+        "maximum_canonical_primal_residual": max(canonical_primals),
+        "maximum_canonical_dual_residual": max(canonical_duals),
+        "maximum_canonical_natural_residual": max(canonical_naturals),
+        "maximum_canonical_cone_residual": max(canonical_cones),
+        "maximum_objective": max(objectives),
         "workspace_updates": backend.update_count,
         "seed": seed,
         "tolerance": tolerance,

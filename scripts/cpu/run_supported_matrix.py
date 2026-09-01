@@ -13,6 +13,7 @@ import resource
 import shutil
 import statistics
 import subprocess
+import sys
 import time
 import traceback
 from collections import Counter
@@ -243,15 +244,6 @@ def _banded(coordinate: dict[str, Any]) -> dict[str, Any]:
     intervals = int(parameters["intervals"])
     nx = int(parameters["state_dimensions"])
     nu = int(parameters["control_dimensions"])
-    if intervals > 500:
-        variables = (intervals + 1) * nx + intervals * nu
-        return _timeout(
-            coordinate,
-            "declared 120-second coordinate limit: full sparse known-optimum construction "
-            "above N=500 is retained as timeout rather than reduced",
-            "TrajectoryBandedFixture",
-            _dimensions(intervals, variables=variables),
-        )
     config = TrajectoryBandedConfig(
         intervals=intervals,
         state_dimension=nx,
@@ -333,13 +325,6 @@ def _banded(coordinate: dict[str, Any]) -> dict[str, Any]:
 def _hcw(coordinate: dict[str, Any]) -> dict[str, Any]:
     parameters = coordinate["parameters"]
     intervals = int(parameters["intervals"])
-    if intervals > 500:
-        return _timeout(
-            coordinate,
-            "declared 120-second coordinate limit: repeated sparse CPU solve above N=500",
-            "CWRendezvousProblem",
-            _dimensions(intervals, variables=(intervals + 1) * 6 + intervals * 3),
-        )
     runner = run_hcw_box if parameters["control_sets"] == "box" else run_hcw_soc
     seed = 7 + round(float(parameters["update_magnitudes"]) * 1000)
     started = time.perf_counter()
@@ -350,18 +335,25 @@ def _hcw(coordinate: dict[str, Any]) -> dict[str, Any]:
         tolerance=1.0e-8,
         update_magnitude=float(parameters["update_magnitudes"]),
     )
-    residual = max(
+    replay_residual = max(
         float(payload["maximum_terminal_error"]),
         float(payload["maximum_dynamics_defect"]),
         float(payload.get("maximum_control_violation", 0.0)),
     )
+    primal = float(payload["maximum_canonical_primal_residual"])
+    dual = float(payload["maximum_canonical_dual_residual"])
+    natural = float(payload["maximum_canonical_natural_residual"])
     duration = float(payload["median_solve_seconds"])
-    qualified = residual <= 1.0e-5
+    qualified = (
+        replay_residual <= 1.0e-5
+        and max(primal, dual, natural) <= 1.0e-7
+        and all(math.isfinite(value) for value in (primal, dual, natural))
+    )
     return _base(
         coordinate,
-        "unqualified",
-        "CPU solver and independent trajectory replay passed, but the legacy HCW emitter "
-        "does not expose an independently recomputed canonical dual/natural residual",
+        "executed" if qualified else "numerical",
+        "CPU solver KKT conditions, exact discrete dynamics, terminal state, and constant-control "
+        "continuous-time path bounds independently recomputed",
         "CWRendezvousProblem+PersistentOSQP/Clarabel",
         "cpu_solver_and_replay",
         _dimensions(
@@ -372,17 +364,21 @@ def _hcw(coordinate: dict[str, Any]) -> dict[str, Any]:
             cones={parameters["control_sets"]: intervals},
         ),
         {
-            **_null_quality(str(payload["backend"])),
-            "canonical_primal_residual": residual,
+            **_null_quality("converged"),
+            "objective": float(payload["maximum_objective"]),
+            "canonical_primal_residual": primal,
+            "canonical_dual_residual": dual,
+            "canonical_natural_residual": natural,
+            "canonical_cone_residual": float(payload.get("maximum_canonical_cone_residual", 0.0)),
             "dynamics_residual": float(payload["maximum_dynamics_defect"]),
             "path_residual": float(payload.get("maximum_control_violation", 0.0)),
             "terminal_residual": float(payload["maximum_terminal_error"]),
-            "continuous_time_violation": None,
+            "continuous_time_violation": float(payload.get("maximum_control_violation", 0.0)),
             "virtual_control_residual": 0.0,
             "nonanticipativity_residual": 0.0,
             "risk_epigraph_residual": 0.0,
             "certified": qualified,
-            "qualified": False,
+            "qualified": qualified,
         },
         {
             **_null_work(),
@@ -399,13 +395,6 @@ def _hcw(coordinate: dict[str, Any]) -> dict[str, Any]:
 def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
     parameters = coordinate["parameters"]
     intervals = int(parameters["intervals"])
-    if intervals > 100:
-        return _timeout(
-            coordinate,
-            "declared 120-second coordinate limit: nonlinear CPU SCvx above N=100",
-            "PoweredDescentSCvxSolver",
-            _dimensions(intervals, variables=(intervals + 1) * 7 + intervals * 18),
-        )
     started = time.perf_counter()
     payload = run_pd3(
         intervals=intervals,
@@ -476,14 +465,6 @@ def _native(coordinate: dict[str, Any], mode: str) -> dict[str, Any]:
             str(parameters["final_polish"]).lower(),
         ]
     else:
-        if intervals > 2000:
-            return _timeout(
-                coordinate,
-                "declared 120-second coordinate limit: native low-thrust transcription "
-                "above N=2000",
-                "LowThrustSubproblem",
-                _dimensions(intervals, variables=(intervals + 1) * 7 + intervals * 18),
-            )
         arguments = [
             "low-thrust",
             str(intervals),
@@ -650,14 +631,6 @@ def _paper2(coordinate: dict[str, Any]) -> dict[str, Any]:
             parameters.get("target_counts", 1) * parameters.get("epoch_counts", 1),
         )
     )
-    if scale > 100_000:
-        return _timeout(
-            coordinate,
-            "declared 120-second coordinate limit: bounded orchestration work exceeds "
-            "100,000 exact items; coordinate retained without reducing the declared scale",
-            "OrbitWeaver bounded component contract",
-            _dimensions(1, variables=scale),
-        )
     checksum = 0
     durations = []
     for repeat in range(WARMUPS + MEASURED):
@@ -718,24 +691,54 @@ def _worker(coordinate: dict[str, Any]) -> tuple[str, str]:
     if (directory / "result.json").is_file():
         return coordinate["coordinate_id"], "checkpoint"
     directory.mkdir(parents=True, exist_ok=True)
+    coordinate_path = directory / "coordinate.json"
+    _write(coordinate_path, coordinate)
+    command = [
+        sys.executable,
+        str(_REPOSITORY / "scripts/cpu/run_supported_matrix.py"),
+        "--repository",
+        str(_REPOSITORY),
+        "--output",
+        str(_OUTPUT),
+        "--native-emitter",
+        str(_NATIVE_EMITTER),
+        "--single-coordinate",
+        str(coordinate_path),
+        "--environment-sha256",
+        _ENVIRONMENT_SHA256,
+    ]
     try:
-        result = _execute(coordinate)
-        stdout = json.dumps(
-            {
-                "coordinate_id": coordinate["coordinate_id"],
-                "disposition": result["disposition"],
-            },
-            sort_keys=True,
+        completed = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT_SECONDS,
+            env={**os.environ, "CUDA_VISIBLE_DEVICES": "-1"},
         )
-        stderr = ""
+        stdout, stderr = completed.stdout, completed.stderr
+        if completed.returncode != 0:
+            raise RuntimeError(stderr.strip() or f"coordinate process exit {completed.returncode}")
+        result = json.loads(stdout)
+        result["command"] = command
     except subprocess.TimeoutExpired as error:
         result = _timeout(
             coordinate,
-            f"subprocess exceeded {TIMEOUT_SECONDS} seconds: {error}",
-            "native subprocess",
+            f"launched coordinate process reached the {TIMEOUT_SECONDS}-second wall limit",
+            "isolated coordinate subprocess",
             _dimensions(int(coordinate["parameters"].get("intervals", 1))),
         )
-        stdout, stderr = "", str(error)
+        result["command"] = command
+        stdout = (
+            (error.stdout or b"").decode()
+            if isinstance(error.stdout, bytes)
+            else error.stdout or ""
+        )
+        stderr = (
+            (error.stderr or b"").decode()
+            if isinstance(error.stderr, bytes)
+            else error.stderr or ""
+        )
     except MemoryError:
         result = _base(
             coordinate,
@@ -796,11 +799,44 @@ def main() -> int:
     parser.add_argument("--native-emitter", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=max(1, min(12, (os.cpu_count() or 2) - 2)))
     parser.add_argument("--preserve-existing", action="store_true")
+    parser.add_argument("--single-coordinate", type=Path)
+    parser.add_argument("--environment-sha256")
     arguments = parser.parse_args()
     repository = arguments.repository.resolve()
     output = arguments.output.resolve()
     if os.environ.get("CUDA_VISIBLE_DEVICES") not in {"", "-1"}:
         raise RuntimeError("CUDA_VISIBLE_DEVICES must be empty or -1")
+    schema = json.loads(
+        (repository / "experiments/schema/cpu_reference_result.schema.json").read_text()
+    )
+    if arguments.single_coordinate is not None:
+        if arguments.environment_sha256 is None:
+            raise ValueError("--environment-sha256 is required for a single coordinate")
+        _initialize(
+            str(repository),
+            str(output),
+            arguments.environment_sha256,
+            schema,
+            str(arguments.native_emitter.resolve()),
+        )
+        coordinate = json.loads(arguments.single_coordinate.read_text(encoding="utf-8"))
+        print(
+            json.dumps(
+                {
+                    "event": "coordinate_started",
+                    "coordinate_id": coordinate["coordinate_id"],
+                    "family": coordinate["family"],
+                    "parameters": coordinate["parameters"],
+                },
+                sort_keys=True,
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
+        result = _execute(coordinate)
+        jsonschema.Draft202012Validator(schema).validate(result)
+        sys.stdout.buffer.write(_canonical_bytes(result))
+        return 0
     head = subprocess.run(
         ["git", "-C", str(repository), "rev-parse", "HEAD"],
         check=True,
@@ -810,9 +846,6 @@ def main() -> int:
     if not arguments.preserve_existing and output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True, exist_ok=True)
-    schema = json.loads(
-        (repository / "experiments/schema/cpu_reference_result.schema.json").read_text()
-    )
     matrices = [
         (
             "paper1",

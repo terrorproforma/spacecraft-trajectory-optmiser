@@ -13,23 +13,11 @@ only from an existing `result.json`.
 - Coordinates are never silently resized. A coordinate outside a bounded owner is retained as
   `timeout`, `unsupported`, or another terminal failure.
 
-The following deterministic preflight boundaries are fixed in source before results are read:
-
-- P1-A exact known-optimum sparse fixture: execute through `N=500`; larger coordinates retain
-  timeout records.
-- P1-B repeated OSQP/Clarabel HCW solve: execute through `N=500`; larger coordinates retain timeout
-  records.
-- P1-C nonlinear CPU SCvx: execute through `N=100`; larger coordinates retain timeout records.
-- P1-D native corrected quaternion transcription/reference replay: all frozen coordinates.
-- P1-E native variational-RK4 transfer/reference replay: execute through `N=2000`; larger
-  coordinates retain timeout records.
-- P1-F deterministic scenario risk/non-anticipativity reference: all frozen coordinates.
-- P2-A/P2-B/P2-C bounded orchestration contracts: coordinates through 100,000 exact work items
-  execute but remain unqualified unless a physical parameterized owner supplies the required
-  Lambert/route/certification metrics; larger coordinates retain timeout records without reducing
-  the declared scale.
-- P2-D/P2-E full-mission formulations remain unsupported because this commit contains component
-  seams but no authoritative full multi-spacecraft optimization model.
+Every coordinate is launched in a fresh subprocess. The subprocess inherits the memory limit and
+receives the complete frozen coordinate without a scale cap. A timeout is emitted only when that
+launched process reaches the declared wall limit; its start event and any partial stdout/stderr are
+retained. Previous preflight timeout predictions are preserved in the earlier archive but are not
+eligible as final execution evidence.
 
 ## Evidence interpretation
 
