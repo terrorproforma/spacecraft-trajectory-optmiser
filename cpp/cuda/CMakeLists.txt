@@ -87,6 +87,7 @@ add_library(
     spacepdhcg_cuda
     SHARED
         src/device_scvx.cu
+        src/orbitweaver_gpu.cu
         src/persistent_pdhcg.cu
 )
 add_library(SpacePDHCG::cuda ALIAS spacepdhcg_cuda)

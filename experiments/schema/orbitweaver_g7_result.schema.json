@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spacepdhcg.dev/schema/orbitweaver-g7-result-v1.json",
+  "title": "OrbitWeaver G7 result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "incumbent",
+    "lower_bound",
+    "optimality_gap",
+    "certified",
+    "certification",
+    "telemetry",
+    "failures"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "status": {
+      "enum": ["converged", "iteration_limit", "infeasible", "cancelled", "failed"]
+    },
+    "incumbent": {"type": ["number", "null"], "minimum": 0},
+    "lower_bound": {"type": ["number", "null"], "minimum": 0},
+    "optimality_gap": {"type": ["number", "null"], "minimum": 0},
+    "certified": {"type": "boolean"},
+    "certification": {"type": ["object", "null"]},
+    "telemetry": {"type": "object"},
+    "failures": {"type": "array", "items": {"type": "object"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"certified": {"const": true}}},
+      "then": {"properties": {"certification": {"type": "object"}}}
+    }
+  ]
+}

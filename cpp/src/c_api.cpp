@@ -3,11 +3,13 @@
 
 #include "spacepdhcg/dynamics/powered_descent_3dof.hpp"
 #include "spacepdhcg/orbitweaver/lambert.hpp"
+#include "spacepdhcg/orbitweaver/lambert_family.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <exception>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -57,6 +59,26 @@ void require_pointer(const void* pointer, const char* name) {
     if (pointer == nullptr) {
         throw std::invalid_argument(std::string(name) + " pointer may not be null");
     }
+}
+
+void copy_lambert_solution(
+    const spacepdhcg::orbitweaver::LambertSolution& solution,
+    spacepdhcg_lambert_result& result
+) {
+    std::copy(
+        solution.departure_velocity.begin(),
+        solution.departure_velocity.end(),
+        result.departure_velocity
+    );
+    std::copy(
+        solution.arrival_velocity.begin(),
+        solution.arrival_velocity.end(),
+        result.arrival_velocity
+    );
+    result.universal_parameter = solution.universal_parameter;
+    result.transfer_angle_radians = solution.transfer_angle_radians;
+    result.iterations = static_cast<uint64_t>(solution.iterations);
+    result.time_of_flight_residual = solution.time_of_flight_residual;
 }
 
 }  // namespace
@@ -173,6 +195,141 @@ spacepdhcg_status_code spacepdhcg_lambert_zero_revolution(
         result->transfer_angle_radians = solution.transfer_angle_radians;
         result->iterations = static_cast<uint64_t>(solution.iterations);
         result->time_of_flight_residual = solution.time_of_flight_residual;
+    });
+}
+
+size_t spacepdhcg_lambert_family_result_stride(
+    const uint64_t supported_maximum_revolutions
+) {
+    if (supported_maximum_revolutions
+        > (std::numeric_limits<size_t>::max() / 4U) - 1U) {
+        return 0U;
+    }
+    return 2U * (1U + 2U * static_cast<size_t>(supported_maximum_revolutions));
+}
+
+spacepdhcg_status_code spacepdhcg_lambert_family_batch_cpu(
+    const spacepdhcg_lambert_family_request* requests,
+    const size_t request_count,
+    const uint64_t supported_maximum_revolutions,
+    spacepdhcg_lambert_family_result* results,
+    const size_t result_capacity
+) {
+    return guard([&] {
+        require_pointer(requests, "Lambert family requests");
+        require_pointer(results, "Lambert family results");
+        if (request_count == 0U) {
+            throw std::invalid_argument("Lambert family batch may not be empty");
+        }
+        const auto stride =
+            spacepdhcg_lambert_family_result_stride(supported_maximum_revolutions);
+        if (stride == 0U || request_count > result_capacity / stride) {
+            throw std::invalid_argument("Lambert family result capacity is insufficient");
+        }
+        for (size_t input = 0U; input < request_count; ++input) {
+            const auto& request = requests[input];
+            auto* output = results + input * stride;
+            for (size_t slot = 0U; slot < stride; ++slot) {
+                output[slot] = {};
+                output[slot].deterministic_id = request.deterministic_id;
+                output[slot].input_index = input;
+                output[slot].family_index = slot;
+                output[slot].status = SPACEPDHCG_LAMBERT_FAMILY_UNSUPPORTED;
+            }
+            for (uint64_t direction = 0U; direction < 2U; ++direction) {
+                const auto included = direction == 0U ? request.include_short_way
+                                                      : request.include_long_way;
+                if (included == 0) {
+                    continue;
+                }
+                const auto base =
+                    static_cast<size_t>(direction)
+                    * (1U + 2U * static_cast<size_t>(supported_maximum_revolutions));
+                const auto requested_revolutions = std::min(
+                    request.maximum_revolutions,
+                    supported_maximum_revolutions
+                );
+                for (uint64_t revolution = 0U;
+                     revolution <= requested_revolutions;
+                     ++revolution) {
+                    if (revolution == 0U) {
+                        output[base].status = SPACEPDHCG_LAMBERT_FAMILY_NO_SOLUTION;
+                        output[base].long_way = static_cast<int>(direction);
+                        continue;
+                    }
+                    const auto first =
+                        base + 1U + 2U * static_cast<size_t>(revolution - 1U);
+                    output[first].status = SPACEPDHCG_LAMBERT_FAMILY_NO_SOLUTION;
+                    output[first + 1U].status = SPACEPDHCG_LAMBERT_FAMILY_NO_SOLUTION;
+                    output[first].long_way = output[first + 1U].long_way =
+                        static_cast<int>(direction);
+                    output[first].revolutions = output[first + 1U].revolutions =
+                        revolution;
+                    output[first].parameter_branch = 1;
+                    output[first + 1U].parameter_branch = 2;
+                }
+            }
+            try {
+                const auto departure = spacepdhcg::orbitweaver::Vector3{
+                    request.departure_position[0],
+                    request.departure_position[1],
+                    request.departure_position[2],
+                };
+                const auto arrival = spacepdhcg::orbitweaver::Vector3{
+                    request.arrival_position[0],
+                    request.arrival_position[1],
+                    request.arrival_position[2],
+                };
+                const auto family =
+                    spacepdhcg::orbitweaver::enumerate_lambert_families(
+                        departure,
+                        arrival,
+                        request.time_of_flight,
+                        request.gravitational_parameter,
+                        static_cast<size_t>(std::min(
+                            request.maximum_revolutions,
+                            supported_maximum_revolutions
+                        )),
+                        request.include_short_way != 0,
+                        request.include_long_way != 0,
+                        request.time_tolerance,
+                        static_cast<size_t>(request.maximum_iterations),
+                        static_cast<size_t>(request.scan_samples_per_band)
+                    );
+                for (const auto& member : family) {
+                    const auto base =
+                        static_cast<size_t>(member.long_way)
+                        * (1U + 2U * static_cast<size_t>(supported_maximum_revolutions));
+                    size_t slot = base;
+                    if (member.revolutions > 0U) {
+                        slot += 1U + 2U * (member.revolutions - 1U);
+                        if (member.branch
+                            == spacepdhcg::orbitweaver::LambertParameterBranch::
+                                higher_parameter) {
+                            ++slot;
+                        }
+                    }
+                    auto& destination = output[slot];
+                    destination.status = SPACEPDHCG_LAMBERT_FAMILY_FEASIBLE;
+                    destination.revolutions = member.revolutions;
+                    destination.long_way = member.long_way ? 1 : 0;
+                    destination.parameter_branch = static_cast<int>(member.branch);
+                    copy_lambert_solution(member.solution, destination.solution);
+                }
+            } catch (const std::invalid_argument&) {
+                for (size_t slot = 0U; slot < stride; ++slot) {
+                    output[slot].status = SPACEPDHCG_LAMBERT_FAMILY_INVALID_INPUT;
+                }
+            } catch (const std::exception&) {
+                for (size_t slot = 0U; slot < stride; ++slot) {
+                    if (output[slot].status
+                        == SPACEPDHCG_LAMBERT_FAMILY_NO_SOLUTION) {
+                        output[slot].status =
+                            SPACEPDHCG_LAMBERT_FAMILY_NUMERICAL_FAILURE;
+                    }
+                }
+            }
+        }
     });
 }
 
