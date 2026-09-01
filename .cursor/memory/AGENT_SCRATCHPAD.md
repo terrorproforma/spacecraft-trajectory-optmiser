@@ -1036,3 +1036,33 @@ Use this file as persistent, repo-local execution memory.
 - Native smoke success is component correctness, not independently replayed Paper 1 qualification.
 - Keep null canonical/nonlinear maxima null until production matrix drivers emit those values.
 - Do not use the generated censored G6 bundle to assert G4, G5, GPU, or scaling claims.
+
+### 2026-09-02 02:05 AEST - Executed CPU matrix campaign
+
+#### What Worked
+
+- Added a schema-validated, checkpointed 12-worker campaign and retained one isolated result for
+  every one of the 16,324 frozen coordinates with CUDA disabled.
+- Independently qualified 6,912 P1-A known optima; executed 2,844 additional CPU/native/risk/route
+  component coordinates fail-closed as unqualified; retained 5,560 declared-budget timeouts and
+  the 1,008 genuine P2-D/P2-E unsupported full-mission coordinates.
+- Rendered five data-bearing JSON/PDF/PNG diagnostic families twice byte-for-byte and produced a
+  Canvas-ready dashboard with semantic and timing hashes kept separate.
+
+#### Mistakes And Fixes
+
+- `[self]` The first P1-D pass held step duration fixed as `N` changed, extending the physical
+  horizon and driving mass negative at `N=2000`. Preserved the failed pass, fixed total horizon at
+  10 seconds, and reran all coordinates without failures.
+- `[self]` An early P2 contract loop used `min(scale, 100000)`. Replaced that silent cap with an
+  explicit retained timeout before the final run.
+- `[self]` HCW update magnitude and P1-C dispersion/polish axes were initially only identities.
+  Added parameterized deterministic updates, initial dispersion, and a real Clarabel final polish.
+
+#### Follow-Ups / Risks
+
+- Only the 6,912 exact P1-A known-optimum records are complete publication-quality CPU evidence.
+- P1-B through P1-F and P2-A through P2-C component runs remain explicitly unqualified; do not
+  relabel them as complete solver or physical full-mission evidence.
+- Native P1-D/P1-E need a host optimizer dual/natural residual owner; Paper 2 needs a parameterized
+  physical Lambert/route/master/certification campaign owner.
