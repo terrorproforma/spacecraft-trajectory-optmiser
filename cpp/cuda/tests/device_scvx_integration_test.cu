@@ -27,6 +27,7 @@ namespace transcription = spacepdhcg::transcription;
 namespace {
 
 bool sanitizer_mode = false;
+bool tight_residual_mode = false;
 
 spacepdhcg_cuda_cone_kind cone_kind(const spacepdhcg::ConeKind kind) {
     switch (kind) {
@@ -302,9 +303,26 @@ IntegrationResult run_resident_sequence(
         }
         const auto solve = sanitizer_mode
             ? test::solve_options(1.0e-2, 5'000U)
-            : test::solve_options(2.0e-4, 200'000U);
+            : (tight_residual_mode
+                   ? test::solve_options(1.0e-6, 1'000'000U)
+                   : test::solve_options(2.0e-4, 200'000U));
         diagnostics = test::solve_and_wait(workspace, problem, solve);
         if (diagnostics.termination != SPACEPDHCG_CUDA_TERMINATION_OPTIMAL) {
+            if (tight_residual_mode) {
+                std::fprintf(
+                    stderr,
+                    "{\"case\":\"tight_final_residual\",\"termination\":%d,"
+                    "\"iterations\":%llu,\"requested\":1e-6,"
+                    "\"relative_primal\":%.9g,\"relative_dual\":%.9g,"
+                    "\"natural_residual\":%.9g}\n",
+                    static_cast<int>(diagnostics.termination),
+                    static_cast<unsigned long long>(diagnostics.iterations),
+                    diagnostics.relative_primal_residual,
+                    diagnostics.relative_dual_residual,
+                    diagnostics.natural_residual_inf
+                );
+                std::exit(8);
+            }
             std::fprintf(
                 stderr,
                 "resident solve failed: variables=%d rows=%d+%d termination=%d "
@@ -628,6 +646,7 @@ IntegrationResult run_pd6() {
 
 int main(const int argc, char** argv) {
     sanitizer_mode = argc > 1 && std::string_view(argv[1]) == "--sanitizer";
+    tight_residual_mode = argc > 1 && std::string_view(argv[1]) == "--tight-pd3";
     if (sanitizer_mode) {
         const auto hcw = run_hcw();
         std::printf(
@@ -637,6 +656,15 @@ int main(const int argc, char** argv) {
             hcw.diagnostics.natural_residual_inf
         );
         return 0;
+    }
+    if (tight_residual_mode) {
+        const auto pd3 = run_pd3();
+        std::printf(
+            "{\"case\":\"tight_final_residual\",\"termination\":1,"
+            "\"requested\":1e-6,\"natural_residual\":%.9g}\n",
+            pd3.diagnostics.natural_residual_inf
+        );
+        return pd3.diagnostics.natural_residual_inf <= 1.0e-6 ? 0 : 9;
     }
     const auto hcw = run_hcw();
     const auto pd3 = run_pd3();
