@@ -36,18 +36,27 @@ def summarize(run: Path) -> dict[str, Any]:
     recovery = _record(run / "recovery.jsonl", "recovery")
     sanitizer_logs = sorted(run.glob("sanitizer-*.log"))
     sanitizer_clean = bool(sanitizer_logs) and all(
-        "ERROR SUMMARY: 0 errors" in path.read_text(encoding="utf-8", errors="replace")
+        (
+            "ERROR SUMMARY: 0 errors" in text
+            or "RACECHECK SUMMARY: 0 hazards" in text
+        )
+        and "Target application returned an error" not in text
         for path in sanitizer_logs
+        for text in [path.read_text(encoding="utf-8", errors="replace")]
     )
-    test_logs = [
-        run / "debug-ctest.log",
-        run / "release-ctest.log",
-        run / "python-pytest.log",
-        run / "ruff.log",
-    ]
-    tests_clean = all(path.exists() for path in test_logs) and all(
-        "failed" not in path.read_text(encoding="utf-8", errors="replace").lower()
-        for path in test_logs
+    debug_ctest = run / "debug-ctest.log"
+    release_ctest = run / "release-ctest.log"
+    python_pytest = run / "python-pytest.log"
+    ruff = run / "ruff.log"
+    tests_clean = (
+        all(
+            path.exists()
+            for path in (debug_ctest, release_ctest, python_pytest, ruff)
+        )
+        and "100% tests passed" in debug_ctest.read_text(encoding="utf-8")
+        and "100% tests passed" in release_ctest.read_text(encoding="utf-8")
+        and "passed in" in python_pytest.read_text(encoding="utf-8")
+        and "All checks passed!" in ruff.read_text(encoding="utf-8")
     )
     maximum_canonical = max(
         float(tight["hcw"]),
