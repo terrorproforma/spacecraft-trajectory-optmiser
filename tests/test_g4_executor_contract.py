@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
+import time
 from pathlib import Path
 
 import pytest
@@ -103,3 +105,47 @@ def test_command_transmits_complete_coordinate_contract(tmp_path: Path) -> None:
         "b" * 64,
         "c" * 64,
     ]
+
+
+def test_persistent_executor_reuses_one_process(tmp_path: Path) -> None:
+    executable = tmp_path / "fake-g4-server"
+    executable.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+if sys.argv[1] != "--g4-server":
+    raise SystemExit(2)
+print(json.dumps({"case": "g4_server_ready", "protocol_version": 1,
+                  "cuda_startup_seconds": 0.125}), flush=True)
+for line in sys.stdin:
+    if line.rstrip("\\n") == "cancel":
+        break
+    fields = line.rstrip("\\n").split("\\t")
+    print(json.dumps({"case": "g4_server_result", "protocol_version": 1,
+                      "coordinate_id": fields[17], "returncode": 0}), flush=True)
+"""
+    )
+    executable.chmod(executable.stat().st_mode | 0o111)
+    command = [str(executable), "--g4-sample", *(["x"] * 16), "d" * 64, "x", "x"]
+    executor = CAMPAIGN.PersistentExecutor(executable, dict(os.environ))
+    try:
+        first = executor.execute(command, 2)
+        second = executor.execute(command, 2)
+    finally:
+        executor.close()
+    assert first[2:] == (0, False, 1, 0.125)
+    assert second[2:] == (0, False, 1, 0.125)
+
+
+def test_direct_energy_sampler_integrates_without_subprocess() -> None:
+    class ConstantPower:
+        def watts(self) -> float:
+            return 100.0
+
+    sampler = CAMPAIGN.EnergySampler(ConstantPower(), interval_seconds=0.01)
+    sampler.start()
+    time.sleep(0.04)
+    result = sampler.finish()
+    assert result["source"] == "nvml-c-api"
+    assert result["sample_count"] >= 3
+    assert result["joules"] > 0.0

@@ -114,3 +114,40 @@ def test_invalid_record_is_quarantined_and_atomic_create_refuses_reuse(
     assert target.read_bytes() == b"first"
     with pytest.raises(G4ContractError, match="source_commit"):
         CampaignStore(tmp_path, loaded.values, loaded.sha256, "c" * 40)
+
+
+def test_imported_terminal_row_is_exactly_once_and_skipped(tmp_path: Path) -> None:
+    loaded = policy()
+    source_root = tmp_path / "source"
+    with CampaignStore(source_root, loaded.values, loaded.sha256, "a" * 40) as source:
+        claim = source.claim()
+        assert claim is not None
+        source.finish(
+            claim,
+            disposition="qualified",
+            reason="source result",
+            record={"coordinate_id": claim.coordinate_id, "disposition": "qualified"},
+            valid=True,
+        )
+    source_run = source_root / "runs" / claim.coordinate_id / claim.attempt_id
+
+    with CampaignStore(
+        tmp_path / "target", loaded.values, loaded.sha256, "b" * 40
+    ) as target:
+        arguments = {
+            "ordinal": claim.ordinal,
+            "identifier": claim.coordinate_id,
+            "state": "completed",
+            "disposition": "qualified",
+            "reason": "source result",
+            "coordinate_payload": (source_run / "coordinate.json").read_bytes(),
+            "result_payload": (source_run / "result.json").read_bytes(),
+            "source_campaign": str(source_root),
+            "source_attempt_id": claim.attempt_id,
+        }
+        assert target.import_terminal(**arguments)
+        assert not target.import_terminal(**arguments)
+        next_claim = target.claim()
+        assert next_claim is not None
+        assert next_claim.ordinal != claim.ordinal
+        assert target.status()["completed"] == 1

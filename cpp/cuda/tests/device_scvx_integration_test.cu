@@ -16,14 +16,18 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <cstdio>
+#include <iostream>
 #include <limits>
 #include <map>
+#include <mutex>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -85,6 +89,8 @@ double g4_condition_factor_max = 1.0;
 double g4_conditioned_coefficient_ratio = 1.0;
 std::uint32_t production_outer_iterations = 1U;
 double cuda_startup_seconds = 0.0;
+double g4_deadline_seconds = 0.0;
+std::chrono::steady_clock::time_point g4_deadline{};
 int benchmark_variables = 0;
 int benchmark_scalar_rows = 0;
 int benchmark_affine_rows = 0;
@@ -1371,6 +1377,24 @@ IntegrationResult run_resident_sequence(
             production_outer_iterations
         );
         spacepdhcg_cuda_scvx_result outer{};
+        std::mutex deadline_mutex;
+        std::condition_variable deadline_condition;
+        bool solve_finished = false;
+        std::thread deadline_thread;
+        if (g4_deadline_seconds > 0.0) {
+            deadline_thread = std::thread([&]() {
+                std::unique_lock lock(deadline_mutex);
+                if (!deadline_condition.wait_until(
+                        lock,
+                        g4_deadline,
+                        [&]() { return solve_finished; }
+                    )) {
+                    static_cast<void>(
+                        spacepdhcg_cuda_scvx_driver_cancel(driver)
+                    );
+                }
+            });
+        }
         const auto outer_status = spacepdhcg_cuda_scvx_driver_solve(
             driver,
             problem.exchange.consumer_stream,
@@ -1378,6 +1402,14 @@ IntegrationResult run_resident_sequence(
             records.size(),
             &outer
         );
+        if (deadline_thread.joinable()) {
+            {
+                std::lock_guard lock(deadline_mutex);
+                solve_finished = true;
+            }
+            deadline_condition.notify_one();
+            deadline_thread.join();
+        }
         if (qoco_unavailable_mode) {
             test::require(
                 outer_status == SPACEPDHCG_CUDA_UNSUPPORTED,
@@ -2136,6 +2168,13 @@ IntegrationResult run_resident_sequence(
                 "\"altitude\":%.17g},"
                 "\"virtual\":%.17g,\"trajectory_difference\":%.17g,"
                 "\"cqp_seconds\":%.17g,\"scvx_seconds\":%.17g,"
+                "\"topology_seconds\":%.17g,"
+                "\"coefficient_seconds\":%.17g,"
+                "\"workspace_create_seconds\":%.17g,"
+                "\"update_seconds\":%.17g,\"scaling_seconds\":%.17g,"
+                "\"solve_seconds\":%.17g,\"residual_seconds\":%.17g,"
+                "\"replay_seconds\":%.17g,\"acceptance_seconds\":%.17g,"
+                "\"h2d_seconds\":%.17g,\"d2h_seconds\":%.17g,"
                 "\"recovery_seconds\":%.17g,\"recovery_iterations\":%llu,"
                 "\"inner_iterations\":%llu,\"h2d_bytes\":%llu,"
                 "\"d2h_bytes\":%llu,\"peak_device_bytes\":%llu,"
@@ -2172,6 +2211,17 @@ IntegrationResult run_resident_sequence(
                 retained_change_maximum,
                 outer.cqp_total_seconds,
                 outer.scvx_total_seconds,
+                outer.topology_seconds,
+                outer.coefficient_seconds,
+                outer.workspace_create_seconds,
+                outer.update_seconds,
+                outer.scaling_seconds,
+                outer.solve_seconds,
+                outer.residual_seconds,
+                outer.replay_seconds,
+                outer.acceptance_seconds,
+                outer.h2d_seconds,
+                outer.d2h_seconds,
                 outer.recovery_seconds,
                 static_cast<unsigned long long>(outer.recovery_iterations),
                 static_cast<unsigned long long>(outer.inner_iterations),
@@ -2870,8 +2920,14 @@ IntegrationResult run_pd6() {
 
 }  // namespace
 
-int main(const int argc, char** argv) {
+int run_invocation(const int argc, char** argv) {
     const auto mode = argc > 1 ? std::string_view(argv[1]) : std::string_view{};
+    if (mode == "--g4-sample" && g4_deadline_seconds > 0.0) {
+        g4_deadline = std::chrono::steady_clock::now()
+            + std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+                std::chrono::duration<double>(g4_deadline_seconds)
+            );
+    }
     if (mode == "--g4-capabilities") {
         std::printf(
             "{\"schema_version\":1,\"executor_semantics_version\":1,"
@@ -3490,5 +3546,74 @@ int main(const int argc, char** argv) {
         "\"maximum_natural_residual\":%.9g}\n",
         maximum_residual
     );
+    return 0;
+}
+
+int main(const int argc, char** argv) {
+    const auto mode = argc > 1 ? std::string_view(argv[1]) : std::string_view{};
+    if (mode != "--g4-server") {
+        return run_invocation(argc, argv);
+    }
+    test::require(argc == 3, "G4 server requires a row deadline");
+    g4_deadline_seconds = std::stod(argv[2]);
+    test::require(g4_deadline_seconds > 0.0, "G4 server deadline must be positive");
+
+    const auto startup_begin = std::chrono::steady_clock::now();
+    test::cuda_require(cudaFree(nullptr), "persistent G4 CUDA startup");
+    const double startup_seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - startup_begin
+    ).count();
+    std::printf(
+        "{\"case\":\"g4_server_ready\",\"protocol_version\":1,"
+        "\"cuda_startup_seconds\":%.17g}\n",
+        startup_seconds
+    );
+    std::fflush(stdout);
+
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        if (line == "cancel") {
+            break;
+        }
+        std::vector<std::string> arguments{"device_scvx_integration_test"};
+        std::size_t begin = 0U;
+        while (begin <= line.size()) {
+            const auto end = line.find('\t', begin);
+            arguments.emplace_back(
+                line.substr(
+                    begin,
+                    end == std::string::npos ? std::string::npos : end - begin
+                )
+            );
+            if (end == std::string::npos) {
+                break;
+            }
+            begin = end + 1U;
+        }
+        if (arguments.size() != 21U || arguments[1] != "--g4-sample") {
+            std::printf(
+                "{\"case\":\"g4_server_error\",\"protocol_version\":1,"
+                "\"reason\":\"invalid request\"}\n"
+            );
+            std::fflush(stdout);
+            continue;
+        }
+        std::vector<char*> pointers;
+        pointers.reserve(arguments.size());
+        for (auto& argument : arguments) {
+            pointers.push_back(argument.data());
+        }
+        const int returncode = run_invocation(
+            static_cast<int>(pointers.size()),
+            pointers.data()
+        );
+        std::printf(
+            "{\"case\":\"g4_server_result\",\"protocol_version\":1,"
+            "\"coordinate_id\":\"%s\",\"returncode\":%d}\n",
+            arguments[18].c_str(),
+            returncode
+        );
+        std::fflush(stdout);
+    }
     return 0;
 }

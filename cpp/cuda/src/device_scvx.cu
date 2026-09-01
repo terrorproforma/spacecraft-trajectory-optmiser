@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <chrono>
 #include <cstddef>
@@ -1705,7 +1706,7 @@ struct spacepdhcg_cuda_scvx_driver {
     size_t checkpoint_elements{0U};
     cudaEvent_t timer_start{nullptr};
     cudaEvent_t timer_stop{nullptr};
-    bool cancelled{false};
+    std::atomic_bool cancelled{false};
     uint64_t allocation_count{0U};
     uint64_t allocation_bytes{0U};
     uint64_t d2h_copy_count{0U};
@@ -2251,7 +2252,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     for (uint32_t outer = 0;
          outer < driver->options.maximum_outer_iterations;
          ++outer) {
-        if (driver->cancelled) {
+        if (driver->cancelled.load(std::memory_order_acquire)) {
             result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
             break;
         }
@@ -3293,7 +3294,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_cancel(
     if (driver == nullptr) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
-    driver->cancelled = true;
+    driver->cancelled.store(true, std::memory_order_release);
     const auto status = spacepdhcg_cuda_workspace_cancel(
         driver->problem.workspace
     );

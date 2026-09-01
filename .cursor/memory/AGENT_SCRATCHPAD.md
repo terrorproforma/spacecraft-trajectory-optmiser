@@ -867,3 +867,29 @@ Use this file as persistent, repo-local execution memory.
   and evaluation seeds, and a content hash over the complete audit.
 - Do not interpret repeat index or solver rotation as a new mathematical instance. Matching
   numerical coordinates must reproduce hashes; different evaluation seeds must not.
+
+### 2026-09-02 06:52 AEST - G4 batching feasibility
+
+#### What Worked
+
+- The first row decomposes to 354.418484 s of CQP work inside 356.864485 s wall time;
+  eliminating all non-CQP/process cost can yield only 1.0069x on that row.
+- A streaming native server, direct NVML sampler, content-addressed stdout archive, and locked
+  exact-once terminal-row importer were implemented without touching the active integration tree.
+- Direct WSL NVML sampling sustained 41 samples over two seconds with a 0.0574 s maximum gap.
+
+#### Guardrails
+
+- Do not migrate merely because CUDA context persistence works. Cross-row workspace reuse and
+  representative old/new equivalence must pass first.
+- A timeout optimization must execute until the real deadline and retain final progress; never
+  infer timeout from another policy/size.
+- With immutable independent repeats, cached results cannot replace execution. Reuse is limited to
+  immutable topology/coefficient preparation proven equal by hashes.
+
+#### Follow-Ups / Risks
+
+- The native server currently destroys per-row workspaces; it is not yet the grouped workspace
+  executor required for a tractable full campaign.
+- The old campaign remains authoritative and active. Six rows were terminal and one was running at
+  recovery; no migration or competing GPU process was launched.
