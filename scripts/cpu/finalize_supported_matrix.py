@@ -481,6 +481,7 @@ def main() -> int:
         if item["disposition"] in {"timeout", "oom", "numerical", "infeasible", "failed"}
     ]
     maxima = {}
+    qualified_maxima = {}
     for field in (
         "canonical_primal_residual",
         "canonical_dual_residual",
@@ -500,10 +501,27 @@ def main() -> int:
             if item["quality"][field] is not None and math.isfinite(float(item["quality"][field]))
         ]
         maxima[field] = max(values, default=None)
+        qualified_values = [
+            float(item["quality"][field])
+            for item in results
+            if item["disposition"] == "executed"
+            and item["quality"]["qualified"]
+            and item["quality"][field] is not None
+            and math.isfinite(float(item["quality"][field]))
+        ]
+        qualified_maxima[field] = max(qualified_values, default=None)
     family_counts: dict[str, Counter[str]] = defaultdict(Counter)
     for item in results:
         family_counts[item["family"]][item["disposition"]] += 1
     baseline_dashboard = arguments.baseline / "dashboard-summary.json"
+    baseline_payload = (
+        json.loads(baseline_dashboard.read_text(encoding="utf-8"))
+        if baseline_dashboard.is_file()
+        else {}
+    )
+    predicted_timeouts = int(
+        baseline_payload.get("counts", {}).get("dispositions", {}).get("timeout", 0)
+    )
     dashboard = {
         "schema_version": SCHEMA_VERSION,
         "campaign_id": campaign.name,
@@ -530,6 +548,7 @@ def main() -> int:
             },
         },
         "numerical_maxima": maxima,
+        "qualified_numerical_maxima": qualified_maxima,
         "timing_distributions_seconds": {
             "all_observed_coordinate_medians": _distribution(
                 [
@@ -555,6 +574,13 @@ def main() -> int:
                 sorted(Counter(item["disposition"] for item in failures).items())
             ),
             "by_reason": dict(sorted(Counter(item["reason"] for item in failures).items())),
+        },
+        "timeout_replacement": {
+            "prior_predicted_preflight": predicted_timeouts,
+            "actual_launched_process_timeouts": dispositions["timeout"],
+            "predictions_replaced_by_completed_or_other_terminal_records": (
+                predicted_timeouts - dispositions["timeout"]
+            ),
         },
         "reproducibility": {
             "semantic_source_sha256": source_digest,

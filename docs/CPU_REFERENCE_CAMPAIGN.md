@@ -24,6 +24,12 @@ identity through a SciPy LIL slice is prohibited because SciPy densifies the rig
 (913 GiB for the largest P1-A control block). P1-C preserves a 40-second physical horizon as `N`
 changes instead of holding the step duration fixed.
 
+Clarabel qualification is recomputed in its expanded bound/cone coordinates, including
+stationarity, primal and dual cone feasibility, and complementarity. P1-F launches the full
+scenario CQP for every requested risk coordinate and independently replays every solved scenario.
+The current CQP objective is expected cost; worst-case and CVaR coordinates therefore fail closed
+as numerical risk-objective mismatches until a frozen epigraph formulation exists.
+
 ## Evidence interpretation
 
 `executed` is reserved for a record with complete independently recomputed quality fields. A
