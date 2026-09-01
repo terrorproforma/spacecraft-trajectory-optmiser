@@ -143,3 +143,26 @@
   - No code was classified obsolete: commit history and dedicated native CI establish this as an
     active parallel native-core API. Conceptual overlap with newer headers is not replacement proof.
   - GPU tests and measured benchmarks were intentionally not run.
+
+## 2026-09-01 22:12 AEST
+
+- Task summary:
+  - Prepared Gate G5 in isolated branch `feat/scenario-aware-multigpu`; this is implementation and
+    one-rank correctness only, not G5 acceptance.
+- Changes:
+  - Added persistent rank-local G2 composition, deterministic MPI-rank/CUDA-device mapping,
+    MPI/NCCL stream-event runtime, scenario-aware and nonzero partitions, device algebra,
+    risk/residual/status reductions, telemetry, checkpoint/restart, and cancellation.
+  - Added 1/2/4/8 logical-rank tests, real one-rank MPI/NCCL/CUDA coverage, G5 evidence schema,
+    CMake/CTest build targets, manual self-hosted CI, and implementation status documentation.
+  - Installed OpenMPI 4.1.2 and NCCL 2.26.2 for CUDA 12.8 only; no driver package was installed.
+- Validation:
+  - Pinned upstream PDHCG commit `167c8b7`/tree `62b05e6` built all 163 distributed steps.
+  - Debug, Release, warnings-as-errors, and sanitizer-capable G5 targets compiled.
+  - Logical 1/2/4/8 tests passed; schema/claim-drift tests passed 6/6; Ruff passed.
+  - Idle RTX 5090 Release one-rank MPI/NCCL/CUDA CTest passed; memcheck was leak/error clean and
+    racecheck reported zero hazards.
+- Follow-up notes / risks:
+  - Initcheck/synccheck and overlap execution were deferred when G4 resumed GPU ownership.
+  - Physical 2/4/8 correctness, rank-failure behavior, strong/weak scaling, and H2/H3/H4 remain
+    unverified. G5 must not be reported as PASS.

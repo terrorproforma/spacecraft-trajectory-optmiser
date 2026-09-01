@@ -396,3 +396,49 @@ Use this file as persistent, repo-local execution memory.
   CTest target; run all three native-core configurations before handoff.
 - Keep isolated build directories matched by `.gitignore` so scikit-build sdists cannot ingest live
   compiler or CTest output.
+
+### 2026-09-01 22:12 AEST - Gate G5 distributed core preparation
+
+#### Task Summary
+
+- Built the pinned upstream MPI/NCCL target and implemented isolated G5 ownership, partition,
+  algebra, telemetry, checkpoint, lifecycle, build, CI, schema, and logical/one-rank tests.
+
+#### Mistakes And Fixes
+
+- `[tool]` Linux-style paths passed to the file patch tool landed under `C:\home`; moved the three
+  files into the WSL worktree, deleted the accidental copies, and used UNC paths for all later edits.
+- `[self]` The first distributed G2 composition solved on a stream different from workspace creation,
+  producing pointer-contract status 4. Copied each exchange and bound creation to the persistent
+  rank compute stream.
+- `[self]` Requested residuals while the local solve was still in flight, producing busy status 5.
+  Enforced solve-wait-residual-wait ordering in one-rank coverage.
+- `[tool]` Compute Sanitizer initcheck accepts `--track-unused-memory` without `yes`; the malformed
+  invocation was discarded and not counted as validation.
+
+#### User Preferences Learned Or Reinforced
+
+- `[user]` G5 implementation/build work is explicitly authorised on this isolated branch while G4
+  continues, but no G5 PASS or 2/4/8-GPU scaling claim is authorised.
+- `[user]` Never install a Linux NVIDIA driver, use fake ranks/MPS, or run GPU work while another
+  compute process owns the RTX 5090.
+
+#### What Worked
+
+- Deterministic logical 1/2/4/8-rank tests exposed ownership, risk, checkpoint, failure, and schema
+  contracts without pretending logical ranks are physical GPUs.
+- GPU-process checks found short idle windows for a clean Release one-rank CTest plus memcheck and
+  racecheck while preserving G4 priority.
+
+#### Guardrails For Next Session
+
+- Use UNC paths for WSL file edits and keep Bash scripts LF-only.
+- Bind every rank-local G2 workspace at creation to the persistent rank compute stream.
+- Wait for solve completion before requesting independent residuals.
+- Require same-machine 1/2/4/8 physical evidence before any scaling efficiency or G5 acceptance.
+
+#### Follow-Ups / Risks
+
+- Initcheck, synccheck, actual overlap-stream execution, and every physical 2/4/8-GPU test remain
+  deferred; ordinary OpenMPI rank loss is fatal rather than ULFM-recoverable.
+- Later G4/P1 fixes must be cherry-picked and the full G5 build/one-rank matrix rerun.
