@@ -672,7 +672,9 @@ IntegrationResult run_resident_sequence(
             "\"ratio\":%.9g,\"objective\":%.9g,\"virtual\":%.9g,"
             "\"dynamics\":%.9g,\"path\":%.9g,\"terminal\":%.9g,"
             "\"cpu_gpu_trajectory\":%.9g,"
-            "\"t_cqp\":%.9g,\"t_scvx\":%.9g,\"d2h_bytes\":%llu,"
+            "\"t_cqp\":%.9g,\"t_scvx\":%.9g,"
+            "\"recovery_seconds\":%.9g,\"recovery_iterations\":%llu,"
+            "\"inner_iterations\":%llu,\"d2h_bytes\":%llu,"
             "\"topology_allocations\":%llu,\"topology_copies\":%llu}\n",
             static_cast<int>(dynamics_config.model),
             outer.outer_iterations,
@@ -690,6 +692,9 @@ IntegrationResult run_resident_sequence(
             parity_maximum,
             outer.cqp_total_seconds,
             outer.scvx_total_seconds,
+            outer.recovery_seconds,
+            static_cast<unsigned long long>(outer.recovery_iterations),
+            static_cast<unsigned long long>(outer.inner_iterations),
             static_cast<unsigned long long>(outer.d2h_bytes),
             static_cast<unsigned long long>(
                 outer.topology_allocation_count_after_create
