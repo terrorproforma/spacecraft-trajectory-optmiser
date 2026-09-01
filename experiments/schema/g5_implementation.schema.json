@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spacepdhcg.dev/schema/g5-implementation-1.0.0.json",
+  "title": "SpacePDHCG Gate G5 implementation evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "gate",
+    "verification",
+    "rank",
+    "world_size",
+    "device",
+    "deterministic",
+    "overlap",
+    "partition",
+    "collectives",
+    "rank_status",
+    "multi_gpu_scaling_verified",
+    "physical_rank_counts_deferred"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "gate": {
+      "const": "G5-implementation"
+    },
+    "verification": {
+      "enum": [
+        "logical-rank-cpu-mock",
+        "one-rank-mpi-nccl-cuda"
+      ]
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "world_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "device": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "deterministic": {
+      "type": "boolean"
+    },
+    "overlap": {
+      "type": "boolean"
+    },
+    "rank_status": {
+      "enum": [
+        "healthy",
+        "cancelled",
+        "failed",
+        "rank_lost"
+      ]
+    },
+    "partition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fingerprint",
+        "scenario_owner",
+        "predicted_rank_load",
+        "measured_rank_load"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "scenario_aware",
+            "nonzero_balanced"
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "scenario_owner": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "predicted_rank_load": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "measured_rank_load": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "collectives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "count",
+          "elements",
+          "payload_bytes",
+          "wire_bytes_estimate",
+          "frequency",
+          "purpose",
+          "collective_seconds",
+          "exposed_seconds",
+          "overlapped_seconds"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "elements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "payload_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "wire_bytes_estimate": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "frequency": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "collective_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "exposed_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "overlapped_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "multi_gpu_scaling_verified": {
+      "const": false
+    },
+    "physical_rank_counts_deferred": {
+      "const": [
+        2,
+        4,
+        8
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verification": {
+            "const": "one-rank-mpi-nccl-cuda"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "world_size": {
+            "const": 1
+          },
+          "rank": {
+            "const": 0
+          },
+          "device": {
+            "const": 0
+          }
+        }
+      }
+    }
+  ]
+}

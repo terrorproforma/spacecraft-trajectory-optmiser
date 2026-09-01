@@ -16,6 +16,11 @@ option(SPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS "Treat native warnings as errors" ON
 option(SPACEPDHCG_NATIVE_ENABLE_SANITIZERS "Enable ASan and UBSan" OFF)
 option(SPACEPDHCG_BUILD_CUDA "Build the persistent single-GPU CUDA workspace" OFF)
 option(
+    SPACEPDHCG_BUILD_DISTRIBUTED
+    "Build the Gate G5 MPI/NCCL scenario-aware runtime"
+    OFF
+)
+option(
     SPACEPDHCG_PYTHON_WHEEL
     "Install the native C ABI inside the spacepdhcg Python package"
     OFF
@@ -90,6 +95,13 @@ endif()
 
 if(SPACEPDHCG_BUILD_CUDA)
     add_subdirectory(cuda)
+endif()
+
+if(SPACEPDHCG_BUILD_DISTRIBUTED)
+    if(NOT SPACEPDHCG_BUILD_CUDA)
+        message(FATAL_ERROR "SPACEPDHCG_BUILD_DISTRIBUTED requires SPACEPDHCG_BUILD_CUDA=ON")
+    endif()
+    add_subdirectory(distributed)
 endif()
 
 if(SPACEPDHCG_PYTHON_WHEEL)

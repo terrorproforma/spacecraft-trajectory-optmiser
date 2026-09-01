@@ -1,0 +1,52 @@
+name: g5-distributed-build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: g5-distributed-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-one-rank-correctness:
+    runs-on: [self-hosted, linux, x64, gpu, nvidia, cuda-12]
+    timeout-minutes: 120
+    strategy:
+      max-parallel: 1
+      matrix:
+        build_type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned distributed prerequisites
+        run: |
+          set -euo pipefail
+          test "$(nvidia-smi -L | wc -l)" -eq 1
+          command -v mpirun
+          test -f /usr/include/nccl.h
+          ldconfig -p | grep -q libnccl
+          bash scripts/gpu/checkout_pinned_pdhcg.sh
+          test "$(git -C _upstream/pdhcg rev-parse HEAD)" = \
+            "167c8b72b4b96d2f94d405b8763e485514192b81"
+          test "$(git -C _upstream/pdhcg rev-parse HEAD^{tree})" = \
+            "62b05e6c1bedd385f6c267af3645ae4aae0421b4"
+      - name: Build G5 and run safe checks
+        env:
+          BUILD_TYPE: ${{ matrix.build_type }}
+          BUILD_DIR: build/g5-ci-${{ matrix.build_type }}
+          RUN_ONE_RANK_GPU: ${{ matrix.build_type == 'Release' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          bash scripts/gpu/run_g5_build_matrix.sh
+      - name: Upload implementation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g5-one-rank-${{ matrix.build_type }}-${{ github.run_id }}
+          path: |
+            build/g5-ci-${{ matrix.build_type }}/Testing/Temporary/LastTest.log
+            build/g5-ci-${{ matrix.build_type }}/CMakeCache.txt
+          if-no-files-found: warn
+          retention-days: 30
