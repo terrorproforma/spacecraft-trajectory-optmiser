@@ -215,6 +215,30 @@
     additively, rerun CPU/static matrices, then serialize deferred GPU validation after contention
     clears.
 
+## 2026-09-01 23:35 AEST
+
+- What changed:
+  - Integrated P1-C rejection telemetry and retry globalization as `99abb9e` then `e191a0d`,
+    preserving P1-D quaternion corrections and QOCO handback semantics.
+  - Added a direct persistent C++ QOCO owner to the CUDA SCvx driver, exact canonical
+    QP/SOC/rotated-SOC conversion, canonical primal/dual mapping, independent residuals,
+    accepted-primal-only warm starts, dual-discard reporting, and CUDA/cuDSS failure ownership.
+  - Added the distinct `pure-gpu-ipm` runtime policy, transactional device nonlinear handback,
+    persistent same-pattern updates, complete timing/transfer telemetry, P1-C oracle assertions,
+    and unavailable-library/no-fallback coverage.
+- Validation:
+  - Native P1-C reused one workspace for two solves/one update, accepted both steps, reached
+    terminal `1.230e-13`, and produced ratios `0.999931728/0.999998351`; the Python oracle produced
+    terminal `2.149e-13` and ratios `0.999896705/0.999998180`.
+  - Corrected P1-D preserved complete quaternion/path checks and exact CQP quality; a three-step
+    run accepted two then rolled back one rejected candidate. P1-E correctly rejected its adverse
+    nonlinear candidate without changing the reference.
+  - Release and Debug warnings-as-errors builds, 55 native tests, 157 Python tests, Ruff, and
+    memcheck/racecheck/initcheck/synccheck passed.
+- Follow-up notes / risks:
+  - No performance, energy, or full matrix campaign was run.
+  - P1-D and P1-E are not yet nonlinear-qualified by these short correctness runs.
+
 ## 2026-09-01 23:00 AEST
 
 - Task summary:

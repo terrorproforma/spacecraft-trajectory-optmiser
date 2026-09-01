@@ -33,7 +33,8 @@ typedef enum spacepdhcg_cuda_scvx_policy {
     SPACEPDHCG_CUDA_SCVX_ADAPTIVE = 0,
     SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT = 1,
     SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE = 2,
-    SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH = 3
+    SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH = 3,
+    SPACEPDHCG_CUDA_SCVX_PURE_QOCO = 4
 } spacepdhcg_cuda_scvx_policy;
 
 typedef enum spacepdhcg_cuda_scvx_trust_action {
@@ -55,6 +56,17 @@ typedef enum spacepdhcg_cuda_qoco_handback_disposition {
     SPACEPDHCG_CUDA_QOCO_HANDBACK_PERMUTATION_MISMATCH = 4,
     SPACEPDHCG_CUDA_QOCO_HANDBACK_STALE_CQP = 5
 } spacepdhcg_cuda_qoco_handback_disposition;
+
+typedef enum spacepdhcg_cuda_qoco_failure {
+    SPACEPDHCG_CUDA_QOCO_FAILURE_NONE = 0,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_UNAVAILABLE = 1,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_UNSUPPORTED = 2,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY = 3,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL = 4,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_INFEASIBLE = 5,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_MAX_ITERATIONS = 6,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_ABI = 7
+} spacepdhcg_cuda_qoco_failure;
 
 typedef struct spacepdhcg_cuda_scvx_numeric_update {
     uint32_t abi_version;
@@ -100,6 +112,8 @@ typedef struct spacepdhcg_cuda_scvx_problem {
     spacepdhcg_accelerator_buffer_view initial_state;
     spacepdhcg_accelerator_buffer_view target_state;
     spacepdhcg_cuda_scvx_numeric_update numeric_update;
+    spacepdhcg_cuda_structure canonical_structure;
+    spacepdhcg_cqp_topology_accelerator_views canonical_topology;
 } spacepdhcg_cuda_scvx_problem;
 
 typedef struct spacepdhcg_cuda_scvx_options {
@@ -250,6 +264,14 @@ typedef struct spacepdhcg_cuda_scvx_result {
     uint64_t recovery_iterations;
     int32_t hidden_cpu_fallback;
     int32_t used_declared_stream;
+    double qoco_conversion_seconds;
+    double qoco_setup_seconds;
+    double qoco_update_seconds;
+    double qoco_solve_seconds;
+    uint64_t qoco_workspace_creations;
+    uint64_t qoco_numeric_updates;
+    int32_t qoco_dual_discarded;
+    spacepdhcg_cuda_qoco_failure qoco_failure;
 } spacepdhcg_cuda_scvx_result;
 
 typedef struct spacepdhcg_cuda_scvx_path_inventory {

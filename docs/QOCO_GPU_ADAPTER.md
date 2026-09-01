@@ -77,6 +77,30 @@ candidates leave the resident nonlinear reference unchanged. Conversion,
 setup, polish, host-to-device transfer, replay, and acceptance costs are
 reported separately.
 
+## Native production outer mode
+
+The CUDA SCvx driver accepts the distinct frozen `pure-gpu-ipm` policy and
+owns a `spacepdhcg_native_qoco` workspace directly; it never invokes Python or
+a subprocess. The native adapter dynamically binds the pinned QOCO C ABI from
+`SPACEPDHCG_QOCO_LIBRARY`, downloads canonical CSC values on the declared
+stream, verifies the immutable topology fingerprint and Hessian symmetry, and
+applies the same bound/SOC/rotated-SOC ordering as the Python oracle.
+
+QOCO setup and symbolic analysis occur once. Every later trust retry or
+accepted-reference update must preserve the generated QOCO sparsity and uses
+in-place matrix/vector updates. Only an accepted canonical primal is eligible
+for `qoco_set_x0`; requested dual warm state is explicitly discarded because
+the pinned ABI has no dual-start entry point. QOCO primal and dual outputs are
+mapped back into resident canonical buffers, independently checked in original
+coordinates, and then pass through the existing device nonlinear
+replay/merit/trust transaction. Rejected candidates do not mutate the retained
+reference, and the driver never routes a pure-QOCO failure to PDHCG.
+
+Conversion, setup, numeric update, solve, transfer counts, workspace reuse,
+warm/dual disposition, and CUDA/cuDSS failure class are emitted separately.
+Adaptive/fixed PDHCG and `pure-gpu-ipm` remain separate policies; pure QOCO is
+not reported as a polish or a hybrid solve.
+
 ## Serialized GPU validation
 
 The pinned CUDA/cuDSS library was loaded on the RTX 5090 and the adapter's 18-test
@@ -86,7 +110,9 @@ dual discard. The CUDA runtime requires both `build/qoco-cudss-lib` and the pinn
 `nvidia/cu12/lib` directory on `LD_LIBRARY_PATH`; omitting them is correctly classified as setup
 failure rather than solver evidence.
 
-This validates the original adapter and CUDA ABI, not the new nonlinear
-handback. The dedicated short `device_scvx_qoco_handback_test` remains deferred
-until the single RTX 5090 is free. No performance, energy, or full frozen
-matrix result is implied by the compile/static coverage.
+The native P1-C correctness run reused one workspace for two solves and one
+numeric update, accepted both nonzero steps, produced ratios
+`0.999931728/0.999998351`, and reached terminal residual `1.230e-13`.
+The corresponding Python oracle ratios were `0.999896705/0.999998180` with
+terminal residual `2.149e-13`. No performance, energy, or full frozen matrix
+result is implied by these short correctness runs.

@@ -511,6 +511,46 @@ Use this file as persistent, repo-local execution memory.
   RTX 5090 is free.
 - Do not infer G4/G5 acceptance from compile, CPU/static, synthetic, or logical-rank validation.
 
+### 2026-09-01 23:35 AEST - Native pure-QOCO SCvx lifecycle
+
+#### Task Summary
+
+- Added a persistent C++ QOCO-GPU owner directly to the resident CUDA SCvx driver.
+- Globalized P1-C through the existing device replay and trust transaction while retaining the
+  corrected P1-D quaternion/path lifecycle.
+
+#### Mistakes And Fixes
+
+- `[tool]` Passed the worktree path as the pinned-PDHCG helper's destination; the helper replaced
+  the isolated checkout with a detached dependency clone. Preserved that clone, pruned only stale
+  worktree metadata, recreated the worktree from intact commit `e191a0d`, and reimplemented the
+  uncommitted native adapter. Never pass the repository root as this helper's positional argument.
+- `[self]` Initially treated SOC slot count as `vector_dimension + 1`. Canonical SOC and RSOC blocks
+  both reserve `vector_dimension + 2`; the missing row made native QOCO stop with `5e-2` equality
+  residual. Matching the canonical slot contract produced the exact Python dimensions and quality.
+- `[self]` Initially allowed a solver-reported success to reach nonlinear acceptance even when the
+  independently computed canonical residual missed the requested tolerance. Pure QOCO acceptance
+  now requires independent quality as well as nonlinear trust acceptance.
+
+#### What Worked
+
+- Native and Python P1-C each reuse one workspace and accept two nonzero steps. Native ratios are
+  `0.999931728/0.999998351`, terminal residual is `1.230e-13`, and final canonical residual is
+  `1.302e-11`.
+- Corrected P1-D obtains exact CQP quality and complete quaternion/path replay; three steps retain
+  two candidates and transactionally reject the third. P1-E exactly rejects adverse nonlinear
+  merit while preserving its reference.
+- Release/Debug warnings-as-errors builds, 55 native tests, 157 Python tests, Ruff, and all four
+  Compute Sanitizer tools pass. No performance, energy, or matrix campaign was run.
+
+#### Guardrails And Follow-Ups
+
+- `pure-gpu-ipm` is a distinct outer policy, never a polish or hybrid label.
+- The pinned ABI permits only accepted-primal warm starts; dual state must remain explicitly
+  discarded. Numeric updates must preserve generated QOCO CSC ordering exactly.
+- P1-D and P1-E remain nonlinear-globalization work after this integration; do not report their
+  short correctness runs as G4 qualification.
+
 ### 2026-09-01 23:00 AEST - P1-C globalization and trust audit
 
 #### What Worked

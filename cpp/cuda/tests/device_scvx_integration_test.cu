@@ -51,6 +51,7 @@ bool g4_diagnostic_mode = false;
 bool p1d_path_audit_mode = false;
 bool p1d_diagnostic_mode = false;
 bool qoco_handback_mode = false;
+bool qoco_unavailable_mode = false;
 std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
@@ -763,6 +764,8 @@ IntegrationResult run_resident_sequence(
             ro64(initial),
             ro64(target),
             numeric_update,
+            problem.structure,
+            problem.exchange.topology,
         };
         const double initial_numeric_trust =
             g4_sample_mode
@@ -1110,6 +1113,10 @@ IntegrationResult run_resident_sequence(
                     frozen_g4::progress_iterations;
             } else if (g4_policy == "adaptive+polish") {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH;
+            } else if (g4_policy == "pure-gpu-ipm") {
+                outer_options.policy = SPACEPDHCG_CUDA_SCVX_PURE_QOCO;
+                outer_options.fixed_inner_tolerance = 1.0e-8;
+                outer_options.fixed_inner_iteration_limit = 200U;
             } else {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE;
             }
@@ -1127,16 +1134,79 @@ IntegrationResult run_resident_sequence(
             production_outer_iterations
         );
         spacepdhcg_cuda_scvx_result outer{};
-        test::status_require(
-            spacepdhcg_cuda_scvx_driver_solve(
-                driver,
-                problem.exchange.consumer_stream,
-                records.data(),
-                records.size(),
-                &outer
-            ),
-            "production outer driver solve"
+        const auto outer_status = spacepdhcg_cuda_scvx_driver_solve(
+            driver,
+            problem.exchange.consumer_stream,
+            records.data(),
+            records.size(),
+            &outer
         );
+        if (qoco_unavailable_mode) {
+            test::require(
+                outer_status == SPACEPDHCG_CUDA_UNSUPPORTED,
+                "missing native QOCO must propagate unsupported"
+            );
+            test::require(
+                outer.status == SPACEPDHCG_CUDA_SCVX_INNER_FAILURE
+                    && outer.qoco_failure
+                        == SPACEPDHCG_CUDA_QOCO_FAILURE_UNAVAILABLE
+                    && outer.hidden_cpu_fallback == 0,
+                "missing native QOCO must classify failure without fallback"
+            );
+            test::status_require(
+                spacepdhcg_cuda_scvx_driver_destroy(&driver),
+                "unavailable QOCO driver destroy"
+            );
+            test::destroy_workspace(workspace);
+            return {};
+        }
+        test::status_require(outer_status, "production outer driver solve");
+        if (g4_policy == "pure-gpu-ipm") {
+            test::require(
+                outer.qoco_workspace_creations == 1U,
+                "pure QOCO must reuse one native workspace"
+            );
+            test::require(
+                outer.qoco_numeric_updates + 1U == outer.outer_iterations,
+                "pure QOCO numeric updates must match persistent outer reuse"
+            );
+            test::require(
+                outer.qoco_failure == SPACEPDHCG_CUDA_QOCO_FAILURE_NONE,
+                "pure QOCO reported a native CUDA/cuDSS failure"
+            );
+            test::require(
+                outer.hidden_cpu_fallback == 0,
+                "pure QOCO must not use a CPU fallback"
+            );
+            test::require(
+                outer.qoco_conversion_seconds >= 0.0
+                    && outer.qoco_setup_seconds >= 0.0
+                    && outer.qoco_update_seconds >= 0.0
+                    && outer.qoco_solve_seconds > 0.0,
+                "pure QOCO timing accounting is incomplete"
+            );
+            if (g4_family == "P1-C-pd3"
+                && production_outer_iterations >= 2U) {
+                test::require(
+                    outer.accepted_steps == 2U,
+                    "P1-C pure QOCO must reproduce two accepted steps"
+                );
+                test::require(
+                    outer.terminal_residual <= g4_quality_tolerance,
+                    "P1-C pure QOCO terminal residual missed frozen quality"
+                );
+                test::require(
+                    std::abs(records[0].reduction_ratio - 0.999897) <= 5.0e-3
+                        && std::abs(records[1].reduction_ratio - 0.999998)
+                            <= 5.0e-3,
+                    "P1-C native ratios differ from the Python oracle"
+                );
+                test::require(
+                    outer.qoco_dual_discarded == 1,
+                    "P1-C second solve must report primal-only dual discard"
+                );
+            }
+        }
         spacepdhcg_cuda_scvx_path_inventory path_inventory{};
         test::status_require(
             spacepdhcg_cuda_scvx_driver_path_inventory(
@@ -1799,7 +1869,15 @@ IntegrationResult run_resident_sequence(
                 "\"inner_iterations\":%llu,\"h2d_bytes\":%llu,"
                 "\"d2h_bytes\":%llu,\"peak_device_bytes\":%llu,"
                 "\"topology_allocations_after_create\":%llu,"
-                "\"hidden_cpu_fallback\":%d}\n",
+                "\"hidden_cpu_fallback\":%d,"
+                "\"qoco_conversion_seconds\":%.17g,"
+                "\"qoco_setup_seconds\":%.17g,"
+                "\"qoco_update_seconds\":%.17g,"
+                "\"qoco_solve_seconds\":%.17g,"
+                "\"qoco_workspace_creations\":%llu,"
+                "\"qoco_numeric_updates\":%llu,"
+                "\"qoco_dual_discarded\":%d,"
+                "\"qoco_failure\":%d}\n",
                 g4_family.c_str(),
                 g4_policy.c_str(),
                 intervals,
@@ -1831,7 +1909,19 @@ IntegrationResult run_resident_sequence(
                 static_cast<unsigned long long>(
                     outer.topology_allocation_count_after_create
                 ),
-                outer.hidden_cpu_fallback
+                outer.hidden_cpu_fallback,
+                outer.qoco_conversion_seconds,
+                outer.qoco_setup_seconds,
+                outer.qoco_update_seconds,
+                outer.qoco_solve_seconds,
+                static_cast<unsigned long long>(
+                    outer.qoco_workspace_creations
+                ),
+                static_cast<unsigned long long>(
+                    outer.qoco_numeric_updates
+                ),
+                outer.qoco_dual_discarded,
+                static_cast<int>(outer.qoco_failure)
             );
         }
         test::status_require(
@@ -2448,7 +2538,19 @@ int main(const int argc, char** argv) {
         || mode == "--g4-diagnose"
         || mode == "--p1d-path-audit"
         || mode == "--dump-p1d"
-        || mode == "--diagnose-p1d";
+        || mode == "--diagnose-p1d"
+        || mode == "--qoco-unavailable";
+    if (mode == "--qoco-unavailable") {
+        qoco_unavailable_mode = true;
+        g4_sample_mode = true;
+        g4_family = "P1-C-pd3";
+        g4_intervals = 2U;
+        g4_policy = "pure-gpu-ipm";
+        g4_quality_tier = "ipm";
+        g4_quality_tolerance = 1.0e-8;
+        g4_dispersion = 0.01;
+        production_outer_iterations = 1U;
+    }
     if (mode == "--qoco-handback") {
         production_driver_mode = true;
         qoco_handback_mode = true;

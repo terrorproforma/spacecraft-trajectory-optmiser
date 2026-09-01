@@ -87,6 +87,7 @@ add_library(
     spacepdhcg_cuda
     SHARED
         src/device_scvx.cu
+        src/native_qoco_adapter.cpp
         src/orbitweaver_gpu.cu
         src/persistent_pdhcg.cu
 )
@@ -97,12 +98,16 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/internal"
 )
 target_link_libraries(
     spacepdhcg_cuda
     PUBLIC
         CUDA::cudart
         CUDA::cusparse
+    PRIVATE
+        ${CMAKE_DL_LIBS}
 )
 target_compile_features(spacepdhcg_cuda PUBLIC cxx_std_20)
 target_compile_options(
@@ -234,10 +239,18 @@ if(BUILD_TESTING)
                 NAME device_scvx_qoco_handback_test
                 COMMAND "${test_name}" --qoco-handback
             )
+            add_test(
+                NAME device_scvx_qoco_unavailable_test
+                COMMAND
+                    "${CMAKE_COMMAND}" -E env
+                    --unset=SPACEPDHCG_QOCO_LIBRARY
+                    "$<TARGET_FILE:${test_name}>" --qoco-unavailable
+            )
             set_tests_properties(
                 device_scvx_production_test
                 device_scvx_p1d_path_audit_test
                 device_scvx_qoco_handback_test
+                device_scvx_qoco_unavailable_test
                 PROPERTIES TIMEOUT 180
             )
         endif()

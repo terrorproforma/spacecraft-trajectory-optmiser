@@ -5,6 +5,8 @@
  */
 #include "spacepdhcg/cuda/device_scvx_driver_c_api.h"
 
+#include "native_qoco_adapter.h"
+
 #include <cuda_runtime.h>
 
 #include <algorithm>
@@ -1655,6 +1657,8 @@ struct spacepdhcg_cuda_scvx_driver {
     ScvxMetrics* host_metrics{nullptr};
     unsigned long long* device_numeric_fingerprint{nullptr};
     unsigned long long* host_numeric_fingerprint{nullptr};
+    spacepdhcg_native_qoco* qoco{nullptr};
+    spacepdhcg_native_qoco_report qoco_report{};
     double* primal{nullptr};
     spacepdhcg_cuda_scvx_path_inventory path_inventory{};
     double* dual{nullptr};
@@ -1676,6 +1680,8 @@ void destroy_driver_storage(spacepdhcg_cuda_scvx_driver* driver) {
     if (driver == nullptr) {
         return;
     }
+    spacepdhcg_native_qoco_destroy(driver->qoco);
+    driver->qoco = nullptr;
     static_cast<void>(cudaEventDestroy(driver->timer_start));
     static_cast<void>(cudaEventDestroy(driver->timer_stop));
     static_cast<void>(cudaFreeHost(driver->host_metrics));
@@ -1923,6 +1929,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
         || options->initial_trust_radius > options->maximum_trust_radius
         || (options->fixed_inner_tolerance > 0.0
             && options->fixed_inner_iteration_limit == 0U)
+        || (options->policy == SPACEPDHCG_CUDA_SCVX_PURE_QOCO
+            && (problem->canonical_structure.abi_version
+                    != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+                || problem->canonical_structure.topology_fingerprint
+                    != problem->topology_fingerprint))
         || (problem->dynamics.model
                 == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
             && (!(problem->numeric_update.maximum_thrust > 0.0)
@@ -2338,32 +2349,74 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             solve_options.iteration_limit =
                 driver->options.fixed_inner_iteration_limit;
         }
-        api_status = spacepdhcg_cuda_workspace_solve_async(
-            driver->problem.workspace,
-            &solve_options,
-            stream
-        );
-        if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
-            api_status = spacepdhcg_cuda_workspace_wait(
-                driver->problem.workspace
-            );
-        }
-        if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
-            api_status = spacepdhcg_cuda_workspace_residuals_async(
+        const bool pure_qoco =
+            driver->options.policy == SPACEPDHCG_CUDA_SCVX_PURE_QOCO;
+        if (pure_qoco) {
+            if (driver->qoco == nullptr) {
+                api_status = spacepdhcg_native_qoco_create(
+                    &driver->problem,
+                    native,
+                    &driver->qoco
+                );
+            }
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                api_status = spacepdhcg_native_qoco_update_solve(
+                    driver->qoco,
+                    &driver->problem,
+                    native,
+                    driver->options.warm_start_mode,
+                    driver->primal,
+                    driver->dual,
+                    &driver->qoco_report
+                );
+            }
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                last_diagnostics = {};
+                last_diagnostics.abi_version =
+                    SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
+                last_diagnostics.termination =
+                    SPACEPDHCG_CUDA_TERMINATION_OPTIMAL;
+                last_diagnostics.natural_residual_inf = std::max(
+                    driver->qoco_report.primal_residual,
+                    driver->qoco_report.dual_residual
+                );
+                last_diagnostics.stationarity_inf =
+                    driver->qoco_report.dual_residual;
+                last_diagnostics.relative_primal_residual =
+                    driver->qoco_report.primal_residual;
+                last_diagnostics.relative_dual_residual =
+                    driver->qoco_report.dual_residual;
+                last_diagnostics.iterations =
+                    static_cast<uint64_t>(driver->qoco_report.iterations);
+            }
+        } else {
+            api_status = spacepdhcg_cuda_workspace_solve_async(
                 driver->problem.workspace,
+                &solve_options,
                 stream
             );
-        }
-        if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
-            api_status = spacepdhcg_cuda_workspace_wait(
-                driver->problem.workspace
-            );
-        }
-        if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
-            api_status = spacepdhcg_cuda_workspace_diagnostics(
-                driver->problem.workspace,
-                &last_diagnostics
-            );
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                api_status = spacepdhcg_cuda_workspace_wait(
+                    driver->problem.workspace
+                );
+            }
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                api_status = spacepdhcg_cuda_workspace_residuals_async(
+                    driver->problem.workspace,
+                    stream
+                );
+            }
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                api_status = spacepdhcg_cuda_workspace_wait(
+                    driver->problem.workspace
+                );
+            }
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
+                api_status = spacepdhcg_cuda_workspace_diagnostics(
+                    driver->problem.workspace,
+                    &last_diagnostics
+                );
+            }
         }
         if (api_status != SPACEPDHCG_CUDA_SUCCESS) {
             static_cast<void>(spacepdhcg_cuda_workspace_restore_async(
@@ -2376,17 +2429,50 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 driver->problem.workspace
             ));
             result->status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
+            if (pure_qoco) {
+                result->qoco_failure =
+                    driver->qoco == nullptr
+                    ? (api_status == SPACEPDHCG_CUDA_OUT_OF_MEMORY
+                        ? SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY
+                        : SPACEPDHCG_CUDA_QOCO_FAILURE_UNAVAILABLE)
+                    : driver->qoco_report.failure;
+                result->qoco_conversion_seconds =
+                    driver->qoco_report.conversion_seconds;
+                result->qoco_setup_seconds =
+                    driver->qoco_report.setup_seconds;
+                result->qoco_update_seconds =
+                    driver->qoco_report.update_seconds;
+                result->qoco_solve_seconds =
+                    driver->qoco_report.solve_seconds;
+            }
             return api_status;
         }
-        result->update_seconds += last_diagnostics.update_seconds;
-        result->scaling_seconds += last_diagnostics.scaling_seconds;
-        result->solve_seconds += std::max(
-            0.0,
-            last_diagnostics.solve_seconds
-                - last_diagnostics.recovery_seconds
-        );
-        result->recovery_seconds += last_diagnostics.recovery_seconds;
-        result->residual_seconds += last_diagnostics.residual_seconds;
+        if (pure_qoco) {
+            result->update_seconds = driver->qoco_report.update_seconds;
+            result->solve_seconds = driver->qoco_report.solve_seconds;
+            result->qoco_conversion_seconds =
+                driver->qoco_report.conversion_seconds;
+            result->qoco_setup_seconds = driver->qoco_report.setup_seconds;
+            result->qoco_update_seconds = driver->qoco_report.update_seconds;
+            result->qoco_solve_seconds = driver->qoco_report.solve_seconds;
+            result->qoco_workspace_creations =
+                driver->qoco_report.workspace_creations;
+            result->qoco_numeric_updates =
+                driver->qoco_report.numeric_updates;
+            result->qoco_dual_discarded =
+                driver->qoco_report.dual_discarded;
+            result->qoco_failure = driver->qoco_report.failure;
+        } else {
+            result->update_seconds += last_diagnostics.update_seconds;
+            result->scaling_seconds += last_diagnostics.scaling_seconds;
+            result->solve_seconds += std::max(
+                0.0,
+                last_diagnostics.solve_seconds
+                    - last_diagnostics.recovery_seconds
+            );
+            result->recovery_seconds += last_diagnostics.recovery_seconds;
+            result->residual_seconds += last_diagnostics.residual_seconds;
+        }
         result->inner_iterations += last_diagnostics.iterations;
         result->recovery_iterations +=
             last_diagnostics.recovery_iterations;
@@ -2434,6 +2520,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         bool accepted =
             last_diagnostics.termination
                 == SPACEPDHCG_CUDA_TERMINATION_OPTIMAL
+            && (!pure_qoco
+                || last_diagnostics.natural_residual_inf
+                    <= solve_options.optimality_tolerance)
             && ((actual > 1.0e-10
                  && std::isfinite(ratio)
                  && ratio >= driver->options.acceptance_threshold)
@@ -2441,7 +2530,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         bool re_solved = false;
         uint64_t resolve_numeric_fingerprint = numeric_fingerprint;
         bool resolve_fingerprint_match = true;
-        if (!accepted
+        if (!pure_qoco
+            && !accepted
             && last_diagnostics.natural_residual_inf
                 > driver->options.resolve_trigger_multiple
                     * solve_options.optimality_tolerance) {
@@ -2612,6 +2702,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 (state_elements + control_elements) * sizeof(double);
             current = candidate;
             ++result->accepted_steps;
+            if (pure_qoco) {
+                spacepdhcg_native_qoco_accept(driver->qoco);
+            }
             if (ratio >= driver->options.strong_agreement_threshold
                 && candidate.step
                     >= driver->options.near_boundary_fraction
@@ -2687,9 +2780,13 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             resolve_numeric_fingerprint,
             resolve_fingerprint_match ? 1 : 0,
             trust_action,
-            outer == 0U
-                ? SPACEPDHCG_CUDA_WARM_START_NONE
-                : driver->options.warm_start_mode,
+            pure_qoco
+                ? (driver->qoco_report.warm_primal_accepted != 0
+                    ? SPACEPDHCG_CUDA_WARM_START_PRIMAL
+                    : SPACEPDHCG_CUDA_WARM_START_NONE)
+                : (outer == 0U
+                    ? SPACEPDHCG_CUDA_WARM_START_NONE
+                    : driver->options.warm_start_mode),
             last_diagnostics.recovery_outcome_reason,
             last_diagnostics.natural_residual_inf
                     <= driver->options.resolve_trigger_multiple
@@ -2781,33 +2878,55 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     result->final_trust_radius = trust_radius;
     result->cqp_total_seconds =
         result->update_seconds + result->scaling_seconds
-        + result->solve_seconds + result->residual_seconds;
+        + result->solve_seconds + result->residual_seconds
+        + result->qoco_conversion_seconds + result->qoco_setup_seconds;
     result->scvx_total_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - started
     ).count();
     result->allocation_count = driver->allocation_count;
     result->allocation_bytes = driver->allocation_bytes;
-    result->h2d_copy_count =
-        last_diagnostics.h2d_copy_count - transfer_before.h2d_copy_count;
-    result->h2d_bytes =
-        last_diagnostics.h2d_copy_bytes - transfer_before.h2d_copy_bytes;
+    const bool pure_qoco =
+        driver->options.policy == SPACEPDHCG_CUDA_SCVX_PURE_QOCO;
+    result->h2d_copy_count = pure_qoco
+        ? 2U * driver->qoco_report.solves
+        : last_diagnostics.h2d_copy_count - transfer_before.h2d_copy_count;
+    result->h2d_bytes = pure_qoco
+        ? driver->qoco_report.solves
+            * (driver->problem.canonical_structure.variables
+               + driver->problem.canonical_structure.scalar_rows
+               + driver->problem.canonical_structure.affine_rows)
+            * sizeof(double)
+        : last_diagnostics.h2d_copy_bytes - transfer_before.h2d_copy_bytes;
     result->d2h_copy_count =
-        last_diagnostics.d2h_copy_count - transfer_before.d2h_copy_count
+        (pure_qoco
+            ? driver->qoco_report.d2h_copy_count
+            : last_diagnostics.d2h_copy_count
+                - transfer_before.d2h_copy_count)
         + driver->d2h_copy_count - driver_d2h_count_before;
     result->d2h_bytes =
-        last_diagnostics.d2h_copy_bytes - transfer_before.d2h_copy_bytes
+        (pure_qoco
+            ? driver->qoco_report.d2h_bytes
+            : last_diagnostics.d2h_copy_bytes
+                - transfer_before.d2h_copy_bytes)
         + driver->d2h_bytes - driver_d2h_bytes_before;
     result->device_copy_count =
-        last_diagnostics.d2d_copy_count - transfer_before.d2d_copy_count
+        (pure_qoco ? 0U
+                   : last_diagnostics.d2d_copy_count
+                       - transfer_before.d2d_copy_count)
         + driver->device_copy_count - driver_device_count_before;
     result->device_copy_bytes =
-        last_diagnostics.d2d_copy_bytes - transfer_before.d2d_copy_bytes
+        (pure_qoco ? 0U
+                   : last_diagnostics.d2d_copy_bytes
+                       - transfer_before.d2d_copy_bytes)
         + driver->device_copy_bytes - driver_device_bytes_before;
     result->topology_allocation_count_after_create =
-        last_diagnostics.topology_allocation_delta_last_update;
+        pure_qoco ? 0U
+                  : last_diagnostics.topology_allocation_delta_last_update;
     result->topology_index_copy_count_after_create =
-        last_diagnostics.topology_index_copy_delta_last_update;
-    result->hidden_cpu_fallback = last_diagnostics.hidden_cpu_fallback;
+        pure_qoco ? 0U
+                  : last_diagnostics.topology_index_copy_delta_last_update;
+    result->hidden_cpu_fallback =
+        pure_qoco ? 0 : last_diagnostics.hidden_cpu_fallback;
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
