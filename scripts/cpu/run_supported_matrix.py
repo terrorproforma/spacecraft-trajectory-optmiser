@@ -46,6 +46,7 @@ WARMUPS = 2
 MEASURED = 7
 TIMEOUT_SECONDS = 120.0
 MEMORY_LIMIT_BYTES = 8 * 1024**3
+CHECKPOINT_INTERVAL = 25
 _REPOSITORY: Path
 _OUTPUT: Path
 _ENVIRONMENT_SHA256: str
@@ -68,6 +69,19 @@ def _write(path: Path, value: Any) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(_canonical_bytes(value))
     temporary.replace(path)
+
+
+def _checkpoint_payload(
+    completed: int,
+    total: int,
+    counts: Counter[str],
+) -> dict[str, Any]:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "completed": completed,
+        "total": total,
+        "dispositions": dict(sorted(counts.items())),
+    }
 
 
 def _coordinates(matrix: dict[str, Any], programme: str) -> list[dict[str, Any]]:
@@ -1006,16 +1020,15 @@ def main() -> int:
             _, disposition = future.result()
             counts[disposition] += 1
             completed += 1
-            if completed % 250 == 0:
+            if completed % CHECKPOINT_INTERVAL == 0:
                 _write(
                     output / "checkpoint.json",
-                    {
-                        "schema_version": SCHEMA_VERSION,
-                        "completed": completed,
-                        "total": len(coordinates),
-                        "dispositions": dict(sorted(counts.items())),
-                    },
+                    _checkpoint_payload(completed, len(coordinates), counts),
                 )
+    _write(
+        output / "checkpoint.json",
+        _checkpoint_payload(completed, len(coordinates), counts),
+    )
     results = [
         json.loads(path.read_text(encoding="utf-8"))
         for path in sorted((output / "runs").rglob("result.json"))

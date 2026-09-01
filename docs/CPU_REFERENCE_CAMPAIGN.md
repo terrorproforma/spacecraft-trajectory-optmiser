@@ -38,6 +38,22 @@ full nonlinear replay, or requested final-polish owner is absent. This distincti
 reference trajectories, risk aggregation, or orchestration checks from being relabelled as
 publication-quality solver results.
 
+The frozen Paper 2 matrix is a scale/method manifest, not a physical instance specification. It
+does not provide target ephemerides or orbital states, epoch values and units, gravitational
+parameters, spacecraft/thrust/mass data, service demands, depot states/capacities, transfer
+resources, or uncertainty distributions. Consequently:
+
+- P2-A/P2-B/P2-C exercise the implemented Lambert-family, graph, route, pricing, master, and
+  certification components but remain `unqualified`; creating full-mission objective, residual,
+  and certification records would require inventing missing physical inputs.
+- P2-D/P2-E remain `unsupported` at this frozen commit because no parameterized multi-spacecraft
+  or robust full-mission formulation binds those missing inputs to the G7 component abstractions.
+
+The implemented G7 headers and native smoke tests establish component support, but they do not
+define the absent benchmark instances. These dispositions can only change after a frozen,
+versioned physical-instance contract is supplied; synthesizing one during the campaign would
+change the benchmark after results.
+
 `scripts/cpu/finalize_supported_matrix.py` validates all records against
 `experiments/schema/cpu_reference_result.schema.json`, checks exact coordinate coverage, renders
 only data-bearing diagnostics, compares two byte-identical render trees, and separately hashes:
