@@ -2237,8 +2237,11 @@ IntegrationResult run_resident_sequence(
             outer = attempt.result;
             records = attempt.iterations;
             outer_status = attempt.api_status;
+            // A cancelled (deadline) attempt is a failed attempt: its partial iterates
+            // were rolled back, so the next boundary must be cold rather than warm.
             prior_attempt_retained_state =
-                attempt.api_status == SPACEPDHCG_CUDA_SUCCESS;
+                attempt.api_status == SPACEPDHCG_CUDA_SUCCESS
+                && attempt.result.status != SPACEPDHCG_CUDA_SCVX_CANCELLED;
             if (g4_session_mode) {
                 emit_g4_attempt(
                     attempt,

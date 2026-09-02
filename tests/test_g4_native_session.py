@@ -193,6 +193,14 @@ def test_pmon_parser_separates_active_idle_and_graphics_contexts() -> None:
     assert [row["pid"] for row in idle] == [484]
 
 
+def test_runtime_library_pins_cover_only_spacepdhcg_shared_objects(tmp_path: Path) -> None:
+    script = tmp_path / "script-executor"
+    _fake_probe(script)
+    assert RUNNER.runtime_libraries(script) == {}
+    assert CAPABILITY.runtime_libraries(Path("/bin/ls")) == {}
+    assert RUNNER.runtime_libraries(tmp_path / "missing") == {}
+
+
 def test_contamination_monitor_excludes_own_descendants_and_nvidia_smi(
     tmp_path: Path,
 ) -> None:

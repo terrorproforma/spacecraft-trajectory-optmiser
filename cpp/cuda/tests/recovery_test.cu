@@ -1,13 +1,16 @@
 #include "cuda_test_support.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <bit>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <limits>
 #include <random>
+#include <thread>
 #include <vector>
 
 namespace test = spacepdhcg::cuda::test;
@@ -433,6 +436,58 @@ void check_cancellation_and_destruction(const bool sanitizer) {
     test::destroy_workspace(destruction);
 }
 
+void check_cross_thread_cancellation_during_wait() {
+    // The G4 session cancels a running attempt from a watchdog thread while the owner thread
+    // blocks in spacepdhcg_cuda_workspace_wait. The inconsistent problem never converges and
+    // the budget is far beyond any test horizon, so only cancellation can end the solve.
+    test::ProblemStorage problem(false, true);
+    initialise_inconsistent_problem(problem);
+    auto* workspace = test::create_workspace(problem);
+    const auto options = test::solve_options(1.0e-20, 4'000'000'000ULL);
+    test::status_require(
+        spacepdhcg_cuda_workspace_solve_async(
+            workspace,
+            &options,
+            problem.exchange.consumer_stream
+        ),
+        "cross-thread cancellation launch"
+    );
+    std::atomic<int> cancel_status{-1};
+    const auto started = std::chrono::steady_clock::now();
+    std::thread watchdog([&]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        cancel_status.store(
+            static_cast<int>(spacepdhcg_cuda_workspace_cancel(workspace))
+        );
+    });
+    test::status_require(
+        spacepdhcg_cuda_workspace_wait(workspace),
+        "cross-thread cancellation wait"
+    );
+    watchdog.join();
+    const double elapsed = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - started
+    ).count();
+    test::require(
+        cancel_status.load() == static_cast<int>(SPACEPDHCG_CUDA_SUCCESS),
+        "cross-thread cancellation did not reach the running solve"
+    );
+    spacepdhcg_cuda_diagnostics diagnostics{};
+    test::status_require(
+        spacepdhcg_cuda_workspace_diagnostics(workspace, &diagnostics),
+        "cross-thread cancellation diagnostics"
+    );
+    test::require(
+        diagnostics.termination == SPACEPDHCG_CUDA_TERMINATION_CANCELLED,
+        "cross-thread cancellation did not terminate the solve as cancelled"
+    );
+    test::require(
+        elapsed < 60.0,
+        "owner wait did not return promptly after cross-thread cancellation"
+    );
+    test::destroy_workspace(workspace);
+}
+
 }  // namespace
 
 int main(const int argc, char** argv) {
@@ -444,6 +499,7 @@ int main(const int argc, char** argv) {
     check_warm_modes_and_checkpoint();
     check_cancellation_and_destruction(sanitizer);
     if (!sanitizer) {
+        check_cross_thread_cancellation_during_wait();
         check_properties();
     }
     std::printf(

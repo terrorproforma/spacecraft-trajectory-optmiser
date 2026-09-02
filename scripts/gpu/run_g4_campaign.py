@@ -70,6 +70,25 @@ def canonical_bytes(value: Any) -> bytes:
     ).encode()
 
 
+def runtime_libraries(executable: Path) -> dict[str, str]:
+    """SHA-256 of every SpacePDHCG shared library the executable resolves through ``ldd``."""
+
+    try:
+        completed = subprocess.run(
+            ["ldd", str(executable)], check=False, capture_output=True, text=True
+        )
+    except OSError:
+        return {}
+    libraries: dict[str, str] = {}
+    for line in completed.stdout.splitlines():
+        if "spacepdhcg" not in line or "=>" not in line:
+            continue
+        target = line.split("=>", 1)[1].split("(", 1)[0].strip()
+        if target and Path(target).is_file():
+            libraries[Path(target).name] = sha256_path(Path(target))
+    return libraries
+
+
 def locked_policy(repository: Path) -> tuple[dict[str, Any], str, str]:
     lock = (repository / "benchmarks/g4_policy.sha256").read_text().split()
     if len(lock) != 2 or lock[1] != "g4_policy.json":
@@ -99,6 +118,10 @@ def load_capabilities(
         raise G4ContractError("executor capability matrix hash mismatch")
     if value.get("executable_sha256") != sha256_path(executable):
         raise G4ContractError("executor capability executable hash mismatch")
+    if "runtime_library_sha256" in value and value["runtime_library_sha256"] != runtime_libraries(
+        executable
+    ):
+        raise G4ContractError("executor capability runtime shared-library hash mismatch")
     if set(value.get("axes", {})) != CAPABILITY_AXES:
         raise G4ContractError("executor capability does not audit every frozen axis")
     if any(

@@ -2465,6 +2465,39 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     driver->problem.workspace
                 );
             }
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS
+                && driver->cancelled.load(std::memory_order_acquire)) {
+                // The attempt deadline cancelled this inner solve. Restore the
+                // pre-iteration checkpoint so the persistent workspace stays
+                // consistent and report the attempt as cancelled (a launched
+                // timeout) rather than as a numerical failure.
+                static_cast<void>(spacepdhcg_cuda_workspace_restore_async(
+                    driver->problem.workspace,
+                    driver->problem.topology_fingerprint,
+                    checkpoint_view,
+                    stream
+                ));
+                static_cast<void>(spacepdhcg_cuda_workspace_wait(
+                    driver->problem.workspace
+                ));
+                static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
+                    driver->problem.workspace,
+                    &last_diagnostics
+                ));
+                // Account for the work actually spent before cancellation; the
+                // residual timer was not run for this iteration and stays out.
+                result->update_seconds += last_diagnostics.update_seconds;
+                result->scaling_seconds += last_diagnostics.scaling_seconds;
+                result->solve_seconds += std::max(
+                    0.0,
+                    last_diagnostics.solve_seconds
+                        - last_diagnostics.recovery_seconds
+                );
+                result->recovery_seconds += last_diagnostics.recovery_seconds;
+                result->inner_iterations += last_diagnostics.iterations;
+                result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+                break;
+            }
             if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
                 api_status = spacepdhcg_cuda_workspace_residuals_async(
                     driver->problem.workspace,

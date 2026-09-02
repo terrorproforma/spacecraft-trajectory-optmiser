@@ -3998,8 +3998,19 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_wait(
     if (workspace == nullptr) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
-    std::lock_guard lock(workspace->mutex);
+    // Block on the completion event without holding the workspace mutex. Holding it across
+    // cudaEventSynchronize made spacepdhcg_cuda_workspace_cancel from another thread (the G4
+    // per-attempt deadline watchdog) wait for the running solve kernel to exhaust its whole
+    // iteration budget, so a frozen deadline could never reach the device. The owner thread
+    // must still not destroy the workspace while another thread waits on it; every state
+    // mutation below happens under the mutex once the event has completed.
+    std::unique_lock lock(workspace->mutex);
+    if (workspace->state == SPACEPDHCG_CUDA_DESTROYED) {
+        return SPACEPDHCG_CUDA_INVALID_STATE;
+    }
+    lock.unlock();
     const auto status = workspace->completion.wait();
+    lock.lock();
     if (status != cudaSuccess) {
         return cuda_failure(workspace, status, "cudaEventSynchronize");
     }

@@ -57,6 +57,29 @@ def sha256_path(path: Path) -> str:
     return digest.hexdigest()
 
 
+def runtime_libraries(executable: Path) -> dict[str, str]:
+    """SHA-256 of every SpacePDHCG shared library the executable resolves through ``ldd``.
+
+    The executor links ``libspacepdhcg_cuda.so`` dynamically, so the executable hash alone
+    cannot pin the solver kernels; a statically linked or non-ELF executable yields an empty map.
+    """
+
+    try:
+        completed = subprocess.run(
+            ["ldd", str(executable)], check=False, capture_output=True, text=True
+        )
+    except OSError:
+        return {}
+    libraries: dict[str, str] = {}
+    for line in completed.stdout.splitlines():
+        if "spacepdhcg" not in line or "=>" not in line:
+            continue
+        target = line.split("=>", 1)[1].split("(", 1)[0].strip()
+        if target and Path(target).is_file():
+            libraries[Path(target).name] = sha256_path(Path(target))
+    return libraries
+
+
 def probe_manifest() -> dict[str, Any]:
     group_id = "g4-group-v1-" + "a" * 64
     instance = "g4-instance-v2-" + "b" * 64
@@ -256,6 +279,7 @@ def main() -> int:
         {
             "source_commit": source_commit,
             "executable_sha256": sha256_path(executable),
+            "runtime_library_sha256": runtime_libraries(executable),
             "policy_sha256": lock[0],
             "matrix_sha256": matrix_sha256,
             "contract_hashes": contract_hashes,
