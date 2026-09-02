@@ -1,0 +1,230 @@
+{
+  "schema_version": "1.0.0",
+  "status": "planned references; values require source-level verification before execution",
+  "programme": "SpacePDHCG comparative solver campaign",
+  "policy_document": "docs/COMPARATIVE_SOLVER_CAMPAIGN.md",
+  "timing_policy": {
+    "published_wall_clock_use": "context_only",
+    "common_hardware_rerun_required_for_speedup": true,
+    "reason": "hardware, implementation, stopping criteria, timing boundaries, and achieved nonlinear quality differ across publications"
+  },
+  "profiles": [
+    {
+      "id": "openscvx-cw-proxops",
+      "target_family": "P1-B-hcw",
+      "evidence_label": "published-reference",
+      "purpose": "end-to-end software compatibility",
+      "source_url": "https://openscvx.github.io/OpenSCvx/latest/Examples/spacecraft/proxops_cw/",
+      "source_revision": null,
+      "required_before_run": "pin an OpenSCvx commit and archive the exact example parameters",
+      "usable_fields": ["problem_definition", "source_trajectory", "software_baseline"],
+      "timing_use": "rerun_required"
+    },
+    {
+      "id": "acikmese-ploen-2007-pd3",
+      "target_family": "P1-C-pd3",
+      "evidence_label": "published-reference",
+      "purpose": "canonical 3-DoF powered-descent formulation",
+      "doi": "10.2514/1.27553",
+      "source_url": "https://doi.org/10.2514/1.27553",
+      "usable_fields": ["problem_definition", "physical_parameters", "objective_reference"],
+      "timing_use": "context_only"
+    },
+    {
+      "id": "szmuk-acikmese-2018-pd6",
+      "target_family": "P1-D-pd6",
+      "evidence_label": "published-reference",
+      "purpose": "canonical 50-node nondimensional 6-DoF powered-descent profile",
+      "doi": "10.2514/6.2018-0617",
+      "source_url": "https://doi.org/10.2514/6.2018-0617",
+      "reference_data": {
+        "nodes": 50,
+        "maximum_outer_iterations": 15,
+        "wet_mass_nondimensional": 2.0,
+        "dry_mass_nondimensional": 1.0,
+        "minimum_thrust_nondimensional": 0.3,
+        "maximum_thrust_nondimensional": 5.0
+      },
+      "usable_fields": ["problem_definition", "algorithm_limits", "physical_parameters"],
+      "timing_use": "context_only"
+    },
+    {
+      "id": "scvxgen-pd6",
+      "target_family": "P1-D-pd6",
+      "evidence_label": "published-reference",
+      "purpose": "reproducible generated-code system baseline",
+      "source_url": "https://scvxgen.com/examples/rocket_landing",
+      "source_revision": null,
+      "required_before_run": "pin the generator and generated solver revisions",
+      "usable_fields": ["problem_definition", "physical_parameters", "software_baseline"],
+      "timing_use": "rerun_required"
+    },
+    {
+      "id": "openscvx-pd6",
+      "target_family": "P1-D-pd6",
+      "evidence_label": "published-reference",
+      "purpose": "reproducible end-to-end CT-SCvx software baseline",
+      "source_url": "https://openscvx.github.io/OpenSCvx/latest/Examples/rocket/6DoF_pdg/",
+      "source_revision": null,
+      "required_before_run": "pin an OpenSCvx commit and archive the exact example parameters",
+      "usable_fields": ["problem_definition", "physical_parameters", "software_baseline"],
+      "timing_use": "rerun_required"
+    },
+    {
+      "id": "chari-et-al-2024-pd6-monte-carlo",
+      "target_family": "P1-D-pd6",
+      "profile_suffix": "independent-batch",
+      "evidence_label": "published-reference",
+      "purpose": "independent trajectory batch-throughput context",
+      "doi": "10.2514/6.2024-1762",
+      "source_url": "https://arxiv.org/abs/2404.18034",
+      "reference_data": {
+        "initial_position_distribution": [
+          "uniform(6,9)",
+          "uniform(3,6)",
+          "uniform(1,2)"
+        ],
+        "published_demonstration_batch_size": 256,
+        "maximum_outer_iterations": 25,
+        "pipg_iterations_per_subproblem": 2500
+      },
+      "usable_fields": ["problem_definition", "dispersion_definition", "algorithm_limits", "published_convergence_context"],
+      "timing_use": "context_only",
+      "comparability_warning": "independent Monte Carlo solves are not coupled robust scenarios"
+    },
+    {
+      "id": "tafazzol-taheri-earth-mars",
+      "target_family": "P1-E-low-thrust",
+      "evidence_label": "published-reference",
+      "purpose": "fixed-time minimum-fuel low-thrust objective reference",
+      "source_url": "https://arxiv.org/abs/2409.01490",
+      "reference_data": {
+        "time_of_flight_days": 348.795,
+        "initial_mass_kg": 1000.0,
+        "specific_impulse_seconds": 2000.0,
+        "maximum_thrust_newtons": 0.5,
+        "best_final_mass_kg": 603.935
+      },
+      "usable_fields": ["problem_definition", "physical_parameters", "objective_reference"],
+      "timing_use": "context_only",
+      "comparability_warning": "published final mass is not an independent nonlinear feasibility certificate"
+    },
+    {
+      "id": "tafazzol-taheri-earth-dionysus",
+      "target_family": "P1-E-low-thrust",
+      "evidence_label": "published-reference",
+      "purpose": "multi-revolution fixed-time minimum-fuel objective reference",
+      "source_url": "https://arxiv.org/abs/2409.01490",
+      "reference_data": {
+        "time_of_flight_days": 3534.0,
+        "initial_mass_kg": 4000.0,
+        "specific_impulse_seconds": 3000.0,
+        "maximum_thrust_newtons": 0.32,
+        "best_final_mass_kg": 2718.33,
+        "best_reported_revolutions": 5
+      },
+      "usable_fields": ["problem_definition", "physical_parameters", "objective_reference"],
+      "timing_use": "context_only",
+      "comparability_warning": "published final mass is not an independent nonlinear feasibility certificate"
+    },
+    {
+      "id": "esa-tops-2026",
+      "target_family": "P1-E-low-thrust",
+      "profile_suffix": "tops",
+      "evidence_label": "published-reference",
+      "purpose": "open low-thrust benchmark suite",
+      "source_url": "https://arxiv.org/abs/2605.11043",
+      "source_repository": "https://gitlab.com/EuropeanSpaceAgency/zero-order-hold",
+      "source_revision": null,
+      "reference_data": {
+        "problem_count": 28,
+        "dynamics_families": ["two_body_cartesian", "modified_equinoctial", "cr3bp", "solar_sail"]
+      },
+      "required_before_run": "pin the repository commit, archive JSON checksums, and preregister selected cases from metadata",
+      "usable_fields": ["problem_definitions", "physical_parameters", "reference_solutions", "evaluation_protocol"],
+      "timing_use": "rerun_required"
+    },
+    {
+      "id": "gtopx-2021",
+      "target_family": null,
+      "target_programme": "secondary global mission-design track",
+      "evidence_label": "published-reference",
+      "purpose": "black-box global interplanetary optimisation",
+      "doi": "10.1016/j.softx.2021.100666",
+      "source_url": "https://www.midaco-solver.com/index.php/about/benchmarks/gtopx",
+      "source_revision": "GTOPX 1.0 fixed distribution; archive checksum required",
+      "reference_data": {
+        "instances": [
+          {"id": 1, "name": "Cassini1", "objectives": 1, "variables": 6, "constraints": 4, "best_known_display": 4.9307},
+          {"id": 2, "name": "Cassini2", "objectives": 1, "variables": 22, "constraints": 0, "best_known_display": 8.3830},
+          {"id": 3, "name": "Messenger reduced", "objectives": 1, "variables": 18, "constraints": 0, "best_known_display": 8.6299},
+          {"id": 4, "name": "Messenger full", "objectives": 1, "variables": 26, "constraints": 0, "best_known_display": 1.9579},
+          {"id": 5, "name": "GTOC1", "objectives": 1, "variables": 8, "constraints": 6, "best_known_display": -1581950.0},
+          {"id": 6, "name": "Rosetta", "objectives": 1, "variables": 22, "constraints": 0, "best_known_display": 1.3434},
+          {"id": 7, "name": "Sagas", "objectives": 1, "variables": 12, "constraints": 2, "best_known_display": 18.1877},
+          {"id": 8, "name": "Cassini1-MINLP", "objectives": 1, "variables": 10, "constraints": 4, "best_known_display": 3.5007},
+          {"id": 9, "name": "Cassini1-MO", "objectives": 2, "variables": 6, "constraints": 5, "best_known_display": null},
+          {"id": 10, "name": "Cassini1-MO-MINLP", "objectives": 2, "variables": 10, "constraints": 5, "best_known_display": null}
+        ]
+      },
+      "required_before_run": "archive the evaluator, exact best-known vectors, bounds, and checksum",
+      "usable_fields": ["problem_definitions", "best_known_vectors", "objective_references", "landscape_context"],
+      "timing_use": "common_budget_rerun_required",
+      "comparability_warning": "GTOPX does not exercise the SpacePDHCG repeated sparse CQP architecture without a compatible global outer search"
+    },
+    {
+      "id": "gtoc-historical-challenges",
+      "target_family": "P2-F",
+      "target_programme": "OrbitWeaver integrated route and trajectory campaign",
+      "evidence_label": "published-reference",
+      "purpose": "historical mixed discrete-continuous mission-design challenge replay",
+      "source_url": "https://sophia.estec.esa.int/gtoc_portal/?page_id=94",
+      "latest_source_url": "https://gtoc.jpl.net/",
+      "reference_data": {
+        "initial_editions": [
+          {
+            "edition": 5,
+            "name": "Penetrators",
+            "stage": "intermediate",
+            "problem_url": "https://sophia.estec.esa.int/gtoc_portal/?page_id=25",
+            "features": ["low_thrust", "multi_rendezvous", "repeat_visits", "sequence_optimisation"],
+            "published_implementation": "https://github.com/lfsimoes/beam_paco__gtoc5"
+          },
+          {
+            "edition": 9,
+            "name": "The Kessler Run",
+            "stage": "primary",
+            "problem_url": "https://kelvins.esa.int/gtoc9-kessler-run/problem/",
+            "target_count": 123,
+            "features": ["debris_removal", "multi_spacecraft", "time_dependent_routing", "j2_perturbation"]
+          },
+          {
+            "edition": 12,
+            "name": "Sustainable Asteroid Mining",
+            "stage": "primary_after_low_thrust_routes",
+            "problem_url": "https://gtoc12.tsinghua.edu.cn/competition/theProblem",
+            "candidate_asteroid_count": 60000,
+            "mission_window_years": 15,
+            "features": ["low_thrust", "multi_rendezvous", "multi_spacecraft", "fleet_selection", "official_offline_validator"]
+          }
+        ],
+        "deferred_editions": [
+          {
+            "edition": 11,
+            "name": "Dyson Sphere",
+            "reason": "requires large scheduling plus mixed impulsive and continuous trajectory support"
+          },
+          {
+            "edition": 13,
+            "name": "The Altaira System",
+            "reason": "requires ballistic flyby and solar-sail models outside the current programme"
+          }
+        ]
+      },
+      "required_before_run": "archive official statements, data, validators, public solutions, and checksums; define reduced subsets before observing scores",
+      "usable_fields": ["problem_definitions", "official_validators", "published_solutions", "leaderboard_quality_targets", "method_context"],
+      "timing_use": "common_hardware_rerun_required",
+      "comparability_warning": "competition scores reflect weeks of team computation and human intervention and are not direct runtime baselines"
+    }
+  ]
+}
