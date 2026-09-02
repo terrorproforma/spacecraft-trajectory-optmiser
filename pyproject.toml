@@ -28,6 +28,7 @@ dev = [
 ]
 
 [project.scripts]
+spacepdhcg = "spacepdhcg.planner.cli:main"
 spacepdhcg-banded-correctness = "spacepdhcg.benchmarks.banded_correctness:main"
 spacepdhcg-g1-correctness = "spacepdhcg.benchmarks.g1_correctness:main"
 spacepdhcg-cw-benchmark = "spacepdhcg.benchmarks.cw_repeat:main"

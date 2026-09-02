@@ -132,6 +132,160 @@ SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_lambert_family_batch_cpu(
     size_t result_capacity
 );
 
+/*
+ * Planner transcription ABI (schema 1.0.0).
+ *
+ * A planner handle owns one frozen transcription built from a normalised planner
+ * problem document.  The CPU reference solver in Python uses it to obtain the
+ * exact CQP topology/values, dynamics-consistent references, independent RK4
+ * replays, and device-equivalent nonlinear quality metrics for every family.
+ * All functions are exception-free and report failures through the status code
+ * plus `spacepdhcg_last_error`.
+ */
+typedef struct spacepdhcg_planner spacepdhcg_planner;
+
+typedef struct spacepdhcg_planner_dimensions {
+    uint64_t state_dimension;
+    uint64_t control_dimension;
+    uint64_t intervals;
+    uint64_t terminal_dimension;
+    uint64_t variables;
+    uint64_t scalar_rows;
+    uint64_t affine_rows;
+    uint64_t quadratic_nonzeros;
+    uint64_t scalar_nonzeros;
+    uint64_t affine_nonzeros;
+    uint64_t affine_cone_count;
+    uint64_t variable_cone_count;
+    uint64_t virtual_variable_count;
+    double step_seconds;
+    double initial_trust_radius;
+} spacepdhcg_planner_dimensions;
+
+typedef struct spacepdhcg_planner_cone {
+    int32_t kind;  /* 0 second-order, 1 rotated second-order, 2 exp, 3 power, 4 PSD */
+    int32_t start;
+    int32_t vector_dimension;
+    double power_alpha;
+} spacepdhcg_planner_cone;
+
+#define SPACEPDHCG_PLANNER_MAX_PATH_COMPONENTS 8
+
+typedef struct spacepdhcg_planner_evaluation {
+    double objective;
+    double path_violation;
+    double terminal_residual;
+    double terminal_position_error;
+    double terminal_velocity_error;
+    double propellant_used;
+    double final_mass;
+    uint64_t path_component_count;
+    double path_normalised[SPACEPDHCG_PLANNER_MAX_PATH_COMPONENTS];
+    double path_physical[SPACEPDHCG_PLANNER_MAX_PATH_COMPONENTS];
+    char path_names[SPACEPDHCG_PLANNER_MAX_PATH_COMPONENTS][32];
+} spacepdhcg_planner_evaluation;
+
+/// Parse a normalised planner problem document and build its transcription.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_create(
+    const char* problem_json,
+    spacepdhcg_planner** planner
+);
+
+SPACEPDHCG_C_API void spacepdhcg_planner_destroy(spacepdhcg_planner* planner);
+
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_get_dimensions(
+    const spacepdhcg_planner* planner,
+    spacepdhcg_planner_dimensions* dimensions
+);
+
+/// Fill caller-allocated topology arrays sized from `spacepdhcg_planner_dimensions`.
+/// `virtual_variables` may be NULL when `virtual_variable_count` is zero.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_structure(
+    const spacepdhcg_planner* planner,
+    int32_t* quadratic_offsets,
+    int32_t* quadratic_indices,
+    int32_t* scalar_offsets,
+    int32_t* scalar_indices,
+    int32_t* affine_offsets,
+    int32_t* affine_indices,
+    spacepdhcg_planner_cone* affine_cones,
+    spacepdhcg_planner_cone* variable_cones,
+    int32_t* state_variables,
+    int32_t* control_variables,
+    int32_t* virtual_variables
+);
+
+/// Numeric CQP coefficients linearised about the supplied reference trajectory.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_values(
+    const spacepdhcg_planner* planner,
+    const double* reference_states,
+    const double* reference_controls,
+    double trust_radius,
+    double* quadratic,
+    double* scalar_constraint,
+    double* affine_cone,
+    double* linear_objective,
+    double* scalar_lower,
+    double* scalar_upper,
+    double* affine_offset,
+    double* variable_lower,
+    double* variable_upper
+);
+
+/// Dynamics-consistent initial reference (warm start when the document supplies one).
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_initial_reference(
+    const spacepdhcg_planner* planner,
+    double* states,
+    double* controls
+);
+
+/// Independent replay; `states` receives (intervals * substeps + 1) * nx entries.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_rollout(
+    const spacepdhcg_planner* planner,
+    const double* initial_state,
+    const double* controls,
+    uint64_t intervals,
+    uint64_t substeps,
+    double* states
+);
+
+/// Device-equivalent nonlinear quality for node states/controls of the full horizon.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_evaluate(
+    const spacepdhcg_planner* planner,
+    const double* states,
+    const double* controls,
+    spacepdhcg_planner_evaluation* evaluation
+);
+
+/// Path-violation components for an arbitrary (intervals + 1)-state sequence
+/// (dense continuous-time checks). Only the path fields are populated.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_path_components(
+    const spacepdhcg_planner* planner,
+    const double* states,
+    const double* controls,
+    uint64_t intervals,
+    spacepdhcg_planner_evaluation* evaluation
+);
+
+/// JSON description of the parsed problem (resolved defaults, units, orders,
+/// solver policy). Writes up to `capacity` bytes including the terminator and
+/// reports the full required size through `required`.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_describe(
+    const spacepdhcg_planner* planner,
+    char* buffer,
+    size_t capacity,
+    size_t* required
+);
+
+/// JSON document of the native family defaults (vehicle, environment,
+/// constraints, transcription weights, terminal pattern, units, orders).
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_planner_default_document(
+    const char* family,
+    char* buffer,
+    size_t capacity,
+    size_t* required
+);
+
 #ifdef __cplusplus
 }
 #endif

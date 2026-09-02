@@ -1194,3 +1194,43 @@ Use this file as persistent, repo-local execution memory.
   executable hash match; generate the capability only from that clean final tree.
 - The campaign is still unrun. Initialize a new `--claim-core` or full grouped checkpoint; never
   reuse the historical row checkpoint.
+
+### 2026-09-03 01:00 AEST - Planner CLI/API (in progress)
+
+#### Preflight (from prior entries)
+
+- `[user]` Work only in the new worktree `/home/angus/worktrees/spacepdhcg-planner`
+  (`feat/planner-cli` from `b6afb49`); never touch the integration tree.
+- `[user]` Serialize every GPU run; back off if `nvidia-smi --query-compute-apps` shows a
+  `device_scvx`/G4 session process. Short correctness runs only.
+- `[tool]` Windows `Write` tool emits CRLF into WSL files; `StrReplace` preserves LF. Run
+  `sed -i 's/\r$//'` on every newly written file before building/testing/committing.
+- `[tool]` PowerShell mangles inline quoting for `wsl -e bash -c`; write scripts to
+  `/home/angus/planner-scratch/*.sh` and execute those instead.
+- `[tool]` No CMake/Python 3.11+ on the WSL system path. Use the isolated
+  `/home/angus/planner-scratch/venv` (Python 3.12, cmake, ninja, deps) and run tests with
+  `PYTHONPATH=src` so the worktree source (not an installed wheel) is imported.
+- `[tool]` Pinned PDHCG checkout is read-only at
+  `/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg`; pass it as
+  `-DSPACEPDHCG_PDHCG_SOURCE_ROOT`. QOCO-GPU: `SPACEPDHCG_QOCO_LIBRARY=/home/angus/spacecraft-trajectory-optmiser/build/qoco-g4/libqoco.so`.
+
+#### Mistakes And Fixes (during task)
+
+- `[self]` Zero-filled fresh device buffers with synchronous `cudaMemset` (legacy stream) and then
+  uploaded on a `cudaStreamNonBlocking` consumer stream. Non-blocking streams do not order
+  against the legacy stream, so the memset raced the uploads and silently zeroed the CQP
+  (QOCO reported `numerical`, PDHCG stalled at residual 2000, coefficient parity was `inf`).
+  Fix: issue every fill with `cudaMemsetAsync` on the same consumer stream. Rule: never mix the
+  legacy default stream with the exchange consumer stream in planner/device code.
+- `[tool]` Background `wsl -e bash -c "... &"` jobs die when the wrapper shell exits; use
+  `setsid nohup ... < /dev/null & disown` for long builds.
+- `[tool]` `device_scvx_integration_test --p1c-qoco-repeatability` fails on this host because the
+  first cold QOCO candidate is rejected (known cold-execution variance noted on 2026-09-01);
+  QOCO itself solves. Do not treat that pre-existing flake as a planner regression.
+- `[self]` GPU overlap: another worker's `--g4-session` claim core started 2026-09-03 01:26 AEST
+  while my `nvidia-smi --query-compute-apps` guard only matched process *names*; under WSL the
+  name is `[Not Found]`, so the guard passed and my planner probes overlapped it from ~01:40 to
+  02:07 AEST (pd3 pure-QOCO 147 s, PDHCG hover 160 s, HCW 0.5 s, low-thrust fixed-tight up to
+  900 s). Their groups in that window are contaminated on my side. Fix: guard by *pid*
+  (`gpu_free.sh`: `pgrep -f 'device_scvx_integration_test|--g4-session'` plus compute-app pids
+  resolved through `ps`), and never run GPU work while it reports busy.
