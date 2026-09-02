@@ -1,0 +1,136 @@
+{
+ "target_id": "blackmore-2010-pd3-case1",
+ "status": "reproduced",
+ "published": {
+  "fuel_used_kg": 399.4,
+  "fuel_used_text": "399.4",
+  "time_of_flight_text": "78.4",
+  "discretisation_points": 55,
+  "objective_convention": "propellant-used",
+  "evidence_label": "published-reference",
+  "extraction": "text (Section V, case 1: 'This solution requires 399.4 kg of fuel and has t_f = 78.4 s'; 55 time-discretisation points; golden search interval 3.0 s)"
+ },
+ "measured": {
+  "lossless_fuel_used_kg": 400.08834536284076,
+  "lossless_fuel_used_kg_by_dt": {
+   "dt=0.4": 400.08834536284076,
+   "dt=0.2": 400.7633008308262
+  },
+  "lossless_replay_fuel_used_kg": 400.0837542316119,
+  "lossless_isp_only_alpha_fuel_used_kg": 362.4761965292025,
+  "scvx_cpu_fuel_used_kg": 413.42506517964966,
+  "scvx_cpu_replay_fuel_used_kg": 413.38929013677443,
+  "scvx_cpu_status": "solver_failed"
+ },
+ "gap": {
+  "lossless_minus_published_kg": 0.6883453628407779,
+  "lossless_relative": 0.0017234485799719026,
+  "acceptance_tolerance_kg": 2.0,
+  "scvx_cpu_minus_published_kg": 14.025065179649687,
+  "scvx_cpu_minus_lossless_kg": 13.336719816808909
+ },
+ "labels": {
+  "published.fuel_used_kg": "published-reference",
+  "measured.lossless_fuel_used_kg": "measured-local",
+  "measured.scvx_cpu_fuel_used_kg": "measured-local"
+ },
+ "envelope": {
+  "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
+  "dt_values_s": [
+   0.4,
+   0.2
+  ],
+  "fuel_spread_kg": 0.6749554679854555,
+  "declared_envelope_kg": 2.0
+ },
+ "commands": [
+  "spacepdhcg literature run blackmore-2010-pd3-case1"
+ ],
+ "notes": [
+  "GPU pure-QOCO SCvx leg not run: the RTX 5090 was owned by a device_scvx_integration_test --g4-session process (PID 471171) for the whole campaign window; rerun with SPACEPDHCG_QOCO_LIBRARY=<libqoco.so> and --option run_gpu=true when the device is free"
+ ],
+ "details": {
+  "lossless": {
+   "dt=0.4": {
+    "dt": 0.4,
+    "intervals": 196,
+    "fuel_used": 400.08834536284076,
+    "final_mass": 1504.9116546371592,
+    "objective_final_log_mass": 7.316489474222223,
+    "replay_fuel_used": 400.0837542316119,
+    "replay_terminal_position_error": 1.9824821453291615e-09,
+    "replay_terminal_velocity_error": 3.781548597990184e-11,
+    "max_thrust_epigraph_gap": 0.00034451476635055656,
+    "min_throttle_violation": 0.0,
+    "max_throttle_violation": 0.0,
+    "glide_slope_violation": 0.0,
+    "solver_status": "Solved",
+    "solver_iterations": 33,
+    "solve_seconds": 0.036565849
+   },
+   "dt=0.2": {
+    "dt": 0.2,
+    "intervals": 392,
+    "fuel_used": 400.7633008308262,
+    "final_mass": 1504.2366991691738,
+    "objective_final_log_mass": 7.316040871893627,
+    "replay_fuel_used": 400.76181657600523,
+    "replay_terminal_position_error": 8.551854261519306e-09,
+    "replay_terminal_velocity_error": 1.2261657661962952e-10,
+    "max_thrust_epigraph_gap": 6.0879271766900445e-05,
+    "min_throttle_violation": 0.0,
+    "max_throttle_violation": 0.0,
+    "glide_slope_violation": 0.0,
+    "solver_status": "Solved",
+    "solver_iterations": 34,
+    "solve_seconds": 0.071292832
+   }
+  },
+  "lossless_isp_only_alpha": {
+   "dt": 0.4,
+   "intervals": 196,
+   "fuel_used": 362.4761965292025,
+   "final_mass": 1542.5238034707975,
+   "objective_final_log_mass": 7.3411751874081554,
+   "replay_fuel_used": 362.473153025549,
+   "replay_terminal_position_error": 2.9195875549406765e-09,
+   "replay_terminal_velocity_error": 4.824304638524715e-11,
+   "max_thrust_epigraph_gap": 0.00028355303207838745,
+   "min_throttle_violation": 0.0,
+   "max_throttle_violation": 0.0,
+   "glide_slope_violation": 0.0,
+   "solver_status": "Solved",
+   "solver_iterations": 26,
+   "solve_seconds": 0.027100145
+  },
+  "repository_scvx": {
+   "clarabel": {
+    "backend": "clarabel",
+    "dt": 0.4,
+    "intervals": 196,
+    "status": "solver_failed",
+    "fuel_used": 413.42506517964966,
+    "final_mass": 1491.5749348203503,
+    "outer_iterations": 8,
+    "accepted_iterations": 5,
+    "residual_dynamics": 9.485863513347682e-08,
+    "residual_path": 0.0,
+    "residual_terminal": 5.448284427700401e-08,
+    "path_max_violation": 0.0,
+    "replay_fuel_used": 413.38929013677443,
+    "replay_terminal_position_error": 37.30892475378738,
+    "replay_terminal_velocity_error": 0.2471029482504499,
+    "total_setup_seconds": 0.04275752000103239,
+    "total_solve_seconds": 1.2380337670000001,
+    "wall_seconds": 9.213458270001865,
+    "workspace_creations": null,
+    "numeric_updates": null,
+    "solves": null,
+    "error": null
+   }
+  }
+ },
+ "family": "P1-C-pd3",
+ "wall_seconds": 12.350536508994992,
+ "support": "supported"
+}

@@ -548,3 +548,13 @@ If resources require a reduced campaign, the minimum defensible set is:
 6. Complete independent nonlinear checking, memory measurement, and failure accounting.
 
 GTOPX does not replace any item in this minimum Paper 1 campaign.
+
+# Implementation status (2026-09-03)
+
+Phase 0 and Phase 1 are implemented as runnable targets on `feat/literature-targets`; see
+`docs/LITERATURE_TARGETS.md` for the code map and `docs/REFERENCE_REPRODUCTION_REPORT.md` (with
+its machine-readable twin `benchmarks/literature/reference_reproduction.json`) for the per-target
+reproduced/gap/descriptive-only/unsupported/blocked outcome. The provenance store
+`benchmarks/literature/provenance.json` carries the evidence label of every literature value used
+above, and `benchmarks/literature/targets.json` is the registry consumed by the tests and by
+`spacepdhcg literature run <id>`.

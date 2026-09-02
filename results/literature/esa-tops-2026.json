@@ -1,0 +1,1827 @@
+{
+ "target_id": "esa-tops-2026",
+ "status": "gap",
+ "published": {
+  "reference_objectives": "none published for the Cartesian two-body problems at the pinned revision"
+ },
+ "measured": {
+  "easy_two_body": {
+   "problem": "two_body_cartesian:P4",
+   "status": "converged",
+   "final_mass": 0.6140572855841121,
+   "time_of_flight": 2.0,
+   "reason": null
+  },
+  "multi_revolution_two_body": {
+   "problem": "two_body_cartesian:P3",
+   "status": "maximum_iterations",
+   "final_mass": 0.511734090257325,
+   "time_of_flight": 13.0,
+   "reason": null
+  },
+  "inclination_or_eccentricity_change": {
+   "problem": "two_body_cartesian:P1",
+   "status": "maximum_iterations",
+   "final_mass": 0.8812639593183471,
+   "time_of_flight": 109.99999236708656,
+   "reason": null
+  },
+  "cr3bp": {
+   "problem": "cr3bp:P0",
+   "status": "unsupported",
+   "final_mass": null,
+   "time_of_flight": null,
+   "reason": "circular restricted three-body dynamics are not implemented"
+  }
+ },
+ "gap": {},
+ "labels": {
+  "measured.easy_two_body": "measured-local",
+  "measured.multi_revolution_two_body": "measured-local",
+  "measured.inclination_or_eccentricity_change": "measured-local",
+  "measured.cr3bp": "measured-local"
+ },
+ "envelope": {
+  "nodes": 120,
+  "problem_count_at_pinned_revision": 34
+ },
+ "commands": [
+  "spacepdhcg literature run esa-tops-2026"
+ ],
+ "notes": [
+  "the ISSFD paper describes 28 problems; the pinned repository revision contains 34 (database is actively expanding); selection made from metadata only"
+ ],
+ "details": {
+  "runs": {
+   "easy_two_body": {
+    "problem": "two_body_cartesian:P4",
+    "label": "two_body_cartesian:P4",
+    "status": "converged",
+    "nodes": 120,
+    "time_of_flight": 2.0,
+    "final_mass": 0.6140572855841121,
+    "final_mass_si": null,
+    "propellant_fraction": 0.3859427144158879,
+    "replay_defect_inf": 1.1519785125813087e-11,
+    "replay_terminal_error_inf": 2.9970447130989175e-11,
+    "path_violations": {
+     "thrust_epigraph": 0.0,
+     "thrust_max": 0.0,
+     "mass_positive": 0.0,
+     "minimum_radius": 0.0
+    },
+    "max_path_violation": 0.0,
+    "iterations": [
+     {
+      "iteration": 0,
+      "sigma": 2.0,
+      "objective": 1890.5522282443087,
+      "virtual_l1": 0.1891271210022531,
+      "trust_norm": 2.7043823297393055,
+      "solver_status": "Solved",
+      "solver_iterations": 17,
+      "solve_seconds": 0.033774745,
+      "discretisation_seconds": 0.06626105699979234,
+      "replay_defect_inf": 0.13547454558752214
+     },
+     {
+      "iteration": 1,
+      "sigma": 2.0,
+      "objective": 2.602197938132204,
+      "virtual_l1": 0.00030222095300102636,
+      "trust_norm": 2.670890625101916,
+      "solver_status": "Solved",
+      "solver_iterations": 21,
+      "solve_seconds": 0.039208104,
+      "discretisation_seconds": 0.06614257400360657,
+      "replay_defect_inf": 0.002661414765767405
+     },
+     {
+      "iteration": 2,
+      "sigma": 2.0,
+      "objective": -0.5690156350356189,
+      "virtual_l1": 2.4583579086563533e-15,
+      "trust_norm": 2.64241791474637,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.031712424,
+      "discretisation_seconds": 0.0712066699998104,
+      "replay_defect_inf": 0.0019458386214630807
+     },
+     {
+      "iteration": 3,
+      "sigma": 2.0,
+      "objective": -0.6124362874678103,
+      "virtual_l1": 1.532670701558581e-16,
+      "trust_norm": 0.9488024700280143,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.036995781,
+      "discretisation_seconds": 0.06408203700266313,
+      "replay_defect_inf": 0.00032100191918371657
+     },
+     {
+      "iteration": 4,
+      "sigma": 2.0,
+      "objective": -0.6135549807356493,
+      "virtual_l1": 1.5356292604668366e-16,
+      "trust_norm": 0.16616261166523108,
+      "solver_status": "Solved",
+      "solver_iterations": 30,
+      "solve_seconds": 0.040446395,
+      "discretisation_seconds": 0.06585921100486303,
+      "replay_defect_inf": 6.5844456991204225e-06
+     },
+     {
+      "iteration": 5,
+      "sigma": 2.0,
+      "objective": -0.6138020237399279,
+      "virtual_l1": 1.3994580237184427e-16,
+      "trust_norm": 0.0706011839293453,
+      "solver_status": "Solved",
+      "solver_iterations": 29,
+      "solve_seconds": 0.037878502,
+      "discretisation_seconds": 0.06744916599564021,
+      "replay_defect_inf": 2.0681887515916486e-06
+     },
+     {
+      "iteration": 6,
+      "sigma": 2.0,
+      "objective": -0.6139346188871445,
+      "virtual_l1": 4.577471584795373e-16,
+      "trust_norm": 0.043930055148329594,
+      "solver_status": "Solved",
+      "solver_iterations": 30,
+      "solve_seconds": 0.040220293,
+      "discretisation_seconds": 0.0681973789978656,
+      "replay_defect_inf": 1.1479172663531045e-06
+     },
+     {
+      "iteration": 7,
+      "sigma": 2.0,
+      "objective": -0.6140014425755903,
+      "virtual_l1": 3.005682835703989e-16,
+      "trust_norm": 0.01340785839742983,
+      "solver_status": "Solved",
+      "solver_iterations": 31,
+      "solve_seconds": 0.041485689,
+      "discretisation_seconds": 0.06531414900382515,
+      "replay_defect_inf": 3.29861593262315e-07
+     },
+     {
+      "iteration": 8,
+      "sigma": 2.0,
+      "objective": -0.6140191394239591,
+      "virtual_l1": 5.548239484418079e-16,
+      "trust_norm": 0.003359105978649181,
+      "solver_status": "Solved",
+      "solver_iterations": 28,
+      "solve_seconds": 0.039927243,
+      "discretisation_seconds": 0.07038610500603681,
+      "replay_defect_inf": 1.919523784366106e-08
+     },
+     {
+      "iteration": 9,
+      "sigma": 2.0,
+      "objective": -0.6140257845720655,
+      "virtual_l1": 4.3512103036465837e-16,
+      "trust_norm": 0.003304479016228973,
+      "solver_status": "Solved",
+      "solver_iterations": 31,
+      "solve_seconds": 0.042100803,
+      "discretisation_seconds": 0.06815500700031407,
+      "replay_defect_inf": 1.2866960386048731e-08
+     },
+     {
+      "iteration": 10,
+      "sigma": 2.0,
+      "objective": -0.6140323569076112,
+      "virtual_l1": 1.995335501200087e-16,
+      "trust_norm": 0.0032975119217174406,
+      "solver_status": "Solved",
+      "solver_iterations": 32,
+      "solve_seconds": 0.045216872,
+      "discretisation_seconds": 0.0665222520037787,
+      "replay_defect_inf": 1.2634609025674592e-08
+     },
+     {
+      "iteration": 11,
+      "sigma": 2.0,
+      "objective": -0.6140389605267851,
+      "virtual_l1": 1.2692641594174005e-15,
+      "trust_norm": 0.0033067200757180386,
+      "solver_status": "Solved",
+      "solver_iterations": 31,
+      "solve_seconds": 0.040074264,
+      "discretisation_seconds": 0.06917196699941996,
+      "replay_defect_inf": 1.262406623681045e-08
+     },
+     {
+      "iteration": 12,
+      "sigma": 2.0,
+      "objective": -0.6140455409642527,
+      "virtual_l1": 4.2458149359432655e-16,
+      "trust_norm": 0.0032993088244599443,
+      "solver_status": "Solved",
+      "solver_iterations": 29,
+      "solve_seconds": 0.03871543,
+      "discretisation_seconds": 0.06707504900259664,
+      "replay_defect_inf": 1.2592457965254766e-08
+     },
+     {
+      "iteration": 13,
+      "sigma": 2.0,
+      "objective": -0.6140521320277506,
+      "virtual_l1": 7.493860900580975e-16,
+      "trust_norm": 0.0032928799580574262,
+      "solver_status": "Solved",
+      "solver_iterations": 29,
+      "solve_seconds": 0.039367006,
+      "discretisation_seconds": 0.06756869699893286,
+      "replay_defect_inf": 1.2546113814515536e-08
+     },
+     {
+      "iteration": 14,
+      "sigma": 2.0,
+      "objective": -0.6140569648920642,
+      "virtual_l1": 5.226450550655442e-15,
+      "trust_norm": 0.000339625647431112,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.03509336,
+      "discretisation_seconds": 0.0685160370048834,
+      "replay_defect_inf": 1.3330487824703141e-09
+     },
+     {
+      "iteration": 15,
+      "sigma": 2.0,
+      "objective": -0.6140572992980681,
+      "virtual_l1": 1.0342170540482985e-14,
+      "trust_norm": 2.3742657989468504e-06,
+      "solver_status": "Solved",
+      "solver_iterations": 18,
+      "solve_seconds": 0.027816907,
+      "discretisation_seconds": 0.06583952499931911,
+      "replay_defect_inf": 1.1519785125813087e-11
+     }
+    ]
+   },
+   "multi_revolution_two_body": {
+    "problem": "two_body_cartesian:P3",
+    "label": "two_body_cartesian:P3",
+    "status": "maximum_iterations",
+    "nodes": 120,
+    "time_of_flight": 13.0,
+    "final_mass": 0.511734090257325,
+    "final_mass_si": null,
+    "propellant_fraction": 0.48826590974267503,
+    "replay_defect_inf": 0.3171725449978262,
+    "replay_terminal_error_inf": 1.9858962610824862,
+    "path_violations": {
+     "thrust_epigraph": 0.0,
+     "thrust_max": 0.0,
+     "mass_positive": 0.0,
+     "minimum_radius": 0.0
+    },
+    "max_path_violation": 0.0,
+    "iterations": [
+     {
+      "iteration": 0,
+      "sigma": 13.0,
+      "objective": 11005.971624369087,
+      "virtual_l1": 1.1006859744968471,
+      "trust_norm": 2.711040477977452,
+      "solver_status": "Solved",
+      "solver_iterations": 21,
+      "solve_seconds": 0.042151877,
+      "discretisation_seconds": 0.06551130399748217,
+      "replay_defect_inf": 1.22847642574036
+     },
+     {
+      "iteration": 1,
+      "sigma": 13.0,
+      "objective": 23797.681846127256,
+      "virtual_l1": 2.3798510052973927,
+      "trust_norm": 2.738611250781007,
+      "solver_status": "Solved",
+      "solver_iterations": 18,
+      "solve_seconds": 0.040721678,
+      "discretisation_seconds": 0.0667238809983246,
+      "replay_defect_inf": 0.6064207445655662
+     },
+     {
+      "iteration": 2,
+      "sigma": 13.0,
+      "objective": 10488.208758585688,
+      "virtual_l1": 1.0488953481199446,
+      "trust_norm": 2.734650458447442,
+      "solver_status": "Solved",
+      "solver_iterations": 19,
+      "solve_seconds": 0.039068433,
+      "discretisation_seconds": 0.07004010400123661,
+      "replay_defect_inf": 0.36081312399114895
+     },
+     {
+      "iteration": 3,
+      "sigma": 13.0,
+      "objective": 17286.194856273527,
+      "virtual_l1": 1.7286849837419112,
+      "trust_norm": 2.635580795113141,
+      "solver_status": "Solved",
+      "solver_iterations": 20,
+      "solve_seconds": 0.043738627,
+      "discretisation_seconds": 0.06879562399990391,
+      "replay_defect_inf": 0.33861214138395623
+     },
+     {
+      "iteration": 4,
+      "sigma": 13.0,
+      "objective": 4354.744621258749,
+      "virtual_l1": 0.435534322502318,
+      "trust_norm": 2.2577945110512827,
+      "solver_status": "Solved",
+      "solver_iterations": 22,
+      "solve_seconds": 0.045166012,
+      "discretisation_seconds": 0.06540758300252492,
+      "replay_defect_inf": 0.15474238015924519
+     },
+     {
+      "iteration": 5,
+      "sigma": 13.0,
+      "objective": 1764.3328159313944,
+      "virtual_l1": 0.17648876141927278,
+      "trust_norm": 2.120158464311565,
+      "solver_status": "Solved",
+      "solver_iterations": 22,
+      "solve_seconds": 0.043981134,
+      "discretisation_seconds": 0.06766894600150408,
+      "replay_defect_inf": 0.09066790515676948
+     },
+     {
+      "iteration": 6,
+      "sigma": 13.0,
+      "objective": 1921.331177813339,
+      "virtual_l1": 0.19218547660094626,
+      "trust_norm": 2.470304707614896,
+      "solver_status": "Solved",
+      "solver_iterations": 21,
+      "solve_seconds": 0.042330716,
+      "discretisation_seconds": 0.07023197400121717,
+      "replay_defect_inf": 0.12237019810222383
+     },
+     {
+      "iteration": 7,
+      "sigma": 13.0,
+      "objective": 1704.8882186892367,
+      "virtual_l1": 0.1705402657056841,
+      "trust_norm": 2.5694097586448983,
+      "solver_status": "Solved",
+      "solver_iterations": 20,
+      "solve_seconds": 0.042105115,
+      "discretisation_seconds": 0.06730115100071998,
+      "replay_defect_inf": 0.1600938120765294
+     },
+     {
+      "iteration": 8,
+      "sigma": 13.0,
+      "objective": 773.3977315113775,
+      "virtual_l1": 0.07739069618023904,
+      "trust_norm": 2.5371813504251595,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.044537188,
+      "discretisation_seconds": 0.07018308999977307,
+      "replay_defect_inf": 0.13012485687657338
+     },
+     {
+      "iteration": 9,
+      "sigma": 13.0,
+      "objective": 1411.179409666583,
+      "virtual_l1": 0.14116890935301254,
+      "trust_norm": 2.286447564320215,
+      "solver_status": "Solved",
+      "solver_iterations": 20,
+      "solve_seconds": 0.035673056,
+      "discretisation_seconds": 0.06752022999717155,
+      "replay_defect_inf": 0.07854346384966626
+     },
+     {
+      "iteration": 10,
+      "sigma": 13.0,
+      "objective": 2116.0237544380857,
+      "virtual_l1": 0.2116534239257076,
+      "trust_norm": 1.4502328775290405,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.042060606,
+      "discretisation_seconds": 0.06862351099698571,
+      "replay_defect_inf": 0.14950529328816847
+     },
+     {
+      "iteration": 11,
+      "sigma": 13.0,
+      "objective": 1456.2235871606615,
+      "virtual_l1": 0.1456733721220112,
+      "trust_norm": 1.7520200043023655,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.042798087,
+      "discretisation_seconds": 0.07110202600597404,
+      "replay_defect_inf": 0.1236326623055133
+     },
+     {
+      "iteration": 12,
+      "sigma": 13.0,
+      "objective": 1574.5638348094005,
+      "virtual_l1": 0.1575076219544834,
+      "trust_norm": 1.3356697277940934,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.043310433,
+      "discretisation_seconds": 0.06814026399661088,
+      "replay_defect_inf": 0.12045415498076495
+     },
+     {
+      "iteration": 13,
+      "sigma": 13.0,
+      "objective": 1362.2388653649364,
+      "virtual_l1": 0.13627483400050275,
+      "trust_norm": 2.297239020586392,
+      "solver_status": "Solved",
+      "solver_iterations": 22,
+      "solve_seconds": 0.051830856,
+      "discretisation_seconds": 0.06905513200035784,
+      "replay_defect_inf": 0.11645968902637793
+     },
+     {
+      "iteration": 14,
+      "sigma": 13.0,
+      "objective": 1150.485038627615,
+      "virtual_l1": 0.11509944895671595,
+      "trust_norm": 2.3852558885257786,
+      "solver_status": "Solved",
+      "solver_iterations": 21,
+      "solve_seconds": 0.044945899,
+      "discretisation_seconds": 0.0687053889996605,
+      "replay_defect_inf": 0.0934812052276599
+     },
+     {
+      "iteration": 15,
+      "sigma": 13.0,
+      "objective": 1302.0567805583917,
+      "virtual_l1": 0.13025669908425513,
+      "trust_norm": 2.051927142252759,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.052583532,
+      "discretisation_seconds": 0.07455669200135162,
+      "replay_defect_inf": 0.14792091499993243
+     },
+     {
+      "iteration": 16,
+      "sigma": 13.0,
+      "objective": 1662.8214568322055,
+      "virtual_l1": 0.16633316120397362,
+      "trust_norm": 1.8143980691692556,
+      "solver_status": "Solved",
+      "solver_iterations": 22,
+      "solve_seconds": 0.046401365,
+      "discretisation_seconds": 0.06626641200273298,
+      "replay_defect_inf": 0.1184799583141497
+     },
+     {
+      "iteration": 17,
+      "sigma": 13.0,
+      "objective": 1900.5045988021984,
+      "virtual_l1": 0.19010146449286172,
+      "trust_norm": 1.8753366326834917,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.047434724,
+      "discretisation_seconds": 0.07084700799896382,
+      "replay_defect_inf": 0.23735177705951793
+     },
+     {
+      "iteration": 18,
+      "sigma": 13.0,
+      "objective": 1701.527234765569,
+      "virtual_l1": 0.1702037596582651,
+      "trust_norm": 1.5583373270461514,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.04989871,
+      "discretisation_seconds": 0.06808815499971388,
+      "replay_defect_inf": 0.3282582082167209
+     },
+     {
+      "iteration": 19,
+      "sigma": 13.0,
+      "objective": 927.9735276155187,
+      "virtual_l1": 0.0928484019602698,
+      "trust_norm": 1.342778386639407,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.045755289,
+      "discretisation_seconds": 0.0675941680019605,
+      "replay_defect_inf": 0.17637012977116284
+     },
+     {
+      "iteration": 20,
+      "sigma": 13.0,
+      "objective": 2330.825673372624,
+      "virtual_l1": 0.23313360130507388,
+      "trust_norm": 1.547561815758125,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.045142604,
+      "discretisation_seconds": 0.06697489200450946,
+      "replay_defect_inf": 0.1203174175523471
+     },
+     {
+      "iteration": 21,
+      "sigma": 13.0,
+      "objective": 1989.719783636042,
+      "virtual_l1": 0.19902296911953715,
+      "trust_norm": 2.1004790659537687,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.049146962,
+      "discretisation_seconds": 0.06799378800496925,
+      "replay_defect_inf": 0.3117453643211024
+     },
+     {
+      "iteration": 22,
+      "sigma": 13.0,
+      "objective": 1126.0315787048505,
+      "virtual_l1": 0.11265414391874937,
+      "trust_norm": 1.9214837132923013,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.048186412,
+      "discretisation_seconds": 0.06838010799401673,
+      "replay_defect_inf": 0.41311823299731665
+     },
+     {
+      "iteration": 23,
+      "sigma": 13.0,
+      "objective": 2779.118581232699,
+      "virtual_l1": 0.2779629437524549,
+      "trust_norm": 1.2346385955836967,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.044155154,
+      "discretisation_seconds": 0.065203976999328,
+      "replay_defect_inf": 0.0846442033890818
+     },
+     {
+      "iteration": 24,
+      "sigma": 13.0,
+      "objective": 2652.43111394425,
+      "virtual_l1": 0.2652942088366204,
+      "trust_norm": 0.9626714207225018,
+      "solver_status": "Solved",
+      "solver_iterations": 21,
+      "solve_seconds": 0.043335591,
+      "discretisation_seconds": 0.07111458200233756,
+      "replay_defect_inf": 0.2598710246675715
+     },
+     {
+      "iteration": 25,
+      "sigma": 13.0,
+      "objective": 1670.8475319539564,
+      "virtual_l1": 0.16713577671350627,
+      "trust_norm": 1.6523317033775717,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.050706603,
+      "discretisation_seconds": 0.06752956499985885,
+      "replay_defect_inf": 0.30561793111538704
+     },
+     {
+      "iteration": 26,
+      "sigma": 13.0,
+      "objective": 3272.873708382027,
+      "virtual_l1": 0.32733849754789573,
+      "trust_norm": 0.7642119212493984,
+      "solver_status": "Solved",
+      "solver_iterations": 21,
+      "solve_seconds": 0.042999129,
+      "discretisation_seconds": 0.07117029599612579,
+      "replay_defect_inf": 0.10623408125337713
+     },
+     {
+      "iteration": 27,
+      "sigma": 13.0,
+      "objective": 2790.507078976983,
+      "virtual_l1": 0.2791018291496349,
+      "trust_norm": 0.8680780628457198,
+      "solver_status": "Solved",
+      "solver_iterations": 19,
+      "solve_seconds": 0.041432607,
+      "discretisation_seconds": 0.0649434370061499,
+      "replay_defect_inf": 0.3550637028218786
+     },
+     {
+      "iteration": 28,
+      "sigma": 13.0,
+      "objective": 2414.747001813492,
+      "virtual_l1": 0.24152571278057394,
+      "trust_norm": 1.639233356554062,
+      "solver_status": "Solved",
+      "solver_iterations": 22,
+      "solve_seconds": 0.049629087,
+      "discretisation_seconds": 0.0730460549966665,
+      "replay_defect_inf": 0.2144304938109749
+     },
+     {
+      "iteration": 29,
+      "sigma": 13.0,
+      "objective": 3585.5423139926424,
+      "virtual_l1": 0.3586052049653084,
+      "trust_norm": 2.2920022340676005,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.053152329,
+      "discretisation_seconds": 0.06589169200015021,
+      "replay_defect_inf": 0.15934756618700407
+     },
+     {
+      "iteration": 30,
+      "sigma": 13.0,
+      "objective": 2905.63220363922,
+      "virtual_l1": 0.2906142535701899,
+      "trust_norm": 1.5529863772330015,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.046880754,
+      "discretisation_seconds": 0.06557648799935123,
+      "replay_defect_inf": 0.30021533126194233
+     },
+     {
+      "iteration": 31,
+      "sigma": 13.0,
+      "objective": 2225.661753621272,
+      "virtual_l1": 0.22261718423242305,
+      "trust_norm": 1.8822436056509473,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.049740089,
+      "discretisation_seconds": 0.06850421099807136,
+      "replay_defect_inf": 0.206433146971713
+     },
+     {
+      "iteration": 32,
+      "sigma": 13.0,
+      "objective": 2749.4941311630782,
+      "virtual_l1": 0.2750004449345167,
+      "trust_norm": 1.7151354550203717,
+      "solver_status": "Solved",
+      "solver_iterations": 22,
+      "solve_seconds": 0.04084798,
+      "discretisation_seconds": 0.07090664599672891,
+      "replay_defect_inf": 0.30368524315780077
+     },
+     {
+      "iteration": 33,
+      "sigma": 13.0,
+      "objective": 2667.147789636918,
+      "virtual_l1": 0.2667658470932936,
+      "trust_norm": 1.2950972604253168,
+      "solver_status": "Solved",
+      "solver_iterations": 29,
+      "solve_seconds": 0.06272184,
+      "discretisation_seconds": 0.06621548199473182,
+      "replay_defect_inf": 0.2580861125505086
+     },
+     {
+      "iteration": 34,
+      "sigma": 13.0,
+      "objective": 1780.8507641783287,
+      "virtual_l1": 0.1781360395194249,
+      "trust_norm": 2.161125892657736,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.056208602,
+      "discretisation_seconds": 0.06932549400517019,
+      "replay_defect_inf": 0.3506522068419837
+     },
+     {
+      "iteration": 35,
+      "sigma": 13.0,
+      "objective": 3313.229227892796,
+      "virtual_l1": 0.3313740262175186,
+      "trust_norm": 0.8768263343369737,
+      "solver_status": "Solved",
+      "solver_iterations": 22,
+      "solve_seconds": 0.045640681,
+      "discretisation_seconds": 0.06715391499892576,
+      "replay_defect_inf": 0.2033928045405881
+     },
+     {
+      "iteration": 36,
+      "sigma": 13.0,
+      "objective": 2835.7439187874284,
+      "virtual_l1": 0.2836253997322493,
+      "trust_norm": 1.7299617082205283,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.048794484,
+      "discretisation_seconds": 0.06986459100153297,
+      "replay_defect_inf": 0.3004583120178842
+     },
+     {
+      "iteration": 37,
+      "sigma": 13.0,
+      "objective": 2555.728790973685,
+      "virtual_l1": 0.25562399560861987,
+      "trust_norm": 0.9445792511755539,
+      "solver_status": "Solved",
+      "solver_iterations": 19,
+      "solve_seconds": 0.041687756,
+      "discretisation_seconds": 0.07137445699481759,
+      "replay_defect_inf": 0.3205237688980322
+     },
+     {
+      "iteration": 38,
+      "sigma": 13.0,
+      "objective": 3256.8896204129746,
+      "virtual_l1": 0.32574003047448363,
+      "trust_norm": 1.5488197913015738,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.051509382,
+      "discretisation_seconds": 0.06821321000461467,
+      "replay_defect_inf": 0.2532111603521816
+     },
+     {
+      "iteration": 39,
+      "sigma": 13.0,
+      "objective": 2066.6085283295474,
+      "virtual_l1": 0.20671189297480064,
+      "trust_norm": 1.5694027205007932,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.05395831,
+      "discretisation_seconds": 0.06621950400585774,
+      "replay_defect_inf": 0.3171725449978262
+     }
+    ]
+   },
+   "inclination_or_eccentricity_change": {
+    "problem": "two_body_cartesian:P1",
+    "label": "two_body_cartesian:P1",
+    "status": "maximum_iterations",
+    "nodes": 120,
+    "time_of_flight": 109.99999236708656,
+    "final_mass": 0.8812639593183471,
+    "final_mass_si": null,
+    "propellant_fraction": 0.11873604068165289,
+    "replay_defect_inf": 2.588567423644772e-05,
+    "replay_terminal_error_inf": 0.020830347072808147,
+    "path_violations": {
+     "thrust_epigraph": 0.0,
+     "thrust_max": 0.0,
+     "mass_positive": 0.0,
+     "minimum_radius": 0.0
+    },
+    "max_path_violation": 0.0,
+    "iterations": [
+     {
+      "iteration": 0,
+      "sigma": 109.99999997075952,
+      "objective": 3760.8197826142246,
+      "virtual_l1": 0.3761626488049572,
+      "trust_norm": 2.738610527947153,
+      "solver_status": "Solved",
+      "solver_iterations": 18,
+      "solve_seconds": 0.03273799,
+      "discretisation_seconds": 0.06650235499546397,
+      "replay_defect_inf": 0.05959300818487975
+     },
+     {
+      "iteration": 1,
+      "sigma": 109.99999996667664,
+      "objective": 1119.4784312978798,
+      "virtual_l1": 0.11201461194383949,
+      "trust_norm": 2.738498124394307,
+      "solver_status": "Solved",
+      "solver_iterations": 17,
+      "solve_seconds": 0.031247358,
+      "discretisation_seconds": 0.06618999900092604,
+      "replay_defect_inf": 0.049485427142082414
+     },
+     {
+      "iteration": 2,
+      "sigma": 109.99999999989365,
+      "objective": 8.429901435466533,
+      "virtual_l1": 0.0008942794471277612,
+      "trust_norm": 1.6955796555830045,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.042416945,
+      "discretisation_seconds": 0.06438352300028782,
+      "replay_defect_inf": 0.0026422836734293353
+     },
+     {
+      "iteration": 3,
+      "sigma": 109.99999973882265,
+      "objective": -0.713262064297548,
+      "virtual_l1": 5.239402761684286e-14,
+      "trust_norm": 2.6761358658280145,
+      "solver_status": "Solved",
+      "solver_iterations": 17,
+      "solve_seconds": 0.025548909,
+      "discretisation_seconds": 0.06685389700578526,
+      "replay_defect_inf": 0.002428173336366829
+     },
+     {
+      "iteration": 4,
+      "sigma": 109.99999947281209,
+      "objective": -0.7975613086757998,
+      "virtual_l1": 3.5551204656036414e-13,
+      "trust_norm": 2.53020837226262,
+      "solver_status": "Solved",
+      "solver_iterations": 20,
+      "solve_seconds": 0.028805654,
+      "discretisation_seconds": 0.07043034700473072,
+      "replay_defect_inf": 0.0003794712582100568
+     },
+     {
+      "iteration": 5,
+      "sigma": 109.99999929490178,
+      "objective": -0.8439246174827822,
+      "virtual_l1": 1.0082920634608001e-14,
+      "trust_norm": 2.273874018025482,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.031418702,
+      "discretisation_seconds": 0.06815107599686598,
+      "replay_defect_inf": 0.00016047071099639654
+     },
+     {
+      "iteration": 6,
+      "sigma": 109.99999926564847,
+      "objective": -0.8717172100854833,
+      "virtual_l1": 1.302523963248322e-14,
+      "trust_norm": 1.8775660048415126,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.034443103,
+      "discretisation_seconds": 0.06933630300045479,
+      "replay_defect_inf": 6.277305590196569e-05
+     },
+     {
+      "iteration": 7,
+      "sigma": 109.99999892675032,
+      "objective": -0.8795422060458034,
+      "virtual_l1": 2.4365560419440466e-14,
+      "trust_norm": 1.2010551675903238,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.032936834,
+      "discretisation_seconds": 0.06674862700310769,
+      "replay_defect_inf": 2.5885680738912953e-05
+     },
+     {
+      "iteration": 8,
+      "sigma": 109.9999986007361,
+      "objective": -0.8807537226652071,
+      "virtual_l1": 2.7376437546675524e-14,
+      "trust_norm": 0.11811636445899543,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.03649298,
+      "discretisation_seconds": 0.06791153200174449,
+      "replay_defect_inf": 2.5885680119075438e-05
+     },
+     {
+      "iteration": 9,
+      "sigma": 109.99999833103021,
+      "objective": -0.8809291520881959,
+      "virtual_l1": 1.8910160049995626e-14,
+      "trust_norm": 0.04929265305075069,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.032004062,
+      "discretisation_seconds": 0.06848977899790043,
+      "replay_defect_inf": 2.5885679892145852e-05
+     },
+     {
+      "iteration": 10,
+      "sigma": 109.99999824164121,
+      "objective": -0.8810149035291134,
+      "virtual_l1": 1.5240041043490368e-14,
+      "trust_norm": 0.034863671887124074,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.034395611,
+      "discretisation_seconds": 0.0689161639966187,
+      "replay_defect_inf": 2.5885679952986074e-05
+     },
+     {
+      "iteration": 11,
+      "sigma": 109.99999816732036,
+      "objective": -0.8810784382160299,
+      "virtual_l1": 1.4170429014715793e-14,
+      "trust_norm": 0.026359188918864684,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.037261605,
+      "discretisation_seconds": 0.0670445599971572,
+      "replay_defect_inf": 2.5885679974857467e-05
+     },
+     {
+      "iteration": 12,
+      "sigma": 109.99999807255412,
+      "objective": -0.8811217964757274,
+      "virtual_l1": 1.7850166406348566e-14,
+      "trust_norm": 0.01616165766302842,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.035519575,
+      "discretisation_seconds": 0.06843098699755501,
+      "replay_defect_inf": 2.588567986316903e-05
+     },
+     {
+      "iteration": 13,
+      "sigma": 109.99999773997325,
+      "objective": -0.8811523545671606,
+      "virtual_l1": 2.551924218137651e-14,
+      "trust_norm": 0.014162295966131597,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.034898947,
+      "discretisation_seconds": 0.06656730199756566,
+      "replay_defect_inf": 2.588567943251352e-05
+     },
+     {
+      "iteration": 14,
+      "sigma": 109.99999764032749,
+      "objective": -0.8811741954037186,
+      "virtual_l1": 1.407401555109847e-14,
+      "trust_norm": 0.008456671779285099,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.035591116,
+      "discretisation_seconds": 0.06846977499662898,
+      "replay_defect_inf": 2.5885679239889825e-05
+     },
+     {
+      "iteration": 15,
+      "sigma": 109.99999722339999,
+      "objective": -0.8811889052157615,
+      "virtual_l1": 2.977007715284366e-14,
+      "trust_norm": 0.005294630534860867,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.035443277,
+      "discretisation_seconds": 0.06728381799621275,
+      "replay_defect_inf": 2.5885679004189477e-05
+     },
+     {
+      "iteration": 16,
+      "sigma": 109.99999697765695,
+      "objective": -0.8811962308008858,
+      "virtual_l1": 2.067151885186875e-14,
+      "trust_norm": 0.004360720552831862,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.034498209,
+      "discretisation_seconds": 0.06532493600388989,
+      "replay_defect_inf": 2.5885678469173e-05
+     },
+     {
+      "iteration": 17,
+      "sigma": 109.99999662937897,
+      "objective": -0.8812042726166841,
+      "virtual_l1": 2.6719075651746967e-14,
+      "trust_norm": 0.004632538751702239,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.034216772,
+      "discretisation_seconds": 0.06782678900344763,
+      "replay_defect_inf": 2.588567829653332e-05
+     },
+     {
+      "iteration": 18,
+      "sigma": 109.99999646179856,
+      "objective": -0.8812107317544418,
+      "virtual_l1": 1.4983529318318204e-14,
+      "trust_norm": 0.004025581520204949,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.035545833,
+      "discretisation_seconds": 0.07037783000123454,
+      "replay_defect_inf": 2.588567810657416e-05
+     },
+     {
+      "iteration": 19,
+      "sigma": 109.99999623532027,
+      "objective": -0.8812183977391238,
+      "virtual_l1": 2.353463596120589e-14,
+      "trust_norm": 0.003668641707522299,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.034051387,
+      "discretisation_seconds": 0.0674221969966311,
+      "replay_defect_inf": 2.5885678067716356e-05
+     },
+     {
+      "iteration": 20,
+      "sigma": 109.99999597627146,
+      "objective": -0.8812239805899191,
+      "virtual_l1": 2.4383073253939338e-14,
+      "trust_norm": 0.0027977657041962016,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.034937893,
+      "discretisation_seconds": 0.06965624500298873,
+      "replay_defect_inf": 2.588567765138272e-05
+     },
+     {
+      "iteration": 21,
+      "sigma": 109.9999957970001,
+      "objective": -0.8812276105562604,
+      "virtual_l1": 1.7719076973034135e-14,
+      "trust_norm": 0.002598778044497144,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.034200124,
+      "discretisation_seconds": 0.06626537100237329,
+      "replay_defect_inf": 2.5885677516934713e-05
+     },
+     {
+      "iteration": 22,
+      "sigma": 109.99999561496266,
+      "objective": -0.8812318842808463,
+      "virtual_l1": 1.9991076487819606e-14,
+      "trust_norm": 0.0026999378957660333,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.033916576,
+      "discretisation_seconds": 0.06599455200193916,
+      "replay_defect_inf": 2.5885677460091294e-05
+     },
+     {
+      "iteration": 23,
+      "sigma": 109.99999550483402,
+      "objective": -0.8812353271769031,
+      "virtual_l1": 1.1817772103150262e-14,
+      "trust_norm": 0.0021687156401657094,
+      "solver_status": "Solved",
+      "solver_iterations": 26,
+      "solve_seconds": 0.036170328,
+      "discretisation_seconds": 0.06837648199871182,
+      "replay_defect_inf": 2.5885677402137652e-05
+     },
+     {
+      "iteration": 24,
+      "sigma": 109.9999952293944,
+      "objective": -0.8812401595283214,
+      "virtual_l1": 2.870897946560944e-14,
+      "trust_norm": 0.0022549919821202497,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.032885598,
+      "discretisation_seconds": 0.06577188899973407,
+      "replay_defect_inf": 2.5885677147674535e-05
+     },
+     {
+      "iteration": 25,
+      "sigma": 109.99999511095422,
+      "objective": -0.881241863507426,
+      "virtual_l1": 1.6699764292218735e-14,
+      "trust_norm": 0.0016238493030539015,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.033196808,
+      "discretisation_seconds": 0.06715375700150616,
+      "replay_defect_inf": 2.5885676791848056e-05
+     },
+     {
+      "iteration": 26,
+      "sigma": 109.99999473388871,
+      "objective": -0.8812456106542466,
+      "virtual_l1": 3.293133814827584e-14,
+      "trust_norm": 0.0021211612890756075,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.03291928,
+      "discretisation_seconds": 0.0645930840037181,
+      "replay_defect_inf": 2.588567653316609e-05
+     },
+     {
+      "iteration": 27,
+      "sigma": 109.99999445855312,
+      "objective": -0.8812476535044167,
+      "virtual_l1": 2.904602833038585e-14,
+      "trust_norm": 0.0021700248523640205,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.033107145,
+      "discretisation_seconds": 0.0685364929959178,
+      "replay_defect_inf": 2.5885675932202368e-05
+     },
+     {
+      "iteration": 28,
+      "sigma": 109.99999437180057,
+      "objective": -0.8812489742988844,
+      "virtual_l1": 1.523746139861292e-14,
+      "trust_norm": 0.0014049093047730924,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.033400486,
+      "discretisation_seconds": 0.06608545700146351,
+      "replay_defect_inf": 2.5885676045334094e-05
+     },
+     {
+      "iteration": 29,
+      "sigma": 109.99999418714468,
+      "objective": -0.8812513884166359,
+      "virtual_l1": 1.9215459432611844e-14,
+      "trust_norm": 0.00155327507852369,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.037348583,
+      "discretisation_seconds": 0.0664045269950293,
+      "replay_defect_inf": 2.5885676148140746e-05
+     },
+     {
+      "iteration": 30,
+      "sigma": 109.99999387757585,
+      "objective": -0.8812546948908766,
+      "virtual_l1": 3.309676596454661e-14,
+      "trust_norm": 0.0020361592208358037,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.034631537,
+      "discretisation_seconds": 0.06693041499966057,
+      "replay_defect_inf": 2.58856756252257e-05
+     },
+     {
+      "iteration": 31,
+      "sigma": 109.99999363886579,
+      "objective": -0.8812562521225088,
+      "virtual_l1": 3.2464645709807284e-14,
+      "trust_norm": 0.0016394920055345392,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.034254006,
+      "discretisation_seconds": 0.06715555600385414,
+      "replay_defect_inf": 2.5885675162373722e-05
+     },
+     {
+      "iteration": 32,
+      "sigma": 109.99999348615982,
+      "objective": -0.8812573071290599,
+      "virtual_l1": 2.0410959024154295e-14,
+      "trust_norm": 0.0012092975060279225,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.034315111,
+      "discretisation_seconds": 0.06861696200212464,
+      "replay_defect_inf": 2.5885675213666026e-05
+     },
+     {
+      "iteration": 33,
+      "sigma": 109.99999327044195,
+      "objective": -0.881259478974046,
+      "virtual_l1": 3.167443829424578e-14,
+      "trust_norm": 0.0016388383662080802,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.034094604,
+      "discretisation_seconds": 0.06537691799894674,
+      "replay_defect_inf": 2.5885675007386588e-05
+     },
+     {
+      "iteration": 34,
+      "sigma": 109.99999304633157,
+      "objective": -0.8812609731319696,
+      "virtual_l1": 3.2478241096105074e-14,
+      "trust_norm": 0.0016591269118168734,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.035068718,
+      "discretisation_seconds": 0.06485500800044974,
+      "replay_defect_inf": 2.588567454986368e-05
+     },
+     {
+      "iteration": 35,
+      "sigma": 109.99999288824714,
+      "objective": -0.8812617232815058,
+      "virtual_l1": 2.4173480996796503e-14,
+      "trust_norm": 0.0012657110503207895,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.033952223,
+      "discretisation_seconds": 0.06758792299660854,
+      "replay_defect_inf": 2.58856744688174e-05
+     },
+     {
+      "iteration": 36,
+      "sigma": 109.99999279407562,
+      "objective": -0.8812621389728166,
+      "virtual_l1": 1.4437553635163517e-14,
+      "trust_norm": 0.0009673671018592828,
+      "solver_status": "Solved",
+      "solver_iterations": 25,
+      "solve_seconds": 0.035325948,
+      "discretisation_seconds": 0.07142486899829237,
+      "replay_defect_inf": 2.5885674659997804e-05
+     },
+     {
+      "iteration": 37,
+      "sigma": 109.99999269918561,
+      "objective": -0.8812633935907659,
+      "virtual_l1": 1.5252766736130787e-14,
+      "trust_norm": 0.0009577779566848515,
+      "solver_status": "Solved",
+      "solver_iterations": 24,
+      "solve_seconds": 0.033105975,
+      "discretisation_seconds": 0.06633702800172614,
+      "replay_defect_inf": 2.5885674767911482e-05
+     },
+     {
+      "iteration": 38,
+      "sigma": 109.9999925788013,
+      "objective": -0.8812646147730548,
+      "virtual_l1": 2.1726002556072103e-14,
+      "trust_norm": 0.0009362364649277874,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.040323373,
+      "discretisation_seconds": 0.06687763299851213,
+      "replay_defect_inf": 2.5885674610259812e-05
+     },
+     {
+      "iteration": 39,
+      "sigma": 109.99999236708656,
+      "objective": -0.8812665327573455,
+      "virtual_l1": 2.8915145102117137e-14,
+      "trust_norm": 0.0014260730612155087,
+      "solver_status": "Solved",
+      "solver_iterations": 23,
+      "solve_seconds": 0.033139245,
+      "discretisation_seconds": 0.06705117900128243,
+      "replay_defect_inf": 2.588567423644772e-05
+     }
+    ]
+   },
+   "cr3bp": {
+    "problem": "cr3bp:P0",
+    "status": "unsupported",
+    "reason": "circular restricted three-body dynamics are not implemented"
+   }
+  },
+  "problems": [
+   {
+    "key": "two_body_cartesian:P0",
+    "family": "two_body_cartesian",
+    "info": "Mildly-elliptic to mildly-elliptic transfer (e_s~0.201, e_f~0.210) in fixed tof -> T=0.22N, Isp=3000s",
+    "fixed_time": true,
+    "tof_bounds": [
+     11.0,
+     11.0
+    ],
+    "max_thrust": 0.03709897158414718,
+    "exhaust_velocity": 0.9877540504250252,
+    "initial_mass": 1.0,
+    "mu": 1.0,
+    "period_ratio": 0.7749129409189313,
+    "revolutions_estimate": 1.0731905527373382
+   },
+   {
+    "key": "two_body_cartesian:P1",
+    "family": "two_body_cartesian",
+    "info": "Highly-elliptic transfer (e_s~0.906, e_f~0.835).",
+    "fixed_time": false,
+    "tof_bounds": [
+     60.0,
+     110.0
+    ],
+    "max_thrust": 0.0058546435335345,
+    "exhaust_velocity": 0.9877540504250252,
+    "initial_mass": 1.0,
+    "mu": 1.0,
+    "period_ratio": 0.5097243044360481,
+    "revolutions_estimate": 0.6619591734673522
+   },
+   {
+    "key": "two_body_cartesian:P2",
+    "family": "two_body_cartesian",
+    "info": "Circular-to-highly-elliptic/high-inclination transfer (e_f~0.8, i_f~60 deg)",
+    "fixed_time": false,
+    "tof_bounds": [
+     10.0,
+     100.0
+    ],
+    "max_thrust": 0.03709897158414718,
+    "exhaust_velocity": 0.9877540504250252,
+    "initial_mass": 1.0,
+    "mu": 1.0,
+    "period_ratio": 8.505172717997155,
+    "revolutions_estimate": 2.5475237728198223
+   },
+   {
+    "key": "two_body_cartesian:P3",
+    "family": "two_body_cartesian",
+    "info": "Multirev arc transfer - Fixed Time",
+    "fixed_time": true,
+    "tof_bounds": [
+     13.0,
+     13.0
+    ],
+    "max_thrust": 0.03709897158414718,
+    "exhaust_velocity": 0.9877540504250252,
+    "initial_mass": 1.0,
+    "mu": 1.0,
+    "period_ratio": 8.505172717997155,
+    "revolutions_estimate": 0.3311780904665769
+   },
+   {
+    "key": "two_body_cartesian:P4",
+    "family": "two_body_cartesian",
+    "info": "Short arc transfer (GTOC style) - Fixed Time",
+    "fixed_time": true,
+    "tof_bounds": [
+     2.0,
+     2.0
+    ],
+    "max_thrust": 0.5709897158414718,
+    "exhaust_velocity": 0.9877540504250252,
+    "initial_mass": 1.0,
+    "mu": 1.0,
+    "period_ratio": 8.505172717997155,
+    "revolutions_estimate": 0.05095047545639645
+   },
+   {
+    "key": "modified_equinoctial:P0",
+    "family": "modified_equinoctial",
+    "info": "Dionysus problem (doi: 10.2514/1.G000379) - Fixed time",
+    "fixed_time": true,
+    "tof_bounds": [
+     60.79091977865148,
+     60.79091977865148
+    ],
+    "max_thrust": 0.013490919161437792,
+    "exhaust_velocity": 0.9877459715411968,
+    "initial_mass": 1.0,
+    "mu": 1.0,
+    "period_ratio": 3.2632558300707464,
+    "revolutions_estimate": 4.539045627820536
+   },
+   {
+    "key": "modified_equinoctial:P1",
+    "family": "modified_equinoctial",
+    "info": "Jiang problem (doi: 10.2514/1.52476) - 2 revs - Fixed time",
+    "fixed_time": true,
+    "tof_bounds": [
+     86400000.0,
+     86400000.0
+    ],
+    "max_thrust": 0.33,
+    "exhaust_velocity": 37265.27,
+    "initial_mass": 1500.0,
+    "mu": 1.32712440018e+20,
+    "period_ratio": null,
+    "revolutions_estimate": null
+   },
+   {
+    "key": "modified_equinoctial:P2",
+    "family": "modified_equinoctial",
+    "info": "Jiang problem (doi: 10.2514/1.52476) - 3 revs - Fixed time",
+    "fixed_time": true,
+    "tof_bounds": [
+     86400000.0,
+     86400000.0
+    ],
+    "max_thrust": 0.33,
+    "exhaust_velocity": 37265.27,
+    "initial_mass": 1500.0,
+    "mu": 1.32712440018e+20,
+    "period_ratio": null,
+    "revolutions_estimate": null
+   },
+   {
+    "key": "modified_equinoctial:P3",
+    "family": "modified_equinoctial",
+    "info": "Jiang problem (doi: 10.2514/1.52476) - 4 revs - Fixed time",
+    "fixed_time": true,
+    "tof_bounds": [
+     86400000.0,
+     86400000.0
+    ],
+    "max_thrust": 0.33,
+    "exhaust_velocity": 37265.27,
+    "initial_mass": 1500.0,
+    "mu": 1.32712440018e+20,
+    "period_ratio": null,
+    "revolutions_estimate": null
+   },
+   {
+    "key": "modified_equinoctial:P4",
+    "family": "modified_equinoctial",
+    "info": "Jiang problem (doi: 10.2514/1.52476) - 5 revs - Fixed time",
+    "fixed_time": true,
+    "tof_bounds": [
+     86400000.0,
+     86400000.0
+    ],
+    "max_thrust": 0.33,
+    "exhaust_velocity": 37265.27,
+    "initial_mass": 1500.0,
+    "mu": 1.32712440018e+20,
+    "period_ratio": null,
+    "revolutions_estimate": null
+   },
+   {
+    "key": "modified_equinoctial:P5",
+    "family": "modified_equinoctial",
+    "info": "GTO-GEO",
+    "fixed_time": true,
+    "tof_bounds": [
+     472800.0,
+     472800.0
+    ],
+    "max_thrust": 0.01,
+    "exhaust_velocity": 20.0,
+    "initial_mass": 1500.0,
+    "mu": 398601.877,
+    "period_ratio": 2.268643254162446,
+    "revolutions_estimate": 7.616987497345745
+   },
+   {
+    "key": "modified_equinoctial:P6",
+    "family": "modified_equinoctial",
+    "info": "GTO-Molniya EXTREME",
+    "fixed_time": true,
+    "tof_bounds": [
+     3064000.0,
+     3064000.0
+    ],
+    "max_thrust": 0.01,
+    "exhaust_velocity": 100.0,
+    "initial_mass": 2000.0,
+    "mu": 398601.877,
+    "period_ratio": 1.136778775080376,
+    "revolutions_estimate": 75.50965711222044
+   },
+   {
+    "key": "modified_equinoctial:P7",
+    "family": "modified_equinoctial",
+    "info": "GTO-Molniya Easy",
+    "fixed_time": true,
+    "tof_bounds": [
+     506400.0,
+     506400.0
+    ],
+    "max_thrust": 0.1,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 2000.0,
+    "mu": 398601.877,
+    "period_ratio": 1.136778775080376,
+    "revolutions_estimate": 12.479794504447922
+   },
+   {
+    "key": "modified_equinoctial:P8",
+    "family": "modified_equinoctial",
+    "info": "GTO-AOP shift",
+    "fixed_time": true,
+    "tof_bounds": [
+     123456.0,
+     123456.0
+    ],
+    "max_thrust": 0.1,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 2000.0,
+    "mu": 398601.877,
+    "period_ratio": 1.0,
+    "revolutions_estimate": 3.25053992214286
+   },
+   {
+    "key": "cr3bp:P0",
+    "family": "cr3bp",
+    "info": "Halo 2 Halo in fixed tof",
+    "fixed_time": true,
+    "tof_bounds": [
+     5.0,
+     5.0
+    ],
+    "max_thrust": 0.3010999584011414,
+    "exhaust_velocity": 11.56499372183432,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 1.4032747490383795,
+    "revolutions_estimate": 1.7677247744258038
+   },
+   {
+    "key": "cr3bp:P1",
+    "family": "cr3bp",
+    "info": "Halo to Halo",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     15.0
+    ],
+    "max_thrust": 0.3010999584011414,
+    "exhaust_velocity": 11.56499372183432,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 0.836466667808475,
+    "revolutions_estimate": 4.9455382593538895
+   },
+   {
+    "key": "cr3bp:P2",
+    "family": "cr3bp",
+    "info": "???",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.3010999584011414,
+    "exhaust_velocity": 11.56499372183432,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 6.588769814547267,
+    "revolutions_estimate": 0.7978733830494851
+   },
+   {
+    "key": "cr3bp:P3",
+    "family": "cr3bp",
+    "info": "Halo to DRO",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.37637494800142673,
+    "exhaust_velocity": 11.56499372183432,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 0.39641359431558265,
+    "revolutions_estimate": 4.336020123095614
+   },
+   {
+    "key": "cr3bp:P4",
+    "family": "cr3bp",
+    "info": "DRO to NHRO",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.15,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 0.5471280341624317,
+    "revolutions_estimate": 4.727593029182792
+   },
+   {
+    "key": "cr3bp:P5",
+    "family": "cr3bp",
+    "info": "Transfer between bretzel orbits",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.2,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 1.213143735475349,
+    "revolutions_estimate": 1.628806672707651
+   },
+   {
+    "key": "cr3bp:P6",
+    "family": "cr3bp",
+    "info": "Earth-Moon resonant orbit to high inclination lunar orbit",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 1.0,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 2.529476847096991,
+    "revolutions_estimate": 2.721210790630448
+   },
+   {
+    "key": "cr3bp:P7",
+    "family": "cr3bp",
+    "info": "High amplitude planar Earth orbit to high inclination lunar orbit",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.25,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 0.6181076243214532,
+    "revolutions_estimate": 1.9608061688759573
+   },
+   {
+    "key": "cr3bp:P8",
+    "family": "cr3bp",
+    "info": "Transfer between high inclination lunar orbits",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.04,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 1.684187073052642,
+    "revolutions_estimate": 1.892312245024163
+   },
+   {
+    "key": "cr3bp:P9",
+    "family": "cr3bp",
+    "info": "Transfer between high inclination lunar orbits",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.05,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 1.6387397284623006,
+    "revolutions_estimate": 1.8911788672386847
+   },
+   {
+    "key": "cr3bp:P10",
+    "family": "cr3bp",
+    "info": "L4 vertical orbit to L4 planar orbits",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     15.0
+    ],
+    "max_thrust": 0.15,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 0.9996730736033754,
+    "revolutions_estimate": 2.376584533145517
+   },
+   {
+    "key": "cr3bp:P11",
+    "family": "cr3bp",
+    "info": "Halo to Halo",
+    "fixed_time": false,
+    "tof_bounds": [
+     2.0,
+     10.0
+    ],
+    "max_thrust": 0.2,
+    "exhaust_velocity": 10.0,
+    "initial_mass": 1.0,
+    "mu": 0.01215058560962404,
+    "period_ratio": 0.9379613810719791,
+    "revolutions_estimate": 4.291102045683642
+   },
+   {
+    "key": "cr3bp:P12",
+    "family": "cr3bp",
+    "info": "Oshima problem (doi: 10.1016/j.asr.2023.05.055) - DRO to DRO - fixed time",
+    "fixed_time": true,
+    "tof_bounds": [
+     12.4155005583399,
+     12.4155005583399
+    ],
+    "max_thrust": 0.029371768613836582,
+    "exhaust_velocity": 28.76178289593944,
+    "initial_mass": 1.0,
+    "mu": 0.0121506683,
+    "period_ratio": 0.4057423605805143,
+    "revolutions_estimate": 3.1047381908263385
+   },
+   {
+    "key": "cr3bp:P13",
+    "family": "cr3bp",
+    "info": "Oshima problem (doi: 10.1016/j.asr.2023.05.055) - Vertical to Lyapunov",
+    "fixed_time": false,
+    "tof_bounds": [
+     10.0,
+     20.698633859117347
+    ],
+    "max_thrust": 0.029371768613836582,
+    "exhaust_velocity": 28.76178289593944,
+    "initial_mass": 1.0,
+    "mu": 0.0121506683,
+    "period_ratio": 1.0396263190443829,
+    "revolutions_estimate": 5.481470025209885
+   },
+   {
+    "key": "solar_sail:P0",
+    "family": "solar_sail",
+    "info": "Circular to quasi-circular - 1 rev",
+    "fixed_time": true,
+    "tof_bounds": [
+     7.8,
+     7.8
+    ],
+    "max_thrust": null,
+    "exhaust_velocity": null,
+    "initial_mass": null,
+    "mu": 1.0,
+    "period_ratio": 1.351217507153332,
+    "revolutions_estimate": 1.0559708341231118
+   },
+   {
+    "key": "solar_sail:P1",
+    "family": "solar_sail",
+    "info": "Eccentric (e=0.5, a=2) to highly-eccentric (e=0.9, a=10) orbit at periapsis (rp=1, nd)",
+    "fixed_time": true,
+    "tof_bounds": [
+     180.0,
+     180.0
+    ],
+    "max_thrust": null,
+    "exhaust_velocity": null,
+    "initial_mass": null,
+    "mu": 1.0,
+    "period_ratio": 11.180339887498949,
+    "revolutions_estimate": 1.6630994948117481
+   },
+   {
+    "key": "solar_sail:P2",
+    "family": "solar_sail",
+    "info": "15-degree inclination change (nd) - many revs",
+    "fixed_time": true,
+    "tof_bounds": [
+     40.0,
+     40.0
+    ],
+    "max_thrust": null,
+    "exhaust_velocity": null,
+    "initial_mass": null,
+    "mu": 1.0,
+    "period_ratio": 1.0,
+    "revolutions_estimate": 6.366197723675814
+   },
+   {
+    "key": "solar_sail:P3",
+    "family": "solar_sail",
+    "info": "Multi-rev outward spiral r=1 to r=1.3 (nd)",
+    "fixed_time": true,
+    "tof_bounds": [
+     50.0,
+     50.0
+    ],
+    "max_thrust": null,
+    "exhaust_velocity": null,
+    "initial_mass": null,
+    "mu": 1.0,
+    "period_ratio": 2.530859105800061,
+    "revolutions_estimate": 4.507541601715435
+   },
+   {
+    "key": "solar_sail:P4",
+    "family": "solar_sail",
+    "info": "Circular to mildly elliptic orbit (e=0.3, a=1) - 2-3 revs",
+    "fixed_time": true,
+    "tof_bounds": [
+     13.0,
+     13.0
+    ],
+    "max_thrust": null,
+    "exhaust_velocity": null,
+    "initial_mass": null,
+    "mu": 1.0,
+    "period_ratio": 1.0,
+    "revolutions_estimate": 2.0690142601946393
+   },
+   {
+    "key": "solar_sail:P5",
+    "family": "solar_sail",
+    "info": "Argument of periapsis rotation by 90 degrees (e=0.3, a=1) (nd)",
+    "fixed_time": true,
+    "tof_bounds": [
+     53.0,
+     53.0
+    ],
+    "max_thrust": null,
+    "exhaust_velocity": null,
+    "initial_mass": null,
+    "mu": 1.0,
+    "period_ratio": 1.0,
+    "revolutions_estimate": 8.435211983870452
+   }
+  ]
+ },
+ "family": "P1-E-low-thrust",
+ "wall_seconds": 26.29375127599633,
+ "support": "partial"
+}

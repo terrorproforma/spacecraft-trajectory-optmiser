@@ -1,0 +1,29 @@
+{
+ "target_id": "gtoc5-data-pin",
+ "status": "blocked",
+ "published": {
+  "asteroid_count": 7075,
+  "evidence_label": "published-reference"
+ },
+ "measured": {
+  "asteroid_count": 7075
+ },
+ "gap": {},
+ "labels": {
+  "measured.asteroid_count": "measured-local"
+ },
+ "envelope": {},
+ "commands": [
+  "spacepdhcg literature run gtoc5-data-pin"
+ ],
+ "notes": [
+  "blocked: no official offline GTOC5 evaluator or example solution file is published; the pinned Simoes et al. beam P-ACO implementation requires pykep, which is not installed in the campaign environment"
+ ],
+ "details": {
+  "asteroid_count": 7075
+ },
+ "family": "P2-F",
+ "wall_seconds": 0.013857896003173664,
+ "support": "unsupported",
+ "unsupported_reason": "no official offline evaluator or example solution published; pinned research code requires pykep"
+}
