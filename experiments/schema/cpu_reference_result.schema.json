@@ -27,6 +27,7 @@
   "properties": {
     "schema_version": {"const": "1.0.0"},
     "coordinate_id": {"type": "string", "pattern": "^[0-9a-f]{24}$"},
+    "coordinate_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "programme": {"enum": ["paper1", "paper2"]},
     "family": {"type": "string", "minLength": 1},
     "parameters": {"type": "object"},
@@ -53,6 +54,9 @@
       "items": {"type": "string"}
     },
     "environment_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "matrix_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "instance_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "instance_contract": {"type": "string", "minLength": 1},
     "implementation": {
       "type": "object",
       "required": ["identifier", "evidence_level"],

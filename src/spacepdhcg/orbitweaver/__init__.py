@@ -52,6 +52,12 @@ from .g7 import (
     load_frozen_paper2_matrix,
     single_gpu_completion_record,
 )
+from .instances import (
+    CartesianState,
+    Paper2InstanceContract,
+    ScenarioFactors,
+    load_paper2_instance_contract,
+)
 
 __all__ = [
     "PAPER2_MATRIX_SHA256",
@@ -63,6 +69,7 @@ __all__ = [
     "ArcResult",
     "ArcStatus",
     "BoundedScheduler",
+    "CartesianState",
     "CertificationChecks",
     "CertificationRecord",
     "CertifiedRouteColumn",
@@ -83,12 +90,14 @@ __all__ = [
     "LogicalRankOwnership",
     "OrbitWeaverAdapterFlow",
     "Ownership",
+    "Paper2InstanceContract",
     "ResultRecord",
     "RiskMeasure",
     "RiskResult",
     "RouteDefinition",
     "RouteMasterResult",
     "RunManifest",
+    "ScenarioFactors",
     "ScenarioOutcome",
     "SchedulerConfig",
     "SchedulerTelemetry",
@@ -100,6 +109,7 @@ __all__ = [
     "expand_promising_scenarios",
     "flow_result_record",
     "load_frozen_paper2_matrix",
+    "load_paper2_instance_contract",
     "single_gpu_completion_record",
     "solve_certified_route_master",
 ]

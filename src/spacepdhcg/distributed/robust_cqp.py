@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 import numpy as np
 import scipy.sparse as sp
@@ -18,6 +19,7 @@ from numpy.typing import NDArray
 from spacepdhcg.cqp import (
     CanonicalCQP,
     ConeBlock,
+    ConeKind,
     CQPStructure,
     CQPValues,
     CSCStructure,
@@ -44,6 +46,19 @@ class RobustDual:
     local_scalar: tuple[FloatArray, ...]
     nonanticipativity: FloatArray
     local_affine: tuple[FloatArray, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RiskEpigraphLayout:
+    """Slices for a sparse worst-case or CVaR objective epigraph."""
+
+    base_variables: int
+    scenario_costs: slice
+    worst_case: int | None
+    threshold: int | None
+    excesses: slice
+    measure: Literal["worst", "cvar"]
+    alpha: float | None
 
 
 class ScenarioCQPBundle:
@@ -240,6 +255,172 @@ class ScenarioCQPBundle:
         local_values: Sequence[CQPValues],
     ) -> float:
         return float(self.tree.probabilities @ self.local_objectives(local_primals, local_values))
+
+    def risk_problem(
+        self,
+        local_values: Sequence[CQPValues],
+        measure: Literal["worst", "cvar"],
+        *,
+        alpha: float | None = None,
+    ) -> tuple[CanonicalCQP, RiskEpigraphLayout]:
+        """Build a sparse exact worst-case or CVaR quadratic-cost epigraph.
+
+        One rotated SOC represents each scenario's convex quadratic objective.
+        The frozen powered-descent transcription has diagonal positive-semidefinite
+        Hessians, so this adds O(SN) nonzeros without dense factorisation.
+        """
+
+        if measure not in {"worst", "cvar"}:
+            raise ValueError("risk measure must be 'worst' or 'cvar'")
+        if measure == "cvar" and (
+            alpha is None or not np.isfinite(alpha) or not 0.0 < alpha < 1.0
+        ):
+            raise ValueError("CVaR alpha must lie strictly between zero and one")
+        validated = self._validated_local_values(local_values)
+        base = self.problem(validated)
+        scenarios = self.scenario_count
+        base_variables = self.structure.n_variables
+        cost_start = base_variables
+        cost_stop = cost_start + scenarios
+        if measure == "worst":
+            worst_case = cost_stop
+            threshold = None
+            excess_start = cost_stop + 1
+            total_variables = excess_start
+        else:
+            worst_case = None
+            threshold = cost_stop
+            excess_start = cost_stop + 1
+            total_variables = excess_start + scenarios
+        layout = RiskEpigraphLayout(
+            base_variables=base_variables,
+            scenario_costs=slice(cost_start, cost_stop),
+            worst_case=worst_case,
+            threshold=threshold,
+            excesses=slice(excess_start, total_variables),
+            measure=measure,
+            alpha=alpha,
+        )
+
+        base_constraint = self.structure.constraint.matrix(base.values.constraint)
+        padded_constraint = sp.hstack(
+            (
+                base_constraint,
+                sp.csc_matrix((base_constraint.shape[0], total_variables - base_variables)),
+            ),
+            format="csc",
+        )
+        risk_rows = sp.lil_matrix((scenarios, total_variables), dtype=np.float64)
+        for scenario in range(scenarios):
+            risk_rows[scenario, cost_start + scenario] = 1.0
+            if measure == "worst":
+                assert worst_case is not None
+                risk_rows[scenario, worst_case] = -1.0
+            else:
+                assert threshold is not None
+                risk_rows[scenario, threshold] = -1.0
+                risk_rows[scenario, excess_start + scenario] = -1.0
+        constraint = sp.vstack((padded_constraint, risk_rows.tocsc()), format="csc")
+        lower = np.concatenate(
+            (base.values.lower, np.full(scenarios, -np.inf, dtype=np.float64))
+        )
+        upper = np.concatenate((base.values.upper, np.zeros(scenarios, dtype=np.float64)))
+
+        affine_blocks: list[sp.spmatrix] = []
+        affine_offsets: list[FloatArray] = []
+        affine_cones = list(self.structure.affine_cones)
+        if self.structure.affine_cone is not None:
+            base_affine = self.structure.affine_cone.matrix(base.values.affine_cone)
+            affine_blocks.append(
+                sp.hstack(
+                    (
+                        base_affine,
+                        sp.csc_matrix(
+                            (base_affine.shape[0], total_variables - base_variables)
+                        ),
+                    ),
+                    format="csc",
+                )
+            )
+            affine_offsets.append(base.values.affine_offset)
+        affine_cursor = self.structure.n_affine_constraints
+        for scenario, values in enumerate(validated):
+            quadratic = self.local_structure.quadratic.matrix(values.quadratic)
+            diagonal = np.asarray(quadratic.diagonal(), dtype=np.float64)
+            off_diagonal = quadratic - sp.diags(diagonal, format="csc")
+            if off_diagonal.nnz and np.max(np.abs(off_diagonal.data), initial=0.0) > 1.0e-12:
+                raise NotImplementedError(
+                    "risk epigraph requires diagonal local Hessians at the frozen commit"
+                )
+            if np.min(diagonal, initial=0.0) < -1.0e-12:
+                raise ValueError("risk epigraph requires positive-semidefinite local Hessians")
+            active = np.flatnonzero(diagonal > 1.0e-15)
+            if active.size == 0:
+                raise NotImplementedError(
+                    "risk epigraph requires a positive quadratic objective coefficient"
+                )
+            cone_rows = int(active.size) + 2
+            block = sp.lil_matrix((cone_rows, total_variables), dtype=np.float64)
+            local_start = self.layout.scenario_slice(scenario).start
+            for row, local_column in enumerate(active):
+                block[row, local_start + int(local_column)] = np.sqrt(diagonal[local_column])
+            block[active.size, cost_start + scenario] = 1.0
+            for local_column in np.flatnonzero(np.abs(values.linear) > 0.0):
+                block[active.size, local_start + int(local_column)] = -values.linear[local_column]
+            affine_blocks.append(block.tocsc())
+            offset = np.zeros(cone_rows, dtype=np.float64)
+            offset[-1] = 1.0
+            affine_offsets.append(offset)
+            affine_cones.append(
+                ConeBlock(
+                    ConeKind.ROTATED_SECOND_ORDER,
+                    affine_cursor,
+                    int(active.size),
+                )
+            )
+            affine_cursor += cone_rows
+        affine = sp.vstack(affine_blocks, format="csc")
+
+        linear = np.zeros(total_variables, dtype=np.float64)
+        if measure == "worst":
+            assert worst_case is not None
+            linear[worst_case] = 1.0
+        else:
+            assert threshold is not None and alpha is not None
+            linear[threshold] = 1.0
+            linear[excess_start:total_variables] = self.tree.probabilities / (1.0 - alpha)
+        variable_lower = np.concatenate(
+            (
+                base.values.variable_lower,
+                np.full(scenarios + 1, -np.inf, dtype=np.float64),
+                (
+                    np.zeros(scenarios, dtype=np.float64)
+                    if measure == "cvar"
+                    else np.empty(0, dtype=np.float64)
+                ),
+            )
+        )
+        variable_upper = np.full(total_variables, np.inf, dtype=np.float64)
+        quadratic = sp.csc_matrix((total_variables, total_variables), dtype=np.float64)
+        structure = CQPStructure(
+            quadratic=CSCStructure.from_matrix(quadratic),
+            constraint=CSCStructure.from_matrix(constraint),
+            affine_cone=CSCStructure.from_matrix(affine),
+            affine_cones=tuple(affine_cones),
+            variable_cones=self.structure.variable_cones,
+        )
+        values = CQPValues(
+            quadratic=np.empty(0, dtype=np.float64),
+            constraint=structure.constraint.values_from(constraint),
+            linear=linear,
+            lower=lower,
+            upper=upper,
+            affine_cone=structure.affine_cone.values_from(affine),
+            affine_offset=np.concatenate(affine_offsets),
+            variable_lower=variable_lower,
+            variable_upper=variable_upper,
+        )
+        return CanonicalCQP(structure, values), layout
 
     def _build_structure(self) -> CQPStructure:
         local_q = self.local_structure.quadratic.matrix(
