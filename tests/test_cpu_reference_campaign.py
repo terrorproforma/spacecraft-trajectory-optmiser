@@ -101,6 +101,18 @@ def test_supported_matrix_driver_expands_same_frozen_inventory(tmp_path: Path) -
     coordinates = module._coordinates(paper1, "paper1") + module._coordinates(paper2, "paper2")
     assert len(coordinates) == 16_324
     assert len({item["coordinate_id"] for item in coordinates}) == len(coordinates)
+    tagged = module._coordinates(
+        {"families": [paper2["families"][0]]},
+        "paper2",
+        matrix_sha256="1" * 64,
+        instance_sha256="2" * 64,
+        instance_contract="orbitweaver-earth-leo-v1",
+    )
+    assert tagged[0]["coordinate_id"] == next(
+        item["coordinate_id"] for item in coordinates if item["family"] == "P2-A"
+    )
+    assert tagged[0]["matrix_sha256"] == "1" * 64
+    assert tagged[0]["instance_sha256"] == "2" * 64
 
     module._OUTPUT = tmp_path
     module._ENVIRONMENT_SHA256 = "0" * 64

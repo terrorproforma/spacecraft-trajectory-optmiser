@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/paper2_instance_contract.schema.json",
+  "title": "OrbitWeaver deterministic physical instance contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "units",
+    "central_body",
+    "epoch_grid",
+    "target_generator",
+    "vehicle",
+    "arc_contract",
+    "service_contract",
+    "route_contract",
+    "scenario_generator",
+    "certification"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "contract_id": {"const": "orbitweaver-earth-leo-v1"},
+    "units": {
+      "type": "object",
+      "required": ["distance", "time", "mass", "velocity", "angle"]
+    },
+    "central_body": {
+      "type": "object",
+      "required": ["name", "gravitational_parameter", "equatorial_radius", "j2"],
+      "properties": {
+        "name": {"const": "Earth"},
+        "gravitational_parameter": {"type": "number", "exclusiveMinimum": 0},
+        "equatorial_radius": {"type": "number", "exclusiveMinimum": 0},
+        "j2": {"type": "number", "minimum": 0}
+      }
+    },
+    "epoch_grid": {
+      "type": "object",
+      "required": ["initial_epoch", "spacing", "maximum_time_of_flight"],
+      "properties": {
+        "initial_epoch": {"type": "number"},
+        "spacing": {"type": "number", "exclusiveMinimum": 0},
+        "maximum_time_of_flight": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "target_generator": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "seed",
+        "minimum_radius",
+        "maximum_radius",
+        "maximum_inclination",
+        "eccentricity"
+      ],
+      "properties": {
+        "algorithm": {"const": "splitmix64-circular-keplerian-v1"},
+        "seed": {"type": "integer", "minimum": 0},
+        "minimum_radius": {"type": "number", "exclusiveMinimum": 0},
+        "maximum_radius": {"type": "number", "exclusiveMinimum": 0},
+        "maximum_inclination": {"type": "number", "minimum": 0},
+        "eccentricity": {"const": 0.0}
+      }
+    },
+    "vehicle": {"type": "object"},
+    "arc_contract": {"type": "object"},
+    "service_contract": {"type": "object"},
+    "route_contract": {"type": "object"},
+    "scenario_generator": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "gravity_relative_spread",
+        "thrust_relative_spread",
+        "service_time_relative_spread"
+      ],
+      "properties": {
+        "algorithm": {"const": "symmetric-quantile-v1"}
+      }
+    },
+    "certification": {"type": "object"}
+  }
+}

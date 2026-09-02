@@ -27,8 +27,11 @@ changes instead of holding the step duration fixed.
 Clarabel qualification is recomputed in its expanded bound/cone coordinates, including
 stationarity, primal and dual cone feasibility, and complementarity. P1-F launches the full
 scenario CQP for every requested risk coordinate and independently replays every solved scenario.
-The current CQP objective is expected cost; worst-case and CVaR coordinates therefore fail closed
-as numerical risk-objective mismatches until a frozen epigraph formulation exists.
+Expected cost uses the native block-arrow quadratic objective. Worst-case and CVaR use one sparse
+rotated-SOC quadratic-cost epigraph per scenario; CVaR additionally owns the threshold and
+non-negative excess variables. All variants retain exact non-anticipativity rows and run through a
+persistent Clarabel SCvx loop. Qualification still requires the independently replayed nonlinear
+trajectory—not merely the conic epigraph—to pass.
 
 ## Evidence interpretation
 
@@ -38,21 +41,20 @@ full nonlinear replay, or requested final-polish owner is absent. This distincti
 reference trajectories, risk aggregation, or orchestration checks from being relabelled as
 publication-quality solver results.
 
-The frozen Paper 2 matrix is a scale/method manifest, not a physical instance specification. It
-does not provide target ephemerides or orbital states, epoch values and units, gravitational
-parameters, spacecraft/thrust/mass data, service demands, depot states/capacities, transfer
-resources, or uncertainty distributions. Consequently:
+The original frozen Paper 2 matrix is a scale/method manifest, not a physical instance
+specification. The completed `cpu-actual-c5a4991` archive therefore remains correctly censored.
+Follow-on runs use the separately versioned `orbitweaver-earth-leo-v1` contract in
+`benchmarks/paper2_instances.json`. It freezes SI units, deterministic circular Earth-orbit target
+states, epoch spacing, vehicle/resource limits, uncertainty quantiles, and independent J2-RK4
+certification tolerances. Its content hash is carried independently from the matrix hash.
 
-- P2-A/P2-B/P2-C exercise the implemented Lambert-family, graph, route, pricing, master, and
-  certification components but remain `unqualified`; creating full-mission objective, residual,
-  and certification records would require inventing missing physical inputs.
-- P2-D/P2-E remain `unsupported` at this frozen commit because no parameterized multi-spacecraft
-  or robust full-mission formulation binds those missing inputs to the G7 component abstractions.
+The physical contract removes the instance-data ambiguity; it does not itself qualify component
+fixtures. P2 rows remain censored until Lambert/trajectory, route/master, and certification owners
+consume that contract and emit their actual residuals and bounds.
 
-The implemented G7 headers and native smoke tests establish component support, but they do not
-define the absent benchmark instances. These dispositions can only change after a frozen,
-versioned physical-instance contract is supplied; synthesizing one during the campaign would
-change the benchmark after results.
+Selective delta runs use `--families` and add coordinate, matrix, instance, environment, and driver
+hashes. `--preserve-existing` resumes only exact hash matches; a mismatched prior result is renamed
+to `result.stale.<hash>.json` before execution rather than silently overwritten.
 
 `scripts/cpu/finalize_supported_matrix.py` validates all records against
 `experiments/schema/cpu_reference_result.schema.json`, checks exact coordinate coverage, renders

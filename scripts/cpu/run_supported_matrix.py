@@ -64,6 +64,10 @@ def _digest(value: Any) -> str:
     return hashlib.sha256(_canonical_bytes(value)).hexdigest()
 
 
+def _file_digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def _write(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -84,7 +88,14 @@ def _checkpoint_payload(
     }
 
 
-def _coordinates(matrix: dict[str, Any], programme: str) -> list[dict[str, Any]]:
+def _coordinates(
+    matrix: dict[str, Any],
+    programme: str,
+    *,
+    matrix_sha256: str | None = None,
+    instance_sha256: str | None = None,
+    instance_contract: str | None = None,
+) -> list[dict[str, Any]]:
     records = []
     for family in matrix["families"]:
         axes = {
@@ -99,12 +110,17 @@ def _coordinates(matrix: dict[str, Any], programme: str) -> list[dict[str, Any]]
                 "family": family["id"],
                 "parameters": dict(zip(names, values, strict=True)),
             }
-            records.append(
-                {
-                    "coordinate_id": _digest(identity)[:24],
-                    **identity,
-                }
-            )
+            record = {
+                "coordinate_id": _digest(identity)[:24],
+                **identity,
+            }
+            if matrix_sha256 is not None:
+                record["matrix_sha256"] = matrix_sha256
+            if instance_sha256 is not None:
+                record["instance_sha256"] = instance_sha256
+            if instance_contract is not None:
+                record["instance_contract"] = instance_contract
+            records.append(record)
     return records
 
 
@@ -201,6 +217,7 @@ def _base(
     return {
         "schema_version": SCHEMA_VERSION,
         **coordinate,
+        "coordinate_sha256": _digest(coordinate),
         "disposition": disposition,
         "reason": reason,
         "repository_commit": FROZEN_COMMIT,
@@ -575,6 +592,14 @@ def _robust(coordinate: dict[str, Any]) -> dict[str, Any]:
                 gravity_spread=0.02,
                 tolerance=1.0e-7,
                 common_prefix_fraction=float(parameters["common_prefix_fractions"]),
+                risk_measure=(
+                    "expected"
+                    if measure is RiskMeasure.EXPECTED
+                    else "worst"
+                    if measure is RiskMeasure.WORST_CASE
+                    else "cvar"
+                ),
+                cvar_alpha=alpha,
             )
             elapsed = time.perf_counter() - begin
             if repeat >= WARMUPS:
@@ -601,23 +626,19 @@ def _robust(coordinate: dict[str, Any]) -> dict[str, Any]:
             float(payload["maximum_nonlinear_terminal_error"]),
             float(payload["nonanticipativity_violation"]),
         )
-        expected_objective_error = abs(
-            float(payload["objective"]) - float(payload["expected_objective_recomputed"])
-        )
-        risk_objective_error = abs(float(payload["objective"]) - risk_result.objective)
+        risk_objective_error = float(payload["risk_objective_gap"])
+        risk_epigraph_residual = float(payload["risk_epigraph_residual"])
         qualified = (
-            measure is RiskMeasure.EXPECTED
-            and maximum <= 1.0e-5
-            and expected_objective_error <= 1.0e-7
+            maximum <= 1.0e-5
             and risk_objective_error <= 1.0e-7
+            and risk_epigraph_residual <= 1.0e-7
         )
         return _base(
             coordinate,
             "executed" if qualified else "numerical",
-            "full monolithic robust Clarabel CQP, expanded-form KKT audit, scenario nonlinear "
-            "replay, prefix non-anticipativity, and requested risk evaluation; worst/CVaR remain "
-            "numerical because the solved CQP objective is expected cost",
-            "ScenarioCQPBundle+PersistentClarabel",
+            "full sparse robust Clarabel SCvx, expanded-form KKT audit, scenario nonlinear replay, "
+            "prefix non-anticipativity, and exact expected/worst/CVaR conic epigraph evaluation",
+            "ScenarioCQPBundle.risk_problem+PersistentClarabel",
             "cpu_solver_and_replay",
             _dimensions(
                 intervals,
@@ -641,18 +662,19 @@ def _robust(coordinate: dict[str, Any]) -> dict[str, Any]:
                 "virtual_control_residual": float(payload["maximum_virtual_control"]),
                 "nonanticipativity_residual": float(payload["nonanticipativity_violation"]),
                 "risk_epigraph_residual": max(
-                    expected_objective_error,
                     risk_objective_error,
+                    risk_epigraph_residual,
                 ),
                 "certified": qualified,
                 "qualified": qualified,
             },
             {
                 **_null_work(),
-                "outer_iterations": 0,
+                "outer_iterations": int(payload["outer_iterations"]),
                 "inner_iterations": int(payload["iterations"]),
-                "accepted_steps": 0,
-                "rejected_steps": 0,
+                "accepted_steps": int(payload["accepted_outer_iterations"]),
+                "rejected_steps": int(payload["outer_iterations"])
+                - int(payload["accepted_outer_iterations"]),
                 "forcing_satisfied": qualified,
                 "polish_used": False,
             },
@@ -806,8 +828,16 @@ def _execute(coordinate: dict[str, Any]) -> dict[str, Any]:
 
 def _worker(coordinate: dict[str, Any]) -> tuple[str, str]:
     directory = _OUTPUT / "runs" / coordinate["family"] / coordinate["coordinate_id"]
-    if (directory / "result.json").is_file():
-        return coordinate["coordinate_id"], "checkpoint"
+    result_path = directory / "result.json"
+    if result_path.is_file():
+        existing = json.loads(result_path.read_text(encoding="utf-8"))
+        if (
+            existing.get("coordinate_sha256") == _digest(coordinate)
+            and existing.get("environment_sha256") == _ENVIRONMENT_SHA256
+        ):
+            return coordinate["coordinate_id"], "checkpoint"
+        stale = directory / f"result.stale.{_digest(existing)[:12]}.json"
+        result_path.replace(stale)
     directory.mkdir(parents=True, exist_ok=True)
     coordinate_path = directory / "coordinate.json"
     _write(coordinate_path, coordinate)
@@ -917,6 +947,11 @@ def main() -> int:
     parser.add_argument("--native-emitter", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=max(1, min(12, (os.cpu_count() or 2) - 2)))
     parser.add_argument("--preserve-existing", action="store_true")
+    parser.add_argument(
+        "--families",
+        nargs="*",
+        help="execute only these exact family IDs; omitted means the complete matrix",
+    )
     parser.add_argument("--single-coordinate", type=Path)
     parser.add_argument("--environment-sha256")
     arguments = parser.parse_args()
@@ -964,22 +999,37 @@ def main() -> int:
     if not arguments.preserve_existing and output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True, exist_ok=True)
+    paper1_path = repository / "benchmarks/paper1_matrix.json"
+    paper2_path = repository / "benchmarks/paper2_matrix.json"
+    paper2_instance_path = repository / "benchmarks/paper2_instances.json"
+    paper2_instances = json.loads(paper2_instance_path.read_text())
     matrices = [
-        (
-            "paper1",
-            json.loads((repository / "benchmarks/paper1_matrix.json").read_text()),
-        ),
-        (
-            "paper2",
-            json.loads((repository / "benchmarks/paper2_matrix.json").read_text()),
-        ),
+        ("paper1", paper1_path, None),
+        ("paper2", paper2_path, paper2_instances),
     ]
     coordinates = [
         coordinate
-        for programme, matrix in matrices
-        for coordinate in _coordinates(matrix, programme)
+        for programme, matrix_path, instances in matrices
+        for coordinate in _coordinates(
+            json.loads(matrix_path.read_text()),
+            programme,
+            matrix_sha256=_file_digest(matrix_path),
+            instance_sha256=None if instances is None else _digest(instances),
+            instance_contract=None if instances is None else str(instances["contract_id"]),
+        )
     ]
-    environment = {
+    if arguments.families:
+        requested_families = set(arguments.families)
+        known_families = {coordinate["family"] for coordinate in coordinates}
+        unknown_families = requested_families - known_families
+        if unknown_families:
+            raise ValueError(f"unknown family IDs: {sorted(unknown_families)}")
+        coordinates = [
+            coordinate
+            for coordinate in coordinates
+            if coordinate["family"] in requested_families
+        ]
+    execution_configuration = {
         "schema_version": SCHEMA_VERSION,
         "source_commit": FROZEN_COMMIT,
         "driver_commit": head,
@@ -990,8 +1040,32 @@ def main() -> int:
         "measured_repeats": MEASURED,
         "timeout_seconds": TIMEOUT_SECONDS,
         "memory_limit_bytes": MEMORY_LIMIT_BYTES,
-        "started_utc": datetime.now(UTC).isoformat(),
+        "matrix_sha256": {
+            "paper1": _file_digest(paper1_path),
+            "paper2": _file_digest(paper2_path),
+        },
+        "paper2_instance_sha256": _digest(paper2_instances),
+        "paper2_instance_contract": paper2_instances["contract_id"],
+        "selected_families": sorted(arguments.families or []),
     }
+    environment_path = output / "environment.json"
+    if arguments.preserve_existing and environment_path.is_file():
+        environment = json.loads(environment_path.read_text(encoding="utf-8"))
+        mismatches = {
+            key: (environment.get(key), value)
+            for key, value in execution_configuration.items()
+            if environment.get(key) != value
+        }
+        if mismatches:
+            raise RuntimeError(
+                "cannot resume campaign with a different execution configuration: "
+                f"{mismatches}"
+            )
+    else:
+        environment = {
+            **execution_configuration,
+            "started_utc": datetime.now(UTC).isoformat(),
+        }
     environment_sha256 = _digest(environment)
     _write(output / "environment.json", environment)
     _write(

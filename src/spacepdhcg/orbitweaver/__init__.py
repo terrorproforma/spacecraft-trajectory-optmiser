@@ -27,6 +27,12 @@ from .g7 import (
     expand_promising_scenarios,
     load_frozen_paper2_matrix,
 )
+from .instances import (
+    CartesianState,
+    Paper2InstanceContract,
+    ScenarioFactors,
+    load_paper2_instance_contract,
+)
 
 __all__ = [
     "PAPER2_MATRIX_SHA256",
@@ -36,15 +42,18 @@ __all__ = [
     "ArcResult",
     "ArcStatus",
     "BoundedScheduler",
+    "CartesianState",
     "CertificationChecks",
     "CertificationRecord",
     "Checkpoint",
     "IndependentCertifier",
     "LogicalRankOwnership",
+    "Paper2InstanceContract",
     "ResultRecord",
     "RiskMeasure",
     "RiskResult",
     "RunManifest",
+    "ScenarioFactors",
     "ScenarioOutcome",
     "SchedulerConfig",
     "SchedulerTelemetry",
@@ -54,4 +63,5 @@ __all__ = [
     "deterministic_top_k",
     "expand_promising_scenarios",
     "load_frozen_paper2_matrix",
+    "load_paper2_instance_contract",
 ]
