@@ -1,10 +1,70 @@
 # Gate G4 report — adaptive and hybrid matched-quality study
 
-Status date: **2026-09-01**
-Decision: **FAIL**
+Status date: **2026-09-03**
+Decision: **FAIL** (historical evidence unchanged; claim core in progress)
 H5: **unresolved**
 H6: **unresolved**
 G5 authorised: **no**
+
+## H5/H6 claim-core campaign (2026-09-03): launched, not yet resolved
+
+The preregistered 360-group, 3,240-invocation claim core (`benchmarks/g4_h5_h6_claim_core.json`,
+SHA-256 `40dc217467ffe32e919d4f901943e0200f69e302cf57cd15ccdfa88bfa0c8d0b`) was launched on
+`integration/single-gpu-v1` after the current-head G0–G3 seal (`results/gpu/current-head-b0cd570/`,
+evidence index SHA-256 `83b643bf81773b59941f7d7226a71f9283e535d1332b64b435f1acd6f2ba9e53`, source
+`b6afb49`). It resolves H5 and H6 only and may not populate any F01–F12 or T01–T08 regime product.
+Nothing in this section changes the historical FAIL evidence below, and the full 2,764,800-group
+grouped ledger has not been started.
+
+Executable provenance:
+
+- The G3-sealed release executable (`4273cd8a…`) was verified against the report-only head
+  `9678134`: `cmake --build` reported `ninja: no work to do` and the code paths were identical to
+  `b6afb49`.
+- The pre-campaign pilot found a genuine executor defect: a P1-E `N=100` fixed-tight group ran the
+  full 91-minute nine-attempt safety boundary without emitting one attempt record because
+  `spacepdhcg_cuda_workspace_wait` held the workspace mutex across `cudaEventSynchronize`, which
+  blocked the deadline watchdog's `spacepdhcg_cuda_workspace_cancel` until the persistent kernel
+  exhausted its 1,000,000-iteration budget. Commit `9a4cbea` releases the mutex while waiting,
+  reports a cancelled inner solve as `SPACEPDHCG_CUDA_SCVX_CANCELLED` (an honest launched
+  `timeout` with the spent time and iterations), forces a cold boundary after a cancelled attempt,
+  adds a native cross-thread cancel-during-wait check to `recovery_test`, and pins the dynamically
+  linked `libspacepdhcg_cuda.so` in the capability. The release tree passed 62/62 tests after the
+  fix; a 20 s-deadline `--g4-session` on claim-core group 0 emitted nine strictly schema-valid
+  `timeout` attempts at 20.0 s each. The G3 seal predates this library change and was not
+  re-run; the sanitizer evidence therefore covers `b6afb49`, not `9a4cbea`.
+- Scheduler commits `2e34d30`/`a68890b` add GPU contamination control: nvidia-smi samples at every
+  group boundary, `/dev/dxg` holders inside WSL2 (excluding the worker's own descendants and
+  holders whose `CUDA_VISIBLE_DEVICES` hides every device), and host `nvidia-smi.exe pmon`
+  compute contexts sampled every second during the group. A group observed alongside foreign
+  compute activity is quarantined as `contaminated` with all raw evidence retained and re-run
+  after the foreign activity ends. Commit `44e6939` adds `scripts/gpu/decide_g4_claim_core.py`
+  (group re-validation, publication aggregates, and the frozen H5/H6 decision functions).
+- Official capability: `/home/angus/g4-executor-capability-9a4cbea.json`, capability SHA-256
+  `e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de`, source commit `9a4cbea`,
+  executable SHA-256 `baab5602cf7ec1d6ee3ce92aa38afee281d2d24e50e94a3ec690108a72b3b9d8`,
+  `libspacepdhcg_cuda.so` SHA-256
+  `84d98bcd4595556d62b122621920ff0c2dd89d889f0c69deba0a2c28a2983d03`, real CUDA session probe
+  passed. Policy SHA-256 `9ab3b444…`, matrix SHA-256 `50afe8ff…`, tolerances, seeds, repeats and
+  order are unchanged.
+
+Campaign state at the time of this report:
+
+- Checkpoint `build-integration-report/g4-claim-core-9a4cbea` (ignored, local-only), initialised
+  with `run_g4_campaign.py init --claim-core`; 0 of 360 groups completed, group 0 (P1-E `N=100`,
+  seed 59, fixed-tight) running. The checkpoint pins `source_commit=9a4cbea`; a detached
+  worktree at that commit (`/home/angus/worktrees/spacepdhcg-g4-claim-core-9a4cbea`) hosts the
+  restart command so this branch can advance without invalidating the pin.
+- The RTX 5090 is shared with other agents' GPU jobs; the worker waits for foreign compute
+  activity before claiming a group and re-runs contaminated groups. Fixed-tight P1-E attempts
+  progressed at roughly 1 ms per PDHCG iteration in the pilot, so groups whose attempts reach the
+  frozen 600 s deadline take about 91 minutes each; dispositions are recorded only from launched
+  attempts and are not predicted here.
+- On completion, `build-integration-report/g4-claim-core-9a4cbea-finish.sh` re-validates every
+  raw attempt and publication aggregate, applies the preregistered H5/H6 decision functions
+  (paired bootstrap, seed 20260901 plus scale, 10,000 samples, thresholds unchanged), and seals a
+  reproducible archive with an evidence index under `results/gpu/g4/claim-core-9a4cbea/`
+  (local-only; no immutable URI exists).
 
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core
