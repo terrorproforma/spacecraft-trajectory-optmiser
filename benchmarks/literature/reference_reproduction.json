@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "generated_utc": "2026-09-02T16:30:58+00:00",
-  "repository_commit": "4f92133b4be2e28a4345c9e96172893893cc9513",
+  "generated_utc": "2026-09-02T19:20:46+00:00",
+  "repository_commit": "8e18b93d628e779e7a3246a233a07d54e9385c63",
   "working_tree_dirty": true,
   "host": {
     "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
@@ -32,39 +32,55 @@
         },
         "lossless_replay_fuel_used_kg": 400.6295072229709,
         "lossless_isp_only_alpha_fuel_used_kg": 362.61786962048905,
-        "scvx_cpu_fuel_used_kg": 405.6504258476823,
-        "scvx_cpu_replay_fuel_used_kg": 405.6504213358494,
-        "scvx_cpu_status": "solver_failed"
+        "lossless_forward_euler_diagnostic_fuel_used_kg": 404.47933388453475,
+        "scvx_cpu_frozen_euler_fuel_used_kg": 405.6504258476823,
+        "scvx_cpu_frozen_euler_status": "solver_failed",
+        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 94.97755832020803,
+        "scvx_cpu_fuel_used_kg": 399.36087632435624,
+        "scvx_cpu_replay_fuel_used_kg": 399.36087615928955,
+        "scvx_cpu_status": "converged",
+        "scvx_cpu_termination_reason": "feasibility and step tolerances satisfied",
+        "scvx_cpu_fuel_used_kg_by_dt": {
+          "dt=1.0": 399.36087632435624,
+          "dt=0.5": 399.35452920249963
+        },
+        "scvx_qoco_gpu_status": "deferred"
       },
       "gap": {
         "lossless_minus_published_kg": 1.1299014681901554,
         "lossless_relative": 0.002828289031765095,
         "acceptance_tolerance_kg": 2.0,
-        "scvx_cpu_minus_published_kg": 6.1504258476823,
-        "scvx_cpu_minus_lossless_kg": 5.020524379492144
+        "scvx_cpu_minus_published_kg": -0.13912367564375927,
+        "scvx_cpu_minus_lossless_kg": -1.2690251438339146,
+        "scvx_cpu_frozen_euler_minus_published_kg": 6.1504258476823,
+        "euler_discrete_optimum_minus_lossless_kg": 3.849432416344598
       },
       "labels": {
         "published.fuel_used_kg": "published-reference",
         "measured.lossless_fuel_used_kg": "measured-local",
-        "measured.scvx_cpu_fuel_used_kg": "measured-local"
+        "measured.scvx_cpu_fuel_used_kg": "measured-local",
+        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local"
       },
       "envelope": {
         "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
+        "scvx_discretisation": "zero-order-hold thrust, variational RK4 coefficients, multiple-shooting exact-penalty merit",
         "dt_values_s": [
           1.0,
           0.5
         ],
         "fuel_spread_kg": 0.6346842019263477,
+        "scvx_fuel_spread_kg": 0.0063471218566064636,
         "declared_envelope_kg": 2.0
       },
       "commands": [
-        "spacepdhcg literature run acikmese-ploen-2007-pd3"
+        "spacepdhcg literature run acikmese-ploen-2007-pd3",
+        "spacepdhcg literature gpu-run acikmese-ploen-2007-pd3  # when the device is free"
       ],
       "notes": [
-        "GPU pure-QOCO SCvx leg not run: the RTX 5090 was owned by a device_scvx_integration_test --g4-session process (PID 471171) for the whole campaign window; rerun with SPACEPDHCG_QOCO_LIBRARY=<libqoco.so> and --option run_gpu=true when the device is free"
+        "GPU pure-QOCO SCvx deferred by preflight: refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))"
       ],
       "family": "P1-C-pd3",
-      "wall_seconds": 21.39950849700108,
+      "wall_seconds": 71.78841003200068,
       "support": "supported"
     },
     {
@@ -87,39 +103,55 @@
         },
         "lossless_replay_fuel_used_kg": 400.0837542316119,
         "lossless_isp_only_alpha_fuel_used_kg": 362.4761965292025,
-        "scvx_cpu_fuel_used_kg": 413.42506517964966,
-        "scvx_cpu_replay_fuel_used_kg": 413.38929013677443,
-        "scvx_cpu_status": "solver_failed"
+        "lossless_forward_euler_diagnostic_fuel_used_kg": 401.2615114278965,
+        "scvx_cpu_frozen_euler_fuel_used_kg": 413.42506517964966,
+        "scvx_cpu_frozen_euler_status": "solver_failed",
+        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 37.30892475378738,
+        "scvx_cpu_fuel_used_kg": 398.8404372792693,
+        "scvx_cpu_replay_fuel_used_kg": 398.8404283003547,
+        "scvx_cpu_status": "converged",
+        "scvx_cpu_termination_reason": "merit stalled below 1e-07 over 3 iterations",
+        "scvx_cpu_fuel_used_kg_by_dt": {
+          "dt=0.4": 398.8404372792693,
+          "dt=0.2": 398.8608464869337
+        },
+        "scvx_qoco_gpu_status": "deferred"
       },
       "gap": {
         "lossless_minus_published_kg": 0.6883453628407779,
         "lossless_relative": 0.0017234485799719026,
         "acceptance_tolerance_kg": 2.0,
-        "scvx_cpu_minus_published_kg": 14.025065179649687,
-        "scvx_cpu_minus_lossless_kg": 13.336719816808909
+        "scvx_cpu_minus_published_kg": -0.5595627207306961,
+        "scvx_cpu_minus_lossless_kg": -1.247908083571474,
+        "scvx_cpu_frozen_euler_minus_published_kg": 14.025065179649687,
+        "euler_discrete_optimum_minus_lossless_kg": 1.1731660650557387
       },
       "labels": {
         "published.fuel_used_kg": "published-reference",
         "measured.lossless_fuel_used_kg": "measured-local",
-        "measured.scvx_cpu_fuel_used_kg": "measured-local"
+        "measured.scvx_cpu_fuel_used_kg": "measured-local",
+        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local"
       },
       "envelope": {
         "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
+        "scvx_discretisation": "zero-order-hold thrust, variational RK4 coefficients, multiple-shooting exact-penalty merit",
         "dt_values_s": [
           0.4,
           0.2
         ],
         "fuel_spread_kg": 0.6749554679854555,
+        "scvx_fuel_spread_kg": 0.020409207664442874,
         "declared_envelope_kg": 2.0
       },
       "commands": [
-        "spacepdhcg literature run blackmore-2010-pd3-case1"
+        "spacepdhcg literature run blackmore-2010-pd3-case1",
+        "spacepdhcg literature gpu-run blackmore-2010-pd3-case1  # when the device is free"
       ],
       "notes": [
-        "GPU pure-QOCO SCvx leg not run: the RTX 5090 was owned by a device_scvx_integration_test --g4-session process (PID 471171) for the whole campaign window; rerun with SPACEPDHCG_QOCO_LIBRARY=<libqoco.so> and --option run_gpu=true when the device is free"
+        "GPU pure-QOCO SCvx deferred by preflight: refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))"
       ],
       "family": "P1-C-pd3",
-      "wall_seconds": 12.350536508994992,
+      "wall_seconds": 257.4908510079986,
       "support": "supported"
     },
     {
@@ -147,8 +179,8 @@
             "convergence_probability": 0.0,
             "accepted": 1,
             "accepted_probability": 1.0,
-            "accepted_trajectories_per_second": 0.028548416128750774,
-            "wall_seconds": 35.0282129660045,
+            "accepted_trajectories_per_second": 0.027462682570107137,
+            "wall_seconds": 36.41304877799848,
             "workers": 1,
             "tof_median": 4.7468733399230105,
             "tof_iqr": [
@@ -167,8 +199,8 @@
             "convergence_probability": 0.0,
             "accepted": 6,
             "accepted_probability": 0.375,
-            "accepted_trajectories_per_second": 0.06768210744462581,
-            "wall_seconds": 88.64972186199884,
+            "accepted_trajectories_per_second": 0.07297508495190681,
+            "wall_seconds": 82.21984262100159,
             "workers": 15,
             "tof_median": 4.763564564450784,
             "tof_iqr": [
@@ -187,8 +219,8 @@
             "convergence_probability": 0.046875,
             "accepted": 22,
             "accepted_probability": 0.34375,
-            "accepted_trajectories_per_second": 0.09906940533505094,
-            "wall_seconds": 222.06653936799557,
+            "accepted_trajectories_per_second": 0.0970489407888675,
+            "wall_seconds": 226.68974870999955,
             "workers": 15,
             "tof_median": 4.676253607308805,
             "tof_iqr": [
@@ -201,8 +233,35 @@
           }
         },
         "gpu_persistent_batch": {
-          "status": "blocked",
-          "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
+          "persistent_device_scvx": {
+            "status": "blocked",
+            "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
+          },
+          "pure_qoco_native_pd6_fft": {
+            "status": "deferred",
+            "reason": "pass run_gpu=true (spacepdhcg literature gpu-run) with SPACEPDHCG_QOCO_LIBRARY set",
+            "preflight": {
+              "ok": false,
+              "reason": "refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))",
+              "nvidia_smi": "/usr/lib/wsl/lib/nvidia-smi",
+              "g4_owned": true,
+              "processes": [
+                {
+                  "pid": 827383,
+                  "reported_name": "[Not Found]",
+                  "command_line": "/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600",
+                  "g4_owner": true
+                },
+                {
+                  "pid": 828904,
+                  "reported_name": "[Not Found]",
+                  "command_line": "/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de",
+                  "g4_owner": true
+                }
+              ],
+              "qoco_library": "/home/angus/spacecraft-trajectory-optmiser/build/qoco-g4/libqoco.so"
+            }
+          }
         }
       },
       "gap": {},
@@ -216,19 +275,20 @@
         "acceptance": "replay defect <= 1e-5 and path violation <= 1e-6"
       },
       "commands": [
-        "spacepdhcg literature run chari-2024-pd6-monte-carlo"
+        "spacepdhcg literature run chari-2024-pd6-monte-carlo",
+        "spacepdhcg literature gpu-run chari-2024-pd6-monte-carlo  # deferred GPU leg (preflight-gated)"
       ],
       "notes": [
         "independent batch: no shared controls, no non-anticipativity constraints; not robust optimisation",
         "the paper's vehicle parameter table is not reproduced here; the Szmuk 2018 Table 1 vehicle is used with the published position dispersion"
       ],
       "family": "P1-D-pd6",
-      "wall_seconds": 345.75566231200355,
+      "wall_seconds": 345.3328620989996,
       "support": "partial"
     },
     {
       "target_id": "esa-tops-2026",
-      "status": "gap",
+      "status": "reproduced",
       "published": {
         "reference_objectives": "none published for the Cartesian two-body problems at the pinned revision"
       },
@@ -236,29 +296,37 @@
         "easy_two_body": {
           "problem": "two_body_cartesian:P4",
           "status": "converged",
+          "formulation": "cartesian",
           "final_mass": 0.6140572855841121,
           "time_of_flight": 2.0,
+          "revolutions": null,
           "reason": null
         },
         "multi_revolution_two_body": {
           "problem": "two_body_cartesian:P3",
-          "status": "maximum_iterations",
-          "final_mass": 0.511734090257325,
+          "status": "converged",
+          "formulation": "modified equinoctial elements, RTN thrust, FOH SCvx",
+          "final_mass": 0.692220338947444,
           "time_of_flight": 13.0,
+          "revolutions": 2,
           "reason": null
         },
         "inclination_or_eccentricity_change": {
           "problem": "two_body_cartesian:P1",
-          "status": "maximum_iterations",
-          "final_mass": 0.8812639593183471,
-          "time_of_flight": 109.99999236708656,
+          "status": "converged",
+          "formulation": "modified equinoctial elements, RTN thrust, FOH SCvx",
+          "final_mass": 0.8726289224692987,
+          "time_of_flight": 90.60816097205658,
+          "revolutions": 1,
           "reason": null
         },
         "cr3bp": {
           "problem": "cr3bp:P0",
           "status": "unsupported",
+          "formulation": null,
           "final_mass": null,
           "time_of_flight": null,
+          "revolutions": null,
           "reason": "circular restricted three-body dynamics are not implemented"
         }
       },
@@ -271,6 +339,7 @@
       },
       "envelope": {
         "nodes": 120,
+        "mee_nodes": 200,
         "problem_count_at_pinned_revision": 34
       },
       "commands": [
@@ -280,7 +349,7 @@
         "the ISSFD paper describes 28 problems; the pinned repository revision contains 34 (database is actively expanding); selection made from metadata only"
       ],
       "family": "P1-E-low-thrust",
-      "wall_seconds": 26.29375127599633,
+      "wall_seconds": 336.5995381360044,
       "support": "partial"
     },
     {
@@ -526,6 +595,30 @@
           "max_path_violation": 9.68834235060001e-10,
           "final_trust_norm": 0.0015287484739095133,
           "final_virtual_l1": 3.3105996025221175e-09
+        },
+        "native_pd6_fft": {
+          "status": "reproduced",
+          "time_of_flight": 3.39254351004221,
+          "fuel_used": 0.1428605892939614,
+          "converged": true,
+          "termination": "converged",
+          "iterations": 30,
+          "replay_defect_inf": 6.429411623098957e-07,
+          "max_path_violation": 8.07702065230842e-08,
+          "path_violations": {
+            "dry_mass": 0.0,
+            "glide_slope": 5.391088090314369e-16,
+            "tilt": 4.885546917191773e-09,
+            "angular_rate": 0.0,
+            "thrust_min": 0.0,
+            "thrust_max": 8.07702065230842e-08,
+            "gimbal": 0.0,
+            "quaternion_norm": 3.6144234050183854e-08
+          },
+          "topology_fingerprint": "8145343b74888a29",
+          "gap_vs_cpu_core_ut": 0.0024645949504100706,
+          "envelope_ut": 0.01,
+          "label": "measured-local"
         }
       },
       "gap": {
@@ -537,11 +630,13 @@
         "published.iterations_to_converge": "published-reference",
         "published.converged_time_of_flight": "descriptive-only",
         "measured.time_of_flight": "measured-local",
+        "measured.native_pd6_fft.time_of_flight": "measured-local",
         "parameters.alpha_mdot": "descriptive-only"
       },
       "envelope": {
         "discretisation": "K = 50 nodes, FOH, RK4 STM with 8 substeps per interval; free final time via sigma",
-        "paper_stop_rule": "||Delta||_2 <= 1e-3 and ||nu||_1 <= 1e-10 within 15 iterations"
+        "paper_stop_rule": "||Delta||_2 <= 1e-3 and ||nu||_1 <= 1e-10 within 15 iterations",
+        "native_pd6_fft": "K = 50 nodes, ZOH, variational RK4 with 4 substeps per interval, sigma column analytic; hard-trust-region SCvx; declared envelope vs the FOH core 0.01 UT"
       },
       "commands": [
         "spacepdhcg literature run szmuk-acikmese-2018-pd6-2d"
@@ -550,12 +645,12 @@
         "alpha_mdot = 0.01 UT/UL and a zero vertical initial velocity are assumptions (not printed in the paper)"
       ],
       "family": "P1-D-pd6",
-      "wall_seconds": 268.26907472199673,
+      "wall_seconds": 285.83055119200435,
       "support": "partial"
     },
     {
       "target_id": "tafazzol-taheri-earth-dionysus",
-      "status": "gap",
+      "status": "reproduced",
       "published": {
         "final_mass_kg": 2718.33,
         "final_mass_text": "2718.33",
@@ -564,17 +659,19 @@
         "extraction": "text (Section 4.2: 'm(t_f) = m_f = 2718.33 kg'; 'The most optimal solution involves five orbital revolutions')"
       },
       "measured": {
-        "final_mass_kg_best": null,
+        "final_mass_kg_best": 2717.427485932241,
         "final_mass_kg_by_nodes": {
-          "nodes=300": 678.8512016499836
+          "nodes=300": 2717.427485932241,
+          "nodes=400": 2717.6656802208654
         },
         "statuses": {
-          "nodes=300": "maximum_iterations"
+          "nodes=300": "converged",
+          "nodes=400": "maximum_iterations"
         }
       },
       "gap": {
-        "final_mass_minus_published_kg": null,
-        "relative": null,
+        "final_mass_minus_published_kg": -0.9025140677590571,
+        "relative": -0.0003320104872326234,
         "acceptance_tolerance_kg": 2.0
       },
       "labels": {
@@ -582,21 +679,24 @@
         "measured.final_mass_kg_best": "measured-local"
       },
       "envelope": {
-        "discretisation": "FOH successive convexification, RK4 STM, nodes swept",
+        "discretisation": "FOH successive convexification, RK4 STM, nodes swept; modified-equinoctial-element state with explicit revolution count",
+        "formulation": "mee",
         "nodes_values": [
-          300
+          300,
+          400
         ],
-        "final_mass_spread_kg": null,
+        "final_mass_spread_kg": 0.0,
         "declared_envelope_kg": 2.0
       },
       "commands": [
         "spacepdhcg literature run tafazzol-taheri-earth-dionysus"
       ],
       "notes": [
-        "boundary states are the paper's fixed heliocentric states (zero hyperbolic excess); no ephemeris model is involved"
+        "boundary states are the paper's fixed heliocentric states (zero hyperbolic excess); no ephemeris model is involved",
+        "revolution count swept [4, 5, 6] at the coarsest node count; best N = 5 (published: 5)"
       ],
       "family": "P1-E-low-thrust",
-      "wall_seconds": 43.92976699700375,
+      "wall_seconds": 397.92616659399937,
       "support": "supported"
     },
     {

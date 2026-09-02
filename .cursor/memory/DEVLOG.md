@@ -922,3 +922,41 @@
   - GPU legs (P1-C pure-QOCO, P1-D-MC persistent batch) blocked; commands recorded in the report.
   - Native `sigma` free-final-time kernels deferred (topology and policy-hash impact).
   - Multi-revolution low-thrust convergence (Dionysus, TOPS P3) needs a better initial guess.
+
+## 2026-09-03 05:40 AEST
+
+- Task summary:
+  - Closed the three substantive gaps of the literature reproduction on `feat/literature-targets`
+    (`/home/angus/worktrees/spacepdhcg-literature`): repository SCvx fuel gap, multi-revolution
+    low thrust, native free final time; added preflight-gated deferred GPU legs.
+- Changes:
+  - `d81c528` accurate 3-DoF option: variational RK4 (`rk4`, `integration_substeps`),
+    multiple-shooting merit with CQP-consistent defect penalty, objective-stall stop,
+    `accept_almost_solved`; frozen forward-Euler default and fixture hashes untouched; literature
+    profiles select the accurate option; regression tests assert gap <= envelope.
+  - `57cee5c` MEE low-thrust formulation (`low_thrust_mee.py`): revolution bookkeeping, spiral
+    seed, trust-weight continuation, complex-step Jacobians, Cartesian replay, revolution sweep;
+    Dionysus and TOPS profiles select `formulation: mee`.
+  - `1fa99ae` native `pd3_fft`/`pd6_fft` free-final-time topologies (sigma column, tangent rule,
+    Szmuk thrust-arm/tilt/gimbal/rate cones), C API, ctypes bridge + outer loop, Szmuk native
+    runner, CUDA time-dilated variational + sigma CSC kernels and parity test, C++ smoke tests.
+  - `8e18b93` `gpu_preflight.py`, `literature gpu-preflight|gpu-run`, deferred P1-C QOCO-GPU leg,
+    P1-D-MC pure-QOCO `pd6_fft` batch, report headlines, tests.
+  - Report/docs commit: regenerated `docs/REFERENCE_REPRODUCTION_REPORT.md` + JSON and the four
+    re-run records; `docs/LITERATURE_TARGETS.md`, roadmap Track L updated.
+- Validation:
+  - Ruff check + format clean on `src` and `tests`.
+  - Full Python suite: 388 passed, 4 skipped (native library from the Release build).
+  - Native Release and Debug `-Werror`: 47/47 ctest each (includes the two new smoke tests).
+  - CUDA workspace built for `sm_120` (nvcc 12.8) including `device_time_dilated_test`; not run.
+  - Before/after fuel: Acikmese-Ploen 2007 405.65 -> 399.36 kg (lossless 400.63, published
+    399.5); Blackmore 2010 case 1 413.43 -> 398.84 kg (lossless 400.09, published 399.4).
+  - Dionysus 2717.43 kg vs 2718.33 kg (envelope 2 kg); TOPS P3 converged (2 rev), TOPS P1
+    converged (1 rev), zero-revolution P1 recorded infeasible.
+  - Szmuk 2018: CPU core t_f 3.39008 UT; native `pd6_fft` 3.39254 UT (gap 0.0025 UT, envelope
+    0.01 UT), fuel 0.14286 vs 0.14263 UM.
+- Follow-ups / risks:
+  - GPU owned by the G4 campaign (`--g4-server 600`, `--g4-session`) throughout: CUDA parity
+    test, sanitizer pass, and both literature GPU legs deferred behind the preflight.
+  - P1-D-MC CPU batch convergence probability stays low (FOH core iteration limit on dispersed
+    states); persistent device SCvx batch still has no arbitrary-initial-state entry point.

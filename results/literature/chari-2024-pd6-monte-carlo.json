@@ -23,8 +23,8 @@
     "convergence_probability": 0.0,
     "accepted": 1,
     "accepted_probability": 1.0,
-    "accepted_trajectories_per_second": 0.028548416128750774,
-    "wall_seconds": 35.0282129660045,
+    "accepted_trajectories_per_second": 0.027462682570107137,
+    "wall_seconds": 36.41304877799848,
     "workers": 1,
     "tof_median": 4.7468733399230105,
     "tof_iqr": [
@@ -43,8 +43,8 @@
     "convergence_probability": 0.0,
     "accepted": 6,
     "accepted_probability": 0.375,
-    "accepted_trajectories_per_second": 0.06768210744462581,
-    "wall_seconds": 88.64972186199884,
+    "accepted_trajectories_per_second": 0.07297508495190681,
+    "wall_seconds": 82.21984262100159,
     "workers": 15,
     "tof_median": 4.763564564450784,
     "tof_iqr": [
@@ -63,8 +63,8 @@
     "convergence_probability": 0.046875,
     "accepted": 22,
     "accepted_probability": 0.34375,
-    "accepted_trajectories_per_second": 0.09906940533505094,
-    "wall_seconds": 222.06653936799557,
+    "accepted_trajectories_per_second": 0.0970489407888675,
+    "wall_seconds": 226.68974870999955,
     "workers": 15,
     "tof_median": 4.676253607308805,
     "tof_iqr": [
@@ -77,8 +77,35 @@
    }
   },
   "gpu_persistent_batch": {
-   "status": "blocked",
-   "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
+   "persistent_device_scvx": {
+    "status": "blocked",
+    "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
+   },
+   "pure_qoco_native_pd6_fft": {
+    "status": "deferred",
+    "reason": "pass run_gpu=true (spacepdhcg literature gpu-run) with SPACEPDHCG_QOCO_LIBRARY set",
+    "preflight": {
+     "ok": false,
+     "reason": "refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))",
+     "nvidia_smi": "/usr/lib/wsl/lib/nvidia-smi",
+     "g4_owned": true,
+     "processes": [
+      {
+       "pid": 827383,
+       "reported_name": "[Not Found]",
+       "command_line": "/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600",
+       "g4_owner": true
+      },
+      {
+       "pid": 828904,
+       "reported_name": "[Not Found]",
+       "command_line": "/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de",
+       "g4_owner": true
+      }
+     ],
+     "qoco_library": "/home/angus/spacecraft-trajectory-optmiser/build/qoco-g4/libqoco.so"
+    }
+   }
   }
  },
  "gap": {},
@@ -92,7 +119,8 @@
   "acceptance": "replay defect <= 1e-5 and path violation <= 1e-6"
  },
  "commands": [
-  "spacepdhcg literature run chari-2024-pd6-monte-carlo"
+  "spacepdhcg literature run chari-2024-pd6-monte-carlo",
+  "spacepdhcg literature gpu-run chari-2024-pd6-monte-carlo  # deferred GPU leg (preflight-gated)"
  ],
  "notes": [
   "independent batch: no shared controls, no non-anticipativity constraints; not robust optimisation",
@@ -112,7 +140,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.6242435666734565e-06,
     "max_path_violation": 2.469243431946211e-07,
-    "wall_seconds": 35.02818727200065
+    "wall_seconds": 36.41301620900049
    }
   ],
   "16": [
@@ -128,7 +156,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.808864067529228e-05,
     "max_path_violation": 7.208236847633387e-06,
-    "wall_seconds": 51.905669255997054
+    "wall_seconds": 49.62481932499941
    },
    {
     "initial_position": [
@@ -142,7 +170,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.0338751359473264e-06,
     "max_path_violation": 2.921435870995026e-07,
-    "wall_seconds": 55.915329743002076
+    "wall_seconds": 49.09344084699842
    },
    {
     "initial_position": [
@@ -156,7 +184,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.116563665805927e-06,
     "max_path_violation": 9.389564630257752e-07,
-    "wall_seconds": 56.78137628499826
+    "wall_seconds": 49.94780031800474
    },
    {
     "initial_position": [
@@ -170,7 +198,7 @@
     "iterations": 25,
     "replay_defect_inf": 6.311968562433545e-06,
     "max_path_violation": 1.1270765980508912e-06,
-    "wall_seconds": 54.49814372800029
+    "wall_seconds": 49.9771617219958
    },
    {
     "initial_position": [
@@ -184,7 +212,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.9015128558397265e-06,
     "max_path_violation": 5.847982420537079e-07,
-    "wall_seconds": 55.83314719700138
+    "wall_seconds": 50.07961735400022
    },
    {
     "initial_position": [
@@ -198,7 +226,7 @@
     "iterations": 25,
     "replay_defect_inf": 7.679189195775038e-05,
     "max_path_violation": 1.6828001924151792e-05,
-    "wall_seconds": 55.60380257500219
+    "wall_seconds": 48.11781873399741
    },
    {
     "initial_position": [
@@ -212,7 +240,7 @@
     "iterations": 25,
     "replay_defect_inf": 5.771026128753576e-06,
     "max_path_violation": 1.6859329055041172e-06,
-    "wall_seconds": 55.246739422000246
+    "wall_seconds": 44.15626324200275
    },
    {
     "initial_position": [
@@ -226,7 +254,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.2066155689337563e-05,
     "max_path_violation": 3.291663301929759e-06,
-    "wall_seconds": 54.643692448000365
+    "wall_seconds": 50.55049679300282
    },
    {
     "initial_position": [
@@ -240,7 +268,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.907636874966869e-06,
     "max_path_violation": 1.1118483906891186e-06,
-    "wall_seconds": 55.26005360099953
+    "wall_seconds": 50.475109070001054
    },
    {
     "initial_position": [
@@ -254,7 +282,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.450035021084318e-06,
     "max_path_violation": 2.468284976409052e-07,
-    "wall_seconds": 54.796630409997306
+    "wall_seconds": 50.4450008040003
    },
    {
     "initial_position": [
@@ -268,7 +296,7 @@
     "iterations": 25,
     "replay_defect_inf": 0.00012794050029318882,
     "max_path_violation": 3.1331416399105194e-05,
-    "wall_seconds": 54.76070090199937
+    "wall_seconds": 50.46632941700227
    },
    {
     "initial_position": [
@@ -282,7 +310,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.7737280475937922e-05,
     "max_path_violation": 4.077337116381585e-06,
-    "wall_seconds": 55.212044940999476
+    "wall_seconds": 49.91469361200143
    },
    {
     "initial_position": [
@@ -296,7 +324,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.7917077654860947e-06,
     "max_path_violation": 5.333874013579987e-07,
-    "wall_seconds": 55.33998146399972
+    "wall_seconds": 51.03298924200499
    },
    {
     "initial_position": [
@@ -310,7 +338,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.838448041333265e-06,
     "max_path_violation": 8.379564375715631e-07,
-    "wall_seconds": 55.361042570999416
+    "wall_seconds": 49.25470011699508
    },
    {
     "initial_position": [
@@ -324,7 +352,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.678258352205697e-05,
     "max_path_violation": 3.1150121291290134e-06,
-    "wall_seconds": 56.41878254599578
+    "wall_seconds": 50.46951125800115
    },
    {
     "initial_position": [
@@ -338,7 +366,7 @@
     "iterations": 25,
     "replay_defect_inf": 5.708779212021398e-06,
     "max_path_violation": 2.0371527555962388e-06,
-    "wall_seconds": 36.71685967400117
+    "wall_seconds": 38.037084933996084
    }
   ],
   "64": [
@@ -354,7 +382,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.835958291815601e-06,
     "max_path_violation": 2.0844339241321563e-06,
-    "wall_seconds": 47.7880902149991
+    "wall_seconds": 50.25661339900398
    },
    {
     "initial_position": [
@@ -368,7 +396,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.3994043737273216e-05,
     "max_path_violation": 1.8063360325282218e-06,
-    "wall_seconds": 47.28095556599874
+    "wall_seconds": 51.00871045499662
    },
    {
     "initial_position": [
@@ -382,7 +410,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.1307119835324286e-05,
     "max_path_violation": 5.621480338335871e-06,
-    "wall_seconds": 47.498982133001846
+    "wall_seconds": 49.31140895700082
    },
    {
     "initial_position": [
@@ -396,7 +424,7 @@
     "iterations": 25,
     "replay_defect_inf": 8.240297282746667e-05,
     "max_path_violation": 1.9425615159329723e-05,
-    "wall_seconds": 46.608347615998355
+    "wall_seconds": 49.06818326699431
    },
    {
     "initial_position": [
@@ -410,7 +438,7 @@
     "iterations": 25,
     "replay_defect_inf": 6.01279980783076e-06,
     "max_path_violation": 5.238385660799594e-07,
-    "wall_seconds": 47.93330561499897
+    "wall_seconds": 49.55680883900641
    },
    {
     "initial_position": [
@@ -424,7 +452,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.146642493374486e-06,
     "max_path_violation": 2.1454681986554647e-06,
-    "wall_seconds": 47.71133642499626
+    "wall_seconds": 48.551350923997234
    },
    {
     "initial_position": [
@@ -438,7 +466,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.082416391102626e-06,
     "max_path_violation": 6.228197726443341e-07,
-    "wall_seconds": 47.81985558300221
+    "wall_seconds": 50.306297573006304
    },
    {
     "initial_position": [
@@ -452,7 +480,7 @@
     "iterations": 25,
     "replay_defect_inf": 5.792069861176863e-06,
     "max_path_violation": 2.4778447811346638e-06,
-    "wall_seconds": 46.69789451499673
+    "wall_seconds": 50.45085870999901
    },
    {
     "initial_position": [
@@ -466,7 +494,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.8716503676907692e-06,
     "max_path_violation": 8.534651827485362e-07,
-    "wall_seconds": 47.21265947199572
+    "wall_seconds": 51.91439955500391
    },
    {
     "initial_position": [
@@ -480,7 +508,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.5715153861339815e-05,
     "max_path_violation": 2.6408546924816534e-06,
-    "wall_seconds": 46.542090611001186
+    "wall_seconds": 48.593051126998034
    },
    {
     "initial_position": [
@@ -494,7 +522,7 @@
     "iterations": 18,
     "replay_defect_inf": 2.6321022983388787e-07,
     "max_path_violation": 6.964071452841836e-08,
-    "wall_seconds": 34.671323624999786
+    "wall_seconds": 37.055762923002476
    },
    {
     "initial_position": [
@@ -508,7 +536,7 @@
     "iterations": 25,
     "replay_defect_inf": 9.85695826827282e-05,
     "max_path_violation": 1.8458749843519584e-05,
-    "wall_seconds": 46.44108790899918
+    "wall_seconds": 49.913840435001475
    },
    {
     "initial_position": [
@@ -522,7 +550,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.5464148351851392e-06,
     "max_path_violation": 4.0522644084717285e-07,
-    "wall_seconds": 47.41741352999816
+    "wall_seconds": 48.91023092799878
    },
    {
     "initial_position": [
@@ -536,7 +564,7 @@
     "iterations": 25,
     "replay_defect_inf": 0.00013141171666219975,
     "max_path_violation": 2.51295953861419e-05,
-    "wall_seconds": 48.892282713000895
+    "wall_seconds": 49.968382250001014
    },
    {
     "initial_position": [
@@ -550,7 +578,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.188905258217801e-07,
     "max_path_violation": 2.1724169307901775e-07,
-    "wall_seconds": 47.71159003399953
+    "wall_seconds": 49.77727048000088
    },
    {
     "initial_position": [
@@ -564,7 +592,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.9159878673089565e-07,
     "max_path_violation": 1.1257528176322751e-07,
-    "wall_seconds": 47.31140292700002
+    "wall_seconds": 47.16179986300267
    },
    {
     "initial_position": [
@@ -578,7 +606,7 @@
     "iterations": 25,
     "replay_defect_inf": 8.948979333611717e-05,
     "max_path_violation": 1.794631070484165e-05,
-    "wall_seconds": 46.674643297999864
+    "wall_seconds": 46.08432149399596
    },
    {
     "initial_position": [
@@ -592,7 +620,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.1709482124775423e-07,
     "max_path_violation": 4.543039389126591e-08,
-    "wall_seconds": 47.58423076300096
+    "wall_seconds": 45.27644838800188
    },
    {
     "initial_position": [
@@ -606,7 +634,7 @@
     "iterations": 25,
     "replay_defect_inf": 5.661934274758806e-06,
     "max_path_violation": 1.8882778820561441e-06,
-    "wall_seconds": 48.11786921699968
+    "wall_seconds": 44.19177570100146
    },
    {
     "initial_position": [
@@ -620,7 +648,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.053704848680506e-05,
     "max_path_violation": 1.0064084299710174e-05,
-    "wall_seconds": 47.03475470600097
+    "wall_seconds": 46.295172920996265
    },
    {
     "initial_position": [
@@ -634,7 +662,7 @@
     "iterations": 25,
     "replay_defect_inf": 8.515159969135766e-06,
     "max_path_violation": 1.4817011928514034e-06,
-    "wall_seconds": 48.24325524699816
+    "wall_seconds": 46.76703836499655
    },
    {
     "initial_position": [
@@ -648,7 +676,7 @@
     "iterations": 25,
     "replay_defect_inf": 0.00014140169396847924,
     "max_path_violation": 1.932371258472898e-05,
-    "wall_seconds": 47.240080304
+    "wall_seconds": 46.44742085799953
    },
    {
     "initial_position": [
@@ -662,7 +690,7 @@
     "iterations": 25,
     "replay_defect_inf": 9.052019822153312e-06,
     "max_path_violation": 1.159997190525175e-06,
-    "wall_seconds": 47.209230373002356
+    "wall_seconds": 44.97043367900187
    },
    {
     "initial_position": [
@@ -676,7 +704,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.204564181486958e-06,
     "max_path_violation": 1.5448779500104592e-06,
-    "wall_seconds": 47.2506554779975
+    "wall_seconds": 45.261045003004256
    },
    {
     "initial_position": [
@@ -690,7 +718,7 @@
     "iterations": 25,
     "replay_defect_inf": 5.890862261104246e-06,
     "max_path_violation": 2.1803352892035832e-06,
-    "wall_seconds": 47.415518990004784
+    "wall_seconds": 45.75078325399954
    },
    {
     "initial_position": [
@@ -704,7 +732,7 @@
     "iterations": 25,
     "replay_defect_inf": 6.07378815487003e-06,
     "max_path_violation": 1.2054650029291736e-06,
-    "wall_seconds": 46.900720410994836
+    "wall_seconds": 46.396110690999194
    },
    {
     "initial_position": [
@@ -718,7 +746,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.2553445743801461e-05,
     "max_path_violation": 3.5627915222491424e-06,
-    "wall_seconds": 47.45098409699858
+    "wall_seconds": 46.82491351900535
    },
    {
     "initial_position": [
@@ -732,7 +760,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.565589426100189e-06,
     "max_path_violation": 5.608135225099176e-07,
-    "wall_seconds": 47.142771172999346
+    "wall_seconds": 46.386590305002755
    },
    {
     "initial_position": [
@@ -746,7 +774,7 @@
     "iterations": 17,
     "replay_defect_inf": 1.2019099981941395e-07,
     "max_path_violation": 6.120874918025265e-09,
-    "wall_seconds": 32.550622912996914
+    "wall_seconds": 31.085512333003862
    },
    {
     "initial_position": [
@@ -760,7 +788,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.729340429276974e-06,
     "max_path_violation": 5.294403850886198e-07,
-    "wall_seconds": 48.138949763997516
+    "wall_seconds": 46.322303353997995
    },
    {
     "initial_position": [
@@ -774,7 +802,7 @@
     "iterations": 25,
     "replay_defect_inf": 0.0002079288893579445,
     "max_path_violation": 2.2485829010543412e-05,
-    "wall_seconds": 45.697397502997774
+    "wall_seconds": 46.28544594300183
    },
    {
     "initial_position": [
@@ -788,7 +816,7 @@
     "iterations": 25,
     "replay_defect_inf": 0.00014921591591199324,
     "max_path_violation": 4.4766133368456806e-05,
-    "wall_seconds": 46.351256207002734
+    "wall_seconds": 48.86419847099751
    },
    {
     "initial_position": [
@@ -802,7 +830,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.69604577895133e-05,
     "max_path_violation": 1.2537383627719834e-05,
-    "wall_seconds": 47.54794749600114
+    "wall_seconds": 47.370809217994974
    },
    {
     "initial_position": [
@@ -816,7 +844,7 @@
     "iterations": 25,
     "replay_defect_inf": 6.215141014664916e-05,
     "max_path_violation": 1.298554619300063e-05,
-    "wall_seconds": 46.32888587399793
+    "wall_seconds": 47.3254550940037
    },
    {
     "initial_position": [
@@ -830,7 +858,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.928718162624854e-05,
     "max_path_violation": 8.468656641946737e-06,
-    "wall_seconds": 46.717699153996364
+    "wall_seconds": 48.39579274800053
    },
    {
     "initial_position": [
@@ -844,7 +872,7 @@
     "iterations": 25,
     "replay_defect_inf": 6.494817540447784e-07,
     "max_path_violation": 3.2001276495385866e-07,
-    "wall_seconds": 46.03500189000624
+    "wall_seconds": 47.296141288999934
    },
    {
     "initial_position": [
@@ -858,7 +886,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.790578050555382e-06,
     "max_path_violation": 1.4611006335929488e-06,
-    "wall_seconds": 46.67701704800129
+    "wall_seconds": 47.20798582499992
    },
    {
     "initial_position": [
@@ -872,7 +900,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.5835983898426775e-05,
     "max_path_violation": 1.8819045917162214e-06,
-    "wall_seconds": 46.79976765700121
+    "wall_seconds": 48.9806167390052
    },
    {
     "initial_position": [
@@ -886,7 +914,7 @@
     "iterations": 25,
     "replay_defect_inf": 6.636179032681877e-08,
     "max_path_violation": 3.322307096098598e-09,
-    "wall_seconds": 47.37395290299901
+    "wall_seconds": 49.42696503800107
    },
    {
     "initial_position": [
@@ -900,7 +928,7 @@
     "iterations": 25,
     "replay_defect_inf": 6.840047751532907e-06,
     "max_path_violation": 2.853199982277843e-06,
-    "wall_seconds": 46.91208152400213
+    "wall_seconds": 47.61511616300413
    },
    {
     "initial_position": [
@@ -914,7 +942,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.0941578485866863e-05,
     "max_path_violation": 9.522398577876956e-06,
-    "wall_seconds": 47.15460071399866
+    "wall_seconds": 46.94097087200498
    },
    {
     "initial_position": [
@@ -928,7 +956,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.147465588324792e-06,
     "max_path_violation": 5.856605342913213e-07,
-    "wall_seconds": 45.7292904049973
+    "wall_seconds": 47.74013260799984
    },
    {
     "initial_position": [
@@ -942,7 +970,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.3833119571214922e-05,
     "max_path_violation": 3.2400943092980583e-06,
-    "wall_seconds": 46.69216568500269
+    "wall_seconds": 48.17886264400295
    },
    {
     "initial_position": [
@@ -956,7 +984,7 @@
     "iterations": 25,
     "replay_defect_inf": 0.00020332819321078333,
     "max_path_violation": 3.9764215378435e-05,
-    "wall_seconds": 46.72401655399881
+    "wall_seconds": 48.53621727499558
    },
    {
     "initial_position": [
@@ -970,7 +998,7 @@
     "iterations": 25,
     "replay_defect_inf": 9.993709790379057e-06,
     "max_path_violation": 1.2209105129112885e-06,
-    "wall_seconds": 45.67813454399584
+    "wall_seconds": 48.26272514699667
    },
    {
     "initial_position": [
@@ -984,7 +1012,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.4887416228969172e-06,
     "max_path_violation": 8.549603132124162e-07,
-    "wall_seconds": 46.24717628600047
+    "wall_seconds": 48.07502275399747
    },
    {
     "initial_position": [
@@ -998,7 +1026,7 @@
     "iterations": 25,
     "replay_defect_inf": 9.430834244650299e-07,
     "max_path_violation": 3.80942081212865e-07,
-    "wall_seconds": 46.574492104002275
+    "wall_seconds": 47.30985128699831
    },
    {
     "initial_position": [
@@ -1012,7 +1040,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.254771445731052e-05,
     "max_path_violation": 2.7646671185710403e-06,
-    "wall_seconds": 46.31651253900054
+    "wall_seconds": 48.01998989900312
    },
    {
     "initial_position": [
@@ -1026,7 +1054,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.585044971954332e-05,
     "max_path_violation": 6.2031882204216515e-06,
-    "wall_seconds": 46.29266362600174
+    "wall_seconds": 44.400781167001696
    },
    {
     "initial_position": [
@@ -1040,7 +1068,7 @@
     "iterations": 25,
     "replay_defect_inf": 4.7667184366329e-06,
     "max_path_violation": 1.4841543980459448e-06,
-    "wall_seconds": 45.305415725000785
+    "wall_seconds": 48.58116543699725
    },
    {
     "initial_position": [
@@ -1054,7 +1082,7 @@
     "iterations": 25,
     "replay_defect_inf": 9.351183834604981e-06,
     "max_path_violation": 3.3836157897759733e-07,
-    "wall_seconds": 46.510836364999705
+    "wall_seconds": 49.834532084001694
    },
    {
     "initial_position": [
@@ -1068,7 +1096,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.7676451964376838e-06,
     "max_path_violation": 9.024237048738115e-07,
-    "wall_seconds": 45.6172621049991
+    "wall_seconds": 48.13940751699556
    },
    {
     "initial_position": [
@@ -1082,7 +1110,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.9014292458319204e-05,
     "max_path_violation": 9.748923742503024e-06,
-    "wall_seconds": 46.04548937200161
+    "wall_seconds": 49.9066945309969
    },
    {
     "initial_position": [
@@ -1096,7 +1124,7 @@
     "iterations": 25,
     "replay_defect_inf": 8.467041157533828e-06,
     "max_path_violation": 2.2668801502589986e-06,
-    "wall_seconds": 46.76366863700241
+    "wall_seconds": 48.20961161599553
    },
    {
     "initial_position": [
@@ -1110,7 +1138,7 @@
     "iterations": 25,
     "replay_defect_inf": 7.504992974860514e-07,
     "max_path_violation": 1.650231276073555e-07,
-    "wall_seconds": 45.577247574001376
+    "wall_seconds": 46.75868655300292
    },
    {
     "initial_position": [
@@ -1124,7 +1152,7 @@
     "iterations": 25,
     "replay_defect_inf": 8.063761666399216e-06,
     "max_path_violation": 3.922600640970941e-06,
-    "wall_seconds": 46.068595311000536
+    "wall_seconds": 47.88900914500118
    },
    {
     "initial_position": [
@@ -1138,7 +1166,7 @@
     "iterations": 25,
     "replay_defect_inf": 3.2205072706403826e-06,
     "max_path_violation": 1.7626838224593655e-06,
-    "wall_seconds": 46.031200960002025
+    "wall_seconds": 49.00962755200453
    },
    {
     "initial_position": [
@@ -1152,7 +1180,7 @@
     "iterations": 25,
     "replay_defect_inf": 8.110681233297612e-07,
     "max_path_violation": 6.709572164531608e-08,
-    "wall_seconds": 46.411719316995004
+    "wall_seconds": 48.96220326499315
    },
    {
     "initial_position": [
@@ -1166,7 +1194,7 @@
     "iterations": 25,
     "replay_defect_inf": 7.591861133304789e-06,
     "max_path_violation": 2.3854821979973906e-06,
-    "wall_seconds": 46.77435428000172
+    "wall_seconds": 47.967058583002654
    },
    {
     "initial_position": [
@@ -1180,7 +1208,7 @@
     "iterations": 25,
     "replay_defect_inf": 1.295435478398943e-05,
     "max_path_violation": 1.7173271582571203e-06,
-    "wall_seconds": 45.21144049400027
+    "wall_seconds": 48.981206123004085
    },
    {
     "initial_position": [
@@ -1194,7 +1222,7 @@
     "iterations": 25,
     "replay_defect_inf": 9.094781938820407e-06,
     "max_path_violation": 3.1633676607079053e-06,
-    "wall_seconds": 38.47297790399898
+    "wall_seconds": 42.26274481300061
    },
    {
     "initial_position": [
@@ -1208,7 +1236,7 @@
     "iterations": 25,
     "replay_defect_inf": 2.0003227116927036e-06,
     "max_path_violation": 2.9835511750064825e-07,
-    "wall_seconds": 38.16840382299415
+    "wall_seconds": 40.1050205490028
    },
    {
     "initial_position": [
@@ -1222,7 +1250,7 @@
     "iterations": 18,
     "replay_defect_inf": 2.126412538272504e-06,
     "max_path_violation": 9.773153781811317e-07,
-    "wall_seconds": 26.059571898003924
+    "wall_seconds": 28.639670868004032
    },
    {
     "initial_position": [
@@ -1236,11 +1264,11 @@
     "iterations": 25,
     "replay_defect_inf": 5.4954873673906945e-06,
     "max_path_violation": 1.8454803125678154e-06,
-    "wall_seconds": 35.659991576998436
+    "wall_seconds": 38.165284567003255
    }
   ]
  },
  "family": "P1-D-pd6",
- "wall_seconds": 345.75566231200355,
+ "wall_seconds": 345.3328620989996,
  "support": "partial"
 }

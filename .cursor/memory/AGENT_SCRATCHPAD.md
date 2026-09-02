@@ -1263,3 +1263,61 @@ Use this file as persistent, repo-local execution memory.
 - Native/CUDA `sigma` (free final time) kernels are not implemented; doing so changes the frozen
   CSC topology and G4 policy hashes and must be scheduled with a reseal.
 - This scratchpad is ~1,250 lines; roll it over (archive-first) at the next consolidation.
+
+### 2026-09-03 05:40 AEST - Literature gap closure (fuel gap, MEE multirev, native free final time)
+
+#### Task Summary
+
+- Closed the three gaps left by the reference reproduction on `feat/literature-targets`:
+  repository 3-DoF SCvx fuel gap (accurate discretisation option), multi-revolution low thrust
+  (MEE formulation), native free final time (`pd3_fft`/`pd6_fft` topologies, CUDA kernels built
+  but not executed), plus preflight-gated deferred GPU legs. Commits `d81c528`, `57cee5c`,
+  `1fa99ae`, `8e18b93` and the report commit after it.
+
+#### Mistakes And Fixes
+
+- `[self]` The 6-14 kg fuel gap was three coupled defects, not one: forward-Euler ZOH
+  discretisation (3.8 / 1.2 kg of it is the Euler *discrete optimum* itself), a single-shooting
+  merit that rejected every improving step once the rollout error dominated, and the frozen
+  virtual weight 1e5 with a stop that never fired. Fixing only the integrator left the solver
+  stalled; the multiple-shooting merit with a CQP-consistent defect penalty and an
+  objective-stall stop were required. Diagnose stall vs. optimum first (trace iterations).
+- `[self]` Blackmore 2010 module constant used the raw `alpha` while the profile document said
+  `cant-corrected`; only the profile document is authoritative - a test now freezes agreement.
+- `[self]` The Szmuk 2018 native reproduction converged to t_f ~ 2.97 UT because the attitude
+  tilt cone `|[q_x, q_y]| <= sqrt((1 - cos theta_max)/2)` was missing from `pd6_fft`, and the
+  glide-slope angle is measured from the horizontal in the paper but from the vertical in the
+  native model. Check every angle convention and every active constraint before tuning weights.
+- `[self]` Hard trust regions near feasibility: numerical noise in the defect term biased the
+  agreement ratio and collapsed the radius; zeroing the penalty below `defect_tolerance` fixed it.
+- `[self]` Default-argument binding (`command_line_of=_read_command_line`) defeated
+  monkeypatching in tests; resolve module-level callables lazily inside the function.
+- `[self]` Python `pytest.mark.slow` is not registered (`--strict-markers`); do not add markers.
+- `[tool]` PowerShell mangles quotes in `wsl -e bash -c "..."` (python -c, `$PATH`, heredocs);
+  write every non-trivial command to a `.sh`/`.py` under `%TEMP%`, `tr -d '\r'` it into `/tmp`,
+  and run that. `results/` is gitignored but tracked: `git add -f` for the record files.
+- `[self]` Central-difference sigma checks on the 6-DoF model are stiff under large direct
+  torque; use small torques in oracle tests rather than loosening tolerances.
+
+#### What Worked
+
+- Variational RK4 (exact Jacobian of the RK4 map, verified to 1e-9) plugged into the existing
+  fixed CSC pattern - the frozen Euler default and its fixture hashes are untouched; the accurate
+  path is an explicit option that the literature profiles select.
+- MEE with true-longitude revolution bookkeeping + Keplerian-spiral seed + trust-weight schedule
+  converged Dionysus (2717.43 vs 2718.33 kg) and TOPS P3/P1 where Cartesian SCvx never did.
+- Sigma-augmented variational RK4 as one shared header serves the C++ smoke tests, both
+  transcriptions and the CUDA kernel line by line, so CPU/GPU parity is structural.
+- The G4 preflight (`nvidia-smi` PIDs -> `/proc/<pid>/cmdline`) refused correctly all session.
+
+#### Guardrails / Follow-Ups
+
+- Deferred until `spacepdhcg literature gpu-preflight` passes (run serially): CUDA
+  `device_time_dilated_test`, one compute-sanitizer memcheck/racecheck pass over it,
+  `spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1
+  chari-2024-pd6-monte-carlo`.
+- The Chari CPU batch convergence probability is low (0-5 %) because the FOH core stops at the
+  iteration limit on dispersed initial states; that is the remaining P1-D-MC `gap`.
+- Rebuild the Release library (`SPACEPDHCG_NATIVE_LIBRARY`) before running
+  `tests/test_native_free_time.py`; it needs the `spacepdhcg_pd6_fft_create` symbol.
+- Scratchpad is ~1,330 lines; roll over (archive-first) at the next consolidation.

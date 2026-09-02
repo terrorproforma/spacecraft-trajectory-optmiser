@@ -78,19 +78,29 @@ before any comparative performance claim. Owner document: `docs/LITERATURE_TARGE
 Scope and status (2026-09-03):
 
 1. Provenance store with evidence labels for every literature value — done, frozen by test.
-2. P1-C Acikmese-Ploen 2007 / Blackmore 2010 Mars 3-DoF — lossless SOCP and repository CPU SCvx
-   run; pure-QOCO GPU leg blocked while the G4 session owns the device.
-3. P1-D Szmuk-Acikmese 2018 free-final-time 6-DoF — reproduced on the independent CPU core;
-   native/CUDA `sigma` kernels deferred (topology and policy-hash change; see track document).
-4. P1-D-MC Chari 2024 — seeded samples committed; CPU independent batch run; GPU batch blocked.
-5. P1-E Earth-Mars — reproduced; Earth-Dionysus (five revolutions) — gap, not converged.
-6. TOPS — pinned revision ingested, metadata selection frozen, supported two-body cases run;
-   MEE/CR3BP/solar-sail unsupported.
+2. P1-C Acikmese-Ploen 2007 / Blackmore 2010 Mars 3-DoF — reproduced: lossless SOCP 400.63 /
+   400.09 kg and the repository SCvx with the accurate option (variational RK4, multiple-shooting
+   merit, stall stop) 399.36 / 398.84 kg against 399.5 / 399.4 kg published (the frozen
+   forward-Euler default stays at 405.65 / 413.43 kg and is recorded as the before value);
+   pure-QOCO GPU leg deferred behind `spacepdhcg literature gpu-run` while the G4 session owns
+   the device.
+3. P1-D Szmuk-Acikmese 2018 free-final-time 6-DoF — reproduced on the independent CPU core
+   (t_f = 3.39008 UT) and on the NEW native `pd6_fft` topology (t_f = 3.39254 UT, envelope
+   0.01 UT); `pd3_fft`/`pd6_fft` CUDA coefficient kernels build for `sm_120`, their device
+   parity test is deferred until the G4 campaign releases the device. Frozen fixed-time
+   topologies and G4 policy hashes untouched.
+4. P1-D-MC Chari 2024 — seeded samples committed; CPU independent batch run; pure-QOCO
+   `pd6_fft` GPU batch deferred (preflight-gated); persistent device SCvx batch blocked.
+5. P1-E Earth-Mars — reproduced; Earth-Dionysus (five revolutions) — reproduced through the MEE
+   formulation with revolution bookkeeping and trust-weight continuation.
+6. TOPS — pinned revision ingested, metadata selection frozen; two-body cases run (P4 Cartesian,
+   P3 multirev and P1 highly-elliptic free-time through MEE); CR3BP/solar-sail unsupported.
 7. GTOPX — evaluator built from pinned source; best-known vectors verified.
 8. GTOC12 — official verifier reproduces published solution files; GTOC9 — official examples
    validate under re-implemented rules; GTOC5 — data pinned, scoring blocked.
 
-Track L does not modify sealed evidence, the G4 policy, or the native transcription topology.
+Track L does not modify sealed evidence, the G4 policy, or the frozen fixed-time native
+transcription topologies; its free-final-time variants are additive (`pd3_fft`, `pd6_fft`).
 
 ## Integration order
 
