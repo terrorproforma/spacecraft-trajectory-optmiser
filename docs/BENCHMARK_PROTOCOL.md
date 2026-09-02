@@ -146,6 +146,8 @@ For OrbitWeaver, report:
 - number of candidate arcs generated, screened, refined, cached, and rejected;
 - route-search nodes/labels/columns expanded;
 - final high-fidelity trajectory feasibility and resource margins.
+- official challenge score and validator status where a GTOC evaluator is used;
+- offline transfer-database generation time and declared human intervention.
 
 # Statistical procedure
 
@@ -171,6 +173,30 @@ The initial comparison set is:
 
 A solver may be omitted only with a recorded technical reason, such as unsupported cone type,
 unavailable build, or memory failure.
+
+# Comparative campaign and published evidence
+
+`docs/COMPARATIVE_SOLVER_CAMPAIGN.md` defines three Paper 1 comparison layers:
+
+1. byte-equivalent CQP data across conic backends;
+2. complete trajectory-optimisation systems on the same continuous physical problem;
+3. capability and scaling crossovers in horizon, scenarios, memory, and GPU count.
+
+The complete-system comparison set includes OpenSCvx, SCPToolbox or its maintained successor,
+SCvxGEN, CasADi with IPOPT, and pykep with IPOPT where each system supports the benchmark family.
+Exact revisions, configurations, and tuning budgets must be pinned before execution.
+
+Published literature may provide problem definitions, physical constants, analytic or best-known
+objectives, and released reference trajectories. Published wall-clock times are contextual only
+unless the code, hardware, precision, stopping criteria, timing boundary, and independently achieved
+quality are common. A direct speedup claim requires a common-hardware rerun.
+
+Every external datum is labelled `analytic`, `published-reference`, `reproduced-external`, or
+`measured-local` and registered in `benchmarks/literature_baselines.json`.
+
+GTOPX is retained as a secondary global mission-design track. Its low-dimensional black-box global
+search problems do not replace the repeated sparse CQP, end-to-end SCvx, low-thrust, or coupled
+robust-scenario campaigns.
 
 # Paper 1 experiment families
 
@@ -268,6 +294,18 @@ Sweep spacecraft count, depots, shared resources, service times, and target comp
 
 Attach scenario sets to promising arcs and routes. Measure the product of candidate-route and
 uncertainty parallelism, final risk, and computational effort allocation across fidelity levels.
+
+## P2-F — historical GTOC challenge replay
+
+Use preregistered reduced and full instances from GTOC5, GTOC9, and GTOC12. Archive the official
+problem statement, data, output format, evaluator, example solution, public reference solutions, and
+checksums. The official evaluator must validate every reported result.
+
+GTOC leaderboard and post-competition scores are solution-quality targets, not speed baselines.
+Direct runtime comparisons require rerunning an available implementation on common hardware and
+must include offline database generation and declared human intervention. GTOC11 and GTOC13 are
+deferred until their scheduling, mixed-propulsion, ballistic-flyby, and solar-sail requirements are
+supported.
 
 # Result storage
 

@@ -1,0 +1,98 @@
+{
+ "target_id": "gtoc9-example-validation",
+ "status": "reproduced",
+ "published": {
+  "example1_debris": [
+   23,
+   3,
+   51
+  ],
+  "example1_text": "contains a possibly valid mission able to remove the debris with ids 23, 3 and 51",
+  "cost_function": "J = sum_i [c_i + alpha (m_0i - m_dry)^2], c_i in [45, 55] MEUR during the competition, alpha = 2.0e-6 MEUR/kg^2",
+  "evidence_label": "published-reference"
+ },
+ "measured": {
+  "example1": {
+   "valid": true,
+   "debris_removed": [
+    3,
+    23,
+    51
+   ],
+   "mission_cost_min_meur": 64.7192,
+   "mission_cost_max_meur": 74.7192
+  },
+  "example2": {
+   "valid": true,
+   "debris_removed": [
+    38,
+    46,
+    103,
+    114
+   ],
+   "mission_cost_min_meur": 65.0978,
+   "mission_cost_max_meur": 75.0978
+  }
+ },
+ "gap": {},
+ "labels": {
+  "measured.example1": "measured-local",
+  "measured.example2": "measured-local"
+ },
+ "envelope": {
+  "evaluator": "local implementation of Kelvins rules 4-19 (no official offline evaluator exists)",
+  "propagator": "scipy DOP853 rtol 1e-12 on the official J2 equations"
+ },
+ "commands": [
+  "spacepdhcg literature run gtoc9-example-validation"
+ ],
+ "notes": [
+  "the official GTOC9 scoring ran on the Kelvins server; both official example submissions must validate under the re-implemented rules"
+ ],
+ "details": {
+  "example1": {
+   "valid": true,
+   "violations": [],
+   "debris_removed": [
+    3,
+    23,
+    51
+   ],
+   "initial_mass_kg": 5140.0,
+   "final_mass_kg": 3512.176670442413,
+   "propellant_mass_kg": 3050.0,
+   "mass_penalty_meur": 19.7192,
+   "mission_cost_min_meur": 64.7192,
+   "mission_cost_max_meur": 74.7192,
+   "max_rendezvous_position_error_m": 0.0002390343185534614,
+   "max_rendezvous_velocity_error_m_s": 2.4339178799214264e-07,
+   "max_propagation_position_error_m": 0.0011808226322486963,
+   "max_propagation_velocity_error_m_s": 1.1813134826176082e-06,
+   "lines": 7
+  },
+  "example2": {
+   "valid": true,
+   "violations": [],
+   "debris_removed": [
+    38,
+    46,
+    103,
+    114
+   ],
+   "initial_mass_kg": 5170.0,
+   "final_mass_kg": 4056.5829111199596,
+   "propellant_mass_kg": 3050.0,
+   "mass_penalty_meur": 20.0978,
+   "mission_cost_min_meur": 65.0978,
+   "mission_cost_max_meur": 75.0978,
+   "max_rendezvous_position_error_m": 0.0002265582102405873,
+   "max_rendezvous_velocity_error_m_s": 2.3498428540063198e-07,
+   "max_propagation_position_error_m": 0.00755317334989879,
+   "max_propagation_velocity_error_m_s": 1.1875425666416676e-06,
+   "lines": 8
+  }
+ },
+ "family": "P2-F",
+ "wall_seconds": 0.11612968299596105,
+ "support": "partial"
+}

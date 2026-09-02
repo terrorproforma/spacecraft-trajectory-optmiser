@@ -17,6 +17,70 @@
     "adaptive",
     "adaptive+polish"
   ],
+  "comparative_campaign": "docs/COMPARATIVE_SOLVER_CAMPAIGN.md",
+  "literature_baselines": "benchmarks/literature_baselines.json",
+  "comparison_layers": [
+    {
+      "id": "same-cqp",
+      "purpose": "isolate conic backend accuracy, persistence, latency, and memory",
+      "requires_common_problem_data": true,
+      "requires_common_hardware_for_speed": true,
+      "published_timing_use": "context_only"
+    },
+    {
+      "id": "end-to-end-system",
+      "purpose": "compare complete trajectory-optimisation systems at matched independently checked nonlinear quality",
+      "requires_common_problem_data": false,
+      "requires_common_physical_problem": true,
+      "requires_common_hardware_for_speed": true,
+      "published_timing_use": "context_only"
+    },
+    {
+      "id": "capability-scaling",
+      "purpose": "identify horizon, scenario, memory, and multi-GPU crossovers",
+      "requires_common_problem_data": false,
+      "requires_common_physical_problem": true,
+      "requires_common_hardware_for_speed": true,
+      "published_timing_use": "context_only"
+    }
+  ],
+  "system_baselines": [
+    {
+      "id": "openscvx",
+      "role": "open end-to-end CT-SCvx comparison",
+      "families": ["P1-B-hcw", "P1-C-pd3", "P1-D-pd6"],
+      "revision": null,
+      "required_before_run": "pin commit and archive configuration"
+    },
+    {
+      "id": "scptoolbox",
+      "role": "open reference SCP implementation",
+      "families": ["P1-C-pd3", "P1-D-pd6"],
+      "revision": null,
+      "required_before_run": "pin maintained repository revision and archive configuration"
+    },
+    {
+      "id": "scvxgen",
+      "role": "generated 6-DoF SCvx implementation",
+      "families": ["P1-D-pd6"],
+      "revision": null,
+      "required_before_run": "pin generator and generated-code revisions"
+    },
+    {
+      "id": "casadi-ipopt",
+      "role": "general direct-NLP end-to-end comparison",
+      "families": ["P1-B-hcw", "P1-C-pd3", "P1-D-pd6", "P1-E-low-thrust"],
+      "revision": null,
+      "required_before_run": "freeze transcription, dependency versions, options, and tuning budget"
+    },
+    {
+      "id": "pykep-ipopt",
+      "role": "TOPS low-thrust reference implementation",
+      "families": ["P1-E-low-thrust"],
+      "revision": null,
+      "required_before_run": "pin pykep, pygmo, IPOPT, TOPS JSON, and selected cases"
+    }
+  ],
   "solver_backends": [
     {
       "id": "clarabel-cpu",

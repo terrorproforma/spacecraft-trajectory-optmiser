@@ -39,14 +39,15 @@ EXIT_GPU_UNAVAILABLE = 66
 EXIT_INTERNAL = 70
 
 
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="spacepdhcg",
-        description=(
-            "SpacePDHCG trajectory planner (persistent single-GPU SCvx with CPU reference)."
-        ),
-    )
-    commands = parser.add_subparsers(dest="command", required=True)
+PLANNER_COMMANDS = ("plan", "validate", "capabilities", "defaults", "summary")
+
+
+def add_commands(commands: argparse._SubParsersAction) -> None:
+    """Attach the planner sub-commands to ``commands``.
+
+    Used by the umbrella :mod:`spacepdhcg.cli` dispatcher and by :func:`_parser`; each leaf
+    stores its handler in ``func`` so a single dispatcher can serve every track.
+    """
 
     run = commands.add_parser("plan", help="plan one problem document")
     run.add_argument("problem", type=Path, help="problem JSON (schema 1.0.0)")
@@ -82,23 +83,38 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--verbose", "-v", action="store_true", help="show progress and native diagnostics"
     )
+    run.set_defaults(func=command_plan)
 
     check = commands.add_parser(
         "validate", help="validate a problem document and print the canonical form"
     )
     check.add_argument("problem", type=Path)
     check.add_argument("--quiet", action="store_true", help="only report validity")
+    check.set_defaults(func=command_validate)
 
     caps = commands.add_parser("capabilities", help="report native executable and GPU availability")
     caps.add_argument("--executable", type=Path)
+    caps.set_defaults(func=command_capabilities)
 
     defaults = commands.add_parser("defaults", help="print the native family defaults")
     defaults.add_argument("family", choices=FAMILIES)
+    defaults.set_defaults(func=command_defaults)
 
     summary = commands.add_parser(
         "summary", help="print the summary of an existing plan-result.json"
     )
     summary.add_argument("result", type=Path)
+    summary.set_defaults(func=command_summary)
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="spacepdhcg",
+        description=(
+            "SpacePDHCG trajectory planner (persistent single-GPU SCvx with CPU reference)."
+        ),
+    )
+    add_commands(parser.add_subparsers(dest="command", required=True))
     return parser
 
 
@@ -242,15 +258,14 @@ def command_summary(arguments: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Planner-only entry point (``python -m spacepdhcg.planner.cli``).
+
+    The ``spacepdhcg`` console script routes through :func:`spacepdhcg.cli.main`, which mounts
+    the same sub-commands next to the other tracks.
+    """
+
     arguments = _parser().parse_args(argv)
-    handlers = {
-        "plan": command_plan,
-        "validate": command_validate,
-        "capabilities": command_capabilities,
-        "defaults": command_defaults,
-        "summary": command_summary,
-    }
-    return handlers[arguments.command](arguments)
+    return int(arguments.func(arguments))
 
 
 if __name__ == "__main__":  # pragma: no cover

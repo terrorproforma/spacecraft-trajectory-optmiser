@@ -49,6 +49,10 @@ See:
 
 - [`docs/PROJECT_BRIEF.md`](docs/PROJECT_BRIEF.md)
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/COMPARATIVE_SOLVER_CAMPAIGN.md`](docs/COMPARATIVE_SOLVER_CAMPAIGN.md)
+- [`docs/LITERATURE_TARGETS.md`](docs/LITERATURE_TARGETS.md)
+- [`docs/REFERENCE_REPRODUCTION_REPORT.md`](docs/REFERENCE_REPRODUCTION_REPORT.md)
+- [`docs/BENCHMARK_PROTOCOL.md`](docs/BENCHMARK_PROTOCOL.md)
 - [`docs/MILESTONES.md`](docs/MILESTONES.md)
 - [`docs/PDHCG_INTEGRATION.md`](docs/PDHCG_INTEGRATION.md)
 - [`docs/adr/0001-pdhcg-native-canonical-form.md`](docs/adr/0001-pdhcg-native-canonical-form.md)

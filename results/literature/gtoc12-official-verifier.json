@@ -1,0 +1,78 @@
+{
+ "target_id": "gtoc12-official-verifier",
+ "status": "reproduced",
+ "published": {
+  "note": "the portal publishes the solution files without an accompanying printed score; the official verifier output (ships, mined asteroids, total resource mass) is the reproducible quantity",
+  "evidence_label": "published-reference"
+ },
+ "measured": {
+  "bundled_result_example": {
+   "accepted": true,
+   "ships": 1,
+   "mined_asteroids": 0,
+   "total_resource_mass_kg": 0.0
+  },
+  "gtoc12.solution_37_self_cleaning": {
+   "accepted": true,
+   "ships": 37,
+   "mined_asteroids": 338,
+   "total_resource_mass_kg": 27045.3
+  },
+  "gtoc12.solution_39_mass_optimal": {
+   "accepted": true,
+   "ships": 39,
+   "mined_asteroids": 356,
+   "total_resource_mass_kg": 28975.1
+  }
+ },
+ "gap": {},
+ "labels": {
+  "measured.bundled_result_example": "reproduced-external",
+  "measured.gtoc12.solution_37_self_cleaning": "reproduced-external",
+  "measured.gtoc12.solution_39_mass_optimal": "reproduced-external"
+ },
+ "envelope": {
+  "evaluator": "official GTOC12 verification program (Linux binary, pinned)"
+ },
+ "commands": [
+  "spacepdhcg literature run gtoc12-official-verifier"
+ ],
+ "notes": [
+  "no route search run; official verifier accepted every file"
+ ],
+ "details": {
+  "bundled_result_example": {
+   "solution": "Result.txt",
+   "accepted": true,
+   "ships": 1,
+   "mined_asteroids": 0,
+   "total_resource_mass_kg": 0.0,
+   "stdout": "Check successfully!\nThe number of mining ships is 1 ;\nThe number of mined asteroids is 0 ;\nThe total resource mass is 0 kg.",
+   "wall_seconds": 0.041228566005884204,
+   "score_data_rows": 0
+  },
+  "gtoc12.solution_37_self_cleaning": {
+   "solution": "37_mass_optimal_self_cleaning.txt",
+   "accepted": true,
+   "ships": 37,
+   "mined_asteroids": 338,
+   "total_resource_mass_kg": 27045.3,
+   "stdout": "Check successfully!\nThe number of mining ships is 37 ;\nThe number of mined asteroids is 338 ;\nThe total resource mass is 27045.3 kg.",
+   "wall_seconds": 0.5772697200009134,
+   "score_data_rows": 338
+  },
+  "gtoc12.solution_39_mass_optimal": {
+   "solution": "39_mass_optimal.txt",
+   "accepted": true,
+   "ships": 39,
+   "mined_asteroids": 356,
+   "total_resource_mass_kg": 28975.1,
+   "stdout": "Check successfully!\nThe number of mining ships is 39 ;\nThe number of mined asteroids is 356 ;\nThe total resource mass is 28975.1 kg.",
+   "wall_seconds": 0.6158095560022048,
+   "score_data_rows": 356
+  }
+ },
+ "family": "P2-F",
+ "wall_seconds": 1.2896093719973578,
+ "support": "supported"
+}

@@ -1,0 +1,43 @@
+{
+  "id": "acikmese-ploen-2007-pd3",
+  "family": "P1-C-pd3",
+  "title": "Acikmese & Ploen 2007 Mars powered descent, fuel-optimal case with 4 deg glide slope, t_f = 81 s",
+  "source": {
+    "doi": "10.2514/1.27553",
+    "url": "https://doi.org/10.2514/1.27553",
+    "secondary_sources": [
+      "https://elib.dlr.de/118732/1/MasterthesisAWENZEL.pdf (Wenzel, DLR, reproduces the 2007 example and quotes its fuel values)",
+      "http://larsjamesblackmore.com/BlackmoreEtAlJGCD10.pdf (Blackmore, Acikmese, Scharf 2010 eq. 72, same vehicle constants)"
+    ]
+  },
+  "frame": "paper frame: x up, (y, z) horizontal; mapped to the repository z-up frame by paper_to_repository_state()",
+  "parameters": {
+    "gravity_mars_m_s2": 3.7114,
+    "wet_mass_kg": 1905.0,
+    "dry_mass_kg": 1505.0,
+    "specific_impulse_s": 225.0,
+    "standard_gravity_m_s2": 9.807,
+    "thruster_count": 6,
+    "thruster_max_thrust_n": 3100.0,
+    "cant_angle_deg": 27.0,
+    "throttle_min": 0.3,
+    "throttle_max": 0.8,
+    "glide_slope_deg": 4.0,
+    "initial_position_m": [1500.0, 0.0, 2000.0],
+    "initial_velocity_m_s": [-75.0, 0.0, 100.0],
+    "time_of_flight_s": 81.0,
+    "alpha_convention": "cant-corrected",
+    "final_thrust_vertical": false
+  },
+  "published": {
+    "fuel_used_kg": 399.5,
+    "fuel_used_text": "399.5",
+    "objective_convention": "propellant-used",
+    "evidence_label": "published-reference",
+    "extraction": "secondary-citation (Wenzel 2018 DLR thesis quoting Acikmese & Ploen 2007 Fig. results for t_f = 81 s with the 4 deg glide slope)",
+    "companion_case_no_glide_slope": {"time_of_flight_s": 72.0, "fuel_used_kg": 387.9, "fuel_used_text": "387.9"}
+  },
+  "envelope_dt_values": [1.0, 0.5],
+  "declared_envelope_kg": 2.0,
+  "acceptance_tolerance_kg": 2.0
+}

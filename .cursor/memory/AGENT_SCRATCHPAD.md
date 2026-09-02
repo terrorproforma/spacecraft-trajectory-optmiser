@@ -1290,3 +1290,130 @@ Use this file as persistent, repo-local execution memory.
   the device for a long time.
 - Pending GPU validation lives in `/home/angus/planner-scratch/gpu_validation.sh` stages
   (`tests`, `memcheck`, `sanitizers`, `examples`, `ctest`); run them serially when free.
+
+### 2026-09-03 02:35 AEST - Literature reference-reproduction track (feat/literature-targets)
+
+#### Task Summary
+
+- Imported the user's comparative-campaign spec as the first commit, then implemented campaign
+  Phase 0-1 as runnable targets: provenance store, pinned external sources, target registry,
+  `spacepdhcg literature` CLI, an independent CPU free-final-time SCvx core, and P1-C/P1-D/
+  P1-D-MC/P1-E/TOPS/GTOPX/GTOC reproductions with a generated reproduction report.
+
+#### Mistakes And Fixes
+
+- `[self]` `tr -d "\r"` inside `wsl -e bash -lc '...'` deleted every literal `r` from copied
+  files (double quotes are stripped by the Windows->WSL argument path). Detected by
+  `benchmaks/pape1_matix.json` in `git apply` output. Fix: never put quotes, `|`, `(` or
+  backslash escapes in inline `wsl` commands; write scripts with the Write tool to
+  `\\wsl.localhost\Ubuntu-22.04\tmp\*.sh`, strip CRLF once with PowerShell
+  `ReadAllText().Replace("`r`n","`n")`, then run everything through `/tmp/crlf-run.sh`.
+- `[self]` Files written through the UNC path carry CRLF; `/tmp/fix-crlf.sh` normalises every
+  modified/untracked text file before tests or commits (`.gitattributes` only covers two globs).
+- `[self]` The 2007 Mars profile with a hard dry-mass bound is infeasible at Delta t = 1 s (the
+  published solution uses 399.5 of 400 kg); the paper's convex problem bounds mass by
+  `m_wet - alpha rho2 t`. Detected by every SCvx candidate being rejected with virtual control.
+- `[self]` Replaying a constant-acceleration (lossless SOCP) control as constant thrust gave
+  37 m terminal errors; replay must hold `u = T/m`, not `T` (`replay_zoh(hold=...)`).
+- `[self]` `vars()` on `slots=True` dataclasses raises; use `dataclasses.asdict`.
+- `[self]` The user's P2-F family changed the Paper 2 matrix digest pinned by the G7 contracts
+  and the CPU ledger counts; resolved by enumerating both digests (sealed and extended) and
+  updating the frozen counts (2,648 -> 2,684; 16,324 -> 16,360), documented in the commit.
+
+#### User Preferences
+
+- `[user]` Deliver code and results, not plans; label every literature value; report gaps
+  honestly; never touch the integration or planner worktrees; back off the GPU when a G4
+  session owns it; no dataset commits above a few MB (pin by checksum + fetch script).
+
+#### What Worked
+
+- Reading paper text via ar5iv/arXiv HTML and open secondary sources (DLR thesis, Blackmore
+  2010 PDF) recovered every constant with digits; evaluating both `alpha` conventions settled the
+  formulation discrepancy (only `1/(Isp g0 cos phi)` reproduces 399.5/387.9 kg).
+- The independent FOH/STM free-final-time core reproduced Szmuk 2018 (ten guesses within
+  0.00054 UT) and Earth-Mars (603.925 vs 603.935 kg) without any repository transcription change.
+- GTOC12 official verifier runs headless from the pinned zip (`./GTOC12_Verify`, no arguments,
+  files named `Result.txt`/`GTOC12_Asteroids_Data.txt` in cwd).
+
+#### What Did Not Work
+
+- Earth-Dionysus (5 revolutions, 60.8 TU) did not converge with element-interpolation guesses,
+  hard trust regions, or thrust-bound homotopy; TOPS P3 (multirev) and P1 (free time) hit the
+  iteration limit. Needs a feasible spiral/shape-based guess or an MEE formulation.
+- The repository forward-Euler 3-DoF SCvx is 6-14 kg above the lossless optimum on the 2007/2010
+  profiles and stalls with the default virtual weight 1e5 (1e3 works better).
+
+#### Guardrails For Next Session
+
+- Regenerate `benchmarks/literature/provenance.json` after touching `pinned_values.py`
+  (`scripts/literature/build_provenance.py`; a test freezes it).
+- `spacepdhcg literature run all` needs `SPACEPDHCG_LITERATURE_CACHE` pointing at the verified
+  cache (`/home/angus/worktrees/spacepdhcg-literature-cache/raw`) and ~25 min on 16 cores.
+- Install `matplotlib` in any fresh venv before the full suite (paper1 G6 tests import it).
+
+#### Follow-Ups / Risks
+
+- P1-C pure-QOCO GPU leg and any P1-D-MC GPU batch remain blocked (device owned by the G4
+  session PID 471171 all night); the GPU 6-DoF path also lacks an arbitrary-initial-state entry.
+- Native/CUDA `sigma` (free final time) kernels are not implemented; doing so changes the frozen
+  CSC topology and G4 policy hashes and must be scheduled with a reseal.
+- This scratchpad is ~1,250 lines; roll it over (archive-first) at the next consolidation.
+
+### 2026-09-03 05:40 AEST - Literature gap closure (fuel gap, MEE multirev, native free final time)
+
+#### Task Summary
+
+- Closed the three gaps left by the reference reproduction on `feat/literature-targets`:
+  repository 3-DoF SCvx fuel gap (accurate discretisation option), multi-revolution low thrust
+  (MEE formulation), native free final time (`pd3_fft`/`pd6_fft` topologies, CUDA kernels built
+  but not executed), plus preflight-gated deferred GPU legs. Commits `d81c528`, `57cee5c`,
+  `1fa99ae`, `8e18b93` and the report commit after it.
+
+#### Mistakes And Fixes
+
+- `[self]` The 6-14 kg fuel gap was three coupled defects, not one: forward-Euler ZOH
+  discretisation (3.8 / 1.2 kg of it is the Euler *discrete optimum* itself), a single-shooting
+  merit that rejected every improving step once the rollout error dominated, and the frozen
+  virtual weight 1e5 with a stop that never fired. Fixing only the integrator left the solver
+  stalled; the multiple-shooting merit with a CQP-consistent defect penalty and an
+  objective-stall stop were required. Diagnose stall vs. optimum first (trace iterations).
+- `[self]` Blackmore 2010 module constant used the raw `alpha` while the profile document said
+  `cant-corrected`; only the profile document is authoritative - a test now freezes agreement.
+- `[self]` The Szmuk 2018 native reproduction converged to t_f ~ 2.97 UT because the attitude
+  tilt cone `|[q_x, q_y]| <= sqrt((1 - cos theta_max)/2)` was missing from `pd6_fft`, and the
+  glide-slope angle is measured from the horizontal in the paper but from the vertical in the
+  native model. Check every angle convention and every active constraint before tuning weights.
+- `[self]` Hard trust regions near feasibility: numerical noise in the defect term biased the
+  agreement ratio and collapsed the radius; zeroing the penalty below `defect_tolerance` fixed it.
+- `[self]` Default-argument binding (`command_line_of=_read_command_line`) defeated
+  monkeypatching in tests; resolve module-level callables lazily inside the function.
+- `[self]` Python `pytest.mark.slow` is not registered (`--strict-markers`); do not add markers.
+- `[tool]` PowerShell mangles quotes in `wsl -e bash -c "..."` (python -c, `$PATH`, heredocs);
+  write every non-trivial command to a `.sh`/`.py` under `%TEMP%`, `tr -d '\r'` it into `/tmp`,
+  and run that. `results/` is gitignored but tracked: `git add -f` for the record files.
+- `[self]` Central-difference sigma checks on the 6-DoF model are stiff under large direct
+  torque; use small torques in oracle tests rather than loosening tolerances.
+
+#### What Worked
+
+- Variational RK4 (exact Jacobian of the RK4 map, verified to 1e-9) plugged into the existing
+  fixed CSC pattern - the frozen Euler default and its fixture hashes are untouched; the accurate
+  path is an explicit option that the literature profiles select.
+- MEE with true-longitude revolution bookkeeping + Keplerian-spiral seed + trust-weight schedule
+  converged Dionysus (2717.43 vs 2718.33 kg) and TOPS P3/P1 where Cartesian SCvx never did.
+- Sigma-augmented variational RK4 as one shared header serves the C++ smoke tests, both
+  transcriptions and the CUDA kernel line by line, so CPU/GPU parity is structural.
+- The G4 preflight (`nvidia-smi` PIDs -> `/proc/<pid>/cmdline`) refused correctly all session.
+
+#### Guardrails / Follow-Ups
+
+- Deferred until `spacepdhcg literature gpu-preflight` passes (run serially): CUDA
+  `device_time_dilated_test`, one compute-sanitizer memcheck/racecheck pass over it,
+  `spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1
+  chari-2024-pd6-monte-carlo`.
+- The Chari CPU batch convergence probability is low (0-5 %) because the FOH core stops at the
+  iteration limit on dispersed initial states; that is the remaining P1-D-MC `gap`.
+- Rebuild the Release library (`SPACEPDHCG_NATIVE_LIBRARY`) before running
+  `tests/test_native_free_time.py`; it needs the `spacepdhcg_pd6_fft_create` symbol.
+- Scratchpad is ~1,330 lines; roll over (archive-first) at the next consolidation.
