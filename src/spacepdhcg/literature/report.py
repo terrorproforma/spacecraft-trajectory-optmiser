@@ -172,7 +172,12 @@ def _headline(record: dict[str, Any]) -> tuple[str, str, str]:
     tid = record["target_id"]
     if tid.endswith("pd3") or "pd3" in tid:
         gpu = measured.get("scvx_qoco_gpu_fuel_used_kg")
-        gpu_text = f"{_fmt(gpu)} kg (repo SCvx QOCO-GPU)" if gpu is not None else "GPU leg blocked"
+        if gpu is not None:
+            gpu_text = f"{_fmt(gpu)} kg (repo SCvx QOCO-GPU)"
+        elif measured.get("scvx_qoco_gpu_status") == "deferred":
+            gpu_text = "GPU leg deferred (G4 owns the device; `literature gpu-run`)"
+        else:
+            gpu_text = "GPU leg not run"
         return (
             f"{published.get('fuel_used_text', published.get('fuel_used_kg', '-'))} kg propellant",
             f"{_fmt(measured.get('lossless_fuel_used_kg', '-'))} kg (lossless SOCP); "
@@ -185,10 +190,19 @@ def _headline(record: dict[str, Any]) -> tuple[str, str, str]:
         ext = measured.get("extended_run", {})
         spread = _fmt(measured.get("time_of_flight_spread_ut", "-"))
         spread_gap = _fmt(gap.get("time_of_flight_spread_minus_published_ut", "-"))
+        native = measured.get("native_pd6_fft", {})
+        if "time_of_flight" in native:
+            native_text = (
+                f"; native pd6_fft t_f = {_fmt(native['time_of_flight'])} UT "
+                f"({native.get('status')}, gap vs core {_fmt(native.get('gap_vs_cpu_core_ut'))} UT)"
+            )
+        else:
+            native_text = f"; native pd6_fft {native.get('status', 'not run')}"
         return (
             f"t_f: figure-only; sweep spread <= {published.get('tf_guess_sweep_spread_ut')} UT; "
             f"{published.get('iterations_to_converge')} iterations",
-            f"t_f = {_fmt(ext.get('time_of_flight', '-'))} UT; sweep spread {spread} UT",
+            f"t_f = {_fmt(ext.get('time_of_flight', '-'))} UT; sweep spread {spread} UT"
+            + native_text,
             f"spread - published = {spread_gap} UT; t_f descriptive-only",
         )
     if "chari" in tid:
@@ -198,10 +212,23 @@ def _headline(record: dict[str, Any]) -> tuple[str, str, str]:
             f"{v['accepted_trajectories_per_second']:.2f} traj/s"
             for k, v in batches.items()
         )
+        gpu = measured.get("gpu_persistent_batch", {})
+        pure = gpu.get("pure_qoco_native_pd6_fft", {}) if isinstance(gpu, dict) else {}
+        if pure.get("status") == "measured":
+            gpu_text = "GPU pure-QOCO pd6_fft batch measured"
+        elif pure.get("status") == "deferred":
+            pre = pure.get("preflight") or {}
+            why = "G4 owns the device" if pre.get("g4_owned") else "preflight refused"
+            gpu_text = (
+                f"GPU pure-QOCO pd6_fft batch deferred ({why}; `literature gpu-run`); "
+                "device SCvx blocked"
+            )
+        else:
+            gpu_text = "GPU batch blocked / not run"
         return (
             "batch 256 demonstrated (no objective printed)",
             summary or "-",
-            "GPU batch blocked",
+            gpu_text,
         )
     if "tafazzol" in tid:
         best = measured.get("final_mass_kg_best")

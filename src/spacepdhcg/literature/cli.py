@@ -43,6 +43,33 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     provenance_parser = commands.add_parser("provenance", help="validate the provenance store")
     provenance_parser.set_defaults(func=_provenance)
 
+    preflight_parser = commands.add_parser(
+        "gpu-preflight",
+        help="report whether the literature GPU legs may run (refuses while G4 owns the device)",
+    )
+    preflight_parser.add_argument(
+        "--allow-shared",
+        action="store_true",
+        help="tolerate non-G4 compute processes on the device",
+    )
+    preflight_parser.set_defaults(func=_gpu_preflight)
+
+    gpu_run_parser = commands.add_parser(
+        "gpu-run",
+        help=(
+            "deferred GPU legs (P1-C pure-QOCO SCvx, P1-D-MC pure-QOCO batch): run the preflight, "
+            "refuse while the G4 session owns the RTX 5090, otherwise run the target with "
+            "run_gpu=true"
+        ),
+    )
+    gpu_run_parser.add_argument("targets", nargs="+", help="target ids")
+    gpu_run_parser.add_argument(
+        "--option", action="append", default=[], help="key=json-value passed to the runner"
+    )
+    gpu_run_parser.add_argument("--allow-shared", action="store_true")
+    gpu_run_parser.add_argument("--no-report", action="store_true")
+    gpu_run_parser.set_defaults(func=_gpu_run)
+
 
 def _list(arguments: argparse.Namespace) -> int:
     registry = load_target_registry()
@@ -111,6 +138,41 @@ def _report(arguments: argparse.Namespace) -> int:
     report.write_report(existing)
     print(f"report re-rendered: {report.REPORT_MD}")
     return 0
+
+
+#: Exit code of ``gpu-run`` / ``gpu-preflight`` when the device must not be used.
+GPU_REFUSED_EXIT_CODE = 3
+
+
+def _gpu_preflight(arguments: argparse.Namespace) -> int:
+    from spacepdhcg.literature.gpu_preflight import preflight
+
+    result = preflight(allow_shared=arguments.allow_shared)
+    print(json.dumps(result.as_dict(), indent=1))
+    return 0 if result.ok else GPU_REFUSED_EXIT_CODE
+
+
+def _gpu_run(arguments: argparse.Namespace) -> int:
+    from spacepdhcg.literature import report
+    from spacepdhcg.literature.gpu_preflight import preflight
+
+    gate = preflight(allow_shared=arguments.allow_shared)
+    print(json.dumps(gate.as_dict(), indent=1))
+    if not gate.ok:
+        print(f"GPU leg refused: {gate.reason}", file=sys.stderr)
+        return GPU_REFUSED_EXIT_CODE
+    options = _parse_options(arguments.option)
+    options["*"]["run_gpu"] = True
+    records = report.run_targets(list(arguments.targets), options=options)
+    for record in records:
+        print(json.dumps(report._compact(record), indent=1, default=report._json_default))
+    if not arguments.no_report:
+        existing = []
+        if report.REPORT_JSON.is_file():
+            existing = json.loads(report.REPORT_JSON.read_text(encoding="utf-8")).get("targets", [])
+        report.write_report(report.merge_records(existing, records))
+        print(f"report updated: {report.REPORT_MD}")
+    return 0 if all(r["status"] in {"reproduced", "descriptive-only"} for r in records) else 2
 
 
 def _provenance(arguments: argparse.Namespace) -> int:

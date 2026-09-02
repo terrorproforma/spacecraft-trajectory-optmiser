@@ -708,10 +708,22 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
                 key: value["fuel_used"] for key, value in scvx_by_dt.items() if "fuel_used" in value
             }
         if run_gpu:
+            from spacepdhcg.literature.gpu_preflight import preflight
+
+            gate = preflight(qoco_library=qoco_library)
             if not qoco_library:
                 scvx_records["qoco-gpu"] = {"error": "no QOCO GPU library configured"}
                 notes.append("GPU pure-QOCO SCvx skipped: SPACEPDHCG_QOCO_LIBRARY not set")
+            elif not gate.ok:
+                # Deferred: the G4 measured campaign (or another process) owns the device.
+                scvx_records["qoco-gpu"] = {"status": "deferred", "preflight": gate.as_dict()}
+                measured["scvx_qoco_gpu_status"] = "deferred"
+                notes.append(f"GPU pure-QOCO SCvx deferred by preflight: {gate.reason}")
+                commands.append(
+                    f"spacepdhcg literature gpu-run {document['id']}  # when the device is free"
+                )
             else:
+                scvx_records["qoco-gpu-preflight"] = gate.as_dict()
                 try:
                     gpu = solve_repository_scvx(
                         profile,
