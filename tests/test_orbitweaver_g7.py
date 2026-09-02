@@ -154,10 +154,13 @@ def test_frozen_paper2_matrix() -> None:
     matrix = load_frozen_paper2_matrix(
         Path(__file__).resolve().parents[1] / "benchmarks" / "paper2_matrix.json"
     )
-    assert [family["id"] for family in matrix["families"]] == [
+    # P2-F (historical GTOC replay) was appended by the comparative solver campaign
+    # specification; the frozen P2-A..P2-E prefix is unchanged.
+    assert [family["id"] for family in matrix["families"]][:5] == [
         "P2-A",
         "P2-B",
         "P2-C",
         "P2-D",
         "P2-E",
     ]
+    assert [family["id"] for family in matrix["families"]][5:] in ([], ["P2-F"])
