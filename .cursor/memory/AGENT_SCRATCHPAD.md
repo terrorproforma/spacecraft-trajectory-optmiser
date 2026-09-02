@@ -1234,3 +1234,32 @@ Use this file as persistent, repo-local execution memory.
   900 s). Their groups in that window are contaminated on my side. Fix: guard by *pid*
   (`gpu_free.sh`: `pgrep -f 'device_scvx_integration_test|--g4-session'` plus compute-app pids
   resolved through `ps`), and never run GPU work while it reports busy.
+- `[self]` Clarabel returns `AlmostSolved` on the badly scaled powered-descent CQPs and its
+  *absolute* KKT audit is ~1e-3 while the *relative* KKT audit is ~1e-8. The CPU reference
+  gates the relative audit (`PersistentClarabel.relative_kkt_residuals`) and records the
+  absolute value alongside; treat `AlmostSolved` like QOCO status 2 (usable candidate).
+- `[self]` SCvx convergence must also fire when a *rejected* candidate lies within the step
+  tolerance of a feasible retained reference (fixed point); otherwise convex families (HCW)
+  loop until the iteration budget with ratio noise.
+
+#### Task Summary (2026-09-03 04:10 AEST writeback)
+
+- Delivered `spacepdhcg plan` CLI + `spacepdhcg.planner.plan()` API, schema 1.0.0, native
+  `spacepdhcg_plan` executable, planner C ABI, CPU reference, viewer export, examples, tests, docs;
+  commit `27569ad` plus a follow-up commit on `feat/planner-cli`.
+
+#### What Worked
+
+- Reusing the frozen transcriptions through host adapters gave device/host coefficient parity
+  `1.6e-16` on the first certified GPU plan; the CPU reference and the pure-QOCO GPU plan agree to
+  `1e-7` in objective on the identical problem.
+- Compiling `cpp/src/c_api.cpp` on demand in `tests/conftest.py` keeps the CPU planner tests
+  independent of a wheel build.
+
+#### Guardrails For Next Session
+
+- Run `bash /home/angus/planner-scratch/gpu_free.sh` (pid-level) before *any* GPU command; the G4
+  claim-core campaign (`run_g4_campaign.py run --claim-core`) started ~03:54 AEST and will hold
+  the device for a long time.
+- Pending GPU validation lives in `/home/angus/planner-scratch/gpu_validation.sh` stages
+  (`tests`, `memcheck`, `sanitizers`, `examples`, `ctest`); run them serially when free.

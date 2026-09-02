@@ -919,5 +919,16 @@
 - Follow-up notes / risks:
   - My probes overlapped the other worker's `--g4-session` from ~01:40 to 02:07 AEST (see
     scratchpad); their groups in that window should be treated as contaminated.
-  - Remaining before final report: gated GPU tests for all four families, memcheck on
-    `spacepdhcg_plan`, CUDA CTest subset, once the GPU is free.
+  - Wheel check: `python -m build --wheel` + fresh venv install; `spacepdhcg validate`, `defaults`,
+    `plan --backend cpu_reference` (low thrust certified in 0.72 s) and the honest GPU-unavailable
+    exit 66 all passed from the packaged wheel (schema JSON packaged).
+  - Commit `27569ad` (planner), follow-up commit with summary rendering and memory writeback.
+  - BLOCKED (GPU occupied): from 01:26 AEST the other worker ran G4 claim-core sessions
+    (`device_scvx_integration_test --g4-session`), a deadline repro from 03:00, and at ~03:54 the
+    full `run_g4_campaign.py run --claim-core` campaign with two session processes. Waiting
+    windows: 02:07-03:11 and 03:11-04:06 with pid-level `gpu_free.sh` polling; the GPU never
+    became free. Not executed this session: `SPACEPDHCG_PLANNER_GPU_TESTS=1 pytest
+    tests/test_planner_gpu.py` (6-DoF and low-thrust GPU plans, warm start on GPU, backend
+    selection, native failure reporting), `compute-sanitizer --tool memcheck spacepdhcg_plan`,
+    and the CUDA CTest subset. `/home/angus/planner-scratch/gpu_validation.sh {tests,memcheck,
+    sanitizers,examples,ctest}` runs each stage after `gpu_free.sh` reports FREE.

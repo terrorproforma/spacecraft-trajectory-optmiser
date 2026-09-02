@@ -272,7 +272,17 @@ class PlanResult:
             f"{fmt(problem.get('horizon', {}).get('final_time'))} {units.get('time', 's')}, "
             f"step {fmt(problem.get('horizon', {}).get('step_seconds'))} s",
             f"- Initial state: {json.dumps(json_safe(problem.get('initial_state')))}",
-            f"- Terminal target: {json.dumps(json_safe(problem.get('terminal', {}).get('state')))}",
+            "- Terminal target (free components shown as `free`): "
+            + json.dumps(
+                [
+                    value if flag else "free"
+                    for value, flag in zip(
+                        json_safe(problem.get("terminal", {}).get("state", [])),
+                        problem.get("terminal", {}).get("fixed", []),
+                        strict=False,
+                    )
+                ]
+            ),
             f"- Terminal fixed flags: {json.dumps(problem.get('terminal', {}).get('fixed'))}",
             f"- Canonical units: {json.dumps(units)}",
             "",
