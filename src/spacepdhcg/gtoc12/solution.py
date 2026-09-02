@@ -26,6 +26,7 @@ from .constants import (
 
 FloatArray = NDArray[np.float64]
 FLYBY_EVENTS = frozenset({EVENT_VENUS_FLYBY, EVENT_EARTH_FLYBY, EVENT_MARS_FLYBY})
+EARTH_ID_EVENT = EVENT_LAUNCH
 
 
 class SolutionFormatError(ValueError):
