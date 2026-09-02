@@ -197,14 +197,18 @@ def test_contamination_monitor_excludes_own_descendants_and_nvidia_smi(
     tmp_path: Path,
 ) -> None:
     monitor = RUNNER.GpuContaminationMonitor(host_nvidia_smi=None, interval_seconds=0.01)
-    child = subprocess.Popen(["sleep", "30"])
+    child = subprocess.Popen(["sleep", "30"], env={**os.environ, "CUDA_VISIBLE_DEVICES": ""})
+    enabled = subprocess.Popen(["sleep", "30"], env={**os.environ, "CUDA_VISIBLE_DEVICES": "0"})
     try:
         assert monitor._is_own(child.pid)
         assert monitor._is_own(os.getpid())
         assert not monitor._is_own(1)
+        assert monitor._cuda_disabled(child.pid) is True
+        assert monitor._cuda_disabled(enabled.pid) is False
     finally:
-        child.kill()
-        child.wait()
+        for process in (child, enabled):
+            process.kill()
+            process.wait()
 
 
 class _ForeignMonitor(RUNNER.GpuContaminationMonitor):
@@ -218,9 +222,23 @@ class _ForeignMonitor(RUNNER.GpuContaminationMonitor):
         return {"at": "t", "compute_apps": []}
 
     def dxg_holders(self) -> list[dict[str, object]]:
+        cpu_only = {
+            "pid": 88888,
+            "comm": "python",
+            "cmdline": "python cpu_only_job.py",
+            "cuda_disabled": True,
+        }
         if self.watching:
-            return [{"pid": 99999, "comm": "ctest", "cmdline": "ctest --test-dir foreign"}]
-        return []
+            return [
+                {
+                    "pid": 99999,
+                    "comm": "ctest",
+                    "cmdline": "ctest --test-dir foreign",
+                    "cuda_disabled": False,
+                },
+                cpu_only,
+            ]
+        return [cpu_only]
 
     def start(self) -> None:
         self.watching = True
@@ -272,8 +290,10 @@ def test_contaminated_group_is_quarantined_with_evidence_and_retryable(tmp_path:
         run_directory = tmp_path / "campaign" / "runs" / claim.coordinate_id / claim.attempt_id
         evidence = json.loads((run_directory / "gpu-contamination.json").read_text())
         assert evidence["foreign_detected"] is True
-        assert evidence["during"]["wsl_foreign_processes"][0]["pid"] == 99999
+        assert [row["pid"] for row in evidence["during"]["wsl_foreign_processes"]] == [99999]
+        assert [row["pid"] for row in evidence["during"]["wsl_cuda_disabled_holders"]] == [88888]
         assert evidence["before"]["foreign"] is False and evidence["after"]["foreign"] is False
+        assert evidence["before"]["wsl_cuda_disabled_holders"][0]["pid"] == 88888
         result = json.loads((run_directory / "result.json").read_text())
         assert result["gpu_contamination"]["foreign_detected"] is True
         assert (run_directory / "stdout.jsonl").is_file()

@@ -428,9 +428,34 @@ class GpuContaminationMonitor:
             if comm == "nvidia-smi" or self._is_own(pid):
                 continue
             holders.append(
-                {"pid": pid, "comm": comm, "cmdline": cmdline.decode(errors="replace")[:300]}
+                {
+                    "pid": pid,
+                    "comm": comm,
+                    "cmdline": cmdline.decode(errors="replace")[:300],
+                    "cuda_disabled": self._cuda_disabled(pid),
+                }
             )
         return holders
+
+    @staticmethod
+    def _cuda_disabled(pid: int) -> bool:
+        """True when the holder's environment hides every CUDA device from it.
+
+        WSL2 processes open ``/dev/dxg`` as soon as the CUDA driver initialises, even when
+        ``CUDA_VISIBLE_DEVICES`` is empty and no kernel can ever reach the GPU. Such holders are
+        retained as evidence but are not foreign compute. An unreadable environment is treated
+        conservatively as CUDA-enabled.
+        """
+
+        try:
+            environment = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+        except OSError:
+            return False
+        for item in environment:
+            if item.startswith(b"CUDA_VISIBLE_DEVICES="):
+                value = item.split(b"=", 1)[1].strip().lower()
+                return value in {b"", b"-1", b"none", b"nodevfiles"}
+        return False
 
     def host_compute_contexts(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str]:
         if self.host_nvidia_smi is None:
@@ -444,10 +469,16 @@ class GpuContaminationMonitor:
 
         probe: dict[str, Any] = {"at": self._now(), "monotonic": time.monotonic()}
         try:
-            probe["wsl_foreign_processes"] = self.dxg_holders()
+            holders = self.dxg_holders()
         except OSError as error:
-            probe["wsl_foreign_processes"] = []
+            holders = []
             probe["dxg_error"] = str(error)
+        probe["wsl_foreign_processes"] = [
+            holder for holder in holders if not holder.get("cuda_disabled")
+        ]
+        probe["wsl_cuda_disabled_holders"] = [
+            holder for holder in holders if holder.get("cuda_disabled")
+        ]
         try:
             active, idle, _ = self.host_compute_contexts()
             probe["host_active_compute_processes"] = active
@@ -496,21 +527,26 @@ class GpuContaminationMonitor:
             self._samples.append(self.probe())
         samples = list(self._samples)
         wsl: dict[int, dict[str, Any]] = {}
+        wsl_disabled: dict[int, dict[str, Any]] = {}
         host_active: dict[int, dict[str, Any]] = {}
         host_idle: dict[int, dict[str, Any]] = {}
         for sample in samples:
-            for process in sample.get("wsl_foreign_processes", []):
-                entry = wsl.setdefault(
-                    process["pid"],
-                    {
-                        **process,
-                        "first_seen": sample["at"],
-                        "last_seen": sample["at"],
-                        "samples": 0,
-                    },
-                )
-                entry["last_seen"] = sample["at"]
-                entry["samples"] += 1
+            for key, table in (
+                ("wsl_foreign_processes", wsl),
+                ("wsl_cuda_disabled_holders", wsl_disabled),
+            ):
+                for process in sample.get(key, []):
+                    entry = table.setdefault(
+                        process["pid"],
+                        {
+                            **process,
+                            "first_seen": sample["at"],
+                            "last_seen": sample["at"],
+                            "samples": 0,
+                        },
+                    )
+                    entry["last_seen"] = sample["at"]
+                    entry["samples"] += 1
             for process in sample.get("host_active_compute_processes", []):
                 entry = host_active.setdefault(
                     process["pid"],
@@ -545,6 +581,9 @@ class GpuContaminationMonitor:
         return {
             "foreign_detected": bool(wsl or host_active),
             "wsl_foreign_processes": sorted(wsl.values(), key=lambda item: item["pid"]),
+            "wsl_cuda_disabled_holders": sorted(
+                wsl_disabled.values(), key=lambda item: item["pid"]
+            ),
             "host_active_compute_processes": sorted(
                 host_active.values(), key=lambda item: item["pid"]
             ),
@@ -1106,10 +1145,11 @@ def execute_group(
             or contamination["after"].get("foreign")
         )
         contamination["rule"] = (
-            "foreign VM /dev/dxg holder present, or host compute-only context with non-zero "
-            "SM/memory utilization, at any sample from the pre-group boundary through the "
-            "post-group boundary censors the whole group as contaminated; idle host contexts "
-            "are recorded but do not censor"
+            "foreign VM /dev/dxg holder with CUDA devices visible, or host compute-only context "
+            "with non-zero SM/memory utilization, at any sample from the pre-group boundary "
+            "through the post-group boundary censors the whole group as contaminated; idle host "
+            "contexts and holders whose CUDA_VISIBLE_DEVICES hides every device are recorded "
+            "but do not censor"
         )
         atomic_create(
             run_directory / "gpu-contamination.json",
