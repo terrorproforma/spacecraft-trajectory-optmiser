@@ -16,7 +16,12 @@ from numpy.typing import NDArray
 
 from spacepdhcg.backends import PersistentClarabel
 from spacepdhcg.backends.base import PersistentCQPBackend
-from spacepdhcg.cqp import CQPSolution, CanonicalCQP, CQPValues
+from spacepdhcg.cqp import (
+    CQPSolution,
+    CanonicalCQP,
+    CanonicalResidualAudit,
+    CQPValues,
+)
 from spacepdhcg.models.powered_descent_3dof import (
     CONTROL_DIMENSION,
     STATE_DIMENSION,
@@ -111,6 +116,12 @@ class SCvxIterationRecord:
     solver_iterations: int
     primal_residual: float
     dual_residual: float
+    objective: float
+    independent_primal_residual: float
+    independent_dual_residual: float
+    independent_natural_residual: float
+    independent_cone_residual: float
+    independent_complementarity: float
     setup_seconds: float
     solve_seconds: float
     trust_radius_before: float
@@ -161,6 +172,7 @@ class PoweredDescentSCvxResult:
 @dataclass(frozen=True, slots=True)
 class _Candidate:
     solution: CQPSolution
+    independent_audit: CanonicalResidualAudit
     setup_seconds: float
     states: FloatArray
     controls: FloatArray
@@ -578,6 +590,12 @@ class PoweredDescentSCvxSolver:
             solution = backend.solve()
         if solution.primal.shape != (self.subproblem.layout.n_variables,):
             raise RuntimeError("backend returned an invalid primal vector")
+        audit_method = getattr(backend, "independent_residuals", None)
+        independent_audit = (
+            audit_method(solution.primal)
+            if callable(audit_method)
+            else CanonicalResidualAudit(*(float("inf"),) * 5)
+        )
         states, controls, virtual, _ = self.subproblem.decode(solution.primal)
         convex_diagnostics = self.subproblem.diagnostics(solution.primal, values)
         step_fraction = self._step_fraction(
@@ -652,6 +670,7 @@ class PoweredDescentSCvxSolver:
         )
         return _Candidate(
             solution=solution,
+            independent_audit=independent_audit,
             setup_seconds=setup_seconds,
             states=states,
             controls=controls,
@@ -689,6 +708,12 @@ class PoweredDescentSCvxSolver:
             solver_iterations=candidate.solution.iterations,
             primal_residual=candidate.solution.primal_residual,
             dual_residual=candidate.solution.dual_residual,
+            objective=candidate.solution.objective,
+            independent_primal_residual=candidate.independent_audit.primal,
+            independent_dual_residual=candidate.independent_audit.dual,
+            independent_natural_residual=candidate.independent_audit.natural,
+            independent_cone_residual=candidate.independent_audit.cone,
+            independent_complementarity=candidate.independent_audit.complementarity,
             setup_seconds=candidate.setup_seconds,
             solve_seconds=candidate.solution.solve_seconds,
             trust_radius_before=trust_update.radius_before,

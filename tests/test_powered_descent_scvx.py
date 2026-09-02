@@ -107,6 +107,12 @@ def test_outer_loop_records_tolerance_trust_and_reduction_evidence() -> None:
     assert record.trust_radius_after > 0.0
     assert np.isfinite(record.predicted_reduction)
     assert np.isfinite(record.actual_reduction)
+    assert np.isfinite(record.objective)
+    assert np.isfinite(record.independent_primal_residual)
+    assert np.isfinite(record.independent_dual_residual)
+    assert np.isfinite(record.independent_natural_residual)
+    assert np.isfinite(record.independent_cone_residual)
+    assert np.isfinite(record.independent_complementarity)
     assert payload["phase"] in {"exploration", "convergence", "polish"}
     assert isinstance(payload["residual"], dict)
 

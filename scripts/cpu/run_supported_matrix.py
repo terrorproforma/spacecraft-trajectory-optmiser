@@ -436,41 +436,75 @@ def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
         initial_dispersion_scale=float(parameters["initial_dispersion_scales"]),
         final_polish=bool(parameters["final_polish"]),
     )
-    residual = float(payload["final_outer_residual"])
     polish = payload["polish"]
+    optimizer = payload["accepted_optimizer"]
+    if optimizer is None:
+        primal = dual = natural = cone = None
+        optimizer_residual = None
+        virtual_control = float(payload["maximum_virtual_control"])
+        qualified = False
+        disposition = "unqualified"
+    else:
+        primal = float(optimizer["independent_primal_residual"])
+        dual = float(optimizer["independent_dual_residual"])
+        natural = float(optimizer["independent_natural_residual"])
+        cone = float(optimizer["independent_cone_residual"])
+        optimizer_residual = optimizer["residual"]
+        virtual_control = float(optimizer["convex_diagnostics"]["virtual_control_inf"])
+        qualified = (
+            bool(payload["converged"])
+            and max(primal, dual, natural, cone) <= 1.0e-7
+            and max(
+                float(optimizer_residual["dynamics"]),
+                float(optimizer_residual["path"]),
+                float(optimizer_residual["terminal"]),
+                float(payload["path_violation"]),
+                virtual_control,
+            )
+            <= 1.0e-5
+        )
+        disposition = "executed" if qualified else "numerical"
     return _base(
         coordinate,
-        "unqualified",
-        "nonlinear CPU SCvx and independent replay executed with the requested dispersion and "
-        "optional final polish; polished CQP and outer nonlinear metrics describe different "
-        "decisions, so combined publication qualification fails closed",
+        disposition,
+        "nonlinear CPU SCvx with per-iterate actual Clarabel dual/KKT audit, trust/forcing "
+        "telemetry, and same-decision nonlinear replay; retained references without an accepted "
+        "optimizer iterate remain unqualified",
         "PoweredDescentSCvxSolver",
         "cpu_solver_and_replay",
         _dimensions(intervals, variables=(intervals + 1) * 7 + intervals * 18),
         {
             **_null_quality(str(payload["status"])),
-            "objective": float(payload["final_merit"]),
-            "canonical_primal_residual": (
-                residual if polish is None else float(polish["independent_primal_residual"])
+            "objective": (
+                float(payload["final_merit"])
+                if optimizer is None
+                else float(optimizer["objective"])
             ),
-            "canonical_dual_residual": (
-                None if polish is None else float(polish["independent_dual_residual"])
+            "canonical_primal_residual": primal,
+            "canonical_dual_residual": dual,
+            "canonical_natural_residual": natural,
+            "canonical_cone_residual": cone,
+            "dynamics_residual": (
+                float(payload["final_dynamics_residual"])
+                if optimizer_residual is None
+                else float(optimizer_residual["dynamics"])
             ),
-            "canonical_natural_residual": (
-                None if polish is None else float(polish["independent_natural_residual"])
+            "path_residual": (
+                float(payload["final_path_residual"])
+                if optimizer_residual is None
+                else float(optimizer_residual["path"])
             ),
-            "canonical_cone_residual": (
-                None if polish is None else float(polish["independent_cone_residual"])
+            "terminal_residual": (
+                float(payload["final_terminal_residual"])
+                if optimizer_residual is None
+                else float(optimizer_residual["terminal"])
             ),
-            "dynamics_residual": float(payload["final_dynamics_residual"]),
-            "path_residual": float(payload["final_path_residual"]),
-            "terminal_residual": float(payload["final_terminal_residual"]),
             "continuous_time_violation": float(payload["path_violation"]),
-            "virtual_control_residual": float(payload["maximum_virtual_control"]),
+            "virtual_control_residual": virtual_control,
             "nonanticipativity_residual": 0.0,
             "risk_epigraph_residual": 0.0,
-            "certified": bool(payload["converged"]),
-            "qualified": False,
+            "certified": qualified,
+            "qualified": qualified,
         },
         {
             **_null_work(),
@@ -478,8 +512,9 @@ def _pd3(coordinate: dict[str, Any]) -> dict[str, Any]:
             "accepted_steps": int(payload["accepted_iterations"]),
             "rejected_steps": int(payload["outer_iterations"])
             - int(payload["accepted_iterations"]),
-            "forcing_satisfied": bool(payload["converged"]),
+            "forcing_satisfied": qualified,
             "polish_used": polish is not None,
+            "outer_telemetry": payload["iterations"],
         },
         [float(payload["total_solve_seconds"]) / MEASURED] * MEASURED,
         time.perf_counter() - started,
@@ -677,6 +712,7 @@ def _robust(coordinate: dict[str, Any]) -> dict[str, Any]:
                 - int(payload["accepted_outer_iterations"]),
                 "forcing_satisfied": qualified,
                 "polish_used": False,
+                "outer_telemetry": payload["outer_telemetry"],
             },
             durations,
             time.perf_counter() - started,
