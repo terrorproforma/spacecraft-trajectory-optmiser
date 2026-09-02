@@ -1034,3 +1034,94 @@
     test, sanitizer pass, and both literature GPU legs deferred behind the preflight.
   - P1-D-MC CPU batch convergence probability stays low (FOH core iteration limit on dispersed
     states); persistent device SCvx batch still has no arbitrary-initial-state entry point.
+
+## 2026-09-03 02:40 AEST
+
+- Task summary:
+  - GTOC12 replay track end-to-end on `feat/gtoc12-asteroid-mining` (worktree
+    `/home/angus/worktrees/spacepdhcg-gtoc12`, base `96781349`, CPU only).
+- Changes:
+  - `benchmarks/gtoc12/`: `pins.json` (URLs, sizes, SHA-256 for nine official files),
+    `gtoc12_rules.json` (machine-readable rules), `reduced_instance_v1.json` (preregistered rule).
+  - `scripts/gtoc12/fetch_gtoc12_data.py`: checksummed fetch into the ignored data directory.
+  - `src/spacepdhcg/gtoc12/`: constants, data, ephemeris, solution format, independent verifier,
+    official-binary wrapper, Lambert (NumPy port + native ctypes parity), screening, reduced
+    instance, beam search, ZOH SCvx low-thrust arcs, G7-adapter pipeline, viewer export, CLI.
+  - `spacepdhcg` console script (`spacepdhcg gtoc12 verify|fetch|reduced-instance|run|export-viewer`).
+  - Imported the user's `docs/COMPARATIVE_SOLVER_CAMPAIGN.md` and `benchmarks/literature_baselines.json`.
+- Validation:
+  - Official verifier on archived references: 39/356/28975.1 kg, 37/338/27045.3 kg,
+    36/320/26062.6 kg; independent verifier reproduces every per-asteroid mass to 0.0 kg and the
+    fixed-bonus weighted scores (24474.15 for the 39-ship file vs published 24474.16).
+  - Lambert NumPy vs native kernel: 1e-13 km/s over 300 short/long-way legs.
+  - First pipeline route (reduced instance, 2 asteroids): official "Check successfully!"
+    195.044 kg; independent 195.04449 kg, max propagation error 0.91 km / 0.15 mm/s.
+  - Ruff clean; 24 fast GTOC12 tests pass; full suite launched in background.
+- Follow-up notes / risks:
+  - Reduced-instance search currently completes mostly one- and two-asteroid chains.
+  - Full-catalogue screening and docs/GTOC12_TRACK.md are the next commits.
+
+## 2026-09-03 03:35 AEST
+
+- Task summary:
+  - Fixed the route search and emitter, then produced officially verified GTOC12 solutions on the
+    preregistered reduced instance and on the full catalogue.
+- Changes:
+  - `search.py`: phase-drift-aware neighbour proxy, deploy waits, 600-day return/collection
+    windows, return-feasibility pruning, per-set diversity, vectorised first level.
+  - `pipeline.py`: camp-then-collect visits emit a single collect event at departure.
+  - `verifier.py`: 1 uN thrust slack (JPL reference file), 1 uday sample-interval slack.
+  - `docs/GTOC12_TRACK.md`, `benchmarks/gtoc12/reference_reproductions.json`, committed compact
+    result artifacts under `results/gtoc12/`.
+- Validation:
+  - Official verifier: reduced-v1-run2 1 ship / 4 asteroids / 253.744 kg (fixed bonus 249.059 kg),
+    47 s wall, 8 refined arcs; full-catalogue-run1 1 / 3 / 249.035 kg (fixed bonus 202.995 kg),
+    963 s wall; reduced-v1-run1 1 / 2 / 195.044 kg.
+  - Independent verifier agrees per asteroid to 1e-10 kg; max propagation error 0.46 km, 8e-5 m/s.
+  - Full pytest: 341 passed, 4 skipped, 1 environmental failure (native wheel absent); GTOC12
+    verifier tests (all three reference reproductions) pass after the thrust-slack fix.
+- Follow-up notes / risks:
+  - Scores are ~1/3 of a single archived reference ship; the search, not the refinement, is the
+    bottleneck at catalogue scale.
+
+## 2026-09-03 04:50 AEST
+
+- Task summary:
+  - Raised the officially verified GTOC12 scores by rebuilding the route search around the
+    structure of the archived JPL/Antipodes solutions, adding greedy fleets and bounded memory.
+- Changes:
+  - `gtoc12/references.py`: decode any solution file into per-ship itineraries and fleet
+    statistics (roles from global visit order, TOF/propellant/transfer angle/revolutions,
+    cooperative vs self-cleaning, launch spread, element spreads).
+  - `gtoc12/proxies.py`: Lambert-free phasing/Edelbaum ΔV pre-ranker (e/i vectors) and a
+    mass-consistent thrust-authority test; `scripts/gtoc12/proxy_validation.py` writes the
+    proxy-error distributions on 164 certified legs and 1882 reference hops.
+  - `gtoc12/search.py`: position-space candidate generation (Δa, Δe-vector, relative
+    inclination, phase at departure), element-band pool filter with sparse fallback,
+    collect-phase propellant reserve, greedy backward collection order with reverse fallback and
+    escalating wait penalty, separate collect-hop TOF grid (90-720 d), per-first-asteroid
+    diversity, block-wise Earth-leg screening, wall-clock budget with partial results, failure
+    reasons retained, asteroid exclusion for fleets.
+  - `gtoc12/fleet.py` + `cli.py --ships/--search-budget-seconds/--pool-*`: greedy fleet
+    construction, fleet-rule check, assembled multi-ship file verified as a whole, failed-leg
+    skipping across refine candidates, peak-RSS reporting.
+  - `docs/GTOC12_TRACK.md`: reference-structure table, proxy validation table, results table,
+    rejected variants, limitations and next bottleneck.
+- Validation:
+  - Official `GTOC12_Verify` "Check successfully!" on every emitted file; independent verifier
+    agrees per asteroid to 1e-10 kg.
+  - reduced-v1: 314.442 kg (5 asteroids, 10 arcs, 228 s, 0.55 GB) — was 253.744 kg.
+  - full catalogue single ship: 548.282 kg (8 asteroids, 16 arcs, 303 s, 0.66 GB) — was 249.035 kg
+    at 11.2 GB.
+  - 3-ship greedy fleet: 1394.11 kg (548.28 + 442.22 + 403.61; 20 asteroids, 40 arcs, 867 s,
+    0.77 GB; fixed-bonus 1318.12 kg; rule 3 ≤ 12.8).
+  - Proxies: refined/proxy propellant median 0.96 (p5 0.66, p95 1.08); refined/Lambert ΔV
+    median 1.165 (p95 1.49); reference true/Lambert 1.16 (p95 1.41), Spearman 0.90.
+  - `pytest`: 349 passed, 4 skipped (native packaging test deselected: no cmake wheel); Ruff clean.
+- Follow-up notes / risks:
+  - Chains stop at 8 asteroids because the collection tour no longer fits the window
+    (`camp_negative`), with 230-430 kg propellant unspent; cluster-first generation and joint
+    re-timing are the next levers. Greedy fleets thin the clusters for ships 2-3.
+  - `full_catalogue_search2` and `fleet3_full_catalogue` artifacts come from an intermediate
+    commit state (documented); `reduced_v1_search3` and `fleet3_full_catalogue_v2` reproduce from
+    HEAD.

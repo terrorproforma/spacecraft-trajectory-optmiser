@@ -558,3 +558,8 @@ reproduced/gap/descriptive-only/unsupported/blocked outcome. The provenance stor
 `benchmarks/literature/provenance.json` carries the evidence label of every literature value used
 above, and `benchmarks/literature/targets.json` is the registry consumed by the tests and by
 `spacepdhcg literature run <id>`.
+
+The GTOC12 replay track of P2-F is implemented on `feat/gtoc12-asteroid-mining`; see
+`docs/GTOC12_TRACK.md` for the pinned official data, the exact independent verifier, the
+preregistered reduced instance, and the officially verified routes driven by
+`spacepdhcg gtoc12 ...`.

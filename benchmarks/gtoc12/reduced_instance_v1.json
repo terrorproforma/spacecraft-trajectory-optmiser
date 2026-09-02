@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "instance_id": "gtoc12-reduced-v1",
+  "defined_utc": "2026-09-02T16:05:00Z",
+  "defined_before_any_search": true,
+  "catalogue": {
+    "file": "GTOC12_Asteroids_Data.txt",
+    "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675"
+  },
+  "selection": {
+    "eligibility": {
+      "description": "metadata-only filter on the catalogue elements; keeps the low-inclination, low-eccentricity main-belt core where low-thrust hops are physically plausible",
+      "max_inclination_deg": 6.0,
+      "max_eccentricity": 0.2,
+      "semi_major_axis_au": [2.5, 3.2]
+    },
+    "rank_key": "SHA-256 of the UTF-8 string 'gtoc12-reduced-v1:<asteroid_id>' interpreted as a big-endian 256-bit unsigned integer",
+    "count": 1000,
+    "rule": "sort eligible asteroid IDs by rank_key ascending and keep the first 1000; ties are impossible in practice and would be broken by ascending ID"
+  },
+  "fleet": {
+    "ships": 1,
+    "note": "single-ship instance; the official fleet-size rule N <= min(100, 2 exp(rho M_bar)) is still evaluated and must hold"
+  },
+  "window": {
+    "start_mjd": 64328,
+    "end_mjd": 69807,
+    "note": "full official window; no subset"
+  },
+  "dynamics_and_rules": "official GTOC12 dynamics, ship parameters, mining rules, tolerances and verifier semantics are unchanged; only the candidate asteroid set and ship count are restricted",
+  "scoring": {
+    "primary": "unweighted collected mass returned to Earth (official offline verifier output)",
+    "secondary": "fixed post-competition bonus-weighted mass using bonus_coefficients.txt",
+    "official_verifier_required": true
+  }
+}

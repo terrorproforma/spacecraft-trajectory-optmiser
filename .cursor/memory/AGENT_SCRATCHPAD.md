@@ -1417,3 +1417,153 @@ Use this file as persistent, repo-local execution memory.
 - Rebuild the Release library (`SPACEPDHCG_NATIVE_LIBRARY`) before running
   `tests/test_native_free_time.py`; it needs the `spacepdhcg_pd6_fft_create` symbol.
 - Scratchpad is ~1,330 lines; roll over (archive-first) at the next consolidation.
+
+### 2026-09-03 02:40 AEST - GTOC12 replay track (feat/gtoc12-asteroid-mining)
+
+#### Task Summary
+
+- Built the GTOC12 "Sustainable Asteroid Mining" track: pinned official data + verifier,
+  independent verifier reproducing official scores exactly, ephemeris, format, Lambert parity,
+  preregistered reduced instance, beam search, CPU SCvx arc refinement through the G7 adapters,
+  official-format emission, and a first officially verified solution.
+
+#### Mistakes And Fixes
+
+- `[model]` SCvx first propagated mass with the interpolated cone slack while the verifier uses
+  |T(t)| of the interpolated vector; 0.044 kg drift over 900 days moved the endpoint 3100 km.
+  Fix: nonlinear model uses |T(t)|; the linearisation keeps the Gamma channel (lossless surrogate,
+  well defined at a coasting reference).
+- `[model]` Cubic-Lagrange emission of bang-bang thrust creates |T(t)| kinks the organisers'
+  RKF78 integrates differently (official Error201 at 3143 km while our DOP853 model saw 1.9 km).
+  Fix: zero-order-hold transcription, one constant-thrust arc per segment (JPL's file uses the
+  same structure); official and independent verifiers then agree to 0.9 km.
+- `[bug]` `linearise` allocated the control sensitivity with the 4-node stencil in ZOH mode and
+  einsum silently broadcast the size-1 axis, corrupting the affine term; every SCvx step was
+  rejected. Fix: size the array from `stencils.shape[1]`.
+- `[bug]` Safeguarded universal-variable Kepler solver bisected with the stale bracket, so the
+  multi-revolution case "converged" at the midpoint (8.7e8 km). Fix: shrink the bracket before
+  choosing the next point.
+- `[format]` The official verifier rejects a trailing newline (`ErrorA09 ... empty`) and our
+  parser rejected arcs printed as all zeros from ~1e-15 N residuals. Fix: no trailing newline;
+  sub-nanonewton segments are emitted as coasts.
+- `[tool]` PowerShell -> `wsl.exe bash -c` mangles nested quotes; every non-trivial command is
+  written to `%TEMP%\gtoc12\*.sh|py`, CR-stripped, and run from `/tmp`. Background jobs need
+  `setsid nohup ... & disown` or WSL kills them with the session. Files written through the
+  `\\wsl.localhost` UNC path arrive CRLF; `/tmp/run.sh` normalises them before every run.
+
+#### What Worked
+
+- The official binary's diagnostic strings are a complete rule catalogue (Error001-901, A00-A23);
+  encoding them one-for-one made the independent verifier reproduce all three archived reference
+  solutions per asteroid to 0.0 kg on the first full run.
+- Probing the black-box verifier by perturbing thrust samples and reading the printed error
+  magnitude exposed that the mismatch depends on the profile shape, which pointed at |T| kinks.
+- ZOH arcs make the discrete model, the independent verifier and the official verifier agree.
+
+#### Guardrails For Next Session
+
+- Never emit cubic-interpolated bang-bang profiles; keep ZOH arcs (or smooth profiles) so any
+  integrator agrees. Certify every leg by DOP853 rollout before emission.
+- Keep the reduced-instance rule file untouched; its SHA-256 and selection SHA-256 are pinned in
+  tests.
+- GPU untouched (G4 owns it); all runs are CPU-only and say so in reports.
+
+#### Follow-Ups / Risks
+
+- `bonus_coefficients.txt` was served by the unauthenticated problem-file endpoint although the
+  UI gates it behind login; the pin records this.
+- Search proxies (Lambert x inflation) accept few multi-asteroid chains; the first scored route
+  has two asteroids (195.044 kg). Wider beams, phasing-aware neighbour selection, and cross-ship
+  deploy/collect are the obvious next steps.
+
+### 2026-09-03 03:35 AEST - GTOC12 track: search fixes and scored runs
+
+#### Mistakes And Fixes
+
+- `[search]` Element-space neighbours ignored phase drift: pairs with different mean motions drift
+  ~45 deg over a ten-year stay, so collect hops cost 20+ km/s and every multi-asteroid chain died
+  at the collection tour. Fix: phase-drift penalty in the proxy, wider return/collection windows,
+  return-feasibility pruning of the first asteroid, and at most two beam slots per deployed set.
+- `[emitter]` A camp-then-collect visit emitted a zero-mass rendezvous at arrival, giving the
+  asteroid three events (our Error805, official Error804). Fix: no arrival event; the collect
+  event sits at the departure epoch and the ship coasts on the asteroid's orbit in between.
+- `[verifier]` The archived JPL file carries 0.60000001 N samples; the official verifier accepts
+  them, so the thrust bound now has 1 uN of slack (our emitted files clamp to 0.6(1-1e-9)).
+- `[tool]` `setsid nohup ... & disown` from `wsl.exe` survived once and died twice; long runs
+  were executed in the foreground with `timeout` instead.
+
+#### What Worked
+
+- Vectorising the first beam level (grid-wide feasibility, propellant and score, then argsort)
+  made the 60,000-asteroid catalogue tractable: 39.1 M Lambert screens in 956 s, 11.2 GB.
+- Proxies calibrated within ~1 kg of refined masses on the reduced routes; optimistic by ~230 kg
+  on the full-catalogue route (still mass-feasible).
+
+#### Guardrails For Next Session
+
+- Each asteroid: at most two rendezvous events, ever; camping never emits an event.
+- Report unweighted (official verifier) and fixed-bonus scores side by side; they differ whenever
+  the chosen asteroids were mined during the competition (249.0 vs 203.0 kg on the full run).
+
+#### Follow-Ups / Risks
+
+- `tests/test_native_packaging.py` fails in this venv because no cmake-built wheel is present
+  (same on the base commit here); everything else in the 343-test suite passes.
+- Next quality steps: multi-revolution Lambert screening, cross-ship deploy/collect, PDHCG CQP
+  backend for the ZOH SCvx subproblem.
+
+### 2026-09-03 04:50 AEST - GTOC12 track: reference-driven search, fleets (feat/gtoc12-asteroid-mining)
+
+#### Mistakes And Fixes
+
+- `[search]` Position-space candidate ranking alone (Δa, Δe, Δi, phase) picked pairs that were
+  co-located at deploy time but on *different ellipses* (e ≈ 0.14, ΔΩ ≈ 100°): eight years later
+  they were 180° apart and every collection tour died (`no_collect_hop`). Fix: rank and filter
+  with eccentricity-vector and inclination-vector differences (relative inclination), not scalar
+  Δe/Δi; the same change lifted the Lambert-free proxy's Spearman from 0.47 to 0.63.
+- `[search]` Strict-reverse collection fallback indexed `remaining[-1]`; going backwards in time
+  the asteroid collected just before the current one is the *earliest*-deployed remaining
+  (`remaining[0]`). Symptom: `tour_not_ending_at_camp` on every chain.
+- `[search]` Collection scheduler minimised propellant with a tiny wait penalty and overran the
+  window (`camp_negative`). Fix: penalty counts the whole hop duration as lost mining and
+  escalates x4/x16 when the tour does not fit.
+- `[search]` Lowering Earth-leg inflation from 1.6 to 1.3 (proxy validation said 1.08x) admitted
+  450-500 day Earth legs that SCvx could not fly: the *authority* test must keep the conservative
+  factor even when the propellant estimate is calibrated (Earth-out tail reached 1.74x on the
+  catalogue pool). Pricing time in the beam heuristic (0.02-0.05 kg/day) or hop duty 0.75/0.7
+  likewise steered the beam into 120-180 day hops at the authority limit -> uncertifiable.
+  Reverted to the proven weights; documented all variants.
+- `[pipeline]` Three refine candidates shared one infeasible first leg and all failed. Fix:
+  skip plans containing a leg SCvx already proved infeasible (rescued fleet ship 2 at rank 8).
+- `[tool]` `pkill -f <pattern>` from a `bash -c` whose own command line contains the pattern kills
+  the shell itself (exit 15). Use `pkill -f 'run-id <id>'` with a token absent from the caller.
+- `[tool]` Redirecting a script's output to a file hid a crash; the "results" I read were the
+  stale JSON from the previous run. Always `tail` the log or check the exit code.
+- `[tests]` The old search-determinism test compared two empty candidate lists (coarse launch
+  grid -> no Earth leg passes the 1.6x authority). Assert non-emptiness in determinism tests.
+
+#### What Worked
+
+- Decoding the archived solutions first: the structural numbers (9-10 asteroids, 183-day 78-kg
+  hops, ±3.3° phase at departure, |Δa| ≤ 0.04 AU, final mass 500 kg) dictated the candidate
+  generator, the reserve rule and the pool box; single-ship score went 249 -> 548 kg and memory
+  11.2 GB -> 0.66 GB in one day.
+- Retaining failure reasons per chain (`last_failure` strings) turned "no feasible collection
+  tour" into actionable categories within minutes.
+- Background runs via the tool's own background shell (not `nohup` inside WSL) survived fine
+  when the log goes to a file and completion is checked with a small printer script.
+
+#### Guardrails For Next Session
+
+- Every proxy knob (inflation, duty, weights) must be validated on a *certified* run before it
+  becomes a default; the proxy-error table lives in `results/gtoc12/proxy_validation.json`.
+- Keep PowerShell out of the loop for anything with quotes: write the Python/bash to `%TEMP%`,
+  `tr -d '\r'`, run from `/tmp`.
+
+#### Follow-Ups / Risks
+
+- Time, not mass, binds: certified routes leave 230-430 kg propellant; deploy hops are 240-300 d
+  vs 140-240 d in the references. Next: cluster-first generation over the whole deploy window
+  and a joint re-timing pass that spends the margin on faster hops.
+- Greedy fleets thin the clusters for later ships (548 / 442 / 404 kg); joint assignment via the
+  G7 master is the natural upgrade.

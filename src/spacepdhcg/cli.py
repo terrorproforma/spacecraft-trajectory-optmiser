@@ -4,7 +4,8 @@ One dispatcher owns every track so the console entry point stays unique:
 
 * planner commands at the top level - ``plan``, ``validate``, ``capabilities``, ``defaults``,
   ``summary`` (:mod:`spacepdhcg.planner.cli`);
-* ``literature ...`` - literature reproduction targets (:mod:`spacepdhcg.literature.cli`).
+* ``literature ...`` - literature reproduction targets (:mod:`spacepdhcg.literature.cli`);
+* ``gtoc12 ...`` - GTOC12 asteroid-mining replay track (:mod:`spacepdhcg.gtoc12.cli`).
 
 Every leaf sub-parser stores its handler with ``set_defaults(func=...)`` (``function=`` is
 accepted as an alias) and :func:`dispatch` calls it.  Additional groups can be attached at
@@ -30,10 +31,11 @@ def register(name: str, adder: Adder) -> None:
 def _core_adders() -> list[Adder]:
     # Imported lazily so ``spacepdhcg literature list`` does not pay for planner imports and
     # vice versa; each track module keeps its own heavy imports.
+    from spacepdhcg.gtoc12 import cli as gtoc12_cli
     from spacepdhcg.literature import cli as literature_cli
     from spacepdhcg.planner import cli as planner_cli
 
-    return [planner_cli.add_commands, literature_cli.add_parser]
+    return [planner_cli.add_commands, literature_cli.add_parser, gtoc12_cli.add_parser]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -41,7 +43,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="spacepdhcg",
         description=(
             "SpacePDHCG / OrbitWeaver tools: trajectory planner (plan, validate, capabilities, "
-            "defaults, summary) and literature reproduction targets (literature ...)."
+            "defaults, summary), literature reproduction targets (literature ...), and the "
+            "GTOC12 replay track (gtoc12 ...)."
         ),
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
