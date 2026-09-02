@@ -1123,3 +1123,40 @@ Use this file as persistent, repo-local execution memory.
   trajectory from `cpu_gpu_trajectory`, objectives, residuals, or other aggregate metrics.
 - P1-A is non-trajectory CQP evidence. G7 GPU Lambert proves component parity but archives no GPU
   path array; label the plotted state history as an exact-request CPU replay.
+
+### 2026-09-02 18:22 AEST - single-GPU roadmap consolidation
+
+#### Task Summary
+
+- Consolidated completed roadmap, CPU campaign, trajectory extraction, and static web viewer changes onto an isolated `integration/single-gpu-v1` branch without restarting campaigns.
+
+#### Mistakes And Fixes
+
+- [tool] Reusing an editable virtual environment imported its original worktree despite changing the working directory.
+- Fix: run Python 3.11 with `-S` and explicitly prepend this worktree plus dependency site-packages to `PYTHONPATH`.
+- [tool] A fresh wheel exposed `jsonschema` as an undeclared OrbitWeaver runtime dependency.
+- Fix: moved `jsonschema>=4.26` into project runtime dependencies and retained fresh-wheel CLI verification.
+- [self] A first WSL test invocation discovered the Windows working tree because its working directory was not changed inside WSL.
+- Fix: every verification command now enters the isolated WSL worktree explicitly.
+
+#### User Preferences
+
+- [user] Keep `single-gpu-v1` active, defer physical multi-GPU work, preserve negative evidence, and do not launch campaigns during consolidation.
+
+#### What Worked
+
+- Patch-id and conflict inspection identified exact/semantic equivalents already in `27ef966`, avoiding duplicate G5/G7/G6 changes.
+- Additive memory conflict resolution preserved scope, grouped-contract, batching-failure, CPU, and visualization histories.
+- The compatible persistent transport, direct NVML, cancellation, content-addressed output, and migration layer coexist with the authoritative grouped scheduler; failed lane batching remains inactive.
+
+#### Guardrails For Next Session
+
+- Never reuse row-oriented G4 checkpoints with the grouped scheduler.
+- Do not launch grouped G4 until the final executable advertises and implements `g4-persistent-group-v1`/`--g4-session`.
+- Keep raw campaign outputs in ignored external paths and commit only schemas, tooling, sealed historical evidence, and intentional browser evidence.
+- For isolated worktrees, avoid editable-environment import leakage by using `python -S` with explicit source and dependency paths.
+
+#### Follow-Ups / Risks
+
+- Current-head G0-G3 evidence must be resealed before grouped G4 starts.
+- CPU campaign paths remain paused externally and should resume only after branch handoff.

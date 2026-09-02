@@ -831,3 +831,26 @@
 - Follow-up notes / risks:
   - No real archived P2 coarse/refined/route trajectory state arrays were found.
   - G4/P1-A remains non-trajectory CQP evidence and is excluded from visualisation geometry.
+
+## 2026-09-02 18:22 AEST
+
+- Task summary:
+  - Created the isolated `integration/single-gpu-v1` consolidation from `27ef966`.
+  - Integrated single-GPU scope, grouped G4 contracts, compatible persistent transport, CPU campaign tooling, trajectory extraction, and the isolated static viewer commit.
+- Conflict resolutions:
+  - Preserved all memory/devlog histories additively.
+  - Combined grouped scheduling with crash-safe terminal migration and imported-ordinal skipping.
+  - Excluded failed protocol-v2 lane scheduling while retaining its negative migration-gate report.
+  - Combined OrbitWeaver adapter and physical-instance exports.
+  - Kept scoped G6/G7 implementations already conflict-resolved in the roadmap base.
+- Integration fixes:
+  - Normalized merged Python sources with Ruff.
+  - Declared `jsonschema>=4.26` as a runtime dependency after fresh-wheel CLI verification exposed the omission.
+- Validation:
+  - Ruff lint/format, 305 Python tests with native and QOCO, generated G4/G7 schemas, G4 claim-core hash/counts, web deterministic import/check/tests, native Release/Debug/ASan+UBSan inventories, wheel/sdist, fresh CMake consumer, CUDA 12.8 sm_120 Release/Debug/sanitizer builds, selected QOCO/G5/G7 GPU correctness tests, and compute-sanitizer tools passed.
+  - G6 synthetic builds were byte-identical and real freeze correctly refused synthetic evidence.
+  - No campaign worker was started and no ignored raw campaign evidence was added.
+- Follow-up notes / risks:
+  - Reseal G0-G3 from the final committed head before any campaign resume.
+  - Grouped G4 requires an executor capability implementing `--g4-session`; never reuse the old row checkpoint.
+  - Physical 2/4/8-GPU G5 and distributed OrbitWeaver remain explicitly deferred.

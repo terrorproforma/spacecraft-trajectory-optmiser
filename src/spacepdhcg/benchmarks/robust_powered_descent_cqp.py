@@ -200,8 +200,7 @@ def run(
         )
         candidate_quality = max(decision_defect, path_violation, terminal_error)
         accepted = solution.solved and (
-            candidate_quality <= tolerance
-            or candidate_quality <= current_quality * (1.0 - 1.0e-3)
+            candidate_quality <= tolerance or candidate_quality <= current_quality * (1.0 - 1.0e-3)
         )
         outer_telemetry.append(
             {
@@ -296,8 +295,7 @@ def run(
             )
             risk_objective_recomputed = float(
                 risk_threshold
-                + probabilities @ np.maximum(objectives - risk_threshold, 0.0)
-                / (1.0 - cvar_alpha)
+                + probabilities @ np.maximum(objectives - risk_threshold, 0.0) / (1.0 - cvar_alpha)
             )
     controls = [
         subproblem.decode(local)[1]
@@ -342,9 +340,7 @@ def run(
         "risk_measure": risk_measure,
         "cvar_alpha": cvar_alpha if risk_measure == "cvar" else None,
         "outer_iterations": len(outer_telemetry),
-        "accepted_outer_iterations": sum(
-            bool(record["accepted"]) for record in outer_telemetry
-        ),
+        "accepted_outer_iterations": sum(bool(record["accepted"]) for record in outer_telemetry),
         "outer_telemetry": outer_telemetry,
         "variables": problem.structure.n_variables,
         "scalar_rows": problem.structure.n_constraints,

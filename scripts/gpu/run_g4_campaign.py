@@ -157,16 +157,12 @@ class NvmlPower:
         if self.library.nvmlInit_v2() != 0:
             raise G4ContractError("NVML initialization failed")
         self.handle = ctypes.c_void_p()
-        if self.library.nvmlDeviceGetHandleByIndex_v2(
-            device_index, ctypes.byref(self.handle)
-        ) != 0:
+        if self.library.nvmlDeviceGetHandleByIndex_v2(device_index, ctypes.byref(self.handle)) != 0:
             raise G4ContractError(f"NVML device {device_index} unavailable")
 
     def watts(self) -> float:
         milliwatts = ctypes.c_uint()
-        status = self.library.nvmlDeviceGetPowerUsage(
-            self.handle, ctypes.byref(milliwatts)
-        )
+        status = self.library.nvmlDeviceGetPowerUsage(self.handle, ctypes.byref(milliwatts))
         if status != 0:
             raise RuntimeError(f"NVML power query failed with status {status}")
         return milliwatts.value / 1000.0
@@ -396,13 +392,10 @@ def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
             fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as error:
             raise G4ContractError("source campaign worker is still active") from error
-        database = sqlite3.connect(
-            f"file:{source / 'checkpoint.sqlite3'}?mode=ro", uri=True
-        )
+        database = sqlite3.connect(f"file:{source / 'checkpoint.sqlite3'}?mode=ro", uri=True)
         database.row_factory = sqlite3.Row
         metadata = {
-            row["key"]: row["value"]
-            for row in database.execute("SELECT key, value FROM metadata")
+            row["key"]: row["value"] for row in database.execute("SELECT key, value FROM metadata")
         }
         if metadata.get("policy_sha256") != store.policy_sha256:
             raise G4ContractError("source campaign policy hash mismatch")
@@ -840,12 +833,8 @@ def execute(
         },
         "stdout_object_sha256": stdout_sha256,
         "stdout_uncompressed_bytes": stdout_bytes,
-        "records": [
-            record for record in records if record.get("case") != "g4_iteration"
-        ],
-        "progress_record_count": sum(
-            record.get("case") == "g4_iteration" for record in records
-        ),
+        "records": [record for record in records if record.get("case") != "g4_iteration"],
+        "progress_record_count": sum(record.get("case") == "g4_iteration" for record in records),
     }
     store.finish(
         claim,
@@ -902,9 +891,7 @@ def main() -> int:
         if arguments.action == "migrate":
             if arguments.source_campaign is None:
                 raise G4ContractError("migrate requires --source-campaign")
-            migration = migrate_terminal_rows(
-                store, arguments.source_campaign.resolve()
-            )
+            migration = migrate_terminal_rows(store, arguments.source_campaign.resolve())
             print(json.dumps({**store.status(), **migration}, sort_keys=True))
             return 0
         if arguments.executable is None or arguments.capabilities is None:

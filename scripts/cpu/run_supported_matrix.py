@@ -1061,9 +1061,7 @@ def main() -> int:
         if unknown_families:
             raise ValueError(f"unknown family IDs: {sorted(unknown_families)}")
         coordinates = [
-            coordinate
-            for coordinate in coordinates
-            if coordinate["family"] in requested_families
+            coordinate for coordinate in coordinates if coordinate["family"] in requested_families
         ]
     execution_configuration = {
         "schema_version": SCHEMA_VERSION,
@@ -1094,8 +1092,7 @@ def main() -> int:
         }
         if mismatches:
             raise RuntimeError(
-                "cannot resume campaign with a different execution configuration: "
-                f"{mismatches}"
+                f"cannot resume campaign with a different execution configuration: {mismatches}"
             )
     else:
         environment = {

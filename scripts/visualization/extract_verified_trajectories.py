@@ -607,9 +607,7 @@ def extract_pd3(archived: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any
 def compile_helper(source: Path, include_roots: list[Path], output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     include_arguments = [
-        argument
-        for root in include_roots
-        for argument in ("-I", str(root / "cpp" / "include"))
+        argument for root in include_roots for argument in ("-I", str(root / "cpp" / "include"))
     ]
     subprocess.run(
         [
@@ -891,8 +889,7 @@ def extract_lambert(
             },
             "solver": "GPU fixed-slot Lambert kernel parity against CPU universal-variable solver",
             "policy": (
-                "one GPU correctness test; no performance measurement; "
-                "CPU state-history replay"
+                "one GPU correctness test; no performance measurement; CPU state-history replay"
             ),
             "status": "component-qualified",
             "source_test_sha256": file_sha256(source_path),

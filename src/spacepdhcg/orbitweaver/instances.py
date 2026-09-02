@@ -68,9 +68,7 @@ class Paper2InstanceContract:
         radius = float(generator["minimum_radius"]) + _unit_interval(seed, target, 0) * (
             float(generator["maximum_radius"]) - float(generator["minimum_radius"])
         )
-        inclination = float(generator["maximum_inclination"]) * _unit_interval(
-            seed, target, 1
-        )
+        inclination = float(generator["maximum_inclination"]) * _unit_interval(seed, target, 1)
         ascending_node = 2.0 * np.pi * _unit_interval(seed, target, 2)
         initial_phase = 2.0 * np.pi * _unit_interval(seed, target, 3)
         epoch = float(epoch_grid["initial_epoch"]) + epoch_index * float(epoch_grid["spacing"])
@@ -111,26 +109,25 @@ class Paper2InstanceContract:
             probability=1.0 / count,
             gravity_scale=1.0 + quantile * float(generator["gravity_relative_spread"]),
             thrust_scale=1.0 - quantile * float(generator["thrust_relative_spread"]),
-            service_time_scale=1.0
-            + quantile * float(generator["service_time_relative_spread"]),
+            service_time_scale=1.0 + quantile * float(generator["service_time_relative_spread"]),
         )
 
 
 def load_paper2_instance_contract(repository: Path) -> Paper2InstanceContract:
     contract_path = repository / "benchmarks" / "paper2_instances.json"
-    schema_path = (
-        repository / "experiments" / "schema" / "paper2_instance_contract.schema.json"
-    )
+    schema_path = repository / "experiments" / "schema" / "paper2_instance_contract.schema.json"
     payload = json.loads(contract_path.read_text(encoding="utf-8"))
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     jsonschema.Draft202012Validator(schema).validate(payload)
-    if payload["target_generator"]["minimum_radius"] <= payload["central_body"][
-        "equatorial_radius"
-    ]:
+    if (
+        payload["target_generator"]["minimum_radius"]
+        <= payload["central_body"]["equatorial_radius"]
+    ):
         raise ValueError("target radius must remain above the central body")
-    if payload["target_generator"]["maximum_radius"] <= payload["target_generator"][
-        "minimum_radius"
-    ]:
+    if (
+        payload["target_generator"]["maximum_radius"]
+        <= payload["target_generator"]["minimum_radius"]
+    ):
         raise ValueError("target radius range must be increasing")
     return Paper2InstanceContract(
         payload=payload,

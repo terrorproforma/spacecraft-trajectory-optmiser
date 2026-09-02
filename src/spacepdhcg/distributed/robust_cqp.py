@@ -272,9 +272,7 @@ class ScenarioCQPBundle:
 
         if measure not in {"worst", "cvar"}:
             raise ValueError("risk measure must be 'worst' or 'cvar'")
-        if measure == "cvar" and (
-            alpha is None or not np.isfinite(alpha) or not 0.0 < alpha < 1.0
-        ):
+        if measure == "cvar" and (alpha is None or not np.isfinite(alpha) or not 0.0 < alpha < 1.0):
             raise ValueError("CVaR alpha must lie strictly between zero and one")
         validated = self._validated_local_values(local_values)
         base = self.problem(validated)
@@ -321,9 +319,7 @@ class ScenarioCQPBundle:
                 risk_rows[scenario, threshold] = -1.0
                 risk_rows[scenario, excess_start + scenario] = -1.0
         constraint = sp.vstack((padded_constraint, risk_rows.tocsc()), format="csc")
-        lower = np.concatenate(
-            (base.values.lower, np.full(scenarios, -np.inf, dtype=np.float64))
-        )
+        lower = np.concatenate((base.values.lower, np.full(scenarios, -np.inf, dtype=np.float64)))
         upper = np.concatenate((base.values.upper, np.zeros(scenarios, dtype=np.float64)))
 
         affine_blocks: list[sp.spmatrix] = []
@@ -335,9 +331,7 @@ class ScenarioCQPBundle:
                 sp.hstack(
                     (
                         base_affine,
-                        sp.csc_matrix(
-                            (base_affine.shape[0], total_variables - base_variables)
-                        ),
+                        sp.csc_matrix((base_affine.shape[0], total_variables - base_variables)),
                     ),
                     format="csc",
                 )

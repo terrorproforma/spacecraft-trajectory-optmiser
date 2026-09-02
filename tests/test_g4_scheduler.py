@@ -131,9 +131,7 @@ def test_imported_terminal_row_is_exactly_once_and_skipped(tmp_path: Path) -> No
         )
     source_run = source_root / "runs" / claim.coordinate_id / claim.attempt_id
 
-    with CampaignStore(
-        tmp_path / "target", loaded.values, loaded.sha256, "b" * 40
-    ) as target:
+    with CampaignStore(tmp_path / "target", loaded.values, loaded.sha256, "b" * 40) as target:
         arguments = {
             "ordinal": claim.ordinal,
             "identifier": claim.coordinate_id,
