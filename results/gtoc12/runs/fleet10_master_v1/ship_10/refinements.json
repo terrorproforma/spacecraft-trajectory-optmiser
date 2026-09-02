@@ -1,0 +1,1245 @@
+[
+  {
+    "plan": {
+      "asteroids": [
+        31419,
+        11069,
+        6545,
+        25614,
+        12689,
+        30562
+      ],
+      "collect_epochs": {
+        "6545": 66855.0,
+        "11069": 68235.0,
+        "12689": 68655.0,
+        "25614": 67605.0,
+        "30562": 66450.0,
+        "31419": 69030.0
+      },
+      "collected_mass_kg": {
+        "6545": 40.71184120465435,
+        "11069": 82.6009582477755,
+        "12689": 79.31553730321697,
+        "25614": 57.138945927446954,
+        "30562": 10.732375085557837,
+        "31419": 112.58042436687201
+      },
+      "deploy_epochs": {
+        "6545": 65368.0,
+        "11069": 65218.0,
+        "12689": 65758.0,
+        "25614": 65518.0,
+        "30562": 66058.0,
+        "31419": 64918.0
+      },
+      "earth_return_epoch": 69580.0,
+      "feasible_proxy": true,
+      "final_mass_proxy_kg": 1118.0711235314775,
+      "foreign_deploy_epochs": {},
+      "launch_epoch": 64418.0,
+      "legs": [
+        {
+          "dv_proxy_km_s": 4.194909129436451,
+          "from": 0,
+          "inflation": 1.6,
+          "role": "earth_out",
+          "t0": 64418.0,
+          "tf": 64918.0,
+          "to": 31419
+        },
+        {
+          "dv_proxy_km_s": 1.5999323390413163,
+          "from": 31419,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 64918.0,
+          "tf": 65218.0,
+          "to": 11069
+        },
+        {
+          "dv_proxy_km_s": 1.4842838697937766,
+          "from": 11069,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65218.0,
+          "tf": 65368.0,
+          "to": 6545
+        },
+        {
+          "dv_proxy_km_s": 2.1701167437961377,
+          "from": 6545,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65368.0,
+          "tf": 65518.0,
+          "to": 25614
+        },
+        {
+          "dv_proxy_km_s": 1.8849243393183959,
+          "from": 25614,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65518.0,
+          "tf": 65758.0,
+          "to": 12689
+        },
+        {
+          "dv_proxy_km_s": 2.627999096648023,
+          "from": 12689,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65758.0,
+          "tf": 66058.0,
+          "to": 30562
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 30562,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 66058.0,
+          "tf": 66450.0,
+          "to": 30562
+        },
+        {
+          "dv_proxy_km_s": 5.1770773682484545,
+          "from": 30562,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 66450.0,
+          "tf": 66810.0,
+          "to": 6545
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 6545,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 66810.0,
+          "tf": 66855.0,
+          "to": 6545
+        },
+        {
+          "dv_proxy_km_s": 2.270912697653245,
+          "from": 6545,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 66855.0,
+          "tf": 67335.0,
+          "to": 25614
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 25614,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 67335.0,
+          "tf": 67605.0,
+          "to": 25614
+        },
+        {
+          "dv_proxy_km_s": 3.8489973189285633,
+          "from": 25614,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 67605.0,
+          "tf": 68205.0,
+          "to": 11069
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 11069,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 68205.0,
+          "tf": 68235.0,
+          "to": 11069
+        },
+        {
+          "dv_proxy_km_s": 0.939407320492016,
+          "from": 11069,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 68235.0,
+          "tf": 68655.0,
+          "to": 12689
+        },
+        {
+          "dv_proxy_km_s": 2.0592325229918673,
+          "from": 12689,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 68655.0,
+          "tf": 69015.0,
+          "to": 31419
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 31419,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 69015.0,
+          "tf": 69030.0,
+          "to": 31419
+        },
+        {
+          "dv_proxy_km_s": 5.945510097646598,
+          "from": 31419,
+          "inflation": 1.6,
+          "role": "earth_return",
+          "t0": 69030.0,
+          "tf": 69580.0,
+          "to": 0
+        }
+      ],
+      "orphaned": [],
+      "propellant_proxy_kg": 2025.008958604046,
+      "self_cleaning": true,
+      "total_collected_kg": 383.08008213552364
+    },
+    "rank": 0,
+    "refined": {
+      "asteroids": [
+        31419,
+        11069,
+        6545,
+        25614,
+        12689,
+        30562
+      ],
+      "certified": false,
+      "collected_mass_kg": {
+        "6545": 0.0,
+        "11069": 0.0,
+        "12689": 0.0,
+        "25614": 0.0,
+        "30562": 0.0,
+        "31419": 0.0
+      },
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 2.064e-03",
+          "from": 6545,
+          "leg": 3,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 25614
+        }
+      ],
+      "final_mass_kg": 2359.9623852680625,
+      "legs": [
+        {
+          "certified": true,
+          "delta_v_km_s": 4.107215501973543,
+          "from": 0,
+          "mass_after": 2701.7708620165045,
+          "mass_before": 3000.0,
+          "position_error_km": 0.03025302246722344,
+          "propellant_kg": 298.22913828103765,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.697610702001839,
+          "status": "feasible",
+          "t0": 64418.0,
+          "tf": 64918.0,
+          "to": 31419,
+          "velocity_error_m_s": 4.052455131889459e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 1.8000488439115374,
+          "from": 31419,
+          "mass_after": 2542.386391534167,
+          "mass_before": 2661.7708620165045,
+          "position_error_km": 0.031204532122898736,
+          "propellant_kg": 119.38447060500766,
+          "scvx_iterations": 9,
+          "solve_seconds": 0.538372672002879,
+          "status": "feasible",
+          "t0": 64918.0,
+          "tf": 65218.0,
+          "to": 11069,
+          "velocity_error_m_s": 2.3922056360147357e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 1.639348998146535,
+          "from": 11069,
+          "mass_after": 2399.9623852680625,
+          "mass_before": 2502.386391534167,
+          "position_error_km": 0.0071183080921241905,
+          "propellant_kg": 102.42400636500952,
+          "scvx_iterations": 8,
+          "solve_seconds": 0.25734321800700855,
+          "status": "feasible",
+          "t0": 65218.0,
+          "tf": 65368.0,
+          "to": 6545,
+          "velocity_error_m_s": 1.2507078748470811e-06
+        },
+        {
+          "certified": false,
+          "delta_v_km_s": 3.441626724261444,
+          "from": 6545,
+          "mass_after": NaN,
+          "mass_before": 2359.9623852680625,
+          "position_error_km": null,
+          "propellant_kg": 198.2328410275195,
+          "scvx_iterations": 29,
+          "solve_seconds": 1.968507066994789,
+          "status": "infeasible",
+          "t0": 65368.0,
+          "tf": 65518.0,
+          "to": 25614,
+          "velocity_error_m_s": null
+        }
+      ],
+      "master_certified": false,
+      "passes": 1,
+      "refined_arcs": 4,
+      "scheduler": {
+        "batches": 1,
+        "completed": 1,
+        "failed": 1,
+        "feasible": 0,
+        "numeric_updates": 4,
+        "submitted": 1,
+        "workspace_creations": 3
+      },
+      "total_collected_kg": 0.0,
+      "wall_seconds": 3.6907440190116176
+    }
+  },
+  {
+    "artifacts": {
+      "solution": "results/gtoc12/runs/fleet10_master_v1/ship_10/candidate_01/Result.txt",
+      "viewer": "results/gtoc12/runs/fleet10_master_v1/ship_10/candidate_01/viewer/trajectories.json"
+    },
+    "independent": {
+      "max_mass_error_kg": 6.639311322942376e-11,
+      "max_position_error_km": 0.5007156717956969,
+      "max_velocity_error_km_s": 8.042568698406199e-08,
+      "mined_asteroids": 6,
+      "ok": true,
+      "scored_masses": {
+        "4117": 106.14647501709987,
+        "39963": 59.329226557199945,
+        "40157": 63.02532511970003,
+        "43914": 40.8487337439999,
+        "48674": 12.922655715299925,
+        "52096": 64.66803559210007
+      },
+      "ship_limit": 8.011748184697966,
+      "ships": 1,
+      "total_mass_kg": 346.94045174539974,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 346.94045174539974
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 6,
+      "ok": true,
+      "return_code": 0,
+      "score_data": {
+        "4117": 106.14647501709987,
+        "39963": 59.329226557199945,
+        "40157": 63.02532511970003,
+        "43914": 40.8487337439999,
+        "48674": 12.922655715299925,
+        "52096": 64.66803559210007
+      },
+      "ships": 1,
+      "total_mass_kg": 346.94,
+      "wall_seconds": 0.04709608599659987
+    },
+    "plan": {
+      "asteroids": [
+        4117,
+        40157,
+        52096,
+        43914,
+        39963,
+        48674
+      ],
+      "collect_epochs": {
+        "4117": 68865.0,
+        "39963": 68265.0,
+        "40157": 67650.0,
+        "43914": 67170.0,
+        "48674": 66870.0,
+        "52096": 67890.0
+      },
+      "collected_mass_kg": {
+        "4117": 106.14647501711157,
+        "39963": 59.32922655715264,
+        "40157": 63.02532511978097,
+        "43914": 40.84873374401095,
+        "48674": 12.922655715263518,
+        "52096": 64.66803559206024
+      },
+      "deploy_epochs": {
+        "4117": 64988.0,
+        "39963": 66098.0,
+        "40157": 65348.0,
+        "43914": 65678.0,
+        "48674": 66398.0,
+        "52096": 65528.0
+      },
+      "earth_return_epoch": 69265.0,
+      "feasible_proxy": true,
+      "final_mass_proxy_kg": 1018.6933676955517,
+      "foreign_deploy_epochs": {},
+      "launch_epoch": 64538.0,
+      "legs": [
+        {
+          "dv_proxy_km_s": 3.8115998334399315,
+          "from": 0,
+          "inflation": 1.6,
+          "role": "earth_out",
+          "t0": 64538.0,
+          "tf": 64988.0,
+          "to": 4117
+        },
+        {
+          "dv_proxy_km_s": 2.406450630589152,
+          "from": 4117,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 64988.0,
+          "tf": 65348.0,
+          "to": 40157
+        },
+        {
+          "dv_proxy_km_s": 2.097594171493613,
+          "from": 40157,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65348.0,
+          "tf": 65528.0,
+          "to": 52096
+        },
+        {
+          "dv_proxy_km_s": 1.6120477614678317,
+          "from": 52096,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65528.0,
+          "tf": 65678.0,
+          "to": 43914
+        },
+        {
+          "dv_proxy_km_s": 2.493675774827168,
+          "from": 43914,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65678.0,
+          "tf": 66098.0,
+          "to": 39963
+        },
+        {
+          "dv_proxy_km_s": 1.752448952159154,
+          "from": 39963,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 66098.0,
+          "tf": 66398.0,
+          "to": 48674
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 48674,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 66398.0,
+          "tf": 66870.0,
+          "to": 48674
+        },
+        {
+          "dv_proxy_km_s": 4.112375426310777,
+          "from": 48674,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 66870.0,
+          "tf": 67170.0,
+          "to": 43914
+        },
+        {
+          "dv_proxy_km_s": 3.661803014586492,
+          "from": 43914,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 67170.0,
+          "tf": 67650.0,
+          "to": 40157
+        },
+        {
+          "dv_proxy_km_s": 2.964511271607862,
+          "from": 40157,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 67650.0,
+          "tf": 67890.0,
+          "to": 52096
+        },
+        {
+          "dv_proxy_km_s": 3.8792397566827956,
+          "from": 52096,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 67890.0,
+          "tf": 68250.0,
+          "to": 39963
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 39963,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 68250.0,
+          "tf": 68265.0,
+          "to": 39963
+        },
+        {
+          "dv_proxy_km_s": 4.271998377182298,
+          "from": 39963,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 68265.0,
+          "tf": 68865.0,
+          "to": 4117
+        },
+        {
+          "dv_proxy_km_s": 4.4217939023211645,
+          "from": 4117,
+          "inflation": 1.6,
+          "role": "earth_return",
+          "t0": 68865.0,
+          "tf": 69265.0,
+          "to": 0
+        }
+      ],
+      "orphaned": [],
+      "propellant_proxy_kg": 2088.2470840498286,
+      "self_cleaning": true,
+      "total_collected_kg": 346.9404517453799
+    },
+    "rank": 1,
+    "refined": {
+      "asteroids": [
+        4117,
+        40157,
+        52096,
+        43914,
+        39963,
+        48674
+      ],
+      "certified": true,
+      "collected_mass_kg": {
+        "4117": 106.14647501711157,
+        "39963": 59.32922655715264,
+        "40157": 63.02532511978097,
+        "43914": 40.84873374401095,
+        "48674": 12.922655715263518,
+        "52096": 64.66803559206024
+      },
+      "failures": [],
+      "final_mass_kg": 708.7104594660518,
+      "legs": [
+        {
+          "certified": true,
+          "delta_v_km_s": 6.682506778486121,
+          "from": 0,
+          "mass_after": 2530.0922796007194,
+          "mass_before": 3000.0,
+          "position_error_km": 0.05038817738568806,
+          "propellant_kg": 469.9077208814292,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.6313506460137432,
+          "status": "feasible",
+          "t0": 64538.0,
+          "tf": 64988.0,
+          "to": 4117,
+          "velocity_error_m_s": 3.7097038733079725e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.210550555045907,
+          "from": 4117,
+          "mass_after": 2294.4049035807993,
+          "mass_before": 2490.0922796007194,
+          "position_error_km": 0.07965753161831829,
+          "propellant_kg": 195.68737621439232,
+          "scvx_iterations": 8,
+          "solve_seconds": 0.6035547420033254,
+          "status": "feasible",
+          "t0": 64988.0,
+          "tf": 65348.0,
+          "to": 40157,
+          "velocity_error_m_s": 3.785076709010552e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.8979021964250418,
+          "from": 40157,
+          "mass_after": 2041.1577792642681,
+          "mass_before": 2254.4049035807993,
+          "position_error_km": 0.022238046976080283,
+          "propellant_kg": 213.24712452823178,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.24924628098960966,
+          "status": "feasible",
+          "t0": 65348.0,
+          "tf": 65528.0,
+          "to": 52096,
+          "velocity_error_m_s": 8.704628410980307e-07
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 1.9485485681341395,
+          "from": 52096,
+          "mass_after": 1904.1805119722223,
+          "mass_before": 2001.1577792642681,
+          "position_error_km": 0.014050510896542448,
+          "propellant_kg": 96.97726738881943,
+          "scvx_iterations": 5,
+          "solve_seconds": 0.16056595000554807,
+          "status": "feasible",
+          "t0": 65528.0,
+          "tf": 65678.0,
+          "to": 43914,
+          "velocity_error_m_s": 1.2257216741062156e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 2.679994949317931,
+          "from": 43914,
+          "mass_after": 1741.0714425823794,
+          "mass_before": 1864.1805119722223,
+          "position_error_km": 0.03888545950370729,
+          "propellant_kg": 123.10906950740014,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.4636578570061829,
+          "status": "feasible",
+          "t0": 65678.0,
+          "tf": 66098.0,
+          "to": 39963,
+          "velocity_error_m_s": 2.9022702165442658e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 1.9157649851497518,
+          "from": 39963,
+          "mass_after": 1619.9898722629478,
+          "mass_before": 1701.0714425823794,
+          "position_error_km": 0.05004909301613214,
+          "propellant_kg": 81.08157040272863,
+          "scvx_iterations": 24,
+          "solve_seconds": 1.6417535460059298,
+          "status": "feasible",
+          "t0": 66098.0,
+          "tf": 66398.0,
+          "to": 48674,
+          "velocity_error_m_s": 3.5019591988650363e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 5.224443124318793,
+          "from": 48674,
+          "mass_after": 1394.27962690418,
+          "mass_before": 1592.9125279782113,
+          "position_error_km": 0.05436769261370823,
+          "propellant_kg": 198.6329013210484,
+          "scvx_iterations": 25,
+          "solve_seconds": 1.7994625059945974,
+          "status": "feasible",
+          "t0": 66870.0,
+          "tf": 67170.0,
+          "to": 43914,
+          "velocity_error_m_s": 1.8738755400714955e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.993973844901964,
+          "from": 43914,
+          "mass_after": 1296.1992107897681,
+          "mass_before": 1435.1283606481911,
+          "position_error_km": 0.10814674756642623,
+          "propellant_kg": 138.92914999182585,
+          "scvx_iterations": 5,
+          "solve_seconds": 0.44916692200058606,
+          "status": "feasible",
+          "t0": 67170.0,
+          "tf": 67650.0,
+          "to": 40157,
+          "velocity_error_m_s": 5.122843132411769e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.2711787616616155,
+          "from": 40157,
+          "mass_after": 1250.4737663104338,
+          "mass_before": 1359.224535909549,
+          "position_error_km": 0.029904897360853583,
+          "propellant_kg": 108.75076970460373,
+          "scvx_iterations": 7,
+          "solve_seconds": 0.3219255570002133,
+          "status": "feasible",
+          "t0": 67650.0,
+          "tf": 67890.0,
+          "to": 52096,
+          "velocity_error_m_s": 1.946680804924721e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 4.310462884169009,
+          "from": 52096,
+          "mass_after": 1178.2829738393125,
+          "mass_before": 1315.141801902494,
+          "position_error_km": 0.09375859952376646,
+          "propellant_kg": 136.85882819727453,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.4096419270063052,
+          "status": "feasible",
+          "t0": 67890.0,
+          "tf": 68250.0,
+          "to": 39963,
+          "velocity_error_m_s": 2.9939295023153253e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 4.41916276358345,
+          "from": 39963,
+          "mass_after": 1105.7530327918573,
+          "mass_before": 1237.6122003964651,
+          "position_error_km": 0.24792420296125306,
+          "propellant_kg": 131.85916773350846,
+          "scvx_iterations": 5,
+          "solve_seconds": 0.6002285919967107,
+          "status": "feasible",
+          "t0": 68265.0,
+          "tf": 68865.0,
+          "to": 4117,
+          "velocity_error_m_s": 1.1836771517162013e-05
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 5.414503147173796,
+          "from": 4117,
+          "mass_after": 1055.6509112114318,
+          "mass_before": 1211.8995078089688,
+          "position_error_km": 0.5006997789906155,
+          "propellant_kg": 156.24859699510807,
+          "scvx_iterations": 9,
+          "solve_seconds": 0.7585770840087207,
+          "status": "feasible",
+          "t0": 68865.0,
+          "tf": 69265.0,
+          "to": 0,
+          "velocity_error_m_s": 8.042321095931955e-05
+        }
+      ],
+      "master_certified": true,
+      "passes": 1,
+      "refined_arcs": 12,
+      "scheduler": {
+        "batches": 1,
+        "completed": 1,
+        "failed": 0,
+        "feasible": 1,
+        "numeric_updates": 12,
+        "submitted": 1,
+        "workspace_creations": 10
+      },
+      "total_collected_kg": 346.9404517453799,
+      "wall_seconds": 8.99663933699776
+    },
+    "score_kg": 346.94,
+    "viewer_manifest": {
+      "files": {
+        "trajectories.json": {
+          "bytes": 348210,
+          "sha256": "08f3772cc2d8acdb5ab94c6e107a5128e14a6e4b55f5d657c1a4ee88f36a0ee3"
+        }
+      },
+      "schema_version": "1.0.0",
+      "source": {
+        "bytes": 411962,
+        "path_basename": "Result.txt",
+        "sha256": "058799a0fdda62514b0b5755130ea633b97fb2631473f152d762e9eb860c5399"
+      },
+      "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+    }
+  },
+  {
+    "artifacts": {
+      "solution": "results/gtoc12/runs/fleet10_master_v1/ship_10/candidate_02/Result.txt",
+      "viewer": "results/gtoc12/runs/fleet10_master_v1/ship_10/candidate_02/viewer/trajectories.json"
+    },
+    "independent": {
+      "max_mass_error_kg": 6.571099220309407e-11,
+      "max_position_error_km": 0.48800630495336395,
+      "max_velocity_error_km_s": 7.828660934297585e-08,
+      "mined_asteroids": 6,
+      "ok": true,
+      "scored_masses": {
+        "4117": 105.18822724160009,
+        "39963": 61.245722108099926,
+        "40157": 62.88843258039992,
+        "43914": 40.71184120470002,
+        "48674": 11.143052703600006,
+        "52096": 64.53114305269992
+      },
+      "ship_limit": 7.972362365720088,
+      "ships": 1,
+      "total_mass_kg": 345.7084188910999,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 345.7084188910999
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 6,
+      "ok": true,
+      "return_code": 0,
+      "score_data": {
+        "4117": 105.18822724160009,
+        "39963": 61.245722108099926,
+        "40157": 62.88843258039992,
+        "43914": 40.71184120470002,
+        "48674": 11.143052703600006,
+        "52096": 64.53114305269992
+      },
+      "ships": 1,
+      "total_mass_kg": 345.708,
+      "wall_seconds": 0.04578478699841071
+    },
+    "plan": {
+      "asteroids": [
+        4117,
+        40157,
+        52096,
+        43914,
+        39963,
+        48674
+      ],
+      "collect_epochs": {
+        "4117": 68830.0,
+        "39963": 68335.0,
+        "40157": 67645.0,
+        "43914": 67165.0,
+        "48674": 66865.0,
+        "52096": 67885.0
+      },
+      "collected_mass_kg": {
+        "4117": 105.18822724161534,
+        "39963": 61.24572210814511,
+        "40157": 62.888432580424364,
+        "43914": 40.71184120465435,
+        "48674": 11.143052703627653,
+        "52096": 64.53114305270363
+      },
+      "deploy_epochs": {
+        "4117": 64988.0,
+        "39963": 66098.0,
+        "40157": 65348.0,
+        "43914": 65678.0,
+        "48674": 66458.0,
+        "52096": 65528.0
+      },
+      "earth_return_epoch": 69280.0,
+      "feasible_proxy": true,
+      "final_mass_proxy_kg": 993.0346268849246,
+      "foreign_deploy_epochs": {},
+      "launch_epoch": 64538.0,
+      "legs": [
+        {
+          "dv_proxy_km_s": 3.8115998334399315,
+          "from": 0,
+          "inflation": 1.6,
+          "role": "earth_out",
+          "t0": 64538.0,
+          "tf": 64988.0,
+          "to": 4117
+        },
+        {
+          "dv_proxy_km_s": 2.406450630589152,
+          "from": 4117,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 64988.0,
+          "tf": 65348.0,
+          "to": 40157
+        },
+        {
+          "dv_proxy_km_s": 2.097594171493613,
+          "from": 40157,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65348.0,
+          "tf": 65528.0,
+          "to": 52096
+        },
+        {
+          "dv_proxy_km_s": 1.6120477614678317,
+          "from": 52096,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65528.0,
+          "tf": 65678.0,
+          "to": 43914
+        },
+        {
+          "dv_proxy_km_s": 2.493675774827168,
+          "from": 43914,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 65678.0,
+          "tf": 66098.0,
+          "to": 39963
+        },
+        {
+          "dv_proxy_km_s": 1.5607090440937759,
+          "from": 39963,
+          "inflation": 1.2,
+          "role": "deploy_hop",
+          "t0": 66098.0,
+          "tf": 66458.0,
+          "to": 48674
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 48674,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 66458.0,
+          "tf": 66865.0,
+          "to": 48674
+        },
+        {
+          "dv_proxy_km_s": 4.142831741414243,
+          "from": 48674,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 66865.0,
+          "tf": 67165.0,
+          "to": 43914
+        },
+        {
+          "dv_proxy_km_s": 3.6491893583613075,
+          "from": 43914,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 67165.0,
+          "tf": 67645.0,
+          "to": 40157
+        },
+        {
+          "dv_proxy_km_s": 2.9409232871342503,
+          "from": 40157,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 67645.0,
+          "tf": 67885.0,
+          "to": 52096
+        },
+        {
+          "dv_proxy_km_s": 3.845575094244633,
+          "from": 52096,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 67885.0,
+          "tf": 68245.0,
+          "to": 39963
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 39963,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 68245.0,
+          "tf": 68335.0,
+          "to": 39963
+        },
+        {
+          "dv_proxy_km_s": 5.170457124638432,
+          "from": 39963,
+          "inflation": 1.2,
+          "role": "collect_hop",
+          "t0": 68335.0,
+          "tf": 68815.0,
+          "to": 4117
+        },
+        {
+          "dv_proxy_km_s": 0.0,
+          "from": 4117,
+          "inflation": 1.0,
+          "role": "camp",
+          "t0": 68815.0,
+          "tf": 68830.0,
+          "to": 4117
+        },
+        {
+          "dv_proxy_km_s": 4.559827543857853,
+          "from": 4117,
+          "inflation": 1.6,
+          "role": "earth_return",
+          "t0": 68830.0,
+          "tf": 69280.0,
+          "to": 0
+        }
+      ],
+      "orphaned": [],
+      "propellant_proxy_kg": 2112.673792006246,
+      "self_cleaning": true,
+      "total_collected_kg": 345.7084188911704
+    },
+    "rank": 2,
+    "refined": {
+      "asteroids": [
+        4117,
+        40157,
+        52096,
+        43914,
+        39963,
+        48674
+      ],
+      "certified": true,
+      "collected_mass_kg": {
+        "4117": 105.18822724161534,
+        "39963": 61.24572210814511,
+        "40157": 62.888432580424364,
+        "43914": 40.71184120465435,
+        "48674": 11.143052703627653,
+        "52096": 64.53114305270363
+      },
+      "failures": [],
+      "final_mass_kg": 692.0271004997544,
+      "legs": [
+        {
+          "certified": true,
+          "delta_v_km_s": 6.682506778486121,
+          "from": 0,
+          "mass_after": 2530.0922796007194,
+          "mass_before": 3000.0,
+          "position_error_km": 0.05038817738568806,
+          "propellant_kg": 469.9077208814292,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.6962894120079,
+          "status": "feasible",
+          "t0": 64538.0,
+          "tf": 64988.0,
+          "to": 4117,
+          "velocity_error_m_s": 3.7097038733079725e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.210550555045907,
+          "from": 4117,
+          "mass_after": 2294.4049035807993,
+          "mass_before": 2490.0922796007194,
+          "position_error_km": 0.07965753161831829,
+          "propellant_kg": 195.68737621439232,
+          "scvx_iterations": 8,
+          "solve_seconds": 0.6081399270042311,
+          "status": "feasible",
+          "t0": 64988.0,
+          "tf": 65348.0,
+          "to": 40157,
+          "velocity_error_m_s": 3.785076709010552e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.8979021964250418,
+          "from": 40157,
+          "mass_after": 2041.1577792642681,
+          "mass_before": 2254.4049035807993,
+          "position_error_km": 0.022238046976080283,
+          "propellant_kg": 213.24712452823178,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.252576972998213,
+          "status": "feasible",
+          "t0": 65348.0,
+          "tf": 65528.0,
+          "to": 52096,
+          "velocity_error_m_s": 8.704628410980307e-07
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 1.9485485681341395,
+          "from": 52096,
+          "mass_after": 1904.1805119722223,
+          "mass_before": 2001.1577792642681,
+          "position_error_km": 0.014050510896542448,
+          "propellant_kg": 96.97726738881943,
+          "scvx_iterations": 5,
+          "solve_seconds": 0.16442867199657485,
+          "status": "feasible",
+          "t0": 65528.0,
+          "tf": 65678.0,
+          "to": 43914,
+          "velocity_error_m_s": 1.2257216741062156e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 2.679994949317931,
+          "from": 43914,
+          "mass_after": 1741.0714425823794,
+          "mass_before": 1864.1805119722223,
+          "position_error_km": 0.03888545950370729,
+          "propellant_kg": 123.10906950740014,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.48306657100329176,
+          "status": "feasible",
+          "t0": 65678.0,
+          "tf": 66098.0,
+          "to": 39963,
+          "velocity_error_m_s": 2.9022702165442658e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 1.6566602372029322,
+          "from": 39963,
+          "mass_after": 1630.725862864407,
+          "mass_before": 1701.0714425823794,
+          "position_error_km": 0.04779547845372461,
+          "propellant_kg": 70.34557978965177,
+          "scvx_iterations": 10,
+          "solve_seconds": 0.6765181719965767,
+          "status": "feasible",
+          "t0": 66098.0,
+          "tf": 66458.0,
+          "to": 48674,
+          "velocity_error_m_s": 2.800797315932335e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 5.283492030153621,
+          "from": 48674,
+          "mass_after": 1400.0101097419047,
+          "mass_before": 1601.8689155680347,
+          "position_error_km": 0.037844828070019924,
+          "propellant_kg": 201.85880601706208,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.3620651539968094,
+          "status": "feasible",
+          "t0": 66865.0,
+          "tf": 67165.0,
+          "to": 43914,
+          "velocity_error_m_s": 1.8774034045809345e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.958685104936204,
+          "from": 43914,
+          "mass_after": 1302.4224562062245,
+          "mass_before": 1440.721950946559,
+          "position_error_km": 0.11568115489277132,
+          "propellant_kg": 138.2994948763735,
+          "scvx_iterations": 5,
+          "solve_seconds": 0.46218823800154496,
+          "status": "feasible",
+          "t0": 67165.0,
+          "tf": 67645.0,
+          "to": 40157,
+          "velocity_error_m_s": 5.423659922443432e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 3.243449944180045,
+          "from": 40157,
+          "mass_after": 1256.9613707064084,
+          "mass_before": 1365.3108887866488,
+          "position_error_km": 0.0386836476899994,
+          "propellant_kg": 108.3495181947219,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.2685433230071794,
+          "status": "feasible",
+          "t0": 67645.0,
+          "tf": 67885.0,
+          "to": 52096,
+          "velocity_error_m_s": 2.181952543925056e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 4.2531616742943585,
+          "from": 52096,
+          "mass_after": 1185.7035865441853,
+          "mass_before": 1321.492513759112,
+          "position_error_km": 0.12028378604590736,
+          "propellant_kg": 135.7889273494036,
+          "scvx_iterations": 8,
+          "solve_seconds": 0.5540737019910011,
+          "status": "feasible",
+          "t0": 67885.0,
+          "tf": 68245.0,
+          "to": 39963,
+          "velocity_error_m_s": 4.26110829180931e-06
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 6.355218267463703,
+          "from": 39963,
+          "mass_after": 1060.4433101260313,
+          "mass_before": 1246.9493086523305,
+          "position_error_km": 0.21663929446402708,
+          "propellant_kg": 186.50599870900942,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.5783587759942748,
+          "status": "feasible",
+          "t0": 68335.0,
+          "tf": 68815.0,
+          "to": 4117,
+          "velocity_error_m_s": 1.1249170451004099e-05
+        },
+        {
+          "certified": true,
+          "delta_v_km_s": 4.558996981124476,
+          "from": 4117,
+          "mass_after": 1037.7355193909248,
+          "mass_before": 1165.6315373676466,
+          "position_error_km": 0.48802203879171563,
+          "propellant_kg": 127.89601809798819,
+          "scvx_iterations": 6,
+          "solve_seconds": 0.5507836360047804,
+          "status": "feasible",
+          "t0": 68830.0,
+          "tf": 69280.0,
+          "to": 0,
+          "velocity_error_m_s": 7.828908719300077e-05
+        }
+      ],
+      "master_certified": true,
+      "passes": 1,
+      "refined_arcs": 12,
+      "scheduler": {
+        "batches": 1,
+        "completed": 1,
+        "failed": 0,
+        "feasible": 1,
+        "numeric_updates": 12,
+        "submitted": 1,
+        "workspace_creations": 8
+      },
+      "total_collected_kg": 345.7084188911704,
+      "wall_seconds": 6.562454769999022
+    },
+    "score_kg": 345.708,
+    "viewer_manifest": {
+      "files": {
+        "trajectories.json": {
+          "bytes": 348099,
+          "sha256": "a4b17d9caad6a20a4e20e5e920791095cb9a57d5adbd1e6ae1b157235d103986"
+        }
+      },
+      "schema_version": "1.0.0",
+      "source": {
+        "bytes": 415567,
+        "path_basename": "Result.txt",
+        "sha256": "94505e63ecd962cd4c0397347746d9829186deedd76ae929a153f0768f2c40bf"
+      },
+      "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+    }
+  }
+]

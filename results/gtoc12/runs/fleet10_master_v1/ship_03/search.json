@@ -1,0 +1,1416 @@
+{
+  "excluded_asteroids": [
+    1122,
+    8123,
+    8846,
+    9644,
+    11147,
+    12963,
+    18870,
+    27861,
+    32153,
+    37385,
+    49900,
+    50601,
+    51359,
+    57949
+  ],
+  "peak_rss_mb": 746.3203125,
+  "search": {
+    "best_by_depth": {
+      "1": 120.5201916495551,
+      "2": 202.02600958247774,
+      "3": 257.65913757700207,
+      "4": 350.66392881587956,
+      "5": 383.709787816564,
+      "6": 419.2197125256674
+    },
+    "candidates": 125,
+    "depth_reached": 9,
+    "expansions": 187,
+    "failed_chains": [
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          56952
+        ],
+        "deploy_end_epoch": 66058.0,
+        "mass_after_deploys_kg": 1935.769624613496,
+        "reason": "no feasible collection tour (greedyx1:camp_negative,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:camp_negative,greedyx16:stay_too_short,reversex16:stay_too_short)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          56952
+        ],
+        "deploy_end_epoch": 66028.0,
+        "mass_after_deploys_kg": 1921.7579112166736,
+        "reason": "no feasible collection tour (greedyx1:camp_negative,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:camp_negative,greedyx16:stay_too_short,reversex16:stay_too_short)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524
+        ],
+        "deploy_end_epoch": 65938.0,
+        "mass_after_deploys_kg": 1809.8811635935176,
+        "reason": "no feasible collection tour (greedyx1:camp_negative,reversex1:no_collect_hop,greedyx4:stay_too_short,reversex4:camp_negative,greedyx16:stay_too_short,reversex16:stay_too_short)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035
+        ],
+        "deploy_end_epoch": 65908.0,
+        "mass_after_deploys_kg": 1752.8257879557036,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:stay_too_short,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035
+        ],
+        "deploy_end_epoch": 65968.0,
+        "mass_after_deploys_kg": 1762.6491975731842,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:stay_too_short,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          9595
+        ],
+        "deploy_end_epoch": 65998.0,
+        "mass_after_deploys_kg": 1750.01897695953,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          53412,
+          49304
+        ],
+        "deploy_end_epoch": 66298.0,
+        "mass_after_deploys_kg": 1669.5703199947006,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          53412,
+          49304
+        ],
+        "deploy_end_epoch": 66238.0,
+        "mass_after_deploys_kg": 1655.2997155848145,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          53412,
+          30562
+        ],
+        "deploy_end_epoch": 66118.0,
+        "mass_after_deploys_kg": 1625.2832412279345,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:camp_negative,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          53412,
+          30562
+        ],
+        "deploy_end_epoch": 66028.0,
+        "mass_after_deploys_kg": 1608.7122547710956,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:camp_negative,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153
+        ],
+        "deploy_end_epoch": 66118.0,
+        "mass_after_deploys_kg": 1664.590048468031,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:no_collect_hop,greedyx16:stay_too_short,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153
+        ],
+        "deploy_end_epoch": 66178.0,
+        "mass_after_deploys_kg": 1674.3756332832395,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:no_collect_hop,greedyx16:stay_too_short,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          56335,
+          45805
+        ],
+        "deploy_end_epoch": 66238.0,
+        "mass_after_deploys_kg": 1652.5410348925293,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:stay_too_short,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          42100
+        ],
+        "deploy_end_epoch": 66508.0,
+        "mass_after_deploys_kg": 1651.4676639963814,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:stay_too_short,reversex16:stay_too_short)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          42100
+        ],
+        "deploy_end_epoch": 66448.0,
+        "mass_after_deploys_kg": 1640.2431712090322,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:camp_negative,reversex4:camp_negative,greedyx16:stay_too_short,reversex16:stay_too_short)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085
+        ],
+        "deploy_end_epoch": 66568.0,
+        "mass_after_deploys_kg": 1705.4729224991454,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085
+        ],
+        "deploy_end_epoch": 66508.0,
+        "mass_after_deploys_kg": 1694.455852339021,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          36389,
+          20550,
+          4931
+        ],
+        "deploy_end_epoch": 66568.0,
+        "mass_after_deploys_kg": 1704.8601518585392,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:camp_negative,greedyx16:stay_too_short,reversex16:stay_too_short)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          52064,
+          15825
+        ],
+        "deploy_end_epoch": 66088.0,
+        "mass_after_deploys_kg": 1568.2911835549924,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          52064,
+          15825
+        ],
+        "deploy_end_epoch": 66028.0,
+        "mass_after_deploys_kg": 1557.1394427968305,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          56952
+        ],
+        "deploy_end_epoch": 66268.0,
+        "mass_after_deploys_kg": 1610.5641941541899,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          56952
+        ],
+        "deploy_end_epoch": 66328.0,
+        "mass_after_deploys_kg": 1620.4622820388267,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          54968
+        ],
+        "deploy_end_epoch": 66268.0,
+        "mass_after_deploys_kg": 1607.1453773333362,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          54968
+        ],
+        "deploy_end_epoch": 66328.0,
+        "mass_after_deploys_kg": 1618.0571934728873,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          8086
+        ],
+        "deploy_end_epoch": 66388.0,
+        "mass_after_deploys_kg": 1626.9233579943434,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          10554
+        ],
+        "deploy_end_epoch": 66388.0,
+        "mass_after_deploys_kg": 1626.7179505304375,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153,
+          19825
+        ],
+        "deploy_end_epoch": 66538.0,
+        "mass_after_deploys_kg": 1566.0087136464017,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153,
+          19825
+        ],
+        "deploy_end_epoch": 66508.0,
+        "mass_after_deploys_kg": 1559.9803138339512,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          53412,
+          30562,
+          49304
+        ],
+        "deploy_end_epoch": 66388.0,
+        "mass_after_deploys_kg": 1467.4585522729938,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          53412,
+          30562,
+          49304
+        ],
+        "deploy_end_epoch": 66448.0,
+        "mass_after_deploys_kg": 1468.9497012211407,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153,
+          46423
+        ],
+        "deploy_end_epoch": 66598.0,
+        "mass_after_deploys_kg": 1550.2790385393657,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153,
+          46423
+        ],
+        "deploy_end_epoch": 66538.0,
+        "mass_after_deploys_kg": 1537.5593800806753,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          12689,
+          30562,
+          49304
+        ],
+        "deploy_end_epoch": 66358.0,
+        "mass_after_deploys_kg": 1509.849883867752,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          12689,
+          30562,
+          49304
+        ],
+        "deploy_end_epoch": 66418.0,
+        "mass_after_deploys_kg": 1518.4983969868335,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          42100
+        ],
+        "deploy_end_epoch": 66628.0,
+        "mass_after_deploys_kg": 1519.8638334428697,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          42100
+        ],
+        "deploy_end_epoch": 66628.0,
+        "mass_after_deploys_kg": 1518.6192725932071,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085,
+          59148
+        ],
+        "deploy_end_epoch": 66748.0,
+        "mass_after_deploys_kg": 1595.83799277935,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085,
+          59148
+        ],
+        "deploy_end_epoch": 66778.0,
+        "mass_after_deploys_kg": 1596.5829168405085,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          51370
+        ],
+        "deploy_end_epoch": 66748.0,
+        "mass_after_deploys_kg": 1519.653268770021,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          51370
+        ],
+        "deploy_end_epoch": 66688.0,
+        "mass_after_deploys_kg": 1508.170560720186,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:camp_negative)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          6545
+        ],
+        "deploy_end_epoch": 66988.0,
+        "mass_after_deploys_kg": 1539.0069866586505,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          6545
+        ],
+        "deploy_end_epoch": 66988.0,
+        "mass_after_deploys_kg": 1537.747152155916,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          52064,
+          15825,
+          56270
+        ],
+        "deploy_end_epoch": 66268.0,
+        "mass_after_deploys_kg": 1453.237302987508,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          52064,
+          15825,
+          56270
+        ],
+        "deploy_end_epoch": 66268.0,
+        "mass_after_deploys_kg": 1452.6602722323712,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          54968,
+          42880
+        ],
+        "deploy_end_epoch": 66508.0,
+        "mass_after_deploys_kg": 1491.9392207192184,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          54968,
+          42880
+        ],
+        "deploy_end_epoch": 66568.0,
+        "mass_after_deploys_kg": 1500.3766195187898,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          10554,
+          9215
+        ],
+        "deploy_end_epoch": 66688.0,
+        "mass_after_deploys_kg": 1532.0600612208361,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          10554,
+          9215
+        ],
+        "deploy_end_epoch": 66718.0,
+        "mass_after_deploys_kg": 1536.387052211638,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          56952,
+          26017
+        ],
+        "deploy_end_epoch": 66448.0,
+        "mass_after_deploys_kg": 1458.7665338436732,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          56952,
+          33482
+        ],
+        "deploy_end_epoch": 66568.0,
+        "mass_after_deploys_kg": 1479.4076434654567,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153,
+          19825,
+          46423
+        ],
+        "deploy_end_epoch": 66658.0,
+        "mass_after_deploys_kg": 1464.1596412395613,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          31419,
+          11069,
+          6545,
+          25614,
+          20524,
+          46153,
+          19825,
+          46423
+        ],
+        "deploy_end_epoch": 66688.0,
+        "mass_after_deploys_kg": 1468.5970306090694,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085,
+          59148,
+          37050
+        ],
+        "deploy_end_epoch": 66988.0,
+        "mass_after_deploys_kg": 1473.7423848034357,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085,
+          59148,
+          37050
+        ],
+        "deploy_end_epoch": 66988.0,
+        "mass_after_deploys_kg": 1472.446738217132,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085,
+          59148,
+          23738
+        ],
+        "deploy_end_epoch": 67108.0,
+        "mass_after_deploys_kg": 1478.4505965922044,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085,
+          59148,
+          23738
+        ],
+        "deploy_end_epoch": 67168.0,
+        "mass_after_deploys_kg": 1487.1908698151422,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          6545,
+          19409
+        ],
+        "deploy_end_epoch": 67348.0,
+        "mass_after_deploys_kg": 1450.1445456662702,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040,
+          6545,
+          19409
+        ],
+        "deploy_end_epoch": 67348.0,
+        "mass_after_deploys_kg": 1449.9350781957494,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          6587,
+          725,
+          18268,
+          9085,
+          59148,
+          30229
+        ],
+        "deploy_end_epoch": 67378.0,
+        "mass_after_deploys_kg": 1451.7759010294476,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          10554,
+          9215,
+          33988
+        ],
+        "deploy_end_epoch": 67108.0,
+        "mass_after_deploys_kg": 1431.8306441220025,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          42035,
+          10554,
+          9215,
+          33988
+        ],
+        "deploy_end_epoch": 67168.0,
+        "mass_after_deploys_kg": 1436.6864004739416,
+        "reason": "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop)"
+      }
+    ],
+    "failures": 61,
+    "lambert_evaluations": 8920796,
+    "top_candidates": [
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040
+        ],
+        "collect_epochs": {
+          "5797": 68345.0,
+          "16459": 69185.0,
+          "18336": 68045.0,
+          "22040": 66920.0,
+          "44653": 68765.0,
+          "57585": 67280.0
+        },
+        "collected_mass_kg": {
+          "5797": 73.29226557152636,
+          "16459": 119.28815879534565,
+          "18336": 73.29226557152636,
+          "22040": 12.922655715263518,
+          "44653": 102.86105407255305,
+          "57585": 37.56331279945243
+        },
+        "deploy_epochs": {
+          "5797": 65668.0,
+          "16459": 64828.0,
+          "18336": 65368.0,
+          "22040": 66448.0,
+          "44653": 65008.0,
+          "57585": 65908.0
+        },
+        "earth_return_epoch": 69685.0,
+        "feasible_proxy": true,
+        "final_mass_proxy_kg": 1109.2907832589444,
+        "foreign_deploy_epochs": {},
+        "launch_epoch": 64328.0,
+        "legs": [
+          {
+            "dv_proxy_km_s": 4.038977562149169,
+            "from": 0,
+            "inflation": 1.6,
+            "role": "earth_out",
+            "t0": 64328.0,
+            "tf": 64828.0,
+            "to": 16459
+          },
+          {
+            "dv_proxy_km_s": 2.345163765764762,
+            "from": 16459,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 64828.0,
+            "tf": 65008.0,
+            "to": 44653
+          },
+          {
+            "dv_proxy_km_s": 1.3025135741401423,
+            "from": 44653,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65008.0,
+            "tf": 65368.0,
+            "to": 18336
+          },
+          {
+            "dv_proxy_km_s": 2.9782281230555205,
+            "from": 18336,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65368.0,
+            "tf": 65668.0,
+            "to": 5797
+          },
+          {
+            "dv_proxy_km_s": 2.2114983671564943,
+            "from": 5797,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65668.0,
+            "tf": 65908.0,
+            "to": 57585
+          },
+          {
+            "dv_proxy_km_s": 0.0,
+            "from": 57585,
+            "inflation": 1.0,
+            "role": "camp",
+            "t0": 65908.0,
+            "tf": 65968.0,
+            "to": 57585
+          },
+          {
+            "dv_proxy_km_s": 1.162112940343413,
+            "from": 57585,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65968.0,
+            "tf": 66448.0,
+            "to": 22040
+          },
+          {
+            "dv_proxy_km_s": 0.0,
+            "from": 22040,
+            "inflation": 1.0,
+            "role": "camp",
+            "t0": 66448.0,
+            "tf": 66920.0,
+            "to": 22040
+          },
+          {
+            "dv_proxy_km_s": 3.570346262532969,
+            "from": 22040,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 66920.0,
+            "tf": 67280.0,
+            "to": 57585
+          },
+          {
+            "dv_proxy_km_s": 3.2332117844609685,
+            "from": 57585,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 67280.0,
+            "tf": 67760.0,
+            "to": 18336
+          },
+          {
+            "dv_proxy_km_s": 0.0,
+            "from": 18336,
+            "inflation": 1.0,
+            "role": "camp",
+            "t0": 67760.0,
+            "tf": 68045.0,
+            "to": 18336
+          },
+          {
+            "dv_proxy_km_s": 3.9716105354721396,
+            "from": 18336,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68045.0,
+            "tf": 68345.0,
+            "to": 5797
+          },
+          {
+            "dv_proxy_km_s": 2.1711025475561776,
+            "from": 5797,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68345.0,
+            "tf": 68765.0,
+            "to": 44653
+          },
+          {
+            "dv_proxy_km_s": 4.003972459712907,
+            "from": 44653,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68765.0,
+            "tf": 69185.0,
+            "to": 16459
+          },
+          {
+            "dv_proxy_km_s": 4.79133044755538,
+            "from": 16459,
+            "inflation": 1.6,
+            "role": "earth_return",
+            "t0": 69185.0,
+            "tf": 69685.0,
+            "to": 0
+          }
+        ],
+        "orphaned": [],
+        "propellant_proxy_kg": 2069.9289292667227,
+        "self_cleaning": true,
+        "total_collected_kg": 419.2197125256674
+      },
+      {
+        "asteroids": [
+          16459,
+          44653,
+          18336,
+          5797,
+          57585,
+          22040
+        ],
+        "collect_epochs": {
+          "5797": 68345.0,
+          "16459": 69185.0,
+          "18336": 68045.0,
+          "22040": 66920.0,
+          "44653": 68765.0,
+          "57585": 67280.0
+        },
+        "collected_mass_kg": {
+          "5797": 73.29226557152636,
+          "16459": 119.28815879534565,
+          "18336": 73.29226557152636,
+          "22040": 12.922655715263518,
+          "44653": 102.86105407255305,
+          "57585": 37.56331279945243
+        },
+        "deploy_epochs": {
+          "5797": 65668.0,
+          "16459": 64828.0,
+          "18336": 65368.0,
+          "22040": 66448.0,
+          "44653": 65008.0,
+          "57585": 65908.0
+        },
+        "earth_return_epoch": 69685.0,
+        "feasible_proxy": true,
+        "final_mass_proxy_kg": 1108.6402163880712,
+        "foreign_deploy_epochs": {},
+        "launch_epoch": 64328.0,
+        "legs": [
+          {
+            "dv_proxy_km_s": 4.038977562149169,
+            "from": 0,
+            "inflation": 1.6,
+            "role": "earth_out",
+            "t0": 64328.0,
+            "tf": 64828.0,
+            "to": 16459
+          },
+          {
+            "dv_proxy_km_s": 2.345163765764762,
+            "from": 16459,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 64828.0,
+            "tf": 65008.0,
+            "to": 44653
+          },
+          {
+            "dv_proxy_km_s": 1.3025135741401423,
+            "from": 44653,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65008.0,
+            "tf": 65368.0,
+            "to": 18336
+          },
+          {
+            "dv_proxy_km_s": 2.9782281230555205,
+            "from": 18336,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65368.0,
+            "tf": 65668.0,
+            "to": 5797
+          },
+          {
+            "dv_proxy_km_s": 2.2114983671564943,
+            "from": 5797,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65668.0,
+            "tf": 65908.0,
+            "to": 57585
+          },
+          {
+            "dv_proxy_km_s": 0.0,
+            "from": 57585,
+            "inflation": 1.0,
+            "role": "camp",
+            "t0": 65908.0,
+            "tf": 66028.0,
+            "to": 57585
+          },
+          {
+            "dv_proxy_km_s": 1.187592294776814,
+            "from": 57585,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 66028.0,
+            "tf": 66448.0,
+            "to": 22040
+          },
+          {
+            "dv_proxy_km_s": 0.0,
+            "from": 22040,
+            "inflation": 1.0,
+            "role": "camp",
+            "t0": 66448.0,
+            "tf": 66920.0,
+            "to": 22040
+          },
+          {
+            "dv_proxy_km_s": 3.570346262532969,
+            "from": 22040,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 66920.0,
+            "tf": 67280.0,
+            "to": 57585
+          },
+          {
+            "dv_proxy_km_s": 3.2332117844609685,
+            "from": 57585,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 67280.0,
+            "tf": 67760.0,
+            "to": 18336
+          },
+          {
+            "dv_proxy_km_s": 0.0,
+            "from": 18336,
+            "inflation": 1.0,
+            "role": "camp",
+            "t0": 67760.0,
+            "tf": 68045.0,
+            "to": 18336
+          },
+          {
+            "dv_proxy_km_s": 3.9716105354721396,
+            "from": 18336,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68045.0,
+            "tf": 68345.0,
+            "to": 5797
+          },
+          {
+            "dv_proxy_km_s": 2.1711025475561776,
+            "from": 5797,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68345.0,
+            "tf": 68765.0,
+            "to": 44653
+          },
+          {
+            "dv_proxy_km_s": 4.003972459712907,
+            "from": 44653,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68765.0,
+            "tf": 69185.0,
+            "to": 16459
+          },
+          {
+            "dv_proxy_km_s": 4.79133044755538,
+            "from": 16459,
+            "inflation": 1.6,
+            "role": "earth_return",
+            "t0": 69185.0,
+            "tf": 69685.0,
+            "to": 0
+          }
+        ],
+        "orphaned": [],
+        "propellant_proxy_kg": 2070.579496137596,
+        "self_cleaning": true,
+        "total_collected_kg": 419.2197125256674
+      },
+      {
+        "asteroids": [
+          57530,
+          53410,
+          16118,
+          45738,
+          25792,
+          2454
+        ],
+        "collect_epochs": {
+          "2454": 66410.0,
+          "16118": 68330.0,
+          "25792": 68690.0,
+          "45738": 67610.0,
+          "53410": 66890.0,
+          "57530": 68990.0
+        },
+        "collected_mass_kg": {
+          "2454": 13.744010951403148,
+          "16118": 83.55920602327173,
+          "25792": 84.38056125941137,
+          "45738": 59.73990417522245,
+          "53410": 52.34770704996578,
+          "57530": 113.94934976043805
+        },
+        "deploy_epochs": {
+          "2454": 65908.0,
+          "16118": 65278.0,
+          "25792": 65608.0,
+          "45738": 65428.0,
+          "53410": 64978.0,
+          "57530": 64828.0
+        },
+        "earth_return_epoch": 69490.0,
+        "feasible_proxy": true,
+        "final_mass_proxy_kg": 1045.2556543089177,
+        "foreign_deploy_epochs": {},
+        "launch_epoch": 64328.0,
+        "legs": [
+          {
+            "dv_proxy_km_s": 4.045269108832464,
+            "from": 0,
+            "inflation": 1.6,
+            "role": "earth_out",
+            "t0": 64328.0,
+            "tf": 64828.0,
+            "to": 57530
+          },
+          {
+            "dv_proxy_km_s": 1.3067488829895237,
+            "from": 57530,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 64828.0,
+            "tf": 64978.0,
+            "to": 53410
+          },
+          {
+            "dv_proxy_km_s": 2.363880658358652,
+            "from": 53410,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 64978.0,
+            "tf": 65278.0,
+            "to": 16118
+          },
+          {
+            "dv_proxy_km_s": 0.8184414445774747,
+            "from": 16118,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65278.0,
+            "tf": 65428.0,
+            "to": 45738
+          },
+          {
+            "dv_proxy_km_s": 2.3740257013037063,
+            "from": 45738,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65428.0,
+            "tf": 65608.0,
+            "to": 25792
+          },
+          {
+            "dv_proxy_km_s": 2.6229157126520435,
+            "from": 25792,
+            "inflation": 1.2,
+            "role": "deploy_hop",
+            "t0": 65608.0,
+            "tf": 65908.0,
+            "to": 2454
+          },
+          {
+            "dv_proxy_km_s": 0.0,
+            "from": 2454,
+            "inflation": 1.0,
+            "role": "camp",
+            "t0": 65908.0,
+            "tf": 66410.0,
+            "to": 2454
+          },
+          {
+            "dv_proxy_km_s": 4.0730372575364,
+            "from": 2454,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 66410.0,
+            "tf": 66890.0,
+            "to": 53410
+          },
+          {
+            "dv_proxy_km_s": 5.126741848001453,
+            "from": 53410,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 66890.0,
+            "tf": 67610.0,
+            "to": 45738
+          },
+          {
+            "dv_proxy_km_s": 3.310783011942971,
+            "from": 45738,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 67610.0,
+            "tf": 68330.0,
+            "to": 16118
+          },
+          {
+            "dv_proxy_km_s": 3.929590670779773,
+            "from": 16118,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68330.0,
+            "tf": 68690.0,
+            "to": 25792
+          },
+          {
+            "dv_proxy_km_s": 2.5518044811885163,
+            "from": 25792,
+            "inflation": 1.2,
+            "role": "collect_hop",
+            "t0": 68690.0,
+            "tf": 68990.0,
+            "to": 57530
+          },
+          {
+            "dv_proxy_km_s": 5.2519076165498815,
+            "from": 57530,
+            "inflation": 1.6,
+            "role": "earth_return",
+            "t0": 68990.0,
+            "tf": 69490.0,
+            "to": 0
+          }
+        ],
+        "orphaned": [],
+        "propellant_proxy_kg": 2122.4650849107948,
+        "self_cleaning": true,
+        "total_collected_kg": 407.7207392197125
+      }
+    ],
+    "wall_seconds": 203.17900821800868
+  },
+  "ship": 3
+}

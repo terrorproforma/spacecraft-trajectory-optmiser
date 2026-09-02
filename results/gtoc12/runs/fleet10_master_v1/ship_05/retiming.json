@@ -1,0 +1,492 @@
+{
+  "after": {
+    "asteroids": 6,
+    "final_mass_kg": 634.9478217922056,
+    "score_kg": 452.156
+  },
+  "attempts": [
+    {
+      "attempt": 0,
+      "bans": {},
+      "calibrated_pairs": 0,
+      "proxy": {
+        "asteroids_after": 6,
+        "asteroids_before": 6,
+        "camp_days_after": 900.0,
+        "camp_days_before": 482.0,
+        "collected_after_kg": 452.1560574948665,
+        "collected_before_kg": 333.388090349076,
+        "deploy_phase_days_after": 1365.0,
+        "deploy_phase_days_before": 1500.0,
+        "final_mass_after_kg": 977.8784480754991,
+        "final_mass_before_kg": 1155.2311185930416,
+        "lambert_evaluations": 1169736,
+        "steps": [
+          {
+            "camp_days_after": 900.0,
+            "camp_days_before": 482.0,
+            "collected_after_kg": 452.1560574948665,
+            "collected_before_kg": 333.388090349076,
+            "deploy_phase_days_after": 1365.0,
+            "deploy_phase_days_before": 1500.0,
+            "end_gap_days_after": 4.0,
+            "end_gap_days_before": 527.0,
+            "failure": "",
+            "final_mass_after_kg": 977.8784480754991,
+            "final_mass_before_kg": 1155.2311185930416,
+            "improved": true,
+            "kind": "retime",
+            "lambert_evaluations": 379176,
+            "mass_rounds": 1,
+            "objective_after_kg": 452.1560574948665,
+            "objective_before_kg": 333.388090349076,
+            "price_rounds": 4,
+            "propellant_price": 0.09375,
+            "wall_seconds": 9.207321807989501
+          },
+          {
+            "asteroids": 6,
+            "closing_variants": 1,
+            "failures": [
+              {
+                "asteroid": 51876,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 11315,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56574,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 54548,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56848,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 34923,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56931,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 11321,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 19857,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 46992,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56062,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              }
+            ],
+            "kind": "extend",
+            "result": "no improving insertion",
+            "value_before_kg": 452.1560574948665
+          }
+        ],
+        "wall_seconds": 29.079705447002198
+      },
+      "refined": {
+        "certified": true,
+        "collected_kg": 452.1560574948665,
+        "failures": [],
+        "final_mass_kg": 634.9478217922056,
+        "refined_arcs": 12,
+        "wall_seconds": 8.447373426999548
+      },
+      "result": "certified"
+    },
+    {
+      "attempt": 1,
+      "bans": {},
+      "calibrated_pairs": 11,
+      "proxy": {
+        "asteroids_after": 6,
+        "asteroids_before": 6,
+        "camp_days_after": 900.0,
+        "camp_days_before": 900.0,
+        "collected_after_kg": 452.1560574948665,
+        "collected_before_kg": 452.1560574948665,
+        "deploy_phase_days_after": 1365.0,
+        "deploy_phase_days_before": 1365.0,
+        "final_mass_after_kg": 977.8784480754991,
+        "final_mass_before_kg": 977.8784480754991,
+        "lambert_evaluations": 1169736,
+        "steps": [
+          {
+            "camp_days_after": 915.0,
+            "camp_days_before": 900.0,
+            "collected_after_kg": 451.3347022587269,
+            "collected_before_kg": 452.1560574948665,
+            "deploy_phase_days_after": 1365.0,
+            "deploy_phase_days_before": 1365.0,
+            "end_gap_days_after": 4.0,
+            "end_gap_days_before": 4.0,
+            "failure": "",
+            "final_mass_after_kg": 1045.4848441975537,
+            "final_mass_before_kg": 977.8784480754991,
+            "improved": false,
+            "kind": "retime",
+            "lambert_evaluations": 1169736,
+            "mass_rounds": 1,
+            "objective_after_kg": 451.3347022587269,
+            "objective_before_kg": 452.1560574948665,
+            "price_rounds": 4,
+            "propellant_price": 0.09375,
+            "wall_seconds": 0.02183460700325668
+          },
+          {
+            "asteroids": 6,
+            "closing_variants": 1,
+            "failures": [
+              {
+                "asteroid": 51876,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 11315,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56574,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 54548,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56848,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 34923,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56931,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 11321,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 19857,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 46992,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56062,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              }
+            ],
+            "kind": "extend",
+            "result": "no improving insertion",
+            "value_before_kg": 452.1560574948665
+          }
+        ],
+        "wall_seconds": 0.6909903990017483
+      },
+      "result": "no proxy improvement"
+    }
+  ],
+  "before": {
+    "asteroids": 6,
+    "final_mass_kg": 1004.3759297932902,
+    "score_kg": 333.388
+  },
+  "certified": true,
+  "certified_variants": 1,
+  "route": {
+    "asteroids": [
+      32489,
+      9720,
+      48888,
+      8810,
+      13593,
+      8739
+    ],
+    "certified": true,
+    "collected_mass_kg": {
+      "8739": 18.8911704312115,
+      "8810": 71.45790554414785,
+      "9720": 95.27720739219713,
+      "13593": 52.56673511293634,
+      "32489": 117.86447638603696,
+      "48888": 96.09856262833675
+    },
+    "failures": [],
+    "final_mass_kg": 634.9478217922056,
+    "legs": [
+      {
+        "certified": true,
+        "delta_v_km_s": 3.5677719506402736,
+        "from": 0,
+        "mass_after": 2739.1822205621606,
+        "mass_before": 3000.0,
+        "position_error_km": 0.028925124788493448,
+        "propellant_kg": 260.8177796897676,
+        "scvx_iterations": 6,
+        "solve_seconds": 0.6810462790017482,
+        "status": "feasible",
+        "t0": 64508.0,
+        "tf": 65003.0,
+        "to": 32489,
+        "velocity_error_m_s": 3.454133565972293e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 2.1261410413185082,
+        "from": 32489,
+        "mass_after": 2556.776623415938,
+        "mass_before": 2699.1822205621606,
+        "position_error_km": 0.004229376463590563,
+        "propellant_kg": 142.40559728629023,
+        "scvx_iterations": 5,
+        "solve_seconds": 0.24351425800705329,
+        "status": "feasible",
+        "t0": 65003.0,
+        "tf": 65243.0,
+        "to": 9720,
+        "velocity_error_m_s": 1.6677622772000177e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 2.6960867088770986,
+        "from": 9720,
+        "mass_after": 2349.6065342763577,
+        "mass_before": 2516.776623415938,
+        "position_error_km": 0.010160871498064777,
+        "propellant_kg": 167.17008930141174,
+        "scvx_iterations": 5,
+        "solve_seconds": 0.3063111840019701,
+        "status": "feasible",
+        "t0": 65243.0,
+        "tf": 65543.0,
+        "to": 48888,
+        "velocity_error_m_s": 1.3800784323470152e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 3.008240230457597,
+        "from": 48888,
+        "mass_after": 2139.1068780873575,
+        "mass_before": 2309.6065342763577,
+        "position_error_km": 0.021880704380902023,
+        "propellant_kg": 170.4996563535874,
+        "scvx_iterations": 5,
+        "solve_seconds": 0.22508058200764935,
+        "status": "feasible",
+        "t0": 65543.0,
+        "tf": 65768.0,
+        "to": 8810,
+        "velocity_error_m_s": 1.3743354188311721e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 2.037067110062946,
+        "from": 8810,
+        "mass_after": 1992.8807383851797,
+        "mass_before": 2099.1068780873575,
+        "position_error_km": 0.014799159647149679,
+        "propellant_kg": 106.22613980544656,
+        "scvx_iterations": 6,
+        "solve_seconds": 0.1949245009891456,
+        "status": "feasible",
+        "t0": 65768.0,
+        "tf": 65918.0,
+        "to": 13593,
+        "velocity_error_m_s": 1.1109142241293184e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 1.6179568714792507,
+        "from": 13593,
+        "mass_after": 1873.9699769911517,
+        "mass_before": 1952.8807383851797,
+        "position_error_km": 0.01174453048714231,
+        "propellant_kg": 78.91076147047079,
+        "scvx_iterations": 5,
+        "solve_seconds": 0.41618898599699605,
+        "status": "feasible",
+        "t0": 65918.0,
+        "tf": 66368.0,
+        "to": 8739,
+        "velocity_error_m_s": 9.286474041898806e-07
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 1.6574422598707246,
+        "from": 8739,
+        "mass_after": 1776.2030926345167,
+        "mass_before": 1852.8611474223633,
+        "position_error_km": 0.06884107557866814,
+        "propellant_kg": 76.65805486229283,
+        "scvx_iterations": 5,
+        "solve_seconds": 0.6131777259870432,
+        "status": "feasible",
+        "t0": 67058.0,
+        "tf": 67628.0,
+        "to": 13593,
+        "velocity_error_m_s": 2.6854244038491152e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 2.1153361924673066,
+        "from": 13593,
+        "mass_after": 1732.7633569331983,
+        "mass_before": 1828.769827747453,
+        "position_error_km": 0.05796258366328733,
+        "propellant_kg": 96.00647090680127,
+        "scvx_iterations": 6,
+        "solve_seconds": 0.6442996989935637,
+        "status": "feasible",
+        "t0": 67838.0,
+        "tf": 68378.0,
+        "to": 8810,
+        "velocity_error_m_s": 4.0883867536560256e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 6.737387883102146,
+        "from": 8810,
+        "mass_after": 1519.4880575770176,
+        "mass_before": 1804.2212624773463,
+        "position_error_km": 0.045940194134389864,
+        "propellant_kg": 284.73320517261914,
+        "scvx_iterations": 10,
+        "solve_seconds": 0.7465765029919567,
+        "status": "feasible",
+        "t0": 68378.0,
+        "tf": 68723.0,
+        "to": 9720,
+        "velocity_error_m_s": 4.827708053947945e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 6.589520094919726,
+        "from": 9720,
+        "mass_after": 1365.0671036512604,
+        "mass_before": 1614.7652649692147,
+        "position_error_km": 0.05414327681913229,
+        "propellant_kg": 249.69816156850607,
+        "scvx_iterations": 25,
+        "solve_seconds": 2.1965923360112356,
+        "status": "feasible",
+        "t0": 68723.0,
+        "tf": 69053.0,
+        "to": 48888,
+        "velocity_error_m_s": 2.5616400198730713e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 4.688687959028526,
+        "from": 48888,
+        "mass_after": 1296.5491572368348,
+        "mass_before": 1461.1656662795972,
+        "position_error_km": 0.06692415740344508,
+        "propellant_kg": 164.61650920280817,
+        "scvx_iterations": 7,
+        "solve_seconds": 0.35197625200089533,
+        "status": "feasible",
+        "t0": 69053.0,
+        "tf": 69308.0,
+        "to": 32489,
+        "velocity_error_m_s": 3.9431060814161e-06
+      },
+      {
+        "certified": true,
+        "delta_v_km_s": 10.324358101358367,
+        "from": 32489,
+        "mass_after": 1087.103879287072,
+        "mass_before": 1414.4136336228719,
+        "position_error_km": 0.3250111600655924,
+        "propellant_kg": 327.30975465858205,
+        "scvx_iterations": 8,
+        "solve_seconds": 0.9244252380012767,
+        "status": "feasible",
+        "t0": 69308.0,
+        "tf": 69803.0,
+        "to": 0,
+        "velocity_error_m_s": 5.626721440510266e-05
+      }
+    ],
+    "master_certified": true,
+    "passes": 1,
+    "refined_arcs": 12,
+    "scheduler": {
+      "batches": 1,
+      "completed": 1,
+      "failed": 0,
+      "feasible": 1,
+      "numeric_updates": 12,
+      "submitted": 1,
+      "workspace_creations": 11
+    },
+    "total_collected_kg": 452.1560574948665,
+    "wall_seconds": 8.447373426999548
+  },
+  "wall_seconds": 38.21816896399832
+}

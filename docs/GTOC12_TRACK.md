@@ -184,7 +184,103 @@ The route is emitted as an official file, scored by both verifiers, and exported
 
 CLI: `spacepdhcg gtoc12 run --run-id <id> --output <dir> [--beam-width 32 --max-deploys 10
 --neighbours 64 --refine-top 3 --ships 3 --search-budget-seconds 1800 --stop-at-first-certified
---search-only --full-catalogue --pool-a-min 2.2 --pool-a-max 3.0 --pool-e-max 0.15 --pool-i-max 8]`.
+--search-only --full-catalogue --pool-a-min 2.2 --pool-a-max 3.0 --pool-e-max 0.15 --pool-i-max 8
+--budget-seconds 7200 --retime-attempts 4 --retime-budget-seconds 900 --no-retime
+--no-bonus-weights --no-cooperative]`.
+
+### 6.4 Joint re-timing, chain extension, clusters, cooperative collection, fleet master
+
+`retiming.py` — after a chain certifies, its visit order is fixed and *every* epoch is re-chosen
+jointly by an exact dynamic programme over a 15-day lattice (launch, each arrival, each camp,
+each departure, Earth return). Stage values are the bonus-weighted mined mass (a deploy at `t`
+contributes `−w k t`, a collect at `t` contributes `+w k t`, so the objective is exactly
+`Σ w_i k (t_collect − t_deploy)`) minus a propellant price × rocket-equation propellant of each
+leg; legs come from cached Lambert tables per body pair (departure lattice × TOF grid: hops
+60–720 d, Earth legs 400–900 d) and are admissible under the role's authority ratio (hops 0.45
+here — every certified hop had ≤ 0.49 and half of those at ≥ 0.49 failed SCvx). The DP runs on a
+per-leg mass profile; a forward pass then rebuilds the plan with true masses, and the price is
+raised geometrically until the mass budget closes (or lowered geometrically while it keeps
+closing), then bisected twice towards the last failing price so the margin is *spent* rather
+than left over. (`fleet6_retime_v1` ran with a price loop that stopped after one halving;
+letting it keep halving lifts ship 1's proxy re-timing from 564.7 to 583.2 kg, which is what
+`fleet10_master_v1` uses.) Chain extension inserts one more asteroid
+(deployed last, collected first) from the position-space candidates and re-times each variant;
+the SCvx-in-the-loop driver (`improve_and_certify`) re-flies the improved plan, *bans* the body
+pair of any leg that fails (authority ratio ≤ 0.9 × the failing ratio in later attempts) and
+*calibrates* the propellant inflation of every pair that certifies (SCvx ΔV / Lambert ΔV × 1.03),
+then tries again from the certified plan. Only certified routes are returned; the previously
+certified route is kept otherwise.
+
+Effect on the 6-ship fleet (`fleet6_retime_v1`, before → after, all officially verified):
+ship 1 548.3 → 592.6 kg (8 → 8 asteroids, final mass 693 → 511 kg: the margin became
+faster hops); ship 2 372.4 → 425.5 (6 → 7, 1030 → 572 kg); ship 3 419.2 (unchanged: the
+re-timed variant did not certify, E→16459 banned at ratio 0.49); ship 4 341.3 → 446.8 (5 → 6,
+1047 → 502 kg); ship 5 333.4 → 465.3 (6 → 7, 1004 → 523 kg); ship 6 329.1 → 395.5 (5 → 6,
+1270 → 616 kg). Fleet 2343.6 → 2744.9 kg (+17 %); every re-timed ship ends within 11–116 kg of
+the 500 kg floor, i.e. the "unspent propellant" of §7 is gone, and the binding constraint is
+again the 15-year window (extensions fail with `mass_below_dry_plus_collected` once the ship is
+at the floor, or `leg_authority` for the heavy collect hops).
+
+Effect on the 10-ship fleet (`fleet10_master_v1`, full price loop; before → after, asteroids,
+refined final mass excluding collected ore): ship 1 548.3 → 583.2 kg (8 → 8, 693 → 574 kg);
+ship 2 372.4 → 490.3 (6 → 6, 1030 → 584); ship 3 419.2 (unchanged, E→16459 ban again); ship 4
+341.3 → 433.7 (5 → 6, 1047 → 541); ship 5 333.4 → 452.2 (6 → 6, 1004 → 635); ship 6 329.1 →
+446.0 (5 → 6, 1270 → 553); ship 7 314.3 → 448.9 (5 → 6, 968 → 620); ship 8 310.7 → 396.7 (5 →
+6, 1091 → 616); ship 9 299.2 → 354.8 (5 → 5, 1232 → 638); ship 10 346.9 → 373.7 (6 → 7, 709 →
+571). Greedy fleet 3614.9 → 4398.7 kg (**+21.7 %**); 9 of 10 ships certified a re-timed
+variant, in 2–4 SCvx attempts (36–132 s per ship, 14–20 legs re-flown per attempt). Ships 2, 5
+and 7 gained > 30 % from re-timing alone (no new asteroid): their beam-search chains had 430–560
+kg of propellant left that the DP turned into 2–3 years more mining per miner.
+
+`clusters.py` — co-moving families: features `(a, e cos ϖ, e sin ϖ, i cos Ω, i sin Ω, λ)` scaled
+by the reference p95 bands (0.04 AU, 0.06, 4.5°, 8° in mean longitude), a `cKDTree` ball count
+gives each asteroid's co-moving density, greedy density-ordered labelling gives clusters, and
+`phasing_window` returns the first window in which two members are within a phase band. The
+prior in the beam (`cluster_min_density`, `cluster_bonus_kg`, co-moving-first expansion) is
+implemented but **off by default**: on the full-catalogue pool it lost the 544–548 kg
+8-asteroid chain (446 kg at best; with the 0.85 Earth-leg ratio it reached 549 kg proxy but
+those Earth legs failed SCvx). The same element bands are used after the beam instead — for
+insertion candidates, for ranking another ship's orphans against a collect tour, and for
+seeding the next ship's first level.
+
+`cooperative.py` — miners as shared resources. `RoutePlan` carries `foreign_deploy_epochs`
+(miners this ship collects but another ship deployed) and may leave *orphans* (deployed, not
+collected); `refine_route`, `emit_solution`, the re-timer's DP (a foreign collect is admissible
+only ≥ 1 year after the *deployer's* epoch) and the independent verifier all handle the split.
+`MinerPool` is the fleet-level registry (each asteroid deployed once, collected once, a collect
+must match the registered deploy epoch); ship *k*'s extension may insert pool orphans into its
+collect tour (first, or beside the tour asteroid they co-move with best) and, when
+`orphan_credit > 0`, may deploy-and-leave a miner valued at `credit × k (T_end − 400 d − t)`.
+The next ship's first level earns `seed_bonus_kg` (120 kg) for Earth targets co-moving with an
+orphan ("pricing seeded from uncovered clusters"). `solve_fleet_master` is the G7-style master:
+columns are certified itineraries (every certified candidate and every certified re-timed
+variant of every ship), the objective is the fixed-bonus score `Σ B_i M_i`, constraints are
+deploy-once / collect-once per asteroid, the deployer of every foreign collect must be in the
+fleet with the same epoch, `N ≤ min(100, 2 exp(0.004 M̄))`, and a ship cap; solved exactly by
+depth-first branch and bound with a suffix-sum bound and a node cap (deterministic, order
+invariant). The greedy fleet is one of its feasible subsets, so the master never scores lower.
+
+What cooperation did on the full catalogue (`fleet6_coop_v1`, credit 0.5): ships 1, 2, 4 and 6
+took 1–3 orphan insertions each (9 orphans, e.g. ship 1 → 10 asteroids: 8 collected + 2 left),
+because a deploy-only hop on a light ship is cheap and the credit (≈ 45 kg per orphan) beat the
+10–36 kg of own collection it displaced. **Nobody collected them**: the next ship's beam still
+started in a different cluster (the 120 kg seed did not outweigh the Earth-leg economics) and
+every cross-cluster foreign collect was DP-infeasible, so the fleet scored 2641.8 kg versus
+2744.9 kg self-cleaning. On a co-moving pair the mechanism itself works: ship 1's un-re-timed
+route (548 kg) collecting two orphans deployed 660–720 days after launch by a neighbouring ship
+re-times to 705 kg (10 asteroids) at proxy level. The credit therefore defaults to 0 (foreign
+collects are still attempted when orphans exist), and the honest conclusion is that cooperative
+collection needs the *deployer and collector to be planned together* in one cluster (the JPL
+pattern: 279/320 collections cooperative, ships sharing a/e/i bands), which is the master's
+next pricing problem, not a greedy side effect.
+
+Master convergence: `fleet6_coop_v1` 20 columns, 9,177 nodes, exhaustive, optimum = greedy
+incumbent (2641.8 kg). `fleet10_master_v1` 31 columns (3 candidates + up to 2 certified re-timed
+variants per ship), 200,009 nodes (node cap), suffix-sum upper bound 12,256 kg (loose: it adds
+every ship's best column ignoring asteroid conflicts), incumbent = greedy 4398.7 kg, 21 columns
+rejected as dominated by the incumbent's column of the same ship (`fleet/master.json`). With
+one launch slot per ship and no cooperative columns the master is an audit, not a lever; it
+becomes one when several ships price against the same cluster.
 
 ### 6.3 Proxy validation (`results/gtoc12/proxy_validation.json`)
 
@@ -218,6 +314,9 @@ not needed: reference hops have zero revolutions (p95 0.004).
 | `full_catalogue_search2` (search v2, beam 32, ≤10 deploys, 64 neighbours, pool 10,612) | full catalogue | 1 | 8 (8846, 27861, 37385, 49900, 8123, 1122, 12992, 57949) | **548.282 kg** | 548.282 kg | 16 | 261 s | 42 s (2 candidates) | 303 s, 0.66 GB | CPU |
 | `fleet3_full_catalogue` (search v2 pre-final, 3 ships greedy, beam 24, ≤10, 48 nb) | full catalogue | 2 (ship 3 uncertified) | 13 | **965.804 kg** | 893.263 kg | 26 | 719 s (3 searches) | 32 s | 751 s, 0.75 GB | CPU |
 | `fleet3_full_catalogue_v2` (final code, 3 ships greedy, beam 32, ≤11, 64 nb, 1800 s budget/ship) | full catalogue | 3 | 20 | **1394.11 kg** (548.28 + 442.22 + 403.61) | 1318.117 kg | 40 | 814 s (3 searches) | 53 s (5 candidates) | 867 s, 0.77 GB | CPU |
+| `fleet6_retime_v1` (6 ships greedy + joint re-timing/extension with SCvx in the loop, beam 24, ≤10, 48 nb) | full catalogue | 6 | 40 | **2744.89 kg** (592.6 + 425.5 + 419.2 + 446.8 + 465.3 + 395.5) | 2744.89 kg (all B = 1: the bonus-weighted beam avoids asteroids other teams mined) | 80 | 6 × ~120–180 s | ~25 min incl. re-timing | 1938 s (32 min), 0.78 GB | CPU |
+| `fleet6_coop_v1` (as above + cooperative pool, orphan credit 0.5, master over 20 columns) | full catalogue | 6 | 45 deployed / 36 collected | **2641.81 kg** | 2641.81 kg | 85 | 6 × ~120–180 s | ~28 min | 2080 s, 0.76 GB | CPU |
+| `fleet10_master_v1` (10 ships greedy + re-timing with the full price loop, cooperative pool with credit 0, master over 31 columns; 2 h budget) | full catalogue | 10 | 62 | **4398.69 kg** (583.2 + 490.3 + 419.2 + 433.7 + 452.2 + 446.0 + 448.9 + 396.7 + 354.8 + 373.7) | 4398.69 kg (all B = 1) | 124 | 10 × ~130–220 s | ~40 min incl. re-timing | 3089 s (51 min), 0.76 GB | CPU |
 
 Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
 RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
@@ -228,7 +327,14 @@ verified artifacts; `reduced_v1_search3` and `fleet3_full_catalogue_v2` are repr
 --beam-width 32 --max-deploys 11 --neighbours 64 --refine-top 3 --stop-at-first-certified
 --search-budget-seconds 1800`). Ship 1 of the final fleet reproduces the `search2` route exactly.
 Best score by depth (proxy kg) for the final ship 1: 1→124.5, 2→221, 3→285, 4→338, 5→404,
-6→445, 7→531, 8→548; depths 9–11 produced no completable chain.
+6→445, 7→531, 8→548; depths 9–11 produced no completable chain. The second-campaign fleets
+(`fleet6_*`, `fleet10_master_v1`) reproduce from HEAD with `--full-catalogue --ships N
+--budget-seconds 7200 --retime-budget-seconds 900 --retime-attempts 4` (defaults: beam 24, ≤ 10
+deploys, 48 neighbours, refine top 3, cooperative pool on, orphan credit 0); `fleet6_retime_v1`
+predates the pool (equivalent to `--no-cooperative`) and used the earlier one-halving price
+loop, `fleet6_coop_v1` orphan credit 0.5. `fleet10_master_v1` is the best verified fleet: official `GTOC12_Verify` "Check
+successfully!" on the 10-ship file (62 asteroids, 4398.686 kg; fleet rule 10 ≤ 11.6), independent
+verifier agreeing per asteroid to 1e-10 kg.
 
 Where the runs stop: 140 of 155 failed chains in the widest run (`beam 48, 96 neighbours`) died
 with `camp_negative` — the backward-scheduled collection tour ran past the deploy phase — at
@@ -250,6 +356,29 @@ Variants tried and rejected (all officially verified where they certified): Eart
 1.3 (`*_search3`: 457 kg / no certified reduced route); time weight 0.05 + duty 0.8
 (`search4`: no certified route, 3 marginal legs infeasible); time weight 0.03 + duty 0.7
 (`search5a`: 244 kg, Earth legs pruned); time weight 0.02 + hop duty 0.75 (`search5`: 447 kg).
+Second campaign (this section's fleets), rejected on the full-catalogue depth probe (24 launch
+targets, proxy kg of the best chain): hop authority ratio 0.5 in the beam (376 kg, depth 6 —
+collect hops of the heavy ship no longer fit); Earth-leg model 0.95×/ratio 0.85 from the
+reference legs (549 kg proxy but E→6014/15614/26515 at ratio 0.71 failed SCvx, `fleet6_coop_v1`
+first launch: no certified ship); cluster prior density ≥ 8 + 150 kg with the certified Earth
+envelope (375–446 kg); co-moving-first expansion (464 kg vs 544 kg without); orphan credit 0.5
+(fleet 2641.8 vs 2744.9 kg, nine uncollected orphans). Retained: the HEAD leg model
+(Earth 1.6×/0.5, hops 1.2×/0.667), joint re-timing with hop ratio 0.45 and per-pair
+calibration/bans, bonus-weighted beam scoring, the master.
+
+Score versus wall-clock budget (single process, `fleet6_retime_v1` / `fleet10_master_v1`):
+5 min → 592.6 kg (1 ship); 10.5 min → 1018.1 kg (2); 15.5 min → 1437.3 kg (3); 20.6 min →
+1884.1 kg (4); 26 min → 2349.4 kg (5); **30 min → 2349.4 kg (5 ships)**; 32 min → 2744.9 kg
+(6). `fleet10_master_v1` (same machine, the run also served the test suite for its first
+10 minutes): 5.1 min → 583.2 kg (1); 9.8 → 1073.5 (2); 14.2 → 1492.7 (3); 19.5 → 1926.4 (4);
+24.0 → 2378.6 (5); **30 min → 2378.6 kg (5 ships; the 6th certifies at 30.3 min → 2824.6)**;
+35.5 → 3273.4 (7); 41.2 → 3670.1 (8); 46.3 → 4025.0 (9); **51.2 min → 4398.7 kg (10 ships)**;
+the 2 h budget was not needed because the fleet rule, not time, stops the fleet: with an
+average of 439.9 kg per ship `N ≤ 2 exp(0.004 M̄) = 11.6`, so an 11th ship is the last admissible
+one at this per-ship mass (the references' 740 kg average is what allows their 36–39 ships).
+Peak RSS stayed at 0.76–0.78 GB throughout (bound: 2 GB). Every ship
+costs ~5–6 min: 2–3 min beam search, 0.5–1 min for up to three SCvx refinements, 1–3 min of
+re-timing/extension with SCvx re-certification (each attempt re-flies 14–20 legs).
 
 Per-leg detail of `reduced-v1-run2` (propellant, SCvx iterations, solve time, certified endpoint
 error): E→1265 600 d 364.7 kg 9 it 1.3 s 0.32 km; 1265→21191 360 d 128.7 kg 7 it 0.5 s 0.04 km;
@@ -279,29 +408,41 @@ context orbits).
 
 ## 8. Limitations
 
-- Self-cleaning ships only (the JPL file shows 279/320 cooperative collections; cross-ship
-  deploy/collect is not modelled); no gravity assists; zero-revolution Lambert screening only
-  (justified by the references, but long collect hops of 600–720 days are then screened as
-  single-arc transfers).
-- Greedy fleets: ship k never revisits ship 1..k−1's choices, so the second and third ships land
-  on thinner clusters (442, 404 kg vs 548 kg). A joint fleet assignment (column generation over
-  ship routes) is the natural next step for the G7 master.
-- Time re-optimisation is at the grid level only (15-day collection scheduling, 30-day launch and
-  deploy-wait grids); legs are not re-timed jointly after refinement, and the 230–430 kg of
-  propellant left in every certified route is not reclaimed.
+- Cooperative collection is modelled end to end (plans, re-timer, refinement, emission, pool,
+  master; §6.4) but the emitted fleets are self-cleaning: orphans left by one ship were never
+  reachable for the next ship's tour, so the credit defaults to 0. No gravity assists;
+  zero-revolution Lambert screening only (justified by the references, but long collect hops of
+  600–720 days are then screened as single-arc transfers).
+- Fleets are still built greedily (ship k prices against ships 1..k−1's asteroids); the master
+  chooses among every certified column afterwards but, without cooperative columns, it can only
+  confirm the greedy incumbent (`fleet6_coop_v1`: 20 columns, 9,177 nodes, exhaustive, greedy
+  = optimum). Later ships land on thinner clusters (355–465 kg vs 593 kg for ship 1).
+- Re-timing is exact on a 15-day lattice with a fixed visit order and per-leg mass profile;
+  order changes are limited to single insertions, and the DP's leg model is the same
+  inflated-Lambert proxy (per-pair calibrated after each SCvx pass), so 1 in 3–4 re-timed plans
+  still fails certification and costs a 1–3 min attempt.
 - Impulsive proxies with fixed inflation factors decide the beam; the tails (1.30× hops, 1.74×
-  Earth-out) mean a few plans per run fail SCvx certification and are skipped, not repaired.
+  Earth-out, and up to 2.2× on Earth legs the fleet runs certified) mean a few plans per run
+  fail SCvx certification and are skipped, not repaired.
 - The SCvx leg solver is a Python/Clarabel CPU reference (2-day ZOH nodes); the fixed-pattern
   PDHCG CQP contract is not used yet, so no GPU timing claim exists.
-- Best single ship is 548 kg vs ≈ 740 kg per archived reference ship (74 %); the reduced instance
-  is intrinsically sparse (≈1–2 co-located candidates per hop vs ≈15 in the full catalogue) and
-  plateaus at 5 asteroids / 314 kg with this search.
+- Best single ship is 592.6 kg vs ≈ 740 kg per archived reference ship (80 %); the 10-ship
+  average is 440 kg (59 %) because ships 2–10 get the thinner clusters (355–490 kg). The reduced
+  instance is intrinsically sparse (≈1–2 co-located candidates per hop vs ≈15 in the full
+  catalogue) and plateaus at 5 asteroids / 314 kg with this search.
 
-Next bottleneck: candidate generation still yields 240–300-day deploy hops because the pool is
-ranked per hop rather than per *cluster*; building tight co-located clusters (Δa ≤ 0.04 AU,
-phase ±5° over the whole deploy window) up front and searching orders within them, plus a joint
-re-timing pass that spends the unused propellant on shorter hops, is what stands between 8 and
-10 asteroids per ship.
+Next bottleneck: the fleet rule `N ≤ 2 exp(0.004 M̄)` ties fleet size to the *average* ship. At
+440 kg it allows 11 ships (4.4–4.8 t total); at the references' 740 kg it allows 38, which is
+exactly why they field 36–39 ships and score ~28 t. Adding ships at 350–450 kg each is therefore
+capped within one more launch, and the whole gap is per-ship mass: our ships end at the 500 kg
+floor with 6–8 asteroids where the references fit 9–10 into clusters that several ships share
+(JPL: 279/320 collections cooperative) and deploy early miners that other ships collect late.
+Getting there needs the master's pricing problem to plan a deployer and its collector(s)
+together inside one co-moving family — a two-ship beam over a cluster with the shared-miner DP
+above — rather than the greedy one-ship-at-a-time loop that leaves orphans where no later ship
+goes. A second lever is throughput: at 5–6 min per ship single-process, pricing several
+clusters in parallel worker processes (the G7 scheduler already batches the Lambert screening)
+would let the master choose among many more columns per launch slot.
 
 ## 9. How this feeds Paper 2 / OrbitWeaver
 
