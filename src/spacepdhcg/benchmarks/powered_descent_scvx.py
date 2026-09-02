@@ -95,6 +95,10 @@ def run(
             "solve_seconds": polish.solve_seconds,
             "setup_seconds": polish_backend.setup_seconds,
         }
+    accepted_optimizer = next(
+        (record.as_dict() for record in reversed(result.iterations) if record.accepted),
+        None,
+    )
     return {
         "benchmark": "nonlinear 3-DoF powered-descent SCvx CPU reference",
         "status": result.status,
@@ -104,6 +108,7 @@ def run(
         "initial_dispersion_scale": initial_dispersion_scale,
         "final_polish": final_polish,
         "polish": polish_payload,
+        "accepted_optimizer": accepted_optimizer,
         "outer_iterations": result.outer_iterations,
         "accepted_iterations": result.accepted_iterations,
         "final_merit": result.merit,
