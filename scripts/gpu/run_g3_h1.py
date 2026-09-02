@@ -47,10 +47,11 @@ def _bootstrap_median_interval(values: list[float]) -> tuple[float, float]:
 
 
 def _parse_record(stdout: str) -> dict[str, Any]:
-    records = []
-    for line in stdout.splitlines():
-        if line.startswith("{"):
-            records.append(json.loads(line))
+    records = [
+        json.loads(line)
+        for line in stdout.splitlines()
+        if line.startswith("{") and '"case":"h1_hcw"' in line
+    ]
     matches = [record for record in records if record.get("case") == "h1_hcw"]
     if len(matches) != 1:
         raise RuntimeError("benchmark did not emit exactly one h1_hcw record")

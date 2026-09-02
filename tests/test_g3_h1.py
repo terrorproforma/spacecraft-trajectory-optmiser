@@ -58,3 +58,16 @@ def test_h1_sustained_boundary_uses_three_coordinates() -> None:
         {"intervals": 500, "summary": {"status": "supported"}},
     ]
     assert module._sustained_boundary(coordinates) == 50
+
+
+def test_h1_parser_ignores_non_json_numeric_sentinels_in_other_records() -> None:
+    module = _module()
+    stdout = "\n".join(
+        (
+            '{"case":"production_outer","ratio":-inf}',
+            '{"case":"h1_hcw","intervals":20,"canonical_residual":1e-9}',
+        )
+    )
+    record = module._parse_record(stdout)
+    assert record["case"] == "h1_hcw"
+    assert record["intervals"] == 20
