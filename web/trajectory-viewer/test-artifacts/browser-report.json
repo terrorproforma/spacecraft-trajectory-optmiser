@@ -1,0 +1,45 @@
+{
+  "browser": "151.0.7922.34",
+  "desktop": {
+    "viewport": "1440x1000",
+    "trajectory": "P2",
+    "replay_points": 512,
+    "interactions": [
+      "switch",
+      "timeline",
+      "play",
+      "drag",
+      "wheel",
+      "keyboard"
+    ]
+  },
+  "mobile": {
+    "viewport": "390x844",
+    "trajectory": "P1-C",
+    "replay_points": 201
+  },
+  "requests": [
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/styles.css"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/app.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/math.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/data/trajectories.json"
+    }
+  ],
+  "errors": [],
+  "webgl2": true
+}
