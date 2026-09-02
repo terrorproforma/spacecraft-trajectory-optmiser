@@ -881,3 +881,44 @@
   - Rebuild after the final commit, generate the executable/hash-pinned capability from the clean
     tree, then initialize a new claim-core or full grouped checkpoint.
   - No 3,240-invocation claim core or 2,764,800-session campaign was run; H5/H6 remain unresolved.
+
+## 2026-09-03 02:35 AEST
+
+- Task summary:
+  - Turned the comparative-campaign specification into runnable Phase 0-1 targets on
+    `feat/literature-targets` (worktree `/home/angus/worktrees/spacepdhcg-literature`, based on
+    `b6afb49`); integration and planner worktrees untouched.
+- Changes:
+  - `715c1db` spec import (user's campaign doc, literature baselines, matrix/protocol/outline
+    edits, manifest tests; text verbatim, CRLF normalised).
+  - `196b3ba` G7 contracts accept both the sealed and the P2-F-extended Paper 2 matrix digests;
+    CPU ledger counts updated (2,684 / 16,360).
+  - `4f92133` `src/spacepdhcg/literature/` (provenance, external sources, registry, free-final-time
+    SCvx core, P1-C/P1-D/P1-D-MC/P1-E/TOPS/GTOPX/GTOC runners, report, CLI), `spacepdhcg`
+    console script, `benchmarks/literature/*` (targets, profiles, provenance store with 126
+    records, external pins, frozen TOPS/GTOC selections, seeded Chari samples), schema, six test
+    modules.
+  - Docs: `docs/LITERATURE_TARGETS.md`, `docs/REFERENCE_REPRODUCTION_REPORT.md` (+ JSON twin and
+    `results/literature/*.json`), Track L in `docs/ACTIVE_SINGLE_GPU_ROADMAP.md`, README links,
+    campaign-doc status section.
+- Validation:
+  - Ruff check (whole repository) and Ruff format on all touched files: clean.
+  - Full Python suite: 354 passed, 4 skipped, 1 environmental failure
+    (`test_native_packaging`, no native library in the fresh venv); the same test passes with
+    `SPACEPDHCG_NATIVE_LIBRARY` pointing at an existing build (2 passed). Literature tests: 46.
+  - `scripts/literature/build_provenance.py --check`: store up to date; `git diff --check` clean.
+  - Reproductions (CPU, RTX 5090 owned by a G4 session all night): Acikmese-Ploen 2007 lossless
+    SOCP 400.63 kg vs 399.5 kg (+1.13 kg, 0.28 %); Blackmore 2010 case 1 400.09 vs 399.4 kg;
+    repository Euler SCvx 405.65 / 413.43 kg (gap); Szmuk 2018 free-final-time t_f = 3.3901 UT
+    with all ten guesses within 0.00054 UT (published: within 0.01 UT); Earth-Mars 603.925 vs
+    603.935 kg; Earth-Dionysus not converged (gap); TOPS P4 converged, P3/P1 iteration-limited,
+    CR3BP unsupported; GTOPX Cassini1/Rosetta/Messenger-reduced/GTOC1 reproduce the official
+    objectives to printed precision (three exactly); GTOC12 official verifier accepts the bundled
+    example and both published solutions (338 asteroids / 27,045.3 kg; 356 / 28,975.1 kg);
+    GTOC9 examples 1 and 2 validate under the re-implemented rules 4-19; GTOC5 scoring blocked.
+  - No native C++/CUDA transcription or kernel was changed, so no Release/Debug Werror, CUDA
+    parity, or sanitizer pass was run; no GPU workload was launched.
+- Follow-up notes / risks:
+  - GPU legs (P1-C pure-QOCO, P1-D-MC persistent batch) blocked; commands recorded in the report.
+  - Native `sigma` free-final-time kernels deferred (topology and policy-hash impact).
+  - Multi-revolution low-thrust convergence (Dionysus, TOPS P3) needs a better initial guess.

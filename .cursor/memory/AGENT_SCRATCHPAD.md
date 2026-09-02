@@ -1194,3 +1194,72 @@ Use this file as persistent, repo-local execution memory.
   executable hash match; generate the capability only from that clean final tree.
 - The campaign is still unrun. Initialize a new `--claim-core` or full grouped checkpoint; never
   reuse the historical row checkpoint.
+
+### 2026-09-03 02:35 AEST - Literature reference-reproduction track (feat/literature-targets)
+
+#### Task Summary
+
+- Imported the user's comparative-campaign spec as the first commit, then implemented campaign
+  Phase 0-1 as runnable targets: provenance store, pinned external sources, target registry,
+  `spacepdhcg literature` CLI, an independent CPU free-final-time SCvx core, and P1-C/P1-D/
+  P1-D-MC/P1-E/TOPS/GTOPX/GTOC reproductions with a generated reproduction report.
+
+#### Mistakes And Fixes
+
+- `[self]` `tr -d "\r"` inside `wsl -e bash -lc '...'` deleted every literal `r` from copied
+  files (double quotes are stripped by the Windows->WSL argument path). Detected by
+  `benchmaks/pape1_matix.json` in `git apply` output. Fix: never put quotes, `|`, `(` or
+  backslash escapes in inline `wsl` commands; write scripts with the Write tool to
+  `\\wsl.localhost\Ubuntu-22.04\tmp\*.sh`, strip CRLF once with PowerShell
+  `ReadAllText().Replace("`r`n","`n")`, then run everything through `/tmp/crlf-run.sh`.
+- `[self]` Files written through the UNC path carry CRLF; `/tmp/fix-crlf.sh` normalises every
+  modified/untracked text file before tests or commits (`.gitattributes` only covers two globs).
+- `[self]` The 2007 Mars profile with a hard dry-mass bound is infeasible at Delta t = 1 s (the
+  published solution uses 399.5 of 400 kg); the paper's convex problem bounds mass by
+  `m_wet - alpha rho2 t`. Detected by every SCvx candidate being rejected with virtual control.
+- `[self]` Replaying a constant-acceleration (lossless SOCP) control as constant thrust gave
+  37 m terminal errors; replay must hold `u = T/m`, not `T` (`replay_zoh(hold=...)`).
+- `[self]` `vars()` on `slots=True` dataclasses raises; use `dataclasses.asdict`.
+- `[self]` The user's P2-F family changed the Paper 2 matrix digest pinned by the G7 contracts
+  and the CPU ledger counts; resolved by enumerating both digests (sealed and extended) and
+  updating the frozen counts (2,648 -> 2,684; 16,324 -> 16,360), documented in the commit.
+
+#### User Preferences
+
+- `[user]` Deliver code and results, not plans; label every literature value; report gaps
+  honestly; never touch the integration or planner worktrees; back off the GPU when a G4
+  session owns it; no dataset commits above a few MB (pin by checksum + fetch script).
+
+#### What Worked
+
+- Reading paper text via ar5iv/arXiv HTML and open secondary sources (DLR thesis, Blackmore
+  2010 PDF) recovered every constant with digits; evaluating both `alpha` conventions settled the
+  formulation discrepancy (only `1/(Isp g0 cos phi)` reproduces 399.5/387.9 kg).
+- The independent FOH/STM free-final-time core reproduced Szmuk 2018 (ten guesses within
+  0.00054 UT) and Earth-Mars (603.925 vs 603.935 kg) without any repository transcription change.
+- GTOC12 official verifier runs headless from the pinned zip (`./GTOC12_Verify`, no arguments,
+  files named `Result.txt`/`GTOC12_Asteroids_Data.txt` in cwd).
+
+#### What Did Not Work
+
+- Earth-Dionysus (5 revolutions, 60.8 TU) did not converge with element-interpolation guesses,
+  hard trust regions, or thrust-bound homotopy; TOPS P3 (multirev) and P1 (free time) hit the
+  iteration limit. Needs a feasible spiral/shape-based guess or an MEE formulation.
+- The repository forward-Euler 3-DoF SCvx is 6-14 kg above the lossless optimum on the 2007/2010
+  profiles and stalls with the default virtual weight 1e5 (1e3 works better).
+
+#### Guardrails For Next Session
+
+- Regenerate `benchmarks/literature/provenance.json` after touching `pinned_values.py`
+  (`scripts/literature/build_provenance.py`; a test freezes it).
+- `spacepdhcg literature run all` needs `SPACEPDHCG_LITERATURE_CACHE` pointing at the verified
+  cache (`/home/angus/worktrees/spacepdhcg-literature-cache/raw`) and ~25 min on 16 cores.
+- Install `matplotlib` in any fresh venv before the full suite (paper1 G6 tests import it).
+
+#### Follow-Ups / Risks
+
+- P1-C pure-QOCO GPU leg and any P1-D-MC GPU batch remain blocked (device owned by the G4
+  session PID 471171 all night); the GPU 6-DoF path also lacks an arbitrary-initial-state entry.
+- Native/CUDA `sigma` (free final time) kernels are not implemented; doing so changes the frozen
+  CSC topology and G4 policy hashes and must be scheduled with a reseal.
+- This scratchpad is ~1,250 lines; roll it over (archive-first) at the next consolidation.
