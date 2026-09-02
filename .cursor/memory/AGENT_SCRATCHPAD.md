@@ -1658,8 +1658,10 @@ Use this file as persistent, repo-local execution memory.
   `StrReplace` tool preserves the file's LF). `ruff format --check` catches `.py`, but Markdown/JSON
   would slip through. Rule: after every whole-file write into WSL run
   `for f in $(git status --porcelain --untracked-files=all | awk '{print $2}'); do file "$f" | grep -q CRLF && sed -i 's/\r$//' "$f"; done`
-  before linting/committing (never touch the frozen `benchmarks/*.json`, several of which are CRLF on
-  purpose and hash-locked).
+  before linting/committing - restricted to the files you wrote: never touch the frozen
+  `benchmarks/*.json` (`benchmarks/g4_policy.json` is CRLF in the index, `i/crlf`, and its
+  `9ab3b444…` hash lock covers those bytes; the `_data` mirror copies it verbatim, so
+  `git diff --check` flags every line of that mirror - expected).
 - `[self]` First wheel audit asserted `"gtoc12/data" not in name` and tripped on
   `spacepdhcg/gtoc12/data.py`. Match the full prefix (`spacepdhcg/_data/benchmarks/gtoc12/data/`)
   when excluding the large-data directory.
