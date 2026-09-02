@@ -995,3 +995,57 @@
   - `full_catalogue_search2` and `fleet3_full_catalogue` artifacts come from an intermediate
     commit state (documented); `reduced_v1_search3` and `fleet3_full_catalogue_v2` reproduce from
     HEAD.
+
+## 2026-09-03 09:40 AEST
+
+- Task summary:
+  - GTOC12 track, second campaign: convert unspent propellant into score (joint re-timing),
+    scale the fleet to 10 ships, add clusters, cooperative collection and the fleet master.
+    Best verified fleet 1394.1 kg (3 ships) -> 4398.7 kg (10 ships, 62 asteroids).
+- Changes:
+  - `gtoc12/retiming.py` (new): exact DP over a 15-day lattice re-choosing every epoch of a fixed
+    visit order (bonus-weighted mined mass minus propellant price; cached Lambert tables per
+    body pair; authority ratio 0.45 for hops), forward-mass re-check, propellant price loop
+    (grow until it closes, halve while it keeps closing, bisect twice), chain extension
+    (self-cleaning / orphan / foreign-collect insertions), SCvx-in-the-loop certification with
+    per-pair bans and calibration. Fixed a DP regression where deploy-only visits of asteroids
+    collected later were priced at the orphan credit (0) instead of the full mining rate.
+  - `gtoc12/clusters.py` (new): co-moving families (a, e-vector, i-vector, mean longitude) via
+    cKDTree, density labelling, precomputed phasing windows, element deviations.
+  - `gtoc12/cooperative.py` (new): `MinerPool` (deploy-once / collect-once, orphans), orphan
+    credit, `FleetColumn`, exact branch-and-bound `solve_fleet_master` (fixed-bonus objective,
+    asteroid uniqueness, deployer-in-fleet for foreign collects, fleet rule, ship cap).
+  - `gtoc12/search.py`: `RoutePlan.foreign_deploy_epochs`, per-role leg model
+    (inflation, authority ratio), bonus-weighted scoring, cluster prior (off by default),
+    seed bonus for uncovered clusters; `pipeline.py`: collected mass from the deployer's epoch;
+    `cli.py`: `--retime*`, `--no-cooperative`, pool + master at every checkpoint, timeline.
+  - `tests/test_gtoc12_cooperative.py` (new, 15 tests): plan/pool rules, orphan credit, master
+    feasibility (each asteroid once, foreign dependency, ship rule), visit orders, cluster
+    determinism, phasing windows, re-timer bookkeeping/determinism, orphan-credit invariance,
+    cooperative extension variants.
+  - `docs/GTOC12_TRACK.md`: section 6.4, results rows `fleet6_retime_v1`, `fleet6_coop_v1`,
+    `fleet10_master_v1`, before/after tables, master stats, score-vs-budget, rejected variants,
+    limitations and the fleet-rule bottleneck.
+- Validation:
+  - Official `GTOC12_Verify` "Check successfully!" on the 10-ship file (4398.686 kg, 62
+    asteroids, fleet rule 10 <= 11.6) and on every per-ship file; independent verifier agrees
+    to 1e-10 kg per asteroid (max position error 23.6 km, within tolerance).
+  - `fleet10_master_v1`: 3089 s wall (51 min), peak RSS 0.76 GB; 30 min -> 2378.6 kg (5 ships);
+    per-ship before -> after re-timing 3614.9 -> 4398.7 kg (+21.7 %), 9/10 ships certified a
+    re-timed variant, 124 refined arcs. Master: 31 columns, 200k nodes (cap), incumbent = greedy.
+  - `fleet6_retime_v1` 2744.89 kg (verified); `fleet6_coop_v1` 2641.81 kg (verified, rejected
+    variant: orphan credit 0.5 left nine uncollected orphans).
+  - Proxy probe on the archived ship-1 plan: 548.3 -> 583.2 kg (DP fix + price loop) vs 564.7
+    (previous loop) vs 545.0 (regressed DP).
+  - `PYTHONPATH=src .venv/bin/python -m pytest -q --deselect tests/test_native_packaging.py`:
+    360 passed, 4 skipped; `ruff check` / `ruff format --check`: clean.
+- Follow-up notes / risks:
+  - Fleet size is capped by the fleet rule at the current 440 kg average (11 ships); the gap to
+    the references is per-ship mass, which needs deployer + collector planned jointly inside one
+    co-moving cluster (cooperative columns for the master) and parallel pricing workers.
+  - Calibration after a certified attempt can raise hop inflations above 1.2x and make the
+    second attempt worse than the first (ship 1: 583 certified, attempt 2 "no proxy
+    improvement"); the best certified route is kept, so this only costs time.
+  - `results/gtoc12/runs/fleet10_master_v1/fleet/viewer/trajectories.json` (3.6 MB) is not
+    committed; regenerate with `python -m spacepdhcg gtoc12 export-viewer` from the committed
+    `fleet/Result.txt`.

@@ -1371,3 +1371,60 @@ Use this file as persistent, repo-local execution memory.
   and a joint re-timing pass that spends the margin on faster hops.
 - Greedy fleets thin the clusters for later ships (548 / 442 / 404 kg); joint assignment via the
   G7 master is the natural upgrade.
+
+### 2026-09-03 09:00 AEST - GTOC12 track: joint re-timing, clusters, cooperative master (feat/gtoc12-asteroid-mining)
+
+#### Mistakes And Fixes
+
+- `[self]` Adding the orphan-credit branch to the re-timing DP turned *every* deploy-only visit
+  into an "orphan" (`elif visit.deploy: -= credit x rate x t`), so with credit 0 the deploy epochs
+  of ordinary self-cleaning asteroids became free and the DP degraded the plan (548 -> 545 kg
+  instead of 548 -> 583 kg). Detected only because the fleet10 log showed
+  `"result": "no proxy improvement"` where fleet6 had certified. Fix: price a deploy at the full
+  rate whenever the same plan collects that body later (`collected_here` set); orphan credit only
+  for bodies nobody in the plan collects. Regression test:
+  `test_orphan_credit_does_not_change_self_cleaning_retiming`.
+- `[self]` The propellant-price loop stopped after one halving when the first solve closed, so
+  the "spend the margin" promise was only half kept (ship 1 ended at 1250 kg final mass at proxy
+  level). Now it keeps halving until the budget stops closing, then bisects: +18 kg on ship 1.
+- `[self]` Launched a 70-minute fleet run on code that had not been probed against the archived
+  ship-1 plan. Guardrail: before any long run, re-time `results/.../ship_01/refinements.json[0].plan`
+  with a 20-second proxy probe and compare against the previous run's `retiming.json` step.
+- `[self]` Orphan credit 0.5 in the extension made ships leave miners that no later ship could
+  reach (cross-cluster collect hops are DP-infeasible); fleet 2641.8 vs 2744.9 kg self-cleaning.
+  Credit defaults to 0; foreign collects of existing orphans stay enabled.
+- `[self]` Relaxing the Earth-leg model to what the *reference* legs need (0.95x, ratio 0.85)
+  found 549 kg proxy chains whose Earth legs SCvx could not fly (`fleet6_coop_v1` ship 1: no
+  certified route). Our ZOH SCvx with the 0.5 authority ratio is the binding envelope, not the
+  references' physics; keep 1.6x/0.5 for Earth legs.
+- `[tool]` `.venv/bin/activate` is not usable from `bash -c` here and the venv has no
+  `spacepdhcg` install: run everything as `PYTHONPATH=src .venv/bin/python ...`; pytest without
+  it collects 43 import errors.
+- `[tool]` `pkill -f 'run-id <id>'` from a `bash -c` whose own command line contains `<id>` returns
+  exit 15 (kills its own shell) but does kill the target; check with `pgrep` afterwards.
+- `[tool]` Any `bash -c "..."` with `'`, `(` or `|` inside is mangled by the PowerShell bridge;
+  write the probe to `%TEMP%`, `tr -d '\r'` it into `/tmp`, run from there (still the rule).
+
+#### What Worked
+
+- Exact DP over a 15-day lattice with a fixed visit order + per-leg mass profile + propellant
+  price, forward-mass re-check, SCvx re-fly with per-pair bans and calibration: +17 % fleet score
+  (2343.6 -> 2744.9 kg) in one pass, every re-timed ship within 11-116 kg of the 500 kg floor.
+- Bonus-weighted beam scoring steered every ship onto B = 1 asteroids: fixed-bonus score ==
+  raw mass for the whole fleet.
+- Master as exact branch-and-bound over certified columns: cheap (9k nodes, <1 s), deterministic,
+  and an audit that the greedy fleet is optimal among the columns we have.
+
+#### Guardrails For Next Session
+
+- Proxy-level probe of the archived ship-1 plan before every long run (see above).
+- Compare `retiming.json` steps run-to-run (`improved`, `objective_after_kg`, `price_rounds`)
+  when a fleet score drops; it localises DP regressions in seconds.
+- `PYTHONPATH=src` for every python/pytest invocation in the worktree.
+
+#### Follow-Ups / Risks
+
+- Cooperative columns never enter the master because orphans are left where no later ship goes:
+  the pricing problem must plan deployer + collector together inside one co-moving family.
+- Fleet build is 5-6 min/ship single-process; 36 ships would need the G7 scheduler to run ship
+  searches in parallel processes.
