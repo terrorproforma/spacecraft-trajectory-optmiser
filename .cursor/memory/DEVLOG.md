@@ -953,3 +953,45 @@
 - Follow-up notes / risks:
   - Scores are ~1/3 of a single archived reference ship; the search, not the refinement, is the
     bottleneck at catalogue scale.
+
+## 2026-09-03 04:50 AEST
+
+- Task summary:
+  - Raised the officially verified GTOC12 scores by rebuilding the route search around the
+    structure of the archived JPL/Antipodes solutions, adding greedy fleets and bounded memory.
+- Changes:
+  - `gtoc12/references.py`: decode any solution file into per-ship itineraries and fleet
+    statistics (roles from global visit order, TOF/propellant/transfer angle/revolutions,
+    cooperative vs self-cleaning, launch spread, element spreads).
+  - `gtoc12/proxies.py`: Lambert-free phasing/Edelbaum ΔV pre-ranker (e/i vectors) and a
+    mass-consistent thrust-authority test; `scripts/gtoc12/proxy_validation.py` writes the
+    proxy-error distributions on 164 certified legs and 1882 reference hops.
+  - `gtoc12/search.py`: position-space candidate generation (Δa, Δe-vector, relative
+    inclination, phase at departure), element-band pool filter with sparse fallback,
+    collect-phase propellant reserve, greedy backward collection order with reverse fallback and
+    escalating wait penalty, separate collect-hop TOF grid (90-720 d), per-first-asteroid
+    diversity, block-wise Earth-leg screening, wall-clock budget with partial results, failure
+    reasons retained, asteroid exclusion for fleets.
+  - `gtoc12/fleet.py` + `cli.py --ships/--search-budget-seconds/--pool-*`: greedy fleet
+    construction, fleet-rule check, assembled multi-ship file verified as a whole, failed-leg
+    skipping across refine candidates, peak-RSS reporting.
+  - `docs/GTOC12_TRACK.md`: reference-structure table, proxy validation table, results table,
+    rejected variants, limitations and next bottleneck.
+- Validation:
+  - Official `GTOC12_Verify` "Check successfully!" on every emitted file; independent verifier
+    agrees per asteroid to 1e-10 kg.
+  - reduced-v1: 314.442 kg (5 asteroids, 10 arcs, 228 s, 0.55 GB) — was 253.744 kg.
+  - full catalogue single ship: 548.282 kg (8 asteroids, 16 arcs, 303 s, 0.66 GB) — was 249.035 kg
+    at 11.2 GB.
+  - 3-ship greedy fleet: 1394.11 kg (548.28 + 442.22 + 403.61; 20 asteroids, 40 arcs, 867 s,
+    0.77 GB; fixed-bonus 1318.12 kg; rule 3 ≤ 12.8).
+  - Proxies: refined/proxy propellant median 0.96 (p5 0.66, p95 1.08); refined/Lambert ΔV
+    median 1.165 (p95 1.49); reference true/Lambert 1.16 (p95 1.41), Spearman 0.90.
+  - `pytest`: 349 passed, 4 skipped (native packaging test deselected: no cmake wheel); Ruff clean.
+- Follow-up notes / risks:
+  - Chains stop at 8 asteroids because the collection tour no longer fits the window
+    (`camp_negative`), with 230-430 kg propellant unspent; cluster-first generation and joint
+    re-timing are the next levers. Greedy fleets thin the clusters for ships 2-3.
+  - `full_catalogue_search2` and `fleet3_full_catalogue` artifacts come from an intermediate
+    commit state (documented); `reduced_v1_search3` and `fleet3_full_catalogue_v2` reproduce from
+    HEAD.

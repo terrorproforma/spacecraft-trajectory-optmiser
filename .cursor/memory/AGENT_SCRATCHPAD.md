@@ -1315,3 +1315,59 @@ Use this file as persistent, repo-local execution memory.
   (same on the base commit here); everything else in the 343-test suite passes.
 - Next quality steps: multi-revolution Lambert screening, cross-ship deploy/collect, PDHCG CQP
   backend for the ZOH SCvx subproblem.
+
+### 2026-09-03 04:50 AEST - GTOC12 track: reference-driven search, fleets (feat/gtoc12-asteroid-mining)
+
+#### Mistakes And Fixes
+
+- `[search]` Position-space candidate ranking alone (Δa, Δe, Δi, phase) picked pairs that were
+  co-located at deploy time but on *different ellipses* (e ≈ 0.14, ΔΩ ≈ 100°): eight years later
+  they were 180° apart and every collection tour died (`no_collect_hop`). Fix: rank and filter
+  with eccentricity-vector and inclination-vector differences (relative inclination), not scalar
+  Δe/Δi; the same change lifted the Lambert-free proxy's Spearman from 0.47 to 0.63.
+- `[search]` Strict-reverse collection fallback indexed `remaining[-1]`; going backwards in time
+  the asteroid collected just before the current one is the *earliest*-deployed remaining
+  (`remaining[0]`). Symptom: `tour_not_ending_at_camp` on every chain.
+- `[search]` Collection scheduler minimised propellant with a tiny wait penalty and overran the
+  window (`camp_negative`). Fix: penalty counts the whole hop duration as lost mining and
+  escalates x4/x16 when the tour does not fit.
+- `[search]` Lowering Earth-leg inflation from 1.6 to 1.3 (proxy validation said 1.08x) admitted
+  450-500 day Earth legs that SCvx could not fly: the *authority* test must keep the conservative
+  factor even when the propellant estimate is calibrated (Earth-out tail reached 1.74x on the
+  catalogue pool). Pricing time in the beam heuristic (0.02-0.05 kg/day) or hop duty 0.75/0.7
+  likewise steered the beam into 120-180 day hops at the authority limit -> uncertifiable.
+  Reverted to the proven weights; documented all variants.
+- `[pipeline]` Three refine candidates shared one infeasible first leg and all failed. Fix:
+  skip plans containing a leg SCvx already proved infeasible (rescued fleet ship 2 at rank 8).
+- `[tool]` `pkill -f <pattern>` from a `bash -c` whose own command line contains the pattern kills
+  the shell itself (exit 15). Use `pkill -f 'run-id <id>'` with a token absent from the caller.
+- `[tool]` Redirecting a script's output to a file hid a crash; the "results" I read were the
+  stale JSON from the previous run. Always `tail` the log or check the exit code.
+- `[tests]` The old search-determinism test compared two empty candidate lists (coarse launch
+  grid -> no Earth leg passes the 1.6x authority). Assert non-emptiness in determinism tests.
+
+#### What Worked
+
+- Decoding the archived solutions first: the structural numbers (9-10 asteroids, 183-day 78-kg
+  hops, ±3.3° phase at departure, |Δa| ≤ 0.04 AU, final mass 500 kg) dictated the candidate
+  generator, the reserve rule and the pool box; single-ship score went 249 -> 548 kg and memory
+  11.2 GB -> 0.66 GB in one day.
+- Retaining failure reasons per chain (`last_failure` strings) turned "no feasible collection
+  tour" into actionable categories within minutes.
+- Background runs via the tool's own background shell (not `nohup` inside WSL) survived fine
+  when the log goes to a file and completion is checked with a small printer script.
+
+#### Guardrails For Next Session
+
+- Every proxy knob (inflation, duty, weights) must be validated on a *certified* run before it
+  becomes a default; the proxy-error table lives in `results/gtoc12/proxy_validation.json`.
+- Keep PowerShell out of the loop for anything with quotes: write the Python/bash to `%TEMP%`,
+  `tr -d '\r'`, run from `/tmp`.
+
+#### Follow-Ups / Risks
+
+- Time, not mass, binds: certified routes leave 230-430 kg propellant; deploy hops are 240-300 d
+  vs 140-240 d in the references. Next: cluster-first generation over the whole deploy window
+  and a joint re-timing pass that spends the margin on faster hops.
+- Greedy fleets thin the clusters for later ships (548 / 442 / 404 kg); joint assignment via the
+  G7 master is the natural upgrade.
