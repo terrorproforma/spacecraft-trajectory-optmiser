@@ -82,3 +82,5 @@ The upstream PDHCG package is intentionally optional because it requires a compa
 ## Development status
 
 Research software under active construction. Numerical results are not claimed until they are reproduced by committed benchmark configurations, independent feasibility checks and CI artifacts.
+
+- [`docs/GTOC12_TRACK.md`](docs/GTOC12_TRACK.md) — GTOC12 asteroid-mining replay (pins, exact verifier, reduced instance, scored routes)
