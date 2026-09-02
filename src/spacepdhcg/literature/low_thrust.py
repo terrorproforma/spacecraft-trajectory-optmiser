@@ -505,24 +505,87 @@ def problem_from_document(document: dict[str, Any]) -> LowThrustProblem:
     )
 
 
+def _run_mee_formulation(
+    document: dict[str, Any],
+    problem: LowThrustProblem,
+    node_values: tuple[int, ...],
+    *,
+    revolutions: int | None,
+) -> tuple[dict[str, Any], list[float], dict[str, Any]]:
+    """Multi-revolution path: MEE transcription with an explicit revolution-count sweep.
+
+    The sweep (published count plus and minus one) is run at the coarsest node count; finer node
+    counts refine only the best topology so the envelope stays affordable.
+    """
+
+    from spacepdhcg.literature import low_thrust_mee
+
+    runs: dict[str, Any] = {}
+    final_masses: list[float] = []
+    if revolutions is None:
+        candidates = low_thrust_mee.default_revolution_candidates(problem)
+    else:
+        candidates = tuple(sorted({max(0, revolutions - 1), revolutions, revolutions + 1}))
+    sweep: dict[str, Any] = {"candidates": list(candidates), "history": []}
+    best_revolutions: int | None = None
+    for index, nodes in enumerate(sorted(int(v) for v in node_values)):
+        if index == 0:
+            best, history = low_thrust_mee.solve_multirev(
+                problem, revolution_candidates=candidates, nodes=nodes
+            )
+            sweep["history"] = history
+            if best is None:
+                # Nothing closed; keep the best-effort record of the published topology.
+                fallback = revolutions if revolutions is not None else candidates[0]
+                best = low_thrust_mee.solve_low_thrust_mee(
+                    problem, revolutions=fallback, nodes=nodes
+                )
+            best_revolutions = best.revolutions
+            result = best
+        else:
+            assert best_revolutions is not None
+            result = low_thrust_mee.solve_low_thrust_mee(
+                problem, revolutions=best_revolutions, nodes=nodes
+            )
+        runs[f"nodes={nodes}"] = result.as_dict()
+        closes = (
+            result.replay_terminal_position_error < 1.0e-4
+            and result.replay_terminal_velocity_error < 1.0e-4
+        )
+        if result.converged and closes and result.final_mass_si is not None:
+            final_masses.append(float(result.final_mass_si))
+    sweep["best_revolutions"] = best_revolutions
+    return runs, final_masses, sweep
+
+
 def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str, Any]:
     problem = problem_from_document(document)
     published = document["published"]
     node_values = tuple(options.get("nodes_values", document.get("envelope_nodes", [200, 400])))
     max_iterations = int(options.get("max_iterations", document.get("max_iterations", 40)))
+    formulation = str(options.get("formulation", document.get("formulation", "cartesian")))
     runs: dict[str, Any] = {}
     final_masses: list[float] = []
     revolutions = document.get("initial_guess_revolutions")
-    for nodes in node_values:
-        result = solve_low_thrust(
+    sweep: dict[str, Any] | None = None
+    if formulation == "mee":
+        runs, final_masses, sweep = _run_mee_formulation(
+            document,
             problem,
-            nodes=int(nodes),
-            max_iterations=max_iterations,
+            node_values,
             revolutions=int(revolutions) if revolutions is not None else None,
         )
-        runs[f"nodes={nodes}"] = result.as_dict()
-        if result.outcome.status == "converged" or result.outcome.replay_defect_inf < 1.0e-6:
-            final_masses.append(float(result.final_mass_si))
+    else:
+        for nodes in node_values:
+            result = solve_low_thrust(
+                problem,
+                nodes=int(nodes),
+                max_iterations=max_iterations,
+                revolutions=int(revolutions) if revolutions is not None else None,
+            )
+            runs[f"nodes={nodes}"] = result.as_dict()
+            if result.outcome.status == "converged" or result.outcome.replay_defect_inf < 1.0e-6:
+                final_masses.append(float(result.final_mass_si))
     published_mass = float(published["final_mass_kg"])
     if final_masses:
         best = max(final_masses)
@@ -555,7 +618,15 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
             "measured.final_mass_kg_best": "measured-local",
         },
         "envelope": {
-            "discretisation": "FOH successive convexification, RK4 STM, nodes swept",
+            "discretisation": (
+                "FOH successive convexification, RK4 STM, nodes swept; "
+                + (
+                    "modified-equinoctial-element state with explicit revolution count"
+                    if formulation == "mee"
+                    else "Cartesian state"
+                )
+            ),
+            "formulation": formulation,
             "nodes_values": list(node_values),
             "final_mass_spread_kg": (max(final_masses) - min(final_masses))
             if final_masses
@@ -566,6 +637,20 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
         "notes": [
             "boundary states are the paper's fixed heliocentric states (zero hyperbolic excess); "
             "no ephemeris model is involved",
-        ],
-        "details": {"runs": runs, "scaling": problem.scaling},
+        ]
+        + (
+            [
+                "revolution count swept "
+                f"{sweep['candidates']} at the coarsest node count; best N = "
+                f"{sweep['best_revolutions']} (published: "
+                f"{published.get('best_reported_revolutions')})"
+            ]
+            if sweep is not None
+            else []
+        ),
+        "details": {
+            "runs": runs,
+            "scaling": problem.scaling,
+            **({"revolution_sweep": sweep} if sweep is not None else {}),
+        },
     }

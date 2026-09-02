@@ -5,7 +5,9 @@ four JSON databases (``zoh/dbs/_tops_{twobody,mee,cr3bp,ss}.json``).  Every prob
 with its metadata; the campaign selection (one easy two-body, one multi-revolution two-body, one
 inclination/eccentricity change, one CR3BP) is made from metadata alone and frozen in
 ``benchmarks/literature/tops_selection.json``.  Only the Cartesian two-body family is supported
-by the current dynamics; MEE, CR3BP, and solar-sail problems are recorded as unsupported.
+by the current dynamics; MEE, CR3BP, and solar-sail problems are recorded as unsupported.  The
+multi-revolution and highly elliptic selections are solved in modified equinoctial elements with
+an explicit revolution-count sweep (:mod:`spacepdhcg.literature.low_thrust_mee`).
 """
 
 from __future__ import annotations
@@ -29,8 +31,9 @@ SUPPORT = {
     "two_body_cartesian": ("supported", None),
     "modified_equinoctial": (
         "unsupported",
-        "modified-equinoctial-element dynamics are not implemented; boundary states would need "
-        "MEE->Cartesian conversion and the reference solutions are given in MEE decision vectors",
+        "the TOPS MEE database entries carry boundary conditions and 'solution_indirect' vectors "
+        "in the release's own MEE decision-variable layout, which is not wired to the campaign's "
+        "MEE transcription (spacepdhcg.literature.low_thrust_mee) yet",
     ),
     "cr3bp": ("unsupported", "circular restricted three-body dynamics are not implemented"),
     "solar_sail": ("unsupported", "solar-sail control model is not implemented"),
@@ -154,6 +157,33 @@ def to_low_thrust_problem(problem: TopsProblem) -> LowThrustProblem:
     )
 
 
+#: Selection roles solved in modified equinoctial elements with a revolution-count sweep:
+#: the multi-revolution arc and the highly elliptic free-time transfer both defeat the
+#: Cartesian geometric guess (see :mod:`spacepdhcg.literature.low_thrust_mee`).
+MEE_ROLES = frozenset({"multi_revolution_two_body", "inclination_or_eccentricity_change"})
+
+
+def _solve_with_mee(
+    key: str, lt_problem: LowThrustProblem, nodes: int
+) -> tuple[dict[str, Any], str]:
+    from spacepdhcg.literature import low_thrust_mee
+
+    best, history = low_thrust_mee.solve_multirev(lt_problem, nodes=nodes)
+    if best is None:
+        return (
+            {
+                "problem": key,
+                "formulation": "mee",
+                "status": "gap",
+                "revolution_sweep": history,
+                "reason": "no revolution count converged with a closing Cartesian replay",
+            },
+            "gap",
+        )
+    payload = {"problem": key, "revolution_sweep": history, **best.as_dict()}
+    return payload, best.outcome.status
+
+
 def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str, Any]:
     try:
         problems = ingest()
@@ -172,6 +202,7 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
     by_key = {p.key: p for p in problems}
     frozen = document["frozen_selection"]
     nodes = int(options.get("nodes", document.get("nodes", 120)))
+    mee_nodes = int(options.get("mee_nodes", document.get("mee_nodes", 200)))
     max_iterations = int(options.get("max_iterations", document.get("max_iterations", 40)))
     runs: dict[str, Any] = {}
     statuses: dict[str, str] = {}
@@ -183,6 +214,9 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
             statuses[role] = "unsupported"
             continue
         lt_problem = to_low_thrust_problem(problem)
+        if role in MEE_ROLES:
+            runs[role], statuses[role] = _solve_with_mee(key, lt_problem, mee_nodes)
+            continue
         result = solve_low_thrust(
             lt_problem,
             nodes=nodes,
@@ -192,8 +226,12 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
             else None,
             hard_trust_radius=0.5,
         )
-        runs[role] = {"problem": key, **result.as_dict()}
+        runs[role] = {"problem": key, "formulation": "cartesian", **result.as_dict()}
         statuses[role] = result.outcome.status
+        if result.outcome.status != "converged":
+            # Cartesian SCvx did not close; retry with the MEE multi-revolution path.
+            runs[role], statuses[role] = _solve_with_mee(key, lt_problem, mee_nodes)
+            runs[role]["cartesian_attempt"] = result.as_dict()
     supported_ok = all(
         statuses[role] == "converged"
         for role in statuses
@@ -211,15 +249,21 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
             role: {
                 "problem": run["problem"],
                 "status": run["status"],
+                "formulation": run.get("formulation"),
                 "final_mass": run.get("final_mass"),
                 "time_of_flight": run.get("time_of_flight"),
+                "revolutions": run.get("revolutions"),
                 "reason": run.get("reason"),
             }
             for role, run in runs.items()
         },
         "gap": {},
         "labels": {f"measured.{role}": "measured-local" for role in runs},
-        "envelope": {"nodes": nodes, "problem_count_at_pinned_revision": len(problems)},
+        "envelope": {
+            "nodes": nodes,
+            "mee_nodes": mee_nodes,
+            "problem_count_at_pinned_revision": len(problems),
+        },
         "commands": [f"spacepdhcg literature run {document['id']}"],
         "notes": [
             "the ISSFD paper describes 28 problems; the pinned repository revision contains "
