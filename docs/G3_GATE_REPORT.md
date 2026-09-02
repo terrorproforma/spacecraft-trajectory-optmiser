@@ -1,5 +1,22 @@
 # Gate G3 report — device-resident deterministic SCvx
 
+## Current-head regression closure — 2026-09-03
+
+G3 **PASS** on tested source commit
+`b6afb49d7fc7da5ed1ac9003c3bcae5d35506026` under `single-gpu-v1`.
+The maximum tight canonical residual is `9.69295039e-7`; displaced HCW accepts three steps,
+and direct non-campaign pure-QOCO P1-C/P1-D/P1-E warmup regressions accept 2/24/2 steps.
+The matched fixed-tight PDHCG representatives remain retained 150-second negatives with zero
+accepted steps. All 62 Debug and 62 Release CTests, H1, and sixteen sanitizer runs pass with no
+fallback or post-create topology churn. The current local-only archive is
+`results/gpu/current-head-b0cd570/seals/g3-b6afb49d7fc7.tar.gz`, SHA-256
+`08ccc71bec848cea24c64b1efbf97e50962a2db14a4d6a2099b7750451756810`.
+
+G4 is scientifically authorised by G0-G3, but launch remains operationally blocked until an
+official capability is regenerated for the final clean executable. No G4 campaign was launched.
+See `CURRENT_HEAD_G0_G3_REPORT.md` for complete current-head evidence. Historical wording and
+negative archives are retained below.
+
 ## Decision
 
 **G3 historical PASS amended: displaced-reference outer-loop parity was not established.**

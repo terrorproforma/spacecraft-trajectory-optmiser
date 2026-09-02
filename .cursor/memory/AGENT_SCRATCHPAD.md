@@ -1194,3 +1194,30 @@ Use this file as persistent, repo-local execution memory.
   executable hash match; generate the capability only from that clean final tree.
 - The campaign is still unrun. Initialize a new `--claim-core` or full grouped checkpoint; never
   reuse the historical row checkpoint.
+
+### 2026-09-03 00:57 AEST - Current-head G0-G3 reseal
+
+#### What Worked
+
+- Sealed final-head G0-G3 evidence from `b6afb49` with 314 Python tests, three 45-test host
+  matrices, three eight-test native inventories, 96 G1 solves plus 16 updates, two 62-test CUDA
+  matrices, real CuPy/PyTorch/JAX DLPack, H1, and all required sanitizers.
+- Replaced the HCW self-target fixture with a reachable displaced start; it accepted three nonzero
+  steps. Pure QOCO displaced P1-C/P1-D/P1-E accepted 2/24/2 steps while fixed-tight PDHCG remained
+  an honest timeout negative.
+
+#### Mistakes And Fixes
+
+- `[environment]` Reused tooling lacked matplotlib and PEP 517 build requirements. Created an
+  ignored current-head environment and retained all failed package attempts.
+- `[harness]` H1 parsed unrelated `-inf` diagnostics before selecting its record. Filtered the H1
+  record before decoding, added a regression test, and reran all gates.
+- `[tool]` Recovery racecheck required 54 minutes; allowed it to complete. A stale Nsight SQLite
+  export was rejected and then regenerated with explicit `--force-export=true`.
+
+#### Guardrails / Follow-Ups
+
+- The b0cd570 G4 capability is not valid for the final executable. Generate a new official
+  capability from the final clean report descendant before any claim-core launch.
+- G0-G3 scientifically authorise G4, but no G4 campaign was launched here and local archives have
+  no immutable URI.

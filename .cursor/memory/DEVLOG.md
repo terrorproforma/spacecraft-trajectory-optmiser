@@ -881,3 +881,26 @@
   - Rebuild after the final commit, generate the executable/hash-pinned capability from the clean
     tree, then initialize a new claim-core or full grouped checkpoint.
   - No 3,240-invocation claim core or 2,764,800-session campaign was run; H5/H6 remain unresolved.
+
+## 2026-09-03 00:57 AEST
+
+- Task summary:
+  - Ran, repaired, reran, and sealed complete current-head G0-G3 evidence before G4.
+- Changes:
+  - Fixed H1 parsing so unrelated non-JSON `-inf` diagnostics cannot abort the result owner.
+  - Replaced the nominal HCW self-target production fixture with a reachable displaced start and
+    required an accepted nonzero outer step.
+  - Added compact current-head gate reports while preserving all raw failures in ignored evidence.
+- Validation:
+  - G0: Ruff; 314 Python tests; 45 top-level and eight standalone tests in RelWithDebInfo, Debug,
+    and ASan+UBSan; wheel/sdist plus isolated wheel and CMake consumers.
+  - G1: 15 exact-optimum cases, 96 declared box/SOC solves, 16 updates, all tolerances/starts, and
+    expected no-device refusal against exact pinned PDHCG.
+  - G2: 62 Debug and 62 RelWithDebInfo CTests, QP/SOCP lifecycle, real CuPy/PyTorch/JAX producers,
+    and five clean sanitizer records.
+  - G3: 62 Debug and 62 Release CTests, displaced HCW and pure-QOCO P1-C/D/E, honest PDHCG
+    negatives, H1, sixteen clean sanitizer records, and retained WSL Nsight limitations.
+- Follow-ups / risks:
+  - G4 is scientifically authorised, but launch is blocked until a new official capability is
+    generated for the final clean report descendant. The old b0cd570 capability was not reused.
+  - All archives remain local-only; no immutable URI exists.
