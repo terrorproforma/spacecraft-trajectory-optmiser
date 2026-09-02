@@ -15,8 +15,28 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-REGISTRY_PATH = REPOSITORY_ROOT / "benchmarks" / "literature" / "targets.json"
+from spacepdhcg import resources
+
+REGISTRY_ASSET = "benchmarks/literature/targets.json"
+
+
+def registry_path() -> Path:
+    """Location of ``benchmarks/literature/targets.json`` (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(REGISTRY_ASSET)
+
+
+def profile_path(profile: str, root: Path | None = None) -> Path:
+    """Resolve a repository-relative profile path.
+
+    With an explicit ``root`` (a custom registry tree) the profile is read below it; otherwise
+    :func:`spacepdhcg.resources.asset_path` applies the usual override/checkout/wheel order.
+    """
+
+    if root is not None:
+        return root / profile
+    return resources.asset_path(profile)
+
 
 SUPPORT_LEVELS: tuple[str, ...] = ("supported", "partial", "unsupported", "descriptive-only")
 RESULT_STATUSES: tuple[str, ...] = (
@@ -76,10 +96,10 @@ class LiteratureTarget:
             notes=payload.get("notes", ""),
         )
 
-    def load_profile(self, root: Path = REPOSITORY_ROOT) -> dict[str, Any]:
+    def load_profile(self, root: Path | None = None) -> dict[str, Any]:
         if self.profile is None:
             return {}
-        with (root / self.profile).open(encoding="utf-8") as handle:
+        with profile_path(self.profile, root).open(encoding="utf-8") as handle:
             return json.load(handle)
 
     def resolve_runner(self) -> Callable[..., dict[str, Any]]:
@@ -109,7 +129,19 @@ class TargetRegistry:
         return tuple(target for target in self.targets if target.family == family)
 
 
-def load_target_registry(path: Path = REGISTRY_PATH) -> TargetRegistry:
+def load_target_registry(path: Path | None = None) -> TargetRegistry:
+    """Load the target registry.
+
+    Without ``path`` the registry and its profiles come from the resolver.  A custom ``path`` is
+    treated as ``<root>/benchmarks/literature/targets.json`` and its profiles are read below that
+    ``<root>``, mirroring the repository layout.
+    """
+
+    root: Path | None = None
+    if path is None:
+        path = registry_path()
+    else:
+        root = path.resolve().parents[2]
     with path.open(encoding="utf-8") as handle:
         document = json.load(handle)
     if document.get("schema_version") != "1.0.0":
@@ -118,9 +150,14 @@ def load_target_registry(path: Path = REGISTRY_PATH) -> TargetRegistry:
     ids = [target.id for target in targets]
     if len(ids) != len(set(ids)):
         raise RegistryError("duplicate target ids")
-    root = path.resolve().parents[2]
     for target in targets:
-        if target.profile is not None and not (root / target.profile).is_file():
+        if target.profile is None:
+            continue
+        try:
+            present = profile_path(target.profile, root).is_file()
+        except resources.AssetNotFound:
+            present = False
+        if not present:
             raise RegistryError(f"{target.id}: profile {target.profile} is missing")
     return TargetRegistry(schema_version=document["schema_version"], targets=targets)
 
@@ -129,7 +166,7 @@ def run_target(
     target: LiteratureTarget,
     *,
     options: Mapping[str, Any] | None = None,
-    root: Path = REPOSITORY_ROOT,
+    root: Path | None = None,
 ) -> dict[str, Any]:
     """Execute the registered runner and normalise the returned record."""
 

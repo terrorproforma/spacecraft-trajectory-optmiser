@@ -18,6 +18,7 @@ from typing import Any
 
 import numpy as np
 
+from spacepdhcg import resources
 from spacepdhcg.planner.problem import FAMILY_INFO
 from spacepdhcg.planner.result import PlanResult, json_safe
 
@@ -45,11 +46,19 @@ def _sha256(data: bytes) -> str:
 
 
 def default_viewer_source() -> Path | None:
+    """``$SPACEPDHCG_VIEWER_SOURCE``, else ``web/trajectory-viewer`` of a source checkout.
+
+    The static viewer is not packaged in the wheel, so an installed package without the
+    override returns ``None`` and the export simply omits the viewer files.
+    """
+
     override = os.environ.get(VIEWER_SOURCE_ENVIRONMENT)
     candidates = []
     if override:
         candidates.append(Path(override))
-    candidates.append(Path(__file__).resolve().parents[3] / "web" / "trajectory-viewer")
+    root = resources.repository_root()
+    if root is not None:
+        candidates.append(root / "web" / "trajectory-viewer")
     for candidate in candidates:
         if (candidate / "app.js").is_file() and (candidate / "scripts" / "check.mjs").is_file():
             return candidate

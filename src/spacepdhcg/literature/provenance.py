@@ -26,10 +26,30 @@ from typing import Any
 
 import jsonschema
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-SCHEMA_PATH = REPOSITORY_ROOT / "experiments" / "schema" / "literature_provenance.schema.json"
-STORE_PATH = REPOSITORY_ROOT / "benchmarks" / "literature" / "provenance.json"
-BASELINES_PATH = REPOSITORY_ROOT / "benchmarks" / "literature_baselines.json"
+from spacepdhcg import resources
+
+SCHEMA_ASSET = "experiments/schema/literature_provenance.schema.json"
+STORE_ASSET = "benchmarks/literature/provenance.json"
+BASELINES_ASSET = "benchmarks/literature_baselines.json"
+
+
+def schema_path() -> Path:
+    """Location of the provenance JSON schema (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(SCHEMA_ASSET)
+
+
+def store_path() -> Path:
+    """Location of the committed provenance store (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(STORE_ASSET)
+
+
+def baselines_path() -> Path:
+    """Location of ``benchmarks/literature_baselines.json`` (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(BASELINES_ASSET)
+
 
 EVIDENCE_LABELS: tuple[str, ...] = (
     "analytic",
@@ -184,8 +204,8 @@ class ProvenanceStore:
         }
 
 
-def load_schema(path: Path = SCHEMA_PATH) -> dict[str, Any]:
-    with path.open(encoding="utf-8") as handle:
+def load_schema(path: Path | None = None) -> dict[str, Any]:
+    with (path or schema_path()).open(encoding="utf-8") as handle:
         return json.load(handle)
 
 
@@ -275,16 +295,20 @@ def validate_provenance_document(
 
 
 def load_provenance_store(
-    path: Path = STORE_PATH,
+    path: Path | None = None,
     *,
     known_profiles: Iterable[str] | None = None,
 ) -> ProvenanceStore:
-    with path.open(encoding="utf-8") as handle:
+    with (path or store_path()).open(encoding="utf-8") as handle:
         document = json.load(handle)
     return validate_provenance_document(document, known_profiles=known_profiles)
 
 
-def write_provenance_store(store: ProvenanceStore, path: Path = STORE_PATH) -> None:
+def write_provenance_store(store: ProvenanceStore, path: Path | None = None) -> None:
+    """Write the store; by default to the checkout's tracked file (never into the wheel)."""
+
+    if path is None:
+        path = resources.output_root() / STORE_ASSET
     path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(store.as_dict(), indent=2, ensure_ascii=False, sort_keys=False) + "\n"
     path.write_text(text, encoding="utf-8", newline="\n")
@@ -305,7 +329,7 @@ def format_value_text(value: Any) -> str:
 
 
 def ingest_literature_baselines(
-    path: Path = BASELINES_PATH,
+    path: Path | None = None,
     *,
     accessed: str,
 ) -> list[ProvenanceRecord]:
@@ -316,7 +340,7 @@ def ingest_literature_baselines(
     ``requires-source-verification`` unless a curated record in ``pinned_values`` supersedes it.
     """
 
-    with path.open(encoding="utf-8") as handle:
+    with (path or baselines_path()).open(encoding="utf-8") as handle:
         manifest = json.load(handle)
     records: list[ProvenanceRecord] = []
     for profile in manifest["profiles"]:

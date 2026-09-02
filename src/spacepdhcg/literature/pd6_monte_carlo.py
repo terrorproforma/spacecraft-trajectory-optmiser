@@ -29,10 +29,10 @@ from typing import Any
 
 import numpy as np
 
+from spacepdhcg import resources
 from spacepdhcg.literature.pd6_szmuk_2018 import Szmuk2018Parameters, reproduce
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-SAMPLES_PATH = REPOSITORY_ROOT / "benchmarks" / "literature" / "chari_2024_initial_positions.json"
+SAMPLES_ASSET = "benchmarks/literature/chari_2024_initial_positions.json"
 
 PUBLISHED_DISTRIBUTION = ((6.0, 9.0), (3.0, 6.0), (1.0, 2.0))
 BATCH_SEEDS = {
@@ -72,8 +72,14 @@ def build_sample_file(batch_sizes: tuple[int, ...] = (1, 16, 64, 256)) -> dict[s
     }
 
 
-def load_samples(path: Path = SAMPLES_PATH) -> dict[str, Any]:
-    with path.open(encoding="utf-8") as handle:
+def samples_path() -> Path:
+    """Location of the committed initial-position samples (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(SAMPLES_ASSET)
+
+
+def load_samples(path: Path | None = None) -> dict[str, Any]:
+    with (path or samples_path()).open(encoding="utf-8") as handle:
         return json.load(handle)
 
 

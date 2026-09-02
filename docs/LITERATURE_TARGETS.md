@@ -49,6 +49,16 @@ Code lives in `src/spacepdhcg/literature/`:
 - `tops.py`, `gtopx.py`, `gtoc.py` - suite ingestion, evaluator wrappers, reduced subsets;
 - `report.py`, `cli.py` - report generation and the `spacepdhcg literature` command.
 
+The frozen inputs (`benchmarks/literature/targets.json`, `provenance.json`,
+`external_sources.json`, the profiles, `chari_2024_initial_positions.json`,
+`benchmarks/literature_baselines.json`, `experiments/schema/literature_provenance.schema.json`)
+are located through `spacepdhcg.resources`: `$SPACEPDHCG_BENCHMARKS_DIR` when set, else the source
+checkout, else the byte-identical copies packaged in the wheel (`spacepdhcg/_data/`), so
+`spacepdhcg literature list/status/provenance/run` work from an installed package.  Generated
+outputs (`reference_reproduction.json`, `docs/REFERENCE_REPRODUCTION_REPORT.md`,
+`results/literature/`) are written below the checkout, or below the working directory when the
+package is installed.
+
 ## Commands
 
 ```bash

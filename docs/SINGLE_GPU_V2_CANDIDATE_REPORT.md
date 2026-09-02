@@ -70,9 +70,11 @@ Evidence: `build-v2-verification/` (ignored) - `summary.tsv`, `summary-py.tsv`, 
 
 ## Follow-ups (not integration defects)
 
-- Wheel consumers cannot run `spacepdhcg literature …` / `spacepdhcg gtoc12 …` because both
-  packages resolve `benchmarks/` relative to the source tree; either package the registries or
-  fail with a clear message.
+- ~~Wheel consumers cannot run `spacepdhcg literature …` / `spacepdhcg gtoc12 …` because both
+  packages resolve `benchmarks/` relative to the source tree.~~ **Fixed on this branch** by
+  `spacepdhcg.resources` (override → checkout → packaged copies in `spacepdhcg/_data`) and the
+  packaged asset mirror; see `docs/WHEEL_ASSET_RESOLUTION_FIX.md` for the evidence
+  (`build-v2-wheel-fix/`).
 - `docs/REFERENCE_REPRODUCTION_REPORT.md` (generated) carries trailing whitespace flagged by
   `git diff --check`; regenerate through the report writer if that matters.
 - GPU-deferred work: `docs/GPU_DEFERRED_VALIDATION_V2.md` / `benchmarks/gpu_deferred_validation_v2.json`.

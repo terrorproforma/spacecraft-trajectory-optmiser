@@ -120,23 +120,28 @@ def _run(arguments: argparse.Namespace) -> int:
     for record in records:
         print(json.dumps(report._compact(record), indent=1, default=report._json_default))
     if not arguments.no_report:
-        existing = []
-        if report.REPORT_JSON.is_file():
-            existing = json.loads(report.REPORT_JSON.read_text(encoding="utf-8")).get("targets", [])
-        report.write_report(report.merge_records(existing, records))
-        print(f"report updated: {report.REPORT_MD}")
+        report.write_report(report.merge_records(_existing_records(), records))
+        print(f"report updated: {report.report_markdown_path()}")
     return 0 if all(r["status"] in {"reproduced", "descriptive-only"} for r in records) else 2
+
+
+def _existing_records() -> list:
+    from spacepdhcg.literature import report
+
+    path = report.report_json_path()
+    if not path.is_file():
+        return []
+    return json.loads(path.read_text(encoding="utf-8")).get("targets", [])
 
 
 def _report(arguments: argparse.Namespace) -> int:
     from spacepdhcg.literature import report
 
-    if not report.REPORT_JSON.is_file():
+    if not report.report_json_path().is_file():
         print("no reproduction records yet", file=sys.stderr)
         return 1
-    existing = json.loads(report.REPORT_JSON.read_text(encoding="utf-8")).get("targets", [])
-    report.write_report(existing)
-    print(f"report re-rendered: {report.REPORT_MD}")
+    report.write_report(_existing_records())
+    print(f"report re-rendered: {report.report_markdown_path()}")
     return 0
 
 
@@ -167,11 +172,8 @@ def _gpu_run(arguments: argparse.Namespace) -> int:
     for record in records:
         print(json.dumps(report._compact(record), indent=1, default=report._json_default))
     if not arguments.no_report:
-        existing = []
-        if report.REPORT_JSON.is_file():
-            existing = json.loads(report.REPORT_JSON.read_text(encoding="utf-8")).get("targets", [])
-        report.write_report(report.merge_records(existing, records))
-        print(f"report updated: {report.REPORT_MD}")
+        report.write_report(report.merge_records(_existing_records(), records))
+        print(f"report updated: {report.report_markdown_path()}")
     return 0 if all(r["status"] in {"reproduced", "descriptive-only"} for r in records) else 2
 
 

@@ -5,17 +5,22 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-import sys
 import time
 from pathlib import Path
 from typing import Any
+
+from spacepdhcg import resources
 
 
 def _json(value: Any) -> str:
     return json.dumps(value, indent=2, sort_keys=True, default=float)
 
 
-def _commit(repository: Path) -> str:
+def _commit(repository: Path | None) -> str:
+    """HEAD of the source checkout, or ``"unknown"`` for an installed wheel."""
+
+    if repository is None:
+        return "unknown"
     try:
         return subprocess.run(
             ["git", "-C", str(repository), "rev-parse", "HEAD"],
@@ -28,13 +33,9 @@ def _commit(repository: Path) -> str:
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:
-    from .data import REPOSITORY_ROOT
+    from .fetch import run
 
-    script = REPOSITORY_ROOT / "scripts" / "gtoc12" / "fetch_gtoc12_data.py"
-    command = [sys.executable, str(script)]
-    if args.data_dir:
-        command += ["--data-dir", str(args.data_dir)]
-    return subprocess.run(command, check=False).returncode
+    return run(args)
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
@@ -125,7 +126,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     verified as a whole.
     """
 
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
@@ -165,7 +166,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     report: dict[str, Any] = {
         "run_id": args.run_id,
-        "commit": _commit(REPOSITORY_ROOT),
+        "commit": _commit(resources.repository_root()),
         "instance": instance_summary,
         "settings": {
             "beam_width": args.beam_width,
@@ -375,7 +376,7 @@ def _optional_bonus(loader):
 
 
 def cmd_export_viewer(args: argparse.Namespace) -> int:
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .solution import Solution
     from .verifier import Gtoc12Verifier
     from .viewer_export import write_viewer_dataset
@@ -391,7 +392,7 @@ def cmd_export_viewer(args: argparse.Namespace) -> int:
         histories,
         catalogue,
         run_id=args.run_id,
-        commit=_commit(REPOSITORY_ROOT),
+        commit=_commit(resources.repository_root()),
         verification=report.summary(),
         solution_path=Path(args.solution),
     )
@@ -405,6 +406,9 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
 
     fetch = commands.add_parser("fetch", help="download and checksum the pinned official data")
     fetch.add_argument("--data-dir", type=Path, default=None)
+    fetch.add_argument("--only", nargs="*", default=None, help="pinned file names to fetch")
+    fetch.add_argument("--skip-optional", action="store_true")
+    fetch.add_argument("--timeout", type=float, default=600.0)
     fetch.set_defaults(function=cmd_fetch)
 
     verify = commands.add_parser("verify", help="independently verify and score a solution file")

@@ -11,9 +11,9 @@ import pytest
 
 from spacepdhcg.literature.provenance import (
     EVIDENCE_LABELS,
-    STORE_PATH,
     ProvenanceError,
     load_provenance_store,
+    store_path,
     validate_provenance_document,
 )
 from spacepdhcg.literature.registry import load_target_registry
@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _document() -> dict:
-    return json.loads(STORE_PATH.read_text(encoding="utf-8"))
+    return json.loads(store_path().read_text(encoding="utf-8"))
 
 
 def test_committed_store_validates_against_schema_and_registry() -> None:

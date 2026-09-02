@@ -9,19 +9,32 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from spacepdhcg.literature.registry import (
-    REPOSITORY_ROOT,
-    LiteratureTarget,
-    load_target_registry,
-    run_target,
-)
+from spacepdhcg import resources
+from spacepdhcg.literature.registry import LiteratureTarget, load_target_registry, run_target
 
-REPORT_JSON = REPOSITORY_ROOT / "benchmarks" / "literature" / "reference_reproduction.json"
-REPORT_MD = REPOSITORY_ROOT / "docs" / "REFERENCE_REPRODUCTION_REPORT.md"
-DETAILS_DIR = REPOSITORY_ROOT / "results" / "literature"
+REPORT_JSON_RELATIVE = "benchmarks/literature/reference_reproduction.json"
+REPORT_MD_RELATIVE = "docs/REFERENCE_REPRODUCTION_REPORT.md"
+DETAILS_DIR_RELATIVE = "results/literature"
 
 
-def _git_commit(root: Path = REPOSITORY_ROOT) -> str:
+def report_json_path() -> Path:
+    """Machine-readable report: below the checkout, or the working directory when installed."""
+
+    return resources.output_root() / REPORT_JSON_RELATIVE
+
+
+def report_markdown_path() -> Path:
+    return resources.output_root() / REPORT_MD_RELATIVE
+
+
+def details_dir() -> Path:
+    return resources.output_root() / DETAILS_DIR_RELATIVE
+
+
+def _git_commit(root: Path | None = None) -> str:
+    root = root or resources.repository_root()
+    if root is None:
+        return "unknown"
     try:
         return subprocess.run(
             ["git", "-C", str(root), "rev-parse", "HEAD"],
@@ -33,7 +46,10 @@ def _git_commit(root: Path = REPOSITORY_ROOT) -> str:
         return "unknown"
 
 
-def _dirty(root: Path = REPOSITORY_ROOT) -> bool:
+def _dirty(root: Path | None = None) -> bool:
+    root = root or resources.repository_root()
+    if root is None:
+        return True
     try:
         output = subprocess.run(
             ["git", "-C", str(root), "status", "--porcelain"],
@@ -77,8 +93,9 @@ def run_targets(
         record = _execute(target, options or {})
         records.append(record)
         if write_details:
-            DETAILS_DIR.mkdir(parents=True, exist_ok=True)
-            (DETAILS_DIR / f"{target.id}.json").write_text(
+            directory = details_dir()
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / f"{target.id}.json").write_text(
                 json.dumps(_sanitize(record), indent=1, default=_json_default) + "\n",
                 encoding="utf-8",
             )
@@ -145,11 +162,14 @@ def write_report(records: list[dict[str, Any]], *, commit: str | None = None) ->
         },
         "targets": [_compact(record) for record in records],
     }
-    REPORT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    REPORT_JSON.write_text(
+    report_json = report_json_path()
+    report_json.parent.mkdir(parents=True, exist_ok=True)
+    report_json.write_text(
         json.dumps(document, indent=2, default=_json_default) + "\n", encoding="utf-8"
     )
-    REPORT_MD.write_text(render_markdown(document), encoding="utf-8")
+    report_md = report_markdown_path()
+    report_md.parent.mkdir(parents=True, exist_ok=True)
+    report_md.write_text(render_markdown(document), encoding="utf-8")
     return document
 
 

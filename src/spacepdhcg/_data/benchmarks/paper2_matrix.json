@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "programme": "OrbitWeaver Paper 2",
+  "status": "pre-gpu manifest",
+  "repository": "terrorproforma/spacecraft-trajectory-optmiser",
+  "comparative_campaign": "docs/COMPARATIVE_SOLVER_CAMPAIGN.md",
+  "literature_baselines": "benchmarks/literature_baselines.json",
+  "gtoc_archive": "https://sophia.estec.esa.int/gtoc_portal/?page_id=94",
+  "arc_fidelities": [
+    "analytical",
+    "lambert",
+    "coarse_convex",
+    "refined_scvx",
+    "robust_scvx",
+    "certified"
+  ],
+  "route_methods": [
+    "exact_elementary_labels",
+    "beam_search",
+    "time_expanded_dynamic_programming",
+    "column_generation",
+    "branch_and_bound"
+  ],
+  "families": [
+    {
+      "id": "P2-A",
+      "name": "arc screening calibration",
+      "arc_counts": [100, 1000, 10000, 100000, 1000000],
+      "screeners": [
+        "hohmann_phasing",
+        "lambert_zero_revolution",
+        "lambert_multi_revolution",
+        "edelbaum"
+      ],
+      "reference_fidelities": ["refined_scvx", "certified"]
+    },
+    {
+      "id": "P2-B",
+      "name": "exact small moving-target routes",
+      "target_counts": [5, 8, 10, 12, 15],
+      "epoch_counts": [5, 10, 20, 40],
+      "visits": [2, 3, 5, 8],
+      "methods": ["exact_elementary_labels", "beam_search"]
+    },
+    {
+      "id": "P2-C",
+      "name": "deterministic multi-destination routes",
+      "target_counts": [10, 50, 100, 500, 1000, 5000],
+      "epoch_counts": [10, 50, 100, 500],
+      "visits": [3, 5, 10, 20, 50],
+      "beam_widths": [16, 64, 256, 1024],
+      "methods": [
+        "beam_search",
+        "time_expanded_dynamic_programming",
+        "column_generation"
+      ]
+    },
+    {
+      "id": "P2-D",
+      "name": "multi-spacecraft servicing and debris removal",
+      "target_counts": [20, 100, 500, 1000],
+      "spacecraft_counts": [2, 4, 8, 16],
+      "depots": [0, 1, 4],
+      "visits_per_spacecraft": [3, 5, 10, 20],
+      "resource_coupling": ["independent", "shared_depot", "propellant_transfer"]
+    },
+    {
+      "id": "P2-E",
+      "name": "robust multi-destination missions",
+      "target_counts": [20, 100, 500],
+      "candidate_route_counts": [100, 1000, 10000],
+      "scenario_counts": [10, 100, 1000],
+      "risk_metrics": ["expected", "worst", "cvar_0.9", "cvar_0.99"],
+      "gpu_counts": [1, 2, 4, 8]
+    },
+    {
+      "id": "P2-F",
+      "name": "historical GTOC challenge replay",
+      "editions": [5, 9, 12],
+      "scales": ["preregistered_reduced", "full"],
+      "reference_levels": ["official_example", "published_solution", "leaderboard_or_postcompetition"],
+      "validation": "official_offline_validator",
+      "selection_rule": "reduced subsets are frozen from problem metadata before solver scores are observed",
+      "deferred_editions": [
+        {
+          "edition": 11,
+          "reason": "mixed scheduling and impulsive/continuous trajectory scope"
+        },
+        {
+          "edition": 13,
+          "reason": "ballistic flyby and solar-sail dynamics are not yet supported"
+        }
+      ]
+    }
+  ],
+  "required_metrics": [
+    "route_objective",
+    "official_score",
+    "official_validator_passed",
+    "route_lower_bound",
+    "optimality_gap",
+    "route_runtime_seconds",
+    "arc_oracle_runtime_seconds",
+    "offline_database_generation_seconds",
+    "human_intervention_minutes",
+    "candidate_arcs_generated",
+    "candidate_arcs_screened",
+    "candidate_arcs_refined",
+    "candidate_arcs_cached",
+    "candidate_arcs_rejected",
+    "search_nodes_expanded",
+    "labels_generated",
+    "columns_generated",
+    "final_propellant_margin",
+    "final_time_margin",
+    "nonlinear_dynamics_defect",
+    "path_violation",
+    "terminal_error",
+    "scenario_risk",
+    "peak_host_bytes",
+    "peak_device_bytes",
+    "energy_joules"
+  ]
+}

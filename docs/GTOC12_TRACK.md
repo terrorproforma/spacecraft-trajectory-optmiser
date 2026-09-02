@@ -12,8 +12,13 @@ Branch `feat/gtoc12-asteroid-mining` (worktree `/home/angus/worktrees/spacepdhcg
 
 All official material is pinned by URL, byte size and SHA-256 in
 [`benchmarks/gtoc12/pins.json`](../benchmarks/gtoc12/pins.json) and fetched by
-`python scripts/gtoc12/fetch_gtoc12_data.py` (or `spacepdhcg gtoc12 fetch`) into the ignored
-directory `benchmarks/gtoc12/data/`. No multi-megabyte dataset is committed.
+`spacepdhcg gtoc12 fetch` (or `python scripts/gtoc12/fetch_gtoc12_data.py`, a thin wrapper around
+`spacepdhcg.gtoc12.fetch`) into the data directory: `$SPACEPDHCG_GTOC12_DATA`, else the ignored
+`benchmarks/gtoc12/data/` of a source checkout (or of `$SPACEPDHCG_BENCHMARKS_DIR`), else
+`<cache>/gtoc12` below `$SPACEPDHCG_CACHE_DIR` / `~/.cache/spacepdhcg` for an installed wheel. No
+multi-megabyte dataset is committed or packaged; the small `pins.json`, `gtoc12_rules.json`,
+`reduced_instance_v1.json` and `reference_reproductions.json` are mirrored into the wheel by
+`spacepdhcg.resources` so every `spacepdhcg gtoc12` command runs from an installed package.
 
 | File | Role | SHA-256 (prefix) | Source |
 | --- | --- | --- | --- |

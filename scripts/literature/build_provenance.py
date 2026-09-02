@@ -13,9 +13,9 @@ from pathlib import Path
 
 from spacepdhcg.literature.pinned_values import ACCESSED, curated_records
 from spacepdhcg.literature.provenance import (
-    STORE_PATH,
     ProvenanceStore,
     ingest_literature_baselines,
+    store_path,
     validate_provenance_document,
     write_provenance_store,
 )
@@ -58,9 +58,16 @@ def build_store() -> ProvenanceStore:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=STORE_PATH)
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="destination (default: the committed benchmarks/literature/provenance.json)",
+    )
     parser.add_argument("--check", action="store_true", help="fail if the committed store differs")
     arguments = parser.parse_args()
+    if arguments.output is None:
+        arguments.output = store_path()
     store = build_store()
     if arguments.check:
         import json

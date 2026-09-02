@@ -1,0 +1,115 @@
+{
+  "constants": {
+    "au_km": 149597870.691,
+    "day_s": 86400.0,
+    "g0_m_s2": 9.80665,
+    "mu_sun_km3_s2": 132712440018.0,
+    "year_days": 365.25
+  },
+  "fleet": {
+    "maximum_ships": 100,
+    "rho_per_kg": 0.004,
+    "rule": "N <= min(100, 2 exp(rho * mean collected mass per ship))"
+  },
+  "format": {
+    "asteroid_element_epoch_mjd": 64328.0,
+    "asteroid_ids": [
+      1,
+      60000
+    ],
+    "burn_sample_interval_days_max": 1.0,
+    "event_burn": -1,
+    "event_earth_flyby": -3,
+    "event_launch": 0,
+    "event_mars_flyby": -4,
+    "event_venus_flyby": -2,
+    "propagation": "numerical integration of state and mass between events",
+    "thrust_interpolation": "cubic Lagrange over burn samples"
+  },
+  "merit": {
+    "bonus_beta_per_kg": 0.05,
+    "bonus_formula": "B_i = (1 + 2 (1 + beta * M~_i)^gamma) / 3",
+    "bonus_gamma": -0.1,
+    "bonus_initial": 1.0,
+    "dynamic_vs_fixed": "During the competition B_i changed with every leaderboard update (dynamic). The archived bonus_coefficients.txt is the frozen end-of-competition state and gives the fixed post-competition weighted score.",
+    "objective": "J = sum_i B_i M_i over asteroids whose mass reached Earth"
+  },
+  "mining": {
+    "first_visit": "deploy one miner: m+ = m- - miner_mass",
+    "max_visits_per_asteroid": 2,
+    "minimum_stay_years": 1.0,
+    "rate_kg_per_year": 10.0,
+    "second_visit": "collect: m+ = m- + M_i with M_i <= rate * (t2 - t1)",
+    "unload": "Earth flyby with vinf <= 6 km/s unloads all carried collected mass"
+  },
+  "planets": [
+    {
+      "argument_of_perihelion_deg": 55.1107191497,
+      "ascending_node_deg": 76.5796397775,
+      "eccentricity": 0.00672988099539,
+      "epoch_mjd": 64328.0,
+      "event_id": -2,
+      "gravitational_parameter_km3_s2": 324858.592,
+      "inclination_deg": 3.39439096544,
+      "mean_anomaly_deg": 11.1218416921,
+      "minimum_pericentre_radius_km": 6351.0,
+      "name": "Venus",
+      "semi_major_axis_km": 108208010.521
+    },
+    {
+      "argument_of_perihelion_deg": 262.9603647,
+      "ascending_node_deg": 198.956406477,
+      "eccentricity": 0.0165519129162,
+      "epoch_mjd": 64328.0,
+      "event_id": -3,
+      "gravitational_parameter_km3_s2": 398600.435436,
+      "inclination_deg": 0.004643891555,
+      "mean_anomaly_deg": 358.03989947,
+      "minimum_pericentre_radius_km": 6678.0,
+      "name": "Earth",
+      "semi_major_axis_km": 149579151.285
+    },
+    {
+      "argument_of_perihelion_deg": 286.731029267,
+      "ascending_node_deg": 49.4553142513,
+      "eccentricity": 0.0933662184095,
+      "epoch_mjd": 64328.0,
+      "event_id": -4,
+      "gravitational_parameter_km3_s2": 42828.375214,
+      "inclination_deg": 1.84693231241,
+      "mean_anomaly_deg": 238.232037154,
+      "minimum_pericentre_radius_km": 3689.0,
+      "name": "Mars",
+      "semi_major_axis_km": 227951663.551
+    }
+  ],
+  "problem": "GTOC12 Sustainable Asteroid Mining",
+  "schema_version": "1.0.0",
+  "ship": {
+    "dry_mass_kg": 500.0,
+    "final_mass_rule": "m(t) >= dry mass + collected mass carried at all events",
+    "maximum_earth_vinf_km_s": 6.0,
+    "maximum_initial_mass_kg": 3000.0,
+    "maximum_miners": 20,
+    "maximum_thrust_n": 0.6,
+    "miner_mass_kg": 40.0,
+    "minimum_sun_distance_au": 0.3,
+    "specific_impulse_s": 4000.0
+  },
+  "source": {
+    "format": "GTOC12_Submission_Format.pdf",
+    "pins": "benchmarks/gtoc12/pins.json",
+    "statement": "GTOC12_Problem.pdf (released 19 June 2023, Tsinghua University)"
+  },
+  "tolerances": {
+    "mass_kg": 0.001,
+    "position_km": 1000.0,
+    "velocity_km_s": 0.001
+  },
+  "window": {
+    "end_mjd": 69807.0,
+    "end_utc_label": "2050-01-01T00:00:00 TT",
+    "start_mjd": 64328.0,
+    "start_utc_label": "2035-01-01T00:00:00 TT"
+  }
+}

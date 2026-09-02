@@ -18,8 +18,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-MANIFEST_PATH = REPOSITORY_ROOT / "benchmarks" / "literature" / "external_sources.json"
+from spacepdhcg import resources
+
+MANIFEST_ASSET = "benchmarks/literature/external_sources.json"
 CACHE_ENV = "SPACEPDHCG_LITERATURE_CACHE"
 ONLINE_ENV = "SPACEPDHCG_LITERATURE_ONLINE"
 USER_AGENT = "spacepdhcg-literature-fetch/0.1"
@@ -73,8 +74,14 @@ def online_allowed() -> bool:
     return os.environ.get(ONLINE_ENV, "").lower() in {"1", "true", "yes"}
 
 
-def load_manifest(path: Path = MANIFEST_PATH) -> dict[str, ExternalArtifact]:
-    with path.open(encoding="utf-8") as handle:
+def manifest_path() -> Path:
+    """Location of ``benchmarks/literature/external_sources.json`` (override, checkout, wheel)."""
+
+    return resources.asset_path(MANIFEST_ASSET)
+
+
+def load_manifest(path: Path | None = None) -> dict[str, ExternalArtifact]:
+    with (path or manifest_path()).open(encoding="utf-8") as handle:
         document = json.load(handle)
     artifacts = {}
     for item in document["artifacts"]:

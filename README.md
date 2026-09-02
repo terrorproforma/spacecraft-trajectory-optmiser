@@ -67,6 +67,8 @@ src/spacepdhcg/
   backends/     persistent CPU references and accelerator adapters
   benchmarks/   reproducible latency, throughput and accuracy experiments
   planner/      user-facing planner (schema, CLI/API, CPU reference, viewer export)
+  resources.py  locates frozen benchmark/spec assets (override, source checkout, wheel copy)
+  _data/        byte-identical mirror of those assets so installed wheels can run every command
 
 cpp/cuda/tools/spacepdhcg_plan.cu   native planner executable on the device SCvx stack
 examples/planner/                   one runnable problem document per family
@@ -94,6 +96,24 @@ native transcription. See [`docs/PLANNER.md`](docs/PLANNER.md) and
 [`examples/planner/README.md`](examples/planner/README.md).
 
 The upstream PDHCG package is intentionally optional because it requires a compatible NVIDIA CUDA environment. CPU installation and CI do not import it.
+
+## Frozen assets from an installed wheel
+
+`spacepdhcg literature …`, `spacepdhcg gtoc12 …` and the other tools read their frozen JSON inputs
+(literature registry/provenance/pins and profiles, GTOC12 rules/pins/reduced-instance rule, G4
+policy/applicability/claim core with hash locks, campaign scopes, paper matrices, the provenance
+schema) through `spacepdhcg.resources`, which looks in this order:
+
+1. `SPACEPDHCG_BENCHMARKS_DIR` — an explicit `benchmarks/` directory; when set it is authoritative
+   for every `benchmarks/...` asset (a missing file there is an error, never a silent fallback);
+2. the source checkout containing the imported module (development trees, editable installs);
+3. the copies packaged in the wheel under `spacepdhcg/_data/`.
+
+`src/spacepdhcg/_data` is maintained by `python scripts/sync_packaged_assets.py` (`--check` in CI and
+`tests/test_resources.py` prove every copy is byte-identical to the repository original). Large
+pinned downloads are never packaged: GTOC12 data goes to `SPACEPDHCG_GTOC12_DATA`, the checkout's
+`benchmarks/gtoc12/data`, or `$SPACEPDHCG_CACHE_DIR`/`~/.cache/spacepdhcg/gtoc12` (fetch with
+`spacepdhcg gtoc12 fetch`); literature artefacts use `SPACEPDHCG_LITERATURE_CACHE`.
 
 ## Development status
 
