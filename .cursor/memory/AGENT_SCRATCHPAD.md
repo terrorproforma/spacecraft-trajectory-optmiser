@@ -1160,3 +1160,6 @@ Use this file as persistent, repo-local execution memory.
 
 - Current-head G0-G3 evidence must be resealed before grouped G4 starts.
 - CPU campaign paths remain paused externally and should resume only after branch handoff.
+- [self] The current native executor still emits the row-oriented capability and has no
+  `execution_contract` declaration. Capability generation must reject it until `--g4-session`
+  implements the authoritative nine-attempt process/workspace contract.

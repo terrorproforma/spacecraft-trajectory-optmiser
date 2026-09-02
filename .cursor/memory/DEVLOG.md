@@ -853,4 +853,6 @@
 - Follow-up notes / risks:
   - Reseal G0-G3 from the final committed head before any campaign resume.
   - Grouped G4 requires an executor capability implementing `--g4-session`; never reuse the old row checkpoint.
+  - Hardened capability generation to reject the currently row-oriented executable until it
+    declares the complete `g4-persistent-group-v1` process/workspace contract.
   - Physical 2/4/8-GPU G5 and distributed OrbitWeaver remain explicitly deferred.

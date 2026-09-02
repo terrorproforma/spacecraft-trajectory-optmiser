@@ -24,6 +24,14 @@ EXPECTED_AXES = {
     "repeat",
     "solver_order",
 }
+EXPECTED_EXECUTION_CONTRACT = {
+    "version": "g4-persistent-group-v1",
+    "one_process_per_group": True,
+    "persistent_session": True,
+    "persistent_workspace": True,
+    "separate_attempt_records": True,
+    "policy_reset_between_attempts": True,
+}
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -91,6 +99,8 @@ def main() -> int:
         for value in capability["axes"].values()
     ):
         raise SystemExit("executor reports an unapplied roadmap-required axis")
+    if capability.get("execution_contract") != EXPECTED_EXECUTION_CONTRACT:
+        raise SystemExit("executor lacks the authoritative persistent nine-attempt group contract")
     capability.update(
         {
             "source_commit": source_commit,
