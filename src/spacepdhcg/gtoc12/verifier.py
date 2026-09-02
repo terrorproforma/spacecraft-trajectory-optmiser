@@ -38,6 +38,9 @@ FloatArray = NDArray[np.float64]
 # 1 + O(1e-11) days; the official verifier accepts them.  One microday (86 ms) of slack keeps the
 # one-day rule while ignoring representation noise.
 SAMPLE_INTERVAL_SLACK_DAYS = 1.0e-6
+# The archived JPL solution carries samples of 0.60000001 N that the official verifier accepts;
+# one micronewton of slack keeps the bound while tolerating printed round-off.
+THRUST_MAGNITUDE_SLACK_N = 1.0e-6
 
 
 @dataclass(frozen=True, slots=True)
@@ -686,7 +689,7 @@ class Gtoc12Verifier:
                     )
                 )
         for sample in samples:
-            if sample.magnitude > C.THRUST_MAX_N + 1e-9:
+            if sample.magnitude > C.THRUST_MAX_N + THRUST_MAGNITUDE_SLACK_N:
                 violations.append(
                     Violation(
                         "Error401",

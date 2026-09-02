@@ -29,6 +29,9 @@ FloatArray = NDArray[np.float64]
 # The zero-revolution time-of-flight residual is monotone in the universal variable, so a coarse
 # bracketing scan suffices for screening; the parity test still uses the kernel's 8192 samples.
 SCREENING_SCAN_SAMPLES = 256
+# Neighbour proxy: penalise relative phase drift accumulated over a typical deploy-to-collect stay.
+PHASE_DRIFT_HORIZON_YEARS = 10.0
+PHASE_DRIFT_WEIGHT = 0.5
 
 
 def exhaust_velocity_km_s() -> float:
@@ -104,7 +107,13 @@ def element_distance_proxy(
             )
         )
     )
-    return base + 0.5 * v_circ * np.hypot(ex_t - ex_s, ey_t - ey_s) + node_penalty
+    # Self-cleaning chains revisit the same pair roughly a decade later: bodies with different
+    # mean motions drift apart in phase, and re-phasing inside a few-hundred-day hop is expensive.
+    mean_motion_s = np.sqrt(C.MU_SUN_KM3_S2 / catalogue.semi_major_axis_km[s] ** 3)
+    mean_motion_t = np.sqrt(C.MU_SUN_KM3_S2 / catalogue.semi_major_axis_km[t] ** 3)
+    drift = np.abs(mean_motion_t - mean_motion_s) * PHASE_DRIFT_HORIZON_YEARS * C.YEAR_S
+    drift_penalty = PHASE_DRIFT_WEIGHT * v_circ * np.minimum(drift, np.pi) / np.pi
+    return base + 0.5 * v_circ * np.hypot(ex_t - ex_s, ey_t - ey_s) + node_penalty + drift_penalty
 
 
 @dataclass(slots=True)

@@ -40,14 +40,17 @@ class SearchSettings:
     min_deploys: int = 1
     launch_epochs: tuple[float, ...] = tuple(C.MISSION_START_MJD + np.arange(0.0, 731.0, 30.0))
     earth_leg_tofs: tuple[float, ...] = tuple(np.arange(300.0, 901.0, 50.0))
-    hop_tofs: tuple[float, ...] = (60.0, 90.0, 120.0, 150.0, 180.0, 240.0, 300.0)
+    hop_tofs: tuple[float, ...] = (60.0, 90.0, 120.0, 150.0, 180.0, 240.0, 300.0, 360.0, 420.0)
+    deploy_wait_days: tuple[float, ...] = (0.0, 60.0, 120.0, 180.0, 240.0, 300.0)
     neighbours: int = 40
     earth_leg_inflation: float = 1.6
     hop_inflation: float = 1.25
     duty: float = 0.85
     end_margin_days: float = 2.0
-    return_window_days: float = 240.0
-    collect_wait_window_days: float = 420.0
+    return_window_days: float = 600.0
+    collect_wait_window_days: float = 600.0
+    max_per_deployed_set: int = 2
+    first_level_limit: int = 4000
     schedule_step_days: float = 15.0
     wait_penalty: float = 0.5  # kg propellant-equivalent per kg of mining mass forgone
     initial_mass: float = C.MAX_INITIAL_MASS_KG
@@ -150,6 +153,7 @@ class RouteSearch:
         self.lambert_evaluations = 0
         self._neighbours: dict[int, NDArray[np.int64]] = {}
         self._hop_cache: dict[tuple[int, float], dict[str, FloatArray]] = {}
+        self._return_cache: dict[int, list[tuple[float, float, float]]] = {}
 
     # -- proxies --
 
@@ -192,30 +196,52 @@ class RouteSearch:
         grid = screen_earth_to_asteroids(self.catalogue, self.ids, epochs, tofs)
         self.lambert_evaluations += 2 * grid["total_delta_v"].size
         beam: list[_Partial] = []
-        # first deploy: Earth -> A1
-        for a_index, asteroid in enumerate(self.ids):
-            for e_index, launch in enumerate(epochs):
-                for t_index, tof in enumerate(tofs):
-                    if not grid["feasible"][a_index, e_index, t_index]:
-                        continue
-                    dv = float(grid["total_delta_v"][a_index, e_index, t_index])
-                    if not self._feasible(s.initial_mass, dv, float(tof), s.earth_leg_inflation):
-                        continue
-                    propellant = self._propellant(s.initial_mass, dv, s.earth_leg_inflation)
-                    arrival = float(launch + tof)
-                    leg = PlannedLeg(
-                        EARTH_ID,
-                        int(asteroid),
-                        float(launch),
-                        arrival,
-                        dv,
-                        s.earth_leg_inflation,
-                        "earth_out",
-                    )
-                    mass = s.initial_mass - propellant - C.MINER_MASS_KG
-                    beam.append(
-                        _Partial([leg], int(asteroid), arrival, mass, [(int(asteroid), arrival)])
-                    )
+        # first deploy: Earth -> A1 (vectorised feasibility and pre-ranking; the catalogue-scale
+        # grid has tens of millions of cells, so only the best ``first_level_limit`` become nodes)
+        dv_grid = np.where(grid["feasible"], grid["total_delta_v"], np.inf)
+        tof_grid = np.broadcast_to(tofs[None, None, :], dv_grid.shape)
+        authority = thrust_authority_km_s(s.initial_mass, tof_grid, s.duty)
+        ok = np.isfinite(dv_grid) & (dv_grid * s.earth_leg_inflation <= authority)
+        propellant_grid = propellant_for_delta_v(s.initial_mass, dv_grid * s.earth_leg_inflation)
+        arrival_grid = epochs[None, :, None] + tofs[None, None, :]
+        horizon = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
+        mined_grid = (
+            C.MINING_RATE_KG_PER_YEAR * np.maximum(horizon - arrival_grid, 0.0) / C.YEAR_DAYS
+        )
+        score_grid = np.where(
+            ok,
+            mined_grid - 0.15 * (propellant_grid + C.MINER_MASS_KG),
+            -np.inf,
+        )
+        flat = np.argsort(-score_grid.ravel(), kind="stable")[: s.first_level_limit]
+        for index in flat:
+            a_index, e_index, t_index = np.unravel_index(int(index), score_grid.shape)
+            if not ok[a_index, e_index, t_index]:
+                break
+            dv = float(dv_grid[a_index, e_index, t_index])
+            launch = float(epochs[e_index])
+            tof = float(tofs[t_index])
+            arrival = launch + tof
+            leg = PlannedLeg(
+                EARTH_ID,
+                int(self.ids[a_index]),
+                launch,
+                arrival,
+                dv,
+                s.earth_leg_inflation,
+                "earth_out",
+            )
+            mass = s.initial_mass - float(propellant_grid[a_index, e_index, t_index])
+            mass -= C.MINER_MASS_KG
+            beam.append(
+                _Partial(
+                    [leg],
+                    int(self.ids[a_index]),
+                    arrival,
+                    mass,
+                    [(int(self.ids[a_index]), arrival)],
+                )
+            )
         expansions = 0
         completed: list[RoutePlan] = []
         failures: list[dict[str, object]] = []
@@ -228,40 +254,57 @@ class RouteSearch:
             next_beam: list[_Partial] = []
             for partial in current:
                 expansions += 1
-                hops = self.hops_from(partial.location, partial.epoch)
                 visited = {item for item, _ in partial.deployed}
-                for t_index, target in enumerate(hops["target_ids"]):
-                    target = int(target)
-                    if target in visited:
-                        continue
-                    for f_index, tof in enumerate(hops["tofs_days"]):
-                        if not hops["feasible"][t_index, f_index]:
+                for wait in s.deploy_wait_days:
+                    departure = partial.epoch + float(wait)
+                    hops = self.hops_from(partial.location, departure)
+                    for t_index, target in enumerate(hops["target_ids"]):
+                        target = int(target)
+                        if target in visited:
                             continue
-                        dv = float(hops["total_delta_v"][t_index, f_index])
-                        if not self._feasible(partial.mass, dv, float(tof), s.hop_inflation):
-                            continue
-                        propellant = self._propellant(partial.mass, dv, s.hop_inflation)
-                        arrival = partial.epoch + float(tof)
-                        if arrival > C.MISSION_END_MJD - 3.0 * C.YEAR_DAYS:
-                            continue
-                        leg = PlannedLeg(
-                            partial.location,
-                            target,
-                            partial.epoch,
-                            arrival,
-                            dv,
-                            s.hop_inflation,
-                            "deploy_hop",
-                        )
-                        next_beam.append(
-                            _Partial(
-                                [*partial.legs, leg],
-                                target,
-                                arrival,
-                                partial.mass - propellant - C.MINER_MASS_KG,
-                                [*partial.deployed, (target, arrival)],
+                        for f_index, tof in enumerate(hops["tofs_days"]):
+                            if not hops["feasible"][t_index, f_index]:
+                                continue
+                            dv = float(hops["total_delta_v"][t_index, f_index])
+                            if not self._feasible(partial.mass, dv, float(tof), s.hop_inflation):
+                                continue
+                            propellant = self._propellant(partial.mass, dv, s.hop_inflation)
+                            arrival = departure + float(tof)
+                            if arrival > C.MISSION_END_MJD - 3.0 * C.YEAR_DAYS:
+                                continue
+                            legs = list(partial.legs)
+                            if wait > 0.0:
+                                legs.append(
+                                    PlannedLeg(
+                                        partial.location,
+                                        partial.location,
+                                        partial.epoch,
+                                        departure,
+                                        0.0,
+                                        1.0,
+                                        "camp",
+                                    )
+                                )
+                            legs.append(
+                                PlannedLeg(
+                                    partial.location,
+                                    target,
+                                    departure,
+                                    arrival,
+                                    dv,
+                                    s.hop_inflation,
+                                    "deploy_hop",
+                                )
                             )
-                        )
+                            next_beam.append(
+                                _Partial(
+                                    legs,
+                                    target,
+                                    arrival,
+                                    partial.mass - propellant - C.MINER_MASS_KG,
+                                    [*partial.deployed, (target, arrival)],
+                                )
+                            )
             current = self._select(next_beam)
             for partial in current:
                 if len(partial.deployed) >= s.min_deploys:
@@ -290,8 +333,27 @@ class RouteSearch:
             failures,
         )
 
+    def _return_feasible(self, asteroid: int, mass_guess: float) -> bool:
+        """Cached test that *some* Earth return from ``asteroid`` fits inside the final window."""
+
+        key = asteroid
+        if key not in self._return_cache:
+            end = C.MISSION_END_MJD - self.settings.end_margin_days
+            options = self._return_options(asteroid, end)
+            self._return_cache[key] = options
+        return any(
+            self._feasible(mass_guess, dv, tof, self.settings.earth_leg_inflation)
+            for dv, _departure, tof in self._return_cache[key]
+        )
+
     def _select(self, partials: list[_Partial]) -> list[_Partial]:
-        """Stable top-``beam_width`` by heuristic: expected mined mass minus propellant penalty."""
+        """Stable top-``beam_width`` by heuristic, with diversity and return pruning.
+
+        Score = expected mined mass minus a propellant penalty.  At most
+        ``max_per_deployed_set`` variants of one deployed set survive, and chains whose first
+        asteroid (the last one collected before the Earth return) has no feasible return are
+        dropped because no collection tour can complete them.
+        """
 
         end = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS  # rough collection horizon
         for partial in partials:
@@ -305,7 +367,23 @@ class RouteSearch:
             partials,
             key=lambda item: (-item.score, item.epoch, tuple(a for a, _ in item.deployed)),
         )
-        return ordered[: self.settings.beam_width]
+        selected: list[_Partial] = []
+        per_set: dict[tuple[int, ...], int] = {}
+        for partial in ordered:
+            if len(selected) >= self.settings.beam_width:
+                break
+            key = tuple(a for a, _ in partial.deployed)
+            if per_set.get(key, 0) >= self.settings.max_per_deployed_set:
+                continue
+            first = partial.deployed[0][0]
+            guess = partial.mass + sum(
+                C.maximum_collected_mass(max(end - d, 0.0)) for _, d in partial.deployed
+            )
+            if not self._return_feasible(first, guess):
+                continue
+            per_set[key] = per_set.get(key, 0) + 1
+            selected.append(partial)
+        return selected
 
     def _return_options(self, asteroid: int, end: float) -> list[tuple[float, float, float]]:
         """Candidate ``(dv, departure, tof)`` Earth returns arriving inside the final window."""

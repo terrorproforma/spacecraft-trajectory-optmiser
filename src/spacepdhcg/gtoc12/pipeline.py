@@ -509,30 +509,41 @@ def emit_solution(route: RefinedRoute, catalogue: AsteroidCatalogue) -> Solution
             continue
         asteroid = leg.planned.to_id
         r, v = asteroid_state(catalogue, asteroid, epoch)
-        if asteroid in deploy and abs(deploy[asteroid] - epoch) < 1e-6:
-            mass_after = mass_before - C.MINER_MASS_KG
-        elif asteroid in collect and abs(collect[asteroid] - epoch) < 1e-6:
-            gained = route.collected_mass[asteroid]
-            mass_after = mass_before + gained
-            carried += gained
-        else:
-            mass_after = mass_before
-        ship.items.append(
-            Event(
-                asteroid,
-                StateLine(epoch, r.copy(), v.copy(), mass_before),
-                StateLine(epoch, r.copy(), v.copy(), mass_after),
-            )
-        )
-        # a collection that happens at the *departure* of the next leg (after camping)
         next_leg = route.legs[index + 1] if index + 1 < len(route.legs) else None
-        if (
+        collects_at_departure = (
             next_leg is not None
             and next_leg.planned.from_id == asteroid
             and asteroid in collect
             and abs(collect[asteroid] - next_leg.planned.departure_epoch) < 1e-6
             and abs(collect[asteroid] - epoch) >= 1e-6
-        ):
+        )
+        if asteroid in deploy and abs(deploy[asteroid] - epoch) < 1e-6:
+            mass_after = mass_before - C.MINER_MASS_KG
+            ship.items.append(
+                Event(
+                    asteroid,
+                    StateLine(epoch, r.copy(), v.copy(), mass_before),
+                    StateLine(epoch, r.copy(), v.copy(), mass_after),
+                )
+            )
+        elif asteroid in collect and abs(collect[asteroid] - epoch) < 1e-6:
+            gained = route.collected_mass[asteroid]
+            mass_after = mass_before + gained
+            carried += gained
+            ship.items.append(
+                Event(
+                    asteroid,
+                    StateLine(epoch, r.copy(), v.copy(), mass_before),
+                    StateLine(epoch, r.copy(), v.copy(), mass_after),
+                )
+            )
+        elif collects_at_departure:
+            # Arrive, coast on the asteroid's orbit (no event: each asteroid may be rendezvoused
+            # twice only), then collect and depart together.
+            mass_after = mass_before
+        else:
+            raise ValueError(f"leg arrives at asteroid {asteroid} without a deploy or collect")
+        if collects_at_departure:
             depart = next_leg.planned.departure_epoch
             r2, v2 = asteroid_state(catalogue, asteroid, depart)
             gained = route.collected_mass[asteroid]
