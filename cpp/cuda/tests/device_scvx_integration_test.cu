@@ -3455,14 +3455,25 @@ std::vector<double> flatten_controls(const std::vector<Control>& controls) {
 
 IntegrationResult run_hcw() {
     transcription::HcwRendezvousConfig config;
-    config.intervals = h1_intervals > 0U ? h1_intervals : 2U;
+    config.intervals = h1_intervals > 0U ? h1_intervals : 20U;
     config.step_seconds = 10.0;
     transcription::HcwRendezvousCqp subproblem(config);
-    const dynamics::HcwState initial{};
+    const dynamics::HcwState initial =
+        h1_intervals > 0U || sanitizer_mode
+        ? dynamics::HcwState{}
+        : dynamics::HcwState{0.1, -0.05, 0.02, 1.0e-4, -2.0e-4, 5.0e-5};
     const dynamics::HcwState target{};
     const auto values = subproblem.values(initial, target);
-    std::vector<dynamics::HcwState> states(config.intervals + 1U, initial);
     std::vector<dynamics::HcwControl> controls(config.intervals);
+    std::vector<dynamics::HcwState> states(config.intervals + 1U);
+    states.front() = initial;
+    for (std::size_t interval = 0U; interval < config.intervals; ++interval) {
+        states[interval + 1U] = dynamics::hcw_step(
+            subproblem.discrete_dynamics(),
+            states[interval],
+            controls[interval]
+        );
+    }
     const auto& layout = subproblem.layout();
     const auto maps = make_maps(
         subproblem.structure().scalar_constraint,
@@ -4157,6 +4168,9 @@ int run_invocation(const int argc, char** argv) {
         || mode == "--diagnose-p1d"
         || mode == "--p1c-qoco-repeatability"
         || mode == "--qoco-unavailable";
+    if (mode == "--production-outer") {
+        production_outer_iterations = 3U;
+    }
     if (mode == "--p1c-qoco-repeatability") {
         p1c_qoco_repeatability_mode = true;
         g4_sample_mode = true;
@@ -4546,6 +4560,13 @@ int run_invocation(const int argc, char** argv) {
                 hcw.cpu_gpu_trajectory_max
             );
             return 0;
+        }
+        if (mode == "--production-outer") {
+            test::require(
+                hcw.outer.accepted_steps >= 1U,
+                "HCW displaced production fixture accepted no nonzero step"
+            );
+            production_outer_iterations = 1U;
         }
         const auto pd3 = run_pd3();
         const auto low_thrust = run_low_thrust();
