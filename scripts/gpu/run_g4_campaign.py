@@ -267,6 +267,330 @@ class EnergySampler:
         }
 
 
+def parse_pmon(text: str) -> list[dict[str, Any]]:
+    """Parse ``nvidia-smi pmon`` rows into pid/type/sm/mem/command records."""
+
+    rows: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        fields = line.split()
+        if len(fields) < 10:
+            continue
+        try:
+            pid = int(fields[1])
+        except ValueError:
+            continue
+
+        def percent(value: str) -> int | None:
+            return None if value == "-" else int(value)
+
+        rows.append(
+            {
+                "pid": pid,
+                "type": fields[2],
+                "sm_percent": percent(fields[3]),
+                "mem_percent": percent(fields[4]),
+                "command": " ".join(fields[9:]),
+            }
+        )
+    return rows
+
+
+def host_compute_activity(
+    rows: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Split host compute-only contexts into active (SM or memory busy) and idle."""
+
+    active: list[dict[str, Any]] = []
+    idle: list[dict[str, Any]] = []
+    for row in rows:
+        if row["type"] != "C":
+            continue
+        busy = bool(row["sm_percent"]) or bool(row["mem_percent"])
+        (active if busy else idle).append(row)
+    return active, idle
+
+
+class GpuContaminationMonitor:
+    """Detect foreign GPU compute activity before, during, and after one execution group.
+
+    WSL2 ``nvidia-smi`` cannot enumerate GPU processes, so three signals are combined:
+
+    1. ``nvidia-smi`` compute-apps, utilization, memory, and power, recorded verbatim;
+    2. ``/dev/dxg`` holders inside the VM that are not this scheduler or its descendants
+       (and are not ``nvidia-smi`` itself);
+    3. host ``nvidia-smi.exe pmon`` compute-only (``C``) contexts with their SM/memory
+       utilization.
+
+    Any foreign VM holder is contaminating whenever it is present. A host compute context is
+    contaminating when it reports non-zero SM or memory utilization; an idle host context is
+    retained as ``host_idle_compute_contexts`` evidence without censoring the group.
+    """
+
+    def __init__(
+        self,
+        nvidia_smi: str = "nvidia-smi",
+        host_nvidia_smi: str | None = "/mnt/c/Windows/System32/nvidia-smi.exe",
+        interval_seconds: float = 1.0,
+    ) -> None:
+        self.nvidia_smi = nvidia_smi
+        self.host_nvidia_smi = (
+            host_nvidia_smi if host_nvidia_smi and Path(host_nvidia_smi).is_file() else None
+        )
+        self.interval_seconds = interval_seconds
+        self.own_pid = os.getpid()
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._samples: list[dict[str, Any]] = []
+        self._errors: list[str] = []
+
+    @staticmethod
+    def _now() -> str:
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    def _run(self, command: list[str], timeout: float = 20.0) -> str:
+        completed = subprocess.run(
+            command, check=False, capture_output=True, text=True, timeout=timeout
+        )
+        if completed.returncode != 0:
+            raise RuntimeError(
+                f"{command[0]} exited {completed.returncode}: {completed.stderr.strip()[-300:]}"
+            )
+        return completed.stdout
+
+    def sample_nvidia_smi(self) -> dict[str, Any]:
+        sample: dict[str, Any] = {"at": self._now()}
+        try:
+            apps = self._run(
+                [self.nvidia_smi, "--query-compute-apps=pid,name,used_memory", "--format=csv"]
+            )
+            sample["compute_apps_csv"] = apps
+            sample["compute_apps"] = [
+                line.strip() for line in apps.splitlines()[1:] if line.strip()
+            ]
+            gpu = self._run(
+                [
+                    self.nvidia_smi,
+                    "--query-gpu=utilization.gpu,memory.used,power.draw",
+                    "--format=csv,noheader,nounits",
+                ]
+            )
+            utilization, memory, power = (item.strip() for item in gpu.strip().split(","))
+            sample["utilization_percent"] = float(utilization)
+            sample["memory_used_mib"] = float(memory)
+            sample["power_watts"] = float(power)
+        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired) as error:
+            sample["error"] = str(error)
+        return sample
+
+    def _is_own(self, pid: int) -> bool:
+        seen: set[int] = set()
+        current = pid
+        while current > 1 and current not in seen:
+            if current == self.own_pid:
+                return True
+            seen.add(current)
+            try:
+                status = Path(f"/proc/{current}/status").read_text()
+            except OSError:
+                return False
+            parent = next(
+                (line.split()[1] for line in status.splitlines() if line.startswith("PPid:")),
+                "0",
+            )
+            current = int(parent)
+        return False
+
+    def dxg_holders(self) -> list[dict[str, Any]]:
+        """Return foreign VM processes holding ``/dev/dxg`` (GPU paravirtualization)."""
+
+        holders: list[dict[str, Any]] = []
+        for entry in os.scandir("/proc"):
+            if not entry.name.isdigit():
+                continue
+            pid = int(entry.name)
+            try:
+                descriptors = os.listdir(f"/proc/{pid}/fd")
+                opened = any(
+                    os.readlink(f"/proc/{pid}/fd/{descriptor}") == "/dev/dxg"
+                    for descriptor in descriptors
+                )
+            except OSError:
+                continue
+            if not opened:
+                continue
+            try:
+                comm = Path(f"/proc/{pid}/comm").read_text().strip()
+                cmdline = Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ")
+            except OSError:
+                continue
+            if comm == "nvidia-smi" or self._is_own(pid):
+                continue
+            holders.append(
+                {"pid": pid, "comm": comm, "cmdline": cmdline.decode(errors="replace")[:300]}
+            )
+        return holders
+
+    def host_compute_contexts(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str]:
+        if self.host_nvidia_smi is None:
+            return [], [], ""
+        text = self._run([self.host_nvidia_smi, "pmon", "-c", "1"])
+        active, idle = host_compute_activity(parse_pmon(text))
+        return active, idle, text
+
+    def probe(self) -> dict[str, Any]:
+        """One combined foreign-activity observation."""
+
+        probe: dict[str, Any] = {"at": self._now(), "monotonic": time.monotonic()}
+        try:
+            probe["wsl_foreign_processes"] = self.dxg_holders()
+        except OSError as error:
+            probe["wsl_foreign_processes"] = []
+            probe["dxg_error"] = str(error)
+        try:
+            active, idle, _ = self.host_compute_contexts()
+            probe["host_active_compute_processes"] = active
+            probe["host_idle_compute_contexts"] = idle
+        except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+            probe["host_active_compute_processes"] = []
+            probe["host_idle_compute_contexts"] = []
+            probe["host_error"] = str(error)
+        probe["foreign"] = bool(
+            probe["wsl_foreign_processes"] or probe["host_active_compute_processes"]
+        )
+        return probe
+
+    def boundary_sample(self) -> dict[str, Any]:
+        """Full before/after sample: nvidia-smi query plus a process probe."""
+
+        sample = {"nvidia_smi": self.sample_nvidia_smi(), **self.probe()}
+        if self.host_nvidia_smi is not None:
+            try:
+                sample["host_pmon"] = self._run([self.host_nvidia_smi, "pmon", "-c", "1"])
+            except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+                sample["host_pmon_error"] = str(error)
+        return sample
+
+    def _watch(self) -> None:
+        while not self._stop.is_set():
+            started = time.monotonic()
+            try:
+                self._samples.append(self.probe())
+            except Exception as error:  # monitoring must never kill the measured worker
+                self._errors.append(str(error))
+            self._stop.wait(max(0.0, self.interval_seconds - (time.monotonic() - started)))
+
+    def start(self) -> None:
+        self._stop.clear()
+        self._samples = []
+        self._errors = []
+        self._thread = threading.Thread(target=self._watch, daemon=True)
+        self._thread.start()
+
+    def stop(self) -> dict[str, Any]:
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join()
+        if not self._samples:
+            self._samples.append(self.probe())
+        samples = list(self._samples)
+        wsl: dict[int, dict[str, Any]] = {}
+        host_active: dict[int, dict[str, Any]] = {}
+        host_idle: dict[int, dict[str, Any]] = {}
+        for sample in samples:
+            for process in sample.get("wsl_foreign_processes", []):
+                entry = wsl.setdefault(
+                    process["pid"],
+                    {
+                        **process,
+                        "first_seen": sample["at"],
+                        "last_seen": sample["at"],
+                        "samples": 0,
+                    },
+                )
+                entry["last_seen"] = sample["at"]
+                entry["samples"] += 1
+            for process in sample.get("host_active_compute_processes", []):
+                entry = host_active.setdefault(
+                    process["pid"],
+                    {
+                        "pid": process["pid"],
+                        "command": process["command"],
+                        "first_seen": sample["at"],
+                        "last_seen": sample["at"],
+                        "max_sm_percent": 0,
+                        "max_mem_percent": 0,
+                        "samples": 0,
+                    },
+                )
+                entry["last_seen"] = sample["at"]
+                entry["samples"] += 1
+                entry["max_sm_percent"] = max(entry["max_sm_percent"], process["sm_percent"] or 0)
+                entry["max_mem_percent"] = max(
+                    entry["max_mem_percent"], process["mem_percent"] or 0
+                )
+            for process in sample.get("host_idle_compute_contexts", []):
+                entry = host_idle.setdefault(
+                    process["pid"],
+                    {"pid": process["pid"], "command": process["command"], "samples": 0},
+                )
+                entry["samples"] += 1
+        errors = list(self._errors) + [
+            sample[key]
+            for sample in samples
+            for key in ("dxg_error", "host_error")
+            if key in sample
+        ]
+        return {
+            "foreign_detected": bool(wsl or host_active),
+            "wsl_foreign_processes": sorted(wsl.values(), key=lambda item: item["pid"]),
+            "host_active_compute_processes": sorted(
+                host_active.values(), key=lambda item: item["pid"]
+            ),
+            "host_idle_compute_contexts": sorted(host_idle.values(), key=lambda item: item["pid"]),
+            "sample_count": len(samples),
+            "interval_seconds": self.interval_seconds,
+            "host_monitor_available": self.host_nvidia_smi is not None,
+            "errors": errors[:50],
+        }
+
+    def wait_until_clear(self, *, poll_seconds: float = 5.0, log: Any = sys.stderr) -> int:
+        """Block until two consecutive probes show no foreign compute activity."""
+
+        waited = 0
+        clear_streak = 0
+        last_report = 0.0
+        while True:
+            probe = self.probe()
+            if not probe["foreign"]:
+                clear_streak += 1
+                if clear_streak >= 2:
+                    return waited
+            else:
+                clear_streak = 0
+                if time.monotonic() - last_report >= 30.0:
+                    last_report = time.monotonic()
+                    print(
+                        json.dumps(
+                            {
+                                "event": "waiting_for_foreign_gpu_processes",
+                                "at": probe["at"],
+                                "wsl_foreign_processes": probe["wsl_foreign_processes"],
+                                "host_active_compute_processes": probe[
+                                    "host_active_compute_processes"
+                                ],
+                            },
+                            sort_keys=True,
+                        ),
+                        file=log,
+                        flush=True,
+                    )
+            pause = 1.0 if clear_streak else poll_seconds
+            time.sleep(pause)
+            waited += int(pause)
+
+
 class PersistentExecutor:
     """One long-lived process and CUDA context for sequential independent rows."""
 
@@ -698,12 +1022,22 @@ def execute_group(
     capability_sha256: str,
     timeout_seconds: int,
     sampler_cpu_core: int | None,
-) -> None:
-    """Execute warmups and measurements in one persistent process/session/workspace."""
+    monitor: GpuContaminationMonitor | None = None,
+) -> str:
+    """Execute warmups and measurements in one persistent process/session/workspace.
+
+    Returns the ledger disposition. A group observed alongside foreign GPU compute activity
+    is quarantined as ``contaminated`` with all raw evidence retained; the caller re-runs it
+    once the foreign activity has ended.
+    """
 
     run_directory = store.root / "runs" / claim.coordinate_id / claim.attempt_id
     manifest = run_directory / "execution-group.json"
     atomic_create(manifest, canonical_bytes(claim.coordinate) + b"\n")
+    contamination: dict[str, Any] = {"monitored": monitor is not None}
+    if monitor is not None:
+        contamination["before"] = monitor.boundary_sample()
+        monitor.start()
     command = command_for_group(
         executable,
         claim,
@@ -763,6 +1097,24 @@ def execute_group(
             atomic_create(run_directory / "stdout.restart-0.jsonl", stdout.encode())
             atomic_create(run_directory / "stderr.restart-0.log", stderr.encode())
     elapsed = time.monotonic() - started
+    if monitor is not None:
+        contamination["during"] = monitor.stop()
+        contamination["after"] = monitor.boundary_sample()
+        contamination["foreign_detected"] = bool(
+            contamination["during"]["foreign_detected"]
+            or contamination["before"].get("foreign")
+            or contamination["after"].get("foreign")
+        )
+        contamination["rule"] = (
+            "foreign VM /dev/dxg holder present, or host compute-only context with non-zero "
+            "SM/memory utilization, at any sample from the pre-group boundary through the "
+            "post-group boundary censors the whole group as contaminated; idle host contexts "
+            "are recorded but do not censor"
+        )
+        atomic_create(
+            run_directory / "gpu-contamination.json",
+            canonical_bytes(contamination) + b"\n",
+        )
     atomic_create(run_directory / "stdout.jsonl", stdout.encode())
     atomic_create(run_directory / "stderr.log", stderr.encode())
     if process_timed_out:
@@ -803,14 +1155,25 @@ def execute_group(
         ],
         "raw_attempts": attempts,
         "reason": reason,
+        "gpu_contamination": contamination,
     }
+    disposition = "completed_group" if valid else "invalid_evidence"
+    if contamination.get("foreign_detected"):
+        valid = False
+        disposition = "contaminated"
+        reason = (
+            "foreign GPU compute activity observed during the group; timing and energy are "
+            "retained as evidence only and the group is re-run after the foreign activity ends"
+        )
+        record["reason"] = reason
     store.finish(
         claim,
-        disposition="completed_group" if valid else "invalid_evidence",
+        disposition=disposition,
         reason=reason,
         record=record,
         valid=valid,
     )
+    return disposition
 
 
 def execute(
@@ -927,6 +1290,16 @@ def main() -> int:
     parser.add_argument("--sampler-cpu-core", type=int)
     parser.add_argument("--nvidia-smi", default="nvidia-smi")
     parser.add_argument(
+        "--host-nvidia-smi",
+        default="/mnt/c/Windows/System32/nvidia-smi.exe",
+        help="Windows nvidia-smi for host compute-context monitoring under WSL2 (if present)",
+    )
+    parser.add_argument(
+        "--no-contamination-guard",
+        action="store_true",
+        help="disable foreign-GPU-process monitoring, quarantine, and re-run",
+    )
+    parser.add_argument(
         "--claim-core",
         action="store_true",
         help="schedule only the hash-pinned 360-group H5/H6 claim core",
@@ -1006,6 +1379,11 @@ def main() -> int:
         completed = 0
         power = NvmlPower(arguments.nvml_library)
         timeout_seconds = int(policy["matrix"]["timeout_seconds_per_sample"])
+        monitor = (
+            None
+            if arguments.no_contamination_guard
+            else GpuContaminationMonitor(arguments.nvidia_smi, arguments.host_nvidia_smi)
+        )
         executor = PersistentExecutor(
             executable,
             dict(os.environ),
@@ -1013,10 +1391,12 @@ def main() -> int:
         )
         try:
             while arguments.max_runs is None or completed < arguments.max_runs:
+                if monitor is not None:
+                    monitor.wait_until_clear()
                 claim = store.claim()
                 if claim is None:
                     break
-                execute_group(
+                disposition = execute_group(
                     store,
                     claim,
                     executable,
@@ -1027,7 +1407,25 @@ def main() -> int:
                     capability_sha256,
                     timeout_seconds,
                     arguments.sampler_cpu_core,
+                    monitor,
                 )
+                if disposition == "contaminated" and monitor is not None:
+                    print(
+                        json.dumps(
+                            {
+                                "event": "group_contaminated",
+                                "ordinal": claim.ordinal,
+                                "group_id": claim.coordinate_id,
+                                "attempt_id": claim.attempt_id,
+                            },
+                            sort_keys=True,
+                        ),
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    monitor.wait_until_clear()
+                    store.retry_quarantined(claim.ordinal)
+                    continue
                 completed += 1
         finally:
             executor.close()

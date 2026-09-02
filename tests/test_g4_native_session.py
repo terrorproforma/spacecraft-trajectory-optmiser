@@ -175,6 +175,200 @@ raise SystemExit(9)
     ).is_file()
 
 
+PMON_SAMPLE = """# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command
+# Idx           #    C/G      %      %      %      %      %      %    name
+    0        484     C      -      -      -      -      -      -    python.exe
+    0        485     C     37      4      -      -      -      -    python.exe
+    0      11368   C+G      0      2      -      -      -      -    explorer.exe
+    0      40688   C+G      0      5      -      -      -      -    Cursor.exe
+"""
+
+
+def test_pmon_parser_separates_active_idle_and_graphics_contexts() -> None:
+    rows = RUNNER.parse_pmon(PMON_SAMPLE)
+    assert [row["pid"] for row in rows] == [484, 485, 11368, 40688]
+    assert rows[0]["sm_percent"] is None and rows[1]["sm_percent"] == 37
+    active, idle = RUNNER.host_compute_activity(rows)
+    assert [row["pid"] for row in active] == [485]
+    assert [row["pid"] for row in idle] == [484]
+
+
+def test_contamination_monitor_excludes_own_descendants_and_nvidia_smi(
+    tmp_path: Path,
+) -> None:
+    monitor = RUNNER.GpuContaminationMonitor(host_nvidia_smi=None, interval_seconds=0.01)
+    child = subprocess.Popen(["sleep", "30"])
+    try:
+        assert monitor._is_own(child.pid)
+        assert monitor._is_own(os.getpid())
+        assert not monitor._is_own(1)
+    finally:
+        child.kill()
+        child.wait()
+
+
+class _ForeignMonitor(RUNNER.GpuContaminationMonitor):
+    """Deterministic monitor: one foreign VM holder during the group, none at boundaries."""
+
+    def __init__(self) -> None:
+        super().__init__(host_nvidia_smi=None, interval_seconds=0.01)
+        self.watching = False
+
+    def sample_nvidia_smi(self) -> dict[str, object]:
+        return {"at": "t", "compute_apps": []}
+
+    def dxg_holders(self) -> list[dict[str, object]]:
+        if self.watching:
+            return [{"pid": 99999, "comm": "ctest", "cmdline": "ctest --test-dir foreign"}]
+        return []
+
+    def start(self) -> None:
+        self.watching = True
+        super().start()
+
+    def stop(self) -> dict[str, object]:
+        summary = super().stop()
+        self.watching = False
+        return summary
+
+
+def test_contaminated_group_is_quarantined_with_evidence_and_retryable(tmp_path: Path) -> None:
+    executable = tmp_path / "executor"
+    _fake_probe(executable)
+    policy = load_policy(ROOT / "benchmarks/g4_policy.json")
+    core = load_claim_core(ROOT / "benchmarks/g4_h5_h6_claim_core.json")
+    groups = tuple(iter_claim_core_groups(core.values))
+    with CampaignStore(
+        tmp_path / "campaign",
+        policy.values,
+        policy.sha256,
+        "a" * 40,
+        grouped=True,
+        groups=groups,
+        schedule_sha256=core.sha256,
+    ) as store:
+        claim = store.claim()
+        assert claim is not None
+        monitor = _ForeignMonitor()
+
+        class ConstantPower:
+            def watts(self) -> float:
+                return 100.0
+
+        disposition = RUNNER.execute_group(
+            store,
+            claim,
+            executable,
+            None,
+            ConstantPower(),
+            "a" * 64,
+            "b" * 64,
+            "c" * 64,
+            1,
+            None,
+            monitor,
+        )
+        assert disposition == "contaminated"
+        run_directory = tmp_path / "campaign" / "runs" / claim.coordinate_id / claim.attempt_id
+        evidence = json.loads((run_directory / "gpu-contamination.json").read_text())
+        assert evidence["foreign_detected"] is True
+        assert evidence["during"]["wsl_foreign_processes"][0]["pid"] == 99999
+        assert evidence["before"]["foreign"] is False and evidence["after"]["foreign"] is False
+        result = json.loads((run_directory / "result.json").read_text())
+        assert result["gpu_contamination"]["foreign_detected"] is True
+        assert (run_directory / "stdout.jsonl").is_file()
+        assert store.status()["quarantined"] == 1 and store.status()["completed"] == 0
+
+        store.retry_quarantined(claim.ordinal)
+        retry = store.claim()
+        assert retry is not None
+        assert retry.ordinal == claim.ordinal
+        assert retry.coordinate_id == claim.coordinate_id
+        assert retry.attempt_id != claim.attempt_id
+        states = {
+            row["attempt_id"]: (row["state"], row["disposition"])
+            for row in store.database.execute("SELECT attempt_id, state, disposition FROM attempts")
+        }
+        assert states[claim.attempt_id] == ("quarantined", "contaminated")
+        assert states[retry.attempt_id] == ("running", None)
+    events = [
+        json.loads(line)
+        for line in (tmp_path / "campaign" / "journal.jsonl").read_text().splitlines()
+    ]
+    assert [event["event"] for event in events] == ["claimed", "quarantined", "claimed"]
+    assert events[1]["disposition"] == "contaminated"
+
+
+def test_clean_group_keeps_its_disposition_and_records_idle_host_context(
+    tmp_path: Path,
+) -> None:
+    executable = tmp_path / "executor"
+    _fake_probe(executable)
+    manifest = CAPABILITY.probe_manifest()
+    claim = SimpleNamespace(
+        coordinate_id=manifest["group_id"],
+        attempt_id="attempt",
+        coordinate=manifest,
+        ordinal=0,
+    )
+    (tmp_path / "runs" / manifest["group_id"] / "attempt").mkdir(parents=True)
+
+    class Store:
+        root = tmp_path
+        disposition: str | None = None
+        valid: bool | None = None
+
+        def finish(self, _claim: object, **kwargs: object) -> None:
+            self.disposition = kwargs["disposition"]  # type: ignore[assignment]
+            self.valid = kwargs["valid"]  # type: ignore[assignment]
+
+    class IdleHostMonitor(RUNNER.GpuContaminationMonitor):
+        def __init__(self) -> None:
+            super().__init__(host_nvidia_smi=None, interval_seconds=0.01)
+
+        def sample_nvidia_smi(self) -> dict[str, object]:
+            return {"at": "t"}
+
+        def dxg_holders(self) -> list[dict[str, object]]:
+            return []
+
+        def host_compute_contexts(
+            self,
+        ) -> tuple[list[dict[str, object]], list[dict[str, object]], str]:
+            idle_only = PMON_SAMPLE.replace("37      4", " -      -")
+            active, idle = RUNNER.host_compute_activity(RUNNER.parse_pmon(idle_only))
+            return active, idle, ""
+
+    class ConstantPower:
+        def watts(self) -> float:
+            return 100.0
+
+    store = Store()
+    disposition = RUNNER.execute_group(
+        store,
+        claim,
+        executable,
+        None,
+        ConstantPower(),
+        "a" * 64,
+        "b" * 64,
+        "c" * 64,
+        1,
+        None,
+        IdleHostMonitor(),
+    )
+    # The fake executor emits schema-incomplete records, so the group is invalid evidence,
+    # but an idle host context must never escalate that to contamination.
+    assert disposition == "invalid_evidence" and store.valid is False
+    evidence = json.loads(
+        (
+            tmp_path / "runs" / manifest["group_id"] / "attempt" / "gpu-contamination.json"
+        ).read_text()
+    )
+    assert evidence["foreign_detected"] is False
+    assert {row["pid"] for row in evidence["during"]["host_idle_compute_contexts"]} == {484, 485}
+
+
 def test_raw_attempt_schema_is_closed_and_locks_topology_reuse() -> None:
     schema = json.loads((ROOT / "experiments/schema/g4_raw_attempt.schema.json").read_text())
     assert schema["additionalProperties"] is False
