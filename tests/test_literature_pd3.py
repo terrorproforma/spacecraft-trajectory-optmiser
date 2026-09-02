@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from spacepdhcg.literature import pd3_acikmese_ploen as pd3
 
@@ -67,3 +68,66 @@ def test_replay_hold_modes_are_consistent() -> None:
     states, fuel = pd3.replay_zoh(profile, accelerations, 1.0, hold="acceleration")
     assert abs(fuel - result.fuel_used) < 1.0e-2
     assert states.shape == (82, 7)
+
+
+def test_forward_euler_diagnostic_isolates_the_discretisation_share_of_the_gap() -> None:
+    profile = _profile("acikmese-ploen-2007-pd3")
+    exact = pd3.solve_lossless_convexification(profile, dt=1.0)
+    euler = pd3.solve_lossless_convexification(profile, dt=1.0, discretisation="forward_euler")
+    # Measured 2026-09: 404.48 vs 400.63 kg; the Euler map alone costs several kilograms.
+    assert 2.0 < euler.fuel_used - exact.fuel_used < 6.0
+
+
+def test_module_blackmore_constant_matches_profile_document() -> None:
+    document = _profile("blackmore-2010-pd3-case1")
+    assert pd3.BLACKMORE_2010_CASE1 == document
+
+
+def test_repository_scvx_accurate_option_closes_the_fuel_gap_2007() -> None:
+    """Regression for the 6 kg gap: rk4 + multiple-shooting merit reaches the published value."""
+
+    profile = _profile("acikmese-ploen-2007-pd3")
+    result = pd3.solve_repository_scvx(profile, dt=1.0, max_iterations=80)
+    assert result.discretisation == "rk4"
+    assert result.merit_mode == "multiple_shooting"
+    assert result.status == "converged", result.termination_reason
+    # Published 399.5 kg (declared envelope 2.0 kg); measured 399.36 kg.
+    assert abs(result.fuel_used - 399.5) <= 0.5
+    assert abs(result.replay_fuel_used - result.fuel_used) < 1.0e-3
+    assert result.replay_terminal_position_error < 1.0e-2
+    assert result.replay_terminal_velocity_error < 1.0e-3
+    assert result.path_max_violation < 1.0e-6
+    lossless = pd3.solve_lossless_convexification(profile, dt=1.0)
+    # The SCvx solves the non-relaxed problem, so it may only undercut the lossless SOCP by the
+    # conservatism of the convex throttle bounds (measured 1.27 kg), never exceed it by more
+    # than the discretisation envelope.
+    assert -2.0 < result.fuel_used - lossless.fuel_used < 0.5
+
+
+def test_repository_scvx_accurate_option_closes_the_fuel_gap_blackmore_2010() -> None:
+    profile = _profile("blackmore-2010-pd3-case1")
+    # dt = 0.8 s (98 intervals) keeps the test under half a minute; the report runs 0.4/0.2 s.
+    result = pd3.solve_repository_scvx(profile, dt=0.8, max_iterations=120)
+    assert result.status == "converged", result.termination_reason
+    # Published 399.4 kg (declared envelope 2.0 kg); measured 398.84 kg at dt = 0.4 s.
+    assert abs(result.fuel_used - 399.4) <= 1.0
+    assert result.replay_terminal_position_error < 1.0e-2
+
+
+def test_frozen_default_configuration_is_untouched() -> None:
+    """The frozen benchmark fixtures rely on these defaults; the accurate path is opt-in."""
+
+    from spacepdhcg.scvx import PoweredDescentOuterConfig
+    from spacepdhcg.transcription import PoweredDescentSCvxConfig
+
+    config = PoweredDescentSCvxConfig()
+    assert config.discretisation == "forward_euler"
+    assert config.integration_substeps == 1
+    outer = PoweredDescentOuterConfig()
+    assert outer.merit_mode == "single_shooting"
+    assert outer.accept_almost_solved is False
+    assert outer.stall_merit_tolerance == 0.0
+    with pytest.raises(ValueError):
+        PoweredDescentSCvxConfig(discretisation="midpoint")
+    with pytest.raises(ValueError):
+        PoweredDescentOuterConfig(merit_mode="shooting")

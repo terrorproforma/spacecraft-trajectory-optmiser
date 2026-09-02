@@ -122,9 +122,11 @@ def test_literature_baselines_separate_quality_references_from_timing() -> None:
     gtoc = next(profile for profile in profiles if profile["id"] == "gtoc-historical-challenges")
     assert gtoc["target_family"] == "P2-F"
     assert gtoc["timing_use"] == "common_hardware_rerun_required"
-    assert {
-        edition["edition"] for edition in gtoc["reference_data"]["initial_editions"]
-    } == {5, 9, 12}
+    assert {edition["edition"] for edition in gtoc["reference_data"]["initial_editions"]} == {
+        5,
+        9,
+        12,
+    }
 
 
 def test_paper2_manifest_covers_exact_and_robust_routes() -> None:

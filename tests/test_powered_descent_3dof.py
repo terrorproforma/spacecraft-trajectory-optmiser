@@ -92,6 +92,62 @@ def test_rollout_mass_and_vertical_path_diagnostics() -> None:
     assert model.path_diagnostics(states, controls).feasible(1.0e-12)
 
 
+def test_rk4_variational_linearisation_is_exact_jacobian_of_the_rk4_map() -> None:
+    model = PoweredDescent3DOFModel()
+    state = np.array([120.0, -45.0, 900.0, -8.0, 3.0, -22.0, 1_850.0])
+    control = np.array([350.0, -220.0, 7_000.0, 7_050.0])
+    for substeps in (1, 3):
+        phi, psi, offset = model.linearised_rk4_dynamics(state, control, 1.0, substeps=substeps)
+        step = model.rk4_step(state, control, 1.0, substeps=substeps)
+        # Affine reconstruction reproduces the implemented map at the reference to roundoff.
+        np.testing.assert_allclose(phi @ state + psi @ control + offset, step, rtol=0, atol=1e-9)
+        # Variational RK4 matches central differences of the discrete map (FD oracle).
+        for column in range(7):
+            direction = np.zeros(7)
+            direction[column] = 1.0e-4 * max(1.0, abs(state[column]))
+            numeric = (
+                model.rk4_step(state + direction, control, 1.0, substeps=substeps)
+                - model.rk4_step(state - direction, control, 1.0, substeps=substeps)
+            ) / (2.0 * direction[column])
+            np.testing.assert_allclose(phi[:, column], numeric, atol=1.0e-8, rtol=1.0e-6)
+        for column in range(4):
+            direction = np.zeros(4)
+            direction[column] = 1.0e-3 * max(1.0, abs(control[column]))
+            numeric = (
+                model.rk4_step(state, control + direction, 1.0, substeps=substeps)
+                - model.rk4_step(state, control - direction, 1.0, substeps=substeps)
+            ) / (2.0 * direction[column])
+            np.testing.assert_allclose(psi[:, column], numeric, atol=1.0e-8, rtol=1.0e-6)
+
+
+def test_rk4_map_matches_the_exact_zero_order_hold_flow_far_better_than_euler() -> None:
+    """Constant thrust with linearly varying mass: RK4 tracks the exact solution to ~1e-9 m."""
+
+    model = PoweredDescent3DOFModel()
+    state = np.array([120.0, -45.0, 900.0, -8.0, 3.0, -22.0, 1_850.0])
+    control = np.array([350.0, -220.0, 7_000.0, 7_050.0])
+    dt = 1.0
+    fine = model.rk4_step(state, control, dt, substeps=200)
+    rk4 = model.rk4_step(state, control, dt, substeps=1)
+    euler = model.euler_step(state, control, dt)
+    assert np.linalg.norm(fine[:3] - rk4[:3]) < 1.0e-8
+    # Euler misses the 0.5 * a * dt^2 curvature term (~0.12 m here at |a| ~ 0.2 m/s^2).
+    assert np.linalg.norm(fine[:3] - euler[:3]) > 0.05
+    # The named dispatchers agree with the direct methods and the default is still Euler.
+    np.testing.assert_allclose(model.discrete_step(state, control, dt), euler)
+    np.testing.assert_allclose(model.discrete_step(state, control, dt, method="rk4"), rk4)
+    a_e, b_e, c_e = model.linearised_discrete_dynamics(state, control, dt)
+    a_ref, b_ref, c_ref = model.linearised_euler_dynamics(state, control, dt)
+    np.testing.assert_array_equal(a_e, a_ref)
+    np.testing.assert_array_equal(b_e, b_ref)
+    np.testing.assert_array_equal(c_e, c_ref)
+    controls = np.tile(control, (3, 1))
+    np.testing.assert_allclose(
+        model.rollout(state, controls, dt, method="rk4")[-1],
+        model.rk4_step(model.rk4_step(rk4, control, dt), control, dt),
+    )
+
+
 def test_path_diagnostics_detect_violations() -> None:
     config = PoweredDescent3DOFConfig(
         minimum_mass=1_000.0,

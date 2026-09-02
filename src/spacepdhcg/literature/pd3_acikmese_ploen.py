@@ -14,11 +14,22 @@ Three reproductions are run:
 
 1. ``lossless`` - an independent implementation of the paper's own lossless-convexification
    SOCP (log-mass change of variables, exact zero-order-hold discretisation) with Clarabel;
-2. ``scvx_cpu`` - the repository CPU reference SCvx (forward-Euler transcription, Clarabel);
+2. ``scvx_cpu`` - the repository CPU reference SCvx with the accurate literature options
+   (variational-RK4 coefficients, multiple-shooting exact-penalty merit, virtual weight 10,
+   objective-stall termination) plus the frozen forward-Euler/single-shooting leg for the
+   before/after decomposition;
 3. ``scvx_qoco_gpu`` - the same SCvx driven by the persistent pure-QOCO GPU backend when a
-   library is available.
+   library is available and the GPU preflight passes.
 
-Every trajectory is replayed independently with the nonlinear mass-varying dynamics.
+Gap diagnosis (2026-09): the historical 6-14 kg excess over the lossless optimum decomposed
+into (a) the forward-Euler translational map (+3.9 kg at dt = 1 s on the 2007 case, measured
+by solving the lossless SOCP under the Euler map), (b) a single-shooting merit that charged
+the second-order rollout drift of an 81-step horizon at the exact-penalty weight, so model
+agreement went negative and the trust region collapsed, and (c) a virtual-control weight
+(1e3-1e5) two to four orders above the dynamics multipliers, which magnified (b).  None of the
+three is an early convergence stop by itself, although the collapsed trust region did end in
+``AlmostSolved``/iteration-budget exits.  Every trajectory is replayed independently with the
+nonlinear mass-varying dynamics.
 """
 
 from __future__ import annotations
@@ -87,11 +98,13 @@ class MarsDescentProfile:
         return MarsDescentProfile(**payload)
 
 
+# Matches benchmarks/literature/profiles/blackmore-2010-pd3-case1.json.  The paper prints the
+# isp-only alpha (4.53e-4 s/m) but only the cant-corrected value reproduces its 399.4 kg.
 BLACKMORE_2010_CASE1 = MarsDescentProfile(
     initial_position=(1500.0, 500.0, 2000.0),
     initial_velocity=(-75.0, 0.0, 100.0),
     time_of_flight=78.4,
-    alpha_convention="isp-only",
+    alpha_convention="cant-corrected",
 )
 
 
@@ -173,6 +186,7 @@ def solve_lossless_convexification(
     *,
     dt: float = 1.0,
     tolerance: float = 1.0e-9,
+    discretisation: str = "exact_zoh",
 ) -> LosslessResult:
     """Acikmese-Ploen Problem 3 (relaxed, convex) with exact ZOH double-integrator discretisation.
 
@@ -182,8 +196,15 @@ def solve_lossless_convexification(
     and the log mass integrates exactly as ``z_{k+1} = z_k - alpha s_k dt``.  The non-convex
     throttle bounds are replaced by the paper's convex bounds on ``s_k`` (second-order Taylor
     lower bound, linear upper bound), which is lossless per Lemma 2 of the paper.
+
+    ``discretisation="forward_euler"`` replaces the exact translational map by the forward-Euler
+    map ``r+ = r + dt v``, ``v+ = v + dt (g + u)``.  It exists only as a diagnostic: it isolates the
+    fuel penalty caused by the repository's frozen Euler transcription from every other effect.
     """
 
+    if discretisation not in {"exact_zoh", "forward_euler"}:
+        raise ValueError("discretisation must be 'exact_zoh' or 'forward_euler'")
+    position_curvature = 0.5 * dt * dt if discretisation == "exact_zoh" else 0.0
     tf = profile.time_of_flight
     N = round(tf / dt)
     if abs(N * dt - tf) > 1.0e-9:
@@ -212,14 +233,11 @@ def solve_lossless_convexification(
 
     for k in range(N):
         for i in range(3):
-            # r_{k+1} = r_k + dt v_k + dt^2/2 (g + u_k)
-            expr = (
-                vec(r[k + 1], i)
-                .minus(vec(r[k], i))
-                .minus(vec(v[k], i).scaled(dt))
-                .minus(vec(u[k], i).scaled(0.5 * dt * dt))
-            )
-            b.add_equality(expr, 0.5 * dt * dt * g[i])
+            # r_{k+1} = r_k + dt v_k + dt^2/2 (g + u_k)   (curvature term dropped for Euler)
+            expr = vec(r[k + 1], i).minus(vec(r[k], i)).minus(vec(v[k], i).scaled(dt))
+            if position_curvature > 0.0:
+                expr = expr.minus(vec(u[k], i).scaled(position_curvature))
+            b.add_equality(expr, position_curvature * g[i])
             # v_{k+1} = v_k + dt (g + u_k)
             expr_v = vec(v[k + 1], i).minus(vec(v[k], i)).minus(vec(u[k], i).scaled(dt))
             b.add_equality(expr_v, dt * g[i])
@@ -263,6 +281,11 @@ def solve_lossless_convexification(
     thrust = accelerations * masses[:-1, None]
     thrust_norm = np.linalg.norm(thrust, axis=1)
     replay_states, replay_fuel = replay_zoh(profile, accelerations, dt, hold="acceleration")
+    if discretisation == "forward_euler":
+        # The Euler map is not the continuous flow; replay the Euler recursion itself so the
+        # diagnostic reports the fuel of the discrete optimum, not an integration mismatch.
+        replay_states = np.hstack([positions, velocities, masses[:, None]])
+        replay_fuel = float(profile.wet_mass - masses[-1])
     gs_violation = 0.0
     if profile.glide_slope_deg is not None:
         tan_gs = math.tan(math.radians(profile.glide_slope_deg))
@@ -338,7 +361,12 @@ class RepositorySCvxResult:
     backend: str
     dt: float
     intervals: int
+    discretisation: str
+    integration_substeps: int
+    merit_mode: str
+    virtual_l1_weight: float
     status: str
+    termination_reason: str
     fuel_used: float
     final_mass: float
     outer_iterations: int
@@ -357,9 +385,15 @@ class RepositorySCvxResult:
     numeric_updates: int | None = None
     solves: int | None = None
     error: str | None = None
+    iteration_trace: list[dict[str, Any]] = field(default_factory=list)
+    states: FloatArray | None = None
+    controls: FloatArray | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        payload = asdict(self)
+        payload.pop("states", None)
+        payload.pop("controls", None)
+        return payload
 
 
 def solve_repository_scvx(
@@ -370,8 +404,22 @@ def solve_repository_scvx(
     qoco_library: Path | None = None,
     max_iterations: int = 60,
     warm_start_from_lossless: bool = True,
+    discretisation: str = "rk4",
+    integration_substeps: int = 1,
+    accept_almost_solved: bool = True,
+    virtual_l1_weight: float = 10.0,
+    merit_mode: str = "multiple_shooting",
+    trust_strong_agreement: float = 0.8,
+    trust_growth_factor: float = 1.6,
+    stall_merit_tolerance: float = 1.0e-7,
 ) -> RepositorySCvxResult:
-    """Run the repository's fixed-grid 3-DoF SCvx on the literature profile."""
+    """Run the repository's fixed-grid 3-DoF SCvx on the literature profile.
+
+    ``discretisation="forward_euler"`` reproduces the frozen reference transcription exactly (the
+    historical 6-14 kg gap); ``"rk4"`` (default here) selects the variational-RK4 coefficient
+    option added for the literature track.  Both share the same CSC pattern, so the same
+    persistent backend lifecycle and GPU workspace apply.
+    """
 
     from spacepdhcg.scvx import (
         PoweredDescentOuterConfig,
@@ -390,9 +438,11 @@ def solve_repository_scvx(
         intervals=intervals,
         step_seconds=dt,
         trust_radius=8.0,
-        # Tuned on this profile: the repository default virtual weight (1e5) lets the
-        # trust-region loop stall at ~424 kg; 1e3 reaches ~406 kg within 60 outer iterations.
-        virtual_l1_weight=1.0e3,
+        # The virtual-control weight must dominate the dynamics multipliers (~1.6 per unit
+        # defect on these profiles in CQP objective units) but every excess factor inflates the
+        # second-order defect cost in the merit and shrinks the trust region: 1e5 stalls at
+        # ~424 kg, 1e3 crawls at ~0.25 kg per iteration, 10 converges in ~30 iterations.
+        virtual_l1_weight=virtual_l1_weight,
         virtual_quadratic_weight=1.0e-6,
         virtual_epigraph_regularisation=1.0e-8,
         fuel_weight=1.0e-3,
@@ -402,6 +452,8 @@ def solve_repository_scvx(
             1.0 / profile.rho_max,
             1.0 / profile.rho_max,
         ),
+        discretisation=discretisation,
+        integration_substeps=integration_substeps,
     )
     subproblem = PoweredDescent3DOFSubproblem(model, config)
     initial = paper_to_repository_state(
@@ -422,7 +474,9 @@ def solve_repository_scvx(
             ]
         )
         reference_controls = controls
-        reference_states = model.rollout(initial, controls, dt)
+        reference_states = model.rollout(
+            initial, controls, dt, method=discretisation, substeps=integration_substeps
+        )
 
     workspaces: list[Any] = []
     if backend == "clarabel":
@@ -450,11 +504,19 @@ def solve_repository_scvx(
             minimum_iterations=1,
             convergence_tolerance=1.0e-6,
             step_tolerance=1.0e-3,
+            accept_almost_solved=accept_almost_solved,
+            merit_mode=merit_mode,
+            # Normalised-fuel units: 1e-7 is ~5e-5 kg on these profiles.
+            stall_merit_tolerance=stall_merit_tolerance,
+            stall_iterations=3,
+            stall_feasibility_tolerance=1.0e-5,
         ),
         trust_config=TrustRegionConfig(
             initial_radius=8.0,
             minimum_radius=1.0e-5,
             maximum_radius=64.0,
+            strong_agreement=trust_strong_agreement,
+            growth_factor=trust_growth_factor,
         ),
         backend_builder=builder,
     )
@@ -469,11 +531,30 @@ def solve_repository_scvx(
     wall = perf_counter() - start
     thrust = repository_to_paper_thrust(result.controls)
     replay_states, replay_fuel = replay_zoh(profile, thrust, dt, hold="thrust")
+    trace = [
+        {
+            "iteration": record.iteration,
+            "status": record.solver_status,
+            "accepted": record.accepted,
+            "trust_radius": record.trust_radius_before,
+            "step_fraction": record.step_fraction,
+            "agreement": record.agreement,
+            "merit_after": record.merit_after,
+            "virtual_control_inf": record.convex_diagnostics.virtual_control_inf,
+            "nonlinear_defect_inf": record.convex_diagnostics.nonlinear_dynamics_defect_inf,
+        }
+        for record in result.iterations
+    ]
     return RepositorySCvxResult(
         backend=backend,
         dt=dt,
         intervals=intervals,
+        discretisation=discretisation,
+        integration_substeps=integration_substeps,
+        merit_mode=merit_mode,
+        virtual_l1_weight=virtual_l1_weight,
         status=result.status,
+        termination_reason=result.termination_reason,
         fuel_used=float(profile.wet_mass - result.states[-1, 6]),
         final_mass=float(result.states[-1, 6]),
         outer_iterations=result.outer_iterations,
@@ -491,6 +572,9 @@ def solve_repository_scvx(
         workspace_creations=len(workspaces) if workspaces else None,
         numeric_updates=sum(w.update_count for w in workspaces) if workspaces else None,
         solves=sum(w.solve_count for w in workspaces) if workspaces else None,
+        iteration_trace=trace,
+        states=result.states,
+        controls=result.controls,
     )
 
 
@@ -549,6 +633,12 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
         profile.replace(alpha_convention="isp-only"), dt=envelope_steps[0]
     ).as_dict()
 
+    # Diagnostic: the same convex problem under the frozen forward-Euler translational map
+    # isolates the discretisation share of the repository SCvx gap.
+    euler_diagnostic = solve_lossless_convexification(
+        profile, dt=envelope_steps[0], discretisation="forward_euler"
+    ).as_dict()
+
     primary = lossless_runs[f"dt={envelope_steps[0]}"]
     fuel_values = [run["fuel_used"] for run in lossless_runs.values()]
     measured: dict[str, Any] = {
@@ -556,23 +646,67 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
         "lossless_fuel_used_kg_by_dt": {k: v["fuel_used"] for k, v in lossless_runs.items()},
         "lossless_replay_fuel_used_kg": primary["replay_fuel_used"],
         "lossless_isp_only_alpha_fuel_used_kg": alternative["fuel_used"],
+        "lossless_forward_euler_diagnostic_fuel_used_kg": euler_diagnostic["fuel_used"],
     }
-    details: dict[str, Any] = {"lossless": lossless_runs, "lossless_isp_only_alpha": alternative}
+    details: dict[str, Any] = {
+        "lossless": lossless_runs,
+        "lossless_isp_only_alpha": alternative,
+        "lossless_forward_euler_diagnostic": euler_diagnostic,
+    }
     commands = [
         f"spacepdhcg literature run {document['id']}",
     ]
     notes: list[str] = []
     scvx_records: dict[str, Any] = {}
     if run_scvx:
-        try:
-            cpu = solve_repository_scvx(profile, dt=envelope_steps[0], backend="clarabel")
-            scvx_records["clarabel"] = cpu.as_dict()
-            measured["scvx_cpu_fuel_used_kg"] = cpu.fuel_used
-            measured["scvx_cpu_replay_fuel_used_kg"] = cpu.replay_fuel_used
-            measured["scvx_cpu_status"] = cpu.status
-        except Exception as error:
-            scvx_records["clarabel"] = {"error": repr(error)}
-            notes.append(f"repository CPU SCvx failed: {error!r}")
+        # Frozen reference transcription (forward Euler, single-shooting merit, virtual weight
+        # 1e3): the historical "before" leg, kept so the gap decomposition stays reproducible.
+        if bool(options.get("run_frozen_scvx", True)):
+            try:
+                before = solve_repository_scvx(
+                    profile,
+                    dt=envelope_steps[0],
+                    backend="clarabel",
+                    discretisation="forward_euler",
+                    merit_mode="single_shooting",
+                    virtual_l1_weight=1.0e3,
+                    accept_almost_solved=False,
+                    stall_merit_tolerance=0.0,
+                )
+                scvx_records["clarabel_frozen_euler"] = before.as_dict()
+                measured["scvx_cpu_frozen_euler_fuel_used_kg"] = before.fuel_used
+                measured["scvx_cpu_frozen_euler_status"] = before.status
+                measured["scvx_cpu_frozen_euler_replay_terminal_position_error_m"] = (
+                    before.replay_terminal_position_error
+                )
+            except Exception as error:
+                scvx_records["clarabel_frozen_euler"] = {"error": repr(error)}
+                notes.append(f"repository frozen-Euler SCvx failed: {error!r}")
+        # Accurate option (variational RK4 coefficients, multiple-shooting merit, virtual weight
+        # 10, objective-stall termination) over the declared dt envelope.
+        scvx_by_dt: dict[str, Any] = {}
+        for dt in envelope_steps:
+            try:
+                cpu = solve_repository_scvx(
+                    profile,
+                    dt=dt,
+                    backend="clarabel",
+                    max_iterations=int(options.get("scvx_max_iterations", 120)),
+                )
+                scvx_by_dt[f"dt={dt}"] = cpu.as_dict()
+            except Exception as error:
+                scvx_by_dt[f"dt={dt}"] = {"error": repr(error)}
+                notes.append(f"repository CPU SCvx (rk4) failed at dt={dt}: {error!r}")
+        scvx_records["clarabel_rk4_by_dt"] = scvx_by_dt
+        primary_scvx = scvx_by_dt.get(f"dt={envelope_steps[0]}", {})
+        if "fuel_used" in primary_scvx:
+            measured["scvx_cpu_fuel_used_kg"] = primary_scvx["fuel_used"]
+            measured["scvx_cpu_replay_fuel_used_kg"] = primary_scvx["replay_fuel_used"]
+            measured["scvx_cpu_status"] = primary_scvx["status"]
+            measured["scvx_cpu_termination_reason"] = primary_scvx["termination_reason"]
+            measured["scvx_cpu_fuel_used_kg_by_dt"] = {
+                key: value["fuel_used"] for key, value in scvx_by_dt.items() if "fuel_used" in value
+            }
         if run_gpu:
             if not qoco_library:
                 scvx_records["qoco-gpu"] = {"error": "no QOCO GPU library configured"}
@@ -615,8 +749,18 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
         "acceptance_tolerance_kg": tolerance_kg,
     }
     if "scvx_cpu_fuel_used_kg" in measured:
-        gap["scvx_cpu_minus_published_kg"] = measured["scvx_cpu_fuel_used_kg"] - published_fuel
+        scvx_gap = measured["scvx_cpu_fuel_used_kg"] - published_fuel
+        gap["scvx_cpu_minus_published_kg"] = scvx_gap
         gap["scvx_cpu_minus_lossless_kg"] = measured["scvx_cpu_fuel_used_kg"] - primary["fuel_used"]
+        if abs(scvx_gap) > tolerance_kg:
+            status = "gap"
+    if "scvx_cpu_frozen_euler_fuel_used_kg" in measured:
+        gap["scvx_cpu_frozen_euler_minus_published_kg"] = (
+            measured["scvx_cpu_frozen_euler_fuel_used_kg"] - published_fuel
+        )
+        gap["euler_discrete_optimum_minus_lossless_kg"] = (
+            euler_diagnostic["fuel_used"] - primary["fuel_used"]
+        )
     if "scvx_qoco_gpu_fuel_used_kg" in measured:
         gap["scvx_qoco_gpu_minus_lossless_kg"] = (
             measured["scvx_qoco_gpu_fuel_used_kg"] - primary["fuel_used"]
@@ -627,6 +771,8 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
     }
     if "scvx_cpu_fuel_used_kg" in measured:
         labels["measured.scvx_cpu_fuel_used_kg"] = "measured-local"
+    if "scvx_cpu_frozen_euler_fuel_used_kg" in measured:
+        labels["measured.scvx_cpu_frozen_euler_fuel_used_kg"] = "measured-local"
     if "scvx_qoco_gpu_fuel_used_kg" in measured:
         labels["measured.scvx_qoco_gpu_fuel_used_kg"] = "measured-local"
     return ReproductionRecord(
@@ -638,8 +784,18 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
         labels=labels,
         envelope={
             "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
+            "scvx_discretisation": "zero-order-hold thrust, variational RK4 coefficients, "
+            "multiple-shooting exact-penalty merit",
             "dt_values_s": list(envelope_steps),
             "fuel_spread_kg": envelope_width,
+            "scvx_fuel_spread_kg": (
+                float(
+                    max(measured["scvx_cpu_fuel_used_kg_by_dt"].values())
+                    - min(measured["scvx_cpu_fuel_used_kg_by_dt"].values())
+                )
+                if measured.get("scvx_cpu_fuel_used_kg_by_dt")
+                else None
+            ),
             "declared_envelope_kg": document.get("declared_envelope_kg"),
         },
         commands=commands,
