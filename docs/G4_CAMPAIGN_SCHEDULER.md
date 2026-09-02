@@ -40,6 +40,10 @@ content-addressed capability record that pins:
 - independent nonlinear replay.
 - one process, persistent session/workspace, separate attempt records, and independent policy reset
   under execution-contract version `g4-persistent-group-v1`.
+- SHA-256 values for the applicability, claim-core, execution-group, raw-attempt, and Paper 1
+  schemas;
+- a real short CUDA session probe proving one PID/context/workspace, exact 2+7 order, strict
+  measured records, and zero post-create topology allocations/index copies.
 
 Every raw attempt must repeat its group, physical instance, and repeat identities with an exact
 disposition, reason, timing, and launch state. A timeout or OOM is legal only after actual launch.
@@ -47,25 +51,45 @@ The scheduler quarantines any disagreement or incomplete measured result.
 
 ## Commands
 
+Build and generate the capability from the final clean commit:
+
 ```bash
-python scripts/gpu/run_g4_campaign.py init \
-  --campaign build/g4-campaign
-
-python scripts/gpu/run_g4_campaign.py status \
-  --campaign build/g4-campaign
-
-python scripts/gpu/run_g4_campaign.py run \
-  --campaign build/g4-campaign \
-  --executable build-integration-cuda-release/cuda-tests/device_scvx_integration_test \
-  --capabilities build/g4-executor-capabilities.json
+cmake -S cpp -B build-g4-cuda-release \
+  -DCMAKE_BUILD_TYPE=Release -DSPACEPDHCG_BUILD_CUDA=ON \
+  -DSPACEPDHCG_PDHCG_SOURCE_ROOT=/absolute/path/to/pinned/pdhcg \
+  -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc \
+  -DCMAKE_CUDA_ARCHITECTURES=120
+cmake --build build-g4-cuda-release --target device_scvx_integration_test -j2
+python scripts/gpu/generate_g4_executor_capability.py \
+  --executable build-g4-cuda-release/cuda-tests/device_scvx_integration_test \
+  --output /campaign/g4-executor-capabilities.json
 ```
 
-Generate the capability only from a clean committed source and its final executable:
+Initialize and run the preregistered 360-group, 3,240-invocation H5/H6 claim core:
 
 ```bash
-python scripts/gpu/generate_g4_executor_capability.py \
-  --executable build-integration-cuda-release/cuda-tests/device_scvx_integration_test \
-  --output build/g4-executor-capabilities.json
+python scripts/gpu/run_g4_campaign.py init \
+  --claim-core \
+  --campaign /campaign/g4-h5-h6-claim-core
+
+python scripts/gpu/run_g4_campaign.py run \
+  --claim-core \
+  --campaign /campaign/g4-h5-h6-claim-core \
+  --executable build-g4-cuda-release/cuda-tests/device_scvx_integration_test \
+  --capabilities /campaign/g4-executor-capabilities.json
+```
+
+After the claim core, initialize a different checkpoint and run all 2,764,800 grouped sessions
+(24,883,200 retained raw attempts):
+
+```bash
+python scripts/gpu/run_g4_campaign.py init \
+  --campaign /campaign/g4-full-grouped-v1
+
+python scripts/gpu/run_g4_campaign.py run \
+  --campaign /campaign/g4-full-grouped-v1 \
+  --executable build-g4-cuda-release/cuda-tests/device_scvx_integration_test \
+  --capabilities /campaign/g4-executor-capabilities.json
 ```
 
 The final command is also the restart command. It resumes an interrupted group before claiming new
@@ -73,7 +97,7 @@ work. `--max-runs N` creates bounded group chunks. The frozen per-attempt timeou
 persistent executor; the outer process has only a nine-attempt safety boundary. Rows are never
 classified from a prediction, and larger rows stay pending until launch.
 
-Energy is sampled around each launched process using 50 ms `nvidia-smi` requests. Records include
-sample count, maximum observed gap, validity, integrated joules and the shared-display-GPU caveat.
-CUDA startup remains separately reported by the executable and excluded from the accepted common
-timing boundary.
+The native session samples NVML directly at each attempt boundary and reports cadence, maximum gap,
+validity and integrated joules for that complete attempt only. The scheduler separately retains a
+group-boundary NVML trace and never divides it among rows. CUDA startup is reported once per session
+and excluded from every accepted common timing boundary.

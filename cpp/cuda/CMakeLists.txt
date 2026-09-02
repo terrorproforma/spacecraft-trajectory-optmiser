@@ -41,6 +41,12 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
     COMMAND_ERROR_IS_FATAL ANY
 )
+execute_process(
+    COMMAND "${GIT_EXECUTABLE}" -C "${SPACEPDHCG_REPOSITORY_ROOT}" rev-parse HEAD
+    OUTPUT_VARIABLE SPACEPDHCG_SOURCE_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
+)
 if(NOT SPACEPDHCG_ACTUAL_PDHCG_COMMIT STREQUAL SPACEPDHCG_PDHCG_COMMIT)
     message(FATAL_ERROR
         "Pinned PDHCG commit mismatch: ${SPACEPDHCG_ACTUAL_PDHCG_COMMIT}"
@@ -216,6 +222,11 @@ if(BUILD_TESTING)
             PRIVATE
                 spacepdhcg_cuda
                 spacepdhcg_pinned_reference
+                ${CMAKE_DL_LIBS}
+        )
+        target_compile_definitions(
+            "${test_name}"
+            PRIVATE SPACEPDHCG_SOURCE_COMMIT="${SPACEPDHCG_SOURCE_COMMIT}"
         )
         set_target_properties(
             "${test_name}"

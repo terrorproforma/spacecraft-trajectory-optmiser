@@ -74,6 +74,7 @@ def main() -> int:
                 "attempts": list(group.attempts),
             },
             sort_keys=True,
+            separators=(",", ":"),
         )
     )
     return 0

@@ -380,6 +380,21 @@ spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_cancel(
     spacepdhcg_cuda_scvx_driver* driver
 );
 
+/*
+ * Restore the independent-attempt boundary without destroying the driver,
+ * its QOCO owner, or the compatible persistent PDHCG workspace.
+ *
+ * NONE clears all solver iterates and any accepted QOCO warm state. PRIMAL
+ * retains only the accepted primal and clears dual/internal momentum state.
+ * PRIMAL_DUAL retains primal and dual state. FULL_RETAINED is reserved for
+ * component tests and has the same cross-attempt retention as PRIMAL_DUAL.
+ */
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_reset_attempt(
+    spacepdhcg_cuda_scvx_driver* driver,
+    spacepdhcg_cuda_warm_start_mode mode,
+    spacepdhcg_accelerator_stream stream
+);
+
 spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_path_inventory(
     const spacepdhcg_cuda_scvx_driver* driver,
     spacepdhcg_cuda_scvx_path_inventory* inventory

@@ -414,6 +414,30 @@ def test_full_runner_requires_persistent_group_capability(tmp_path: Path) -> Non
         "separate_attempt_records": True,
         "policy_reset_between_attempts": True,
     }
+    value["contract_hashes"] = {
+        "applicability": RUNNER.sha256_path(ROOT / "benchmarks/g4_applicability.json"),
+        "claim_core": RUNNER.sha256_path(ROOT / "benchmarks/g4_h5_h6_claim_core.json"),
+        "execution_group_schema": RUNNER.sha256_path(
+            ROOT / "experiments/schema/g4_execution_group.schema.json"
+        ),
+        "raw_attempt_schema": RUNNER.sha256_path(
+            ROOT / "experiments/schema/g4_raw_attempt.schema.json"
+        ),
+        "paper1_result_schema": RUNNER.sha256_path(
+            ROOT / "experiments/schema/paper1_result.schema.json"
+        ),
+    }
+    value["session_probe"] = {
+        "kind": "real_cuda_session",
+        "attempt_count": 9,
+        "warmup_count": 2,
+        "measured_count": 7,
+        "same_process": True,
+        "same_context": True,
+        "same_workspace": True,
+        "zero_post_create_topology_allocations": True,
+        "zero_post_create_topology_index_copies": True,
+    }
     value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
     capability_path.write_text(json.dumps(value), encoding="utf-8")
     loaded = RUNNER.load_capabilities(

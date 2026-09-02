@@ -856,3 +856,28 @@
   - Hardened capability generation to reject the currently row-oriented executable until it
     declares the complete `g4-persistent-group-v1` process/workspace contract.
   - Physical 2/4/8-GPU G5 and distributed OrbitWeaver remain explicitly deferred.
+
+## 2026-09-02 19:20 AEST
+
+- Task summary:
+  - Implemented native `g4-persistent-group-v1`: one process/context/workspace, two warm-ups, seven
+    measurements, deterministic reset/retention, strict partial records, and direct NVML boundaries.
+- Changes:
+  - Added allocation-free SCvx/QOCO attempt reset, native group parsing/hash refusal, exact terminal
+    dispositions, timing/work/resource/source telemetry, crash-safe flush/exit behavior, and one
+    scheduler restart after abnormal process exit.
+  - Added contract/schema hashes plus a mandatory real CUDA probe to capability generation.
+  - Added independent 360-group claim-core checkpoints via `--claim-core`; full grouped scheduling
+    remains 2,764,800 sessions and cannot share the historical row checkpoint.
+- Validation:
+  - Ruff and full Python passed: 309 passed, four optional skips; focused session contracts passed.
+  - Native Release/Debug/ASan+UBSan passed 45/45 each; CUDA Release/Debug/sanitizer matrices built
+    for CUDA 12.8 `sm_120`.
+  - Isolated native session/legacy-row equivalence passed 8/8; QOCO mapping passed 29/29; native
+    handback passed 1/1.
+  - Session memcheck/initcheck/synccheck reported zero errors; racecheck reported zero hazards,
+    errors, and warnings. The briefly overlapped first QOCO run was excluded and rerun serially.
+- Follow-ups / risks:
+  - Rebuild after the final commit, generate the executable/hash-pinned capability from the clean
+    tree, then initialize a new claim-core or full grouped checkpoint.
+  - No 3,240-invocation claim core or 2,764,800-session campaign was run; H5/H6 remain unresolved.

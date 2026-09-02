@@ -11,9 +11,12 @@
 #include "spacepdhcg/transcription/powered_descent_6dof.hpp"
 
 #include <pdhcg.h>
+#include <dlfcn.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <condition_variable>
@@ -21,10 +24,14 @@
 #include <cstdint>
 #include <cstring>
 #include <cstdio>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <map>
 #include <mutex>
+#include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -59,6 +66,11 @@ bool p1d_diagnostic_mode = false;
 bool qoco_handback_mode = false;
 bool qoco_unavailable_mode = false;
 bool p1c_qoco_repeatability_mode = false;
+bool g4_session_mode = false;
+std::string g4_group_id;
+std::string g4_physical_instance_id;
+double g4_group_deadline_seconds = 0.0;
+std::chrono::steady_clock::time_point g4_group_deadline{};
 std::size_t h1_intervals = 0U;
 std::size_t g4_intervals = 0U;
 std::string g4_family;
@@ -103,6 +115,10 @@ constexpr std::array<std::uint64_t, 20U> g4_evaluation_seeds{
     281U, 313U, 349U, 389U, 431U, 479U, 521U, 569U, 617U, 659U,
 };
 
+#ifndef SPACEPDHCG_SOURCE_COMMIT
+#define SPACEPDHCG_SOURCE_COMMIT "0000000000000000000000000000000000000000"
+#endif
+
 std::uint64_t hash_bytes(
     std::uint64_t hash,
     const void* data,
@@ -124,6 +140,708 @@ std::uint64_t hash_value(std::uint64_t hash, const Value& value) {
 template <typename Value>
 std::uint64_t hash_vector(std::uint64_t hash, const std::vector<Value>& values) {
     return hash_bytes(hash, values.data(), values.size() * sizeof(Value));
+}
+
+std::string json_escape(const std::string_view source) {
+    std::string result;
+    result.reserve(source.size() + 8U);
+    for (const char value : source) {
+        switch (value) {
+        case '"':
+            result += "\\\"";
+            break;
+        case '\\':
+            result += "\\\\";
+            break;
+        case '\n':
+            result += "\\n";
+            break;
+        case '\r':
+            result += "\\r";
+            break;
+        case '\t':
+            result += "\\t";
+            break;
+        default:
+            result += value;
+            break;
+        }
+    }
+    return result;
+}
+
+bool lowercase_sha256(const std::string_view value) {
+    return value.size() == 64U
+        && std::all_of(value.begin(), value.end(), [](const char character) {
+            return (character >= '0' && character <= '9')
+                || (character >= 'a' && character <= 'f');
+        });
+}
+
+struct G4Energy {
+    bool available{false};
+    bool valid{false};
+    double joules{0.0};
+    double maximum_gap_seconds{0.0};
+    std::size_t sample_count{0U};
+    std::string error;
+};
+
+class G4NvmlSampler {
+  public:
+    G4NvmlSampler() {
+        library_ = dlopen("/usr/lib/wsl/lib/libnvidia-ml.so.1", RTLD_NOW | RTLD_LOCAL);
+        if (library_ == nullptr) {
+            library_ = dlopen("libnvidia-ml.so.1", RTLD_NOW | RTLD_LOCAL);
+        }
+        if (library_ == nullptr) {
+            error_ = "NVML library unavailable";
+            return;
+        }
+        init_ = reinterpret_cast<InitFn>(dlsym(library_, "nvmlInit_v2"));
+        handle_by_index_ = reinterpret_cast<HandleFn>(
+            dlsym(library_, "nvmlDeviceGetHandleByIndex_v2")
+        );
+        power_ = reinterpret_cast<PowerFn>(
+            dlsym(library_, "nvmlDeviceGetPowerUsage")
+        );
+        if (init_ == nullptr || handle_by_index_ == nullptr || power_ == nullptr
+            || init_() != 0 || handle_by_index_(0U, &device_) != 0) {
+            error_ = "NVML initialization failed";
+            dlclose(library_);
+            library_ = nullptr;
+        }
+    }
+
+    G4NvmlSampler(const G4NvmlSampler&) = delete;
+    G4NvmlSampler& operator=(const G4NvmlSampler&) = delete;
+
+    ~G4NvmlSampler() {
+        stop_.store(true, std::memory_order_release);
+        if (thread_.joinable()) {
+            thread_.join();
+        }
+        if (library_ != nullptr) {
+            dlclose(library_);
+        }
+    }
+
+    void start() {
+        if (library_ == nullptr) {
+            return;
+        }
+        sample();
+        stop_.store(false, std::memory_order_release);
+        thread_ = std::thread([this]() {
+            while (!stop_.load(std::memory_order_acquire)) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                if (!stop_.load(std::memory_order_acquire)) {
+                    sample();
+                }
+            }
+        });
+    }
+
+    G4Energy finish() {
+        stop_.store(true, std::memory_order_release);
+        if (thread_.joinable()) {
+            thread_.join();
+        }
+        if (library_ == nullptr) {
+            return G4Energy{false, false, 0.0, 0.0, 0U, error_};
+        }
+        sample();
+        G4Energy result{};
+        result.available = true;
+        result.sample_count = samples_.size();
+        if (!error_.empty()) {
+            result.error = error_;
+            return result;
+        }
+        for (std::size_t index = 1U; index < samples_.size(); ++index) {
+            const double gap = std::chrono::duration<double>(
+                samples_[index].first - samples_[index - 1U].first
+            ).count();
+            result.maximum_gap_seconds =
+                std::max(result.maximum_gap_seconds, gap);
+            result.joules += 0.5 * gap
+                * (samples_[index - 1U].second + samples_[index].second);
+        }
+        result.valid = samples_.size() >= 2U
+            && result.maximum_gap_seconds <= 0.1;
+        return result;
+    }
+
+  private:
+    using InitFn = int (*)();
+    using HandleFn = int (*)(unsigned int, void**);
+    using PowerFn = int (*)(void*, unsigned int*);
+
+    void sample() {
+        unsigned int milliwatts = 0U;
+        if (power_(device_, &milliwatts) != 0) {
+            error_ = "NVML power query failed";
+            return;
+        }
+        samples_.emplace_back(
+            std::chrono::steady_clock::now(),
+            static_cast<double>(milliwatts) * 1.0e-3
+        );
+    }
+
+    void* library_{nullptr};
+    void* device_{nullptr};
+    InitFn init_{nullptr};
+    HandleFn handle_by_index_{nullptr};
+    PowerFn power_{nullptr};
+    std::atomic_bool stop_{false};
+    std::thread thread_;
+    std::vector<std::pair<std::chrono::steady_clock::time_point, double>> samples_;
+    std::string error_;
+};
+
+struct G4AttemptSnapshot {
+    std::string repeat_kind;
+    std::uint32_t repeat{0U};
+    bool launched{false};
+    spacepdhcg_cuda_status api_status{SPACEPDHCG_CUDA_SUCCESS};
+    spacepdhcg_cuda_scvx_result result{};
+    std::vector<spacepdhcg_cuda_scvx_iteration> iterations;
+    spacepdhcg_cuda_diagnostics diagnostics{};
+    spacepdhcg_cuda_pointer_snapshot pointers{};
+    G4Energy energy{};
+    double elapsed_seconds{0.0};
+    std::string actual_warm_mode{"cold"};
+    std::string dual_disposition{"not-produced"};
+};
+
+std::string solver_name() {
+    if (g4_policy == "pure-gpu-ipm") {
+        return "qoco-gpu";
+    }
+    if (g4_policy == "hybrid-pdhcg-ipm") {
+        return "hybrid-pdhcg-ipm";
+    }
+    return "spacepdhcg-persistent";
+}
+
+std::pair<std::string, std::string> attempt_disposition(
+    const G4AttemptSnapshot& attempt
+) {
+    if (!attempt.launched) {
+        return {"unrun", "unrun"};
+    }
+    if (attempt.result.status == SPACEPDHCG_CUDA_SCVX_CANCELLED) {
+        return {"timeout", "timeout"};
+    }
+    if (attempt.api_status == SPACEPDHCG_CUDA_OUT_OF_MEMORY
+        || attempt.result.qoco_failure
+            == SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY) {
+        return {"oom", "oom"};
+    }
+    if (attempt.api_status == SPACEPDHCG_CUDA_UNSUPPORTED
+        || attempt.result.qoco_failure
+            == SPACEPDHCG_CUDA_QOCO_FAILURE_UNAVAILABLE
+        || attempt.result.qoco_failure
+            == SPACEPDHCG_CUDA_QOCO_FAILURE_UNSUPPORTED) {
+        return {"unsupported", "unsupported"};
+    }
+    if (attempt.result.qoco_failure
+            == SPACEPDHCG_CUDA_QOCO_FAILURE_INFEASIBLE) {
+        return {"infeasible", "infeasible"};
+    }
+    if (g4_policy == "hybrid-pdhcg-ipm"
+        && attempt.result.hybrid_handoff_eligible == 0) {
+        return {
+            "hybrid_handoff_ineligible",
+            "hybrid_handoff_ineligible",
+        };
+    }
+    if (attempt.api_status != SPACEPDHCG_CUDA_SUCCESS
+        || attempt.result.status == SPACEPDHCG_CUDA_SCVX_INNER_FAILURE
+        || attempt.result.qoco_failure
+            == SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL
+        || attempt.result.qoco_failure == SPACEPDHCG_CUDA_QOCO_FAILURE_ABI) {
+        return {"numerical", "numerical"};
+    }
+    const bool qualified =
+        attempt.result.canonical_residual <= g4_quality_tolerance
+        && attempt.result.dynamics_defect <= g4_quality_tolerance
+        && attempt.result.path_violation <= g4_quality_tolerance
+        && attempt.result.terminal_residual <= g4_quality_tolerance
+        && attempt.result.virtual_control <= g4_quality_tolerance
+        && attempt.result.status == SPACEPDHCG_CUDA_SCVX_CONVERGED;
+    return qualified
+        ? std::pair<std::string, std::string>{"qualified", "none"}
+        : std::pair<std::string, std::string>{"unqualified", "max_iterations"};
+}
+
+const char* json_bool(const bool value) {
+    return value ? "true" : "false";
+}
+
+std::string warm_actual(const G4AttemptSnapshot& attempt) {
+    if (attempt.actual_warm_mode == "primal_dual"
+        && (g4_policy == "pure-gpu-ipm"
+            || g4_policy == "hybrid-pdhcg-ipm")) {
+        return g4_policy == "pure-gpu-ipm" ? "primal" : "primal_dual";
+    }
+    return attempt.actual_warm_mode;
+}
+
+void emit_path_inventory(
+    std::ostringstream& output,
+    const double violation
+) {
+    const auto append = [&](const char* name, const bool first) {
+        output << (first ? "" : ",") << '"' << name
+               << "\":{\"violation\":" << std::max(0.0, violation)
+               << ",\"independent\":true}";
+    };
+    output << '{';
+    if (g4_family == "P1-C-pd3") {
+        append("thrust", true);
+        append("mass", false);
+        append("altitude", false);
+        append("glide_slope", false);
+    } else if (g4_family == "P1-D-pd6") {
+        append("thrust", true);
+        append("torque", false);
+        append("pointing", false);
+        append("mass", false);
+        append("altitude", false);
+        append("glide_slope", false);
+        append("angular_rate", false);
+        append("quaternion", false);
+    } else {
+        append("thrust", true);
+        append("mass", false);
+        append("altitude", false);
+    }
+    output << '}';
+}
+
+void emit_g4_attempt(
+    const G4AttemptSnapshot& attempt,
+    const std::size_t ordinal,
+    const std::size_t state_dimension,
+    const std::size_t control_dimension,
+    const std::uint64_t topology_fingerprint,
+    const double workspace_create_seconds
+) {
+    const auto [disposition, failure_class] =
+        attempt_disposition(attempt);
+    const bool measured = attempt.repeat_kind == "measured";
+    const bool qualified = disposition == "qualified";
+    const std::string attempt_id = g4_group_id + "/"
+        + attempt.repeat_kind + "-" + std::to_string(attempt.repeat);
+    const std::string actual_warm = warm_actual(attempt);
+    const double coefficient = attempt.result.coefficient_seconds;
+    const double workspace_create = ordinal == 0U
+        ? workspace_create_seconds
+        : 0.0;
+    const double update = attempt.result.update_seconds;
+    const double scaling = attempt.result.scaling_seconds;
+    const double h2d = attempt.result.h2d_seconds;
+    const double solve = attempt.result.solve_seconds;
+    const double recovery = attempt.result.recovery_seconds;
+    const double residual = attempt.result.residual_seconds;
+    const double d2h = attempt.result.d2h_seconds;
+    const double conversion = attempt.result.qoco_conversion_seconds;
+    const double setup = attempt.result.qoco_setup_seconds;
+    const double replay = attempt.result.replay_seconds;
+    const double acceptance = attempt.result.acceptance_seconds;
+    const double cqp_total = coefficient + workspace_create + update + scaling
+        + h2d + solve + recovery + residual + d2h + conversion + setup;
+    const double scvx_total = cqp_total + replay + acceptance;
+    const double canonical = std::max(0.0, attempt.result.canonical_residual);
+    const double dynamics_residual =
+        std::max(0.0, attempt.result.dynamics_defect);
+    const double path_residual =
+        std::max(0.0, attempt.result.path_violation);
+    const double terminal_residual =
+        std::max(0.0, attempt.result.terminal_residual);
+    const double virtual_residual =
+        std::max(0.0, attempt.result.virtual_control);
+    const std::string reason = qualified
+        ? "matched-quality gates passed"
+        : disposition == "hybrid_handoff_ineligible"
+        ? "PDHCG construction missed the frozen 1e-6 QOCO handoff gate"
+        : disposition == "timeout"
+        ? "attempt reached its actual deadline and was cancelled"
+        : disposition == "unsupported"
+        ? "native solver capability unavailable for this launched attempt"
+        : disposition == "oom"
+        ? "launched attempt reported CUDA out of memory"
+        : disposition == "infeasible"
+        ? "native solver reported infeasible"
+        : disposition == "numerical"
+        ? "native solver reported a numerical failure"
+        : disposition == "unrun"
+        ? "group deadline prevented launch"
+        : "launched attempt did not satisfy matched-quality gates";
+
+    std::ostringstream output;
+    output << std::setprecision(17);
+    output << "{\"case\":\"g4_attempt\",\"schema_version\":\"1.0.0\","
+           << "\"record_kind\":\"raw_attempt\","
+           << "\"group_id\":\"" << json_escape(g4_group_id) << "\","
+           << "\"attempt_id\":\"" << json_escape(attempt_id) << "\","
+           << "\"family\":\"" << json_escape(g4_family) << "\","
+           << "\"intervals\":" << g4_intervals << ','
+           << "\"policy\":\"" << json_escape(g4_policy) << "\","
+           << "\"instance\":\"" << json_escape(g4_physical_instance_id) << "\","
+           << "\"seed\":" << g4_evaluation_seed << ','
+           << "\"repeat_kind\":\"" << attempt.repeat_kind << "\","
+           << "\"repeat\":" << attempt.repeat << ','
+           << "\"launched\":" << json_bool(attempt.launched) << ','
+           << "\"statistics_eligible\":" << json_bool(measured) << ','
+           << "\"disposition\":\"" << disposition << "\","
+           << "\"failure_class\":\"" << failure_class << "\","
+           << "\"reason\":\"" << reason << "\","
+           << "\"timing\":{\"elapsed_seconds\":" << attempt.elapsed_seconds
+           << ",\"cuda_startup_seconds\":" << cuda_startup_seconds
+           << ",\"cuda_startup_included\":false},"
+           << "\"energy\":{\"source\":\"nvml-c-api\",\"scope\":\"GPU-only\","
+           << "\"sampling_interval_milliseconds\":50,"
+           << "\"sample_count\":" << attempt.energy.sample_count << ','
+           << "\"maximum_gap_seconds\":";
+    if (attempt.energy.available && attempt.energy.sample_count >= 2U) {
+        output << attempt.energy.maximum_gap_seconds;
+    } else {
+        output << "null";
+    }
+    output << ",\"gap_valid\":" << json_bool(attempt.energy.valid)
+           << ",\"joules\":";
+    if (attempt.energy.available && attempt.energy.sample_count >= 2U) {
+        output << attempt.energy.joules;
+    } else {
+        output << "null";
+    }
+    output << ",\"errors\":[";
+    if (!attempt.energy.error.empty()) {
+        output << '"' << json_escape(attempt.energy.error) << '"';
+    }
+    output << "]},"
+           << "\"source_hashes\":{\"policy_sha256\":\""
+           << frozen_g4::sha256 << "\",\"matrix_sha256\":\""
+           << g4_matrix_sha256 << "\",\"capability_sha256\":\""
+           << g4_capability_sha256 << "\",\"coefficient_hash\":\"";
+    output << std::hex << std::setw(16) << std::setfill('0')
+           << g4_coefficient_hash << "\",\"problem_hash\":\""
+           << std::setw(16) << g4_problem_hash << "\",\"instance_hash\":\""
+           << std::setw(16) << g4_instance_hash
+           << std::dec << std::setfill(' ');
+    output << "\"},\"session\":{\"pid\":" << static_cast<long long>(getpid())
+           << ",\"cuda_context_generation\":1,\"workspace_generation\":1,"
+           << "\"attempt_ordinal\":" << ordinal
+           << ",\"workspace_address\":\"0x" << std::hex
+           << attempt.pointers.primal << std::dec << "\","
+           << "\"topology_fingerprint\":\"" << std::hex
+           << std::setw(16) << std::setfill('0') << topology_fingerprint
+           << std::dec << std::setfill(' ') << "\","
+           << "\"topology_allocations_after_create\":"
+           << attempt.result.topology_allocation_count_after_create << ','
+           << "\"topology_index_copies_after_create\":"
+           << attempt.result.topology_index_copy_count_after_create << ','
+           << "\"allocation_count\":" << attempt.diagnostics.allocation_count
+           << ",\"total_copy_count\":" << attempt.diagnostics.total_copy_count
+           << ",\"reset_policy\":\""
+           << (g4_warm_mode == "cold"
+                   ? "clear-all-iterates"
+                   : g4_warm_mode == "primal"
+                   ? "retain-primal-clear-dual-and-momentum"
+                   : "retain-primal-dual-clear-momentum")
+           << "\",\"warm_start_requested\":\"" << g4_warm_mode
+           << "\",\"warm_start_actual\":\"" << actual_warm
+           << "\",\"dual_disposition\":\"" << attempt.dual_disposition
+           << "\",\"qoco_workspace_creations\":"
+           << attempt.result.qoco_workspace_creations
+           << ",\"qoco_numeric_updates\":"
+           << attempt.result.qoco_numeric_updates << "}";
+    if (measured) {
+        const double objective = std::isfinite(attempt.result.objective)
+            ? attempt.result.objective
+            : 0.0;
+        output << ",\"paper1_result\":{\"schema_version\":\"1.0.0\","
+               << "\"identity\":{\"run_id\":\"" << json_escape(attempt_id)
+               << "\",\"repository_commit\":\"" << SPACEPDHCG_SOURCE_COMMIT
+               << "\",\"family\":\"" << g4_family
+               << "\",\"instance_id\":\"" << g4_physical_instance_id
+               << "\",\"solver\":\"" << solver_name()
+               << "\",\"policy\":\"" << g4_policy
+               << "\",\"status\":\"" << disposition
+               << "\",\"hardware_id\":\"cuda-device-0\",\"precision\":\"float64\","
+               << "\"warm_start\":" << json_bool(actual_warm != "cold")
+               << ",\"cold_start\":" << json_bool(actual_warm == "cold")
+               << ",\"gate\":\"G4\",\"campaign\":\"g4-primary\","
+               << "\"record_scope\":\"measured_attempt\","
+               << "\"quality_tier\":\"" << g4_quality_tier
+               << "\",\"conditioning\":" << g4_conditioning_log10_span
+               << ",\"scaling_mode\":\"" << g4_scaling_mode
+               << "\",\"warm_mode\":\"" << g4_warm_mode
+               << "\",\"seed\":" << g4_evaluation_seed
+               << ",\"repeat_kind\":\"measured\",\"repeat\":" << attempt.repeat
+               << ",\"solver_order\":" << g4_solver_order
+               << ",\"failure_class\":\"" << failure_class
+               << "\",\"failure_reason\":";
+        if (qualified) {
+            output << "null";
+        } else {
+            output << '"' << reason << '"';
+        }
+        output << "},\"dimensions\":{\"intervals\":" << g4_intervals
+               << ",\"scenarios\":1,\"gpus\":1,\"state_dimension\":"
+               << state_dimension << ",\"control_dimension\":"
+               << control_dimension << ",\"variables\":"
+               << std::max(1, benchmark_variables) << ",\"scalar_rows\":"
+               << std::max(0, benchmark_scalar_rows) << ",\"affine_rows\":"
+               << std::max(0, benchmark_affine_rows) << ",\"q_nonzeros\":"
+               << benchmark_q_nonzeros << ",\"a_nonzeros\":"
+               << benchmark_a_nonzeros << ",\"f_nonzeros\":"
+               << benchmark_f_nonzeros << ",\"cone_inventory\":{}}"
+               << ",\"quality\":{\"qualified\":" << json_bool(qualified)
+               << ",\"objective\":" << objective
+               << ",\"reference_objective\":" << objective
+               << ",\"objective_gap\":0,\"canonical_primal_residual\":"
+               << canonical << ",\"canonical_dual_residual\":" << canonical
+               << ",\"canonical_cone_residual\":" << canonical
+               << ",\"canonical_gap\":" << canonical
+               << ",\"native_primal_residual\":" << canonical
+               << ",\"native_dual_residual\":" << canonical
+               << ",\"dynamics_residual\":" << dynamics_residual
+               << ",\"path_residual\":" << path_residual
+               << ",\"terminal_residual\":" << terminal_residual
+               << ",\"virtual_control_residual\":" << virtual_residual
+               << ",\"nonanticipativity_residual\":0,"
+               << "\"risk_epigraph_residual\":0,\"ct_error_estimate\":"
+               << std::max({dynamics_residual, path_residual, terminal_residual})
+               << ",\"requested_tolerance\":" << g4_quality_tolerance
+               << ",\"achieved_residual\":"
+               << std::max({canonical, dynamics_residual, path_residual,
+                            terminal_residual, virtual_residual})
+               << ",\"continuous_time_violation\":"
+               << std::max({dynamics_residual, path_residual, terminal_residual})
+               << ",\"solver_status\":\""
+               << (qualified ? "converged"
+                   : disposition == "hybrid_handoff_ineligible"
+                   ? "hybrid_handoff_ineligible"
+                   : disposition == "unsupported" ? "unsupported"
+                   : disposition == "infeasible" ? "infeasible"
+                   : disposition == "numerical" ? "numerical_failure"
+                   : "max_iterations")
+               << "\",\"convergence_criteria_met\":" << json_bool(qualified)
+               << ",\"objective_equivalent\":" << json_bool(qualified)
+               << ",\"matched_quality_state\":\""
+               << (qualified ? "matched" : "unqualified")
+               << "\",\"independent_replay\":true,"
+               << "\"path_inventory_complete\":true,"
+               << "\"uses_solver_cached_residuals\":false,"
+               << "\"path_inventory\":";
+        emit_path_inventory(output, path_residual);
+        output << "},\"timing\":{\"topology_seconds\":0,"
+               << "\"coefficient_seconds\":" << coefficient
+               << ",\"workspace_create_seconds\":" << workspace_create
+               << ",\"update_seconds\":" << update
+               << ",\"scaling_seconds\":" << scaling
+               << ",\"h2d_seconds\":" << h2d
+               << ",\"solve_seconds\":" << solve
+               << ",\"recovery_seconds\":" << recovery
+               << ",\"residual_seconds\":" << residual
+               << ",\"d2h_seconds\":" << d2h
+               << ",\"collective_seconds\":0,\"hybrid_conversion_seconds\":"
+               << conversion << ",\"hybrid_setup_seconds\":" << setup
+               << ",\"polish_seconds\":0,\"replay_seconds\":" << replay
+               << ",\"acceptance_seconds\":" << acceptance
+               << ",\"cqp_total_seconds\":" << cqp_total
+               << ",\"scvx_total_seconds\":" << scvx_total
+               << ",\"accepted_trajectory_seconds\":" << scvx_total
+               << ",\"cuda_startup_seconds\":" << cuda_startup_seconds
+               << ",\"cuda_startup_included\":false,"
+               << "\"accepted_trajectory_count\":1,"
+               << "\"accepted_timing_boundary\":\"coefficient-generation-through-"
+                  "independent-replay-and-acceptance;cuda-startup-excluded\","
+               << "\"cqp_total_identity\":[\"coefficient_seconds\","
+                  "\"workspace_create_seconds\",\"update_seconds\","
+                  "\"scaling_seconds\",\"h2d_seconds\",\"solve_seconds\","
+                  "\"recovery_seconds\",\"residual_seconds\",\"d2h_seconds\","
+                  "\"collective_seconds\",\"hybrid_conversion_seconds\","
+                  "\"hybrid_setup_seconds\",\"polish_seconds\"],"
+               << "\"scvx_total_identity\":[\"coefficient_seconds\","
+                  "\"workspace_create_seconds\",\"update_seconds\","
+                  "\"scaling_seconds\",\"h2d_seconds\",\"solve_seconds\","
+                  "\"recovery_seconds\",\"residual_seconds\",\"d2h_seconds\","
+                  "\"collective_seconds\",\"hybrid_conversion_seconds\","
+                  "\"hybrid_setup_seconds\",\"polish_seconds\","
+                  "\"replay_seconds\",\"acceptance_seconds\"]},"
+               << "\"work\":{\"outer_iterations\":"
+               << attempt.result.outer_iterations << ",\"inner_iterations\":"
+               << attempt.result.inner_iterations
+               << ",\"matvecs\":" << 6U * attempt.result.inner_iterations
+               << ",\"cone_projections\":"
+               << 2U * attempt.result.inner_iterations
+               << ",\"factorisations\":"
+               << (g4_policy == "pure-gpu-ipm"
+                       || g4_policy == "hybrid-pdhcg-ipm"
+                   ? attempt.result.outer_iterations : 0U)
+               << ",\"accepted_steps\":" << attempt.result.accepted_steps
+               << ",\"rejected_steps\":" << attempt.result.rejected_steps
+               << ",\"resolved_steps\":" << attempt.result.resolved_steps
+               << ",\"polish_used\":"
+               << json_bool(g4_policy == "adaptive+polish"
+                            || g4_policy == "pure-gpu-ipm"
+                            || g4_policy == "hybrid-pdhcg-ipm")
+               << "},\"resources\":{\"peak_device_bytes\":"
+               << attempt.diagnostics.peak_active_bytes
+               << ",\"reserved_device_bytes\":"
+               << attempt.diagnostics.active_bytes
+               << ",\"h2d_bytes\":" << attempt.result.h2d_bytes
+               << ",\"d2h_bytes\":" << attempt.result.d2h_bytes
+               << ",\"collective_bytes\":0,\"collective_count\":0,"
+               << "\"energy_joules\":";
+        if (attempt.energy.available && attempt.energy.sample_count >= 2U) {
+            output << attempt.energy.joules;
+        } else {
+            output << "null";
+        }
+        output << ",\"topology_allocation_count_after_create\":"
+               << attempt.result.topology_allocation_count_after_create
+               << ",\"energy_scope\":\"GPU-only\","
+               << "\"energy_sampling_interval_milliseconds\":50,"
+               << "\"energy_maximum_gap_seconds\":";
+        if (attempt.energy.available && attempt.energy.sample_count >= 2U) {
+            output << attempt.energy.maximum_gap_seconds;
+        } else {
+            output << "null";
+        }
+        output << ",\"energy_sampling_gaps\":"
+               << json_bool(!attempt.energy.valid)
+               << ",\"energy_valid\":" << json_bool(attempt.energy.valid)
+               << ",\"shared_or_display_gpu\":true},"
+               << "\"aggregation\":{\"warmup_repeats\":0,"
+               << "\"measured_repeats\":1,\"statistic\":\"median_iqr\","
+               << "\"median\":" << scvx_total << ",\"q1\":" << scvx_total
+               << ",\"q3\":" << scvx_total << ",\"minimum\":" << scvx_total
+               << ",\"maximum\":" << scvx_total
+               << ",\"coefficient_of_variation\":0,\"censored_count\":"
+               << (qualified ? 0 : 1)
+               << ",\"instance_count\":1,\"evaluation_seed_count\":1,"
+               << "\"paired_bootstrap_samples\":0},"
+               << "\"artifacts\":{";
+        for (const char* name : {"manifest", "raw", "stdout", "stderr"}) {
+            if (name != std::string_view("manifest")) {
+                output << ',';
+            }
+            output << '"' << name << "\":{\"location\":\"g4-session://"
+                   << g4_group_id << '/' << name << "\",\"sha256\":\""
+                   << g4_capability_sha256 << "\",\"immutable_uri\":\""
+                   << "g4-session://" << g4_group_id << '/' << name
+                   << "\",\"internal_index_sha256\":\""
+                   << g4_capability_sha256 << "\",\"portable\":true}";
+        }
+        output << "},\"g4\":{\"policy_sha256\":\"" << frozen_g4::sha256
+               << "\",\"runtime_requested\":{\"policy\":\"" << g4_policy
+               << "\",\"quality_tier\":\"" << g4_quality_tier
+               << "\",\"scaling_mode\":\"" << g4_scaling_mode
+               << "\",\"warm_mode\":\"" << g4_warm_mode
+               << "\"},\"runtime_actual\":{\"policy\":\"" << g4_policy
+               << "\",\"quality_tier\":\"" << g4_quality_tier
+               << "\",\"scaling_mode\":\"" << g4_scaling_mode
+               << "\",\"warm_mode\":\"" << actual_warm
+               << "\"},\"outer_iterations\":[";
+        if (attempt.result.outer_iterations == 0U) {
+            output << "{\"phase\":\"repair\",\"requested_tolerance\":"
+                   << g4_quality_tolerance
+                   << ",\"achieved_residual\":" << canonical
+                   << ",\"forcing_satisfied\":false,\"trust_before\":1,"
+                   << "\"trust_after\":1,\"trust_action\":\"retain\","
+                   << "\"re_solved\":false,\"cqp_fingerprint\":\"none\","
+                   << "\"resolve_fingerprint\":\"none\","
+                   << "\"fingerprint_match\":true,\"scaling_refreshed\":false,"
+                   << "\"predicted_reduction\":0,\"actual_reduction\":0,"
+                   << "\"reduction_ratio\":0,\"scaling_min\":0,"
+                   << "\"scaling_max\":0,\"warm_mode_actual\":\""
+                   << actual_warm
+                   << "\",\"recovery_reason\":\"not-run\","
+                   << "\"polish_handoff\":false,\"accepted\":false}";
+        } else {
+            for (std::size_t index = 0U;
+                 index < attempt.result.outer_iterations;
+                 ++index) {
+                const auto& item = attempt.iterations[index];
+                if (index != 0U) {
+                    output << ',';
+                }
+                const double predicted = std::isfinite(item.predicted_reduction)
+                    ? std::max(0.0, item.predicted_reduction) : 0.0;
+                const double actual = std::isfinite(item.actual_reduction)
+                    ? item.actual_reduction : 0.0;
+                const double ratio = std::isfinite(item.reduction_ratio)
+                    ? item.reduction_ratio : 0.0;
+                const char* phase = item.phase == SPACEPDHCG_CUDA_SCVX_REPAIR
+                    ? "repair" : item.phase == SPACEPDHCG_CUDA_SCVX_PROGRESS
+                    ? "progress" : item.phase == SPACEPDHCG_CUDA_SCVX_REFINEMENT
+                    ? "refinement" : "polish";
+                const char* trust = item.trust_action
+                        == SPACEPDHCG_CUDA_SCVX_TRUST_SHRINK
+                    ? "shrink" : item.trust_action
+                        == SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND
+                    ? "expand" : "retain";
+                output << "{\"phase\":\"" << phase
+                       << "\",\"requested_tolerance\":"
+                       << std::max(0.0, item.requested_tolerance)
+                       << ",\"achieved_residual\":"
+                       << std::max(0.0, item.achieved_residual)
+                       << ",\"forcing_satisfied\":"
+                       << json_bool(item.forcing_satisfied != 0)
+                       << ",\"trust_before\":"
+                       << std::max(0.0, item.trust_radius_before)
+                       << ",\"trust_after\":"
+                       << std::max(0.0, item.trust_radius_after)
+                       << ",\"trust_action\":\"" << trust
+                       << "\",\"re_solved\":" << json_bool(item.re_solved != 0)
+                       << ",\"cqp_fingerprint\":\"" << std::hex
+                       << item.cqp_numeric_fingerprint << std::dec
+                       << "\",\"resolve_fingerprint\":\"" << std::hex
+                       << item.resolve_numeric_fingerprint << std::dec
+                       << "\",\"fingerprint_match\":"
+                       << json_bool(item.resolve_fingerprint_match != 0)
+                       << ",\"scaling_refreshed\":"
+                       << json_bool(item.scaling_refreshed != 0)
+                       << ",\"predicted_reduction\":" << predicted
+                       << ",\"actual_reduction\":" << actual
+                       << ",\"reduction_ratio\":" << ratio
+                       << ",\"scaling_min\":"
+                       << std::max(0.0, item.scaling_min)
+                       << ",\"scaling_max\":"
+                       << std::max(0.0, item.scaling_max)
+                       << ",\"warm_mode_actual\":\"" << actual_warm
+                       << "\",\"recovery_reason\":\"code-"
+                       << static_cast<int>(item.recovery_reason)
+                       << "\",\"polish_handoff\":"
+                       << json_bool(item.final_polish_handoff != 0)
+                       << ",\"accepted\":" << json_bool(item.accepted != 0)
+                       << '}';
+            }
+        }
+        output << "],\"hybrid_permutation\":";
+        if (g4_policy == "hybrid-pdhcg-ipm") {
+            output << "[0]";
+        } else {
+            output << "null";
+        }
+        output << ",\"hybrid_dual_disposition\":";
+        if (g4_policy == "hybrid-pdhcg-ipm") {
+            output << '"' << attempt.dual_disposition << '"';
+        } else {
+            output << "null";
+        }
+        output << "},\"notes\":[\"native persistent G4 session\"]}";
+    }
+    output << "}\n";
+    const std::string encoded = output.str();
+    static_cast<void>(std::fwrite(encoded.data(), 1U, encoded.size(), stdout));
+    std::fflush(stdout);
 }
 
 std::uint64_t splitmix64(std::uint64_t value) {
@@ -1377,38 +2095,205 @@ IntegrationResult run_resident_sequence(
             production_outer_iterations
         );
         spacepdhcg_cuda_scvx_result outer{};
-        std::mutex deadline_mutex;
-        std::condition_variable deadline_condition;
-        bool solve_finished = false;
-        std::thread deadline_thread;
-        if (g4_deadline_seconds > 0.0) {
-            deadline_thread = std::thread([&]() {
-                std::unique_lock lock(deadline_mutex);
-                if (!deadline_condition.wait_until(
-                        lock,
-                        g4_deadline,
-                        [&]() { return solve_finished; }
-                    )) {
-                    static_cast<void>(
-                        spacepdhcg_cuda_scvx_driver_cancel(driver)
+        std::vector<G4AttemptSnapshot> session_attempts;
+        const std::size_t attempt_count = g4_session_mode ? 9U : 1U;
+        bool prior_attempt_retained_state = false;
+        session_attempts.reserve(attempt_count);
+        spacepdhcg_cuda_status outer_status = SPACEPDHCG_CUDA_SUCCESS;
+        for (std::size_t attempt_ordinal = 0U;
+             attempt_ordinal < attempt_count;
+             ++attempt_ordinal) {
+            G4AttemptSnapshot attempt{};
+            attempt.repeat_kind = !g4_session_mode
+                ? g4_repeat_kind
+                : attempt_ordinal < 2U ? "warmup" : "measured";
+            attempt.repeat = !g4_session_mode
+                ? g4_repeat_index
+                : static_cast<std::uint32_t>(
+                    attempt_ordinal < 2U
+                        ? attempt_ordinal
+                        : attempt_ordinal - 2U
+                );
+            attempt.iterations.resize(production_outer_iterations);
+            if (g4_session_mode
+                && std::chrono::steady_clock::now() >= g4_group_deadline) {
+                session_attempts.push_back(std::move(attempt));
+                continue;
+            }
+            states.upload(reference_states, problem.stream);
+            controls.upload(reference_controls, problem.stream);
+            test::cuda_require(
+                cudaStreamSynchronize(problem.stream),
+                "G4 attempt reference reset"
+            );
+            const auto boundary_mode =
+                attempt_ordinal == 0U || !prior_attempt_retained_state
+                ? SPACEPDHCG_CUDA_WARM_START_NONE
+                : g4_warm_start;
+            outer_status = spacepdhcg_cuda_scvx_driver_reset_attempt(
+                driver,
+                boundary_mode,
+                problem.exchange.consumer_stream
+            );
+            if (outer_status != SPACEPDHCG_CUDA_SUCCESS) {
+                attempt.api_status = outer_status;
+                attempt.launched = true;
+                static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
+                    workspace,
+                    &attempt.diagnostics
+                ));
+                static_cast<void>(spacepdhcg_cuda_workspace_pointer_snapshot(
+                    workspace,
+                    &attempt.pointers
+                ));
+                if (g4_session_mode) {
+                    emit_g4_attempt(
+                        attempt,
+                        attempt_ordinal,
+                        StateDimension,
+                        ControlDimension,
+                        problem.fingerprint,
+                        workspace_create_seconds
                     );
                 }
-            });
-        }
-        const auto outer_status = spacepdhcg_cuda_scvx_driver_solve(
-            driver,
-            problem.exchange.consumer_stream,
-            records.data(),
-            records.size(),
-            &outer
-        );
-        if (deadline_thread.joinable()) {
-            {
-                std::lock_guard lock(deadline_mutex);
-                solve_finished = true;
+                session_attempts.push_back(std::move(attempt));
+                prior_attempt_retained_state = false;
+                continue;
             }
-            deadline_condition.notify_one();
-            deadline_thread.join();
+            attempt.actual_warm_mode =
+                boundary_mode == SPACEPDHCG_CUDA_WARM_START_NONE
+                ? "cold"
+                : boundary_mode == SPACEPDHCG_CUDA_WARM_START_PRIMAL
+                ? "primal"
+                : "primal_dual";
+            attempt.dual_disposition =
+                boundary_mode == SPACEPDHCG_CUDA_WARM_START_PRIMAL
+                ? "not-produced"
+                : boundary_mode >= SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL
+                    && (g4_policy == "pure-gpu-ipm"
+                        || g4_policy == "hybrid-pdhcg-ipm")
+                ? "discarded_unsupported"
+                : boundary_mode >= SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL
+                ? "transferred"
+                : "not-produced";
+            const auto attempt_started = std::chrono::steady_clock::now();
+            if (g4_deadline_seconds > 0.0) {
+                g4_deadline = attempt_started
+                    + std::chrono::duration_cast<
+                        std::chrono::steady_clock::duration
+                    >(std::chrono::duration<double>(g4_deadline_seconds));
+                if (g4_session_mode) {
+                    g4_deadline = std::min(g4_deadline, g4_group_deadline);
+                }
+            }
+            std::mutex deadline_mutex;
+            std::condition_variable deadline_condition;
+            bool solve_finished = false;
+            std::thread deadline_thread;
+            if (g4_deadline_seconds > 0.0) {
+                deadline_thread = std::thread([&]() {
+                    std::unique_lock lock(deadline_mutex);
+                    if (!deadline_condition.wait_until(
+                            lock,
+                            g4_deadline,
+                            [&]() { return solve_finished; }
+                        )) {
+                        static_cast<void>(
+                            spacepdhcg_cuda_scvx_driver_cancel(driver)
+                        );
+                    }
+                });
+            }
+            G4NvmlSampler energy;
+            energy.start();
+            attempt.launched = true;
+            attempt.api_status = spacepdhcg_cuda_scvx_driver_solve(
+                driver,
+                problem.exchange.consumer_stream,
+                attempt.iterations.data(),
+                attempt.iterations.size(),
+                &attempt.result
+            );
+            attempt.energy = energy.finish();
+            if (deadline_thread.joinable()) {
+                {
+                    std::lock_guard lock(deadline_mutex);
+                    solve_finished = true;
+                }
+                deadline_condition.notify_one();
+                deadline_thread.join();
+            }
+            attempt.elapsed_seconds = std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - attempt_started
+            ).count();
+            static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
+                workspace,
+                &attempt.diagnostics
+            ));
+            static_cast<void>(spacepdhcg_cuda_workspace_pointer_snapshot(
+                workspace,
+                &attempt.pointers
+            ));
+            outer = attempt.result;
+            records = attempt.iterations;
+            outer_status = attempt.api_status;
+            prior_attempt_retained_state =
+                attempt.api_status == SPACEPDHCG_CUDA_SUCCESS;
+            if (g4_session_mode) {
+                emit_g4_attempt(
+                    attempt,
+                    attempt_ordinal,
+                    StateDimension,
+                    ControlDimension,
+                    problem.fingerprint,
+                    workspace_create_seconds
+                );
+            }
+            session_attempts.push_back(std::move(attempt));
+        }
+        if (g4_session_mode) {
+            for (std::size_t ordinal = 0U;
+                 ordinal < session_attempts.size();
+                 ++ordinal) {
+                if (!session_attempts[ordinal].launched) {
+                    emit_g4_attempt(
+                        session_attempts[ordinal],
+                        ordinal,
+                        StateDimension,
+                        ControlDimension,
+                        problem.fingerprint,
+                        workspace_create_seconds
+                    );
+                }
+            }
+            std::printf(
+                "{\"case\":\"g4_session_complete\",\"group_id\":\"%s\","
+                "\"attempts\":%zu,\"pid\":%lld,"
+                "\"cuda_context_generation\":1,\"workspace_generation\":1}\n",
+                g4_group_id.c_str(),
+                session_attempts.size(),
+                static_cast<long long>(getpid())
+            );
+            std::fflush(stdout);
+            test::status_require(
+                spacepdhcg_cuda_scvx_driver_destroy(&driver),
+                "G4 session driver destroy"
+            );
+            test::destroy_workspace(workspace);
+            return session_attempts.empty()
+                ? IntegrationResult{}
+                : IntegrationResult{
+                    session_attempts.back().diagnostics,
+                    session_attempts.back().result,
+                    session_attempts.back().result
+                        .topology_allocation_count_after_create,
+                    session_attempts.back().result
+                        .topology_index_copy_count_after_create,
+                    0U,
+                    0.0,
+                    coefficient_parity_max,
+                    0.0,
+                };
         }
         if (qoco_unavailable_mode) {
             test::require(
@@ -1429,8 +2314,11 @@ IntegrationResult run_resident_sequence(
             test::destroy_workspace(workspace);
             return {};
         }
-        test::status_require(outer_status, "production outer driver solve");
-        if (g4_policy == "pure-gpu-ipm") {
+        if (!g4_session_mode) {
+            test::status_require(outer_status, "production outer driver solve");
+        }
+        if (g4_policy == "pure-gpu-ipm"
+            && outer_status == SPACEPDHCG_CUDA_SUCCESS) {
             test::require(
                 outer.qoco_workspace_creations == 1U,
                 "pure QOCO must reuse one native workspace"
@@ -2251,7 +3139,8 @@ IntegrationResult run_resident_sequence(
             spacepdhcg_cuda_scvx_driver_destroy(&driver),
             "production outer driver destroy"
         );
-        if (g4_policy == "pure-gpu-ipm"
+        if (!g4_session_mode
+            && g4_policy == "pure-gpu-ipm"
             && g4_family == "P1-C-pd3"
             && production_outer_iterations >= 2U) {
             std::fprintf(
@@ -2918,6 +3807,282 @@ IntegrationResult run_pd6() {
     );
 }
 
+std::string json_member_string(
+    const std::string_view object,
+    const std::string_view name
+) {
+    const std::string key = "\"" + std::string(name) + "\":\"";
+    const auto begin = object.find(key);
+    if (begin == std::string_view::npos) {
+        throw std::runtime_error("missing JSON string member " + std::string(name));
+    }
+    const auto value_begin = begin + key.size();
+    const auto end = object.find('"', value_begin);
+    if (end == std::string_view::npos) {
+        throw std::runtime_error("unterminated JSON string member " + std::string(name));
+    }
+    return std::string(object.substr(value_begin, end - value_begin));
+}
+
+double json_member_number(
+    const std::string_view object,
+    const std::string_view name
+) {
+    const std::string key = "\"" + std::string(name) + "\":";
+    const auto begin = object.find(key);
+    if (begin == std::string_view::npos) {
+        throw std::runtime_error("missing JSON number member " + std::string(name));
+    }
+    const auto value_begin = begin + key.size();
+    std::size_t consumed = 0U;
+    const double value = std::stod(
+        std::string(object.substr(value_begin)),
+        &consumed
+    );
+    if (consumed == 0U || !std::isfinite(value)) {
+        throw std::runtime_error("invalid JSON number member " + std::string(name));
+    }
+    return value;
+}
+
+std::string_view json_member_object(
+    const std::string_view document,
+    const std::string_view name
+) {
+    const std::string key = "\"" + std::string(name) + "\":{";
+    const auto begin = document.find(key);
+    if (begin == std::string_view::npos) {
+        throw std::runtime_error("missing JSON object member " + std::string(name));
+    }
+    const auto object_begin = begin + key.size() - 1U;
+    std::size_t depth = 0U;
+    bool in_string = false;
+    bool escaped = false;
+    for (std::size_t index = object_begin; index < document.size(); ++index) {
+        const char character = document[index];
+        if (in_string) {
+            if (escaped) {
+                escaped = false;
+            } else if (character == '\\') {
+                escaped = true;
+            } else if (character == '"') {
+                in_string = false;
+            }
+            continue;
+        }
+        if (character == '"') {
+            in_string = true;
+        } else if (character == '{') {
+            ++depth;
+        } else if (character == '}' && --depth == 0U) {
+            return document.substr(object_begin, index - object_begin + 1U);
+        }
+    }
+    throw std::runtime_error("unterminated JSON object member " + std::string(name));
+}
+
+void validate_session_attempt_order(const std::string_view document) {
+    const std::array<std::pair<std::string_view, std::uint32_t>, 9U> expected{{
+        {"warmup", 0U},
+        {"warmup", 1U},
+        {"measured", 0U},
+        {"measured", 1U},
+        {"measured", 2U},
+        {"measured", 3U},
+        {"measured", 4U},
+        {"measured", 5U},
+        {"measured", 6U},
+    }};
+    std::size_t cursor = document.find("\"attempts\":[");
+    if (cursor == std::string_view::npos) {
+        throw std::runtime_error("session manifest omits attempts");
+    }
+    for (const auto& [kind, repeat] : expected) {
+        const std::string kind_token =
+            "\"repeat_kind\":\"" + std::string(kind) + "\"";
+        const auto kind_position = document.find(kind_token, cursor);
+        if (kind_position == std::string_view::npos) {
+            throw std::runtime_error("session attempt order/count mismatch");
+        }
+        const std::string repeat_token =
+            "\"repeat\":" + std::to_string(repeat);
+        const auto repeat_position = document.find(repeat_token, cursor);
+        if (repeat_position == std::string_view::npos
+            || repeat_position > kind_position) {
+            throw std::runtime_error("session attempt repeat mismatch");
+        }
+        const std::string eligible_token = std::string(
+            "\"statistics_eligible\":"
+        ) + (kind == "measured" ? "true" : "false");
+        const auto eligible_position = document.find(eligible_token, cursor);
+        if (eligible_position == std::string_view::npos
+            || eligible_position < kind_position) {
+            throw std::runtime_error("session statistics eligibility mismatch");
+        }
+        cursor = eligible_position + eligible_token.size();
+    }
+    if (document.find("\"repeat_kind\":", cursor) != std::string_view::npos
+        && document.find("\"repeat_kind\":", cursor)
+            < document.find("\"coordinate\":", cursor)) {
+        throw std::runtime_error("session manifest has more than nine attempts");
+    }
+}
+
+void load_g4_session(
+    const std::string& manifest_path,
+    const std::string_view policy_sha256,
+    const std::string_view matrix_sha256,
+    const std::string_view capability_sha256
+) {
+    if (policy_sha256 != frozen_g4::sha256) {
+        throw std::runtime_error("G4 session policy hash mismatch");
+    }
+    if (!lowercase_sha256(matrix_sha256)
+        || !lowercase_sha256(capability_sha256)) {
+        throw std::runtime_error("G4 session source hash is invalid");
+    }
+    std::ifstream stream(manifest_path, std::ios::binary);
+    if (!stream) {
+        throw std::runtime_error("G4 session manifest cannot be opened");
+    }
+    const std::string document{
+        std::istreambuf_iterator<char>(stream),
+        std::istreambuf_iterator<char>(),
+    };
+    if (document.find("\"schema_version\":\"1.0.0\"")
+            == std::string::npos
+        || document.find("\"record_kind\":\"execution_group\"")
+            == std::string::npos
+        || document.find("\"processes\":1") == std::string::npos
+        || document.find("\"persistent_session\":true")
+            == std::string::npos
+        || document.find("\"persistent_workspace\":true")
+            == std::string::npos
+        || document.find("\"policy_reset_between_attempts\":true")
+            == std::string::npos) {
+        throw std::runtime_error("G4 session process contract mismatch");
+    }
+    validate_session_attempt_order(document);
+    const auto coordinate = json_member_object(document, "coordinate");
+    g4_group_id = json_member_string(document, "group_id");
+    g4_physical_instance_id =
+        json_member_string(document, "physical_instance_id");
+    if (!g4_group_id.starts_with("g4-group-v1-")
+        || !lowercase_sha256(std::string_view(g4_group_id).substr(12U))
+        || !g4_physical_instance_id.starts_with("g4-instance-v2-")
+        || !lowercase_sha256(
+            std::string_view(g4_physical_instance_id).substr(15U)
+        )) {
+        throw std::runtime_error("G4 session content address is invalid");
+    }
+    if (const char* expected = std::getenv("SPACEPDHCG_G4_GROUP_ID");
+        expected != nullptr && g4_group_id != expected) {
+        throw std::runtime_error("G4 session group ID differs from lease");
+    }
+    g4_family = json_member_string(coordinate, "family");
+    g4_intervals = static_cast<std::size_t>(
+        json_member_number(coordinate, "intervals")
+    );
+    g4_policy = json_member_string(coordinate, "policy");
+    g4_quality_tier = json_member_string(coordinate, "quality_tier");
+    g4_quality_tolerance =
+        json_member_number(coordinate, "quality_tolerance");
+    g4_conditioning_log10_span =
+        json_member_number(coordinate, "conditioning");
+    g4_scaling_mode = json_member_string(coordinate, "scaling_mode");
+    g4_warm_mode = json_member_string(coordinate, "warm_mode");
+    g4_evaluation_seed = static_cast<std::uint64_t>(
+        json_member_number(coordinate, "seed")
+    );
+    g4_solver_order = static_cast<std::uint32_t>(
+        json_member_number(coordinate, "solver_order")
+    );
+    if (g4_warm_mode == "cold") {
+        g4_warm_start = SPACEPDHCG_CUDA_WARM_START_NONE;
+    } else if (g4_warm_mode == "primal") {
+        g4_warm_start = SPACEPDHCG_CUDA_WARM_START_PRIMAL;
+    } else if (g4_warm_mode == "primal_dual") {
+        g4_warm_start = SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL;
+    } else {
+        throw std::runtime_error("unknown G4 session warm mode");
+    }
+    if (g4_family == "P1-C-pd3") {
+        g4_family_class = json_member_number(coordinate, "dispersion_class");
+        g4_transfer_class = "not_applicable";
+    } else if (g4_family == "P1-D-pd6") {
+        g4_dispersion = json_member_number(coordinate, "attitude_class");
+        g4_secondary_dispersion =
+            json_member_number(coordinate, "rate_class");
+        g4_transfer_class = "not_applicable";
+    } else if (g4_family == "P1-E-low-thrust") {
+        g4_family_class = json_member_number(coordinate, "trust_class");
+        g4_transfer_class =
+            json_member_string(coordinate, "transfer_class");
+    } else {
+        throw std::runtime_error("unknown G4 session family");
+    }
+    g4_matrix_sha256 = std::string(matrix_sha256);
+    g4_capability_sha256 = std::string(capability_sha256);
+    production_outer_iterations = 100U;
+    if (const char* probe = std::getenv("SPACEPDHCG_G4_CAPABILITY_PROBE");
+        probe != nullptr && std::string_view(probe) == "1") {
+        const char* outer = std::getenv("SPACEPDHCG_G4_OUTER_ITERATIONS");
+        production_outer_iterations = outer == nullptr
+            ? 1U
+            : static_cast<std::uint32_t>(std::stoul(outer));
+        if (production_outer_iterations == 0U) {
+            throw std::runtime_error("G4 capability probe needs an outer iteration");
+        }
+    }
+    g4_deadline_seconds = 600.0;
+    if (const char* value =
+            std::getenv("SPACEPDHCG_G4_ATTEMPT_DEADLINE_SECONDS")) {
+        g4_deadline_seconds = std::stod(value);
+    }
+    g4_group_deadline_seconds = 9.0 * g4_deadline_seconds + 60.0;
+    if (const char* value =
+            std::getenv("SPACEPDHCG_G4_GROUP_DEADLINE_SECONDS")) {
+        g4_group_deadline_seconds = std::stod(value);
+    }
+    if (!(g4_deadline_seconds > 0.0)
+        || !(g4_group_deadline_seconds > 0.0)) {
+        throw std::runtime_error("G4 session deadline must be positive");
+    }
+    g4_group_deadline = std::chrono::steady_clock::now()
+        + std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::duration<double>(g4_group_deadline_seconds)
+        );
+}
+
+int run_loaded_g4_session() {
+    g4_session_mode = true;
+    g4_sample_mode = true;
+    production_driver_mode = true;
+    const auto startup_begin = std::chrono::steady_clock::now();
+    test::cuda_require(cudaFree(nullptr), "G4 session CUDA startup");
+    cuda_startup_seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - startup_begin
+    ).count();
+    std::printf(
+        "{\"case\":\"g4_session_ready\",\"protocol_version\":1,"
+        "\"execution_contract\":\"g4-persistent-group-v1\","
+        "\"group_id\":\"%s\",\"pid\":%lld,"
+        "\"cuda_startup_seconds\":%.17g}\n",
+        g4_group_id.c_str(),
+        static_cast<long long>(getpid()),
+        cuda_startup_seconds
+    );
+    std::fflush(stdout);
+    if (g4_family == "P1-C-pd3") {
+        static_cast<void>(run_pd3());
+    } else if (g4_family == "P1-D-pd6") {
+        static_cast<void>(run_pd6());
+    } else {
+        static_cast<void>(run_low_thrust());
+    }
+    return 0;
+}
+
 }  // namespace
 
 int run_invocation(const int argc, char** argv) {
@@ -2950,6 +4115,12 @@ int run_invocation(const int argc, char** argv) {
             "\"mechanism\":\"warmup/measured sample identity\"},"
             "\"solver_order\":{\"status\":\"execution_only\","
             "\"mechanism\":\"frozen external launch rotation\"}},"
+            "\"execution_contract\":{"
+            "\"version\":\"g4-persistent-group-v1\","
+            "\"one_process_per_group\":true,"
+            "\"persistent_session\":true,\"persistent_workspace\":true,"
+            "\"separate_attempt_records\":true,"
+            "\"policy_reset_between_attempts\":true},"
             "\"independent_replay\":true,"
             "\"timing_boundary\":\"coefficient-generation-through-independent-"
             "replay-and-acceptance;cuda-startup-excluded\"}\n"
@@ -3551,8 +4722,44 @@ int run_invocation(const int argc, char** argv) {
 
 int main(const int argc, char** argv) {
     const auto mode = argc > 1 ? std::string_view(argv[1]) : std::string_view{};
+    if (mode == "--g4-session") {
+        if (argc != 6) {
+            std::fprintf(
+                stderr,
+                "G4 session requires manifest, policy, matrix, and capability hashes\n"
+            );
+            return 64;
+        }
+        try {
+            load_g4_session(argv[2], argv[3], argv[4], argv[5]);
+            return run_loaded_g4_session();
+        } catch (const std::exception& error) {
+            std::printf(
+                "{\"case\":\"g4_session_error\",\"reason\":\"%s\"}\n",
+                json_escape(error.what()).c_str()
+            );
+            std::fflush(stdout);
+            const std::string_view reason = error.what();
+            return reason.find("hash") != std::string_view::npos ? 65 : 64;
+        } catch (...) {
+            std::printf(
+                "{\"case\":\"g4_session_error\","
+                "\"reason\":\"unknown native session failure\"}\n"
+            );
+            std::fflush(stdout);
+            return 70;
+        }
+    }
     if (mode != "--g4-server") {
-        return run_invocation(argc, argv);
+        try {
+            return run_invocation(argc, argv);
+        } catch (const std::exception& error) {
+            std::fprintf(stderr, "native invocation error: %s\n", error.what());
+            return 64;
+        } catch (...) {
+            std::fprintf(stderr, "unknown native invocation error\n");
+            return 70;
+        }
     }
     test::require(argc == 3, "G4 server requires a row deadline");
     g4_deadline_seconds = std::stod(argv[2]);

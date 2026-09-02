@@ -24,6 +24,7 @@ Use this file as persistent, repo-local execution memory.
 - `[self]` Treat missing production drivers and harnesses as implementation scope, not blockers.
 - `[self]` Preserve machine-readable failures and censored benchmark points; report matched end-to-end nonlinear quality.
 - `[self]` Never use backslash-sensitive Perl through PowerShell/WSL for line endings; it changed `return`/`pattern` tokens. Use PowerShell `ReadAllText().Replace("`r`n", "`n")`, then rebuild.
+- `[self]` Run every GPU executable, QOCO test, and Compute Sanitizer command serially. A 2026-09-02 session briefly overlapped a native QOCO handback test; terminate, exclude, and rerun both commands independently.
 
 ## Session Entries
 
@@ -1163,3 +1164,33 @@ Use this file as persistent, repo-local execution memory.
 - [self] The current native executor still emits the row-oriented capability and has no
   `execution_contract` declaration. Capability generation must reject it until `--g4-session`
   implements the authoritative nine-attempt process/workspace contract.
+
+### 2026-09-02 19:20 AEST - Persistent G4 session executor
+
+#### Task Summary
+
+- Implemented the authoritative native two-warmup/seven-measurement G4 session, persistent
+  PDHCG/SCvx/QOCO lifecycle, direct per-attempt NVML, strict records, and claim-core checkpoint.
+
+#### Mistakes And Fixes
+
+- `[self]` Briefly launched a native QOCO handback test while the session/QOCO pytest command was
+  active. Terminated the second process, excluded both overlapping observations, and reran the
+  session, mapping, and handback checks serially.
+- `[tool]` WSL system Python was 3.10 and CMake was absent. Used the pinned Python 3.11 environment
+  with `-S`/explicit `PYTHONPATH` and `uvx cmake`; no system environment was changed.
+
+#### What Worked
+
+- The real short probe emitted exact 2+7 order from one PID/context/workspace, strict measured
+  records, matching legacy-row instance/problem/coefficient hashes, and zero post-create topology
+  allocations/index copies.
+- CUDA Release/Debug/sanitizer builds, 309 Python tests, three native 45-test matrices, isolated
+  QOCO mapping/handback, and all four session Compute Sanitizer tools passed.
+
+#### Guardrails / Follow-Ups
+
+- Build the final executable after committing so its compiled source commit and capability
+  executable hash match; generate the capability only from that clean final tree.
+- The campaign is still unrun. Initialize a new `--claim-core` or full grouped checkpoint; never
+  reuse the historical row checkpoint.

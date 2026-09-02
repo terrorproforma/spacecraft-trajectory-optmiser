@@ -3,7 +3,7 @@
   "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/g4_raw_attempt.schema.json",
   "title": "G4 raw attempt evidence",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
   "required": [
     "schema_version",
     "record_kind",
@@ -82,7 +82,95 @@
       "properties": {
         "elapsed_seconds": {"type": "number", "minimum": 0}
       }
-    }
+    },
+    "case": {"const": "g4_attempt"},
+    "energy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "scope",
+        "sampling_interval_milliseconds",
+        "sample_count",
+        "maximum_gap_seconds",
+        "gap_valid",
+        "joules",
+        "errors"
+      ],
+      "properties": {
+        "source": {"const": "nvml-c-api"},
+        "scope": {"const": "GPU-only"},
+        "sampling_interval_milliseconds": {"const": 50},
+        "sample_count": {"type": "integer", "minimum": 0},
+        "maximum_gap_seconds": {"type": ["number", "null"], "minimum": 0},
+        "gap_valid": {"type": "boolean"},
+        "joules": {"type": ["number", "null"], "minimum": 0},
+        "errors": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "source_hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_sha256",
+        "matrix_sha256",
+        "capability_sha256",
+        "coefficient_hash",
+        "problem_hash",
+        "instance_hash"
+      ],
+      "properties": {
+        "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "matrix_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "capability_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "coefficient_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "problem_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "instance_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"}
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pid",
+        "cuda_context_generation",
+        "workspace_generation",
+        "attempt_ordinal",
+        "workspace_address",
+        "topology_fingerprint",
+        "topology_allocations_after_create",
+        "topology_index_copies_after_create",
+        "allocation_count",
+        "total_copy_count",
+        "reset_policy",
+        "warm_start_requested",
+        "warm_start_actual",
+        "dual_disposition",
+        "qoco_workspace_creations",
+        "qoco_numeric_updates"
+      ],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "cuda_context_generation": {"const": 1},
+        "workspace_generation": {"const": 1},
+        "attempt_ordinal": {"type": "integer", "minimum": 0, "maximum": 8},
+        "workspace_address": {"type": "string", "pattern": "^0x[0-9a-f]+$"},
+        "topology_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "topology_allocations_after_create": {"const": 0},
+        "topology_index_copies_after_create": {"const": 0},
+        "allocation_count": {"type": "integer", "minimum": 0},
+        "total_copy_count": {"type": "integer", "minimum": 0},
+        "reset_policy": {"type": "string", "minLength": 1},
+        "warm_start_requested": {"enum": ["cold", "primal", "primal_dual"]},
+        "warm_start_actual": {"enum": ["cold", "primal", "primal_dual"]},
+        "dual_disposition": {
+          "enum": ["transferred", "discarded_unsupported", "not-produced"]
+        },
+        "qoco_workspace_creations": {"type": "integer", "minimum": 0},
+        "qoco_numeric_updates": {"type": "integer", "minimum": 0}
+      }
+    },
+    "paper1_result": {"type": "object"}
   },
   "allOf": [
     {

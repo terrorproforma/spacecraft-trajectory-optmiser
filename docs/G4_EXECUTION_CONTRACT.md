@@ -120,3 +120,31 @@ Before campaign launch:
    campaign checkpoint because its lease and warm-up semantics are different;
 5. retain the old campaign evidence as historical attempts rather than
    rewriting or deleting it.
+
+## Native session protocol and lifecycle
+
+The production CUDA executable accepts:
+
+`--g4-session <execution-group.json> <policy-sha256> <matrix-sha256> <capability-sha256>`
+
+It validates the process contract, hash syntax, leased group ID, coordinate, and exact
+`warmup-0,warmup-1,measured-0..6` order before CUDA work. It emits a flushed
+`g4_session_ready` record, one flushed `g4_attempt` record after every terminal attempt, and one
+`g4_session_complete` record. Usage/manifest errors exit 64, hash mismatches exit 65, and unknown
+native failures exit 70. Launched solver outcomes remain data dispositions rather than being
+collapsed into process exit codes.
+
+One family owner creates topology buffers, one PDHCG workspace, one SCvx driver, and at most one
+compatible QOCO workspace. Every attempt restores the immutable physical reference, performs
+values-only updates, solves, independently replays, and applies the trust/acceptance transaction.
+`cold` clears all iterates; `primal` retains primal but clears dual and momentum;
+`primal_dual` retains primal/dual while resetting momentum. Pinned QOCO retains only accepted
+primal state and reports a requested dual as `discarded_unsupported`. A failed attempt forces the
+next boundary to cold rather than leaking partial state.
+
+Raw records carry PID/context/workspace generations, workspace address, topology and coefficient
+fingerprints, allocation/copy counters, requested/actual warm mode, dual/recovery/QOCO
+dispositions, full timing identity, and direct-NVML attempt energy. Workspace setup occurs once;
+CUDA startup is separately reported and excluded. Group deadline expiry emits explicit unlaunched
+records, while an abnormal process is archived and restarted no more than once from a fresh group
+boundary.

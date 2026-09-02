@@ -1027,6 +1027,33 @@ void spacepdhcg_native_qoco_accept(spacepdhcg_native_qoco* workspace) {
     }
 }
 
+void spacepdhcg_native_qoco_reset_warm_state(
+    spacepdhcg_native_qoco* workspace,
+    const bool retain_primal
+) {
+    if (workspace == nullptr) {
+        return;
+    }
+    if (!retain_primal) {
+        std::fill(
+            workspace->accepted_primal.begin(),
+            workspace->accepted_primal.end(),
+            0.0
+        );
+        workspace->has_accepted = false;
+    }
+    workspace->report.warm_primal_accepted = 0;
+    workspace->report.dual_discarded = 0;
+    if (workspace->solver != nullptr && workspace->set_x0 != nullptr) {
+        workspace->set_x0(
+            workspace->solver,
+            retain_primal && workspace->has_accepted
+                ? workspace->accepted_primal.data()
+                : nullptr
+        );
+    }
+}
+
 void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace) {
     delete workspace;
 }

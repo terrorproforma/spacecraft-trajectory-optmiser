@@ -222,13 +222,25 @@ class CampaignStore:
         source_commit: str,
         *,
         grouped: bool = False,
+        groups: Sequence[ExecutionGroup] | None = None,
+        schedule_sha256: str | None = None,
     ) -> None:
         self.root = root
         self.policy = policy
         self.policy_sha256 = policy_sha256
         self.source_commit = source_commit
+        if groups is not None and not grouped:
+            raise G4ContractError("explicit G4 groups require grouped scheduling")
         self.grouped = grouped
-        self.total = execution_group_count(policy) if grouped else coverage_count(policy)
+        self.groups = tuple(groups) if groups is not None else None
+        self.schedule_sha256 = schedule_sha256 or policy_sha256
+        self.total = (
+            len(self.groups)
+            if self.groups is not None
+            else execution_group_count(policy)
+            if grouped
+            else coverage_count(policy)
+        )
         root.mkdir(parents=True, exist_ok=True)
         self.database = sqlite3.connect(root / "checkpoint.sqlite3", timeout=30.0)
         self.database.row_factory = sqlite3.Row
@@ -270,8 +282,15 @@ class CampaignStore:
         )
         expected = {
             "schema_version": str(SCHEMA_VERSION),
-            "schedule_kind": "execution_groups" if self.grouped else "logical_rows",
+            "schedule_kind": (
+                "claim_core_execution_groups"
+                if self.groups is not None
+                else "execution_groups"
+                if self.grouped
+                else "logical_rows"
+            ),
             "policy_sha256": self.policy_sha256,
+            "schedule_sha256": self.schedule_sha256,
             "source_commit": self.source_commit,
             "total_rows": str(self.total),
             "next_ordinal": "0",
@@ -330,7 +349,9 @@ class CampaignStore:
                     if schedule_index >= self.total:
                         return None
                     ordinal = (
-                        scheduled_group_ordinal_at(self.policy, schedule_index)
+                        schedule_index
+                        if self.groups is not None
+                        else scheduled_group_ordinal_at(self.policy, schedule_index)
                         if self.grouped
                         else scheduled_ordinal_at(self.policy, schedule_index)
                     )
@@ -417,7 +438,11 @@ class CampaignStore:
         if not self.grouped:
             coordinate = coordinate_at(self.policy, ordinal)
             return coordinate, coordinate_id(coordinate)
-        group = execution_group_at(self.policy, ordinal)
+        group = (
+            self.groups[ordinal]
+            if self.groups is not None
+            else execution_group_at(self.policy, ordinal)
+        )
         coordinate = {
             "schema_version": "1.0.0",
             "record_kind": "execution_group",

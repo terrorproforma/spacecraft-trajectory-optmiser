@@ -3303,6 +3303,60 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_cancel(
         : status;
 }
 
+extern "C" spacepdhcg_cuda_status
+spacepdhcg_cuda_scvx_driver_reset_attempt(
+    spacepdhcg_cuda_scvx_driver* driver,
+    const spacepdhcg_cuda_warm_start_mode mode,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (driver == nullptr
+        || mode < SPACEPDHCG_CUDA_WARM_START_NONE
+        || mode > SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED
+        || stream.device.type != SPACEPDHCG_DEVICE_CUDA
+        || stream.device.id != driver->problem.reference_states.device.id) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    driver->cancelled.store(false, std::memory_order_release);
+    if (mode == SPACEPDHCG_CUDA_WARM_START_NONE) {
+        spacepdhcg_native_qoco_reset_warm_state(driver->qoco, false);
+        auto status = spacepdhcg_cuda_workspace_reset_async(
+            driver->problem.workspace,
+            SPACEPDHCG_CUDA_RESET_ITERATES,
+            stream
+        );
+        if (status == SPACEPDHCG_CUDA_SUCCESS) {
+            status = spacepdhcg_cuda_workspace_wait(driver->problem.workspace);
+        }
+        return status;
+    }
+
+    const auto native = reinterpret_cast<cudaStream_t>(stream.native_handle);
+    if (mode == SPACEPDHCG_CUDA_WARM_START_PRIMAL) {
+        const size_t dual_elements =
+            driver->problem.numeric.scalar_lower.elements
+            + driver->problem.numeric.affine_offset.elements;
+        if (cudaMemsetAsync(
+                driver->dual,
+                0,
+                dual_elements * sizeof(double),
+                native
+            ) != cudaSuccess) {
+            return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        }
+    }
+    spacepdhcg_native_qoco_reset_warm_state(driver->qoco, true);
+    auto status = spacepdhcg_cuda_workspace_warm_start_async(
+        driver->problem.workspace,
+        SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,
+        nullptr,
+        stream
+    );
+    if (status == SPACEPDHCG_CUDA_SUCCESS) {
+        status = spacepdhcg_cuda_workspace_wait(driver->problem.workspace);
+    }
+    return status;
+}
+
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_destroy(
     spacepdhcg_cuda_scvx_driver** driver
 ) {

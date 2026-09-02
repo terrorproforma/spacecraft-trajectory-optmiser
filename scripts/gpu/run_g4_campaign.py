@@ -20,6 +20,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from jsonschema import Draft202012Validator, ValidationError
+
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPOSITORY / "src"))
 
@@ -30,6 +32,8 @@ from spacepdhcg.experiments.g4 import (  # noqa: E402
     sha256_path,
 )
 from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
+    iter_claim_core_groups,
+    load_claim_core,
     validate_attempt_record,
 )
 from spacepdhcg.experiments.g4_scheduler import (  # noqa: E402
@@ -116,6 +120,34 @@ def load_capabilities(
             "policy_reset_between_attempts": True,
         }:
             raise G4ContractError("executor lacks the persistent nine-attempt group contract")
+        expected_contracts = {
+            "applicability": sha256_path(REPOSITORY / "benchmarks/g4_applicability.json"),
+            "claim_core": sha256_path(REPOSITORY / "benchmarks/g4_h5_h6_claim_core.json"),
+            "execution_group_schema": sha256_path(
+                REPOSITORY / "experiments/schema/g4_execution_group.schema.json"
+            ),
+            "raw_attempt_schema": sha256_path(
+                REPOSITORY / "experiments/schema/g4_raw_attempt.schema.json"
+            ),
+            "paper1_result_schema": sha256_path(
+                REPOSITORY / "experiments/schema/paper1_result.schema.json"
+            ),
+        }
+        if value.get("contract_hashes") != expected_contracts:
+            raise G4ContractError("executor capability authoritative contract hash mismatch")
+        probe = value.get("session_probe", {})
+        if probe != {
+            "kind": "real_cuda_session",
+            "attempt_count": 9,
+            "warmup_count": 2,
+            "measured_count": 7,
+            "same_process": True,
+            "same_context": True,
+            "same_workspace": True,
+            "zero_post_create_topology_allocations": True,
+            "zero_post_create_topology_index_copies": True,
+        }:
+            raise G4ContractError("executor capability lacks a passing real session probe")
     declared_hash = value.get("capability_sha256")
     payload = {key: item for key, item in value.items() if key != "capability_sha256"}
     if declared_hash != hashlib.sha256(canonical_bytes(payload)).hexdigest():
@@ -615,6 +647,10 @@ def validate_group_success(
     expected_keys = {(item["repeat_kind"], item["repeat"]) for item in planned}
     if set(by_repeat) != expected_keys:
         return False, "raw attempt repeat set differs from the group manifest", emitted
+    raw_schema = json.loads(
+        (REPOSITORY / "experiments/schema/g4_raw_attempt.schema.json").read_text(encoding="utf-8")
+    )
+    raw_validator = Draft202012Validator(raw_schema)
     for item in planned:
         key = (item["repeat_kind"], item["repeat"])
         record = by_repeat[key]
@@ -632,6 +668,7 @@ def validate_group_success(
             if record.get(field) != item.get(field):
                 return False, f"raw attempt field {field} differs from manifest", emitted
         try:
+            raw_validator.validate(record)
             validate_attempt_record(record)
             if item["repeat_kind"] == "measured":
                 result = record.get("paper1_result")
@@ -645,7 +682,7 @@ def validate_group_success(
                     result,
                     REPOSITORY / "experiments/schema/paper1_result.schema.json",
                 )
-        except (G4ContractError, Paper1ResultError, ValueError) as error:
+        except (G4ContractError, Paper1ResultError, ValidationError, ValueError) as error:
             return False, f"strict measured-result validation failed: {error}", emitted
     return True, "all raw attempts and measured Paper 1 results validated", emitted
 
@@ -654,12 +691,13 @@ def execute_group(
     store: CampaignStore,
     claim: Claim,
     executable: Path,
+    _executor: PersistentExecutor,
+    power: NvmlPower,
     policy_sha256: str,
     matrix_sha256: str,
     capability_sha256: str,
     timeout_seconds: int,
-    nvidia_smi: str,
-    environment: dict[str, str],
+    sampler_cpu_core: int | None,
 ) -> None:
     """Execute warmups and measurements in one persistent process/session/workspace."""
 
@@ -675,35 +713,56 @@ def execute_group(
         manifest,
     )
     atomic_create(run_directory / "command.json", canonical_bytes(command) + b"\n")
-    run_environment = dict(environment)
+    run_environment = dict(os.environ)
     run_environment.update(
         {
             "SPACEPDHCG_G4_GROUP_ID": claim.coordinate_id,
             "SPACEPDHCG_G4_POLICY_RESET": "independent-with-persistent-workspace",
+            "SPACEPDHCG_G4_ATTEMPT_DEADLINE_SECONDS": str(timeout_seconds),
+            "SPACEPDHCG_G4_GROUP_DEADLINE_SECONDS": str(timeout_seconds * 9 + 60),
         }
     )
-    sampler = EnergySampler(nvidia_smi)
     started = time.monotonic()
-    sampler.start()
-    process_timed_out = False
-    try:
-        process = subprocess.run(
-            command,
-            env=run_environment,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds * 9 + 60,
+    histories: list[dict[str, Any]] = []
+    for generation in range(2):
+        sampler = EnergySampler(power, cpu_core=sampler_cpu_core)
+        sampler.start()
+        process_timed_out = False
+        try:
+            process = subprocess.run(
+                command,
+                env={**run_environment, "SPACEPDHCG_G4_RESTART_GENERATION": str(generation)},
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds * 9 + 60,
+            )
+            stdout, stderr, returncode = process.stdout, process.stderr, process.returncode
+        except subprocess.TimeoutExpired as error:
+            stdout, stderr, returncode = error.stdout or "", error.stderr or "", 124
+            if isinstance(stdout, bytes):
+                stdout = stdout.decode(errors="replace")
+            if isinstance(stderr, bytes):
+                stderr = stderr.decode(errors="replace")
+            process_timed_out = True
+        energy = sampler.finish()
+        partial = [record for record in parse_records(stdout) if record.get("case") == "g4_attempt"]
+        histories.append(
+            {
+                "generation": generation,
+                "returncode": returncode,
+                "timed_out": process_timed_out,
+                "partial_attempts": partial,
+                "stdout": stdout,
+                "stderr": stderr,
+                "energy": energy,
+            }
         )
-        stdout, stderr, returncode = process.stdout, process.stderr, process.returncode
-    except subprocess.TimeoutExpired as error:
-        stdout, stderr, returncode = error.stdout or "", error.stderr or "", 124
-        if isinstance(stdout, bytes):
-            stdout = stdout.decode(errors="replace")
-        if isinstance(stderr, bytes):
-            stderr = stderr.decode(errors="replace")
-        process_timed_out = True
+        if not process_timed_out and returncode == 0:
+            break
+        if generation == 0:
+            atomic_create(run_directory / "stdout.restart-0.jsonl", stdout.encode())
+            atomic_create(run_directory / "stderr.restart-0.log", stderr.encode())
     elapsed = time.monotonic() - started
-    energy = sampler.finish()
     atomic_create(run_directory / "stdout.jsonl", stdout.encode())
     atomic_create(run_directory / "stderr.log", stderr.encode())
     if process_timed_out:
@@ -732,6 +791,16 @@ def execute_group(
         "returncode": returncode,
         "elapsed_seconds": elapsed,
         "energy": energy,
+        "restart_count": len(histories) - 1,
+        "restart_history": [
+            {
+                "generation": item["generation"],
+                "returncode": item["returncode"],
+                "timed_out": item["timed_out"],
+                "partial_attempt_count": len(item["partial_attempts"]),
+            }
+            for item in histories
+        ],
         "raw_attempts": attempts,
         "reason": reason,
     }
@@ -857,9 +926,30 @@ def main() -> int:
     parser.add_argument("--nvml-library")
     parser.add_argument("--sampler-cpu-core", type=int)
     parser.add_argument("--nvidia-smi", default="nvidia-smi")
+    parser.add_argument(
+        "--claim-core",
+        action="store_true",
+        help="schedule only the hash-pinned 360-group H5/H6 claim core",
+    )
     arguments = parser.parse_args()
     repository = arguments.repository.resolve()
     policy, policy_sha256, matrix_sha256 = locked_policy(repository)
+    groups = None
+    schedule_sha256 = policy_sha256
+    if arguments.claim_core:
+        core_lock = (
+            (repository / "benchmarks/g4_h5_h6_claim_core.sha256")
+            .read_text(encoding="utf-8")
+            .split()
+        )
+        if len(core_lock) != 2 or core_lock[1] != "g4_h5_h6_claim_core.json":
+            raise G4ContractError("invalid H5/H6 claim-core lock")
+        loaded_core = load_claim_core(
+            repository / "benchmarks/g4_h5_h6_claim_core.json",
+            expected_sha256=core_lock[0],
+        )
+        groups = tuple(iter_claim_core_groups(loaded_core.values))
+        schedule_sha256 = loaded_core.sha256
     source_commit = subprocess.run(
         ["git", "-C", repository, "rev-parse", "HEAD"],
         check=True,
@@ -881,6 +971,8 @@ def main() -> int:
         policy_sha256,
         source_commit,
         grouped=True,
+        groups=groups,
+        schedule_sha256=schedule_sha256,
     ) as store:
         if arguments.action == "status":
             print(json.dumps(store.status(), sort_keys=True))

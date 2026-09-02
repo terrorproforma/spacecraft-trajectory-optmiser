@@ -6,6 +6,12 @@ H5: **unresolved**
 H6: **unresolved**
 G5 authorised: **no**
 
+Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
+direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core
+checkpoint are implementation-ready on `integration/single-gpu-v1`. No claim-core or full grouped
+campaign has been run. H5/H6 and the scientific G4 decision therefore remain unresolved; this
+implementation status does not promote or erase the historical FAIL evidence below.
+
 Scope reconciliation (2026-09-02): this report is retained historical evidence and its original
 FAIL/unresolved classifications are unchanged. Under `single-gpu-v1`, current-head G4 remains the
 active Paper 1 evidence gate, but physical G5 is a separate deferred campaign and does not block a

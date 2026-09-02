@@ -44,4 +44,8 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve(
 );
 
 void spacepdhcg_native_qoco_accept(spacepdhcg_native_qoco* workspace);
+void spacepdhcg_native_qoco_reset_warm_state(
+    spacepdhcg_native_qoco* workspace,
+    bool retain_primal
+);
 void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace);
