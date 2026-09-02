@@ -26,6 +26,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from . import constants as C
+from .clusters import ClusterBands, ComovingClusters
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
 from .proxies import phasing_edelbaum_proxy
@@ -82,20 +83,30 @@ class SearchSettings:
     band_e: float = 0.06  # eccentricity-vector difference
     band_phase_deg: float = 3.3
     filter_scale: float = 1.5  # element-band filter = filter_scale x reference p95 bands
-    # certified Earth legs cost 1.08x (out) / 0.97x (return) their Lambert proxy
-    # (results/gtoc12/proxy_validation.json); 1.3 was tried (reduced_v1_search3,
-    # full_catalogue_search3-5) and did not beat 1.6 once SCvx-infeasible legs were removed
-    earth_leg_inflation: float = 1.6
-    # ...but the thrust-authority test keeps the old 1.6 factor: a 5 km/s Earth leg squeezed into
-    # 500 days passes the mass budget yet SCvx cannot fly it (reduced_v1_search3)
-    earth_leg_authority_inflation: float = 1.6
-    hop_inflation: float = (
-        1.2  # reference hops: true dV / zero-rev Lambert dV median 1.16, p90 1.34
-    )
-    duty: float = 0.8  # Earth legs (their 1.6x authority inflation already carries the margin)
-    # hops: reference hops use <= 0.79 of full authority with *true* dV (p95); lowering this to
-    # 0.75 removed the SCvx-infeasible 120-180 day hops but cost more than it saved
-    hop_duty: float = 0.8
+    # Leg model: propellant = rocket equation at ``inflation x`` the zero-revolution Lambert ΔV,
+    # and a leg is admissible while Lambert ΔV / (T_max/m x TOF) <= the role's authority ratio.
+    #
+    # Earth out: the 111 archived Earth legs (all to a = 2.73-2.80 AU, 490-565 days) cost
+    # 0.83x their Lambert ΔV and fly at 0.72 of the *full* authority, but that is measured on
+    # *their* legs.  For the legs our beam picks the story is different: the nine certified
+    # Earth legs of the fleet runs all had Lambert ratio <= 0.49 and cost 0.86-2.22x (median
+    # 1.4x) the Lambert ΔV, while every ratio-0.71 leg the 0.85 limit admitted
+    # (fleet6_coop_v1, E->6014/15614/26515) failed SCvx with virtual control left.  The
+    # single-conic Lambert arc with a free 6 km/s asymptote is a loose proxy here, so the limit
+    # stays at the certified envelope and the re-timer calibrates per pair.
+    earth_out_inflation: float = 1.6
+    earth_out_authority_ratio: float = 0.5
+    # Earth return: certified returns cost ~1.0x Lambert at ratios <= 0.4; above that is
+    # untested by SCvx so the limit stays at the proven envelope (the re-timer bans what does
+    # not fly).
+    earth_return_inflation: float = 1.6
+    earth_return_authority_ratio: float = 0.5
+    # hops: reference hops cost 1.16x Lambert (p90 1.34).  The beam keeps the 0.667 ratio
+    # (1.2x ΔV within 0.8 duty) that found the 544-548 kg / 8-asteroid chains: tightening it
+    # to the certified 0.49 envelope cut chains to depth 5-6 (376-446 kg) because collect hops
+    # of the heavy ship no longer fit the window; the re-timer applies 0.45 to what it moves.
+    hop_inflation: float = 1.2
+    hop_authority_ratio: float = 0.667
     end_margin_days: float = 2.0
     return_window_days: float = 600.0
     collect_wait_window_days: float = 600.0
@@ -104,6 +115,9 @@ class SearchSettings:
     earth_block: int = 1500  # asteroids per Earth-leg screening block (bounds memory)
     schedule_step_days: float = 15.0
     wait_penalty: float = 1.0  # kg propellant-equivalent per kg of mining mass forgone
+    # a collect hop may take up to slack x the mean time left per remaining collect; 1.5 was
+    # neutral on the full-catalogue probe once the hop ratio went back to 0.667, so it is off
+    collect_span_slack: float = float("inf")
     reserve_fraction: float = 0.9  # collect-phase hop propellant ~ deploy-phase hop propellant
     return_reserve_kg: float = 250.0  # reference Earth returns cost 190-230 kg
     # beam heuristic weights; full-catalogue chains die on the 15-year window with 230-430 kg
@@ -111,6 +125,22 @@ class SearchSettings:
     # day hops that SCvx could not fly (full_catalogue_search4/5), so it is off by default
     propellant_weight: float = 0.15
     time_weight: float = 0.0  # kg of heuristic score per day of deploy-phase duration
+    # cluster-first prior (clusters.py): Earth targets need at least ``cluster_min_density``
+    # co-moving neighbours, and partials earn ``cluster_bonus_kg`` x (unvisited co-moving
+    # neighbours of the current asteroid, capped at the remaining deploy slots) / max_deploys
+    # Off by default: on the full-catalogue pool the prior (density >= 8, 150 kg) and the
+    # co-moving-first expansion lost the 544 kg / 8-asteroid chain (446 kg at best) - the
+    # densest co-moving families are not the ones a 0.5-ratio Earth leg reaches.  The
+    # co-moving structure is exploited after the beam instead: insertion candidates, orphan
+    # ranking and cooperative seeding all use the same element bands.
+    cluster_min_density: int = 0
+    cluster_bonus_kg: float = 0.0
+    cluster_density_cap: int = 30  # Earth-target bonus saturates at this co-moving density
+    cluster_radius: float = 1.5
+    cluster_phase_band_deg: float = 8.0
+    cluster_neighbours_first: bool = False  # expansions try co-moving neighbours first
+    # cooperative pricing: first-level bonus for Earth targets co-moving with a seed (orphan)
+    seed_bonus_kg: float = 120.0
     initial_mass: float = C.MAX_INITIAL_MASS_KG
     time_budget_seconds: float = float("inf")  # stop expanding (keep completed plans) past this
     seed: int = 0
@@ -140,10 +170,33 @@ class RoutePlan:
     collected_mass: dict[int, float]
     propellant_proxy_kg: float
     final_mass_proxy_kg: float
+    # cooperative collection: deploy epochs of miners this ship collects but another ship
+    # deployed (the collected mass is mined from that epoch); empty for self-cleaning plans
+    foreign_deploy_epochs: dict[int, float] = field(default_factory=dict)
 
     @property
     def asteroids(self) -> tuple[int, ...]:
-        return tuple(self.deploy_epochs)
+        """Every asteroid the ship touches: its deploys first, then foreign collects."""
+
+        foreign = [a for a in self.collect_epochs if a not in self.deploy_epochs]
+        return (*self.deploy_epochs, *foreign)
+
+    @property
+    def orphaned(self) -> tuple[int, ...]:
+        """Asteroids this ship deploys on but leaves for another ship to collect."""
+
+        return tuple(a for a in self.deploy_epochs if a not in self.collect_epochs)
+
+    @property
+    def self_cleaning(self) -> bool:
+        return set(self.deploy_epochs) == set(self.collect_epochs)
+
+    def deploy_epoch_of(self, asteroid: int) -> float:
+        """Epoch the miner collected at ``asteroid`` was deployed (own or foreign)."""
+
+        if asteroid in self.deploy_epochs:
+            return self.deploy_epochs[asteroid]
+        return self.foreign_deploy_epochs[asteroid]
 
     @property
     def total_collected_kg(self) -> float:
@@ -153,13 +206,53 @@ class RoutePlan:
     def feasible(self) -> bool:
         return self.final_mass_proxy_kg >= C.DRY_MASS_KG + self.total_collected_kg
 
+    @classmethod
+    def from_summary(cls, data: dict[str, object]) -> RoutePlan:
+        """Inverse of :meth:`summary` (used to re-time archived plans and in tests)."""
+
+        defaults = SearchSettings()
+        default_inflation = {
+            "earth_out": defaults.earth_out_inflation,
+            "earth_return": defaults.earth_return_inflation,
+            "deploy_hop": defaults.hop_inflation,
+            "collect_hop": defaults.hop_inflation,
+            "camp": 1.0,
+        }
+        legs = tuple(
+            PlannedLeg(
+                int(item["from"]),
+                int(item["to"]),
+                float(item["t0"]),
+                float(item["tf"]),
+                float(item["dv_proxy_km_s"]),
+                float(item.get("inflation", default_inflation[str(item["role"])])),
+                str(item["role"]),
+            )
+            for item in data["legs"]  # type: ignore[union-attr]
+        )
+        return cls(
+            legs,
+            {int(k): float(v) for k, v in data["deploy_epochs"].items()},  # type: ignore[union-attr]
+            {int(k): float(v) for k, v in data["collect_epochs"].items()},  # type: ignore[union-attr]
+            {int(k): float(v) for k, v in data["collected_mass_kg"].items()},  # type: ignore[union-attr]
+            float(data["propellant_proxy_kg"]),  # type: ignore[arg-type]
+            float(data["final_mass_proxy_kg"]),  # type: ignore[arg-type]
+            {
+                int(k): float(v)
+                for k, v in data.get("foreign_deploy_epochs", {}).items()  # type: ignore[union-attr]
+            },
+        )
+
     def summary(self) -> dict[str, object]:
         return {
             "asteroids": list(self.asteroids),
+            "orphaned": list(self.orphaned),
+            "self_cleaning": self.self_cleaning,
             "launch_epoch": self.legs[0].departure_epoch,
             "earth_return_epoch": self.legs[-1].arrival_epoch,
             "deploy_epochs": dict(self.deploy_epochs),
             "collect_epochs": dict(self.collect_epochs),
+            "foreign_deploy_epochs": dict(self.foreign_deploy_epochs),
             "collected_mass_kg": dict(self.collected_mass),
             "total_collected_kg": self.total_collected_kg,
             "propellant_proxy_kg": self.propellant_proxy_kg,
@@ -172,6 +265,7 @@ class RoutePlan:
                     "t0": leg.departure_epoch,
                     "tf": leg.arrival_epoch,
                     "dv_proxy_km_s": leg.delta_v_proxy_km_s,
+                    "inflation": leg.inflation,
                     "role": leg.role,
                 }
                 for leg in self.legs
@@ -279,30 +373,98 @@ class RouteSearch:
         asteroid_ids: NDArray[np.int64],
         settings: SearchSettings | None = None,
         excluded: set[int] | frozenset[int] | None = None,
+        weights: dict[int, float] | None = None,
+        seeds: dict[int, float] | None = None,
     ) -> None:
         self.catalogue = catalogue
+        # cooperative pricing: uncollected miners of earlier ships (asteroid -> deploy epoch);
+        # Earth targets co-moving with them earn ``seed_bonus_kg`` in the first level
+        self.seeds: dict[int, float] = dict(seeds or {})
         banned = set(excluded or ())
+        self.excluded: frozenset[int] = frozenset(banned)
         self.ids = np.asarray(
             sorted(int(item) for item in asteroid_ids if int(item) not in banned), dtype=np.int64
         )
         self.settings = settings or SearchSettings()
+        # per-asteroid score weights (the frozen bonus coefficients); 1.0 when absent
+        self.weights = weights or {}
         self.lambert_evaluations = 0
         self._hop_cache: dict[tuple[int, float], dict[str, FloatArray]] = {}
         self._return_cache: dict[int, list[tuple[float, float, float]]] = {}
         self._collect_cache: dict[tuple[int, int, float], list[tuple[float, float, float]]] = {}
         self.last_failure = ""
         self._band_cache: dict[int, NDArray[np.int64]] = {}
+        self._clusters: ComovingClusters | None = None
+
+    @property
+    def clusters(self) -> ComovingClusters | None:
+        """Co-moving clusters of the pool (built lazily, only when the prior is enabled)."""
+
+        s = self.settings
+        if s.cluster_min_density <= 0 and s.cluster_bonus_kg <= 0.0:
+            return None
+        if self._clusters is None:
+            self._clusters = ComovingClusters(
+                self.catalogue,
+                self.ids,
+                ClusterBands(
+                    a_au=s.band_a_au,
+                    e=s.band_e,
+                    i_deg=s.band_i_deg,
+                    phase_deg=s.cluster_phase_band_deg,
+                    radius=s.cluster_radius,
+                ),
+            )
+        return self._clusters
+
+    def seeded_mask(self, pool: NDArray[np.int64]) -> NDArray[np.float64] | None:
+        """1.0 for pool asteroids co-moving (within the filter bands) with a seed asteroid."""
+
+        s = self.settings
+        if not self.seeds or s.seed_bonus_kg <= 0.0 or pool.shape[0] == 0:
+            return None
+        mask = np.zeros(pool.shape[0], dtype=bool)
+        for seed in sorted(self.seeds):
+            da, de, di = element_deviations(self.catalogue, seed, pool)
+            mask |= (
+                (da <= s.filter_scale * s.band_a_au)
+                & (de <= s.filter_scale * s.band_e)
+                & (di <= s.filter_scale * s.band_i_deg)
+            )
+        return mask.astype(np.float64)
+
+    def _cluster_potential_kg(self, partial: _Partial) -> float:
+        clusters = self.clusters
+        if clusters is None or self.settings.cluster_bonus_kg <= 0.0:
+            return 0.0
+        visited = {item for item, _ in partial.deployed}
+        remaining = max(self.settings.max_deploys - len(partial.deployed), 0)
+        potential = min(clusters.unvisited_potential(partial.location, visited), remaining)
+        return self.settings.cluster_bonus_kg * potential / max(self.settings.max_deploys, 1)
+
+    def weighted(self, plan: RoutePlan) -> float:
+        """Bonus-weighted collected mass (the fixed post-competition score of the plan)."""
+
+        return sum(self.weights.get(a, 1.0) * m for a, m in plan.collected_mass.items())
 
     # -- proxies --
 
     def _propellant(self, mass: float, delta_v: float, inflation: float) -> float:
         return float(propellant_for_delta_v(mass, delta_v * inflation))
 
-    def _feasible(
-        self, mass: float, delta_v: float, tof: float, inflation: float, *, hop: bool = False
-    ) -> bool:
-        duty = self.settings.hop_duty if hop else self.settings.duty
-        return delta_v * inflation <= float(thrust_authority_km_s(mass, tof, duty))
+    def limits(self, role: str) -> tuple[float, float]:
+        """(propellant inflation, Lambert-ΔV / full-authority ratio limit) for a leg role."""
+
+        s = self.settings
+        if role == "earth_out":
+            return s.earth_out_inflation, s.earth_out_authority_ratio
+        if role == "earth_return":
+            return s.earth_return_inflation, s.earth_return_authority_ratio
+        return s.hop_inflation, s.hop_authority_ratio
+
+    def _feasible(self, mass: float, delta_v: float, tof: float, role: str) -> bool:
+        _, ratio = self.limits(role)
+        return delta_v <= ratio * float(thrust_authority_km_s(mass, tof, 1.0))
 
     def band_pool(self, asteroid_id: int) -> NDArray[np.int64]:
         """Asteroids on orbits similar enough to ``asteroid_id`` to be collectable years later.
@@ -339,7 +501,18 @@ class RouteSearch:
         by_position, _ = positional_candidates(self.catalogue, asteroid_id, pool, epoch, s)
         chosen: list[int] = []
         seen: set[int] = set()
-        for item in list(by_proxy[: s.neighbours]) + list(by_position[: s.neighbours // 2]):
+        comoving: list[int] = []
+        clusters = self.clusters
+        if clusters is not None and s.cluster_neighbours_first and clusters.contains(asteroid_id):
+            # (a source outside the pool - e.g. an excluded asteroid of an archived plan being
+            # re-timed - simply gets no co-moving preference)
+            allowed = set(self.ids.tolist())
+            comoving = [int(a) for a in clusters.neighbours(asteroid_id) if int(a) in allowed][
+                : s.neighbours
+            ]
+        for item in (
+            comoving + list(by_proxy[: s.neighbours]) + list(by_position[: s.neighbours // 2])
+        ):
             if int(item) not in seen:
                 seen.add(int(item))
                 chosen.append(int(item))
@@ -374,24 +547,55 @@ class RouteSearch:
         tofs = np.asarray(s.earth_leg_tofs)
         horizon = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
         tof_grid = np.broadcast_to(tofs[None, None, :], (1, epochs.shape[0], tofs.shape[0]))
-        authority = thrust_authority_km_s(s.initial_mass, tof_grid, s.duty)
+        out_inflation, out_ratio = self.limits("earth_out")
+        authority = out_ratio * thrust_authority_km_s(s.initial_mass, tof_grid, 1.0)
         arrival_grid = epochs[None, :, None] + tofs[None, None, :]
         mined_grid = (
             C.MINING_RATE_KG_PER_YEAR * np.maximum(horizon - arrival_grid, 0.0) / C.YEAR_DAYS
         )
         kept: list[tuple[float, int, float, float, float, float]] = []
-        for start in range(0, self.ids.shape[0], s.earth_block):
-            block = self.ids[start : start + s.earth_block]
+        clusters = self.clusters
+        pool = self.ids
+        if clusters is not None and s.cluster_min_density > 0:
+            # cluster-first: only asteroids with enough co-moving neighbours can start a chain
+            dense = np.asarray(
+                [clusters.density_of(int(a)) >= s.cluster_min_density for a in pool], dtype=bool
+            )
+            # sparse pools (reduced instances, tests) fall back to the densest quartile so the
+            # prior never empties the first level
+            if int(dense.sum()) < s.beam_width:
+                densities = np.asarray([clusters.density_of(int(a)) for a in pool])
+                cutoff = np.quantile(densities, 0.75) if densities.size else 0
+                dense = densities >= cutoff
+            pool = pool[dense]
+        seeded = self.seeded_mask(pool)
+        for start in range(0, pool.shape[0], s.earth_block):
+            block = pool[start : start + s.earth_block]
             grid = screen_earth_to_asteroids(self.catalogue, block, epochs, tofs)
             self.lambert_evaluations += 2 * grid["total_delta_v"].size
             dv_grid = np.where(grid["feasible"], grid["total_delta_v"], np.inf)
-            ok = np.isfinite(dv_grid) & (dv_grid * s.earth_leg_authority_inflation <= authority)
-            propellant_grid = propellant_for_delta_v(
-                s.initial_mass, dv_grid * s.earth_leg_inflation
-            )
+            ok = np.isfinite(dv_grid) & (dv_grid <= authority)
+            propellant_grid = propellant_for_delta_v(s.initial_mass, dv_grid * out_inflation)
+            weight = np.asarray([self.weights.get(int(a), 1.0) for a in block])[:, None, None]
             score_grid = np.where(
-                ok, mined_grid - s.propellant_weight * (propellant_grid + C.MINER_MASS_KG), -np.inf
+                ok,
+                weight * mined_grid - s.propellant_weight * (propellant_grid + C.MINER_MASS_KG),
+                -np.inf,
             )
+            if clusters is not None and s.cluster_bonus_kg > 0.0:
+                potential = np.asarray(
+                    [
+                        min(clusters.density_of(int(a)), s.cluster_density_cap)
+                        / s.cluster_density_cap
+                        for a in block
+                    ]
+                )[:, None, None]
+                score_grid = np.where(ok, score_grid + s.cluster_bonus_kg * potential, -np.inf)
+            if seeded is not None:
+                # pricing seeded from clusters with uncollected miners: chains starting there can
+                # pick the orphans up in their collect tour (cooperative collection)
+                bonus = s.seed_bonus_kg * seeded[start : start + s.earth_block][:, None, None]
+                score_grid = np.where(ok, score_grid + bonus, -np.inf)
             flat = np.argsort(-score_grid.ravel(), kind="stable")[: s.first_level_limit]
             for index in flat:
                 a_index, e_index, t_index = np.unravel_index(int(index), score_grid.shape)
@@ -411,9 +615,7 @@ class RouteSearch:
         beam: list[_Partial] = []
         for _score, asteroid, launch, tof, dv, propellant in kept[: s.first_level_limit]:
             arrival = launch + tof
-            leg = PlannedLeg(
-                EARTH_ID, asteroid, launch, arrival, dv, s.earth_leg_inflation, "earth_out"
-            )
+            leg = PlannedLeg(EARTH_ID, asteroid, launch, arrival, dv, out_inflation, "earth_out")
             mass = s.initial_mass - propellant - C.MINER_MASS_KG
             beam.append(_Partial([leg], asteroid, arrival, mass, [(asteroid, arrival)]))
         return beam
@@ -433,7 +635,7 @@ class RouteSearch:
                     if not hops["feasible"][t_index, f_index]:
                         continue
                     dv = float(hops["total_delta_v"][t_index, f_index])
-                    if not self._feasible(partial.mass, dv, float(tof), s.hop_inflation, hop=True):
+                    if not self._feasible(partial.mass, dv, float(tof), "deploy_hop"):
                         continue
                     propellant = self._propellant(partial.mass, dv, s.hop_inflation)
                     arrival = departure + float(tof)
@@ -523,7 +725,7 @@ class RouteSearch:
                             }
                         )
         completed.sort(
-            key=lambda item: (-item.total_collected_kg, item.propellant_proxy_kg, item.asteroids)
+            key=lambda item: (-self.weighted(item), item.propellant_proxy_kg, item.asteroids)
         )
         best = next((item for item in completed if item.feasible), None)
         return SearchResult(
@@ -544,7 +746,7 @@ class RouteSearch:
             end = C.MISSION_END_MJD - self.settings.end_margin_days
             self._return_cache[asteroid] = self._return_options(asteroid, end)
         return any(
-            self._feasible(mass_guess, dv, tof, self.settings.earth_leg_authority_inflation)
+            self._feasible(mass_guess, dv, tof, "earth_return")
             for dv, _departure, tof in self._return_cache[asteroid]
         )
 
@@ -561,8 +763,9 @@ class RouteSearch:
         end = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS  # rough collection horizon
         for partial in partials:
             mined = sum(
-                C.maximum_collected_mass(max(end - deploy_epoch, 0.0))
-                for _, deploy_epoch in partial.deployed
+                self.weights.get(asteroid, 1.0)
+                * C.maximum_collected_mass(max(end - deploy_epoch, 0.0))
+                for asteroid, deploy_epoch in partial.deployed
             )
             spent = self.settings.initial_mass - partial.mass
             elapsed = partial.epoch - partial.legs[0].departure_epoch
@@ -570,6 +773,7 @@ class RouteSearch:
                 mined
                 - self.settings.propellant_weight * spent
                 - self.settings.time_weight * elapsed
+                + self._cluster_potential_kg(partial)
             )
         ordered = sorted(
             partials,
@@ -672,12 +876,15 @@ class RouteSearch:
         epoch: float,
         mass_guess: float,
         penalty_scale: float = 1.0,
+        max_span_days: float = np.inf,
     ) -> tuple[float, tuple[float, float, float] | None]:
         s = self.settings
         best_hop = None
         best_cost = np.inf
         for dv, departure, tof in self._collect_hop_options(source, target, epoch):
-            if not self._feasible(mass_guess, dv, tof, s.hop_inflation, hop=True):
+            if epoch - departure > max_span_days:
+                continue  # hop + camp would not leave time for the remaining collections
+            if not self._feasible(mass_guess, dv, tof, "collect_hop"):
                 continue
             # propellant proxy plus the mining mass lost by collecting ``source`` earlier (the
             # whole hop duration counts: the miner at ``source`` stops when the ship leaves)
@@ -710,7 +917,7 @@ class RouteSearch:
         if not plans:
             self.last_failure = ",".join(reasons)
             return None
-        plans.sort(key=lambda item: (-item.total_collected_kg, item.propellant_proxy_kg))
+        plans.sort(key=lambda item: (-self.weighted(item), item.propellant_proxy_kg))
         return plans[0]
 
     def _schedule(
@@ -735,8 +942,9 @@ class RouteSearch:
             for _, deploy_epoch in partial.deployed
         )
         best_return = None
+        return_inflation, _ = self.limits("earth_return")
         for dv, departure, tof in self._return_options(first, end):
-            if self._feasible(mass_guess, dv, tof, s.earth_leg_authority_inflation):
+            if self._feasible(mass_guess, dv, tof, "earth_return"):
                 best_return = (dv, departure, tof)
                 break
         if best_return is None:
@@ -749,7 +957,7 @@ class RouteSearch:
                 best_return[1],
                 best_return[1] + best_return[2],
                 best_return[0],
-                s.earth_leg_inflation,
+                return_inflation,
                 "earth_return",
             )
         ]
@@ -766,10 +974,16 @@ class RouteSearch:
                 choices = list(remaining)
             else:
                 choices = [a for a in remaining if a != camp_asteroid] or list(remaining)
+            # time-aware: the remaining hops (each hop + camp) must fit between the end of the
+            # deploy phase and the current collection epoch; the slack lets one hop run long
+            # when others are short.  Without this the propellant-first choice picks 480-720
+            # day hops and 8-10 asteroid chains die with ``camp_negative``.
+            time_left = epoch - partial.epoch
+            max_span = s.collect_span_slack * time_left / len(remaining)
             best_choice = None
             for previous in choices:
                 cost, hop = self._best_collect_hop(
-                    previous, location, epoch, mass_guess, penalty_scale
+                    previous, location, epoch, mass_guess, penalty_scale, max_span
                 )
                 if hop is not None and (best_choice is None or cost < best_choice[0] - 1e-12):
                     best_choice = (cost, previous, hop)
@@ -831,15 +1045,7 @@ class RouteSearch:
                 gained = C.maximum_collected_mass(collect[asteroid] - deploy[asteroid])
                 collected[asteroid] = gained
                 mass += gained
-            authority_inflation = (
-                s.earth_leg_authority_inflation
-                if leg.role in ("earth_out", "earth_return")
-                else leg.inflation
-            )
-            is_hop = leg.role in ("deploy_hop", "collect_hop")
-            if not self._feasible(
-                mass, leg.delta_v_proxy_km_s, leg.tof_days, authority_inflation, hop=is_hop
-            ):
+            if not self._feasible(mass, leg.delta_v_proxy_km_s, leg.tof_days, leg.role):
                 self.last_failure = "leg_authority"
                 return None
             propellant = self._propellant(mass, leg.delta_v_proxy_km_s, leg.inflation)

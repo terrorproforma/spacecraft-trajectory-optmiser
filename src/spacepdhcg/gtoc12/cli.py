@@ -125,12 +125,14 @@ def cmd_run(args: argparse.Namespace) -> int:
     verified as a whole.
     """
 
+    from .cooperative import FleetColumn, MinerPool, solve_fleet_master
     from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
     from .pipeline import refine_route, write_route_artifacts
     from .reduced_instance import build_reduced_instance
+    from .retiming import Retimer, improve_and_certify
     from .search import RouteSearch, SearchSettings
     from .solution import Solution
     from .verifier import Gtoc12Verifier
@@ -138,6 +140,13 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     started = time.perf_counter()
     catalogue = load_catalogue()
+    bonus_table = _optional_bonus(load_bonus_table)
+    weights: dict[int, float] | None = None
+    if bonus_table is not None and not args.no_bonus_weights:
+        weights = {
+            int(asteroid): float(bonus_table.coefficient[asteroid - 1])
+            for asteroid in catalogue.ids
+        }
     if args.full_catalogue:
         ids = catalogue_pool(catalogue, args)
         instance_summary = {
@@ -175,14 +184,51 @@ def cmd_run(args: argparse.Namespace) -> int:
             "ships": args.ships,
             "refine_top": args.refine_top,
             "search_budget_seconds": args.search_budget_seconds,
+            "budget_seconds": args.budget_seconds,
+            "retime": not args.no_retime,
+            "retime_attempts": args.retime_attempts,
+            "retime_budget_seconds": args.retime_budget_seconds,
+            "bonus_weights": weights is not None,
+            "cooperative": not args.no_cooperative,
         },
         "cpu_only": True,
         "gpu_used": False,
         "ships": [],
+        "timeline": [],  # (elapsed seconds, ships, fleet collected kg) after each ship
     }
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
-    fleet = FleetPlan()
-    verifier = Gtoc12Verifier(catalogue, bonus=_optional_bonus(load_bonus_table))
+    fleet = FleetPlan()  # greedy incumbent (one certified route per ship slot)
+    pool = MinerPool()  # shared miners: later ships may collect earlier ships' orphans
+    columns: list[FleetColumn] = []  # every certified itinerary, for the master
+    verifier = Gtoc12Verifier(catalogue, bonus=bonus_table)
+
+    def add_column(slot: int, label: str, refined) -> None:
+        columns.append(
+            FleetColumn.from_plan(
+                len(columns),
+                slot,
+                label,
+                refined.plan,
+                refined.collected_mass,
+                certified=refined.certified,
+                route=refined,
+            )
+        )
+
+    def run_master():
+        master = solve_fleet_master(columns, weights=weights, max_ships=args.ships)
+        report["master"] = master.summary()
+        report["master"]["greedy_collected_kg"] = sum(fleet.collected_kg)
+        report["master"]["greedy_ships"] = len(fleet.routes)
+        report["master"]["columns"] = len(columns)
+        report["miner_pool"] = pool.summary()
+        return master
+
+    def checkpoint() -> None:
+        report["fleet"] = fleet.summary()
+        report["wall_seconds_total"] = time.perf_counter() - started
+        report["peak_rss_mb"] = _peak_rss_mb()
+        (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
 
     def verify(solution_path: Path, histories: dict | None = None) -> dict[str, Any]:
         checker = (
@@ -204,9 +250,20 @@ def cmd_run(args: argparse.Namespace) -> int:
         return entry
 
     for ship_index in range(1, args.ships + 1):
+        elapsed = time.perf_counter() - started
+        if elapsed > args.budget_seconds:
+            report["stopped"] = f"wall-clock budget reached before ship {ship_index}"
+            break
         ship_dir = output_dir / f"ship_{ship_index:02d}"
         ship_dir.mkdir(parents=True, exist_ok=True)
-        search = RouteSearch(catalogue, ids, settings, excluded=fleet.used_asteroids())
+        search = RouteSearch(
+            catalogue,
+            ids,
+            settings,
+            excluded=fleet.used_asteroids() | pool.touched(),
+            weights=weights,
+            seeds=None if args.no_cooperative else pool.orphans(),
+        )
         result = search.run()
         ship_report: dict[str, Any] = {
             "ship": ship_index,
@@ -297,6 +354,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                 }
                 if best_entry is None or entry["score_kg"] > best_entry[0]["score_kg"]:
                     best_entry = (entry, refined)
+                add_column(ship_index, f"s{ship_index:02d}_c{rank:02d}", refined)
             refinements.append(entry)
             (ship_dir / "refinements.json").write_text(_json(refinements) + "\n", encoding="utf-8")
             print(
@@ -316,15 +374,95 @@ def cmd_run(args: argparse.Namespace) -> int:
         ship_report["refinements"] = refinements
         if best_entry is None:
             ship_report["status"] = "no_certified_route"
+            checkpoint()
             break
+        if not args.no_retime:
+            # joint re-timing + chain extension with SCvx in the loop; the previously
+            # certified route is kept unless the re-timed one certifies with a higher score
+            retimer = Retimer(catalogue, settings, weights=weights)
+            improvement = improve_and_certify(
+                best_entry[1].plan,
+                search,
+                retimer,
+                catalogue,
+                scvx=scvx,
+                max_attempts=args.retime_attempts,
+                time_budget_seconds=args.retime_budget_seconds,
+                pool=None if args.no_cooperative else pool,
+            )
+            for index, variant in enumerate(improvement.certified_routes):
+                add_column(ship_index, f"s{ship_index:02d}_retimed{index}", variant)
+            improvement_summary = improvement.summary()
+            improvement_summary["before"] = {
+                "score_kg": best_entry[0]["score_kg"],
+                "asteroids": len(best_entry[1].plan.asteroids),
+                "final_mass_kg": best_entry[1].final_mass_kg,
+            }
+            if improvement.route is not None:
+                directory = ship_dir / "retimed"
+                artifacts = write_route_artifacts(improvement.route, catalogue, directory)
+                solution_path = Path(artifacts["solution"])
+                entry = {"rank": "retimed", "plan": improvement.route.plan.summary()}
+                entry["refined"] = improvement.route.summary()
+                entry.update(verify(solution_path))
+                entry["artifacts"] = {"solution": str(solution_path)}
+                improvement_summary["after"] = {
+                    "score_kg": entry["score_kg"],
+                    "asteroids": len(improvement.route.plan.asteroids),
+                    "final_mass_kg": improvement.route.final_mass_kg,
+                }
+                if entry["score_kg"] > best_entry[0]["score_kg"]:
+                    best_entry = (entry, improvement.route)
+            ship_report["retiming"] = improvement_summary
+            (ship_dir / "retiming.json").write_text(
+                _json(improvement_summary) + "\n", encoding="utf-8"
+            )
+            print(
+                _json(
+                    {
+                        "ship": ship_index,
+                        "retiming": {
+                            "before": improvement_summary["before"],
+                            "after": improvement_summary.get("after"),
+                            "attempts": len(improvement.attempts),
+                            "wall_seconds": round(improvement.wall_seconds, 1),
+                        },
+                    }
+                ),
+                flush=True,
+            )
         ship_report["best"] = best_entry[0]
         ship_report["status"] = "scored"
         fleet.routes.append(best_entry[1])
+        pool.register(best_entry[1].plan, ship_index)
+        master = run_master()
+        report["timeline"].append(
+            {
+                "elapsed_seconds": time.perf_counter() - started,
+                "ships": len(fleet.routes),
+                "fleet_collected_kg": sum(fleet.collected_kg),
+                "master_ships": len(master.selected),
+                "master_collected_kg": master.collected_kg,
+                "master_objective_kg": master.objective,
+                "peak_rss_mb": _peak_rss_mb(),
+            }
+        )
+        checkpoint()
     report["fleet"] = fleet.summary()
     if fleet.routes:
+        # the master picks the fleet from every certified column (the greedy fleet is one of
+        # its feasible subsets, so it never scores lower)
+        master = run_master()
+        selected = FleetPlan([column.route for column in master.selected])
+        report["fleet"] = selected.summary()
+        report["fleet"]["greedy"] = fleet.summary()
         fleet_dir = output_dir / "fleet"
         fleet_dir.mkdir(parents=True, exist_ok=True)
-        fleet_solution = assemble_fleet(fleet, catalogue)
+        (fleet_dir / "master.json").write_text(
+            _json({"master": report["master"], "columns": [c.summary() for c in columns]}) + "\n",
+            encoding="utf-8",
+        )
+        fleet_solution = assemble_fleet(selected, catalogue)
         fleet_path = fleet_dir / "Result.txt"
         fleet_solution.write(fleet_path)
         histories = {}
@@ -444,6 +582,25 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     run.add_argument("--pool-a-max", type=float, default=3.0)
     run.add_argument("--pool-e-max", type=float, default=0.15)
     run.add_argument("--pool-i-max", type=float, default=8.0)
+    run.add_argument(
+        "--budget-seconds",
+        type=float,
+        default=float("inf"),
+        help="declared wall-clock budget: no new ship is started after it (partial results kept)",
+    )
+    run.add_argument("--no-retime", action="store_true", help="skip joint re-timing/extension")
+    run.add_argument("--retime-attempts", type=int, default=4)
+    run.add_argument("--retime-budget-seconds", type=float, default=900.0)
+    run.add_argument(
+        "--no-bonus-weights",
+        action="store_true",
+        help="score plain collected mass instead of the fixed-bonus weighted mass",
+    )
+    run.add_argument(
+        "--no-cooperative",
+        action="store_true",
+        help="self-cleaning ships only (no shared miner pool / orphan collection)",
+    )
     run.set_defaults(function=cmd_run)
 
     export = commands.add_parser("export-viewer", help="propagate a solution and write viewer data")

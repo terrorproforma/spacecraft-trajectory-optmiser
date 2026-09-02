@@ -304,9 +304,11 @@ def refine_route(
     )
     deploy = dict(plan.deploy_epochs)
     collect = dict(plan.collect_epochs)
+    # cooperative plans collect miners another ship deployed (plan.foreign_deploy_epochs) and may
+    # leave their own miners for another ship: the mass is mined from the deployer's epoch
     collected = {
-        asteroid: C.maximum_collected_mass(collect[asteroid] - deploy[asteroid])
-        for asteroid in deploy
+        asteroid: C.maximum_collected_mass(collect[asteroid] - plan.deploy_epoch_of(asteroid))
+        for asteroid in collect
     }
     legs_to_fly = [leg for leg in plan.legs if leg.role != "camp"]
     refined: list[RefinedLeg] = []
@@ -322,7 +324,7 @@ def refine_route(
         for index, leg in enumerate(legs_to_fly):
             r0, v0 = body_state(catalogue, leg.from_id, leg.departure_epoch)
             rf, vf = body_state(catalogue, leg.to_id, leg.arrival_epoch)
-            carried = sum(collected[a] for a in deploy if collect[a] <= leg.departure_epoch)
+            carried = sum(collected[a] for a in collect if collect[a] <= leg.departure_epoch)
             boundary = LegBoundary(
                 leg.departure_epoch,
                 r0,
