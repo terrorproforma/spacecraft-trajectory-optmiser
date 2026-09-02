@@ -2193,13 +2193,27 @@ IntegrationResult run_resident_sequence(
             if (g4_deadline_seconds > 0.0) {
                 deadline_thread = std::thread([&]() {
                     std::unique_lock lock(deadline_mutex);
-                    if (!deadline_condition.wait_until(
+                    if (deadline_condition.wait_until(
                             lock,
                             g4_deadline,
                             [&]() { return solve_finished; }
                         )) {
+                        return;
+                    }
+                    // Deadline reached: keep re-asserting the cancellation
+                    // once per second until the owner thread reports the
+                    // attempt finished, so a cancel that lands while the
+                    // workspace is between inner solves cannot be lost.
+                    while (!solve_finished) {
+                        lock.unlock();
                         static_cast<void>(
                             spacepdhcg_cuda_scvx_driver_cancel(driver)
+                        );
+                        lock.lock();
+                        deadline_condition.wait_for(
+                            lock,
+                            std::chrono::seconds(1),
+                            [&]() { return solve_finished; }
                         );
                     }
                 });

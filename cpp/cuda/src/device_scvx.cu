@@ -2416,6 +2416,13 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         const bool hybrid_qoco =
             driver->options.policy == SPACEPDHCG_CUDA_SCVX_HYBRID_QOCO;
         bool qoco_used = pure_qoco;
+        // A deadline that fired between inner solves (while the workspace was
+        // not solving) cannot reach the device; honour it here instead of
+        // launching another full-budget solve.
+        if (driver->cancelled.load(std::memory_order_acquire)) {
+            result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+            break;
+        }
         if (pure_qoco) {
             if (driver->qoco == nullptr) {
                 api_status = spacepdhcg_native_qoco_create(
@@ -2692,6 +2699,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             for (uint32_t resolve = 0;
                  resolve < driver->options.maximum_resolves_per_iteration;
                  ++resolve) {
+                if (driver->cancelled.load(std::memory_order_acquire)) {
+                    // Deadline reached before the identical-CQP re-solve:
+                    // stop here rather than spending another inner budget.
+                    result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+                    break;
+                }
                 api_status = collect_numeric_fingerprint(
                     driver,
                     native,
@@ -2742,6 +2755,34 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                         driver->problem.workspace
                     );
                 }
+                if (api_status == SPACEPDHCG_CUDA_SUCCESS
+                    && driver->cancelled.load(std::memory_order_acquire)) {
+                    // Deadline cancelled the re-solve: roll back and report
+                    // the launched timeout with the work actually spent.
+                    static_cast<void>(spacepdhcg_cuda_workspace_restore_async(
+                        driver->problem.workspace,
+                        driver->problem.topology_fingerprint,
+                        checkpoint_view,
+                        stream
+                    ));
+                    static_cast<void>(spacepdhcg_cuda_workspace_wait(
+                        driver->problem.workspace
+                    ));
+                    static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
+                        driver->problem.workspace,
+                        &last_diagnostics
+                    ));
+                    result->solve_seconds += std::max(
+                        0.0,
+                        last_diagnostics.solve_seconds
+                            - last_diagnostics.recovery_seconds
+                    );
+                    result->recovery_seconds +=
+                        last_diagnostics.recovery_seconds;
+                    result->inner_iterations += last_diagnostics.iterations;
+                    result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+                    break;
+                }
                 if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
                     api_status = spacepdhcg_cuda_workspace_residuals_async(
                         driver->problem.workspace,
@@ -2777,6 +2818,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     break;
                 }
             }
+        }
+        if (result->status == SPACEPDHCG_CUDA_SCVX_CANCELLED) {
+            break;
         }
         if (re_solved) {
             gather_scvx_candidate_kernel<<<1, 256, 0, native>>>(

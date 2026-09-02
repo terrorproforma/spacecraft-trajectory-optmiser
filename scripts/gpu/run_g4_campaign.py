@@ -61,6 +61,9 @@ CAPABILITY_AXES = {
 }
 
 
+GROUP_SAFETY_GRACE_SECONDS = 300
+
+
 def canonical_bytes(value: Any) -> bytes:
     return json.dumps(
         value,
@@ -1125,12 +1128,15 @@ def execute_group(
         sampler.start()
         process_timed_out = False
         try:
+            # The executor owns the group deadline (nine attempts plus 60 s) and emits explicit
+            # unlaunched records when it expires; the outer boundary only guards against a hung
+            # process, so it must sit strictly beyond the executor's own deadline.
             process = subprocess.run(
                 command,
                 env={**run_environment, "SPACEPDHCG_G4_RESTART_GENERATION": str(generation)},
                 capture_output=True,
                 text=True,
-                timeout=timeout_seconds * 9 + 60,
+                timeout=timeout_seconds * 9 + 60 + GROUP_SAFETY_GRACE_SECONDS,
             )
             stdout, stderr, returncode = process.stdout, process.stderr, process.returncode
         except subprocess.TimeoutExpired as error:
