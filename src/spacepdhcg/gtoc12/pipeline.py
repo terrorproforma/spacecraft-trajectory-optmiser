@@ -468,12 +468,14 @@ def refine_route(
     )
 
 
-def emit_solution(route: RefinedRoute, catalogue: AsteroidCatalogue) -> Solution:
+def emit_solution(
+    route: RefinedRoute, catalogue: AsteroidCatalogue, *, ship_id: int = 1
+) -> Solution:
     """Write the refined route as one official-format ship section."""
 
     if not route.certified:
         raise ValueError("only fully certified routes are emitted")
-    ship = ShipTrajectory(1)
+    ship = ShipTrajectory(ship_id)
     plan = route.plan
     deploy = plan.deploy_epochs
     collect = plan.collect_epochs

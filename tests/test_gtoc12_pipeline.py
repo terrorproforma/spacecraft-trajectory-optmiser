@@ -120,12 +120,13 @@ def test_search_is_deterministic_on_small_subset() -> None:
         beam_width=4,
         max_deploys=2,
         neighbours=8,
-        launch_epochs=(64328.0, 64508.0),
-        earth_leg_tofs=(400.0, 600.0),
+        launch_epochs=tuple(float(x) for x in C.MISSION_START_MJD + np.arange(0.0, 731.0, 90.0)),
+        earth_leg_tofs=(600.0, 750.0, 900.0),
         hop_tofs=(90.0, 180.0),
     )
     first = RouteSearch(catalogue, ids, settings).run()
     second = RouteSearch(catalogue, ids, settings).run()
+    assert first.candidates, "grids must admit at least one route or the check is vacuous"
     assert [item.summary() for item in first.candidates] == [
         item.summary() for item in second.candidates
     ]
