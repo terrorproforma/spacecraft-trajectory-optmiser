@@ -607,7 +607,377 @@ spacepdhcg_cuda_status launch_variational(
         : SPACEPDHCG_CUDA_RUNTIME_ERROR;
 }
 
+// ---------------------------------------------------------------------------------------------
+// Free-final-time (time-dilated) variational RK4: pd3_fft / pd6_fft coefficient kernels.
+// ---------------------------------------------------------------------------------------------
+
+template <int StateDimension, int ControlDimension>
+struct TimeDilatedAugmented {
+    double state[StateDimension];
+    double transition[StateDimension * StateDimension];
+    double sensitivity[StateDimension * ControlDimension];
+    double sigma[StateDimension];
+};
+
+/// x' = sigma f, Phi' = sigma f_x Phi, Gamma' = sigma (f_x Gamma + f_u), S' = f + sigma f_x S.
+template <int Model, int StateDimension, int ControlDimension>
+__device__ TimeDilatedAugmented<StateDimension, ControlDimension> time_dilated_derivative(
+    const TimeDilatedAugmented<StateDimension, ControlDimension>& input,
+    const double* control,
+    const double sigma,
+    const spacepdhcg_cuda_dynamics_config& config
+) {
+    TimeDilatedAugmented<StateDimension, ControlDimension> result{};
+    double f[StateDimension]{};
+    double state_jacobian[StateDimension * StateDimension]{};
+    double control_jacobian[StateDimension * ControlDimension]{};
+    evaluate<Model, StateDimension, ControlDimension>(
+        input.state, control, config, f, state_jacobian, control_jacobian
+    );
+    for (int row = 0; row < StateDimension; ++row) {
+        result.state[row] = sigma * f[row];
+        double sigma_value = f[row];
+        for (int inner = 0; inner < StateDimension; ++inner) {
+            sigma_value += sigma * state_jacobian[row * StateDimension + inner]
+                           * input.sigma[inner];
+        }
+        result.sigma[row] = sigma_value;
+        for (int column = 0; column < StateDimension; ++column) {
+            double value = 0.0;
+            for (int inner = 0; inner < StateDimension; ++inner) {
+                value += state_jacobian[row * StateDimension + inner]
+                         * input.transition[inner * StateDimension + column];
+            }
+            result.transition[row * StateDimension + column] = sigma * value;
+        }
+        for (int column = 0; column < ControlDimension; ++column) {
+            double value = control_jacobian[row * ControlDimension + column];
+            for (int inner = 0; inner < StateDimension; ++inner) {
+                value += state_jacobian[row * StateDimension + inner]
+                         * input.sensitivity[inner * ControlDimension + column];
+            }
+            result.sensitivity[row * ControlDimension + column] = sigma * value;
+        }
+    }
+    return result;
+}
+
+template <int StateDimension, int ControlDimension>
+__device__ TimeDilatedAugmented<StateDimension, ControlDimension> time_dilated_add_scaled(
+    const TimeDilatedAugmented<StateDimension, ControlDimension>& base,
+    const TimeDilatedAugmented<StateDimension, ControlDimension>& increment,
+    const double scale
+) {
+    TimeDilatedAugmented<StateDimension, ControlDimension> result = base;
+    for (int index = 0; index < StateDimension; ++index) {
+        result.state[index] += scale * increment.state[index];
+        result.sigma[index] += scale * increment.sigma[index];
+    }
+    for (int index = 0; index < StateDimension * StateDimension; ++index) {
+        result.transition[index] += scale * increment.transition[index];
+    }
+    for (int index = 0; index < StateDimension * ControlDimension; ++index) {
+        result.sensitivity[index] += scale * increment.sensitivity[index];
+    }
+    return result;
+}
+
+/// Quaternion normalisation of rows 6..9 with the exact Jacobian `(I - q q^T/|q|^2)/|q|`
+/// applied to the A, B and S blocks (tangent rule), mirroring the host `apply_projection`.
+template <int StateDimension, int ControlDimension>
+__device__ void time_dilated_project_quaternion(
+    TimeDilatedAugmented<StateDimension, ControlDimension>& value
+) {
+    static_assert(StateDimension == 14, "quaternion projection assumes the 6-DoF layout");
+    double raw[4]{};
+    double norm_squared = 0.0;
+    for (int component = 0; component < 4; ++component) {
+        raw[component] = value.state[6 + component];
+        norm_squared += raw[component] * raw[component];
+    }
+    const double norm = sqrt(norm_squared);
+    double projector[16]{};
+    for (int row = 0; row < 4; ++row) {
+        for (int inner = 0; inner < 4; ++inner) {
+            projector[row * 4 + inner] =
+                ((row == inner ? 1.0 : 0.0) - raw[row] * raw[inner] / norm_squared) / norm;
+        }
+    }
+    double projected_transition[4 * StateDimension]{};
+    double projected_sensitivity[4 * ControlDimension]{};
+    double projected_sigma[4]{};
+    for (int row = 0; row < 4; ++row) {
+        for (int inner = 0; inner < 4; ++inner) {
+            const double entry = projector[row * 4 + inner];
+            projected_sigma[row] += entry * value.sigma[6 + inner];
+            for (int column = 0; column < StateDimension; ++column) {
+                projected_transition[row * StateDimension + column] +=
+                    entry * value.transition[(6 + inner) * StateDimension + column];
+            }
+            for (int column = 0; column < ControlDimension; ++column) {
+                projected_sensitivity[row * ControlDimension + column] +=
+                    entry * value.sensitivity[(6 + inner) * ControlDimension + column];
+            }
+        }
+    }
+    for (int row = 0; row < 4; ++row) {
+        value.state[6 + row] = raw[row] / norm;
+        value.sigma[6 + row] = projected_sigma[row];
+        for (int column = 0; column < StateDimension; ++column) {
+            value.transition[(6 + row) * StateDimension + column] =
+                projected_transition[row * StateDimension + column];
+        }
+        for (int column = 0; column < ControlDimension; ++column) {
+            value.sensitivity[(6 + row) * ControlDimension + column] =
+                projected_sensitivity[row * ControlDimension + column];
+        }
+    }
+}
+
+template <int Model, int StateDimension, int ControlDimension>
+__global__ void time_dilated_variational_kernel(
+    const double* states,
+    const double* controls,
+    double* propagated,
+    double* transition,
+    double* sensitivity,
+    double* sigma_sensitivity,
+    double* offset,
+    const size_t intervals,
+    const size_t substeps,
+    const double sigma,
+    const double d_tau,
+    const spacepdhcg_cuda_dynamics_config config
+) {
+    const size_t interval = blockIdx.x;
+    if (threadIdx.x != 0 || interval >= intervals) {
+        return;
+    }
+    const double* state = states + interval * StateDimension;
+    const double* control = controls + interval * ControlDimension;
+    TimeDilatedAugmented<StateDimension, ControlDimension> current{};
+    for (int index = 0; index < StateDimension; ++index) {
+        current.state[index] = state[index];
+        current.transition[index * StateDimension + index] = 1.0;
+    }
+    const double h = d_tau / static_cast<double>(substeps);
+    for (size_t substep = 0; substep < substeps; ++substep) {
+        const auto k1 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            current, control, sigma, config
+        );
+        const auto k2 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            time_dilated_add_scaled(current, k1, 0.5 * h), control, sigma, config
+        );
+        const auto k3 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            time_dilated_add_scaled(current, k2, 0.5 * h), control, sigma, config
+        );
+        const auto k4 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            time_dilated_add_scaled(current, k3, h), control, sigma, config
+        );
+        TimeDilatedAugmented<StateDimension, ControlDimension> integrated = current;
+        for (int index = 0; index < StateDimension; ++index) {
+            integrated.state[index] += h
+                * (k1.state[index] + 2.0 * k2.state[index] + 2.0 * k3.state[index]
+                   + k4.state[index])
+                / 6.0;
+            integrated.sigma[index] += h
+                * (k1.sigma[index] + 2.0 * k2.sigma[index] + 2.0 * k3.sigma[index]
+                   + k4.sigma[index])
+                / 6.0;
+        }
+        for (int index = 0; index < StateDimension * StateDimension; ++index) {
+            integrated.transition[index] += h
+                * (k1.transition[index] + 2.0 * k2.transition[index]
+                   + 2.0 * k3.transition[index] + k4.transition[index])
+                / 6.0;
+        }
+        for (int index = 0; index < StateDimension * ControlDimension; ++index) {
+            integrated.sensitivity[index] += h
+                * (k1.sensitivity[index] + 2.0 * k2.sensitivity[index]
+                   + 2.0 * k3.sensitivity[index] + k4.sensitivity[index])
+                / 6.0;
+        }
+        if constexpr (Model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
+            time_dilated_project_quaternion(integrated);
+        }
+        current = integrated;
+    }
+    double* output_state = propagated + interval * StateDimension;
+    double* output_transition = transition + interval * StateDimension * StateDimension;
+    double* output_sensitivity =
+        sensitivity + interval * StateDimension * ControlDimension;
+    double* output_sigma = sigma_sensitivity + interval * StateDimension;
+    double* output_offset = offset + interval * StateDimension;
+    for (int row = 0; row < StateDimension; ++row) {
+        output_state[row] = current.state[row];
+        double affine = current.state[row];
+        for (int column = 0; column < StateDimension; ++column) {
+            const double value = current.transition[row * StateDimension + column];
+            output_transition[row * StateDimension + column] = value;
+            affine -= value * state[column];
+        }
+        for (int column = 0; column < ControlDimension; ++column) {
+            const double value = current.sensitivity[row * ControlDimension + column];
+            output_sensitivity[row * ControlDimension + column] = value;
+            affine -= value * control[column];
+        }
+        output_sigma[row] = current.sigma[row];
+        affine -= current.sigma[row] * sigma;
+        output_offset[row] = affine;
+    }
+}
+
+__global__ void fill_time_dilated_sigma_csc_kernel(
+    const double* sigma_sensitivity,
+    const int* sigma_positions,
+    double* scalar_values,
+    const size_t intervals,
+    const size_t state_dimension
+) {
+    const size_t interval = blockIdx.x;
+    if (interval >= intervals) {
+        return;
+    }
+    for (size_t row = threadIdx.x; row < state_dimension; row += blockDim.x) {
+        const size_t flat = interval * state_dimension + row;
+        scalar_values[sigma_positions[flat]] = -sigma_sensitivity[flat];
+    }
+}
+
+template <int Model, int StateDimension, int ControlDimension>
+spacepdhcg_cuda_status launch_time_dilated(
+    const spacepdhcg_cuda_dynamics_config& config,
+    const spacepdhcg_cuda_time_dilated_request& request,
+    const cudaStream_t stream
+) {
+    time_dilated_variational_kernel<Model, StateDimension, ControlDimension>
+        <<<request.intervals, 32, 0, stream>>>(
+            view_pointer<const double>(request.reference_states),
+            view_pointer<const double>(request.reference_controls),
+            view_pointer<double>(request.propagated_states),
+            view_pointer<double>(request.state_transition),
+            view_pointer<double>(request.control_sensitivity),
+            view_pointer<double>(request.sigma_sensitivity),
+            view_pointer<double>(request.affine_offset),
+            request.intervals,
+            request.substeps,
+            request.sigma,
+            request.d_tau,
+            config
+        );
+    return cudaGetLastError() == cudaSuccess
+        ? SPACEPDHCG_CUDA_SUCCESS
+        : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+}
+
 }  // namespace
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_time_dilated_variational_rk4_async(
+    const spacepdhcg_cuda_dynamics_config* config,
+    const spacepdhcg_cuda_time_dilated_request* request,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (config == nullptr || request == nullptr
+        || config->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || request->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || request->intervals == 0U || request->substeps == 0U
+        || !std::isfinite(request->sigma) || request->sigma <= 0.0
+        || !std::isfinite(request->d_tau) || request->d_tau <= 0.0
+        || stream.device.type != SPACEPDHCG_DEVICE_CUDA || stream.device.id < 0) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    size_t state_dimension = 0U;
+    size_t control_dimension = 0U;
+    switch (config->model) {
+        case SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF:
+            state_dimension = 7U;
+            control_dimension = 4U;
+            break;
+        case SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF:
+            state_dimension = 14U;
+            control_dimension = 7U;
+            break;
+        default:
+            return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    const size_t expected[] = {
+        request->intervals * state_dimension,
+        request->intervals * control_dimension,
+        request->intervals * state_dimension,
+        request->intervals * state_dimension * state_dimension,
+        request->intervals * state_dimension * control_dimension,
+        request->intervals * state_dimension,
+        request->intervals * state_dimension,
+    };
+    const spacepdhcg_accelerator_buffer_view views[] = {
+        request->reference_states,
+        request->reference_controls,
+        request->propagated_states,
+        request->state_transition,
+        request->control_sensitivity,
+        request->sigma_sensitivity,
+        request->affine_offset,
+    };
+    for (size_t index = 0; index < 7U; ++index) {
+        const auto status = validate_device_view(
+            views[index], expected[index], SPACEPDHCG_SCALAR_FLOAT64, stream.device.id
+        );
+        if (status != SPACEPDHCG_CUDA_SUCCESS) {
+            return status;
+        }
+    }
+    const auto native_stream = reinterpret_cast<cudaStream_t>(stream.native_handle);
+    if (config->model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF) {
+        return launch_time_dilated<SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF, 7, 4>(
+            *config, *request, native_stream
+        );
+    }
+    return launch_time_dilated<SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF, 14, 7>(
+        *config, *request, native_stream
+    );
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_fill_time_dilated_csc_async(
+    const spacepdhcg_cuda_csc_time_dilated_fill* request,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (request == nullptr) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    const auto dynamics_status =
+        spacepdhcg_cuda_fill_dynamics_csc_async(&request->dynamics, stream);
+    if (dynamics_status != SPACEPDHCG_CUDA_SUCCESS) {
+        return dynamics_status;
+    }
+    const size_t state_rows = request->dynamics.intervals * request->dynamics.state_dimension;
+    auto status = validate_device_view(
+        request->sigma_sensitivity, state_rows, SPACEPDHCG_SCALAR_FLOAT64, stream.device.id
+    );
+    if (status != SPACEPDHCG_CUDA_SUCCESS) {
+        return status;
+    }
+    status = validate_device_view(
+        request->sigma_positions, state_rows, SPACEPDHCG_SCALAR_INT32, stream.device.id
+    );
+    if (status != SPACEPDHCG_CUDA_SUCCESS) {
+        return status;
+    }
+    fill_time_dilated_sigma_csc_kernel<<<
+        request->dynamics.intervals,
+        32,
+        0,
+        reinterpret_cast<cudaStream_t>(stream.native_handle)
+    >>>(
+        view_pointer<const double>(request->sigma_sensitivity),
+        view_pointer<const int>(request->sigma_positions),
+        view_pointer<double>(request->dynamics.scalar_values),
+        request->dynamics.intervals,
+        request->dynamics.state_dimension
+    );
+    return cudaGetLastError() == cudaSuccess
+        ? SPACEPDHCG_CUDA_SUCCESS
+        : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+}
 
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_variational_rk4_async(
     const spacepdhcg_cuda_dynamics_config* config,

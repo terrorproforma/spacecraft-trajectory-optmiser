@@ -423,6 +423,55 @@ def parameters_from_document(document: dict[str, Any]) -> Szmuk2018Parameters:
     )
 
 
+#: Declared discretisation envelope between the FOH Python core and the ZOH native pd6_fft.
+NATIVE_TF_ENVELOPE_UT = 0.01
+
+
+def _native_free_time_leg(
+    params: Szmuk2018Parameters, core_time_of_flight: float, options: dict[str, Any]
+) -> dict[str, Any]:
+    """Run the same problem through the native ``pd6_fft`` transcription when it is available."""
+
+    if options.get("skip_native"):
+        return {"status": "skipped", "reason": "skip_native option set"}
+    try:
+        from spacepdhcg.native import native_available
+        from spacepdhcg.native._library import load_native_library
+    except Exception as error:
+        return {"status": "unavailable", "reason": f"native package import failed: {error}"}
+    if not native_available():
+        return {
+            "status": "unavailable",
+            "reason": "native library not found (build cpp/ and set SPACEPDHCG_NATIVE_LIBRARY)",
+        }
+    if not hasattr(load_native_library(), "spacepdhcg_pd6_fft_create"):
+        return {"status": "unavailable", "reason": "native library predates the pd6_fft C API"}
+    from spacepdhcg.literature.pd6_szmuk_2018_native import reproduce_native
+
+    try:
+        result = reproduce_native(params)
+    except Exception as error:
+        return {"status": "error", "reason": repr(error)}
+    gap = float(result.time_of_flight - core_time_of_flight)
+    within = result.outcome.converged and abs(gap) <= NATIVE_TF_ENVELOPE_UT
+    within = within and result.max_path_violation <= 1.0e-6
+    return {
+        "status": "reproduced" if within else "gap",
+        "time_of_flight": result.time_of_flight,
+        "fuel_used": result.fuel_used,
+        "converged": result.outcome.converged,
+        "termination": result.outcome.termination,
+        "iterations": len(result.outcome.iterations),
+        "replay_defect_inf": result.outcome.replay_defect_inf,
+        "max_path_violation": result.max_path_violation,
+        "path_violations": result.path_violations,
+        "topology_fingerprint": f"{result.topology_fingerprint:016x}",
+        "gap_vs_cpu_core_ut": gap,
+        "envelope_ut": NATIVE_TF_ENVELOPE_UT,
+        "label": "measured-local",
+    }
+
+
 def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str, Any]:
     params = parameters_from_document(document)
     guesses = tuple(
@@ -442,6 +491,7 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
         r.max_path_violation <= 1.0e-6 and r.outcome.replay_defect_inf <= 1.0e-5 for r in sweep
     )
     status = "reproduced" if (spread <= acceptance_spread and all_feasible) else "gap"
+    native_leg = _native_free_time_leg(params, extended_run.time_of_flight, options)
     return {
         "target_id": document["id"],
         "status": status,
@@ -461,6 +511,7 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
                 "final_trust_norm": extended_run.outcome.iterations[-1].trust_norm,
                 "final_virtual_l1": extended_run.outcome.iterations[-1].virtual_l1,
             },
+            "native_pd6_fft": native_leg,
         },
         "gap": {
             "time_of_flight_spread_minus_published_ut": spread
@@ -474,6 +525,7 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
             "published.iterations_to_converge": "published-reference",
             "published.converged_time_of_flight": "descriptive-only",
             "measured.time_of_flight": "measured-local",
+            "measured.native_pd6_fft.time_of_flight": "measured-local",
             "parameters.alpha_mdot": "descriptive-only",
         },
         "envelope": {
@@ -481,6 +533,10 @@ def run_target(document: dict[str, Any], *, options: dict[str, Any]) -> dict[str
                 "K = 50 nodes, FOH, RK4 STM with 8 substeps per interval; free final time via sigma"
             ),
             "paper_stop_rule": "||Delta||_2 <= 1e-3 and ||nu||_1 <= 1e-10 within 15 iterations",
+            "native_pd6_fft": (
+                "K = 50 nodes, ZOH, variational RK4 with 4 substeps per interval, sigma column "
+                "analytic; hard-trust-region SCvx; declared envelope vs the FOH core 0.01 UT"
+            ),
         },
         "commands": [f"spacepdhcg literature run {document['id']}"],
         "notes": [
