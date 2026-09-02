@@ -1279,3 +1279,39 @@ Use this file as persistent, repo-local execution memory.
 - Search proxies (Lambert x inflation) accept few multi-asteroid chains; the first scored route
   has two asteroids (195.044 kg). Wider beams, phasing-aware neighbour selection, and cross-ship
   deploy/collect are the obvious next steps.
+
+### 2026-09-03 03:35 AEST - GTOC12 track: search fixes and scored runs
+
+#### Mistakes And Fixes
+
+- `[search]` Element-space neighbours ignored phase drift: pairs with different mean motions drift
+  ~45 deg over a ten-year stay, so collect hops cost 20+ km/s and every multi-asteroid chain died
+  at the collection tour. Fix: phase-drift penalty in the proxy, wider return/collection windows,
+  return-feasibility pruning of the first asteroid, and at most two beam slots per deployed set.
+- `[emitter]` A camp-then-collect visit emitted a zero-mass rendezvous at arrival, giving the
+  asteroid three events (our Error805, official Error804). Fix: no arrival event; the collect
+  event sits at the departure epoch and the ship coasts on the asteroid's orbit in between.
+- `[verifier]` The archived JPL file carries 0.60000001 N samples; the official verifier accepts
+  them, so the thrust bound now has 1 uN of slack (our emitted files clamp to 0.6(1-1e-9)).
+- `[tool]` `setsid nohup ... & disown` from `wsl.exe` survived once and died twice; long runs
+  were executed in the foreground with `timeout` instead.
+
+#### What Worked
+
+- Vectorising the first beam level (grid-wide feasibility, propellant and score, then argsort)
+  made the 60,000-asteroid catalogue tractable: 39.1 M Lambert screens in 956 s, 11.2 GB.
+- Proxies calibrated within ~1 kg of refined masses on the reduced routes; optimistic by ~230 kg
+  on the full-catalogue route (still mass-feasible).
+
+#### Guardrails For Next Session
+
+- Each asteroid: at most two rendezvous events, ever; camping never emits an event.
+- Report unweighted (official verifier) and fixed-bonus scores side by side; they differ whenever
+  the chosen asteroids were mined during the competition (249.0 vs 203.0 kg on the full run).
+
+#### Follow-Ups / Risks
+
+- `tests/test_native_packaging.py` fails in this venv because no cmake-built wheel is present
+  (same on the base commit here); everything else in the 343-test suite passes.
+- Next quality steps: multi-revolution Lambert screening, cross-ship deploy/collect, PDHCG CQP
+  backend for the ZOH SCvx subproblem.

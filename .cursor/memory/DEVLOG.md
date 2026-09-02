@@ -930,3 +930,26 @@
 - Follow-up notes / risks:
   - Reduced-instance search currently completes mostly one- and two-asteroid chains.
   - Full-catalogue screening and docs/GTOC12_TRACK.md are the next commits.
+
+## 2026-09-03 03:35 AEST
+
+- Task summary:
+  - Fixed the route search and emitter, then produced officially verified GTOC12 solutions on the
+    preregistered reduced instance and on the full catalogue.
+- Changes:
+  - `search.py`: phase-drift-aware neighbour proxy, deploy waits, 600-day return/collection
+    windows, return-feasibility pruning, per-set diversity, vectorised first level.
+  - `pipeline.py`: camp-then-collect visits emit a single collect event at departure.
+  - `verifier.py`: 1 uN thrust slack (JPL reference file), 1 uday sample-interval slack.
+  - `docs/GTOC12_TRACK.md`, `benchmarks/gtoc12/reference_reproductions.json`, committed compact
+    result artifacts under `results/gtoc12/`.
+- Validation:
+  - Official verifier: reduced-v1-run2 1 ship / 4 asteroids / 253.744 kg (fixed bonus 249.059 kg),
+    47 s wall, 8 refined arcs; full-catalogue-run1 1 / 3 / 249.035 kg (fixed bonus 202.995 kg),
+    963 s wall; reduced-v1-run1 1 / 2 / 195.044 kg.
+  - Independent verifier agrees per asteroid to 1e-10 kg; max propagation error 0.46 km, 8e-5 m/s.
+  - Full pytest: 341 passed, 4 skipped, 1 environmental failure (native wheel absent); GTOC12
+    verifier tests (all three reference reproductions) pass after the thrust-slack fix.
+- Follow-up notes / risks:
+  - Scores are ~1/3 of a single archived reference ship; the search, not the refinement, is the
+    bottleneck at catalogue scale.
