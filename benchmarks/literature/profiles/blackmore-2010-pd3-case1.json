@@ -1,0 +1,41 @@
+{
+  "id": "blackmore-2010-pd3-case1",
+  "family": "P1-C-pd3",
+  "title": "Blackmore, Acikmese & Scharf 2010 case 1 (feasible target): minimum-fuel solution 399.4 kg at t_f = 78.4 s",
+  "source": {
+    "doi": "10.2514/1.47202",
+    "url": "http://larsjamesblackmore.com/BlackmoreEtAlJGCD10.pdf"
+  },
+  "frame": "paper frame: x up, (y, z) horizontal",
+  "parameters": {
+    "gravity_mars_m_s2": 3.7114,
+    "wet_mass_kg": 1905.0,
+    "dry_mass_kg": 1505.0,
+    "specific_impulse_s": 225.0,
+    "standard_gravity_m_s2": 9.807,
+    "thruster_count": 6,
+    "thruster_max_thrust_n": 3100.0,
+    "cant_angle_deg": 27.0,
+    "throttle_min": 0.3,
+    "throttle_max": 0.8,
+    "glide_slope_deg": 4.0,
+    "initial_position_m": [1500.0, 500.0, 2000.0],
+    "initial_velocity_m_s": [-75.0, 0.0, 100.0],
+    "time_of_flight_s": 78.4,
+    "alpha_convention": "cant-corrected",
+    "final_thrust_vertical": false
+  },
+  "published": {
+    "fuel_used_kg": 399.4,
+    "fuel_used_text": "399.4",
+    "time_of_flight_text": "78.4",
+    "discretisation_points": 55,
+    "objective_convention": "propellant-used",
+    "evidence_label": "published-reference",
+    "extraction": "text (Section V, case 1: 'This solution requires 399.4 kg of fuel and has t_f = 78.4 s'; 55 time-discretisation points; golden search interval 3.0 s)"
+  },
+  "envelope_dt_values": [0.4, 0.2],
+  "declared_envelope_kg": 2.0,
+  "acceptance_tolerance_kg": 2.0,
+  "notes": "The paper prints alpha = 4.53e-4 s/m (1/(Isp g0) without the cant-angle factor) while rho1/rho2 include cos(27 deg). Both conventions are evaluated; only the cant-corrected alpha reproduces the published propellant."
+}

@@ -1,0 +1,33 @@
+{
+  "id": "esa-tops-2026",
+  "family": "P1-E-low-thrust",
+  "profile_suffix": "tops",
+  "title": "ESA TOPS low-thrust suite (zero-order-hold repository, pinned revision 24fe8849)",
+  "source": {
+    "url": "https://gitlab.com/EuropeanSpaceAgency/zero-order-hold",
+    "revision": "24fe8849b403af376773f09b64b5132e5591b94e",
+    "paper": "https://arxiv.org/abs/2605.11043"
+  },
+  "artifacts": ["tops.twobody", "tops.mee", "tops.cr3bp", "tops.solar_sail"],
+  "frozen_selection": {
+    "easy_two_body": "two_body_cartesian:P4",
+    "multi_revolution_two_body": "two_body_cartesian:P3",
+    "inclination_or_eccentricity_change": "two_body_cartesian:P1",
+    "cr3bp": "cr3bp:P0"
+  },
+  "selection_rules": {
+    "easy_two_body": "fixed-time Cartesian two-body problem with the smallest tof/mean-period ratio",
+    "multi_revolution_two_body": "Cartesian two-body problem whose info string declares a multirev arc (lowest key)",
+    "inclination_or_eccentricity_change": "Cartesian two-body problem whose info string mentions inclination or highly-elliptic (lowest key)",
+    "cr3bp": "fixed-time CR3BP problem with the smallest tof/mean-period ratio"
+  },
+  "selection_frozen_before_solving": true,
+  "nodes": 120,
+  "max_iterations": 40,
+  "published": {
+    "problem_count_paper": 28,
+    "problem_count_pinned_revision": 34,
+    "evidence_label": "published-reference",
+    "note": "the Cartesian two-body JSON entries carry no reference objective; MEE entries carry 'solution_indirect' decision vectors in MEE variables (not used)"
+  }
+}

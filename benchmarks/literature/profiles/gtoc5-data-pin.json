@@ -1,0 +1,14 @@
+{
+  "id": "gtoc5-data-pin",
+  "family": "P2-F",
+  "title": "GTOC5 Penetrators: pinned problem data and statement; scoring blocked",
+  "source": {
+    "url": "https://sophia.estec.esa.int/gtoc_portal/?page_id=25"
+  },
+  "artifacts": ["gtoc5.problem_data", "gtoc5.problem_description", "gtoc5.beam_paco_archive"],
+  "published": {
+    "asteroid_count": 7075,
+    "evidence_label": "published-reference"
+  },
+  "blocker": "no official offline evaluator or example solution file is published for GTOC5; the pinned research implementation (Simoes et al.) depends on pykep"
+}

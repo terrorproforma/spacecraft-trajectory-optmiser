@@ -1,0 +1,35 @@
+{
+  "id": "tafazzol-taheri-earth-dionysus",
+  "family": "P1-E-low-thrust",
+  "title": "Tafazzol & Taheri, fixed-time minimum-fuel Earth-to-Dionysus rendezvous (3534 days, five revolutions)",
+  "source": {
+    "url": "https://arxiv.org/abs/2409.01490",
+    "version": "arXiv:2409.01490 (HTML version read 2026-09-03)",
+    "location": "Table 3"
+  },
+  "objective_convention": "final-mass",
+  "parameters": {
+    "sun_mu_km3_s2": 132712440018.0,
+    "initial_mass_kg": 4000.0,
+    "specific_impulse_s": 3000.0,
+    "maximum_thrust_n": 0.32,
+    "time_of_flight_days": 3534.0,
+    "departure_position_km": [-3637871.081, 147099798.784, -2261.441],
+    "departure_velocity_km_s": [-30.265097, -0.8486854, 0.0000505],
+    "arrival_position_km": [-302452014.884, 316097179.632, 82872290.0755],
+    "arrival_velocity_km_s": [-4.533473, -13.110309, 0.656163],
+    "hyperbolic_excess_velocity": "zero at both ends (fixed heliocentric boundary states)"
+  },
+  "published": {
+    "final_mass_kg": 2718.33,
+    "final_mass_text": "2718.33",
+    "best_reported_revolutions": 5,
+    "evidence_label": "published-reference",
+    "extraction": "text (Section 4.2: 'm(t_f) = m_f = 2718.33 kg'; 'The most optimal solution involves five orbital revolutions')"
+  },
+  "initial_guess_revolutions": 5,
+  "envelope_nodes": [300],
+  "max_iterations": 60,
+  "declared_envelope_kg": 2.0,
+  "acceptance_tolerance_kg": 2.0
+}
