@@ -114,14 +114,67 @@ committed before any search ran. Rule SHA-256 `718dd7e76f8f09295ae53de58b56626c5
 
 ## 6. Route search and pipeline
 
+### 6.1 What the archived references do (`references.py`)
+
+`spacepdhcg.gtoc12.references.decode_file` decodes any solution file into per-ship itineraries
+(launch, deploy/collect roles from the global visit order per asteroid, per-leg TOF, propellant,
+transfer angle, revolutions, cooperative vs self-cleaning collections) and fleet statistics.
+Decoding the three archived files (`results/gtoc12/references/*.itinerary.json`) gives:
+
+| Statistic (median unless noted) | Antipodes 37 (self-cleaning) | Antipodes 39 | JPL 36 |
+| --- | --- | --- | --- |
+| asteroids per ship | 9 (8–10) | 9 | 9 (7–11) |
+| collected per ship | 726 kg (703–781) | ~743 kg | 718 kg (476–873) |
+| launch v∞ / launch epochs | 6.0 km/s saturated / first 9 months | same | same |
+| Earth → A₁ | 532 d, 466 kg, 0.14 rev | — | 530 d, 447 kg |
+| hop TOF / propellant / transfer angle | 183 d / 78 kg / 40° | — | 184 d / 80 kg / 38° |
+| hop revolutions | 0 (p95 0.004) | — | 0 |
+| deploy phase / collect phase | 2120 d / 1910 d | — | 2030 d / 1980 d |
+| stay per miner | 3110 d (803–4450) | — | 2860 d |
+| Earth return | 486 d, 206 kg | — | 473 d, 211 kg |
+| final mass | 500–501 kg (all margin spent) | — | 500 kg |
+| per-ship a / i spread | 0.035 AU / 3.8° | — | 0.069 AU / 4.0° |
+| cooperative collections | 0 of 338 | — | 279 of 320 |
+
+Per hop (1882 samples, `scripts/gtoc12/proxy_validation.py`): |Δa| ≤ 0.041 AU, |Δe| ≤ 0.045,
+|Δi| ≤ 3.0° and — decisive — the **target is within ±3.3° of the ship's heliocentric phase at
+departure** (p95). Hops are sub-revolution drifts between co-located asteroids on nearly identical
+orbits, flown at 37 % (p95 79 %) of full-thrust authority. True low-thrust ΔV is 1.16× the
+zero-revolution Lambert ΔV (p90 1.34, p95 1.41; Spearman 0.90). The 338 Antipodes asteroids
+occupy a ∈ [2.27, 2.85] AU, e ≤ 0.18, i ≤ 6.1°: 5,701 catalogue asteroids fall in that box.
+
+Consequences encoded in the search: (i) candidate targets are ranked in *position space at the
+departure epoch* (`positional_candidates`: (Δa, Δe-vector, relative inclination, phase) scaled by
+the p95 bands) and by a Lambert-free phasing/Edelbaum ΔV (`proxies.phasing_edelbaum_proxy`), and
+only that union gets Lambert evaluations; (ii) the candidate pool is filtered to orbits that stay
+collectable years later (1.5× the p95 bands on Δa, eccentricity-vector and inclination-vector
+differences, with a nearest-neighbour fallback for sparse pools); (iii) hop inflation 1.2 and
+duty 0.8 come from the measured ratios; (iv) chains keep a collect-phase propellant reserve
+(0.9× the deploy-hop propellant + 250 kg return) so the beam does not fill with uncollectable deploy
+phases; (v) the full-catalogue pool is the reference a/e/i box (a ∈ [2.2, 3.0] AU, e ≤ 0.15,
+i ≤ 8°: 10,612 asteroids), which bounds memory.
+
+### 6.2 Search
+
 `search.py`: deterministic beam search over self-cleaning routes
-`Earth → A₁ → … → A_k (deploy) → camp → A_k → … → A₁ (collect) → Earth`. Deploy hops expand
-forwards from a launch grid (Earth legs 300–900 d, hops 60–420 d, optional waits for phasing)
-over element-space neighbours with a phase-drift penalty; the collection tour is scheduled
-backwards from the window end with per-hop wait windows; Earth returns may arrive in the last 600
-days. Costs are Lambert rendezvous ΔV (6 km/s Earth allowance credited) inflated ×1.6 (Earth legs)
-and ×1.25 (hops) against a 0.85-duty thrust authority. Beams cap variants per deployed set and
-prune first asteroids without a feasible return. Ties break on asteroid ID; no randomness.
+`Earth → A₁ → … → A_k (deploy) → camp at A_k → collection tour → Earth`. Deploy hops expand
+forwards from a launch grid (Earth legs 300–900 d, hops 60–480 d, waits 0–120 d) over the
+position-space candidates above; the collection tour is scheduled backwards from the window end
+(hops 90–720 d, per-hop wait windows) with the order chosen greedily by proxy cost (strict reverse
+as fallback, and an escalating wait penalty when the tour does not fit), the first-deployed
+asteroid collected last and the camp asteroid collected first. Earth returns may arrive in the
+last 600 days. Costs are Lambert rendezvous ΔV (6 km/s Earth allowance credited) inflated ×1.6
+(Earth legs) and ×1.2 (hops) against a 0.8-duty thrust authority. Beams cap variants per deployed
+set and per first asteroid, drop chains below the dry mass + reserve, and prune first asteroids
+without a feasible return. The Earth-leg grid is screened in 1,500-asteroid blocks (memory
+bounded: 0.65 GB peak at catalogue scale vs 11.2 GB before), a wall-clock budget stops expansion
+while retaining completed plans, and every failed chain is kept with its reason
+(`no_collect_hop`, `camp_negative`, …). Ties break on asteroid ID; no randomness.
+
+`fleet.py`: greedy fleets — ship *k* searches with ships 1..k−1's asteroids excluded, its best
+certified route is kept, the routes are assembled into one file (ship IDs 1..N) under the rule
+N ≤ 2 exp(0.004 M̄), and the fleet file is verified as a whole. In `cmd_run`, a plan containing a
+leg SCvx already proved infeasible is skipped ("retain failed chains").
 
 `pipeline.py`: each planned leg becomes an `ArcRequest`; `G3TrajectoryOracleAdapter` owns one
 `Gtoc12ScvxDriver` per topology group; `BoundedScheduler` orders the work; the certified legs form
@@ -129,8 +182,30 @@ a `RouteDefinition` column and pass `solve_certified_route_master`. Collected ma
 rule maximum and are scaled down if the final-mass rule (`m_f ≥ 500 kg + carried`) would fail.
 The route is emitted as an official file, scored by both verifiers, and exported for the viewer.
 
-CLI: `spacepdhcg gtoc12 run --run-id <id> --output <dir> [--beam-width 24 --max-deploys 4
---refine-top 3 --search-only --full-catalogue]`.
+CLI: `spacepdhcg gtoc12 run --run-id <id> --output <dir> [--beam-width 32 --max-deploys 10
+--neighbours 64 --refine-top 3 --ships 3 --search-budget-seconds 1800 --stop-at-first-certified
+--search-only --full-catalogue --pool-a-min 2.2 --pool-a-max 3.0 --pool-e-max 0.15 --pool-i-max 8]`.
+
+### 6.3 Proxy validation (`results/gtoc12/proxy_validation.json`)
+
+| Data set | Quantity | p5 | p25 | median | p75 | p95 |
+| --- | --- | --- | --- | --- | --- | --- |
+| our certified legs (164, all runs) | refined ÷ proxy propellant | 0.66 | 0.90 | 0.96 | 1.02 | 1.08 |
+| our certified legs (164) | refined − proxy propellant (kg) | −112 | −8.5 | −3.6 | +3.1 | +26 |
+| our certified legs (164) | refined ÷ Lambert ΔV | 0.98 | 1.08 | 1.165 | 1.23 | 1.49 |
+| our deploy hops (71) / collect hops (64) | refined ÷ Lambert ΔV, median (p95) | 1.12 (1.30) / 1.19 (1.29) | | | | |
+| our Earth-out (16) / return (13) | refined ÷ Lambert ΔV, median (p95) | 1.27 (1.74) / 0.98 (1.04) | | | | |
+| reference hops (1882) | true ÷ Lambert ΔV | 1.03 | 1.10 | 1.16 | 1.23 | 1.41 |
+| reference hops (1882) | true ÷ phasing/Edelbaum ΔV | 1.02 | 1.34 | 1.76 | 2.29 | 3.68 |
+| reference hops (1882) | true ΔV ÷ full-thrust authority | 0.10 | 0.25 | 0.37 | 0.52 | 0.79 |
+
+Spearman rank correlation with the true ΔV: Lambert 0.90, phasing/Edelbaum 0.63 (0.47 with scalar
+Δe/Δi). The Lambert-free proxy is therefore only a pre-ranker; the zero-revolution Lambert ΔV with
+1.2× inflation is the screening cost (hops land at 1.12–1.19× with a 1.30× tail, so ~half the
+hops cost a few kg more than planned and the mass reserve absorbs it). Earth-out legs on the
+catalogue pool reach 1.74× Lambert, which is why the 1.6× Earth factor stays: lowering it to 1.3
+(runs `*_search3`) admitted 450–500-day Earth legs SCvx could not fly. Multi-revolution Lambert was
+not needed: reference hops have zero revolutions (p95 0.004).
 
 ## 7. Results (all CPU, 16-core WSL2, single process)
 
@@ -139,6 +214,42 @@ CLI: `spacepdhcg gtoc12 run --run-id <id> --output <dir> [--beam-width 24 --max-
 | `reduced-v1-run1` (beam 24, ≤4 deploys, before phasing fixes) | gtoc12-reduced-v1 | 1 | 2 (36777, 37351) | **195.044 kg** | 195.044 kg (both B = 1) | 4 | 18.5 s | 7.0 s | 37 s | CPU |
 | `reduced-v1-run2` (beam 24, ≤4 deploys, phasing-aware) | gtoc12-reduced-v1 | 1 | 4 (1265, 21191, 27292, 40808) | **253.744 kg** | 249.059 kg | 8 | 24.5 s | 6.0 s | 47 s | CPU |
 | `full-catalogue-run1` (beam 8, ≤3 deploys, 39.1 M Lambert screens) | full catalogue (60,000) | 1 | 3 (20194, 23644, 15033) | **249.035 kg** | 202.995 kg | 6 | 956 s | 7.1 s | 963 s (11.2 GB peak RSS) | CPU |
+| `reduced_v1_search3` (search v2: beam 48, ≤8 deploys, 64 neighbours) | gtoc12-reduced-v1 | 1 | 5 (37351, 36777, 44316, 6249, 1128) | **314.442 kg** | 314.442 kg | 10 | 194 s | 34 s (3 candidates) | 228 s, 0.55 GB | CPU |
+| `full_catalogue_search2` (search v2, beam 32, ≤10 deploys, 64 neighbours, pool 10,612) | full catalogue | 1 | 8 (8846, 27861, 37385, 49900, 8123, 1122, 12992, 57949) | **548.282 kg** | 548.282 kg | 16 | 261 s | 42 s (2 candidates) | 303 s, 0.66 GB | CPU |
+| `fleet3_full_catalogue` (search v2 pre-final, 3 ships greedy, beam 24, ≤10, 48 nb) | full catalogue | 2 (ship 3 uncertified) | 13 | **965.804 kg** | 893.263 kg | 26 | 719 s (3 searches) | 32 s | 751 s, 0.75 GB | CPU |
+| `fleet3_full_catalogue_v2` (final code, 3 ships greedy, beam 32, ≤11, 64 nb, 1800 s budget/ship) | full catalogue | 3 | 20 | **1394.11 kg** (548.28 + 442.22 + 403.61) | 1318.117 kg | 40 | 814 s (3 searches) | 53 s (5 candidates) | 867 s, 0.77 GB | CPU |
+
+Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
+RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
+reserve-pruned beam search of §6.2; `search2`/`fleet3_full_catalogue` were produced at an
+intermediate commit of it (scalar Δe/Δi pre-ranking, no failed-leg skipping) and are kept as
+verified artifacts; `reduced_v1_search3` and `fleet3_full_catalogue_v2` are reproducible from HEAD
+(`--beam-width 48 --max-deploys 8 --neighbours 64 --refine-top 3` and `--full-catalogue --ships 3
+--beam-width 32 --max-deploys 11 --neighbours 64 --refine-top 3 --stop-at-first-certified
+--search-budget-seconds 1800`). Ship 1 of the final fleet reproduces the `search2` route exactly.
+Best score by depth (proxy kg) for the final ship 1: 1→124.5, 2→221, 3→285, 4→338, 5→404,
+6→445, 7→531, 8→548; depths 9–11 produced no completable chain.
+
+Where the runs stop: 140 of 155 failed chains in the widest run (`beam 48, 96 neighbours`) died
+with `camp_negative` — the backward-scheduled collection tour ran past the deploy phase — at
+depths 6–10, while every certified route still had 230–430 kg of propellant unspent (final dry +
+propellant mass 693–1241 kg vs the 500 kg floor). Time, not mass, is the binding constraint:
+our deploy hops take 240–300 days where the references take 140–240, because the candidate
+clusters are thinner (per-ship a-spread 0.06–0.10 AU vs 0.035). Pricing time in the beam
+heuristic (0.02–0.05 kg/day) or lowering the hop duty pushed the beam into 120–180-day hops at
+the authority limit that SCvx could not fly (`full_catalogue_search4/5`: 447 kg), so those knobs
+default off; the fix is in candidate generation (tighter co-located clusters), see §8.
+
+Per-leg detail of the final fleet's ship 1 (TOF, certified propellant): E→8846 500 d 515 kg;
+deploy hops 300/180/150/300/300/300/240 d = 72/114/100/87/92/88/75 kg; collect hops
+300/300/240/300/240/180/240 d = 152/139/50/106/77/66/108 kg; return 400 d 146 kg — i.e. the
+reference hop economy (median 78 kg) is reproduced; the gap to a 740 kg reference ship is one to
+two more asteroids and ~600 days of collection-phase time.
+
+Variants tried and rejected (all officially verified where they certified): Earth-leg inflation
+1.3 (`*_search3`: 457 kg / no certified reduced route); time weight 0.05 + duty 0.8
+(`search4`: no certified route, 3 marginal legs infeasible); time weight 0.03 + duty 0.7
+(`search5a`: 244 kg, Earth legs pruned); time weight 0.02 + hop duty 0.75 (`search5`: 447 kg).
 
 Per-leg detail of `reduced-v1-run2` (propellant, SCvx iterations, solve time, certified endpoint
 error): E→1265 600 d 364.7 kg 9 it 1.3 s 0.32 km; 1265→21191 360 d 128.7 kg 7 it 0.5 s 0.04 km;
@@ -148,37 +259,49 @@ error): E→1265 600 d 364.7 kg 9 it 1.3 s 0.32 km; 1265→21191 360 d 128.7 kg 
 mass 1273.3 kg ≥ 500 kg + 253.7 kg carried. Run 2's other two refined candidates also verified
 officially (252.923 kg and 241.697 kg).
 
-Full catalogue: screening the 60,000 asteroids over 25 launch epochs × 13 Earth-leg TOFs
-(39.1 M zero-revolution Lambert solves, both branches) took 956 s and 11.2 GB; only 16 beam
-expansions and 13 completed candidates fit the 40-minute cap, and 11 of the 16 multi-asteroid
-partials still failed the collection tour. The single refined route (6 arcs, 7.1 s) verified
-officially at 249.035 kg but, unlike the reduced-instance asteroids, its three targets were mined
-during the competition, so the fixed-bonus score is 202.995 kg. Where time ended: the search, not
-the refinement; catalogue-scale neighbour selection is still an O(N) element-space proxy per node
-and the Earth-return grid is recomputed per first asteroid. Failures are retained in
-`results/gtoc12/*/search.json`.
+Full catalogue, run 1 (before search v2): screening the 60,000 asteroids over 25 launch epochs ×
+13 Earth-leg TOFs (39.1 M zero-revolution Lambert solves) took 956 s and 11.2 GB. Search v2
+screens the 10,612-asteroid reference box in 1,500-asteroid blocks (0.65 GB peak) and reaches
+depth 8 in ~260 s; failures are retained with reasons in `ship_NN/search.json`.
 
-Independent verifier on the scored files: max propagation error ≤ 0.46 km, ≤ 8e-5 m/s, ≤ 3e-11 kg;
-official and independent per-asteroid masses agree to 1e-10 kg. Fleet rule: 1 ship ≤ 2 exp(0.004 M̄)
-(≈ 4.4 for 195 kg).
+Independent verifier on the scored files: per-asteroid masses agree with the official verifier to
+1e-10 kg; max propagation error 0.52 km on single ships and 14.4 km on the 3-ship fleet file (well
+inside the official tolerance; the official binary reports "Check successfully!" on every file).
+Fleet rule: 3 ships ≤ 2 exp(0.004 × 464.7) = 12.8.
 
-Artifacts (ignored `results/gtoc12/<run>/`): `search.json`, `refinements.json`, `run_report.json`,
-`candidate_NN/Result.txt`, `candidate_NN/route_summary.json`,
-`candidate_NN/viewer/{trajectories.json,manifest.json}`. The viewer export follows the
+Artifacts (ignored `results/gtoc12/runs/<run>/`, compact files force-added): `run_report.json`,
+`ship_NN/search.json`, `ship_NN/refinements.json`, `ship_NN/candidate_NN/Result.txt`,
+`ship_NN/candidate_NN/route_summary.json`, `fleet/Result.txt`, and
+`fleet/viewer/{trajectories.json,manifest.json}` for the best fleet. The viewer export follows the
 `web/trajectory-viewer` record schema (family `GTOC12`, heliocentric frame, replay decimated to
 ≤ 512 exact propagated samples with events preserved, event-state transcription, asteroid/Earth
 context orbits).
 
 ## 8. Limitations
 
-- Single self-cleaning ship; no cross-ship deploy/collect, no gravity assists, zero-revolution
-  Lambert screening only (multi-revolution legs and 2-year+ phasing are unexplored).
-- Impulsive proxies with fixed inflation factors decide the beam; the refined masses matched the
-  proxies within ~1 kg on the scored routes, but proxies still reject many chains.
+- Self-cleaning ships only (the JPL file shows 279/320 cooperative collections; cross-ship
+  deploy/collect is not modelled); no gravity assists; zero-revolution Lambert screening only
+  (justified by the references, but long collect hops of 600–720 days are then screened as
+  single-arc transfers).
+- Greedy fleets: ship k never revisits ship 1..k−1's choices, so the second and third ships land
+  on thinner clusters (442, 404 kg vs 548 kg). A joint fleet assignment (column generation over
+  ship routes) is the natural next step for the G7 master.
+- Time re-optimisation is at the grid level only (15-day collection scheduling, 30-day launch and
+  deploy-wait grids); legs are not re-timed jointly after refinement, and the 230–430 kg of
+  propellant left in every certified route is not reclaimed.
+- Impulsive proxies with fixed inflation factors decide the beam; the tails (1.30× hops, 1.74×
+  Earth-out) mean a few plans per run fail SCvx certification and are skipped, not repaired.
 - The SCvx leg solver is a Python/Clarabel CPU reference (2-day ZOH nodes); the fixed-pattern
   PDHCG CQP contract is not used yet, so no GPU timing claim exists.
-- Scores are far below the archived references (≈ 700 kg/ship): this is a first working
-  end-to-end pipeline on a 1000-asteroid preregistered subset, not a competitive entry.
+- Best single ship is 548 kg vs ≈ 740 kg per archived reference ship (74 %); the reduced instance
+  is intrinsically sparse (≈1–2 co-located candidates per hop vs ≈15 in the full catalogue) and
+  plateaus at 5 asteroids / 314 kg with this search.
+
+Next bottleneck: candidate generation still yields 240–300-day deploy hops because the pool is
+ranked per hop rather than per *cluster*; building tight co-located clusters (Δa ≤ 0.04 AU,
+phase ±5° over the whole deploy window) up front and searching orders within them, plus a joint
+re-timing pass that spends the unused propellant on shorter hops, is what stands between 8 and
+10 asteroids per ship.
 
 ## 9. How this feeds Paper 2 / OrbitWeaver
 
