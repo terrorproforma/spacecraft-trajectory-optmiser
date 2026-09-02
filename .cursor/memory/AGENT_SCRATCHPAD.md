@@ -1095,3 +1095,31 @@ Use this file as persistent, repo-local execution memory.
 
 - P1-C/D/E still need qualified optimizer-owned outputs; P1-F needs frozen worst/CVaR epigraph
   formulations; Paper 2 needs versioned physical instances.
+### 2026-09-02 10:20 AEST - Verified trajectory visualisation extraction
+
+#### Task Summary
+
+- Built an isolated CPU-only extractor for compact physical trajectory visualisation evidence.
+- Recreated exact P1-B/P1-C/P1-D/P1-E source paths and a labelled CPU replay of the actual G7
+  one-GPU Lambert test request.
+
+#### Mistakes And Fixes
+
+- `[self]` The first G7 helper build assumed G7 retained the low-thrust benchmark helper header.
+  Compiled with G7 headers first and the exact CPU-source headers as a fallback.
+- `[self]` SCvx iteration agreement legitimately contains negative infinity. Converted non-finite
+  diagnostic sentinels to JSON null while keeping all trajectory arrays strictly finite.
+
+#### What Worked
+
+- Archive checksums, rerun residuals, dimensions, endpoints, path limits, and dense integrated
+  replays are checked before any compact JSON or preview is emitted.
+- Deterministic decimation preserves endpoints, coordinate/radius extrema, and family-specific
+  constraint-near points without interpolation.
+
+#### Guardrails For Next Session
+
+- G4 and `cpu-actual-c5a4991` result records are scalar aggregates, not path arrays. Never draw a
+  trajectory from `cpu_gpu_trajectory`, objectives, residuals, or other aggregate metrics.
+- P1-A is non-trajectory CQP evidence. G7 GPU Lambert proves component parity but archives no GPU
+  path array; label the plotted state history as an exact-request CPU replay.

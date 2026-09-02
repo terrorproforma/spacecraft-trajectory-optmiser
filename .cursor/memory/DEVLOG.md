@@ -808,3 +808,26 @@
   - P1-C/D/E/F and Paper 2 physical-route publication evidence remains fail-closed where complete
     solver/formulation or physical benchmark inputs do not exist.
   - GPU timing, energy, and 2/4/8-GPU collective telemetry remain hardware-only.
+## 2026-09-02 10:20 AEST
+
+- Task summary:
+  - Produced compact, verified trajectory visualisation evidence in an isolated worktree without
+    running a GPU workload or manufacturing paths from scalar metrics.
+- Changes:
+  - Added a header-only C++ state-history emitter for exact-source P1-D/P1-E and G7 Lambert
+    requests, including dense nonlinear RK4 replay.
+  - Added a Python extractor that verifies archive checksums, recreates P1-B/P1-C solver paths,
+    validates source metrics, applies deterministic constraint-aware decimation, and renders
+    record-specific XY/XZ/YZ/perspective PNG/PDF previews.
+  - Added decimation/classification tests and ignored generated visualisation outputs.
+- Validation:
+  - Ruff and `git diff --check` passed; focused pytest passed 3/3.
+  - All selected CPU archive files matched `checksums.json`; archived campaign validation retained
+    zero missing, duplicate, or schema-error records.
+  - Five paths passed finite/dimension/endpoint checks. P1-B is qualified; P1-C/P1-D/P1-E remain
+    explicitly unqualified; P2 is a CPU replay of the exact request from a passing one-GPU Lambert
+    parity test.
+  - Two independent output builds produced byte-identical compact datasets and previews.
+- Follow-up notes / risks:
+  - No real archived P2 coarse/refined/route trajectory state arrays were found.
+  - G4/P1-A remains non-trajectory CQP evidence and is excluded from visualisation geometry.
