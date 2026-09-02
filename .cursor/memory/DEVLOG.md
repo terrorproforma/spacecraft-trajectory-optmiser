@@ -1125,3 +1125,48 @@
   - `full_catalogue_search2` and `fleet3_full_catalogue` artifacts come from an intermediate
     commit state (documented); `reduced_v1_search3` and `fleet3_full_catalogue_v2` reproduce from
     HEAD.
+
+## 2026-09-03 06:20 AEST
+
+- Task summary:
+  - Consolidated `feat/planner-cli` (c74fdb7), `feat/literature-targets` (f6e8140) and
+    `feat/gtoc12-asteroid-mining` @ fa91b43 into `integration/single-gpu-v2-candidate` (worktree
+    `/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 63271d5 = current tip of
+    `integration/single-gpu-v1`, which already contains 9678134). The running G4 claim core
+    (`spacepdhcg-single-gpu-integration`, 9a4cbea capability `e546583b…`) was not touched; no GPU
+    use; `/home/angus/.spacepdhcg-gpu.lock` never created.
+- Changes (all committed as SpacePDHCG-Integration via `GIT_*` env; no push/amend/reset):
+  - `2e7548b` merge planner (memory files additive).
+  - `da0a96b` merge literature: three-way union of the appended `c_api.h`/`c_api.cpp` ABI blocks;
+    `pyproject` console script → `spacepdhcg.cli:main`; `planner.cli.add_commands()`; umbrella
+    `src/spacepdhcg/cli.py`; `src/spacepdhcg/__main__.py` (identical to gtoc12); `tests/test_cli_dispatch.py`.
+  - `2f4be21` merge gtoc12 @ fa91b43: dispatcher gains `gtoc12`, duplicate `pyproject` key dropped,
+    `COMPARATIVE_SOLVER_CAMPAIGN.md` appendix kept + GTOC12 pointer; `literature_baselines.json`
+    identical on both sides (deduplicated spec import).
+  - `f55a309` `docs/SINGLE_GPU_V2_CANDIDATE_REPORT.md`, `docs/GPU_DEFERRED_VALIDATION_V2.md`,
+    `benchmarks/gpu_deferred_validation_v2.json`, `tests/test_gpu_deferred_manifest.py`.
+- Validation (CPU only, `CUDA_VISIBLE_DEVICES=''`; evidence in `build-v2-verification/`):
+  - Ruff check/format clean (262 files). `cpp` RelWithDebInfo/Debug/ASan+UBSan Werror: 49/49 CTest
+    each (new planner + free-time smoke tests included); `cpp/native` 8/8 ×3; CMake consumer 1/1.
+  - Schema `--check` (G7 schemas, G4 policy header) pass.
+  - Full Python suite with the fresh library, pinned **CPU** QOCO (09f0495 + abstol patch, builtin
+    algebra) and GTOC12 data: 490 passed, 23 skipped (GPU-gated, offline artefacts, node).
+    Subsets: G4 contracts 67 passed (claim-core `40dc2174…`, policy `9ab3b444…`, applicability
+    `1c4e0d51…` unchanged), G6 freeze 37 passed, GTOC12 39 passed incl. official binary
+    reproduction, literature 81 passed / 11 offline skips, planner viewer export 4/4 with node.
+  - Wheel/sdist built; fresh venv import + ABI (`spacepdhcg_planner_create`, `spacepdhcg_pd3_fft_create`,
+    `spacepdhcg_pd6_fft_create`) + CLI (`--help`, `validate`, `defaults hcw`, `plan --backend
+    cpu_reference`, `gtoc12 --help`, `python -m spacepdhcg`, exit 66 without GPU) pass.
+  - CUDA sm_120 Release + Debug configure/build of all 175 targets (pinned PDHCG 167c8b7) pass;
+    68-test CTest inventory recorded, not executed.
+  - Web viewer: `npm run check` pass (Linux node 20, Windows node 24); `npm test` 6/6 on Windows
+    node 24 (suite is Windows-specific; 4/6 on Linux with two environment-only failures).
+  - Frozen artefacts blob-identical to 63271d5 (fixed-time transcription headers, persistent_pdhcg.cu,
+    device_scvx_integration_test.cu, recovery_test.cu, G4 JSON + .sha256, paper2_instances.json);
+    `device_scvx.cu` +370/−0; `device_scvx_c_api.h` +49 with CRLF→LF only.
+- Follow-up notes / risks:
+  - Wheel consumers cannot run `spacepdhcg literature …` / `gtoc12 …` (registries resolved via
+    `Path(__file__).parents[3]`; pre-existing on both branches).
+  - Promotion after the claim-core finish script:
+    `cd /home/angus/worktrees/spacepdhcg-single-gpu-integration && test -z "$(git status --porcelain=v1)" && test "$(git rev-parse HEAD)" = 63271d58b78df343c1ae694525e460db31696f5d && git merge --ff-only integration/single-gpu-v2-candidate`.
+  - Later commits on `feat/gtoc12-asteroid-mining` (after fa91b43) are not in the candidate.

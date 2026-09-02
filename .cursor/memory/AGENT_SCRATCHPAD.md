@@ -1567,3 +1567,74 @@ Use this file as persistent, repo-local execution memory.
   and a joint re-timing pass that spends the margin on faster hops.
 - Greedy fleets thin the clusters for later ships (548 / 442 / 404 kg); joint assignment via the
   G7 master is the natural upgrade.
+
+### 2026-09-03 06:20 AEST - Single-GPU v2 candidate consolidation (WSL, CPU only)
+
+#### Task Summary
+
+- Consolidated `feat/planner-cli` (c74fdb7), `feat/literature-targets` (f6e8140) and
+  `feat/gtoc12-asteroid-mining` @ fa91b43 into `integration/single-gpu-v2-candidate`
+  (worktree `/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 63271d5 = live tip of
+  `integration/single-gpu-v1`) without touching the G4 claim-core worktree, branch, or GPU.
+
+#### Mistakes And Fixes
+
+- `[self]` The brief said the integration HEAD was 9678134; the branch had moved to 63271d5 (five
+  G4 campaign commits). Based the candidate on 63271d5 so promotion is `--ff-only`; recorded the
+  deviation in the report. Rule: `git log --oneline -3 <branch>` before trusting a quoted HEAD.
+- `[self]` Ran `python -S -m pytest` with `PYTHONPATH=src` only; `-S` drops site-packages, so
+  pytest/build were "missing". The sealed G0 recipe puts the venv `site.getsitepackages()[0]` on
+  `PYTHONPATH` as well. Copy that line verbatim.
+- `[self]` The full suite died silently (rc=1, no summary, faulthandler silent) inside
+  `tests/test_qoco_cpu_reference.py` because `SPACEPDHCG_QOCO_LIBRARY` pointed at the cuDSS/CUDA
+  QOCO while `CUDA_VISIBLE_DEVICES=''`. The sealed G0 gate silently used the GPU there. Fix: build
+  the pinned QOCO 09f0495 + abstol patch with `-DQOCO_ALGEBRA_BACKEND=builtin` (115 KB, no CUDA
+  linkage) and point the suite at it; 490 passed.
+- `[self]` `rsync --exclude 'build*'` also dropped `docs/qocogen/build.rst` from the QOCO source copy
+  (harmless, but the copy shows a spurious deletion). Exclude `build/` and `build-*/` explicitly.
+- `[self]` Guessed `spacepdhcg defaults hcw_rendezvous`; the family id is `hcw`.
+- `[tool]` WSL system `python3` is 3.10 (no `tomllib`); always use the venv interpreter for repo
+  scripts.
+- `[tool]` A PowerShell session whose cwd is a `\\wsl.localhost` UNC path stops returning output for
+  every later command; pass `working_directory` explicitly or `Set-Location` back to `C:` first.
+- `[tool]` Windows `node` via WSL interop cannot serve the viewer from a WSL path (`npm test`
+  404s); the viewer's `npm test` is Windows-specific (`pathname.slice(1)`, UNC archive path). Use
+  `/home/angus/.local/node/bin` (Linux node 20) for `check.mjs`/pytest and Windows node on a
+  `git archive` export for `npm test`.
+- `[tool]` `git diff --cached --check` fails on the literature branch's generated
+  `docs/REFERENCE_REPRODUCTION_REPORT.md` (trailing double-space line breaks); do not gate merges
+  on it for generated files.
+
+#### What Worked
+
+- Merge order planner → literature → gtoc12 with three-way *union of insertions* for `c_api.h/.cpp`
+  (both sides only appended at the same anchors; `difflib` opcodes verified insert-only, includes
+  deduplicated, `g++ -fsyntax-only -Werror` before committing).
+- Additive conflict resolution for the tracked memory files (keep ours, then theirs).
+- Unified CLI: `planner.cli.add_commands(subparsers)` + umbrella `spacepdhcg.cli` accepting `func`
+  and `function` handlers; `python -m spacepdhcg` from gtoc12's `__main__.py`.
+- CUDA sm_120 Release/Debug configure+build (175 targets, ~40 s each with 6 jobs) needs no device;
+  `-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg` is
+  read-only for CMake (it copies the source into the build tree).
+- Blob-id comparison (`git rev-parse base:path` vs `HEAD:path`) is the cheapest byte-identity
+  evidence for frozen fixtures; the new manifest test recomputes the blob ids from the working tree.
+
+#### Guardrails For Next Session
+
+- Never run `ctest` in a CUDA tree (even `spacepdhcg_plan_capabilities`) while the G4 campaign owns
+  the device; build only, and keep `CUDA_VISIBLE_DEVICES=''` exported in CPU gates.
+- The GPU-variant `libqoco.so` touches the device on load-and-solve; CPU gates need the builtin
+  build (`build-v2-qoco-cpu/libqoco.so`, sha256 `089d5fa7…`).
+- Wheel consumers cannot run `spacepdhcg literature …`/`gtoc12 …` (registries resolved from
+  `__file__`); pre-existing on both branches, listed as a follow-up.
+- Promotion: `git merge --ff-only integration/single-gpu-v2-candidate` from the integration
+  worktree only after the claim-core finish script has run and `integration/single-gpu-v1` is
+  still 63271d5.
+
+#### Follow-Ups / Risks
+
+- All GPU work is deferred and enumerated in `benchmarks/gpu_deferred_validation_v2.json` /
+  `docs/GPU_DEFERRED_VALIDATION_V2.md` (planner GPU pytest, sanitizers, CUDA ctest subset, literature
+  `device_time_dilated_test` + `gpu-run`, GTOC12 GPU Lambert parity, current-head G2/G3 reseal).
+- The candidate's `libspacepdhcg_cuda.so` (`af835ad8…`) differs from the campaign's pinned
+  `84d98bcd…`; a new G0-G3 seal and capability are required before any G4-class claim from it.
