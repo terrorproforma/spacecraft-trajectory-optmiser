@@ -141,12 +141,18 @@ controls/risk aggregates rather than all scenario states.
 Refer to:
 
 - `benchmarks/paper1_matrix.json`;
+- `benchmarks/literature_baselines.json`;
+- `docs/COMPARATIVE_SOLVER_CAMPAIGN.md`;
 - `docs/BENCHMARK_PROTOCOL.md`.
 
 ## 7.1 Solvers
 
 Clarabel, OSQP, upstream PDHCG one-shot, SpacePDHCG persistent, QOCO-GPU, CuClarabel, and selected
-custom structured baselines.
+custom structured baselines for byte-equivalent CQP comparisons.
+
+OpenSCvx, SCPToolbox or its maintained successor, SCvxGEN, CasADi with IPOPT, and pykep with IPOPT
+where applicable for complete end-to-end trajectory-system comparisons. Published timing is
+contextual; common-hardware reruns support speedup claims.
 
 ## 7.2 Hardware
 
