@@ -1638,3 +1638,91 @@ Use this file as persistent, repo-local execution memory.
   `device_time_dilated_test` + `gpu-run`, GTOC12 GPU Lambert parity, current-head G2/G3 reseal).
 - The candidate's `libspacepdhcg_cuda.so` (`af835ad8…`) differs from the campaign's pinned
   `84d98bcd…`; a new G0-G3 seal and capability are required before any G4-class claim from it.
+
+### 2026-09-03 08:05 AEST - Installed-wheel asset resolution fix (WSL, CPU only)
+
+#### Task Summary
+
+- Fixed the wheel-consumer defect on `integration/single-gpu-v2-candidate` (worktree
+  `/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 2c8c651): `spacepdhcg literature …` /
+  `gtoc12 …` resolved `benchmarks/` via `Path(__file__).parents[3]`. New `spacepdhcg.resources`
+  resolver (`$SPACEPDHCG_BENCHMARKS_DIR` authoritative → source checkout → `spacepdhcg/_data`
+  packaged copies), 34 frozen assets mirrored by `scripts/sync_packaged_assets.py`, every
+  `parents[n]` root assumption in `src/` replaced, `tests/test_resources.py` (30 tests), evidence in
+  `docs/WHEEL_ASSET_RESOLUTION_FIX.md` + `build-v2-wheel-fix/`. Commit b20e2ea. GPU and the G4
+  integration worktree untouched.
+
+#### Mistakes And Fixes
+
+- `[tool]` The Cursor `Write` tool writes **CRLF** when targeting `\\wsl.localhost\...` paths (the
+  `StrReplace` tool preserves the file's LF). `ruff format --check` catches `.py`, but Markdown/JSON
+  would slip through. Rule: after every whole-file write into WSL run
+  `for f in $(git status --porcelain --untracked-files=all | awk '{print $2}'); do file "$f" | grep -q CRLF && sed -i 's/\r$//' "$f"; done`
+  before linting/committing (never touch the frozen `benchmarks/*.json`, several of which are CRLF on
+  purpose and hash-locked).
+- `[self]` First wheel audit asserted `"gtoc12/data" not in name` and tripped on
+  `spacepdhcg/gtoc12/data.py`. Match the full prefix (`spacepdhcg/_data/benchmarks/gtoc12/data/`)
+  when excluding the large-data directory.
+- `[self]` `PurePosixPath("benchmarks/./x")` collapses `.`; a "reject `.` segments" test was wrong.
+  Reject absolute paths, `..`, and empty names; normalise `.`.
+- `[tool]` PowerShell mangles `$f`/`\$` in `wsl -e bash -lc "…"`; the reliable loop is: `Write` the
+  script to `/tmp/v2fix/step_x.sh`, then `wsl -e bash -lc "tr -d '\r' < step_x.sh > step_xu.sh && bash step_xu.sh"`
+  (no `$` in the PowerShell string). Same for heredocs.
+
+#### User Preferences Learned Or Reinforced
+
+- `[user]` "Fix properly": one resolver module, packaged data through `wheel.packages`, never large
+  datasets, SHA-256 test for packaged copies, tests from a *fresh venv + built wheel*, frozen G4/G6/
+  topology hashes unchanged, commit with `GIT_*` env identity (no config edits/push/amend/reset).
+- `[user]` Report back files changed, resolver semantics, packaged asset list with sizes, test
+  results, commit hash, and explicit confirmation that frozen hashes are unchanged.
+
+#### What Worked
+
+- Resolver design: repository-relative POSIX asset names; the env override is *authoritative* for
+  `benchmarks/…` (a bogus override fails loudly - proven in the consumer venv with a `{}` registry);
+  `locate_directory()` for run-time dirs (GTOC12 data), `output_root()` for generated reports,
+  `cache_root()` (`$SPACEPDHCG_CACHE_DIR` / XDG / `~/.cache/spacepdhcg`).
+- Tracked mirror `src/spacepdhcg/_data` + `sync_packaged_assets.py --check` + a byte-identity test
+  (repo copy vs mirror vs `.sha256` lock) instead of CMake install rules: no `cpp/` change, works from
+  the sdist, testable from the checkout without building a wheel. `git rev-parse HEAD:<path>` blob ids
+  are identical for all 34 pairs.
+- Simulating the installed layout in pytest by `monkeypatch.setattr(resources, "repository_root",
+  lambda: None)` — every module calls `resources.<fn>()` through the module attribute, so one patch
+  covers literature, gtoc12, planner, orbitweaver.
+- Consumer gate from `/tmp` with `env -u PYTHONPATH -u SPACEPDHCG_NATIVE_LIBRARY -u SPACEPDHCG_GTOC12_DATA …`
+  and the repo's own `tests/test_gtoc12_verifier.py` run against the installed package (20 passed,
+  incl. the official-binary reproduction) - strongest evidence that rules + verifier work from a wheel.
+- Moving `scripts/gtoc12/fetch_gtoc12_data.py` into `spacepdhcg.gtoc12.fetch` (script = thin
+  wrapper) so `spacepdhcg gtoc12 fetch` works from a wheel; the packaged `libspacepdhcg.so` already
+  exports the Lambert ABI, so `NativeLambert()` falls back to it.
+
+#### What Failed Or Was Inefficient
+
+- `git diff --cached --check` flags every line of the mirrored `g4_policy.json` (source file is
+  CRLF and hash-locked) - expected; do not gate on `--check` for mirrored frozen files.
+- `tests/test_resources.py::test_lambert_library_resolution` first assumed `packaged_library_path()`
+  always succeeds; from `src/` there is no packaged `.so` unless `SPACEPDHCG_NATIVE_LIBRARY` is set,
+  so the test now accepts either outcome.
+
+#### Guardrails For Next Session
+
+- After changing any file in `spacepdhcg.resources.PACKAGED_ASSETS`, run
+  `python scripts/sync_packaged_assets.py` (the `--check` and `tests/test_resources.py` fail otherwise).
+- Never write generated outputs into `resources.asset_path(...)` locations (may be the wheel);
+  use `resources.output_root()` (report/provenance writers already do).
+- New repo-relative inputs in `src/` must go through `resources.asset_path()`; grep
+  `parents\[` in `src/` should only hit `resources.py`, the registry's explicit custom-path rule, and
+  `orbitweaver/adapters.py` (a dict named `parents`).
+- The scratchpad is ~1700 lines and the devlog ~1200: both are past the rollover threshold;
+  archive-first rollover is due at the next consolidation pass.
+
+#### Follow-Ups / Risks
+
+- `spacepdhcg literature run/report` from a wheel write below the working directory
+  (`benchmarks/literature/reference_reproduction.json`, `docs/…`, `results/literature/`); acceptable
+  and documented, but an explicit `--output` option would be cleaner.
+- `web/trajectory-viewer` is not packaged; planner exports from a wheel omit the static viewer files
+  unless `SPACEPDHCG_VIEWER_SOURCE` is set (pre-existing, now explicit).
+- Promotion of the candidate to `integration/single-gpu-v1` is unchanged (ff-only after the
+  claim-core finish script); this fix is one extra commit on the candidate.

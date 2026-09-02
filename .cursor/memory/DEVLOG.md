@@ -1170,3 +1170,60 @@
   - Promotion after the claim-core finish script:
     `cd /home/angus/worktrees/spacepdhcg-single-gpu-integration && test -z "$(git status --porcelain=v1)" && test "$(git rev-parse HEAD)" = 63271d58b78df343c1ae694525e460db31696f5d && git merge --ff-only integration/single-gpu-v2-candidate`.
   - Later commits on `feat/gtoc12-asteroid-mining` (after fa91b43) are not in the candidate.
+
+## 2026-09-03 08:05 AEST
+
+- Task summary:
+  - Fixed the installed-wheel defect on `integration/single-gpu-v2-candidate`
+    (`/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 2c8c651): `spacepdhcg literature …`,
+    `spacepdhcg gtoc12 …` and `spacepdhcg-orbitweaver-g7 validate-matrix` resolved `benchmarks/`
+    through `Path(__file__).parents[3]`. CPU only; `CUDA_VISIBLE_DEVICES=""`; the G4 integration
+    worktree and the GPU were not touched; `/home/angus/.spacepdhcg-gpu.lock` never created.
+- Changes (commit `b20e2ea`, author SpacePDHCG-Integration via `GIT_*` env; no push/amend/reset):
+  - `src/spacepdhcg/resources.py` (new): `asset_path()` resolves repository-relative names in the order
+    `$SPACEPDHCG_BENCHMARKS_DIR` (authoritative for `benchmarks/…`; missing file → `AssetNotFound`
+    naming the variable) → source checkout containing the module → `spacepdhcg/_data` packaged copies;
+    `AssetNotFound` lists every searched location; `locate_directory()`, `cache_root()`
+    (`$SPACEPDHCG_CACHE_DIR` / XDG / `~/.cache/spacepdhcg`), `output_root()`, `compare_packaged_assets()`.
+  - `src/spacepdhcg/_data/` (new, 34 files, 270,583 B + README): literature registry/provenance/
+    external sources/11 profiles/Chari samples/TOPS selection/GTOC subsets, GTOC12 rules/pins/
+    reduced-instance/reference reproductions, G4 policy/applicability/claim core + `.sha256` locks,
+    campaign scopes, paper1/paper2 matrices, paper2 instances, provenance schema. Maintained by
+    `scripts/sync_packaged_assets.py` (`--check`). No large data (gtoc12/data, downloads) packaged.
+  - Resolver adoption: `literature/{registry,external_sources,provenance,pd6_monte_carlo,report,cli}.py`,
+    `gtoc12/{data,reduced_instance,lambert,cli}.py`, new `gtoc12/fetch.py` (fetch logic moved from
+    `scripts/gtoc12/fetch_gtoc12_data.py`, now a thin wrapper), `planner/viewer_export.py`,
+    `orbitweaver/cli.py`. Module path constants became functions (`registry_path()`, `store_path()`,
+    `rules_path()`, `default_rule_path()`, …); `load_rules()` added; GTOC12 data dir falls back to
+    `<cache>/gtoc12`; `NativeLambert` falls back to the packaged `libspacepdhcg`.
+  - Tests: `tests/test_resources.py` (30 tests: order, override authority, error messages, SHA-256
+    byte identity incl. hash locks, sync-script drift/repair, commands from a simulated installed
+    layout); `test_gtoc12_rules_and_data.py`, `test_gtoc12_pipeline.py`, `test_literature_provenance.py`
+    and `scripts/literature/build_provenance.py` moved to the new accessors.
+  - Docs: README (layout + "Frozen assets from an installed wheel"), `docs/GTOC12_TRACK.md`,
+    `docs/LITERATURE_TARGETS.md`, new `docs/WHEEL_ASSET_RESOLUTION_FIX.md`, candidate report follow-up
+    closed; `pyproject.toml` comment on `wheel.packages`.
+- Validation (evidence `build-v2-wheel-fix/`: `summary.tsv`, `summary-py.tsv`, `commands.txt`, logs):
+  - Ruff check/format clean (268 files); G7 schema, G4 policy header, provenance store and packaged
+    mirror `--check` pass.
+  - Full Python suite (`python -S -m pytest`, RelWithDebInfo library, pinned CPU QOCO, GTOC12 data):
+    527 passed, 23 skipped (550 collected; same GPU/offline/node skips). G4 contracts 67 passed; G6
+    freeze 37 passed; topology/handback/G7/G5 hash tests 85 passed, 1 skipped; GTOC12 39 passed;
+    literature 81 passed / 11 offline skips; planner+CLI+resources 92 passed / 11 skips.
+  - Frozen hashes unchanged: `sha256sum -c` OK for `g4_policy` (`9ab3b444…`), `g4_applicability`
+    (`1c4e0d51…`), `g4_h5_h6_claim_core` (`40dc2174…`); `git diff HEAD -- benchmarks/ experiments/
+    cpp/ papers/ web/` empty; mirror blobs identical to the originals.
+  - Wheel `e3f51456…` + sdist `26dd1a1e…` built; wheel audit (34 assets byte-identical, no
+    `gtoc12/data`, native lib present); a wheel built from the extracted sdist has identical `_data`.
+  - Fresh `uv` venv from `/tmp` with repo env unset: `--help`, `capabilities`, `validate`, `defaults hcw`,
+    `plan --backend cpu_reference` (certified), `literature list/status/provenance`, `literature report`
+    (exit 1, "no reproduction records yet"), `gtoc12 --help`, `gtoc12 fetch --help`, rules unit path,
+    missing-data message, `gtoc12 reduced-instance` (with `SPACEPDHCG_GTOC12_DATA`), `NativeLambert()`
+    via the packaged library, `tests/test_gtoc12_rules_and_data.py` + `test_gtoc12_verifier.py` against
+    the installed package (20 passed), `spacepdhcg-orbitweaver-g7 validate-matrix`,
+    `spacepdhcg-paper1 --help`, override semantics, installed `_data` byte-identical to the repository.
+- Follow-ups / risks:
+  - `literature run/report` from a wheel write below the working directory (documented).
+  - `web/trajectory-viewer` remains unpackaged (export omits viewer files unless
+    `SPACEPDHCG_VIEWER_SOURCE`).
+  - Memory files are past the rollover threshold; archive-first rollover due next consolidation.
