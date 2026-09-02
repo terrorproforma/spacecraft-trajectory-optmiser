@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+  "family": "powered_descent_6dof",
+  "units": {"position": "m", "velocity": "m/s", "mass": "kg", "thrust": "N", "torque": "N*m", "angle": "deg", "angular_rate": "deg/s", "time": "s"},
+  "horizon": {"intervals": 20, "final_time": 4.0, "free_final_time": false},
+  "initial_state": [0.0, 0.0, 100.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2000.0],
+  "terminal": {
+    "state": [0.0, 0.0, 97.0, 0.0, 0.0, -0.4, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "fixed": [true, true, true, true, true, true, true, true, true, true, true, true, true, false]
+  },
+  "vehicle": {
+    "dry_mass": 1000.0,
+    "exhaust_velocity": 2173.9130434782608,
+    "thrust": {"minimum": 0.0, "maximum": 15000.0},
+    "principal_inertia": [2500.0, 2200.0, 1800.0],
+    "maximum_torque": 2000.0
+  },
+  "environment": {"gravity": [0.0, 0.0, -3.711]},
+  "constraints": {"maximum_tilt": 30.0, "glide_slope": 60.0, "minimum_altitude": 0.0, "maximum_angular_rate": 57.29577951308232},
+  "solver": {
+    "backend": "pure_qoco",
+    "tolerance": 1.0e-6,
+    "maximum_outer_iterations": 30,
+    "time_limit_seconds": 600
+  },
+  "output": {"dense_replay_substeps": 10}
+}

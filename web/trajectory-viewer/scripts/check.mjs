@@ -27,14 +27,27 @@ const html = htmlBytes.toString();
 const app = appBytes.toString();
 const css = cssBytes.toString();
 
+// Two dataset kinds share the viewer: the verified archive (default) and planner
+// exports written by `spacepdhcg plan --export-viewer`.  Archive-specific assertions
+// (authoritative SHA, fixed family list, archive companions, 201..512 replay density)
+// apply only to the archive; planner exports carry `dataset_kind: "planner-export"`.
+const plannerExport = data.dataset_kind === "planner-export";
+
 assert.equal(data.viewer_schema_version, "1.0.0");
-assert.equal(data.imported_source_sha256, "83fc5031ecafccbdc7ae624df4a61679fd2af342ce315e528adda9e6325ae6d2");
+if (plannerExport) {
+  assert.equal(manifest.dataset_kind, "planner-export");
+  assert.match(data.imported_source_sha256, /^[0-9a-f]{64}$/);
+  assert.equal(data.generated_by, "spacepdhcg plan --export-viewer");
+  assert.ok(Array.isArray(data.trajectories) && data.trajectories.length >= 1, "planner export trajectories");
+} else {
+  assert.equal(data.imported_source_sha256, "83fc5031ecafccbdc7ae624df4a61679fd2af342ce315e528adda9e6325ae6d2");
+  assert.ok(data.archive?.data_dictionary && data.archive?.validation_report);
+  assert.deepEqual(data.trajectories.map((item) => item.family), ["P1-B", "P1-C", "P1-D", "P1-E", "P2"]);
+}
 assert.equal(data.imported_source_sha256, manifest.source.sha256);
 assert.equal(sha256(dataBytes), manifest.files["trajectories.json"].sha256);
 assert.equal(dataBytes.length, manifest.files["trajectories.json"].bytes);
 assert.equal(data.prohibitions.visual_interpolation_included, false);
-assert.ok(data.archive?.data_dictionary && data.archive?.validation_report);
-assert.deepEqual(data.trajectories.map((item) => item.family), ["P1-B", "P1-C", "P1-D", "P1-E", "P2"]);
 
 for (const item of data.trajectories) {
   assert.equal(typeof item.qualification.qualified, "boolean", `${item.family} qualification`);
@@ -56,22 +69,35 @@ for (const item of data.trajectories) {
       Number.isInteger(value) && (index === 0 || value > series.selected_indices[index - 1])),
     `${item.family} ${mode} source index order`);
   }
-  assert.ok(item.replay.point_count >= 201 && item.replay.point_count <= 512, `${item.family} replay density`);
+  if (plannerExport) {
+    assert.ok(item.replay.point_count >= 2, `${item.family} replay density`);
+    assert.ok(item.transcription.point_count >= 3, `${item.family} node count`);
+    assert.ok(Array.isArray(item.terminal_target) && item.terminal_target.length >= 3, `${item.family} terminal target`);
+    assert.ok(["hcw", "local-surface", "central-body"].includes(item.viewer.scene_kind), `${item.family} scene kind`);
+    assert.ok(Array.isArray(item.viewer.axes) && item.viewer.axes.length === 3, `${item.family} axes`);
+    assert.ok(typeof item.source.run_id === "string" && typeof item.source.commit === "string", `${item.family} provenance`);
+    assert.ok(typeof item.frame === "string" && typeof item.position_units === "string", `${item.family} frame/units`);
+    assert.equal(item.replay.points_txyz.at(-1)[0], item.transcription.points_txyz.at(-1)[0], `${item.family} replay reaches final time`);
+  } else {
+    assert.ok(item.replay.point_count >= 201 && item.replay.point_count <= 512, `${item.family} replay density`);
+  }
   assert.deepEqual(item.replay.points_txyz[0].slice(1), item.initial_state.slice(0, 3), `${item.family} replay initial state`);
 }
 
-const byFamily = Object.fromEntries(data.trajectories.map((item) => [item.family, item]));
-assert.equal(byFamily["P1-B"].viewer.scene_kind, "hcw");
-assert.equal(byFamily["P1-B"].viewer.body_radius, null);
-for (const family of ["P1-C", "P1-D"]) {
-  assert.equal(byFamily[family].viewer.scene_kind, "local-surface");
-  assert.equal(byFamily[family].viewer.body_radius, 0);
-  assert.match(byFamily[family].viewer.radius_label, /Z = 0/);
+if (!plannerExport) {
+  const byFamily = Object.fromEntries(data.trajectories.map((item) => [item.family, item]));
+  assert.equal(byFamily["P1-B"].viewer.scene_kind, "hcw");
+  assert.equal(byFamily["P1-B"].viewer.body_radius, null);
+  for (const family of ["P1-C", "P1-D"]) {
+    assert.equal(byFamily[family].viewer.scene_kind, "local-surface");
+    assert.equal(byFamily[family].viewer.body_radius, 0);
+    assert.match(byFamily[family].viewer.radius_label, /Z = 0/);
+  }
+  assert.equal(byFamily["P1-E"].viewer.body_radius, 6500);
+  assert.match(byFamily["P1-E"].viewer.radius_label, /constraint/i);
+  assert.equal(byFamily.P2.viewer.body_radius, 6378136.3);
+  assert.match(byFamily.P2.frame, /Earth-centred inertial/);
 }
-assert.equal(byFamily["P1-E"].viewer.body_radius, 6500);
-assert.match(byFamily["P1-E"].viewer.radius_label, /constraint/i);
-assert.equal(byFamily.P2.viewer.body_radius, 6378136.3);
-assert.match(byFamily.P2.frame, /Earth-centred inertial/);
 
 for (const id of requiredIds) assert.match(html, new RegExp(`id=["']${id}["']`), `DOM id ${id}`);
 assert.match(html, /<script type="module" src="\.\/app\.js"><\/script>/);
@@ -81,5 +107,5 @@ assert.match(app, /webglcontextlost/);
 assert.match(app, /webglcontextrestored/);
 assert.doesNotMatch(`${html}\n${css}\n${app}`, /https?:\/\/(?!localhost|127\.0\.0\.1)/i, "No external URLs");
 
-console.log(`Validated ${data.trajectories.length} trajectories, ${data.trajectories.reduce((sum, item) => sum + item.replay.point_count, 0)} dense replay points`);
+console.log(`Validated ${data.trajectories.length} ${plannerExport ? "planner-export" : "archive"} trajectories, ${data.trajectories.reduce((sum, item) => sum + item.replay.point_count, 0)} dense replay points`);
 console.log(`Data SHA-256 ${manifest.files["trajectories.json"].sha256}`);

@@ -904,3 +904,54 @@
   - G4 is scientifically authorised, but launch is blocked until a new official capability is
     generated for the final clean report descendant. The old b0cd570 capability was not reused.
   - All archives remain local-only; no immutable URI exists.
+
+## 2026-09-03 02:45 AEST
+
+- Task summary:
+  - Built the user-facing planner (`spacepdhcg plan` CLI + `spacepdhcg.planner.plan()`) on the
+    validated single-GPU device SCvx stack in the isolated worktree
+    `/home/angus/worktrees/spacepdhcg-planner` (`feat/planner-cli` from `b6afb49`).
+- Changes:
+  - `cpp/include/spacepdhcg/planner/{json,problem,families,describe}.hpp`: strict JSON model,
+    schema-1.0.0 problem parser with the native default table, and per-family adapters that build
+    the frozen HCW/3-DoF/6-DoF/low-thrust transcriptions from user values, emit the device layout
+    metadata, generate dynamics-consistent references, replay controls (RK4 / exact HCW ZOH), and
+    evaluate device-equivalent path/terminal metrics.
+  - `cpp/cuda/tools/spacepdhcg_plan.cu`: native executable running the persistent SCvx driver
+    (pure_qoco / pdhcg / pdhcg_recovery), independent host replay, certificate gates, strict JSON
+    result, deterministic exit codes (0/2/3/64/65/66/70), optional wall-clock cancellation.
+  - `cpp/src/c_api.cpp` + `c_api.h`: `spacepdhcg_planner_*` transcription ABI (structure, values,
+    reference, rollout, evaluate, describe, defaults) used by the Python CPU reference.
+  - `src/spacepdhcg/planner/`: JSON Schema, unit normalisation, native runner, Clarabel CPU
+    reference SCvx loop (device acceptance/trust/convergence rules, relative KKT audit), PlanResult
+    writers (JSON/CSV/summary), viewer export bundle, CLI; `web/trajectory-viewer/scripts/check.mjs`
+    now validates `dataset_kind: planner-export` while keeping every archive assertion.
+  - `examples/planner/` (four problems + README), `docs/PLANNER.md`, README section, native smoke
+    tests `planner_problem_smoke` / `planner_c_api_smoke`, Python tests (schema, CPU reference,
+    viewer export, gated GPU).
+- Validation:
+  - Ruff lint/format clean (143 files). Python: 366 passed, 13 skipped (GPU/QOCO gated).
+  - Native host Release, Debug, Debug+ASan/UBSan Werror builds: 47/47 tests each. CUDA 12.8
+    `sm_120` Release and Debug Werror builds of `spacepdhcg_plan` succeeded.
+  - GPU correctness so far (before the other worker's G4 claim core started at 01:26 AEST):
+    3-DoF hover pure_qoco N=20 certified (objective 0.492694362, 3 outer, terminal 3.3e-11,
+    13.0 s); HCW pdhcg N=20 certified (0.28 s). CPU reference certifies all four examples in
+    < 1 s each; CPU vs GPU on the identical hover problem: objective rel. diff 1e-7, states within
+    6 mm.
+  - Viewer export `npm run check` passes for the planner export and still passes for the archive.
+- Follow-up notes / risks:
+  - My probes overlapped the other worker's `--g4-session` from ~01:40 to 02:07 AEST (see
+    scratchpad); their groups in that window should be treated as contaminated.
+  - Wheel check: `python -m build --wheel` + fresh venv install; `spacepdhcg validate`, `defaults`,
+    `plan --backend cpu_reference` (low thrust certified in 0.72 s) and the honest GPU-unavailable
+    exit 66 all passed from the packaged wheel (schema JSON packaged).
+  - Commit `27569ad` (planner), follow-up commit with summary rendering and memory writeback.
+  - BLOCKED (GPU occupied): from 01:26 AEST the other worker ran G4 claim-core sessions
+    (`device_scvx_integration_test --g4-session`), a deadline repro from 03:00, and at ~03:54 the
+    full `run_g4_campaign.py run --claim-core` campaign with two session processes. Waiting
+    windows: 02:07-03:11 and 03:11-04:06 with pid-level `gpu_free.sh` polling; the GPU never
+    became free. Not executed this session: `SPACEPDHCG_PLANNER_GPU_TESTS=1 pytest
+    tests/test_planner_gpu.py` (6-DoF and low-thrust GPU plans, warm start on GPU, backend
+    selection, native failure reporting), `compute-sanitizer --tool memcheck spacepdhcg_plan`,
+    and the CUDA CTest subset. `/home/angus/planner-scratch/gpu_validation.sh {tests,memcheck,
+    sanitizers,examples,ctest}` runs each stage after `gpu_free.sh` reports FREE.

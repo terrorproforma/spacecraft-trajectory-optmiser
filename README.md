@@ -62,7 +62,10 @@ src/spacepdhcg/
   models/       spacecraft dynamics and benchmark models
   backends/     persistent CPU references and accelerator adapters
   benchmarks/   reproducible latency, throughput and accuracy experiments
+  planner/      user-facing planner (schema, CLI/API, CPU reference, viewer export)
 
+cpp/cuda/tools/spacepdhcg_plan.cu   native planner executable on the device SCvx stack
+examples/planner/                   one runnable problem document per family
 tests/          algebraic, solver and trajectory feasibility tests
 docs/           research scope, decisions, architecture and milestone gates
 ```
@@ -76,6 +79,15 @@ pytest
 spacepdhcg-cw-benchmark --repeats 20 --intervals 40
 spacepdhcg-cw-socp-benchmark --repeats 20 --intervals 40
 ```
+
+## Planner
+
+`spacepdhcg plan problem.json --output out/` plans one trajectory (HCW rendezvous, 3-DoF or
+6-DoF powered descent, low-thrust transfer) on the validated single-GPU SCvx stack and emits
+node/dense histories, per-iteration telemetry, timings, and an independent-replay certificate.
+`--backend cpu_reference` runs the clearly labelled Clarabel SCvx reference over the same
+native transcription. See [`docs/PLANNER.md`](docs/PLANNER.md) and
+[`examples/planner/README.md`](examples/planner/README.md).
 
 The upstream PDHCG package is intentionally optional because it requires a compatible NVIDIA CUDA environment. CPU installation and CI do not import it.
 

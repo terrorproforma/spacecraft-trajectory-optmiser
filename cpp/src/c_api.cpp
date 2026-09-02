@@ -4,14 +4,25 @@
 #include "spacepdhcg/dynamics/powered_descent_3dof.hpp"
 #include "spacepdhcg/orbitweaver/lambert.hpp"
 #include "spacepdhcg/orbitweaver/lambert_family.hpp"
+#include "spacepdhcg/planner/describe.hpp"
+#include "spacepdhcg/planner/families.hpp"
+#include "spacepdhcg/planner/json.hpp"
+#include "spacepdhcg/planner/problem.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include <exception>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
+
+struct spacepdhcg_planner {
+    std::unique_ptr<spacepdhcg::planner::FamilyAdapter> adapter{};
+};
 
 namespace {
 
@@ -59,6 +70,83 @@ void require_pointer(const void* pointer, const char* name) {
     if (pointer == nullptr) {
         throw std::invalid_argument(std::string(name) + " pointer may not be null");
     }
+}
+
+const spacepdhcg::planner::FamilyAdapter& adapter_of(const spacepdhcg_planner* planner) {
+    require_pointer(planner, "planner");
+    if (!planner->adapter) {
+        throw std::invalid_argument("planner handle has no transcription");
+    }
+    return *planner->adapter;
+}
+
+template <typename Source, typename Destination>
+void copy_indices(const Source& source, Destination* destination, const char* name) {
+    require_pointer(destination, name);
+    for (std::size_t index = 0U; index < source.size(); ++index) {
+        destination[index] = static_cast<Destination>(source[index]);
+    }
+}
+
+void copy_doubles(const std::vector<double>& source, double* destination, const char* name) {
+    require_pointer(destination, name);
+    std::copy(source.begin(), source.end(), destination);
+}
+
+void copy_cones(
+    const std::vector<spacepdhcg::ConeBlockDescriptor>& cones,
+    spacepdhcg_planner_cone* destination,
+    const char* name
+) {
+    if (cones.empty()) {
+        return;
+    }
+    require_pointer(destination, name);
+    for (std::size_t index = 0U; index < cones.size(); ++index) {
+        destination[index].kind = static_cast<int32_t>(cones[index].kind);
+        destination[index].start = static_cast<int32_t>(cones[index].start);
+        destination[index].vector_dimension = static_cast<int32_t>(cones[index].vector_dimension);
+        destination[index].power_alpha = cones[index].power_alpha;
+    }
+}
+
+void write_path_components(
+    const std::vector<spacepdhcg::planner::PathComponent>& components,
+    spacepdhcg_planner_evaluation& evaluation
+) {
+    if (components.size() > SPACEPDHCG_PLANNER_MAX_PATH_COMPONENTS) {
+        throw std::runtime_error("too many path components for the planner ABI");
+    }
+    evaluation.path_component_count = components.size();
+    evaluation.path_violation = 0.0;
+    for (std::size_t index = 0U; index < components.size(); ++index) {
+        evaluation.path_normalised[index] = components[index].normalised;
+        evaluation.path_physical[index] = components[index].physical;
+        evaluation.path_violation =
+            std::max(evaluation.path_violation, components[index].normalised);
+        std::memset(evaluation.path_names[index], 0, sizeof(evaluation.path_names[index]));
+        std::strncpy(
+            evaluation.path_names[index],
+            components[index].name.c_str(),
+            sizeof(evaluation.path_names[index]) - 1U
+        );
+    }
+}
+
+void write_string(
+    const std::string& text,
+    char* buffer,
+    const size_t capacity,
+    size_t* required
+) {
+    require_pointer(required, "required size");
+    *required = text.size() + 1U;
+    if (buffer == nullptr || capacity == 0U) {
+        return;
+    }
+    const std::size_t count = std::min(capacity - 1U, text.size());
+    std::memcpy(buffer, text.data(), count);
+    buffer[count] = '\0';
 }
 
 void copy_lambert_solution(
@@ -330,6 +418,279 @@ spacepdhcg_status_code spacepdhcg_lambert_family_batch_cpu(
                 }
             }
         }
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_create(
+    const char* problem_json,
+    spacepdhcg_planner** planner
+) {
+    return guard([&] {
+        require_pointer(problem_json, "problem JSON");
+        require_pointer(planner, "planner handle");
+        *planner = nullptr;
+        auto problem = spacepdhcg::planner::parse_problem_text(problem_json);
+        auto handle = std::make_unique<spacepdhcg_planner>();
+        handle->adapter = spacepdhcg::planner::make_adapter(std::move(problem));
+        *planner = handle.release();
+    });
+}
+
+void spacepdhcg_planner_destroy(spacepdhcg_planner* planner) {
+    delete planner;  // NOLINT(cppcoreguidelines-owning-memory)
+}
+
+spacepdhcg_status_code spacepdhcg_planner_get_dimensions(
+    const spacepdhcg_planner* planner,
+    spacepdhcg_planner_dimensions* dimensions
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        require_pointer(dimensions, "dimensions");
+        const auto& info = adapter.layout();
+        const auto& structure = adapter.structure();
+        *dimensions = {};
+        dimensions->state_dimension = info.state_dimension;
+        dimensions->control_dimension = info.control_dimension;
+        dimensions->intervals = info.intervals;
+        dimensions->terminal_dimension = info.terminal_dimension;
+        dimensions->variables = info.variables;
+        dimensions->scalar_rows = info.scalar_rows;
+        dimensions->affine_rows = info.affine_rows;
+        dimensions->quadratic_nonzeros = structure.quadratic.nonzeros();
+        dimensions->scalar_nonzeros = structure.scalar_constraint.nonzeros();
+        dimensions->affine_nonzeros =
+            structure.affine_cone.has_value() ? structure.affine_cone->nonzeros() : 0U;
+        dimensions->affine_cone_count = structure.affine_cones.size();
+        dimensions->variable_cone_count = structure.variable_cones.size();
+        dimensions->virtual_variable_count = info.virtual_variables.size();
+        dimensions->step_seconds = adapter.problem().step_seconds;
+        dimensions->initial_trust_radius = adapter.problem().solver.trust.initial_radius;
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_structure(
+    const spacepdhcg_planner* planner,
+    int32_t* quadratic_offsets,
+    int32_t* quadratic_indices,
+    int32_t* scalar_offsets,
+    int32_t* scalar_indices,
+    int32_t* affine_offsets,
+    int32_t* affine_indices,
+    spacepdhcg_planner_cone* affine_cones,
+    spacepdhcg_planner_cone* variable_cones,
+    int32_t* state_variables,
+    int32_t* control_variables,
+    int32_t* virtual_variables
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        const auto& structure = adapter.structure();
+        const auto& info = adapter.layout();
+        copy_indices(structure.quadratic.offsets, quadratic_offsets, "quadratic offsets");
+        copy_indices(structure.quadratic.indices, quadratic_indices, "quadratic indices");
+        copy_indices(structure.scalar_constraint.offsets, scalar_offsets, "scalar offsets");
+        copy_indices(structure.scalar_constraint.indices, scalar_indices, "scalar indices");
+        require_pointer(affine_offsets, "affine offsets");
+        if (structure.affine_cone.has_value()) {
+            copy_indices(structure.affine_cone->offsets, affine_offsets, "affine offsets");
+            if (!structure.affine_cone->indices.empty()) {
+                copy_indices(structure.affine_cone->indices, affine_indices, "affine indices");
+            }
+        } else {
+            for (std::size_t column = 0U; column <= info.variables; ++column) {
+                affine_offsets[column] = 0;
+            }
+        }
+        copy_cones(structure.affine_cones, affine_cones, "affine cones");
+        copy_cones(structure.variable_cones, variable_cones, "variable cones");
+        copy_indices(info.state_variables, state_variables, "state variables");
+        copy_indices(info.control_variables, control_variables, "control variables");
+        if (!info.virtual_variables.empty()) {
+            copy_indices(info.virtual_variables, virtual_variables, "virtual variables");
+        }
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_values(
+    const spacepdhcg_planner* planner,
+    const double* reference_states,
+    const double* reference_controls,
+    const double trust_radius,
+    double* quadratic,
+    double* scalar_constraint,
+    double* affine_cone,
+    double* linear_objective,
+    double* scalar_lower,
+    double* scalar_upper,
+    double* affine_offset,
+    double* variable_lower,
+    double* variable_upper
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        require_pointer(reference_states, "reference states");
+        require_pointer(reference_controls, "reference controls");
+        const auto& info = adapter.layout();
+        spacepdhcg::planner::Trajectory reference{};
+        reference.states.assign(
+            reference_states,
+            reference_states + (info.intervals + 1U) * info.state_dimension
+        );
+        reference.controls.assign(
+            reference_controls,
+            reference_controls + info.intervals * info.control_dimension
+        );
+        const auto values = adapter.values(reference, trust_radius);
+        copy_doubles(values.quadratic, quadratic, "quadratic values");
+        copy_doubles(values.scalar_constraint, scalar_constraint, "scalar values");
+        if (!values.affine_cone.empty()) {
+            copy_doubles(values.affine_cone, affine_cone, "affine values");
+        }
+        copy_doubles(values.linear_objective, linear_objective, "linear objective");
+        copy_doubles(values.scalar_lower, scalar_lower, "scalar lower");
+        copy_doubles(values.scalar_upper, scalar_upper, "scalar upper");
+        if (!values.affine_offset.empty()) {
+            copy_doubles(values.affine_offset, affine_offset, "affine offset");
+        }
+        copy_doubles(values.variable_lower, variable_lower, "variable lower");
+        copy_doubles(values.variable_upper, variable_upper, "variable upper");
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_initial_reference(
+    const spacepdhcg_planner* planner,
+    double* states,
+    double* controls
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        const auto reference = adapter.initial_reference();
+        copy_doubles(reference.states, states, "reference states");
+        copy_doubles(reference.controls, controls, "reference controls");
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_rollout(
+    const spacepdhcg_planner* planner,
+    const double* initial_state,
+    const double* controls,
+    const uint64_t intervals,
+    const uint64_t substeps,
+    double* states
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        require_pointer(initial_state, "initial state");
+        require_pointer(controls, "controls");
+        require_pointer(states, "states");
+        if (intervals == 0U || substeps == 0U) {
+            throw std::invalid_argument("rollout requires positive intervals and substeps");
+        }
+        const auto& info = adapter.layout();
+        const std::vector<double> initial(initial_state, initial_state + info.state_dimension);
+        const std::vector<double> control_vector(
+            controls, controls + static_cast<std::size_t>(intervals) * info.control_dimension
+        );
+        const auto replay = adapter.rollout(
+            initial, control_vector, static_cast<std::size_t>(substeps)
+        );
+        std::copy(replay.begin(), replay.end(), states);
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_evaluate(
+    const spacepdhcg_planner* planner,
+    const double* states,
+    const double* controls,
+    spacepdhcg_planner_evaluation* evaluation
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        require_pointer(states, "states");
+        require_pointer(controls, "controls");
+        require_pointer(evaluation, "evaluation");
+        const auto& info = adapter.layout();
+        const std::vector<double> state_vector(
+            states, states + (info.intervals + 1U) * info.state_dimension
+        );
+        const std::vector<double> control_vector(
+            controls, controls + info.intervals * info.control_dimension
+        );
+        const auto result = adapter.evaluate(state_vector, control_vector);
+        *evaluation = {};
+        evaluation->objective = result.objective;
+        evaluation->terminal_residual = result.terminal_residual;
+        evaluation->terminal_position_error = result.terminal_position_error;
+        evaluation->terminal_velocity_error = result.terminal_velocity_error;
+        evaluation->propellant_used = result.propellant_used;
+        evaluation->final_mass = result.final_mass;
+        write_path_components(result.path, *evaluation);
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_path_components(
+    const spacepdhcg_planner* planner,
+    const double* states,
+    const double* controls,
+    const uint64_t intervals,
+    spacepdhcg_planner_evaluation* evaluation
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        require_pointer(states, "states");
+        require_pointer(controls, "controls");
+        require_pointer(evaluation, "evaluation");
+        if (intervals == 0U) {
+            throw std::invalid_argument("path evaluation requires at least one interval");
+        }
+        const auto& info = adapter.layout();
+        const std::vector<double> state_vector(
+            states, states + (static_cast<std::size_t>(intervals) + 1U) * info.state_dimension
+        );
+        const std::vector<double> control_vector(
+            controls, controls + static_cast<std::size_t>(intervals) * info.control_dimension
+        );
+        *evaluation = {};
+        write_path_components(adapter.path_components(state_vector, control_vector), *evaluation);
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_describe(
+    const spacepdhcg_planner* planner,
+    char* buffer,
+    const size_t capacity,
+    size_t* required
+) {
+    return guard([&] {
+        const auto& adapter = adapter_of(planner);
+        write_string(
+            spacepdhcg::planner::json::dump(
+                spacepdhcg::planner::describe_problem(adapter.problem())
+            ),
+            buffer,
+            capacity,
+            required
+        );
+    });
+}
+
+spacepdhcg_status_code spacepdhcg_planner_default_document(
+    const char* family,
+    char* buffer,
+    const size_t capacity,
+    size_t* required
+) {
+    return guard([&] {
+        require_pointer(family, "family");
+        write_string(
+            spacepdhcg::planner::json::dump(
+                spacepdhcg::planner::default_document(spacepdhcg::planner::parse_family(family))
+            ),
+            buffer,
+            capacity,
+            required
+        );
     });
 }
 
