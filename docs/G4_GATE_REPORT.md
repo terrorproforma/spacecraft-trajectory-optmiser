@@ -40,30 +40,47 @@ Executable provenance:
   compute activity is quarantined as `contaminated` with all raw evidence retained and re-run
   after the foreign activity ends. Commit `44e6939` adds `scripts/gpu/decide_g4_claim_core.py`
   (group re-validation, publication aggregates, and the frozen H5/H6 decision functions).
-- Official capability: `/home/angus/g4-executor-capability-9a4cbea.json`, capability SHA-256
-  `e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de`, source commit `9a4cbea`,
-  executable SHA-256 `baab5602cf7ec1d6ee3ce92aa38afee281d2d24e50e94a3ec690108a72b3b9d8`,
+- The first official group under `9a4cbea` (checkpoint `g4-claim-core-9a4cbea`, retained as
+  evidence) exposed the residual gap: its attempts each reached the 600 s deadline with
+  1,000,000 PDHCG iterations and canonical residual ≈37 (far from the 1e-6 tier), but one
+  attempt ran more than 20 minutes and the group overran the safety boundary, discarding all nine
+  attempts. A cancel that fired while the workspace was between inner solves could not reach the
+  device, and the following inner solve or identical-CQP re-solve spent its full budget first.
+  Commit `26def2b` checks the driver's cancellation flag before every inner solve and re-solve,
+  rolls back and reports a cancelled re-solve as `CANCELLED`, makes the watchdog re-assert the
+  cancellation every second until the attempt returns, and moves the scheduler's outer boundary
+  300 s beyond the executor's own group deadline. Release ctest passed 62/62; 20 s-deadline
+  `--g4-session` runs on claim-core groups 0 (fixed-tight), 1 (adaptive) and 3 (hybrid) each
+  emitted nine strictly schema-valid launched `timeout` attempts at 20.0 s. The generation-0
+  silence of that first group (no attempt record in 91 minutes while foreign host compute ran at
+  up to 99 % SM) is recorded as an unexplained observation; the same group's generation 1
+  produced seven 600.1 s `timeout` attempts before the overrun.
+- Official capability: `/home/angus/g4-executor-capability-26def2b.json`, capability SHA-256
+  `93b6dac4c5035e9510db9d2c91b9e53ba6d8943e4c3be9947dd3cbaa5e868903`, source commit `26def2b`,
+  executable SHA-256 `16c1883f16f78bdfa4bbd00d341e1b0c90882ce2319742e358535e2a24f4923e`,
   `libspacepdhcg_cuda.so` SHA-256
-  `84d98bcd4595556d62b122621920ff0c2dd89d889f0c69deba0a2c28a2983d03`, real CUDA session probe
-  passed. Policy SHA-256 `9ab3b444…`, matrix SHA-256 `50afe8ff…`, tolerances, seeds, repeats and
-  order are unchanged.
+  `bf31e1249af45e66d23b31ed559201402652048aaf6e16720060edbfa4a4823b`, real CUDA session probe
+  passed. The superseded `9a4cbea` capability (`e546583b…`) executed no completed group. Policy
+  SHA-256 `9ab3b444…`, matrix SHA-256 `50afe8ff…`, tolerances, seeds, repeats and order are
+  unchanged.
 
 Campaign state at the time of this report:
 
-- Checkpoint `build-integration-report/g4-claim-core-9a4cbea` (ignored, local-only), initialised
-  with `run_g4_campaign.py init --claim-core`; 0 of 360 groups completed, group 0 (P1-E `N=100`,
-  seed 59, fixed-tight) running. The checkpoint pins `source_commit=9a4cbea`; a detached
-  worktree at that commit (`/home/angus/worktrees/spacepdhcg-g4-claim-core-9a4cbea`) hosts the
-  restart command so this branch can advance without invalidating the pin.
-- The RTX 5090 is shared with other agents' GPU jobs; the worker waits for foreign compute
-  activity before claiming a group and re-runs contaminated groups. Fixed-tight P1-E attempts
-  progressed at roughly 1 ms per PDHCG iteration in the pilot, so groups whose attempts reach the
-  frozen 600 s deadline take about 91 minutes each; dispositions are recorded only from launched
-  attempts and are not predicted here.
-- On completion, `build-integration-report/g4-claim-core-9a4cbea-finish.sh` re-validates every
+- Checkpoint `build-integration-report/g4-claim-core-26def2b` (ignored, local-only), initialised
+  with `run_g4_campaign.py init --claim-core`; 0 of 360 groups completed. The checkpoint pins
+  `source_commit=26def2b`; a detached worktree at that commit
+  (`/home/angus/worktrees/spacepdhcg-g4-claim-core-26def2b`) hosts the restart, status,
+  observer and completion scripts (`build-integration-report/g4-claim-core-26def2b-*.sh`) so this
+  branch can advance without invalidating the pin.
+- The RTX 5090 is shared with other agents' GPU jobs (WSL and Windows-side); the worker waits for
+  foreign compute activity before claiming a group and re-runs contaminated groups. Fixed-tight
+  P1-E `N=100` attempts progressed at 0.5–1 ms per PDHCG iteration depending on contention, so
+  groups whose attempts reach the frozen 600 s deadline take about 91 minutes each; dispositions
+  are recorded only from launched attempts and are not predicted here.
+- On completion, `build-integration-report/g4-claim-core-26def2b-finish.sh` re-validates every
   raw attempt and publication aggregate, applies the preregistered H5/H6 decision functions
   (paired bootstrap, seed 20260901 plus scale, 10,000 samples, thresholds unchanged), and seals a
-  reproducible archive with an evidence index under `results/gpu/g4/claim-core-9a4cbea/`
+  reproducible archive with an evidence index under `results/gpu/g4/claim-core-26def2b/`
   (local-only; no immutable URI exists).
 
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
