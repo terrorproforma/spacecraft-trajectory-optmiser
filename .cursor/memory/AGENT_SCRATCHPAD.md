@@ -1221,3 +1221,61 @@ Use this file as persistent, repo-local execution memory.
   capability from the final clean report descendant before any claim-core launch.
 - G0-G3 scientifically authorise G4, but no G4 campaign was launched here and local archives have
   no immutable URI.
+
+### 2026-09-03 02:40 AEST - GTOC12 replay track (feat/gtoc12-asteroid-mining)
+
+#### Task Summary
+
+- Built the GTOC12 "Sustainable Asteroid Mining" track: pinned official data + verifier,
+  independent verifier reproducing official scores exactly, ephemeris, format, Lambert parity,
+  preregistered reduced instance, beam search, CPU SCvx arc refinement through the G7 adapters,
+  official-format emission, and a first officially verified solution.
+
+#### Mistakes And Fixes
+
+- `[model]` SCvx first propagated mass with the interpolated cone slack while the verifier uses
+  |T(t)| of the interpolated vector; 0.044 kg drift over 900 days moved the endpoint 3100 km.
+  Fix: nonlinear model uses |T(t)|; the linearisation keeps the Gamma channel (lossless surrogate,
+  well defined at a coasting reference).
+- `[model]` Cubic-Lagrange emission of bang-bang thrust creates |T(t)| kinks the organisers'
+  RKF78 integrates differently (official Error201 at 3143 km while our DOP853 model saw 1.9 km).
+  Fix: zero-order-hold transcription, one constant-thrust arc per segment (JPL's file uses the
+  same structure); official and independent verifiers then agree to 0.9 km.
+- `[bug]` `linearise` allocated the control sensitivity with the 4-node stencil in ZOH mode and
+  einsum silently broadcast the size-1 axis, corrupting the affine term; every SCvx step was
+  rejected. Fix: size the array from `stencils.shape[1]`.
+- `[bug]` Safeguarded universal-variable Kepler solver bisected with the stale bracket, so the
+  multi-revolution case "converged" at the midpoint (8.7e8 km). Fix: shrink the bracket before
+  choosing the next point.
+- `[format]` The official verifier rejects a trailing newline (`ErrorA09 ... empty`) and our
+  parser rejected arcs printed as all zeros from ~1e-15 N residuals. Fix: no trailing newline;
+  sub-nanonewton segments are emitted as coasts.
+- `[tool]` PowerShell -> `wsl.exe bash -c` mangles nested quotes; every non-trivial command is
+  written to `%TEMP%\gtoc12\*.sh|py`, CR-stripped, and run from `/tmp`. Background jobs need
+  `setsid nohup ... & disown` or WSL kills them with the session. Files written through the
+  `\\wsl.localhost` UNC path arrive CRLF; `/tmp/run.sh` normalises them before every run.
+
+#### What Worked
+
+- The official binary's diagnostic strings are a complete rule catalogue (Error001-901, A00-A23);
+  encoding them one-for-one made the independent verifier reproduce all three archived reference
+  solutions per asteroid to 0.0 kg on the first full run.
+- Probing the black-box verifier by perturbing thrust samples and reading the printed error
+  magnitude exposed that the mismatch depends on the profile shape, which pointed at |T| kinks.
+- ZOH arcs make the discrete model, the independent verifier and the official verifier agree.
+
+#### Guardrails For Next Session
+
+- Never emit cubic-interpolated bang-bang profiles; keep ZOH arcs (or smooth profiles) so any
+  integrator agrees. Certify every leg by DOP853 rollout before emission.
+- Keep the reduced-instance rule file untouched; its SHA-256 and selection SHA-256 are pinned in
+  tests.
+- GPU untouched (G4 owns it); all runs are CPU-only and say so in reports.
+
+#### Follow-Ups / Risks
+
+- `bonus_coefficients.txt` was served by the unauthenticated problem-file endpoint although the
+  UI gates it behind login; the pin records this.
+- Search proxies (Lambert x inflation) accept few multi-asteroid chains; the first scored route
+  has two asteroids (195.044 kg). Wider beams, phasing-aware neighbour selection, and cross-ship
+  deploy/collect are the obvious next steps.

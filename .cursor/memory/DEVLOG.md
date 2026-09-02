@@ -904,3 +904,29 @@
   - G4 is scientifically authorised, but launch is blocked until a new official capability is
     generated for the final clean report descendant. The old b0cd570 capability was not reused.
   - All archives remain local-only; no immutable URI exists.
+
+## 2026-09-03 02:40 AEST
+
+- Task summary:
+  - GTOC12 replay track end-to-end on `feat/gtoc12-asteroid-mining` (worktree
+    `/home/angus/worktrees/spacepdhcg-gtoc12`, base `96781349`, CPU only).
+- Changes:
+  - `benchmarks/gtoc12/`: `pins.json` (URLs, sizes, SHA-256 for nine official files),
+    `gtoc12_rules.json` (machine-readable rules), `reduced_instance_v1.json` (preregistered rule).
+  - `scripts/gtoc12/fetch_gtoc12_data.py`: checksummed fetch into the ignored data directory.
+  - `src/spacepdhcg/gtoc12/`: constants, data, ephemeris, solution format, independent verifier,
+    official-binary wrapper, Lambert (NumPy port + native ctypes parity), screening, reduced
+    instance, beam search, ZOH SCvx low-thrust arcs, G7-adapter pipeline, viewer export, CLI.
+  - `spacepdhcg` console script (`spacepdhcg gtoc12 verify|fetch|reduced-instance|run|export-viewer`).
+  - Imported the user's `docs/COMPARATIVE_SOLVER_CAMPAIGN.md` and `benchmarks/literature_baselines.json`.
+- Validation:
+  - Official verifier on archived references: 39/356/28975.1 kg, 37/338/27045.3 kg,
+    36/320/26062.6 kg; independent verifier reproduces every per-asteroid mass to 0.0 kg and the
+    fixed-bonus weighted scores (24474.15 for the 39-ship file vs published 24474.16).
+  - Lambert NumPy vs native kernel: 1e-13 km/s over 300 short/long-way legs.
+  - First pipeline route (reduced instance, 2 asteroids): official "Check successfully!"
+    195.044 kg; independent 195.04449 kg, max propagation error 0.91 km / 0.15 mm/s.
+  - Ruff clean; 24 fast GTOC12 tests pass; full suite launched in background.
+- Follow-up notes / risks:
+  - Reduced-instance search currently completes mostly one- and two-asteroid chains.
+  - Full-catalogue screening and docs/GTOC12_TRACK.md are the next commits.
