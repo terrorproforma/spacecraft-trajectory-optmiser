@@ -235,6 +235,14 @@ boundary after 26 completed groups, all P1-E pure-gpu-ipm, every attempt `numeri
   `diagnostic` ledger state, excluded from H6, and cited by the successor checkpoint's
   `diagnostic_strata` metadata. They agree with the amended runs in direction (IPM fails at
   conditioning 4.0) but are not comparable records because they predate rules A and B.
+- First five amended IPM groups (`g4-claim-core-46bc895`, capability `827ce9e8…51bce3`, P1-E
+  `N=100` conditioning 4.0, foreign host compute at 53–96 % SM throughout): 35 launched attempts,
+  every one on a fresh QOCO solver with `ruiz_iterations 0 / qoco_native_default` echoed and
+  `scaling_mode not_applicable_ipm_native` recorded; 25 `timeout` (measured wall 120.3–309.5 s,
+  solver outcome `numerical` attached, QOCO status 3 or 4 = max-iterations at 200), 10 `numerical`
+  (51–120 s, 37–99 QOCO iterations), 10 `unrun` at the 1140 s group deadline, 0 qualified,
+  35/35 contaminated. Groups took 1123–1362 s (≈20.6 min each). Rule B is consistent on all 35
+  records (timeout ⇔ wall > 120 s). Pure IPM at this coordinate is a genuine negative.
 
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core
