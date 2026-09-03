@@ -58,26 +58,36 @@ class MinerPool:
             self.collected[asteroid] = ship
 
     def register_all(self, plans: list[tuple[RoutePlan, int]]) -> None:
-        """Register several plans in a deployer-before-collector order.
+        """Register several plans whatever their mutual collection order.
 
-        A repaired bundle can have ship 1 collecting a miner ship 2 deployed, so slot order is not
-        a valid registration order; plans are registered as soon as every foreign collect they
-        make is deployed.  When no plan qualifies the first remaining one is registered so the
-        usual error is raised.
+        A repaired or jointly harvested bundle can have ship 1 collecting a miner ship 2 deployed
+        *and* ship 2 collecting one of ship 1's (a cycle no slot order resolves), so the plans are
+        registered in two phases: every deploy first (each asteroid deployed once), then every
+        collect against the complete deploy table (each collected once, deployed by somebody,
+        against the deployer's epoch).  A failure leaves the pool untouched.
         """
 
-        remaining = list(plans)
-        while remaining:
-            ready = [
-                (plan, ship)
-                for plan, ship in remaining
-                if all(a in plan.deploy_epochs or a in self.deployed for a in plan.collect_epochs)
-            ]
-            if not ready:
-                ready = remaining[:1]
-            for plan, ship in ready:
-                self.register(plan, ship)
-                remaining.remove((plan, ship))
+        deployed: dict[int, tuple[float, int]] = dict(self.deployed)
+        for plan, ship in plans:
+            for asteroid, epoch in plan.deploy_epochs.items():
+                if asteroid in deployed:
+                    raise ValueError(f"asteroid {asteroid} deployed twice")
+                deployed[asteroid] = (float(epoch), ship)
+        collected: dict[int, int] = dict(self.collected)
+        for plan, ship in plans:
+            for asteroid in plan.collect_epochs:
+                if asteroid in collected:
+                    raise ValueError(f"asteroid {asteroid} collected twice")
+                if asteroid not in deployed:
+                    raise ValueError(f"asteroid {asteroid} collected but never deployed")
+                if asteroid not in plan.deploy_epochs and (
+                    abs(plan.deploy_epoch_of(asteroid) - deployed[asteroid][0])
+                    > EPOCH_TOLERANCE_DAYS
+                ):
+                    raise ValueError(f"asteroid {asteroid} collected against a stale deploy epoch")
+                collected[asteroid] = ship
+        self.deployed = deployed
+        self.collected = collected
 
     def orphans(self) -> dict[int, float]:
         """Deployed-but-uncollected miners: asteroid -> deploy epoch (sorted by asteroid)."""

@@ -139,6 +139,13 @@ class SearchSettings:
     # day hops that SCvx could not fly (full_catalogue_search4/5), so it is off by default
     propellant_weight: float = 0.15
     time_weight: float = 0.0  # kg of heuristic score per day of deploy-phase duration
+    # collect look-ahead: a deploy pair is re-flown ~3 years later by the collection tour, when
+    # the family's relative phase drift can make the same pair cost 2-3x (measured: our collect
+    # hops 110 kg vs 66 kg for the references at equal deploy-hop cost).  Each deploy hop also
+    # prices the pair at ``departure + collect_gap_days`` (cheapest TOF, same inflation) and the
+    # beam score charges ``collect_lookahead_weight`` x that propellant.  0 = off.
+    collect_lookahead_weight: float = 0.0
+    collect_gap_days: float = 3.0 * C.YEAR_DAYS
     # cluster-first prior (clusters.py): Earth targets need at least ``cluster_min_density``
     # co-moving neighbours, and partials earn ``cluster_bonus_kg`` x (unvisited co-moving
     # neighbours of the current asteroid, capped at the remaining deploy slots) / max_deploys
@@ -316,6 +323,7 @@ class _Partial:
     deployed: list[tuple[int, float]]
     hop_propellant: float = 0.0
     score: float = 0.0
+    lookahead_kg: float = 0.0  # estimated collect-time cost of re-flying the deploy pairs
 
 
 @dataclass(slots=True)
@@ -438,6 +446,7 @@ class RouteSearch:
         self._hop_cache: dict[tuple[int, float], dict[str, FloatArray]] = {}
         self._return_cache: dict[int, list[tuple[float, float, float]]] = {}
         self._collect_cache: dict[tuple[int, int, float], list[tuple[float, float, float]]] = {}
+        self._lookahead_cache: dict[tuple[int, float], FloatArray] = {}
         self.last_failure = ""
         self._band_cache: dict[int, NDArray[np.int64]] = {}
         self._clusters: ComovingClusters | None = None
@@ -586,6 +595,36 @@ class RouteSearch:
             self.lambert_evaluations += 2 * targets.shape[0] * len(self.settings.hop_tofs)
             self._hop_cache[key] = result
         return self._hop_cache[key]
+
+    def collect_lookahead(
+        self, asteroid_id: int, targets: NDArray[np.int64], departure: float, mass: float
+    ) -> FloatArray:
+        """Propellant (kg) of re-flying ``asteroid_id -> target`` ``collect_gap_days`` later.
+
+        The cheapest feasible TOF of the collect grid at the later epoch, inflated like a hop;
+        ``inf`` when no TOF is feasible (the pair has drifted out of reach).  Cached per
+        (source, departure) - the targets are the deploy screening's, in the same order.
+        """
+
+        s = self.settings
+        key = (asteroid_id, round(departure, 6))
+        if key not in self._lookahead_cache:
+            epoch = departure + s.collect_gap_days
+            tofs = np.asarray(s.collect_hop_tofs, dtype=np.float64)
+            hops = screen_asteroid_hops(self.catalogue, asteroid_id, targets, epoch, tofs)
+            self.lambert_evaluations += 2 * targets.shape[0] * tofs.shape[0]
+            dv = np.where(
+                hops["feasible"] & np.isfinite(hops["total_delta_v"]),
+                hops["total_delta_v"],
+                np.inf,
+            )
+            best = np.min(dv, axis=1)
+            self._lookahead_cache[key] = best
+        best = self._lookahead_cache[key]
+        cost = np.full(best.shape[0], np.inf)
+        finite = np.isfinite(best)
+        cost[finite] = propellant_for_delta_v(mass, best[finite] * s.hop_inflation)
+        return cost
 
     def _reserve(self, partial: _Partial) -> float:
         """Propellant the collection tour and Earth return will need (reference-calibrated)."""
@@ -793,9 +832,21 @@ class RouteSearch:
         for wait in s.deploy_wait_days:
             departure = partial.epoch + float(wait)
             hops = self.hops_from(partial.location, departure)
+            lookahead: FloatArray | None = None
+            if s.collect_lookahead_weight > 0.0:
+                lookahead = self.collect_lookahead(
+                    partial.location,
+                    np.asarray(hops["target_ids"], dtype=np.int64),
+                    departure,
+                    partial.mass,
+                )
             for t_index, target in enumerate(hops["target_ids"]):
                 target = int(target)
                 if target in visited or (partial.location, target) in self.banned_pairs:
+                    continue
+                # a pair that cannot be re-flown at collect time is not a deploy candidate
+                pair_lookahead = 0.0 if lookahead is None else float(lookahead[t_index])
+                if not np.isfinite(pair_lookahead):
                     continue
                 for f_index, tof in enumerate(hops["tofs_days"]):
                     if not hops["feasible"][t_index, f_index]:
@@ -840,6 +891,7 @@ class RouteSearch:
                             partial.mass - propellant - C.MINER_MASS_KG,
                             [*partial.deployed, (target, arrival)],
                             partial.hop_propellant + propellant,
+                            lookahead_kg=partial.lookahead_kg + pair_lookahead,
                         )
                     )
         return children
@@ -941,6 +993,7 @@ class RouteSearch:
                 mined
                 - self.settings.propellant_weight * spent
                 - self.settings.time_weight * elapsed
+                - self.settings.collect_lookahead_weight * partial.lookahead_kg
                 + self._cluster_potential_kg(partial)
             )
         ordered = sorted(

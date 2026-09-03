@@ -40,9 +40,13 @@ FloatArray = NDArray[np.float64]
 
 @dataclass(frozen=True, slots=True)
 class HarvestSettings:
-    collect_tofs: tuple[float, ...] = (180.0, 240.0, 300.0, 360.0, 420.0, 480.0)
-    # a ship stops taking miners when its next arrival would be later than this before the end
-    return_reserve_days: float = 900.0 + 60.0
+    collect_tofs: tuple[float, ...] = (120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0)
+    # a ship stops taking miners when its next arrival would be later than this before the end:
+    # the Earth return itself (400-450 d on the certified routes) plus one lattice step.  A
+    # 960 d reserve (first version) ended the joint tours ~700 d before the self-cleaning tours
+    # did and left 4 of 13 miners of family 247 uncollected - the DP re-timing is what actually
+    # checks the return closes
+    return_reserve_days: float = 450.0 + 15.0
     # a miner deployed later than the ship's arrival + this cannot be collected without a long
     # camp: skip it for this ship at this step
     max_camp_days: float = 240.0

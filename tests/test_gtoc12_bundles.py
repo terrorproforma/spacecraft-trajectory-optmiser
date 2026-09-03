@@ -445,6 +445,26 @@ def test_forward_collection_tour_collects_in_deploy_order_after_one_repositionin
     again = RouteSearch(catalogue, members, settings).run()
     assert [p.summary() for p in again.candidates] == [p.summary() for p in result.candidates]
 
+    # collect look-ahead: every deploy pair is also priced ~3 years later; the cost is a finite
+    # hop propellant for reachable pairs (inf otherwise), cached per (source, departure), and
+    # a beam with the weight on is deterministic and only keeps pairs that are re-flyable
+    hops = search.hops_from(int(members[0]), C.MISSION_START_MJD + 800.0)
+    targets = np.asarray(hops["target_ids"], dtype=np.int64)
+    cost = search.collect_lookahead(int(members[0]), targets, C.MISSION_START_MJD + 800.0, 2500.0)
+    assert cost.shape == targets.shape and np.all(cost > 0.0)
+    assert np.isfinite(cost).any()
+    heavier = search.collect_lookahead(
+        int(members[0]), targets, C.MISSION_START_MJD + 800.0, 2900.0
+    )
+    finite = np.isfinite(cost)
+    assert np.all(heavier[finite] > cost[finite])  # same ΔV costs more propellant at higher mass
+    assert (int(members[0]), round(C.MISSION_START_MJD + 800.0, 6)) in search._lookahead_cache
+    weighted = replace(settings, collect_lookahead_weight=0.5)
+    first = RouteSearch(catalogue, members, weighted).run()
+    second = RouteSearch(catalogue, members, weighted).run()
+    assert [p.summary() for p in first.candidates] == [p.summary() for p in second.candidates]
+    assert first.lambert_evaluations > result.lambert_evaluations  # the look-ahead screens too
+
 
 @requires_data
 def test_injected_first_level_seeds_the_beam_at_the_certified_mass(catalogue, family) -> None:
@@ -964,6 +984,26 @@ def test_pool_register_all_orders_deployers_before_collectors_and_bundle_consist
     pool = MinerPool()
     pool.register_all([(collector, 1), (deployer, 2)])
     assert pool.collected[9] == 1 and pool.deployed[9][1] == 2 and pool.orphans() == {}
+    # mutual collection (ship 2 also collects ship 1's miner 5): no slot order registers this
+    # one ship at a time, the two-phase registration does (the joint harvest produces such pairs)
+    mutual_deployer = replace(
+        deployer,
+        collect_epochs={8: arrive + 3300.0, 5: arrive + 3100.0},
+        collected_mass={8: 300.0, 5: 250.0},
+        foreign_deploy_epochs={5: arrive},
+    )
+    mutual_collector = replace(
+        collector, collect_epochs={9: arrive + 3300.0}, collected_mass={9: 200.0}
+    )
+    pool = MinerPool()
+    pool.register_all([(mutual_collector, 1), (mutual_deployer, 2)])
+    assert pool.collected == {9: 1, 8: 2, 5: 2} and pool.orphans() == {}
+    # a stale epoch inside the cycle still fails, and leaves the pool untouched
+    stale = replace(mutual_deployer, foreign_deploy_epochs={5: arrive + 15.0})
+    pool = MinerPool()
+    with pytest.raises(ValueError, match="stale deploy epoch"):
+        pool.register_all([(mutual_collector, 1), (stale, 2)])
+    assert pool.deployed == {} and pool.collected == {}
     bundle = ClusterBundle(
         0,
         (5, 8, 9),

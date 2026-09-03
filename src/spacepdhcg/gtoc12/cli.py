@@ -588,6 +588,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         earth_leg_continuous=args.earth_leg_refinements > 0,
         earth_leg_refinements=args.earth_leg_refinements,
         collector_harvest=args.collector_harvest,
+        collect_lookahead_weight=args.collect_lookahead,
     )
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
@@ -1183,6 +1184,12 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="SCvx evaluations of the continuous Earth-leg optimiser per certified leg (0: off)",
     )
     cluster.add_argument("--collector-harvest", action="store_true")
+    cluster.add_argument(
+        "--collect-lookahead",
+        type=float,
+        default=0.0,
+        help="beam score weight on the collect-time cost of re-flying each deploy pair (0: off)",
+    )
     cluster.set_defaults(function=cmd_cluster_fleet)
 
     master = commands.add_parser(

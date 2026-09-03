@@ -82,6 +82,9 @@ class ClusterPricingSettings:
     # slots left (all orphans, any position in the tour) instead of only the beam's incidental
     # foreign collects; see ``harvest_orphans``
     collector_harvest: bool = True
+    # beam score weight on the collect-time cost of re-flying each deploy pair (SearchSettings
+    # .collect_lookahead_weight); 0 = off
+    collect_lookahead_weight: float = 0.0
     # launch grid spans the mission start plus this window (the references launch over ~3 y)
     launch_window_days: float = 3.0 * C.YEAR_DAYS
     launch_step_days: float = 30.0
@@ -139,6 +142,7 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         # neighbour of a certified 610 d leg; with the window off it closed 7 asteroids/414 kg
         # on the certified leg instead of 6/364 kg).
         first_level_window_days=0.0 if settings.earth_leg_continuous else 200.0,
+        collect_lookahead_weight=settings.collect_lookahead_weight,
         **grids,
     )
 
