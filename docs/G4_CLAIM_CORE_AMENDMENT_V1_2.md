@@ -30,7 +30,10 @@ PDHCG-oriented campaign `scaling_mode` axis and use QOCO's own equilibration set
 
 **What "native default" turned out to mean.** The request assumed QOCO's default is "Ruiz on".
 At the pinned QOCO commit (`09f0495…`, library SHA-256 `3db21490…e131ac`) `set_default_settings`
-sets `ruiz_iters = 0`: the shipped default is *no* equilibration. The amendment records
+sets `ruiz_iters = 0`: the shipped default is *no* equilibration. This is an upstream
+`qoco-org/qoco` decision, not a local patch: commit `bfc16b0` ("set default ruiz iters to 0 and
+dyn reg to 1e-8") introduced it and it is unchanged at v0.3.2 (`598de4e`, `src/qoco_api.c:248`).
+The amendment records
 `mode: qoco_native_default`, `ruiz_iterations: 0`, and the executor passes exactly that to QOCO
 for every IPM solve regardless of the coordinate `scaling_mode`. Each IPM attempt echoes
 `amendment.ipm_equilibration = {mode, ruiz_iterations, requested_ruiz_iterations, scaling_mode,
