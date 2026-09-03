@@ -555,11 +555,18 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
             for asteroid in catalogue.ids
         }
     ids = catalogue_pool(catalogue, args)
-    bands = ClusterBands(radius=args.cluster_radius, phase_deg=args.cluster_phase_deg)
+    bands = ClusterBands(
+        radius=args.cluster_radius,
+        phase_deg=args.cluster_phase_deg,
+        visit_epochs=None if args.static_families else ClusterBands().visit_epochs,
+    )
     clusters = family_clusters(catalogue, ids, bands=bands, min_members=args.min_members)
-    # cheapest families first (Earth access + internal hops), not largest first
+    # cheapest families first (Earth access + internal hops over the visit epochs), not largest
     ranked = rank_families(
-        catalogue, clusters, cluster_search_settings(ClusterPricingSettings(), 2)
+        catalogue,
+        clusters,
+        cluster_search_settings(ClusterPricingSettings(), 2),
+        visit_epochs=bands.phase_epochs,
     )
     if args.families:
         wanted = {int(item) for item in args.families.split(",") if item.strip()}
@@ -578,6 +585,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         hop_authority_ratio=args.hop_authority_ratio,
         time_budget_seconds=args.cluster_budget_seconds,
         seed=args.seed,
+        earth_leg_continuous=args.earth_leg_refinements > 0,
+        earth_leg_refinements=args.earth_leg_refinements,
+        collector_harvest=args.collector_harvest,
     )
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
@@ -594,7 +604,12 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
                 "e_max": args.pool_e_max,
                 "i_max_deg": args.pool_i_max,
             },
-            "cluster_bands": {"radius": bands.radius, "phase_deg": bands.phase_deg},
+            "cluster_bands": {
+                "radius": bands.radius,
+                "phase_deg": bands.phase_deg,
+                "visit_epochs": list(bands.phase_epochs),
+                "phasing_aware": bands.visit_epochs is not None,
+            },
             "families_priced": [
                 {"label": int(label), "members": int(members.shape[0]), **family_stats[label]}
                 for label, members in clusters
@@ -1028,6 +1043,24 @@ def cmd_export_viewer(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def cmd_leg_stats(args: argparse.Namespace) -> int:
+    from .data import load_catalogue
+    from .legstats import compare, format_table
+
+    solutions: dict[str, str] = {}
+    for item in args.solution:
+        name, _, path = item.partition("=")
+        if not path:
+            name, path = Path(item).parent.name or Path(item).stem, item
+        solutions[name] = path
+    comparison = compare(solutions, load_catalogue(), cheap_hop_kg=args.cheap_hop_kg)
+    print(format_table(comparison))
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(_json(comparison) + "\n", encoding="utf-8")
+    return 0
+
+
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("gtoc12", help="GTOC12 Sustainable Asteroid Mining replay track")
     commands = parser.add_subparsers(dest="gtoc12_command", required=True)
@@ -1138,6 +1171,18 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="declared wall-clock budget: no new family is started after it",
     )
     cluster.add_argument("--no-bonus-weights", action="store_true")
+    cluster.add_argument(
+        "--static-families",
+        action="store_true",
+        help="single-epoch (static) family membership instead of the phasing-aware default",
+    )
+    cluster.add_argument(
+        "--earth-leg-refinements",
+        type=int,
+        default=8,
+        help="SCvx evaluations of the continuous Earth-leg optimiser per certified leg (0: off)",
+    )
+    cluster.add_argument("--collector-harvest", action="store_true")
     cluster.set_defaults(function=cmd_cluster_fleet)
 
     master = commands.add_parser(
@@ -1170,3 +1215,17 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     export.add_argument("--output", required=True)
     export.add_argument("--run-id", default="manual")
     export.set_defaults(function=cmd_export_viewer)
+
+    legs = commands.add_parser(
+        "leg-stats",
+        help="per-role leg cost distributions (Earth legs, hops, returns) of solution files",
+    )
+    legs.add_argument(
+        "--solution",
+        action="append",
+        required=True,
+        help="name=path of a solution file (repeatable; the references are decoded the same way)",
+    )
+    legs.add_argument("--cheap-hop-kg", type=float, default=75.0)
+    legs.add_argument("--output", default="", help="optional JSON output path")
+    legs.set_defaults(function=cmd_leg_stats)

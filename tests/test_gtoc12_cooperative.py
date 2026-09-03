@@ -139,6 +139,46 @@ def test_master_requires_the_deployer_of_a_foreign_collect() -> None:
     assert fleet_feasible([deployer, twice]) == "asteroid 1 collected twice"
 
 
+def test_master_selects_a_competitive_cooperative_pair_and_reports_it() -> None:
+    """A deployer + collector pair whose collector harvests old miners beats a self-cleaning
+    ship of the same family and is reported as cooperative in the incumbent."""
+
+    # self-cleaning ship: 6 asteroids x 75 kg
+    six = range(1, 7)
+    solo = _column(0, {k: 400.0 + k for k in six}, {k: 3400.0 + k for k in six}, 75.0)
+    # deployer: 8 miners early, collects 4 itself
+    deployer = _column(
+        1,
+        {k: 300.0 + k for k in range(11, 19)},
+        {k: 3500.0 + k for k in range(11, 15)},
+        85.0,
+        slot=1,
+    )
+    # collector: its own 5 asteroids plus the 4 miners the deployer left (8.5 years old: 85 kg)
+    collector = _column(
+        2,
+        {k: 500.0 + k for k in range(21, 26)},
+        {**{k: 3600.0 + k for k in range(21, 26)}, **{k: 3400.0 + k for k in range(15, 19)}},
+        85.0,
+        foreign={k: 300.0 + k for k in range(15, 19)},
+        slot=2,
+    )
+    result = solve_fleet_master([solo, deployer, collector])
+    assert result.exhaustive
+    chosen = {col.identifier for col in result.selected}
+    assert {1, 2} <= chosen  # the cooperative pair enters the incumbent
+    coop = result.cooperative_columns()
+    assert coop["collector_ships"] == 1 and coop["deployer_ships"] == 1
+    assert coop["foreign_collects"] == 4 and coop["bundle_columns"] == 0
+    assert result.summary()["cooperative"] == coop
+    # as one bundle column the pair is counted as two ships and one bundle
+    bundle = FleetColumn.from_bundle(3, "b", [deployer, collector])
+    bundled = solve_fleet_master([solo, bundle])
+    assert bundled.cooperative_columns()["bundle_columns"] == 1
+    assert bundled.cooperative_columns()["collector_ships"] == 1
+    assert bundled.ships == 3 if 3 in {c.identifier for c in bundled.selected} else True
+
+
 def test_master_respects_ship_count_rule_and_is_order_invariant() -> None:
     # 2 exp(0.004 * 100) = 2.98 ships at 100 kg each: three light ships are one too many
     light = [_column(k, {k: 100.0}, {k: 3000.0}, 100.0) for k in range(3)]
@@ -252,6 +292,71 @@ def test_comoving_clusters_are_deterministic_and_phasing_windows_close(catalogue
 
 
 @requires_data
+def test_phasing_aware_families_require_co_location_at_every_visit_epoch(catalogue) -> None:
+    from spacepdhcg.gtoc12.clusters import ClusterBands, ComovingClusters
+    from spacepdhcg.gtoc12.reduced_instance import build_reduced_instance
+
+    ids = build_reduced_instance(catalogue).asteroid_ids
+    static = ComovingClusters(catalogue, ids, ClusterBands(radius=1.5, visit_epochs=None))
+    aware = ComovingClusters(catalogue, ids, ClusterBands(radius=1.5))
+    assert static.features.shape[1] == 7 and aware.features.shape[1] == 9  # +2 per extra epoch
+    assert aware.summary()["bands"]["visit_epochs"] == list(ClusterBands().visit_epochs)
+    # the phasing-aware neighbourhood is a subset of the static one (an extra distance term)
+    for asteroid in aware.ids[:40].tolist():
+        assert set(aware.neighbours(asteroid).tolist()) <= set(static.neighbours(asteroid).tolist())
+    assert aware.density.sum() <= static.density.sum()
+    # pairs the static membership keeps but the phasing-aware one drops drift apart between the
+    # deploy and the collect epoch; kept pairs stay within the band at both epochs
+    t_deploy, t_collect = ClusterBands().visit_epochs
+    dropped, kept = [], []
+    for asteroid in static.ids[:60].tolist():
+        aware_set = set(aware.neighbours(asteroid).tolist())
+        for other in static.neighbours(asteroid).tolist():
+            drift = abs(
+                aware.phase_difference_deg(asteroid, other, t_collect)
+                - aware.phase_difference_deg(asteroid, other, t_deploy)
+            )
+            (kept if other in aware_set else dropped).append(drift)
+    if dropped and kept:
+        assert np.median(dropped) > np.median(kept)
+    for asteroid in aware.ids[:40].tolist():
+        for other in aware.neighbours(asteroid).tolist():
+            for epoch in (t_deploy, t_collect):
+                # within radius x band (chord ~ angle for small differences)
+                assert abs(aware.phase_difference_deg(asteroid, other, epoch)) <= 1.5 * 8.0 + 0.5
+    # deterministic under input order
+    again = ComovingClusters(catalogue, ids[::-1].copy(), ClusterBands(radius=1.5))
+    assert again.labels.tolist() == aware.labels.tolist()
+
+
+def test_low_thrust_inflation_model_is_monotone_and_calibrates_as_a_residual() -> None:
+    from spacepdhcg.gtoc12.retiming import Retimer, RetimeSettings
+    from spacepdhcg.gtoc12.screening import low_thrust_inflation, thrust_authority_km_s
+
+    mass, tof = 2000.0, 200.0
+    authority = float(thrust_authority_km_s(mass, tof, 1.0))
+    ratios = np.asarray([0.1, 0.2, 0.3, 0.4, 0.5])
+    inflation = low_thrust_inflation(ratios * authority, mass, tof)
+    assert np.all(np.diff(inflation) > 0)  # faster hops are penalised more
+    assert inflation[0] == pytest.approx(1.05 + 0.065) and inflation[-1] == pytest.approx(1.375)
+    # the model was fitted on the archived hops: 1.08 at r 0.15, 1.13 at 0.25, 1.21 at 0.35
+    assert low_thrust_inflation(0.15 * authority, mass, tof) == pytest.approx(1.1475, abs=0.07)
+    assert low_thrust_inflation(0.35 * authority, mass, tof) == pytest.approx(1.2775, abs=0.07)
+    retimer = Retimer.__new__(Retimer)
+    retimer.settings = RetimeSettings()
+    retimer.search_settings = None
+    retimer.inflations = {}
+    retimer.bans = {}
+    # a hop measured exactly at the model stores a unit residual; Earth legs keep the raw factor
+    retimer.calibrate(1, 2, 1.375, authority_ratio=0.5)
+    assert retimer.inflations[(1, 2)] == pytest.approx(RetimeSettings().calibration_margin)
+    retimer.calibrate(1, 2, 1.375 * 1.10, authority_ratio=0.5)
+    assert retimer.inflations[(1, 2)] == pytest.approx(1.10 * RetimeSettings().calibration_margin)
+    retimer.calibrate(0, 2, 1.2, authority_ratio=0.7)  # Earth leg: raw factor, no model
+    assert retimer.inflations[(0, 2)] == pytest.approx(1.2 * RetimeSettings().calibration_margin)
+
+
+@requires_data
 def test_retiming_keeps_visit_order_and_mass_bookkeeping(catalogue, small_search) -> None:
     from spacepdhcg.gtoc12.retiming import Retimer, RetimeSettings, orders_of
 
@@ -343,6 +448,35 @@ def test_cooperative_extension_collects_another_ships_orphan(catalogue, small_se
         left = variant.plan.orphaned
         assert all(a in variant.plan.deploy_epochs for a in left)
         assert all(a not in variant.plan.collected_mass for a in left)
+    # harvest mode tries every orphan at every collect position and keeps the bookkeeping:
+    # the foreign miner's mass is mined from the *other* ship's deploy epoch
+    other2 = _plan({orphan: T0 + 400.0, 59998: T0 + 450.0, 59999: T0 + 500.0}, {59999: T0 + 3000.0})
+    pool2 = MinerPool()
+    pool2.register(other2, 1)
+    assert set(pool2.orphans()) == {orphan, 59998}
+    h_variants, h_failures = extend_plan(
+        plan, search, retimer, candidates=2, pool=pool2, harvest=True
+    )
+    _, collect_order = orders_of(plan)
+    tried = [f for f in h_failures if f["kind"] == "foreign_collect"] + [
+        {"asteroid": next(a for a in v.plan.foreign_deploy_epochs)}
+        for v in h_variants
+        if v.plan.foreign_deploy_epochs
+    ]
+    # both orphans were offered (each at up to len(collect_order) + 1 positions)
+    assert {t["asteroid"] for t in tried} <= {orphan, 59998}
+    assert len(tried) <= 2 * (len(collect_order) + 1)
+    assert len(tried) >= len([f for f in failures if f["kind"] == "foreign_collect"]) + len(
+        foreign_variants
+    )
+    for variant in h_variants:
+        coop = variant.plan
+        for asteroid, epoch in coop.foreign_deploy_epochs.items():
+            assert epoch == pool2.orphans()[asteroid]
+            stay = coop.collect_epochs[asteroid] - epoch
+            assert stay >= C.MIN_MINING_STAY_YEARS * YEAR - 1e-6
+            assert coop.collected_mass[asteroid] == pytest.approx(C.maximum_collected_mass(stay))
+        assert coop.total_collected_kg == pytest.approx(sum(coop.collected_mass.values()))
     # something was attempted in each cooperative role
     attempted = (
         {f["kind"] for f in failures}

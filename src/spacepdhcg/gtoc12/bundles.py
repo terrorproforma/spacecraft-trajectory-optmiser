@@ -42,7 +42,7 @@ from numpy.typing import NDArray
 
 from . import constants as C
 from .clusters import ClusterBands, ComovingClusters
-from .cooperative import FleetColumn, MinerPool
+from .cooperative import EPOCH_TOLERANCE_DAYS, FleetColumn, MinerPool
 from .data import AsteroidCatalogue
 from .earthleg import EarthLegBounds, EarthLegModel, refine_leg_scvx
 from .low_thrust import ScvxSettings
@@ -78,6 +78,10 @@ class ClusterPricingSettings:
     # (earthleg.refine_leg_scvx); ``earth_leg_refinements`` extra SCvx calls per leg
     earth_leg_continuous: bool = True
     earth_leg_refinements: int = 8
+    # collector itineraries: later ship slots are seeded to harvest every miner the earlier
+    # slots left (all orphans, any position in the tour) instead of only the beam's incidental
+    # foreign collects; see ``harvest_orphans``
+    collector_harvest: bool = True
     # launch grid spans the mission start plus this window (the references launch over ~3 y)
     launch_window_days: float = 3.0 * C.YEAR_DAYS
     launch_step_days: float = 30.0
@@ -129,6 +133,12 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         earth_return_authority_ratio=0.5,
         return_reserve_kg=200.0,
         seed=settings.seed,
+        # With continuously optimised Earth legs the beam is seeded with the certified legs
+        # only: the grid neighbours the window would add are shorter legs priced at the long
+        # leg's calibration (1.05x Lambert), and those fail SCvx (probe: the beam flew a 450 d
+        # neighbour of a certified 610 d leg; with the window off it closed 7 asteroids/414 kg
+        # on the certified leg instead of 6/364 kg).
+        first_level_window_days=0.0 if settings.earth_leg_continuous else 200.0,
         **grids,
     )
 
@@ -319,6 +329,7 @@ class ClusterBundle:
     rejected: list[dict[str, Any]] = field(default_factory=list)  # reject-variant log
     earth_legs: dict[str, Any] = field(default_factory=dict)
     repairs: list[dict[str, Any]] = field(default_factory=list)
+    harvest: dict[str, Any] = field(default_factory=dict)  # joint collect re-sequencing report
     wall_seconds: float = 0.0
     peak_rss_mb: float = 0.0
     stopped: str = ""
@@ -396,6 +407,7 @@ class ClusterBundle:
             "cooperative": self.cooperative_statistics() if self.ships else None,
             "earth_legs": self.earth_legs,
             "repairs": self.repairs,
+            "harvest": self.harvest,
             "rejected": self.rejected,
             "wall_seconds": self.wall_seconds,
             "peak_rss_mb": self.peak_rss_mb,
@@ -441,8 +453,16 @@ def profile_for_orders(
     return profile
 
 
-def drop_asteroid(plan: RoutePlan, asteroid: int, retimer: Retimer) -> RoutePlan | None:
-    """The plan without one of its own deploys (and its collect, if any), re-timed."""
+def drop_asteroid(
+    plan: RoutePlan,
+    asteroid: int,
+    retimer: Retimer,
+    pinned: dict[int, float] | None = None,
+) -> RoutePlan | None:
+    """The plan without one of its own deploys (and its collect, if any), re-timed.
+
+    ``pinned`` deploys (miners another ship collects) keep their exact epoch in the re-timing.
+    """
 
     deploy_order, collect_order = orders_of(plan)
     if asteroid not in deploy_order or len(deploy_order) < 2:
@@ -459,6 +479,7 @@ def drop_asteroid(plan: RoutePlan, asteroid: int, retimer: Retimer) -> RoutePlan
         before=-np.inf,
         original=plan,
         foreign=plan.foreign_deploy_epochs,
+        pinned={a: e for a, e in (pinned or {}).items() if a in new_deploy},
     )
     if result.plan is None or not result.plan.feasible:
         return None
@@ -620,8 +641,24 @@ def price_cluster(
                 }
             )
             if not result.candidates:
+                reasons: dict[str, int] = {}
+                for failure in result.failures:
+                    key = str(failure.get("reason", "?"))
+                    reasons[key] = reasons.get(key, 0) + 1
                 bundle.rejected.append(
-                    {"slot": slot, "attempt": attempt, "reason": "beam found no closing chain"}
+                    {
+                        "slot": slot,
+                        "attempt": attempt,
+                        "reason": "beam found no closing chain",
+                        "first_level": result.first_level,
+                        "depth_reached": result.depth_reached,
+                        "failed_chains": len(result.failures),
+                        "failure_reasons": dict(sorted(reasons.items(), key=lambda kv: -kv[1])[:5]),
+                        "earth_legs": [
+                            [leg.target, leg.launch_epoch, leg.tof_days, leg.propellant_kg]
+                            for leg in legs
+                        ],
+                    }
                 )
                 break
             bans_before = len(banned_pairs) + len(banned_earth)
@@ -670,6 +707,8 @@ def price_cluster(
             time_budget_seconds=min(settings.retime_budget_seconds, max(remaining_budget(), 1.0)),
             pool=pool,
             refine=refine,
+            # later slots harvest what the earlier ones left (all orphans, all positions)
+            harvest=settings.collector_harvest and bool(pool.orphans()),
         )
         variants.extend(improvement.certified_routes)
         best = refined
@@ -700,10 +739,153 @@ def price_cluster(
         retimers[slot] = retimer
         searches[slot] = search
     bundle.earth_legs = earth_report
+    if settings.collector_harvest and len(bundle.ships) >= 2 and remaining_budget() > 0.0:
+        pool = _joint_harvest(bundle, retimers, refine, catalogue, search_settings) or pool
     _repair_orphans(bundle, pool, retimers, searches, refine)
     bundle.wall_seconds = time.perf_counter() - started
     bundle.peak_rss_mb = _peak_rss_mb()
     return bundle
+
+
+def _joint_harvest(
+    bundle: ClusterBundle,
+    retimers: dict[int, Retimer],
+    refine,
+    catalogue: AsteroidCatalogue,
+    search_settings: SearchSettings,
+) -> MinerPool | None:
+    """Re-plan the bundle's collect tours jointly over the pooled miners (``harvest`` module).
+
+    Ships whose new tour certifies adopt it; the others keep their original route, and miners a
+    kept ship still collects are removed from the new tours (one more re-timing/certification
+    round).  The bundle adopts the result only if it collects at least as much as before and
+    forms a consistent pool; returns that pool, or ``None`` when the original routes stay.
+    """
+
+    from .harvest import harvest_report, joint_collect_orders, retime_harvest
+
+    plans = {ship.slot: ship.route.plan for ship in bundle.ships}
+    states, uncollected = joint_collect_orders(catalogue, plans, search_settings)
+    report = harvest_report(states, uncollected)
+    report["ships_retimed"] = 0
+    report["ships_certified"] = 0
+    report["rounds"] = 0
+    bundle.harvest = report
+    # a ship's miners that another ship collects - in the new assignment or in an original route
+    # a ship may keep - stay deployed at exactly their current epoch when the ship is re-timed
+    collected_elsewhere: dict[int, set[int]] = {ship.slot: set() for ship in bundle.ships}
+    for ship in bundle.ships:
+        others = [s for s in bundle.ships if s.slot != ship.slot]
+        for asteroid in plans[ship.slot].deploy_epochs:
+            if any(
+                asteroid in states[o.slot].collect_order or asteroid in o.route.plan.collect_epochs
+                for o in others
+            ):
+                collected_elsewhere[ship.slot].add(asteroid)
+    new_routes: dict[int, RefinedRoute | None] = {}
+    for _round in range(3):
+        report["rounds"] += 1
+        pending = [
+            ship
+            for ship in bundle.ships
+            if ship.slot not in new_routes
+            and states[ship.slot].collect_order != orders_of(ship.route.plan)[1]
+        ]
+        if not pending:
+            break
+        for ship in pending:
+            state = states[ship.slot]
+            pinned = {
+                a: e
+                for a, e in ship.route.plan.deploy_epochs.items()
+                if a in collected_elsewhere[ship.slot]
+            }
+            plan, dropped, failure = retime_harvest(
+                ship.route.plan, state, retimers[ship.slot], pinned=pinned
+            )
+            state.collect_order = [a for a in state.collect_order if a not in dropped]
+            for asteroid in dropped:
+                state.foreign.pop(asteroid, None)
+            if plan is None:
+                new_routes[ship.slot] = None
+                bundle.rejected.append(
+                    {"slot": ship.slot, "reason": "harvest tour not re-timed", "failure": failure}
+                )
+                continue
+            report["ships_retimed"] += 1
+            route = refine(plan)
+            if route.certified:
+                report["ships_certified"] += 1
+                new_routes[ship.slot] = route
+            else:
+                new_routes[ship.slot] = None
+                bundle.rejected.append(
+                    {
+                        "slot": ship.slot,
+                        "reason": "harvest tour not certified",
+                        "failures": route.failures[:2],
+                        "plan_collected_kg": plan.total_collected_kg,
+                    }
+                )
+        # ships that keep their original route still collect their own miners: take those
+        # miners out of the new tours and re-time the affected ships once more
+        kept_collects = {
+            a
+            for ship in bundle.ships
+            if new_routes.get(ship.slot, ship) is None
+            for a in ship.route.plan.collect_epochs
+        }
+        for ship in bundle.ships:
+            route = new_routes.get(ship.slot)
+            if route is None:
+                continue
+            clash = [a for a in states[ship.slot].collect_order if a in kept_collects]
+            if clash:
+                states[ship.slot].collect_order = [
+                    a for a in states[ship.slot].collect_order if a not in kept_collects
+                ]
+                for asteroid in clash:
+                    states[ship.slot].foreign.pop(asteroid, None)
+                del new_routes[ship.slot]  # re-timed in the next round
+    for ship in bundle.ships:
+        if ship.slot not in new_routes:
+            new_routes[ship.slot] = None  # never re-timed (unchanged tour or clash unresolved)
+    adopted = {slot: route for slot, route in new_routes.items() if route is not None}
+    report["ships_adopted"] = sorted(adopted)
+    if not adopted:
+        return None
+    before_kg = bundle.collected_kg
+    original = {ship.slot: ship.route for ship in bundle.ships}
+    for ship in bundle.ships:
+        if ship.slot in adopted:
+            ship.route = adopted[ship.slot]
+            ship.variants.append(adopted[ship.slot])
+    try:
+        pool = bundle.pool()
+    except ValueError as error:
+        for ship in bundle.ships:
+            ship.route = original[ship.slot]
+        report["reverted"] = f"inconsistent: {error}"
+        return None
+    after_kg = bundle.collected_kg
+    report["collected_before_kg"] = before_kg
+    report["collected_after_kg"] = after_kg
+    if after_kg < before_kg - 1e-9:
+        for ship in bundle.ships:
+            ship.route = original[ship.slot]
+        report["reverted"] = "collects less than the self-cleaning routes"
+        return None
+    for ship in bundle.ships:
+        if ship.slot in adopted:
+            bundle.repairs.append(
+                {
+                    "kind": "joint_harvest",
+                    "collector": ship.slot,
+                    "foreign": sorted(ship.route.plan.foreign_deploy_epochs),
+                    "collected_kg": ship.route.total_collected_kg,
+                }
+            )
+    return pool
 
 
 def _repair_orphans(
@@ -771,7 +953,19 @@ def _repair_orphans(
         #    certified variant without that deploy, whichever collects more.  Both are compared
         #    because a re-timed variant that speculated on orphans can, once they are dropped,
         #    fall below the plain chain it was meant to improve.
-        dropped = drop_asteroid(deployer.route.plan, asteroid, retimers[deployer_slot])
+        # miners other ships of the bundle already collect from this deployer must stay deployed
+        # at exactly their epoch, otherwise the repair strands a collector: the drop re-timing
+        # pins them, and a fallback variant must reproduce them (dropping them is a last resort)
+        required = {
+            a: deployer.route.plan.deploy_epochs[a]
+            for s in bundle.ships
+            if s.slot != deployer_slot
+            for a in s.route.plan.foreign_deploy_epochs
+            if a in deployer.route.plan.deploy_epochs
+        }
+        dropped = drop_asteroid(
+            deployer.route.plan, asteroid, retimers[deployer_slot], pinned=required
+        )
         route = refine(dropped) if dropped is not None else None
         options: list[tuple[RefinedRoute, str]] = []
         if route is not None and route.certified:
@@ -793,16 +987,15 @@ def _repair_orphans(
             and not v.plan.orphaned
             and not v.plan.foreign_deploy_epochs
         )
-        # miners other ships of the bundle already collect from this deployer must stay deployed,
-        # otherwise the repair strands a collector (a variant that drops them is a last resort)
-        required = {
-            a
-            for s in bundle.ships
-            if s.slot != deployer_slot
-            for a in s.route.plan.foreign_deploy_epochs
-            if a in deployer.route.plan.deploy_epochs
-        }
-        keeping = [item for item in options if required <= set(item[0].plan.deploy_epochs)]
+        keeping = [
+            item
+            for item in options
+            if all(
+                a in item[0].plan.deploy_epochs
+                and abs(item[0].plan.deploy_epochs[a] - e) <= EPOCH_TOLERANCE_DAYS
+                for a, e in required.items()
+            )
+        ]
         if keeping:
             options = keeping
         if not options:
@@ -917,19 +1110,25 @@ def rank_families(
     settings: SearchSettings | None = None,
     *,
     top: int = 5,
+    visit_epochs: Sequence[float] | None = None,
+    cheap_hop_kg: float = 75.0,
 ) -> list[tuple[int, IntArray, dict[str, float]]]:
     """Order families by how cheaply a ship can work them (best first).
 
     Score = mean of the ``top`` cheapest Lambert Earth legs over the launch grid (kg of
-    propellant at 3000 kg) + the family's mean nearest-neighbour hop proxy (kg at 2000 kg).
-    Size alone is a poor guide: the largest families of the box are often the eccentric or
-    inclined ones whose Earth legs cost 600 kg and whose hops cost 1.3 km/s.  Deterministic:
-    ties break on the label.
+    propellant at 3000 kg) + the family's mean nearest-neighbour hop proxy (kg at 2000 kg),
+    the hop proxy averaged over the *visit epochs* (deploy phase at year 3 and collect phase at
+    year 10, ``ClusterBands.visit_epochs``) so a family whose members drift apart by the collect
+    phase is priced as the expensive family it is.  ``cheap_pair_fraction`` reports the share of
+    nearest-neighbour hops at or under ``cheap_hop_kg`` (the references' 75 kg).  Size alone is a
+    poor guide: the largest families of the box are often the eccentric or inclined ones whose
+    Earth legs cost 600 kg and whose hops cost 1.3 km/s.  Deterministic: ties break on the label.
     """
 
     settings = settings or SearchSettings()
     epochs = np.asarray(settings.launch_epochs)
     tofs = np.asarray(settings.earth_leg_tofs)
+    visit_epochs = tuple(visit_epochs or ClusterBands().phase_epochs)
     ranked: list[tuple[int, IntArray, dict[str, float]]] = []
     for label, members in families:
         members = np.asarray(sorted(int(a) for a in members), dtype=np.int64)
@@ -941,25 +1140,36 @@ def rank_families(
             earth_kg = float("inf")
         else:
             earth_kg = float(np.mean(propellant_for_delta_v(settings.initial_mass, best)))
-        # internal hops: nearest-neighbour phasing proxy at a mid-mission epoch
-        mid = C.MISSION_START_MJD + 3.0 * C.YEAR_DAYS
+        # internal hops: nearest-neighbour phasing proxy at every visit epoch
         hop_tofs = np.asarray(settings.hop_tofs)
         nearest: list[float] = []
-        for source in members.tolist():
-            others = members[members != source]
-            if others.size == 0:
-                continue
-            proxy = phasing_edelbaum_proxy(catalogue, source, others, mid, hop_tofs)
-            nearest.extend(np.sort(proxy["best_delta_v"])[: min(3, others.size)].tolist())
-        hop_kg = (
-            float(np.mean(propellant_for_delta_v(2000.0, np.asarray(nearest))))
-            if nearest
-            else float("inf")
-        )
+        per_epoch_kg: list[float] = []
+        for epoch in visit_epochs:
+            at_epoch: list[float] = []
+            for source in members.tolist():
+                others = members[members != source]
+                if others.size == 0:
+                    continue
+                proxy = phasing_edelbaum_proxy(catalogue, source, others, epoch, hop_tofs)
+                at_epoch.extend(np.sort(proxy["best_delta_v"])[: min(3, others.size)].tolist())
+            nearest.extend(at_epoch)
+            per_epoch_kg.append(
+                float(np.mean(propellant_for_delta_v(2000.0, np.asarray(at_epoch))))
+                if at_epoch
+                else float("inf")
+            )
+        if nearest:
+            hop_kg_all = propellant_for_delta_v(2000.0, np.asarray(nearest))
+            hop_kg = float(np.mean(hop_kg_all))
+            cheap_fraction = float(np.mean(hop_kg_all <= cheap_hop_kg))
+        else:
+            hop_kg, cheap_fraction = float("inf"), 0.0
         stats = {
             "members": float(members.shape[0]),
             "earth_leg_kg": earth_kg,
             "hop_kg": hop_kg,
+            "hop_kg_by_epoch": per_epoch_kg,
+            "cheap_pair_fraction": cheap_fraction,
             "score": earth_kg + 4.0 * hop_kg,  # a chain flies ~4 hops per Earth leg
         }
         ranked.append((int(label), members, stats))

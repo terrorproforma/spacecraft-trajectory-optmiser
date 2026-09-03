@@ -111,8 +111,11 @@ class SearchSettings:
     # of the heavy ship no longer fit the window; the re-timer applies 0.45 to what it moves.
     hop_inflation: float = 1.2
     # ratio-dependent hop inflation ``floor + slope x (Lambert ΔV / full authority)``, fitted on
-    # 1674 certified hops (``screening.low_thrust_inflation``); ``None`` keeps the flat factor
-    hop_inflation_slope: float | None = 0.65
+    # 1674 certified hops (``screening.low_thrust_inflation``); ``None`` keeps the flat factor.
+    # Off in the beam by default: the beam's chains are seeds the re-timer re-prices anyway, and
+    # with the model the beam closes fewer, shorter chains (6 asteroids / 401 kg vs 7 / 440 kg
+    # on the 99-member family 0) because it prices its fast deploy hops out of the mass budget.
+    hop_inflation_slope: float | None = None
     hop_inflation_floor: float = 1.05
     hop_authority_ratio: float = 0.667
     end_margin_days: float = 2.0
@@ -325,6 +328,7 @@ class SearchResult:
     failures: list[dict[str, object]] = field(default_factory=list)
     depth_reached: int = 0
     best_by_depth: dict[int, float] = field(default_factory=dict)
+    first_level: int = 0  # Earth-leg partials the beam started from
 
 
 def element_deviations(
@@ -845,7 +849,7 @@ class RouteSearch:
         s = self.settings
         beam = self._first_level()
         if not beam:
-            return SearchResult(None, [], 0, self.lambert_evaluations, 0.0, [], 0, {})
+            return SearchResult(None, [], 0, self.lambert_evaluations, 0.0, [], 0, {}, 0)
         expansions = 0
         completed: list[RoutePlan] = []
         failures: list[dict[str, object]] = []
@@ -900,6 +904,7 @@ class RouteSearch:
             failures,
             depth,
             best_by_depth,
+            len(beam),
         )
 
     def _return_feasible(self, asteroid: int, mass_guess: float) -> bool:
@@ -1068,20 +1073,27 @@ class RouteSearch:
                 best_hop = (dv, departure, tof)
         return best_cost, best_hop
 
+    TOUR_MODES = ("greedy", "reverse", "forward", "forward_revisit")
+
     def _complete(self, partial: _Partial) -> RoutePlan | None:
-        """Schedule the collection tour: greedy backward order first, strict reverse as fallback."""
+        """Schedule the collection tour: best of the greedy-backward, reverse and forward orders.
+
+        The forward tours (collect in deployment order after one repositioning hop back to the
+        first asteroid) are what make the collect hops as cheap as the deploy hops: the deploy
+        chain follows the family's phase drift, and traversing it backwards fights that drift
+        (measured on family 0: reverse collect hops 2.3-3.3 km/s where the same pairs cost
+        1.2-2.0 km/s on the way out).
+        """
 
         plans: list[RoutePlan] = []
         reasons: list[str] = []
         for penalty_scale in (1.0, 4.0, 16.0):
-            for greedy in (True, False):
-                plan = self._schedule(partial, greedy, penalty_scale)
+            for mode in self.TOUR_MODES:
+                plan = self._schedule(partial, mode, penalty_scale)
                 if plan is not None:
                     plans.append(plan)
                 else:
-                    reasons.append(
-                        f"{'greedy' if greedy else 'reverse'}x{penalty_scale:g}:{self.last_failure}"
-                    )
+                    reasons.append(f"{mode}x{penalty_scale:g}:{self.last_failure}")
             if plans:
                 break
         if not plans:
@@ -1091,22 +1103,49 @@ class RouteSearch:
         return plans[0]
 
     def _schedule(
-        self, partial: _Partial, greedy: bool, penalty_scale: float = 1.0
+        self, partial: _Partial, mode: str | bool, penalty_scale: float = 1.0
     ) -> RoutePlan | None:
         """Schedule the collection tour and Earth return backwards from the window end.
 
-        The first deployed asteroid is collected last (it has the longest stay and the return
-        departs from it); the remaining order is either the strict reverse of deployment or chosen
-        greedily backwards by proxy cost, with the camp asteroid (last deployed) forced to be the
-        first collected because the ship is already there.
+        ``mode`` is one of :attr:`TOUR_MODES` (``True``/``False`` are accepted for the legacy
+        greedy/reverse flags):
+
+        * ``"greedy"`` - the first deployed asteroid is collected last (the return departs from
+          it); the remaining order is chosen greedily backwards by proxy cost, with the camp
+          asteroid (last deployed) forced to be the first collected because the ship is there;
+        * ``"reverse"`` - strict reverse of deployment (camp first, first-deployed last);
+        * ``"forward"`` - the camp asteroid is collected first (on departure, as usual), then the
+          others in deployment order; the return departs from the second-to-last deployed one;
+        * ``"forward_revisit"`` - the ship leaves the camp *without collecting*, collects in
+          deployment order and returns from the camp asteroid after collecting it last on the
+          revisit.  The repositioning hop is charged like a collect hop but triggers no collection.
         """
 
+        if isinstance(mode, bool):
+            mode = "greedy" if mode else "reverse"
+        if mode not in self.TOUR_MODES:
+            raise ValueError(f"unknown tour mode {mode!r}")
         s = self.settings
         deploy = dict(partial.deployed)
-        remaining = [asteroid for asteroid, _ in partial.deployed]
+        deployed_order = [asteroid for asteroid, _ in partial.deployed]
+        remaining = list(deployed_order)
         end = C.MISSION_END_MJD - s.end_margin_days
-        first = remaining[0]  # the last asteroid collected before returning to Earth
         camp_asteroid = partial.location
+        # explicit collect order (first collected -> last collected) for the ordered modes
+        order: list[int] | None
+        if mode == "reverse":
+            order = list(reversed(deployed_order))
+        elif mode == "forward":
+            order = [camp_asteroid, *deployed_order[:-1]]
+        elif mode == "forward_revisit":
+            order = list(deployed_order)
+        else:
+            order = None
+        if order is not None and len(order) < 2 and mode != "reverse":
+            self.last_failure = "forward_needs_two"
+            return None
+        # the last asteroid collected before returning to Earth
+        first = order[-1] if order is not None else remaining[0]
         mass_guess = partial.mass + sum(
             C.maximum_collected_mass(max(end - deploy_epoch, 0.0))
             for _, deploy_epoch in partial.deployed
@@ -1135,11 +1174,15 @@ class RouteSearch:
         epoch = best_return[1]  # collection (=departure) epoch at the current asteroid
         location = first
         remaining.remove(first)
-        while remaining:
-            if not greedy:
-                # strict reverse of deployment: going backwards in time, the asteroid collected
-                # just before ``location`` is the earliest-deployed one still remaining
-                choices = [remaining[0]]
+        sequence = order[:-1] if order is not None else None  # still to place, collect order
+        # forward_revisit: after the collections (built backwards) one more hop brings the ship
+        # from its camp to the first-deployed asteroid without collecting anything
+        reposition = mode == "forward_revisit"
+        while remaining or reposition:
+            if sequence is not None:
+                # ordered modes: the asteroid collected just before ``location`` is the last of
+                # the sequence still to place; then (revisit) the repositioning hop from the camp
+                choices = [sequence[-1]] if sequence else [camp_asteroid]
             elif len(remaining) == 1:
                 choices = list(remaining)
             else:
@@ -1149,7 +1192,8 @@ class RouteSearch:
             # when others are short.  Without this the propellant-first choice picks 480-720
             # day hops and 8-10 asteroid chains die with ``camp_negative``.
             time_left = epoch - partial.epoch
-            max_span = s.collect_span_slack * time_left / len(remaining)
+            hops_left = len(remaining) + (1 if reposition else 0)
+            max_span = s.collect_span_slack * time_left / hops_left
             best_choice = None
             for previous in choices:
                 cost, hop = self._best_collect_hop(
@@ -1158,7 +1202,7 @@ class RouteSearch:
                 if hop is not None and (best_choice is None or cost < best_choice[0] - 1e-12):
                     best_choice = (cost, previous, hop)
             if best_choice is None:
-                self.last_failure = "no_collect_hop"
+                self.last_failure = "no_collect_hop" if remaining else "no_reposition_hop"
                 return None
             _cost, previous, best_hop = best_choice
             arrival = best_hop[1] + best_hop[2]
@@ -1177,10 +1221,15 @@ class RouteSearch:
                     "collect_hop",
                 )
             )
-            collect[previous] = best_hop[1]
             epoch = best_hop[1]
             location = previous
-            remaining.remove(previous)
+            if remaining:
+                collect[previous] = best_hop[1]
+                remaining.remove(previous)
+                if sequence is not None:
+                    sequence.pop()
+            else:
+                reposition = False  # the camp -> first-deployed hop collects nothing
         if location != camp_asteroid:
             self.last_failure = "tour_not_ending_at_camp"
             return None
@@ -1210,11 +1259,13 @@ class RouteSearch:
             if leg.role == "camp":
                 continue
             if leg.role == "collect_hop" or leg.role == "earth_return":
-                # collection happens at departure of the leg
+                # collection happens at departure of the leg (not on the forward tour's
+                # repositioning hop, which leaves the camp asteroid for a later revisit)
                 asteroid = leg.from_id
-                gained = C.maximum_collected_mass(collect[asteroid] - deploy[asteroid])
-                collected[asteroid] = gained
-                mass += gained
+                if abs(collect[asteroid] - leg.departure_epoch) < 1e-6:
+                    gained = C.maximum_collected_mass(collect[asteroid] - deploy[asteroid])
+                    collected[asteroid] = gained
+                    mass += gained
             if not self._feasible(mass, leg.delta_v_proxy_km_s, leg.tof_days, leg.role):
                 self.last_failure = "leg_authority"
                 return None

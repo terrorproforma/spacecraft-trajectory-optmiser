@@ -110,6 +110,8 @@ class Visit:
     role_out: str  # role of the leg departing this visit ("" for the final Earth visit)
     # cooperative collection: the (fixed) epoch another ship deployed the miner collected here
     foreign_deploy_epoch: float | None = None
+    # a deploy another ship already collects at this epoch: the re-timing must arrive exactly then
+    pinned_arrival: float | None = None
 
 
 @dataclass(slots=True)
@@ -214,6 +216,14 @@ class _Lattice:
     def index(self, epoch: float) -> int:
         return round((epoch - self.start) / self.step)
 
+    def exact_index(self, epoch: float, tolerance: float = 1e-6) -> int | None:
+        """Lattice index of an epoch that lies on the lattice (within ``tolerance`` days)."""
+
+        k = self.index(epoch)
+        if k < 0 or k >= self.count or abs(self.epochs[k] - epoch) > tolerance:
+            return None
+        return k
+
 
 class Retimer:
     def __init__(
@@ -243,11 +253,17 @@ class Retimer:
     def _tofs(self, role: str) -> FloatArray:
         s = self.settings
         lo, hi = s.earth_tof_days if role in ("earth_out", "earth_return") else s.hop_tof_days
+        # the grid must sit on the lattice: the DP realises a TOF as ``round(tof / step)`` steps,
+        # so an off-lattice bound (400 d on a 15- or 30-day lattice) makes the DP price and
+        # authority-check a leg at one TOF and fly it at another - the forward pass then refuses
+        # legs the DP accepted and the mass rounds cannot converge
+        lo = s.step_days * math.ceil(lo / s.step_days - 1e-9)
+        hi = s.step_days * math.floor(hi / s.step_days + 1e-9)
         if role == "earth_out" and self.earth_out_tof_floor is not None:
             # snap the floor onto the lattice so the certified TOF itself stays admissible
             floor = s.step_days * math.floor(self.earth_out_tof_floor / s.step_days + 1e-9)
             lo = max(lo, floor)
-            hi = max(hi, lo)
+        hi = max(hi, lo)
         return np.arange(lo, hi + 1e-9, s.step_days)
 
     def protect_earth_leg(self, plan: RoutePlan) -> None:
@@ -489,6 +505,15 @@ class Retimer:
                 next_tof = np.where(better, t_index, next_tof)
             back_arrival.append(next_back)
             back_tof.append(next_tof)
+            if nxt.pinned_arrival is not None:
+                # another ship collects this miner against exactly this deploy epoch: the only
+                # admissible arrival is the pinned lattice epoch (off-lattice pins are infeasible)
+                k = lat.exact_index(nxt.pinned_arrival)
+                if k is None:
+                    return None
+                pinned_value = np.full(n, neg_inf)
+                pinned_value[k] = next_value[k]
+                next_value = pinned_value
             value = next_value
         if not np.any(np.isfinite(value)):
             return None
@@ -556,7 +581,9 @@ class Retimer:
             _flat, ratio_limit = self._limits(role, visit.body, nxt.body)
             tof = arrivals[j + 1] - departures[j]
             if self.authority_ratio(dv, mass, tof) > ratio_limit:
-                return None, masses, "leg_authority"
+                # include the refused leg's departure mass: it is the entry of the DP's profile
+                # that was too optimistic, and the mass rounds correct exactly that entry
+                return None, [*masses, mass], "leg_authority"
             masses.append(mass)
             infl_p = float(self.leg_inflation(role, visit.body, nxt.body, dv, mass, tof))
             propellant = float(propellant_for_delta_v(mass, dv * infl_p))
@@ -583,6 +610,7 @@ class Retimer:
         before: float = -np.inf,
         original: RoutePlan | None = None,
         foreign: dict[int, float] | None = None,
+        pinned: dict[int, float] | None = None,
     ) -> RetimeResult:
         """Re-time the visit order ``Earth -> deploys -> collects -> Earth`` from scratch.
 
@@ -590,13 +618,14 @@ class Retimer:
         geometrically until the forward bookkeeping closes (or lowered geometrically while it
         keeps closing) and then bisected twice towards the last failing price so the margin is
         spent rather than left over.  ``foreign`` gives the deploy epochs of miners another ship
-        deployed (cooperative collection).
+        deployed (cooperative collection); ``pinned`` the deploy epochs of this ship's miners that
+        another ship collects, which the re-timed plan must reproduce exactly.
         """
 
         started = time.perf_counter()
         s = self.settings
         try:
-            visits = build_visits(deploy_order, collect_order, foreign)
+            visits = build_visits(deploy_order, collect_order, foreign, pinned)
         except ValueError as error:
             # an ill-formed order (duplicate visit, collect without a deployer) is a failed
             # re-timing, not a crash of the pricing worker
@@ -624,9 +653,13 @@ class Retimer:
         price = s.propellant_price
         best_price = price
         bisections = 0
+        profile = list(profile)
         while price_rounds < s.max_price_rounds:
             price_rounds += 1
-            candidate, failure, rounds = self._solve_at_price(visits, list(profile), price)
+            # the mass-profile corrections (forward masses heavier than guessed) describe the visit
+            # order, not the price: carry them over so each price round does not restart the
+            # leg-by-leg convergence from the original guess
+            candidate, failure, rounds, profile = self._solve_at_price(visits, profile, price)
             mass_rounds = max(mass_rounds, rounds)
             if candidate is None:
                 if failure not in ("mass_below_dry_plus_collected", "leg_authority"):
@@ -666,19 +699,21 @@ class Retimer:
 
     def _solve_at_price(
         self, visits: list[Visit], profile: list[float], price: float
-    ) -> tuple[RoutePlan | None, str, int]:
+    ) -> tuple[RoutePlan | None, str, int, list[float]]:
+        """DP + forward bookkeeping at one price; returns (plan, failure, rounds, last profile)."""
+
         s = self.settings
         failure = ""
         for mass_round in range(s.max_mass_rounds):
             dp = self._dp(visits, profile, price)
             if dp is None:
-                return None, "dp_infeasible", mass_round + 1
+                return None, "dp_infeasible", mass_round + 1, profile
             a_idx, d_idx, _objective = dp
             arrivals = [float(self.lattice.epochs[i]) for i in a_idx]
             departures = [float(self.lattice.epochs[i]) for i in d_idx]
             candidate, forward_masses, failure = self._forward(visits, arrivals, departures)
             if candidate is not None:
-                return candidate, "", mass_round + 1
+                return candidate, "", mass_round + 1, profile
             if failure == "leg_authority" and forward_masses:
                 # the DP used an optimistic mass profile: replace the leading masses with the
                 # forward ones and make the rest at least as heavy (conservative -> converges)
@@ -687,8 +722,8 @@ class Retimer:
                     max(m, m * scale) for m in profile[len(forward_masses) :]
                 ]
                 continue
-            return None, failure, mass_round + 1
-        return None, failure, s.max_mass_rounds
+            return None, failure, mass_round + 1, profile
+        return None, failure, s.max_mass_rounds, profile
 
     def retime(self, plan: RoutePlan) -> RetimeResult:
         """Re-time an existing plan keeping its visit order."""
@@ -743,7 +778,10 @@ def orders_of(plan: RoutePlan) -> tuple[list[int], list[int]]:
     collect_order = [
         leg.from_id
         for leg in plan.legs
-        if leg.role in ("collect_hop", "earth_return") and leg.from_id in plan.collect_epochs
+        if leg.role in ("collect_hop", "earth_return")
+        and leg.from_id in plan.collect_epochs
+        # the forward tour leaves its camp asteroid once without collecting (revisited later)
+        and abs(plan.collect_epochs[leg.from_id] - leg.departure_epoch) < 1e-6
     ]
     return deploy_order, collect_order
 
@@ -752,6 +790,7 @@ def build_visits(
     deploy_order: list[int],
     collect_order: list[int],
     foreign: dict[int, float] | None = None,
+    pinned: dict[int, float] | None = None,
 ) -> list[Visit]:
     """Visit sequence for ``Earth -> deploy_order -> collect_order -> Earth``.
 
@@ -759,6 +798,8 @@ def build_visits(
     that deploys on arrival and collects at departure); otherwise it deploys and leaves.
     Asteroids collected but not deployed here must have their (other ship's) deploy epoch in
     ``foreign``; asteroids deployed but not collected are left as orphans for another ship.
+    ``pinned`` fixes the deploy epoch of the listed deploys - miners another ship of the bundle
+    collects against exactly that epoch - so re-timing this ship cannot strand that collector.
     """
 
     if not deploy_order or not collect_order:
@@ -766,17 +807,28 @@ def build_visits(
     if len(set(deploy_order)) != len(deploy_order) or len(set(collect_order)) != len(collect_order):
         raise ValueError("an asteroid appears twice in a visit order")
     foreign = foreign or {}
+    pinned = pinned or {}
     for asteroid in collect_order:
         if asteroid not in deploy_order and asteroid not in foreign:
             raise ValueError(f"asteroid {asteroid} is collected but deployed by nobody")
     visits: list[Visit] = [Visit(EARTH_ID, False, False, "earth_out")]
     for asteroid in deploy_order[:-1]:
-        visits.append(Visit(asteroid, True, False, "deploy_hop"))
+        visits.append(
+            Visit(asteroid, True, False, "deploy_hop", pinned_arrival=pinned.get(asteroid))
+        )
     camp = deploy_order[-1]
     merged = collect_order[0] == camp
     remaining = collect_order[1:] if merged else list(collect_order)
     role = "earth_return" if not remaining else "collect_hop"
-    visits.append(Visit(camp, True, merged, role if merged else "collect_hop"))
+    visits.append(
+        Visit(
+            camp,
+            True,
+            merged,
+            role if merged else "collect_hop",
+            pinned_arrival=pinned.get(camp),
+        )
+    )
     for index, asteroid in enumerate(remaining):
         last = index == len(remaining) - 1
         visits.append(
@@ -870,6 +922,7 @@ def extend_plan(
     candidates: int = 12,
     pool: MinerPool | None = None,
     foreign_candidates: int = 4,
+    harvest: bool = False,
 ) -> tuple[list[RetimeResult], list[dict[str, Any]]]:
     """Insert one more asteroid and re-time each variant.
 
@@ -877,8 +930,11 @@ def extend_plan(
     (self-cleaning); with a ``pool``, a fresh asteroid deployed last and *left* for another ship
     (orphan, valued at the re-timer's orphan credit); and a pool orphan (another ship's miner)
     inserted into the collect tour first or next to the tour asteroid it co-moves with best.
-    Returns the closing variants sorted by plan value and the failure records of the others
-    (retained for the report).
+    With ``harvest`` (collector itineraries) *every* pool orphan is tried at *every* position of
+    the collect tour: a miner another ship dropped years earlier has accumulated mass at the
+    official rate since, so a late collector picks up 60-90 kg for one hop and no miner - the
+    cooperative structure the references use.  Returns the closing variants sorted by plan
+    value and the failure records of the others (retained for the report).
     """
 
     deploy_order, collect_order = orders_of(plan)
@@ -959,19 +1015,22 @@ def extend_plan(
                 foreign,
             )
     if pool is not None:
-        for asteroid in orphan_candidates(
-            plan, pool, search.catalogue, foreign_candidates, search.settings
-        ):
+        count = len(pool.orphans()) if harvest else foreign_candidates
+        for asteroid in orphan_candidates(plan, pool, search.catalogue, count, search.settings):
             if asteroid in plan.asteroids:
                 continue
             deploy_epoch = pool.orphans()[asteroid]
-            # insert next to the tour asteroid it co-moves with best (before / after), plus first
+            # insert next to the tour asteroid it co-moves with best (before / after), plus first;
+            # a harvesting collector tries every position
             da, de, di = element_deviations(
                 search.catalogue, asteroid, np.asarray(collect_order, dtype=np.int64)
             )
             ss = search.settings
             nearest = int(np.argmin(da / ss.band_a_au + de / ss.band_e + di / ss.band_i_deg))
-            for position in sorted({0, nearest, nearest + 1}):
+            positions = (
+                range(len(collect_order) + 1) if harvest else sorted({0, nearest, nearest + 1})
+            )
+            for position in positions:
                 new_collect = [*collect_order[:position], asteroid, *collect_order[position:]]
                 # one extra collect leg; the ship is heavier by the collected mass afterwards
                 leg = camp_index + position
@@ -1006,11 +1065,12 @@ def improve_plan(
     candidates: int = 12,
     time_budget_seconds: float = float("inf"),
     pool: MinerPool | None = None,
+    harvest: bool = False,
 ) -> ImproveResult:
     """Re-time, then insert asteroids one at a time while the plan value grows.
 
     With a ``pool`` the insertions include cooperative variants (orphans left for other ships and
-    other ships' orphans collected here).
+    other ships' orphans collected here; ``harvest`` tries every orphan at every position).
     """
 
     started = time.perf_counter()
@@ -1027,7 +1087,9 @@ def improve_plan(
         if len(current.asteroids) >= search.settings.max_deploys:
             steps.append({"kind": "stop", "reason": "max deploys"})
             break
-        variants, failures = extend_plan(current, search, retimer, candidates=candidates, pool=pool)
+        variants, failures = extend_plan(
+            current, search, retimer, candidates=candidates, pool=pool, harvest=harvest
+        )
         value = plan_value(current, retimer)
         step: dict[str, Any] = {
             "kind": "extend",
@@ -1122,6 +1184,7 @@ def improve_and_certify(
     time_budget_seconds: float = float("inf"),
     pool: MinerPool | None = None,
     refine=None,
+    harvest: bool = False,
 ) -> CertifiedImprovement:
     """SCvx-in-the-loop re-timing: improve at proxy level, re-fly, ban what does not fly, repeat.
 
@@ -1152,6 +1215,7 @@ def improve_and_certify(
             candidates=candidates,
             time_budget_seconds=remaining,
             pool=pool,
+            harvest=harvest,
         )
         record: dict[str, Any] = {
             "attempt": attempt,

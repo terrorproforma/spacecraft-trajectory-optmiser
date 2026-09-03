@@ -269,11 +269,32 @@ class FleetMasterResult:
     def routes(self) -> list[Any]:
         return [route for column in self.selected for route in column.routes()]
 
+    def cooperative_columns(self) -> dict[str, int]:
+        """How much of the incumbent is cooperative: bundle columns, ships with foreign collects
+        (collectors), ships whose miners another ship collects (deployers) and foreign collects."""
+
+        bundles = sum(1 for column in self.selected if column.members)
+        ships = [
+            member
+            for column in self.selected
+            for member in (column.members if column.members else (column,))
+        ]
+        collectors = sum(1 for ship in ships if ship.foreign)
+        wanted = {a for ship in ships for a in ship.foreign}
+        deployers = sum(1 for ship in ships if any(a in wanted for a in ship.deploys))
+        return {
+            "bundle_columns": bundles,
+            "collector_ships": collectors,
+            "deployer_ships": deployers,
+            "foreign_collects": sum(len(ship.foreign) for ship in ships),
+        }
+
     def summary(self) -> dict[str, Any]:
         mean = self.collected_kg / self.ships if self.selected else 0.0
         return {
             "ships": self.ships,
             "columns": len(self.selected),
+            "cooperative": self.cooperative_columns(),
             "objective_kg": self.objective,
             "greedy_objective_kg": self.greedy_objective,
             "collected_kg": self.collected_kg,

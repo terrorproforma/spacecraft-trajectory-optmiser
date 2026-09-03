@@ -38,6 +38,20 @@ class ClusterBands:
     phase_deg: float = 8.0  # wider than the 3.3° hop band: the phase drifts over the mission
     reference_epoch: float = C.MISSION_START_MJD + 3.0 * C.YEAR_DAYS  # mid deploy phase
     radius: float = 1.5  # neighbourhood radius in band units (Euclidean in scaled space)
+    # Phasing-aware membership: the phase is embedded at *every* epoch listed here (the deploy
+    # phase and the collect phase of the archived solutions), so two asteroids are neighbours
+    # only if they are co-located when the miners are dropped *and* when they are picked up -
+    # i.e. their relative phase drift (Δn x gap) is small too.  A Δa of 0.04 AU at 2.75 AU
+    # drifts 1.7°/yr: co-location at year 3 alone says nothing about year 10.  ``None`` keeps
+    # the single-epoch (static) membership.
+    visit_epochs: tuple[float, ...] | None = (
+        C.MISSION_START_MJD + 3.0 * C.YEAR_DAYS,
+        C.MISSION_START_MJD + 10.0 * C.YEAR_DAYS,
+    )
+
+    @property
+    def phase_epochs(self) -> tuple[float, ...]:
+        return self.visit_epochs if self.visit_epochs else (self.reference_epoch,)
 
 
 def mean_longitude(catalogue: AsteroidCatalogue, index: IntArray, epoch: float) -> FloatArray:
@@ -87,12 +101,17 @@ class ComovingClusters:
         i_vec = np.rad2deg(cat.inclination_rad[idx])[:, None] * np.stack(
             [np.cos(node), np.sin(node)], axis=1
         )
-        lam = np.rad2deg(mean_longitude(cat, idx, b.reference_epoch))
         # the phase is periodic: embed it on a circle so that 359° and 1° are neighbours; the
-        # chord 2 sin(Δ/2) ~ Δ for small differences, scaled so one band = one unit
+        # chord 2 sin(Δ/2) ~ Δ for small differences, scaled so one band = one unit.  With
+        # several visit epochs the embedding is repeated per epoch (phasing-aware membership).
         scale = 360.0 / (2.0 * np.pi * b.phase_deg)
-        phase = scale * np.stack([np.cos(np.deg2rad(lam)), np.sin(np.deg2rad(lam))], axis=1)
-        return np.column_stack([a / b.a_au, e_vec / b.e, i_vec / b.i_deg, phase]).astype(np.float64)
+        phases = []
+        for epoch in b.phase_epochs:
+            lam = mean_longitude(cat, idx, epoch)
+            phases.append(scale * np.stack([np.cos(lam), np.sin(lam)], axis=1))
+        return np.column_stack([a / b.a_au, e_vec / b.e, i_vec / b.i_deg, *phases]).astype(
+            np.float64
+        )
 
     def _density(self) -> IntArray:
         counts = self.tree.query_ball_point(self.features, r=self.bands.radius, return_length=True)
@@ -188,5 +207,20 @@ class ComovingClusters:
                 "phase_deg": self.bands.phase_deg,
                 "radius": self.bands.radius,
                 "reference_epoch": self.bands.reference_epoch,
+                "visit_epochs": list(self.bands.phase_epochs),
             },
         }
+
+    def relative_drift_deg_per_year(self, source: int, target: int) -> float:
+        """Relative phase drift of a pair (deg/yr): how fast their co-location decays."""
+
+        idx = self.catalogue.index_of(np.asarray([source, target], dtype=np.int64))
+        n = mean_motion_rad_per_day(self.catalogue, idx)
+        return float(abs(np.rad2deg(n[1] - n[0])) * C.YEAR_DAYS)
+
+    def phase_difference_deg(self, source: int, target: int, epoch: float) -> float:
+        """Signed phase difference target - source (deg, in (-180, 180]) at ``epoch``."""
+
+        idx = self.catalogue.index_of(np.asarray([source, target], dtype=np.int64))
+        lam = mean_longitude(self.catalogue, idx, epoch)
+        return float(np.rad2deg(np.angle(np.exp(1j * (lam[1] - lam[0])))))

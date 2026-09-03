@@ -307,6 +307,146 @@ def test_continuous_earth_leg_refinement_respects_bounds_and_is_deterministic(
 
 
 @requires_data
+def test_surrogate_earth_leg_optimiser_obeys_launch_constraints_and_is_deterministic(
+    catalogue, family
+) -> None:
+    """The continuous (launch, TOF) optimiser stays inside the official launch constraints."""
+
+    from spacepdhcg.gtoc12.earthleg import EarthLegBounds, EarthLegModel, optimise_earth_leg
+    from spacepdhcg.gtoc12.screening import thrust_authority_km_s
+
+    _label, members = family
+    target = int(members[0])
+    bounds = EarthLegBounds(
+        launch_min=C.MISSION_START_MJD,
+        launch_max=C.MISSION_START_MJD + 3.0 * C.YEAR_DAYS,  # later launches, as the references
+        tof_min=300.0,
+        tof_max=900.0,
+    )
+    model = EarthLegModel()
+    runs = [
+        optimise_earth_leg(
+            catalogue,
+            target,
+            model=model,
+            bounds=bounds,
+            launch_grid_days=180.0,
+            tof_grid_days=150.0,
+            starts=3,
+            max_evaluations=120,
+        )
+        for _ in range(2)
+    ]
+    assert [leg.summary() for leg in runs[0]] == [leg.summary() for leg in runs[1]]
+    legs = runs[0]
+    assert legs, "the grid must admit at least one Earth leg to this family"
+    assert legs == sorted(legs, key=lambda leg: (-leg.score, leg.launch_epoch, leg.tof_days))
+    for leg in legs:
+        assert bounds.launch_min <= leg.launch_epoch <= bounds.launch_max
+        assert bounds.tof_min <= leg.tof_days <= bounds.tof_max
+        assert leg.arrival_epoch <= bounds.latest_arrival + 1e-9
+        assert leg.evaluations <= 120
+        # the flown ΔV (above the free 6 km/s launch v∞) fits the thrust authority of the leg
+        full = thrust_authority_km_s(model.initial_mass, leg.tof_days, 1.0)
+        assert leg.lambert_dv_km_s <= model.authority_ratio * full + 1e-9
+        evaluated = model.evaluate(
+            catalogue, target, np.asarray([leg.launch_epoch]), np.asarray([leg.tof_days])
+        )
+        assert bool(evaluated["feasible"][0])
+        assert evaluated["departure_excess"][0] >= 0.0  # nothing charged below the allowance
+        assert evaluated["score"][0] == pytest.approx(leg.score)
+        # snapped so the certified plan is reproducible
+        assert leg.tof_days == round(leg.tof_days)
+        assert round(leg.launch_epoch, 1) == leg.launch_epoch
+    # starts with distinct launch epochs give distinct legs (deduplicated on the snapped point)
+    assert len({(leg.launch_epoch, leg.tof_days) for leg in legs}) == len(legs)
+
+
+@requires_data
+def test_forward_collection_tour_collects_in_deploy_order_after_one_repositioning_hop(
+    catalogue, family
+) -> None:
+    from spacepdhcg.gtoc12.bundles import (
+        ClusterPricingSettings,
+        cluster_search_settings,
+        family_clusters,
+    )
+    from spacepdhcg.gtoc12.clusters import ClusterBands
+    from spacepdhcg.gtoc12.retiming import build_visits, orders_of
+
+    # the campaign's own pool and phasing-aware bands: family 0 (99 co-moving members)
+    a_au = catalogue.semi_major_axis_km / C.AU_KM
+    mask = (a_au >= 2.2) & (a_au <= 3.0) & (catalogue.eccentricity <= 0.15)
+    mask &= np.rad2deg(catalogue.inclination_rad) <= 8.0
+    bands = ClusterBands(radius=2.0, phase_deg=8.0, visit_epochs=ClusterBands().visit_epochs)
+    pool = catalogue.ids[mask]
+    _label, members = family_clusters(catalogue, pool, bands=bands, min_members=12)[0]
+    settings = cluster_search_settings(
+        ClusterPricingSettings(**{**PRICING_SETTINGS, "beam_width": 6, "max_deploys": 3}),
+        members.shape[0],
+    )
+    settings = replace(settings, earth_leg_tofs=tuple(float(t) for t in range(300, 901, 50)))
+    search = RouteSearch(catalogue, members, settings)
+    result = search.run()
+    assert result.candidates
+
+    def classify(plan) -> str:
+        deploys, collects = orders_of(plan)
+        if len(deploys) == 1:
+            return "reverse"  # a single camp: every mode coincides
+        if collects == deploys:
+            return "forward_revisit"
+        if collects == [deploys[-1], *deploys[:-1]]:
+            return "forward"
+        if collects == list(reversed(deploys)):
+            return "reverse"
+        return "greedy"
+
+    modes = {classify(plan) for plan in result.candidates if len(plan.asteroids) >= 3}
+    assert modes & {"forward", "forward_revisit"}, modes
+    for plan in result.candidates:
+        deploys, collects = orders_of(plan)
+        camp = deploys[-1]
+        mode = classify(plan)
+        assert plan.feasible
+        assert plan.legs[-1].role == "earth_return"
+        assert plan.legs[-1].from_id == collects[-1]
+        assert plan.collect_epochs[collects[-1]] == plan.legs[-1].departure_epoch
+        # every stay honours the minimum and the masses are the official accumulation
+        for asteroid in deploys:
+            stay = plan.collect_epochs[asteroid] - plan.deploy_epochs[asteroid]
+            assert stay >= C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS
+            assert plan.collected_mass[asteroid] == pytest.approx(C.maximum_collected_mass(stay))
+        # hops that leave an asteroid at an epoch other than its collection collect nothing:
+        # only the forward_revisit tour has one (camp -> first deployed), all others none
+        silent = [
+            leg
+            for leg in plan.legs
+            if leg.role == "collect_hop"
+            and abs(leg.departure_epoch - plan.collect_epochs[leg.from_id]) > 1e-6
+        ]
+        visits = build_visits(deploys, collects)
+        if mode == "forward_revisit":
+            assert len(silent) == 1
+            assert silent[0].from_id == camp and silent[0].to_id == deploys[0]
+            assert silent[0].departure_epoch >= plan.deploy_epochs[camp]
+            assert collects[-1] == camp
+            # the re-timer revisits the camp: deploy-only first, collect on the way back
+            assert len(visits) == 2 + 2 * len(deploys)
+            assert visits[len(deploys)].body == camp
+            assert visits[len(deploys)].deploy and not visits[len(deploys)].collect
+            assert visits[-2].body == camp and visits[-2].collect and not visits[-2].deploy
+        else:
+            assert not silent and collects[0] == camp
+            assert len(visits) == 1 + 2 * len(deploys)  # camp visit deploys and collects
+            if mode == "forward":
+                assert collects[-1] == deploys[-2]
+    # the candidate list is deterministic
+    again = RouteSearch(catalogue, members, settings).run()
+    assert [p.summary() for p in again.candidates] == [p.summary() for p in result.candidates]
+
+
+@requires_data
 def test_injected_first_level_seeds_the_beam_at_the_certified_mass(catalogue, family) -> None:
     from spacepdhcg.gtoc12.search import SearchSettings
 
@@ -477,6 +617,162 @@ def test_drop_asteroid_removes_one_visit_and_keeps_the_rest_in_order(
     assert drop_asteroid(plan, 123456, retimer) is None
 
 
+@requires_data
+def test_pinned_deploys_keep_their_epoch_through_drop_and_retiming(
+    catalogue, family, bundle
+) -> None:
+    """A deploy another ship collects must survive the deployer's re-timing at the same epoch.
+
+    Without the pin, dropping an orphan re-times the whole chain, shifts the remaining deploy
+    epochs and strands every collector of those miners (the probe_v4 bundle lost 240 kg that way).
+    """
+
+    from spacepdhcg.gtoc12.bundles import (
+        ClusterPricingSettings,
+        cluster_retime_settings,
+        cluster_search_settings,
+        drop_asteroid,
+    )
+    from spacepdhcg.gtoc12.retiming import Retimer, Visit, build_visits, orders_of
+
+    visits = build_visits([1, 2, 3], [3, 2, 1], pinned={2: 64600.0, 3: 64700.0})
+    assert [v.pinned_arrival for v in visits] == [None, None, 64600.0, 64700.0, None, None, None]
+    assert Visit(5, True, False, "deploy_hop").pinned_arrival is None
+
+    pricing = ClusterPricingSettings(**PRICING_SETTINGS)
+    retimer = Retimer(
+        catalogue,
+        cluster_search_settings(pricing, family[1].shape[0]),
+        cluster_retime_settings(pricing, last=True),
+    )
+    # the DP realises a TOF as whole lattice steps: every grid TOF must be one (400 d bounds on a
+    # 30-day lattice used to make the DP accept legs the forward pass then refused)
+    step = retimer.settings.step_days
+    for role in ("earth_out", "earth_return", "deploy_hop", "collect_hop"):
+        tofs = retimer._tofs(role)
+        assert np.allclose(tofs / step, np.round(tofs / step))
+    # a plan this re-timer produced, re-timed again with every deploy pinned, must reproduce the
+    # deploy epochs exactly (the unpinned optimum is one admissible pinned solution)
+    plan = None
+    for ship in bundle.ships:
+        for variant in [ship.route, *ship.variants]:
+            if len(variant.plan.deploy_epochs) < 2:
+                continue
+            retimed = retimer.retime(variant.plan)
+            if retimed.plan is not None:
+                plan = retimed.plan
+                break
+        if plan is not None:
+            break
+    if plan is None:
+        pytest.skip("no fixture plan closes on the coarse re-timing lattice")
+    deploy_order, collect_order = orders_of(plan)
+    result = retimer.retime_order(
+        deploy_order,
+        collect_order,
+        retimer._plan_masses(plan),
+        original=plan,
+        pinned=dict(plan.deploy_epochs),
+    )
+    assert result.plan is not None
+    for asteroid, epoch in plan.deploy_epochs.items():
+        assert result.plan.deploy_epochs[asteroid] == pytest.approx(epoch, abs=1e-9)
+    # dropping the first deploy while pinning the second keeps the second where it was
+    victim, kept = deploy_order[0], deploy_order[1]
+    dropped = drop_asteroid(plan, victim, retimer, pinned={kept: plan.deploy_epochs[kept]})
+    if dropped is not None:
+        assert dropped.deploy_epochs[kept] == pytest.approx(plan.deploy_epochs[kept], abs=1e-9)
+    # an off-lattice pin is infeasible rather than silently rounded
+    off = retimer.retime_order(
+        deploy_order,
+        collect_order,
+        retimer._plan_masses(plan),
+        original=plan,
+        pinned={kept: plan.deploy_epochs[kept] + 0.37},
+    )
+    assert off.plan is None
+
+
+@requires_data
+def test_joint_harvest_orders_share_the_pool_once_and_retime_with_foreign_epochs(
+    catalogue, family, bundle
+) -> None:
+    """Collect tours over the pooled miners: each miner to one ship, camps first, deploys kept."""
+
+    from spacepdhcg.gtoc12.bundles import (
+        ClusterPricingSettings,
+        cluster_retime_settings,
+        cluster_search_settings,
+    )
+    from spacepdhcg.gtoc12.cooperative import MinerPool
+    from spacepdhcg.gtoc12.harvest import (
+        HarvestSettings,
+        harvest_report,
+        joint_collect_orders,
+        retime_harvest,
+    )
+    from spacepdhcg.gtoc12.retiming import Retimer, orders_of
+
+    if len(bundle.ships) < 2:
+        pytest.skip("the joint harvest needs two ships in the priced bundle")
+    pricing = ClusterPricingSettings(**PRICING_SETTINGS)
+    search_settings = cluster_search_settings(pricing, family[1].shape[0])
+    plans = {ship.slot: ship.route.plan for ship in bundle.ships}
+    pool_miners = {a for plan in plans.values() for a in plan.deploy_epochs}
+    states, uncollected = joint_collect_orders(catalogue, plans, search_settings)
+    again, again_uncollected = joint_collect_orders(catalogue, plans, search_settings)
+    assert [s.collect_order for s in states.values()] == [s.collect_order for s in again.values()]
+    assert uncollected == again_uncollected  # deterministic
+    collected = [a for state in states.values() for a in state.collect_order]
+    assert len(collected) == len(set(collected))  # each miner to exactly one ship
+    assert set(collected) | set(uncollected) == pool_miners
+    for slot, state in states.items():
+        deploy_order, _ = orders_of(plans[slot])
+        assert state.deploy_order == deploy_order  # the deploy chain is kept
+        assert state.collect_order[0] == deploy_order[-1]  # the camp is collected first
+        own = set(deploy_order)
+        assert set(state.foreign) == set(state.collect_order) - own
+        for asteroid, epoch in state.foreign.items():
+            deployer = next(s for s, p in plans.items() if asteroid in p.deploy_epochs)
+            assert deployer != slot and plans[deployer].deploy_epochs[asteroid] == epoch
+        assert state.stop_reason
+    report = harvest_report(states, uncollected)
+    assert report["foreign_collects"] == sum(len(s.foreign) for s in states.values())
+    # a max_collects cap is honoured and is the stop reason when it binds
+    capped, _ = joint_collect_orders(
+        catalogue, plans, search_settings, HarvestSettings(max_collects=1)
+    )
+    assert all(len(s.collect_order) == 1 for s in capped.values())
+    assert all(s.stop_reason == "max_collects" for s in capped.values())
+    # the DP re-times a new order with the foreign deploy epochs, or drops the tail to close
+    retimer = Retimer(catalogue, search_settings, cluster_retime_settings(pricing, last=False))
+    plan = None
+    failures = []
+    for slot in sorted(states):
+        plan, dropped, failure = retime_harvest(plans[slot], states[slot], retimer, drop_tail=3)
+        if plan is not None:
+            break
+        failures.append(failure)
+    if plan is None:
+        pytest.skip(f"no harvest order closes on the coarse lattice: {failures}")
+    new_deploy, new_collect = orders_of(plan)
+    assert new_deploy == states[slot].deploy_order
+    assert new_collect == [a for a in states[slot].collect_order if a not in dropped]
+    assert set(plan.foreign_deploy_epochs) == set(new_collect) - set(new_deploy)
+    for asteroid in new_collect:
+        stay = plan.collect_epochs[asteroid] - plan.deploy_epoch_of(asteroid)
+        assert stay >= C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS - 1e-6
+        assert plan.collected_mass[asteroid] == pytest.approx(C.maximum_collected_mass(stay))
+    assert plan.feasible
+    # a pool of the deployers alone accepts the new plan (every foreign collect has a deployer)
+    deployers = MinerPool()
+    for other, other_plan in plans.items():
+        if other != slot:
+            deployers.deployed.update({a: (e, other) for a, e in other_plan.deploy_epochs.items()})
+    deployers.register(plan, slot)
+    assert set(deployers.collected) == set(new_collect)
+
+
 def _plan(first_target: int, launch: float, tof: float, hop_to: int) -> RoutePlan:
     """A two-asteroid self-cleaning plan skeleton (epochs only need to be ordered)."""
 
@@ -613,7 +909,9 @@ def test_orphan_repair_keeps_the_better_of_dropped_and_reverted(monkeypatch) -> 
     )
     speculative_route = _proxy_refine(speculative)
     clean_route = _proxy_refine(clean)
-    monkeypatch.setattr(bundles, "drop_asteroid", lambda plan, asteroid, retimer: dropped_plan)
+    monkeypatch.setattr(
+        bundles, "drop_asteroid", lambda plan, asteroid, retimer, pinned=None: dropped_plan
+    )
     # no ship can take the orphan as a foreign collect
     monkeypatch.setattr(bundles, "extend_plan", lambda *args, **kwargs: ([], []))
     ship = BundleShip(1, speculative_route, [clean_route, speculative_route], {})
@@ -726,6 +1024,32 @@ def test_retimer_reports_an_invalid_visit_order_instead_of_raising() -> None:
     assert result.plan is None and result.failure.startswith("invalid_order")
     result = retimer.retime_order([5], [7], [3000.0, 2900.0])
     assert result.plan is None and "deployed by nobody" in result.failure
+
+
+@requires_data
+def test_leg_stats_decode_references_with_shared_roles(catalogue) -> None:
+    from spacepdhcg.gtoc12.data import REPOSITORY_ROOT
+    from spacepdhcg.gtoc12.legstats import ROLES, compare, format_table, leg_costs
+
+    path = REPOSITORY_ROOT / "benchmarks/gtoc12/data/37_mass_optimal_self_cleaning.txt"
+    if not path.exists():
+        pytest.skip("reference solution not fetched")
+    report = leg_costs("antipodes37", path, catalogue)
+    assert report.ships == 37
+    summary = report.summary(cheap_hop_kg=75.0)
+    for role in ROLES:
+        assert summary["roles"][role]["propellant_kg"]["n"] > 0
+    hist = summary["roles"]["collect_hop"]["histogram_kg"]
+    assert sum(b["count"] for b in hist) == summary["roles"]["collect_hop"]["propellant_kg"]["n"]
+    assert 0.3 < summary["hops_at_or_under_cheap_kg"] < 0.7  # the references: ~46%
+    assert 400.0 < summary["roles"]["earth_out"]["propellant_kg"]["median"] < 520.0
+    comparison = compare({"a": path, "b": path}, catalogue)
+    table = format_table(comparison)
+    assert "collect_hop" in table and "<= cheap fraction" in table
+    a, b = comparison["solutions"]["a"], comparison["solutions"]["b"]
+    assert {k: v for k, v in a.items() if k != "name"} == {
+        k: v for k, v in b.items() if k != "name"
+    }
 
 
 def test_earth_leg_record_arrival() -> None:
