@@ -454,6 +454,23 @@ def test_full_runner_requires_persistent_group_capability(tmp_path: Path) -> Non
     value["contract_hashes"]["claim_core_amendment"] = RUNNER.sha256_path(
         ROOT / "benchmarks/g4_claim_core_amendment_v1_1.json"
     )
+    # An executor configured (SPACEPDHCG_SOURCE_COMMIT baked at CMake configure time) at a
+    # different commit than the campaign's is refused: its records would carry the wrong
+    # identity.repository_commit and fail the decision step at the end of the campaign.
+    value["compiled_source_commit"] = "f" * 40
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(G4ContractError, match="configured at a different commit"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    value.pop("capability_sha256")
+    value["compiled_source_commit"] = "a" * 40
     value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
     capability_path.write_text(json.dumps(value), encoding="utf-8")
     loaded = RUNNER.load_capabilities(

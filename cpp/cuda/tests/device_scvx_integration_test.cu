@@ -4433,6 +4433,10 @@ int run_invocation(const int argc, char** argv) {
             "\"policy_reset_between_attempts\":true},"
             "\"independent_replay\":true,"
             "\"policy_amendments_supported\":[\"single-gpu-v1.1\"],"
+            // Baked at CMake configure time; every measured record echoes it as
+            // identity.repository_commit, so the capability generator must refuse an
+            // executor configured at a different commit than the one it is pinned to.
+            "\"compiled_source_commit\":\"" SPACEPDHCG_SOURCE_COMMIT "\","
             "\"timing_boundary\":\"coefficient-generation-through-independent-"
             "replay-and-acceptance;cuda-startup-excluded\"}\n"
         );

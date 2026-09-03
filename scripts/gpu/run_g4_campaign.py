@@ -180,6 +180,10 @@ def load_capabilities(
         )
         if value.get("contract_hashes") != expected_contracts:
             raise G4ContractError("executor capability authoritative contract hash mismatch")
+        if value.get("compiled_source_commit") != source_commit:
+            raise G4ContractError(
+                "executor was configured at a different commit than the campaign source commit"
+            )
         if amendment is not None:
             if expected_contracts.get("claim_core_amendment") != amendment.sha256:
                 raise G4ContractError("executor capability pins a different claim-core amendment")

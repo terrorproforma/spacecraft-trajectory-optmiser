@@ -150,7 +150,11 @@ Before campaign launch:
    group scheduler into the batched executor branch;
 2. implement the persistent session protocol in the native executable;
 3. regenerate an executor capability record declaring
-   `g4-persistent-group-v1`;
+   `g4-persistent-group-v1`; the executor's `compiled_source_commit`
+   (`SPACEPDHCG_SOURCE_COMMIT`, baked at CMake *configure* time and echoed as
+   `identity.repository_commit` in every measured record) must equal the
+   pinned source commit, so a tree that was only rebuilt since an older
+   configure is refused by the generator and by the scheduler;
 4. initialize a new grouped checkpoint. Do not reuse the row-oriented active
    campaign checkpoint because its lease and warm-up semantics are different;
 5. retain the old campaign evidence as historical attempts rather than

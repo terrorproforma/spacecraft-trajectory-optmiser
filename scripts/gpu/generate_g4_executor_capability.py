@@ -280,6 +280,17 @@ def main() -> int:
             raise SystemExit(f"{contract_name} lock mismatch")
     if capability.get("policy_amendments_supported") != ["single-gpu-v1.1"]:
         raise SystemExit("executor does not declare support for amendment single-gpu-v1.1")
+    # The executor bakes SPACEPDHCG_SOURCE_COMMIT at CMake *configure* time and echoes it as
+    # identity.repository_commit in every measured record; the decision step rejects records
+    # whose commit differs from the campaign's. A tree that was only rebuilt (not
+    # re-configured) since an older commit would pass every other check and fail at the end
+    # of the campaign, so refuse it here.
+    if capability.get("compiled_source_commit") != source_commit:
+        raise SystemExit(
+            "executor was configured at commit "
+            f"{capability.get('compiled_source_commit')!r}, not HEAD {source_commit}; "
+            "re-run the CMake configure step and rebuild before generating a capability"
+        )
     session_probe = run_session_probe(executable, lock[0], matrix_sha256)
     capability.update(
         {
