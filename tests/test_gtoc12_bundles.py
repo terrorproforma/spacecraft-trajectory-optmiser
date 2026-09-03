@@ -436,8 +436,16 @@ def test_forward_collection_tour_collects_in_deploy_order_after_one_repositionin
             assert visits[len(deploys)].body == camp
             assert visits[len(deploys)].deploy and not visits[len(deploys)].collect
             assert visits[-2].body == camp and visits[-2].collect and not visits[-2].deploy
+        elif silent:
+            # the exact collect DP may also leave the camp uncollected and pick it up at any
+            # later position of a free order (a repositioning hop, then a plain revisit)
+            assert len(silent) == 1
+            assert silent[0].from_id == camp and collects[0] != camp and camp in collects
+            assert len(visits) == 2 + 2 * len(deploys)
+            assert visits[len(deploys)].body == camp
+            assert visits[len(deploys)].deploy and not visits[len(deploys)].collect
         else:
-            assert not silent and collects[0] == camp
+            assert collects[0] == camp
             assert len(visits) == 1 + 2 * len(deploys)  # camp visit deploys and collects
             if mode == "forward":
                 assert collects[-1] == deploys[-2]
@@ -1164,14 +1172,17 @@ def test_master_warm_start_never_regresses_when_columns_are_added() -> None:
     exact = solve_fleet_master(columns)
     assert exact.exhaustive and exact.objective == pytest.approx(700.0)
     assert exact.greedy_objective == pytest.approx(600.0)
-    # node cap 0: the search stops at the root, only the starting fleets can be returned
-    cold = solve_fleet_master(columns, node_cap=0)
+    # node cap 0 without the LP: the search stops at the root, only the starting fleets can be
+    # returned; with the LP branch and bound the same cap is rescued
+    cold = solve_fleet_master(columns, node_cap=0, lp_bound=False)
     assert not cold.exhaustive and cold.objective == pytest.approx(600.0)
-    warm = solve_fleet_master(columns, node_cap=0, incumbent=exact.selected)
+    rescued = solve_fleet_master(columns, node_cap=0)
+    assert rescued.lp_proven and rescued.objective == pytest.approx(700.0)
+    warm = solve_fleet_master(columns, node_cap=0, incumbent=exact.selected, lp_bound=False)
     assert warm.objective == pytest.approx(700.0) and fleet_feasible(warm.selected) == ""
     # adding columns keeps the incumbent feasible, so the answer never regresses
     more = [*columns, _column(3, {3: 1.0}, {3: 3000.0}, 20.0)]
-    later = solve_fleet_master(more, node_cap=0, incumbent=warm.selected)
+    later = solve_fleet_master(more, node_cap=0, incumbent=warm.selected, lp_bound=False)
     assert later.objective >= 700.0 - 1e-9
     # an incumbent that lost a column is ignored (never trusted blindly)
     stale = solve_fleet_master([big, left], node_cap=0, incumbent=exact.selected)

@@ -48,10 +48,46 @@ class ClusterBands:
         C.MISSION_START_MJD + 3.0 * C.YEAR_DAYS,
         C.MISSION_START_MJD + 10.0 * C.YEAR_DAYS,
     )
+    # per-epoch weight of the phase embedding (1.0 each when ``None``): a weight below one
+    # loosens co-location at that epoch, above one tightens it
+    phase_weights: tuple[float, ...] | None = None
 
     @property
     def phase_epochs(self) -> tuple[float, ...]:
         return self.visit_epochs if self.visit_epochs else (self.reference_epoch,)
+
+    @property
+    def epoch_weights(self) -> tuple[float, ...]:
+        epochs = self.phase_epochs
+        if self.phase_weights is None:
+            return tuple(1.0 for _ in epochs)
+        if len(self.phase_weights) != len(epochs):
+            raise ValueError("phase_weights must have one entry per visit epoch")
+        return tuple(float(w) for w in self.phase_weights)
+
+    @classmethod
+    def collect_window(cls, **overrides: object) -> ClusterBands:
+        """Families clustered on *collect-epoch* co-motion.
+
+        The collect tour re-flies the family in years 8-14 of the window, so membership is
+        decided by co-location at three epochs spanning that harvest window (and, at half
+        weight, at the year-3 deploy epoch so the deploy chain still closes): two members with
+        a relative phase drift ``Δn x 6 yr`` larger than the band fall apart across the three
+        collect epochs and are separated even if they were co-located when deployed.  ``Δa`` is
+        in the feature vector as before, so the drift rate itself is bounded too.
+        """
+
+        fields: dict[str, object] = {
+            "visit_epochs": (
+                C.MISSION_START_MJD + 3.0 * C.YEAR_DAYS,
+                C.MISSION_START_MJD + 8.5 * C.YEAR_DAYS,
+                C.MISSION_START_MJD + 11.0 * C.YEAR_DAYS,
+                C.MISSION_START_MJD + 13.5 * C.YEAR_DAYS,
+            ),
+            "phase_weights": (0.5, 1.0, 1.0, 1.0),
+        }
+        fields.update(overrides)
+        return cls(**fields)  # type: ignore[arg-type]
 
 
 def mean_longitude(catalogue: AsteroidCatalogue, index: IntArray, epoch: float) -> FloatArray:
@@ -106,9 +142,9 @@ class ComovingClusters:
         # several visit epochs the embedding is repeated per epoch (phasing-aware membership).
         scale = 360.0 / (2.0 * np.pi * b.phase_deg)
         phases = []
-        for epoch in b.phase_epochs:
+        for epoch, weight in zip(b.phase_epochs, b.epoch_weights, strict=True):
             lam = mean_longitude(cat, idx, epoch)
-            phases.append(scale * np.stack([np.cos(lam), np.sin(lam)], axis=1))
+            phases.append(weight * scale * np.stack([np.cos(lam), np.sin(lam)], axis=1))
         return np.column_stack([a / b.a_au, e_vec / b.e, i_vec / b.i_deg, *phases]).astype(
             np.float64
         )
@@ -208,6 +244,7 @@ class ComovingClusters:
                 "radius": self.bands.radius,
                 "reference_epoch": self.bands.reference_epoch,
                 "visit_epochs": list(self.bands.phase_epochs),
+                "phase_weights": list(self.bands.epoch_weights),
             },
         }
 

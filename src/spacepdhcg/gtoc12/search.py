@@ -29,6 +29,7 @@ from numpy.typing import NDArray
 
 from . import constants as C
 from .clusters import ClusterBands, ComovingClusters
+from .collectdp import CollectDPSettings, CollectPairTable, CollectTour, plan_collect_tour
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
 from .proxies import phasing_edelbaum_proxy
@@ -146,6 +147,16 @@ class SearchSettings:
     # beam score charges ``collect_lookahead_weight`` x that propellant.  0 = off.
     collect_lookahead_weight: float = 0.0
     collect_gap_days: float = 3.0 * C.YEAR_DAYS
+    # exact collect-tour pricing (collectdp.py): every completed partial with at least
+    # ``collect_dp_min_deploys`` asteroids also gets the Held-Karp order + timing DP over the
+    # pair-cost table at the actual collect epochs; the best of the heuristic tours and the DP
+    # tour is kept.  The table is shared by all partials of the search (bounded cache).
+    collect_dp: bool = True
+    collect_dp_min_deploys: int = 2
+    collect_dp_max_deploys: int = 10
+    collect_dp_step_days: float = 30.0
+    collect_dp_propellant_weight: float = 1.0
+    collect_dp_cache_pairs: int = 20_000
     # cluster-first prior (clusters.py): Earth targets need at least ``cluster_min_density``
     # co-moving neighbours, and partials earn ``cluster_bonus_kg`` x (unvisited co-moving
     # neighbours of the current asteroid, capped at the remaining deploy slots) / max_deploys
@@ -450,6 +461,52 @@ class RouteSearch:
         self.last_failure = ""
         self._band_cache: dict[int, NDArray[np.int64]] = {}
         self._clusters: ComovingClusters | None = None
+        self._collect_table: CollectPairTable | None = None
+        # collect-DP telemetry: tours priced, tours that beat the heuristic modes, DP seconds
+        self.collect_dp_stats: dict[str, float] = {
+            "priced": 0,
+            "won": 0,
+            "failed": 0,
+            "seconds": 0.0,
+        }
+
+    @property
+    def collect_table(self) -> CollectPairTable:
+        """Pair/return cost table of the exact collect-tour DP (built on first use)."""
+
+        if self._collect_table is None:
+            s = self.settings
+            step = s.collect_dp_step_days
+            tofs = tuple(
+                float(t)
+                for t in s.collect_hop_tofs
+                if abs(t / step - round(t / step)) < 1e-9 and t <= 720.0
+            )
+            self._collect_table = CollectPairTable(
+                self.catalogue,
+                CollectDPSettings(
+                    step_days=step,
+                    tofs=tofs,
+                    return_tofs=tuple(float(t) for t in s.earth_leg_tofs),
+                    max_asteroids=s.collect_dp_max_deploys,
+                    end_margin_days=s.end_margin_days,
+                    propellant_weight=s.collect_dp_propellant_weight,
+                    hop_inflation=s.hop_inflation,
+                    hop_inflation_slope=s.hop_inflation_slope,
+                    hop_inflation_floor=s.hop_inflation_floor,
+                    hop_authority_ratio=s.hop_authority_ratio,
+                    return_inflation=s.earth_return_inflation,
+                    return_authority_ratio=s.earth_return_authority_ratio,
+                    cache_pairs=s.collect_dp_cache_pairs,
+                ),
+            )
+        return self._collect_table
+
+    @property
+    def collect_dp_used(self) -> bool:
+        """Whether the collect DP table has been built (and so holds cached pairs)."""
+
+        return self._collect_table is not None
 
     @property
     def clusters(self) -> ComovingClusters | None:
@@ -944,7 +1001,7 @@ class RouteSearch:
                             }
                         )
         completed.sort(
-            key=lambda item: (-self.weighted(item), item.propellant_proxy_kg, item.asteroids)
+            key=lambda item: (-self.plan_score(item), item.propellant_proxy_kg, item.asteroids)
         )
         best = next((item for item in completed if item.feasible), None)
         return SearchResult(
@@ -1149,11 +1206,128 @@ class RouteSearch:
                     reasons.append(f"{mode}x{penalty_scale:g}:{self.last_failure}")
             if plans:
                 break
+        heuristic_best = max((self.plan_score(p) for p in plans), default=-np.inf)
+        s = self.settings
+        if (
+            s.collect_dp
+            and s.collect_dp_min_deploys <= len(partial.deployed) <= s.collect_dp_max_deploys
+        ):
+            started = time.perf_counter()
+            dp_plans = self._schedule_dp(partial)
+            self.collect_dp_stats["seconds"] += time.perf_counter() - started
+            self.collect_dp_stats["priced"] += 1
+            if dp_plans:
+                plans.extend(dp_plans)
+                if max(self.plan_score(p) for p in dp_plans) > heuristic_best + 1e-9:
+                    self.collect_dp_stats["won"] += 1
+            else:
+                self.collect_dp_stats["failed"] += 1
+                reasons.append(f"dp:{self.last_failure}")
         if not plans:
             self.last_failure = ",".join(reasons)
             return None
-        plans.sort(key=lambda item: (-self.weighted(item), item.propellant_proxy_kg))
+        plans.sort(key=lambda item: (-self.plan_score(item), item.propellant_proxy_kg))
         return plans[0]
+
+    def plan_score(self, plan: RoutePlan) -> float:
+        """Ranking of alternative tours of one chain: weighted mass minus the beam's propellant
+        weight x propellant.  A tour that collects a little less but leaves hundreds of kg of
+        propellant is the better seed: the re-timer turns the margin into later collects."""
+
+        return self.weighted(plan) - self.settings.propellant_weight * plan.propellant_proxy_kg
+
+    def _schedule_dp(self, partial: _Partial) -> list[RoutePlan]:
+        """Collect tours from the exact order + timing DP (``collectdp.plan_collect_tour``).
+
+        The DP prices every collect order and every lattice epoch with the same leg model as
+        the heuristic tours, at ``collect_dp_propellant_weight`` kg of value per kg of propellant
+        (propellant-first) and again at the beam's own ``propellant_weight`` (mass-first, later
+        collects); each tour is re-priced by the exact forward mass pass of :meth:`_finish`, so
+        a DP tour that does not close on the true mass profile is rejected like any other.
+        """
+
+        s = self.settings
+        plans: list[RoutePlan] = []
+        reasons: list[str] = []
+        weights = [s.collect_dp_propellant_weight]
+        if s.propellant_weight > 0.0 and abs(s.propellant_weight - weights[0]) > 1e-9:
+            weights.append(s.propellant_weight)
+        for weight in weights:
+            tour = plan_collect_tour(
+                self.collect_table,
+                partial.deployed,
+                partial.location,
+                partial.epoch,
+                partial.mass,
+                weights=self.weights,
+                banned_pairs=self.banned_pairs,
+                propellant_weight=weight,
+            )
+            if tour is None:
+                reasons.append(f"w{weight:g}:no_tour")
+                continue
+            plan = self._plan_from_tour(partial, tour)
+            if plan is None:
+                reasons.append(f"w{weight:g}:{self.last_failure}")
+            else:
+                plans.append(plan)
+        if not plans:
+            self.last_failure = ",".join(reasons)
+        return plans
+
+    def _plan_from_tour(self, partial: _Partial, tour: CollectTour) -> RoutePlan | None:
+        """Legs of a DP tour (camps inserted between arrivals and departures) -> RoutePlan."""
+
+        deploy = dict(partial.deployed)
+        mass_guess = partial.mass + sum(
+            C.maximum_collected_mass(max(tour.collect_epochs[a] - deploy[a], 0.0)) for a in deploy
+        )
+        legs_forward: list[PlannedLeg] = []
+        location = partial.location
+        epoch = partial.epoch
+        for source, target, departure, tof, dv in tour.hops:
+            if source != location:
+                self.last_failure = "dp_tour_disconnected"
+                return None
+            if departure < epoch - 1e-6:
+                self.last_failure = "dp_departure_before_arrival"
+                return None
+            if departure > epoch + 1e-6:
+                legs_forward.append(
+                    PlannedLeg(location, location, epoch, departure, 0.0, 1.0, "camp")
+                )
+            legs_forward.append(
+                PlannedLeg(
+                    source,
+                    target,
+                    departure,
+                    departure + tof,
+                    dv,
+                    self.hop_inflation_for(dv, mass_guess, tof),
+                    "collect_hop",
+                )
+            )
+            location, epoch = target, departure + tof
+        if tour.return_departure > epoch + 1e-6:
+            legs_forward.append(
+                PlannedLeg(location, location, epoch, tour.return_departure, 0.0, 1.0, "camp")
+            )
+        elif tour.return_departure < epoch - 1e-6:
+            self.last_failure = "dp_return_before_arrival"
+            return None
+        return_inflation, _ = self.limits("earth_return")
+        legs_forward.append(
+            PlannedLeg(
+                location,
+                EARTH_ID,
+                tour.return_departure,
+                tour.return_departure + tour.return_tof,
+                tour.return_dv,
+                return_inflation,
+                "earth_return",
+            )
+        )
+        return self._finish(partial, deploy, dict(tour.collect_epochs), legs_forward)
 
     def _schedule(
         self, partial: _Partial, mode: str | bool, penalty_scale: float = 1.0
@@ -1292,18 +1466,34 @@ class RouteSearch:
         if camp_end - camp_start < 0.0:
             self.last_failure = "camp_negative"
             return None
-        for asteroid in deploy:
-            if collect[asteroid] - deploy[asteroid] < C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS:
-                self.last_failure = "stay_too_short"
-                return None
-        legs = list(partial.legs)
+        legs_forward: list[PlannedLeg] = []
         if camp_end > camp_start:
-            legs.append(
+            legs_forward.append(
                 PlannedLeg(
                     partial.location, partial.location, camp_start, camp_end, 0.0, 1.0, "camp"
                 )
             )
-        legs.extend(reversed(legs_backward))
+        legs_forward.extend(reversed(legs_backward))
+        return self._finish(partial, deploy, collect, legs_forward)
+
+    def _finish(
+        self,
+        partial: _Partial,
+        deploy: dict[int, float],
+        collect: dict[int, float],
+        legs_forward: list[PlannedLeg],
+    ) -> RoutePlan | None:
+        """Exact forward mass pass over the collect-phase legs -> RoutePlan (or None + reason)."""
+
+        s = self.settings
+        for asteroid in deploy:
+            if asteroid not in collect:
+                self.last_failure = "uncollected"
+                return None
+            if collect[asteroid] - deploy[asteroid] < C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS - 1e-6:
+                self.last_failure = "stay_too_short"
+                return None
+        legs = [*partial.legs, *legs_forward]
         # mass proxy forward through the collection tour (heavier ship after each collection)
         mass = partial.mass
         collected: dict[int, float] = {}

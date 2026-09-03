@@ -346,6 +346,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                     commit=report["commit"],
                     verification=entry["independent"],
                     solution_path=solution_path,
+                    instance_id=str(instance_summary["instance_id"]),
                 )
                 entry["viewer_manifest"] = viewer
                 entry["artifacts"] = {
@@ -477,6 +478,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             commit=report["commit"],
             verification=fleet_entry["independent"],
             solution_path=fleet_path,
+            instance_id=str(instance_summary["instance_id"]),
         )
         fleet_entry["viewer_manifest"] = viewer
         fleet_entry["artifacts"]["viewer"] = str(fleet_dir / "viewer" / "trajectories.json")
@@ -555,11 +557,16 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
             for asteroid in catalogue.ids
         }
     ids = catalogue_pool(catalogue, args)
-    bands = ClusterBands(
-        radius=args.cluster_radius,
-        phase_deg=args.cluster_phase_deg,
-        visit_epochs=None if args.static_families else ClusterBands().visit_epochs,
-    )
+    if args.collect_epoch_families:
+        bands = ClusterBands.collect_window(
+            radius=args.cluster_radius, phase_deg=args.cluster_phase_deg
+        )
+    else:
+        bands = ClusterBands(
+            radius=args.cluster_radius,
+            phase_deg=args.cluster_phase_deg,
+            visit_epochs=None if args.static_families else ClusterBands().visit_epochs,
+        )
     clusters = family_clusters(catalogue, ids, bands=bands, min_members=args.min_members)
     # cheapest families first (Earth access + internal hops over the visit epochs), not largest
     ranked = rank_families(
@@ -589,6 +596,8 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         earth_leg_refinements=args.earth_leg_refinements,
         collector_harvest=args.collector_harvest,
         collect_lookahead_weight=args.collect_lookahead,
+        collect_dp=not args.no_collect_dp,
+        collect_dp_propellant_weight=args.collect_dp_weight,
     )
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
@@ -609,7 +618,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
                 "radius": bands.radius,
                 "phase_deg": bands.phase_deg,
                 "visit_epochs": list(bands.phase_epochs),
+                "phase_weights": list(bands.epoch_weights),
                 "phasing_aware": bands.visit_epochs is not None,
+                "collect_epoch_families": bool(args.collect_epoch_families),
             },
             "families_priced": [
                 {"label": int(label), "members": int(members.shape[0]), **family_stats[label]}
@@ -949,7 +960,11 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
         print(_json({"run_id": args.run_id, "status": report["status"]}))
         return 1
     master = solve_fleet_master(
-        columns, weights=weights, max_ships=args.max_ships, node_cap=args.node_cap
+        columns,
+        weights=weights,
+        max_ships=args.max_ships,
+        node_cap=args.node_cap,
+        lp_node_limit=args.lp_node_limit,
     )
     report["master"] = master.summary() | {"columns": len(columns)}
     report["master_wall_seconds"] = (
@@ -1190,6 +1205,22 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         default=0.0,
         help="beam score weight on the collect-time cost of re-flying each deploy pair (0: off)",
     )
+    cluster.add_argument(
+        "--collect-epoch-families",
+        action="store_true",
+        help="cluster families on collect-window (years 8.5-13.5) phase co-motion",
+    )
+    cluster.add_argument(
+        "--no-collect-dp",
+        action="store_true",
+        help="disable the exact collect-tour order/timing DP in the beam",
+    )
+    cluster.add_argument(
+        "--collect-dp-weight",
+        type=float,
+        default=1.0,
+        help="collect DP objective: kg of value per kg of propellant (default 1.0)",
+    )
     cluster.set_defaults(function=cmd_cluster_fleet)
 
     master = commands.add_parser(
@@ -1211,6 +1242,12 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         type=int,
         default=2_000_000,
         help="branch-and-bound node cap (about 10 s per million nodes)",
+    )
+    master.add_argument(
+        "--lp-node-limit",
+        type=int,
+        default=20_000,
+        help="LPs solved by the LP branch and bound that closes or bounds the master",
     )
     master.add_argument("--scvx-iterations", type=int, default=40)
     master.add_argument("--node-days", type=float, default=2.0)

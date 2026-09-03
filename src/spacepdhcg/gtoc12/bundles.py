@@ -85,6 +85,11 @@ class ClusterPricingSettings:
     # beam score weight on the collect-time cost of re-flying each deploy pair (SearchSettings
     # .collect_lookahead_weight); 0 = off
     collect_lookahead_weight: float = 0.0
+    # exact collect-tour pricing in the beam (SearchSettings.collect_dp): every completed
+    # partial also gets the Held-Karp order + timing DP over the pair-cost table at the actual
+    # collect epochs; the best of the heuristic tours and the DP tour is kept
+    collect_dp: bool = True
+    collect_dp_propellant_weight: float = 1.0
     # launch grid spans the mission start plus this window (the references launch over ~3 y)
     launch_window_days: float = 3.0 * C.YEAR_DAYS
     launch_step_days: float = 30.0
@@ -143,6 +148,8 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         # on the certified leg instead of 6/364 kg).
         first_level_window_days=0.0 if settings.earth_leg_continuous else 200.0,
         collect_lookahead_weight=settings.collect_lookahead_weight,
+        collect_dp=settings.collect_dp,
+        collect_dp_propellant_weight=settings.collect_dp_propellant_weight,
         **grids,
     )
 
@@ -642,6 +649,10 @@ def price_cluster(
                     "earth_legs": [leg.target for leg in legs],
                     "banned_pairs": len(banned_pairs),
                     "banned_earth": len(banned_earth),
+                    "collect_dp": dict(search.collect_dp_stats),
+                    "collect_table_pairs": (
+                        search.collect_table.cached_pairs if search.collect_dp_used else 0
+                    ),
                 }
             )
             if not result.candidates:
