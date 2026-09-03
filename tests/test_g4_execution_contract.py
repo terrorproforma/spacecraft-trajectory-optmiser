@@ -438,6 +438,22 @@ def test_full_runner_requires_persistent_group_capability(tmp_path: Path) -> Non
         "zero_post_create_topology_allocations": True,
         "zero_post_create_topology_index_copies": True,
     }
+    # A capability that does not pin the claim-core amendment contract is refused outright.
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(G4ContractError, match="contract hash mismatch"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    value.pop("capability_sha256")
+    value["contract_hashes"]["claim_core_amendment"] = RUNNER.sha256_path(
+        ROOT / "benchmarks/g4_claim_core_amendment_v1_1.json"
+    )
     value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
     capability_path.write_text(json.dumps(value), encoding="utf-8")
     loaded = RUNNER.load_capabilities(
@@ -449,3 +465,31 @@ def test_full_runner_requires_persistent_group_capability(tmp_path: Path) -> Non
         require_persistent_group=True,
     )
     assert loaded["execution_contract"]["persistent_workspace"] is True
+    # Running under the amendment additionally requires the executor to declare support.
+    amendment = SimpleNamespace(
+        sha256=value["contract_hashes"]["claim_core_amendment"],
+        values={"amendment_id": "single-gpu-v1.1"},
+    )
+    with pytest.raises(G4ContractError, match="does not support the requested amendment"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+            amendment=amendment,
+        )
+    value.pop("capability_sha256")
+    value["policy_amendments_supported"] = ["single-gpu-v1.1"]
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    RUNNER.load_capabilities(
+        capability_path,
+        executable,
+        "b" * 64,
+        "c" * 64,
+        "a" * 40,
+        require_persistent_group=True,
+        amendment=amendment,
+    )

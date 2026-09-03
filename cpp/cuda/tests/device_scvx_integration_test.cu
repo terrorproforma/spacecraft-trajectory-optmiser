@@ -110,6 +110,15 @@ std::size_t benchmark_q_nonzeros = 0U;
 std::size_t benchmark_a_nonzeros = 0U;
 std::size_t benchmark_f_nonzeros = 0U;
 std::uint64_t tight_iteration_limit = 1'000'000U;
+// Amendment single-gpu-v1.1 (claim core only). All four values arrive through the scheduler's
+// environment, are echoed into every raw attempt record, and stay inert when absent so the
+// original single-gpu-v1 behaviour is unchanged.
+std::string g4_policy_amendment;
+std::string g4_censoring_stratum{"claim_core"};
+std::uint64_t g4_inner_iteration_cap = 0U;
+bool g4_deterministic_replay = false;
+constexpr std::string_view g4_supported_amendment = "single-gpu-v1.1";
+constexpr std::uint64_t g4_fnv_offset_basis = 14'695'981'039'346'656'037ULL;
 constexpr std::array<std::uint64_t, 20U> g4_evaluation_seeds{
     59U, 71U, 89U, 101U, 127U, 149U, 173U, 197U, 223U, 251U,
     281U, 313U, 349U, 389U, 431U, 479U, 521U, 569U, 617U, 659U,
@@ -313,6 +322,10 @@ struct G4AttemptSnapshot {
     double elapsed_seconds{0.0};
     std::string actual_warm_mode{"cold"};
     std::string dual_disposition{"not-produced"};
+    // Amendment single-gpu-v1.1: deterministic-replay bookkeeping.
+    bool replayed{false};
+    std::string replay_source_attempt_id;
+    std::string trace_hash;
 };
 
 std::string solver_name() {
@@ -328,6 +341,9 @@ std::string solver_name() {
 std::pair<std::string, std::string> attempt_disposition(
     const G4AttemptSnapshot& attempt
 ) {
+    if (attempt.replayed) {
+        return {"timeout_deterministic_replay", "timeout"};
+    }
     if (!attempt.launched) {
         return {"unrun", "unrun"};
     }
@@ -421,8 +437,168 @@ void emit_path_inventory(
     output << '}';
 }
 
-void emit_g4_attempt(
+std::string g17(const double value) {
+    char buffer[64];
+    std::snprintf(buffer, sizeof buffer, "%.17g", value);
+    return std::string(buffer);
+}
+
+const char* g4_phase_name(const spacepdhcg_cuda_scvx_phase phase) {
+    return phase == SPACEPDHCG_CUDA_SCVX_REPAIR
+        ? "repair" : phase == SPACEPDHCG_CUDA_SCVX_PROGRESS
+        ? "progress" : phase == SPACEPDHCG_CUDA_SCVX_REFINEMENT
+        ? "refinement" : "polish";
+}
+
+// Amendment single-gpu-v1.1 deterministic trace. The string is
+//   disposition|inner|outer|canonical|dynamics|path|terminal|virtual|
+//   phase:requested:achieved:accepted:re_solved;...
+// with every double printed as %.17g; the hash is 64-bit FNV-1a over its UTF-8 bytes. The
+// Python reference (spacepdhcg.experiments.g4_execution_contract.deterministic_trace_hash)
+// must stay bit-identical; --g4-amendment-selftest checks this.
+std::string g4_trace_string(
     const G4AttemptSnapshot& attempt,
+    const std::string& disposition
+) {
+    std::string text = disposition;
+    text += '|';
+    text += std::to_string(attempt.result.inner_iterations);
+    text += '|';
+    text += std::to_string(attempt.result.outer_iterations);
+    for (const double value : {
+             std::max(0.0, attempt.result.canonical_residual),
+             std::max(0.0, attempt.result.dynamics_defect),
+             std::max(0.0, attempt.result.path_violation),
+             std::max(0.0, attempt.result.terminal_residual),
+             std::max(0.0, attempt.result.virtual_control),
+         }) {
+        text += '|';
+        text += g17(value);
+    }
+    text += '|';
+    const std::size_t count = std::min<std::size_t>(
+        attempt.result.outer_iterations,
+        attempt.iterations.size()
+    );
+    for (std::size_t index = 0U; index < count; ++index) {
+        const auto& item = attempt.iterations[index];
+        if (index != 0U) {
+            text += ';';
+        }
+        text += g4_phase_name(item.phase);
+        text += ':';
+        text += g17(std::max(0.0, item.requested_tolerance));
+        text += ':';
+        text += g17(std::max(0.0, item.achieved_residual));
+        text += ':';
+        text += item.accepted != 0 ? '1' : '0';
+        text += ':';
+        text += item.re_solved != 0 ? '1' : '0';
+    }
+    return text;
+}
+
+std::string g4_trace_hash(
+    const G4AttemptSnapshot& attempt,
+    const std::string& disposition
+) {
+    const std::string text = g4_trace_string(attempt, disposition);
+    const std::uint64_t hash =
+        hash_bytes(g4_fnv_offset_basis, text.data(), text.size());
+    char buffer[24];
+    std::snprintf(
+        buffer,
+        sizeof buffer,
+        "%016llx",
+        static_cast<unsigned long long>(hash)
+    );
+    return std::string(buffer);
+}
+
+void emit_g4_trace(
+    std::ostringstream& output,
+    const G4AttemptSnapshot& attempt
+) {
+    output << "\"trace\":{\"inner_iterations\":"
+           << attempt.result.inner_iterations
+           << ",\"outer_iterations\":" << attempt.result.outer_iterations
+           << ",\"canonical_residual\":"
+           << std::max(0.0, attempt.result.canonical_residual)
+           << ",\"dynamics_residual\":"
+           << std::max(0.0, attempt.result.dynamics_defect)
+           << ",\"path_residual\":"
+           << std::max(0.0, attempt.result.path_violation)
+           << ",\"terminal_residual\":"
+           << std::max(0.0, attempt.result.terminal_residual)
+           << ",\"virtual_control_residual\":"
+           << std::max(0.0, attempt.result.virtual_control)
+           << ",\"checkpoints\":[";
+    const std::size_t count = std::min<std::size_t>(
+        attempt.result.outer_iterations,
+        attempt.iterations.size()
+    );
+    for (std::size_t index = 0U; index < count; ++index) {
+        const auto& item = attempt.iterations[index];
+        output << (index == 0U ? "" : ",") << "[\"" << g4_phase_name(item.phase)
+               << "\"," << std::max(0.0, item.requested_tolerance) << ','
+               << std::max(0.0, item.achieved_residual) << ','
+               << json_bool(item.accepted != 0) << ','
+               << json_bool(item.re_solved != 0) << ']';
+    }
+    output << "]}";
+}
+
+// Amendment single-gpu-v1.1 rule 1: warm-up/0, warm-up/1 and measured/0 all reached the
+// attempt deadline with identical deterministic traces.
+bool g4_deterministic_replay_eligible(
+    const std::vector<G4AttemptSnapshot>& attempts
+) {
+    if (attempts.size() != 3U) {
+        return false;
+    }
+    std::string first_hash;
+    for (const auto& attempt : attempts) {
+        if (!attempt.launched || attempt.replayed) {
+            return false;
+        }
+        const auto [disposition, failure_class] = attempt_disposition(attempt);
+        if (disposition != "timeout") {
+            return false;
+        }
+        const std::string hash = g4_trace_hash(attempt, disposition);
+        if (first_hash.empty()) {
+            first_hash = hash;
+        } else if (hash != first_hash) {
+            return false;
+        }
+    }
+    return true;
+}
+
+G4AttemptSnapshot g4_replay_snapshot(
+    const G4AttemptSnapshot& source,
+    const std::size_t ordinal
+) {
+    G4AttemptSnapshot replay{};
+    replay.repeat_kind = "measured";
+    replay.repeat = static_cast<std::uint32_t>(ordinal - 2U);
+    replay.launched = false;
+    replay.replayed = true;
+    replay.replay_source_attempt_id = g4_group_id + "/measured-0";
+    replay.api_status = source.api_status;
+    replay.result = source.result;
+    replay.iterations = source.iterations;
+    replay.diagnostics = source.diagnostics;
+    replay.pointers = source.pointers;
+    replay.energy = G4Energy{};
+    replay.elapsed_seconds = 0.0;
+    replay.actual_warm_mode = source.actual_warm_mode;
+    replay.dual_disposition = source.dual_disposition;
+    return replay;
+}
+
+void emit_g4_attempt(
+    G4AttemptSnapshot& attempt,
     const std::size_t ordinal,
     const std::size_t state_dimension,
     const std::size_t control_dimension,
@@ -431,6 +607,7 @@ void emit_g4_attempt(
 ) {
     const auto [disposition, failure_class] =
         attempt_disposition(attempt);
+    attempt.trace_hash = g4_trace_hash(attempt, disposition);
     const bool measured = attempt.repeat_kind == "measured";
     const bool qualified = disposition == "qualified";
     const std::string attempt_id = g4_group_id + "/"
@@ -467,6 +644,10 @@ void emit_g4_attempt(
         ? "matched-quality gates passed"
         : disposition == "hybrid_handoff_ineligible"
         ? "PDHCG construction missed the frozen 1e-6 QOCO handoff gate"
+        : disposition == "timeout_deterministic_replay"
+        ? "deterministic replay of the measured/0 timeout: warm-up/0, warm-up/1 and "
+          "measured/0 reached the attempt deadline with identical trace hashes; not executed "
+          "(amendment single-gpu-v1.1)"
         : disposition == "timeout"
         ? "attempt reached its actual deadline and was cancelled"
         : disposition == "unsupported"
@@ -559,6 +740,21 @@ void emit_g4_attempt(
            << attempt.result.qoco_workspace_creations
            << ",\"qoco_numeric_updates\":"
            << attempt.result.qoco_numeric_updates << "}";
+    output << ",\"trace_hash\":\"" << attempt.trace_hash << "\",";
+    emit_g4_trace(output, attempt);
+    if (!g4_policy_amendment.empty()) {
+        output << ",\"policy_amendment\":\"" << json_escape(g4_policy_amendment)
+               << "\",\"amendment\":{\"censoring_stratum\":\""
+               << json_escape(g4_censoring_stratum)
+               << "\",\"attempt_deadline_seconds\":" << g4_deadline_seconds
+               << ",\"inner_iteration_cap\":" << g4_inner_iteration_cap
+               << ",\"deterministic_replay\":"
+               << json_bool(g4_deterministic_replay) << '}';
+    }
+    if (attempt.replayed) {
+        output << ",\"replay_source_attempt_id\":\""
+               << json_escape(attempt.replay_source_attempt_id) << '"';
+    }
     if (measured) {
         const double objective = std::isfinite(attempt.result.objective)
             ? attempt.result.objective
@@ -836,7 +1032,19 @@ void emit_g4_attempt(
         } else {
             output << "null";
         }
-        output << "},\"notes\":[\"native persistent G4 session\"]}";
+        output << "},\"notes\":[\"native persistent G4 session\"";
+        if (!g4_policy_amendment.empty()) {
+            output << ",\"policy_amendment: " << json_escape(g4_policy_amendment)
+                   << "; censoring_stratum " << json_escape(g4_censoring_stratum)
+                   << ", attempt deadline " << g4_deadline_seconds
+                   << " s, inner iteration cap " << g4_inner_iteration_cap << '"';
+        }
+        if (attempt.replayed) {
+            output << ",\"timing, work and residuals are those of the executed source "
+                      "attempt " << json_escape(attempt.replay_source_attempt_id)
+                   << "; this attempt was not executed\"";
+        }
+        output << "]}";
     }
     output << "}\n";
     const std::string encoded = output.str();
@@ -2016,6 +2224,20 @@ IntegrationResult run_resident_sequence(
             } else {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE;
             }
+            if (g4_inner_iteration_cap > 0U) {
+                // Amendment single-gpu-v1.1 rule 2: every inner PDHCG iteration limit becomes
+                // min(limit, cap); limits already below the cap are unchanged.
+                for (std::uint64_t* limit : {
+                         &outer_options.fixed_inner_iteration_limit,
+                         &outer_options.repair_iteration_limit,
+                         &outer_options.progress_iteration_limit,
+                         &outer_options.refinement_iteration_limit,
+                         &outer_options.polish_iteration_limit,
+                         &outer_options.final_polish_iteration_limit,
+                     }) {
+                    *limit = std::min(*limit, g4_inner_iteration_cap);
+                }
+            }
         }
         spacepdhcg_cuda_scvx_driver* driver = nullptr;
         test::status_require(
@@ -2098,11 +2320,35 @@ IntegrationResult run_resident_sequence(
         std::vector<G4AttemptSnapshot> session_attempts;
         const std::size_t attempt_count = g4_session_mode ? 9U : 1U;
         bool prior_attempt_retained_state = false;
+        bool replay_active = false;
         session_attempts.reserve(attempt_count);
         spacepdhcg_cuda_status outer_status = SPACEPDHCG_CUDA_SUCCESS;
         for (std::size_t attempt_ordinal = 0U;
              attempt_ordinal < attempt_count;
              ++attempt_ordinal) {
+            if (g4_session_mode && g4_deterministic_replay
+                && attempt_ordinal == 3U) {
+                replay_active =
+                    g4_deterministic_replay_eligible(session_attempts);
+            }
+            if (replay_active) {
+                // Amendment single-gpu-v1.1 rule 1: record measured/1..6 as deterministic
+                // replays of measured/0 without executing them.
+                G4AttemptSnapshot replay = g4_replay_snapshot(
+                    session_attempts[2U],
+                    attempt_ordinal
+                );
+                emit_g4_attempt(
+                    replay,
+                    attempt_ordinal,
+                    StateDimension,
+                    ControlDimension,
+                    problem.fingerprint,
+                    workspace_create_seconds
+                );
+                session_attempts.push_back(std::move(replay));
+                continue;
+            }
             G4AttemptSnapshot attempt{};
             attempt.repeat_kind = !g4_session_mode
                 ? g4_repeat_kind
@@ -2272,7 +2518,8 @@ IntegrationResult run_resident_sequence(
             for (std::size_t ordinal = 0U;
                  ordinal < session_attempts.size();
                  ++ordinal) {
-                if (!session_attempts[ordinal].launched) {
+                if (!session_attempts[ordinal].launched
+                    && !session_attempts[ordinal].replayed) {
                     emit_g4_attempt(
                         session_attempts[ordinal],
                         ordinal,
@@ -4076,6 +4323,41 @@ void load_g4_session(
         || !(g4_group_deadline_seconds > 0.0)) {
         throw std::runtime_error("G4 session deadline must be positive");
     }
+    // Amendment single-gpu-v1.1: optional, all-or-nothing, echoed into every record.
+    if (const char* value = std::getenv("SPACEPDHCG_G4_POLICY_AMENDMENT")) {
+        if (std::string_view(value) != g4_supported_amendment) {
+            throw std::runtime_error("unsupported G4 policy amendment");
+        }
+        g4_policy_amendment = value;
+        const char* stratum = std::getenv("SPACEPDHCG_G4_CENSORING_STRATUM");
+        const char* cap = std::getenv("SPACEPDHCG_G4_INNER_ITERATION_CAP");
+        const char* replay = std::getenv("SPACEPDHCG_G4_DETERMINISTIC_REPLAY");
+        if (stratum == nullptr || cap == nullptr || replay == nullptr) {
+            throw std::runtime_error(
+                "G4 policy amendment requires censoring stratum, inner iteration cap "
+                "and deterministic-replay flag"
+            );
+        }
+        if (std::string_view(stratum) != "claim_core"
+            && std::string_view(stratum) != "censoring_sensitivity") {
+            throw std::runtime_error("unknown G4 censoring stratum");
+        }
+        g4_censoring_stratum = stratum;
+        g4_inner_iteration_cap = std::stoull(cap);
+        if (g4_inner_iteration_cap == 0U) {
+            throw std::runtime_error("G4 inner iteration cap must be positive");
+        }
+        if (std::string_view(replay) != "0" && std::string_view(replay) != "1") {
+            throw std::runtime_error("G4 deterministic-replay flag must be 0 or 1");
+        }
+        g4_deterministic_replay = std::string_view(replay) == "1";
+    } else if (std::getenv("SPACEPDHCG_G4_INNER_ITERATION_CAP") != nullptr
+               || std::getenv("SPACEPDHCG_G4_DETERMINISTIC_REPLAY") != nullptr
+               || std::getenv("SPACEPDHCG_G4_CENSORING_STRATUM") != nullptr) {
+        throw std::runtime_error(
+            "G4 amendment settings require SPACEPDHCG_G4_POLICY_AMENDMENT"
+        );
+    }
     g4_group_deadline = std::chrono::steady_clock::now()
         + std::chrono::duration_cast<std::chrono::steady_clock::duration>(
             std::chrono::duration<double>(g4_group_deadline_seconds)
@@ -4150,8 +4432,73 @@ int run_invocation(const int argc, char** argv) {
             "\"separate_attempt_records\":true,"
             "\"policy_reset_between_attempts\":true},"
             "\"independent_replay\":true,"
+            "\"policy_amendments_supported\":[\"single-gpu-v1.1\"],"
             "\"timing_boundary\":\"coefficient-generation-through-independent-"
             "replay-and-acceptance;cuda-startup-excluded\"}\n"
+        );
+        return 0;
+    }
+    if (mode == "--g4-amendment-selftest") {
+        // Amendment single-gpu-v1.1: prove the deterministic trace hash and the replay
+        // eligibility rule on synthetic snapshots without touching the GPU. The Python test
+        // recomputes the hash from the printed trace string with the reference implementation.
+        g4_group_id = "g4-group-v1-" + std::string(64U, '0');
+        std::vector<G4AttemptSnapshot> attempts;
+        for (std::size_t ordinal = 0U; ordinal < 3U; ++ordinal) {
+            G4AttemptSnapshot attempt{};
+            attempt.repeat_kind = ordinal < 2U ? "warmup" : "measured";
+            attempt.repeat = static_cast<std::uint32_t>(ordinal < 2U ? ordinal : 0U);
+            attempt.launched = true;
+            attempt.result.status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+            attempt.result.inner_iterations = 123'456U;
+            attempt.result.outer_iterations = 2U;
+            attempt.result.canonical_residual = 1.0e-6;
+            attempt.result.dynamics_defect = 2.5e-7;
+            attempt.result.path_violation = -1.0;  // clamps to 0 like the record
+            attempt.result.terminal_residual = 3.0e-9;
+            attempt.result.virtual_control = 0.1;
+            attempt.iterations.resize(2U);
+            attempt.iterations[0].phase = SPACEPDHCG_CUDA_SCVX_REPAIR;
+            attempt.iterations[0].requested_tolerance = 1.0e-2;
+            attempt.iterations[0].achieved_residual = 5.0e-3;
+            attempt.iterations[0].accepted = 1;
+            attempt.iterations[0].re_solved = 0;
+            attempt.iterations[1].phase = SPACEPDHCG_CUDA_SCVX_POLISH;
+            attempt.iterations[1].requested_tolerance = 1.0e-8;
+            attempt.iterations[1].achieved_residual = 7.0e-4;
+            attempt.iterations[1].accepted = 0;
+            attempt.iterations[1].re_solved = 1;
+            attempts.push_back(std::move(attempt));
+        }
+        const bool equal_eligible = g4_deterministic_replay_eligible(attempts);
+        const std::string trace = g4_trace_string(attempts[2], "timeout");
+        const std::string hash = g4_trace_hash(attempts[2], "timeout");
+        attempts[2].result.inner_iterations += 1U;
+        const bool differing_eligible = g4_deterministic_replay_eligible(attempts);
+        attempts[2].result.inner_iterations -= 1U;
+        attempts[1].result.status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
+        const bool non_timeout_eligible = g4_deterministic_replay_eligible(attempts);
+        G4AttemptSnapshot replay = g4_replay_snapshot(attempts[2], 4U);
+        const auto [replay_disposition, replay_failure] = attempt_disposition(replay);
+        std::printf(
+            "{\"case\":\"g4_amendment_selftest\",\"amendment\":\"%.*s\","
+            "\"trace_string\":\"%s\",\"trace_hash\":\"%s\","
+            "\"replay_eligible_identical\":%s,\"replay_eligible_differing\":%s,"
+            "\"replay_eligible_non_timeout\":%s,\"replay_disposition\":\"%s\","
+            "\"replay_failure_class\":\"%s\",\"replay_repeat\":%u,"
+            "\"replay_launched\":%s,\"replay_source_attempt_id\":\"%s\"}\n",
+            static_cast<int>(g4_supported_amendment.size()),
+            g4_supported_amendment.data(),
+            json_escape(trace).c_str(),
+            hash.c_str(),
+            json_bool(equal_eligible),
+            json_bool(differing_eligible),
+            json_bool(non_timeout_eligible),
+            replay_disposition.c_str(),
+            replay_failure.c_str(),
+            replay.repeat,
+            json_bool(replay.launched),
+            replay.replay_source_attempt_id.c_str()
         );
         return 0;
     }

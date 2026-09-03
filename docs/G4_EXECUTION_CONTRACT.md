@@ -77,6 +77,10 @@ unsupported. `hybrid_handoff_ineligible`, `not_applicable`, and `unsupported`
 all require a reason and explicit timing and are never winner-eligible.
 
 Timeout and OOM can be recorded only for an attempt that was actually launched.
+`timeout_deterministic_replay` (amendment `single-gpu-v1.1`, claim core only) is
+the single unlaunched timeout-class disposition: it may appear only on
+measured/1..6, must reference the executed `measured-0` attempt whose
+deterministic trace it repeats, and counts as timeout censoring.
 No failure at a smaller coordinate predicts or censors a larger coordinate.
 Every larger logical row remains pending until it is launched or receives a
 contract-authorized static applicability disposition.
@@ -99,6 +103,37 @@ The core may resolve only H5 and H6. Its definition explicitly permits no
 F01–F12 or T01–T08 regime product, and the publication builder rejects any
 claim-core run. It cannot replace, populate, complete, or freeze the full G4
 regime map.
+
+### Amendment `single-gpu-v1.1` (claim core only)
+
+`benchmarks/g4_claim_core_amendment_v1_1.json` (lock
+`benchmarks/g4_claim_core_amendment_v1_1.sha256`, schema
+`experiments/schema/g4_claim_core_amendment.schema.json`, document
+`docs/G4_CLAIM_CORE_AMENDMENT_V1_1.md`) is a preregistered amendment frozen
+before any claim-core group result was inspected. It is listed in the
+`single-gpu-v1` scope registry and recorded as `policy_amendment:
+"single-gpu-v1.1"` in the checkpoint metadata and in every raw attempt, group
+result, decision and aggregate record. It changes three execution rules and
+nothing else:
+
+1. contamination is run-and-flag: attempts overlapping foreign GPU compute are
+   flagged `contaminated` in place (timing/energy invalid, disposition and
+   quality retained, no re-run) and excluded from timing statistics with the
+   reduced `n` reported;
+2. deterministic-replay timeouts: when warm-up/0, warm-up/1 and measured/0 all
+   time out with identical `trace_hash`, measured/1..6 are recorded as
+   `timeout_deterministic_replay` (unlaunched, referencing measured/0) instead
+   of being executed; differing traces execute all seven;
+3. censoring 600 s / 1M → 120 s / 200k for the claim core, with a
+   hash-selected 10 % `censoring_sensitivity` stratum (36 twins, distinct group
+   ids) re-run at 600 s / 1M and a preregistered acceptance rule: any attempt
+   qualified at 600 s whose 120 s counterpart is censored invalidates the
+   amendment and reverts the whole core to 600 s.
+
+Scheduling under the amendment runs converging policies before fixed-tight;
+`solver_order` remains recorded unchanged as an execution-only axis. The
+original `single-gpu-v1` rules stay readable in the claim-core and policy JSON
+and in `censoring.original`.
 
 ## Batched-executor integration
 

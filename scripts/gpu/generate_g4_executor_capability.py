@@ -37,9 +37,15 @@ EXPECTED_EXECUTION_CONTRACT = {
 PINNED_CONTRACTS = {
     "applicability": "benchmarks/g4_applicability.json",
     "claim_core": "benchmarks/g4_h5_h6_claim_core.json",
+    "claim_core_amendment": "benchmarks/g4_claim_core_amendment_v1_1.json",
     "execution_group_schema": "experiments/schema/g4_execution_group.schema.json",
     "raw_attempt_schema": "experiments/schema/g4_raw_attempt.schema.json",
     "paper1_result_schema": "experiments/schema/paper1_result.schema.json",
+}
+PINNED_LOCKS = {
+    "applicability": "benchmarks/g4_applicability.sha256",
+    "claim_core": "benchmarks/g4_h5_h6_claim_core.sha256",
+    "claim_core_amendment": "benchmarks/g4_claim_core_amendment_v1_1.sha256",
 }
 
 
@@ -268,12 +274,12 @@ def main() -> int:
     contract_hashes = {
         name: sha256_path(repository / relative) for name, relative in PINNED_CONTRACTS.items()
     }
-    for name in ("g4_applicability", "g4_h5_h6_claim_core"):
-        lock_path = repository / f"benchmarks/{name}.sha256"
-        expected = lock_path.read_text().split()[0]
-        contract_name = "applicability" if name == "g4_applicability" else "claim_core"
+    for contract_name, relative in PINNED_LOCKS.items():
+        expected = (repository / relative).read_text().split()[0]
         if contract_hashes[contract_name] != expected:
-            raise SystemExit(f"{name} lock mismatch")
+            raise SystemExit(f"{contract_name} lock mismatch")
+    if capability.get("policy_amendments_supported") != ["single-gpu-v1.1"]:
+        raise SystemExit("executor does not declare support for amendment single-gpu-v1.1")
     session_probe = run_session_probe(executable, lock[0], matrix_sha256)
     capability.update(
         {

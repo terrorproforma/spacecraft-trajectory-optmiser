@@ -224,11 +224,15 @@ class CampaignStore:
         grouped: bool = False,
         groups: Sequence[ExecutionGroup] | None = None,
         schedule_sha256: str | None = None,
+        extra_metadata: Mapping[str, str] | None = None,
     ) -> None:
         self.root = root
         self.policy = policy
         self.policy_sha256 = policy_sha256
         self.source_commit = source_commit
+        self.extra_metadata = dict(extra_metadata or {})
+        if "next_ordinal" in self.extra_metadata:
+            raise G4ContractError("next_ordinal is scheduler-owned metadata")
         if groups is not None and not grouped:
             raise G4ContractError("explicit G4 groups require grouped scheduling")
         self.grouped = grouped
@@ -293,6 +297,7 @@ class CampaignStore:
             "schedule_sha256": self.schedule_sha256,
             "source_commit": self.source_commit,
             "total_rows": str(self.total),
+            **self.extra_metadata,
             "next_ordinal": "0",
         }
         with self.database:

@@ -52,6 +52,7 @@ PAPER1_STATUSES: Final = frozenset(
         "unsupported",
         "oom",
         "timeout",
+        "timeout_deterministic_replay",
         "numerical",
         "infeasible",
         "unrun",

@@ -21,6 +21,7 @@ from .g4 import (
 
 APPLICABILITY_SCHEMA_VERSION: Final = "1.0.0"
 CLAIM_CORE_SCHEMA_VERSION: Final = "1.0.0"
+AMENDMENT_SCHEMA_VERSION: Final = "1.0.0"
 APPLICABILITY_STATES: Final = ("executable", "not_applicable", "unsupported")
 TERMINAL_DISPOSITIONS: Final = (
     "qualified",
@@ -30,10 +31,33 @@ TERMINAL_DISPOSITIONS: Final = (
     "unsupported",
     "oom",
     "timeout",
+    "timeout_deterministic_replay",
     "numerical",
     "infeasible",
     "unrun",
 )
+# Amendment single-gpu-v1.1 (claim core only). The original single-gpu-v1 rules stay readable
+# through ``ORIGINAL_CENSORING``; the amendment never rewrites the claim-core definition.
+AMENDMENT_ID: Final = "single-gpu-v1.1"
+AMENDMENT_RECORD_FIELD: Final = "policy_amendment"
+ORIGINAL_CENSORING: Final = {"attempt_deadline_seconds": 600, "inner_iteration_cap": 1_000_000}
+CLAIM_CORE_STRATUM: Final = "claim_core"
+SENSITIVITY_STRATUM: Final = "censoring_sensitivity"
+CENSORING_STRATA: Final = (CLAIM_CORE_STRATUM, SENSITIVITY_STRATUM)
+REPLAY_DISPOSITION: Final = "timeout_deterministic_replay"
+TRACE_HASH_FIELDS: Final = (
+    "disposition",
+    "inner_iterations",
+    "outer_iterations",
+    "canonical_residual",
+    "dynamics_residual",
+    "path_residual",
+    "terminal_residual",
+    "virtual_control_residual",
+    "checkpoints[phase,requested_tolerance,achieved_residual,accepted,re_solved]",
+)
+_FNV_OFFSET: Final = 14_695_981_039_346_656_037
+_FNV_PRIME: Final = 1_099_511_628_211
 FAMILY_CLASS_KEYS: Final = (
     "dispersion_class",
     "attitude_class",
@@ -293,7 +317,7 @@ def solver_rotation(
 
 
 def execution_group_coordinate(coordinate: Mapping[str, Any]) -> dict[str, Any]:
-    return {
+    result = {
         **physical_coordinate(coordinate),
         "policy": coordinate["policy"],
         "quality_tier": coordinate["quality_tier"],
@@ -303,6 +327,15 @@ def execution_group_coordinate(coordinate: Mapping[str, Any]) -> dict[str, Any]:
         "warm_mode": coordinate["warm_mode"],
         "solver_order": coordinate["solver_order"],
     }
+    # Amendment single-gpu-v1.1: a censoring-sensitivity twin shares every physical and
+    # experimental axis of its claim-core group (same physical instance, same solver order) and
+    # differs only in the censoring stratum, which therefore enters the group identity.
+    stratum = coordinate.get("censoring_stratum")
+    if stratum is not None:
+        _require(stratum in CENSORING_STRATA, f"unknown censoring stratum {stratum!r}")
+        if stratum != CLAIM_CORE_STRATUM:
+            result["censoring_stratum"] = stratum
+    return result
 
 
 def make_execution_group(coordinate: Mapping[str, Any]) -> ExecutionGroup:
@@ -343,6 +376,21 @@ def validate_attempt_record(record: Mapping[str, Any]) -> None:
     )
     if disposition in {"timeout", "oom"}:
         _require(record["launched"] is True, "timeout/OOM disposition requires an actual launch")
+    if disposition == REPLAY_DISPOSITION:
+        # Amendment single-gpu-v1.1: a replayed timeout is never launched; it references the
+        # executed measured/0 attempt whose deterministic trace it repeats.
+        _require(record["launched"] is False, "replayed timeouts are recorded without a launch")
+        _require(record["repeat_kind"] == "measured", "only measured attempts may be replayed")
+        _require(repeat >= 1, "measured/0 must be executed before any replay")
+        source = record.get("replay_source_attempt_id")
+        _require(
+            isinstance(source, str) and source.endswith("/measured-0"),
+            "replayed timeouts must reference the executed measured/0 attempt",
+        )
+        _require(
+            record.get(AMENDMENT_RECORD_FIELD) == AMENDMENT_ID,
+            "replayed timeouts exist only under amendment single-gpu-v1.1",
+        )
     if disposition == "not_applicable":
         _require(record["launched"] is False, "not_applicable attempts may not be launched")
     if disposition == "hybrid_handoff_ineligible":
@@ -477,3 +525,294 @@ def claim_core_group_at(
 def claim_core_may_populate_product(definition: Mapping[str, Any], product_id: str) -> bool:
     _require(product_id in PUBLICATION_PRODUCT_IDS, f"unknown Paper 1 product {product_id!r}")
     return product_id in definition["paper1_regime_products_permitted"]
+
+
+# ------------------------------------------------------------------------------------------------
+# Amendment single-gpu-v1.1 (preregistered claim-core amendment)
+# ------------------------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class LoadedAmendment:
+    values: dict[str, Any]
+    sha256: str
+    path: Path
+
+
+def fnv1a64(payload: bytes) -> int:
+    """64-bit FNV-1a, bit-identical to ``hash_bytes`` in the native executor."""
+
+    value = _FNV_OFFSET
+    for byte in payload:
+        value ^= byte
+        value = (value * _FNV_PRIME) & 0xFFFFFFFFFFFFFFFF
+    return value
+
+
+def _g17(value: Any) -> str:
+    """``%.17g`` exactly as the executor prints doubles into the trace string."""
+
+    number = float(value)
+    _require(number == number and abs(number) != float("inf"), "trace values must be finite")
+    return f"{number:.17g}"
+
+
+def deterministic_trace_string(disposition: str, trace: Mapping[str, Any]) -> str:
+    """Canonical trace text hashed by both the executor and this reference implementation.
+
+    ``trace`` is the ``trace`` object of a raw attempt record: iteration counts, the final
+    residual set, and one ``[phase, requested_tolerance, achieved_residual, accepted,
+    re_solved]`` checkpoint per outer iteration.
+    """
+
+    parts = [
+        str(disposition),
+        str(int(trace["inner_iterations"])),
+        str(int(trace["outer_iterations"])),
+        _g17(trace["canonical_residual"]),
+        _g17(trace["dynamics_residual"]),
+        _g17(trace["path_residual"]),
+        _g17(trace["terminal_residual"]),
+        _g17(trace["virtual_control_residual"]),
+    ]
+    checkpoints = []
+    for checkpoint in trace["checkpoints"]:
+        phase, requested, achieved, accepted, re_solved = checkpoint
+        checkpoints.append(
+            f"{phase}:{_g17(requested)}:{_g17(achieved)}:{int(bool(accepted))}:"
+            f"{int(bool(re_solved))}"
+        )
+    return "|".join(parts) + "|" + ";".join(checkpoints)
+
+
+def deterministic_trace_hash(disposition: str, trace: Mapping[str, Any]) -> str:
+    return f"{fnv1a64(deterministic_trace_string(disposition, trace).encode('utf-8')):016x}"
+
+
+def deterministic_replay_eligible(records: Sequence[Mapping[str, Any]]) -> bool:
+    """Amendment rule 1: warm-up/0, warm-up/1 and measured/0 all timed out with equal traces."""
+
+    if len(records) != 3:
+        return False
+    expected = (("warmup", 0), ("warmup", 1), ("measured", 0))
+    for record, (kind, repeat) in zip(records, expected, strict=True):
+        if (record.get("repeat_kind"), record.get("repeat")) != (kind, repeat):
+            return False
+        if record.get("launched") is not True or record.get("disposition") != "timeout":
+            return False
+        if not isinstance(record.get("trace_hash"), str) or not isinstance(
+            record.get("trace"), Mapping
+        ):
+            return False
+        if deterministic_trace_hash("timeout", record["trace"]) != record["trace_hash"]:
+            raise G4ContractError("raw attempt trace_hash does not match its trace")
+    return len({record["trace_hash"] for record in records}) == 1
+
+
+def censoring_sensitivity_group_ids(
+    definition: Mapping[str, Any],
+    amendment: Mapping[str, Any],
+) -> dict[str, list[str]]:
+    """Deterministic hash-selected subset per family x scale x policy stratum.
+
+    Within each stratum the twenty claim-core groups are ranked by
+    ``sha256(selection_seed + "|" + group_id)`` and the lowest ``groups_per_stratum`` are
+    selected; the choice depends only on the frozen group identities and the amendment seed.
+    """
+
+    stratum = amendment["censoring"]["sensitivity_stratum"]
+    seed = str(stratum["selection_seed"])
+    per_stratum = int(stratum["groups_per_stratum"])
+    ranked: dict[tuple[str, int, str], list[tuple[str, str]]] = {}
+    for group in iter_claim_core_groups(definition):
+        coordinate = group.coordinate
+        key = (coordinate["family"], coordinate["intervals"], coordinate["policy"])
+        rank = hashlib.sha256(f"{seed}|{group.group_id}".encode()).hexdigest()
+        ranked.setdefault(key, []).append((rank, group.group_id))
+    selected: dict[str, list[str]] = {}
+    for key in sorted(ranked, key=lambda item: (item[0], item[1], item[2])):
+        chosen = sorted(ranked[key])[:per_stratum]
+        selected["/".join(str(part) for part in key)] = [group_id for _, group_id in chosen]
+    return selected
+
+
+def sensitivity_group_for(group: ExecutionGroup) -> ExecutionGroup:
+    """The 600 s / 1M twin of one claim-core group (distinct identity, same instance)."""
+
+    _require(
+        group.coordinate.get("censoring_stratum") is None,
+        "sensitivity twins derive from claim-core groups only",
+    )
+    return make_execution_group({**group.coordinate, "censoring_stratum": SENSITIVITY_STRATUM})
+
+
+def group_censoring_stratum(group: ExecutionGroup) -> str:
+    return str(group.coordinate.get("censoring_stratum") or CLAIM_CORE_STRATUM)
+
+
+def group_censoring(
+    group: ExecutionGroup,
+    amendment: Mapping[str, Any],
+) -> dict[str, int]:
+    """Attempt deadline and inner iteration cap in force for one scheduled group."""
+
+    censoring = amendment["censoring"]
+    if group_censoring_stratum(group) == SENSITIVITY_STRATUM:
+        source = censoring["original"]
+    else:
+        source = censoring["claim_core"]
+    deadline = int(source["attempt_deadline_seconds"])
+    return {
+        "attempt_deadline_seconds": deadline,
+        "inner_iteration_cap": int(source["inner_iteration_cap"]),
+        "group_deadline_seconds": 9 * deadline + 60,
+    }
+
+
+def amended_claim_core_groups(
+    definition: Mapping[str, Any],
+    amendment: Mapping[str, Any],
+) -> tuple[ExecutionGroup, ...]:
+    """Frozen execution schedule of the amended claim core.
+
+    Group identities, solver-order values and the seven-plus-two repeat structure are those of
+    the claim core. Only the execution order changes: policies run in the amendment's
+    ``policy_priority`` (converging policies before fixed-tight) and each hash-selected
+    censoring-sensitivity twin immediately follows its claim-core group so the preregistered
+    acceptance rule can be checked as evidence accrues.
+    """
+
+    priority = list(amendment["schedule"]["policy_priority"])
+    selected = {
+        group_id
+        for group_ids in amendment["censoring"]["sensitivity_stratum"]["group_ids"].values()
+        for group_id in group_ids
+    }
+    core_groups = tuple(iter_claim_core_groups(definition))
+    _require(
+        selected <= {group.group_id for group in core_groups},
+        "sensitivity stratum references groups outside the claim core",
+    )
+    ordered: list[ExecutionGroup] = []
+    for policy_name in priority:
+        for group in core_groups:
+            if group.coordinate["policy"] != policy_name:
+                continue
+            ordered.append(group)
+            if group.group_id in selected:
+                ordered.append(sensitivity_group_for(group))
+    _require(len(ordered) == len(core_groups) + len(selected), "amended schedule count drift")
+    return tuple(ordered)
+
+
+def amended_schedule_sha256(groups: Sequence[ExecutionGroup]) -> str:
+    return hashlib.sha256(canonical_bytes([group.group_id for group in groups])).hexdigest()
+
+
+def validate_claim_core_amendment(
+    amendment: Mapping[str, Any],
+    definition: Mapping[str, Any],
+    *,
+    claim_core_sha256: str,
+    policy_sha256: str,
+) -> None:
+    _require(amendment.get("schema_version") == AMENDMENT_SCHEMA_VERSION, "amendment schema drift")
+    _require(amendment.get("amendment_id") == AMENDMENT_ID, "amendment identity drift")
+    _require(
+        amendment.get("preregistered_before_results") is True,
+        "amendment must be frozen before any group result is inspected",
+    )
+    amends = amendment.get("amends", {})
+    _require(amends.get("campaign_scope_id") == "single-gpu-v1", "amendment scope drift")
+    _require(
+        amends.get("claim_core_campaign_id") == definition.get("campaign_id"),
+        "amendment references a different claim core",
+    )
+    _require(amends.get("claim_core_sha256") == claim_core_sha256, "amendment core hash drift")
+    _require(amends.get("policy_sha256") == policy_sha256, "amendment policy hash drift")
+    record_field = amendment.get("record_field", {})
+    _require(
+        record_field == {"name": AMENDMENT_RECORD_FIELD, "value": AMENDMENT_ID},
+        "amendment record field drift",
+    )
+    contamination = amendment.get("contamination", {})
+    _require(contamination.get("policy") == "run_and_flag", "contamination policy drift")
+    _require(
+        contamination.get("attempt_flag") == "contaminated"
+        and contamination.get("rerun_required") is False,
+        "contaminated attempts must be flagged in place without a re-run",
+    )
+    replay = amendment.get("deterministic_replay", {})
+    _require(replay.get("disposition") == REPLAY_DISPOSITION, "replay disposition drift")
+    _require(
+        tuple(replay.get("trace_hash_fields", ())) == TRACE_HASH_FIELDS,
+        "replay trace fields drift",
+    )
+    _require(replay.get("trace_hash_algorithm") == "fnv1a64", "replay hash algorithm drift")
+    censoring = amendment.get("censoring", {})
+    _require(
+        censoring.get("original") == ORIGINAL_CENSORING,
+        "original single-gpu-v1 censoring values must remain readable and unchanged",
+    )
+    core = censoring.get("claim_core", {})
+    _require(
+        core == {"attempt_deadline_seconds": 120, "inner_iteration_cap": 200_000},
+        "claim-core censoring values drift",
+    )
+    stratum = censoring.get("sensitivity_stratum", {})
+    _require(stratum.get("name") == SENSITIVITY_STRATUM, "sensitivity stratum name drift")
+    _require(
+        stratum.get("stratification") == ["family", "intervals", "policy"],
+        "sensitivity stratification drift",
+    )
+    _require(stratum.get("groups_per_stratum") == 2, "sensitivity stratum must hold 10%")
+    expected_ids = censoring_sensitivity_group_ids(definition, amendment)
+    _require(
+        stratum.get("group_ids") == expected_ids,
+        "committed sensitivity group IDs differ from the deterministic selection",
+    )
+    total = sum(len(ids) for ids in expected_ids.values())
+    _require(stratum.get("group_count") == total == 36, "sensitivity group count drift")
+    schedule = amendment.get("schedule", {})
+    _require(
+        schedule.get("policy_priority")
+        == ["pure-gpu-ipm", "adaptive", "hybrid-pdhcg-ipm", "fixed-tight"],
+        "schedule policy priority drift",
+    )
+    _require(
+        schedule.get("solver_order_identity_unchanged") is True,
+        "the frozen solver-order rotation must remain recorded unchanged",
+    )
+    groups = amended_claim_core_groups(definition, amendment)
+    _require(
+        schedule.get("group_count") == len(groups) == 396, "amended schedule cardinality drift"
+    )
+    _require(
+        schedule.get("schedule_sha256") == amended_schedule_sha256(groups),
+        "amended schedule hash drift",
+    )
+    unchanged = amendment.get("unchanged", [])
+    _require(isinstance(unchanged, list) and len(unchanged) >= 6, "amendment must list invariants")
+
+
+def load_claim_core_amendment(
+    path: str | Path,
+    definition: Mapping[str, Any],
+    *,
+    claim_core_sha256: str,
+    policy_sha256: str,
+    expected_sha256: str | None = None,
+) -> LoadedAmendment:
+    source = Path(path)
+    digest = sha256_path(source)
+    if expected_sha256 is not None:
+        _require(digest == expected_sha256, "claim-core amendment hash drift")
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    _require(isinstance(payload, dict), "amendment root must be an object")
+    validate_claim_core_amendment(
+        payload,
+        definition,
+        claim_core_sha256=claim_core_sha256,
+        policy_sha256=policy_sha256,
+    )
+    return LoadedAmendment(payload, digest, source)

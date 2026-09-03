@@ -12,6 +12,13 @@ The claim core (``benchmarks/g4_h5_h6_claim_core.json``) resolves H5 and H6 only
    ``spacepdhcg.experiments.g4`` with the policy's bootstrap seed, sample count and thresholds.
 
 No timing enters a decision unless both sides of a pair are ``qualified``; nothing is imputed.
+
+Amendment ``single-gpu-v1.1`` (``--amendment``): attempts flagged ``contaminated`` keep their
+disposition and quality but never enter a timing/energy statistic or a paired bootstrap (the pair
+count ``n`` actually used is reported per coordinate); ``timeout_deterministic_replay`` counts as
+timeout censoring; the ``censoring_sensitivity`` twins (600 s / 1M) are evaluated against their
+120 s / 200k claim-core groups under the preregistered acceptance rule, and no H5/H6 decision is
+issued from the 120 s core if that rule fails.
 """
 
 from __future__ import annotations
@@ -40,10 +47,18 @@ from spacepdhcg.experiments.g4 import (  # noqa: E402
     sha256_path,
 )
 from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
+    AMENDMENT_RECORD_FIELD,
     ATTEMPT_KINDS,
+    REPLAY_DISPOSITION,
+    SENSITIVITY_STRATUM,
     ExecutionGroup,
+    LoadedAmendment,
+    amended_claim_core_groups,
+    amended_schedule_sha256,
+    group_censoring_stratum,
     iter_claim_core_groups,
     load_claim_core,
+    load_claim_core_amendment,
     validate_attempt_record,
 )
 from spacepdhcg.experiments.paper1 import (  # noqa: E402
@@ -82,6 +97,13 @@ PAIRING_RULE = (
     "unqualified, censored and contaminated attempts never enter a statistic and are counted "
     "as failures or censoring instead"
 )
+CENSORED_DISPOSITIONS = frozenset({"timeout", "oom", REPLAY_DISPOSITION})
+
+
+def timing_eligible(record: Mapping[str, Any]) -> bool:
+    """A measured attempt may enter a timing statistic: qualified and not contaminated."""
+
+    return record.get("disposition") == "qualified" and not bool(record.get("contaminated"))
 
 
 class ClaimCoreDecisionError(ValueError):
@@ -147,6 +169,7 @@ def validate_group_evidence(
     result: Mapping[str, Any],
     raw_validator: Draft202012Validator,
     paper1_schema: Path,
+    amendment: LoadedAmendment | None = None,
 ) -> list[dict[str, Any]]:
     """Return the seven validated measured attempts of one completed group."""
 
@@ -155,6 +178,29 @@ def validate_group_evidence(
     if result.get("group_id") != group.group_id:
         raise ClaimCoreDecisionError("group result identity differs from the claim core")
     attempts = result.get("raw_attempts", [])
+    if amendment is not None:
+        amendment_id = amendment.values["amendment_id"]
+        if result.get(AMENDMENT_RECORD_FIELD) != amendment_id:
+            raise ClaimCoreDecisionError(f"group {group.group_id} lacks the amendment echo")
+        if result.get("policy_amendment_sha256") != amendment.sha256:
+            raise ClaimCoreDecisionError(f"group {group.group_id} pins a different amendment")
+        stratum = group_censoring_stratum(group)
+        expected_censoring = amendment.values["censoring"][
+            "original" if stratum == SENSITIVITY_STRATUM else "claim_core"
+        ]
+        censoring = result.get("censoring") or {}
+        if censoring.get("stratum") != stratum or any(
+            censoring.get(name) != expected_censoring[name]
+            for name in ("attempt_deadline_seconds", "inner_iteration_cap")
+        ):
+            raise ClaimCoreDecisionError(f"group {group.group_id} ran under the wrong censoring")
+        for item in attempts:
+            if item.get(AMENDMENT_RECORD_FIELD) != amendment_id:
+                raise ClaimCoreDecisionError("raw attempt lacks the amendment echo")
+            if item.get("amendment", {}).get("censoring_stratum") != stratum:
+                raise ClaimCoreDecisionError("raw attempt censoring stratum drift")
+    elif any(AMENDMENT_RECORD_FIELD in item for item in attempts):
+        raise ClaimCoreDecisionError("amended records require --amendment")
     if len(attempts) != len(ATTEMPT_KINDS):
         raise ClaimCoreDecisionError(f"group {group.group_id} retained {len(attempts)} attempts")
     by_repeat = {(item["repeat_kind"], item["repeat"]): item for item in attempts}
@@ -231,6 +277,7 @@ def build_publication_aggregate(
     source_commit: str,
     group_coordinate: Mapping[str, Any],
     archive: Mapping[str, Any],
+    amendment: LoadedAmendment | None = None,
 ) -> dict[str, Any]:
     """Aggregate 20 instances x 7 measured attempts into one strict publication record."""
 
@@ -240,9 +287,13 @@ def build_publication_aggregate(
         raise ClaimCoreDecisionError(f"no measured attempts for {key}")
     seeds = sorted({int(item["seed"]) for item in measured})
     instances = sorted({str(item["instance"]) for item in measured})
-    qualified = [item for item in results if item["identity"]["status"] == "qualified"]
+    # Decision A: contaminated attempts keep disposition/quality but never enter a timing or
+    # energy statistic; ``qualified`` below is the timing-eligible pool.
+    contaminated = sum(1 for item in measured if bool(item.get("contaminated")))
+    replayed = sum(1 for item in measured if item["disposition"] == REPLAY_DISPOSITION)
+    qualified = [dict(item["paper1_result"]) for item in measured if timing_eligible(item)]
     statuses = Counter(item["identity"]["status"] for item in results)
-    all_qualified = len(qualified) == len(results)
+    all_qualified = statuses.get("qualified", 0) == len(results)
     if all_qualified:
         status, failure_class, solver_status = "qualified", "none", "converged"
     else:
@@ -359,17 +410,22 @@ def build_publication_aggregate(
         )
     }
     work["polish_used"] = bool(template["work"]["polish_used"])
+    energy_pool = [
+        dict(item["paper1_result"]) for item in measured if not bool(item.get("contaminated"))
+    ] or results
     energy_values = [
         float(item["resources"]["energy_joules"])
-        for item in results
+        for item in energy_pool
         if item["resources"].get("energy_joules") is not None
     ]
     gaps = [
         float(item["resources"]["energy_maximum_gap_seconds"])
-        for item in results
+        for item in energy_pool
         if item["resources"].get("energy_maximum_gap_seconds") is not None
     ]
-    energy_valid = all(bool(item["resources"]["energy_valid"]) for item in results)
+    energy_valid = all(bool(item["resources"]["energy_valid"]) for item in energy_pool) and (
+        contaminated == 0
+    )
     resources = {
         name: _median_int(
             [
@@ -428,7 +484,7 @@ def build_publication_aggregate(
             "warmup_repeats": 2,
             "measured_repeats": 7,
             "statistic": "median_iqr",
-            "censored_count": len(results) - len(qualified),
+            "censored_count": len(results) - statuses.get("qualified", 0),
             "instance_count": len(instances),
             "evaluation_seed_count": len(seeds),
             "paired_bootstrap_samples": 10_000,
@@ -528,11 +584,22 @@ def build_publication_aggregate(
             "g4.outer_iterations is the trace of the median-time qualified attempt "
             f"({representative['identity']['run_id']}).",
             f"measured attempt statuses: {dict(sorted(statuses.items()))}.",
+            f"timing/energy statistics use n={len(qualified)} qualified uncontaminated attempts of "
+            f"{len(results)}; contaminated={contaminated} (excluded from timing/energy, retained "
+            f"in status counts); timeout_deterministic_replay={replayed} (censored, unlaunched).",
             "artifacts are content-addressed identifiers of the local-only sealed claim-core "
             f"checkpoint ({archive['note']}); no network-resolvable immutable URI exists.",
             "This aggregate resolves H5/H6 only and may not populate any F01-F12/T01-T08 product.",
         ],
     }
+    if amendment is not None:
+        censoring = amendment.values["censoring"]["claim_core"]
+        record["notes"].append(
+            f"policy_amendment: {amendment.values['amendment_id']} (sha256 {amendment.sha256}); "
+            f"attempt deadline {censoring['attempt_deadline_seconds']} s, inner iteration cap "
+            f"{censoring['inner_iteration_cap']}, run-and-flag contamination, deterministic-replay "
+            "timeouts; censoring-sensitivity twins are excluded from this aggregate."
+        )
     validate_paper1_result_schema(
         record, REPOSITORY / "experiments/schema/paper1_result.schema.json"
     )
@@ -558,10 +625,49 @@ def _dominant_failure(records: Iterable[Mapping[str, Any]]) -> str | None:
     counts = Counter(item["disposition"] for item in records if item["disposition"] != "qualified")
     if not counts:
         return None
-    for preferred in ("timeout", "oom"):
-        if counts[preferred] and counts[preferred] == sum(counts.values()):
-            return preferred
+    timeouts = counts["timeout"] + counts[REPLAY_DISPOSITION]
+    if timeouts and timeouts == sum(counts.values()):
+        return "timeout"
+    if counts["oom"] and counts["oom"] == sum(counts.values()):
+        return "oom"
     return counts.most_common(1)[0][0]
+
+
+def _contamination_summary(
+    baseline: Mapping[Any, Mapping[str, Any]],
+    candidate: Mapping[Any, Mapping[str, Any]],
+    excluded_pairs: int,
+) -> dict[str, Any]:
+    """Decision A bookkeeping for one coordinate row (reported, never imputed)."""
+
+    return {
+        "baseline_contaminated": sum(bool(item.get("contaminated")) for item in baseline.values()),
+        "candidate_contaminated": sum(
+            bool(item.get("contaminated")) for item in candidate.values()
+        ),
+        "contaminated_pairs_excluded": excluded_pairs,
+        "baseline_replayed": sum(
+            item["disposition"] == REPLAY_DISPOSITION for item in baseline.values()
+        ),
+        "candidate_replayed": sum(
+            item["disposition"] == REPLAY_DISPOSITION for item in candidate.values()
+        ),
+    }
+
+
+def _pair_disposition(
+    failures: Sequence[Mapping[str, Any]],
+    baseline: Mapping[Any, Mapping[str, Any]],
+    candidate: Mapping[Any, Mapping[str, Any]],
+) -> str:
+    """Terminal disposition of a coordinate with no usable pair."""
+
+    dominant = _dominant_failure(failures)
+    if dominant is not None:
+        return dominant
+    if any(bool(item.get("contaminated")) for item in (*baseline.values(), *candidate.values())):
+        return "contaminated"
+    return "unrun"
 
 
 def _final_forcing(paper1: Mapping[str, Any]) -> bool:
@@ -603,9 +709,13 @@ def build_h5_rows(
             adaptive: list[float] = []
             objective_equivalent = True
             forcing_satisfied = True
+            excluded_pairs = 0
             for pair_key in sorted(set(baseline) & set(candidate)):
                 left, right = baseline[pair_key], candidate[pair_key]
                 if left["disposition"] != "qualified" or right["disposition"] != "qualified":
+                    continue
+                if not (timing_eligible(left) and timing_eligible(right)):
+                    excluded_pairs += 1
                     continue
                 fixed_tight.append(float(left["paper1_result"]["timing"]["scvx_total_seconds"]))
                 adaptive.append(float(right["paper1_result"]["timing"]["scvx_total_seconds"]))
@@ -639,10 +749,11 @@ def build_h5_rows(
                 "adaptive_dispositions": dict(
                     Counter(item["disposition"] for item in candidate.values())
                 ),
+                "contamination": _contamination_summary(baseline, candidate, excluded_pairs),
                 "pairing_rule": PAIRING_RULE,
             }
             if not fixed_tight:
-                row["disposition"] = _dominant_failure(failures) or "unrun"
+                row["disposition"] = _pair_disposition(failures, baseline, candidate)
             rows.append(row)
     return rows
 
@@ -666,9 +777,13 @@ def build_h6_rows(
             hybrid_seconds: list[float] = []
             hybrid_residuals: list[float] = []
             ipm_residuals: list[float] = []
+            excluded_pairs = 0
             for pair_key in sorted(set(ipm) & set(hybrid)):
                 left, right = ipm[pair_key], hybrid[pair_key]
                 if left["disposition"] != "qualified" or right["disposition"] != "qualified":
+                    continue
+                if not (timing_eligible(left) and timing_eligible(right)):
+                    excluded_pairs += 1
                     continue
                 ipm_seconds.append(float(left["paper1_result"]["timing"]["scvx_total_seconds"]))
                 hybrid_seconds.append(float(right["paper1_result"]["timing"]["scvx_total_seconds"]))
@@ -725,12 +840,90 @@ def build_h6_rows(
                 "hybrid_dispositions": dict(
                     Counter(item["disposition"] for item in hybrid.values())
                 ),
+                "contamination": _contamination_summary(ipm, hybrid, excluded_pairs),
                 "pairing_rule": PAIRING_RULE,
             }
             if not ipm_seconds:
-                row["disposition"] = _dominant_failure(failures) or "unrun"
+                row["disposition"] = _pair_disposition(failures, ipm, hybrid)
             rows.append(row)
     return rows
+
+
+# --------------------------------------------------------------------------------------------
+# Amendment single-gpu-v1.1: censoring-sensitivity acceptance rule
+# --------------------------------------------------------------------------------------------
+
+
+def censoring_acceptance(
+    core_measured_by_group: Mapping[str, Sequence[Mapping[str, Any]]],
+    twin_measured_by_group: Mapping[str, Sequence[Mapping[str, Any]]],
+    twins: Mapping[str, ExecutionGroup],
+    twin_to_core: Mapping[str, str],
+    *,
+    expected_twins: int,
+) -> dict[str, Any]:
+    """Preregistered acceptance rule of amendment single-gpu-v1.1.
+
+    Every measured attempt (seed, repeat) of a completed 600 s / 1M sensitivity twin is compared
+    with the same attempt of its 120 s / 200k claim-core group. A twin attempt that qualified
+    while the core attempt timed out (``timeout`` or ``timeout_deterministic_replay``) or is
+    missing is a violation: the amendment is invalid and the full core reverts to 600 s / 1M.
+    Contamination does not affect qualification, so contaminated attempts take part here.
+    """
+
+    violations: list[dict[str, Any]] = []
+    compared_attempts = 0
+    compared_twins = 0
+    for twin_id, twin_measured in sorted(twin_measured_by_group.items()):
+        core_id = twin_to_core[twin_id]
+        core_measured = core_measured_by_group.get(core_id)
+        if core_measured is None:
+            continue  # core partner not complete yet; compared once both exist
+        compared_twins += 1
+        core_by_pair = _by_pair(core_measured)
+        for twin_record in twin_measured:
+            if twin_record["disposition"] != "qualified":
+                continue
+            key = (int(twin_record["seed"]), int(twin_record["repeat"]))
+            compared_attempts += 1
+            core_record = core_by_pair.get(key)
+            core_disposition = core_record["disposition"] if core_record else None
+            if core_record is None or core_disposition in {"timeout", REPLAY_DISPOSITION}:
+                coordinate = twins[twin_id].coordinate
+                violations.append(
+                    {
+                        "twin_group_id": twin_id,
+                        "core_group_id": core_id,
+                        "family": coordinate["family"],
+                        "intervals": coordinate["intervals"],
+                        "policy": coordinate["policy"],
+                        "seed": key[0],
+                        "repeat": key[1],
+                        "twin_seconds": float(
+                            twin_record["paper1_result"]["timing"]["scvx_total_seconds"]
+                        ),
+                        "core_disposition": core_disposition or "missing",
+                    }
+                )
+    if violations:
+        status = "invalid"
+    elif compared_twins == expected_twins:
+        status = "accepted"
+    else:
+        status = "pending"
+    return {
+        "status": status,
+        "rule": (
+            "twin qualified under 600 s / 1M while the 120 s / 200k core attempt is timeout, "
+            "timeout_deterministic_replay or missing => amendment invalid; full core reverts to "
+            "600 s / 1M"
+        ),
+        "sensitivity_twins_expected": expected_twins,
+        "sensitivity_twins_completed": len(twin_measured_by_group),
+        "sensitivity_twins_compared": compared_twins,
+        "qualified_twin_attempts_compared": compared_attempts,
+        "violations": violations,
+    }
 
 
 # --------------------------------------------------------------------------------------------
@@ -761,6 +954,12 @@ def main() -> int:
         action="store_true",
         help="write a clearly labelled preview from a partial ledger; never a decision record",
     )
+    parser.add_argument(
+        "--amendment",
+        type=Path,
+        default=None,
+        help="claim-core amendment JSON the campaign was run under (single-gpu-v1.1)",
+    )
     arguments = parser.parse_args()
     repository = arguments.repository.resolve()
     campaign = arguments.campaign.resolve()
@@ -772,14 +971,41 @@ def main() -> int:
     core = load_claim_core(
         repository / "benchmarks/g4_h5_h6_claim_core.json", expected_sha256=core_lock
     )
-    groups = tuple(iter_claim_core_groups(core.values))
     capability = json.loads(arguments.capabilities.read_text(encoding="utf-8"))
 
     metadata, rows = load_campaign(campaign)
     if metadata.get("schedule_kind") != "claim_core_execution_groups":
         raise ClaimCoreDecisionError("campaign is not a claim-core grouped checkpoint")
-    if metadata.get("schedule_sha256") != core.sha256:
-        raise ClaimCoreDecisionError("campaign schedule hash differs from the locked claim core")
+    amendment: LoadedAmendment | None = None
+    if metadata.get(AMENDMENT_RECORD_FIELD) is not None:
+        if arguments.amendment is None:
+            raise ClaimCoreDecisionError(
+                f"campaign ran under amendment {metadata[AMENDMENT_RECORD_FIELD]}; pass --amendment"
+            )
+        amendment_path = arguments.amendment.resolve()
+        amendment_lock = amendment_path.with_suffix(".sha256").read_text().split()
+        if len(amendment_lock) != 2 or amendment_lock[1] != amendment_path.name:
+            raise ClaimCoreDecisionError("invalid claim-core amendment lock")
+        amendment = load_claim_core_amendment(
+            amendment_path,
+            core.values,
+            claim_core_sha256=core.sha256,
+            policy_sha256=policy.sha256,
+            expected_sha256=amendment_lock[0],
+        )
+        if metadata.get(AMENDMENT_RECORD_FIELD) != amendment.values["amendment_id"]:
+            raise ClaimCoreDecisionError("campaign amendment identity differs from --amendment")
+        if metadata.get("policy_amendment_sha256") != amendment.sha256:
+            raise ClaimCoreDecisionError("campaign amendment hash differs from --amendment")
+        groups = amended_claim_core_groups(core.values, amendment.values)
+        expected_schedule = amended_schedule_sha256(groups)
+    elif arguments.amendment is not None:
+        raise ClaimCoreDecisionError("campaign did not run under an amendment; drop --amendment")
+    else:
+        groups = tuple(iter_claim_core_groups(core.values))
+        expected_schedule = core.sha256
+    if metadata.get("schedule_sha256") != expected_schedule:
+        raise ClaimCoreDecisionError("campaign schedule hash differs from the locked schedule")
     if metadata.get("policy_sha256") != policy.sha256:
         raise ClaimCoreDecisionError("campaign policy hash differs from the locked policy")
     if int(metadata["total_rows"]) != len(groups):
@@ -787,6 +1013,25 @@ def main() -> int:
     source_commit = metadata["source_commit"]
     if capability.get("source_commit") != source_commit:
         raise ClaimCoreDecisionError("capability source commit differs from the campaign")
+    core_groups = [
+        group for group in groups if group_censoring_stratum(group) != SENSITIVITY_STRATUM
+    ]
+    twin_groups = {
+        group.group_id: group
+        for group in groups
+        if group_censoring_stratum(group) == SENSITIVITY_STRATUM
+    }
+    core_by_coordinate = {
+        canonical_bytes(group.coordinate): group.group_id for group in core_groups
+    }
+    twin_to_core = {
+        twin_id: core_by_coordinate[
+            canonical_bytes(
+                {key: value for key, value in twin.coordinate.items() if key != "censoring_stratum"}
+            )
+        ]
+        for twin_id, twin in twin_groups.items()
+    }
 
     completed = [row for row in rows if row["state"] == "completed"]
     if len(completed) != len(groups) and not arguments.allow_incomplete:
@@ -809,7 +1054,14 @@ def main() -> int:
     contamination_events = 0
     validated_groups = 0
     result_files: list[Path] = []
-    for group in groups:
+    core_measured_by_group: dict[str, list[dict[str, Any]]] = {}
+    twin_measured_by_group: dict[str, list[dict[str, Any]]] = {}
+    contaminated_measured = 0
+    contaminated_groups = 0
+    replayed_measured = 0
+    replay_groups = 0
+    group_seconds: list[float] = []
+    for group in core_groups:
         coordinate = group.coordinate
         coordinates_by_key[
             (coordinate["family"], coordinate["intervals"], coordinate["policy"])
@@ -824,9 +1076,22 @@ def main() -> int:
         if len(command) != 6 or command[5] != capability["capability_sha256"]:
             raise ClaimCoreDecisionError("group executed under a different capability")
         result_files.append(run_directory / "result.json")
-        measured = validate_group_evidence(group, result, raw_validator, paper1_schema)
+        measured = validate_group_evidence(group, result, raw_validator, paper1_schema, amendment)
         validated_groups += 1
         group_dispositions[row["disposition"]] += 1
+        if result.get("elapsed_seconds") is not None:
+            group_seconds.append(float(result["elapsed_seconds"]))
+        group_contaminated = sum(bool(item.get("contaminated")) for item in measured)
+        group_replayed = sum(item["disposition"] == REPLAY_DISPOSITION for item in measured)
+        contaminated_measured += group_contaminated
+        contaminated_groups += bool(group_contaminated)
+        replayed_measured += group_replayed
+        replay_groups += bool(group_replayed)
+        if group_censoring_stratum(group) == SENSITIVITY_STRATUM:
+            # 600 s / 1M twins feed the acceptance rule only, never an H5/H6 statistic.
+            twin_measured_by_group[group.group_id] = measured
+            continue
+        core_measured_by_group[group.group_id] = measured
         for record in measured:
             measured_dispositions[record["disposition"]] += 1
             energy = record.get("energy") or {}
@@ -838,6 +1103,15 @@ def main() -> int:
             (coordinate["family"], coordinate["intervals"], coordinate["policy"])
         ].extend(measured)
     contamination_events = sum(1 for row in rows if row["disposition"] == "contaminated")
+    acceptance = None
+    if amendment is not None:
+        acceptance = censoring_acceptance(
+            core_measured_by_group,
+            twin_measured_by_group,
+            twin_groups,
+            twin_to_core,
+            expected_twins=len(twin_groups),
+        )
     quarantined_history = Counter()
     database = sqlite3.connect(f"file:{campaign / 'checkpoint.sqlite3'}?mode=ro", uri=True)
     for (disposition,) in database.execute(
@@ -875,6 +1149,7 @@ def main() -> int:
                     source_commit=source_commit,
                     group_coordinate=coordinates_by_key[key],
                     archive=archive,
+                    amendment=amendment,
                 )
             )
         except (Paper1ResultError, ClaimCoreDecisionError) as error:
@@ -883,10 +1158,16 @@ def main() -> int:
                 raise
     h5_rows = build_h5_rows(measured_by_key, coordinates_by_key, core.values)
     h6_rows = build_h6_rows(measured_by_key, coordinates_by_key, core.values)
-    decision = g4_decision(h5_rows, h6_rows, policy.values)
+    decision: dict[str, Any] | None = g4_decision(h5_rows, h6_rows, policy.values)
+    amendment_invalid = acceptance is not None and acceptance["status"] == "invalid"
+    if amendment_invalid:
+        # Preregistered consequence: no H5/H6 decision from the 120 s / 200k core.
+        decision = None
 
     output.mkdir(parents=True, exist_ok=True)
     complete = len(completed) == len(groups) and not publication_errors
+    if amendment is not None and complete and acceptance is not None:
+        complete = acceptance["status"] == "accepted"
     prefix = "" if complete else "PREVIEW-"
     publication_index = []
     for record in publication:
@@ -927,6 +1208,46 @@ def main() -> int:
             "maximum_gap_seconds_max": max(energy_gaps) if energy_gaps else None,
         },
         "contaminated_group_attempts": contamination_events,
+        "amendment": None
+        if amendment is None
+        else {
+            "policy_amendment": amendment.values["amendment_id"],
+            "policy_amendment_sha256": amendment.sha256,
+            "path": str(amendment.path),
+            "claim_core_groups_total": len(core_groups),
+            "claim_core_groups_completed": len(core_measured_by_group),
+            "sensitivity_groups_total": len(twin_groups),
+            "sensitivity_groups_completed": len(twin_measured_by_group),
+            "censoring": amendment.values["censoring"]["claim_core"],
+            "sensitivity_censoring": amendment.values["censoring"]["original"],
+            "contamination": {
+                "policy": amendment.values["contamination"]["policy"],
+                "groups_with_contaminated_measured_attempts": contaminated_groups,
+                "contaminated_measured_attempts": contaminated_measured,
+                "measured_attempts_seen": contaminated_measured
+                + sum(
+                    1
+                    for measured in (
+                        *core_measured_by_group.values(),
+                        *twin_measured_by_group.values(),
+                    )
+                    for item in measured
+                    if not bool(item.get("contaminated"))
+                ),
+                "statistics_rule": amendment.values["contamination"]["statistics"],
+            },
+            "deterministic_replay": {
+                "groups_applied": replay_groups,
+                "replayed_measured_attempts": replayed_measured,
+            },
+            "group_elapsed_seconds": {
+                "median": _median(group_seconds),
+                "maximum": max(group_seconds) if group_seconds else None,
+                "count": len(group_seconds),
+            },
+            "acceptance": acceptance,
+            "decision_withheld": amendment_invalid,
+        },
         "non_terminal_attempt_history": dict(quarantined_history),
         "publication_records": publication_index,
         "publication_errors": publication_errors,
@@ -949,16 +1270,17 @@ def main() -> int:
                 "decision_file": f"{prefix}decision.json",
                 "decision_sha256": digest,
                 "preview_only": not complete,
-                "G4": decision["decision"],
-                "H5": decision["H5"]["decision"],
-                "H6": decision["H6"]["decision"],
+                "G4": None if decision is None else decision["decision"],
+                "H5": None if decision is None else decision["H5"]["decision"],
+                "H6": None if decision is None else decision["H6"]["decision"],
                 "groups_completed": len(completed),
                 "groups_total": len(groups),
+                "amendment_acceptance": None if acceptance is None else acceptance["status"],
             },
             sort_keys=True,
         )
     )
-    return 0
+    return 2 if amendment_invalid else 0
 
 
 if __name__ == "__main__":

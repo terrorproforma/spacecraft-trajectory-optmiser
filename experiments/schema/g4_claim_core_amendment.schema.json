@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/g4_claim_core_amendment.schema.json",
+  "title": "Preregistered G4 claim-core amendment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "amendment_id",
+    "title",
+    "frozen_at",
+    "preregistered_before_results",
+    "frozen_before_any_group_result_inspected",
+    "amends",
+    "record_field",
+    "record_field_scope",
+    "unchanged",
+    "contamination",
+    "deterministic_replay",
+    "censoring",
+    "schedule"
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "groupId": {"type": "string", "pattern": "^g4-group-v1-[0-9a-f]{64}$"},
+    "censoringValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_deadline_seconds", "inner_iteration_cap"],
+      "properties": {
+        "attempt_deadline_seconds": {"type": "integer", "minimum": 1},
+        "inner_iteration_cap": {"type": "integer", "minimum": 1}
+      }
+    },
+    "policy": {
+      "enum": [
+        "fixed-tight",
+        "fixed-loose",
+        "adaptive",
+        "adaptive+polish",
+        "pure-gpu-ipm",
+        "hybrid-pdhcg-ipm"
+      ]
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "amendment_id": {"const": "single-gpu-v1.1"},
+    "title": {"type": "string", "minLength": 1},
+    "frozen_at": {"type": "string", "format": "date-time"},
+    "preregistered_before_results": {"const": true},
+    "frozen_before_any_group_result_inspected": {"type": "string", "minLength": 1},
+    "amends": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "campaign_scope_id",
+        "claim_core_campaign_id",
+        "claim_core_path",
+        "claim_core_sha256",
+        "policy_path",
+        "policy_sha256",
+        "execution_contract"
+      ],
+      "properties": {
+        "campaign_scope_id": {"const": "single-gpu-v1"},
+        "claim_core_campaign_id": {"const": "g4-h5-h6-claim-core-v1"},
+        "claim_core_path": {"const": "benchmarks/g4_h5_h6_claim_core.json"},
+        "claim_core_sha256": {"$ref": "#/$defs/sha256"},
+        "policy_path": {"const": "benchmarks/g4_policy.json"},
+        "policy_sha256": {"$ref": "#/$defs/sha256"},
+        "execution_contract": {"const": "docs/G4_EXECUTION_CONTRACT.md"}
+      }
+    },
+    "record_field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"const": "policy_amendment"},
+        "value": {"const": "single-gpu-v1.1"}
+      }
+    },
+    "record_field_scope": {
+      "type": "array",
+      "minItems": 4,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "unchanged": {"type": "array", "minItems": 6, "items": {"type": "string", "minLength": 1}},
+    "contamination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "superseded_policy",
+        "attempt_flag",
+        "rerun_required",
+        "rule",
+        "detection",
+        "statistics"
+      ],
+      "properties": {
+        "policy": {"const": "run_and_flag"},
+        "superseded_policy": {"type": "string", "minLength": 1},
+        "attempt_flag": {"const": "contaminated"},
+        "rerun_required": {"const": false},
+        "rule": {"type": "string", "minLength": 1},
+        "detection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "before_during_after",
+            "wsl_limitation",
+            "utilization_deltas",
+            "lock_file",
+            "lock_file_rule"
+          ],
+          "properties": {
+            "before_during_after": {"type": "string", "minLength": 1},
+            "wsl_limitation": {"type": "string", "minLength": 1},
+            "utilization_deltas": {"type": "string", "minLength": 1},
+            "lock_file": {"const": "/home/angus/.spacepdhcg-gpu.lock"},
+            "lock_file_rule": {"type": "string", "minLength": 1}
+          }
+        },
+        "statistics": {"type": "string", "minLength": 1}
+      }
+    },
+    "deterministic_replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "disposition",
+        "failure_class",
+        "trigger",
+        "trace_hash_fields",
+        "trace_hash_algorithm",
+        "trace_string",
+        "action",
+        "fallback",
+        "statistics"
+      ],
+      "properties": {
+        "disposition": {"const": "timeout_deterministic_replay"},
+        "failure_class": {"const": "timeout"},
+        "trigger": {"type": "string", "minLength": 1},
+        "trace_hash_fields": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "trace_hash_algorithm": {"const": "fnv1a64"},
+        "trace_string": {"type": "string", "minLength": 1},
+        "action": {"type": "string", "minLength": 1},
+        "fallback": {"type": "string", "minLength": 1},
+        "statistics": {"type": "string", "minLength": 1}
+      }
+    },
+    "censoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_core",
+        "original",
+        "scope",
+        "inner_iteration_cap_rule",
+        "group_deadline_rule",
+        "sensitivity_stratum",
+        "acceptance_rule"
+      ],
+      "properties": {
+        "claim_core": {"$ref": "#/$defs/censoringValues"},
+        "original": {"$ref": "#/$defs/censoringValues"},
+        "scope": {"type": "string", "minLength": 1},
+        "inner_iteration_cap_rule": {"type": "string", "minLength": 1},
+        "group_deadline_rule": {"type": "string", "minLength": 1},
+        "sensitivity_stratum": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "fraction",
+            "stratification",
+            "groups_per_stratum",
+            "selection",
+            "selection_seed",
+            "settings",
+            "twin_identity",
+            "group_count",
+            "group_ids"
+          ],
+          "properties": {
+            "name": {"const": "censoring_sensitivity"},
+            "fraction": {"const": 0.1},
+            "stratification": {
+              "type": "array",
+              "items": {"enum": ["family", "intervals", "policy"]},
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "groups_per_stratum": {"type": "integer", "minimum": 1},
+            "selection": {"type": "string", "minLength": 1},
+            "selection_seed": {"type": "string", "minLength": 1},
+            "settings": {"$ref": "#/$defs/censoringValues"},
+            "twin_identity": {"type": "string", "minLength": 1},
+            "group_count": {"type": "integer", "minimum": 1},
+            "group_ids": {
+              "type": "object",
+              "minProperties": 18,
+              "maxProperties": 18,
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/groupId"}
+              }
+            }
+          }
+        },
+        "acceptance_rule": {"type": "string", "minLength": 1}
+      }
+    },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_priority",
+        "rule",
+        "solver_order_identity_unchanged",
+        "solver_order_note",
+        "group_count",
+        "schedule_sha256"
+      ],
+      "properties": {
+        "policy_priority": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/policy"}
+        },
+        "rule": {"type": "string", "minLength": 1},
+        "solver_order_identity_unchanged": {"const": true},
+        "solver_order_note": {"type": "string", "minLength": 1},
+        "group_count": {"type": "integer", "minimum": 1},
+        "schedule_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

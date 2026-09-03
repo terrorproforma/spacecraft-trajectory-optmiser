@@ -52,6 +52,7 @@ DISPOSITIONS: Final = (
     "unsupported",
     "oom",
     "timeout",
+    "timeout_deterministic_replay",
     "numerical",
     "infeasible",
     "unrun",
@@ -557,7 +558,7 @@ def _coordinate_evidence(
             "reason": f"terminal disposition {disposition} is not winner-eligible",
             "family": row.get("family"),
             "scale": row.get("scale"),
-            "censored": disposition in {"timeout", "oom"},
+            "censored": disposition in {"timeout", "oom", "timeout_deterministic_replay"},
             "terminal_disposition": disposition,
         }
     baseline = row.get(baseline_key, ())

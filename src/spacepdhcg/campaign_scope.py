@@ -71,6 +71,17 @@ SCOPE_DEFINITIONS: Final[dict[str, dict[str, Any]]] = {
         "deferred_products": ["F07", "F12", "T06"],
         "allowed_gpu_counts": [0, 1],
         "requires_physical_g5": False,
+        # Preregistered amendments to this scope. Each is a versioned JSON contract with its own
+        # lock file; the original single-gpu-v1 rules stay readable and are never rewritten.
+        "amendments": [
+            {
+                "amendment_id": "single-gpu-v1.1",
+                "applies_to": "g4-h5-h6-claim-core-v1",
+                "path": "benchmarks/g4_claim_core_amendment_v1_1.json",
+                "lock": "benchmarks/g4_claim_core_amendment_v1_1.sha256",
+                "document": "docs/G4_CLAIM_CORE_AMENDMENT_V1_1.md",
+            }
+        ],
     },
 }
 

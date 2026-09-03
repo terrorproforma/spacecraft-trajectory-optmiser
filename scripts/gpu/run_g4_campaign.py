@@ -13,10 +13,12 @@ import math
 import os
 import queue
 import sqlite3
+import statistics
 import subprocess
 import sys
 import threading
 import time
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -32,8 +34,20 @@ from spacepdhcg.experiments.g4 import (  # noqa: E402
     sha256_path,
 )
 from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
+    AMENDMENT_ID,
+    AMENDMENT_RECORD_FIELD,
+    CLAIM_CORE_STRATUM,
+    REPLAY_DISPOSITION,
+    ExecutionGroup,
+    LoadedAmendment,
+    amended_claim_core_groups,
+    amended_schedule_sha256,
+    deterministic_replay_eligible,
+    deterministic_trace_hash,
+    group_censoring,
     iter_claim_core_groups,
     load_claim_core,
+    load_claim_core_amendment,
     validate_attempt_record,
 )
 from spacepdhcg.experiments.g4_scheduler import (  # noqa: E402
@@ -62,6 +76,7 @@ CAPABILITY_AXES = {
 
 
 GROUP_SAFETY_GRACE_SECONDS = 300
+SHARED_GPU_LOCK_FILE = Path("/home/angus/.spacepdhcg-gpu.lock")
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -109,6 +124,7 @@ def load_capabilities(
     source_commit: str,
     *,
     require_persistent_group: bool = False,
+    amendment: LoadedAmendment | None = None,
 ) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if value.get("schema_version") != 1:
@@ -159,8 +175,16 @@ def load_capabilities(
                 REPOSITORY / "experiments/schema/paper1_result.schema.json"
             ),
         }
+        expected_contracts["claim_core_amendment"] = sha256_path(
+            REPOSITORY / "benchmarks/g4_claim_core_amendment_v1_1.json"
+        )
         if value.get("contract_hashes") != expected_contracts:
             raise G4ContractError("executor capability authoritative contract hash mismatch")
+        if amendment is not None:
+            if expected_contracts.get("claim_core_amendment") != amendment.sha256:
+                raise G4ContractError("executor capability pins a different claim-core amendment")
+            if amendment.values["amendment_id"] not in value.get("policy_amendments_supported", []):
+                raise G4ContractError("executor does not support the requested amendment")
         probe = value.get("session_probe", {})
         if probe != {
             "kind": "real_cuda_session",
@@ -490,10 +514,32 @@ class GpuContaminationMonitor:
         active, idle = host_compute_activity(parse_pmon(text))
         return active, idle, text
 
+    def utilization(self) -> dict[str, Any]:
+        """Whole-GPU utilization/memory/power; the delta against the boundaries is evidence."""
+
+        try:
+            gpu = self._run(
+                [
+                    self.nvidia_smi,
+                    "--query-gpu=utilization.gpu,memory.used,power.draw",
+                    "--format=csv,noheader,nounits",
+                ],
+                timeout=10.0,
+            )
+            utilization, memory, power = (item.strip() for item in gpu.strip().split(","))
+            return {
+                "utilization_percent": float(utilization),
+                "memory_used_mib": float(memory),
+                "power_watts": float(power),
+            }
+        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired) as error:
+            return {"utilization_error": str(error)}
+
     def probe(self) -> dict[str, Any]:
         """One combined foreign-activity observation."""
 
         probe: dict[str, Any] = {"at": self._now(), "monotonic": time.monotonic()}
+        probe.update(self.utilization())
         try:
             holders = self.dxg_holders()
         except OSError as error:
@@ -545,6 +591,39 @@ class GpuContaminationMonitor:
         self._thread = threading.Thread(target=self._watch, daemon=True)
         self._thread.start()
 
+    def foreign_samples(self) -> list[dict[str, Any]]:
+        """Timestamped foreign observations for per-attempt attribution (run-and-flag)."""
+
+        return [
+            {
+                "monotonic": sample["monotonic"],
+                "at": sample["at"],
+                "utilization_percent": sample.get("utilization_percent"),
+                "max_sm_percent": max(
+                    (
+                        process.get("sm_percent") or 0
+                        for process in sample.get("host_active_compute_processes", [])
+                    ),
+                    default=0,
+                ),
+                "processes": sorted(
+                    {
+                        f"host:{process['pid']}:{process['command']}"
+                        for process in sample.get("host_active_compute_processes", [])
+                    }
+                    | {
+                        f"wsl:{process['pid']}:{process['comm']}"
+                        for process in sample.get("wsl_foreign_processes", [])
+                    }
+                ),
+            }
+            for sample in self._samples
+            if sample.get("foreign")
+        ]
+
+    def sample_times(self) -> list[float]:
+        return [sample["monotonic"] for sample in self._samples]
+
     def stop(self) -> dict[str, Any]:
         self._stop.set()
         if self._thread is not None:
@@ -552,6 +631,11 @@ class GpuContaminationMonitor:
         if not self._samples:
             self._samples.append(self.probe())
         samples = list(self._samples)
+        utilizations = [
+            float(sample["utilization_percent"])
+            for sample in samples
+            if sample.get("utilization_percent") is not None
+        ]
         wsl: dict[int, dict[str, Any]] = {}
         wsl_disabled: dict[int, dict[str, Any]] = {}
         host_active: dict[int, dict[str, Any]] = {}
@@ -615,6 +699,12 @@ class GpuContaminationMonitor:
             ),
             "host_idle_compute_contexts": sorted(host_idle.values(), key=lambda item: item["pid"]),
             "sample_count": len(samples),
+            "foreign_sample_count": sum(1 for sample in samples if sample.get("foreign")),
+            "utilization_percent": {
+                "mean": statistics.fmean(utilizations) if utilizations else None,
+                "max": max(utilizations) if utilizations else None,
+                "min": min(utilizations) if utilizations else None,
+            },
             "interval_seconds": self.interval_seconds,
             "host_monitor_available": self.host_nvidia_smi is not None,
             "errors": errors[:50],
@@ -654,6 +744,188 @@ class GpuContaminationMonitor:
             pause = 1.0 if clear_streak else poll_seconds
             time.sleep(pause)
             waited += int(pause)
+
+
+class SharedGpuLock:
+    """Advisory shared GPU lock file (amendment single-gpu-v1.1, run-and-flag evidence).
+
+    The worker holds ``flock`` on ``/home/angus/.spacepdhcg-gpu.lock`` for the whole group and
+    writes a JSON payload naming itself. A foreign payload or a held lock is recorded, never
+    waited for: the group runs and its attempts are flagged by the GPU monitor instead.
+    """
+
+    def __init__(self, path: Path = SHARED_GPU_LOCK_FILE) -> None:
+        self.path = path
+        self.descriptor: int | None = None
+
+    def acquire(self, payload: dict[str, Any]) -> dict[str, Any]:
+        record: dict[str, Any] = {"path": str(self.path), "held_by_other": False}
+        try:
+            record["existing_payload"] = self.path.read_text(encoding="utf-8", errors="replace")[
+                :1000
+            ]
+        except OSError:
+            record["existing_payload"] = None
+        try:
+            self.descriptor = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o644)
+            try:
+                fcntl.flock(self.descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                record["held_by_other"] = True
+                os.close(self.descriptor)
+                self.descriptor = None
+                return record
+            os.ftruncate(self.descriptor, 0)
+            os.write(self.descriptor, canonical_bytes(payload) + b"\n")
+            os.fsync(self.descriptor)
+            record["payload"] = payload
+        except OSError as error:
+            record["error"] = str(error)
+            if self.descriptor is not None:
+                os.close(self.descriptor)
+                self.descriptor = None
+        return record
+
+    def release(self) -> dict[str, Any]:
+        record: dict[str, Any] = {"path": str(self.path)}
+        try:
+            record["payload_at_release"] = self.path.read_text(encoding="utf-8", errors="replace")[
+                :1000
+            ]
+        except OSError:
+            record["payload_at_release"] = None
+        if self.descriptor is not None:
+            try:
+                os.ftruncate(self.descriptor, 0)
+                fcntl.flock(self.descriptor, fcntl.LOCK_UN)
+            except OSError as error:
+                record["error"] = str(error)
+            finally:
+                os.close(self.descriptor)
+                self.descriptor = None
+        return record
+
+
+def run_group_process(
+    command: list[str],
+    environment: dict[str, str],
+    timeout_seconds: float,
+) -> tuple[str, str, int, bool, list[tuple[float, str]]]:
+    """Run one executor process, timestamping every stdout line as it arrives.
+
+    Returns stdout, stderr, returncode, timed_out, and ``[(monotonic, line), ...]`` so every raw
+    attempt record can be attributed a wall-clock window for contamination flagging.
+    """
+
+    process = subprocess.Popen(
+        command,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+    )
+    assert process.stdout is not None and process.stderr is not None
+    timeline: list[tuple[float, str]] = []
+    stderr_chunks: list[str] = []
+    stdout_stream, stderr_stream = process.stdout, process.stderr
+
+    def read_stdout() -> None:
+        for line in stdout_stream:
+            timeline.append((time.monotonic(), line))
+
+    def read_stderr() -> None:
+        stderr_chunks.append(stderr_stream.read())
+
+    readers = [
+        threading.Thread(target=read_stdout, daemon=True),
+        threading.Thread(target=read_stderr, daemon=True),
+    ]
+    for reader in readers:
+        reader.start()
+    timed_out = False
+    try:
+        returncode = process.wait(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        process.kill()
+        returncode = process.wait()
+        returncode = 124
+    for reader in readers:
+        reader.join(timeout=30.0)
+    stdout = "".join(line for _, line in timeline)
+    return stdout, "".join(stderr_chunks), returncode, timed_out, timeline
+
+
+def attempt_windows(
+    timeline: list[tuple[float, str]],
+    group_started: float,
+) -> dict[tuple[str, int], tuple[float, float]]:
+    """Wall-clock window of every emitted raw attempt: previous record (or session ready) to own."""
+
+    windows: dict[tuple[str, int], tuple[float, float]] = {}
+    previous = group_started
+    for at, line in timeline:
+        if not line.startswith("{"):
+            continue
+        try:
+            record = json.loads(line.replace("-inf", "-Infinity"))
+        except json.JSONDecodeError:
+            continue
+        case = record.get("case")
+        if case == "g4_session_ready":
+            previous = at
+        elif case == "g4_attempt":
+            key = (str(record.get("repeat_kind")), int(record.get("repeat", -1)))
+            windows[key] = (previous, at)
+            previous = at
+    return windows
+
+
+def flag_contaminated_attempts(
+    attempts: list[dict[str, Any]],
+    windows: dict[tuple[str, int], tuple[float, float]],
+    foreign: list[dict[str, Any]],
+    sample_times: list[float],
+    *,
+    slack_seconds: float,
+) -> int:
+    """Decision A: flag attempts whose window overlaps a foreign sample; never re-run.
+
+    Replayed attempts were not executed and cannot be contaminated; they carry
+    ``contaminated: false`` with an empty window summary.
+    """
+
+    flagged = 0
+    for attempt in attempts:
+        key = (str(attempt.get("repeat_kind")), int(attempt.get("repeat", -1)))
+        start, end = windows.get(key, (0.0, 0.0))
+        if attempt.get("launched") is not True:
+            attempt["contaminated"] = False
+            attempt["contamination"] = {
+                "window_start_monotonic": start,
+                "window_end_monotonic": end,
+                "foreign_samples": 0,
+                "total_samples": 0,
+                "max_foreign_sm_percent": 0,
+                "foreign_processes": [],
+            }
+            continue
+        low, high = start - slack_seconds, end + slack_seconds
+        hits = [sample for sample in foreign if low <= sample["monotonic"] <= high]
+        total = sum(1 for at in sample_times if low <= at <= high)
+        processes = sorted({name for sample in hits for name in sample["processes"]})
+        attempt["contaminated"] = bool(hits)
+        attempt["contamination"] = {
+            "window_start_monotonic": start,
+            "window_end_monotonic": end,
+            "foreign_samples": len(hits),
+            "total_samples": total,
+            "max_foreign_sm_percent": max((sample["max_sm_percent"] for sample in hits), default=0),
+            "foreign_processes": processes,
+        }
+        flagged += int(bool(hits))
+    return flagged
 
 
 class PersistentExecutor:
@@ -1017,9 +1289,63 @@ def validate_success(
     return True, "strict runtime and sample records validated"
 
 
+def validate_amendment_records(
+    records: list[dict[str, Any]],
+    expected: dict[str, Any] | None,
+) -> str | None:
+    """Amendment single-gpu-v1.1 echo, trace-hash and replay consistency checks.
+
+    ``expected`` is ``{"censoring_stratum", "attempt_deadline_seconds", "inner_iteration_cap"}``
+    for the scheduled group, or ``None`` when no amendment is in force (records must then carry
+    no amendment fields).
+    """
+
+    ordered = sorted(records, key=lambda item: (item["repeat_kind"] != "warmup", item["repeat"]))
+    for record in ordered:
+        if expected is None:
+            if AMENDMENT_RECORD_FIELD in record or record.get("disposition") == REPLAY_DISPOSITION:
+                return "raw attempt carries amendment fields without an amendment in force"
+            continue
+        if record.get(AMENDMENT_RECORD_FIELD) != AMENDMENT_ID:
+            return f"raw attempt lacks {AMENDMENT_RECORD_FIELD}={AMENDMENT_ID}"
+        echoed = record.get("amendment", {})
+        if (
+            echoed.get("censoring_stratum") != expected["censoring_stratum"]
+            or float(echoed.get("attempt_deadline_seconds", -1))
+            != float(expected["attempt_deadline_seconds"])
+            or echoed.get("inner_iteration_cap") != expected["inner_iteration_cap"]
+            or echoed.get("deterministic_replay") is not True
+        ):
+            return f"raw attempt amendment echo {echoed!r} differs from the scheduled {expected!r}"
+        try:
+            recomputed = deterministic_trace_hash(record["disposition"], record["trace"])
+        except (KeyError, TypeError, ValueError, G4ContractError) as error:
+            return f"raw attempt trace unusable: {error}"
+        if recomputed != record.get("trace_hash"):
+            return "raw attempt trace_hash differs from the reference recomputation"
+    if expected is None:
+        return None
+    replays = [record for record in ordered if record.get("disposition") == REPLAY_DISPOSITION]
+    try:
+        eligible = deterministic_replay_eligible(ordered[:3])
+    except G4ContractError as error:
+        return str(error)
+    if replays and not eligible:
+        return "executor replayed timeouts although the first three traces were not identical"
+    if eligible and len(replays) != 6:
+        return "executor executed measured/1..6 although deterministic replay was required"
+    for record in replays:
+        if record.get("trace_hash") != deterministic_trace_hash(
+            REPLAY_DISPOSITION, ordered[2]["trace"]
+        ):
+            return "replayed attempt does not repeat the measured/0 trace"
+    return None
+
+
 def validate_group_success(
     claim: Claim,
     records: list[dict[str, Any]],
+    amendment_expected: dict[str, Any] | None = None,
 ) -> tuple[bool, str, list[dict[str, Any]]]:
     """Validate distinct raw attempts and every measured Paper 1 result."""
 
@@ -1073,6 +1399,9 @@ def validate_group_success(
                 )
         except (G4ContractError, Paper1ResultError, ValidationError, ValueError) as error:
             return False, f"strict measured-result validation failed: {error}", emitted
+    problem = validate_amendment_records(emitted, amendment_expected)
+    if problem is not None:
+        return False, f"amendment consistency failed: {problem}", emitted
     return True, "all raw attempts and measured Paper 1 results validated", emitted
 
 
@@ -1088,18 +1417,48 @@ def execute_group(
     timeout_seconds: int,
     sampler_cpu_core: int | None,
     monitor: GpuContaminationMonitor | None = None,
+    amendment: LoadedAmendment | None = None,
+    group: ExecutionGroup | None = None,
+    shared_lock: SharedGpuLock | None = None,
 ) -> str:
     """Execute warmups and measurements in one persistent process/session/workspace.
 
-    Returns the ledger disposition. A group observed alongside foreign GPU compute activity
-    is quarantined as ``contaminated`` with all raw evidence retained; the caller re-runs it
-    once the foreign activity has ended.
+    Returns the ledger disposition. Under amendment single-gpu-v1.1 (Decision A, run-and-flag)
+    the group always completes: attempts whose wall-clock window overlaps foreign GPU compute
+    are flagged ``contaminated`` in place and are never re-run. Without an amendment the
+    original single-gpu-v1 quarantine-and-re-run behaviour is retained.
     """
 
     run_directory = store.root / "runs" / claim.coordinate_id / claim.attempt_id
     manifest = run_directory / "execution-group.json"
     atomic_create(manifest, canonical_bytes(claim.coordinate) + b"\n")
-    contamination: dict[str, Any] = {"monitored": monitor is not None}
+    censoring: dict[str, int] | None = None
+    amendment_expected: dict[str, Any] | None = None
+    if amendment is not None:
+        if group is None:
+            raise G4ContractError("amended execution requires the scheduled group")
+        censoring = group_censoring(group, amendment)
+        timeout_seconds = censoring["attempt_deadline_seconds"]
+        amendment_expected = {
+            "censoring_stratum": group.coordinate.get("censoring_stratum") or CLAIM_CORE_STRATUM,
+            "attempt_deadline_seconds": censoring["attempt_deadline_seconds"],
+            "inner_iteration_cap": censoring["inner_iteration_cap"],
+        }
+    group_deadline = timeout_seconds * 9 + 60
+    contamination: dict[str, Any] = {
+        "monitored": monitor is not None,
+        "policy": "run_and_flag" if amendment is not None else "quarantine_and_rerun",
+    }
+    if shared_lock is not None:
+        contamination["lock_file"] = shared_lock.acquire(
+            {
+                "pid": os.getpid(),
+                "campaign": str(store.root),
+                "group_id": claim.coordinate_id,
+                "attempt_id": claim.attempt_id,
+                "started": GpuContaminationMonitor._now(),
+            }
+        )
     if monitor is not None:
         contamination["before"] = monitor.boundary_sample()
         monitor.start()
@@ -1118,34 +1477,33 @@ def execute_group(
             "SPACEPDHCG_G4_GROUP_ID": claim.coordinate_id,
             "SPACEPDHCG_G4_POLICY_RESET": "independent-with-persistent-workspace",
             "SPACEPDHCG_G4_ATTEMPT_DEADLINE_SECONDS": str(timeout_seconds),
-            "SPACEPDHCG_G4_GROUP_DEADLINE_SECONDS": str(timeout_seconds * 9 + 60),
+            "SPACEPDHCG_G4_GROUP_DEADLINE_SECONDS": str(group_deadline),
         }
     )
+    if amendment is not None and censoring is not None and amendment_expected is not None:
+        run_environment.update(
+            {
+                "SPACEPDHCG_G4_POLICY_AMENDMENT": amendment.values["amendment_id"],
+                "SPACEPDHCG_G4_CENSORING_STRATUM": str(amendment_expected["censoring_stratum"]),
+                "SPACEPDHCG_G4_INNER_ITERATION_CAP": str(censoring["inner_iteration_cap"]),
+                "SPACEPDHCG_G4_DETERMINISTIC_REPLAY": "1",
+            }
+        )
     started = time.monotonic()
     histories: list[dict[str, Any]] = []
+    timeline: list[tuple[float, str]] = []
     for generation in range(2):
         sampler = EnergySampler(power, cpu_core=sampler_cpu_core)
         sampler.start()
-        process_timed_out = False
-        try:
-            # The executor owns the group deadline (nine attempts plus 60 s) and emits explicit
-            # unlaunched records when it expires; the outer boundary only guards against a hung
-            # process, so it must sit strictly beyond the executor's own deadline.
-            process = subprocess.run(
-                command,
-                env={**run_environment, "SPACEPDHCG_G4_RESTART_GENERATION": str(generation)},
-                capture_output=True,
-                text=True,
-                timeout=timeout_seconds * 9 + 60 + GROUP_SAFETY_GRACE_SECONDS,
-            )
-            stdout, stderr, returncode = process.stdout, process.stderr, process.returncode
-        except subprocess.TimeoutExpired as error:
-            stdout, stderr, returncode = error.stdout or "", error.stderr or "", 124
-            if isinstance(stdout, bytes):
-                stdout = stdout.decode(errors="replace")
-            if isinstance(stderr, bytes):
-                stderr = stderr.decode(errors="replace")
-            process_timed_out = True
+        generation_started = time.monotonic()
+        # The executor owns the group deadline (nine attempts plus 60 s) and emits explicit
+        # unlaunched records when it expires; the outer boundary only guards against a hung
+        # process, so it must sit strictly beyond the executor's own deadline.
+        stdout, stderr, returncode, process_timed_out, timeline = run_group_process(
+            command,
+            {**run_environment, "SPACEPDHCG_G4_RESTART_GENERATION": str(generation)},
+            group_deadline + GROUP_SAFETY_GRACE_SECONDS,
+        )
         energy = sampler.finish()
         partial = [record for record in parse_records(stdout) if record.get("case") == "g4_attempt"]
         histories.append(
@@ -1157,6 +1515,7 @@ def execute_group(
                 "stdout": stdout,
                 "stderr": stderr,
                 "energy": energy,
+                "started_monotonic": generation_started,
             }
         )
         if not process_timed_out and returncode == 0:
@@ -1165,25 +1524,47 @@ def execute_group(
             atomic_create(run_directory / "stdout.restart-0.jsonl", stdout.encode())
             atomic_create(run_directory / "stderr.restart-0.log", stderr.encode())
     elapsed = time.monotonic() - started
+    foreign_samples: list[dict[str, Any]] = []
+    sample_times: list[float] = []
     if monitor is not None:
         contamination["during"] = monitor.stop()
+        foreign_samples = monitor.foreign_samples()
+        sample_times = monitor.sample_times()
         contamination["after"] = monitor.boundary_sample()
         contamination["foreign_detected"] = bool(
             contamination["during"]["foreign_detected"]
             or contamination["before"].get("foreign")
             or contamination["after"].get("foreign")
         )
+        before_utilization = contamination["before"].get("utilization_percent")
+        after_utilization = contamination["after"].get("utilization_percent")
+        during_mean = contamination["during"]["utilization_percent"]["mean"]
+        contamination["utilization_delta_percent"] = {
+            "before": before_utilization,
+            "during_mean": during_mean,
+            "after": after_utilization,
+            "during_minus_before": (
+                during_mean - before_utilization
+                if during_mean is not None and before_utilization is not None
+                else None
+            ),
+        }
         contamination["rule"] = (
-            "foreign VM /dev/dxg holder with CUDA devices visible, or host compute-only context "
-            "with non-zero SM/memory utilization, at any sample from the pre-group boundary "
-            "through the post-group boundary censors the whole group as contaminated; idle host "
-            "contexts and holders whose CUDA_VISIBLE_DEVICES hides every device are recorded "
-            "but do not censor"
+            "run-and-flag (amendment single-gpu-v1.1): an attempt whose wall-clock window "
+            "(previous record or session-ready to its own record, +/- one probe interval) "
+            "overlaps any sample with a foreign VM /dev/dxg holder with CUDA devices visible or "
+            "a host compute-only context with non-zero SM/memory utilization is flagged "
+            "contaminated; disposition and quality are retained, timing and energy are invalid "
+            "for statistics, and the group is never re-run"
+            if amendment is not None
+            else "foreign VM /dev/dxg holder with CUDA devices visible, or host compute-only "
+            "context with non-zero SM/memory utilization, at any sample from the pre-group "
+            "boundary through the post-group boundary censors the whole group as contaminated; "
+            "idle host contexts and holders whose CUDA_VISIBLE_DEVICES hides every device are "
+            "recorded but do not censor"
         )
-        atomic_create(
-            run_directory / "gpu-contamination.json",
-            canonical_bytes(contamination) + b"\n",
-        )
+    if shared_lock is not None:
+        contamination["lock_file_release"] = shared_lock.release()
     atomic_create(run_directory / "stdout.jsonl", stdout.encode())
     atomic_create(run_directory / "stderr.log", stderr.encode())
     if process_timed_out:
@@ -1200,9 +1581,33 @@ def execute_group(
         )
     else:
         try:
-            valid, reason, attempts = validate_group_success(claim, parse_records(stdout))
+            valid, reason, attempts = validate_group_success(
+                claim, parse_records(stdout), amendment_expected
+            )
         except (G4ContractError, json.JSONDecodeError, ValueError) as error:
             valid, reason, attempts = False, f"invalid group executor records: {error}", []
+    contaminated_attempts = 0
+    if monitor is not None and amendment is not None:
+        windows = attempt_windows(timeline, histories[-1]["started_monotonic"])
+        contaminated_attempts = flag_contaminated_attempts(
+            attempts,
+            windows,
+            foreign_samples,
+            sample_times,
+            slack_seconds=monitor.interval_seconds,
+        )
+        contamination["contaminated_attempts"] = contaminated_attempts
+        contamination["contaminated_measured_attempts"] = sum(
+            1
+            for item in attempts
+            if item.get("contaminated") and item.get("repeat_kind") == "measured"
+        )
+        contamination["foreign_samples"] = foreign_samples[:2000]
+    if monitor is not None:
+        atomic_create(
+            run_directory / "gpu-contamination.json",
+            canonical_bytes(contamination) + b"\n",
+        )
     record = {
         "schema_version": "1.0.0",
         "record_kind": "execution_group_result",
@@ -1224,10 +1629,29 @@ def execute_group(
         ],
         "raw_attempts": attempts,
         "reason": reason,
-        "gpu_contamination": contamination,
+        "gpu_contamination": {
+            key: value for key, value in contamination.items() if key != "foreign_samples"
+        },
     }
+    if amendment is not None and censoring is not None:
+        record[AMENDMENT_RECORD_FIELD] = amendment.values["amendment_id"]
+        record["policy_amendment_sha256"] = amendment.sha256
+        record["censoring"] = {
+            "stratum": amendment_expected["censoring_stratum"] if amendment_expected else None,
+            **censoring,
+        }
+        record["deterministic_replay_applied"] = any(
+            item.get("disposition") == REPLAY_DISPOSITION for item in attempts
+        )
     disposition = "completed_group" if valid else "invalid_evidence"
-    if contamination.get("foreign_detected"):
+    if amendment is not None:
+        if valid and contaminated_attempts:
+            reason = (
+                f"{reason}; {contaminated_attempts} attempt(s) flagged contaminated by foreign GPU "
+                "compute (run-and-flag; timing/energy invalid, disposition/quality retained)"
+            )
+            record["reason"] = reason
+    elif contamination.get("foreign_detected"):
         valid = False
         disposition = "contaminated"
         reason = (
@@ -1373,11 +1797,25 @@ def main() -> int:
         action="store_true",
         help="schedule only the hash-pinned 360-group H5/H6 claim core",
     )
+    parser.add_argument(
+        "--amendment",
+        type=Path,
+        default=None,
+        help=(
+            "apply the preregistered claim-core amendment JSON (single-gpu-v1.1): run-and-flag "
+            "contamination, deterministic-replay timeouts, 120 s / 200k censoring plus the "
+            "censoring-sensitivity stratum; requires --claim-core"
+        ),
+    )
     arguments = parser.parse_args()
     repository = arguments.repository.resolve()
     policy, policy_sha256, matrix_sha256 = locked_policy(repository)
     groups = None
     schedule_sha256 = policy_sha256
+    amendment: LoadedAmendment | None = None
+    extra_metadata: dict[str, str] = {}
+    if arguments.amendment is not None and not arguments.claim_core:
+        raise G4ContractError("--amendment applies to the claim core only")
     if arguments.claim_core:
         core_lock = (
             (repository / "benchmarks/g4_h5_h6_claim_core.sha256")
@@ -1392,6 +1830,29 @@ def main() -> int:
         )
         groups = tuple(iter_claim_core_groups(loaded_core.values))
         schedule_sha256 = loaded_core.sha256
+        if arguments.amendment is not None:
+            amendment_path = arguments.amendment.resolve()
+            amendment_lock = (
+                amendment_path.with_suffix(".sha256").read_text(encoding="utf-8").split()
+            )
+            if len(amendment_lock) != 2 or amendment_lock[1] != amendment_path.name:
+                raise G4ContractError("invalid claim-core amendment lock")
+            amendment = load_claim_core_amendment(
+                amendment_path,
+                loaded_core.values,
+                claim_core_sha256=loaded_core.sha256,
+                policy_sha256=policy_sha256,
+                expected_sha256=amendment_lock[0],
+            )
+            groups = amended_claim_core_groups(loaded_core.values, amendment.values)
+            schedule_sha256 = amended_schedule_sha256(groups)
+            if schedule_sha256 != amendment.values["schedule"]["schedule_sha256"]:
+                raise G4ContractError("amended schedule hash drift")
+            extra_metadata = {
+                AMENDMENT_RECORD_FIELD: amendment.values["amendment_id"],
+                "policy_amendment_sha256": amendment.sha256,
+                "claim_core_sha256": loaded_core.sha256,
+            }
     source_commit = subprocess.run(
         ["git", "-C", repository, "rev-parse", "HEAD"],
         check=True,
@@ -1415,6 +1876,7 @@ def main() -> int:
         grouped=True,
         groups=groups,
         schedule_sha256=schedule_sha256,
+        extra_metadata=extra_metadata,
     ) as store:
         if arguments.action == "status":
             print(json.dumps(store.status(), sort_keys=True))
@@ -1438,6 +1900,7 @@ def main() -> int:
             matrix_sha256,
             source_commit,
             require_persistent_group=True,
+            amendment=amendment,
         )
         capability_sha256 = capabilities["capability_sha256"]
         lock_descriptor = os.open(store.root / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
@@ -1458,13 +1921,16 @@ def main() -> int:
             dict(os.environ),
             row_deadline_seconds=timeout_seconds,
         )
+        shared_lock = SharedGpuLock() if amendment is not None else None
         try:
             while arguments.max_runs is None or completed < arguments.max_runs:
-                if monitor is not None:
+                if monitor is not None and amendment is None:
+                    # single-gpu-v1 wait-for-idle; amendment single-gpu-v1.1 runs and flags.
                     monitor.wait_until_clear()
                 claim = store.claim()
                 if claim is None:
                     break
+                group = groups[claim.ordinal] if groups is not None else None
                 disposition = execute_group(
                     store,
                     claim,
@@ -1477,8 +1943,44 @@ def main() -> int:
                     timeout_seconds,
                     arguments.sampler_cpu_core,
                     monitor,
+                    amendment,
+                    group,
+                    shared_lock,
                 )
-                if disposition == "contaminated" and monitor is not None:
+                if amendment is not None:
+                    result_path = (
+                        store.root / "runs" / claim.coordinate_id / claim.attempt_id / "result.json"
+                    )
+                    summary = json.loads(result_path.read_text(encoding="utf-8"))
+                    print(
+                        json.dumps(
+                            {
+                                "event": "group_finished",
+                                "at": GpuContaminationMonitor._now(),
+                                "ordinal": claim.ordinal,
+                                "group_id": claim.coordinate_id,
+                                "disposition": disposition,
+                                "elapsed_seconds": summary.get("elapsed_seconds"),
+                                "censoring": summary.get("censoring"),
+                                "attempt_dispositions": sorted(
+                                    Counter(
+                                        item.get("disposition")
+                                        for item in summary.get("raw_attempts", [])
+                                    ).items()
+                                ),
+                                "contaminated_attempts": summary.get("gpu_contamination", {}).get(
+                                    "contaminated_attempts"
+                                ),
+                                "deterministic_replay_applied": summary.get(
+                                    "deterministic_replay_applied"
+                                ),
+                            },
+                            sort_keys=True,
+                        ),
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                elif disposition == "contaminated" and monitor is not None:
                     print(
                         json.dumps(
                             {
