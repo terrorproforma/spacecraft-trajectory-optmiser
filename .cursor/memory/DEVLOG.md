@@ -1114,3 +1114,121 @@
 - Validation: six archived Earth legs 393-602 kg -> 292-410 kg (mean -104 kg, 8 SCvx / ~20 s
   each); `tests/test_gtoc12_*.py` 73 passed, 1 skipped; Ruff clean.
 - Next: phasing-aware families + leg-stats command, collector harvest loop, campaign v4.
+
+## 2026-09-03 21:20 AEST
+
+- Scope: GTOC12 per-ship mass levers, part 2 (phasing-aware families, beam/tour fixes, joint
+  collect harvest).
+- Changes:
+  - `gtoc12/clusters.py`: `ClusterBands.visit_epochs` - phase embedded at the deploy *and* the
+    collect epoch (phasing-aware families); `relative_drift_deg_per_year`, `phase_difference_deg`.
+  - `gtoc12/legstats.py` (new) + `gtoc12 leg-stats` CLI: per-role leg cost distributions of any
+    solution file (ours and the references) through the shared itinerary decoder.
+  - `gtoc12/search.py`: beam back to the flat hop inflation (the ratio model stays in the DP);
+    `SearchResult.first_level`; collection tour modes `greedy | reverse | forward |
+    forward_revisit` (`_complete` keeps the best; `orders_of` epoch-matches collects so a
+    revisit tour is decoded correctly).
+  - `gtoc12/bundles.py`: window 0 with continuous Earth legs; richer 'no closing chain'
+    diagnostics; `_joint_harvest` after the slots (adopt certified joint tours, resolve clashes,
+    revert when the bundle collects less); `ClusterBundle.harvest` report.
+  - `gtoc12/harvest.py` (new): `joint_collect_orders` (deterministic multi-ship nearest
+    neighbour over the pooled miners at collect epochs), `retime_harvest` (DP re-timing with
+    foreign deploy epochs, tail dropping), `harvest_report`.
+  - `gtoc12/cooperative.py`: `FleetMasterResult.cooperative_columns` in the master summary.
+  - Tests: surrogate optimiser constraints/determinism, tour modes (structure, bookkeeping,
+    determinism), joint harvest (pool shared once, foreign epochs, DP closure), phasing-aware
+    families, inflation model, harvest bookkeeping, master picks cooperative pair.
+- Evidence (family 0, 99 members, real SCvx): self-cleaning collect hops re-fly the deploy pairs
+  three years later at 2-3x the deploy dV (5441->57635 1.29 vs 3.25 km/s, 23907->16356 2.29 vs
+  4.95 km/s); direction does not matter (forward tours: 270/318/365 kg). Pooled nearest-neighbour
+  chains at the collect epochs stay at 1.3-2.0 km/s (median 1.6-1.9 vs 2.5-2.7 own-set).
+  Proxy replay with the joint harvest: 1258 -> 1502 kg for three ships.
+- Next: real-SCvx probe of the joint harvest, then campaign cluster_fleet_v4 + fleet_master_v2.
+
+## 2026-09-03 23:20 AEST
+
+- Scope: GTOC12 per-ship mass levers, part 3 (real-SCvx probe of the joint harvest, re-timing
+  consistency fixes, campaign v4 launch).
+- Probe `probe_v4_family` (family 0, 3 ships, 19 min, real SCvx): 1014.6 kg / 3 ships (338 kg
+  average) - *worse* than the self-cleaning bundle. Root cause was not the harvest idea but the
+  bookkeeping around it: ship 1's re-timed variant speculated on 7 orphans (294.9 kg itself),
+  ships 2 and 3 collected four of them as foreign (488.7 / 474.3 kg), then the orphan repair
+  dropped the three nobody took, which re-timed ship 1's deploy epochs and stranded both
+  collectors (`reverted_stranded` -> 328 / 332.6 kg). The joint harvest itself certified two of
+  three new tours but was reverted for the same reason ("asteroid 49218 collected against a
+  stale deploy epoch").
+- Changes (commit eb4a5be):
+  - `gtoc12/retiming.py`: `Visit.pinned_arrival` / `build_visits(..., pinned)` /
+    `retime_order(..., pinned)`: a deploy another ship collects keeps its exact lattice epoch
+    through any re-timing (`_Lattice.exact_index`; off-lattice pins are infeasible, not rounded).
+    `_tofs` snaps the TOF grid onto the lattice (the 400 d Earth bound on a 15/30 d lattice made
+    the DP price/authority-check a leg at 730 d and fly it at 720 d: forward refused what the DP
+    accepted and the mass rounds never converged). `_forward` returns the refused leg's mass so
+    the profile correction hits the right entry; corrections carry across price rounds.
+  - `gtoc12/bundles.py`: `drop_asteroid(..., pinned)`; orphan repair pins the deploys other
+    ships collect and requires fallback variants to reproduce them (epoch, not just membership);
+    `_joint_harvest` pins every deploy collected elsewhere (new assignment or kept route).
+  - `gtoc12/harvest.py`: `retime_harvest(..., pinned)`.
+  - Tests: `test_pinned_deploys_keep_their_epoch_through_drop_and_retiming` (pins reproduced,
+    off-lattice pin infeasible, TOF grids on the lattice); orphan-repair monkeypatch updated.
+- Validation: full suite 392 passed, 4 skipped (`test_native_library_is_packaged_and_abi_compatible`
+  deselected: this worktree has no built native library - environment, not code); Ruff clean.
+  Before the fixes a fixture plan re-timed by its own re-timer failed `leg_authority`; after them
+  it closes in 2 mass rounds, pinned or not.
+- Leg-cost distributions (`gtoc12 leg-stats`, results/gtoc12/leg_stats/before_v4.json), best
+  verified fleet (15 ships) vs JPL36 / Antipodes39 / Antipodes37, propellant per leg:
+  Earth-out median 484 vs 447 / 461 / 466 kg (TOF 540 vs 523-532 d); deploy hop 100 vs 101 / 96 /
+  97 kg (TOF 240 vs 174-183 d); collect hop 110 vs 67 / 66 / 66 kg (TOF 330 vs 181-187 d);
+  Earth return 192 vs 206-214 kg; hops <= 75 kg: 21% vs 44-46%; hop propellant per ship equal
+  (1448 vs 1448-1464 kg) - the references buy 9-10 asteroids with it, we buy 6.
+- Campaign `cluster_fleet_v4` launched 21:25 AEST: 4 workers, 4 ships/family, radius 2.0
+  (phasing-aware), continuous Earth legs, `--collector-harvest`, 4 h declared budget
+  (`timeout 15300`), log /tmp/cluster_fleet_v4.log.
+
+## 2026-09-04 02:30 AEST
+
+- Scope: GTOC12 per-ship mass levers, part 4 (campaign v4 results, fleet_master_v2, docs,
+  commits). Task closed.
+- While v4 ran: `MinerPool.register_all` made two-phase (all deploys, then all collects) after
+  the campaign's harvest of family 459 certified both new tours and was rejected as "collected
+  but never deployed" - the joint harvest produces *mutual* pairs (A collects B's miner and B
+  collects A's) that no slot order can register. Collect look-ahead in the beam
+  (`SearchSettings.collect_lookahead_weight`, `--collect-lookahead`) built and measured on
+  family 247 with proxy pricing: 934 kg (W = 0.5) vs 1023 kg off -> stays off, documented as a
+  rejected variant. `HarvestSettings.return_reserve_days` 960 -> 465 after the family-247 replay
+  (joint tours ended ~700 d early; 791.8 kg with the fix, still < 884.6 self-cleaning).
+  Commit ba93060 (author fell back to the local identity - env vars were not set in that shell;
+  the later commits use the track identity).
+- `cluster_fleet_v4` finished at 252.5 min (families in flight at the 4 h mark run to
+  completion; `timeout 15300` was not hit): 47 families, 119 certified ships, 1322 Earth legs
+  flown / 533 certified / 324 continuously re-optimised (477 -> 390 kg median, -102 kg mean), 67
+  cooperative collects, 22 orphans, 190 repairs, 226 rejected variants, 38 joint harvests
+  attempted / 0 adopted (8: no tour certified, 19: less mass, 11: pool inconsistent - part of
+  those are the mutual pairs). Verified intermediate fleets: 30 min 884.6 kg (2 ships; 5 ships
+  at 34.1 min), 1 h 4841.7 (11), 2 h 6167.1 (13), 4 h 6926.9 (14); final 6975.69 kg / 14 ships /
+  100 deployed, 96 mined, average 498.3 kg. Main 0.46 GB, worker peak 0.81 GB. Leg stats of the
+  v4 fleet: Earth-out 404 kg/ship (references 460-474) - lever 1 won; deploy hops 129 kg mean
+  (111 before), collect hops 102 kg median (110 before, references 66) - levers 2/3 not won; the
+  Earth saving was spent on deploy hops and the average stayed at 498 kg.
+- `fleet_master_v2` over all six archives (330 routes re-flown through SCvx in 749 s, 0
+  failures; 436 columns; 5 M nodes in 103 s, not exhaustive): **16 ships, 123 asteroids (116
+  mined), 8324.27 kg**, official `GTOC12_Verify` "Check successfully!" + independent verifier
+  (56 km max propagation error), fixed-bonus 7905.05 kg, average 520.3 kg, rule 16 <= 16.03.
+  Sources: v1 8 ships, v4 5 (564/538/524/499/495 kg), fleet10 2, v3 1. One cooperative pair in
+  the incumbent (family 0: ship 15 collects 27306 + 30267 deployed by ship 10; 2 foreign
+  collects, 0 bundle columns). Best-fleet leg stats: Earth-out 468, deploy hop 110, collect hop
+  90 kg median (was 110), 0.23 of hops <= 75 kg (references 0.44-0.46).
+- Validation: Ruff clean (check + format), suite 392 passed / 4 skipped / 1 deselected (native
+  library not built in this worktree).
+- Docs: `docs/GTOC12_TRACK.md` 6.6 (after-campaign leg table, harvest outcome), 7 (v4 and
+  fleet_master_v2 rows, budget marks, per-ship table, regenerate commands), 8 (fourth-campaign
+  limitation, next bottleneck = the collect hop: price the collect tour exactly in the beam,
+  tighter collect-epoch families, exhaustive master).
+- Commits: ba93060 (code), 2aabeef (results: v4 reports/bundles/route summaries/intermediate
+  fleet.json, fleet_master_v2 report + Result.txt 6.9 MB + fleet.json + viewer manifest, probe,
+  leg_stats before/after), docs + memory commit follows.
+- Next bottleneck: collect hops (90-102 vs 66 kg, 170-250 kg per ship = the whole 500 -> 740 kg
+  gap). The Lambert look-ahead does not predict the DP's cheap collect tours; the beam needs the
+  collect tour priced exactly (DP on deploy+collect per surviving partial, or a certified
+  collect-pair table at the collect epoch per family) and families re-clustered at radius <= 1.0
+  weighted on the collect-epoch phase.

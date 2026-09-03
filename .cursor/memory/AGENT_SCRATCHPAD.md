@@ -1581,3 +1581,114 @@ Use this file as persistent, repo-local execution memory.
 - Any Earth-leg gain must be protected in the re-timer (`Retimer.protect_earth_leg`): its
   Lambert table barely depends on TOF and would shorten the leg again.
 - Do not trust Lambert-ratio calibration for Earth legs; only hops follow the ratio model.
+
+### 2026-09-03 21:20 AEST - GTOC12 lever 2: collect tours over the pooled miners (interim)
+
+#### Mistakes And Fixes
+
+- [self] Hypothesised that collect hops were expensive because the tour traversed the deploy
+  chain backwards against the phase drift; built forward tours and measured: same pairs cost
+  2-3x more three years after deployment in *either* direction (relative drift), so the fix is
+  a different pair set at collect time, not a different order. Kept the tour modes (cheap, the
+  beam picks the best) but the real lever is the joint harvest over the pooled miners.
+- [self] The beam with the ratio inflation model closed fewer/shorter chains (6/401 kg vs
+  7/440 kg) because it priced its fast deploy hops out of the mass budget; reverted the beam to
+  the flat factor and kept the model where the speed/propellant trade is decided (DP).
+- [self] With continuous Earth legs the first-level window let the beam fly 400-450 d grid
+  neighbours at the 600 d leg's calibration; they fail SCvx. Window 0 when continuous.
+- [tool] PowerShell mangles inline python -c / heredocs with brackets and quotes: write probe
+  scripts to /tmp with the file tool and run them by path.
+
+#### Guardrails For Next Session
+
+- Any collect-phase change must be judged on the *measured* legs of a real SCvx probe, not on
+  the beam proxy (the proxy said reverse == forward; SCvx said both are bad).
+- 'beam found no closing chain' now logs first_level/depth/failure reasons/legs - read them
+  before touching beam settings.
+
+### 2026-09-03 23:20 AEST - GTOC12 lever 3: harvest probe, pinned deploys, DP consistency (interim)
+
+#### Task Summary
+
+- Real-SCvx probe of the joint harvest on family 0 collected *less* (1014.6 kg / 3 ships) than the
+  self-cleaning bundle; traced to bookkeeping (stranded collectors after the orphan repair re-timed
+  the deployer), not to the harvest idea. Fixed with pinned deploy epochs + two latent DP bugs;
+  committed eb4a5be; campaign `cluster_fleet_v4` (4 h) launched 21:25 AEST.
+
+#### Mistakes And Fixes
+
+- [self] Orphan repair's "keep required deploys" check tested *membership* of the deploys other
+  ships collect, not their *epoch*; `drop_asteroid` re-times the whole chain, so every collector
+  of that deployer was stranded and reverted (-240 kg in the probe). Fix: `pinned` deploy epochs
+  through `build_visits` -> `Visit.pinned_arrival` -> DP mask at the exact lattice index; the
+  harvest pins every deploy collected elsewhere too.
+- [code] `Retimer._tofs` produced TOF grids off the lattice (400 d bound, 15/30 d step): the DP
+  realises TOF as `round(tof/step)` steps, so it priced/authority-checked at 730 d and flew 720 d
+  -> forward `leg_authority` on legs the DP accepted; mass rounds looped on the same profile.
+  Snap lo/hi onto the lattice. This affected every Earth-return leg of every earlier campaign.
+- [code] `_forward` returned the masses *before* the refused leg, so the profile correction
+  (`forward_masses + scaled rest`) never touched the refused leg's entry -> non-convergence.
+  Return `[*masses, mass]`; carry the corrected profile across price rounds.
+- [test] A pinned re-timing test must start from a plan *this* re-timer produced (a beam plan or
+  another re-timer's plan need not be reproducible on this lattice); iterate the bundle's variants
+  and skip only if none closes.
+- [tool] PowerShell mangled backticks and `\r` in a heredoc-written DEVLOG entry (rendered as
+  `\gtoc12/...\` and CR bytes): write memory entries with the file tool via the `\\wsl$` UNC path,
+  never through `bash -lc "... <<EOF"` from PowerShell.
+
+#### Guardrails For Next Session
+
+- Whenever a plan of ship A is re-timed and ship B collects one of A's miners, pass
+  `pinned={a: A.deploy_epochs[a]}`; `bundle.pool()` / `MinerPool.register` is the check
+  (`EPOCH_TOLERANCE_DAYS = 1e-6`).
+- Debug DP-vs-forward disagreements by replaying `_dp` + `_forward` on the same visits/profile and
+  printing the leg's (dep, tof, dv, mass, ratio) from both sides - the two must use identical
+  TOF/mass; if not, the grid or the profile indexing is wrong.
+- `test_native_library_is_packaged_and_abi_compatible` fails in this worktree because no native
+  library is built here; deselect it, do not "fix" it.
+
+### 2026-09-04 02:30 AEST - GTOC12 per-ship mass levers: campaign v4 + fleet_master_v2 (closed)
+
+#### Task Summary
+
+- Fourth campaign closed: best verified fleet `fleet_master_v2` 8324.27 kg / 16 ships / 123
+  asteroids (116 mined) / 520.3 kg average, rule 16 <= 16.03 (was 7575.58 / 15 / 505). Lever 1
+  (continuous SCvx Earth legs) won: 404 kg/ship vs 460-474 for the references. Levers 2/3
+  (phasing-aware families, joint harvest) did not move the collect hop (102 kg in the v4 fleet vs
+  66), and the Earth saving was spent on deploy hops (129 vs 111 kg mean). One cooperative pair in
+  the incumbent; 38 joint harvests attempted, 0 adopted. Commits ba93060, 2aabeef, + docs/memory.
+
+#### Mistakes And Fixes
+
+- [self] Reported the 8 harvest records without a `reverted` key as "adopted" in a first docs
+  draft; they were harvests where *no* re-timed tour certified (`ships_certified: 0`, stop
+  `no_reachable_miner`). Read `ships_adopted`/`collected_after_kg`, not the absence of a reason.
+  Fixed in the docs before commit.
+- [self] Wrote "8 of the 11 inconsistent harvests were mutual pairs" without having counted them;
+  only family 459 was verified. Reworded to what was measured.
+- [tool] `git commit` in a fresh `bash -c` shell had no `GIT_AUTHOR_*` env vars, so ba93060 carries
+  the local fallback identity (no amend allowed). Export the track identity inside every commit
+  script, as the later commit scripts do.
+- [tool] `wsl -- bash -lc "... python -c \"...\""` from PowerShell breaks on `[`, `(`, backticks
+  and `$(...)`: write the command to a `.sh`/`.py` file on the Windows side, strip `\r`
+  (`tr -d '\r' < /mnt/c/... > /tmp/x.sh`) and run that. `timeout ... python` also fails: the venv
+  has no `python` on PATH - use `.venv/bin/python` with `PYTHONPATH=src`.
+- [code] The campaign's harvest rejections "collected but never deployed" were partly a
+  registration-order artefact (mutual pairs); `MinerPool.register_all` is two-phase now.
+  Anything that validates a bundle must register all deploys before any collect.
+- [method] `fleet-master` over *all* archives (including the probe run) is what produced the gain,
+  not the campaign's own master (14 ships / 6975.7 kg at a 200k node cap): always run the
+  archive master after a campaign and commit that fleet.
+
+#### Guardrails For Next Session
+
+- The remaining gap is the collect hop (90-102 vs 66 kg = 170-250 kg/ship). Do not spend time on
+  Earth legs (done, below references) or on nearest-neighbour joint harvests inside 13-40-member
+  families (measured: never cheaper than self-cleaning). Price the collect tour *exactly* in the
+  beam (DP on deploy+collect for surviving partials, or a certified collect-pair cost table at the
+  collect epoch), and re-cluster at radius <= 1.0 weighting the collect-epoch phase.
+- Every 25 kg of fleet average buys one ship (535 -> 17, 600 -> 22, 740 -> 38); the master takes
+  any ship above the current average and drops anything below - judge new columns against 520 kg.
+- Re-run `fleet-master` with `--node-cap` > 5 M or a dual bound before claiming optimality: 436
+  columns are not exhaustive at 5 M nodes.
+- Regenerate commands and the committed/not-committed split are in `docs/GTOC12_TRACK.md` 7.

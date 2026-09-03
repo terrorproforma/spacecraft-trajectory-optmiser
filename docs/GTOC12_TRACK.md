@@ -360,6 +360,140 @@ dropped and logged; groups keep their cooperative structure as bundle columns. R
 checked exactly against the ten `fleet10_master_v1` plans (camps included) and every priced
 family. This is how the fleet10 ships and the cooperative bundles are selected *together*.
 
+### 6.6 Per-ship mass levers (fourth campaign: `earthleg.py`, `harvest.py`, `legstats.py`)
+
+The fleet rule `N ≤ 2 exp(0.004 M̄)` binds at 15 ships (average 505 kg), so the fourth campaign
+attacked the per-ship leg economy. `gtoc12 leg-stats` decodes any solution file (ours and the
+references) through the shared itinerary decoder and reports per-role propellant/TOF
+distributions; the measurement that framed the work (`results/gtoc12/leg_stats/before_v4.json`,
+propellant per leg, `fleet_master_v1` vs JPL 36 / Antipodes 39 / Antipodes 37):
+
+| Leg role | Statistic | ours (15 ships) | JPL 36 | Antipodes 39 | Antipodes 37 |
+| --- | --- | --- | --- | --- | --- |
+| Earth-out | median / mean / p90 kg | 484 / 479 / 601 | 447 / 473 / 561 | 461 / 472 / 537 | 466 / 474 / 536 |
+| Earth-out | TOF median d | 540 | 530 | 523 | 532 |
+| deploy hop | median / mean / p90 kg | 100 / 111 / 172 | 101 / 107 / 162 | 96 / 103 / 160 | 97 / 105 / 165 |
+| deploy hop | TOF median d | 240 | 182 | 174 | 183 |
+| **collect hop** | median / mean / p90 kg | **110 / 109 / 165** | **67 / 69 / 101** | **66 / 67 / 103** | **66 / 66 / 102** |
+| collect hop | TOF median d | 330 | 187 | 181 | 182 |
+| Earth return | median / mean / p90 kg | 192 / 205 / 277 | 211 / 216 / 252 | 214 / 214 / 246 | 206 / 208 / 249 |
+| hops ≤ 75 kg | fraction | 0.21 | 0.44 | 0.46 | 0.46 |
+| per ship | Earth-out kg / hops kg | 479 / 1448 | 460 / 1464 | 472 / 1448 | 474 / 1453 |
+
+After the campaign (`results/gtoc12/leg_stats/after_v4.json`, same decoder; `cluster_fleet_v4`
+is the 14-ship fleet the campaign itself emitted, `fleet_master_v2` the 16-ship best fleet that
+mixes v4 ships with earlier archives):
+
+| Leg role | Statistic | `cluster_fleet_v4` (14 ships, all continuous Earth legs) | **`fleet_master_v2`** (16 ships) | references (JPL 36 / Ant. 39 / Ant. 37) |
+| --- | --- | --- | --- | --- |
+| Earth-out | median / mean / p90 kg | **399 / 404 / 475** | 471 / 468 / 612 | 447–466 / 472–474 / 536–561 |
+| Earth-out | TOF median d | 600 | 545 | 523–532 |
+| deploy hop | median / mean / p90 kg | 122 / 129 / 198 | 110 / 114 / 168 | 96–101 / 103–107 / 160–165 |
+| deploy hop | TOF median d | 255 | 240 | 174–183 |
+| collect hop | median / mean / p90 kg | 102 / 107 / 173 | **90 / 95 / 152** | 66–67 / 66–69 / 101–103 |
+| collect hop | TOF median d | 300 | 292 | 181–187 |
+| Earth return | median / mean / p90 kg | 194 / 202 / 257 | 192 / 197 / 267 | 206–214 / 208–216 / 246–252 |
+| hops ≤ 75 kg | fraction | 0.20 | 0.23 | 0.44–0.46 |
+| per ship | Earth-out kg / hops kg | **404** / 1525 | 468 / 1454 | 460–474 / 1448–1464 |
+
+The continuous Earth-leg optimiser (§ below) put the campaign's Earth legs **70 kg per ship below
+the references** (404 vs 460–474 kg mean; the 324 optimised grid legs went from a 477 kg median to
+390 kg, saving 102 kg on average, p10/p90 20/218 kg, with the flown legs at 397 kg median). The
+saving did not become collected mass: the v4 ships spent it on deploy hops (129 vs 111 kg mean)
+and the collect hops stayed at 102 kg, so the per-ship average of the v4 fleet is 498 kg against
+505 kg before. The collect hops of the best fleet improved from 110 to 90 kg median because the
+master now picks v4 ships whose collect tours the re-timer made cheaper, not because the phase
+drift was removed (still 0.23 of hops under 75 kg vs 0.44–0.46).
+
+Earth legs and deploy hops were already at the reference cost before the campaign; the whole gap is in the **collect
+hops** (110 vs 66 kg, 7 per ship ≈ 300 kg) — the hop propellant per ship is *equal* (1448 vs
+1448–1464 kg) but the references buy 9–10 asteroids with it and we buy 6–7. Self-cleaning tours
+re-fly the deploy pairs three years later, when the family's relative phase drift (a few degrees
+per year) has made the same pairs cost 2–3× (family 0, measured by SCvx: 5441→57635 1.29 km/s
+out, 3.25 km/s back; 23907→16356 2.29 vs 4.95 km/s), in either direction (forward tours were
+built and measured: 270/318/365 kg, no better than reverse). Nearest-neighbour chains over the
+*pooled* miners of a family at the collect epochs stay at 1.3–2.0 km/s — the reference collect
+economy — which is why the references' ships both deploy and collect across a shared cluster.
+
+What was built (all deterministic, CPU):
+
+- **Continuous Earth-leg optimisation (`earthleg.py`).** A Lambert-surrogate compass search was
+  built first and rejected: on 181 certified Earth legs the measured/Lambert ratio scatters
+  0.86–1.51 at equal authority ratio, so the surrogate steers towards shorter TOFs SCvx cannot
+  fly. `refine_leg_scvx` runs the compass search (launch epoch × TOF, official launch window and
+  v∞ ≤ 6 km/s as bounds, line search, time weighted at the mining rate 0.22 kg/day) with the SCvx
+  arc as the objective: 8 SCvx calls (~20 s) per certified grid leg, −104 kg per leg on six
+  archived legs (393–602 → 292–410 kg), 409/368/374/385/397/374 kg in the family-0 probe.
+  `Retimer.protect_earth_leg` keeps the DP's Earth-out TOF at or above the optimised one (its
+  Lambert table barely depends on TOF and would shorten the leg again). The launch grid spans the
+  first three years of the window (`launch_window_days`), as the references do.
+- **Ratio-dependent low-thrust inflation (`screening.low_thrust_inflation`).** Fitted on 1674
+  certified hops: measured/Lambert = 1.05 + 0.65 r (r = Lambert ΔV over full-thrust authority),
+  p60–p75 of every ratio bin. The flat 1.2× under-priced fast hops by 9.5 % and over-priced slow
+  ones by 11 %; the model is used in the DP/forward pass (per-pair residual calibration after each
+  SCvx pass). The beam keeps the flat factor — with the model it closed fewer and shorter chains
+  (6 asteroids / 401 kg vs 7 / 440 kg) because it priced its fast deploy hops out of the budget.
+- **Phasing-aware families (`ClusterBands.visit_epochs`).** The family feature vector embeds the
+  phase at the deploy *and* the collect epoch, so members are co-located at every visit epoch,
+  not only at t0 (`relative_drift_deg_per_year`, `phase_difference_deg` for diagnostics). At radius
+  2.0 the fraction of member pairs under 75 kg at the collect epoch rises to 98 % in the probed
+  family (static families: 21 % of our flown hops).
+- **Collection tour modes** (`greedy | reverse | forward | forward_revisit` in the beam,
+  `orders_of` epoch-matches collects so a repositioning hop is decoded as such) and the
+  **joint harvest (`harvest.py`)**: after a bundle's ships are certified, a deterministic
+  multi-ship nearest-neighbour construction re-plans the collect tours over the pooled miners
+  (each miner collected once, camps first, Lambert ΔV at the running collect epoch + 0.05 kg/day),
+  the per-ship DP re-times each new order with the foreign deploy epochs, SCvx certifies, ships
+  whose tour does not certify keep their route and the clashes are re-timed once more; the bundle
+  adopts the result only if it collects at least as much and forms a consistent pool.
+- **Pinned deploy epochs (`Visit.pinned_arrival`).** The family-0 probe of the harvest collected
+  *less* (1014.6 kg / 3 ships): ship 1's re-timed variant speculated on 7 orphans, ships 2–3
+  collected four of them as foreign (488.7 / 474.3 kg), the orphan repair dropped the other three
+  — which re-timed ship 1's remaining deploy epochs and stranded both collectors back to their
+  clean variants (328 / 333 kg). Any re-timing of a deployer now pins the deploys another ship
+  collects to their exact lattice epoch (`drop_asteroid`, `retime_harvest`; off-lattice pins are
+  infeasible, not rounded), and a fallback variant must reproduce them.
+- **Re-timing consistency.** Two latent DP/forward disagreements surfaced under the pins: the TOF
+  grid was not on the lattice (a 400 d Earth bound on a 15/30 d lattice made the DP price and
+  authority-check a leg at 730 d and fly it at 720 d, so the forward pass refused legs the DP had
+  accepted), and the refused leg's own mass was missing from the profile correction, so the mass
+  rounds corrected the wrong entry and never converged. `_tofs` snaps the grid, `_forward`
+  returns the refused mass, and corrections carry across price rounds: a fixture plan that failed
+  `leg_authority` when re-timed by its own re-timer now closes in two mass rounds.
+- `MinerPool.register_all` registers a bundle in two phases (all deploys, then all collects):
+  the joint harvest produces *mutual* pairs (ship 1 collects one of ship 2's miners and ship 2 one
+  of ship 1's), which no deployer-before-collector slot order can register — the campaign's
+  harvest of family 459 certified both new tours and was rejected as "collected but never
+  deployed" for that reason alone.
+- **Collect look-ahead in the beam** (`SearchSettings.collect_lookahead_weight`, off by default,
+  `cluster-fleet --collect-lookahead W`): each deploy pair is also priced at
+  `departure + 3 years` (cheapest collect TOF) and the beam score charges `W ×` that propellant;
+  pairs that cannot be re-flown are not deploy candidates. Measured on family 247 (proxy
+  pricing, 2 ships): `W = 0.5` collected 934 kg against 1023 kg with the look-ahead off, with the
+  same collect-hop ΔV median (2.81 km/s) — the Lambert cost of the pair three years ahead does
+  not predict which tour the DP re-timer will make cheap, so the option stays off.
+- `FleetMasterResult.cooperative_columns` reports how many selected columns are cooperative
+  (foreign collects / multi-ship bundles); `cluster-fleet --collector-harvest
+  --earth-leg-refinements N --static-families`.
+
+What the campaign measured about the harvest itself (`cluster_fleet_v4`, 4 h, 4 ships per
+family, 47 families priced): the joint nearest-neighbour tours were attempted in 38 families and
+**adopted in none** — in 8 no re-timed tour certified at all (ships stop with `no_reachable_miner`
+after 3–6 collects), in 19 the certified tours collected *less* than the self-cleaning routes (every measured
+before → after pair lost mass: 884.6 → 669.0, 1416 → 1168, 1739 → 1368, 903 → 641, 1666 →
+1113, 1799 → 1388, 812 → 690 kg …; family 247 recovers to 791.8 kg in the offline replay with
+the corrected 465 d return reserve, still below 884.6) and in 11 because the pool was
+inconsistent ("collected but never deployed": the campaign ran with the single-pass
+`register_all`, which rejects the mutual pairs the harvest produces — family 459 was verified to
+be one — so part of those 11 are false rejections the two-phase registration now accepts). The
+replay shows why: in a 13–20-member family the pooled alternatives
+at the collect epochs are not cheaper than the ship's own pairs (the joint tour of family 247
+still flies 5.1–7.1 km/s hops), so cooperation cannot buy back what the phase drift costs; the
+references' 66 kg collect hops come from *tighter* clusters (Antipodes' 37-ship solution is
+self-cleaning and has the same 66 kg collect hops as the cooperative JPL one), not from
+cooperation per se. The lever is therefore family tightness at the collect epoch (Δa spread), not
+the collector assignment — see §8.
+
 ### 6.3 Proxy validation (`results/gtoc12/proxy_validation.json`)
 
 | Data set | Quantity | p5 | p25 | median | p75 | p95 |
@@ -397,7 +531,9 @@ not needed: reference hops have zero revolutions (p95 0.004).
 | `fleet10_master_v1` (10 ships greedy + re-timing with the full price loop, cooperative pool with credit 0, master over 31 columns; 2 h budget) | full catalogue | 10 | 62 | **4398.69 kg** (583.2 + 490.3 + 419.2 + 433.7 + 452.2 + 446.0 + 448.9 + 396.7 + 354.8 + 373.7) | 4398.69 kg (all B = 1) | 124 | 10 × ~130–220 s | ~40 min incl. re-timing | 3089 s (51 min), 0.76 GB | CPU |
 | `cluster_fleet_v1` (third campaign: 108 co-moving families priced cheapest-first in 4 workers, deployer + collectors per family, orphan repair, bundle master; 4 h budget) | full catalogue | 14 | 99 | **6932.48 kg** | 6407.87 kg | 202 | 108 families × 166–1700 s (4 in parallel) | in the family pricing | 14921 s (249 min); main 0.43 GB, worker peak 0.60 GB | CPU |
 | `cluster_fleet_v2_deep` / `cluster_fleet_v3_repair` (re-pricing of the 6 richest and the 7 lost families, 4–5 ships per family, 5–6 re-timing attempts) | full catalogue | 7 / 11 | 41 / 81 | 2878.00 kg / 4704.15 kg | 2603.22 / 4315.35 kg | 85 / 158 | 6 / 7 families | in the family pricing | 2742 s / 2166 s; 0.44 GB main | CPU |
-| **`fleet_master_v1`** (master over every archived certified route of the four runs above: 208 routes re-flown through SCvx, 273 columns, 5 M nodes) | full catalogue | **15** | **109** (103 mined, 6 miners left) | **7575.58 kg** (per-ship table below) | **7217.51 kg** | 217 | — | 405 s re-certification (6 workers) + 67 s master | 488 s, 0.24 GB main | CPU |
+| `fleet_master_v1` (master over every archived certified route of the four runs above: 208 routes re-flown through SCvx, 273 columns, 5 M nodes) | full catalogue | 15 | 109 (103 mined, 6 miners left) | **7575.58 kg** (per-ship table below) | 7217.51 kg | 217 | — | 405 s re-certification (6 workers) + 67 s master | 488 s, 0.24 GB main | CPU |
+| `cluster_fleet_v4` (fourth campaign: phasing-aware families, continuous SCvx Earth legs, 4 ships per family, joint harvest, 4 workers; 4 h budget) | full catalogue | 14 | 100 (96 mined) | **6975.69 kg** | 6737.08 kg | 201 | 47 families × 523–2400 s (4 in parallel) | in the family pricing | 15151 s (252.5 min); main 0.46 GB, worker peak 0.81 GB | CPU |
+| **`fleet_master_v2`** (master over every archived certified route of all six runs: 330 routes re-flown through SCvx, 436 columns, 5 M nodes) | full catalogue | **16** | **123** (116 mined, 7 miners left) | **8324.27 kg** (per-ship table below) | **7905.05 kg** | 246 | — | 749 s re-certification (6 workers) + 103 s master | 872 s, 0.29 GB main | CPU |
 
 Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
 RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
@@ -413,7 +549,7 @@ Best score by depth (proxy kg) for the final ship 1: 1→124.5, 2→221, 3→285
 --budget-seconds 7200 --retime-budget-seconds 900 --retime-attempts 4` (defaults: beam 24, ≤ 10
 deploys, 48 neighbours, refine top 3, cooperative pool on, orphan credit 0); `fleet6_retime_v1`
 predates the pool (equivalent to `--no-cooperative`) and used the earlier one-halving price
-loop, `fleet6_coop_v1` orphan credit 0.5. `fleet10_master_v1` is the best verified fleet: official `GTOC12_Verify` "Check
+loop, `fleet6_coop_v1` orphan credit 0.5. `fleet10_master_v1` was the best verified fleet of the second campaign: official `GTOC12_Verify` "Check
 successfully!" on the 10-ship file (62 asteroids, 4398.686 kg; fleet rule 10 ≤ 11.6), independent
 verifier agreeing per asteroid to 1e-10 kg.
 
@@ -531,6 +667,68 @@ pair lowers the fleet average and the rule takes a ship away. The 15 ships launc
 64328 and 64538 (the first 210 days of the window), fly 12–18 arcs each (217 in total), spend
 371–618 kg on the Earth leg and return at MJD 69518–69803 (the last 289 days of the window).
 
+**Fourth campaign (per-ship mass levers, §6.6).** `cluster_fleet_v4` priced 47 phasing-aware
+families (radius 2.0, deploy + collect epochs in the feature vector) in 4 worker processes over
+its 4 h budget (`--workers 4 --ships-per-family 4 --budget-seconds 14400 --collector-harvest
+--earth-leg-refinements 8`, beam 24, ≤ 10 deploys, joint harvest on, seed 0; families are
+priced until the budget is spent and the last four run to completion, 252.5 min total): 1322
+Earth legs flown by SCvx on the grid (533 certified), 324 of them re-optimised continuously (477 →
+390 kg median), 119 certified ships in 40 multi-ship families, 67 cooperative collects, 37
+deployers with collectors, 22 orphans left after 190 repairs, 226 rejected variants in the log,
+38 joint harvests attempted / 0 adopted. Score versus wall clock (verified incumbent fleets, all
+retained under `fleets/`): 16.5 min → 884.6 kg (2 ships); **30 min → 884.6 kg (2 ships; the 5-ship
+fleet certifies at 34.1 min → 2358.5)**; 38.7 → 3737.0 (8); 49.6 → 4697.8 (11); **1 h → 4841.7 kg
+(11 ships, 74 asteroids)**; 67.6 → 5523.2 (12); 96.2 → 6085.4 (13); **2 h → 6167.1 kg (13 ships,
+96 asteroids)**; 169.8 → 6817.6 (14); 220.2 → 6926.9; **4 h → 6926.9 kg (14 ships, 103 asteroids;
+final fleet at 240.2 min: 6975.7 kg, 14 ships, 100 deployed / 96 mined, average 498.3 kg)**. It
+is slower to start than `cluster_fleet_v1` (4 ships per family and 8 SCvx Earth-leg refinements
+per certified grid leg make a family 9–40 min instead of 3–28) and lands at the same fleet
+(6975.7 vs 6932.5 kg): the per-ship average did not move (498 vs 495 kg). Memory: main 0.46 GB
+peak, worker peaks up to 0.81 GB (the conservative sum-of-peaks bound in the report, main + 4 ×
+worst worker, is 3.7 GB; the workers' peaks are not simultaneous).
+
+`fleet_master_v2` re-flew all 330 archived routes of the six runs (`cluster_fleet_v1/v2_deep/
+v3_repair/v4`, `fleet10_master_v1`, `probe_v4_family`) through SCvx (749 s in 6 workers, **0
+re-certification failures**), built 436 columns and solved the master with the ship-rule bound
+to 5 M nodes (103 s, not exhaustive): **16 ships, 123 asteroids visited (116 mined), 8324.27 kg
+collected (official `GTOC12_Verify` "Check successfully!"; independent verifier agrees, max
+propagation error 56 km), fixed-bonus score 7905.05 kg, average 520.3 kg per ship, fleet rule
+16 ≤ 16.03**. The rule is again exactly binding: a 17th ship needs the average above 535 kg.
+Ships from the fourth campaign contribute 5 of the 16 (families 430, 355, 17, 4, 5 — three of
+them at 524–564 kg, the campaign's best), `cluster_fleet_v1` 8, `fleet10_master_v1` 2,
+`cluster_fleet_v3_repair` 1. **One cooperative pair enters the incumbent** (ships 10 and 15,
+family 0 of `cluster_fleet_v1`: ship 15 collects 27306 and 30267 deployed by ship 10 — 2 foreign
+collects, 0 multi-ship bundle columns); the v4 collectors that harvest other ships' miners
+(e.g. family 275 slot 3 with 4 foreign collects, 386 kg; family 410 slot 2, 3 foreign, 456 kg)
+were not selected because the same families' self-cleaning routes collect more per ship. The
+launch spread is used: ship 5 launches at MJD 64763 (435 days into the window).
+
+Per-ship table of `fleet_master_v2` (final mass = dry + propellant at Earth return):
+
+| # | Source (family / run) | Slot | Asteroids | Collected kg | Final mass kg | Arcs | Launch MJD | Foreign collects | Orphans left |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `fleet10_master_v1` | 1 | 8 | 583.2 | 574.4 | 16 | 64403 | – | – |
+| 2 | `cluster_fleet_v4/family_0430` | 1 | 8 | 564.3 | 522.5 | 16 | 64373 | – | 39189 |
+| 3 | `cluster_fleet_v1/family_0024` | 2 | 8 | 541.3 | 582.3 | 16 | 64358 | – | – |
+| 4 | `cluster_fleet_v1/family_0024` | 3 | 7 | 539.6 | 532.1 | 14 | 64358 | – | – |
+| 5 | `cluster_fleet_v4/family_0355` | 1 | 9 | 537.6 | 595.7 | 18 | 64763 | – | 39692 |
+| 6 | `cluster_fleet_v1/family_0033` | 2 | 8 | 528.5 | 541.7 | 16 | 64403 | – | 46294 |
+| 7 | `cluster_fleet_v4/family_0017` | 1 | 7 | 524.0 | 644.4 | 14 | 64388 | – | – |
+| 8 | `cluster_fleet_v1/family_0025` | 1 | 9 | 516.6 | 571.8 | 18 | 64373 | – | 13637 |
+| 9 | `cluster_fleet_v1/family_0065` | 2 | 7 | 507.8 | 750.0 | 14 | 64328 | – | – |
+| 10 | `cluster_fleet_v1/family_0000` | 1 | 9 | 502.3 | 536.1 | 17 | 64388 | – | 27306, 30267 (collected by #15) |
+| 11 | `cluster_fleet_v1/family_0065` | 1 | 7 | 501.4 | 511.3 | 14 | 64328 | – | – |
+| 12 | `cluster_fleet_v4/family_0004` | 3 | 7 | 499.4 | 520.5 | 14 | 64448 | – | – |
+| 13 | `cluster_fleet_v3_repair/family_0007` | 2 | 8 | 498.2 | 538.1 | 16 | 64478 | – | 28289 |
+| 14 | `cluster_fleet_v4/family_0005` | 2 | 9 | 494.9 | 596.5 | 17 | 64568 | – | 21437, 47969 |
+| 15 | `cluster_fleet_v1/family_0000` | 3 | 8 | 494.9 | 575.4 | 14 | 64388 | 27306, 30267 | – |
+| 16 | `fleet10_master_v1` | 2 | 6 | 490.3 | 584.1 | 12 | 64508 | – | – |
+
+Cooperative statistics of the emitted fleet: 2 foreign collects (one collector, one deployer), 7
+of the 123 deployed miners left uncollected (116 mined), 246 arcs. The master's 420 rejected
+columns are all "dominated or incompatible with the incumbent" — among them every multi-ship
+bundle column and every collector with more than two foreign collects.
+
 Per-leg detail of `reduced-v1-run2` (propellant, SCvx iterations, solve time, certified endpoint
 error): E→1265 600 d 364.7 kg 9 it 1.3 s 0.32 km; 1265→21191 360 d 128.7 kg 7 it 0.5 s 0.04 km;
 21191→27292 360 d 153.5 kg 5 it 0.3 s 0.04 km; 27292→40808 120 d 97.4 kg 24 it 0.7 s 0.01 km;
@@ -570,6 +768,24 @@ fleet with `python -m spacepdhcg gtoc12 fleet-master --run-id fleet_master_v1 --
 --source results/gtoc12/runs/cluster_fleet_v1 --source results/gtoc12/runs/cluster_fleet_v2_deep
 --source results/gtoc12/runs/cluster_fleet_v3_repair --source
 results/gtoc12/runs/fleet10_master_v1 --workers 6 --node-cap 5000000` (8 min on 16 cores).
+Fourth-campaign runs follow the same rule: `cluster_fleet_v4` commits `run_report.json`, the 47
+`bundle.json` and 119 `route_summary.json` files and the 15 intermediate `fleets/*/fleet.json`
+(its 137 per-ship/intermediate `Result.txt` files are not committed); `fleet_master_v2` commits
+`run_report.json`, `fleet/Result.txt` (6.9 MB, the best verified fleet), `fleet/fleet.json` and
+`fleet/viewer/manifest.json`; `probe_v4_family` (the family-0 harvest probe whose 3 ships are
+`fleet-master` sources) commits its `run_report.json`, `bundle.json` and `route_summary.json`.
+Regenerate the best fleet with `PYTHONPATH=src python -m spacepdhcg gtoc12 fleet-master --run-id
+fleet_master_v2 --output <dir> --source results/gtoc12/runs/cluster_fleet_v1 --source
+results/gtoc12/runs/cluster_fleet_v2_deep --source results/gtoc12/runs/cluster_fleet_v3_repair
+--source results/gtoc12/runs/cluster_fleet_v4 --source results/gtoc12/runs/fleet10_master_v1
+--source results/gtoc12/runs/probe_v4_family --workers 6 --node-cap 5000000` (14.5 min on 16
+cores; the SCvx replay is deterministic, 330/330 routes re-certify) and its viewer data with
+`PYTHONPATH=src python -m spacepdhcg gtoc12 export-viewer
+results/gtoc12/runs/fleet_master_v2/fleet/Result.txt --output
+results/gtoc12/runs/fleet_master_v2/fleet/viewer --run-id fleet_master_v2_fleet` (6.8 MB
+`trajectories.json`, not committed). The leg-cost tables of §6.6 are
+`results/gtoc12/leg_stats/{before_v4,after_v4}.json` from `gtoc12 leg-stats --solution
+name=path …` over the fleet files and the three reference files.
 
 ## 8. Limitations
 
@@ -611,24 +827,36 @@ results/gtoc12/runs/fleet10_master_v1 --workers 6 --node-cap 5000000` (8 min on 
   by ships 1–3.
 - The master is exact only up to its node cap: 273 columns need > 30 M nodes for a proof; with
   5 M nodes the gap to the proven optimum is unknown (30 M moved the objective by 0.03 %).
+  `fleet_master_v2` (436 columns) is likewise not exhaustive at 5 M nodes.
+- Fourth campaign (§6.6): of the three levers, the Earth leg was won (404 vs 460–474 kg per ship,
+  70 kg below the references) and the two hop levers were not. The phasing-aware families make
+  member pairs cheap at the collect epoch on paper (98 % under 75 kg in the probe) but the beam
+  still builds deploy tours whose *re-flown* pairs cost 100+ kg three years later (collect hops
+  102 kg median in the v4 fleet, 90 kg in the best fleet, references 66 kg; hops ≤ 75 kg 0.23 vs
+  0.44–0.46), and the joint harvest — 38 attempts, none adopted — cannot buy it back inside
+  13–40-member families. The Earth-leg saving was absorbed by more expensive deploy hops
+  (129 vs 111 kg mean), leaving the v4 average at 498 kg.
 
-Next bottleneck: per-ship mass is now the *only* lever — the fleet rule `N ≤ 2 exp(0.004 M̄)` is
-exactly binding at 15 ≤ 15.08 (average 505 kg). Every 25 kg of average buys one more ship
-(520 kg → 16, 600 kg → 22, the references' 740 kg → 38), and the third campaign showed the
-master will take any ship above the current average and drop anything below it. The gap sits in
-the leg economy of the *whole* tour, not in the assignment: (i) the Earth leg — 371–618 kg
-against 428–503 kg for the references — because our launch grid is 15-day / 30-day coarse and
-the certified-leg calibration only opens ±200 d around a handful of SCvx-flown legs; a
-continuous launch/TOF optimisation of the Earth leg per family (SCvx in the loop, free
-departure v∞ up to 6 km/s) is worth 100–150 kg per ship directly; (ii) hops of 75–150 kg
-against 78 kg median because the co-moving families are defined at one epoch and drift apart
-over the 7–8-year deploy phase — phasing-aware family membership (re-cluster at the deploy
-epoch of each hop) would let the 2.72–2.80 AU families supply 9–10 asteroids per ship at the
-reference hop cost; (iii) with both, the ships that today carry 6–7 asteroids and return 100–
-250 kg of propellant (ships 7, 10–12, 15 in the table) are the ones that extend to 9–10 and
-600+ kg. A GPU-batched Lambert/SCvx pre-screen of Earth legs per family (thousands of
-`(launch, TOF)` pairs at once, allowed under the lock-file protocol once the G4 campaign frees
-the card) is the throughput lever for (i).
+Next bottleneck: the collect hop. Per-ship mass is still the only lever — the fleet rule
+`N ≤ 2 exp(0.004 M̄)` is exactly binding at 16 ≤ 16.03 (average 520 kg); every 25 kg of average
+buys one more ship (535 kg → 17, 600 kg → 22, the references' 740 kg → 38), and the master will
+take any ship above the current average and drop anything below it. Earth legs (404 kg) and
+Earth returns (197 kg) are now at or below the reference cost, deploy hops are within 10–20 kg of
+it, and the *whole* remaining gap is the collect phase: 90–102 kg per collect hop against 66 kg,
+i.e. 170–250 kg per ship over 7 hops, exactly the distance from 500 to 740 kg. What the
+references do that the pipeline does not: (i) deploy tours are chosen so that the *collect* tour
+is cheap — their collect hops (181–187 d, 66 kg) are as cheap as their deploy hops, which means
+the deploy order and epochs are optimised for the return sweep, not the outbound one; the
+collect look-ahead tried here (Lambert at +3 years) does not predict the DP's cheap tours, so the
+next step is to price the collect tour *exactly* in the beam (run the DP re-timer on the
+deploy+collect chain of each surviving partial, or a table of certified collect-pair costs at the
+collect epoch per family) rather than by proxy; (ii) clusters tight enough that the pool of
+collectable miners at the collect epoch is dense (Δa spread 0.02–0.03 AU across the ships that
+share a cluster) — the phasing-aware radius 2.0 families are 13–40 members over 0.06–0.10 AU,
+so re-clustering at radius ≤ 1.0 with the collect-epoch phase weighted higher than the deploy-
+epoch phase is the family-generation change to make; (iii) the master's node cap (5 M) on 436
+columns — a column-generation dual/LP bound, or pruning dominated columns before branching,
+would make it exhaustive and let the incumbent be certified optimal over the archive.
 
 ## 9. How this feeds Paper 2 / OrbitWeaver
 
