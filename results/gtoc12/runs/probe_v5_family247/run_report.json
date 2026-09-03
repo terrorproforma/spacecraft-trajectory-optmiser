@@ -1,0 +1,643 @@
+{
+  "best": {
+    "artifacts": {
+      "solution": "results/gtoc12/runs/probe_v5_family247/fleet/Result.txt"
+    },
+    "elapsed_seconds": 826.0926391940156,
+    "fleet": {
+      "asteroids": [
+        100,
+        5050,
+        12747,
+        17436,
+        27438,
+        29746,
+        30332,
+        30520,
+        36236,
+        38774,
+        42339,
+        49438,
+        55977,
+        58743
+      ],
+      "average_collected_kg": 493.0184804928132,
+      "collected_kg_per_ship": [
+        547.0225872689939,
+        439.01437371663246
+      ],
+      "rule_satisfied": true,
+      "ship_limit": 14.37112668723354,
+      "ships": 2,
+      "total_collected_kg": 986.0369609856264
+    },
+    "independent": {
+      "max_mass_error_kg": 9.754330676514655e-11,
+      "max_position_error_km": 112.67736107094571,
+      "max_velocity_error_km_s": 6.252615435811993e-06,
+      "mined_asteroids": 14,
+      "ok": true,
+      "ship_limit": 14.371126687238531,
+      "ships": 2,
+      "total_mass_kg": 986.0369609858001,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 957.0126183812689
+    },
+    "master": {
+      "collected_kg": 986.0369609856263,
+      "columns": 5,
+      "cooperative": {
+        "bundle_columns": 1,
+        "collector_ships": 0,
+        "deployer_ships": 0,
+        "foreign_collects": 0
+      },
+      "exhaustive": true,
+      "gap_kg": 0.0,
+      "greedy_objective_kg": 957.0126183811175,
+      "lp_bound_kg": 957.0126183811175,
+      "lp_gap_kg": 0.0,
+      "lp_nodes": 0,
+      "lp_relaxations_kg": {
+        "1": 542.8419560427354,
+        "2": 957.0126183811175
+      },
+      "lp_seconds": 0.005835813994053751,
+      "lp_sizes_searched": [],
+      "mean_collected_kg": 493.0184804928131,
+      "nodes": 1,
+      "objective_kg": 957.0126183811175,
+      "proven_optimal": true,
+      "root_bound_kg": 957.0126183811175,
+      "ship_limit": 14.371126687233536,
+      "ships": 2,
+      "upper_bound_kg": 957.0126183811175
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 14,
+      "ok": true,
+      "return_code": 0,
+      "ships": 2,
+      "total_mass_kg": 986.037,
+      "wall_seconds": 0.055467016994953156
+    },
+    "ok": true,
+    "score_kg": 986.037,
+    "viewer_manifest": {
+      "files": {
+        "trajectories.json": {
+          "bytes": 783343,
+          "sha256": "fc8d2b2c5d6987564bbaf20e898f0b12749d04b4a8a604e1aa5426103dc1f2c0"
+        }
+      },
+      "schema_version": "1.0.0",
+      "source": {
+        "bytes": 873428,
+        "path_basename": "Result.txt",
+        "sha256": "ce5d5919841f60aa8bca38d9355cd9cd50b529ff0a14215d4787fed0a3ef3d35"
+      },
+      "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+    }
+  },
+  "budget_marks": {
+    "120_min": {
+      "asteroids": 14,
+      "average_collected_kg": 493.0184804928132,
+      "elapsed_seconds": 824.1364222039992,
+      "path": "results/gtoc12/runs/probe_v5_family247/fleets/fleet_000_02ships/Result.txt",
+      "score_kg": 986.037,
+      "ships": 2
+    },
+    "240_min": {
+      "asteroids": 14,
+      "average_collected_kg": 493.0184804928132,
+      "elapsed_seconds": 824.1364222039992,
+      "path": "results/gtoc12/runs/probe_v5_family247/fleets/fleet_000_02ships/Result.txt",
+      "score_kg": 986.037,
+      "ships": 2
+    },
+    "30_min": {
+      "asteroids": 14,
+      "average_collected_kg": 493.0184804928132,
+      "elapsed_seconds": 824.1364222039992,
+      "path": "results/gtoc12/runs/probe_v5_family247/fleets/fleet_000_02ships/Result.txt",
+      "score_kg": 986.037,
+      "ships": 2
+    },
+    "60_min": {
+      "asteroids": 14,
+      "average_collected_kg": 493.0184804928132,
+      "elapsed_seconds": 824.1364222039992,
+      "path": "results/gtoc12/runs/probe_v5_family247/fleets/fleet_000_02ships/Result.txt",
+      "score_kg": 986.037,
+      "ships": 2
+    }
+  },
+  "bundles": [
+    {
+      "cooperative": {
+        "asteroids": 14,
+        "collected_kg": 986.0369609856264,
+        "collectors_per_deployer": {
+          "3": 0,
+          "4": 0
+        },
+        "cooperative_collects": 0,
+        "deployers_with_collectors": 0,
+        "orphans_left": [],
+        "ships": 2
+      },
+      "earth_legs_certified": 6,
+      "earth_legs_checked": 45,
+      "harvest": {
+        "collected_after_kg": 712.5256673511294,
+        "collected_before_kg": 965.5030800821355,
+        "foreign_collects": 7,
+        "reverted": "collects less than the self-cleaning routes",
+        "rounds": 2,
+        "ships": {
+          "3": {
+            "collects": [
+              44225,
+              42339,
+              17436,
+              29746,
+              30520
+            ],
+            "foreign": [
+              17436,
+              29746,
+              42339
+            ],
+            "stop": "no_reachable_miner"
+          },
+          "4": {
+            "collects": [
+              58743,
+              27438,
+              5050,
+              100,
+              30332
+            ],
+            "foreign": [
+              100,
+              5050,
+              27438,
+              30332
+            ],
+            "stop": "no_reachable_miner"
+          }
+        },
+        "ships_adopted": [
+          3,
+          4
+        ],
+        "ships_certified": 2,
+        "ships_retimed": 2,
+        "uncollected": [
+          12747,
+          33600,
+          36236,
+          38774,
+          49438,
+          55977
+        ]
+      },
+      "label": 247,
+      "members": 20,
+      "peak_rss_mb": 457.7421875,
+      "rejected": 3,
+      "repairs": 2,
+      "ships": [
+        {
+          "asteroids": [
+            30520,
+            100,
+            12747,
+            36236,
+            5050,
+            27438,
+            30332
+          ],
+          "certified_variants": 5,
+          "collected_kg": 547.0225872689939,
+          "final_mass_kg": 536.6438396673075,
+          "foreign_collects": [],
+          "launch_epoch": 64568.0,
+          "orphaned": [],
+          "refined_arcs": 14,
+          "refined_attempt": 0,
+          "refined_rank": 0,
+          "retiming": {
+            "after_kg": 526.488706365503,
+            "attempts": 2,
+            "bans": {},
+            "before_kg": 507.0499657768652,
+            "certified_variants": 1,
+            "wall_seconds": 71.33575503100292
+          },
+          "search": [
+            {
+              "attempt": 0,
+              "banned_earth": 0,
+              "banned_pairs": 0,
+              "best_by_depth": {
+                "2": 191.10198494182066,
+                "3": 265.29774127310066,
+                "4": 368.24093086926763,
+                "5": 432.580424366872,
+                "6": 481.3141683778234,
+                "7": 530.0479123887749,
+                "8": 540.9993155373032
+              },
+              "candidates": 100,
+              "earth_legs": [
+                30520,
+                38774
+              ],
+              "failed_chains": 22,
+              "wall_seconds": 77.46687247400405
+            }
+          ],
+          "slot": 3
+        },
+        {
+          "asteroids": [
+            38774,
+            42339,
+            17436,
+            55977,
+            49438,
+            29746,
+            58743
+          ],
+          "certified_variants": 3,
+          "collected_kg": 439.01437371663246,
+          "final_mass_kg": 565.5158409320393,
+          "foreign_collects": [],
+          "launch_epoch": 64598.0,
+          "orphaned": [],
+          "refined_arcs": 15,
+          "refined_attempt": 0,
+          "refined_rank": 1,
+          "retiming": {
+            "after_kg": 439.01437371663246,
+            "attempts": 2,
+            "bans": {},
+            "before_kg": 394.66119096509243,
+            "certified_variants": 1,
+            "wall_seconds": 55.82973035000032
+          },
+          "search": [
+            {
+              "attempt": 0,
+              "banned_earth": 0,
+              "banned_pairs": 0,
+              "best_by_depth": {
+                "1": 98.61738535249829,
+                "2": 211.90965092402465,
+                "3": 285.1745379876797,
+                "4": 350.71868583162217,
+                "5": 422.17659137577004,
+                "6": 470.6365503080082,
+                "7": 509.2402464065708,
+                "8": 523.2032854209446
+              },
+              "candidates": 137,
+              "earth_legs": [
+                38774,
+                17436,
+                55977,
+                55601
+              ],
+              "failed_chains": 32,
+              "wall_seconds": 78.32026079299976
+            }
+          ],
+          "slot": 4
+        }
+      ],
+      "stopped": "",
+      "wall_seconds": 679.2771155039954
+    }
+  ],
+  "commit": "b4c6b0111d9dcb1b84f9fe460d2b15076d4dfec4",
+  "cpu_only": true,
+  "final_fleet": {
+    "artifacts": {
+      "solution": "results/gtoc12/runs/probe_v5_family247/fleet/Result.txt"
+    },
+    "elapsed_seconds": 826.0926391940156,
+    "fleet": {
+      "asteroids": [
+        100,
+        5050,
+        12747,
+        17436,
+        27438,
+        29746,
+        30332,
+        30520,
+        36236,
+        38774,
+        42339,
+        49438,
+        55977,
+        58743
+      ],
+      "average_collected_kg": 493.0184804928132,
+      "collected_kg_per_ship": [
+        547.0225872689939,
+        439.01437371663246
+      ],
+      "rule_satisfied": true,
+      "ship_limit": 14.37112668723354,
+      "ships": 2,
+      "total_collected_kg": 986.0369609856264
+    },
+    "independent": {
+      "max_mass_error_kg": 9.754330676514655e-11,
+      "max_position_error_km": 112.67736107094571,
+      "max_velocity_error_km_s": 6.252615435811993e-06,
+      "mined_asteroids": 14,
+      "ok": true,
+      "ship_limit": 14.371126687238531,
+      "ships": 2,
+      "total_mass_kg": 986.0369609858001,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 957.0126183812689
+    },
+    "master": {
+      "collected_kg": 986.0369609856263,
+      "columns": 5,
+      "cooperative": {
+        "bundle_columns": 1,
+        "collector_ships": 0,
+        "deployer_ships": 0,
+        "foreign_collects": 0
+      },
+      "exhaustive": true,
+      "gap_kg": 0.0,
+      "greedy_objective_kg": 957.0126183811175,
+      "lp_bound_kg": 957.0126183811175,
+      "lp_gap_kg": 0.0,
+      "lp_nodes": 0,
+      "lp_relaxations_kg": {
+        "1": 542.8419560427354,
+        "2": 957.0126183811175
+      },
+      "lp_seconds": 0.005835813994053751,
+      "lp_sizes_searched": [],
+      "mean_collected_kg": 493.0184804928131,
+      "nodes": 1,
+      "objective_kg": 957.0126183811175,
+      "proven_optimal": true,
+      "root_bound_kg": 957.0126183811175,
+      "ship_limit": 14.371126687233536,
+      "ships": 2,
+      "upper_bound_kg": 957.0126183811175
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 14,
+      "ok": true,
+      "return_code": 0,
+      "ships": 2,
+      "total_mass_kg": 986.037,
+      "wall_seconds": 0.055467016994953156
+    },
+    "ok": true,
+    "score_kg": 986.037,
+    "viewer_manifest": {
+      "files": {
+        "trajectories.json": {
+          "bytes": 783343,
+          "sha256": "fc8d2b2c5d6987564bbaf20e898f0b12749d04b4a8a604e1aa5426103dc1f2c0"
+        }
+      },
+      "schema_version": "1.0.0",
+      "source": {
+        "bytes": 873428,
+        "path_basename": "Result.txt",
+        "sha256": "ce5d5919841f60aa8bca38d9355cd9cd50b529ff0a14215d4787fed0a3ef3d35"
+      },
+      "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+    }
+  },
+  "fleets": [
+    {
+      "asteroids": 14,
+      "average_collected_kg": 493.0184804928132,
+      "elapsed_seconds": 824.1364222039992,
+      "path": "results/gtoc12/runs/probe_v5_family247/fleets/fleet_000_02ships/Result.txt",
+      "score_kg": 986.037,
+      "ships": 2
+    }
+  ],
+  "gpu_used": false,
+  "instance": {
+    "cluster_bands": {
+      "collect_epoch_families": false,
+      "phase_deg": 8.0,
+      "phase_weights": [
+        1.0,
+        1.0
+      ],
+      "phasing_aware": true,
+      "radius": 2.0,
+      "visit_epochs": [
+        65423.75,
+        67980.5
+      ]
+    },
+    "families_priced": [
+      {
+        "cheap_pair_fraction": 0.8166666666666667,
+        "earth_leg_kg": 304.7076229385806,
+        "hop_kg": 60.22902779654313,
+        "hop_kg_by_epoch": [
+          56.32396106439349,
+          64.13409452869278
+        ],
+        "label": 247,
+        "members": 20.0,
+        "score": 545.6237341247531
+      }
+    ],
+    "instance_id": "gtoc12-full-catalogue",
+    "pool_asteroids": 10612,
+    "pool_filter": {
+      "a_au": [
+        2.2,
+        3.0
+      ],
+      "e_max": 0.15,
+      "i_max_deg": 8.0
+    }
+  },
+  "master": {
+    "collected_kg": 986.0369609856263,
+    "columns": 5,
+    "cooperative": {
+      "bundle_columns": 1,
+      "collector_ships": 0,
+      "deployer_ships": 0,
+      "foreign_collects": 0
+    },
+    "exhaustive": true,
+    "gap_kg": 0.0,
+    "greedy_objective_kg": 957.0126183811175,
+    "lp_bound_kg": 957.0126183811175,
+    "lp_gap_kg": 0.0,
+    "lp_nodes": 0,
+    "lp_relaxations_kg": {
+      "1": 542.8419560427354,
+      "2": 957.0126183811175
+    },
+    "lp_seconds": 0.005835813994053751,
+    "lp_sizes_searched": [],
+    "mean_collected_kg": 493.0184804928131,
+    "nodes": 1,
+    "objective_kg": 957.0126183811175,
+    "proven_optimal": true,
+    "rejected": [
+      {
+        "identifier": 0,
+        "label": "f247_s3",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 542.8419560427354
+      },
+      {
+        "identifier": 1,
+        "label": "f247_s3_v0",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 502.9723591852357
+      },
+      {
+        "identifier": 2,
+        "label": "f247_s4",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 414.170662338382
+      },
+      {
+        "identifier": 3,
+        "label": "f247_s4_v0",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 372.90746588892813
+      }
+    ],
+    "root_bound_kg": 957.0126183811175,
+    "selected": [
+      {
+        "certified": true,
+        "collected_kg": 986.0369609856263,
+        "collects": [
+          100,
+          5050,
+          12747,
+          17436,
+          27438,
+          29746,
+          30332,
+          30520,
+          36236,
+          38774,
+          42339,
+          49438,
+          55977,
+          58743
+        ],
+        "deploys": [
+          100,
+          5050,
+          12747,
+          17436,
+          27438,
+          29746,
+          30332,
+          30520,
+          36236,
+          38774,
+          42339,
+          49438,
+          55977,
+          58743
+        ],
+        "foreign": [],
+        "identifier": 4,
+        "label": "f247",
+        "members": [
+          "f247_s3",
+          "f247_s4"
+        ],
+        "ships": 2,
+        "slot": 3
+      }
+    ],
+    "ship_limit": 14.371126687233536,
+    "ships": 2,
+    "upper_bound_kg": 957.0126183811175
+  },
+  "memory_bound_mb": 915.484375,
+  "peak_rss_mb": 457.7421875,
+  "run_id": "probe_v5_family247",
+  "settings": {
+    "beam_width": 24,
+    "bonus_weights": true,
+    "budget_seconds": Infinity,
+    "collect_dp": true,
+    "collect_dp_propellant_weight": 1.0,
+    "collect_lookahead_weight": 0.0,
+    "collector_harvest": true,
+    "earth_authority_ratio": 0.95,
+    "earth_inflation": 0.9,
+    "earth_leg_checks": 12,
+    "earth_leg_continuous": true,
+    "earth_leg_refinements": 8,
+    "earth_leg_tofs": null,
+    "earth_legs_per_ship": 4,
+    "hop_authority_ratio": 0.55,
+    "launch_epochs": null,
+    "launch_step_days": 30.0,
+    "launch_window_days": 1095.75,
+    "max_deploys": 10,
+    "max_ships": 100,
+    "neighbours": 64,
+    "node_days": 2.0,
+    "orphan_credit": 1.0,
+    "orphan_margin_days": 400.0,
+    "refine_top": 2,
+    "retime_attempts": 4,
+    "retime_budget_seconds": 900.0,
+    "retime_rounds": 6,
+    "retime_step_days": 15.0,
+    "scvx_iterations": 40,
+    "search_retries": 2,
+    "seed": 0,
+    "ships": 4,
+    "time_budget_seconds": 2400.0,
+    "workers": 1
+  },
+  "status": "scored",
+  "timeline": [
+    {
+      "columns": 5,
+      "elapsed_seconds": 824.1366171220143,
+      "families_priced": 1,
+      "incumbent_score_kg": 986.037,
+      "master_collected_kg": 986.0369609856263,
+      "master_exhaustive": true,
+      "master_objective_kg": 957.0126183811175,
+      "master_ships": 2,
+      "peak_rss_mb": 457.7421875,
+      "verified_ok": true,
+      "verified_score_kg": 986.037,
+      "worker_peak_rss_mb": 457.7421875
+    }
+  ],
+  "wall_seconds_total": 826.161655436008,
+  "worker_peak_rss_mb": 457.7421875
+}
