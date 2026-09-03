@@ -732,6 +732,10 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         return entry
 
     def on_result(bundle) -> None:
+        problem = bundle.consistent()
+        if problem:  # never let one family's inconsistency end the campaign
+            bundle.rejected.append({"reason": "inconsistent bundle at master", "detail": problem})
+            bundle.ships.clear()
         summary = bundle.summary()
         worker_rss.append(bundle.peak_rss_mb)
         cluster_dir = output_dir / "clusters" / f"family_{bundle.label:04d}"

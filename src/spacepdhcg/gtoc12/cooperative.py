@@ -56,6 +56,28 @@ class MinerPool:
         for asteroid in plan.collect_epochs:
             self.collected[asteroid] = ship
 
+    def register_all(self, plans: list[tuple[RoutePlan, int]]) -> None:
+        """Register several plans in a deployer-before-collector order.
+
+        A repaired bundle can have ship 1 collecting a miner ship 2 deployed, so slot order is not
+        a valid registration order; plans are registered as soon as every foreign collect they
+        make is deployed.  When no plan qualifies the first remaining one is registered so the
+        usual error is raised.
+        """
+
+        remaining = list(plans)
+        while remaining:
+            ready = [
+                (plan, ship)
+                for plan, ship in remaining
+                if all(a in plan.deploy_epochs or a in self.deployed for a in plan.collect_epochs)
+            ]
+            if not ready:
+                ready = remaining[:1]
+            for plan, ship in ready:
+                self.register(plan, ship)
+                remaining.remove((plan, ship))
+
     def orphans(self) -> dict[int, float]:
         """Deployed-but-uncollected miners: asteroid -> deploy epoch (sorted by asteroid)."""
 

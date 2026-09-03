@@ -535,6 +535,57 @@ def test_orphan_repair_keeps_the_better_of_dropped_and_reverted(monkeypatch) -> 
     assert 5 not in ship.route.plan.deploy_epochs and not ship.route.plan.orphaned
 
 
+def test_pool_register_all_orders_deployers_before_collectors_and_bundle_consistency() -> None:
+    from spacepdhcg.gtoc12.bundles import BundleShip, ClusterBundle
+
+    launch = T0 + 100.0
+    arrive = launch + 500.0
+    # ship 1 collects 9, which ship 2 deploys (a repaired bundle can look like this)
+    collector_legs = (
+        PlannedLeg(EARTH_ID, 5, launch, arrive, 6.0, 1.0, "earth_out"),
+        PlannedLeg(5, 9, arrive + 3000.0, arrive + 3200.0, 1.0, 1.2, "collect_hop"),
+        PlannedLeg(9, EARTH_ID, arrive + 3300.0, arrive + 3800.0, 6.0, 1.0, "earth_return"),
+    )
+    collector = RoutePlan(
+        collector_legs,
+        {5: arrive},
+        {5: arrive + 3000.0, 9: arrive + 3300.0},
+        {5: 300.0, 9: 200.0},
+        500.0,
+        1200.0,
+        foreign_deploy_epochs={9: arrive + 400.0},
+    )
+    deployer_legs = (
+        PlannedLeg(EARTH_ID, 9, launch, arrive + 400.0, 6.0, 1.0, "earth_out"),
+        PlannedLeg(9, 8, arrive + 430.0, arrive + 600.0, 1.0, 1.2, "deploy_hop"),
+        PlannedLeg(8, EARTH_ID, arrive + 3300.0, arrive + 3800.0, 6.0, 1.0, "earth_return"),
+    )
+    deployer = RoutePlan(
+        deployer_legs,
+        {9: arrive + 400.0, 8: arrive + 600.0},
+        {8: arrive + 3300.0},
+        {8: 300.0},
+        500.0,
+        1200.0,
+    )
+    pool = MinerPool()
+    with pytest.raises(ValueError, match="never deployed"):
+        pool.register(collector, 1)
+    pool = MinerPool()
+    pool.register_all([(collector, 1), (deployer, 2)])
+    assert pool.collected[9] == 1 and pool.deployed[9][1] == 2 and pool.orphans() == {}
+    bundle = ClusterBundle(
+        0,
+        (5, 8, 9),
+        [BundleShip(1, _proxy_refine(collector)), BundleShip(2, _proxy_refine(deployer))],
+    )
+    assert bundle.consistent() == ""
+    assert bundle.cooperative_statistics()["cooperative_collects"] == 1
+    # without the deployer the collector is stranded and the bundle says so
+    stranded = ClusterBundle(0, (5, 9), [BundleShip(1, _proxy_refine(collector))])
+    assert "never deployed" in stranded.consistent()
+
+
 def test_earth_leg_record_arrival() -> None:
     leg = EarthLeg(5, T0, 500.0, 6.0, 450.0)
     assert leg.arrival_epoch == T0 + 500.0 and leg.certified

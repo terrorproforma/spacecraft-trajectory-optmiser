@@ -280,9 +280,18 @@ class ClusterBundle:
 
     def pool(self) -> MinerPool:
         pool = MinerPool()
-        for ship in self.ships:
-            pool.register(ship.route.plan, ship.slot)
+        pool.register_all([(ship.route.plan, ship.slot) for ship in self.ships])
         return pool
+
+    def consistent(self) -> str:
+        """Empty when the emitted routes form a valid pool (each miner deployed once, every
+        collect matched to a deploy in the bundle); the error text otherwise."""
+
+        try:
+            self.pool()
+        except ValueError as error:
+            return str(error)
+        return ""
 
     def cooperative_statistics(self) -> dict[str, Any]:
         """Orphans left, foreign collects and collectors per deployer for the emitted routes."""
@@ -724,6 +733,18 @@ def _repair_orphans(
             and not v.plan.orphaned
             and not v.plan.foreign_deploy_epochs
         )
+        # miners other ships of the bundle already collect from this deployer must stay deployed,
+        # otherwise the repair strands a collector (a variant that drops them is a last resort)
+        required = {
+            a
+            for s in bundle.ships
+            if s.slot != deployer_slot
+            for a in s.route.plan.foreign_deploy_epochs
+            if a in deployer.route.plan.deploy_epochs
+        }
+        keeping = [item for item in options if required <= set(item[0].plan.deploy_epochs)]
+        if keeping:
+            options = keeping
         if not options:
             bundle.repairs.append(
                 {"asteroid": asteroid, "deployer": deployer_slot, "kind": "unrepaired"}
@@ -741,7 +762,7 @@ def _repair_orphans(
     # the emitted routes must be mutually consistent (dropping a deployer's visit may have
     # orphaned nothing else, but a reverted deployer can strand a collector's foreign collect)
     deployed = {a for s in bundle.ships for a in s.route.plan.deploy_epochs}
-    for ship in bundle.ships:
+    for ship in list(bundle.ships):
         stranded = [a for a in ship.route.plan.foreign_deploy_epochs if a not in deployed]
         if stranded:
             clean = [
@@ -752,6 +773,17 @@ def _repair_orphans(
                 bundle.repairs.append(
                     {"collector": ship.slot, "kind": "reverted_stranded", "asteroids": stranded}
                 )
+            else:
+                bundle.ships.remove(ship)
+                bundle.repairs.append(
+                    {"collector": ship.slot, "kind": "removed_stranded", "asteroids": stranded}
+                )
+    # last resort: a bundle the pool rejects is not emitted at all (the master would trip on it)
+    problem = bundle.consistent()
+    if problem:
+        bundle.rejected.append({"reason": "inconsistent bundle", "detail": problem})
+        bundle.repairs.append({"kind": "bundle_discarded", "detail": problem})
+        bundle.ships.clear()
 
 
 # -- clusters and parallel pricing -------------------------------------------------------------
