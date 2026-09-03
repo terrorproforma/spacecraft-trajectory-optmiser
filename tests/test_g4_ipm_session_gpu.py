@@ -60,3 +60,17 @@ def test_pure_gpu_ipm_session_constructs_qoco_and_returns_solver_dispositions() 
     assert set(ipm["dispositions"]) <= {"qualified", "unqualified"}
     assert "executor_defect" not in ipm["dispositions"]
     assert "numerical" not in ipm["dispositions"]
+    # Amendment single-gpu-v1.2 rule A: the session ran QOCO with its native default
+    # equilibration (ruiz_iters = 0 at the pinned commit), echoed that selection on every
+    # attempt with the raw QOCO status code, and recorded scaling_mode not_applicable_ipm_native.
+    assert ipm["policy_amendment"] == "single-gpu-v1.2"
+    assert ipm["ipm_equilibration"] == {
+        "mode": "qoco_native_default",
+        "ruiz_iterations": 0,
+        "requested_ruiz_iterations": 0,
+        "scaling_mode": "not_applicable_ipm_native",
+    }
+    assert len(ipm["qoco_status_codes"]) == 9
+    # QOCO_SOLVED (1) or QOCO_SOLVED_INACCURATE (2) behind every solver disposition; never
+    # QOCO_NUMERICAL_ERROR (3) or QOCO_MAX_ITER (4) on this known-good coordinate.
+    assert all(isinstance(code, int) and code in (1, 2) for code in ipm["qoco_status_codes"])

@@ -1,0 +1,438 @@
+{
+  "schema_version": "1.0.0",
+  "amendment_id": "single-gpu-v1.2",
+  "title": "Preregistered claim-core amendment: IPM baseline equilibration recorded per attempt (QOCO native default), wall-clock deadline classification for uninterruptible solves, N=2000 hard bound recorded unchanged",
+  "frozen_at": "2026-09-03T06:45:00Z",
+  "preregistered_before_results": true,
+  "frozen_before_any_group_result_inspected": "Frozen while checkpoint build-integration-report/g4-claim-core-ccd5596 (amendment v1.1) held only pure-gpu-ipm groups; no group has run under this amendment. The v1.1 IPM records were inspected only to establish the rule-A probe evidence below and are quarantined as the diagnostic stratum ipm_no_equilibration_v1_1, never as H6 evidence.",
+  "supersedes": {
+    "amendment_id": "single-gpu-v1.1",
+    "path": "benchmarks/g4_claim_core_amendment_v1_1.json",
+    "sha256": "c691467e77367c63d2ba4b0adc1b290d3e4d731f360cbccae45a7d3cf5b8a1f5"
+  },
+  "inherited_from_v1_1": [
+    "contamination",
+    "deterministic_replay",
+    "censoring",
+    "schedule"
+  ],
+  "amends": {
+    "campaign_scope_id": "single-gpu-v1",
+    "claim_core_campaign_id": "g4-h5-h6-claim-core-v1",
+    "claim_core_path": "benchmarks/g4_h5_h6_claim_core.json",
+    "claim_core_sha256": "40dc217467ffe32e919d4f901943e0200f69e302cf57cd15ccdfa88bfa0c8d0b",
+    "policy_path": "benchmarks/g4_policy.json",
+    "policy_sha256": "9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024",
+    "execution_contract": "docs/G4_EXECUTION_CONTRACT.md"
+  },
+  "record_field": {
+    "name": "policy_amendment",
+    "value": "single-gpu-v1.2"
+  },
+  "record_field_scope": [
+    "checkpoint metadata (policy_amendment, policy_amendment_sha256)",
+    "every raw attempt record emitted by the executor",
+    "every execution_group_result record",
+    "decision and publication-aggregate records (notes)"
+  ],
+  "unchanged": [
+    "quality tiers, tolerances and matched-quality gates (benchmarks/g4_policy.json unchanged)",
+    "the twenty evaluation seeds and physical instance identities",
+    "two same-session warm-ups followed by seven measured attempts per group",
+    "group identities (g4-group-v1 content addresses) and the frozen solver_order rotation",
+    "one process, one CUDA context and one persistent workspace per group",
+    "bootstrap seed, sample count, confidence and decision thresholds",
+    "the claim core resolves H5 and H6 only and feeds no F01-F12/T01-T08 product",
+    "every v1.1 rule (run-and-flag contamination, deterministic replay, 120 s / 200k censoring, 10% censoring-sensitivity stratum) and the amended 396-group schedule identity",
+    "the campaign scaling_mode axis and its PDHCG meaning for adaptive, fixed-tight and the PDHCG stage of hybrid-pdhcg-ipm"
+  ],
+  "ipm_equilibration": {
+    "rule": "A",
+    "policies": [
+      "pure-gpu-ipm",
+      "hybrid-pdhcg-ipm"
+    ],
+    "fairness_basis": "docs/COMPARATIVE_SOLVER_CAMPAIGN.md: each system runs its native algorithm at documented default/best-feasible settings; matched final quality, not matched internals. The IPM baseline therefore ignores the PDHCG-oriented scaling_mode axis and uses QOCO's own equilibration setting.",
+    "mode": "qoco_native_default",
+    "ruiz_iterations": 0,
+    "selection_rule": "The executor hands QOCO settings.ruiz_iters = ruiz_iterations for every IPM solve (pure-gpu-ipm attempts and the IPM stage of hybrid-pdhcg-ipm) regardless of the coordinate scaling_mode; each raw attempt echoes amendment.ipm_equilibration {mode, ruiz_iterations, requested_ruiz_iterations, scaling_mode, qoco_status_code}. Non-IPM policies carry ipm_equilibration = null.",
+    "recorded_scaling_mode": {
+      "pure-gpu-ipm": "not_applicable_ipm_native",
+      "hybrid-pdhcg-ipm": "coordinate_axis_retained_for_pdhcg_stage"
+    },
+    "qoco_default_at_pinned_commit": {
+      "commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+      "ruiz_iters": 0,
+      "source": "src/qoco_api.c set_default_settings: settings->ruiz_iters = 0",
+      "library_sha256": "3db214900fcdf9fbea0200305328c2a8e8fafcba0b896293f3dea8ba52e131ac",
+      "note": "The request assumed QOCO's default is 'Ruiz on'. At the pinned commit the shipped default is no Ruiz equilibration; 'native default' therefore means ruiz_iters = 0. Ruiz-on (5 iterations) was probed and is not selected: see probe_evidence."
+    },
+    "probe_evidence": {
+      "coordinate": "P1-E-low-thrust N=100 claim-core group a8bdf61e (conditioning 4.0, the failing coordinate) and the same coordinate at conditioning 0.0; foreground, contaminated by a foreign Windows compute job, attempt deadline 120 s, cap 200000",
+      "adaptive_conditioning_interpretation": "'one adaptive-conditioning coordinate' was read as the other level of the claim-core conditioning axis (0.0) for the same family/scale; hybrid-pdhcg-ipm at conditioning 4.0 was also probed.",
+      "probes": [
+        {
+          "label": "campaign_v1_1_ruiz0_cond4",
+          "library": "pinned 3db21490",
+          "ruiz_iterations": 0,
+          "policy": "pure-gpu-ipm",
+          "conditioning": 4.0,
+          "attempts": 8,
+          "disposition": "numerical (8/8; group hit the 1140 s group deadline, 1 unrun)",
+          "qoco_status": "numerical error (QOCO status 5) on every solve",
+          "qoco_iterations": [
+            131,
+            195,
+            27,
+            180,
+            172,
+            200,
+            108,
+            115
+          ],
+          "wall_seconds": [
+            140.5,
+            205.2,
+            28.0,
+            194.4,
+            188.7,
+            212.8,
+            117.4,
+            127.5
+          ],
+          "note": "under rule B the 7 attempts with wall > 120 s become timeout"
+        },
+        {
+          "label": "ruiz5_cond4_pinned",
+          "library": "pinned 3db21490",
+          "ruiz_iterations": 5,
+          "policy": "pure-gpu-ipm",
+          "conditioning": 4.0,
+          "attempts": 6,
+          "disposition": "numerical (6/6)",
+          "qoco_status": "numerical error at iteration 8 on every solve, NaN iterates",
+          "qoco_iterations": [
+            8,
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "wall_seconds": [
+            49.1,
+            43.6,
+            46.3,
+            43.4,
+            44.9,
+            46.6
+          ],
+          "note": "the NaNs are a QOCO CUDA-backend Ruiz defect, not data scaling"
+        },
+        {
+          "label": "ruiz5_cond4_patched",
+          "library": "scratch build with both Ruiz defects fixed (not the pinned library)",
+          "ruiz_iterations": 5,
+          "policy": "pure-gpu-ipm",
+          "conditioning": 4.0,
+          "attempts": 1,
+          "disposition": "numerical",
+          "qoco_status": "numerical error after 54 iterations, best iterate 9 restored, no NaN",
+          "qoco_iterations": [
+            54
+          ],
+          "wall_seconds": [
+            183.0
+          ],
+          "note": "equilibration removes the NaNs but the solve still fails and is slower"
+        },
+        {
+          "label": "ruiz5_cond0_patched",
+          "library": "scratch build with both Ruiz defects fixed",
+          "ruiz_iterations": 5,
+          "policy": "pure-gpu-ipm",
+          "conditioning": 0.0,
+          "attempts": 6,
+          "disposition": "numerical (6/6)",
+          "qoco_status": "numerical error, best iterate 11-16 restored, no NaN",
+          "qoco_iterations": [
+            24,
+            21,
+            24,
+            24,
+            23,
+            24
+          ],
+          "wall_seconds": [
+            88.2,
+            43.1,
+            39.8,
+            44.5,
+            37.9,
+            35.7
+          ],
+          "note": "Ruiz-on turns a converging coordinate into a failing one"
+        },
+        {
+          "label": "ruiz0_cond0_patched",
+          "library": "scratch build with both Ruiz defects fixed",
+          "ruiz_iterations": 0,
+          "policy": "pure-gpu-ipm",
+          "conditioning": 0.0,
+          "attempts": 3,
+          "disposition": "qualified (3/3) at 9-12 SCvx outer iterations",
+          "qoco_status": "solved, 11-13 iterations per subproblem",
+          "qoco_iterations": [
+            13,
+            11,
+            12,
+            11,
+            11,
+            11
+          ],
+          "wall_seconds": [
+            155.8,
+            132.7,
+            128.1
+          ],
+          "note": "walls exceed 120 s under contamination; rule B classifies these timeout"
+        },
+        {
+          "label": "hybrid_cond4_ruiz5_and_ruiz0",
+          "library": "scratch build with both Ruiz defects fixed",
+          "ruiz_iterations": [
+            5,
+            0
+          ],
+          "policy": "hybrid-pdhcg-ipm",
+          "conditioning": 4.0,
+          "attempts": 6,
+          "disposition": "timeout (6/6) in the PDHCG stage, handoff never eligible",
+          "qoco_status": "no QOCO workspace created",
+          "qoco_iterations": [],
+          "wall_seconds": [
+            120.0,
+            120.1,
+            120.1,
+            120.1,
+            120.0,
+            120.1
+          ],
+          "note": "equilibration cannot matter here; the IPM stage is never reached"
+        }
+      ],
+      "conclusion": "QOCO native equilibration (Ruiz) does not rescue the failing P1-E N=100 conditioning-4.0 coordinate: with the pinned library it produces NaN iterates (QOCO defect); with the defects patched it still ends in numerical error and is slower; on the converging conditioning-0.0 coordinate it turns qualified solves into numerical failures. The conditioning-4.0 IPM result stands as a genuine IPM negative on this problem class. The amendment selects QOCO's actual pinned default (ruiz_iters = 0) as the native baseline and records it on every IPM attempt."
+    },
+    "qoco_cuda_ruiz_defects": [
+      {
+        "location": "src/equilibration.c ruiz_equilibration",
+        "defect": "safe_div(1.0, 0.0) returns QOCOFloat_MAX for a zero-infinity-norm row or column, so structurally empty rows of G/A (present in the SCvx formulation) receive a DBL_MAX scale and the scaled problem overflows to NaN",
+        "status_observed": "numerical error (5) at iteration 8 with NaN residuals",
+        "scratch_fix": "ruiz_inverse_or_one(): zero norm -> scale 1.0"
+      },
+      {
+        "location": "algebra/cuda/cuda_linalg.cu scale_arrayf",
+        "defect": "no host fallback: Ruiz runs on host data but scale_arrayf only launches a device kernel, so P and c are never scaled while the bookkeeping scale k is, collapsing the objective scale",
+        "status_observed": "objective overflow / DBL_MAX cost with Ruiz > 0",
+        "scratch_fix": "host-pointer loop when the array is not device memory"
+      }
+    ],
+    "not_papered_over": "The NaNs were traced to the two defects above rather than to problem data. The pinned library is unchanged for the campaign; the scratch fixes were used only to separate 'Ruiz is broken in this build' from 'Ruiz does not help this problem class'."
+  },
+  "deadline_classification": {
+    "rule": "B",
+    "criterion": "measured_wall_exceeds_attempt_deadline",
+    "disposition": "timeout",
+    "never": "numerical",
+    "applies_to": "every backend",
+    "executor_defect_precedence": true,
+    "statement": "An IPM (or any) solve may be uninterruptible. If a launched attempt's measured wall time exceeds the attempt deadline, the attempt is classified timeout with reason wall_exceeded_deadline; the completed solve's residuals, iteration counts and the solver's own disposition are attached as diagnostics (amendment.deadline_classification.solver_disposition). An executor_defect keeps its disposition.",
+    "record_fields": [
+      "amendment.deadline_classification.rule",
+      "amendment.deadline_classification.wall_exceeded_deadline",
+      "amendment.deadline_classification.attempt_deadline_seconds",
+      "amendment.deadline_classification.measured_wall_seconds",
+      "amendment.deadline_classification.solver_disposition"
+    ],
+    "statistics": "wall-clock timeouts are censoring, identical to a cooperative timeout"
+  },
+  "hard_bound": {
+    "rule": "C",
+    "intervals": 2000,
+    "unchanged": true,
+    "behaviour": "kill + one restart + error record",
+    "statement": "N=2000 groups keep the single-gpu-v1 hard bound: an executor that exceeds the group deadline is killed, restarted exactly once (restart_generation 1), and a second breach produces an error record for the group."
+  },
+  "diagnostic_strata": {
+    "ipm_no_equilibration_v1_1": {
+      "retained": true,
+      "excluded_from": [
+        "H6"
+      ],
+      "cited_in": "docs/G4_GATE_REPORT.md",
+      "policies": [
+        "pure-gpu-ipm"
+      ],
+      "source_checkpoints": [
+        "build-integration-report/g4-claim-core-ccd5596"
+      ],
+      "reason": "pure-gpu-ipm records taken under amendment v1.1 before rule A recorded the equilibration selection and before rule B existed; the executor was correct but the records are not comparable to v1.2 records",
+      "ledger_action": "label-stratum (state diagnostic, disposition ipm_no_equilibration_v1_1)"
+    }
+  },
+  "contamination": {
+    "policy": "run_and_flag",
+    "superseded_policy": "wait_for_idle_then_quarantine_and_rerun (single-gpu-v1 scheduler default)",
+    "attempt_flag": "contaminated",
+    "rerun_required": false,
+    "rule": "A measured or warm-up attempt whose execution window overlaps any monitor sample reporting foreign GPU compute (a foreign WSL /dev/dxg holder with CUDA devices visible, or a host compute-only context with non-zero SM or memory utilization) is flagged contaminated=true. Its disposition and quality metrics are retained; its timing and energy are invalid for statistics.",
+    "detection": {
+      "before_during_after": "boundary samples before and after the group plus ~1 s probes during it",
+      "wsl_limitation": "WSL2 nvidia-smi cannot enumerate foreign PIDs; foreign host processes are read from Windows nvidia-smi.exe pmon (SM%/MEM% per PID)",
+      "utilization_deltas": "GPU utilization, memory and power are recorded at both boundaries and at every probe; the group record stores the before/during/after utilization delta",
+      "lock_file": "/home/angus/.spacepdhcg-gpu.lock",
+      "lock_file_rule": "the worker holds the shared advisory lock with a JSON payload (pid, campaign, group_id, started) for the whole group and records any foreign payload found in it"
+    },
+    "statistics": "Contaminated measured attempts never enter a timing or energy statistic or a paired bootstrap; they remain in disposition and quality counts. Every H5/H6 coordinate row reports the pair count n actually used, the contaminated count per policy, and censoring, so a reduced sample is visible rather than imputed."
+  },
+  "deterministic_replay": {
+    "disposition": "timeout_deterministic_replay",
+    "failure_class": "timeout",
+    "trigger": "warm-up/0, warm-up/1 and measured/0 of one group each reach the attempt deadline (disposition timeout, actually launched) with identical trace hashes",
+    "trace_hash_fields": [
+      "disposition",
+      "inner_iterations",
+      "outer_iterations",
+      "canonical_residual",
+      "dynamics_residual",
+      "path_residual",
+      "terminal_residual",
+      "virtual_control_residual",
+      "checkpoints[phase,requested_tolerance,achieved_residual,accepted,re_solved]"
+    ],
+    "trace_hash_algorithm": "fnv1a64",
+    "trace_string": "disposition|inner_iterations|outer_iterations|canonical_residual|dynamics_residual|path_residual|terminal_residual|virtual_control_residual|phase:requested_tolerance:achieved_residual:accepted:re_solved;... (doubles as %.17g)",
+    "action": "measured/1..6 are recorded unlaunched with disposition timeout_deterministic_replay, replay_source_attempt_id = <group>/measured-0, the source trace and zero wall time; they are not executed",
+    "fallback": "if any of the three traces differ, all seven measured attempts are executed",
+    "statistics": "replayed attempts count as timeout censoring; they never enter a timing statistic"
+  },
+  "censoring": {
+    "claim_core": {
+      "attempt_deadline_seconds": 120,
+      "inner_iteration_cap": 200000
+    },
+    "original": {
+      "attempt_deadline_seconds": 600,
+      "inner_iteration_cap": 1000000
+    },
+    "scope": "claim core only; the full G4 ledger keeps the original values",
+    "inner_iteration_cap_rule": "every inner PDHCG iteration limit of the policy (fixed-tight limit, adaptive polish limit, final polish limit) becomes min(limit, cap); limits already below the cap are unchanged",
+    "group_deadline_rule": "9 x attempt deadline + 60 s, as in single-gpu-v1",
+    "sensitivity_stratum": {
+      "name": "censoring_sensitivity",
+      "fraction": 0.1,
+      "stratification": [
+        "family",
+        "intervals",
+        "policy"
+      ],
+      "groups_per_stratum": 2,
+      "selection": "sha256(selection_seed + '|' + group_id), lowest two per stratum",
+      "selection_seed": "single-gpu-v1.1-censoring-sensitivity",
+      "settings": {
+        "attempt_deadline_seconds": 600,
+        "inner_iteration_cap": 1000000
+      },
+      "twin_identity": "same coordinate plus censoring_stratum=censoring_sensitivity (distinct g4-group-v1 id, same physical instance)",
+      "group_count": 36,
+      "group_ids": {
+        "P1-C-pd3/20/adaptive": [
+          "g4-group-v1-5cd96f8d860671724ebe74d85bc6e6a8ec652c6c16e53b2277c2f7cc037082a2",
+          "g4-group-v1-6fb8acfee74c06438354bc1bffa87285f4128b7679e8f06c60106bf932519ba6"
+        ],
+        "P1-C-pd3/20/fixed-tight": [
+          "g4-group-v1-edb097cea5aaf7396f3e2cb40c521cff448eb0641bf950e781e134bfe32bef7e",
+          "g4-group-v1-9df6a68d6084f9c9aa60593f9ae5970841d1aa4ae42530e14b1589ebd9316731"
+        ],
+        "P1-C-pd3/50/adaptive": [
+          "g4-group-v1-292fe850913379422c6b8a9cc3f81059a4b590a7cdc4a70679388010de3304e4",
+          "g4-group-v1-5bd550c05fb1648b5161b1825a61ae74e5c4db4da73737107860fb66bcf06209"
+        ],
+        "P1-C-pd3/50/fixed-tight": [
+          "g4-group-v1-5b84d59a7bb264b80f1f7eeeb9ae94bb848d4720a81ff6bd9bc5610ab42f1f20",
+          "g4-group-v1-4525c8323efe0a2684b8c93aea52e953d1c944bb5b06d0f8378f7d0670b74957"
+        ],
+        "P1-C-pd3/100/adaptive": [
+          "g4-group-v1-ae9a2d16d16de1ca30916d7f8a0c6268b72d07f57715f0dacacc725f8831646d",
+          "g4-group-v1-da32ea2ff5fc511772d70e201611186f0f931a484fbb024fcd9c627795846da4"
+        ],
+        "P1-C-pd3/100/fixed-tight": [
+          "g4-group-v1-2f79e358a64007ce11212b3469516fca637d88ccdd981507a62246d4ede64afd",
+          "g4-group-v1-5eba2c912c5b8b92e3ac18bd0f84de2734a0721d4e18cb2ecc1917c6a0ecd14f"
+        ],
+        "P1-E-low-thrust/100/adaptive": [
+          "g4-group-v1-b425b9f7cfa32e31a40564278dcea503309a4db29013eac2e81d069281253b9b",
+          "g4-group-v1-da8e9ceda266f75cb072411731cb4a119e30d19e83459da4ebddc711171d0ade"
+        ],
+        "P1-E-low-thrust/100/fixed-tight": [
+          "g4-group-v1-0ebe0f28d497720a5e254254653665ae0b95bebc2c440ea9c72de1ca5e438dba",
+          "g4-group-v1-4f388a977672faf0d054eb31b6799100b94cbfa4f4d2fd0cedbc0fcf3229f933"
+        ],
+        "P1-E-low-thrust/100/hybrid-pdhcg-ipm": [
+          "g4-group-v1-a9901a8baa88bab044861d36bfa436bf45dc451c5e35feab1c3721d1acd8715a",
+          "g4-group-v1-63970baa4e80e16945957089169c0bdae94262f110ec67817c83b9922bf2a3ea"
+        ],
+        "P1-E-low-thrust/100/pure-gpu-ipm": [
+          "g4-group-v1-8e039f9a6459d9baf43a7a019b1eb7da12e7a320352ce4db336294d46103c8fe",
+          "g4-group-v1-d0a18ebe45d512b531956f3f42ca53a146627af56143281fd2216c19745966d0"
+        ],
+        "P1-E-low-thrust/500/adaptive": [
+          "g4-group-v1-76cc752c3081f4353af799a3766789f8ef52c2bc730f51760ebdb9b961e4fb8d",
+          "g4-group-v1-c0009759bc603a5ac49fd0852f91b3edb6d6833f45884dc8eb68ee18d13b5de1"
+        ],
+        "P1-E-low-thrust/500/fixed-tight": [
+          "g4-group-v1-c0d8b6793d4f6a00dfc80bcc231526d995ceb9520f6f8181c8726979971735a7",
+          "g4-group-v1-6c71765792a80bfcd33c40cb2ee33e0f1405e01fec7e7c553c1b6ddd78c62778"
+        ],
+        "P1-E-low-thrust/500/hybrid-pdhcg-ipm": [
+          "g4-group-v1-0fa9cec4dc2e7ec1f10b94ddbc13dd0aafca61d9e91ad7a7b2522a8ef86e2a08",
+          "g4-group-v1-b488e6506bbb5868d214ceed21fec918559bd6b1cb1bf7faa28fa5c7548236e9"
+        ],
+        "P1-E-low-thrust/500/pure-gpu-ipm": [
+          "g4-group-v1-bb3e6a47f0b9a672d3d6ec88b06e74c4150a76ac13f52b0c53756e0a65d84adf",
+          "g4-group-v1-713dc0d1946284c3bcb5c9b2b39f7fb90157f71be55b63bbc1551c8e4cad69f9"
+        ],
+        "P1-E-low-thrust/2000/adaptive": [
+          "g4-group-v1-178163e40e182e1a9ec7b910047d792b866303204a4e6e94a5bfc4b084a358b6",
+          "g4-group-v1-6cac90769f89f43f15e32a0b986dc4d6d9bde9d338babc02f2aa34ac570a18a3"
+        ],
+        "P1-E-low-thrust/2000/fixed-tight": [
+          "g4-group-v1-014e9f4092857cfb812c1972d1f9e04c7fc8e4cf808cbb51d5ab75333b301ac1",
+          "g4-group-v1-735debae33c534cfb2aee5335117c49c70b79e77aa19b88d43d24ab4f08923a7"
+        ],
+        "P1-E-low-thrust/2000/hybrid-pdhcg-ipm": [
+          "g4-group-v1-47158c31aace35821e49ef661deb04323f7b7ec14f68a554772fc27af315dc4e",
+          "g4-group-v1-04f7aeb18e2fb9bb2e50114a5e5e2825e56340b550795adceb65e7d4574f8a60"
+        ],
+        "P1-E-low-thrust/2000/pure-gpu-ipm": [
+          "g4-group-v1-8dd11a920d381d8bf195331e73a221fccdbc1aa23c4e27f39e34cd82bb428a79",
+          "g4-group-v1-27a25ae2a548a7998525dcb59e36ec024f682a7b5decfac7e286d47364a7b422"
+        ]
+      }
+    },
+    "acceptance_rule": "For every sensitivity twin, each measured attempt (seed, repeat) is compared with the same attempt of its claim-core group. If any attempt is qualified under 600 s / 1M while its 120 s / 200k counterpart is timeout or timeout_deterministic_replay (or the counterpart is missing while the twin qualified), the amendment is invalid: no H5/H6 decision is issued from the 120 s core and the full core reverts to 600 s / 1M."
+  },
+  "schedule": {
+    "policy_priority": [
+      "pure-gpu-ipm",
+      "adaptive",
+      "hybrid-pdhcg-ipm",
+      "fixed-tight"
+    ],
+    "rule": "claim-core groups run in policy_priority order and, within a policy, in the claim core's definition order; each sensitivity twin runs immediately after its claim-core group",
+    "solver_order_identity_unchanged": true,
+    "solver_order_note": "The claim core never bound its execution order to the solver_order rotation (its scheduler ran definition order); solver_order stays recorded per group as an execution-only identity axis, so reordering is permitted.",
+    "group_count": 396,
+    "schedule_sha256": "1123b8ded77bea63ed28f5cb3d5eefa812aed59c06fb50273b5b06a2522a76cd"
+  }
+}

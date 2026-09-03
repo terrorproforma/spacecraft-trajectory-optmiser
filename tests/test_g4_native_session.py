@@ -55,13 +55,23 @@ def test_probe_manifest_is_exact_authoritative_session() -> None:
     ]
 
 
-def _fake_probe(path: Path, *, varying_workspace: bool = False) -> None:
+def _fake_probe(
+    path: Path,
+    *,
+    varying_workspace: bool = False,
+    ruiz_iterations: int = 0,
+    disposition: str = "unqualified",
+    qoco_workspace_creations: int = 1,
+) -> None:
+    """A fake pure-gpu-ipm probe session: nine launched attempts echoing amendment v1.2 rule A."""
+
     path.write_text(
         f"""#!/usr/bin/env python3
 import json
 import os
 ready = {{"case": "g4_session_ready", "pid": os.getpid()}}
 print(json.dumps(ready), flush=True)
+assert os.environ["SPACEPDHCG_G4_POLICY_AMENDMENT"] == "single-gpu-v1.2"
 for ordinal in range(9):
     measured = ordinal >= 2
     session = {{
@@ -72,14 +82,29 @@ for ordinal in range(9):
         "workspace_generation": 1,
         "topology_allocations_after_create": 0,
         "topology_index_copies_after_create": 0,
+        "qoco_workspace_creations": {qoco_workspace_creations!r},
+        "qoco_numeric_updates": ordinal,
     }}
     print(json.dumps({{
         "case": "g4_attempt",
         "repeat_kind": "measured" if measured else "warmup",
         "repeat": ordinal - 2 if measured else ordinal,
         "statistics_eligible": measured,
+        "launched": True,
+        "disposition": {disposition!r},
+        "policy_amendment": "single-gpu-v1.2",
+        "amendment": {{
+            "ipm_equilibration": {{
+                "mode": "qoco_native_default" if {ruiz_iterations!r} == 0 else "qoco_native_ruiz",
+                "ruiz_iterations": {ruiz_iterations!r},
+                "requested_ruiz_iterations": {ruiz_iterations!r},
+                "scaling_mode": "not_applicable_ipm_native",
+                "qoco_status_code": 1,
+            }},
+        }},
         "session": session,
-        **({{"paper1_result": {{}}}} if measured else {{}}),
+        **({{"paper1_result": {{"identity": {{"scaling_mode": "not_applicable_ipm_native"}}}}}}
+           if measured else {{}}),
     }}), flush=True)
 print(json.dumps({{"case": "g4_session_complete"}}), flush=True)
 """
@@ -101,7 +126,38 @@ def test_capability_probe_proves_same_process_context_workspace(tmp_path: Path) 
         "same_workspace": True,
         "zero_post_create_topology_allocations": True,
         "zero_post_create_topology_index_copies": True,
+        "pure_gpu_ipm_probe": {
+            "policy": "pure-gpu-ipm",
+            "dispositions": ["unqualified"] * 9,
+            "qoco_workspace_creations": [1] * 9,
+            "qoco_numeric_updates": list(range(9)),
+            "policy_amendment": "single-gpu-v1.2",
+            "ipm_equilibration": {
+                "mode": "qoco_native_default",
+                "ruiz_iterations": 0,
+                "requested_ruiz_iterations": 0,
+                "scaling_mode": "not_applicable_ipm_native",
+            },
+            "qoco_status_codes": [1] * 9,
+        },
     }
+
+
+def test_capability_probe_refuses_ipm_defects_and_wrong_equilibration(tmp_path: Path) -> None:
+    """The IPM probe fails closed: no QOCO workspace, non-solver outcome, or Ruiz drift."""
+
+    executable = tmp_path / "no-workspace"
+    _fake_probe(executable, qoco_workspace_creations=0)
+    with pytest.raises(SystemExit, match="never constructed a QOCO workspace"):
+        CAPABILITY.run_session_probe(executable, "a" * 64, "b" * 64)
+    executable = tmp_path / "defect"
+    _fake_probe(executable, disposition="executor_defect")
+    with pytest.raises(SystemExit, match="non-solver dispositions"):
+        CAPABILITY.run_session_probe(executable, "a" * 64, "b" * 64)
+    executable = tmp_path / "ruiz"
+    _fake_probe(executable, ruiz_iterations=5)
+    with pytest.raises(SystemExit, match="amended native equilibration"):
+        CAPABILITY.run_session_probe(executable, "a" * 64, "b" * 64)
 
 
 def test_capability_probe_rejects_workspace_recreation(tmp_path: Path) -> None:

@@ -174,7 +174,7 @@
       }
     },
     "paper1_result": {"type": "object"},
-    "policy_amendment": {"const": "single-gpu-v1.1"},
+    "policy_amendment": {"enum": ["single-gpu-v1.1", "single-gpu-v1.2"]},
     "amendment": {
       "type": "object",
       "additionalProperties": false,
@@ -188,7 +188,60 @@
         "censoring_stratum": {"enum": ["claim_core", "censoring_sensitivity"]},
         "attempt_deadline_seconds": {"type": "number", "exclusiveMinimum": 0},
         "inner_iteration_cap": {"type": "integer", "minimum": 1},
-        "deterministic_replay": {"type": "boolean"}
+        "deterministic_replay": {"type": "boolean"},
+        "ipm_equilibration": {
+          "description": "Amendment single-gpu-v1.2 rule A: the QOCO equilibration the IPM attempt actually ran with (pure-gpu-ipm and hybrid-pdhcg-ipm); null for PDHCG-only policies.",
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mode",
+                "ruiz_iterations",
+                "requested_ruiz_iterations",
+                "scaling_mode",
+                "qoco_status_code"
+              ],
+              "properties": {
+                "mode": {"enum": ["qoco_native_default", "qoco_native_ruiz"]},
+                "ruiz_iterations": {"type": "integer", "minimum": 0},
+                "requested_ruiz_iterations": {"type": "integer", "minimum": 0},
+                "scaling_mode": {"const": "not_applicable_ipm_native"},
+                "qoco_status_code": {"type": "integer"}
+              }
+            }
+          ]
+        },
+        "deadline_classification": {
+          "description": "Amendment single-gpu-v1.2 rule B: the solver's own outcome behind the recorded disposition and whether measured wall time exceeded the attempt deadline.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rule",
+            "wall_exceeded_deadline",
+            "measured_wall_seconds",
+            "solver_disposition",
+            "solver_failure_class",
+            "canonical_residual",
+            "dynamics_residual",
+            "path_residual",
+            "terminal_residual",
+            "virtual_control_residual"
+          ],
+          "properties": {
+            "rule": {"const": "measured_wall_exceeds_attempt_deadline"},
+            "wall_exceeded_deadline": {"type": "boolean"},
+            "measured_wall_seconds": {"type": "number", "minimum": 0},
+            "solver_disposition": {"type": "string", "minLength": 1},
+            "solver_failure_class": {"type": "string", "minLength": 1},
+            "canonical_residual": {"type": "number", "minimum": 0},
+            "dynamics_residual": {"type": "number", "minimum": 0},
+            "path_residual": {"type": "number", "minimum": 0},
+            "terminal_residual": {"type": "number", "minimum": 0},
+            "virtual_control_residual": {"type": "number", "minimum": 0}
+          }
+        }
       }
     },
     "trace_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"},

@@ -482,7 +482,7 @@ def test_full_runner_requires_persistent_group_capability(
         )
     value.pop("capability_sha256")
     value["contract_hashes"]["claim_core_amendment"] = RUNNER.sha256_path(
-        ROOT / "benchmarks/g4_claim_core_amendment_v1_1.json"
+        ROOT / RUNNER.AMENDMENT_IN_FORCE_PATH
     )
     # An executor configured (SPACEPDHCG_SOURCE_COMMIT baked at CMake configure time) at a
     # different commit than the campaign's is refused: its records would carry the wrong

@@ -217,6 +217,24 @@ boundary after 26 completed groups, all P1-E pure-gpu-ipm, every attempt `numeri
   single QOCO solve cannot be interrupted, so if an `N=2000` IPM solve exceeds the scheduler's
   hard bound (1140 s + 300 s grace) the session is killed, restarted once, and the group ends as
   an error record — nothing is recorded as solver evidence, but ≈48 min per such group is spent.
+- Amendment `single-gpu-v1.2` (`docs/G4_CLAIM_CORE_AMENDMENT_V1_2.md`, frozen
+  2026-09-03T06:45:00Z) resolves the two caveats above by preregistered rule rather than
+  interpretation. Rule A: the IPM baseline runs QOCO's native default equilibration and records
+  it; at the pinned commit that default is `ruiz_iters = 0`, and Ruiz-on was probed on the failing
+  P1-E `N=100` conditioning-4.0 coordinate and on conditioning 0.0 — with the pinned library it
+  NaNs at iteration 8 (two QOCO CUDA-backend defects: `safe_div(1,0)=DBL_MAX` on empty rows and a
+  `scale_arrayf` without host fallback), and with those defects patched in a scratch build it still
+  ends `numerical` at conditioning 4.0 (54 iterations, 183 s) and turns the qualified
+  conditioning-0.0 solves (3/3 qualified, 11–13 QOCO iterations) into `numerical` (6/6). The
+  conditioning-4.0 pure-IPM result is a genuine IPM negative. Rule B: a launched attempt whose
+  measured wall exceeds the 120 s deadline is `timeout`, never `numerical`, for every backend.
+  Rule C: the `N=2000` hard bound is unchanged. **Diagnostic stratum
+  `ipm_no_equilibration_v1_1`**: the `pure-gpu-ipm` groups completed under v1.1 in
+  `g4-claim-core-ccd5596` (all P1-E `N=100`, every launched attempt `numerical` and
+  `contaminated`, 27–200 IPM iterations, 28–304 s per attempt) are retained verbatim in the
+  `diagnostic` ledger state, excluded from H6, and cited by the successor checkpoint's
+  `diagnostic_strata` metadata. They agree with the amended runs in direction (IPM fails at
+  conditioning 4.0) but are not comparable records because they predate rules A and B.
 
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core

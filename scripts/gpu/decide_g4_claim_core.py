@@ -47,19 +47,24 @@ from spacepdhcg.experiments.g4 import (  # noqa: E402
     sha256_path,
 )
 from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
+    AMENDMENT_ID_V1_2,
     AMENDMENT_RECORD_FIELD,
     ATTEMPT_KINDS,
     EXECUTOR_DEFECT_DISPOSITION,
+    NO_EQUILIBRATION_DIAGNOSTIC_STRATUM,
     REPLAY_DISPOSITION,
     SENSITIVITY_STRATUM,
     ExecutionGroup,
     LoadedAmendment,
     amended_claim_core_groups,
     amended_schedule_sha256,
+    classify_launched_attempt,
+    expected_ipm_equilibration,
     group_censoring_stratum,
     iter_claim_core_groups,
     load_claim_core,
     load_claim_core_amendment,
+    recorded_scaling_mode,
     validate_attempt_record,
 )
 from spacepdhcg.experiments.paper1 import (  # noqa: E402
@@ -165,6 +170,52 @@ def load_campaign(campaign: Path) -> tuple[dict[str, str], list[sqlite3.Row]]:
     return metadata, rows
 
 
+def validate_v1_2_attempt(
+    item: Mapping[str, Any],
+    group: ExecutionGroup,
+    amendment: LoadedAmendment,
+    censoring: Mapping[str, Any],
+) -> None:
+    """Amendment single-gpu-v1.2 rules A and B on one retained raw attempt.
+
+    Rule A: IPM attempts echo the QOCO equilibration the adapter actually ran with and it must
+    equal the amended selection; PDHCG-only attempts echo ``null``. Rule B: the recorded
+    disposition must be the reference classification of the solver's own outcome and the
+    attempt's measured wall time, so an uninterruptible solve past the deadline can never enter
+    the decision as ``numerical``.
+    """
+
+    echoed = item.get("amendment", {})
+    expected_ipm = expected_ipm_equilibration(group.coordinate["policy"], amendment.values)
+    observed_ipm = echoed.get("ipm_equilibration", "missing")
+    if expected_ipm is None:
+        if observed_ipm is not None:
+            raise ClaimCoreDecisionError("PDHCG-only attempt carries an IPM equilibration echo")
+    else:
+        if not isinstance(observed_ipm, Mapping):
+            raise ClaimCoreDecisionError("IPM attempt lacks the ipm_equilibration echo")
+        stripped = {key: value for key, value in observed_ipm.items() if key != "qoco_status_code"}
+        if stripped != expected_ipm:
+            raise ClaimCoreDecisionError(
+                f"IPM attempt ran with {stripped!r}, amendment selects {expected_ipm!r}"
+            )
+    classification = echoed.get("deadline_classification")
+    if not isinstance(classification, Mapping):
+        raise ClaimCoreDecisionError("amended attempt lacks the deadline_classification echo")
+    if item.get("launched") is True and item.get("disposition") != REPLAY_DISPOSITION:
+        reference = classify_launched_attempt(
+            solver_disposition=str(classification.get("solver_disposition")),
+            elapsed_seconds=float(item["timing"]["elapsed_seconds"]),
+            attempt_deadline_seconds=float(censoring["attempt_deadline_seconds"]),
+            amendment_id=AMENDMENT_ID_V1_2,
+        )
+        if reference != item.get("disposition"):
+            raise ClaimCoreDecisionError(
+                f"attempt disposition {item.get('disposition')!r} differs from the rule B "
+                f"reference {reference!r}"
+            )
+
+
 def validate_group_evidence(
     group: ExecutionGroup,
     result: Mapping[str, Any],
@@ -200,6 +251,8 @@ def validate_group_evidence(
                 raise ClaimCoreDecisionError("raw attempt lacks the amendment echo")
             if item.get("amendment", {}).get("censoring_stratum") != stratum:
                 raise ClaimCoreDecisionError("raw attempt censoring stratum drift")
+            if amendment_id == AMENDMENT_ID_V1_2:
+                validate_v1_2_attempt(item, group, amendment, expected_censoring)
     elif any(AMENDMENT_RECORD_FIELD in item for item in attempts):
         raise ClaimCoreDecisionError("amended records require --amendment")
     if len(attempts) != len(ATTEMPT_KINDS):
@@ -258,7 +311,13 @@ def validate_group_evidence(
             "repeat_kind": "measured",
             "status": record["disposition"],
             "quality_tier": planned["quality_tier"],
-            "scaling_mode": planned["scaling_mode"],
+            # Amendment single-gpu-v1.2 rule A: the pure IPM baseline records
+            # not_applicable_ipm_native; every other policy records the coordinate axis.
+            "scaling_mode": recorded_scaling_mode(
+                planned["policy"],
+                planned["scaling_mode"],
+                None if amendment is None else amendment.values["amendment_id"],
+            ),
             "warm_mode": planned["warm_mode"],
             "solver_order": planned["solver_order"],
         }
@@ -982,6 +1041,11 @@ def main() -> int:
     capability = json.loads(arguments.capabilities.read_text(encoding="utf-8"))
 
     metadata, rows = load_campaign(campaign)
+    # Diagnostic strata the checkpoint cites (amendment single-gpu-v1.2): groups of an earlier
+    # checkpoint that are retained as evidence about the executor but excluded from H6.
+    metadata_diagnostic_strata: dict[str, Any] = json.loads(
+        metadata.get("diagnostic_strata") or "{}"
+    )
     if metadata.get("schedule_kind") != "claim_core_execution_groups":
         raise ClaimCoreDecisionError("campaign is not a claim-core grouped checkpoint")
     amendment: LoadedAmendment | None = None
@@ -1005,6 +1069,13 @@ def main() -> int:
             raise ClaimCoreDecisionError("campaign amendment identity differs from --amendment")
         if metadata.get("policy_amendment_sha256") != amendment.sha256:
             raise ClaimCoreDecisionError("campaign amendment hash differs from --amendment")
+        if (
+            amendment.values["amendment_id"] == AMENDMENT_ID_V1_2
+            and NO_EQUILIBRATION_DIAGNOSTIC_STRATUM not in metadata_diagnostic_strata
+        ):
+            raise ClaimCoreDecisionError(
+                "a v1.2 checkpoint must cite the ipm_no_equilibration_v1_1 diagnostic stratum"
+            )
         groups = amended_claim_core_groups(core.values, amendment.values)
         expected_schedule = amended_schedule_sha256(groups)
     elif arguments.amendment is not None:
@@ -1256,6 +1327,19 @@ def main() -> int:
             },
             "acceptance": acceptance,
             "decision_withheld": amendment_invalid,
+            # Amendment single-gpu-v1.2: the IPM records taken under v1.1 (QOCO default
+            # equilibration, pre-rule-B classification) are retained as a labelled diagnostic
+            # stratum and never enter H6; the report cites them from here.
+            "diagnostic_strata": {
+                name: {
+                    **stratum,
+                    "groups_excluded_from_this_decision": len(
+                        metadata_diagnostic_strata.get(name, {}).get("group_ids", [])
+                    ),
+                    "checkpoint_citation": metadata_diagnostic_strata.get(name),
+                }
+                for name, stratum in amendment.values.get("diagnostic_strata", {}).items()
+            },
         },
         "non_terminal_attempt_history": dict(quarantined_history),
         "publication_records": publication_index,

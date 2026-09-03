@@ -41,6 +41,30 @@ EXECUTOR_DEFECT_DISPOSITION: Final = "executor_defect"
 # Amendment single-gpu-v1.1 (claim core only). The original single-gpu-v1 rules stay readable
 # through ``ORIGINAL_CENSORING``; the amendment never rewrites the claim-core definition.
 AMENDMENT_ID: Final = "single-gpu-v1.1"
+# Amendment single-gpu-v1.2 supersedes v1.1 (it inherits every v1.1 section verbatim) and adds
+# rule A (IPM equilibration selection recorded per attempt, pure-gpu-ipm scaling_mode
+# ``not_applicable_ipm_native``), rule B (measured wall time past the attempt deadline is a
+# ``timeout`` for every backend) and rule C (N=2000 hard bound unchanged, recorded).
+AMENDMENT_ID_V1_2: Final = "single-gpu-v1.2"
+SUPPORTED_AMENDMENT_IDS: Final = (AMENDMENT_ID, AMENDMENT_ID_V1_2)
+AMENDMENT_V1_1_SHA256: Final = "c691467e77367c63d2ba4b0adc1b290d3e4d731f360cbccae45a7d3cf5b8a1f5"
+AMENDMENT_V1_1_INHERITED_SECTIONS: Final = (
+    "contamination",
+    "deterministic_replay",
+    "censoring",
+    "schedule",
+)
+IPM_POLICIES: Final = ("pure-gpu-ipm", "hybrid-pdhcg-ipm")
+IPM_NATIVE_SCALING_MODE: Final = "not_applicable_ipm_native"
+IPM_EQUILIBRATION_MODES: Final = ("qoco_native_default", "qoco_native_ruiz")
+# The equilibration the amended executor hands to QOCO for IPM attempts. QOCO's own default at
+# the pinned commit (09f0495, upstream bfc16b0 "set default ruiz iters to 0") is no
+# equilibration; see the amendment's probe_evidence for why Ruiz-on is not selected.
+IPM_NATIVE_RUIZ_ITERATIONS: Final = 0
+IPM_EQUILIBRATION_MODE: Final = "qoco_native_default"
+DEADLINE_CLASSIFICATION_RULE: Final = "measured_wall_exceeds_attempt_deadline"
+HARD_BOUND_INTERVALS: Final = 2000
+NO_EQUILIBRATION_DIAGNOSTIC_STRATUM: Final = "ipm_no_equilibration_v1_1"
 AMENDMENT_RECORD_FIELD: Final = "policy_amendment"
 ORIGINAL_CENSORING: Final = {"attempt_deadline_seconds": 600, "inner_iteration_cap": 1_000_000}
 CLAIM_CORE_STRATUM: Final = "claim_core"
@@ -719,6 +743,155 @@ def amended_schedule_sha256(groups: Sequence[ExecutionGroup]) -> str:
     return hashlib.sha256(canonical_bytes([group.group_id for group in groups])).hexdigest()
 
 
+# ------------------------------------------------------------------------------------------------
+# Amendment single-gpu-v1.2 (supersedes v1.1: IPM equilibration, deadline classification)
+# ------------------------------------------------------------------------------------------------
+
+
+def policy_uses_ipm(policy: str) -> bool:
+    return policy in IPM_POLICIES
+
+
+def recorded_scaling_mode(
+    policy: str, coordinate_scaling_mode: str, amendment_id: str | None
+) -> str:
+    """The ``scaling_mode`` an attempt record carries (rule A of amendment single-gpu-v1.2).
+
+    The coordinate axis is a PDHCG workspace setting. Under v1.2 the pure IPM baseline records
+    ``not_applicable_ipm_native`` because nothing of that axis reaches QOCO; the hybrid keeps the
+    axis (its PDHCG stage uses it) and records the IPM-stage selection in
+    ``amendment.ipm_equilibration`` instead. Every other policy and every earlier amendment
+    records the coordinate axis unchanged.
+    """
+
+    _require(coordinate_scaling_mode in SCALING_MODES, "unknown scaling mode")
+    if amendment_id == AMENDMENT_ID_V1_2 and policy == "pure-gpu-ipm":
+        return IPM_NATIVE_SCALING_MODE
+    return coordinate_scaling_mode
+
+
+def expected_ipm_equilibration(policy: str, amendment: Mapping[str, Any]) -> dict[str, Any] | None:
+    """The ``amendment.ipm_equilibration`` echo an amended v1.2 raw attempt must carry."""
+
+    if amendment.get("amendment_id") != AMENDMENT_ID_V1_2 or not policy_uses_ipm(policy):
+        return None
+    selection = amendment["ipm_equilibration"]
+    return {
+        "mode": selection["mode"],
+        "ruiz_iterations": int(selection["ruiz_iterations"]),
+        "requested_ruiz_iterations": int(selection["ruiz_iterations"]),
+        "scaling_mode": IPM_NATIVE_SCALING_MODE,
+    }
+
+
+def classify_launched_attempt(
+    *,
+    solver_disposition: str,
+    elapsed_seconds: float,
+    attempt_deadline_seconds: float,
+    amendment_id: str | None,
+) -> str:
+    """Reference implementation of rule B (amendment single-gpu-v1.2, every backend).
+
+    A launched attempt whose measured wall time exceeds the attempt deadline is ``timeout``
+    whatever the solver reported (its own outcome stays attached as diagnostics). An executor
+    defect is not evidence either way and keeps its disposition. Before v1.2 the solver's own
+    disposition stands, which is how uninterruptible IPM solves past the deadline were recorded
+    as ``numerical`` in the ``ipm_no_equilibration_v1_1`` stratum.
+    """
+
+    _require(solver_disposition in TERMINAL_DISPOSITIONS, "unknown solver disposition")
+    _require(attempt_deadline_seconds > 0.0, "attempt deadline must be positive")
+    if solver_disposition in ("unrun", REPLAY_DISPOSITION, EXECUTOR_DEFECT_DISPOSITION):
+        return solver_disposition
+    if amendment_id == AMENDMENT_ID_V1_2 and elapsed_seconds > attempt_deadline_seconds:
+        return "timeout"
+    return solver_disposition
+
+
+def validate_amendment_v1_2_sections(amendment: Mapping[str, Any]) -> None:
+    """Rules A/B/C and the diagnostic-stratum citation of amendment single-gpu-v1.2."""
+
+    supersedes = amendment.get("supersedes", {})
+    _require(
+        supersedes
+        == {
+            "amendment_id": AMENDMENT_ID,
+            "path": "benchmarks/g4_claim_core_amendment_v1_1.json",
+            "sha256": AMENDMENT_V1_1_SHA256,
+        },
+        "amendment v1.2 must supersede the frozen v1.1 amendment by hash",
+    )
+    _require(
+        list(amendment.get("inherited_from_v1_1", [])) == list(AMENDMENT_V1_1_INHERITED_SECTIONS),
+        "amendment v1.2 must inherit the v1.1 sections verbatim",
+    )
+    selection = amendment.get("ipm_equilibration", {})
+    _require(selection.get("rule") == "A", "ipm_equilibration rule label drift")
+    _require(list(selection.get("policies", [])) == list(IPM_POLICIES), "IPM policy list drift")
+    _require(selection.get("mode") in IPM_EQUILIBRATION_MODES, "unknown IPM equilibration mode")
+    _require(selection.get("mode") == IPM_EQUILIBRATION_MODE, "IPM equilibration mode drift")
+    ruiz = selection.get("ruiz_iterations")
+    _require(isinstance(ruiz, int) and ruiz >= 0, "ruiz_iterations must be a non-negative integer")
+    _require(ruiz == IPM_NATIVE_RUIZ_ITERATIONS, "IPM ruiz_iterations drift")
+    _require(
+        (selection.get("mode") == "qoco_native_default") == (ruiz == 0),
+        "qoco_native_default means ruiz_iterations == 0 and vice versa",
+    )
+    recorded = selection.get("recorded_scaling_mode", {})
+    _require(
+        recorded.get("pure-gpu-ipm") == IPM_NATIVE_SCALING_MODE
+        and recorded.get("hybrid-pdhcg-ipm") == "coordinate_axis_retained_for_pdhcg_stage",
+        "recorded scaling_mode rule drift",
+    )
+    default = selection.get("qoco_default_at_pinned_commit", {})
+    _require(
+        default.get("ruiz_iters") == 0 and isinstance(default.get("commit"), str),
+        "QOCO pinned-commit default must be recorded",
+    )
+    evidence = selection.get("probe_evidence", {})
+    _require(
+        isinstance(evidence.get("probes"), list) and len(evidence["probes"]) >= 3,
+        "probe evidence must list the with/without equilibration probes",
+    )
+    defects = selection.get("qoco_cuda_ruiz_defects", [])
+    _require(isinstance(defects, list) and len(defects) >= 2, "QOCO Ruiz defects must be listed")
+    deadline = amendment.get("deadline_classification", {})
+    _require(deadline.get("rule") == "B", "deadline_classification rule label drift")
+    _require(deadline.get("disposition") == "timeout", "deadline classification disposition drift")
+    _require(deadline.get("never") == "numerical", "deadline classification must exclude numerical")
+    _require(
+        deadline.get("criterion") == DEADLINE_CLASSIFICATION_RULE,
+        "deadline classification criterion drift",
+    )
+    _require(
+        deadline.get("applies_to") == "every backend", "deadline rule must cover every backend"
+    )
+    _require(
+        deadline.get("executor_defect_precedence") is True,
+        "an executor defect must keep its disposition",
+    )
+    hard_bound = amendment.get("hard_bound", {})
+    _require(hard_bound.get("rule") == "C", "hard_bound rule label drift")
+    _require(hard_bound.get("intervals") == HARD_BOUND_INTERVALS, "hard bound scale drift")
+    _require(hard_bound.get("unchanged") is True, "hard bound behaviour must remain unchanged")
+    _require(
+        hard_bound.get("behaviour") == "kill + one restart + error record",
+        "hard bound behaviour text drift",
+    )
+    strata = amendment.get("diagnostic_strata", {})
+    stratum = strata.get(NO_EQUILIBRATION_DIAGNOSTIC_STRATUM, {})
+    _require(
+        stratum.get("retained") is True and stratum.get("excluded_from") == ["H6"],
+        "the v1.1 IPM stratum must be retained and excluded from H6",
+    )
+    _require(
+        isinstance(stratum.get("source_checkpoints"), list)
+        and len(stratum["source_checkpoints"]) >= 1,
+        "the v1.1 IPM stratum must cite its source checkpoints",
+    )
+
+
 def validate_claim_core_amendment(
     amendment: Mapping[str, Any],
     definition: Mapping[str, Any],
@@ -727,11 +900,14 @@ def validate_claim_core_amendment(
     policy_sha256: str,
 ) -> None:
     _require(amendment.get("schema_version") == AMENDMENT_SCHEMA_VERSION, "amendment schema drift")
-    _require(amendment.get("amendment_id") == AMENDMENT_ID, "amendment identity drift")
+    amendment_id = amendment.get("amendment_id")
+    _require(amendment_id in SUPPORTED_AMENDMENT_IDS, "amendment identity drift")
     _require(
         amendment.get("preregistered_before_results") is True,
         "amendment must be frozen before any group result is inspected",
     )
+    if amendment_id == AMENDMENT_ID_V1_2:
+        validate_amendment_v1_2_sections(amendment)
     amends = amendment.get("amends", {})
     _require(amends.get("campaign_scope_id") == "single-gpu-v1", "amendment scope drift")
     _require(
@@ -742,7 +918,7 @@ def validate_claim_core_amendment(
     _require(amends.get("policy_sha256") == policy_sha256, "amendment policy hash drift")
     record_field = amendment.get("record_field", {})
     _require(
-        record_field == {"name": AMENDMENT_RECORD_FIELD, "value": AMENDMENT_ID},
+        record_field == {"name": AMENDMENT_RECORD_FIELD, "value": amendment_id},
         "amendment record field drift",
     )
     contamination = amendment.get("contamination", {})

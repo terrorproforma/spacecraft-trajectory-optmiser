@@ -193,6 +193,39 @@ Scheduling under the amendment runs converging policies before fixed-tight;
 original `single-gpu-v1` rules stay readable in the claim-core and policy JSON
 and in `censoring.original`.
 
+### Amendment `single-gpu-v1.2` (claim core only, supersedes v1.1)
+
+`benchmarks/g4_claim_core_amendment_v1_2.json` (lock
+`benchmarks/g4_claim_core_amendment_v1_2.sha256`, same schema with conditional
+v1.2 sections, document `docs/G4_CLAIM_CORE_AMENDMENT_V1_2.md`) was frozen at
+`2026-09-03T06:45:00Z` before any group ran under it. It supersedes v1.1 by
+hash and inherits `contamination`, `deterministic_replay`, `censoring` and
+`schedule` verbatim (schedule identity unchanged). Records carry
+`policy_amendment: "single-gpu-v1.2"`. It adds three rules:
+
+- **A. IPM baseline equilibration.** `pure-gpu-ipm` and the IPM stage of
+  `hybrid-pdhcg-ipm` use QOCO's native default equilibration regardless of the
+  campaign `scaling_mode` axis. At the pinned QOCO commit that default is
+  `ruiz_iters = 0`; Ruiz-on was probed and rejected (it NaNs on the pinned
+  build through two QOCO CUDA-backend defects, and still fails or regresses
+  once those are patched). Every IPM attempt echoes
+  `amendment.ipm_equilibration` (mode, ruiz iterations, QOCO status code);
+  `pure-gpu-ipm` records `scaling_mode: not_applicable_ipm_native`.
+- **B. Deadline classification.** A launched attempt whose measured wall time
+  exceeds the attempt deadline is `timeout` (reason `wall_exceeded_deadline`)
+  for every backend, never `numerical`; the completed solve's residuals and
+  the solver's own disposition ride along as diagnostics. `executor_defect`
+  takes precedence.
+- **C. N=2000 hard bound** (kill, one restart, error record) is unchanged and
+  recorded.
+
+Ledger consequences: v1.1 `pure-gpu-ipm` records become the labelled
+diagnostic stratum `ipm_no_equilibration_v1_1` (`label-stratum`; state
+`diagnostic`, records retained, excluded from H6, cited by the successor
+checkpoint's `diagnostic_strata` metadata and by the gate report). `migrate`
+refuses to import records taken under a different amendment; the decision
+refuses a v1.2 checkpoint that does not cite the stratum.
+
 ## Batched-executor integration
 
 The batched executor must add `--g4-session <execution-group.json>` and emit nine

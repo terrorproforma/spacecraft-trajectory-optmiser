@@ -36,6 +36,24 @@ TERMINAL_STATES: Final = ("completed", "quarantined")
 # so the row leaves the completed set and can never be counted or imported as evidence.
 INVALIDATED_STATE: Final = "invalidated"
 INVALID_EXECUTOR_DEFECT: Final = "invalid_executor_defect"
+# A terminal row retained as a labelled diagnostic stratum (amendment single-gpu-v1.2): valid
+# evidence about the executor under a superseded amendment, cited by the report, never a claim
+# statistic. Records stay on disk verbatim; the disposition becomes the stratum name.
+DIAGNOSTIC_STATE: Final = "diagnostic"
+SCHEDULER_OWNED_METADATA: Final = frozenset(
+    {
+        "schema_version",
+        "schedule_kind",
+        "policy_sha256",
+        "schedule_sha256",
+        "source_commit",
+        "total_rows",
+        "next_ordinal",
+        "policy_amendment",
+        "policy_amendment_sha256",
+        "claim_core_sha256",
+    }
+)
 
 
 def _canonical_json(value: Mapping[str, Any]) -> bytes:
@@ -322,6 +340,25 @@ class CampaignStore:
     @staticmethod
     def _now() -> str:
         return datetime.now(UTC).isoformat()
+
+    def metadata(self) -> dict[str, str]:
+        return {
+            str(row["key"]): str(row["value"])
+            for row in self.database.execute("SELECT key, value FROM metadata")
+        }
+
+    def set_metadata(self, key: str, value: str) -> None:
+        """Write one annotation key; identity/scheduler-owned keys are immutable."""
+
+        if key in SCHEDULER_OWNED_METADATA:
+            raise G4ContractError(f"{key} is scheduler-owned metadata")
+        with self.database:
+            self.database.execute(
+                "INSERT INTO metadata(key, value) VALUES (?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (key, value),
+            )
+        self._journal({"event": "metadata", "at": self._now(), "key": key, "value": value})
 
     def _journal(self, event: Mapping[str, Any]) -> None:
         payload = _canonical_json(event) + b"\n"
@@ -673,6 +710,74 @@ class CampaignStore:
         self._journal({"event": INVALIDATED_STATE, "at": now, **record})
         return record
 
+    def label_diagnostic_stratum(
+        self,
+        ordinal: int,
+        *,
+        stratum: str,
+        reason: str,
+        provenance: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Move one completed or quarantined row into a named diagnostic stratum.
+
+        Amendment single-gpu-v1.2: records taken under a superseded amendment are retained as
+        evidence about the executor (and cited by the report) but leave the completed set so
+        they can never enter a claim statistic. Nothing is deleted or rewritten: a
+        ``diagnostic_stratum.json`` is written beside the result (create-only), the attempt and
+        coordinate move to the ``diagnostic`` state, and the disposition becomes the stratum
+        name. The fresh checkpoint under the new amendment owns any re-run.
+        """
+
+        if not stratum or not reason:
+            raise G4ContractError("diagnostic labelling requires a stratum name and a reason")
+        now = self._now()
+        with self.database:
+            row = self.database.execute(
+                "SELECT coordinate_id, state, latest_attempt_id FROM coordinates WHERE ordinal = ?",
+                (ordinal,),
+            ).fetchone()
+            if row is None or row["state"] not in TERMINAL_STATES:
+                raise G4ContractError(
+                    "only completed or quarantined coordinates may join a diagnostic stratum"
+                )
+            attempt = self.database.execute(
+                "SELECT run_directory, disposition, state FROM attempts WHERE attempt_id = ?",
+                (row["latest_attempt_id"],),
+            ).fetchone()
+            if attempt is None or attempt["state"] not in TERMINAL_STATES:
+                raise G4ContractError("terminal coordinate lacks its terminal attempt")
+            record = {
+                "record_kind": "diagnostic_stratum",
+                "campaign": str(self.root),
+                "ordinal": ordinal,
+                "coordinate_id": row["coordinate_id"],
+                "attempt_id": row["latest_attempt_id"],
+                "prior_state": row["state"],
+                "prior_disposition": attempt["disposition"],
+                "stratum": stratum,
+                "reason": reason,
+                "labelled_at": now,
+                **dict(provenance),
+            }
+            atomic_create(
+                Path(attempt["run_directory"]) / "diagnostic_stratum.json",
+                _canonical_json(record) + b"\n",
+            )
+            self.database.execute(
+                """
+                UPDATE attempts
+                SET state = ?, disposition = ?, reason = ?
+                WHERE attempt_id = ?
+                """,
+                (DIAGNOSTIC_STATE, stratum, reason, row["latest_attempt_id"]),
+            )
+            self.database.execute(
+                "UPDATE coordinates SET state = ?, updated_at = ? WHERE ordinal = ?",
+                (DIAGNOSTIC_STATE, now, ordinal),
+            )
+        self._journal({"event": DIAGNOSTIC_STATE, "at": now, **record})
+        return record
+
     def retry_quarantined(self, ordinal: int) -> None:
         with self.database:
             updated = self.database.execute(
@@ -700,6 +805,7 @@ class CampaignStore:
             "running": counts.get("running", 0),
             "quarantined": counts.get("quarantined", 0),
             "invalidated": counts.get(INVALIDATED_STATE, 0),
+            "diagnostic": counts.get(DIAGNOSTIC_STATE, 0),
             "remaining": self.total - completed,
         }
 

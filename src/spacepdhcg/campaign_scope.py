@@ -80,7 +80,15 @@ SCOPE_DEFINITIONS: Final[dict[str, dict[str, Any]]] = {
                 "path": "benchmarks/g4_claim_core_amendment_v1_1.json",
                 "lock": "benchmarks/g4_claim_core_amendment_v1_1.sha256",
                 "document": "docs/G4_CLAIM_CORE_AMENDMENT_V1_1.md",
-            }
+            },
+            {
+                "amendment_id": "single-gpu-v1.2",
+                "applies_to": "g4-h5-h6-claim-core-v1",
+                "supersedes": "single-gpu-v1.1",
+                "path": "benchmarks/g4_claim_core_amendment_v1_2.json",
+                "lock": "benchmarks/g4_claim_core_amendment_v1_2.sha256",
+                "document": "docs/G4_CLAIM_CORE_AMENDMENT_V1_2.md",
+            },
         ],
     },
 }

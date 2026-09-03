@@ -111,7 +111,8 @@ def test_amendment_hash_lock_schema_and_registry_agree() -> None:
     }
     # Registry: the single-gpu-v1 scope and its JSON mirror pin the amendment by hash.
     registered = SCOPE_DEFINITIONS["single-gpu-v1"]["amendments"]
-    assert [item["amendment_id"] for item in registered] == [AMENDMENT_ID]
+    # v1.2 supersedes v1.1 (tests/test_g4_claim_core_amendment_v1_2.py); v1.1 stays registered.
+    assert [item["amendment_id"] for item in registered] == [AMENDMENT_ID, "single-gpu-v1.2"]
     assert ROOT / registered[0]["path"] == AMENDMENT_PATH
     lock = (ROOT / registered[0]["lock"]).read_text("utf-8").split()
     assert lock == [amendment.sha256, AMENDMENT_PATH.name]

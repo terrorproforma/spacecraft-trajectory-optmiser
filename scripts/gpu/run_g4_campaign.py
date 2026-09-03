@@ -36,21 +36,27 @@ from spacepdhcg.experiments.g4 import (  # noqa: E402
     sha256_path,
 )
 from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
-    AMENDMENT_ID,
+    AMENDMENT_ID_V1_2,
     AMENDMENT_RECORD_FIELD,
     CLAIM_CORE_STRATUM,
+    DEADLINE_CLASSIFICATION_RULE,
     EXECUTOR_DEFECT_DISPOSITION,
+    IPM_NATIVE_SCALING_MODE,
     REPLAY_DISPOSITION,
+    SUPPORTED_AMENDMENT_IDS,
     ExecutionGroup,
     LoadedAmendment,
     amended_claim_core_groups,
     amended_schedule_sha256,
+    classify_launched_attempt,
     deterministic_replay_eligible,
     deterministic_trace_hash,
+    expected_ipm_equilibration,
     group_censoring,
     iter_claim_core_groups,
     load_claim_core,
     load_claim_core_amendment,
+    recorded_scaling_mode,
     validate_attempt_record,
 )
 from spacepdhcg.experiments.g4_scheduler import (  # noqa: E402
@@ -81,6 +87,8 @@ CAPABILITY_AXES = {
 
 GROUP_SAFETY_GRACE_SECONDS = 300
 SHARED_GPU_LOCK_FILE = Path("/home/angus/.spacepdhcg-gpu.lock")
+# The claim-core amendment the executor capability must pin (v1.2 supersedes v1.1).
+AMENDMENT_IN_FORCE_PATH = "benchmarks/g4_claim_core_amendment_v1_2.json"
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -179,8 +187,10 @@ def load_capabilities(
                 REPOSITORY / "experiments/schema/paper1_result.schema.json"
             ),
         }
+        # The capability pins the amendment currently in force for the claim core (v1.2, which
+        # supersedes v1.1 and carries its rules verbatim).
         expected_contracts["claim_core_amendment"] = sha256_path(
-            REPOSITORY / "benchmarks/g4_claim_core_amendment_v1_1.json"
+            REPOSITORY / AMENDMENT_IN_FORCE_PATH
         )
         if value.get("contract_hashes") != expected_contracts:
             raise G4ContractError("executor capability authoritative contract hash mismatch")
@@ -193,6 +203,27 @@ def load_capabilities(
                 raise G4ContractError("executor capability pins a different claim-core amendment")
             if amendment.values["amendment_id"] not in value.get("policy_amendments_supported", []):
                 raise G4ContractError("executor does not support the requested amendment")
+            if amendment.values["amendment_id"] == AMENDMENT_ID_V1_2:
+                selection = amendment.values["ipm_equilibration"]
+                declared = value.get("ipm_equilibration", {})
+                if (
+                    declared.get("mode") != selection["mode"]
+                    or declared.get("ruiz_iterations") != selection["ruiz_iterations"]
+                    or declared.get("recorded_scaling_mode") != IPM_NATIVE_SCALING_MODE
+                    or declared.get("amendment") != AMENDMENT_ID_V1_2
+                ):
+                    raise G4ContractError(
+                        "executor IPM equilibration declaration differs from amendment v1.2"
+                    )
+                classification = value.get("deadline_classification", {})
+                if (
+                    classification.get("rule") != DEADLINE_CLASSIFICATION_RULE
+                    or classification.get("disposition") != "timeout"
+                    or classification.get("amendment") != AMENDMENT_ID_V1_2
+                ):
+                    raise G4ContractError(
+                        "executor deadline classification declaration differs from amendment v1.2"
+                    )
         probe = dict(value.get("session_probe", {}))
         ipm_probe = probe.pop("pure_gpu_ipm_probe", None)
         if probe != {
@@ -1177,8 +1208,101 @@ def invalidate_completed_groups(
         os.close(lock_descriptor)
 
 
+def label_diagnostic_stratum_groups(
+    store: CampaignStore,
+    groups: Sequence[ExecutionGroup],
+    *,
+    policies: Sequence[str],
+    stratum: str,
+    reason: str,
+    provenance: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Move every terminal group of the given policies into one named diagnostic stratum.
+
+    Amendment single-gpu-v1.2 rule A: IPM records taken under v1.1 (no equilibration switch
+    recorded, no wall-clock timeout rule) are retained verbatim as ``ipm_no_equilibration_v1_1``.
+    They leave the completed set, so ``migrate`` and ``decide`` can never count them, while the
+    campaign metadata (``diagnostic_strata``) keeps the citation the report needs. Refuses while
+    a worker owns the campaign GPU lock.
+    """
+
+    for policy in policies:
+        if policy not in POLICY_NAMES:
+            raise G4ContractError(f"unknown policy {policy!r}")
+    lock_descriptor = os.open(store.root / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        try:
+            fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise G4ContractError("campaign worker is still active; pause it first") from error
+        rows = list(
+            store.database.execute(
+                "SELECT ordinal, coordinate_id, state FROM coordinates "
+                "WHERE state IN ('completed', 'quarantined') ORDER BY ordinal"
+            )
+        )
+        labelled: list[dict[str, Any]] = []
+        for row in rows:
+            group = groups[int(row["ordinal"])]
+            if group.group_id != str(row["coordinate_id"]):
+                raise G4ContractError("checkpoint coordinate content address drift")
+            if group.coordinate["policy"] not in policies:
+                continue
+            record = store.label_diagnostic_stratum(
+                int(row["ordinal"]),
+                stratum=stratum,
+                reason=reason,
+                provenance=provenance,
+            )
+            labelled.append(
+                {
+                    "ordinal": record["ordinal"],
+                    "group_id": record["coordinate_id"],
+                    "policy": group.coordinate["policy"],
+                    "prior_state": record["prior_state"],
+                    "prior_disposition": record["prior_disposition"],
+                }
+            )
+        existing = json.loads(store.metadata().get("diagnostic_strata", "{}"))
+        existing[stratum] = {
+            "reason": reason,
+            "labelled_at": store._now(),
+            "policies": list(policies),
+            "group_count": len(labelled),
+            "groups": labelled,
+            **dict(provenance),
+        }
+        store.set_metadata("diagnostic_strata", json.dumps(existing, sort_keys=True))
+        return {"stratum": stratum, "labelled": len(labelled), "groups": labelled}
+    finally:
+        fcntl.flock(lock_descriptor, fcntl.LOCK_UN)
+        os.close(lock_descriptor)
+
+
+def cited_diagnostic_strata(citations: Sequence[str]) -> dict[str, Any]:
+    """Copy named diagnostic strata (plus their source checkpoint) into new campaign metadata."""
+
+    cited: dict[str, Any] = {}
+    for citation in citations:
+        name, separator, source = citation.partition("=")
+        if not separator or not name or not source:
+            raise G4ContractError("--cite-diagnostic-stratum takes NAME=SOURCE_CAMPAIGN")
+        source_path = Path(source).resolve()
+        strata = json.loads(stored_metadata(source_path).get("diagnostic_strata", "{}"))
+        if name not in strata:
+            raise G4ContractError(f"{source_path} has no diagnostic stratum {name!r}")
+        cited[name] = {**strata[name], "source_campaign": str(source_path)}
+    return cited
+
+
 def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
-    """Import completed evidence only while the source GPU lock is unowned."""
+    """Import completed evidence only while the source GPU lock is unowned.
+
+    Only ``completed``/``quarantined`` rows are eligible; ``invalidated`` and ``diagnostic`` rows
+    never travel. The source must have run under the same amendment as the target: a record's
+    classification rules (e.g. v1.2 rule B) are part of its evidence, so cross-amendment
+    imports fail closed instead of laundering superseded records into a new claim core.
+    """
 
     lock_descriptor = os.open(source / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
     try:
@@ -1195,6 +1319,13 @@ def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
             raise G4ContractError("source campaign policy hash mismatch")
         if metadata.get("total_rows") != str(store.total):
             raise G4ContractError("source campaign cardinality mismatch")
+        target_metadata = store.metadata()
+        for key in (AMENDMENT_RECORD_FIELD, "policy_amendment_sha256"):
+            if metadata.get(key) != target_metadata.get(key):
+                raise G4ContractError(
+                    f"source campaign {key} differs from the target; records taken under a "
+                    "superseded amendment are a diagnostic stratum, not importable evidence"
+                )
         imported = 0
         already_present = 0
         rows = database.execute(
@@ -1390,15 +1521,77 @@ def validate_success(
     return True, "strict runtime and sample records validated"
 
 
+def validate_v1_2_record_echo(
+    record: dict[str, Any],
+    echoed: dict[str, Any],
+    expected: dict[str, Any],
+) -> str | None:
+    """Rules A and B of amendment single-gpu-v1.2 on one raw attempt record."""
+
+    ipm = echoed.get("ipm_equilibration", "missing")
+    if expected["ipm_equilibration"] is None:
+        conformant = ipm is None
+    else:
+        # IPM attempts must echo the adapter's selection plus the raw QOCO status code.
+        conformant = (
+            isinstance(ipm, dict)
+            and {key: value for key, value in ipm.items() if key != "qoco_status_code"}
+            == expected["ipm_equilibration"]
+            and isinstance(ipm.get("qoco_status_code"), int)
+        )
+    if not conformant:
+        return (
+            f"raw attempt ipm_equilibration echo {ipm!r} differs from the amended "
+            f"{expected['ipm_equilibration']!r}"
+        )
+    classification = echoed.get("deadline_classification")
+    if not isinstance(classification, dict):
+        return "raw attempt lacks the deadline_classification echo"
+    if classification.get("rule") != DEADLINE_CLASSIFICATION_RULE:
+        return "raw attempt deadline_classification rule drift"
+    solver_disposition = classification.get("solver_disposition")
+    if record.get("launched") is True and not record.get("disposition") == REPLAY_DISPOSITION:
+        try:
+            reference = classify_launched_attempt(
+                solver_disposition=str(solver_disposition),
+                elapsed_seconds=float(record["timing"]["elapsed_seconds"]),
+                attempt_deadline_seconds=float(expected["attempt_deadline_seconds"]),
+                amendment_id=AMENDMENT_ID_V1_2,
+            )
+        except (KeyError, TypeError, ValueError, G4ContractError) as error:
+            return f"raw attempt deadline classification unusable: {error}"
+        if reference != record.get("disposition"):
+            return (
+                f"raw attempt disposition {record.get('disposition')!r} differs from the rule B "
+                f"reference {reference!r} (solver {solver_disposition!r}, wall "
+                f"{record['timing']['elapsed_seconds']!r} s)"
+            )
+        if classification.get("wall_exceeded_deadline") is not (
+            float(record["timing"]["elapsed_seconds"]) > float(expected["attempt_deadline_seconds"])
+        ):
+            return "raw attempt wall_exceeded_deadline flag disagrees with its timing"
+    identity = record.get("paper1_result", {}).get("identity")
+    if isinstance(identity, dict) and identity.get("scaling_mode") != expected["scaling_mode"]:
+        return (
+            f"measured record scaling_mode {identity.get('scaling_mode')!r} differs from the "
+            f"amended {expected['scaling_mode']!r}"
+        )
+    return None
+
+
 def validate_amendment_records(
     records: list[dict[str, Any]],
     expected: dict[str, Any] | None,
 ) -> str | None:
-    """Amendment single-gpu-v1.1 echo, trace-hash and replay consistency checks.
+    """Amendment echo, trace-hash and replay consistency checks (single-gpu-v1.1 and v1.2).
 
-    ``expected`` is ``{"censoring_stratum", "attempt_deadline_seconds", "inner_iteration_cap"}``
-    for the scheduled group, or ``None`` when no amendment is in force (records must then carry
-    no amendment fields).
+    ``expected`` is ``{"amendment_id", "censoring_stratum", "attempt_deadline_seconds",
+    "inner_iteration_cap", "ipm_equilibration"}`` for the scheduled group, or ``None`` when no
+    amendment is in force (records must then carry no amendment fields). Under v1.2 every record
+    must also echo rule A (``ipm_equilibration``: the adapter-reported Ruiz setting for IPM
+    policies, ``null`` otherwise) and rule B (``deadline_classification``: the solver's own
+    outcome behind the recorded disposition), and the recorded disposition must equal the
+    reference classification of that solver outcome.
     """
 
     ordered = sorted(records, key=lambda item: (item["repeat_kind"] != "warmup", item["repeat"]))
@@ -1407,8 +1600,11 @@ def validate_amendment_records(
             if AMENDMENT_RECORD_FIELD in record or record.get("disposition") == REPLAY_DISPOSITION:
                 return "raw attempt carries amendment fields without an amendment in force"
             continue
-        if record.get(AMENDMENT_RECORD_FIELD) != AMENDMENT_ID:
-            return f"raw attempt lacks {AMENDMENT_RECORD_FIELD}={AMENDMENT_ID}"
+        amendment_id = expected["amendment_id"]
+        if amendment_id not in SUPPORTED_AMENDMENT_IDS:
+            return f"unsupported amendment {amendment_id!r}"
+        if record.get(AMENDMENT_RECORD_FIELD) != amendment_id:
+            return f"raw attempt lacks {AMENDMENT_RECORD_FIELD}={amendment_id}"
         echoed = record.get("amendment", {})
         if (
             echoed.get("censoring_stratum") != expected["censoring_stratum"]
@@ -1418,6 +1614,10 @@ def validate_amendment_records(
             or echoed.get("deterministic_replay") is not True
         ):
             return f"raw attempt amendment echo {echoed!r} differs from the scheduled {expected!r}"
+        if amendment_id == AMENDMENT_ID_V1_2:
+            problem = validate_v1_2_record_echo(record, echoed, expected)
+            if problem is not None:
+                return problem
         try:
             recomputed = deterministic_trace_hash(record["disposition"], record["trace"])
         except (KeyError, TypeError, ValueError, G4ContractError) as error:
@@ -1541,9 +1741,19 @@ def execute_group(
         censoring = group_censoring(group, amendment.values)
         timeout_seconds = censoring["attempt_deadline_seconds"]
         amendment_expected = {
+            "amendment_id": amendment.values["amendment_id"],
             "censoring_stratum": group.coordinate.get("censoring_stratum") or CLAIM_CORE_STRATUM,
             "attempt_deadline_seconds": censoring["attempt_deadline_seconds"],
             "inner_iteration_cap": censoring["inner_iteration_cap"],
+            # Amendment single-gpu-v1.2 rule A: what IPM attempts must echo and record.
+            "ipm_equilibration": expected_ipm_equilibration(
+                group.coordinate["policy"], amendment.values
+            ),
+            "scaling_mode": recorded_scaling_mode(
+                group.coordinate["policy"],
+                group.coordinate["scaling_mode"],
+                amendment.values["amendment_id"],
+            ),
         }
     group_deadline = timeout_seconds * 9 + 60
     contamination: dict[str, Any] = {
@@ -1890,7 +2100,10 @@ def execute(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("init", "migrate", "status", "run", "invalidate"))
+    parser.add_argument(
+        "action",
+        choices=("init", "migrate", "status", "run", "invalidate", "label-stratum"),
+    )
     parser.add_argument("--repository", type=Path, default=REPOSITORY)
     parser.add_argument("--campaign", type=Path, required=True)
     parser.add_argument("--executable", type=Path)
@@ -1918,6 +2131,27 @@ def main() -> int:
         "--superseded-by",
         type=Path,
         help="invalidate: the campaign that re-runs the invalidated groups (provenance only)",
+    )
+    parser.add_argument(
+        "--stratum-policy",
+        action="append",
+        default=[],
+        help="label-stratum: terminal groups of this coordinate policy join the stratum",
+    )
+    parser.add_argument(
+        "--stratum-name",
+        help="label-stratum: the diagnostic stratum name recorded on every labelled attempt",
+    )
+    parser.add_argument(
+        "--stratum-reason",
+        help="label-stratum: why these records are diagnostic rather than claim evidence",
+    )
+    parser.add_argument(
+        "--cite-diagnostic-stratum",
+        action="append",
+        default=[],
+        metavar="NAME=SOURCE_CAMPAIGN",
+        help="init: copy a labelled diagnostic stratum citation from another checkpoint's metadata",
     )
     parser.add_argument("--nvml-library")
     parser.add_argument("--sampler-cpu-core", type=int)
@@ -2009,7 +2243,7 @@ def main() -> int:
         if dirty:
             raise G4ContractError("campaign initialization and execution require a clean commit")
     store_source_commit = source_commit
-    if arguments.action == "invalidate":
+    if arguments.action in ("invalidate", "label-stratum"):
         # Ledger maintenance opens the checkpoint under its own pinned source commit: the
         # fixed executor lives at a later HEAD, and the invalidated rows are re-run by a new
         # campaign initialised there, never by this one.
@@ -2053,7 +2287,46 @@ def main() -> int:
             )
             print(json.dumps({**store.status(), "invalidated_now": invalidated}, sort_keys=True))
             return 0
+        if arguments.action == "label-stratum":
+            if groups is None:
+                raise G4ContractError("label-stratum is defined for the claim core only")
+            if (
+                not arguments.stratum_policy
+                or not arguments.stratum_name
+                or not arguments.stratum_reason
+            ):
+                raise G4ContractError(
+                    "label-stratum requires --stratum-policy, --stratum-name and --stratum-reason"
+                )
+            stored = store.metadata()
+            labelled = label_diagnostic_stratum_groups(
+                store,
+                groups,
+                policies=tuple(arguments.stratum_policy),
+                stratum=arguments.stratum_name,
+                reason=arguments.stratum_reason,
+                provenance={
+                    "source_commit": store_source_commit,
+                    "policy_amendment": stored.get(AMENDMENT_RECORD_FIELD),
+                    "policy_amendment_sha256": stored.get("policy_amendment_sha256"),
+                    "superseded_by": (
+                        str(arguments.superseded_by.resolve())
+                        if arguments.superseded_by is not None
+                        else None
+                    ),
+                    "labelled_from_commit": source_commit,
+                },
+            )
+            print(json.dumps({**store.status(), **labelled}, sort_keys=True))
+            return 0
         if arguments.action == "init":
+            if arguments.cite_diagnostic_stratum:
+                store.set_metadata(
+                    "diagnostic_strata",
+                    json.dumps(
+                        cited_diagnostic_strata(arguments.cite_diagnostic_stratum), sort_keys=True
+                    ),
+                )
             print(json.dumps(store.status(), sort_keys=True))
             return 0
         if arguments.action == "migrate":

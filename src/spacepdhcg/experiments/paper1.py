@@ -250,7 +250,9 @@ def _validate_identity(identity: Mapping[str, Any]) -> None:
             is None
         ):
             raise Paper1ResultError("identity.conditioning may not be null")
-        if identity["scaling_mode"] not in SCALING_MODES:
+        # ``not_applicable_ipm_native``: amendment single-gpu-v1.2 rule A, the pure IPM
+        # baseline records that the PDHCG scaling axis never reaches QOCO.
+        if identity["scaling_mode"] not in (*SCALING_MODES, "not_applicable_ipm_native"):
             raise Paper1ResultError("identity.scaling_mode is invalid")
         if identity["warm_mode"] not in WARM_MODES:
             raise Paper1ResultError("identity.warm_mode is invalid")
