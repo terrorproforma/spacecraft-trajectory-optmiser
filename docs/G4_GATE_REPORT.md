@@ -130,6 +130,83 @@ QOCO workspace creations (a pre-existing executor defect candidate, reproduced w
 amendment environment), 90 of 90 measured attempts `contaminated` by a foreign Windows compute
 process at 80–98 % SM, 31–136 s per group. No H5/H6 statistic has been formed.
 
+Pure-gpu-ipm defect triage (2026-09-03, checkpoint `g4-claim-core-a08f5e2` paused at a group
+boundary after 26 completed groups, all P1-E pure-gpu-ipm, every attempt `numerical`):
+
+- Environment and wiring were not the cause. `/proc/<worker>/environ` and the executor server
+  carried `SPACEPDHCG_QOCO_LIBRARY=…/build-current-head-qoco/libqoco.so` (QOCO v0.3.2,
+  cuda/cuDSS algebra) and the cuDSS `LD_LIBRARY_PATH`; a foreground `--g4-session` replay of group
+  0 with the exact worker environment and with the planner's known-good library
+  (`build/qoco-g4/libqoco.so`) reproduced the same nine `numerical` attempts. A stderr diagnostic
+  added to the executor showed `api_status=7` (`NUMERICAL_FAILURE`), SCvx `INNER_FAILURE`,
+  `qoco_failure=4` (`NUMERICAL`), QOCO setup 0.08–0.19 s and a 5 s first solve: the adapter was
+  constructed and QOCO ran. The reported "zero workspace creations" was a reporting gap — the
+  driver's failure branch never copied `workspace_creations` into the result.
+- Root cause 1 (executor defect, fake `numerical`): with `warm_mode=primal` the reset boundary of
+  every attempt after a successful one calls `spacepdhcg_cuda_workspace_warm_start_async(…,
+  FULL_RETAINED)` on the PDHCG workspace. Pure IPM never runs the PDHCG kernel, the workspace holds
+  no retained solver state, the call returns `INVALID_STATE`, and the executor recorded the attempt
+  as a launched `numerical` failure in 0.00 s. On an unconditioned replay this produced the
+  alternating pattern `qualified, numerical, qualified, numerical, …` (warm-ups and measured/1,3,5
+  lost). Fix: for `SPACEPDHCG_CUDA_SCVX_PURE_QOCO` the warm boundary is the retained QOCO primal plus
+  the dual clear and the PDHCG warm start is skipped; the failure branch now reports QOCO
+  workspace creations/updates; the adapter records the raw QOCO status.
+- Root cause 2 (genuine solver outcome, not an executor defect): at the claim core's fixed axis
+  `conditioning=4.0` QOCO reports `numerical error` (P1-E `N=100`, 53 iterations, step lengths
+  ~0, `Pcost` 1e17–1e18, primal residual 1e6–1e8; constraint coefficient range 1e2 versus 1e0
+  unconditioned) and `maximum iterations reached` (`N=20`). Ruiz scaling (5 or 10 iterations),
+  static regularisation 1e-8/1e-10 and one IR step were tried for diagnosis only and diverged to
+  NaN at iteration 1; no adapter setting was changed. The same group with `conditioning=0.0`
+  qualified every executed attempt (100 outer iterations, canonical residual 2–8e-10, 65–96 s
+  per attempt, ≥1 QOCO workspace). Fixed-tight PDHCG on the same `N=100` conditioning-4.0
+  coordinate reached its 600 s deadline at residual ≈37 in `g4-claim-core-9a4cbea`. Genuine
+  `numerical` attempts at conditioning 4.0 therefore remain valid H6 evidence for the pure-IPM
+  baseline; they are not invalidated by this triage. Two caveats are recorded for the H6
+  interpretation rather than fixed here (either would be a solver-setting change requiring a
+  preregistered amendment): the pure-IPM baseline runs QOCO without equilibration
+  (`ruiz_iters=0`) while PDHCG uses the workspace's `refresh_if_needed` scaling, and a single
+  QOCO solve is not interruptible, so an IPM attempt whose one solve overruns the 120 s attempt
+  deadline is recorded by QOCO's own outcome (`numerical` after 101 iterations / 109–134 s under
+  the foreign load) rather than as `timeout`.
+- Root cause 3 (executor defect, found on the first re-run group under `857f99a`): QOCO keeps
+  state across `qoco_solve` calls on one persistent solver. Its stall handler multiplies
+  `solver->settings->kkt_dynamic_reg` by 10 in place and never restores it, and the best-iterate
+  tracker (`best_valid`/`best_metric`) is reset only at setup. After attempt 0 ended in
+  `numerical error` (101 iterations, 109 s), the numeric-update path re-solved the identical data
+  in 62 iterations, then 1 iteration (1.7 s) for every remaining attempt, each restoring "best
+  iterate (39)" from the first solve — same disposition, but not independent attempts. Fix
+  (adapter only; the vendored QOCO is untouched): restore the configured settings before every
+  numeric update and, after any failed solve, tear the solver down and set it up again on the
+  current formulation before the next solve, counted in `qoco_workspace_creations` (so the
+  invariant is ≥ 1 per group, not exactly 1). The stale-best hazard for a *successful* solve
+  followed by a failed one on different data (hybrid handoff) is bounded: the executor's quality
+  gate recomputes canonical residuals on the current data, so a stale iterate can be
+  `unqualified`, never `qualified`.
+- Fail-closed contract: new terminal disposition `executor_defect` (reset-boundary failure, QOCO
+  ABI fault, or any driver API status that is not a solver outcome) in the executor, raw-attempt
+  and Paper 1 schemas and Python contracts; a group containing one is quarantined, and the
+  decision refuses a completed group carrying one. The capability probe now runs a real
+  pure-gpu-ipm session and refuses the executor unless all nine attempts launch with ≥1 QOCO
+  workspace creation and solver dispositions; it pins the QOCO library hash, and the worker
+  refuses to start unless its `SPACEPDHCG_QOCO_LIBRARY` hashes to the pinned library.
+  `tests/test_g4_ipm_session_gpu.py` drives the real executor through that probe (9/9 attempts
+  ≥1 QOCO workspace, dispositions `unqualified` at one outer iteration, warm boundaries
+  `primal`); it passed on the fixed build with a foreign compute job at 99 % SM (12–20 s per
+  attempt).
+- Campaign hygiene: the 26 completed pure-gpu-ipm groups of `g4-claim-core-a08f5e2` (all P1-E,
+  22 × `N=100`, 4 × `N=500`; 182 measured attempts, 84 contaminated) were invalidated with the
+  new `invalidate` ledger action (`invalid_executor_defect`, records and result files retained,
+  `invalidation.json` sidecars, journal events, `fix_commit=857f99a`); the interrupted group 26
+  stays `running`/`interrupted` in that checkpoint, which is never resumed (`claim()` skips every
+  existing row and the checkpoint pins `source_commit=a08f5e2`). Option (b) was taken: fix commit
+  `857f99a`, CUDA CTest 62/62, capability `1d8c7527…25041` (probe: 9/9 launched, 1 QOCO
+  workspace, numeric updates 0..8, all `unqualified`), new checkpoint `g4-claim-core-857f99a`,
+  `migrate` from `a08f5e2` imported 0 (no untouched completed group of another policy existed).
+  Its first nine groups exposed root cause 3, so that worker was paused at a group boundary after
+  9 completed P1-E `N=100` groups (81 measured `numerical`, all contaminated) and those groups
+  were invalidated in turn (`fix_commit` = the root-cause-3 commit, superseded by the next
+  checkpoint). Order is unchanged (pure-gpu-ipm first).
+
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core
 checkpoint are implementation-ready on `integration/single-gpu-v1`. No claim-core or full grouped

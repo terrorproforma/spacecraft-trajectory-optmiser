@@ -117,6 +117,20 @@ QOCO workspace creations/updates and timings); the scheduler retains it in the
 group's `stderr.log`. `SPACEPDHCG_QOCO_VERBOSE=1` additionally turns on QOCO's
 own iteration log (diagnostic only; never set by the scheduler).
 
+Independent attempts on the persistent QOCO workspace: QOCO (v0.3.2 fork) keeps
+two pieces of state across `qoco_solve` calls on one solver, the stall handler's
+escalated `kkt_dynamic_reg` (mutated in place, never restored) and the
+best-iterate tracker (`best_valid`/`best_metric`, reset only at setup). After a
+`numerical error`/`maximum iterations` exit the next solve on the same solver is
+therefore not an independent attempt (observed on P1-E `N=100`, conditioning
+4.0: 101, 62, then 1 iteration per solve on identical data). The adapter now
+restores the configured settings before every numeric update and, after any
+failed solve, tears the solver down and sets it up again on the current
+formulation before the next solve. That rebuild is reported honestly:
+`qoco_workspace_creations` in a group is 1 plus the number of solves that
+followed a failure, so "≥ 1 creation" (not "exactly 1") is the invariant.
+Successful solves keep the persistent workspace and its numeric-update path.
+
 ### Capability preflight for the IPM policies
 
 `generate_g4_executor_capability.py` runs its real persistent-session probe on a
