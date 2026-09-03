@@ -527,6 +527,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
 
     from .bundles import (
         ClusterPricingSettings,
+        bundle_columns,
         bundle_settings_summary,
         cluster_search_settings,
         family_clusters,
@@ -641,37 +642,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
 
     def add_bundle_columns(bundle) -> None:
-        members: list[FleetColumn] = []
-        for ship in bundle.ships:
-            column = FleetColumn.from_plan(
-                len(columns),
-                ship.slot,
-                f"f{bundle.label}_s{ship.slot}",
-                ship.route.plan,
-                ship.route.collected_mass,
-                certified=ship.route.certified,
-                route=ship.route,
-            )
-            columns.append(column)
-            members.append(column)
-            # every certified variant that stands alone is a column of its own
-            for index, variant in enumerate(ship.variants):
-                standalone = not variant.plan.orphaned and not variant.plan.foreign_deploy_epochs
-                if variant is ship.route or not standalone:
-                    continue
-                columns.append(
-                    FleetColumn.from_plan(
-                        len(columns),
-                        ship.slot,
-                        f"f{bundle.label}_s{ship.slot}_v{index}",
-                        variant.plan,
-                        variant.collected_mass,
-                        certified=variant.certified,
-                        route=variant,
-                    )
-                )
-        if len(members) > 1:
-            columns.append(FleetColumn.from_bundle(len(columns), f"f{bundle.label}", members))
+        columns.extend(bundle_columns(bundle, len(columns)))
 
     def run_master():
         master = solve_fleet_master(columns, weights=weights, max_ships=args.max_ships)
@@ -848,6 +819,170 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_fleet_master(args: argparse.Namespace) -> int:
+    """Master over archived certified routes (this and earlier runs) -> verified fleet.
+
+    Every ``route_summary.json`` below the ``--source`` directories is rebuilt into its plan,
+    re-flown through SCvx in worker processes, packed into bundle columns (archived families
+    keep their cooperative structure) and handed to the fleet master.  The selected fleet is
+    verified independently and officially before it is reported.
+    """
+
+    from .archive import discover_archives, recertify_archives
+    from .bundles import bundle_columns
+    from .cooperative import FleetColumn, solve_fleet_master
+    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .fleet import FleetPlan, assemble_fleet
+    from .low_thrust import ScvxSettings
+    from .official import official_verifier_available, run_official_verifier
+    from .pipeline import write_route_artifacts
+    from .solution import Solution
+    from .verifier import Gtoc12Verifier
+    from .viewer_export import write_viewer_dataset
+
+    started = time.perf_counter()
+    catalogue = load_catalogue()
+    bonus_table = _optional_bonus(load_bonus_table)
+    weights: dict[int, float] | None = None
+    if bonus_table is not None and not args.no_bonus_weights:
+        weights = {
+            int(asteroid): float(bonus_table.coefficient[asteroid - 1])
+            for asteroid in catalogue.ids
+        }
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    groups = discover_archives([Path(s) for s in args.source])
+    report: dict[str, Any] = {
+        "run_id": args.run_id,
+        "commit": _commit(REPOSITORY_ROOT),
+        "sources": [str(s) for s in args.source],
+        "groups": [
+            {
+                "name": g.name,
+                "ships": len(g.ships),
+                "archives": sum(len(s.summaries) for s in g.ships),
+            }
+            for g in groups
+        ],
+        "settings": {
+            "workers": args.workers,
+            "max_ships": args.max_ships,
+            "scvx_iterations": args.scvx_iterations,
+            "node_days": args.node_days,
+            "bonus_weights": weights is not None,
+        },
+        "cpu_only": True,
+        "gpu_used": False,
+        "recertification": [],
+        "bundles": [],
+    }
+    print(
+        _json(
+            {
+                "groups": len(groups),
+                "ships": sum(len(g.ships) for g in groups),
+                "archives": sum(len(s.summaries) for g in groups for s in g.ships),
+            }
+        ),
+        flush=True,
+    )
+
+    def on_progress(entry: dict[str, Any]) -> None:
+        report["recertification"].append(entry)
+        print(_json(entry), flush=True)
+
+    bundles = recertify_archives(
+        catalogue,
+        groups,
+        scvx=ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days),
+        workers=args.workers,
+        on_progress=on_progress,
+    )
+    columns: list[FleetColumn] = []
+    for bundle in bundles:
+        summary = bundle.summary()
+        report["bundles"].append(summary)
+        for ship in bundle.ships:
+            write_route_artifacts(
+                ship.route,
+                catalogue,
+                output_dir / "columns" / summary_dir(bundle) / f"ship_{ship.slot:02d}",
+            )
+        columns.extend(bundle_columns(bundle, len(columns), prefix="a"))
+    report["columns"] = len(columns)
+    report["recertified_routes"] = sum(len(s.variants) for b in bundles for s in b.ships)
+    report["recertification_wall_seconds"] = time.perf_counter() - started
+    if not columns:
+        report["status"] = "no_certified_route"
+        (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
+        print(_json({"run_id": args.run_id, "status": report["status"]}))
+        return 1
+    master = solve_fleet_master(columns, weights=weights, max_ships=args.max_ships)
+    report["master"] = master.summary() | {"columns": len(columns)}
+    plan = FleetPlan(master.routes())
+    directory = output_dir / "fleet"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "Result.txt"
+    assemble_fleet(plan, catalogue).write(path)
+    histories: dict = {}
+    independent = Gtoc12Verifier(catalogue, bonus=bonus_table, history=histories).verify_file(path)
+    entry: dict[str, Any] = {"independent": independent.summary()}
+    if official_verifier_available():
+        entry["official"] = run_official_verifier(path).summary()
+    score = entry.get("official", {}).get("total_mass_kg")
+    entry["score_kg"] = independent.total_mass_kg if score is None else score
+    entry["ok"] = bool(independent.ok) and entry.get("official", {}).get("ok", True)
+    entry["fleet"] = plan.summary()
+    entry["artifacts"] = {"solution": str(path)}
+    entry["master"] = {
+        k: v for k, v in report["master"].items() if k not in ("selected", "rejected")
+    }
+    if entry["ok"]:
+        entry["viewer_manifest"] = write_viewer_dataset(
+            directory / "viewer",
+            Solution.read(path),
+            histories,
+            catalogue,
+            run_id=f"{args.run_id}_fleet",
+            commit=report["commit"],
+            verification=entry["independent"],
+            solution_path=path,
+        )
+    (directory / "fleet.json").write_text(_json(entry) + "\n", encoding="utf-8")
+    report["best"] = entry if entry["ok"] else None
+    report["final_fleet"] = entry
+    report["status"] = "scored" if entry["ok"] else "fleet_failed_verification"
+    report["wall_seconds_total"] = time.perf_counter() - started
+    report["peak_rss_mb"] = _peak_rss_mb()
+    (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
+    print(
+        _json(
+            {
+                "run_id": args.run_id,
+                "status": report["status"],
+                "score_kg": entry["score_kg"],
+                "ships": entry["fleet"]["ships"],
+                "asteroids": len(entry["fleet"]["asteroids"]),
+                "average_collected_kg": entry["fleet"]["average_collected_kg"],
+                "columns": len(columns),
+                "master_exhaustive": master.exhaustive,
+                "wall_seconds_total": report["wall_seconds_total"],
+                "peak_rss_mb": report["peak_rss_mb"],
+            }
+        )
+    )
+    return 0 if entry["ok"] else 1
+
+
+def summary_dir(bundle) -> str:
+    """Directory name of an archived bundle's re-certified columns."""
+
+    archived = next((s.report.get("archived") for s in bundle.ships if s.report), None)
+    if archived:
+        return str(archived).replace("/", "__").replace("\\", "__")
+    return f"bundle_{bundle.label}"
+
+
 def cmd_export_viewer(args: argparse.Namespace) -> int:
     from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
     from .solution import Solution
@@ -978,6 +1113,25 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     )
     cluster.add_argument("--no-bonus-weights", action="store_true")
     cluster.set_defaults(function=cmd_cluster_fleet)
+
+    master = commands.add_parser(
+        "fleet-master",
+        help="re-certify archived routes (this and earlier runs) and solve the fleet master",
+    )
+    master.add_argument("--run-id", required=True)
+    master.add_argument("--output", required=True)
+    master.add_argument(
+        "--source",
+        action="append",
+        required=True,
+        help="run directory holding ship_NN/**/route_summary.json archives (repeatable)",
+    )
+    master.add_argument("--workers", type=int, default=2)
+    master.add_argument("--max-ships", type=int, default=100)
+    master.add_argument("--scvx-iterations", type=int, default=40)
+    master.add_argument("--node-days", type=float, default=2.0)
+    master.add_argument("--no-bonus-weights", action="store_true")
+    master.set_defaults(function=cmd_fleet_master)
 
     export = commands.add_parser("export-viewer", help="propagate a solution and write viewer data")
     export.add_argument("solution")

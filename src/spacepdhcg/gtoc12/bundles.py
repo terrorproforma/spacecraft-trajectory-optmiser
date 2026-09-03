@@ -41,7 +41,7 @@ from numpy.typing import NDArray
 
 from . import constants as C
 from .clusters import ClusterBands, ComovingClusters
-from .cooperative import MinerPool
+from .cooperative import FleetColumn, MinerPool
 from .data import AsteroidCatalogue
 from .low_thrust import ScvxSettings
 from .pipeline import RefinedRoute, refine_route
@@ -966,3 +966,46 @@ def price_clusters(
 
 def bundle_settings_summary(settings: ClusterPricingSettings) -> dict[str, Any]:
     return asdict(settings)
+
+
+def bundle_columns(bundle: ClusterBundle, start: int, prefix: str = "f") -> list[FleetColumn]:
+    """The master columns of one priced bundle, numbered from ``start``.
+
+    Every emitted ship route is a column; every *stand-alone* certified variant (no orphans, no
+    foreign collects) is a column of its own; and when the bundle has several ships they also
+    form one multi-ship bundle column so their cooperative collects can be selected together.
+    """
+
+    columns: list[FleetColumn] = []
+    members: list[FleetColumn] = []
+    label = f"{prefix}{bundle.label}"
+    for ship in bundle.ships:
+        column = FleetColumn.from_plan(
+            start + len(columns),
+            ship.slot,
+            f"{label}_s{ship.slot}",
+            ship.route.plan,
+            ship.route.collected_mass,
+            certified=ship.route.certified,
+            route=ship.route,
+        )
+        columns.append(column)
+        members.append(column)
+        for index, variant in enumerate(ship.variants):
+            standalone = not variant.plan.orphaned and not variant.plan.foreign_deploy_epochs
+            if variant is ship.route or not standalone or not variant.certified:
+                continue
+            columns.append(
+                FleetColumn.from_plan(
+                    start + len(columns),
+                    ship.slot,
+                    f"{label}_s{ship.slot}_v{index}",
+                    variant.plan,
+                    variant.collected_mass,
+                    certified=variant.certified,
+                    route=variant,
+                )
+            )
+    if len(members) > 1:
+        columns.append(FleetColumn.from_bundle(start + len(columns), label, members))
+    return columns

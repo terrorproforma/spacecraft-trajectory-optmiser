@@ -249,6 +249,7 @@ class RefinedRoute:
             "wall_seconds": self.wall_seconds,
             "refined_arcs": self.refined_arc_count,
             "scheduler": self.scheduler_telemetry,
+            "plan": self.plan.summary(),  # reloadable (``RoutePlan.from_summary``) for archives
             "legs": [
                 {
                     "from": leg.planned.from_id,
@@ -574,3 +575,110 @@ def write_route_artifacts(
         json.dumps(summary, indent=2, sort_keys=True, default=float) + "\n", encoding="utf-8"
     )
     return {"solution": str(solution_path), "summary": summary}
+
+
+def plan_from_route_summary(
+    summary: dict[str, Any], *, deployers: dict[int, float] | None = None
+) -> RoutePlan:
+    """Rebuild the :class:`RoutePlan` an archived ``route_summary.json`` was refined from.
+
+    Recent archives carry the plan verbatim (``summary["plan"]``).  Older ones only carry the
+    flown legs and the collected masses, from which the schedule is reconstructed: a leg towards
+    an unvisited asteroid deploys a miner at its arrival, a later visit collects it (at the
+    arrival or the departure — whichever reproduces the archived collected mass), and an
+    asteroid collected without an own deploy is a foreign miner whose deploy epoch is taken from
+    ``deployers`` (the other ships of the same archived bundle) or backed out of the mass.
+    """
+
+    if "plan" in summary:
+        plan = RoutePlan.from_summary(summary["plan"])
+        if deployers:
+            foreign = {
+                a: deployers.get(a, epoch) for a, epoch in plan.foreign_deploy_epochs.items()
+            }
+            plan = RoutePlan(
+                plan.legs,
+                plan.deploy_epochs,
+                plan.collect_epochs,
+                plan.collected_mass,
+                plan.propellant_proxy_kg,
+                plan.final_mass_proxy_kg,
+                foreign,
+            )
+        return plan
+    collected = {int(k): float(v) for k, v in summary["collected_mass_kg"].items()}
+    rate_per_day = C.MINING_RATE_KG_PER_YEAR / C.YEAR_DAYS
+    deploy: dict[int, float] = {}
+    collect: dict[int, float] = {}
+    foreign: dict[int, float] = {}
+    legs: list[PlannedLeg] = []
+    raw = [
+        (int(item["from"]), int(item["to"]), float(item["t0"]), float(item["tf"]), item)
+        for item in summary["legs"]
+    ]
+    for index, (source, target, t0, tf, item) in enumerate(raw):
+        departure = raw[index + 1][2] if index + 1 < len(raw) else tf  # leaving ``target``
+        if source == EARTH_ID:
+            role = "earth_out"
+        elif target == EARTH_ID:
+            role = "earth_return"
+        elif target in deploy or target in collect:
+            role = "collect_hop"  # revisit: the miner deployed earlier is collected now
+        elif target not in collected:
+            role = "deploy_hop"  # deployed and left for another ship (or never collected)
+        else:
+            # first visit to an asteroid this ship collects: either the ship deploys now and
+            # collects on a later visit / when it leaves after camping, or it collects a foreign
+            # miner right away.  The archived mass tells the cases apart.
+            mass_days = collected[target] / rate_per_day
+            revisit = any(leg[1] == target for leg in raw[index + 1 :])
+            camp_matches = abs((departure - tf) - mass_days) < 1e-6
+            role = "deploy_hop" if revisit or camp_matches else "collect_hop"
+        if role in ("earth_out", "deploy_hop"):
+            deploy[target] = tf
+        elif target != EARTH_ID and target in collected and target not in collect:
+            # collect at the arrival or the departure (camping) - whichever reproduces the mass
+            if target in deploy:
+                mined_from = deploy[target]
+            elif deployers and target in deployers:
+                mined_from = deployers[target]
+            else:
+                mined_from = None
+            if mined_from is None:
+                collect[target] = tf
+                foreign[target] = tf - collected[target] / rate_per_day
+            else:
+                expected = mined_from + collected[target] / rate_per_day
+                collect[target] = (
+                    tf if abs(tf - expected) <= abs(departure - expected) else departure
+                )
+                if target not in deploy:
+                    foreign[target] = mined_from
+        legs.append(
+            PlannedLeg(
+                source,
+                target,
+                t0,
+                tf,
+                float(item.get("delta_v_km_s") or 0.0),
+                1.0,
+                role,
+            )
+        )
+    # an own miner collected when the ship leaves the asteroid (camp) has no revisit leg
+    for asteroid in collected:
+        if asteroid not in collect and asteroid in deploy:
+            departures = [leg.departure_epoch for leg in legs if leg.from_id == asteroid]
+            if departures:
+                collect[asteroid] = departures[-1]
+    total = sum(collected.values())
+    final_mass = float(summary.get("final_mass_kg", C.DRY_MASS_KG + total))
+    return RoutePlan(
+        tuple(legs),
+        deploy,
+        collect,
+        collected,
+        C.MAX_INITIAL_MASS_KG - final_mass - C.MINER_MASS_KG * len(deploy),
+        final_mass + total,
+        foreign,
+    )
