@@ -24,6 +24,7 @@ fallback when a re-timed leg turns out not to be flyable.
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -37,7 +38,12 @@ from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
 from .low_thrust import ScvxSettings
 from .pipeline import RefinedRoute, refine_route
-from .screening import lambert_hops, propellant_for_delta_v, thrust_authority_km_s
+from .screening import (
+    lambert_hops,
+    low_thrust_inflation,
+    propellant_for_delta_v,
+    thrust_authority_km_s,
+)
 from .search import (
     EARTH_ID,
     PlannedLeg,
@@ -67,6 +73,13 @@ class RetimeSettings:
     earth_out_inflation: float | None = None
     earth_return_inflation: float | None = None
     hop_inflation: float | None = None
+    # Ratio-dependent hop inflation ``floor + slope x (Lambert ΔV / full authority)`` (see
+    # ``screening.low_thrust_inflation``; fitted on 1674 certified hops).  ``None`` keeps the
+    # flat ``hop_inflation``.  With the model, a slow hop (ratio 0.15) costs 1.15x Lambert and a
+    # hop at the limit (0.5) 1.38x, so the DP stops treating fast and slow hops alike and the
+    # margin it spends buys cheaper, longer hops; per-pair calibration becomes a residual factor.
+    hop_inflation_slope: float | None = 0.65
+    hop_inflation_floor: float = 1.05
     hop_authority_ratio: float | None = 0.45
     earth_out_authority_ratio: float | None = None
     earth_return_authority_ratio: float | None = None
@@ -219,13 +232,34 @@ class Retimer:
         self.inflations: dict[tuple[int, int], float] = {}
         self._tables: dict[tuple[int, int, str], tuple[FloatArray, NDArray[np.bool_]]] = {}
         self.lattice = _Lattice(self.settings.step_days, self.settings.end_margin_days)
+        # Earth-out TOF floor (days): set from a certified, continuously optimised Earth leg so
+        # the DP may only keep or lengthen it.  Earth legs are nearly thrust-saturated and their
+        # Lambert proxy barely depends on TOF, so without the floor the DP shortens the leg to
+        # buy hop time and SCvx then costs 60-200 kg more (earthleg.py).
+        self.earth_out_tof_floor: float | None = None
 
     # -- Lambert tables ------------------------------------------------------------------
 
     def _tofs(self, role: str) -> FloatArray:
         s = self.settings
         lo, hi = s.earth_tof_days if role in ("earth_out", "earth_return") else s.hop_tof_days
+        if role == "earth_out" and self.earth_out_tof_floor is not None:
+            # snap the floor onto the lattice so the certified TOF itself stays admissible
+            floor = s.step_days * math.floor(self.earth_out_tof_floor / s.step_days + 1e-9)
+            lo = max(lo, floor)
+            hi = max(hi, lo)
         return np.arange(lo, hi + 1e-9, s.step_days)
+
+    def protect_earth_leg(self, plan: RoutePlan) -> None:
+        """Keep the DP's Earth-out TOF at or above the plan's (certified) Earth-leg TOF."""
+
+        first = plan.legs[0] if plan.legs else None
+        if first is None or first.role != "earth_out":
+            return
+        floor = float(first.tof_days)
+        if self.earth_out_tof_floor is None or floor != self.earth_out_tof_floor:
+            self.earth_out_tof_floor = floor
+            self._tables = {k: v for k, v in self._tables.items() if k[2] != "earth_out"}
 
     def _state(self, body: int, epochs: FloatArray) -> tuple[FloatArray, FloatArray]:
         if body == EARTH_ID:
@@ -285,8 +319,42 @@ class Retimer:
             overrides = (s.hop_inflation, s.hop_authority_ratio)
         inflation = inflation if overrides[0] is None else overrides[0]
         ratio = ratio if overrides[1] is None else overrides[1]
-        inflation = self.inflations.get((from_body, to_body), inflation)
+        if not self._ratio_model(role):
+            inflation = self.inflations.get((from_body, to_body), inflation)
         return inflation, min(ratio, self.bans.get((from_body, to_body), np.inf))
+
+    def _ratio_model(self, role: str) -> bool:
+        """True when hops of this role are priced with the ratio-dependent inflation model."""
+
+        return self.settings.hop_inflation_slope is not None and role in (
+            "deploy_hop",
+            "collect_hop",
+        )
+
+    def leg_inflation(
+        self,
+        role: str,
+        from_body: int,
+        to_body: int,
+        delta_v_km_s: FloatArray | float,
+        mass_kg: float,
+        tof_days: FloatArray | float,
+    ) -> FloatArray | float:
+        """Propellant inflation of a leg: flat per role (Earth legs, legacy hops) or the
+        ratio-dependent model times the pair's calibrated residual (hops)."""
+
+        base, _ = self._limits(role, from_body, to_body)
+        if not self._ratio_model(role):
+            return base
+        s = self.settings
+        model = low_thrust_inflation(
+            delta_v_km_s,
+            mass_kg,
+            tof_days,
+            floor=s.hop_inflation_floor,
+            slope=s.hop_inflation_slope,
+        )
+        return model * self.inflations.get((from_body, to_body), 1.0)
 
     def search_settings_limits(self, role: str) -> tuple[float, float]:
         s = self.search_settings
@@ -302,10 +370,28 @@ class Retimer:
         limit = self.settings.ban_factor * ratio
         self.bans[(from_body, to_body)] = min(self.bans.get((from_body, to_body), np.inf), limit)
 
-    def calibrate(self, from_body: int, to_body: int, measured_inflation: float) -> None:
-        """Use the SCvx-measured ΔV ratio (x safety margin) as this pair's propellant inflation."""
+    def calibrate(
+        self,
+        from_body: int,
+        to_body: int,
+        measured_inflation: float,
+        *,
+        authority_ratio: float | None = None,
+    ) -> None:
+        """Use the SCvx-measured ΔV ratio (x safety margin) as this pair's propellant inflation.
 
-        value = max(measured_inflation, 1.0) * self.settings.calibration_margin
+        With the ratio-dependent hop model the pair's entry is the *residual* measured / model
+        at the flown ``authority_ratio`` (floored at 0.95), so a hop flown fast does not inflate
+        the same pair's slow hops by its own finite-thrust penalty.
+        """
+
+        s = self.settings
+        hop = from_body != EARTH_ID and to_body != EARTH_ID
+        if hop and authority_ratio is not None and s.hop_inflation_slope is not None:
+            model = s.hop_inflation_floor + s.hop_inflation_slope * max(authority_ratio, 0.0)
+            value = max(measured_inflation / model, 0.95) * s.calibration_margin
+        else:
+            value = max(measured_inflation, 1.0) * s.calibration_margin
         previous = self.inflations.get((from_body, to_body))
         self.inflations[(from_body, to_body)] = value if previous is None else max(previous, value)
 
@@ -380,10 +466,12 @@ class Retimer:
             nxt = visits[j + 1]
             dv, feasible = self.leg_table(visit.body, nxt.body, role)
             tofs = self._tofs(role)
-            infl_p, ratio_limit = self._limits(role, visit.body, nxt.body)
+            _flat, ratio_limit = self._limits(role, visit.body, nxt.body)
             mass = masses[j]
             authority = thrust_authority_km_s(mass, tofs, 1.0)
             ok = feasible & (dv <= ratio_limit * authority[None, :])
+            safe_dv = np.where(np.isfinite(dv), dv, 0.0)
+            infl_p = self.leg_inflation(role, visit.body, nxt.body, safe_dv, mass, tofs[None, :])
             propellant = propellant_for_delta_v(mass, dv * infl_p)
             leg_value = np.where(ok, departure_value[:, None] - price * propellant, neg_inf)
             next_value = np.full(n, neg_inf)
@@ -465,11 +553,12 @@ class Retimer:
             dv = float(dv_table[d_index, t_index])
             if not np.isfinite(dv):
                 return None, [], "leg_infeasible"
-            infl_p, ratio_limit = self._limits(role, visit.body, nxt.body)
+            _flat, ratio_limit = self._limits(role, visit.body, nxt.body)
             tof = arrivals[j + 1] - departures[j]
             if self.authority_ratio(dv, mass, tof) > ratio_limit:
                 return None, masses, "leg_authority"
             masses.append(mass)
+            infl_p = float(self.leg_inflation(role, visit.body, nxt.body, dv, mass, tof))
             propellant = float(propellant_for_delta_v(mass, dv * infl_p))
             propellant_total += propellant
             mass -= propellant
@@ -631,7 +720,11 @@ class Retimer:
                 if abs(plan.collect_epochs[leg.from_id] - leg.departure_epoch) < 1e-6:
                     mass += plan.collected_mass[leg.from_id]
             masses.append(mass)
-            inflation, _ = self._limits(leg.role, leg.from_id, leg.to_id)
+            inflation = float(
+                self.leg_inflation(
+                    leg.role, leg.from_id, leg.to_id, leg.delta_v_proxy_km_s, mass, leg.tof_days
+                )
+            )
             mass -= float(propellant_for_delta_v(mass, leg.delta_v_proxy_km_s * inflation))
             if leg.to_id != EARTH_ID and leg.to_id in plan.deploy_epochs:
                 if abs(plan.deploy_epochs[leg.to_id] - leg.arrival_epoch) < 1e-6:
@@ -973,6 +1066,31 @@ def improve_plan(
     )
 
 
+def calibrate_from_route(retimer: Retimer, route: RefinedRoute) -> int:
+    """Calibrate the re-timer's pair inflations from every certified leg of a refined route.
+
+    Returns the number of legs used.  The measured inflation is SCvx ΔV / planned Lambert ΔV; the
+    leg's authority ratio (planned ΔV over the full thrust authority at its initial mass) lets
+    the ratio-dependent hop model store a residual instead of the raw factor.
+    """
+
+    used = 0
+    for leg in route.legs:
+        if not leg.certified or leg.solution is None or leg.planned.delta_v_proxy_km_s <= 0:
+            continue
+        planned = leg.planned
+        retimer.calibrate(
+            planned.from_id,
+            planned.to_id,
+            leg.solution.delta_v_km_s / planned.delta_v_proxy_km_s,
+            authority_ratio=retimer.authority_ratio(
+                planned.delta_v_proxy_km_s, leg.mass_before, planned.tof_days
+            ),
+        )
+        used += 1
+    return used
+
+
 @dataclass(slots=True)
 class CertifiedImprovement:
     route: RefinedRoute | None  # best certified re-timed route (None if none certified)
@@ -1056,13 +1174,7 @@ def improve_and_certify(
             "failures": refined.failures,
         }
         # every certified leg calibrates its pair's propellant inflation for the next attempt
-        for leg in refined.legs:
-            if leg.certified and leg.solution is not None and leg.planned.delta_v_proxy_km_s > 0:
-                retimer.calibrate(
-                    leg.planned.from_id,
-                    leg.planned.to_id,
-                    leg.solution.delta_v_km_s / leg.planned.delta_v_proxy_km_s,
-                )
+        calibrate_from_route(retimer, refined)
         if refined.certified:
             certified_routes.append(refined)
             if best is None or refined.total_collected_kg > best.total_collected_kg:

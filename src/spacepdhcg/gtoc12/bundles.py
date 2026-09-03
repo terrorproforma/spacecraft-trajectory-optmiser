@@ -44,6 +44,7 @@ from . import constants as C
 from .clusters import ClusterBands, ComovingClusters
 from .cooperative import FleetColumn, MinerPool
 from .data import AsteroidCatalogue
+from .earthleg import EarthLegBounds, EarthLegModel, refine_leg_scvx
 from .low_thrust import ScvxSettings
 from .pipeline import RefinedRoute, refine_route
 from .proxies import phasing_edelbaum_proxy
@@ -52,6 +53,7 @@ from .retiming import (
     RetimeSettings,
     Visit,
     build_visits,
+    calibrate_from_route,
     extend_plan,
     improve_and_certify,
     orders_of,
@@ -72,6 +74,13 @@ class ClusterPricingSettings:
     earth_inflation: float = 0.9  # reference Earth legs cost 0.83-0.86x their Lambert ΔV
     earth_legs_per_ship: int = 4  # certified legs the beam is seeded with (per ship slot)
     earth_leg_checks: int = 12  # SCvx checks per ship slot before giving up
+    # continuous (launch, TOF) refinement of every certified grid leg with SCvx in the loop
+    # (earthleg.refine_leg_scvx); ``earth_leg_refinements`` extra SCvx calls per leg
+    earth_leg_continuous: bool = True
+    earth_leg_refinements: int = 8
+    # launch grid spans the mission start plus this window (the references launch over ~3 y)
+    launch_window_days: float = 3.0 * C.YEAR_DAYS
+    launch_step_days: float = 30.0
     # beam inside the family
     beam_width: int = 24
     max_deploys: int = 10
@@ -102,6 +111,11 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
     grids: dict[str, Any] = {}
     if settings.launch_epochs is not None:
         grids["launch_epochs"] = settings.launch_epochs
+    else:
+        grids["launch_epochs"] = tuple(
+            C.MISSION_START_MJD
+            + np.arange(0.0, settings.launch_window_days + 1e-9, settings.launch_step_days)
+        )
     if settings.earth_leg_tofs is not None:
         grids["earth_leg_tofs"] = settings.earth_leg_tofs
     return SearchSettings(
@@ -153,13 +167,21 @@ def certify_earth_legs(
     cache: dict[tuple[int, float, float], EarthLeg | None] | None = None,
     weights: dict[int, float] | None = None,
     certify=None,
+    continuous: bool = True,
+    continuous_evaluations: int = 8,
+    scvx_cache: dict[tuple[int, float, float], EarthLeg | None] | None = None,
+    optimiser_log: list[dict[str, Any]] | None = None,
 ) -> tuple[list[EarthLeg], list[dict[str, Any]]]:
     """SCvx-certified Earth legs to ``targets``: the beam's first level for one ship slot.
 
     Distinct ``(target, launch)`` legs are ranked by the beam's own first-level score (mining
     horizon minus priced propellant at the best admissible TOF) and flown in that order until
-    ``count`` certify or ``max_checks`` were tried.  Failed legs are retained (returned as the
-    reject log) and cached so no cluster flies the same leg twice.
+    ``count`` certify or ``max_checks`` were tried.  With ``continuous`` (default) every grid
+    leg that certifies is then refined by the continuous Earth-leg optimiser
+    (``earthleg.refine_leg_scvx``: compass search over launch epoch and TOF inside ±half a grid
+    spacing with SCvx as the evaluator, at most ``continuous_evaluations`` extra SCvx calls) and
+    the cheapest certified leg of that launch window seeds the beam.  Failed legs are retained
+    (returned as the reject log) and cached so no cluster flies the same leg twice.
     """
 
     s = search_settings
@@ -170,6 +192,20 @@ def certify_earth_legs(
         return [], []
     epochs = np.asarray(s.launch_epochs)
     tofs = np.asarray(s.earth_leg_tofs)
+    launch_radius = 0.5 * float(np.min(np.diff(epochs))) if epochs.shape[0] > 1 else 15.0
+    model = EarthLegModel(
+        initial_mass=s.initial_mass,
+        inflation=s.earth_out_inflation,
+        authority_ratio=s.earth_out_authority_ratio,
+        propellant_weight=s.propellant_weight,
+    )
+    bounds = EarthLegBounds(
+        launch_min=float(epochs.min()),
+        launch_max=float(epochs.max()),
+        tof_min=float(tofs.min()),
+        tof_max=float(tofs.max()),
+    )
+    scvx_cache = {} if scvx_cache is None else scvx_cache
     grid = screen_earth_to_asteroids(catalogue, targets, epochs, tofs)
     dv = np.where(grid["feasible"], grid["total_delta_v"], np.inf)
     authority = s.earth_out_authority_ratio * thrust_authority_km_s(
@@ -199,27 +235,43 @@ def certify_earth_legs(
         target = int(targets[a_index])
         launch = float(epochs[e_index])
         tof = float(tofs[t_index])
-        key = (target, round(launch, 3), round(tof, 3))
-        if key in cache:
-            leg = cache[key]
+        lambert = float(dv[a_index, e_index, t_index])
+        grid_key = (target, round(launch, 3), round(tof, 3))
+        if grid_key in cache:
+            leg = cache[grid_key]
+            launch_flown, tof_flown = launch, tof
         elif checks >= max_checks:
             continue  # only cached legs from here on
         else:
+            launch_flown, tof_flown = launch, tof
             checks += 1
-            leg = certify(
-                catalogue, target, launch, tof, float(dv[a_index, e_index, t_index]), scvx
-            )
-            cache[key] = leg
+            leg = certify(catalogue, target, launch_flown, tof_flown, lambert, scvx)
+            if leg is not None and continuous and continuous_evaluations > 0:
+                refinement = refine_leg_scvx(
+                    catalogue,
+                    leg,
+                    certify,
+                    scvx,
+                    bounds=bounds,
+                    launch_radius_days=launch_radius,
+                    max_evaluations=continuous_evaluations,
+                    cache=scvx_cache,
+                    model=model,
+                )
+                if optimiser_log is not None:
+                    optimiser_log.append(refinement.summary())
+                leg = refinement.leg
+                launch_flown, tof_flown = leg.launch_epoch, leg.tof_days
+            cache[grid_key] = leg
         if leg is None:
             rejected.append(
                 {
                     "target": target,
-                    "launch_epoch": launch,
-                    "tof_days": tof,
-                    "lambert_dv_km_s": float(dv[a_index, e_index, t_index]),
+                    "launch_epoch": launch_flown,
+                    "tof_days": tof_flown,
+                    "lambert_dv_km_s": lambert,
                     "authority_ratio": float(
-                        dv[a_index, e_index, t_index]
-                        / thrust_authority_km_s(s.initial_mass, tof, 1.0)
+                        lambert / thrust_authority_km_s(s.initial_mass, tof_flown, 1.0)
                     ),
                     "reason": "earth leg not certified by SCvx",
                 }
@@ -485,8 +537,15 @@ def price_cluster(
     pool = MinerPool()
     bundle = ClusterBundle(label, tuple(int(a) for a in members), [])
     earth_cache = {} if earth_cache is None else earth_cache
+    earth_scvx_cache: dict[tuple[int, float, float], EarthLeg | None] = {}
     search_settings = cluster_search_settings(settings, members.shape[0])
-    earth_report: dict[str, Any] = {"checked": 0, "certified": 0, "rejected": []}
+    earth_report: dict[str, Any] = {
+        "checked": 0,
+        "certified": 0,
+        "rejected": [],
+        "continuous": settings.earth_leg_continuous,
+        "optimised": [],  # grid leg -> continuous leg records (surrogate propellant before/after)
+    }
     retimers: dict[int, Retimer] = {}
     searches: dict[int, RouteSearch] = {}
     # legs SCvx refused anywhere in this family: shared by every ship slot's beam
@@ -515,6 +574,10 @@ def price_cluster(
             cache=earth_cache,
             weights=weights,
             certify=certify_earth,
+            continuous=settings.earth_leg_continuous,
+            continuous_evaluations=settings.earth_leg_refinements,
+            scvx_cache=earth_scvx_cache,
+            optimiser_log=earth_report["optimised"],
         )
         earth_report["checked"] += len(earth_cache) - before
         earth_report["certified"] += len(legs)
@@ -593,13 +656,9 @@ def price_cluster(
             cluster_retime_settings(settings, last=last),
             weights,
         )
-        for leg in refined.legs:
-            if leg.certified and leg.solution is not None and leg.planned.delta_v_proxy_km_s > 0:
-                retimer.calibrate(
-                    leg.planned.from_id,
-                    leg.planned.to_id,
-                    leg.solution.delta_v_km_s / leg.planned.delta_v_proxy_km_s,
-                )
+        calibrate_from_route(retimer, refined)
+        if settings.earth_leg_continuous:
+            retimer.protect_earth_leg(refined.plan)
         improvement = improve_and_certify(
             refined.plan,
             search,

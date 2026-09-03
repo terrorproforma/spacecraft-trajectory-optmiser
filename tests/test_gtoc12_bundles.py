@@ -199,7 +199,14 @@ def test_certify_earth_legs_ranks_dedups_caches_and_logs_rejects(catalogue, fami
     )
     cache: dict = {}
     legs, rejected = certify_earth_legs(
-        catalogue, members, settings, count=2, max_checks=6, cache=cache, certify=_proxy_certify
+        catalogue,
+        members,
+        settings,
+        count=2,
+        max_checks=6,
+        cache=cache,
+        certify=_proxy_certify,
+        continuous=False,
     )
     assert 1 <= len(legs) <= 2 and len(cache) <= 6
     assert all(leg.target % 2 == 0 and leg.target in set(members.tolist()) for leg in legs)
@@ -210,9 +217,93 @@ def test_certify_earth_legs_ranks_dedups_caches_and_logs_rejects(catalogue, fami
         assert 0.0 < leg.propellant_kg < 3000.0 - C.DRY_MASS_KG
     # the cache means a second call flies nothing new and returns the same legs
     again, _ = certify_earth_legs(
-        catalogue, members, settings, count=2, max_checks=0, cache=cache, certify=_proxy_certify
+        catalogue,
+        members,
+        settings,
+        count=2,
+        max_checks=0,
+        cache=cache,
+        certify=_proxy_certify,
+        continuous=False,
     )
     assert again == legs
+
+
+def _tof_priced_certify(catalogue, target, launch, tof, lambert_dv, scvx):
+    """Stand-in SCvx whose Earth leg gets cheaper with TOF (as the real ones do) and whose
+    launch window is bounded: launches beyond +400 d of the start fail."""
+
+    if target % 2 or launch > C.MISSION_START_MJD + 400.0:
+        return None
+    propellant = max(600.0 - 0.8 * (tof - 300.0), 150.0)
+    lambert = lambert_dv if lambert_dv == lambert_dv else 5.0
+    return EarthLeg(target, launch, tof, lambert, propellant)
+
+
+@requires_data
+def test_continuous_earth_leg_refinement_respects_bounds_and_is_deterministic(
+    catalogue, family
+) -> None:
+    from spacepdhcg.gtoc12.bundles import (
+        ClusterPricingSettings,
+        certify_earth_legs,
+        cluster_search_settings,
+    )
+    from spacepdhcg.gtoc12.earthleg import EarthLegBounds, refine_leg_scvx
+
+    _label, members = family
+    settings = cluster_search_settings(
+        ClusterPricingSettings(launch_epochs=SMALL_LAUNCH_EPOCHS, earth_leg_tofs=SMALL_EARTH_TOFS),
+        members.shape[0],
+    )
+    runs = []
+    for _ in range(2):
+        log: list = []
+        legs, _rejected = certify_earth_legs(
+            catalogue,
+            members,
+            settings,
+            count=2,
+            max_checks=6,
+            cache={},
+            certify=_tof_priced_certify,
+            continuous=True,
+            continuous_evaluations=10,
+            optimiser_log=log,
+        )
+        runs.append(([(leg.target, leg.launch_epoch, leg.tof_days) for leg in legs], log))
+    assert runs[0] == runs[1]  # deterministic
+    legs_key, log = runs[0]
+    assert legs_key and log
+    radius = 0.5 * min(np.diff(np.asarray(SMALL_LAUNCH_EPOCHS)))
+    for record in log:
+        # the refined leg stays inside the grid window and the TOF band, and never costs more
+        assert record["saved_kg"] >= -1e-9
+        assert record["scvx_evaluations"] <= 10
+        assert min(SMALL_EARTH_TOFS) <= record["tof_days"] <= max(SMALL_EARTH_TOFS)
+        assert min(SMALL_LAUNCH_EPOCHS) <= record["launch_epoch"] <= max(SMALL_LAUNCH_EPOCHS)
+        grid_launches = np.asarray(SMALL_LAUNCH_EPOCHS)
+        assert np.min(np.abs(grid_launches - record["launch_epoch"])) <= radius + 1e-9
+        # the stand-in rewards longer legs: the search lengthened the TOF unless already at the top
+        assert record["tof_days"] >= record["trace"][0]["tof_days"] - 2 * 30.0 or (
+            record["tof_days"] == max(SMALL_EARTH_TOFS)
+        )
+    # legs whose launch moved keep the official window: the stand-in refuses launches > +400 d
+    for _target, launch, tof in legs_key:
+        assert launch <= C.MISSION_START_MJD + 400.0
+        assert tof == round(tof) and round(launch, 1) == launch
+    # direct call: a refinement that cannot improve returns the start leg unchanged
+    start = EarthLeg(legs_key[0][0], legs_key[0][1], max(SMALL_EARTH_TOFS), 5.0, 150.0)
+    bounds = EarthLegBounds(
+        launch_min=min(SMALL_LAUNCH_EPOCHS),
+        launch_max=max(SMALL_LAUNCH_EPOCHS),
+        tof_min=min(SMALL_EARTH_TOFS),
+        tof_max=max(SMALL_EARTH_TOFS),
+    )
+    result = refine_leg_scvx(
+        catalogue, start, _tof_priced_certify, None, bounds=bounds, max_evaluations=6
+    )
+    assert result.leg == start and result.saved_kg == 0.0 and result.evaluations <= 6
 
 
 @requires_data

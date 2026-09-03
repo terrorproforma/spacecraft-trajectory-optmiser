@@ -1557,3 +1557,27 @@ Use this file as persistent, repo-local execution memory.
   conflicts inside the per-ship unit list) or a MIP would settle it.
 - `results/gtoc12/runs/*/clusters/*/ship_NN/Result.txt` and `fleets/*/Result.txt` are not
   committed (regenerable); `fleet_master_v1/fleet/Result.txt` (6.5 MB) is.
+
+### 2026-09-03 18:30 AEST - GTOC12 lever 1: Earth legs + hop pricing (interim)
+
+#### Task Summary
+
+- Raise per-ship collected mass (505 -> ~740 kg). Measured the levers on the archived fleet vs the
+  decoded references: Earth legs median 484 vs 447-466 kg, deploy hops equal (109 vs 103 kg),
+  collect hops 115 vs 66 kg at similar geometry (the DP buys speed with margin).
+
+#### Mistakes And Fixes
+
+- [self] Built a Lambert-surrogate compass search for the Earth leg first; SCvx showed it steers
+  the wrong way (shorter TOF -> legs fail or cost more). On 181 certified Earth legs the
+  measured/Lambert ratio scatters 0.86-1.51 at the same authority ratio, so Lambert is unusable
+  as a fine-scale Earth-leg objective. Replaced by SCvx-in-the-loop compass search
+  (`earthleg.refine_leg_scvx`, 8 SCvx calls, ~20 s): -104 kg per Earth leg on six archived legs.
+- [self] The flat 1.2x hop inflation under-priced fast hops by 9.5% and over-priced slow ones by
+  11%; the ratio model `1.05 + 0.65 r` (1674 hops) removes the bias (+0.9% / +6%).
+
+#### Guardrails For Next Session
+
+- Any Earth-leg gain must be protected in the re-timer (`Retimer.protect_earth_leg`): its
+  Lambert table barely depends on TOF and would shorten the leg again.
+- Do not trust Lambert-ratio calibration for Earth legs; only hops follow the ratio model.

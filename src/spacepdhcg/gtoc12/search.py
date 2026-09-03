@@ -35,6 +35,7 @@ from .proxies import phasing_edelbaum_proxy
 from .screening import (
     exhaust_velocity_km_s,
     lambert_hops,
+    low_thrust_inflation,
     propellant_for_delta_v,
     screen_asteroid_hops,
     screen_earth_to_asteroids,
@@ -109,6 +110,10 @@ class SearchSettings:
     # to the certified 0.49 envelope cut chains to depth 5-6 (376-446 kg) because collect hops
     # of the heavy ship no longer fit the window; the re-timer applies 0.45 to what it moves.
     hop_inflation: float = 1.2
+    # ratio-dependent hop inflation ``floor + slope x (Lambert ΔV / full authority)``, fitted on
+    # 1674 certified hops (``screening.low_thrust_inflation``); ``None`` keeps the flat factor
+    hop_inflation_slope: float | None = 0.65
+    hop_inflation_floor: float = 1.05
     hop_authority_ratio: float = 0.667
     end_margin_days: float = 2.0
     return_window_days: float = 600.0
@@ -489,6 +494,18 @@ class RouteSearch:
     def _propellant(self, mass: float, delta_v: float, inflation: float) -> float:
         return float(propellant_for_delta_v(mass, delta_v * inflation))
 
+    def hop_inflation_for(self, delta_v: float, mass: float, tof: float) -> float:
+        """Propellant inflation of an asteroid hop at this mass and TOF (ratio model or flat)."""
+
+        s = self.settings
+        if s.hop_inflation_slope is None:
+            return s.hop_inflation
+        return float(
+            low_thrust_inflation(
+                delta_v, mass, tof, floor=s.hop_inflation_floor, slope=s.hop_inflation_slope
+            )
+        )
+
     def limits(self, role: str) -> tuple[float, float]:
         """(propellant inflation, Lambert-ΔV / full-authority ratio limit) for a leg role."""
 
@@ -782,7 +799,8 @@ class RouteSearch:
                     dv = float(hops["total_delta_v"][t_index, f_index])
                     if not self._feasible(partial.mass, dv, float(tof), "deploy_hop"):
                         continue
-                    propellant = self._propellant(partial.mass, dv, s.hop_inflation)
+                    inflation = self.hop_inflation_for(dv, partial.mass, float(tof))
+                    propellant = self._propellant(partial.mass, dv, inflation)
                     arrival = departure + float(tof)
                     if arrival > C.MISSION_END_MJD - 3.0 * C.YEAR_DAYS:
                         continue
@@ -806,7 +824,7 @@ class RouteSearch:
                             departure,
                             arrival,
                             dv,
-                            s.hop_inflation,
+                            inflation,
                             "deploy_hop",
                         )
                     )
@@ -1041,7 +1059,7 @@ class RouteSearch:
             # propellant proxy plus the mining mass lost by collecting ``source`` earlier (the
             # whole hop duration counts: the miner at ``source`` stops when the ship leaves)
             lost = C.maximum_collected_mass(epoch - departure)
-            cost = self._propellant(mass_guess, dv, s.hop_inflation)
+            cost = self._propellant(mass_guess, dv, self.hop_inflation_for(dv, mass_guess, tof))
             cost += s.wait_penalty * penalty_scale * lost
             if cost < best_cost - 1e-12 or (
                 abs(cost - best_cost) <= 1e-12 and best_hop is not None and departure > best_hop[1]
@@ -1155,7 +1173,7 @@ class RouteSearch:
                     best_hop[1],
                     arrival,
                     best_hop[0],
-                    s.hop_inflation,
+                    self.hop_inflation_for(best_hop[0], mass_guess, best_hop[2]),
                     "collect_hop",
                 )
             )
@@ -1200,7 +1218,10 @@ class RouteSearch:
             if not self._feasible(mass, leg.delta_v_proxy_km_s, leg.tof_days, leg.role):
                 self.last_failure = "leg_authority"
                 return None
-            propellant = self._propellant(mass, leg.delta_v_proxy_km_s, leg.inflation)
+            inflation = leg.inflation
+            if leg.role == "collect_hop":  # priced at the guessed mass above; use the actual one
+                inflation = self.hop_inflation_for(leg.delta_v_proxy_km_s, mass, leg.tof_days)
+            propellant = self._propellant(mass, leg.delta_v_proxy_km_s, inflation)
             propellant_total += propellant
             mass -= propellant
         if mass < C.DRY_MASS_KG + sum(collected.values()):

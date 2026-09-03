@@ -55,6 +55,32 @@ def thrust_authority_km_s(
     return duty * acceleration * np.asarray(tof_days) * C.DAY_S
 
 
+# Low-thrust penalty over the impulsive (zero-revolution Lambert) ΔV as a function of the
+# authority ratio r = Lambert ΔV / (T_max / m x TOF).  Measured on the 1674 SCvx-certified
+# asteroid hops archived by the first three campaigns (results/gtoc12/runs/*): the median
+# measured/Lambert ratio is 1.04 at r < 0.1, 1.08 at 0.1-0.2, 1.13 at 0.2-0.3, 1.21 at 0.3-0.4,
+# 1.31 at 0.4-0.5 and 1.45 at 0.5-0.6 - a flat 1.2 over-prices slow hops by 10-15 % and
+# under-prices hops near the authority limit by 20 %.  ``1.05 + 0.65 r`` sits at the p60-p75 of
+# every bin (conservative, so the forward mass check closes), rms residual 0.10.
+LOW_THRUST_INFLATION_FLOOR = 1.05
+LOW_THRUST_INFLATION_SLOPE = 0.65
+
+
+def low_thrust_inflation(
+    lambert_dv_km_s: FloatArray,
+    mass_kg: FloatArray,
+    tof_days: FloatArray,
+    *,
+    floor: float = LOW_THRUST_INFLATION_FLOOR,
+    slope: float = LOW_THRUST_INFLATION_SLOPE,
+) -> FloatArray:
+    """Ratio-dependent propellant inflation ``floor + slope x r`` (see above); vectorised."""
+
+    authority = thrust_authority_km_s(mass_kg, tof_days, 1.0)
+    ratio = np.asarray(lambert_dv_km_s) / np.maximum(authority, 1e-12)
+    return floor + slope * ratio
+
+
 def edelbaum_proxy(
     a1_km: FloatArray,
     i1_rad: FloatArray,

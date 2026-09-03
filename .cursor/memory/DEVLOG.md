@@ -1094,3 +1094,23 @@
   - Cooperative columns were never selected by the master (collectors 280-330 kg vs
     self-cleaning 450-540 kg in the same family).
   - Master result at 5 M nodes is not a proven optimum for 273 columns.
+
+## 2026-09-03 18:30 AEST
+
+- Scope: GTOC12 per-ship mass levers, part 1 (hop pricing model, continuous Earth-leg optimiser).
+- Changes:
+  - `gtoc12/screening.py`: `low_thrust_inflation` (ratio model 1.05 + 0.65 r, fitted on 1674
+    certified hops; validated: under-pricing of fast hops 18% -> 7% of legs).
+  - `gtoc12/retiming.py`: ratio-dependent hop inflation in the DP, forward pass and plan masses;
+    `calibrate(..., authority_ratio)` stores residuals; `calibrate_from_route`;
+    `Retimer.protect_earth_leg` (Earth-out TOF floor).
+  - `gtoc12/search.py`: beam prices hops with the same model (`hop_inflation_for`).
+  - `gtoc12/earthleg.py` (new): `EarthLegModel`/`EarthLegBounds`, Lambert `compass_search` and
+    `optimise_earth_leg` (coarse start finder), `refine_leg_scvx` (SCvx-in-the-loop compass with
+    line search, official launch constraints via bounds, deterministic).
+  - `gtoc12/bundles.py`: `certify_earth_legs(continuous=...)` refines every certified grid leg
+    (8 SCvx calls), logs grid-vs-refined propellant; launch grid widened to 3 years.
+  - Tests: continuous refinement bounds/determinism/no-worse; grid test pinned to `continuous=False`.
+- Validation: six archived Earth legs 393-602 kg -> 292-410 kg (mean -104 kg, 8 SCvx / ~20 s
+  each); `tests/test_gtoc12_*.py` 73 passed, 1 skipped; Ruff clean.
+- Next: phasing-aware families + leg-stats command, collector harvest loop, campaign v4.
