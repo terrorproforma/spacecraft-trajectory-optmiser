@@ -1049,3 +1049,48 @@
   - `results/gtoc12/runs/fleet10_master_v1/fleet/viewer/trajectories.json` (3.6 MB) is not
     committed; regenerate with `python -m spacepdhcg gtoc12 export-viewer` from the committed
     `fleet/Result.txt`.
+
+## 2026-09-03 17:45 AEST
+
+- Task summary:
+  - GTOC12 track, third campaign: cooperative cluster pricing in parallel workers, bundle
+    columns in the master, archived routes as columns. Best verified fleet 4398.7 kg (10 ships)
+    -> 7575.58 kg (15 ships, 109 asteroids visited / 103 mined, average 505.0 kg per ship,
+    fleet rule 15 <= 15.08). Target of >= 600 kg/ship not reached (see bottleneck).
+- Changes (commits 1ca6a0c, 568980c, 2bfdf27, 79ab08c, f8fa226 + results/docs commit):
+  - `gtoc12/bundles.py` (new): per-family pricing (SCvx-certified Earth legs seeding the beam,
+    deployer + collector slots sharing a MinerPool, leg bans and beam retries, orphan repair,
+    `make_consistent`), `rank_families`, forked-worker `price_clusters`, `bundle_columns`.
+  - `gtoc12/archive.py` (new): `discover_archives` / `group_plans` / `recertify_archives` -
+    archived `route_summary.json` files of any run are rebuilt into plans, re-flown through SCvx
+    in workers and packed into pool-consistent bundles for the master.
+  - `gtoc12/pipeline.py`: `plan_from_route_summary` (legacy archives: deploys at first arrival,
+    collects at revisit arrival or camp departure by archived mass, foreign collects snapped to
+    the deployer); `RefinedRoute.summary` embeds the plan.
+  - `gtoc12/cooperative.py`: ship-rule bound (`ship_rule_bound`), two greedy starts + warm
+    start from the previous selection, `MinerPool.register_all`.
+  - `gtoc12/retiming.py`: `retime_order` fails softly on invalid visit orders.
+  - `gtoc12/cli.py`: `cluster-fleet` (checkpoints, verified intermediate fleets, budget marks,
+    `--families`, `--node-cap`) and `fleet-master` (archives -> re-certified columns -> master
+    -> verified fleet + viewer export).
+  - Tests: `tests/test_gtoc12_bundles.py` (bundle columns, master rule/bound/brute-force/warm
+    start, Earth-leg certification, injected first level, pricing, orphan repair,
+    make_consistent, retimer guard), `tests/test_gtoc12_archive.py` (reconstruction, discovery,
+    re-certification). 383 passed, 4 skipped, 1 deselected (pre-existing native packaging).
+  - `docs/GTOC12_TRACK.md`: section 6.5, results rows, score-vs-budget, per-ship table,
+    cooperative statistics, master convergence, artifact policy, limitations, bottleneck.
+- Validation:
+  - `fleet_master_v1/fleet/Result.txt`: official `GTOC12_Verify` "Check successfully!" 15 ships
+    7575.58 kg; independent verifier agrees (fixed-bonus 7217.51 kg, max position error 56 km).
+    Intermediate verified fleets of `cluster_fleet_v1` retained under `fleets/` (30 min 4692.8,
+    1 h 5382.7, 2 h 6357.9, 4 h 6932.5 kg); `cluster_fleet_v2_deep` 2878.0 kg,
+    `cluster_fleet_v3_repair` 4704.15 kg, all officially verified.
+  - 208 archived routes re-certified with 0 failures (deterministic SCvx replay).
+  - Memory: campaign main 0.43 GB peak, worker peaks <= 0.60 GB, sampled concurrent total
+    1.2-1.5 GB (sum-of-peaks bound 2.8 GB); fleet-master 0.24 GB main.
+- Follow-up notes / risks:
+  - The rule binds exactly; per-ship mass (Earth-leg cost 371-618 kg, hop cost 75-150 kg) is
+    the remaining lever - see docs section 8.
+  - Cooperative columns were never selected by the master (collectors 280-330 kg vs
+    self-cleaning 450-540 kg in the same family).
+  - Master result at 5 M nodes is not a proven optimum for 273 columns.

@@ -1,0 +1,224 @@
+{
+  "cooperative": {
+    "asteroids": 8,
+    "collected_kg": 523.6139630390144,
+    "collectors_per_deployer": {
+      "1": 1,
+      "2": 0
+    },
+    "cooperative_collects": 1,
+    "deployers_with_collectors": 1,
+    "orphans_left": [],
+    "ships": 2
+  },
+  "earth_legs": {
+    "certified": 8,
+    "checked": 8,
+    "rejected": [
+      {
+        "authority_ratio": 0.9075362858322729,
+        "lambert_dv_km_s": 7.057002158631753,
+        "launch_epoch": 65018.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 31548,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.7021877962393311,
+        "lambert_dv_km_s": 7.886973327360167,
+        "launch_epoch": 64568.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 31548,
+        "tof_days": 650.0
+      }
+    ]
+  },
+  "label": 43,
+  "members": 14,
+  "peak_rss_mb": 516.69921875,
+  "rejected": [
+    {
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 2.782e-03",
+          "from": 7746,
+          "leg": 13,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 0
+        }
+      ],
+      "reason": "re-timed variant not certified",
+      "result": {
+        "banned": "7746->0",
+        "ratio": 0.36006188251831817,
+        "tof_days": 405.0
+      },
+      "slot": 1
+    },
+    {
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 6.105e-02",
+          "from": 31548,
+          "leg": 10,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 0
+        }
+      ],
+      "reason": "re-timed variant not certified",
+      "result": {
+        "banned": "31548->0",
+        "ratio": 0.49100965896066023,
+        "tof_days": 465.0
+      },
+      "slot": 2
+    }
+  ],
+  "repairs": [
+    {
+      "asteroid": 33368,
+      "collected_kg": 216.83778234086242,
+      "deployer": 2,
+      "kind": "dropped"
+    },
+    {
+      "asteroid": 39117,
+      "collected_kg": 222.58726899383984,
+      "deployer": 2,
+      "kind": "dropped"
+    },
+    {
+      "asteroid": 39926,
+      "collected_kg": 228.33675564681724,
+      "deployer": 2,
+      "kind": "dropped"
+    },
+    {
+      "asteroid": 50456,
+      "collected_kg": 211.49897330595482,
+      "deployer": 2,
+      "kind": "dropped"
+    },
+    {
+      "asteroid": 53244,
+      "collected_kg": 210.26694045174537,
+      "deployer": 2,
+      "kind": "dropped"
+    }
+  ],
+  "ships": [
+    {
+      "asteroids": [
+        7746,
+        47699,
+        17635,
+        11957,
+        30671,
+        10507
+      ],
+      "certified_variants": 2,
+      "collected_kg": 313.347022587269,
+      "final_mass_kg": 778.7477520956759,
+      "foreign_collects": [],
+      "launch_epoch": 64538.0,
+      "orphaned": [
+        10507
+      ],
+      "refined_arcs": 12,
+      "refined_attempt": 0,
+      "refined_rank": 0,
+      "retiming": {
+        "after_kg": 313.347022587269,
+        "attempts": 3,
+        "bans": {
+          "7746->0": 0.32405569426648634
+        },
+        "before_kg": 281.0403832991102,
+        "certified_variants": 1,
+        "wall_seconds": 134.64794798400544
+      },
+      "search": [
+        {
+          "attempt": 0,
+          "banned_earth": 0,
+          "banned_pairs": 0,
+          "best_by_depth": {
+            "1": 90.9514031485284,
+            "2": 160.27378507871322,
+            "3": 201.39630390143736,
+            "4": 241.6974674880219,
+            "5": 285.968514715948
+          },
+          "candidates": 33,
+          "earth_legs": [
+            39926,
+            39926,
+            7746,
+            10507
+          ],
+          "failed_chains": 144,
+          "wall_seconds": 72.6309189619933
+        }
+      ],
+      "slot": 1
+    },
+    {
+      "asteroids": [
+        31548,
+        12493,
+        10507
+      ],
+      "certified_variants": 8,
+      "collected_kg": 210.26694045174537,
+      "final_mass_kg": 1111.1484339407016,
+      "foreign_collects": [
+        10507
+      ],
+      "launch_epoch": 64538.0,
+      "orphaned": [],
+      "refined_arcs": 5,
+      "refined_attempt": 0,
+      "refined_rank": 0,
+      "retiming": {
+        "after_kg": 215.19507186858317,
+        "attempts": 4,
+        "bans": {
+          "31548->0": 0.44190869306459424
+        },
+        "before_kg": 160.54757015742643,
+        "certified_variants": 2,
+        "wall_seconds": 109.70667968199996
+      },
+      "search": [
+        {
+          "attempt": 0,
+          "banned_earth": 0,
+          "banned_pairs": 0,
+          "best_by_depth": {
+            "1": 100.26009582477755,
+            "2": 167.6659822039699,
+            "3": 201.8069815195072,
+            "4": 250.45859000684462,
+            "5": 290.89664613278575
+          },
+          "candidates": 35,
+          "earth_legs": [
+            39926,
+            39926,
+            31548,
+            31548
+          ],
+          "failed_chains": 59,
+          "wall_seconds": 33.29906342999311
+        }
+      ],
+      "slot": 2
+    }
+  ],
+  "stopped": "family exhausted before ship slot 3",
+  "wall_seconds": 528.7142881719919
+}

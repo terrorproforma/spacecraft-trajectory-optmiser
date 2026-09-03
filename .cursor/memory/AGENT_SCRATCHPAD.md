@@ -1428,3 +1428,132 @@ Use this file as persistent, repo-local execution memory.
   the pricing problem must plan deployer + collector together inside one co-moving family.
 - Fleet build is 5-6 min/ship single-process; 36 ships would need the G7 scheduler to run ship
   searches in parallel processes.
+
+### 2026-09-03 10:40 AEST - GTOC12 track: cooperative cluster pricing (feat/gtoc12-asteroid-mining)
+
+#### Task Summary
+
+- Raise per-ship mass towards ~740 kg (fleet rule N <= 2 exp(0.004 M)) with cooperative cluster
+  pricing (deployer + collectors in one co-moving family), bundle columns in the master, parallel
+  pricing workers, verified fleets at 30 min / 1 h / 2 h / 4 h.
+
+#### Mistakes And Fixes (in progress)
+
+- [self] Last session's lesson keep 1.6x/0.5 for Earth legs was wrong in general: the three
+  archived Antipodes Earth legs (a 2.77 AU, 509-587 d, Lambert ratio 0.80-0.92) all certify in our
+  SCvx in 2-5 s, reproducing the reference propellant (503/428/445 kg). The 0.5 gate kept every
+  ship in the a 2.23-2.43, e 0.12-0.14 region where co-moving families have 2-43 members; the
+  reference region (a 2.72-2.80) has 55-member families where a restricted beam gives a certified
+  7-asteroid / 485 kg chain with 218 kg to spare (fleet10 ships: 6-8 asteroids, 41-138 kg spare).
+  Fix: SCvx-prescreen Earth legs and seed the beam only with certified ones (first_level).
+- [self] Reference hops that failed SCvx at 3000 kg all certify at their true mass (1300-2300 kg):
+  probe legs at the mass they fly, never at the launch mass.
+- [self] Seeding the beam with *only* the 4 certified Earth legs (one arrival epoch each) starved
+  it: 3 of the first 4 families closed no chain at all. Fix: each certified leg unlocks the Lambert
+  grid for its target within ±200 d (launch and TOF), priced at the measured/Lambert ratio of that
+  target; the exact certified legs stay first-class.
+- [self] The widened grid then produced chains whose *Earth leg* SCvx refused (virtual control
+  left), and the top-2 beam candidates were near-duplicates on the same leg, so both refine tries
+  died on it - and the same chain came back for ship slots 2 and 3. Fixes: (a) refine one chain per
+  distinct Earth leg, exactly-certified legs first; (b) `RouteSearch.banned_pairs/banned_earth`
+  filled from `RefinedRoute.failures` (leg index -> plan leg), shared by every slot of the family;
+  (c) re-run the beam (<= 2 retries) when everything flown was refused and something new got banned.
+- [self] `_select` pruned first asteroids by return feasibility at mass `post-deploy + cargo`
+  (~3000 kg); the ship returns at dry + cargo + return propellant (~1300-1500 kg). Ratio 0.35
+  returns looked like 0.7 and whole a-2.77 families were unreachable. Guess is now
+  `min(post-deploy + cargo, dry + cargo + return_reserve)`.
+- [self] Orphan repair took the re-timed-then-dropped route unconditionally; after dropping the two
+  orphans it collected *less* than the un-retimed chain (455 vs 465 kg). Repair now takes the max of
+  the dropped route and the clean certified variants, and skips orphans an earlier repair removed.
+- [self] Largest-first family order spent the first 20 minutes on eccentric/inclined 49-member
+  families with 1.3 km/s hops and 10 km/s returns. `rank_families` (mean of 5 cheapest Earth legs
+  + 4x nearest-hop proxy, kg) costs 61 s and puts the a-2.77 low-e families and the cheap 2.37 AU
+  ones first.
+- [tool] `python -m spacepdhcg.gtoc12.cli` is not an entry point (the gtoc12 parser is a sub-parser
+  of `spacepdhcg.cli`); it exits silently with nothing in the log. Use
+  `python -m spacepdhcg gtoc12 cluster-fleet ...`. Use `-u` so the log is not block-buffered.
+- [tool] `pkill -f 'gtoc12 cluster-fleet'` inside a `bash -c` whose command line contains the
+  pattern kills the shell (exit 15) *before* the rest of the `&&` chain runs; do the kill and the
+  relaunch in separate commands.
+- [tool] Never `git stash` while a campaign is running from the worktree: forked workers had their
+  modules loaded, but any lazy import in the window would have picked up HEAD's files.
+- [self] `extend_plan` raised `ValueError: an asteroid appears twice in a visit order` deep in
+  `improve_and_certify` and would have killed a worker; the pricing worker now returns a crashed
+  bundle (traceback in `rejected`) and `extend_plan` records the bad order as a failure instead.
+- [tests] `tests/test_native_packaging.py` fails in this venv on HEAD as well (no wheel-packaged
+  native library; `SPACEPDHCG_NATIVE_LIBRARY=build/gtoc12/libspacepdhcg_c_api.so` fixes every
+  other native test). 368 passed / 4 skipped / 1 pre-existing failure.
+- [self] The cluster campaign's first families averaged 280-430 kg/ship (below fleet10's 440), so
+  the master was about to trade ships. Instead of touching the running campaign, archived routes
+  are now master columns: `route_summary.json` only stored flown legs + collected masses (no plan),
+  so `plan_from_route_summary` rebuilds the schedule from them. First attempt treated every first
+  visit as a deploy and produced "deployed twice" for every cooperative family; the archived mass
+  is what tells a foreign collect (first visit, no revisit, stay != mass/rate) from an own deploy.
+  Verified exact against the ten fleet10 `refinements.json` plans (camps included) and all seven
+  priced families. `RefinedRoute.summary` now embeds `plan` so this never has to be inferred again.
+- [tool] Every leg of an archived route is re-flown through SCvx before it becomes a column
+  (`recertify_archives`, forked workers, ~9 s/route with 2 workers); nothing enters the master on
+  the strength of a JSON file. `--source` = run root or a single family directory.
+- [tool] The campaign's stdout is `/tmp/cluster_fleet_v1.stdout.log` (not under results/): read
+  `/proc/<pid>/fd/1` to find a detached job's log. PowerShell mangles `!`/`$(...)` inside
+  `wsl.exe bash -c "..."`; write the script to Temp, `tr -d '\r'`, then run it.
+- [self] The B&B master with the plain suffix-sum bound hit its 200k-node cap from the 7th family
+  on and silently returned the greedy fleet - which is not monotone in the column set, so adding a
+  family took the campaign from 11 ships / 4840 kg to 9 / 4089 kg. Two fixes: the ship-rule
+  bound (k more ships collect at most the k largest remaining per-ship masses; if that already
+  breaks `2 exp(0.004 M)` no k-ship completion exists) and a warm start from the previous
+  selection. 64 columns: exhaustive in 34k nodes; 273 columns still need > 30 M nodes for a proof.
+  Test the master on realistic column sets (100+) before trusting "exhaustive".
+- [self] `_repair_orphans` discarded a *whole family* when the pool rejected the final bundle
+  (stale foreign epoch after a deployer re-time, or a miner nobody deploys any more): families 19,
+  138, 371 in the campaign and 3, 25 in the deep re-pricing (0 ships where the first pass had 3).
+  Drop single ships (stranded collector -> clean variant or out; pool conflict -> lightest ship
+  touching the named asteroid) and discard the bundle only if that fails.
+- [self] `build_visits` raised "an asteroid appears twice in a visit order" from a second call
+  site (`Retimer.retime_order` via `improve_and_certify`) after I had guarded only `extend_plan`;
+  it crashed the workers of families 66 and 7. Guard at the source (`retime_order` returns a failed
+  result), not at each caller.
+- [self] Running the deep re-pricing (5 slots, 6 attempts) on the six richest families gave 7
+  ships in 46 min: slots 4-5 almost never close ("beam found no closing chain") because a family's
+  cheap Earth legs and co-moving members are spent by ships 1-3. More slots per family is not a
+  lever; more families and cheaper Earth legs are.
+- [self] Cooperative columns were priced (54 foreign collects, 32 deployers with collectors) but
+  the exact master chose none: a collector flying to another ship's miners collects 280-330 kg vs
+  450-540 kg for a self-cleaning ship in the same family, so under the fleet rule it lowers the
+  average and costs a ship. The references' cooperation works because every ship both deploys and
+  collects in a shared cluster - our deployer/collector split is sequential.
+
+#### What Worked
+
+- Archiving every emitted route as reloadable JSON and treating archives as master columns
+  (re-flown through SCvx, 0 of 208 failed) decoupled "pricing" from "assignment": three pricing
+  runs + fleet10 were combined into the 15-ship fleet in 8 minutes, and lost families could be
+  re-priced with `--families` without touching the 4 h campaign.
+- Probing the master on reconstructed plans (`FleetColumn.from_plan`, no SCvx) showed in 0.2 s
+  what the campaign's own master would deliver, and exposed the non-monotone greedy fallback.
+- Foreground long runs with `timeout` + a grep'd progress stream stayed observable; the
+  detached campaign needed `/proc/<pid>/fd/1` to find its log.
+
+#### Guardrails For Next Session
+
+- Before any long campaign, run the master on the *expected* column count (200-300) and set
+  `--node-cap` so it stays exhaustive or accept the gap consciously; never read "exhaustive: false"
+  as "greedy is fine".
+- A bundle's end-of-pricing consistency failure must cost ships, not families; check
+  `bundle.json` `repairs` for `bundle_discarded` after every run (should be 0).
+- `route_summary.json` now embeds `plan`; legacy archives without it go through
+  `plan_from_route_summary` - verify reconstruction against `refinements.json` before relying on
+  it for a new run layout.
+- Report memory as measured (main peak, worker peaks, sampled concurrent total) *and* the
+  sum-of-peaks bound; the bound (2.8 GB) exceeded the 2 GB target even though the sampled total
+  never did.
+
+#### Follow-Ups / Risks
+
+- Per-ship mass 505 kg average is the only lever left (rule 15 <= 15.08): Earth legs cost
+  371-618 kg vs 428-503 kg for the references (continuous launch/TOF optimisation per family),
+  hops 75-150 kg vs 78 kg median (phasing-aware family membership over the deploy phase).
+- The master's 5 M-node result is not a proven optimum for 273 columns; a tighter bound (asteroid
+  conflicts inside the per-ship unit list) or a MIP would settle it.
+- `results/gtoc12/runs/*/clusters/*/ship_NN/Result.txt` and `fleets/*/Result.txt` are not
+  committed (regenerable); `fleet_master_v1/fleet/Result.txt` (6.5 MB) is.

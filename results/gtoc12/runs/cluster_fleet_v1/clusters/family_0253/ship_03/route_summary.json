@@ -1,0 +1,59 @@
+{
+  "asteroids": [
+    13783
+  ],
+  "certified": true,
+  "collected_mass_kg": {
+    "13783": 115.1813826146475
+  },
+  "failures": [],
+  "final_mass_kg": 2206.0368826261915,
+  "legs": [
+    {
+      "certified": true,
+      "delta_v_km_s": 6.287848026698288,
+      "from": 0,
+      "mass_after": 2555.6760166044173,
+      "mass_before": 3000.0,
+      "position_error_km": 35.53618589397727,
+      "propellant_kg": 444.32398386892373,
+      "scvx_iterations": 27,
+      "solve_seconds": 4.5617309169902,
+      "status": "feasible",
+      "t0": 64568.0,
+      "tf": 65018.0,
+      "to": 13783,
+      "velocity_error_m_s": 0.0020690638538004603
+    },
+    {
+      "certified": true,
+      "delta_v_km_s": 4.9118622114198,
+      "from": 13783,
+      "mass_after": 2321.218265240839,
+      "mass_before": 2630.857399219065,
+      "position_error_km": 0.6438916604104763,
+      "propellant_kg": 309.63913429362765,
+      "scvx_iterations": 8,
+      "solve_seconds": 1.1842104259994812,
+      "status": "feasible",
+      "t0": 69225.0,
+      "tf": 69775.0,
+      "to": 0,
+      "velocity_error_m_s": 0.00010837551078093323
+    }
+  ],
+  "master_certified": true,
+  "passes": 1,
+  "refined_arcs": 2,
+  "scheduler": {
+    "batches": 1,
+    "completed": 1,
+    "failed": 0,
+    "feasible": 1,
+    "numeric_updates": 2,
+    "submitted": 1,
+    "workspace_creations": 2
+  },
+  "total_collected_kg": 115.1813826146475,
+  "wall_seconds": 6.06795829499606
+}
