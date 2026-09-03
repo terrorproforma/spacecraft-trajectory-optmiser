@@ -561,6 +561,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     ranked = rank_families(
         catalogue, clusters, cluster_search_settings(ClusterPricingSettings(), 2)
     )
+    if args.families:
+        wanted = {int(item) for item in args.families.split(",") if item.strip()}
+        ranked = [item for item in ranked if int(item[0]) in wanted]
     ranked = ranked[args.skip_clusters : args.skip_clusters + args.max_clusters]
     clusters = [(label, members) for label, members, _stats in ranked]
     family_stats = {label: stats for label, _members, stats in ranked}
@@ -650,7 +653,11 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         # the previous selection stays feasible (columns are only added): warm start so the
         # node-capped search never regresses below the last incumbent
         master = solve_fleet_master(
-            columns, weights=weights, max_ships=args.max_ships, incumbent=tuple(previous)
+            columns,
+            weights=weights,
+            max_ships=args.max_ships,
+            node_cap=args.node_cap,
+            incumbent=tuple(previous),
         )
         previous[:] = list(master.selected)
         report["master"] = master.summary()
@@ -874,6 +881,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
         "settings": {
             "workers": args.workers,
             "max_ships": args.max_ships,
+            "node_cap": args.node_cap,
             "scvx_iterations": args.scvx_iterations,
             "node_days": args.node_days,
             "bonus_weights": weights is not None,
@@ -924,8 +932,13 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
         (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
         print(_json({"run_id": args.run_id, "status": report["status"]}))
         return 1
-    master = solve_fleet_master(columns, weights=weights, max_ships=args.max_ships)
+    master = solve_fleet_master(
+        columns, weights=weights, max_ships=args.max_ships, node_cap=args.node_cap
+    )
     report["master"] = master.summary() | {"columns": len(columns)}
+    report["master_wall_seconds"] = (
+        time.perf_counter() - started - report["recertification_wall_seconds"]
+    )
     plan = FleetPlan(master.routes())
     directory = output_dir / "fleet"
     directory.mkdir(parents=True, exist_ok=True)
@@ -1093,10 +1106,16 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         "--max-clusters", type=int, default=60, help="families priced (cheapest first)"
     )
     cluster.add_argument("--skip-clusters", type=int, default=0)
+    cluster.add_argument(
+        "--families",
+        default="",
+        help="comma-separated family labels to price (default: all, cheapest first)",
+    )
     cluster.add_argument("--min-members", type=int, default=12)
     cluster.add_argument("--cluster-radius", type=float, default=1.5)
     cluster.add_argument("--cluster-phase-deg", type=float, default=8.0)
     cluster.add_argument("--max-ships", type=int, default=100)
+    cluster.add_argument("--node-cap", type=int, default=200_000, help="master node cap")
     cluster.add_argument("--beam-width", type=int, default=24)
     cluster.add_argument("--max-deploys", type=int, default=10)
     cluster.add_argument("--refine-top", type=int, default=2)
@@ -1135,6 +1154,12 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     )
     master.add_argument("--workers", type=int, default=2)
     master.add_argument("--max-ships", type=int, default=100)
+    master.add_argument(
+        "--node-cap",
+        type=int,
+        default=2_000_000,
+        help="branch-and-bound node cap (about 10 s per million nodes)",
+    )
     master.add_argument("--scvx-iterations", type=int, default=40)
     master.add_argument("--node-days", type=float, default=2.0)
     master.add_argument("--no-bonus-weights", action="store_true")

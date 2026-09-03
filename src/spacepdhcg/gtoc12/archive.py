@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .bundles import BundleShip, ClusterBundle
+from .bundles import BundleShip, ClusterBundle, make_consistent
 from .data import AsteroidCatalogue
 from .low_thrust import ScvxSettings
 from .pipeline import RefinedRoute, plan_from_route_summary, refine_route
@@ -203,31 +203,8 @@ def recertify_archives(
             primary = routes[0] if routes and routes[0] in certified else certified[0]
             ships.append(BundleShip(ship.slot, primary, certified, {"archived": group.name}))
         bundle = ClusterBundle(first_label + index, (), ships, rejected=rejected)
-        _drop_stranded(bundle)
+        make_consistent(bundle)  # a collector whose deployer failed is dropped, not the bundle
         bundle.members = tuple(sorted({a for s in bundle.ships for a in s.route.plan.asteroids}))
         bundle.wall_seconds = time.perf_counter() - started
         bundles.append(bundle)
     return bundles
-
-
-def _drop_stranded(bundle: ClusterBundle) -> None:
-    """Remove collectors whose deployer is not in the bundle until the pool is consistent."""
-
-    while bundle.ships:
-        deployed = {a for ship in bundle.ships for a in ship.route.plan.deploy_epochs}
-        stranded = [
-            ship
-            for ship in bundle.ships
-            if any(a not in deployed for a in ship.route.plan.foreign_deploy_epochs)
-        ]
-        if not stranded:
-            break
-        for ship in stranded:
-            bundle.ships.remove(ship)
-            bundle.rejected.append(
-                {"reason": "archived collector stranded (deployer missing)", "ship": ship.slot}
-            )
-    problem = bundle.consistent()
-    if problem:
-        bundle.rejected.append({"reason": "inconsistent archived bundle", "detail": problem})
-        bundle.ships.clear()

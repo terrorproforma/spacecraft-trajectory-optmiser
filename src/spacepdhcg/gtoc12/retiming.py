@@ -506,7 +506,23 @@ class Retimer:
 
         started = time.perf_counter()
         s = self.settings
-        visits = build_visits(deploy_order, collect_order, foreign)
+        try:
+            visits = build_visits(deploy_order, collect_order, foreign)
+        except ValueError as error:
+            # an ill-formed order (duplicate visit, collect without a deployer) is a failed
+            # re-timing, not a crash of the pricing worker
+            return RetimeResult(
+                None,
+                original if original is not None else _empty_plan(),
+                before,
+                before,
+                s.propellant_price,
+                0,
+                0,
+                self.lambert_evaluations,
+                time.perf_counter() - started,
+                f"invalid_order: {error}",
+            )
         if len(profile) != len(visits) - 1:
             raise ValueError("mass profile must have one entry per leg")
         best: RoutePlan | None = None

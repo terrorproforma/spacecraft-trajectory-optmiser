@@ -203,7 +203,7 @@ def test_recertify_archives_drops_failed_and_stranded_ships_and_builds_columns(
     assert seven.ships == [] and seven.label == 10_000
     reasons = [r["reason"] for r in seven.rejected]
     assert "archived primary route failed re-certification" in reasons
-    assert "archived collector stranded (deployer missing)" in reasons
+    assert [r["kind"] for r in seven.repairs] == ["removed_stranded"]
     # family 8: the self-cleaning ship stays; the collector of a miner nobody deploys is dropped
     assert [s.slot for s in eight.ships] == [1] and eight.consistent() == ""
     assert eight.members == (11, 12)

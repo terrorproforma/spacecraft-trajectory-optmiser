@@ -586,6 +586,56 @@ def test_pool_register_all_orders_deployers_before_collectors_and_bundle_consist
     stranded = ClusterBundle(0, (5, 9), [BundleShip(1, _proxy_refine(collector))])
     assert "never deployed" in stranded.consistent()
 
+    # make_consistent gives up ships, not the bundle: a stale foreign epoch (the deployer was
+    # re-timed by 15 days) strands the collector, which reverts to its clean variant when it
+    # has one and leaves otherwise; two deployers of the same asteroid lose the lighter one
+    from spacepdhcg.gtoc12.bundles import make_consistent
+
+    moved = replace(deployer, deploy_epochs={9: arrive + 415.0, 8: arrive + 600.0})
+    clean_plan = replace(
+        collector,
+        collect_epochs={5: arrive + 3000.0},
+        collected_mass={5: 300.0},
+        foreign_deploy_epochs={},
+    )
+    clean = _proxy_refine(clean_plan)
+    ship1 = BundleShip(1, _proxy_refine(collector), [clean])
+    bundle = ClusterBundle(0, (5, 8, 9), [ship1, BundleShip(2, _proxy_refine(moved))])
+    assert "stale" in bundle.consistent()
+    make_consistent(bundle)
+    assert bundle.consistent() == "" and [s.slot for s in bundle.ships] == [1, 2]
+    assert ship1.route is clean and bundle.repairs[-1]["kind"] == "reverted_stranded"
+    no_variant = ClusterBundle(
+        0, (5, 8, 9), [BundleShip(1, _proxy_refine(collector)), BundleShip(2, _proxy_refine(moved))]
+    )
+    make_consistent(no_variant)
+    assert [s.slot for s in no_variant.ships] == [2]
+    assert no_variant.repairs[-1]["kind"] == "removed_stranded"
+    twice = ClusterBundle(
+        0,
+        (8, 9),
+        [BundleShip(2, _proxy_refine(deployer)), BundleShip(3, _proxy_refine(moved))],
+    )
+    assert "deployed twice" in twice.consistent()
+    make_consistent(twice)
+    assert twice.consistent() == "" and [s.slot for s in twice.ships] == [
+        3
+    ]  # tie -> lower slot goes
+    assert twice.repairs[-1]["kind"] == "removed_conflict" and not twice.rejected
+
+
+def test_retimer_reports_an_invalid_visit_order_instead_of_raising() -> None:
+    from spacepdhcg.gtoc12.retiming import Retimer
+
+    class _Catalogue:  # the order check happens before any ephemeris is touched
+        pass
+
+    retimer = Retimer(_Catalogue())  # type: ignore[arg-type]
+    result = retimer.retime_order([5, 5], [5], [3000.0, 2900.0, 2800.0])
+    assert result.plan is None and result.failure.startswith("invalid_order")
+    result = retimer.retime_order([5], [7], [3000.0, 2900.0])
+    assert result.plan is None and "deployed by nobody" in result.failure
+
 
 def test_earth_leg_record_arrival() -> None:
     leg = EarthLeg(5, T0, 500.0, 6.0, 450.0)

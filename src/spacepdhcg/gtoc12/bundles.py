@@ -31,6 +31,7 @@ from __future__ import annotations
 import concurrent.futures
 import multiprocessing
 import os
+import re
 import time
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
@@ -759,12 +760,35 @@ def _repair_orphans(
                 "collected_kg": deployer.route.total_collected_kg,
             }
         )
-    # the emitted routes must be mutually consistent (dropping a deployer's visit may have
-    # orphaned nothing else, but a reverted deployer can strand a collector's foreign collect)
-    deployed = {a for s in bundle.ships for a in s.route.plan.deploy_epochs}
-    for ship in list(bundle.ships):
-        stranded = [a for a in ship.route.plan.foreign_deploy_epochs if a not in deployed]
-        if stranded:
+    make_consistent(bundle)
+
+
+def make_consistent(bundle: ClusterBundle) -> None:
+    """Make the emitted routes mutually consistent, giving up single ships rather than the bundle.
+
+    Dropping a deployer's visit or reverting a deployer to another variant can strand a
+    collector's foreign collect (the miner is no longer deployed, or was re-timed to another
+    epoch); two ships may also end up deploying or collecting the same asteroid.  Stranded
+    collectors revert to their best clean variant (no foreign collects, no orphans) or leave the
+    bundle; any remaining pool conflict removes the lightest ship touching the asteroid the pool
+    complains about.  Only a bundle that stays inconsistent after that is discarded.
+    """
+
+    for _ in range(len(bundle.ships) + 1):
+        deployed = {a: e for s in bundle.ships for a, e in s.route.plan.deploy_epochs.items()}
+        stranded_ships = [
+            (
+                ship,
+                [
+                    a
+                    for a, e in ship.route.plan.foreign_deploy_epochs.items()
+                    if a not in deployed or abs(deployed[a] - e) > 1e-6
+                ],
+            )
+            for ship in list(bundle.ships)
+        ]
+        stranded_ships = [(ship, items) for ship, items in stranded_ships if items]
+        for ship, stranded in stranded_ships:
             clean = [
                 v for v in ship.variants if not v.plan.foreign_deploy_epochs and not v.plan.orphaned
             ]
@@ -778,6 +802,23 @@ def _repair_orphans(
                 bundle.repairs.append(
                     {"collector": ship.slot, "kind": "removed_stranded", "asteroids": stranded}
                 )
+        if stranded_ships:
+            continue
+        problem = bundle.consistent()
+        if not problem:
+            return
+        match = re.search(r"asteroid (\d+)", problem)
+        asteroid = int(match.group(1)) if match else None
+        involved = [
+            s for s in bundle.ships if asteroid is None or asteroid in s.route.plan.asteroids
+        ]
+        if not involved:
+            break
+        victim = min(involved, key=lambda s: (s.route.total_collected_kg, s.slot))
+        bundle.ships.remove(victim)
+        bundle.repairs.append(
+            {"collector": victim.slot, "kind": "removed_conflict", "detail": problem}
+        )
     # last resort: a bundle the pool rejects is not emitted at all (the master would trip on it)
     problem = bundle.consistent()
     if problem:
