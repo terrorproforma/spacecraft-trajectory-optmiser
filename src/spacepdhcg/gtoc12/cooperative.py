@@ -17,6 +17,7 @@ Antipodes solutions do) and may leave its own miners for another ship.  Two obje
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -378,18 +379,50 @@ def greedy_fleet(usable: list[FleetColumn], max_ships: int) -> tuple[FleetColumn
     return ()
 
 
+def ship_rule_bound(
+    ships: int,
+    mass: float,
+    value: float,
+    mass_prefix: list[float],
+    value_prefix: list[float],
+    room: int,
+) -> float:
+    """Upper bound on the value a partial fleet (``ships`` ships, ``mass`` kg collected, ``value``
+    weighted kg) can reach by adding up to ``room`` more ships from the remaining columns.
+
+    ``mass_prefix[k]`` / ``value_prefix[k]`` are the sums of the ``k`` largest remaining per-ship
+    masses / values.  Adding ``k`` ships collects at most ``mass_prefix[k]`` kg, so if
+    ``ships + k`` breaks ``N <= 2 exp(rho * mean)`` at that mass it breaks it for every real
+    k-ship extension; among the feasible ``k`` the value gained is at most ``value_prefix[k]``.
+    ``-inf`` when no completion (including stopping here) can satisfy the rule.
+    """
+
+    best = -math.inf
+    if ships == 0 or ships <= C.maximum_ship_count(mass / ships) + 1e-9:
+        best = value
+    for k in range(1, min(room, len(mass_prefix) - 1) + 1):
+        total = mass + mass_prefix[k]
+        if ships + k <= C.maximum_ship_count(total / (ships + k)) + 1e-9:
+            best = max(best, value + value_prefix[k])
+    return best
+
+
 def solve_fleet_master(
     columns: list[FleetColumn],
     *,
     weights: dict[int, float] | None = None,
     max_ships: int = C.MAX_SHIPS,
     node_cap: int = 200_000,
+    incumbent: tuple[FleetColumn, ...] | list[FleetColumn] | None = None,
 ) -> FleetMasterResult:
     """Exact branch-and-bound packing master (see module docstring).
 
     Bundle columns count their member ships towards ``max_ships`` and the ship rule.  The
-    search starts from the iterated-greedy incumbent (:func:`greedy_fleet`), so when the node
-    cap stops it (``exhaustive`` False) the result is still at least the greedy fleet.
+    search starts from the best of the iterated-greedy fleets (:func:`greedy_fleet` in value and
+    in value-per-ship order) and the caller's ``incumbent`` (e.g. the previous master's
+    selection, which stays feasible when columns are only added), so when the node cap stops it
+    (``exhaustive`` False) the result never regresses.  Nodes are pruned with the ship-rule bound
+    (:func:`ship_rule_bound`) on top of the asteroid conflicts.
     """
 
     certified = sorted(
@@ -429,9 +462,43 @@ def solve_fleet_master(
     suffix = [0.0] * (len(usable) + 1)
     for index in range(len(usable) - 1, -1, -1):
         suffix[index] = suffix[index + 1] + values[index]
-    best: tuple[FleetColumn, ...] = greedy_fleet(usable, max_ships)
-    best_value = sum(column.value(weights) for column in best)
-    greedy_value = best_value
+    # per-ship units of the columns from ``index`` on, largest first, with prefix sums: the
+    # ingredients of the ship-rule bound at every depth
+    mass_prefixes: list[list[float]] = []
+    value_prefixes: list[list[float]] = []
+    for index in range(len(usable) + 1):
+        remaining = usable[index:]
+        masses = sorted(
+            (c.collected_kg / c.ships for c in remaining for _ in range(c.ships)), reverse=True
+        )
+        unit_values = sorted(
+            (values[index + i] / c.ships for i, c in enumerate(remaining) for _ in range(c.ships)),
+            reverse=True,
+        )
+        mass_prefixes.append(_prefix_sums(masses))
+        value_prefixes.append(_prefix_sums(unit_values))
+
+    def total_value(selection) -> float:
+        return sum(column.value(weights) for column in selection)
+
+    starts: list[tuple[FleetColumn, ...]] = [
+        greedy_fleet(usable, max_ships),
+        greedy_fleet(
+            sorted(
+                usable,
+                key=lambda c: (-c.value(weights) / c.ships, -c.value(weights), c.identifier),
+            ),
+            max_ships,
+        ),
+    ]
+    greedy_value = max(total_value(start) for start in starts)
+    if incumbent:
+        usable_ids = {column.identifier for column in usable}
+        warm = tuple(column for column in incumbent if column.identifier in usable_ids)
+        if warm and len(warm) == len(incumbent) and fleet_feasible(warm) == "":
+            starts.append(warm)
+    best: tuple[FleetColumn, ...] = max(starts, key=total_value)
+    best_value = total_value(best)
     nodes = 0
     exhausted = True
 
@@ -447,6 +514,7 @@ def solve_fleet_master(
         index: int,
         selected: tuple[FleetColumn, ...],
         value: float,
+        mass: float,
         deployed: dict[int, float],
         collected: set[int],
     ) -> None:
@@ -457,26 +525,36 @@ def solve_fleet_master(
             return
         if selected and value > best_value + 1e-9 and leaf_ok(selected, deployed):
             best, best_value = selected, value
-        if index == len(usable) or ship_count(selected) >= max_ships:
+        ships = ship_count(selected)
+        if index == len(usable) or ships >= max_ships:
             return
         if value + suffix[index] <= best_value + 1e-9:
             return  # cannot beat the incumbent even taking every remaining column
+        bound = ship_rule_bound(
+            ships,
+            mass,
+            value,
+            mass_prefixes[index],
+            value_prefixes[index],
+            max_ships - ships,
+        )
+        if bound <= best_value + 1e-9:
+            return  # no rule-feasible completion beats the incumbent
         column = usable[index]
-        if ship_count(selected) + column.ships <= max_ships and compatible(
-            column, deployed, collected
-        ):
+        if ships + column.ships <= max_ships and compatible(column, deployed, collected):
             new_deployed = dict(deployed)
             new_deployed.update(column.deploys)
             search(
                 index + 1,
                 (*selected, column),
                 value + values[index],
+                mass + column.collected_kg,
                 new_deployed,
                 collected | set(column.collects),
             )
-        search(index + 1, selected, value, deployed, collected)
+        search(index + 1, selected, value, mass, deployed, collected)
 
-    search(0, (), 0.0, {}, set())
+    search(0, (), 0.0, 0.0, {}, set())
     chosen = {column.identifier for column in best}
     for column in usable:
         if column.identifier not in chosen:
@@ -502,3 +580,10 @@ def solve_fleet_master(
 
 def _rejected_key(item: dict[str, Any]) -> int:
     return int(item["identifier"])
+
+
+def _prefix_sums(items: list[float]) -> list[float]:
+    prefix = [0.0]
+    for item in items:
+        prefix.append(prefix[-1] + item)
+    return prefix

@@ -644,8 +644,15 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     def add_bundle_columns(bundle) -> None:
         columns.extend(bundle_columns(bundle, len(columns)))
 
+    previous: list[FleetColumn] = []
+
     def run_master():
-        master = solve_fleet_master(columns, weights=weights, max_ships=args.max_ships)
+        # the previous selection stays feasible (columns are only added): warm start so the
+        # node-capped search never regresses below the last incumbent
+        master = solve_fleet_master(
+            columns, weights=weights, max_ships=args.max_ships, incumbent=tuple(previous)
+        )
+        previous[:] = list(master.selected)
         report["master"] = master.summary()
         report["master"]["columns"] = len(columns)
         return master

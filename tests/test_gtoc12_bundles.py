@@ -15,6 +15,7 @@ from spacepdhcg.gtoc12.cooperative import (
     fleet_feasible,
     greedy_fleet,
     ship_count,
+    ship_rule_bound,
     solve_fleet_master,
 )
 from spacepdhcg.gtoc12.data import data_available, load_catalogue
@@ -591,3 +592,82 @@ def test_earth_leg_record_arrival() -> None:
     assert leg.arrival_epoch == T0 + 500.0 and leg.certified
     planned = PlannedLeg(EARTH_ID, 5, T0, T0 + 500.0, 6.0, 1.0, "earth_out")
     assert planned.tof_days == leg.tof_days
+
+
+# -- master: ship-rule bound, warm start, brute-force agreement --------------------------------
+
+
+def test_ship_rule_bound_is_a_valid_and_tighter_relaxation() -> None:
+    # 3 ships x 100 kg break the rule (limit 2.98) whatever is added from 100 kg units
+    prefix = [0.0, 100.0, 200.0, 300.0]
+    assert ship_rule_bound(0, 0.0, 0.0, prefix, prefix, 3) == pytest.approx(200.0)
+    # a heavy start admits everything: bound = value + every unit
+    assert ship_rule_bound(1, 600.0, 600.0, prefix, prefix, 3) == pytest.approx(900.0)
+    # the value prefix (bonus-weighted) is what is added, the mass prefix decides feasibility
+    assert ship_rule_bound(1, 600.0, 500.0, prefix, [0.0, 50.0, 100.0, 150.0], 3) == 650.0
+    # a partial fleet that already breaks the rule and cannot be rescued is pruned
+    assert ship_rule_bound(5, 100.0, 100.0, [0.0], [0.0], 3) == -math.inf
+    assert ship_rule_bound(5, 100.0, 100.0, prefix, prefix, 0) == -math.inf
+
+
+def _brute_force(columns, max_ships=100):
+    from itertools import combinations
+
+    best_value = 0.0
+    for size in range(1, len(columns) + 1):
+        for subset in combinations(columns, size):
+            if ship_count(subset) <= max_ships and fleet_feasible(subset) == "":
+                best_value = max(best_value, sum(c.collected_kg for c in subset))
+    return best_value
+
+
+def test_master_matches_brute_force_on_random_instances_and_uses_the_bound() -> None:
+    rng = np.random.default_rng(12)
+    for trial in range(25):
+        columns = []
+        asteroid = 1
+        for identifier in range(int(rng.integers(4, 9))):
+            deploys = {asteroid + k: 100.0 for k in range(int(rng.integers(1, 3)))}
+            asteroid += len(deploys)
+            if rng.random() < 0.3 and columns:  # share an asteroid with an earlier column
+                shared = next(iter(columns[-1].deploys))
+                deploys[shared] = columns[-1].deploys[shared]
+            mass = float(rng.integers(60, 700))
+            columns.append(_column(identifier, deploys, {a: 3000.0 for a in deploys}, mass))
+        if trial % 5 == 0:  # a two-ship bundle
+            members = [
+                _column(90, {900: 1.0}, {900: 3000.0}, float(rng.integers(100, 500))),
+                _column(91, {901: 1.0}, {901: 3000.0}, float(rng.integers(100, 500))),
+            ]
+            columns.append(FleetColumn.from_bundle(92, "b", members))
+        result = solve_fleet_master(columns)
+        assert result.exhaustive
+        assert result.objective == pytest.approx(_brute_force(columns)), trial
+        assert fleet_feasible(result.selected) == ""
+    # determinism: identical calls give identical selections
+    a = solve_fleet_master(columns).selected
+    b = solve_fleet_master(columns).selected
+    assert [c.identifier for c in a] == [c.identifier for c in b]
+
+
+def test_master_warm_start_never_regresses_when_columns_are_added() -> None:
+    # both greedy orders take the 600 kg column (2 x 300) and block the 350 + 350 pair
+    big = _column(0, {1: 1.0, 2: 1.0}, {1: 3000.0, 2: 3000.0}, 300.0)
+    left = _column(1, {1: 1.0}, {1: 3000.0}, 350.0)
+    right = _column(2, {2: 1.0}, {2: 3000.0}, 350.0)
+    columns = [big, left, right]
+    exact = solve_fleet_master(columns)
+    assert exact.exhaustive and exact.objective == pytest.approx(700.0)
+    assert exact.greedy_objective == pytest.approx(600.0)
+    # node cap 0: the search stops at the root, only the starting fleets can be returned
+    cold = solve_fleet_master(columns, node_cap=0)
+    assert not cold.exhaustive and cold.objective == pytest.approx(600.0)
+    warm = solve_fleet_master(columns, node_cap=0, incumbent=exact.selected)
+    assert warm.objective == pytest.approx(700.0) and fleet_feasible(warm.selected) == ""
+    # adding columns keeps the incumbent feasible, so the answer never regresses
+    more = [*columns, _column(3, {3: 1.0}, {3: 3000.0}, 20.0)]
+    later = solve_fleet_master(more, node_cap=0, incumbent=warm.selected)
+    assert later.objective >= 700.0 - 1e-9
+    # an incumbent that lost a column is ignored (never trusted blindly)
+    stale = solve_fleet_master([big, left], node_cap=0, incumbent=exact.selected)
+    assert stale.objective == pytest.approx(600.0) and fleet_feasible(stale.selected) == ""
