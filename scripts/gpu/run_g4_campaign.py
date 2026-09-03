@@ -1437,7 +1437,7 @@ def execute_group(
     if amendment is not None:
         if group is None:
             raise G4ContractError("amended execution requires the scheduled group")
-        censoring = group_censoring(group, amendment)
+        censoring = group_censoring(group, amendment.values)
         timeout_seconds = censoring["attempt_deadline_seconds"]
         amendment_expected = {
             "censoring_stratum": group.coordinate.get("censoring_stratum") or CLAIM_CORE_STRATUM,
