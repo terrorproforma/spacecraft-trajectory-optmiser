@@ -1232,3 +1232,74 @@
   collect tour priced exactly (DP on deploy+collect per surviving partial, or a certified
   collect-pair table at the collect epoch per family) and families re-clustered at radius <= 1.0
   weighted on the collect-epoch phase.
+
+## 2026-09-04 03:20 AEST
+
+- Fifth iteration started (branch `feat/gtoc12-asteroid-mining`, from b4c6b01): attack the
+  collect hop. New module `src/spacepdhcg/gtoc12/collectdp.py`: `CollectPairTable` (lazy,
+  bounded, float32 Lambert ΔV per ordered pair on a 30-day mission lattice x 10 collect TOFs,
+  Earth returns per asteroid) and `plan_collect_tour` (Held-Karp over collected subset x
+  location x lattice epoch: free collect order, camp may be left uncollected and revisited,
+  camps anywhere, collection on departure with rate x stay and the one-year minimum, objective
+  collected - w x propellant; propellant priced as mass x fraction table at the heaviest mass).
+  `SearchSettings.collect_dp*`; `RouteSearch._complete` adds the DP tours (w = 1.0 and the
+  beam's 0.15) to the heuristic ones and ranks all by `plan_score` (weighted - 0.15 x
+  propellant); `_finish` is the shared exact forward mass pass. `ClusterBands.phase_weights` and
+  `ClusterBands.collect_window()`; `cluster-fleet --collect-epoch-families --no-collect-dp
+  --collect-dp-weight`. Master: `ship_rule_mass_floor`, `_LpModel`, `lp_fleet_bound` (per-N LP
+  relaxation with foreign-closure rows), `LpBound.node_bound` (dual bound, kept but weak),
+  `lp_branch_and_bound` (fractional-column branching for the sizes whose LP beats the
+  incumbent), `FleetMasterResult.lp_bound/lp_relaxations/lp_nodes/proven`. Exporter title now
+  derived from the instance (`dataset_title`) and `--run-id`/instance passed through.
+- Probe (archived fleet_master_v2 tours, DP vs archived collect tours at equal mass): DP tours
+  cut the proxy collect+return propellant on 3 of 6 ships (1398 -> 919, 1411 -> 1302, 1030 ->
+  1004 kg) with 10-60 kg less proxy mass; two tours reordered, one used the camp revisit.
+  Master probe (312 archived single routes): LP bound 7997.5 kg (0.3 s, 16 LPs), combinatorial
+  DFS 7905.0 at 2 M nodes, LP branch and bound 7987.3 kg proven optimal in 39 LPs.
+- Tests: `tests/test_gtoc12_collectdp.py` (14: mass-floor rule, LP bound validity vs brute force
+  on random column sets, LP B&B exactness, tiny node cap rescued, bundle ships in the LP, DP
+  bookkeeping / min stay / single collect / free order, camp revisit, no-tour, off-lattice TOFs,
+  pair table determinism + bounded cache + return window, beam completion with DP on/off,
+  collect-window families). Family probe `probe_v5_family247` (4 slots) running.
+
+## 2026-09-04 09:10 AEST
+
+- Fifth campaign closed. Probe of family 247 with the DP (4 slots; the first 2-slot probe
+  "failed" only because the 12-check Earth-leg limit rejects the same 24 short legs v4 rejected
+  and v4 certified its ships in slots 3-4): 884.6 -> 986.0 kg. Campaigns (both 4 h, 4 ships per
+  family, radius 2.0, collector harvest, run concurrently on the 16 cores): `cluster_fleet_v5`
+  (4 workers, deploy-epoch phasing families + DP) 38 families / 128 ships / 16 verified
+  intermediate fleets, marks 30 min 2551.9 kg (5 ships), 1 h 7695.3 (15), 2 h 8365.9 (16), 4 h
+  9101.9 (17), final 9101.85 kg / 17 ships / 137 asteroids, DP priced 20 984 times (8391 s),
+  won 10 392, failed to close 9825, main 0.45 GB / worker 0.83 GB; `cluster_fleet_v5c` (3
+  workers, collect-epoch families) 27 families / 94 ships / 10 fleets, marks 1 h 5569.1 (11),
+  2 h 8358.0 (16), 4 h 9111.3 (17), final 9100.89 kg / 17 ships / 140 asteroids, DP 14 673 /
+  8305 / 5536. Campaign masters proven optimal by the LP B&B (v5 81 LPs, gap 28 kg; v5c 9 LPs,
+  gap 3 kg). Harvest: v5 38 attempts, 2 adopted (459, 280), 27 less mass, 9 no tour; v5c 27, 0.
+- `fleet_master_v3` over nine archives: 554 routes re-flown through SCvx in 921 s (8 workers, 0
+  failures), 726 columns, DFS 5 M nodes then LP B&B over sizes 18 and 17 (565 LPs, 136 s):
+  **18 ships, 147 asteroids (142 mined), 9888.57 kg**, official "Check successfully!",
+  independent verifier ok (113 km max propagation error, 9.5e-11 kg mass), fixed-bonus 9329.82
+  kg vs LP bound 9334.32 (gap 4.5 kg, proven optimal over the archive; LP infeasible at 19),
+  average 549.36 kg, rule 18 <= 18.004. Sources: v5c 8, v5 5, probe_v5 1, v4 2, v1 1, fleet10 1.
+  No cooperative column selected.
+- Leg stats (`results/gtoc12/leg_stats/after_v5.json`), best fleet before -> after: collect hop
+  mean 95.3 -> 89.7, median 90.2 -> 87.1, p75 122.7 -> 115.3, p90 152.5 -> 140.0 kg, share
+  <= 75 kg 0.233 -> 0.292 (references 66 kg / 0.44-0.46, TOF 181-187 d vs our 240 d); deploy
+  hop median 109.6 -> 98.9 (references 96-101); Earth-out 468 -> 412 (references 460-474);
+  Earth return 197 -> 227 (references 208-216). Per-ship collect propellant 691 -> 707 kg
+  because ships carry 8.1 instead of 7.7 asteroids.
+- Viewer: `export-viewer` regenerated for `fleet_master_v3` (title now "GTOC12 full-catalogue
+  OrbitWeaver solution (18 ships, 9888.6 kg)", 8.0 MB); the v2 candidate's importer run with
+  Windows node over UNC paths (no Linux node in WSL): 18 ships, 147 asteroids, 9140 replay
+  samples, hashes and Kepler cross-check ok; data stays ignored.
+- Validation: Ruff clean; suite 406 passed / 4 skipped / 1 failed (`test_native_packaging`,
+  native library not built in this worktree - pre-existing). Test
+  `test_master_warm_start_never_regresses_when_columns_are_added` updated: a node cap of 0 is
+  now rescued by the LP B&B, the cold-start case passes `lp_bound=False`.
+- Commits: b1678aa (collectdp, search, clusters, cooperative LP, viewer title, tests), 81d73e4
+  (v5/v5c/probe reports, bundles, route summaries, intermediate fleet.json, fleet_master_v3
+  report + Result.txt 7.6 MB + fleet.json + viewer manifest, leg stats), docs + memory follow.
+- Next bottleneck: collect-hop phase at the harvest epoch (87 vs 66 kg, 240 vs 181 d): tighter
+  collect-window families (radius <= 1.0, more ships per family), certified pair costs in the DP
+  table, finer Earth-return grid, cheaper Earth-leg pre-screen.

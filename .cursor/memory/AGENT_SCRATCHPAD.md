@@ -1692,3 +1692,86 @@ Use this file as persistent, repo-local execution memory.
 - Re-run `fleet-master` with `--node-cap` > 5 M or a dual bound before claiming optimality: 436
   columns are not exhaustive at 5 M nodes.
 - Regenerate commands and the committed/not-committed split are in `docs/GTOC12_TRACK.md` 7.
+
+### 2026-09-04 03:20 AEST - GTOC12 collect hop: exact collect DP, collect-epoch families, master LP (closed 09:10)
+
+#### Task Summary
+
+- Target: the collect hop (median 90-102 vs 66 kg in the references). Built `collectdp.py`
+  (bounded pair-cost table on a 30-day absolute lattice x collect TOF grid, Held-Karp DP over
+  (collected set, location, epoch) with free collect order, camp-skip/revisit, per-epoch mining
+  bookkeeping), hooked into `RouteSearch._complete` (best of heuristic tours and the DP tours at
+  two propellant weights, ranked by `plan_score = weighted - 0.15 x propellant`).
+  `ClusterBands.collect_window()` = phase embedding at years 3 (w 0.5), 8.5, 11, 13.5. Master:
+  `_LpModel` + `lp_fleet_bound` (per-N LP with the ship rule as a mass floor
+  `N ln(N/2)/rho`) + `lp_branch_and_bound` (branch on fractional columns for the N whose LP beats
+  the incumbent). Probe on the 312 archived single routes: LP bound 7997.5, LP B&B found 7987.3
+  and proved it in 39 LPs where the combinatorial DFS stalled at 7905.0 after 2 M nodes.
+
+#### Mistakes And Fixes (in progress)
+
+- [self] First probe of family 247 came back "no certified Earth leg" and looked like a
+  regression; it was `--ships-per-cluster 2`: the 12-check limit per slot rejects the same 24
+  short (350-400 d, ratio 0.75-0.93) legs v4 rejected, and v4 only certified 30520 (530 d) in
+  slots 3-4. Compare like with like (4 slots) before suspecting the code.
+- [code] The subset DP must expand the start state `(empty, camp)` before the other `(empty, l)`
+  states it feeds (the "left the camp uncollected" moves) - iterate the camp first at popcount 0.
+- [perf] The collect DP itself is cheap (192-448 states, <0.3 s); the Lambert pair tables
+  dominate (~0.12 s per pair, 25k Lambert solves/s), so the table is cached across all partials
+  of a search and the DP only prices the pairs a partial actually needs.
+- [master] The dual node bound derived from the root LP duals (weak duality, free-column reduced
+  costs) did not prune the DFS at all on 312 columns (degenerate packing duals); what closed the
+  gap was LP-based branching on fractional columns restricted to the fleet sizes whose LP beats
+  the incumbent (only N = 16 there).
+
+#### Guardrails For Next Session
+
+- Judge the collect DP by the *certified* per-ship mass after re-timing, not by the proxy: the DP
+  saves 100-480 kg of proxy propellant on the archived tours but collects 10-60 kg less before
+  the re-timer converts the margin.
+- `fleet-master` now reports `lp_bound_kg`, `lp_gap_kg`, `proven_optimal`; claim optimality only
+  when `proven_optimal` is true.
+
+#### Outcome (09:10 AEST)
+
+- Two 4 h campaigns side by side (v5: v4 config + DP, 4 workers; v5c: + collect-epoch families,
+  3 workers) each reached 17 ships / 9101.9 and 9111.3 kg on their own; `fleet_master_v3` over
+  all nine archives (554 routes re-certified, 726 columns): **18 ships / 147 asteroids /
+  9888.57 kg verified**, average 549.4 kg, rule 18 <= 18.004, LP branch and bound proves the
+  master optimal over the archive (9329.82 vs LP bound 9334.32 fixed-bonus; LP infeasible at 19
+  ships). Was 8324.27 / 16 / 520.3. Commits b1678aa (code), 81d73e4 (results), docs+memory next.
+
+#### What Worked
+
+- Pricing the collect tour exactly in the beam (Held-Karp over subset x location x epoch with a
+  shared, bounded pair table) - +11.5 % on the probe family, +15 kg on the fleet average, 12/128
+  and 10/94 campaign ships above the old 535 kg threshold (v4 had 3/119).
+- The LP relaxation + fractional-column branching closed every master this session (campaign
+  masters in 9-81 LPs, the 726-column archive master in 565 LPs / 136 s) where the DFS at 5 M
+  nodes never proved anything.
+- Running both campaign variants concurrently and merging through the archive master: 14 of the
+  18 ships come from this iteration and neither campaign alone had them all.
+
+#### Mistakes And Fixes (closing)
+
+- [self] Counted harvest `ships_adopted` as adoption again in the first aggregation; the list is
+  filled even when `reverted` is set. Adopted = `reverted` empty *and* `ships_adopted` non-empty
+  (v5: 2 of 38; v5c: 0 of 27).
+- [tool] Running Windows `node` from a UNC cwd (`\\wsl.localhost\...`) works for the viewer
+  import, but leaving the PowerShell cwd on the UNC path hung every later Shell call until a call
+  passed an explicit `working_directory`. Always pass `working_directory` after touching UNC.
+- [tool] WSL has no Linux node; `npm` resolves to the Windows binary through interop and fails
+  with `C:\Windows\scripts\...`. Run `node scripts/import-gtoc12.mjs` from PowerShell with UNC
+  paths instead.
+
+#### Guardrails For Next Session
+
+- The collect hop is still the gap but as *phase at the harvest epoch* (median 87 vs 66 kg, TOF
+  240 vs 181 d), not tour order - the DP already optimises order/epochs. Next: families at radius
+  <= 1.0 on collect-window bands with more ships per family; certified (per-pair calibrated) hop
+  costs in the DP table; finer Earth-return grid (returns cost 227 vs 197 kg before, refs 208-216);
+  skip Earth legs above authority ratio 0.7 before SCvx (12 checks/slot wasted slots 1-2 of
+  family 247).
+- A 19th ship needs the average above 562.8 kg; the LP says no 19-ship fleet exists in the
+  726-column archive, so only new columns above 563 kg move the score.
+- Do not edit `src/` while a campaign runs: workers import the modules fresh per task.
