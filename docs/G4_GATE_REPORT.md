@@ -203,9 +203,20 @@ boundary after 26 completed groups, all P1-E pure-gpu-ipm, every attempt `numeri
   workspace, numeric updates 0..8, all `unqualified`), new checkpoint `g4-claim-core-857f99a`,
   `migrate` from `a08f5e2` imported 0 (no untouched completed group of another policy existed).
   Its first nine groups exposed root cause 3, so that worker was paused at a group boundary after
-  9 completed P1-E `N=100` groups (81 measured `numerical`, all contaminated) and those groups
-  were invalidated in turn (`fix_commit` = the root-cause-3 commit, superseded by the next
-  checkpoint). Order is unchanged (pure-gpu-ipm first).
+  9 completed P1-E `N=100` groups (63 measured `numerical`, all contaminated) and those groups
+  were invalidated in turn (`fix_commit=ccd5596`, superseded by `g4-claim-core-ccd5596`).
+  Current checkpoint: `g4-claim-core-ccd5596` (fix commit `ccd5596`, qoco/scvx CTest 7/7,
+  GPU regression test 2:57, capability `d7d27454…b5319`, `migrate` imported 0). Order is
+  unchanged (pure-gpu-ipm first).
+- First valid IPM group (`ccd5596`, ordinal 0, P1-E `N=100`, conditioning 4.0, foreign job at
+  99 % SM): eight launched attempts, each on a freshly built QOCO solver (`workspace_creations`
+  1..8), 27–200 IPM iterations and 28–213 s per attempt, all genuine `numerical` (QOCO status 3;
+  one `maximum iterations` at 200), all `contaminated`; the ninth attempt is `unrun` because the
+  executor's 1140 s group deadline expired at 1216 s. Pure IPM therefore does not qualify on the
+  conditioning-4.0 P1-E core; each failing `N=100` IPM group costs ≈20 min. Risk to watch: a
+  single QOCO solve cannot be interrupted, so if an `N=2000` IPM solve exceeds the scheduler's
+  hard bound (1140 s + 300 s grace) the session is killed, restarted once, and the group ends as
+  an error record — nothing is recorded as solver evidence, but ≈48 min per such group is spent.
 
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core
