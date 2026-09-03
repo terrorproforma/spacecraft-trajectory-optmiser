@@ -27,12 +27,18 @@ struct spacepdhcg_native_qoco_report {
     // Raw QOCO solve status of the last solve (1 solved, 2 solved inaccurate,
     // 3 numerical error, 4 max iterations; -1 before any solve).
     int status_code;
+    // Ruiz equilibration iterations the solver was configured with (0 = none).
+    int ruiz_iterations;
     spacepdhcg_cuda_qoco_failure failure;
 };
 
+// ``ruiz_iterations`` selects QOCO's own Ruiz equilibration (0 = off, the
+// pinned QOCO commit's default). It is a solver setting, independent of the
+// PDHCG workspace scaling mode.
 spacepdhcg_cuda_status spacepdhcg_native_qoco_create(
     const spacepdhcg_cuda_scvx_problem* problem,
     cudaStream_t stream,
+    int ruiz_iterations,
     spacepdhcg_native_qoco** workspace
 );
 

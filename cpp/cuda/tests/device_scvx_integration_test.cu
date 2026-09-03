@@ -117,7 +117,48 @@ std::string g4_policy_amendment;
 std::string g4_censoring_stratum{"claim_core"};
 std::uint64_t g4_inner_iteration_cap = 0U;
 bool g4_deterministic_replay = false;
-constexpr std::string_view g4_supported_amendment = "single-gpu-v1.1";
+// Amendment single-gpu-v1.2 (supersedes v1.1, inherits all of its rules):
+//   A. IPM attempts (pure-gpu-ipm, hybrid IPM stage) run QOCO's own native
+//      equilibration setting and record it explicitly; the PDHCG scaling axis
+//      never reaches the IPM, so pure-gpu-ipm records scaling_mode
+//      "not_applicable_ipm_native". At the pinned QOCO commit the native
+//      default is ruiz_iters = 0 (upstream bfc16b0); Ruiz-on was probed and
+//      rejected (QOCO CUDA-backend Ruiz defects; after patching them it turned
+//      a converging coordinate into a numerical failure). See
+//      benchmarks/g4_claim_core_amendment_v1_2.json probe_evidence.
+//   B. A launched attempt whose measured wall time exceeds the attempt
+//      deadline is classified timeout (solver outcome kept as diagnostics),
+//      never numerical, for every backend.
+//   C. The N=2000 hard bound (kill + one restart + error record) is unchanged.
+bool g4_amendment_v1_2 = false;
+constexpr std::array<std::string_view, 2U> g4_supported_amendments{
+    "single-gpu-v1.1", "single-gpu-v1.2",
+};
+constexpr std::string_view g4_amendment_v1_2_id = "single-gpu-v1.2";
+constexpr int g4_ipm_native_ruiz_iterations = 0;
+constexpr std::string_view g4_ipm_equilibration_mode = "qoco_native_default";
+constexpr std::string_view g4_ipm_native_scaling_mode = "not_applicable_ipm_native";
+
+bool g4_policy_uses_ipm() {
+    return g4_policy == "pure-gpu-ipm" || g4_policy == "hybrid-pdhcg-ipm";
+}
+
+// Ruiz iterations handed to the native QOCO adapter for this attempt.
+int g4_qoco_ruiz_iterations() {
+    return g4_amendment_v1_2 && g4_policy_uses_ipm()
+        ? g4_ipm_native_ruiz_iterations
+        : 0;
+}
+
+// The scaling_mode written into records. The coordinate axis is retained for
+// every PDHCG-bearing policy (including the hybrid's PDHCG stage); the pure IPM
+// baseline records that the axis does not apply to it under amendment v1.2.
+std::string g4_recorded_scaling_mode() {
+    if (g4_amendment_v1_2 && g4_policy == "pure-gpu-ipm") {
+        return std::string(g4_ipm_native_scaling_mode);
+    }
+    return g4_scaling_mode;
+}
 constexpr std::uint64_t g4_fnv_offset_basis = 14'695'981'039'346'656'037ULL;
 constexpr std::array<std::uint64_t, 20U> g4_evaluation_seeds{
     59U, 71U, 89U, 101U, 127U, 149U, 173U, 197U, 223U, 251U,
@@ -329,6 +370,10 @@ struct G4AttemptSnapshot {
     bool replayed{false};
     std::string replay_source_attempt_id;
     std::string trace_hash;
+    // Amendment single-gpu-v1.2 rule B: the launched solve ran to its own end
+    // (uninterruptible IPM or a cancel that landed late) but its measured wall
+    // time exceeded the attempt deadline.
+    bool wall_exceeded_deadline{false};
 };
 
 std::string solver_name() {
@@ -341,7 +386,27 @@ std::string solver_name() {
     return "spacepdhcg-persistent";
 }
 
+// The solver's own outcome of a launched attempt, before amendment v1.2 rule B
+// (wall-clock deadline classification) is applied on top of it.
+std::pair<std::string, std::string> solver_disposition(
+    const G4AttemptSnapshot& attempt
+);
+
 std::pair<std::string, std::string> attempt_disposition(
+    const G4AttemptSnapshot& attempt
+) {
+    const auto solver = solver_disposition(attempt);
+    // Amendment single-gpu-v1.2 rule B: a launched attempt that finished after
+    // its deadline is censored (timeout) whatever the solver reported, except
+    // that an executor defect stays a defect (it is not evidence either way).
+    if (attempt.wall_exceeded_deadline && attempt.launched
+        && solver.first != "executor_defect") {
+        return {"timeout", "timeout"};
+    }
+    return solver;
+}
+
+std::pair<std::string, std::string> solver_disposition(
     const G4AttemptSnapshot& attempt
 ) {
     if (attempt.replayed) {
@@ -662,6 +727,10 @@ void emit_g4_attempt(
         ? "deterministic replay of the measured/0 timeout: warm-up/0, warm-up/1 and "
           "measured/0 reached the attempt deadline with identical trace hashes; not executed "
           "(amendment single-gpu-v1.1)"
+        : disposition == "timeout" && attempt.wall_exceeded_deadline
+        ? "attempt finished after its deadline: measured wall time exceeded the attempt "
+          "deadline; the solver's own outcome is retained as diagnostics (amendment "
+          "single-gpu-v1.2 rule B)"
         : disposition == "timeout"
         ? "attempt reached its actual deadline and was cancelled"
         : disposition == "unsupported"
@@ -766,7 +835,40 @@ void emit_g4_attempt(
                << "\",\"attempt_deadline_seconds\":" << g4_deadline_seconds
                << ",\"inner_iteration_cap\":" << g4_inner_iteration_cap
                << ",\"deterministic_replay\":"
-               << json_bool(g4_deterministic_replay) << '}';
+               << json_bool(g4_deterministic_replay);
+        if (g4_amendment_v1_2) {
+            // Rule A echo: what the IPM actually ran with (from the adapter's
+            // report, not from the request) and how the scaling axis was recorded.
+            output << ",\"ipm_equilibration\":";
+            if (g4_policy_uses_ipm()) {
+                output << "{\"mode\":\"" << g4_ipm_equilibration_mode
+                       << "\",\"ruiz_iterations\":"
+                       << attempt.result.qoco_ruiz_iterations
+                       << ",\"requested_ruiz_iterations\":"
+                       << g4_ipm_native_ruiz_iterations
+                       << ",\"scaling_mode\":\"" << g4_ipm_native_scaling_mode
+                       << "\",\"qoco_status_code\":"
+                       << attempt.result.qoco_status_code << '}';
+            } else {
+                output << "null";
+            }
+            // Rule B echo: the solver's own outcome behind a wall-clock timeout.
+            const auto solver = solver_disposition(attempt);
+            output << ",\"deadline_classification\":{\"rule\":"
+                   << "\"measured_wall_exceeds_attempt_deadline\","
+                   << "\"wall_exceeded_deadline\":"
+                   << json_bool(attempt.wall_exceeded_deadline)
+                   << ",\"measured_wall_seconds\":" << attempt.elapsed_seconds
+                   << ",\"solver_disposition\":\"" << solver.first
+                   << "\",\"solver_failure_class\":\"" << solver.second
+                   << "\",\"canonical_residual\":" << canonical
+                   << ",\"dynamics_residual\":" << dynamics_residual
+                   << ",\"path_residual\":" << path_residual
+                   << ",\"terminal_residual\":" << terminal_residual
+                   << ",\"virtual_control_residual\":" << virtual_residual
+                   << '}';
+        }
+        output << '}';
     }
     if (attempt.replayed) {
         output << ",\"replay_source_attempt_id\":\""
@@ -791,7 +893,7 @@ void emit_g4_attempt(
                << "\"record_scope\":\"measured_attempt\","
                << "\"quality_tier\":\"" << g4_quality_tier
                << "\",\"conditioning\":" << g4_conditioning_log10_span
-               << ",\"scaling_mode\":\"" << g4_scaling_mode
+               << ",\"scaling_mode\":\"" << g4_recorded_scaling_mode()
                << "\",\"warm_mode\":\"" << g4_warm_mode
                << "\",\"seed\":" << g4_evaluation_seed
                << ",\"repeat_kind\":\"measured\",\"repeat\":" << attempt.repeat
@@ -960,7 +1062,7 @@ void emit_g4_attempt(
                << "\",\"warm_mode\":\"" << g4_warm_mode
                << "\"},\"runtime_actual\":{\"policy\":\"" << g4_policy
                << "\",\"quality_tier\":\"" << g4_quality_tier
-               << "\",\"scaling_mode\":\"" << g4_scaling_mode
+               << "\",\"scaling_mode\":\"" << g4_recorded_scaling_mode()
                << "\",\"warm_mode\":\"" << actual_warm
                << "\"},\"outer_iterations\":[";
         if (attempt.result.outer_iterations == 0U) {
@@ -2242,6 +2344,10 @@ IntegrationResult run_resident_sequence(
             } else {
                 outer_options.policy = SPACEPDHCG_CUDA_SCVX_ADAPTIVE;
             }
+            // Amendment single-gpu-v1.2 rule A: the IPM runs QOCO's own Ruiz
+            // equilibration (pure baseline and hybrid hand-off stage); inert
+            // (0, the pinned QOCO default) for every other policy or amendment.
+            outer_options.qoco_ruiz_iterations = g4_qoco_ruiz_iterations();
             if (g4_inner_iteration_cap > 0U) {
                 // Amendment single-gpu-v1.1 rule 2: every inner PDHCG iteration limit becomes
                 // min(limit, cap); limits already below the cap are unchanged.
@@ -2515,6 +2621,12 @@ IntegrationResult run_resident_sequence(
             attempt.elapsed_seconds = std::chrono::duration<double>(
                 std::chrono::steady_clock::now() - attempt_started
             ).count();
+            // Amendment single-gpu-v1.2 rule B (any backend): measured wall time
+            // past the attempt deadline is a timeout even when the solve could
+            // not be interrupted and returned its own outcome.
+            attempt.wall_exceeded_deadline = g4_amendment_v1_2
+                && g4_deadline_seconds > 0.0
+                && attempt.elapsed_seconds > g4_deadline_seconds;
             static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
                 workspace,
                 &attempt.diagnostics
@@ -3170,7 +3282,7 @@ IntegrationResult run_resident_sequence(
                 g4_policy.c_str(),
                 g4_quality_tier.c_str(),
                 g4_quality_tolerance,
-                g4_scaling_mode.c_str(),
+                g4_recorded_scaling_mode().c_str(),
                 g4_warm_mode.c_str(),
                 outer_options.resolve_trigger_multiple,
                 outer_options.resolve_refinement_factor,
@@ -4385,10 +4497,15 @@ void load_g4_session(
     }
     // Amendment single-gpu-v1.1: optional, all-or-nothing, echoed into every record.
     if (const char* value = std::getenv("SPACEPDHCG_G4_POLICY_AMENDMENT")) {
-        if (std::string_view(value) != g4_supported_amendment) {
+        if (std::find(
+                g4_supported_amendments.begin(),
+                g4_supported_amendments.end(),
+                std::string_view(value)
+            ) == g4_supported_amendments.end()) {
             throw std::runtime_error("unsupported G4 policy amendment");
         }
         g4_policy_amendment = value;
+        g4_amendment_v1_2 = std::string_view(value) == g4_amendment_v1_2_id;
         const char* stratum = std::getenv("SPACEPDHCG_G4_CENSORING_STRATUM");
         const char* cap = std::getenv("SPACEPDHCG_G4_INNER_ITERATION_CAP");
         const char* replay = std::getenv("SPACEPDHCG_G4_DETERMINISTIC_REPLAY");
@@ -4492,7 +4609,12 @@ int run_invocation(const int argc, char** argv) {
             "\"separate_attempt_records\":true,"
             "\"policy_reset_between_attempts\":true},"
             "\"independent_replay\":true,"
-            "\"policy_amendments_supported\":[\"single-gpu-v1.1\"],"
+            "\"policy_amendments_supported\":[\"single-gpu-v1.1\",\"single-gpu-v1.2\"],"
+            "\"ipm_equilibration\":{\"mode\":\"qoco_native_default\","
+            "\"ruiz_iterations\":0,\"recorded_scaling_mode\":\"not_applicable_ipm_native\","
+            "\"amendment\":\"single-gpu-v1.2\"},"
+            "\"deadline_classification\":{\"rule\":\"measured_wall_exceeds_attempt_deadline\","
+            "\"disposition\":\"timeout\",\"amendment\":\"single-gpu-v1.2\"},"
             // Baked at CMake configure time; every measured record echoes it as
             // identity.repository_commit, so the capability generator must refuse an
             // executor configured at a different commit than the one it is pinned to.
@@ -4551,8 +4673,8 @@ int run_invocation(const int argc, char** argv) {
             "\"replay_eligible_non_timeout\":%s,\"replay_disposition\":\"%s\","
             "\"replay_failure_class\":\"%s\",\"replay_repeat\":%u,"
             "\"replay_launched\":%s,\"replay_source_attempt_id\":\"%s\"}\n",
-            static_cast<int>(g4_supported_amendment.size()),
-            g4_supported_amendment.data(),
+            static_cast<int>(g4_supported_amendments[0].size()),
+            g4_supported_amendments[0].data(),
             json_escape(trace).c_str(),
             hash.c_str(),
             json_bool(equal_eligible),
@@ -4564,6 +4686,63 @@ int run_invocation(const int argc, char** argv) {
             json_bool(replay.launched),
             replay.replay_source_attempt_id.c_str()
         );
+        return 0;
+    }
+    if (mode == "--g4-amendment-v1-2-selftest") {
+        // Amendment single-gpu-v1.2: prove rule A (equilibration selection and the recorded
+        // scaling_mode per policy) and rule B (wall-clock deadline classification) on
+        // synthetic snapshots without touching the GPU. Each case is printed for both
+        // amendments so the Python test can check v1.1 behaviour is unchanged.
+        g4_deadline_seconds = 120.0;
+        g4_scaling_mode = "refresh_if_needed";
+        const std::array<std::string, 4U> policies{
+            "pure-gpu-ipm", "hybrid-pdhcg-ipm", "adaptive", "fixed-tight",
+        };
+        std::printf("{\"case\":\"g4_amendment_v1_2_selftest\",\"policies\":[");
+        for (std::size_t index = 0U; index < policies.size(); ++index) {
+            g4_policy = policies[index];
+            std::printf("%s{\"policy\":\"%s\"", index == 0U ? "" : ",", g4_policy.c_str());
+            for (const bool v1_2 : {false, true}) {
+                g4_amendment_v1_2 = v1_2;
+                // Solver said numerical after 130 s of a 120 s deadline.
+                G4AttemptSnapshot late_numerical{};
+                late_numerical.launched = true;
+                late_numerical.api_status = SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
+                late_numerical.result.status = SPACEPDHCG_CUDA_SCVX_INNER_FAILURE;
+                late_numerical.elapsed_seconds = 130.0;
+                late_numerical.wall_exceeded_deadline =
+                    v1_2 && late_numerical.elapsed_seconds > g4_deadline_seconds;
+                // Solver converged and qualified, but 121 s of wall time.
+                G4AttemptSnapshot late_qualified{};
+                late_qualified.launched = true;
+                late_qualified.result.status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
+                late_qualified.result.hybrid_handoff_eligible = 1;
+                late_qualified.elapsed_seconds = 121.0;
+                late_qualified.wall_exceeded_deadline =
+                    v1_2 && late_qualified.elapsed_seconds > g4_deadline_seconds;
+                // Solver converged inside the deadline.
+                G4AttemptSnapshot on_time = late_qualified;
+                on_time.elapsed_seconds = 119.0;
+                on_time.wall_exceeded_deadline = false;
+                // Executor defect after the deadline stays a defect.
+                G4AttemptSnapshot late_defect = late_numerical;
+                late_defect.boundary_failed = true;
+                std::printf(
+                    ",\"%s\":{\"qoco_ruiz_iterations\":%d,\"recorded_scaling_mode\":\"%s\","
+                    "\"late_numerical\":\"%s\",\"late_qualified\":\"%s\","
+                    "\"on_time\":\"%s\",\"late_defect\":\"%s\"}",
+                    v1_2 ? "single-gpu-v1.2" : "single-gpu-v1.1",
+                    g4_qoco_ruiz_iterations(),
+                    g4_recorded_scaling_mode().c_str(),
+                    attempt_disposition(late_numerical).first.c_str(),
+                    attempt_disposition(late_qualified).first.c_str(),
+                    attempt_disposition(on_time).first.c_str(),
+                    attempt_disposition(late_defect).first.c_str()
+                );
+            }
+            std::printf("}");
+        }
+        std::printf("]}\n");
         return 0;
     }
     sanitizer_mode =

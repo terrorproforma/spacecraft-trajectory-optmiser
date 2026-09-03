@@ -2189,6 +2189,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     result->status = SPACEPDHCG_CUDA_SCVX_MAXIMUM_ITERATIONS;
     result->final_trust_radius = driver->options.initial_trust_radius;
     result->used_declared_stream = 1;
+    result->qoco_ruiz_iterations = driver->options.qoco_ruiz_iterations;
+    result->qoco_status_code = -1;
     spacepdhcg_cuda_diagnostics transfer_before{};
     auto api_status = spacepdhcg_cuda_workspace_diagnostics(
         driver->problem.workspace,
@@ -2428,6 +2430,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 api_status = spacepdhcg_native_qoco_create(
                     &driver->problem,
                     native,
+                    driver->options.qoco_ruiz_iterations,
                     &driver->qoco
                 );
             }
@@ -2530,6 +2533,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                         api_status = spacepdhcg_native_qoco_create(
                             &driver->problem,
                             native,
+                            driver->options.qoco_ruiz_iterations,
                             &driver->qoco
                         );
                     }
@@ -2590,6 +2594,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     driver->qoco_report.workspace_creations;
                 result->qoco_numeric_updates =
                     driver->qoco_report.numeric_updates;
+                result->qoco_ruiz_iterations =
+                    driver->qoco_report.ruiz_iterations;
+                result->qoco_status_code = driver->qoco_report.status_code;
                 result->qoco_dual_discarded = driver->qoco_report.dual_discarded;
                 if (driver->qoco != nullptr && driver->qoco_report.iterations > 0) {
                     // IPM iterations spent by the failed solve are real work.
@@ -2620,6 +2627,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 driver->qoco_report.workspace_creations;
             result->qoco_numeric_updates =
                 driver->qoco_report.numeric_updates;
+            result->qoco_ruiz_iterations =
+                driver->qoco_report.ruiz_iterations;
+            result->qoco_status_code = driver->qoco_report.status_code;
             result->qoco_dual_discarded =
                 driver->qoco_report.dual_discarded;
             result->qoco_failure = driver->qoco_report.failure;
@@ -2643,6 +2653,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     driver->qoco_report.workspace_creations;
                 result->qoco_numeric_updates =
                     driver->qoco_report.numeric_updates;
+                result->qoco_ruiz_iterations =
+                    driver->qoco_report.ruiz_iterations;
+                result->qoco_status_code = driver->qoco_report.status_code;
                 result->qoco_dual_discarded =
                     driver->qoco_report.dual_discarded;
                 result->qoco_failure = driver->qoco_report.failure;

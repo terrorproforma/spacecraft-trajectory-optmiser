@@ -793,6 +793,7 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
 spacepdhcg_cuda_status native_qoco_create_impl(
     const spacepdhcg_cuda_scvx_problem* problem,
     cudaStream_t stream,
+    int ruiz_iterations,
     spacepdhcg_native_qoco** workspace
 ) {
     if (problem == nullptr || workspace == nullptr) {
@@ -852,8 +853,12 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         problem->dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST;
     // Low-thrust mass-flow equalities are much smaller than the virtual
     // penalty scale, so they require less KKT bias and tighter refinement.
+    // ruiz_iters is the caller's choice (amendment single-gpu-v1.2 selects
+    // QOCO's own Ruiz equilibration for IPM attempts; 0 keeps the pinned
+    // QOCO commit's default of no equilibration).
     SettingsAbi settings{
-        200, 0, low_thrust ? 20 : 5, low_thrust ? 1.0e-12 : 1.0e-6,
+        200, std::max(0, ruiz_iterations), low_thrust ? 20 : 5,
+        low_thrust ? 1.0e-12 : 1.0e-6,
         1.0e-13, low_thrust ? 1.0e-13 : 1.0e-8, 1.0e-13,
         low_thrust ? 1.0e-13 : 1.0e-11,
         1.0e-8, 1.0e-8, 1.0e-5, 1.0e-5, 0,
@@ -864,6 +869,7 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         verbose != nullptr && verbose[0] == '1') {
         settings.verbose = 1;
     }
+    result->report.ruiz_iterations = settings.ruiz_iters;
     result->report.status_code = -1;
     result->configured_settings = settings;
     result->variables = problem->canonical_structure.variables;
@@ -1003,13 +1009,72 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         mix(workspace->formulation.p.values);
         mix(workspace->formulation.a.values);
         mix(workspace->formulation.g.values);
+        // Structural emptiness that QOCO's Ruiz equilibration cannot handle
+        // (safe_div(1, 0) = DBL_MAX): all-zero rows of A/G and variables that
+        // appear in no row of [P; A; G] with a zero cost.
+        const auto zero_rows = [](const Csc& matrix) {
+            std::vector<char> touched(static_cast<std::size_t>(matrix.rows), 0);
+            for (std::size_t k = 0; k < matrix.values.size(); ++k) {
+                if (matrix.values[k] != 0.0) {
+                    touched[static_cast<std::size_t>(matrix.indices[k])] = 1;
+                }
+            }
+            return std::count(touched.begin(), touched.end(), 0);
+        };
+        const auto touched_columns = [](const Csc& matrix, std::vector<char>* out) {
+            for (int column = 0; column < matrix.columns; ++column) {
+                for (int k = matrix.offsets[column]; k < matrix.offsets[column + 1]; ++k) {
+                    if (matrix.values[k] != 0.0) {
+                        (*out)[static_cast<std::size_t>(column)] = 1;
+                    }
+                }
+            }
+        };
+        std::vector<char> column_touched(workspace->formulation.c.size(), 0);
+        touched_columns(workspace->formulation.p, &column_touched);
+        touched_columns(workspace->formulation.a, &column_touched);
+        touched_columns(workspace->formulation.g, &column_touched);
+        for (std::size_t j = 0; j < workspace->formulation.c.size(); ++j) {
+            if (workspace->formulation.c[j] != 0.0) {
+                column_touched[j] = 1;
+            }
+        }
+        // Where the zero G rows come from and what their offsets are.
+        std::vector<char> g_touched(static_cast<std::size_t>(workspace->formulation.g.rows), 0);
+        for (std::size_t k = 0; k < workspace->formulation.g.values.size(); ++k) {
+            if (workspace->formulation.g.values[k] != 0.0) {
+                g_touched[static_cast<std::size_t>(workspace->formulation.g.indices[k])] = 1;
+            }
+        }
+        long zero_scalar = 0, zero_variable = 0, zero_affine = 0, zero_cone = 0;
+        double h_min = std::numeric_limits<double>::infinity();
+        double h_max = -std::numeric_limits<double>::infinity();
+        for (std::size_t row = 0; row < g_touched.size(); ++row) {
+            if (g_touched[row] != 0) {
+                continue;
+            }
+            const auto& map = workspace->formulation.conic_map[row];
+            (map.source == Source::scalar ? zero_scalar
+             : map.source == Source::variable ? zero_variable
+             : map.source == Source::affine ? zero_affine : zero_cone) += 1;
+            h_min = std::min(h_min, workspace->formulation.h[row]);
+            h_max = std::max(h_max, workspace->formulation.h[row]);
+        }
         std::fprintf(
             stderr,
             "{\"case\":\"qoco_formulation\",\"solve_ordinal\":%llu,"
-            "\"data_fnv1a64\":\"%016llx\",\"fresh_solver\":%d}\n",
+            "\"data_fnv1a64\":\"%016llx\",\"fresh_solver\":%d,"
+            "\"zero_rows_a\":%ld,\"zero_rows_g\":%ld,\"zero_columns\":%ld,"
+            "\"zero_g_by_source\":{\"scalar\":%ld,\"variable\":%ld,\"affine_cone\":%ld,"
+            "\"variable_cone\":%ld},\"zero_g_h_range\":[%.6g,%.6g],\"ruiz_iters\":%d}\n",
             static_cast<unsigned long long>(workspace->report.solves),
             static_cast<unsigned long long>(hash),
-            workspace->report.numeric_updates == 0U ? 1 : 0
+            workspace->report.numeric_updates == 0U ? 1 : 0,
+            static_cast<long>(zero_rows(workspace->formulation.a)),
+            static_cast<long>(zero_rows(workspace->formulation.g)),
+            static_cast<long>(std::count(column_touched.begin(), column_touched.end(), 0)),
+            zero_scalar, zero_variable, zero_affine, zero_cone, h_min, h_max,
+            workspace->configured_settings.ruiz_iters
         );
     }
     const bool warm = workspace->has_accepted
@@ -1085,10 +1150,11 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
 spacepdhcg_cuda_status spacepdhcg_native_qoco_create(
     const spacepdhcg_cuda_scvx_problem* problem,
     cudaStream_t stream,
+    int ruiz_iterations,
     spacepdhcg_native_qoco** workspace
 ) {
     try {
-        return native_qoco_create_impl(problem, stream, workspace);
+        return native_qoco_create_impl(problem, stream, ruiz_iterations, workspace);
     } catch (const std::bad_alloc&) {
         return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
     } catch (...) {
