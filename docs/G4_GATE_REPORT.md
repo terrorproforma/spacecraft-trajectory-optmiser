@@ -83,6 +83,53 @@ Campaign state at the time of this report:
   reproducible archive with an evidence index under `results/gpu/g4/claim-core-26def2b/`
   (local-only; no immutable URI exists).
 
+Amendment `single-gpu-v1.1` and relaunch (2026-09-03): the `26def2b` worker was paused with 0 of
+360 groups completed (its one quarantined `contaminated` fixed-tight group and the wait /
+contamination logs are retained under `g4-claim-core-26def2b`). Before any group result was
+inspected, the preregistered amendment `benchmarks/g4_claim_core_amendment_v1_1.json` (SHA-256
+`c691467e77367c63d2ba4b0adc1b290d3e4d731f360cbccae45a7d3cf5b8a1f5`, document
+`docs/G4_CLAIM_CORE_AMENDMENT_V1_1.md`) was frozen and applied to the claim core only:
+
+- Contamination policy run-and-flag (Decision A): the worker never waits for GPU idle; foreign
+  SM utilisation is sampled before, during and after every attempt, the utilisation deltas and the
+  shared lock file `/home/angus/.spacepdhcg-gpu.lock` are recorded, and each measured attempt
+  executed alongside foreign compute is flagged `contaminated` (disposition and quality retained,
+  timing and energy excluded from every H5/H6 statistic; each coordinate row reports the pair count
+  n actually used and its censoring; no re-run).
+- Deterministic-replay timeouts: when both warm-ups and `measured/0` reach the attempt deadline
+  with bit-identical FNV-1a trace hashes, `measured/1..6` are recorded as
+  `timeout_deterministic_replay` (censored, not executed, referencing `measured/0`); any trace
+  difference executes all seven.
+- Attempt deadline 600 s → 120 s and inner iteration cap 1,000,000 → 200,000 for the claim core; a
+  hash-selected 10 % stratified subset (36 `censoring_sensitivity` twins, family × scale × policy,
+  committed in the amendment) additionally runs at 600 s / 1M immediately after its core group. The
+  preregistered acceptance rule (a twin qualifying where its 120 s core attempt is censored
+  invalidates the amendment and reverts the whole core to 600 s) is enforced by
+  `decide_g4_claim_core.py` (exit 2, decision withheld).
+- Execution order: pure-gpu-ipm → adaptive → hybrid-pdhcg-ipm → fixed-tight, definition order
+  within a policy. The claim core never bound execution order to the `solver_order` rotation (it
+  is recorded per group as an identity axis only), so the reordering is permitted. Tolerances,
+  seeds, repeats, group identities and quality gates are unchanged; `policy_amendment:
+  single-gpu-v1.1` is echoed in the checkpoint metadata and every raw and group record.
+
+Two defects were found and fixed before relaunch: the executor bakes `SPACEPDHCG_SOURCE_COMMIT`
+at CMake configure time, so a rebuilt-only tree emitted `identity.repository_commit=b6afb49` under
+a campaign pinned at the live head (commit `2ef27e1`: the executor reports
+`compiled_source_commit`, and the capability generator and scheduler refuse a mismatch); and
+`decide_h6` recorded missing residuals as ±inf, which the `allow_nan=False` decision writer would
+have rejected on the first failed coordinate (commit `a08f5e2`: null with explicit gates).
+New official capability `/home/angus/g4-executor-capability-a08f5e2.json`, SHA-256
+`cf057e02944c09573348025ff457544984ce75651220fe5777c1fe64eefdaaef`, source commit `a08f5e2`,
+executable SHA-256 `0a7c41c453bfabc6c1b9014d53c2b606f6b0723ef16a36c05a9c60cfbd070132`. Checkpoint
+`build-integration-report/g4-claim-core-a08f5e2` (396 groups, schedule SHA-256 `1123b8de…`,
+`policy_amendment=single-gpu-v1.1` in metadata) is driven from the detached worktree
+`/home/angus/worktrees/spacepdhcg-g4-claim-core-a08f5e2` by
+`build-integration-report/g4-claim-core-a08f5e2-{worker,status,observer,finish}.sh`. First ten
+groups (all P1-E `N=100` pure-gpu-ipm): every attempt `numerical` at outer iteration 0 with zero
+QOCO workspace creations (a pre-existing executor defect candidate, reproduced without the
+amendment environment), 90 of 90 measured attempts `contaminated` by a foreign Windows compute
+process at 80–98 % SM, 31–136 s per group. No H5/H6 statistic has been formed.
+
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core
 checkpoint are implementation-ready on `integration/single-gpu-v1`. No claim-core or full grouped
