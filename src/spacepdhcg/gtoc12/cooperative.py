@@ -105,7 +105,12 @@ def orphan_credit_kg(
 
 @dataclass(frozen=True, slots=True)
 class FleetColumn:
-    """One certified ship itinerary offered to the master."""
+    """One certified ship itinerary - or a bundle of them - offered to the master.
+
+    A *bundle* column (``members`` non-empty) is a cooperative cluster plan: several ships whose
+    foreign collects are satisfied inside the bundle.  The master treats it as one column that
+    counts ``len(members)`` ships towards the fleet rule.
+    """
 
     identifier: int
     slot: int  # ship slot the column was generated for (report only)
@@ -116,6 +121,57 @@ class FleetColumn:
     collected_mass: dict[int, float]
     certified: bool
     route: Any = None  # RefinedRoute (opaque to the master)
+    members: tuple[FleetColumn, ...] = ()  # bundle members (single-ship columns)
+
+    @property
+    def ships(self) -> int:
+        return len(self.members) if self.members else 1
+
+    def routes(self) -> list[Any]:
+        """The RefinedRoute objects this column puts in the fleet (one per ship)."""
+
+        if self.members:
+            return [member.route for member in self.members]
+        return [self.route]
+
+    @classmethod
+    def from_bundle(
+        cls, identifier: int, label: str, members: list[FleetColumn] | tuple[FleetColumn, ...]
+    ) -> FleetColumn:
+        """One column for a set of ships whose foreign collects are (mostly) mutual."""
+
+        members = tuple(members)
+        deploys: dict[int, float] = {}
+        collects: dict[int, float] = {}
+        collected: dict[int, float] = {}
+        for member in members:
+            for asteroid, epoch in member.deploys.items():
+                if asteroid in deploys:
+                    raise ValueError(f"bundle deploys asteroid {asteroid} twice")
+                deploys[asteroid] = epoch
+            for asteroid, epoch in member.collects.items():
+                if asteroid in collects:
+                    raise ValueError(f"bundle collects asteroid {asteroid} twice")
+                collects[asteroid] = epoch
+            collected.update(member.collected_mass)
+        foreign = {
+            asteroid: epoch
+            for member in members
+            for asteroid, epoch in member.foreign.items()
+            if asteroid not in deploys or abs(deploys[asteroid] - epoch) > EPOCH_TOLERANCE_DAYS
+        }
+        return cls(
+            identifier,
+            min(member.slot for member in members) if members else 0,
+            label,
+            deploys,
+            collects,
+            foreign,
+            collected,
+            all(member.certified for member in members) and bool(members),
+            None,
+            members,
+        )
 
     @classmethod
     def from_plan(
@@ -155,12 +211,18 @@ class FleetColumn:
             "identifier": self.identifier,
             "slot": self.slot,
             "label": self.label,
+            "ships": self.ships,
             "deploys": sorted(self.deploys),
             "collects": sorted(self.collects),
             "foreign": sorted(self.foreign),
             "collected_kg": self.collected_kg,
             "certified": self.certified,
+            "members": [member.label for member in self.members],
         }
+
+
+def ship_count(columns: tuple[FleetColumn, ...] | list[FleetColumn]) -> int:
+    return sum(column.ships for column in columns)
 
 
 @dataclass(slots=True)
@@ -171,17 +233,28 @@ class FleetMasterResult:
     nodes: int
     exhaustive: bool
     rejected: list[dict[str, Any]] = field(default_factory=list)
+    greedy_objective: float = 0.0
 
     @property
     def collected_kg(self) -> float:
         return sum(column.collected_kg for column in self.selected)
 
+    @property
+    def ships(self) -> int:
+        return ship_count(self.selected)
+
+    def routes(self) -> list[Any]:
+        return [route for column in self.selected for route in column.routes()]
+
     def summary(self) -> dict[str, Any]:
-        mean = self.collected_kg / len(self.selected) if self.selected else 0.0
+        mean = self.collected_kg / self.ships if self.selected else 0.0
         return {
-            "ships": len(self.selected),
+            "ships": self.ships,
+            "columns": len(self.selected),
             "objective_kg": self.objective,
+            "greedy_objective_kg": self.greedy_objective,
             "collected_kg": self.collected_kg,
+            "mean_collected_kg": mean,
             "upper_bound_kg": self.upper_bound,
             "gap_kg": self.upper_bound - self.objective,
             "nodes": self.nodes,
@@ -217,10 +290,70 @@ def fleet_feasible(columns: tuple[FleetColumn, ...] | list[FleetColumn]) -> str:
             if abs(deployed[asteroid] - epoch) > EPOCH_TOLERANCE_DAYS:
                 return f"asteroid {asteroid} deploy epoch differs from the collector's assumption"
     if columns:
-        mean = sum(column.collected_kg for column in columns) / len(columns)
-        if len(columns) > C.maximum_ship_count(mean) + 1e-9:
-            return f"{len(columns)} ships exceed the limit {C.maximum_ship_count(mean):.2f}"
+        ships = ship_count(columns)
+        mean = sum(column.collected_kg for column in columns) / ships
+        if ships > C.maximum_ship_count(mean) + 1e-9:
+            return f"{ships} ships exceed the limit {C.maximum_ship_count(mean):.2f}"
     return ""
+
+
+def _ship_rule_ok(selected: tuple[FleetColumn, ...]) -> bool:
+    ships = ship_count(selected)
+    mean = sum(column.collected_kg for column in selected) / ships
+    return ships <= C.maximum_ship_count(mean) + 1e-9
+
+
+def _foreign_ok(selected: tuple[FleetColumn, ...], deployed: dict[int, float]) -> bool:
+    for column in selected:
+        for asteroid, epoch in column.foreign.items():
+            if asteroid not in deployed or abs(deployed[asteroid] - epoch) > EPOCH_TOLERANCE_DAYS:
+                return False
+    return True
+
+
+def greedy_fleet(usable: list[FleetColumn], max_ships: int) -> tuple[FleetColumn, ...]:
+    """Iterated greedy over columns (bundles included) under the mass-average ship rule.
+
+    Columns are taken in value order while they stay compatible; then, because the ship limit
+    ``2 exp(rho * mean)`` depends on the selection itself, the lowest value-per-ship columns are
+    dropped one at a time until the rule and the foreign-collect closure hold (the fixed-point
+    iteration on the mean mass).
+    """
+
+    selected: list[FleetColumn] = []
+    deployed: dict[int, float] = {}
+    collected: set[int] = set()
+    for column in usable:
+        if ship_count(selected) + column.ships > max_ships:
+            continue
+        if any(a in deployed for a in column.deploys) or any(
+            a in collected for a in column.collects
+        ):
+            continue
+        selected.append(column)
+        deployed.update(column.deploys)
+        collected |= set(column.collects)
+    while selected:
+        chosen = tuple(selected)
+        deployed = {a: e for column in chosen for a, e in column.deploys.items()}
+        if _foreign_ok(chosen, deployed) and _ship_rule_ok(chosen):
+            return chosen
+        # drop what helps least: a column with an unsatisfied foreign collect first, else the
+        # lowest collected mass per ship
+        stranded = [
+            column
+            for column in selected
+            if any(
+                a not in deployed or abs(deployed[a] - e) > EPOCH_TOLERANCE_DAYS
+                for a, e in column.foreign.items()
+            )
+        ]
+        victim = min(
+            stranded or selected,
+            key=lambda column: (column.collected_kg / column.ships, -column.identifier),
+        )
+        selected.remove(victim)
+    return ()
 
 
 def solve_fleet_master(
@@ -230,7 +363,12 @@ def solve_fleet_master(
     max_ships: int = C.MAX_SHIPS,
     node_cap: int = 200_000,
 ) -> FleetMasterResult:
-    """Exact branch-and-bound packing master (see module docstring)."""
+    """Exact branch-and-bound packing master (see module docstring).
+
+    Bundle columns count their member ships towards ``max_ships`` and the ship rule.  The
+    search starts from the iterated-greedy incumbent (:func:`greedy_fleet`), so when the node
+    cap stops it (``exhaustive`` False) the result is still at least the greedy fleet.
+    """
 
     certified = sorted(
         (column for column in columns if column.certified),
@@ -269,8 +407,9 @@ def solve_fleet_master(
     suffix = [0.0] * (len(usable) + 1)
     for index in range(len(usable) - 1, -1, -1):
         suffix[index] = suffix[index + 1] + values[index]
-    best: tuple[FleetColumn, ...] = ()
-    best_value = 0.0
+    best: tuple[FleetColumn, ...] = greedy_fleet(usable, max_ships)
+    best_value = sum(column.value(weights) for column in best)
+    greedy_value = best_value
     nodes = 0
     exhausted = True
 
@@ -280,15 +419,7 @@ def solve_fleet_master(
         )
 
     def leaf_ok(selected: tuple[FleetColumn, ...], deployed: dict[int, float]) -> bool:
-        for column in selected:
-            for asteroid, epoch in column.foreign.items():
-                if (
-                    asteroid not in deployed
-                    or abs(deployed[asteroid] - epoch) > EPOCH_TOLERANCE_DAYS
-                ):
-                    return False
-        mean = sum(column.collected_kg for column in selected) / len(selected)
-        return len(selected) <= C.maximum_ship_count(mean) + 1e-9
+        return _foreign_ok(selected, deployed) and _ship_rule_ok(selected)
 
     def search(
         index: int,
@@ -304,12 +435,14 @@ def solve_fleet_master(
             return
         if selected and value > best_value + 1e-9 and leaf_ok(selected, deployed):
             best, best_value = selected, value
-        if index == len(usable) or len(selected) >= max_ships:
+        if index == len(usable) or ship_count(selected) >= max_ships:
             return
         if value + suffix[index] <= best_value + 1e-9:
             return  # cannot beat the incumbent even taking every remaining column
         column = usable[index]
-        if compatible(column, deployed, collected):
+        if ship_count(selected) + column.ships <= max_ships and compatible(
+            column, deployed, collected
+        ):
             new_deployed = dict(deployed)
             new_deployed.update(column.deploys)
             search(
@@ -335,7 +468,13 @@ def solve_fleet_master(
             )
     selected = tuple(sorted(best, key=lambda column: column.identifier))
     return FleetMasterResult(
-        selected, best_value, suffix[0], nodes, exhausted, sorted(rejected, key=_rejected_key)
+        selected,
+        best_value,
+        suffix[0],
+        nodes,
+        exhausted,
+        sorted(rejected, key=_rejected_key),
+        greedy_value,
     )
 
 

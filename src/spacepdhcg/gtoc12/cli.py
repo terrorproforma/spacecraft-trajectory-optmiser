@@ -453,7 +453,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         # the master picks the fleet from every certified column (the greedy fleet is one of
         # its feasible subsets, so it never scores lower)
         master = run_master()
-        selected = FleetPlan([column.route for column in master.selected])
+        selected = FleetPlan(master.routes())
         report["fleet"] = selected.summary()
         report["fleet"]["greedy"] = fleet.summary()
         fleet_dir = output_dir / "fleet"
@@ -510,6 +510,338 @@ def _optional_bonus(loader):
         return loader()
     except Exception:
         return None
+
+
+BUDGET_MARKS_MINUTES = (30, 60, 120, 240)
+
+
+def cmd_cluster_fleet(args: argparse.Namespace) -> int:
+    """Cooperative cluster pricing -> bundle master -> verified fleet, with checkpoints.
+
+    Co-moving families of the pool are priced in parallel worker processes (deployer +
+    collector itineraries, all SCvx-certified; see ``bundles.py``).  Every finished family adds
+    its bundle and single-ship columns to the master; whenever the master's fleet verifies with
+    a higher score than the incumbent it is retained under ``fleets/`` (the intermediate verified
+    fleets the budget report refers to).  The final fleet is written to ``fleet/Result.txt``.
+    """
+
+    from .bundles import (
+        ClusterPricingSettings,
+        bundle_settings_summary,
+        cluster_search_settings,
+        family_clusters,
+        price_clusters,
+        rank_families,
+    )
+    from .clusters import ClusterBands
+    from .cooperative import FleetColumn, solve_fleet_master
+    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .fleet import FleetPlan, assemble_fleet
+    from .low_thrust import ScvxSettings
+    from .official import official_verifier_available, run_official_verifier
+    from .pipeline import write_route_artifacts
+    from .solution import Solution
+    from .verifier import Gtoc12Verifier
+    from .viewer_export import write_viewer_dataset
+
+    started = time.perf_counter()
+    catalogue = load_catalogue()
+    bonus_table = _optional_bonus(load_bonus_table)
+    weights: dict[int, float] | None = None
+    if bonus_table is not None and not args.no_bonus_weights:
+        weights = {
+            int(asteroid): float(bonus_table.coefficient[asteroid - 1])
+            for asteroid in catalogue.ids
+        }
+    ids = catalogue_pool(catalogue, args)
+    bands = ClusterBands(radius=args.cluster_radius, phase_deg=args.cluster_phase_deg)
+    clusters = family_clusters(catalogue, ids, bands=bands, min_members=args.min_members)
+    # cheapest families first (Earth access + internal hops), not largest first
+    ranked = rank_families(
+        catalogue, clusters, cluster_search_settings(ClusterPricingSettings(), 2)
+    )
+    ranked = ranked[args.skip_clusters : args.skip_clusters + args.max_clusters]
+    clusters = [(label, members) for label, members, _stats in ranked]
+    family_stats = {label: stats for label, _members, stats in ranked}
+    settings = ClusterPricingSettings(
+        ships=args.ships_per_cluster,
+        beam_width=args.beam_width,
+        max_deploys=args.max_deploys,
+        refine_top=args.refine_top,
+        retime_attempts=args.retime_attempts,
+        retime_budget_seconds=args.retime_budget_seconds,
+        orphan_credit=args.orphan_credit,
+        hop_authority_ratio=args.hop_authority_ratio,
+        time_budget_seconds=args.cluster_budget_seconds,
+        seed=args.seed,
+    )
+    scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    verifier = Gtoc12Verifier(catalogue, bonus=bonus_table)
+    report: dict[str, Any] = {
+        "run_id": args.run_id,
+        "commit": _commit(REPOSITORY_ROOT),
+        "instance": {
+            "instance_id": "gtoc12-full-catalogue",
+            "pool_asteroids": int(ids.shape[0]),
+            "pool_filter": {
+                "a_au": [args.pool_a_min, args.pool_a_max],
+                "e_max": args.pool_e_max,
+                "i_max_deg": args.pool_i_max,
+            },
+            "cluster_bands": {"radius": bands.radius, "phase_deg": bands.phase_deg},
+            "families_priced": [
+                {"label": int(label), "members": int(members.shape[0]), **family_stats[label]}
+                for label, members in clusters
+            ],
+        },
+        "settings": {
+            **bundle_settings_summary(settings),
+            "workers": args.workers,
+            "max_ships": args.max_ships,
+            "budget_seconds": args.budget_seconds,
+            "scvx_iterations": args.scvx_iterations,
+            "node_days": args.node_days,
+            "bonus_weights": weights is not None,
+        },
+        "cpu_only": True,
+        "gpu_used": False,
+        "bundles": [],
+        "timeline": [],
+        "fleets": [],  # every verified incumbent (elapsed, ships, score, path)
+    }
+    columns: list[FleetColumn] = []
+    incumbent: dict[str, Any] | None = None
+    worker_rss: list[float] = []
+
+    def verify(solution_path: Path, histories: dict | None = None) -> dict[str, Any]:
+        checker = (
+            verifier
+            if histories is None
+            else Gtoc12Verifier(catalogue, bonus=bonus_table, history=histories)
+        )
+        independent = checker.verify_file(solution_path)
+        entry: dict[str, Any] = {"independent": independent.summary()}
+        if official_verifier_available():
+            official = run_official_verifier(solution_path)
+            entry["official"] = official.summary()
+        score = entry.get("official", {}).get("total_mass_kg")
+        entry["score_kg"] = independent.total_mass_kg if score is None else score
+        entry["ok"] = bool(independent.ok) and entry.get("official", {}).get("ok", True)
+        return entry
+
+    def checkpoint() -> None:
+        report["wall_seconds_total"] = time.perf_counter() - started
+        report["peak_rss_mb"] = _peak_rss_mb()
+        report["worker_peak_rss_mb"] = max(worker_rss) if worker_rss else None
+        report["memory_bound_mb"] = _peak_rss_mb() + args.workers * (
+            max(worker_rss) if worker_rss else 0.0
+        )
+        (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
+
+    def add_bundle_columns(bundle) -> None:
+        members: list[FleetColumn] = []
+        for ship in bundle.ships:
+            column = FleetColumn.from_plan(
+                len(columns),
+                ship.slot,
+                f"f{bundle.label}_s{ship.slot}",
+                ship.route.plan,
+                ship.route.collected_mass,
+                certified=ship.route.certified,
+                route=ship.route,
+            )
+            columns.append(column)
+            members.append(column)
+            # every certified variant that stands alone is a column of its own
+            for index, variant in enumerate(ship.variants):
+                standalone = not variant.plan.orphaned and not variant.plan.foreign_deploy_epochs
+                if variant is ship.route or not standalone:
+                    continue
+                columns.append(
+                    FleetColumn.from_plan(
+                        len(columns),
+                        ship.slot,
+                        f"f{bundle.label}_s{ship.slot}_v{index}",
+                        variant.plan,
+                        variant.collected_mass,
+                        certified=variant.certified,
+                        route=variant,
+                    )
+                )
+        if len(members) > 1:
+            columns.append(FleetColumn.from_bundle(len(columns), f"f{bundle.label}", members))
+
+    def run_master():
+        master = solve_fleet_master(columns, weights=weights, max_ships=args.max_ships)
+        report["master"] = master.summary()
+        report["master"]["columns"] = len(columns)
+        return master
+
+    def try_fleet(master, final: bool) -> dict[str, Any] | None:
+        nonlocal incumbent
+        if not master.selected:
+            return None
+        plan = FleetPlan(master.routes())
+        if final:
+            directory = output_dir / "fleet"
+        else:
+            name = f"fleet_{len(report['fleets']):03d}_{len(plan.routes):02d}ships"
+            directory = output_dir / "fleets" / name
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / "Result.txt"
+        assemble_fleet(plan, catalogue).write(path)
+        histories: dict = {}
+        entry = verify(path, histories if final else None)
+        entry["fleet"] = plan.summary()
+        entry["artifacts"] = {"solution": str(path)}
+        entry["elapsed_seconds"] = time.perf_counter() - started
+        entry["master"] = {
+            k: v for k, v in report["master"].items() if k not in ("selected", "rejected")
+        }
+        (directory / "fleet.json").write_text(_json(entry) + "\n", encoding="utf-8")
+        if final:
+            viewer = write_viewer_dataset(
+                directory / "viewer",
+                Solution.read(path),
+                histories,
+                catalogue,
+                run_id=f"{args.run_id}_fleet",
+                commit=report["commit"],
+                verification=entry["independent"],
+                solution_path=path,
+            )
+            entry["viewer_manifest"] = viewer
+        if entry["ok"] and (incumbent is None or entry["score_kg"] > incumbent["score_kg"] + 1e-9):
+            incumbent = entry
+            report["fleets"].append(
+                {
+                    "elapsed_seconds": entry["elapsed_seconds"],
+                    "ships": entry["fleet"]["ships"],
+                    "asteroids": len(entry["fleet"]["asteroids"]),
+                    "score_kg": entry["score_kg"],
+                    "average_collected_kg": entry["fleet"]["average_collected_kg"],
+                    "path": str(path),
+                }
+            )
+        elif not entry["ok"]:
+            report.setdefault("failed_fleets", []).append(
+                {"path": str(path), "independent": entry["independent"]}
+            )
+        return entry
+
+    def on_result(bundle) -> None:
+        summary = bundle.summary()
+        worker_rss.append(bundle.peak_rss_mb)
+        cluster_dir = output_dir / "clusters" / f"family_{bundle.label:04d}"
+        cluster_dir.mkdir(parents=True, exist_ok=True)
+        for ship in bundle.ships:
+            write_route_artifacts(ship.route, catalogue, cluster_dir / f"ship_{ship.slot:02d}")
+        (cluster_dir / "bundle.json").write_text(_json(summary) + "\n", encoding="utf-8")
+        report["bundles"].append(
+            {k: v for k, v in summary.items() if k not in ("rejected", "earth_legs", "repairs")}
+            | {
+                "rejected": len(summary["rejected"]),
+                "earth_legs_checked": summary["earth_legs"].get("checked"),
+                "earth_legs_certified": summary["earth_legs"].get("certified"),
+                "repairs": len(summary["repairs"]),
+            }
+        )
+        add_bundle_columns(bundle)
+        master = run_master()
+        entry = try_fleet(master, final=False)
+        report["timeline"].append(
+            {
+                "elapsed_seconds": time.perf_counter() - started,
+                "families_priced": len(report["bundles"]),
+                "columns": len(columns),
+                "master_ships": master.ships,
+                "master_collected_kg": master.collected_kg,
+                "master_objective_kg": master.objective,
+                "master_exhaustive": master.exhaustive,
+                "verified_score_kg": None if entry is None else entry["score_kg"],
+                "verified_ok": None if entry is None else entry["ok"],
+                "incumbent_score_kg": None if incumbent is None else incumbent["score_kg"],
+                "peak_rss_mb": _peak_rss_mb(),
+                "worker_peak_rss_mb": bundle.peak_rss_mb,
+            }
+        )
+        checkpoint()
+        coop = summary["cooperative"] or {}
+        print(
+            _json(
+                {
+                    "family": bundle.label,
+                    "members": len(bundle.members),
+                    "ships": len(bundle.ships),
+                    "collected_kg": [round(s.route.total_collected_kg, 1) for s in bundle.ships],
+                    "cooperative_collects": coop.get("cooperative_collects"),
+                    "orphans_left": coop.get("orphans_left"),
+                    "wall_seconds": round(bundle.wall_seconds),
+                    "elapsed_minutes": round((time.perf_counter() - started) / 60.0, 1),
+                    "master": {
+                        "ships": master.ships,
+                        "collected_kg": round(master.collected_kg, 1),
+                        "exhaustive": master.exhaustive,
+                    },
+                    "incumbent_kg": None if incumbent is None else round(incumbent["score_kg"], 1),
+                }
+            ),
+            flush=True,
+        )
+
+    price_clusters(
+        catalogue,
+        clusters,
+        settings=settings,
+        scvx=scvx,
+        weights=weights,
+        workers=args.workers,
+        on_result=on_result,
+        budget_seconds=args.budget_seconds,
+    )
+    if columns:
+        master = run_master()
+        final = try_fleet(master, final=True)
+        report["best"] = incumbent if final is None or not final["ok"] else final
+        report["final_fleet"] = final
+        report["status"] = "scored" if incumbent is not None else "no_verified_fleet"
+    else:
+        report["best"] = None
+        report["status"] = "no_certified_route"
+    report["budget_marks"] = {
+        f"{minutes}_min": max(
+            (f for f in report["fleets"] if f["elapsed_seconds"] <= minutes * 60.0),
+            key=lambda f: f["score_kg"],
+            default=None,
+        )
+        for minutes in BUDGET_MARKS_MINUTES
+    }
+    checkpoint()
+    best = report["best"]
+    print(
+        _json(
+            {
+                "run_id": args.run_id,
+                "status": report["status"],
+                "score_kg": None if best is None else best["score_kg"],
+                "ships": None if best is None else best["fleet"]["ships"],
+                "asteroids": None if best is None else len(best["fleet"]["asteroids"]),
+                "average_collected_kg": None
+                if best is None
+                else best["fleet"]["average_collected_kg"],
+                "budget_marks": {
+                    k: None if v is None else round(v["score_kg"], 1)
+                    for k, v in report["budget_marks"].items()
+                },
+                "wall_seconds_total": report["wall_seconds_total"],
+                "peak_rss_mb": report["peak_rss_mb"],
+                "memory_bound_mb": report["memory_bound_mb"],
+            }
+        )
+    )
+    return 0
 
 
 def cmd_export_viewer(args: argparse.Namespace) -> int:
@@ -602,6 +934,46 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="self-cleaning ships only (no shared miner pool / orphan collection)",
     )
     run.set_defaults(function=cmd_run)
+
+    cluster = commands.add_parser(
+        "cluster-fleet",
+        help="cooperative cluster pricing in parallel workers -> bundle master -> verified fleet",
+    )
+    cluster.add_argument("--run-id", required=True)
+    cluster.add_argument("--output", required=True)
+    cluster.add_argument("--workers", type=int, default=2, help="pricing worker processes")
+    cluster.add_argument("--ships-per-cluster", type=int, default=3)
+    cluster.add_argument(
+        "--max-clusters", type=int, default=60, help="families priced (cheapest first)"
+    )
+    cluster.add_argument("--skip-clusters", type=int, default=0)
+    cluster.add_argument("--min-members", type=int, default=12)
+    cluster.add_argument("--cluster-radius", type=float, default=1.5)
+    cluster.add_argument("--cluster-phase-deg", type=float, default=8.0)
+    cluster.add_argument("--max-ships", type=int, default=100)
+    cluster.add_argument("--beam-width", type=int, default=24)
+    cluster.add_argument("--max-deploys", type=int, default=10)
+    cluster.add_argument("--refine-top", type=int, default=2)
+    cluster.add_argument("--retime-attempts", type=int, default=4)
+    cluster.add_argument("--retime-budget-seconds", type=float, default=600.0)
+    cluster.add_argument("--orphan-credit", type=float, default=1.0)
+    cluster.add_argument("--hop-authority-ratio", type=float, default=0.55)
+    cluster.add_argument("--cluster-budget-seconds", type=float, default=1800.0)
+    cluster.add_argument("--scvx-iterations", type=int, default=40)
+    cluster.add_argument("--node-days", type=float, default=2.0)
+    cluster.add_argument("--seed", type=int, default=0)
+    cluster.add_argument("--pool-a-min", type=float, default=2.2)
+    cluster.add_argument("--pool-a-max", type=float, default=3.0)
+    cluster.add_argument("--pool-e-max", type=float, default=0.15)
+    cluster.add_argument("--pool-i-max", type=float, default=8.0)
+    cluster.add_argument(
+        "--budget-seconds",
+        type=float,
+        default=float("inf"),
+        help="declared wall-clock budget: no new family is started after it",
+    )
+    cluster.add_argument("--no-bonus-weights", action="store_true")
+    cluster.set_defaults(function=cmd_cluster_fleet)
 
     export = commands.add_parser("export-viewer", help="propagate a solution and write viewer data")
     export.add_argument("solution")

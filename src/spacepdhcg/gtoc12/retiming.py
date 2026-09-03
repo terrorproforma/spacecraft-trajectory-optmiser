@@ -790,7 +790,20 @@ def extend_plan(
     ) -> None:
         # a foreign collect placed first un-merges the camp visit (deploy, leave, come back):
         # the visit list then has one leg more than the naive insertion count
-        needed = len(build_visits(new_deploy, new_collect, new_foreign)) - 1
+        try:
+            needed = len(build_visits(new_deploy, new_collect, new_foreign)) - 1
+        except ValueError as error:
+            failures.append(
+                {
+                    "kind": kind,
+                    "asteroid": asteroid,
+                    "reason": f"invalid_order:{error}",
+                    "deploy_order": list(new_deploy),
+                    "collect_order": list(new_collect),
+                    "plan_legs": [(leg.from_id, leg.to_id, leg.role) for leg in plan.legs],
+                }
+            )
+            return
         while len(new_profile) < needed:
             new_profile.insert(camp_index, new_profile[camp_index])
         while len(new_profile) > needed:
@@ -974,6 +987,7 @@ def improve_and_certify(
     minimum_gain_kg: float = 0.0,
     time_budget_seconds: float = float("inf"),
     pool: MinerPool | None = None,
+    refine=None,
 ) -> CertifiedImprovement:
     """SCvx-in-the-loop re-timing: improve at proxy level, re-fly, ban what does not fly, repeat.
 
@@ -981,10 +995,12 @@ def improve_and_certify(
     SCvx and, when a leg is not certifiable, tightens the authority ratio allowed for that body
     pair to ``ban_factor`` x the failing ratio before trying again.  Only fully certified routes
     are returned; the caller keeps its previously certified route otherwise.  Every certified
-    variant is retained in ``certified_routes`` as a column for the fleet master.
+    variant is retained in ``certified_routes`` as a column for the fleet master.  ``refine``
+    replaces :func:`refine_route` (tests inject a proxy-trusting stand-in).
     """
 
     started = time.perf_counter()
+    refine = refine or (lambda candidate: refine_route(candidate, catalogue, scvx=scvx))
     attempts: list[dict[str, Any]] = []
     best: RefinedRoute | None = None
     certified_routes: list[RefinedRoute] = []
@@ -1014,7 +1030,7 @@ def improve_and_certify(
             record["result"] = "no proxy improvement"
             attempts.append(record)
             break
-        refined = refine_route(improved.plan, catalogue, scvx=scvx)
+        refined = refine(improved.plan)
         record["refined"] = {
             "certified": refined.certified,
             "collected_kg": refined.total_collected_kg,

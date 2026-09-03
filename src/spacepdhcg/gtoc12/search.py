@@ -19,7 +19,9 @@ of ``seed`` is to shuffle nothing unless ``randomise`` is requested.
 
 from __future__ import annotations
 
+import math
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -31,6 +33,7 @@ from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
 from .proxies import phasing_edelbaum_proxy
 from .screening import (
+    exhaust_velocity_km_s,
     lambert_hops,
     propellant_for_delta_v,
     screen_asteroid_hops,
@@ -112,6 +115,9 @@ class SearchSettings:
     collect_wait_window_days: float = 600.0
     max_per_deployed_set: int = 2
     first_level_limit: int = 4000
+    # injected (certified) Earth legs unlock the Lambert grid for their target within this many
+    # days of the certified launch and TOF, priced at the per-target measured/Lambert ratio
+    first_level_window_days: float = 200.0
     earth_block: int = 1500  # asteroids per Earth-leg screening block (bounds memory)
     schedule_step_days: float = 15.0
     wait_penalty: float = 1.0  # kg propellant-equivalent per kg of mining mass forgone
@@ -145,6 +151,26 @@ class SearchSettings:
     time_budget_seconds: float = float("inf")  # stop expanding (keep completed plans) past this
     seed: int = 0
     randomise: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class EarthLeg:
+    """A pre-screened (typically SCvx-certified) Earth -> asteroid leg to seed the beam with.
+
+    ``propellant_kg`` is what the leg really costs (the SCvx-measured value when certified), so
+    the chain built on it starts from the right mass instead of the inflated Lambert estimate.
+    """
+
+    target: int
+    launch_epoch: float
+    tof_days: float
+    delta_v_km_s: float  # zero-revolution Lambert proxy (kept for the plan record)
+    propellant_kg: float
+    certified: bool = True
+
+    @property
+    def arrival_epoch(self) -> float:
+        return self.launch_epoch + self.tof_days
 
 
 @dataclass(frozen=True, slots=True)
@@ -375,11 +401,22 @@ class RouteSearch:
         excluded: set[int] | frozenset[int] | None = None,
         weights: dict[int, float] | None = None,
         seeds: dict[int, float] | None = None,
+        first_level: Sequence[EarthLeg] | None = None,
     ) -> None:
         self.catalogue = catalogue
         # cooperative pricing: uncollected miners of earlier ships (asteroid -> deploy epoch);
         # Earth targets co-moving with them earn ``seed_bonus_kg`` in the first level
         self.seeds: dict[int, float] = dict(seeds or {})
+        # cluster pricing: when given, these (SCvx-certified) Earth legs seed the first level
+        # (a calibrated grid around them) instead of the Lambert launch-grid screening
+        self.first_level: tuple[EarthLeg, ...] | None = (
+            None if first_level is None else tuple(first_level)
+        )
+        # legs SCvx refused: ``(from, to)`` asteroid pairs are never hopped again (deploy or
+        # collect), ``(target, launch, tof)`` Earth legs never seed the first level again.  The
+        # pricing loop fills these so a refused chain is not rebuilt for the next ship slot.
+        self.banned_pairs: set[tuple[int, int]] = set()
+        self.banned_earth: set[tuple[int, float, float]] = set()
         banned = set(excluded or ())
         self.excluded: frozenset[int] = frozenset(banned)
         self.ids = np.asarray(
@@ -543,6 +580,8 @@ class RouteSearch:
         s = self.settings
         if s.max_deploys < 1 or self.ids.shape[0] == 0:
             return []
+        if self.first_level is not None:
+            return self._injected_first_level()
         epochs = np.asarray(s.launch_epochs)
         tofs = np.asarray(s.earth_leg_tofs)
         horizon = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
@@ -620,6 +659,112 @@ class RouteSearch:
             beam.append(_Partial([leg], asteroid, arrival, mass, [(asteroid, arrival)]))
         return beam
 
+    def _injected_first_level(self) -> list[_Partial]:
+        """First level from pre-certified Earth legs: a calibrated grid around each of them.
+
+        The certified legs say which targets SCvx can really reach and what the Earth leg truly
+        costs. Seeding the beam with those exact legs alone starves it (a handful of partials,
+        one arrival epoch each), so each certified leg also unlocks the Lambert launch/TOF grid
+        for its target within ``first_level_window_days`` of the certified launch and TOF, priced
+        with the per-target inflation ``measured Delta-V / Lambert Delta-V`` instead of the global
+        one. The certified legs themselves are kept at their measured propellant.
+        """
+
+        s = self.settings
+        _out_inflation, out_ratio = self.limits("earth_out")
+        horizon = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
+        allowed = set(self.ids.tolist())
+        legs = [leg for leg in self.first_level or () if leg.target in allowed]
+        if not legs:
+            return []
+        exhaust = exhaust_velocity_km_s()
+        epochs = np.asarray(s.launch_epochs)
+        tofs = np.asarray(s.earth_leg_tofs)
+        window = s.first_level_window_days
+        # per-target calibration: the smallest measured/Lambert ratio over that target's legs
+        calibration: dict[int, float] = {}
+        for leg in legs:
+            true_dv = exhaust * math.log(s.initial_mass / (s.initial_mass - leg.propellant_kg))
+            ratio = true_dv / max(leg.delta_v_km_s, 1e-9)
+            calibration[leg.target] = min(calibration.get(leg.target, np.inf), ratio)
+        # (score, target, launch, tof, lambert dv, propellant, inflation)
+        kept: list[tuple[float, int, float, float, float, float, float]] = []
+        seen: set[tuple[int, float, float]] = set()
+        for leg in legs:
+            key = (leg.target, leg.launch_epoch, leg.tof_days)
+            if key in seen:
+                continue
+            seen.add(key)
+            mined = C.MINING_RATE_KG_PER_YEAR * max(horizon - leg.arrival_epoch, 0.0) / C.YEAR_DAYS
+            score = self.weights.get(leg.target, 1.0) * mined - s.propellant_weight * (
+                leg.propellant_kg + C.MINER_MASS_KG
+            )
+            kept.append(
+                (
+                    score,
+                    leg.target,
+                    leg.launch_epoch,
+                    leg.tof_days,
+                    leg.delta_v_km_s,
+                    leg.propellant_kg,
+                    calibration[leg.target],
+                )
+            )
+        if window > 0.0 and epochs.size and tofs.size:
+            targets = np.asarray(sorted(calibration), dtype=np.int64)
+            grid = screen_earth_to_asteroids(self.catalogue, targets, epochs, tofs)
+            self.lambert_evaluations += 2 * grid["total_delta_v"].size
+            dv_grid = np.where(grid["feasible"], grid["total_delta_v"], np.inf)
+            tof_grid = np.broadcast_to(tofs[None, :], (epochs.shape[0], tofs.shape[0]))
+            authority = out_ratio * thrust_authority_km_s(s.initial_mass, tof_grid, 1.0)
+            arrival_grid = epochs[:, None] + tofs[None, :]
+            mined_grid = (
+                C.MINING_RATE_KG_PER_YEAR * np.maximum(horizon - arrival_grid, 0.0) / C.YEAR_DAYS
+            )
+            for t_index, target in enumerate(targets.tolist()):
+                inflation = calibration[target]
+                near = np.zeros((epochs.shape[0], tofs.shape[0]), dtype=bool)
+                for leg in legs:
+                    if leg.target != target:
+                        continue
+                    near |= (np.abs(epochs[:, None] - leg.launch_epoch) <= window) & (
+                        np.abs(tofs[None, :] - leg.tof_days) <= window
+                    )
+                dv = dv_grid[t_index]
+                ok = near & np.isfinite(dv) & (dv * inflation <= authority)
+                propellant = propellant_for_delta_v(s.initial_mass, dv * inflation)
+                weight = self.weights.get(target, 1.0)
+                score_grid = np.where(
+                    ok,
+                    weight * mined_grid - s.propellant_weight * (propellant + C.MINER_MASS_KG),
+                    -np.inf,
+                )
+                for e_index, t2_index in zip(*np.nonzero(ok), strict=True):
+                    key = (target, float(epochs[e_index]), float(tofs[t2_index]))
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    kept.append(
+                        (
+                            float(score_grid[e_index, t2_index]),
+                            target,
+                            key[1],
+                            key[2],
+                            float(dv[e_index, t2_index]),
+                            float(propellant[e_index, t2_index]),
+                            inflation,
+                        )
+                    )
+        kept = [item for item in kept if (item[1], item[2], item[3]) not in self.banned_earth]
+        kept.sort(key=lambda item: (-item[0], item[1], item[2], item[3]))
+        beam: list[_Partial] = []
+        for _score, target, launch, tof, dv, propellant, inflation in kept[: s.first_level_limit]:
+            arrival = launch + tof
+            planned = PlannedLeg(EARTH_ID, target, launch, arrival, dv, inflation, "earth_out")
+            mass = s.initial_mass - propellant - C.MINER_MASS_KG
+            beam.append(_Partial([planned], target, arrival, mass, [(target, arrival)]))
+        return beam
+
     def _expand(self, partial: _Partial) -> list[_Partial]:
         s = self.settings
         visited = {item for item, _ in partial.deployed}
@@ -629,7 +774,7 @@ class RouteSearch:
             hops = self.hops_from(partial.location, departure)
             for t_index, target in enumerate(hops["target_ids"]):
                 target = int(target)
-                if target in visited:
+                if target in visited or (partial.location, target) in self.banned_pairs:
                     continue
                 for f_index, tof in enumerate(hops["tofs_days"]):
                     if not hops["feasible"][t_index, f_index]:
@@ -793,8 +938,13 @@ class RouteSearch:
             first = partial.deployed[0][0]
             if per_first.get(first, 0) >= self.settings.max_per_first:
                 continue
-            guess = partial.mass + sum(
-                C.maximum_collected_mass(max(end - d, 0.0)) for _, d in partial.deployed
+            # mass at the Earth-return departure: the collect tour has burnt the deploy-phase
+            # surplus, so the ship is dry mass + cargo + the return propellant, not the
+            # post-deploy mass plus cargo (that guess made every ratio-0.35 return look 0.7 and
+            # pruned whole families whose returns SCvx flies without trouble)
+            mined = sum(C.maximum_collected_mass(max(end - d, 0.0)) for _, d in partial.deployed)
+            guess = min(
+                partial.mass + mined, C.DRY_MASS_KG + mined + self.settings.return_reserve_kg
             )
             if not self._return_feasible(first, guess):
                 continue
@@ -881,6 +1031,8 @@ class RouteSearch:
         s = self.settings
         best_hop = None
         best_cost = np.inf
+        if (source, target) in self.banned_pairs:
+            return best_cost, None
         for dv, departure, tof in self._collect_hop_options(source, target, epoch):
             if epoch - departure > max_span_days:
                 continue  # hop + camp would not leave time for the remaining collections
