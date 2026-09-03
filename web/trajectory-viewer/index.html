@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="dark">
     <meta
       name="description"
-      content="Standalone WebGL2 viewer for verified archived SpacePDHCG trajectory evidence."
+      content="Standalone WebGL2 viewer for verified archived SpacePDHCG trajectory evidence and the verified GTOC12 asteroid-mining fleet."
     >
     <title>SpacePDHCG trajectory evidence viewer</title>
     <link rel="stylesheet" href="./styles.css">
@@ -31,8 +31,22 @@
       <div class="error-banner" id="error-banner" role="alert" hidden></div>
 
       <main class="workspace">
-        <aside class="sidebar" aria-label="Trajectory inventory and controls">
-          <section class="panel inventory-panel">
+        <aside class="sidebar" aria-label="Dataset, inventory and controls">
+          <section class="panel dataset-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="kicker">Dataset</p>
+                <h2><label for="dataset-select">Evidence source</label></h2>
+              </div>
+            </div>
+            <select class="dataset-select" id="dataset-select">
+              <option value="archive" selected>Archived P1/P2 evidence</option>
+              <option value="gtoc12" disabled>GTOC12 fleet — checking…</option>
+            </select>
+            <p class="help-text" id="dataset-help">Verified archived P1/P2 evidence records, each in its own physical frame.</p>
+          </section>
+
+          <section class="panel inventory-panel archive-only">
             <div class="panel-heading">
               <div>
                 <p class="kicker">Evidence inventory</p>
@@ -43,7 +57,18 @@
             <div class="trajectory-list" id="trajectory-list" role="list"></div>
           </section>
 
-          <section class="panel controls-panel">
+          <section class="panel inventory-panel fleet-only" hidden>
+            <div class="panel-heading">
+              <div>
+                <p class="kicker">GTOC12 fleet</p>
+                <h2>Ships</h2>
+              </div>
+              <span class="count-badge" id="fleet-count">—</span>
+            </div>
+            <div class="trajectory-list ship-list" id="ship-list" role="list"></div>
+          </section>
+
+          <section class="panel controls-panel archive-only">
             <div class="panel-heading">
               <div>
                 <p class="kicker">Data source</p>
@@ -93,6 +118,44 @@
               Keyboard: arrows orbit · Shift+arrows pan · +/− zoom · Space play
             </p>
           </section>
+
+          <section class="panel controls-panel fleet-only" hidden>
+            <div class="panel-heading">
+              <div>
+                <p class="kicker">Mission timeline</p>
+                <h2>2035 – 2050</h2>
+              </div>
+            </div>
+            <div class="control-row">
+              <button class="primary-button" id="mission-play-button" type="button">
+                <span aria-hidden="true" id="mission-play-icon">▶</span>
+                <span id="mission-play-label">Play mission</span>
+              </button>
+              <button class="secondary-button" id="focus-ship-button" type="button" disabled>Focus ship</button>
+              <button class="secondary-button" id="fleet-reset-button" type="button">Reset view</button>
+            </div>
+            <label class="timeline-label" for="mission-timeline">
+              <span>Epoch</span>
+              <output id="mission-timeline-output" for="mission-timeline">—</output>
+            </label>
+            <input
+              class="timeline"
+              id="mission-timeline"
+              type="range"
+              min="64328"
+              max="69807"
+              step="1"
+              value="69807"
+              aria-describedby="mission-timeline-output"
+            >
+            <p class="help-text">
+              Ships appear at launch and advance to the last archived sample at or before the epoch; nothing between samples is interpolated. Earth and asteroids move on their Keplerian orbits.
+            </p>
+            <p class="keyboard-help">
+              Hover to identify ships, events, asteroids and Earth · click to select<br>
+              Drag orbit · right-drag or Shift+drag pan · wheel zoom · Space play
+            </p>
+          </section>
         </aside>
 
         <section class="viewer-column" aria-label="Interactive trajectory scene">
@@ -115,19 +178,45 @@
                 <strong>Physical frame</strong>
                 <span>—</span>
               </div>
-              <div class="scene-label bottom-left" id="legend-overlay">
+              <div class="scene-label bottom-left archive-only" id="legend-overlay">
                 <span><i class="legend-mark start"></i>Start</span>
                 <span><i class="legend-mark current"></i>Current</span>
                 <span><i class="legend-mark target"></i>Target</span>
               </div>
+              <div class="scene-label bottom-left fleet-legend fleet-only" id="fleet-legend" hidden>
+                <div class="legend-row legend-ships" aria-label="Ship colours">
+                  <span><i class="ship-swatch ship-colour-1"></i>1</span><span><i class="ship-swatch ship-colour-2"></i>2</span>
+                  <span><i class="ship-swatch ship-colour-3"></i>3</span><span><i class="ship-swatch ship-colour-4"></i>4</span>
+                  <span><i class="ship-swatch ship-colour-5"></i>5</span><span><i class="ship-swatch ship-colour-6"></i>6</span>
+                  <span><i class="ship-swatch ship-colour-7"></i>7</span><span><i class="ship-swatch ship-colour-8"></i>8</span>
+                  <span><i class="ship-swatch ship-colour-9"></i>9</span><span><i class="ship-swatch ship-colour-10"></i>10</span>
+                  <span><i class="ship-swatch ship-colour-11"></i>11</span><span><i class="ship-swatch ship-colour-12"></i>12</span>
+                  <span><i class="ship-swatch ship-colour-13"></i>13</span><span><i class="ship-swatch ship-colour-14"></i>14</span>
+                  <span><i class="ship-swatch ship-colour-15"></i>15</span>
+                </div>
+                <div class="legend-row">
+                  <span><i class="legend-mark ring ship-tone"></i>Deploy miner</span>
+                  <span><i class="legend-mark disc ship-tone"></i>Collect</span>
+                  <span><i class="legend-mark start"></i>Launch</span>
+                  <span><i class="legend-mark target"></i>Earth return</span>
+                </div>
+                <div class="legend-row">
+                  <span><i class="legend-line earth"></i>Earth orbit</span>
+                  <span><i class="legend-line asteroid"></i>Asteroid orbits (Keplerian, pinned elements)</span>
+                  <span><i class="legend-mark sun"></i>Sun (not to scale)</span>
+                </div>
+                <div class="legend-row legend-note">Arcs: straight segments between exact archived samples — no interpolation.</div>
+              </div>
               <div class="scene-label bottom-right" id="scene-overlay">—</div>
+              <div class="event-labels" id="event-labels" aria-hidden="true"></div>
+              <div class="hover-tooltip" id="hover-tooltip" role="status" aria-live="polite" hidden></div>
             </div>
           </div>
 
           <section class="notice-panel" id="qualification-notice" aria-live="polite"></section>
 
           <div class="detail-grid">
-            <section class="panel">
+            <section class="panel archive-only">
               <div class="panel-heading">
                 <div>
                   <p class="kicker">Selected sample</p>
@@ -137,7 +226,7 @@
               <dl class="metric-list" id="current-state"></dl>
             </section>
 
-            <section class="panel">
+            <section class="panel archive-only">
               <div class="panel-heading">
                 <div>
                   <p class="kicker">Model semantics</p>
@@ -147,7 +236,7 @@
               <div id="frame-details"></div>
             </section>
 
-            <section class="panel">
+            <section class="panel archive-only">
               <div class="panel-heading">
                 <div>
                   <p class="kicker">Validation</p>
@@ -155,6 +244,26 @@
                 </div>
               </div>
               <dl class="metric-list" id="validation-details"></dl>
+            </section>
+
+            <section class="panel fleet-only" hidden>
+              <div class="panel-heading">
+                <div>
+                  <p class="kicker">Mission progress</p>
+                  <h2>Fleet at epoch</h2>
+                </div>
+              </div>
+              <dl class="metric-list" id="fleet-summary"></dl>
+            </section>
+
+            <section class="panel ship-detail-panel fleet-only" hidden>
+              <div class="panel-heading">
+                <div>
+                  <p class="kicker">Selected ship</p>
+                  <h2 id="ship-detail-title">Fleet totals</h2>
+                </div>
+              </div>
+              <div id="ship-detail"></div>
             </section>
 
             <section class="panel">
@@ -170,9 +279,13 @@
             </section>
           </div>
 
-          <details class="panel provenance-panel">
+          <details class="panel provenance-panel archive-only">
             <summary>Source provenance and archive caveats</summary>
             <div class="provenance-content" id="provenance-content"></div>
+          </details>
+          <details class="panel provenance-panel fleet-only" hidden>
+            <summary>GTOC12 source provenance, hashes and rendering caveats</summary>
+            <div class="provenance-content" id="fleet-provenance-content"></div>
           </details>
         </section>
       </main>

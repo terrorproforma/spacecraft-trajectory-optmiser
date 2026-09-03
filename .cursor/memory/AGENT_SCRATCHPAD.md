@@ -1728,3 +1728,61 @@ Use this file as persistent, repo-local execution memory.
   unless `SPACEPDHCG_VIEWER_SOURCE` is set (pre-existing, now explicit).
 - Promotion of the candidate to `integration/single-gpu-v1` is unchanged (ff-only after the
   claim-core finish script); this fix is one extra commit on the candidate.
+
+### 2026-09-04 01:40 AEST - GTOC12 fleet visualisation in the WebGL viewer (WSL + Windows, CPU only)
+
+#### Task Summary
+
+- Regenerated and verified the fleet_master_v1 viewer export, extended `web/trajectory-viewer` with
+  a dataset selector and a Sun-centred GTOC12 fleet view (Keplerian Earth/asteroid orbits, per-ship
+  arcs, deploy/collect markers, mission timeline, picking), captured browser screenshots and a
+  matplotlib fallback, committed on `integration/single-gpu-v2-candidate`.
+
+#### Mistakes And Fixes
+
+- [self] UA `[hidden]` lost to author `display: grid` on `.controls-panel`/`.dataset-panel`, so
+  archive panels stayed visible in fleet mode. Fix: `[hidden] { display: none !important; }`.
+  Preventive rule: every toggled panel with a `display:` class rule needs the global override.
+- [self] Switching renderers on one WebGL2 context left enabled vertex attribs pointing at deleted
+  buffers ("no buffer is bound to enabled attribute" warnings). Fix: `dispose()` disables all attrib
+  arrays and unbinds before deleting buffers/programs.
+- [self] `focusShip` at 2.3 r with a 45° vertical FOV cropped bounding-sphere extremes off-canvas and
+  the hover test hit nothing. Fix: distance 3 r; the test asserts the projected marker is inside the
+  canvas before hovering.
+- [tool] Playwright reports `requestfailed net::ERR_ABORTED` for a `HEAD` fetch on Chromium although
+  `response.ok` is true; probe optional datasets with GET (1.7 KB manifest).
+- [tool] Playwright actions have no default timeout, so a failing actionability check hangs
+  forever, and an uncaught assertion leaves the browser open (node never exits). Always
+  `page.setDefaultTimeout(...)` and close the browser in `finally`.
+- [tool] The server CSP `style-src 'self'` forbids inline `style=` attributes but not CSSOM; per-ship
+  colours live in `.ship-colour-N` classes (check.mjs asserts parity with `SHIP_COLOURS`), tooltips
+  and event labels are positioned through `element.style`.
+- [tool] Linux node 20 prints TAP (`ok N - …`, `# pass N`), not the `✔` reporter; grep accordingly.
+  `tests/server.test.mjs` used `pathname.slice(1)` (Windows-only) → `fileURLToPath`.
+
+#### What Worked
+
+- Regenerating the export into a fresh ignored directory (`results/gtoc12/viewer-exports/…`) kept
+  the GTOC12 worktree's tracked `fleet/viewer/manifest.json` untouched while its campaign ran; the
+  only difference from the committed export is the commit string.
+- Attaching pinned Keplerian elements at import and cross-checking the JS propagation against the
+  exporter's 41k context points (3.5e-6 km) gives exact Earth/asteroid positions at any epoch
+  without shipping 6 MB of sampled orbits.
+- Event markers are the transcription nodes (exact archived body states), so deploy/collect
+  positions need no ephemeris lookup and the legend can honestly say "no interpolation".
+
+#### Guardrails For Next Session
+
+- The v2 candidate is authoritative for the viewer; sync the Windows mirror with `tr -d '\r'` and
+  compare with `diff -rq --strip-trailing-cr` before committing anywhere.
+- `web/trajectory-viewer/data/gtoc12/` is ignored; regenerate with `npm run import-gtoc12 -- --export …
+  --catalogue … [--solution … --fleet …]` (README); `check.mjs` validates it only when present.
+- Browser check needs `PLAYWRIGHT_PATH=C:/Users/Angus/AppData/Local/Temp/ptd-browser/node_modules/playwright`
+  (Playwright 1.62.1, chromium-1234) and `npm run serve` on 4173; WSL has the browsers but no module.
+
+#### Follow-Ups / Risks
+
+- `cluster_fleet_v4` was still running at commit time (best 6975.69 kg / 14 ships < 7575.58);
+  export + import any fleet that beats fleet_master_v1.
+- The exporter title constant says "reduced-instance" for full-catalogue fleets; fix on the gtoc12
+  branch when it is next touched.

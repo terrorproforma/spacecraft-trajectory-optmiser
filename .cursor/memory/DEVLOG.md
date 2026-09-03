@@ -1227,3 +1227,59 @@
   - `web/trajectory-viewer` remains unpackaged (export omits viewer files unless
     `SPACEPDHCG_VIEWER_SOURCE`).
   - Memory files are past the rollover threshold; archive-first rollover due next consolidation.
+
+## 2026-09-04 01:40 AEST
+
+- Task summary:
+  - Visualised the verified GTOC12 fleet `fleet_master_v1` (15 ships, 109 asteroids, 7575.58 kg
+    official) in the standalone WebGL viewer and as static matplotlib figures; regenerated and
+    cross-checked the viewer export; extended the viewer for heliocentric multi-body mission data.
+    CPU only; GPU/G4 worktrees untouched; the `cluster_fleet_v4` run in the GTOC12 worktree was left
+    running (best fleet so far 6975.69 kg / 14 ships, below 7575.58, so nothing newer to show).
+- Changes (viewer on `integration/single-gpu-v2-candidate`; Windows mirror `feat/webgl-trajectory-viewer`
+  synced byte-identical modulo CRLF, v2 authoritative):
+  - New modules `web/trajectory-viewer/kepler.js` (GTOC12 Appendix 6.1 Kepler propagation, MJD
+    calendar), `webgl.js` (shared GL resources/shaders, ribbon `uWidth`), `dom.js`, `gtoc12.js`
+    (scene builder in AU, `FleetRenderer`, screen-space picking, ship panels, HTML event labels).
+  - `app.js`: dataset selector (archive / GTOC12) that degrades gracefully when `data/gtoc12/` is
+    absent (GET probe of `manifest.json`, disabled option, import hint); mission epoch timeline
+    64328–69807 with play/scrub; per-ship selection, focus and dimming; hover/click tooltip; deep
+    links `?dataset=gtoc12&ship=N&epoch=MJD&focus=1`; read-only `window.viewerDebug` hooks.
+  - `scripts/import-gtoc12.mjs` (`npm run import-gtoc12`): verifies the export manifest hash, the
+    pinned catalogue SHA-256, the `Result.txt` hash and `fleet.json` cross-references, checks every
+    replay/transcription series, classifies events (launch / deploy / collect / earth-return),
+    attaches pinned Keplerian elements for the 109 visited asteroids + Earth, cross-checks the JS
+    propagation against the exporter's 41,179 context points (max 3.5e-6 km) and writes the ignored
+    `data/gtoc12/{fleet.json,manifest.json}` (1.38 MB, exact samples/indices/hashes verbatim).
+  - `scripts/plot_gtoc12_fleet.py`: matplotlib ecliptic XY fallback (ruff clean).
+  - `scripts/check.mjs` (new DOM ids, module checks, colour-class parity, optional fleet dataset
+    validation), `scripts/browser-check.cjs` (absent-dataset degrade, fleet scene, timeline, focus,
+    hover tooltip, click-select, play, dataset switch, mobile; 15 s action timeouts; browser closed in
+    `finally`), tests `kepler.test.mjs`, `gtoc12-import.test.mjs`; `server.test.mjs` made
+    Linux-portable (`fileURLToPath`), `data.test.mjs` skips when the WSL source is unreachable
+    (`TRAJECTORY_SOURCE` override).
+  - README (GTOC12 dataset section with export/import/launch commands, controls, evidence semantics),
+    `.gitignore` (`web/trajectory-viewer/data/gtoc12/`), `package.json` 1.1.0.
+  - Screenshots in `web/trajectory-viewer/test-artifacts/`: `gtoc12-fleet-heliocentric.png`,
+    `gtoc12-timeline-mid-mission.png`, `gtoc12-ship4-hop-sequence.png`, `gtoc12-desktop-fullpage.png`,
+    `gtoc12-mobile.png`, matplotlib `gtoc12-fleet-ecliptic.png` and `gtoc12-fleet-ecliptic-ship4.png`;
+    archive screenshots and `browser-report.json` refreshed.
+- Validation:
+  - Export regenerated in 16 s with `PYTHONPATH=src .venv/bin/python -m spacepdhcg gtoc12 export-viewer
+    results/gtoc12/runs/fleet_master_v1/fleet/Result.txt --output results/gtoc12/viewer-exports/fleet_master_v1
+    --run-id fleet_master_v1_fleet` (ignored path; tracked `fleet/viewer/manifest.json` untouched).
+    Identical to the committed export apart from `generated_by_commit`/`source.commit` (eb4a5be vs
+    f8fa226); manifest source SHA-256 `61603bb4…7c35` = `Result.txt` = `fleet.json` viewer_manifest;
+    6,044,143 bytes; 15 ships, 7,622 replay points (≤ 512/ship), per-ship events equal the Result.txt
+    event lines, per-ship collected kg equal `fleet.json` to 1e-6, 109 unique asteroids equal the
+    `fleet.json` set, sum 7575.578 kg → official 7575.58 kg.
+  - `npm run check` passes on Windows node 24 and Linux node 20, with and without the dataset;
+    `npm test` 16/16 on both (Linux 14 pass + 2 environment skips without source env vars); ruff
+    check/format clean repo-wide; browser check (Chromium 151, SwiftShader WebGL2, 1440×1000 and
+    390×844): zero console errors/warnings, all 10 requests < 400, tooltip identifies
+    "Ship 4 · Deploy miner · asteroid 24684".
+- Follow-up notes / risks:
+  - The exporter's title constant still says "reduced-instance" for full-catalogue fleets (gtoc12
+    branch); the importer relabels the dataset title and keeps `export_title`.
+  - Whole-fleet end-of-mission view is dense by nature; mid-mission frames and per-ship focus are
+    the legible views. Re-run export + import for any fleet that beats fleet_master_v1.

@@ -18,6 +18,31 @@
     "trajectory": "P1-C",
     "replay_points": 201
   },
+  "gtoc12": {
+    "installed": true,
+    "title": "GTOC12 verified fleet fleet_master_v1_fleet — 15 ships, 109 asteroids, 7575.58 kg",
+    "ships": 15,
+    "asteroids": 109,
+    "official_kg": 7575.58,
+    "screenshots": [
+      "gtoc12-fleet-heliocentric.png",
+      "gtoc12-desktop-fullpage.png",
+      "gtoc12-timeline-mid-mission.png",
+      "gtoc12-ship4-hop-sequence.png",
+      "gtoc12-mobile.png"
+    ],
+    "interactions": [
+      "absent-dataset-degrade",
+      "select",
+      "timeline",
+      "focus",
+      "hover-tooltip",
+      "click-select",
+      "play",
+      "dataset-switch",
+      "mobile"
+    ]
+  },
   "requests": [
     {
       "status": 200,
@@ -37,7 +62,27 @@
     },
     {
       "status": 200,
+      "url": "http://127.0.0.1:4173/dom.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/webgl.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/kepler.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/gtoc12.js"
+    },
+    {
+      "status": 200,
       "url": "http://127.0.0.1:4173/data/trajectories.json"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/data/gtoc12/manifest.json"
     }
   ],
   "errors": [],
