@@ -40,6 +40,7 @@ FAILURE_CLASSES: Final = (
     "timeout",
     "numerical",
     "infeasible",
+    "executor_defect",
     "max_iterations",
     "unrun",
     "evidence",
@@ -55,8 +56,13 @@ DISPOSITIONS: Final = (
     "timeout_deterministic_replay",
     "numerical",
     "infeasible",
+    "executor_defect",
     "unrun",
 )
+# A launched attempt whose reset boundary, adapter ABI or driver call failed before any solver
+# outcome. It is invalid evidence: never a solver disposition, never a statistic, and a group
+# containing one is quarantined rather than completed.
+EXECUTOR_DEFECT_DISPOSITION: Final = "executor_defect"
 
 PATH_INVENTORY: Final = {
     "P1-C-pd3": ("thrust", "mass", "altitude", "glide_slope"),

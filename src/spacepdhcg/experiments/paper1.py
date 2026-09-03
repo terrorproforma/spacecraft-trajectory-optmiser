@@ -55,6 +55,7 @@ PAPER1_STATUSES: Final = frozenset(
         "timeout_deterministic_replay",
         "numerical",
         "infeasible",
+        "executor_defect",
         "unrun",
         "failed",
     }
@@ -272,6 +273,7 @@ def _validate_identity(identity: Mapping[str, Any]) -> None:
                 "hybrid_handoff_ineligible",
                 "not_applicable",
                 "unsupported",
+                "executor_defect",
             }
             and identity["failure_class"] != identity["status"]
         ):
@@ -414,6 +416,7 @@ def _validate_quality(
             "max_iterations",
             "numerical_failure",
             "infeasible",
+            "executor_defect",
             "hybrid_handoff_ineligible",
             "not_applicable",
             "unsupported",

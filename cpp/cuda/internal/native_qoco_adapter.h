@@ -24,6 +24,9 @@ struct spacepdhcg_native_qoco_report {
     int iterations;
     int warm_primal_accepted;
     int dual_discarded;
+    // Raw QOCO solve status of the last solve (1 solved, 2 solved inaccurate,
+    // 3 numerical error, 4 max iterations; -1 before any solve).
+    int status_code;
     spacepdhcg_cuda_qoco_failure failure;
 };
 

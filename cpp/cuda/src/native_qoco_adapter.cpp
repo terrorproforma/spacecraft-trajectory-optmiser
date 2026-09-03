@@ -811,6 +811,13 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         low_thrust ? 1.0e-13 : 1.0e-11,
         1.0e-8, 1.0e-8, 1.0e-5, 1.0e-5, 0,
     };
+    // Diagnostic only: QOCO's own iteration log on stderr. Never set by the
+    // campaign scheduler; timing records are not affected in its absence.
+    if (const char* verbose = std::getenv("SPACEPDHCG_QOCO_VERBOSE");
+        verbose != nullptr && verbose[0] == '1') {
+        settings.verbose = 1;
+    }
+    result->report.status_code = -1;
     const auto setup_start = std::chrono::steady_clock::now();
     const int code = result->setup(
         result->solver,
@@ -924,6 +931,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         std::chrono::steady_clock::now() - solve_start
     ).count();
     ++workspace->report.solves;
+    workspace->report.status_code = status_code;
     if (workspace->solver->sol == nullptr
         || workspace->solver->sol->status != status_code) {
         workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;

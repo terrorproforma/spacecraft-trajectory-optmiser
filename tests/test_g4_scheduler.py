@@ -12,6 +12,8 @@ from spacepdhcg.experiments.g4 import (
     load_policy,
 )
 from spacepdhcg.experiments.g4_scheduler import (
+    INVALID_EXECUTOR_DEFECT,
+    INVALIDATED_STATE,
     CampaignStore,
     atomic_create,
     coordinate_at,
@@ -77,6 +79,7 @@ def test_store_recovers_interrupted_attempt_without_overwrite(tmp_path: Path) ->
             "completed": 1,
             "running": 0,
             "quarantined": 0,
+            "invalidated": 0,
             "remaining": 24_883_199,
         }
         attempts = recovered.database.execute(
@@ -149,3 +152,58 @@ def test_imported_terminal_row_is_exactly_once_and_skipped(tmp_path: Path) -> No
         assert next_claim is not None
         assert next_claim.ordinal != claim.ordinal
         assert target.status()["completed"] == 1
+
+
+def test_invalidation_retains_evidence_and_leaves_completed_set(tmp_path: Path) -> None:
+    """Executor-defect hygiene: records stay on disk, the ledger row leaves ``completed``."""
+
+    loaded = policy()
+    with CampaignStore(tmp_path, loaded.values, loaded.sha256, "a" * 40) as store:
+        claim = store.claim()
+        assert claim is not None
+        record = {"coordinate_id": claim.coordinate_id, "disposition": "numerical"}
+        store.finish(claim, disposition="completed_group", reason="ok", record=record, valid=True)
+        run_directory = tmp_path / "runs" / claim.coordinate_id / claim.attempt_id
+        before = (run_directory / "result.json").read_bytes()
+
+        # Only completed rows can be invalidated, and a reason is mandatory.
+        with pytest.raises(G4ContractError, match="requires a reason"):
+            store.invalidate(claim.ordinal, reason="", provenance={})
+        with pytest.raises(G4ContractError, match="only completed"):
+            store.invalidate(claim.ordinal + 1, reason="defect", provenance={})
+
+        written = store.invalidate(
+            claim.ordinal,
+            reason="pure-gpu-ipm warm boundary defect",
+            provenance={"fix_commit": "f" * 40, "superseded_by": "/tmp/next"},
+        )
+        assert written["disposition"] == INVALID_EXECUTOR_DEFECT
+        assert written["prior_disposition"] == "completed_group"
+        # Nothing was deleted or rewritten; the invalidation sits beside the result.
+        assert (run_directory / "result.json").read_bytes() == before
+        invalidation = json.loads((run_directory / "invalidation.json").read_text())
+        assert invalidation["fix_commit"] == "f" * 40
+        assert invalidation["attempt_id"] == claim.attempt_id
+        status = store.status()
+        assert status["completed"] == 0
+        assert status["invalidated"] == 1
+        assert status["remaining"] == status["total"]
+        row = store.database.execute(
+            "SELECT state, disposition FROM attempts WHERE attempt_id = ?", (claim.attempt_id,)
+        ).fetchone()
+        assert (row["state"], row["disposition"]) == (INVALIDATED_STATE, INVALID_EXECUTOR_DEFECT)
+        # A second invalidation of the same evidence is refused (create-only sidecar, state).
+        with pytest.raises(G4ContractError, match="only completed"):
+            store.invalidate(claim.ordinal, reason="again", provenance={})
+        # The invalidated row is never claimed again by this checkpoint: a fresh campaign owns it.
+        following = store.claim()
+        assert following is not None and following.ordinal != claim.ordinal
+
+    events = [json.loads(line) for line in (tmp_path / "journal.jsonl").read_text().splitlines()]
+    assert [event["event"] for event in events] == [
+        "claimed",
+        "completed",
+        INVALIDATED_STATE,
+        "claimed",
+    ]
+    assert events[2]["reason"] == "pure-gpu-ipm warm boundary defect"

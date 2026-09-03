@@ -85,6 +85,50 @@ No failure at a smaller coordinate predicts or censors a larger coordinate.
 Every larger logical row remains pending until it is launched or receives a
 contract-authorized static applicability disposition.
 
+### `executor_defect` (fail closed, never evidence)
+
+`executor_defect` is the disposition of a launched attempt whose *executor*, not
+the solver, failed: the reset boundary between attempts returned an error, the
+IPM adapter reported an ABI fault, or the driver returned an API status that is
+not a solver outcome (invalid argument/state, topology mismatch, pointer
+contract, busy, runtime or internal error). It requires `launched: true`, a
+matching `failure_class`, a reason and timing, and is never winner-eligible.
+It must never be recorded as `numerical`; `numerical` is reserved for
+`SPACEPDHCG_CUDA_NUMERICAL_FAILURE` and the QOCO numerical-error status.
+
+A group containing an `executor_defect` attempt is **quarantined** by the
+scheduler (disposition `executor_defect`, records retained verbatim) and the
+decision step refuses any completed group carrying one. Evidence already
+committed as `completed` under a defective executor is retired with the
+`invalidate` ledger action (`run_g4_campaign.py invalidate --invalidate-policy
+<policy> --invalidate-reason ... --fix-commit <sha> --superseded-by <campaign>`):
+the attempt row moves to state `invalidated` with disposition
+`invalid_executor_defect`, an `invalidation.json` sidecar (create-only) is
+written beside the untouched `result.json`, the journal records the event, and
+the coordinate leaves the completed set. Nothing is deleted or re-run in place:
+the campaign's `source_commit` pin means the corrected executor lives at a later
+HEAD, so the invalidated groups are re-run by a new checkpoint initialised there
+(completed groups of unaffected policies may be imported exactly once with
+`migrate`).
+
+The executor prints one `g4_attempt_diagnostic` JSON line to stderr for every
+attempt that does not converge (API status, SCvx status, QOCO failure code,
+QOCO workspace creations/updates and timings); the scheduler retains it in the
+group's `stderr.log`. `SPACEPDHCG_QOCO_VERBOSE=1` additionally turns on QOCO's
+own iteration log (diagnostic only; never set by the scheduler).
+
+### Capability preflight for the IPM policies
+
+`generate_g4_executor_capability.py` runs its real persistent-session probe on a
+`pure-gpu-ipm` coordinate and refuses the executor unless every one of the nine
+attempts launched, reports at least one QOCO workspace creation in the session,
+and ends in a solver disposition (`qualified`/`unqualified`). It pins the QOCO
+shared library (`ipm_library.path`/`sha256`, from `SPACEPDHCG_QOCO_LIBRARY`,
+which must be set and exist). `run_g4_campaign.py run` refuses to start unless
+the capability carries that probe and the worker's `SPACEPDHCG_QOCO_LIBRARY`
+hashes to the pinned library, so a durable worker launched without the library
+fails closed before claiming a group instead of recording fake IPM failures.
+
 ## H5/H6 claim-resolution core
 
 `benchmarks/g4_h5_h6_claim_core.json` preregisters 360 persistent groups and

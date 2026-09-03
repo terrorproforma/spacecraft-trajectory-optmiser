@@ -49,6 +49,7 @@ from spacepdhcg.experiments.g4 import (  # noqa: E402
 from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
     AMENDMENT_RECORD_FIELD,
     ATTEMPT_KINDS,
+    EXECUTOR_DEFECT_DISPOSITION,
     REPLAY_DISPOSITION,
     SENSITIVITY_STRATUM,
     ExecutionGroup,
@@ -230,6 +231,13 @@ def validate_group_evidence(
             validate_attempt_record(record)
         except (ValidationError, G4ContractError) as error:
             raise ClaimCoreDecisionError(f"raw attempt invalid: {error}") from error
+        if record.get("disposition") == EXECUTOR_DEFECT_DISPOSITION:
+            # The scheduler quarantines such groups; a completed group carrying one is a
+            # ledger inconsistency and the decision refuses rather than counting it.
+            raise ClaimCoreDecisionError(
+                f"group {group.group_id} completed with an executor_defect attempt "
+                f"({planned['repeat_kind']}/{planned['repeat']}); invalid evidence"
+            )
         if planned["repeat_kind"] != "measured":
             continue
         paper1 = record.get("paper1_result")
@@ -1115,7 +1123,8 @@ def main() -> int:
     quarantined_history = Counter()
     database = sqlite3.connect(f"file:{campaign / 'checkpoint.sqlite3'}?mode=ro", uri=True)
     for (disposition,) in database.execute(
-        "SELECT disposition FROM attempts WHERE state IN ('quarantined', 'interrupted')"
+        "SELECT disposition FROM attempts "
+        "WHERE state IN ('quarantined', 'interrupted', 'invalidated')"
     ):
         quarantined_history[str(disposition)] += 1
     database.close()

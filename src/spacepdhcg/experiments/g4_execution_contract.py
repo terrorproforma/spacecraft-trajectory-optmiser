@@ -34,8 +34,10 @@ TERMINAL_DISPOSITIONS: Final = (
     "timeout_deterministic_replay",
     "numerical",
     "infeasible",
+    "executor_defect",
     "unrun",
 )
+EXECUTOR_DEFECT_DISPOSITION: Final = "executor_defect"
 # Amendment single-gpu-v1.1 (claim core only). The original single-gpu-v1 rules stay readable
 # through ``ORIGINAL_CENSORING``; the amendment never rewrites the claim-core definition.
 AMENDMENT_ID: Final = "single-gpu-v1.1"
@@ -393,6 +395,14 @@ def validate_attempt_record(record: Mapping[str, Any]) -> None:
         )
     if disposition == "not_applicable":
         _require(record["launched"] is False, "not_applicable attempts may not be launched")
+    if disposition == EXECUTOR_DEFECT_DISPOSITION:
+        # The record itself is well formed (so the evidence is retained and auditable) but it
+        # is invalid as an observation: the executor, not the solver, failed.
+        _require(record["launched"] is True, "an executor defect is recorded on a launched attempt")
+        _require(
+            record.get("failure_class") == EXECUTOR_DEFECT_DISPOSITION,
+            "executor_defect disposition and failure class must match",
+        )
     if disposition == "hybrid_handoff_ineligible":
         _require(record["launched"] is True, "hybrid handoff eligibility requires an actual launch")
         _require(

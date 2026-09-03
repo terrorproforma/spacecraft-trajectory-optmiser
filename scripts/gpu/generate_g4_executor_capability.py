@@ -42,6 +42,7 @@ PINNED_CONTRACTS = {
     "raw_attempt_schema": "experiments/schema/g4_raw_attempt.schema.json",
     "paper1_result_schema": "experiments/schema/paper1_result.schema.json",
 }
+PROBE_GROUP_DEADLINE_SECONDS = 900
 PINNED_LOCKS = {
     "applicability": "benchmarks/g4_applicability.sha256",
     "claim_core": "benchmarks/g4_h5_h6_claim_core.sha256",
@@ -148,8 +149,12 @@ def run_session_probe(
                 "SPACEPDHCG_G4_GROUP_ID": "g4-group-v1-" + "a" * 64,
                 "SPACEPDHCG_G4_CAPABILITY_PROBE": "1",
                 "SPACEPDHCG_G4_OUTER_ITERATIONS": "1",
-                "SPACEPDHCG_G4_ATTEMPT_DEADLINE_SECONDS": "10",
-                "SPACEPDHCG_G4_GROUP_DEADLINE_SECONDS": "120",
+                # One SCvx iteration per attempt. The QOCO solve inside a pure-gpu-ipm attempt
+                # cannot be cancelled mid-factorisation and a foreign GPU job can slow it by
+                # >10x (observed 12-20 s per attempt on a busy GPU for the N=20 probe), so the
+                # probe deadlines are generous: they exist to catch hangs, not to time anything.
+                "SPACEPDHCG_G4_ATTEMPT_DEADLINE_SECONDS": "60",
+                "SPACEPDHCG_G4_GROUP_DEADLINE_SECONDS": str(PROBE_GROUP_DEADLINE_SECONDS),
             }
         )
         completed = subprocess.run(
@@ -164,7 +169,7 @@ def run_session_probe(
             check=False,
             capture_output=True,
             text=True,
-            timeout=130,
+            timeout=PROBE_GROUP_DEADLINE_SECONDS + 120,
             env=environment,
         )
     if completed.returncode != 0:
@@ -205,6 +210,21 @@ def run_session_probe(
         raise SystemExit("executor session probe omitted strict measured records")
     if any(record.get("statistics_eligible") is not False for record in attempts[:2]):
         raise SystemExit("executor session probe included warmups in statistics")
+    # The probe coordinate is pure-gpu-ipm: every launched attempt must have run on a real
+    # QOCO workspace (>= 1 creation in the persistent session) and end in a solver outcome.
+    # An executor whose IPM adapter cannot initialise, whose warm boundary fails, or whose
+    # library is missing is refused here instead of producing fake failures for a campaign.
+    dispositions = [record.get("disposition") for record in attempts]
+    if any(record.get("launched") is not True for record in attempts):
+        raise SystemExit(f"pure-gpu-ipm probe did not launch every attempt: {dispositions}")
+    if any(disposition not in {"qualified", "unqualified"} for disposition in dispositions):
+        raise SystemExit(
+            "pure-gpu-ipm probe produced non-solver dispositions (IPM adapter or warm boundary "
+            f"defect, or QOCO unavailable): {dispositions}"
+        )
+    creations = [record.get("qoco_workspace_creations") for record in sessions]
+    if any(not isinstance(value, int) or value < 1 for value in creations):
+        raise SystemExit(f"pure-gpu-ipm probe never constructed a QOCO workspace: {creations}")
     return {
         "kind": "real_cuda_session",
         "attempt_count": 9,
@@ -215,7 +235,28 @@ def run_session_probe(
         "same_workspace": True,
         "zero_post_create_topology_allocations": True,
         "zero_post_create_topology_index_copies": True,
+        "pure_gpu_ipm_probe": {
+            "policy": "pure-gpu-ipm",
+            "dispositions": dispositions,
+            "qoco_workspace_creations": creations,
+            "qoco_numeric_updates": [record.get("qoco_numeric_updates") for record in sessions],
+        },
     }
+
+
+def ipm_library_identity() -> dict[str, str]:
+    """Pin the QOCO library the executor will dlopen; refuse when it is not usable."""
+
+    path = os.environ.get("SPACEPDHCG_QOCO_LIBRARY", "")
+    if not path:
+        raise SystemExit(
+            "SPACEPDHCG_QOCO_LIBRARY is unset: the pure-gpu-ipm and hybrid policies cannot run; "
+            "export the QOCO shared library path before generating a capability"
+        )
+    library = Path(path)
+    if not library.is_file():
+        raise SystemExit(f"SPACEPDHCG_QOCO_LIBRARY={path} is not a file")
+    return {"path": str(library.resolve()), "sha256": sha256_path(library)}
 
 
 def main() -> int:
@@ -291,12 +332,14 @@ def main() -> int:
             f"{capability.get('compiled_source_commit')!r}, not HEAD {source_commit}; "
             "re-run the CMake configure step and rebuild before generating a capability"
         )
+    ipm_library = ipm_library_identity()
     session_probe = run_session_probe(executable, lock[0], matrix_sha256)
     capability.update(
         {
             "source_commit": source_commit,
             "executable_sha256": sha256_path(executable),
             "runtime_library_sha256": runtime_libraries(executable),
+            "ipm_library": ipm_library,
             "policy_sha256": lock[0],
             "matrix_sha256": matrix_sha256,
             "contract_hashes": contract_hashes,

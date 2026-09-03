@@ -322,6 +322,9 @@ struct G4AttemptSnapshot {
     double elapsed_seconds{0.0};
     std::string actual_warm_mode{"cold"};
     std::string dual_disposition{"not-produced"};
+    // The attempt's reset boundary (not the solve) failed: an executor defect,
+    // never a solver disposition.
+    bool boundary_failed{false};
     // Amendment single-gpu-v1.1: deterministic-replay bookkeeping.
     bool replayed{false};
     std::string replay_source_attempt_id;
@@ -350,6 +353,18 @@ std::pair<std::string, std::string> attempt_disposition(
     if (attempt.result.status == SPACEPDHCG_CUDA_SCVX_CANCELLED) {
         return {"timeout", "timeout"};
     }
+    // Fail closed: a failed reset boundary, an adapter ABI/driver error, or an
+    // API status that is not a solver outcome (invalid argument/state, topology
+    // mismatch, pointer contract, busy, runtime or internal error) is an executor
+    // defect. It must never be recorded as a solver "numerical" failure.
+    if (attempt.boundary_failed
+        || attempt.result.qoco_failure == SPACEPDHCG_CUDA_QOCO_FAILURE_ABI
+        || (attempt.api_status != SPACEPDHCG_CUDA_SUCCESS
+            && attempt.api_status != SPACEPDHCG_CUDA_NUMERICAL_FAILURE
+            && attempt.api_status != SPACEPDHCG_CUDA_OUT_OF_MEMORY
+            && attempt.api_status != SPACEPDHCG_CUDA_UNSUPPORTED)) {
+        return {"executor_defect", "executor_defect"};
+    }
     if (attempt.api_status == SPACEPDHCG_CUDA_OUT_OF_MEMORY
         || attempt.result.qoco_failure
             == SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY) {
@@ -376,8 +391,7 @@ std::pair<std::string, std::string> attempt_disposition(
     if (attempt.api_status != SPACEPDHCG_CUDA_SUCCESS
         || attempt.result.status == SPACEPDHCG_CUDA_SCVX_INNER_FAILURE
         || attempt.result.qoco_failure
-            == SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL
-        || attempt.result.qoco_failure == SPACEPDHCG_CUDA_QOCO_FAILURE_ABI) {
+            == SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL) {
         return {"numerical", "numerical"};
     }
     const bool qualified =
@@ -658,6 +672,9 @@ void emit_g4_attempt(
         ? "native solver reported infeasible"
         : disposition == "numerical"
         ? "native solver reported a numerical failure"
+        : disposition == "executor_defect"
+        ? "executor defect: reset boundary, adapter ABI or driver error before a "
+          "solver outcome; attempt is invalid evidence"
         : disposition == "unrun"
         ? "group deadline prevented launch"
         : "launched attempt did not satisfy matched-quality gates";
@@ -825,6 +842,7 @@ void emit_g4_attempt(
                    : disposition == "unsupported" ? "unsupported"
                    : disposition == "infeasible" ? "infeasible"
                    : disposition == "numerical" ? "numerical_failure"
+                   : disposition == "executor_defect" ? "executor_defect"
                    : "max_iterations")
                << "\",\"convergence_criteria_met\":" << json_bool(qualified)
                << ",\"objective_equivalent\":" << json_bool(qualified)
@@ -2384,6 +2402,17 @@ IntegrationResult run_resident_sequence(
             if (outer_status != SPACEPDHCG_CUDA_SUCCESS) {
                 attempt.api_status = outer_status;
                 attempt.launched = true;
+                attempt.boundary_failed = true;
+                std::fprintf(
+                    stderr,
+                    "{\"case\":\"g4_attempt_diagnostic\",\"attempt_ordinal\":%zu,"
+                    "\"stage\":\"reset_boundary\",\"api_status\":%d,"
+                    "\"boundary_mode\":%d}\n",
+                    attempt_ordinal,
+                    static_cast<int>(outer_status),
+                    static_cast<int>(boundary_mode)
+                );
+                std::fflush(stderr);
                 static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
                     workspace,
                     &attempt.diagnostics
@@ -2497,6 +2526,37 @@ IntegrationResult run_resident_sequence(
             outer = attempt.result;
             records = attempt.iterations;
             outer_status = attempt.api_status;
+            if (g4_session_mode
+                && (attempt.api_status != SPACEPDHCG_CUDA_SUCCESS
+                    || attempt.result.status != SPACEPDHCG_CUDA_SCVX_CONVERGED)) {
+                // Failure diagnostics for the retained stderr log: the raw status codes
+                // behind a non-qualified disposition, so an executor defect (ABI, driver
+                // error) can be told apart from a genuine solver failure after the fact.
+                std::fprintf(
+                    stderr,
+                    "{\"case\":\"g4_attempt_diagnostic\",\"attempt_ordinal\":%zu,"
+                    "\"api_status\":%d,\"scvx_status\":%d,\"qoco_failure\":%d,"
+                    "\"qoco_workspace_creations\":%llu,\"qoco_numeric_updates\":%llu,"
+                    "\"qoco_conversion_seconds\":%.6g,\"qoco_setup_seconds\":%.6g,"
+                    "\"qoco_solve_seconds\":%.6g,\"outer_iterations\":%zu,"
+                    "\"inner_iterations\":%llu,\"hybrid_handoff_eligible\":%d}\n",
+                    attempt_ordinal,
+                    static_cast<int>(attempt.api_status),
+                    static_cast<int>(attempt.result.status),
+                    static_cast<int>(attempt.result.qoco_failure),
+                    static_cast<unsigned long long>(
+                        attempt.result.qoco_workspace_creations
+                    ),
+                    static_cast<unsigned long long>(attempt.result.qoco_numeric_updates),
+                    attempt.result.qoco_conversion_seconds,
+                    attempt.result.qoco_setup_seconds,
+                    attempt.result.qoco_solve_seconds,
+                    static_cast<std::size_t>(attempt.result.outer_iterations),
+                    static_cast<unsigned long long>(attempt.result.inner_iterations),
+                    static_cast<int>(attempt.result.hybrid_handoff_eligible)
+                );
+                std::fflush(stderr);
+            }
             // A cancelled (deadline) attempt is a failed attempt: its partial iterates
             // were rolled back, so the next boundary must be cold rather than warm.
             prior_attempt_retained_state =

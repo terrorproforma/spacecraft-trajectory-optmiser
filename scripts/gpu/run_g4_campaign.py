@@ -19,6 +19,7 @@ import sys
 import threading
 import time
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ sys.path.insert(0, str(REPOSITORY / "src"))
 
 from spacepdhcg.experiments.g4 import (  # noqa: E402
     ACCEPTED_TIMING_BOUNDARY,
+    POLICY_NAMES,
     G4ContractError,
     load_policy,
     sha256_path,
@@ -37,6 +39,7 @@ from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
     AMENDMENT_ID,
     AMENDMENT_RECORD_FIELD,
     CLAIM_CORE_STRATUM,
+    EXECUTOR_DEFECT_DISPOSITION,
     REPLAY_DISPOSITION,
     ExecutionGroup,
     LoadedAmendment,
@@ -51,6 +54,7 @@ from spacepdhcg.experiments.g4_execution_contract import (  # noqa: E402
     validate_attempt_record,
 )
 from spacepdhcg.experiments.g4_scheduler import (  # noqa: E402
+    INVALID_EXECUTOR_DEFECT,
     CampaignStore,
     Claim,
     atomic_create,
@@ -189,7 +193,8 @@ def load_capabilities(
                 raise G4ContractError("executor capability pins a different claim-core amendment")
             if amendment.values["amendment_id"] not in value.get("policy_amendments_supported", []):
                 raise G4ContractError("executor does not support the requested amendment")
-        probe = value.get("session_probe", {})
+        probe = dict(value.get("session_probe", {}))
+        ipm_probe = probe.pop("pure_gpu_ipm_probe", None)
         if probe != {
             "kind": "real_cuda_session",
             "attempt_count": 9,
@@ -202,6 +207,36 @@ def load_capabilities(
             "zero_post_create_topology_index_copies": True,
         }:
             raise G4ContractError("executor capability lacks a passing real session probe")
+        # The capability must have proven a real pure-gpu-ipm session (>= 1 QOCO workspace per
+        # attempt, solver dispositions only), and this worker must dlopen the very library that
+        # probe used: a worker environment without it would otherwise fail every IPM attempt.
+        if (
+            not isinstance(ipm_probe, Mapping)
+            or ipm_probe.get("policy") != "pure-gpu-ipm"
+            or any(
+                not isinstance(item, int) or item < 1
+                for item in ipm_probe.get("qoco_workspace_creations", [])
+            )
+            or len(ipm_probe.get("qoco_workspace_creations", [])) != 9
+            or any(
+                item not in {"qualified", "unqualified"}
+                for item in ipm_probe.get("dispositions", [None])
+            )
+        ):
+            raise G4ContractError("executor capability lacks a passing pure-gpu-ipm probe")
+        ipm_library = value.get("ipm_library")
+        if not isinstance(ipm_library, Mapping) or not ipm_library.get("sha256"):
+            raise G4ContractError("executor capability does not pin the IPM library")
+        worker_library = os.environ.get("SPACEPDHCG_QOCO_LIBRARY", "")
+        if not worker_library or not Path(worker_library).is_file():
+            raise G4ContractError(
+                "SPACEPDHCG_QOCO_LIBRARY is unset or missing in the worker environment; the "
+                "pure-gpu-ipm and hybrid policies cannot run"
+            )
+        if sha256_path(Path(worker_library)) != ipm_library["sha256"]:
+            raise G4ContractError(
+                "worker SPACEPDHCG_QOCO_LIBRARY differs from the library the capability probed"
+            )
     declared_hash = value.get("capability_sha256")
     payload = {key: item for key, item in value.items() if key != "capability_sha256"}
     if declared_hash != hashlib.sha256(canonical_bytes(payload)).hexdigest():
@@ -1080,6 +1115,68 @@ def archive_stdout(root: Path, stdout: str) -> tuple[str, int]:
     return digest, len(payload)
 
 
+def stored_metadata(campaign: Path) -> dict[str, str]:
+    """Read a checkpoint's metadata table read-only (no schema creation, no lock)."""
+
+    database = sqlite3.connect(f"file:{campaign / 'checkpoint.sqlite3'}?mode=ro", uri=True)
+    try:
+        return {
+            str(key): str(value)
+            for key, value in database.execute("SELECT key, value FROM metadata")
+        }
+    finally:
+        database.close()
+
+
+def invalidate_completed_groups(
+    store: CampaignStore,
+    groups: Sequence[ExecutionGroup],
+    *,
+    policy: str,
+    disposition: str,
+    reason: str,
+    provenance: Mapping[str, Any],
+) -> int:
+    """Invalidate every completed group of one policy; refuses while a worker owns the GPU lock.
+
+    Records are retained verbatim (see ``CampaignStore.invalidate``); the ledger rows leave the
+    completed set so they are never counted, migrated or decided on.
+    """
+
+    if policy not in POLICY_NAMES:
+        raise G4ContractError(f"unknown policy {policy!r}")
+    lock_descriptor = os.open(store.root / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        try:
+            fcntl.flock(lock_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise G4ContractError("campaign worker is still active; pause it first") from error
+        rows = list(
+            store.database.execute(
+                "SELECT ordinal, coordinate_id FROM coordinates WHERE state = 'completed' "
+                "ORDER BY ordinal"
+            )
+        )
+        invalidated = 0
+        for row in rows:
+            group = groups[int(row["ordinal"])]
+            if group.group_id != str(row["coordinate_id"]):
+                raise G4ContractError("checkpoint coordinate content address drift")
+            if group.coordinate["policy"] != policy:
+                continue
+            store.invalidate(
+                int(row["ordinal"]),
+                disposition=disposition,
+                reason=reason,
+                provenance=provenance,
+            )
+            invalidated += 1
+        return invalidated
+    finally:
+        fcntl.flock(lock_descriptor, fcntl.LOCK_UN)
+        os.close(lock_descriptor)
+
+
 def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
     """Import completed evidence only while the source GPU lock is unowned."""
 
@@ -1648,6 +1745,23 @@ def execute_group(
             item.get("disposition") == REPLAY_DISPOSITION for item in attempts
         )
     disposition = "completed_group" if valid else "invalid_evidence"
+    defective_attempts = [
+        item.get("attempt_id")
+        for item in attempts
+        if item.get("disposition") == EXECUTOR_DEFECT_DISPOSITION
+    ]
+    if valid and defective_attempts:
+        # Fail closed: the executor (reset boundary, adapter ABI, driver call) failed before a
+        # solver outcome on at least one attempt. The records are retained verbatim, but the
+        # group is quarantined instead of completed so it never enters any statistic.
+        valid = False
+        disposition = EXECUTOR_DEFECT_DISPOSITION
+        reason = (
+            f"executor defect on {len(defective_attempts)} attempt(s) "
+            f"({', '.join(str(item).rsplit('/', 1)[-1] for item in defective_attempts)}); "
+            "group quarantined, evidence retained"
+        )
+        record["reason"] = reason
     if amendment is not None:
         if valid and contaminated_attempts:
             reason = (
@@ -1776,13 +1890,35 @@ def execute(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("init", "migrate", "status", "run"))
+    parser.add_argument("action", choices=("init", "migrate", "status", "run", "invalidate"))
     parser.add_argument("--repository", type=Path, default=REPOSITORY)
     parser.add_argument("--campaign", type=Path, required=True)
     parser.add_argument("--executable", type=Path)
     parser.add_argument("--capabilities", type=Path)
     parser.add_argument("--max-runs", type=int)
     parser.add_argument("--source-campaign", type=Path)
+    parser.add_argument(
+        "--invalidate-policy",
+        help="invalidate: only completed groups whose coordinate policy equals this value",
+    )
+    parser.add_argument(
+        "--invalidate-reason",
+        help="invalidate: the defect statement recorded on every invalidated attempt",
+    )
+    parser.add_argument(
+        "--invalidate-disposition",
+        default=INVALID_EXECUTOR_DEFECT,
+        help="invalidate: ledger disposition written on the invalidated attempts",
+    )
+    parser.add_argument(
+        "--fix-commit",
+        help="invalidate: the commit carrying the executor fix (provenance only)",
+    )
+    parser.add_argument(
+        "--superseded-by",
+        type=Path,
+        help="invalidate: the campaign that re-runs the invalidated groups (provenance only)",
+    )
     parser.add_argument("--nvml-library")
     parser.add_argument("--sampler-cpu-core", type=int)
     parser.add_argument("--nvidia-smi", default="nvidia-smi")
@@ -1872,11 +2008,17 @@ def main() -> int:
         ).stdout
         if dirty:
             raise G4ContractError("campaign initialization and execution require a clean commit")
+    store_source_commit = source_commit
+    if arguments.action == "invalidate":
+        # Ledger maintenance opens the checkpoint under its own pinned source commit: the
+        # fixed executor lives at a later HEAD, and the invalidated rows are re-run by a new
+        # campaign initialised there, never by this one.
+        store_source_commit = stored_metadata(arguments.campaign.resolve())["source_commit"]
     with CampaignStore(
         arguments.campaign.resolve(),
         policy,
         policy_sha256,
-        source_commit,
+        store_source_commit,
         grouped=True,
         groups=groups,
         schedule_sha256=schedule_sha256,
@@ -1884,6 +2026,32 @@ def main() -> int:
     ) as store:
         if arguments.action == "status":
             print(json.dumps(store.status(), sort_keys=True))
+            return 0
+        if arguments.action == "invalidate":
+            if groups is None:
+                raise G4ContractError("invalidate is defined for the claim core only")
+            if not arguments.invalidate_policy or not arguments.invalidate_reason:
+                raise G4ContractError(
+                    "invalidate requires --invalidate-policy and --invalidate-reason"
+                )
+            invalidated = invalidate_completed_groups(
+                store,
+                groups,
+                policy=arguments.invalidate_policy,
+                disposition=arguments.invalidate_disposition,
+                reason=arguments.invalidate_reason,
+                provenance={
+                    "defect_source_commit": store_source_commit,
+                    "fix_commit": arguments.fix_commit,
+                    "superseded_by": (
+                        str(arguments.superseded_by.resolve())
+                        if arguments.superseded_by is not None
+                        else None
+                    ),
+                    "invalidated_from_commit": source_commit,
+                },
+            )
+            print(json.dumps({**store.status(), "invalidated_now": invalidated}, sort_keys=True))
             return 0
         if arguments.action == "init":
             print(json.dumps(store.status(), sort_keys=True))

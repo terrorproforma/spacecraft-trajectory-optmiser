@@ -2583,6 +2583,20 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                         ? SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY
                         : SPACEPDHCG_CUDA_QOCO_FAILURE_UNAVAILABLE)
                     : driver->qoco_report.failure;
+                // A failed solve still ran on a real QOCO workspace: report the
+                // creations/updates so a solver failure (workspace_creations >= 1)
+                // is distinguishable from a never-constructed adapter (0).
+                result->qoco_workspace_creations =
+                    driver->qoco_report.workspace_creations;
+                result->qoco_numeric_updates =
+                    driver->qoco_report.numeric_updates;
+                result->qoco_dual_discarded = driver->qoco_report.dual_discarded;
+                if (driver->qoco != nullptr && driver->qoco_report.iterations > 0) {
+                    // IPM iterations spent by the failed solve are real work.
+                    result->inner_iterations += static_cast<uint64_t>(
+                        driver->qoco_report.iterations
+                    );
+                }
                 result->qoco_conversion_seconds =
                     driver->qoco_report.conversion_seconds;
                 result->qoco_setup_seconds =
@@ -3422,6 +3436,14 @@ spacepdhcg_cuda_scvx_driver_reset_attempt(
         }
     }
     spacepdhcg_native_qoco_reset_warm_state(driver->qoco, true);
+    if (driver->options.policy == SPACEPDHCG_CUDA_SCVX_PURE_QOCO) {
+        // Pure IPM never runs the PDHCG kernel, so the persistent workspace
+        // holds no retained solver state and a FULL_RETAINED warm start would
+        // be refused with INVALID_STATE (which the G4 executor used to record
+        // as a launched "numerical" attempt). The warm boundary for this
+        // policy is the retained QOCO primal reset above plus the dual clear.
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
     auto status = spacepdhcg_cuda_workspace_warm_start_async(
         driver->problem.workspace,
         SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,

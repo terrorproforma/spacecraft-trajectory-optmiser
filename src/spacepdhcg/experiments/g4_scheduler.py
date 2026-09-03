@@ -31,6 +31,11 @@ from .g4_execution_contract import (
 
 SCHEMA_VERSION: Final = 1
 TERMINAL_STATES: Final = ("completed", "quarantined")
+# A completed row whose evidence was later found to come from a defective executor. The
+# attempt row, run directory and result stay on disk verbatim; only the ledger state changes
+# so the row leaves the completed set and can never be counted or imported as evidence.
+INVALIDATED_STATE: Final = "invalidated"
+INVALID_EXECUTOR_DEFECT: Final = "invalid_executor_defect"
 
 
 def _canonical_json(value: Mapping[str, Any]) -> bytes:
@@ -603,6 +608,71 @@ class CampaignStore:
             }
         )
 
+    def invalidate(
+        self,
+        ordinal: int,
+        *,
+        disposition: str = INVALID_EXECUTOR_DEFECT,
+        reason: str,
+        provenance: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Invalidate one completed row's evidence without deleting anything.
+
+        The result record, run directory and attempt row are retained; the attempt moves to
+        the ``invalidated`` state with the invalidation disposition, an ``invalidation.json``
+        is written beside the result (create-only, so a second invalidation of the same
+        attempt is refused), and the coordinate leaves the completed set. Nothing here
+        re-runs the row: a fresh campaign under the fixed executor owns that.
+        """
+
+        if not reason:
+            raise G4ContractError("invalidation requires a reason")
+        now = self._now()
+        with self.database:
+            row = self.database.execute(
+                "SELECT coordinate_id, state, latest_attempt_id FROM coordinates WHERE ordinal = ?",
+                (ordinal,),
+            ).fetchone()
+            if row is None or row["state"] != "completed":
+                raise G4ContractError("only completed coordinates may be invalidated")
+            attempt = self.database.execute(
+                "SELECT run_directory, disposition, state FROM attempts WHERE attempt_id = ?",
+                (row["latest_attempt_id"],),
+            ).fetchone()
+            if attempt is None or attempt["state"] != "completed":
+                raise G4ContractError("completed coordinate lacks its completed attempt")
+            record = {
+                "record_kind": "invalidation",
+                "campaign": str(self.root),
+                "ordinal": ordinal,
+                "coordinate_id": row["coordinate_id"],
+                "attempt_id": row["latest_attempt_id"],
+                "prior_state": "completed",
+                "prior_disposition": attempt["disposition"],
+                "disposition": disposition,
+                "reason": reason,
+                "invalidated_at": now,
+                **dict(provenance),
+            }
+            atomic_create(
+                Path(attempt["run_directory"]) / "invalidation.json",
+                _canonical_json(record) + b"\n",
+            )
+            self.database.execute(
+                """
+                UPDATE attempts
+                SET state = ?, disposition = ?, reason = ?
+                WHERE attempt_id = ?
+                """,
+                (INVALIDATED_STATE, disposition, reason, row["latest_attempt_id"]),
+            )
+            self.database.execute(
+                "UPDATE coordinates SET state = ?, updated_at = ? WHERE ordinal = ?",
+                (INVALIDATED_STATE, now, ordinal),
+            )
+        self._journal({"event": INVALIDATED_STATE, "at": now, **record})
+        return record
+
     def retry_quarantined(self, ordinal: int) -> None:
         with self.database:
             updated = self.database.execute(
@@ -629,6 +699,7 @@ class CampaignStore:
             "completed": completed,
             "running": counts.get("running", 0),
             "quarantined": counts.get("quarantined", 0),
+            "invalidated": counts.get(INVALIDATED_STATE, 0),
             "remaining": self.total - completed,
         }
 
