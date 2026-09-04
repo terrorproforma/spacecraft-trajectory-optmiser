@@ -72,18 +72,30 @@ four certified examples, CUDA CTest 69/69):
 
 ```bash
 cd $V2 && mkdir -p build-v2-gpu-deferred
+# The examples are user-unit documents (pd3/pd6 angles in degrees); the executable takes the
+# CLI's canonical form, so canonicalise first instead of handing the raw example to it.
+for f in hcw_rendezvous powered_descent_3dof; do
+  $V2/.venv-v2/bin/spacepdhcg validate examples/planner/$f.json \
+    > build-v2-gpu-deferred/$f-canonical.json; echo $f canonical exit=$?
+done
 compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan \
-  examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet \
+  build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet \
   > build-v2-gpu-deferred/memcheck-hcw.log 2>&1; echo exit=$?
 compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan \
-  examples/planner/powered_descent_3dof.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet \
+  build-v2-gpu-deferred/powered_descent_3dof-canonical.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet \
   > build-v2-gpu-deferred/memcheck-pd3.log 2>&1; echo exit=$?
 for tool in initcheck synccheck racecheck; do
   compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tools/spacepdhcg_plan \
-    examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet \
+    build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet \
     > build-v2-gpu-deferred/$tool-hcw.log 2>&1; echo $tool exit=$?
 done
 ```
+
+History: the first real-GPU run's pd3 command exited 255 because it handed the raw example
+(`maximum_tilt: 30.0` degrees) to the executable, which validates canonical radians
+(`'maximum_tilt' must lie strictly inside (0, pi/2)`); the CLI-normalised request was sanitizer-clean.
+`tests/test_gpu_deferred_manifest.py` now refuses any manifest command that passes an
+`examples/planner` document straight to `spacepdhcg_plan`.
 
 Expected: every `exit=0`; `ERROR SUMMARY: 0 errors` (memcheck/initcheck/synccheck) and
 `RACECHECK SUMMARY: 0 hazards`; both result documents `status.code == "certified"`,

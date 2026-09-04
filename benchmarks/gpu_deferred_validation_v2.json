@@ -89,9 +89,10 @@
       "title": "compute-sanitizer memcheck (and initcheck/synccheck/racecheck) on spacepdhcg_plan",
       "blocked_by": "G4 claim core owns the device",
       "commands": [
-        "cd $V2 && mkdir -p build-v2-gpu-deferred && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet > build-v2-gpu-deferred/memcheck-hcw.log 2>&1; echo exit=$?",
-        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/powered_descent_3dof.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet > build-v2-gpu-deferred/memcheck-pd3.log 2>&1; echo exit=$?",
-        "cd $V2 && for tool in initcheck synccheck racecheck; do compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet > build-v2-gpu-deferred/$tool-hcw.log 2>&1; echo $tool exit=$?; done",
+        "cd $V2 && mkdir -p build-v2-gpu-deferred && for f in hcw_rendezvous powered_descent_3dof; do $V2/.venv-v2/bin/spacepdhcg validate examples/planner/$f.json > build-v2-gpu-deferred/$f-canonical.json; echo $f canonical exit=$?; done  # the examples are user-unit documents (pd3 angles in degrees); the executable takes the CLI's canonical form",
+        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet > build-v2-gpu-deferred/memcheck-hcw.log 2>&1; echo exit=$?",
+        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/powered_descent_3dof-canonical.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet > build-v2-gpu-deferred/memcheck-pd3.log 2>&1; echo exit=$?",
+        "cd $V2 && for tool in initcheck synccheck racecheck; do compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet > build-v2-gpu-deferred/$tool-hcw.log 2>&1; echo $tool exit=$?; done",
         "cd $V2 && $V2/.venv-v2/bin/python -c \"import json; [print(f, json.load(open(f))['status']['code'], json.load(open(f))['certificate']['certified']) for f in ('build-v2-gpu-deferred/memcheck-hcw.json','build-v2-gpu-deferred/memcheck-pd3.json')]\""
       ],
       "expected": [
@@ -99,7 +100,12 @@
         "`========= ERROR SUMMARY: 0 errors` (memcheck/initcheck/synccheck) and `========= RACECHECK SUMMARY: 0 hazards` in each log",
         "both result documents report status.code == 'certified' and certificate.certified == true (HCW N=20; 3-DoF pure_qoco hover objective ~0.5522: CPU reference 0.552214 on the H100, GPU 0.552214 on the RTX 5090; the ~0.4927 quoted before the first real-GPU run was a pre-campaign prediction, not a measurement)"
       ],
-      "evidence": ["build-v2-gpu-deferred/*.log", "build-v2-gpu-deferred/*.json"]
+      "evidence": ["build-v2-gpu-deferred/*.log", "build-v2-gpu-deferred/*.json"],
+      "history": {
+        "h100_3373988": "hcw: sanitizers clean (ERROR SUMMARY: 0 errors, 0 bytes leaked) but exit 2 = the executable's converged_not_certified status (fixed under planner-gpu-pytest). pd3: exit 255, manifest defect - the raw example carries maximum_tilt 30.0 degrees and the executable expects the CLI's canonical radians ('maximum_tilt' must lie strictly inside (0, pi/2)); re-run on the CLI-normalised request was sanitizer-clean",
+        "fix": "commands canonicalise through `spacepdhcg validate` first; tests/test_gpu_deferred_manifest.py refuses any manifest command that hands an examples/planner document straight to spacepdhcg_plan",
+        "rtx5090": "the fixed commands run end to end on the RTX 5090 (sm_120, CUDA 12.8 compute-sanitizer): memcheck hcw/pd3, initcheck/synccheck/racecheck hcw all exit 0, ERROR SUMMARY: 0 errors, 0 bytes leaked, 0 hazards; every result document certified (hcw objective 3.6995e-4, pd3 0.552214)"
+      }
     },
     {
       "id": "planner-cuda-ctest-subset",
