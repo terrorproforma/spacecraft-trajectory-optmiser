@@ -494,29 +494,41 @@ export function describeItem(item, fleetView) {
   return "";
 }
 
+/**
+ * Ship rows: colour swatch, name, running collected mass over the ship's total, a bar of that
+ * fraction (filled by `renderShipCounters` as the epoch moves) and the asteroid count / launch date.
+ */
 export function renderShipList(container, fleetView) {
   const { fleet, view } = fleetView;
-  container.innerHTML = `<button type="button" class="ship-item ${view.selected == null ? "active" : ""}" data-ship="all" aria-pressed="${view.selected == null}">
-      <span class="ship-swatch fleet-swatch" aria-hidden="true"></span><span><strong>Whole fleet</strong><small><span data-counter="fleet">0.0</span> of ${fleetMassLabel(fleet)} kg · ${fleet.ships.length} ships · ${fleet.asteroids.length} asteroids</small></span></button>${
-    fleet.ships.map((ship, index) => `
-    <button type="button" class="ship-item ${view.selected === index ? "active" : ""}" data-ship="${index}" aria-pressed="${view.selected === index}">
-      <span class="ship-swatch ship-colour-${index % SHIP_COLOURS.length + 1}" aria-hidden="true"></span>
-      <span><strong>Ship ${ship.ship_id}</strong><small><span data-counter="${index}">0.0</span> of ${ship.collected_kg.toFixed(1)} kg · ${ship.asteroids.length} asteroids · launch ${formatMjd(ship.launch_epoch_mjd)}</small></span>
-    </button>`).join("")}`;
+  const row = (index, colourClass, name, counterKey, totalKg, meta) => `
+    <button type="button" class="ship-item ${view.selected === index ? "active" : ""}" data-ship="${index == null ? "all" : index}" aria-pressed="${view.selected === index}">
+      <span class="ship-swatch ${colourClass}" aria-hidden="true"></span>
+      <span class="ship-name">${name}</span>
+      <span class="ship-mass"><span data-counter="${counterKey}">0.0</span><small> of ${totalKg} kg</small></span>
+      <span class="mass-bar ${index == null ? "fleet-bar" : colourClass}" aria-hidden="true"><i data-bar="${counterKey}"></i></span>
+      <span class="ship-meta">${meta}</span>
+    </button>`;
+  container.innerHTML = row(null, "fleet-swatch", "Whole fleet", "fleet", fleetMassLabel(fleet), `${fleet.ships.length} ships, ${fleet.asteroids.length} asteroids`)
+    + fleet.ships.map((ship, index) => row(index, `ship-colour-${index % SHIP_COLOURS.length + 1}`, `Ship ${ship.ship_id}`, index, ship.collected_kg.toFixed(1),
+      `${ship.asteroids.length} asteroids, launched ${formatMjd(ship.launch_epoch_mjd)}`)).join("");
   renderShipCounters(container, fleetView);
 }
 
-/** Running collected-mass counters (per ship and fleet) at the current epoch, without re-rendering the list. */
+/** Running collected-mass counters and bars (per ship and fleet) at the current epoch, without re-rendering the list. */
 export function renderShipCounters(container, fleetView) {
-  const { scene, view } = fleetView;
+  const { fleet, scene, view } = fleetView;
   let total = 0;
+  const paint = (key, collected, totalKg) => {
+    const counter = container.querySelector(`[data-counter="${key}"]`);
+    if (counter) counter.textContent = collected.toFixed(1);
+    const bar = container.querySelector(`[data-bar="${key}"]`);
+    if (bar) bar.style.transform = `scaleX(${totalKg > 0 ? clamp(collected / totalKg, 0, 1) : 0})`;
+  };
   for (const ship of scene.ships) {
     const collected = collectedAt(ship, view.epoch); total += collected;
-    const counter = container.querySelector(`[data-counter="${ship.index}"]`);
-    if (counter) counter.textContent = collected.toFixed(1);
+    paint(ship.index, collected, ship.record.collected_kg);
   }
-  const fleetCounter = container.querySelector('[data-counter="fleet"]');
-  if (fleetCounter) fleetCounter.textContent = total.toFixed(1);
+  paint("fleet", total, fleet.score.total_collected_kg ?? fleet.score.official_total_mass_kg);
   return total;
 }
 
@@ -571,7 +583,7 @@ export function renderFleetProvenance(container, fleetView) {
   container.innerHTML = `<p>Run <code>${escapeHtml(fleet.run_id)}</code> · export commit <code>${escapeHtml(fleet.generated_by_commit)}</code> · ${escapeHtml(fleet.source.generator)}.</p>
     <p>Official solution file <code>${escapeHtml(fleet.source.solution_basename)}</code> SHA-256 <code>${escapeHtml(fleet.source.solution_sha256)}</code> (${fleet.source.solution_bytes.toLocaleString()} bytes; official verifier ${fleet.source.official_verifier_ok === null ? "not recorded" : fleet.source.official_verifier_ok ? "pass" : "fail"} at ${fleet.score.official_total_mass_kg} kg, independent verifier ${fleet.score.verifier_ok ? "pass" : "fail"} at ${fleet.score.independent_total_mass_kg?.toFixed(3)} kg, max propagation error ${fleet.verification.max_position_error_km?.toFixed(2)} km). The official verifier prints six significant digits; the headline ${fleetMassLabel(fleet)} kg is the sum of the archived collect events.</p>
     <p>Export <code>trajectories.json</code> SHA-256 <code>${escapeHtml(fleet.source.export_trajectories_sha256)}</code>; asteroid catalogue <code>${escapeHtml(fleet.source.catalogue.name)}</code> SHA-256 <code>${escapeHtml(fleet.source.catalogue.sha256)}</code>.</p>
-    <p>Ship arcs are lit 3D tube meshes (-sided, lit by the Sun with distance fog) whose straight segments connect ${fleet.ships.reduce((sum, ship) => sum + ship.replay.point_count, 0).toLocaleString()} exact archived propagated samples (≤ 512 per ship, every event epoch preserved) — connections between archived nodes, not interpolation; the bright trail marks the last ${TRAIL_DAYS} days of each arc. Earth and asteroid orbits and their epoch positions are two-body Keplerian curves from the pinned GTOC12 elements (Appendix 6.1); the viewer's propagation agrees with the exporter's context orbits to ${fleet.kepler_check.asteroid_max_error_km.toExponential(1)} km over ${fleet.kepler_check.context_points_checked.toLocaleString()} samples. Sun, Earth, asteroid and ship spheres are instanced lit display markers sized for legibility, not to scale; tube and sphere radii scale with camera distance. The vertical-exaggeration slider scales Z only for display and is not physical.</p>`;
+    <p>Ship arcs are lit 3D tube meshes (${TUBE_SIDES}-sided, lit by the Sun with distance fog) whose straight segments connect ${fleet.ships.reduce((sum, ship) => sum + ship.replay.point_count, 0).toLocaleString()} exact archived propagated samples (≤ 512 per ship, every event epoch preserved) — connections between archived nodes, not interpolation; the bright trail marks the last ${TRAIL_DAYS} days of each arc. Earth and asteroid orbits and their epoch positions are two-body Keplerian curves from the pinned GTOC12 elements (Appendix 6.1); the viewer's propagation agrees with the exporter's context orbits to ${fleet.kepler_check.asteroid_max_error_km.toExponential(1)} km over ${fleet.kepler_check.context_points_checked.toLocaleString()} samples. Sun, Earth, asteroid and ship spheres are instanced lit display markers sized for legibility, not to scale; tube and sphere radii scale with camera distance. The vertical-exaggeration slider scales Z only for display and is not physical.</p>`;
 }
 
 export function renderTimelineOutput(output, fleetView) {

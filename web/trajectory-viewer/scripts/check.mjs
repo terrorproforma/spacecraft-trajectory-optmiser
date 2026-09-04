@@ -22,6 +22,8 @@ const requiredIds = [
   "fleet-legend", "hover-tooltip", "fleet-provenance-content", "event-labels",
   // Perspective 3D controls (camera presets, follow-ship, vertical exaggeration, playback speed).
   "speed-select", "camera-presets", "follow-ship-button", "exaggeration", "exaggeration-output", "legend-ships",
+  // Timeline strip tick rows (archive percentages are static HTML; mission years are rendered by app.js).
+  "timeline-ticks", "mission-timeline-ticks",
 ];
 
 const [dataBytes, manifestBytes, htmlBytes, appBytes, cssBytes, gtocBytes, webglBytes, keplerBytes, cameraBytes] = await Promise.all([

@@ -87,12 +87,16 @@ Archive view:
 
 GTOC12 fleet view:
 
-- The **Epoch** slider (MJD 64328–69807, 2035-01-01 to 2050-01-01) scrubs the mission; **Play mission** runs the 15-year window at the selected speed (default 1 yr/s). Every frame shows each launched ship at its last archived sample at or before the epoch — nothing between samples is interpolated — while Earth and the asteroids move on their Keplerian orbits.
-- The **Ships** list (colour, collected kg so far, asteroid count, launch date) selects one ship: its tube and its asteroids' orbits are highlighted, the others dimmed, its archived events are labelled in the scene and tabulated in **Selected ship**. **Whole fleet** clears the selection; **Frame ship arc** fits the selected arc; **Follow ship** keeps the ship centred while the clock runs.
+- The **Epoch** slider (MJD 64328–69807, 2035-01-01 to 2050-01-01) sits under the scene as a mission clock with a time cursor and 1 January year ticks; **Play mission** runs the 15-year window at the selected speed (default 1 yr/s). Every frame shows each launched ship at its last archived sample at or before the epoch — nothing between samples is interpolated — while Earth and the asteroids move on their Keplerian orbits.
+- The **Ships** list (colour, collected kg so far over the ship's total with a bar that fills as the clock runs, asteroid count, launch date) selects one ship: its tube and its asteroids' orbits are highlighted, the others dimmed, its archived events are labelled in the scene and tabulated in **Selected ship**. **Whole fleet** clears the selection; **Frame ship arc** fits the selected arc; **Follow ship** keeps the ship centred while the clock runs.
 - Hover identifies ships, event markers (asteroid, epoch, mass before/after), asteroids (elements, visits, state) and Earth; click selects the ship or pins an asteroid.
 - The compact legend maps ship colours and markers: hollow ring = deploy miner, filled disc = collect mined mass, green ring = launch, amber ring = Earth return; grey sphere = asteroid not yet reached, ship-coloured sphere = mined; blue = Earth orbit; faint grey = asteroid orbits; tube + bright 450-day trail = ship arc; spheres are not to scale; rings every 1 AU.
 
-The canvas is focusable and all controls have keyboard focus indicators. Layouts adapt to narrow screens. Reduced-motion preferences suppress decorative motion; playback only starts on explicit input.
+The canvas is focusable and all controls have keyboard focus indicators. Layouts adapt to narrow screens (on phones the scene, timeline and verification strip come first, then the ship list and camera controls, then the tables). Reduced-motion preferences suppress decorative motion; nothing animates on its own and playback only starts on explicit input.
+
+### Visual design
+
+The chrome is styled as a matte instrument panel around a black porthole: graphite surfaces, warm-white legends, hairline rules, one system sans-serif family with tabular numerals (monospace only for hashes and commands), no web fonts, no CDN. Colour is reserved for meaning — ship colours mirror the scene, green/amber/red mark verified/caution/error — and structure encodes information: the timeline is a strip chart with a thin time cursor, ship rows carry a bar of collected mass, and the qualification/verifier state is repeated as a labelled dot in the scene toolbar, the list rows and the verification strip. The layout follows Anthropic's `frontend-design` skill guidance (dependency-free, visible focus, reduced motion respected, no decorative gradients or motion). Before/after captures live in `test-artifacts/redesign-*.png`.
 
 ## Evidence and smoothness
 
@@ -117,7 +121,7 @@ Qualification is record-specific:
 
 ## Package structure
 
-- `index.html` — semantic application shell (dataset selector, archive and fleet panels).
+- `index.html` — semantic application shell (top bar with dataset selector, inventory/camera rail, porthole, timeline strip, verification strip, detail tables).
 - `app.js` — UI state, dataset switching, interaction and the archive WebGL2 renderer.
 - `gtoc12.js` — GTOC12 scene builder, fleet renderer, picking, panels and event labels.
 - `kepler.js` — pure Keplerian ephemeris helpers (GTOC12 Appendix 6.1) and MJD calendar conversion.

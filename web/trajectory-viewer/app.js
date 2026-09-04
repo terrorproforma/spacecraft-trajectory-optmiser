@@ -23,8 +23,33 @@ const requiredIds = [
   "focus-ship-button", "fleet-reset-button", "fleet-summary", "ship-detail", "ship-detail-title",
   "fleet-legend", "hover-tooltip", "fleet-provenance-content", "legend-overlay", "event-labels",
   "speed-select", "camera-presets", "follow-ship-button", "exaggeration", "exaggeration-output", "legend-ships",
+  "timeline-ticks", "mission-timeline-ticks",
 ];
 for (const id of requiredIds) if (!$(id)) throw new Error(`Required DOM element #${id} is missing`);
+
+/** Paint the elapsed fraction of a range input into `--fill` (the track is a strip chart, not a bare slider). */
+function paintRange(input) {
+  const min = Number(input.min), max = Number(input.max), value = Number(input.value);
+  const fraction = max > min ? clamp((value - min) / (max - min), 0, 1) : 0;
+  input.style.setProperty("--fill", `${(fraction * 100).toFixed(2)}%`);
+}
+/** Year ticks under the mission timeline: 1 January of each mission year at its MJD position. */
+function renderMissionTicks(container) {
+  const span = MISSION_END_MJD - MISSION_START_MJD;
+  const ticks = [];
+  for (let year = 2035; year <= 2050; year += 1) {
+    const mjd = Date.UTC(year, 0, 1) / 86_400_000 + 40_587;
+    if (mjd < MISSION_START_MJD || mjd > MISSION_END_MJD) continue;
+    const tick = document.createElement("span");
+    tick.textContent = String(year);
+    if (year % 5 === 0) tick.classList.add("major");
+    tick.style.left = `${((mjd - MISSION_START_MJD) / span * 100).toFixed(3)}%`;
+    ticks.push(tick);
+  }
+  container.replaceChildren(...ticks);
+}
+renderMissionTicks($("mission-timeline-ticks"));
+paintRange($("exaggeration"));
 
 const canvas = $("trajectory-canvas");
 const ARCHIVE_CAMERA = { yaw: -0.72, pitch: 0.48, distance: 3.25, target: [0, 0, 0] };
@@ -199,10 +224,11 @@ function updateDetails() {
   $("qualification-badge").textContent = item.qualification.qualified ? "Qualified scope" : "Diagnostic only";
   $("qualification-notice").className = `notice-panel ${item.qualification.qualified ? "qualified" : "warning"}`;
   $("qualification-notice").innerHTML = `<strong>${item.qualification.qualified ? "Qualified evidence scope" : "Unqualified trajectory warning"}</strong><p>${escapeHtml(item.qualification.label)}. Qualification applies only to the stated archived evidence scope.</p>`;
-  $("frame-overlay").innerHTML = `<strong>${escapeHtml(item.frame)}</strong><span>${escapeHtml(item.viewer.axes.join(" · "))}</span>`;
-  $("scene-overlay").textContent = item.viewer.scene_kind === "hcw" ? "LVLH plane · Earthward −X" : item.viewer.radius_label;
+  $("frame-overlay").innerHTML = `<strong>${escapeHtml(item.frame)}</strong><span>${escapeHtml(item.viewer.axes.join(", "))}</span>`;
+  $("scene-overlay").textContent = item.viewer.scene_kind === "hcw" ? "LVLH plane, Earthward −X" : item.viewer.radius_label;
   $("timeline-output").textContent = `${state.progress.toFixed(1)}%`;
-  $("sample-output").textContent = `Sample ${index + 1} / ${source.point_count} · ${format(point[0], item.time_units)}`;
+  paintRange($("timeline"));
+  $("sample-output").textContent = `Sample ${index + 1} / ${source.point_count} at ${format(point[0], item.time_units)}`;
   $("current-state").innerHTML = metricRows([
     ["Replay time", format(point[0], item.time_units)], ["Position", `[${point.slice(1).map((v) => format(v)).join(", ")}] ${item.position_units}`],
     ["Physical measure", vertical], ["Camera scale", format(state.camera.distance * state.scene.scale, item.position_units)],
@@ -227,7 +253,7 @@ function updateFleetSelection() {
   renderShipDetail($("ship-detail"), fleetView);
   renderLegendShips($("legend-ships"), fleet);
   $("fleet-count").textContent = String(fleet.ships.length);
-  $("family-label").textContent = `GTOC12 · ${fleet.run_id}`;
+  $("family-label").textContent = `GTOC12 run ${fleet.run_id}`;
   $("trajectory-title").textContent = selected == null
     ? `${fleet.title} — ${fleet.score.ships} ships, ${fleet.score.unique_asteroids} asteroids, ${fleetMassLabel(fleet)} kg`
     : `Ship ${fleet.ships[selected].ship_id} — ${fleet.ships[selected].collected_kg.toFixed(1)} kg from ${fleet.ships[selected].asteroids.length} asteroids`;
@@ -239,13 +265,14 @@ function updateFleetSelection() {
   $("qualification-badge").textContent = qualified ? "Verified fleet" : "Unverified";
   $("qualification-notice").className = `notice-panel ${qualified ? "qualified" : "warning"}`;
   $("qualification-notice").innerHTML = `<strong>${qualified ? "Verified GTOC12 fleet" : "Unverified GTOC12 fleet"}</strong><p>${escapeHtml(fleet.ships[0].qualification.label)}. ${fleetMassLabel(fleet)} kg collected by ${fleet.score.ships} ships from ${fleet.score.unique_asteroids} asteroids (official verifier ${fleet.score.official_total_mass_kg} kg; independent verifier ${fleet.score.independent_total_mass_kg?.toFixed(3)} kg; ship-count limit ${fleet.score.ship_limit?.toFixed(2)}). Arcs connect exact archived samples; Earth/asteroid orbits are Keplerian from the pinned catalogue.</p>`;
-  $("frame-overlay").innerHTML = `<strong>${escapeHtml(fleet.frame)}</strong><span>Sun-centred · 1 scene unit = ${fleetView.scene.scale.toFixed(2)} AU · rings every 1 AU</span>`;
+  $("frame-overlay").innerHTML = `<strong>${escapeHtml(fleet.frame)}</strong><span>Sun-centred; 1 scene unit = ${fleetView.scene.scale.toFixed(2)} AU; rings every 1 AU</span>`;
   updatePresetButtons();
   renderFleetProvenance($("fleet-provenance-content"), fleetView);
 }
 function updateFleetEpoch() {
   const fleetView = state.fleetView;
   $("mission-timeline").value = String(fleetView.view.epoch);
+  paintRange($("mission-timeline"));
   renderTimelineOutput($("mission-timeline-output"), fleetView);
   renderFleetSummary($("fleet-summary"), fleetView);
   renderShipCounters($("ship-list"), fleetView);
@@ -255,8 +282,9 @@ function updateFleetEpoch() {
 function updateSceneOverlay() {
   const factor = state.fleetView?.exaggeration ?? 1;
   $("exaggeration-output").textContent = `${factor % 1 === 0 ? factor.toFixed(0) : factor.toFixed(1)}×`;
+  paintRange($("exaggeration"));
   $("scene-overlay").textContent = factor > 1
-    ? `Straight segments = connections between archived samples · Z exaggerated ${factor}× (not physical)`
+    ? `Straight segments = connections between archived samples; Z exaggerated ${factor}× (not physical)`
     : "Straight segments = connections between archived samples";
 }
 function updatePresetButtons() {

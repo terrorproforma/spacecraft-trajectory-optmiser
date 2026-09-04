@@ -168,6 +168,10 @@ async function checkGtoc12(browser, artifacts) {
   assert.match(await page.locator("#scene-overlay").textContent(), /connections between archived samples/);
   assert.equal(await page.locator("#qualification-badge").textContent(), "Verified fleet");
   assert.equal(await page.locator(".archive-only:visible").count(), 0, "archive panels hidden in fleet mode");
+  // Timeline strip and ship rows: year ticks 2035..2050 under the mission clock; mass bars full at mission end.
+  assert.equal(await page.locator("#mission-timeline-ticks span").count(), 16, "one tick per mission year");
+  assert.match(await page.locator('#ship-list [data-bar="fleet"]').evaluate((element) => element.style.transform), /scaleX\(1\)/, "fleet mass bar is full at mission end");
+  assert.equal(await page.locator("#ship-list .mass-bar").count(), ships + 1, "one mass bar per ship row");
   // Opens in real 3D: 30° oblique preset at 6x vertical exaggeration (labelled), full-bleed canvas.
   assert.equal(await debug("d.preset"), "oblique");
   assert.ok(near(await debug("d.camera.pitch"), Math.PI / 6, 1e-9), "oblique preset is 30 degrees");
