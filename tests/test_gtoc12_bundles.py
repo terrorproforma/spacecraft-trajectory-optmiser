@@ -968,7 +968,15 @@ def test_single_slot_pricing_stays_inside_the_declared_memory_budget(bundle) -> 
     # per-slot live growth v7 measured): the report says what was dropped, and it was something
     for ship in bundle.ships:
         released = ship.report["released_caches"]
-        assert set(released) == {"hops", "returns", "collects", "lookahead", "harvest", "pairs"}
+        assert set(released) == {
+            "hops",
+            "returns",
+            "collects",
+            "lookahead",
+            "harvest",
+            "chain_tours",
+            "pairs",
+        }
         assert released["hops"] > 0 and all(v >= 0 for v in released.values())
 
 

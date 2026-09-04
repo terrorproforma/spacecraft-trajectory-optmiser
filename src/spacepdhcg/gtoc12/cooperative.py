@@ -567,6 +567,9 @@ class _LpModel:
                 rows.append(offset + collect_rows.setdefault(asteroid, len(collect_rows)))
                 cols.append(c)
         self.n_asteroid_rows = offset + len(collect_rows)
+        # asteroid -> row index (deploy rows first, then collect rows) for the dual pricing
+        self.deploy_rows = dict(deploy_rows)
+        self.collect_rows = {a: offset + r for a, r in collect_rows.items()}
         data = [1.0] * len(rows)
         # foreign rows: x_c - sum_{d supplies (a, epoch)} x_d <= 0
         n_rows = self.n_asteroid_rows
@@ -705,6 +708,136 @@ def lp_fleet_bound(
 
 
 @dataclass(slots=True)
+class AsteroidPrices:
+    """Per-asteroid duals of the master LP at one fleet size (see :func:`lp_asteroid_prices`).
+
+    ``prices[a]`` is the marginal value (kg of master objective) of asteroid ``a``'s packing
+    rows - its deploy row plus its collect row - i.e. what the master already pays for ``a``
+    through the columns that use it.  A new column ``c`` improves the LP only if its reduced
+    cost ``v_c - sum_{a in c} prices[a] - mu + m_c nu`` is positive, so a family search that
+    subtracts ``prices`` from its chains prices the columns the master would take.
+    """
+
+    size: int  # fleet size N the LP was solved at
+    prices: dict[int, float]
+    mu: float  # ship-count dual
+    nu: float  # mass-floor dual (kg of objective per kg of collected mass)
+    lp_value: float
+    solved_sizes: list[int] = field(default_factory=list)
+
+    def summary(self) -> dict[str, Any]:
+        values = sorted(self.prices.values(), reverse=True)
+        return {
+            "size": self.size,
+            "priced_asteroids": len(self.prices),
+            "max_kg": values[0] if values else 0.0,
+            "sum_kg": float(sum(values)),
+            "top": [
+                {"asteroid": a, "kg": p}
+                for a, p in sorted(self.prices.items(), key=lambda kv: (-kv[1], kv[0]))[:10]
+            ],
+            "mu": self.mu,
+            "nu": self.nu,
+            "lp_value_kg": self.lp_value,
+            "solved_sizes": list(self.solved_sizes),
+        }
+
+
+def usable_columns(
+    columns: list[FleetColumn], weights: dict[int, float] | None
+) -> tuple[list[FleetColumn], list[dict[str, Any]]]:
+    """Certified columns whose foreign collects some column supplies, best value first, and
+    the reject log for the rest (shared by the master and the dual pricing)."""
+
+    certified = sorted(
+        (column for column in columns if column.certified),
+        key=lambda column: (-column.value(weights), column.identifier),
+    )
+    rejected = [
+        {"identifier": column.identifier, "label": column.label, "reason": "not certified"}
+        for column in columns
+        if not column.certified
+    ]
+    deployers: dict[int, list[tuple[float, int]]] = {}
+    for column in certified:
+        for asteroid, epoch in column.deploys.items():
+            deployers.setdefault(asteroid, []).append((epoch, column.identifier))
+    usable: list[FleetColumn] = []
+    for column in certified:
+        missing = [
+            asteroid
+            for asteroid, epoch in column.foreign.items()
+            if not any(
+                abs(e - epoch) <= EPOCH_TOLERANCE_DAYS for e, _ in deployers.get(asteroid, [])
+            )
+        ]
+        if missing:
+            rejected.append(
+                {
+                    "identifier": column.identifier,
+                    "label": column.label,
+                    "reason": f"no column deploys foreign miners {sorted(missing)}",
+                }
+            )
+        else:
+            usable.append(column)
+    return usable, rejected
+
+
+def lp_asteroid_prices(
+    columns: list[FleetColumn],
+    *,
+    weights: dict[int, float] | None = None,
+    max_ships: int = C.MAX_SHIPS,
+    size: int | None = None,
+    target_size: int | None = None,
+) -> AsteroidPrices | None:
+    """Duals of the master LP as per-asteroid prices for the family pricing.
+
+    The LP is the relaxation of :func:`lp_fleet_bound` at one fleet size: ``size`` when given,
+    else the largest LP-feasible size not above ``target_size`` (default: the largest feasible
+    size at all) - pricing at ``N* + 1`` asks which asteroids stand between the archive and one
+    more ship.  Returns ``None`` when no size is LP-feasible.  Prices are non-negative; an
+    asteroid appears only when its rows carry a positive dual.  Deterministic for a given
+    column list (HiGHS on the same LP).
+    """
+
+    import numpy as np
+
+    usable, _rejected = usable_columns(columns, weights)
+    if not usable:
+        return None
+    values = [column.value(weights) for column in usable]
+    model = _LpModel(usable, values)
+    sizes = model.sizes(max_ships)
+    if size is not None:
+        sizes = [s for s in sizes if s == size]
+    elif target_size is not None:
+        sizes = [s for s in sizes if s <= target_size]
+    solved: list[int] = []
+    chosen: tuple[int, Any] | None = None
+    for candidate in sorted(sizes, reverse=True):
+        result = model.solve(candidate)
+        solved.append(candidate)
+        if result is not None:
+            chosen = (candidate, result)
+            break
+    if chosen is None:
+        return None
+    n_size, result = chosen
+    y = np.maximum(-np.asarray(result.ineqlin.marginals), 0.0)
+    mu = float(-result.eqlin.marginals[0])
+    nu = float(y[model.mass_row])
+    prices: dict[int, float] = {}
+    for asteroid, row in model.deploy_rows.items():
+        prices[asteroid] = prices.get(asteroid, 0.0) + float(y[row])
+    for asteroid, row in model.collect_rows.items():
+        prices[asteroid] = prices.get(asteroid, 0.0) + float(y[row])
+    prices = {a: p for a, p in sorted(prices.items()) if p > 1e-9}
+    return AsteroidPrices(int(n_size), prices, mu, nu, float(-result.fun), solved)
+
+
+@dataclass(slots=True)
 class LpBranchResult:
     """Outcome of :func:`lp_branch_and_bound`."""
 
@@ -813,39 +946,8 @@ def solve_fleet_master(
     (:func:`ship_rule_bound`) on top of the asteroid conflicts.
     """
 
-    certified = sorted(
-        (column for column in columns if column.certified),
-        key=lambda column: (-column.value(weights), column.identifier),
-    )
-    rejected = [
-        {"identifier": column.identifier, "label": column.label, "reason": "not certified"}
-        for column in columns
-        if not column.certified
-    ]
-    deployers: dict[int, list[tuple[float, int]]] = {}
-    for column in certified:
-        for asteroid, epoch in column.deploys.items():
-            deployers.setdefault(asteroid, []).append((epoch, column.identifier))
     # columns whose foreign collects no column can supply can never be selected
-    usable: list[FleetColumn] = []
-    for column in certified:
-        missing = [
-            asteroid
-            for asteroid, epoch in column.foreign.items()
-            if not any(
-                abs(e - epoch) <= EPOCH_TOLERANCE_DAYS for e, _ in deployers.get(asteroid, [])
-            )
-        ]
-        if missing:
-            rejected.append(
-                {
-                    "identifier": column.identifier,
-                    "label": column.label,
-                    "reason": f"no column deploys foreign miners {sorted(missing)}",
-                }
-            )
-        else:
-            usable.append(column)
+    usable, rejected = usable_columns(columns, weights)
     values = [column.value(weights) for column in usable]
     suffix = [0.0] * (len(usable) + 1)
     for index in range(len(usable) - 1, -1, -1):
