@@ -766,7 +766,7 @@ not needed: reference hops have zero revolutions (p95 0.004).
 | `return_sweep_v2` (return sweep + re-timing of the 21 best `cluster_fleet_v7` ships, 3 workers) | full catalogue | 13 improved of 21 | — | +225.5 kg (improved returns 159–274 kg; family 7 ship 3 528.3 → 602.9, ship 1 607.8 → 616.4) | — | — | 21 ships (3 in parallel) | in the re-timing | 2181 s (36 min); worker peak 0.21 GB | CPU |
 | **`fleet_master_v6`** (master over all fourteen runs: 779 routes re-flown through SCvx, 1032 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **20** | **168** (164 mined) | **11515.67 kg** (575.78 kg average; 5.8 kg below `v5` in raw mass, 166 kg above it in the score the master optimises) | **10739.27 kg** (LP bound 10744.85, gap 5.6 kg) | 343 | — | 2660 s re-certification (3 workers) + 69 s master | 2749 s, 0.49 GB main | CPU |
 | `cluster_fleet_v8` (eighth campaign: v7 configuration + harvest substitution after the beam + SCvx return-sweep cells in the DP and the re-timer; same radius-1.6 / ≥ 18 partition as v7, **3 workers, `nice 19`**, 4 h budget, on a machine shared with two other agents' runs) | full catalogue | 19 | 161 | **10697.60 kg** (563.0 kg average; marks: 60 min 5155.8 / 10 ships, 120 min 8453.2 / 16, 240 min 10707.2 / 19; first fleet at 40 min) | 9502.24 kg (LP bound 9514.75, gap 12.5 kg, exhaustive) | 864 (all 59 ships) | 20 families × 1096–3026 s (3 in parallel), 59 ships | in the family pricing | 14938 s (249 min); main 0.43 GB, worker peak 0.52 GB, **process-tree PSS peak 0.91 GB** | CPU |
-| **`fleet_master_v7`** (master over all fifteen runs: 854 routes re-flown through SCvx, 1109 columns, 2 M nodes + LP branch and bound) | full catalogue | **20** | **168** (164 mined) | **11515.67 kg** (575.78 kg average — the same twenty ships as `v6`: no v8 column enters, see §7 text) | **10739.27 kg** (LP bound 10744.90, gap 5.6 kg) | 343 | — | 2767 s re-certification (3 workers) + 70 s master | 2855 s, 0.52 GB main | CPU |
+| **`fleet_master_v7_v8archives`** (this branch's eighth-iteration master over all fifteen v8-era runs: 854 routes re-flown through SCvx, 1109 columns, 2 M nodes + LP branch and bound; renamed from `fleet_master_v7` when `main` — which carries the joint-itinerary branch's 21-ship `fleet_master_v7` — was merged) | full catalogue | **20** | **168** (164 mined) | **11515.67 kg** (575.78 kg average — the same twenty ships as `v6`: no v8 column enters, see §7 text) | **10739.27 kg** (LP bound 10744.90, gap 5.6 kg) | 343 | — | 2767 s re-certification (3 workers) + 70 s master | 2855 s, 0.52 GB main | CPU |
 
 Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
 RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
@@ -1256,7 +1256,7 @@ endpoints attacked, 612 substitute chains re-flown and re-toured (2059 s total, 
 swaps +2.5 to +26.7 kg, three raised the score at slightly lower mass) — an order of magnitude
 short of the ~150 kg per ship the work list targeted. *The collect hop did not move*: 86.8 kg /
 210 d median (mean 87.9, p75 107.5, p90 129.1, share ≤ 75 kg 0.29; v6 84.5 / 225 d, references
-66 / 181–187). `fleet_master_v7` over all fifteen archives (854 routes re-flown, 0 failures,
+66 / 181–187). `fleet_master_v7_v8archives` over all fifteen archives (854 routes re-flown, 0 failures,
 1109 columns, LP bound 10 744.90, gap 5.6 kg) selects **the same twenty ships as `v6`**:
 11 515.67 kg / 575.78 kg average, both verifiers ok (official "Check successfully!", independent
 mass error 1e-10 kg). The v8 columns do not enter because the best of them are the archive's own
@@ -1270,7 +1270,7 @@ Leg-cost table `results/gtoc12/leg_stats/after_v8.json`:
 
 | Fleet | Collect hops n | mean | p25 | median | p75 | p90 | share ≤ 75 kg | collect TOF median (p25–p75) d | Deploy hop per ship | Earth-out mean | Earth-return mean / median | return TOF median |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `fleet_master_v6` = `fleet_master_v7` (20 ships) | 164 | 88.4 | 63.5 | 84.5 | 111.4 | 140.0 | 0.324 | 225 (165–300) | 767.5 | 409.6 | 216.5 / 216.7 | 450 |
+| `fleet_master_v6` = `fleet_master_v7_v8archives` (20 ships) | 164 | 88.4 | 63.5 | 84.5 | 111.4 | 140.0 | 0.324 | 225 (165–300) | 767.5 | 409.6 | 216.5 / 216.7 | 450 |
 | `cluster_fleet_v8` (19) | 154 | 87.9 | 66.7 | 86.8 | 107.5 | 129.1 | 0.292 | 210 (150–300) | 772.9 | 422.5 | **205.2 / 204.8** | **495** |
 | Antipodes 37 / 39, JPL 36 | 338 / 356 / 320 | 65.9–69.2 | 48.2–52.5 | 66.0–67.1 | 82.4–84.9 | 101.1–103.0 | 0.443–0.459 | 181–187 | 837–851 | 460.1–473.5 | 208.0–215.9 / 206.1–214.2 | 473–486 |
 
@@ -1409,15 +1409,15 @@ points; output ignored.
 Eighth campaign: `cluster_fleet_v8` commits `run_report.json` (`budget_marks`, `memory_samples`,
 `memory_total_pss_peak_mb`), every `bundle.json` (with `ships[].search[].substitution` and
 `ships[].return_sweep`) and `route_summary.json` (20 families, 59 ships), `fleet/fleet.json`
-and the intermediate fleets' `fleets/*/fleet.json` (its `Result.txt` is regenerable and ignored); `fleet_master_v7` its
+and the intermediate fleets' `fleets/*/fleet.json` (its `Result.txt` is regenerable and ignored); `fleet_master_v7_v8archives` its
 `run_report.json`, `fleet/Result.txt` (the best verified fleet — identical to `v6`'s),
 `fleet/fleet.json` and `fleet/viewer/manifest.json`; the leg-cost table is
 `results/gtoc12/leg_stats/after_v8.json`. Commands: the v7 `cluster-fleet` line with
 `--run-id cluster_fleet_v8 --substitution-budget-seconds 150 --return-sweep-budget-seconds 180`
-under `nice -n 19` (249 min); `fleet-master --run-id fleet_master_v7 --output <dir>` with the
+under `nice -n 19` (249 min); `fleet-master --run-id fleet_master_v7_v8archives --output <dir>` with the
 fifteen `--source` directories (`cluster_fleet_v8` added) `--workers 3` (48 min); an external
 archive directory (the Lambda box's `cluster_fleet_h100_v1`) is one more `--source`. The v2
-viewer importer was run on `fleet_master_v7/fleet/viewer`: 20 ships, 168 asteroids, 10 150
+viewer importer was run on `fleet_master_v7_v8archives/fleet/viewer`: 20 ships, 168 asteroids, 10 150
 exact replay samples, Kepler cross-check 3.57e-6 km / 3.07e-7 km over 63 088 context points;
 output ignored.
 
