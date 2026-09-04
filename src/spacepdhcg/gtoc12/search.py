@@ -171,6 +171,21 @@ class SearchSettings:
     harvest_reference_mass: float = 1400.0
     # charged (kg) to a deploy pair the window cannot re-fly - a deterrent, not a prune
     harvest_unreachable_kg: float = 250.0
+    # harvest substitution (``RouteSearch._substitution_pass``): once the beam has completed its
+    # chains, the dearest collect hops of the best plans are attacked by swapping one endpoint
+    # of the deploy chain for a neighbouring miner whose harvest-window pair cost to the tour's
+    # neighbours is lower (the pair's relative phase crosses zero when the tour flies it), the
+    # deploy chain is re-flown through the substitute and the collect tour re-solved with the
+    # same DP + exact forward mass pass; a substitute is kept only when the plan score rises.
+    harvest_substitution: bool = True
+    substitution_top: int = 2  # completed plans the local search starts from
+    substitution_rounds: int = 2  # accepted swaps per plan (each round re-ranks the hops)
+    substitution_hops: int = 2  # dearest collect hops attacked per round
+    substitution_candidates: int = 6  # substitutes tried per attacked endpoint
+    # predicted (harvest saved - deploy cost) threshold: substitutes predicted to cost up to
+    # this much more are still re-toured (the prediction is a window optimum vs a paid cost)
+    substitution_slack_kg: float = 60.0
+    substitution_budget_seconds: float = 180.0
     # exact collect-tour pricing (collectdp.py): every completed partial with at least
     # ``collect_dp_min_deploys`` asteroids also gets the Held-Karp order + timing DP over the
     # pair-cost table at the actual collect epochs; the best of the heuristic tours and the DP
@@ -504,6 +519,19 @@ class RouteSearch:
             "seconds": 0.0,
             "peak_growth_mb": 0.0,
         }
+        # harvest-substitution telemetry: chains re-flown, swaps that raised the plan score,
+        # collected kg gained by the accepted swaps, wall seconds
+        self.substitution_stats: dict[str, float] = {
+            "endpoints": 0,  # dear-hop endpoints attacked
+            "candidates": 0,  # substitutes ranked below the endpoint's paid cost
+            "rebuild_failed": 0,  # chains that did not re-fly through the substitute
+            "tried": 0,  # chains re-flown and re-toured
+            "improved": 0,
+            "gain_kg": 0.0,
+            "seconds": 0.0,
+        }
+        # why re-toured substitute chains were rejected (tour failure reason -> count)
+        self.substitution_failures: dict[str, int] = {}
 
     def release_caches(self) -> dict[str, int]:
         """Drop the beam's memo tables once the slot is priced (Lambert hop/return/collect
@@ -1080,6 +1108,8 @@ class RouteSearch:
             return SearchResult(None, [], 0, self.lambert_evaluations, 0.0, [], 0, {}, 0)
         expansions = 0
         completed: list[RoutePlan] = []
+        # the chain each completed plan came from (the substitution pass re-flies chains)
+        origins: dict[int, _Partial] = {}
         failures: list[dict[str, object]] = []
         best_by_depth: dict[int, float] = {}
         current = self._select(beam)
@@ -1088,6 +1118,7 @@ class RouteSearch:
             plan = self._complete(partial)
             if plan is not None:
                 completed.append(plan)
+                origins[id(plan)] = partial
                 best_by_depth[1] = max(best_by_depth.get(1, 0.0), plan.total_collected_kg)
         for depth in range(2, s.max_deploys + 1):
             if time.perf_counter() - started > s.time_budget_seconds:
@@ -1107,6 +1138,7 @@ class RouteSearch:
                     plan = self._complete(partial)
                     if plan is not None:
                         completed.append(plan)
+                        origins[id(plan)] = partial
                         best_by_depth[depth] = max(
                             best_by_depth.get(depth, 0.0), plan.total_collected_kg
                         )
@@ -1122,6 +1154,17 @@ class RouteSearch:
         completed.sort(
             key=lambda item: (-self.plan_score(item), item.propellant_proxy_kg, item.asteroids)
         )
+        if s.harvest_substitution and completed:
+            substituted = self._substitution_pass(completed, origins)
+            if substituted:
+                completed.extend(substituted)
+                completed.sort(
+                    key=lambda item: (
+                        -self.plan_score(item),
+                        item.propellant_proxy_kg,
+                        item.asteroids,
+                    )
+                )
         best = next((item for item in completed if item.feasible), None)
         return SearchResult(
             best,
@@ -1134,6 +1177,346 @@ class RouteSearch:
             best_by_depth,
             len(beam),
         )
+
+    # -- harvest substitution --
+
+    def _substitution_pass(
+        self, completed: list[RoutePlan], origins: dict[int, _Partial]
+    ) -> list[RoutePlan]:
+        """Local search over the best completed plans: swap the endpoint of a dear collect hop
+        for a cheaper-to-harvest neighbour, re-fly the chain, re-solve the tour.
+
+        ``completed`` is sorted best-first; the top ``substitution_top`` feasible plans with a
+        known chain are attacked for up to ``substitution_rounds`` accepted swaps each, inside
+        ``substitution_budget_seconds``.  Returns the improved plans (every accepted step, so the
+        beam's candidate list keeps the intermediate plans as fall-backs for SCvx).
+        """
+
+        s = self.settings
+        started = time.perf_counter()
+        deadline = started + s.substitution_budget_seconds
+        improved: list[RoutePlan] = []
+        seeds = [p for p in completed if p.feasible and id(p) in origins][: s.substitution_top]
+        for seed in seeds:
+            plan, partial = seed, origins[id(seed)]
+            for _round in range(s.substitution_rounds):
+                if time.perf_counter() > deadline:
+                    break
+                step = self._substitute_once(plan, partial, deadline)
+                if step is None:
+                    break
+                new_plan, new_partial = step
+                self.substitution_stats["improved"] += 1
+                self.substitution_stats["gain_kg"] += (
+                    new_plan.total_collected_kg - plan.total_collected_kg
+                )
+                improved.append(new_plan)
+                plan, partial = new_plan, new_partial
+        self.substitution_stats["seconds"] += time.perf_counter() - started
+        return improved
+
+    def dear_collect_hops(self, plan: RoutePlan) -> list[PlannedLeg]:
+        """The plan's collect hops, dearest first (inflated ΔV: the propellant ranking at any one
+        mass, so no forward pass is needed to order them)."""
+
+        hops = [leg for leg in plan.legs if leg.role == "collect_hop"]
+        hops.sort(key=lambda leg: -leg.delta_v_proxy_km_s * leg.inflation)
+        return hops
+
+    def tour_neighbours(self, plan: RoutePlan, asteroid: int) -> list[int]:
+        """Asteroids adjacent to ``asteroid`` in the plan's collect tour (hop partners)."""
+
+        partners: list[int] = []
+        for leg in plan.legs:
+            if leg.role != "collect_hop":
+                continue
+            if leg.from_id == asteroid and leg.to_id != asteroid:
+                partners.append(leg.to_id)
+            elif leg.to_id == asteroid and leg.from_id != asteroid:
+                partners.append(leg.from_id)
+        return partners
+
+    def _substitute_once(
+        self, plan: RoutePlan, partial: _Partial, deadline: float
+    ) -> tuple[RoutePlan, _Partial] | None:
+        """One accepted substitution on ``plan`` (or ``None`` when no candidate beats it).
+
+        For each endpoint of the ``substitution_hops`` dearest collect hops (never the Earth
+        leg's target - that leg is certified), the substitutes are the deploy-hop neighbours of
+        the chain's previous asteroid at the same departure whose summed harvest-window cost to
+        the endpoint's tour partners is below the endpoint's own; the best
+        ``substitution_candidates`` are re-flown (:meth:`_rebuild_chain`) and re-toured
+        (:meth:`_complete`).  The first candidate set that yields a better plan wins.
+        """
+
+        s = self.settings
+        deployed = [a for a, _ in partial.deployed]
+        position = {a: i for i, a in enumerate(deployed)}
+        chain = set(deployed)
+        current_score = self.plan_score(plan)
+        attacked: set[int] = set()
+        best: tuple[float, RoutePlan, _Partial] | None = None
+        for hop in self.dear_collect_hops(plan)[: s.substitution_hops]:
+            for endpoint in (hop.to_id, hop.from_id):
+                if endpoint in attacked or position.get(endpoint, 0) < 1:
+                    continue  # foreign, already tried, or the Earth leg's target
+                attacked.add(endpoint)
+                p = position[endpoint]
+                previous = deployed[p - 1]
+                departure = self._deploy_departure(partial, endpoint)
+                if departure is None:
+                    continue
+                partners = np.asarray(
+                    [a for a in self.tour_neighbours(plan, endpoint) if a != endpoint],
+                    dtype=np.int64,
+                )
+                if partners.shape[0] == 0:
+                    continue
+                pool = np.asarray(self.hops_from(previous, departure)["target_ids"], dtype=np.int64)
+                pool = np.asarray(
+                    [
+                        int(b)
+                        for b in pool
+                        if int(b) not in chain and (previous, int(b)) not in self.banned_pairs
+                    ],
+                    dtype=np.int64,
+                )
+                if pool.shape[0] == 0:
+                    continue
+                self.substitution_stats["endpoints"] += 1
+                # a substitute is promising when the harvest it saves exceeds the deploy
+                # propellant it costs: (harvest-window optimum of the substitute against the
+                # same partners - what the tour pays now for the endpoint's hops) + (deploy
+                # hops into and out of the substitute - the endpoint's own).  The first probe
+                # ranked on the harvest side alone and every substitute chain died on the
+                # deploy side (family 7: +180-260 kg of deploy propellant, no tour closed).
+                paid = self._paid_for(plan, endpoint, s.harvest_reference_mass)
+                masses = self._chain_masses(partial)
+                cost = np.asarray(
+                    [
+                        self._harvest_sum(int(b), partners)
+                        - paid
+                        + self._deploy_delta(partial, p, int(b), masses)
+                        for b in pool
+                    ]
+                )
+                order = np.argsort(cost, kind="stable")
+                if cost.shape[0]:
+                    self.substitution_stats["best_predicted_kg"] = min(
+                        self.substitution_stats.get("best_predicted_kg", np.inf),
+                        float(cost[order[0]]),
+                    )
+                # the prediction is a window optimum against a paid cost: substitutes predicted
+                # up to ``substitution_slack_kg`` dearer are still worth a re-tour
+                candidates = [
+                    int(pool[i]) for i in order if cost[i] < s.substitution_slack_kg - 1e-9
+                ][: s.substitution_candidates]
+                self.substitution_stats["candidates"] += len(candidates)
+                for substitute in candidates:
+                    if time.perf_counter() > deadline:
+                        break
+                    rebuilt = self._rebuild_chain(partial, p, substitute)
+                    if rebuilt is None:
+                        self.substitution_stats["rebuild_failed"] += 1
+                        continue
+                    self.substitution_stats["tried"] += 1
+                    candidate = self._complete(rebuilt)
+                    if candidate is None or not candidate.feasible:
+                        reason = "infeasible" if candidate is not None else self.last_failure
+                        self.substitution_failures[reason] = (
+                            self.substitution_failures.get(reason, 0) + 1
+                        )
+                        continue
+                    score = self.plan_score(candidate)
+                    if score > current_score + 1e-6 and (best is None or score > best[0]):
+                        best = (score, candidate, rebuilt)
+            if best is not None:
+                break  # the dearest hop that can be improved is enough for one round
+        if best is None:
+            return None
+        return best[1], best[2]
+
+    def _chain_masses(self, partial: _Partial) -> list[float]:
+        """Ship mass on departure of each deploy hop of the chain (index ``p`` = the hop into
+        the ``p``-th deployed asteroid; index 0 is the mass after the Earth leg and the first
+        miner), replayed exactly from the chain's own legs."""
+
+        n = len(partial.deployed)
+        mass = partial.mass + partial.hop_propellant + C.MINER_MASS_KG * (n - 1)
+        masses = [mass]
+        for leg in partial.legs[1:]:
+            if leg.role != "deploy_hop":
+                continue
+            mass -= self._propellant(mass, leg.delta_v_proxy_km_s, leg.inflation)
+            mass -= C.MINER_MASS_KG
+            masses.append(mass)
+        return masses
+
+    def _cheapest_deploy_hop(
+        self, source: int, target: int, departure: float, mass: float
+    ) -> tuple[float, float] | None:
+        """``(propellant, tof)`` of the cheapest feasible deploy hop ``source -> target``
+        departing at ``departure`` on the beam's hop grid; ``None`` when none flies."""
+
+        hops = self.hops_from(source, departure)
+        ids = np.asarray(hops["target_ids"], dtype=np.int64)
+        found = np.nonzero(ids == target)[0]
+        if found.shape[0] == 0:
+            return None
+        t_index = int(found[0])
+        best: tuple[float, float] | None = None
+        for f_index, tof in enumerate(hops["tofs_days"]):
+            if not hops["feasible"][t_index, f_index]:
+                continue
+            dv = float(hops["total_delta_v"][t_index, f_index])
+            if not self._feasible(mass, dv, float(tof), "deploy_hop"):
+                continue
+            propellant = self._propellant(mass, dv, self.hop_inflation_for(dv, mass, float(tof)))
+            if best is None or propellant < best[0]:
+                best = (propellant, float(tof))
+        return best
+
+    def _deploy_delta(
+        self, partial: _Partial, position: int, substitute: int, masses: list[float]
+    ) -> float:
+        """Extra deploy propellant (kg) of routing the chain through ``substitute`` instead of
+        the asteroid at ``position``: the hops into and out of it (cheapest feasible TOF each,
+        at the chain's masses) minus the chain's own two hops.  ``inf`` when a hop cannot fly."""
+
+        deployed = [a for a, _ in partial.deployed]
+        legs = [leg for leg in partial.legs if leg.role == "deploy_hop"]
+        leg_in = legs[position - 1]
+        mass_in = masses[position - 1]
+        own = self._propellant(mass_in, leg_in.delta_v_proxy_km_s, leg_in.inflation)
+        hop_in = self._cheapest_deploy_hop(
+            deployed[position - 1], substitute, leg_in.departure_epoch, mass_in
+        )
+        if hop_in is None:
+            return float("inf")
+        new = hop_in[0]
+        if position + 1 < len(deployed):
+            leg_out = legs[position]
+            own += self._propellant(masses[position], leg_out.delta_v_proxy_km_s, leg_out.inflation)
+            wait = leg_out.departure_epoch - leg_in.arrival_epoch
+            departure = leg_in.departure_epoch + hop_in[1] + wait
+            mass_out = mass_in - hop_in[0] - C.MINER_MASS_KG
+            hop_out = self._cheapest_deploy_hop(
+                substitute, deployed[position + 1], departure, mass_out
+            )
+            if hop_out is None:
+                return float("inf")
+            new += hop_out[0]
+        return new - own
+
+    @staticmethod
+    def _paid_for(plan: RoutePlan, asteroid: int, mass: float) -> float:
+        """Propellant (kg at ``mass``) the plan's collect hops touching ``asteroid`` cost."""
+
+        total = 0.0
+        for leg in plan.legs:
+            if leg.role == "collect_hop" and asteroid in (leg.from_id, leg.to_id):
+                total += float(propellant_for_delta_v(mass, leg.delta_v_proxy_km_s * leg.inflation))
+        return total
+
+    def _harvest_sum(self, asteroid: int, partners: NDArray[np.int64]) -> float:
+        """Summed harvest-window cost (kg, collector reference mass) of ``asteroid`` against
+        its would-be tour partners: the substitution ranking."""
+
+        mass = self.settings.harvest_reference_mass
+        return float(np.sum(self.harvest_window_costs(asteroid, partners, mass)))
+
+    @staticmethod
+    def _deploy_departure(partial: _Partial, asteroid: int) -> float | None:
+        for leg in partial.legs:
+            if leg.role == "deploy_hop" and leg.to_id == asteroid:
+                return leg.departure_epoch
+        return None
+
+    def _rebuild_chain(self, partial: _Partial, position: int, substitute: int) -> _Partial | None:
+        """Re-fly ``partial``'s deploy chain with ``substitute`` at deploy ``position`` (>= 1).
+
+        The Earth leg is kept verbatim.  Every later deploy hop keeps its camp wait; the hops
+        into and out of the substitute take the cheapest feasible TOF of the beam's hop grid,
+        the others keep their TOF and are re-priced (Lambert at the shifted departure, the
+        beam's inflation and authority limits, exact mass chain with one miner per stop).
+        ``None`` when the substitute is not a screened neighbour of its predecessor, a leg is
+        infeasible, a pair is banned or an asteroid would be visited twice.
+        """
+
+        if position < 1 or position >= len(partial.deployed):
+            return None
+        steps: list[tuple[int, float, float]] = []  # (target, wait days, tof days)
+        wait = 0.0
+        for leg in partial.legs[1:]:
+            if leg.role == "camp":
+                wait = leg.tof_days
+            elif leg.role == "deploy_hop":
+                steps.append((leg.to_id, wait, leg.tof_days))
+                wait = 0.0
+        if len(steps) != len(partial.deployed) - 1:
+            return None
+        # mass after the Earth leg and the first miner: every deploy hop's propellant is in
+        # ``hop_propellant`` and one miner was dropped at each of the later stops
+        n = len(partial.deployed)
+        mass = partial.mass + partial.hop_propellant + C.MINER_MASS_KG * (n - 1)
+        first_asteroid, first_epoch = partial.deployed[0]
+        location, epoch = first_asteroid, first_epoch
+        legs: list[PlannedLeg] = [partial.legs[0]]
+        deployed: list[tuple[int, float]] = [(first_asteroid, first_epoch)]
+        visited = {first_asteroid}
+        hop_propellant = 0.0
+        horizon = C.MISSION_END_MJD - 3.0 * C.YEAR_DAYS
+        for index, (original, wait, tof) in enumerate(steps, start=1):
+            target = substitute if index == position else original
+            if target in visited or (location, target) in self.banned_pairs:
+                return None
+            departure = epoch + wait
+            hops = self.hops_from(location, departure)
+            ids = np.asarray(hops["target_ids"], dtype=np.int64)
+            found = np.nonzero(ids == target)[0]
+            if found.shape[0] == 0:
+                return None
+            t_index = int(found[0])
+            tofs = np.asarray(hops["tofs_days"], dtype=np.float64)
+            free_tof = index in (position, position + 1)
+            # hops touching the substitute take the cheapest feasible TOF; the others keep
+            # their TOF when it still flies at the (possibly shifted) departure, else the
+            # cheapest feasible one
+            stages = [range(tofs.shape[0])]
+            if not free_tof:
+                stages.insert(0, np.nonzero(np.abs(tofs - tof) < 1e-9)[0])
+            chosen: tuple[float, float, float, float] | None = None  # propellant, dv, infl, tof
+            for options in stages:
+                for f_index in options:
+                    if not hops["feasible"][t_index, f_index]:
+                        continue
+                    dv = float(hops["total_delta_v"][t_index, f_index])
+                    leg_tof = float(tofs[f_index])
+                    if not self._feasible(mass, dv, leg_tof, "deploy_hop"):
+                        continue
+                    if departure + leg_tof > horizon:
+                        continue
+                    inflation = self.hop_inflation_for(dv, mass, leg_tof)
+                    propellant = self._propellant(mass, dv, inflation)
+                    if chosen is None or propellant < chosen[0]:
+                        chosen = (propellant, dv, inflation, leg_tof)
+                if chosen is not None:
+                    break
+            if chosen is None:
+                return None
+            propellant, dv, inflation, leg_tof = chosen
+            if wait > 0.0:
+                legs.append(PlannedLeg(location, location, epoch, departure, 0.0, 1.0, "camp"))
+            arrival = departure + leg_tof
+            legs.append(
+                PlannedLeg(location, target, departure, arrival, dv, inflation, "deploy_hop")
+            )
+            mass -= propellant + C.MINER_MASS_KG
+            hop_propellant += propellant
+            location, epoch = target, arrival
+            deployed.append((target, arrival))
+            visited.add(target)
+        return _Partial(legs, location, epoch, mass, deployed, hop_propellant)
 
     def _return_feasible(self, asteroid: int, mass_guess: float) -> bool:
         """Cached test that *some* Earth return from ``asteroid`` fits inside the final window."""
@@ -1455,9 +1838,10 @@ class RouteSearch:
             self.last_failure = "dp_return_before_arrival"
             return None
         # the DP priced the return with the table's (TOF-dependent) inflation at the mass after
-        # the deploys plus the mined mass; the forward pass re-prices at the same model
-        return_inflation = float(
-            self.collect_table.return_inflation(tour.return_dv, mass_guess, tour.return_tof)[()]
+        # the deploys plus the mined mass - or, with a sweep set for the camp, the certified
+        # cell's measured inflation; the forward pass re-prices at the same figure
+        return_inflation = self.collect_table.return_inflation_at(
+            location, tour.return_departure, tour.return_tof, tour.return_dv, mass_guess
         )
         legs_forward.append(
             PlannedLeg(
