@@ -36,27 +36,72 @@ reuse, `pdhcg` backend selection recorded, honest infeasible-target report, time
 `cpu_reference` documents rejected); no skips once the GPU QOCO library is set. Currently 9 SKIPPED
 (gated) in the CPU run.
 
+History: the first real-GPU run (H100, 3373988) failed 4/9 (`hcw`, `powered_descent_3dof`,
+`powered_descent_6dof`, pdhcg selection) and the `hcw` / `powered_descent_3dof` examples exited 2
+(`converged_not_certified`). All of it reproduced identically on the RTX 5090, i.e. none of it was
+sm_90-specific. Four independent candidate defects, all fixed and re-verified on the 5090 (9/9,
+four certified examples, CUDA CTest 69/69):
+
+1. **HCW replay integrator** (`independent_replay_parity` 1.386e-6 vs 1e-9, `independent_dynamics_defect`
+   1.386e-6 vs 1e-6). `replay_scvx_kernel` re-integrated the HCW controls with the generic RK4
+   `state_rk4_step` while `hcw_exact_kernel` (and the host `HcwAdapter::rollout`) use the exact
+   zero-order-hold map. The replay now shares `hcw_exact_matrices` with the coefficient kernel.
+2. **HCW control linear objective**. The device numeric update wrote `c[u] = -w_u * u_ref` for every
+   family; `HcwRendezvousCqp::values` has no control-tracking term (plain `0.5 * w_u * |u|^2`), so
+   every re-linearised HCW QP was `min 0.5 * w_u * |u - u_ref|^2` and the accepted trajectory drifted
+   from the fixed QP optimum (short-horizon objective 1.573e-4 -> 1.691e-4; the CPU reference stayed
+   at 1.573e-4, hence the pytest objective mismatch and the SCvx "accept one, reject fourteen" pattern
+   with a negative merit ratio on an exactly-linear problem). HCW controls now keep `c[u] = 0`.
+3. **pure_qoco canonical residual** (`canonical_residual` 2.52e-3 vs 1e-6 on pd3). The QOCO adapter
+   reported *absolute* KKT residuals; the certificate gate, the CPU reference
+   (`canonical_residual_audit`) and the PDHCG backend are all relative. The adapter now reports the
+   same relative audit (equality / primal-cone / dual-cone violation over `1 + |rhs| + |Ax|`,
+   stationarity over `1 + |c| + |Px| + |A^T y|`, per-cone complementarity over the objective-gap scale).
+   pd3's absolute 2.5e-3 was a relative 1.2e-4 — still not a converged QP, which exposed defect 4.
+4. **Warm-started QOCO stalls, and the certificate read the wrong solve.** With the preset's `primal`
+   warm start QOCO restarted at the previous (boundary) optimum, took one interior-point iteration and
+   returned `QOCO_SOLVED_INACCURATE` with a 1e-4 dual residual; every polish candidate was rightly
+   rejected, but the driver reported the *last rejected candidate's* residual as the plan's canonical
+   residual instead of the accepted solve's 1.1e-9. Two fixes: the adapter re-solves cold once when a
+   warm solve ends inaccurate (`warm_inaccurate_cold_retries` in its report), and both the device
+   driver and `cpu_reference.py` now certify the residual of the solve whose candidate was accepted
+   (the CPU reference's pd6 N=10 failure, 1.197e-6 from a rejected candidate against a 3.1e-8
+   accepted solve, was the same bookkeeping defect).
+
 ## planner-memcheck
 
 ```bash
 cd $V2 && mkdir -p build-v2-gpu-deferred
+# The examples are user-unit documents (pd3/pd6 angles in degrees); the executable takes the
+# CLI's canonical form, so canonicalise first instead of handing the raw example to it.
+for f in hcw_rendezvous powered_descent_3dof; do
+  $V2/.venv-v2/bin/spacepdhcg validate examples/planner/$f.json \
+    > build-v2-gpu-deferred/$f-canonical.json; echo $f canonical exit=$?
+done
 compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan \
-  examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet \
+  build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet \
   > build-v2-gpu-deferred/memcheck-hcw.log 2>&1; echo exit=$?
 compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan \
-  examples/planner/powered_descent_3dof.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet \
+  build-v2-gpu-deferred/powered_descent_3dof-canonical.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet \
   > build-v2-gpu-deferred/memcheck-pd3.log 2>&1; echo exit=$?
 for tool in initcheck synccheck racecheck; do
   compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tools/spacepdhcg_plan \
-    examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet \
+    build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet \
     > build-v2-gpu-deferred/$tool-hcw.log 2>&1; echo $tool exit=$?
 done
 ```
 
+History: the first real-GPU run's pd3 command exited 255 because it handed the raw example
+(`maximum_tilt: 30.0` degrees) to the executable, which validates canonical radians
+(`'maximum_tilt' must lie strictly inside (0, pi/2)`); the CLI-normalised request was sanitizer-clean.
+`tests/test_gpu_deferred_manifest.py` now refuses any manifest command that passes an
+`examples/planner` document straight to `spacepdhcg_plan`.
+
 Expected: every `exit=0`; `ERROR SUMMARY: 0 errors` (memcheck/initcheck/synccheck) and
 `RACECHECK SUMMARY: 0 hazards`; both result documents `status.code == "certified"`,
-`certificate.certified == true` (HCW N=20 `pdhcg`; 3-DoF hover `pure_qoco`, objective ≈ 0.4927 as
-measured on 2026-09-03 before the campaign took the device).
+`certificate.certified == true` (HCW N=20; 3-DoF hover `pure_qoco`, objective ≈ 0.5522: CPU reference
+0.552214 on the H100, GPU 0.552214 on the RTX 5090. The 0.4927 quoted before the first real-GPU run
+was a pre-campaign prediction, not a measurement).
 
 ## planner-cuda-ctest-subset
 
@@ -86,6 +131,16 @@ Expected: `exit=0` (certified) for all four; each export bundle is a self-contai
 passes `node scripts/check.mjs` as a `planner-export` dataset while the default archive keeps its assertions (re-verified in this
 integration: `Validated 5 archive trajectories`, data SHA `b160734e…`).
 
+History: all four viewer checks failed in the first real-GPU run because `viewer_export.py` copied a
+frozen file list (`app.js`, `math.js`) while the viewer had grown `gtoc12.js`, `webgl.js`,
+`kepler.js`, `camera.js`, `dom.js`. The export now copies the ES-module graph discovered from
+`app.js` (`viewer_modules`) and from each `scripts/` root (`viewer_scripts`: `check.mjs` imports
+`palette.mjs`), and `tests/test_planner_viewer_export.py` asserts every module, every script and every
+non-data file `check.mjs` reads unconditionally is present without needing node. The check's
+hard-coded 20-ship palette assertion was replaced by one that reads the palette length from
+`gtoc12.js` and regenerates it from `scripts/palette.mjs` (40 generated OKLCH colours after the
+`feat/viewer-40-ships` merge), so the 21-ship `fleet_master_v7` fleet validates.
+
 ## literature-device-time-dilated-ctest
 
 ```bash
@@ -95,7 +150,19 @@ cd $V2 && ctest --test-dir build-v2-cuda-debug   --output-on-failure -R device_t
 
 Expected: `100% tests passed, 0 tests failed out of 1` per tree. Internal gates: pd3_fft device
 A/B/z and sigma-column parity `< 5.0e-11`, affine reconstruction `< 1.0e-8`; pd6_fft parity
-`< 2.0e-9`, reconstruction `< 1.0e-8`.
+`< 2.0e-9`, reconstruction `< 1.0e-8`, and the host reference must itself obey the quaternion
+tangent rule (`< 2.0e-10`). The test prints the worst row/column per block (propagated, transition,
+sensitivity, sigma, offset) so a failure is localised from the log.
+
+History: the first real-GPU run (H100, 3373988) failed with pd6_fft parity 0.98 in `offset` row 6.
+Root cause was the host *reference*, not the kernel: `device_time_dilated_test.cu` included only
+the model and `time_dilated_flow_linearisation.hpp`, so the `requires`-expression that detects
+`project_rk4_variational` by ADL found nothing and the reference was linearised without the
+quaternion-normalisation Jacobian (the production `c_api.cpp` TU pulls the hook in through
+`variational_rk4.hpp`, which is why the chari pd6_fft GPU batch converged). The linearisation
+header now includes the hook and `static_assert`s it for the 6-DoF model;
+`cpp/tests/time_dilated_flow_include_order_smoke.cpp` guards the include-order case. Reproduced and
+fixed on the RTX 5090 (sm_120, parity 2.2e-16); H100 (sm_90) re-verification pending a GPU window.
 
 ## literature-device-time-dilated-sanitizers
 
@@ -156,10 +223,10 @@ cd $V2 && bash scripts/gpu/run_g3_evidence.sh   # pass --force-export=true to ns
 cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure && ctest --test-dir build-v2-cuda-debug --output-on-failure
 ```
 
-Expected: full CUDA CTest `100% tests passed out of 68` in Release and Debug (62 sealed at b6afb49
+Expected: full CUDA CTest `100% tests passed out of 69` in Release and Debug (62 sealed at b6afb49
 plus `planner_c_api_smoke`, `planner_problem_smoke`, `powered_descent_free_time_transcription_smoke`,
-`time_dilated_flow_smoke`, `device_time_dilated_test`, `spacepdhcg_plan_capabilities`); G2/G3
-`status=PASS`.
+`time_dilated_flow_smoke`, `time_dilated_flow_include_order_smoke`, `device_time_dilated_test`,
+`spacepdhcg_plan_capabilities`); G2/G3 `status=PASS`.
 
 **New topologies do not alter sealed ones.** Evidence, base 63271d5 vs candidate:
 

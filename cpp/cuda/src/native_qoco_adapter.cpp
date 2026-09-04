@@ -700,14 +700,83 @@ void residuals(spacepdhcg_native_qoco* workspace) {
             }
         }
     }
-    transpose_accumulate(formulation.a, workspace->solver->sol->y, &stationarity);
-    transpose_accumulate(formulation.g, workspace->solver->sol->z, &stationarity);
+    // Stationarity c + P x + A^T y + G^T z, with the constraint-transposed term kept separately
+    // so the dual scale sees the same |A^T y + G^T z| magnitude the CPU-reference audit uses.
+    std::vector<double> constraint_dual(formulation.c.size(), 0.0);
+    transpose_accumulate(formulation.a, workspace->solver->sol->y, &constraint_dual);
+    transpose_accumulate(formulation.g, workspace->solver->sol->z, &constraint_dual);
     double dual = 0.0;
-    for (double value : stationarity) {
-        dual = std::max(dual, std::abs(value));
+    double max_px = 0.0;
+    double max_c = 0.0;
+    double max_constraint_dual = 0.0;
+    double primal_objective = 0.0;
+    for (std::size_t index = 0U; index < stationarity.size(); ++index) {
+        const double px = stationarity[index] - formulation.c[index];
+        max_px = std::max(max_px, std::abs(px));
+        max_c = std::max(max_c, std::abs(formulation.c[index]));
+        max_constraint_dual = std::max(max_constraint_dual, std::abs(constraint_dual[index]));
+        primal_objective +=
+            (0.5 * px + formulation.c[index]) * workspace->primal[index];
+        dual = std::max(dual, std::abs(stationarity[index] + constraint_dual[index]));
     }
-    workspace->report.primal_residual = primal;
-    workspace->report.dual_residual = dual;
+
+    // Dual cone feasibility (z in K*) and per-cone complementarity |s . z|, which QOCO
+    // drives to its own tolerances but which the planner certificate also audits.
+    const double* z = workspace->solver->sol->z;
+    double dual_cone = 0.0;
+    double complementarity = 0.0;
+    for (int index = 0; index < formulation.nonnegative; ++index) {
+        dual_cone = std::max(dual_cone, std::max(0.0, -z[index]));
+        complementarity = std::max(complementarity, std::abs(slack[index] * z[index]));
+    }
+    cursor = formulation.nonnegative;
+    for (int size : formulation.soc) {
+        dual_cone = std::max(dual_cone, soc_violation(z + cursor, size));
+        double inner = 0.0;
+        for (int offset = 0; offset < size; ++offset) {
+            inner += slack[cursor + offset] * z[cursor + offset];
+        }
+        complementarity = std::max(complementarity, std::abs(inner));
+        cursor += size;
+    }
+
+    // Relative KKT normalisation matching `spacepdhcg.cqp.quality.canonical_residual_audit`
+    // (the definition the planner's `canonical_residual` certificate gate and the CPU
+    // reference report).  An absolute residual is not comparable across families: the
+    // pd3 canonical rows carry O(1e3) thrust/mass magnitudes, so QOCO's converged solution
+    // showed an absolute 2.5e-3 against the 1e-6 gate while the relative residual was 1e-8.
+    double max_rhs = 0.0;
+    for (double value : formulation.b) {
+        max_rhs = std::max(max_rhs, std::abs(value));
+    }
+    for (double value : formulation.h) {
+        max_rhs = std::max(max_rhs, std::abs(value));
+    }
+    double max_ax = 0.0;
+    for (double value : ax) {
+        max_ax = std::max(max_ax, std::abs(value));
+    }
+    for (double value : gx) {
+        max_ax = std::max(max_ax, std::abs(value));
+    }
+    double dual_objective = 0.0;
+    for (std::size_t index = 0U; index < formulation.b.size(); ++index) {
+        dual_objective += formulation.b[index] * workspace->solver->sol->y[index];
+    }
+    for (std::size_t index = 0U; index < formulation.h.size(); ++index) {
+        dual_objective += formulation.h[index] * z[index];
+    }
+    const double primal_scale = 1.0 + max_rhs + max_ax;
+    const double dual_scale = 1.0 + max_c + max_px + max_constraint_dual;
+    const double gap_scale = 1.0 + std::abs(primal_objective) + std::abs(dual_objective);
+
+    auto& report = workspace->report;
+    report.absolute_primal_residual = primal;
+    report.absolute_dual_residual = dual;
+    report.dual_cone_residual = dual_cone / primal_scale;
+    report.complementarity_residual = complementarity / gap_scale;
+    report.primal_residual = std::max(primal, dual_cone) / primal_scale;
+    report.dual_residual = std::max(dual / dual_scale, report.complementarity_residual);
 }
 
 void map_dual(
@@ -1090,7 +1159,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             || requested_warm == SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED)
         ? 1 : 0;
     const auto solve_start = std::chrono::steady_clock::now();
-    const int status_code = workspace->solve(workspace->solver);
+    int status_code = workspace->solve(workspace->solver);
     workspace->report.solve_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - solve_start
     ).count();
@@ -1102,6 +1171,33 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         return finish(SPACEPDHCG_CUDA_INTERNAL_ERROR);
     }
     workspace->report.iterations = workspace->solver->sol->iters;
+    if (warm && status_code == 2) {
+        // QOCO_SOLVED_INACCURATE off a warm start: an interior-point method started at the
+        // previous (boundary) optimum stalls after a single iteration and hands back a point
+        // that only meets the loose 1e-5 tolerances (pd3 polish: dual residual 2.5e-3 from
+        // a 1e-10 cold solve).  Re-solve cold once and keep the cold result; a cold
+        // interior-point solve is deterministic, so this fallback is reproducible.
+        // `dual_discarded` describes how the *request* was handled (the requested dual
+        // was never usable by QOCO) and stays set; only the primal-warm flag flips.
+        workspace->set_x0(workspace->solver, nullptr);
+        workspace->report.warm_primal_accepted = 0;
+        ++workspace->report.warm_inaccurate_cold_retries;
+        const auto retry_start = std::chrono::steady_clock::now();
+        status_code = workspace->solve(workspace->solver);
+        workspace->report.solve_seconds += std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - retry_start
+        ).count();
+        ++workspace->report.solves;
+        if (workspace->solver->sol->status != status_code) {
+            workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+            return finish(SPACEPDHCG_CUDA_INTERNAL_ERROR);
+        }
+        workspace->report.iterations += workspace->solver->sol->iters;
+        // `status_code` is the raw status of the *last* solve: the cold retry, not the
+        // stalled warm attempt it replaced.
+        workspace->report.status_code = status_code;
+    }
+    workspace->report.last_status_inaccurate = status_code == 2 ? 1 : 0;
     if (status_code != 1 && status_code != 2) {
         workspace->needs_fresh_solver = true;
         workspace->report.failure = status_code == 4

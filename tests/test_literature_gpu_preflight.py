@@ -44,6 +44,18 @@ def test_preflight_refuses_other_compute_processes_unless_shared_is_allowed(monk
     assert allowed.ok
 
 
+def test_preflight_ignores_its_own_process_between_targets_of_one_gpu_run(monkeypatch) -> None:
+    import os
+
+    own = os.getpid()
+    monkeypatch.setattr(gpu_preflight, "_read_command_line", {own: "spacepdhcg literature"}.get)
+    result = gpu_preflight.preflight(runner=lambda command: f"{own}, python\n")
+    assert result.ok and result.reason == "device free"
+    assert [process.pid for process in result.processes] == [own]
+    refused = gpu_preflight.preflight(runner=lambda command: f"{own}, python\n4242, python\n")
+    assert not refused.ok and "pid 4242" in refused.reason and f"pid {own}" not in refused.reason
+
+
 def test_preflight_passes_on_an_idle_device_and_checks_the_qoco_library(tmp_path) -> None:
     idle = gpu_preflight.preflight(runner=lambda command: "")
     assert idle.ok and idle.reason == "device free"

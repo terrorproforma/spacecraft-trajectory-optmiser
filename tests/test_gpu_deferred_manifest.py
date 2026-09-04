@@ -78,6 +78,28 @@ def test_referenced_repository_paths_exist(manifest: dict) -> None:
     assert not missing, missing
 
 
+def test_executable_commands_never_take_raw_user_unit_examples(manifest: dict) -> None:
+    # examples/planner/*.json are user-unit documents (pd3/pd6 angles in degrees) that only the
+    # Python CLI normalises; spacepdhcg_plan validates canonical radians and rejected the raw pd3
+    # example (exit 255) in the first real-GPU sweep. Manifest commands must canonicalise first
+    # (`spacepdhcg validate`) or go through `spacepdhcg plan --executable`.
+    direct = re.compile(r"spacepdhcg_plan\s+(examples/planner/[\w./-]+\.json)")
+    offenders = [
+        (item["id"], match)
+        for item in manifest["items"]
+        for command in item["commands"]
+        for match in direct.findall(command)
+    ]
+    assert not offenders, offenders
+    # The guard matters: at least one example really is in non-canonical units.
+    from spacepdhcg.planner import load_problem, normalise_problem
+
+    raw = load_problem(ROOT / "examples" / "planner" / "powered_descent_3dof.json")
+    canonical = normalise_problem(raw)
+    assert raw["units"]["angle"] == "deg"
+    assert canonical["constraints"]["maximum_tilt"] == pytest.approx(30.0 * 3.141592653589793 / 180)
+
+
 def test_frozen_files_are_byte_identical_to_the_recorded_blobs(manifest: dict) -> None:
     blobs = manifest["frozen_hashes"]["identical_blobs_base_vs_candidate"]
     assert len(blobs) >= 10

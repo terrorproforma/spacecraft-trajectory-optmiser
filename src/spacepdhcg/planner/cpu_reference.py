@@ -197,6 +197,12 @@ def _solve(
     previous_agreement: float | None = None
     last_audit_natural = math.nan
     last_audit_absolute = math.nan
+    # Audit of the inner solve whose candidate became the returned reference.  The
+    # certificate audits the trajectory we hand back, so it must not inherit the
+    # residual of a later *rejected* candidate (the device driver keeps the same
+    # accepted-solve residual; see `accepted_natural_residual` in device_scvx.cu).
+    accepted_audit_natural = math.nan
+    accepted_audit_absolute = math.nan
     last_virtual = 0.0
     inner_iterations = 0
     setup_seconds = 0.0
@@ -352,6 +358,8 @@ def _solve(
                     step=candidate.step,
                 )
                 last_virtual = candidate.virtual_max
+                accepted_audit_natural = last_audit_natural
+                accepted_audit_absolute = last_audit_absolute
                 accepted_steps += 1
                 accepted_streak += 1
                 previous_agreement = candidate.ratio
@@ -399,7 +407,12 @@ def _solve(
     independent_replay_seconds = time.perf_counter() - replay_started
 
     converged = status == "converged"
-    canonical = last_audit_natural
+    if accepted_steps > 0 and math.isfinite(accepted_audit_natural):
+        canonical = accepted_audit_natural
+        canonical_absolute = accepted_audit_absolute
+    else:
+        canonical = last_audit_natural
+        canonical_absolute = last_audit_absolute
     gates = {
         "solver_api_success": (
             status != "inner_failure",
@@ -529,10 +542,11 @@ def _solve(
         "solver_residuals": {
             "canonical_residual": canonical,
             "canonical_residual_definition": (
-                "independent relative KKT audit of the last Clarabel solve "
-                "(max of relative primal, dual, and complementarity residuals)"
+                "independent relative KKT audit of the Clarabel solve whose candidate was "
+                "accepted as the returned reference (max of relative primal, dual, and "
+                "complementarity residuals); the last solve when no step was accepted"
             ),
-            "canonical_residual_absolute": last_audit_absolute,
+            "canonical_residual_absolute": canonical_absolute,
             "dynamics_defect": current_residual.dynamics,
             "path_violation": current_residual.path,
             "terminal_residual": current_residual.terminal,

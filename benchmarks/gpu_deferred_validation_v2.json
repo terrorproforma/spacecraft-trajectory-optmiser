@@ -69,7 +69,19 @@
         "0 skipped once SPACEPDHCG_QOCO_LIBRARY names the GPU QOCO (the pure_qoco leg otherwise skips)"
       ],
       "evidence": ["pytest output"],
-      "cpu_status_now": "6 functions / 9 tests SKIPPED (gated) in full-pytest-cpu-qoco.log"
+      "cpu_status_now": "6 functions / 9 tests SKIPPED (gated) in full-pytest-cpu-qoco.log",
+      "history": {
+        "h100_3373988": "4/9 failed (hcw objective mismatch + maximum_iterations, pd3 canonical_residual, pd6 CPU reference canonical_residual 1.197e-6, pdhcg selection not converged); reproduced identically on the RTX 5090, so not sm_90-specific",
+        "fixes": [
+          "device_scvx.cu: HCW replay_scvx_kernel uses the exact ZOH map shared with hcw_exact_kernel instead of RK4 (replay parity 1.386e-6 -> 4e-14)",
+          "device_scvx.cu: the numeric update no longer writes a -w_u*u_ref control linear term for HCW (HcwRendezvousCqp has no control tracking; the term made every re-linearised QP min |u-u_ref|^2 and drifted the objective 1.573e-4 -> 1.691e-4)",
+          "native_qoco_adapter.cpp: pure_qoco reports the relative KKT audit used by the certificate gate, the CPU reference and PDHCG instead of absolute residuals (pd3 2.5e-3 absolute == 1.2e-4 relative)",
+          "native_qoco_adapter.cpp: a warm-started solve that ends QOCO_SOLVED_INACCURATE (one stalled IPM iteration from the boundary optimum) is re-solved cold once (report.warm_inaccurate_cold_retries)",
+          "device_scvx.cu + cpu_reference.py: the certificate's canonical residual is the residual of the solve whose candidate was accepted, not of a later rejected polish candidate"
+        ],
+        "rtx5090_after_fix": "9 passed; four GPU examples certified (hcw 3.699459e-4 vs CPU 3.699459e-4, pd3 0.552214 vs 0.552214, pd6 0.512976, low_thrust 0.149922); CUDA CTest 69/69 sm_120",
+        "h100_reverification": "pending a GPU window (device reserved for the G4 claim-core campaign)"
+      }
     },
     {
       "id": "planner-memcheck",
@@ -77,17 +89,23 @@
       "title": "compute-sanitizer memcheck (and initcheck/synccheck/racecheck) on spacepdhcg_plan",
       "blocked_by": "G4 claim core owns the device",
       "commands": [
-        "cd $V2 && mkdir -p build-v2-gpu-deferred && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet > build-v2-gpu-deferred/memcheck-hcw.log 2>&1; echo exit=$?",
-        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/powered_descent_3dof.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet > build-v2-gpu-deferred/memcheck-pd3.log 2>&1; echo exit=$?",
-        "cd $V2 && for tool in initcheck synccheck racecheck; do compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet > build-v2-gpu-deferred/$tool-hcw.log 2>&1; echo $tool exit=$?; done",
+        "cd $V2 && mkdir -p build-v2-gpu-deferred && for f in hcw_rendezvous powered_descent_3dof; do $V2/.venv-v2/bin/spacepdhcg validate examples/planner/$f.json > build-v2-gpu-deferred/$f-canonical.json; echo $f canonical exit=$?; done  # the examples are user-unit documents (pd3 angles in degrees); the executable takes the CLI's canonical form",
+        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet > build-v2-gpu-deferred/memcheck-hcw.log 2>&1; echo exit=$?",
+        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/powered_descent_3dof-canonical.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet > build-v2-gpu-deferred/memcheck-pd3.log 2>&1; echo exit=$?",
+        "cd $V2 && for tool in initcheck synccheck racecheck; do compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet > build-v2-gpu-deferred/$tool-hcw.log 2>&1; echo $tool exit=$?; done",
         "cd $V2 && $V2/.venv-v2/bin/python -c \"import json; [print(f, json.load(open(f))['status']['code'], json.load(open(f))['certificate']['certified']) for f in ('build-v2-gpu-deferred/memcheck-hcw.json','build-v2-gpu-deferred/memcheck-pd3.json')]\""
       ],
       "expected": [
         "exit=0 for every sanitizer invocation",
         "`========= ERROR SUMMARY: 0 errors` (memcheck/initcheck/synccheck) and `========= RACECHECK SUMMARY: 0 hazards` in each log",
-        "both result documents report status.code == 'certified' and certificate.certified == true (HCW N=20 pdhcg; 3-DoF pure_qoco hover objective ~0.4927 as measured on 2026-09-03 before the campaign started)"
+        "both result documents report status.code == 'certified' and certificate.certified == true (HCW N=20; 3-DoF pure_qoco hover objective ~0.5522: CPU reference 0.552214 on the H100, GPU 0.552214 on the RTX 5090; the ~0.4927 quoted before the first real-GPU run was a pre-campaign prediction, not a measurement)"
       ],
-      "evidence": ["build-v2-gpu-deferred/*.log", "build-v2-gpu-deferred/*.json"]
+      "evidence": ["build-v2-gpu-deferred/*.log", "build-v2-gpu-deferred/*.json"],
+      "history": {
+        "h100_3373988": "hcw: sanitizers clean (ERROR SUMMARY: 0 errors, 0 bytes leaked) but exit 2 = the executable's converged_not_certified status (fixed under planner-gpu-pytest). pd3: exit 255, manifest defect - the raw example carries maximum_tilt 30.0 degrees and the executable expects the CLI's canonical radians ('maximum_tilt' must lie strictly inside (0, pi/2)); re-run on the CLI-normalised request was sanitizer-clean",
+        "fix": "commands canonicalise through `spacepdhcg validate` first; tests/test_gpu_deferred_manifest.py refuses any manifest command that hands an examples/planner document straight to spacepdhcg_plan",
+        "rtx5090": "the fixed commands run end to end on the RTX 5090 (sm_120, CUDA 12.8 compute-sanitizer): memcheck hcw/pd3, initcheck/synccheck/racecheck hcw all exit 0, ERROR SUMMARY: 0 errors, 0 bytes leaked, 0 hazards; every result document certified (hcw objective 3.6995e-4, pd3 0.552214)"
+      }
     },
     {
       "id": "planner-cuda-ctest-subset",
@@ -117,7 +135,12 @@
         "exit=0 (certified) for each example; exit 2 would mean produced-but-not-certified and must be investigated",
         "each export passes `node scripts/check.mjs` as a planner-export dataset (the archive assertions remain in force for the default archive data: verified again in this integration)"
       ],
-      "evidence": ["build-v2-gpu-deferred/plan-*/plan-result.json", "plan-summary.md", "viewer/manifest.json"]
+      "evidence": ["build-v2-gpu-deferred/plan-*/plan-result.json", "plan-summary.md", "viewer/manifest.json"],
+      "history": {
+        "h100_3373988": "hcw exit 2 (independent replay parity/defect 1.386e-6), pd3 exit 2 (canonical residual 2.52e-3 after 14 QOCO numeric updates), pd6 and low_thrust certified; all four viewer checks failed on the export file list",
+        "rtx5090_after_fix": "all four exit=0 certified (see planner-gpu-pytest.history.fixes); pd3 now converges in 5 outer / 2 accepted with canonical residual 1.1e-10",
+        "h100_reverification": "pending a GPU window"
+      }
     },
     {
       "id": "literature-device-time-dilated-ctest",
@@ -130,7 +153,8 @@
       ],
       "expected": [
         "100% tests passed, 0 tests failed out of 1 in each tree",
-        "the test's own gates: pd3_fft device A/B/z and sigma-column parity < 5.0e-11, affine reconstruction < 1.0e-8; pd6_fft parity < 2.0e-9, reconstruction < 1.0e-8 (cpp/cuda/tests/device_time_dilated_test.cu)"
+        "the test's own gates: pd3_fft device A/B/z and sigma-column parity < 5.0e-11, affine reconstruction < 1.0e-8; pd6_fft parity < 2.0e-9, reconstruction < 1.0e-8, and the host reference itself must satisfy the quaternion tangent rule (< 2.0e-10) so an unprojected reference is reported as a reference defect (cpp/cuda/tests/device_time_dilated_test.cu; per-block worst row/column is printed)",
+        "measured on the RTX 5090 (sm_120) on 2026-09-05 after the include-order fix: pd6_fft coefficients 2.2e-16, sigma 4.3e-19, reconstruction 1.4e-14; the pre-fix host reference was linearised without the quaternion projection and produced the 0.98 offset gap seen on the H100 (results/lambda-h100/v2-deferred-3373988/triage.md); H100 (sm_90) re-verification pending a GPU window"
       ],
       "evidence": ["ctest output"]
     },
@@ -196,7 +220,7 @@
         "cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure && ctest --test-dir build-v2-cuda-debug --output-on-failure"
       ],
       "expected": [
-        "full CUDA CTest: 100% tests passed out of 68 in Release and Debug (62 sealed tests at b6afb49 + planner_c_api_smoke, planner_problem_smoke, powered_descent_free_time_transcription_smoke, time_dilated_flow_smoke, device_time_dilated_test, spacepdhcg_plan_capabilities)",
+        "full CUDA CTest: 100% tests passed out of 69 in Release and Debug (62 sealed tests at b6afb49 + planner_c_api_smoke, planner_problem_smoke, powered_descent_free_time_transcription_smoke, time_dilated_flow_smoke, time_dilated_flow_include_order_smoke, device_time_dilated_test, spacepdhcg_plan_capabilities)",
         "G2/G3 status=PASS with the sealed b6afb49 topology fingerprints for HCW, P1-C pd3, P1-D pd6 and low-thrust unchanged: their transcription headers are blob-identical to 63271d5 (see frozen_hashes) and device_scvx.cu only gained the pd3_fft/pd6_fft branches (+370/-0 lines)",
         "the G4 capability e546583b... stays bound to source_commit 9a4cbea and libspacepdhcg_cuda.so 84d98bcd...; the candidate's Release library is af835ad8... (new kernels), so NO G4 claim-core evidence may be produced from the candidate until a new capability is generated after its own G0-G3 reseal"
       ],

@@ -115,13 +115,72 @@ DeviceResult<StateDimension, ControlDimension> run_device(
     return result;
 }
 
+/// Worst absolute gap of one coefficient block together with the position it occurred at, so a
+/// parity failure names the block, row and column instead of a bare maximum.
+struct BlockGap {
+    const char* block{"none"};
+    double gap{0.0};
+    std::size_t row{0U};
+    std::size_t column{0U};
+    double device{0.0};
+    double host{0.0};
+
+    void update(
+        const char* candidate_block,
+        const std::size_t candidate_row,
+        const std::size_t candidate_column,
+        const double device_value,
+        const double host_value
+    ) {
+        const double candidate = std::abs(device_value - host_value);
+        if (candidate > gap) {
+            block = candidate_block;
+            gap = candidate;
+            row = candidate_row;
+            column = candidate_column;
+            device = device_value;
+            host = host_value;
+        }
+    }
+};
+
 struct Parity {
     double coefficients{0.0};
     double sigma_column{0.0};
     double sigma_finite_difference{0.0};
     double quaternion_radial{0.0};
     double reconstruction{0.0};
+    /// Tangent-rule residual of the *host* reference: a non-zero value means the reference
+    /// itself skipped the quaternion projection (the 0.98 failure mode), not the kernel.
+    double host_quaternion_radial{0.0};
+    BlockGap worst{};
+    BlockGap propagated{};
+    BlockGap transition{};
+    BlockGap sensitivity{};
+    BlockGap sigma{};
+    BlockGap offset{};
 };
+
+void print_gap(const char* name, const BlockGap& gap) {
+    std::printf(
+        "  %-12s max |device - host| = %.3e at (row %zu, column %zu): device %.17g host %.17g\n",
+        name, gap.gap, gap.row, gap.column, gap.device, gap.host
+    );
+}
+
+void report(const char* name, const std::size_t substeps, const Parity& parity) {
+    std::printf(
+        "%s substeps=%zu: coefficients %.3e sigma %.3e sigma_fd %.3e reconstruction %.3e "
+        "quaternion_radial(device) %.3e quaternion_radial(host) %.3e\n",
+        name, substeps, parity.coefficients, parity.sigma_column, parity.sigma_finite_difference,
+        parity.reconstruction, parity.quaternion_radial, parity.host_quaternion_radial
+    );
+    print_gap("propagated", parity.propagated);
+    print_gap("transition", parity.transition);
+    print_gap("sensitivity", parity.sensitivity);
+    print_gap("sigma", parity.sigma);
+    print_gap("offset", parity.offset);
+}
 
 template <std::size_t StateDimension, std::size_t ControlDimension, typename Model>
 Parity compare(
@@ -138,24 +197,31 @@ Parity compare(
     );
     const auto device = run_device(config, state, control, sigma, d_tau, substeps);
     Parity parity{};
-    for (std::size_t index = 0; index < StateDimension; ++index) {
-        parity.coefficients = std::max(
-            parity.coefficients, std::abs(device.propagated[index] - cpu.propagated[index])
-        );
-        parity.coefficients =
-            std::max(parity.coefficients, std::abs(device.offset[index] - cpu.offset[index]));
-        parity.sigma_column =
-            std::max(parity.sigma_column, std::abs(device.sigma[index] - cpu.sigma[index]));
+    for (std::size_t row = 0; row < StateDimension; ++row) {
+        parity.propagated.update("propagated", row, 0U, device.propagated[row], cpu.propagated[row]);
+        parity.offset.update("offset", row, 0U, device.offset[row], cpu.offset[row]);
+        parity.sigma.update("sigma", row, 0U, device.sigma[row], cpu.sigma[row]);
+        for (std::size_t column = 0; column < StateDimension; ++column) {
+            const std::size_t flat = row * StateDimension + column;
+            parity.transition.update(
+                "transition", row, column, device.transition[flat], cpu.state[flat]
+            );
+        }
+        for (std::size_t column = 0; column < ControlDimension; ++column) {
+            const std::size_t flat = row * ControlDimension + column;
+            parity.sensitivity.update(
+                "sensitivity", row, column, device.sensitivity[flat], cpu.control[flat]
+            );
+        }
     }
-    for (std::size_t index = 0; index < cpu.state.size(); ++index) {
-        parity.coefficients =
-            std::max(parity.coefficients, std::abs(device.transition[index] - cpu.state[index]));
+    for (const auto* block :
+         {&parity.propagated, &parity.offset, &parity.transition, &parity.sensitivity}) {
+        parity.coefficients = std::max(parity.coefficients, block->gap);
+        if (block->gap >= parity.worst.gap) {
+            parity.worst = *block;
+        }
     }
-    for (std::size_t index = 0; index < cpu.control.size(); ++index) {
-        parity.coefficients = std::max(
-            parity.coefficients, std::abs(device.sensitivity[index] - cpu.control[index])
-        );
-    }
+    parity.sigma_column = parity.sigma.gap;
     // Affine reconstruction through the device blocks.
     for (std::size_t row = 0; row < StateDimension; ++row) {
         double value = device.offset[row] + device.sigma[row] * sigma;
@@ -205,6 +271,23 @@ Parity compare(
             radial += device.propagated[6U + row] * device.sigma[6U + row];
         }
         parity.quaternion_radial = std::max(parity.quaternion_radial, std::abs(radial));
+        // The host reference must obey the same tangent rule; if it does not, the reference
+        // was linearised without the quaternion projection and the parity gap is a reference
+        // defect (the include-order regression), not a kernel defect.
+        for (std::size_t column = 0; column < StateDimension; ++column) {
+            double host_radial = 0.0;
+            for (std::size_t row = 0; row < 4U; ++row) {
+                host_radial += cpu.propagated[6U + row] * cpu.state[(6U + row) * StateDimension + column];
+            }
+            parity.host_quaternion_radial =
+                std::max(parity.host_quaternion_radial, std::abs(host_radial));
+        }
+        double host_sigma_radial = 0.0;
+        for (std::size_t row = 0; row < 4U; ++row) {
+            host_sigma_radial += cpu.propagated[6U + row] * cpu.sigma[6U + row];
+        }
+        parity.host_quaternion_radial =
+            std::max(parity.host_quaternion_radial, std::abs(host_sigma_radial));
     }
     return parity;
 }
@@ -360,6 +443,11 @@ int main() {
     const auto pd3_four = test_pd3(4U);
     const auto pd6_one = test_pd6(1U);
     const auto pd6_four = test_pd6(4U);
+    // Column-by-column diagnostics first, so a failing gate below can be localised from the log.
+    report("pd3_fft", 1U, pd3_one);
+    report("pd3_fft", 4U, pd3_four);
+    report("pd6_fft", 1U, pd6_one);
+    report("pd6_fft", 4U, pd6_four);
     for (const auto* parity : {&pd3_one, &pd3_four}) {
         test::require(parity->coefficients < 5.0e-11, "pd3_fft device A/B/z differ from CPU");
         test::require(parity->sigma_column < 5.0e-11, "pd3_fft device S differs from CPU");
@@ -369,6 +457,10 @@ int main() {
         );
     }
     for (const auto* parity : {&pd6_one, &pd6_four}) {
+        test::require(
+            parity->host_quaternion_radial < 2.0e-10,
+            "pd6_fft host reference is not tangent: linearised without the quaternion projection"
+        );
         test::require(parity->coefficients < 2.0e-9, "pd6_fft device A/B/z differ from CPU");
         test::require(parity->sigma_column < 2.0e-9, "pd6_fft device S differs from CPU");
         test::require(parity->reconstruction < 1.0e-8, "pd6_fft affine reconstruction fails");
@@ -383,8 +475,8 @@ int main() {
     std::printf(
         "{\"case\":\"device_time_dilated\",\"pd3_fft\":{\"coefficients\":%.3e,\"sigma\":%.3e,"
         "\"sigma_fd\":%.3e,\"reconstruction\":%.3e},\"pd6_fft\":{\"coefficients\":%.3e,"
-        "\"sigma\":%.3e,\"sigma_fd\":%.3e,\"reconstruction\":%.3e,\"quaternion_radial\":%.3e},"
-        "\"substeps\":[1,4],\"sigma_csc_fill\":true}\n",
+        "\"sigma\":%.3e,\"sigma_fd\":%.3e,\"reconstruction\":%.3e,\"quaternion_radial\":%.3e,"
+        "\"host_quaternion_radial\":%.3e},\"substeps\":[1,4],\"sigma_csc_fill\":true}\n",
         std::max(pd3_one.coefficients, pd3_four.coefficients),
         std::max(pd3_one.sigma_column, pd3_four.sigma_column),
         std::max(pd3_one.sigma_finite_difference, pd3_four.sigma_finite_difference),
@@ -393,7 +485,8 @@ int main() {
         std::max(pd6_one.sigma_column, pd6_four.sigma_column),
         std::max(pd6_one.sigma_finite_difference, pd6_four.sigma_finite_difference),
         std::max(pd6_one.reconstruction, pd6_four.reconstruction),
-        std::max(pd6_one.quaternion_radial, pd6_four.quaternion_radial)
+        std::max(pd6_one.quaternion_radial, pd6_four.quaternion_radial),
+        std::max(pd6_one.host_quaternion_radial, pd6_four.host_quaternion_radial)
     );
     return 0;
 }

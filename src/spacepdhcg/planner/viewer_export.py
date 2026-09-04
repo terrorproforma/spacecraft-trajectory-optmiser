@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -25,20 +26,62 @@ from spacepdhcg.planner.result import PlanResult, json_safe
 VIEWER_SCHEMA_VERSION = "1.0.0"
 DATASET_KIND = "planner-export"
 VIEWER_SOURCE_ENVIRONMENT = "SPACEPDHCG_VIEWER_SOURCE"
-_VIEWER_FILES = (
-    "index.html",
-    "app.js",
-    "math.js",
-    "camera.js",
-    "dom.js",
-    "gtoc12.js",
-    "kepler.js",
-    "webgl.js",
-    "styles.css",
-    "package.json",
-    "README.md",
-)
+# Static files every bundle carries.  The ES-module graph rooted at ``app.js`` is discovered
+# from the sources (``viewer_modules``) rather than listed here: the first real-GPU sweep
+# found this tuple frozen at ``app.js``/``math.js`` after the viewer had grown ``gtoc12.js``,
+# ``webgl.js``, ``kepler.js``, ``camera.js`` and ``dom.js``, so every export failed
+# ``scripts/check.mjs`` and would not have loaded in a browser.
+_VIEWER_FILES = ("index.html", "app.js", "styles.css", "package.json", "README.md")
+# Script roots; their own import graphs are discovered the same way (``check.mjs`` imports
+# ``palette.mjs`` for the ship-palette regeneration check), so nothing under ``scripts/`` is
+# listed twice or forgotten.
 _VIEWER_SCRIPTS = ("check.mjs", "serve.mjs")
+_VIEWER_ENTRY = "app.js"
+_RELATIVE_IMPORT = re.compile(r"""\bfrom\s+["'](\./[A-Za-z0-9_./-]+\.m?js)["']""")
+
+
+def viewer_modules(source: Path, entry: str = _VIEWER_ENTRY) -> tuple[str, ...]:
+    """Relative ES-module files reachable from ``entry`` inside the viewer ``source`` tree.
+
+    Follows ``from "./x.js"`` imports transitively (the viewer has no bundler, so the browser
+    resolves exactly these paths).  The entry itself is included first; a missing module raises
+    so a broken import graph fails the export instead of producing a bundle that cannot load.
+    """
+
+    ordered: list[str] = []
+    pending = [entry]
+    while pending:
+        name = pending.pop(0)
+        if name in ordered:
+            continue
+        path = source / name
+        if not path.is_file():
+            raise FileNotFoundError(f"viewer module {name!r} imported but missing under {source}")
+        ordered.append(name)
+        for match in _RELATIVE_IMPORT.finditer(path.read_text(encoding="utf-8")):
+            relative = os.path.normpath(os.path.join(os.path.dirname(name), match.group(1)))
+            relative = relative.replace(os.sep, "/")
+            if relative not in ordered and relative not in pending:
+                pending.append(relative)
+    return tuple(ordered)
+
+
+def viewer_scripts(source: Path) -> tuple[str, ...]:
+    """``scripts/`` files a bundle needs: each root in ``_VIEWER_SCRIPTS`` plus its imports.
+
+    Roots that the source tree lacks are skipped (older viewer copies); a root that is present
+    but imports a missing module raises like ``viewer_modules``.
+    """
+
+    ordered: list[str] = []
+    for script in _VIEWER_SCRIPTS:
+        root = f"scripts/{script}"
+        if not (source / root).is_file():
+            continue
+        for name in viewer_modules(source, root):
+            if name not in ordered:
+                ordered.append(name)
+    return tuple(ordered)
 
 
 def _stable(value: Any) -> Any:
@@ -295,11 +338,10 @@ def export_viewer_bundle(
     (data_directory / "manifest.json").write_text(_serialize(manifest), encoding="utf-8")
     source = viewer_source or default_viewer_source()
     if source is not None:
-        for name in _VIEWER_FILES:
-            if (source / name).is_file():
-                shutil.copyfile(source / name, target_path / name)
+        modules = viewer_modules(source) if (source / _VIEWER_ENTRY).is_file() else ()
         (target_path / "scripts").mkdir(exist_ok=True)
-        for name in _VIEWER_SCRIPTS:
-            if (source / "scripts" / name).is_file():
-                shutil.copyfile(source / "scripts" / name, target_path / "scripts" / name)
+        for name in (*_VIEWER_FILES, *modules, *viewer_scripts(source)):
+            if (source / name).is_file():
+                (target_path / name).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source / name, target_path / name)
     return target_path

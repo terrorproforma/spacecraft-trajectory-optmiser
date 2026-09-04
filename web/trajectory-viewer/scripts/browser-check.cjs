@@ -7,7 +7,9 @@ async function main() {
   if (!modulePath) throw new Error("Set PLAYWRIGHT_PATH to an installed Playwright module");
   const { chromium } = require(modulePath);
   const root = resolve(__dirname, "..");
-  const artifacts = join(root, "test-artifacts");
+  // BROWSER_CHECK_ARTIFACTS redirects the screenshots/report (e.g. to /tmp) so a run against a
+  // different imported fleet does not overwrite the committed artefact set.
+  const artifacts = process.env.BROWSER_CHECK_ARTIFACTS ? resolve(process.env.BROWSER_CHECK_ARTIFACTS) : join(root, "test-artifacts");
   await mkdir(artifacts, { recursive: true });
   const browser = await chromium.launch({
     headless: true,
@@ -193,6 +195,16 @@ async function checkGtoc12(browser, artifacts) {
   await page.screenshot({ path: join(artifacts, "gtoc12-3d-desktop-window.png") });
   await page.screenshot({ path: join(artifacts, "gtoc12-3d-desktop-fullpage.png"), fullPage: true });
 
+  // 2b. Ship palette and per-ship UI at 1440x900 and 1920x1080: every ship has its own colour in the
+  // legend and the rail (no palette wrap), the > 20-ship fleets use the dense layouts, and neither
+  // the rail list, its rows, the legend nor the toolbar overflow their boxes.
+  const palette = await checkShipPalette(page, fleet, artifacts, "1440x900");
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const paletteWide = await checkShipPalette(page, fleet, artifacts, "1920x1080");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+
   // Mouse-wheel dolly towards the cursor: the distance shrinks and the target slides towards the pointed-at region.
   const before = await debug("d.camera");
   await page.mouse.move(openingCanvas.x + openingCanvas.width * 0.72, openingCanvas.y + openingCanvas.height * 0.35);
@@ -327,10 +339,62 @@ async function checkGtoc12(browser, artifacts) {
     screenshots: [
       "gtoc12-3d-oblique-fleet.png", "gtoc12-3d-desktop-window.png", "gtoc12-3d-desktop-fullpage.png", "gtoc12-3d-edge-on.png", "gtoc12-3d-timeline-mid-mission.png",
       "gtoc12-3d-follow-ship.png", "gtoc12-3d-ship-arc-framed.png", ...frameEpochs.map((_, index) => `gtoc12-3d-frame-${String(index + 1).padStart(2, "0")}.png`), "gtoc12-3d-mobile.png",
+      ...palette.screenshots, ...paletteWide.screenshots,
     ],
+    palette: { "1440x900": palette, "1920x1080": paletteWide },
     gl: glInfo,
-    interactions: ["absent-dataset-degrade", "presets", "exaggeration-default-6x", "full-bleed", "wheel-dolly-to-cursor", "transition", "timeline", "counters", "follow", "play", "frame-arc", "hover-tooltip", "hover-highlight", "click-select", "inertia", "speed", "dataset-switch", "mobile"],
+    interactions: ["absent-dataset-degrade", "presets", "exaggeration-default-6x", "full-bleed", "wheel-dolly-to-cursor", "transition", "timeline", "counters", "follow", "play", "frame-arc", "hover-tooltip", "hover-highlight", "click-select", "inertia", "speed", "dataset-switch", "mobile", "palette-distinct", "dense-layout", "no-overflow-1440x900", "no-overflow-1920x1080"],
   };
+}
+
+/**
+ * Palette / layout contract for the loaded fleet at the current viewport: one distinct swatch colour
+ * per ship in the legend and the rail (legend and rail agree), the dense layouts engage above 20
+ * ships, nothing overflows, and the legend stays inside the porthole. Writes viewer40-*-<size>.png.
+ */
+async function checkShipPalette(page, fleet, artifacts, size) {
+  const ships = fleet.ships.length, dense = ships > 20;
+  const legendColours = await page.locator("#legend-ships .ship-swatch").evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).backgroundColor));
+  const railColours = await page.locator('#ship-list .ship-item:not([data-ship="all"]) .ship-swatch').evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).backgroundColor));
+  assert.equal(legendColours.length, ships, `${size}: one legend swatch per ship`);
+  assert.deepEqual(railColours, legendColours, `${size}: rail swatches carry the legend colours in ship order`);
+  assert.equal(new Set(legendColours).size, ships, `${size}: no two ships share a colour (${ships} ships)`);
+  const barColours = await page.locator('#ship-list .ship-item:not([data-ship="all"]) .mass-bar').evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).color));
+  assert.deepEqual(barColours, legendColours, `${size}: each mass bar is painted in its ship's colour`);
+  assert.equal(await page.locator("#ship-list").evaluate((node) => node.classList.contains("dense")), dense, `${size}: dense rail layout iff > 20 ships`);
+  assert.equal(await page.locator("#legend-ships").evaluate((node) => node.classList.contains("dense")), dense, `${size}: dense legend layout iff > 20 ships`);
+  const overflow = await page.evaluate(() => {
+    const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+    const horizontal = (node) => node.scrollWidth - node.clientWidth;
+    const list = document.querySelector("#ship-list");
+    const rows = [...list.querySelectorAll(".ship-item")];
+    const masses = [...list.querySelectorAll(".ship-mass")];
+    const names = [...list.querySelectorAll(".ship-name")];
+    const legend = document.querySelector("#fleet-legend"), legendShips = document.querySelector("#legend-ships"), canvas = box("#trajectory-canvas"), legendBox = legend.getBoundingClientRect();
+    return {
+      listHorizontal: horizontal(list), rowHorizontal: Math.max(...rows.map(horizontal)), massClipped: Math.max(...masses.map(horizontal)), nameClipped: Math.max(...names.map(horizontal)),
+      legendHorizontal: horizontal(legendShips), legendRows: Math.round(legendShips.getBoundingClientRect().height / 14),
+      legendInsideCanvas: legendBox.left >= canvas.left && legendBox.right <= canvas.right && legendBox.top >= canvas.top && legendBox.bottom <= canvas.bottom,
+      legendHeightFraction: legendBox.height / canvas.height,
+      toolbarHorizontal: horizontal(document.querySelector(".viewport-toolbar")), pageHorizontal: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      listVisibleRows: rows.filter((row) => { const r = row.getBoundingClientRect(), l = list.getBoundingClientRect(); return r.top >= l.top - 1 && r.bottom <= l.bottom + 1; }).length,
+    };
+  });
+  assert.equal(overflow.listHorizontal, 0, `${size}: ship list has no horizontal overflow`);
+  assert.equal(overflow.rowHorizontal, 0, `${size}: ship rows have no horizontal overflow`);
+  assert.equal(overflow.massClipped, 0, `${size}: running-mass text is not clipped`);
+  assert.equal(overflow.nameClipped, 0, `${size}: ship names are not clipped`);
+  assert.equal(overflow.legendHorizontal, 0, `${size}: legend swatches wrap instead of overflowing`);
+  assert.ok(overflow.legendInsideCanvas, `${size}: legend stays inside the porthole`);
+  assert.ok(overflow.legendHeightFraction <= 0.3, `${size}: legend covers <= 30% of the porthole height (${overflow.legendHeightFraction.toFixed(2)})`);
+  assert.equal(overflow.toolbarHorizontal, 0, `${size}: scene toolbar has no horizontal overflow`);
+  assert.equal(overflow.pageHorizontal, 0, `${size}: no horizontal page scrollbar`);
+  assert.ok(overflow.listVisibleRows >= (dense ? 8 : 4), `${size}: at least ${dense ? 8 : 4} ship rows visible without scrolling (${overflow.listVisibleRows})`);
+  const screenshots = [`viewer40-fleet-${size}.png`, `viewer40-rail-${size}.png`, `viewer40-legend-${size}.png`];
+  await page.screenshot({ path: join(artifacts, screenshots[0]) });
+  await page.locator(".sidebar").screenshot({ path: join(artifacts, screenshots[1]) });
+  await page.locator("#fleet-legend").screenshot({ path: join(artifacts, screenshots[2]) });
+  return { ships, dense, distinct_colours: new Set(legendColours).size, legend_rows: overflow.legendRows, visible_rows: overflow.listVisibleRows, legend_height_fraction: Number(overflow.legendHeightFraction.toFixed(3)), screenshots };
 }
 
 main().catch((error) => {

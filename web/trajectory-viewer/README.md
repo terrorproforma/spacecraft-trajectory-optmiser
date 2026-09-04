@@ -57,7 +57,13 @@ The GTOC12 data is multi-megabyte and regenerable, so it is **not committed**; `
 
 3. `npm run check` now also validates the fleet dataset; `npm run serve` and open `http://127.0.0.1:4173/?dataset=gtoc12`, or pick **GTOC12 fleet** in the selector. Deep-link parameters: `dataset=gtoc12`, `ship=N` (1-based), `epoch=MJD`, `focus=1`, `follow=1`, `preset=top|oblique|edge`, `exaggeration=1..20`.
 
-To visualise a different verified fleet (for example a later `results/gtoc12/runs/<run>/fleets/<fleet>/Result.txt`), run steps 1–2 with that solution and its `fleet.json`. The currently imported dataset is `fleet_master_v4_fleet` (19 ships, 158 asteroids, 10 700.48 kg summed collects; official verifier 10 700.5 kg).
+To visualise a different verified fleet (for example a later `results/gtoc12/runs/<run>/fleets/<fleet>/Result.txt`), run steps 1–2 with that solution and its `fleet.json`. The `gtoc12-3d-*.png` artefacts show `fleet_master_v4_fleet` (19 ships, 158 asteroids, 10 700.48 kg summed collects; official verifier 10 700.5 kg); the `viewer40-*.png` artefacts show `fleet_master_v7_fleet` (21 ships, 177 asteroids, 12 346.48 kg; official verifier 12 346.5 kg), exported from `/home/angus/worktrees/spacepdhcg-gtoc12-methods` with the same commands.
+
+### Ship palette (up to 40 ships)
+
+Every ship gets its own colour: `SHIP_COLOURS` in `gtoc12.js` has 40 entries (the GTOC12 all-time record fleet, Antipodes, uses 39), mirrored by the `.ship-colour-N` classes in `styles.css` (the CSP forbids inline styles) and by `SHIP_COLOURS` in `scripts/plot_gtoc12_fleet.py`. The palette is generated, not hand-picked: `npm run palette` (`scripts/palette.mjs`) builds two OKLCH lightness bands (L 0.74 for odd ships, L 0.62 for even ships) × 20 hues. Each band samples the hue circle at 0.2° at the largest sRGB-in-gamut chroma, excludes hues within CIE76 ΔE 14 of the reserved scene and UI colours (Sun, Earth, pending asteroid, launch ring, Earth-return ring, `--verified`, `--caution`, `--alert`, `--focus`, `--bone`), and places 20 hues at equal CIELAB arc length along what remains. Ship order interleaves the bands and strides through the hue slots so consecutive ships differ in lightness and by at least five hue slots. On the committed values the minimum ΔE is 75.4 between consecutive ships, 14.8 over all pairs and 15.5 to any reserved colour. `npm run check` regenerates the palette from the spec, asserts the three copies match it and enforce those floors (≥ 25 / ≥ 14 / ≥ 14), checks that a fleet never exceeds `SHIP_COLOURS.length` (a 21-ship and a 39-ship synthetic fleet pass, a 41-ship fleet is refused with a clear message), and rejects any imported dataset with more ships than colours.
+
+Above 20 ships the **Ships** rail switches to a two-column compact layout (name over running mass, bar beneath; the asteroid count and launch date move to the row's tooltip) inside the same scroll box, and the on-canvas legend tightens its swatch spacing so 40 entries wrap to two rows. The mission timeline has no per-ship lanes (one clock for the fleet), so it is unaffected by the ship count.
 
 ### 3D scene
 
@@ -119,6 +125,8 @@ Qualification is record-specific:
 
 `scripts/browser-check.cjs` drives headless Chromium (SwiftShader WebGL2) through both datasets and writes `test-artifacts/browser-report.json` plus screenshots. It needs a local Playwright module: `PLAYWRIGHT_PATH=<path to node_modules/playwright> node scripts/browser-check.cjs` with `npm run serve` running on port 4173. GTOC12 steps run only when `data/gtoc12/` is installed; the absent-dataset degrade path is always exercised. The fleet steps assert the 3D contract from `window.viewerDebug.glInfo` (antialiased WebGL2 context, depth test on, one sphere instance per body, 6-sided tubes), the default 30° oblique / 6× opening, the ≥ 70 %-height canvas, wheel dolly towards the cursor, preset transitions, follow-ship centring during playback, hover picking and the running mass counters. Screenshots at 1440×900: `gtoc12-3d-oblique-fleet.png` (opening view), `gtoc12-3d-desktop-window.png` (full window), `gtoc12-3d-desktop-fullpage.png`, `gtoc12-3d-edge-on.png` (10×, inclinations), `gtoc12-3d-timeline-mid-mission.png`, `gtoc12-3d-follow-ship.png` (tube + trail close-up), `gtoc12-3d-ship-arc-framed.png` (hover tooltip), the ten-frame sequence `gtoc12-3d-frame-01..10.png` (2036 → 2050), and `gtoc12-3d-mobile.png` (390 px). `python scripts/build_gif.py` (Pillow) assembles the frames into `gtoc12-3d-preview.gif`. Archive: `desktop-p2-earth.png`, `mobile-p1c-local-surface.png`. Static fallback (`scripts/plot_gtoc12_fleet.py`): `gtoc12-fleet-ecliptic.png`, `gtoc12-fleet-ecliptic-ship15.png` (ship 15, the richest at 603.7 kg).
 
+The palette/layout step runs at 1440×900 and again at 1920×1080: it reads the computed swatch colours of the legend and the rail (one per ship, all distinct, rail = legend = mass-bar colour in ship order), asserts the dense layouts engage exactly when the fleet has more than 20 ships, and asserts that the ship list, its rows, the running-mass text, the legend, the scene toolbar and the page have no horizontal overflow and that the legend stays inside the porthole. It writes `viewer40-fleet-<size>.png` (window), `viewer40-rail-<size>.png` (ship rows with mass bars) and `viewer40-legend-<size>.png`; the committed set shows the 21-ship `fleet_master_v7_fleet`. Set `BROWSER_CHECK_ARTIFACTS=<dir>` to write screenshots and the report elsewhere when checking a different imported fleet.
+
 ## Package structure
 
 - `index.html` — semantic application shell (top bar with dataset selector, inventory/camera rail, porthole, timeline strip, verification strip, detail tables).
@@ -134,10 +142,11 @@ Qualification is record-specific:
 - `scripts/import-data.mjs` — verified lossless archive transform.
 - `scripts/import-gtoc12.mjs` — verified GTOC12 fleet transform.
 - `scripts/plot_gtoc12_fleet.py` — static matplotlib fallback figure.
-- `scripts/check.mjs` — schema, data, physical-rule, DOM and asset checks (both datasets).
+- `scripts/check.mjs` — schema, data, physical-rule, DOM, asset and ship-palette checks (both datasets).
+- `scripts/palette.mjs` — deterministic 40-ship OKLCH palette generator and CIE76 ΔE helpers (`npm run palette`).
 - `scripts/serve.mjs` — localhost static server.
 - `scripts/browser-check.cjs` — headless browser verification; `scripts/build_gif.py` — frame sequence → GIF.
-- `tests/` — Node standard-runner tests for data, import determinism, Kepler helpers, camera and geometry (tubes, ribbons, star field), math and server behaviour.
+- `tests/` — Node standard-runner tests for data, import determinism, Kepler helpers, camera and geometry (tubes, ribbons, star field), the ship palette, math and server behaviour.
 - `test-artifacts/` — browser-verification screenshots and report.
 
 WebGL2 context loss pauses playback and reports status; restoration recreates shaders and buffers. Page shutdown deletes all allocated buffers and programs.
