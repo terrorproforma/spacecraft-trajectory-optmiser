@@ -23,6 +23,7 @@ export const SHIP_COLOURS = [
   "#36d6ff", "#ff5d8f", "#ffd166", "#06d6a0", "#ff8c42", "#c77dff", "#7bf1a8", "#f95738",
   "#6fa8ff", "#f9c74f", "#e0aaff", "#43aa8b", "#ff9de2", "#b8f2e6", "#f4a261",
   "#ff4fd8", "#b5ff3d", "#9d4edd", "#ffe8a3", "#c9184a",
+  "#00b4d8", "#ef476f", "#8ac926", "#ffb703",
 ];
 export const FLEET_CAMERA = { yaw: -0.72, pitch: 30 * DEG, distance: 2.9, target: [0, 0, 0] };
 export const FLEET_ZOOM = { minimum: 0.03, maximum: 12 };

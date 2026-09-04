@@ -130,9 +130,12 @@ assert.match(app, /from "\.\/camera\.js"/);
 for (const name of ["BODY_VERTEX", "STAR_VERTEX", "uZScale", "starField", "concatRibbons"]) assert.match(`${gtocBytes}\n${webglBytes}`, new RegExp(name), `3D scene uses ${name}`);
 assert.doesNotMatch(`${html}\n${css}\n${modules}`, /https?:\/\/(?!localhost|127\.0\.0\.1)/i, "No external URLs");
 // Ship colours are duplicated between gtoc12.js and styles.css because the CSP forbids inline styles.
-const shipColours = [...String(gtocBytes).matchAll(/"(#[0-9a-f]{6})"/g)].map((match) => match[1]).slice(0, 20);
-assert.equal(shipColours.length, 20, "twenty ship colours");
-assert.equal(new Set(shipColours).size, 20, "ship colours are distinct");
+// The palette must cover the largest fleet the GTOC12 solver produces (fleet_master_v7: 21 ships).
+const paletteSource = String(gtocBytes).match(/export const SHIP_COLOURS = \[([^\]]*)\];/);
+assert.ok(paletteSource, "SHIP_COLOURS palette is exported by gtoc12.js");
+const shipColours = [...paletteSource[1].matchAll(/"(#[0-9a-f]{6})"/g)].map((match) => match[1]);
+assert.ok(shipColours.length >= 21, `ship palette has at least 21 colours (found ${shipColours.length})`);
+assert.equal(new Set(shipColours).size, shipColours.length, "ship colours are distinct");
 shipColours.forEach((colour, index) => assert.match(css, new RegExp(`\\.ship-colour-${index + 1} \\{ color: ${colour}; \\}`), `ship colour ${index + 1} in styles.css`));
 assert.match(css, /\[hidden\] \{ display: none !important; \}/, "hidden panels stay hidden");
 
@@ -200,7 +203,7 @@ if (!fleetBytes) {
   assert.ok(Math.abs(collected - fleet.score.total_collected_kg) < 1e-6, "fleet collected mass from events");
   // The official verifier prints six significant digits (7575.58, 10700.5), so compare at that precision.
   assert.equal(Number(collected.toPrecision(6)), fleet.score.official_total_mass_kg, "official score equals summed collects to 6 significant digits");
-  assert.ok(fleet.ships.length <= 20, "ship palette covers every ship without wrapping");
+  assert.ok(fleet.ships.length <= shipColours.length, `ship palette (${shipColours.length}) covers every ship (${fleet.ships.length}) without wrapping`);
   for (const asteroid of fleet.asteroids) {
     assert.ok(asteroid.a_au > 0 && asteroid.e >= 0 && asteroid.e < 1 && asteroid.epoch_mjd === 64328, `asteroid ${asteroid.id} elements`);
     assert.ok(asteroid.visited_by.every((shipId) => fleet.ships.some((ship) => ship.ship_id === shipId && ship.asteroids.includes(asteroid.id))), `asteroid ${asteroid.id} visitors`);
