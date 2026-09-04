@@ -226,6 +226,17 @@ checkpoint's `diagnostic_strata` metadata and by the gate report). `migrate`
 refuses to import records taken under a different amendment; the decision
 refuses a v1.2 checkpoint that does not cite the stratum.
 
+Deterministic replay under v1.2: the `deterministic_replay` section is inherited
+verbatim, so a `timeout_deterministic_replay` record is valid when stamped with
+any supported amendment (`single-gpu-v1.1` or `single-gpu-v1.2`); the scheduler
+and the decision step separately require the stamp to be the amendment in force.
+The raw-attempt contract at `46bc895` accepted only the v1.1 stamp, which
+quarantined every conformant v1.2 replay group as `invalid_evidence` (checkpoint
+`g4-claim-core-46bc895`, ordinals 45, 47, 49 and 57). Such scheduler-caused
+quarantines are re-run by the successor checkpoint: `migrate --skip-quarantined`
+imports the completed rows exactly once and leaves the quarantined rows in the
+source ledger (records retained there), so the new worker claims them first.
+
 ## Batched-executor integration
 
 The batched executor must add `--g4-session <execution-group.json>` and emit nine

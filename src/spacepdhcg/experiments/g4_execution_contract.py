@@ -404,7 +404,10 @@ def validate_attempt_record(record: Mapping[str, Any]) -> None:
         _require(record["launched"] is True, "timeout/OOM disposition requires an actual launch")
     if disposition == REPLAY_DISPOSITION:
         # Amendment single-gpu-v1.1: a replayed timeout is never launched; it references the
-        # executed measured/0 attempt whose deterministic trace it repeats.
+        # executed measured/0 attempt whose deterministic trace it repeats. Amendment
+        # single-gpu-v1.2 inherits the deterministic_replay section verbatim, so a replay is
+        # valid under every supported amendment that carries the section (the scheduler and the
+        # decision step additionally require the record's amendment to be the one in force).
         _require(record["launched"] is False, "replayed timeouts are recorded without a launch")
         _require(record["repeat_kind"] == "measured", "only measured attempts may be replayed")
         _require(repeat >= 1, "measured/0 must be executed before any replay")
@@ -414,8 +417,8 @@ def validate_attempt_record(record: Mapping[str, Any]) -> None:
             "replayed timeouts must reference the executed measured/0 attempt",
         )
         _require(
-            record.get(AMENDMENT_RECORD_FIELD) == AMENDMENT_ID,
-            "replayed timeouts exist only under amendment single-gpu-v1.1",
+            record.get(AMENDMENT_RECORD_FIELD) in SUPPORTED_AMENDMENT_IDS,
+            "replayed timeouts exist only under amendments " + " or ".join(SUPPORTED_AMENDMENT_IDS),
         )
     if disposition == "not_applicable":
         _require(record["launched"] is False, "not_applicable attempts may not be launched")

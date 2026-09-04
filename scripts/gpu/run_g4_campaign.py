@@ -1295,13 +1295,23 @@ def cited_diagnostic_strata(citations: Sequence[str]) -> dict[str, Any]:
     return cited
 
 
-def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
+def migrate_terminal_rows(
+    store: CampaignStore,
+    source: Path,
+    *,
+    include_quarantined: bool = True,
+) -> dict[str, int]:
     """Import completed evidence only while the source GPU lock is unowned.
 
     Only ``completed``/``quarantined`` rows are eligible; ``invalidated`` and ``diagnostic`` rows
     never travel. The source must have run under the same amendment as the target: a record's
     classification rules (e.g. v1.2 rule B) are part of its evidence, so cross-amendment
     imports fail closed instead of laundering superseded records into a new claim core.
+
+    ``include_quarantined=False`` leaves the source's ``quarantined`` rows behind (their records
+    stay in the source checkpoint for audit) so that the target campaign re-runs them: this is
+    the hygiene path when the quarantine itself was caused by a scheduler/validator defect that
+    the target's source commit fixes, rather than by the executor or the GPU.
     """
 
     lock_descriptor = os.open(source / "gpu-worker.lock", os.O_CREAT | os.O_RDWR, 0o644)
@@ -1328,6 +1338,7 @@ def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
                 )
         imported = 0
         already_present = 0
+        skipped_quarantined = 0
         rows = database.execute(
             """
             SELECT c.ordinal, c.coordinate_id, c.state, a.attempt_id,
@@ -1339,6 +1350,9 @@ def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
             """
         )
         for row in rows:
+            if str(row["state"]) == "quarantined" and not include_quarantined:
+                skipped_quarantined += 1
+                continue
             run_directory = Path(row["run_directory"])
             changed = store.import_terminal(
                 ordinal=int(row["ordinal"]),
@@ -1354,7 +1368,11 @@ def migrate_terminal_rows(store: CampaignStore, source: Path) -> dict[str, int]:
             imported += int(changed)
             already_present += int(not changed)
         database.close()
-        return {"imported": imported, "already_present": already_present}
+        return {
+            "imported": imported,
+            "already_present": already_present,
+            "skipped_quarantined": skipped_quarantined,
+        }
     finally:
         fcntl.flock(lock_descriptor, fcntl.LOCK_UN)
         os.close(lock_descriptor)
@@ -2111,6 +2129,14 @@ def main() -> int:
     parser.add_argument("--max-runs", type=int)
     parser.add_argument("--source-campaign", type=Path)
     parser.add_argument(
+        "--skip-quarantined",
+        action="store_true",
+        help=(
+            "migrate: leave the source's quarantined rows behind (records retained there) so "
+            "this campaign re-runs them; for quarantines caused by a scheduler/validator defect"
+        ),
+    )
+    parser.add_argument(
         "--invalidate-policy",
         help="invalidate: only completed groups whose coordinate policy equals this value",
     )
@@ -2332,7 +2358,11 @@ def main() -> int:
         if arguments.action == "migrate":
             if arguments.source_campaign is None:
                 raise G4ContractError("migrate requires --source-campaign")
-            migration = migrate_terminal_rows(store, arguments.source_campaign.resolve())
+            migration = migrate_terminal_rows(
+                store,
+                arguments.source_campaign.resolve(),
+                include_quarantined=not arguments.skip_quarantined,
+            )
             print(json.dumps({**store.status(), **migration}, sort_keys=True))
             return 0
         if arguments.executable is None or arguments.capabilities is None:

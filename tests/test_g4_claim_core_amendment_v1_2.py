@@ -29,16 +29,21 @@ from spacepdhcg.experiments.g4_execution_contract import (
     IPM_NATIVE_SCALING_MODE,
     NO_EQUILIBRATION_DIAGNOSTIC_STRATUM,
     REPLAY_DISPOSITION,
+    SUPPORTED_AMENDMENT_IDS,
     amended_claim_core_groups,
     amended_schedule_sha256,
     classify_launched_attempt,
+    deterministic_trace_hash,
     expected_ipm_equilibration,
+    iter_claim_core_groups,
     load_claim_core,
     load_claim_core_amendment,
     policy_uses_ipm,
     recorded_scaling_mode,
+    validate_attempt_record,
     validate_claim_core_amendment,
 )
+from spacepdhcg.experiments.g4_scheduler import CampaignStore
 
 ROOT = Path(__file__).resolve().parents[1]
 V1_1_PATH = ROOT / "benchmarks/g4_claim_core_amendment_v1_1.json"
@@ -487,6 +492,191 @@ def test_runner_end_to_end_amendment_records_check_under_v1_2() -> None:
         missing, _expected("pure-gpu-ipm")
     )
     assert RUNNER.AMENDMENT_IN_FORCE_PATH == "benchmarks/g4_claim_core_amendment_v1_2.json"
+
+
+# ------------------------------------------------------------------------------------------
+# Deterministic replay under v1.2 (inherited verbatim from v1.1)
+# ------------------------------------------------------------------------------------------
+
+
+_IDENTITY_KEYS = (
+    "group_id",
+    "family",
+    "intervals",
+    "policy",
+    "instance",
+    "seed",
+    "repeat_kind",
+    "repeat",
+    "statistics_eligible",
+)
+
+
+def test_replay_records_are_valid_under_v1_2_and_refused_under_unknown_amendments() -> None:
+    """Regression for g4-claim-core-46bc895 ordinals 45/47/49/57.
+
+    The raw-attempt contract accepted a ``timeout_deterministic_replay`` record only when it was
+    stamped ``single-gpu-v1.1``; every conformant v1.2 replay group was therefore quarantined as
+    ``invalid_evidence`` by the scheduler (and would have been refused by the decision step).
+    v1.2 inherits the ``deterministic_replay`` section verbatim, so a replay is valid under every
+    supported amendment; anything else is still refused.
+    """
+
+    group = next(iter_claim_core_groups(_core().values))
+    planned = group.attempts[2 + 3]  # measured/3
+    trace = {
+        # An IPM attempt that never completes an outer iteration: the campaign's actual shape.
+        "inner_iterations": 200,
+        "outer_iterations": 0,
+        "canonical_residual": 0.0,
+        "dynamics_residual": 0.0,
+        "path_residual": 0.0,
+        "terminal_residual": 0.0,
+        "virtual_control_residual": 0.0,
+        "checkpoints": [],
+    }
+    record = {
+        **{key: planned[key] for key in _IDENTITY_KEYS},
+        "schema_version": "1.0.0",
+        "record_kind": "raw_attempt",
+        "attempt_id": f"{group.group_id}/measured-3",
+        "launched": False,
+        "disposition": REPLAY_DISPOSITION,
+        "failure_class": "timeout",
+        "reason": "deterministic replay of the measured/0 timeout",
+        "replay_source_attempt_id": f"{group.group_id}/measured-0",
+        AMENDMENT_RECORD_FIELD: AMENDMENT_ID_V1_2,
+        "trace": trace,
+        "trace_hash": deterministic_trace_hash(REPLAY_DISPOSITION, trace),
+        "timing": {"elapsed_seconds": 0.0},
+    }
+    validate_attempt_record(record)
+    validate_attempt_record({**record, AMENDMENT_RECORD_FIELD: AMENDMENT_ID})
+    assert SUPPORTED_AMENDMENT_IDS == (AMENDMENT_ID, AMENDMENT_ID_V1_2)
+    for foreign in ("single-gpu-v1", "single-gpu-v9.9", None):
+        with pytest.raises(G4ContractError, match="exist only under amendments"):
+            validate_attempt_record({**record, AMENDMENT_RECORD_FIELD: foreign})
+    without = dict(record)
+    del without[AMENDMENT_RECORD_FIELD]
+    with pytest.raises(G4ContractError, match="exist only under amendments"):
+        validate_attempt_record(without)
+
+
+def test_runner_accepts_a_replayed_group_under_v1_2() -> None:
+    """Three launched timeouts with identical traces plus six unlaunched replays (the shape the
+    executor emitted for the quarantined N=2000 pure-gpu-ipm groups) pass every scheduler check
+    a v1.2 group must pass: the raw-attempt contract and the amendment consistency rules."""
+
+    group = next(
+        item
+        for item in iter_claim_core_groups(_core().values)
+        if item.coordinate["policy"] == "pure-gpu-ipm"
+    )
+    records = []
+    for kind, repeat in (("warmup", 0), ("warmup", 1), ("measured", 0)):
+        executed = _record(
+            policy="pure-gpu-ipm",
+            disposition="timeout",
+            solver_disposition="numerical",
+            elapsed=272.3,
+            repeat_kind=kind,
+            repeat=repeat,
+        )
+        records.append(executed)
+    for repeat in range(1, 7):
+        replay = _record(
+            policy="pure-gpu-ipm",
+            disposition=REPLAY_DISPOSITION,
+            solver_disposition=REPLAY_DISPOSITION,
+            elapsed=0.0,
+            repeat=repeat,
+            launched=False,
+        )
+        replay["replay_source_attempt_id"] = f"{group.group_id}/measured-0"
+        records.append(replay)
+    for record in records:
+        index = record["repeat"] if record["repeat_kind"] == "warmup" else 2 + record["repeat"]
+        record.update({key: group.attempts[index][key] for key in _IDENTITY_KEYS})
+        record.update(
+            {
+                "schema_version": "1.0.0",
+                "record_kind": "raw_attempt",
+                "attempt_id": f"{group.group_id}/{record['repeat_kind']}-{record['repeat']}",
+                "failure_class": "timeout",
+                "reason": "synthetic deadline outcome",
+            }
+        )
+        validate_attempt_record(record)
+    assert RUNNER.deterministic_replay_eligible(records[:3]) is True
+    assert RUNNER.validate_amendment_records(records, _expected("pure-gpu-ipm")) is None
+    # The replay must repeat measured/0's trace; a drifted replay is still refused.
+    drifted = copy.deepcopy(records)
+    drifted[5]["trace"]["inner_iterations"] = 199
+    drifted[5]["trace_hash"] = deterministic_trace_hash(REPLAY_DISPOSITION, drifted[5]["trace"])
+    assert "does not repeat the measured/0 trace" in RUNNER.validate_amendment_records(
+        drifted, _expected("pure-gpu-ipm")
+    )
+
+
+def test_migrate_can_leave_quarantined_rows_behind_for_re_run(tmp_path: Path) -> None:
+    """``migrate --skip-quarantined``: quarantined rows stay in the source ledger (records
+    retained) and the target campaign re-runs them first; the default still carries them."""
+
+    core, policy, amendment = _core(), _policy(), _amendment()
+    groups = amended_claim_core_groups(core.values, amendment.values)
+    schedule = amended_schedule_sha256(groups)
+    extra = {
+        AMENDMENT_RECORD_FIELD: AMENDMENT_ID_V1_2,
+        "policy_amendment_sha256": amendment.sha256,
+        "claim_core_sha256": core.sha256,
+    }
+
+    def open_store(root: Path, commit: str) -> CampaignStore:
+        return CampaignStore(
+            root,
+            policy.values,
+            policy.sha256,
+            commit,
+            grouped=True,
+            groups=groups,
+            schedule_sha256=schedule,
+            extra_metadata=extra,
+        )
+
+    source_root = tmp_path / "source"
+    with open_store(source_root, "a" * 40) as source:
+        valid = source.claim()
+        assert valid is not None
+        source.finish(
+            valid,
+            disposition="completed_group",
+            reason="all raw attempts and measured Paper 1 results validated",
+            record={"raw_attempts": []},
+            valid=True,
+        )
+        broken = source.claim()
+        assert broken is not None
+        source.finish(
+            broken,
+            disposition="invalid_evidence",
+            reason="strict measured-result validation failed: synthetic",
+            record={"raw_attempts": []},
+            valid=False,
+        )
+        assert (source.status()["completed"], source.status()["quarantined"]) == (1, 1)
+
+    with open_store(tmp_path / "rerun", "b" * 40) as target:
+        outcome = RUNNER.migrate_terminal_rows(target, source_root, include_quarantined=False)
+        assert outcome == {"imported": 1, "already_present": 0, "skipped_quarantined": 1}
+        assert (target.status()["completed"], target.status()["quarantined"]) == (1, 0)
+        claim = target.claim()
+        assert claim is not None and claim.ordinal == broken.ordinal
+    with open_store(tmp_path / "carry", "c" * 40) as target:
+        outcome = RUNNER.migrate_terminal_rows(target, source_root)
+        assert outcome == {"imported": 2, "already_present": 0, "skipped_quarantined": 0}
+        assert (target.status()["completed"], target.status()["quarantined"]) == (1, 1)
+        claim = target.claim()
+        assert claim is not None and claim.ordinal not in {valid.ordinal, broken.ordinal}
 
 
 # ------------------------------------------------------------------------------------------
