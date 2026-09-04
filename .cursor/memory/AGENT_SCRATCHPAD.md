@@ -25,6 +25,10 @@ Use this file as persistent, repo-local execution memory.
 - `[self]` Preserve machine-readable failures and censored benchmark points; report matched end-to-end nonlinear quality.
 - `[self]` Never use backslash-sensitive Perl through PowerShell/WSL for line endings; it changed `return`/`pattern` tokens. Use PowerShell `ReadAllText().Replace("`r`n", "`n")`, then rebuild.
 - `[self]` Run every GPU executable, QOCO test, and Compute Sanitizer command serially. A 2026-09-02 session briefly overlapped a native QOCO handback test; terminate, exclude, and rerun both commands independently.
+- `[tool]` PowerShell -> `wsl -e bash -lc '...'` strips inner double quotes and backslashes. A quoted regex such as `grep -E "a|b|c"` becomes the pipeline `grep a | b | c` and *executes* `b` and `c` (on 2026-09-04 it launched the `grok`, `agent`, `claude` and `codex` CLIs). Put every non-trivial command in a script file, copy it into WSL with `sed "s/.$//"` (CRLF strip), then run it.
+- `[tool]` The Write tool emits CRLF even for `\\wsl$` paths; StrReplace on an LF file keeps LF. Normalise every newly written file with a Python `replace(b"\r\n", b"\n")` before building or committing.
+- `[self]` Never issue several StrReplace calls against one file in the same batch: they race, some report "not found" after another's write, and the result can mix variable names. Edit one file sequentially and re-read the region afterwards.
+- `[self]` A GPU kernel that reads a mapped host flag must do so through one thread plus shared memory (`poll_cancellation`); per-thread `volatile` reads before `__syncthreads()` are a barrier-divergence hazard. Every long device loop (CGLS, projections, refinements) needs its own poll or a cross-thread cancel cannot bound it.
 
 ## Session Entries
 
@@ -1221,3 +1225,54 @@ Use this file as persistent, repo-local execution memory.
   capability from the final clean report descendant before any claim-core launch.
 - G0-G3 scientifically authorise G4, but no G4 campaign was launched here and local archives have
   no immutable URI.
+
+### 2026-09-05 02:40 AEST - Ordinal-73 deadline defect (recovery kernel cancellation)
+
+#### Task Summary
+
+- Reproduced, root-caused and fixed the G4 attempt-deadline overrun of campaign
+  g4-claim-core-4db5047 ordinal 73 in the recovery kernel's unpolled phases; added a native
+  cancellation stress test and a GPU pytest deadline matrix; committed and bundled.
+
+#### Mistakes And Fixes
+
+- `[tool]` Quoted `|` regexes passed through `wsl -e bash -lc` became pipelines and launched
+  `grok`, `agent`, `claude`, `codex`. Killing strays also killed a pre-existing Codex app-server
+  (pid 400). Rule: every non-trivial command goes in a script file first (see Retained Lessons).
+- `[self]` Four StrReplace calls on one file in one batch raced and produced a mixed variable name;
+  re-read the region and repaired it. Sequential edits only.
+- `[self]` Assumed 20 s deadline tests covered the recovery path; they never reach it (300,000 PDHG
+  iterations take ~150 s at N=100). The faithful 600 s single-attempt reproduction was decisive.
+- `[self]` First fix left an N=2000 5 s attempt at 12 s: lazy module loading inside `solve_async`
+  (mutex held, state not SOLVING). Diagnosed with `CUDA_MODULE_LOADING=EAGER`; fixed by pre-loading
+  the solve-path kernels at workspace creation.
+
+#### What Worked
+
+- Per-record wall timestamps around `--g4-session` plus a 5 s `nvidia-smi` sampler separated
+  executor phases from the foreign 220 W Windows workload visible in the observer log.
+- The tiny inconsistent recovery fixture (PDHG 1.1 s, recovery 0.5 s) gives a fast, repeatable
+  probe of cancel latency in every kernel phase; the dishonest full-budget report showed on the
+  first run.
+- Block-uniform polling (`poll_cancellation`) plus per-loop polls bounded every phase within one
+  loop body; the atomic scaling write keeps a cancelled preamble consistent.
+
+#### Guardrails For Next Session
+
+- Any new device loop that can run longer than ~1 s must poll the cancellation flag through
+  `poll_cancellation`; never read the mapped flag per thread before a barrier.
+- Test deadlines against the phase they must interrupt: a deadline that cancels PDHG proves nothing
+  about recovery. Use the 600 s ordinal-73 run (`/tmp/spx/repro_long.sh`) or the stress test.
+- Verify first-attempt behaviour separately from later attempts (module loading, first
+  equilibration) and at N=2000 as well as N=100.
+- Generate a fresh capability from the committed tree before relaunching; the old 4db5047
+  capability pins the pre-fix library hashes.
+
+#### Follow-Ups / Risks
+
+- Cancelled-after-cancelled attempts re-equilibrate because the outer-0 checkpoint predates the
+  first scaling (steps restored to 0): ~5-9 s per attempt at N=2000. Pre-existing and policy
+  neutral; consider checkpointing after the first scaling if attempt fidelity at N=2000 matters.
+- Deterministic replay can trigger when all three lead attempts time out before the first PDHG
+  iteration (identical zero-work traces); impossible at campaign deadlines, rule unchanged.
+- `H100` shipping: the bundle carries the fix; the campaign restart is the operator's decision.

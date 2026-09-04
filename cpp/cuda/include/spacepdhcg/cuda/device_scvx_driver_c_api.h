@@ -164,6 +164,12 @@ typedef struct spacepdhcg_cuda_scvx_options {
      * pinned-commit default (no equilibration); the PDHCG scaling_mode axis
      * never reaches the IPM. */
     int32_t qoco_ruiz_iterations;
+    /* Upper bound on every inner PDHCG iteration limit the driver derives at run time,
+     * including the identical-CQP re-solve escalation floor (amendment single-gpu-v1.2
+     * rule 2: every inner limit becomes min(limit, cap)). 0 leaves the derived limits
+     * uncapped. The phase limits above are capped by the caller; this field covers the
+     * limits the driver computes itself. */
+    uint64_t inner_iteration_cap;
 } spacepdhcg_cuda_scvx_options;
 
 typedef struct spacepdhcg_cuda_scvx_iteration {

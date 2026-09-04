@@ -2077,6 +2077,22 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
     if (result->options.final_polish_iteration_limit == 0U) {
         result->options.final_polish_iteration_limit = 1'000'000U;
     }
+    if (result->options.inner_iteration_cap > 0U) {
+        // Amendment single-gpu-v1.2 rule 2 enforced at the driver boundary as well as by
+        // the executor: no inner PDHCG limit, defaulted or supplied, exceeds the cap.
+        for (uint64_t* limit : {
+                 &result->options.fixed_inner_iteration_limit,
+                 &result->options.repair_iteration_limit,
+                 &result->options.progress_iteration_limit,
+                 &result->options.refinement_iteration_limit,
+                 &result->options.polish_iteration_limit,
+                 &result->options.final_polish_iteration_limit,
+             }) {
+            if (*limit > 0U) {
+                *limit = std::min(*limit, result->options.inner_iteration_cap);
+            }
+        }
+    }
     spacepdhcg_cuda_pointer_snapshot pointers{};
     auto api_status = spacepdhcg_cuda_workspace_pointer_snapshot(
         problem->workspace,
@@ -2755,10 +2771,19 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 );
                 solve_options.feasibility_tolerance =
                     solve_options.optimality_tolerance;
+                // The re-solve escalates to the recovery-enabled floor, but never past
+                // the amendment's inner iteration cap (min(limit, cap) for every inner
+                // PDHCG limit, including this derived one).
                 solve_options.iteration_limit = std::max<uint64_t>(
                     solve_options.iteration_limit,
                     350'000U
                 );
+                if (driver->options.inner_iteration_cap > 0U) {
+                    solve_options.iteration_limit = std::min<uint64_t>(
+                        solve_options.iteration_limit,
+                        driver->options.inner_iteration_cap
+                    );
+                }
                 api_status = spacepdhcg_cuda_workspace_warm_start_async(
                     driver->problem.workspace,
                     SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,

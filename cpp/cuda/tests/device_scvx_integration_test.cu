@@ -2350,7 +2350,9 @@ IntegrationResult run_resident_sequence(
             outer_options.qoco_ruiz_iterations = g4_qoco_ruiz_iterations();
             if (g4_inner_iteration_cap > 0U) {
                 // Amendment single-gpu-v1.1 rule 2: every inner PDHCG iteration limit becomes
-                // min(limit, cap); limits already below the cap are unchanged.
+                // min(limit, cap); limits already below the cap are unchanged. The driver
+                // receives the cap as well so the limits it derives itself (the identical-CQP
+                // re-solve escalation) honour the same bound.
                 for (std::uint64_t* limit : {
                          &outer_options.fixed_inner_iteration_limit,
                          &outer_options.repair_iteration_limit,
@@ -2361,6 +2363,43 @@ IntegrationResult run_resident_sequence(
                      }) {
                     *limit = std::min(*limit, g4_inner_iteration_cap);
                 }
+                outer_options.inner_iteration_cap = g4_inner_iteration_cap;
+            }
+            if (g4_session_mode) {
+                // Retained stderr diagnostic: the effective inner PDHCG limits this session
+                // runs with, so the per-stratum cap (200,000 claim core, 1,000,000 twins)
+                // can be audited from the run directory.
+                std::fprintf(
+                    stderr,
+                    "{\"case\":\"g4_inner_iteration_limits\",\"policy\":\"%s\","
+                    "\"censoring_stratum\":\"%s\",\"inner_iteration_cap\":%llu,"
+                    "\"fixed_inner\":%llu,\"repair\":%llu,\"progress\":%llu,"
+                    "\"refinement\":%llu,\"polish\":%llu,\"final_polish\":%llu,"
+                    "\"resolve_floor\":%llu}\n",
+                    g4_policy.c_str(),
+                    g4_censoring_stratum.c_str(),
+                    static_cast<unsigned long long>(g4_inner_iteration_cap),
+                    static_cast<unsigned long long>(
+                        outer_options.fixed_inner_iteration_limit
+                    ),
+                    static_cast<unsigned long long>(outer_options.repair_iteration_limit),
+                    static_cast<unsigned long long>(
+                        outer_options.progress_iteration_limit
+                    ),
+                    static_cast<unsigned long long>(
+                        outer_options.refinement_iteration_limit
+                    ),
+                    static_cast<unsigned long long>(outer_options.polish_iteration_limit),
+                    static_cast<unsigned long long>(
+                        outer_options.final_polish_iteration_limit
+                    ),
+                    static_cast<unsigned long long>(
+                        g4_inner_iteration_cap > 0U
+                            ? std::min<std::uint64_t>(350'000U, g4_inner_iteration_cap)
+                            : 350'000U
+                    )
+                );
+                std::fflush(stderr);
             }
         }
         spacepdhcg_cuda_scvx_driver* driver = nullptr;
@@ -2651,7 +2690,11 @@ IntegrationResult run_resident_sequence(
                     "\"qoco_workspace_creations\":%llu,\"qoco_numeric_updates\":%llu,"
                     "\"qoco_conversion_seconds\":%.6g,\"qoco_setup_seconds\":%.6g,"
                     "\"qoco_solve_seconds\":%.6g,\"outer_iterations\":%zu,"
-                    "\"inner_iterations\":%llu,\"hybrid_handoff_eligible\":%d}\n",
+                    "\"inner_iterations\":%llu,\"hybrid_handoff_eligible\":%d,"
+                    "\"elapsed_seconds\":%.6g,\"replay_seconds\":%.6g,"
+                    "\"coefficient_seconds\":%.6g,\"update_seconds\":%.6g,"
+                    "\"scaling_seconds\":%.6g,\"solve_seconds\":%.6g,"
+                    "\"recovery_seconds\":%.6g,\"residual_seconds\":%.6g}\n",
                     attempt_ordinal,
                     static_cast<int>(attempt.api_status),
                     static_cast<int>(attempt.result.status),
@@ -2665,7 +2708,15 @@ IntegrationResult run_resident_sequence(
                     attempt.result.qoco_solve_seconds,
                     static_cast<std::size_t>(attempt.result.outer_iterations),
                     static_cast<unsigned long long>(attempt.result.inner_iterations),
-                    static_cast<int>(attempt.result.hybrid_handoff_eligible)
+                    static_cast<int>(attempt.result.hybrid_handoff_eligible),
+                    attempt.elapsed_seconds,
+                    attempt.result.replay_seconds,
+                    attempt.result.coefficient_seconds,
+                    attempt.result.update_seconds,
+                    attempt.result.scaling_seconds,
+                    attempt.result.solve_seconds,
+                    attempt.result.recovery_seconds,
+                    attempt.result.residual_seconds
                 );
                 std::fflush(stderr);
             }

@@ -904,3 +904,70 @@
   - G4 is scientifically authorised, but launch is blocked until a new official capability is
     generated for the final clean report descendant. The old b0cd570 capability was not reused.
   - All archives remain local-only; no immutable URI exists.
+
+## 2026-09-05 02:40 AEST
+
+- Task summary:
+  - Fixed the blocking executor defect behind campaign g4-claim-core-4db5047 ordinal 73 (adaptive
+    P1-E N=100 censoring twin: five 600 s timeouts, then a sixth attempt past the 5760 s safety
+    boundary) on `integration/single-gpu-v1`; the local campaign stayed paused.
+- Root cause (evidence in `/tmp/spx/repro73`, retained run dir under
+  `build-integration-report/g4-claim-core-4db5047/runs/g4-group-v1-bc6f9f6f…/3c730b5b…`):
+  - With the 1,000,000 inner cap and tight tolerance the inner PDHCG enables recovery: 300,000
+    PDHG iterations (~150 s at N=100 on an idle GPU) then `recovery_kernel`. That kernel read the
+    mapped cancellation flag per thread before `__syncthreads()` (barrier-divergence hazard) and
+    polled it only inside its 50,000-iteration projected-gradient loop; the polish projections,
+    32 KKT refinements and restarted CGLS never polled, and the cancelled path reported
+    `control->iteration_limit` (the 1,000,000 seen in the records) instead of the spent count.
+  - Faithful reproduction on the exact coordinate via `--g4-session`, 600 s deadline, free GPU:
+    the pre-fix executor produced no record within 900 s (killed); the fixed executor returned
+    the attempt at 600.06 s with honest `inner_iterations=300000` and exit 0.
+  - The five prompt 600 s cancels ran under a foreign Windows GPU load (220 W, ~1.9 GiB, flagged
+    contaminated on ordinals 70-72) that slowed the executor enough to keep the deadline inside
+    the polled loop; the load ended during attempt 4.
+  - Secondary: under CUDA lazy module loading the first solve launch loaded the module for ~7 s
+    inside `solve_async` (mutex held, state not yet SOLVING), so an N=2000 first attempt overran
+    a 5 s deadline to 11.96 s; the identical-CQP re-solve escalated to `max(limit, 350000)`
+    regardless of the amendment cap (exceeding the 200,000 claim-core cap).
+- Changes:
+  - `persistent_pdhcg.cu`: block-uniform `poll_cancellation` (one thread + shared memory) used at
+    recovery entry, per projected-gradient iteration, per polish projection, per refinement and
+    every fourth CGLS iteration (`recovery_reconstruct_dual` takes the flag); cancelled recovery
+    rolls back and reports PDHG iterations spent plus completed recovery iterations.
+    `initialise_control_kernel` polls between Ruiz/power passes, accumulates factors in recovery
+    scratch and writes `problem->scaling` atomically at the end. `workspace_create` pre-loads the
+    solve-path kernel modules (`cudaFuncGetAttributes`).
+  - `device_scvx_driver_c_api.h` / `device_scvx.cu`: trailing `inner_iteration_cap` option; the
+    re-solve floor and every phase limit are capped in the driver.
+  - `device_scvx_integration_test.cu`: passes the amendment cap, echoes effective limits
+    (`g4_inner_iteration_limits`) and phase seconds in the stderr diagnostics.
+  - New `cpp/cuda/tests/cancellation_deadline_test.cu` (ctest) and
+    `tests/test_g4_pdhcg_deadline_gpu.py` (skips without `SPACEPDHCG_G4_EXECUTOR`).
+- Validation:
+  - Stress (release): pre-fix 72/72 recovery-phase cancels reported the full 350,000 budget;
+    post-fix 84/84 cancels CANCELLED, max latency 4.8 ms, 0 late returns, 0 full-budget reports.
+  - `tests/test_g4_pdhcg_deadline_gpu.py`: 13/13 passed in 22:50 (adaptive, fixed-tight,
+    hybrid-pdhcg-ipm x N=100, N=2000 x 5 s, 20 s; claim-core cap check). Every launched attempt
+    within deadline + 2 s; N=2000 warm-up/0 at 5 s went from 11.96 s to 5.25 s.
+  - Existing GPU modules `test_g4_ipm_session_gpu.py` + `test_g4_native_session.py`: 16 passed.
+    CPU G4 contract/scheduler/amendment tests: 91 passed, 1 skip. Ruff clean.
+  - CUDA Release ctest 63/63 (new `cancellation_deadline_test` 53 s); CUDA Debug ctest 22/22;
+    sanitizer tree built. A first release run showed one SIGHUP on test 47 caused by the
+    launching WSL pty closing; the detached rerun passed.
+  - Compute Sanitizer memcheck on `cancellation_deadline_test --sanitizer`: 0 errors, 7/7 cancels
+    within 0.9 ms. Racecheck of the full test did not finish one 350,000-iteration solve in 50 min
+    (killed, no result); racecheck restricted to `--kernel-name kns=recovery_kernel` completed in
+    24 min: 0 hazards, 0 errors, 0 warnings, 4/4 cancels within 20 ms.
+- Follow-ups / risks:
+  - A new executor capability must be generated from the committed tree before any relaunch;
+    the campaign was not restarted here.
+  - Every cancelled attempt after a cancelled attempt re-equilibrates (the outer-0 checkpoint
+    predates the first scaling, so its restore zeroes the steps): ~5-9 s per attempt at N=2000,
+    negligible at N=100. Pre-existing, policy-neutral, not changed.
+  - Deterministic replay can trigger only when warm-up/0, warm-up/1 and measured/0 all time out
+    before the first PDHG iteration (identical zero-work traces; observed at N=2000 with a 5 s
+    deadline). Under campaign deadlines iteration counts and atomicAdd-ordered residuals differ
+    per attempt, so timeouts never replay. Rule left unchanged.
+  - A mangled PowerShell->WSL pipeline this session launched the `grok`, `agent`, `claude` and
+    `codex` CLIs; killing the strays also terminated a long-running Codex app-server process
+    (pid 400) that was not started by this session.
