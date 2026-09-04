@@ -32,6 +32,9 @@ VIEWER_SOURCE_ENVIRONMENT = "SPACEPDHCG_VIEWER_SOURCE"
 # ``webgl.js``, ``kepler.js``, ``camera.js`` and ``dom.js``, so every export failed
 # ``scripts/check.mjs`` and would not have loaded in a browser.
 _VIEWER_FILES = ("index.html", "app.js", "styles.css", "package.json", "README.md")
+# Script roots; their own import graphs are discovered the same way (``check.mjs`` imports
+# ``palette.mjs`` for the ship-palette regeneration check), so nothing under ``scripts/`` is
+# listed twice or forgotten.
 _VIEWER_SCRIPTS = ("check.mjs", "serve.mjs")
 _VIEWER_ENTRY = "app.js"
 _RELATIVE_IMPORT = re.compile(r"""\bfrom\s+["'](\./[A-Za-z0-9_./-]+\.m?js)["']""")
@@ -60,6 +63,24 @@ def viewer_modules(source: Path, entry: str = _VIEWER_ENTRY) -> tuple[str, ...]:
             relative = relative.replace(os.sep, "/")
             if relative not in ordered and relative not in pending:
                 pending.append(relative)
+    return tuple(ordered)
+
+
+def viewer_scripts(source: Path) -> tuple[str, ...]:
+    """``scripts/`` files a bundle needs: each root in ``_VIEWER_SCRIPTS`` plus its imports.
+
+    Roots that the source tree lacks are skipped (older viewer copies); a root that is present
+    but imports a missing module raises like ``viewer_modules``.
+    """
+
+    ordered: list[str] = []
+    for script in _VIEWER_SCRIPTS:
+        root = f"scripts/{script}"
+        if not (source / root).is_file():
+            continue
+        for name in viewer_modules(source, root):
+            if name not in ordered:
+                ordered.append(name)
     return tuple(ordered)
 
 
@@ -318,12 +339,9 @@ def export_viewer_bundle(
     source = viewer_source or default_viewer_source()
     if source is not None:
         modules = viewer_modules(source) if (source / _VIEWER_ENTRY).is_file() else ()
-        for name in (*_VIEWER_FILES, *modules):
+        (target_path / "scripts").mkdir(exist_ok=True)
+        for name in (*_VIEWER_FILES, *modules, *viewer_scripts(source)):
             if (source / name).is_file():
                 (target_path / name).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source / name, target_path / name)
-        (target_path / "scripts").mkdir(exist_ok=True)
-        for name in _VIEWER_SCRIPTS:
-            if (source / "scripts" / name).is_file():
-                shutil.copyfile(source / "scripts" / name, target_path / "scripts" / name)
     return target_path

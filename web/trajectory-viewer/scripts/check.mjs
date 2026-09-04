@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PALETTE_FLOORS, SHIP_PALETTE_SPEC, generateShipPalette, maxChannelDifference, paletteMetrics } from "./palette.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFile(join(root, path));
@@ -26,9 +27,10 @@ const requiredIds = [
   "timeline-ticks", "mission-timeline-ticks",
 ];
 
-const [dataBytes, manifestBytes, htmlBytes, appBytes, cssBytes, gtocBytes, webglBytes, keplerBytes, cameraBytes] = await Promise.all([
+const [dataBytes, manifestBytes, htmlBytes, appBytes, cssBytes, gtocBytes, webglBytes, keplerBytes, cameraBytes, plotBytes] = await Promise.all([
   read("data/trajectories.json"), read("data/manifest.json"), read("index.html"),
   read("app.js"), read("styles.css"), read("gtoc12.js"), read("webgl.js"), read("kepler.js"), read("camera.js"),
+  read("scripts/plot_gtoc12_fleet.py").catch((error) => { if (error.code === "ENOENT") return null; throw error; }),
 ]);
 const data = JSON.parse(dataBytes);
 const manifest = JSON.parse(manifestBytes);
@@ -129,15 +131,63 @@ for (const preset of ["top", "oblique", "edge", "follow"]) assert.match(html, ne
 assert.match(app, /from "\.\/camera\.js"/);
 for (const name of ["BODY_VERTEX", "STAR_VERTEX", "uZScale", "starField", "concatRibbons"]) assert.match(`${gtocBytes}\n${webglBytes}`, new RegExp(name), `3D scene uses ${name}`);
 assert.doesNotMatch(`${html}\n${css}\n${modules}`, /https?:\/\/(?!localhost|127\.0\.0\.1)/i, "No external URLs");
-// Ship colours are duplicated between gtoc12.js and styles.css because the CSP forbids inline styles.
-// The palette must cover the largest fleet the GTOC12 solver produces (fleet_master_v7: 21 ships).
-const paletteSource = String(gtocBytes).match(/export const SHIP_COLOURS = \[([^\]]*)\];/);
-assert.ok(paletteSource, "SHIP_COLOURS palette is exported by gtoc12.js");
-const shipColours = [...paletteSource[1].matchAll(/"(#[0-9a-f]{6})"/g)].map((match) => match[1]);
-assert.ok(shipColours.length >= 21, `ship palette has at least 21 colours (found ${shipColours.length})`);
+// Ship palette: SHIP_COLOURS in gtoc12.js is the committed output of scripts/palette.mjs and is
+// duplicated in styles.css (the CSP forbids inline styles) and in the matplotlib fallback. Its size
+// is read from gtoc12.js (never hard-coded here) and must cover both the largest fleet the GTOC12
+// solver has produced (fleet_master_v7: 21 ships) and the GTOC12 record fleet (Antipodes: 39 ships).
+const colourList = (source, label) => {
+  const block = /SHIP_COLOURS = \[([\s\S]*?)\]/.exec(source);
+  assert.ok(block, `${label} declares SHIP_COLOURS = [...]`);
+  return [...block[1].matchAll(/"(#[0-9a-f]{6})"/g)].map((match) => match[1]);
+};
+assert.match(String(gtocBytes), /export const SHIP_COLOURS = \[/, "SHIP_COLOURS palette is exported by gtoc12.js");
+const shipColours = colourList(String(gtocBytes), "gtoc12.js");
+const expectedShipCount = SHIP_PALETTE_SPEC.hues * SHIP_PALETTE_SPEC.bands.length;
+assert.equal(shipColours.length, expectedShipCount, `${expectedShipCount} ship colours (${SHIP_PALETTE_SPEC.bands.length} lightness bands x ${SHIP_PALETTE_SPEC.hues} hues)`);
+assert.ok(shipColours.length >= 21, `ship palette covers the 21-ship fleet_master_v7 fleet (found ${shipColours.length})`);
+assert.ok(shipColours.length >= 40, `ship palette covers the GTOC12 record fleet (39 ships) with one spare (found ${shipColours.length})`);
 assert.equal(new Set(shipColours).size, shipColours.length, "ship colours are distinct");
+assert.match(String(gtocBytes), /export const MAX_SHIPS = SHIP_COLOURS\.length;/, "MAX_SHIPS is derived from the palette length");
+// Regeneration: the committed hex values are the spec's output (per channel within 8-bit rounding).
+const regenerated = generateShipPalette(SHIP_PALETTE_SPEC);
+const channelDrift = maxChannelDifference(shipColours, regenerated);
+assert.ok(channelDrift <= 2, `SHIP_COLOURS regenerate from SHIP_PALETTE_SPEC (max channel difference ${channelDrift}; run node scripts/palette.mjs)`);
+// Distinctness (CIE76 dE*ab): consecutive ships, every pair, and against the reserved scene/UI colours.
+const palette = paletteMetrics(shipColours, SHIP_PALETTE_SPEC.reserved);
+assert.ok(palette.neighbour >= PALETTE_FLOORS.neighbour, `consecutive ships differ by >= ${PALETTE_FLOORS.neighbour} dE (min ${palette.neighbour.toFixed(1)} between ships ${palette.neighbourPair})`);
+assert.ok(palette.pairwise >= PALETTE_FLOORS.pairwise, `every pair of ships differs by >= ${PALETTE_FLOORS.pairwise} dE (min ${palette.pairwise.toFixed(1)} between ships ${palette.pairwisePair})`);
+assert.ok(palette.reserved >= PALETTE_FLOORS.reserved, `every ship differs from the Sun/Earth/asteroid/UI colours by >= ${PALETTE_FLOORS.reserved} dE (min ${palette.reserved.toFixed(1)}: ship ${palette.reservedPair?.[0]} vs ${palette.reservedPair?.[1]})`);
+// Reserved colours in the spec are the ones the scene and stylesheet actually use.
+for (const [name, token] of [["verified", "--verified"], ["caution", "--caution"], ["alert", "--alert"], ["focus", "--focus"], ["bone", "--bone"]]) {
+  assert.match(css, new RegExp(`${token}: ${SHIP_PALETTE_SPEC.reserved[name]};`), `palette spec reserves the stylesheet's ${token}`);
+}
+const glColour = (name) => { const match = new RegExp(`const ${name} = \\[([^\\]]+)\\]`).exec(String(gtocBytes)); assert.ok(match, `${name} in gtoc12.js`); return `#${match[1].split(",").slice(0, 3).map((v) => Math.round(Number(v) * 255).toString(16).padStart(2, "0")).join("")}`; };
+assert.equal(glColour("EARTH_COLOUR"), SHIP_PALETTE_SPEC.reserved.earth, "palette spec reserves the scene's Earth colour");
+assert.equal(glColour("SUN_COLOUR"), SHIP_PALETTE_SPEC.reserved.sun, "palette spec reserves the scene's Sun colour");
+assert.equal(glColour("PENDING_ASTEROID"), SHIP_PALETTE_SPEC.reserved.asteroidPending, "palette spec reserves the pending-asteroid colour");
+// Mirrors: one `.ship-colour-N` class per palette entry (and none beyond), same order in the matplotlib fallback.
 shipColours.forEach((colour, index) => assert.match(css, new RegExp(`\\.ship-colour-${index + 1} \\{ color: ${colour}; \\}`), `ship colour ${index + 1} in styles.css`));
+assert.equal([...css.matchAll(/\.ship-colour-(\d+) \{/g)].length, shipColours.length, "styles.css has exactly one class per ship colour");
+if (plotBytes) assert.deepEqual(colourList(String(plotBytes), "plot_gtoc12_fleet.py"), shipColours, "matplotlib fallback palette matches gtoc12.js");
+assert.match(css, /\.ship-list\.dense \{/, "dense (> 20 ships) rail layout is styled");
+assert.match(css, /\.legend-ships\.dense \{/, "dense (> 20 ships) legend layout is styled");
 assert.match(css, /\[hidden\] \{ display: none !important; \}/, "hidden panels stay hidden");
+
+/** Ship-count rule shared by the real dataset and the synthetic fleets below: one palette entry per ship, no wrapping. */
+function assertPaletteCoversFleet(fleet, label) {
+  const count = fleet.ships.length;
+  assert.ok(count <= shipColours.length, `${label}: ${count} ships exceed the ${shipColours.length}-colour ship palette (SHIP_COLOURS in gtoc12.js); ship ${shipColours.length + 1} would repeat ship 1's colour`);
+  const classes = fleet.ships.map((_, index) => `ship-colour-${index % shipColours.length + 1}`);
+  assert.equal(new Set(classes).size, count, `${label}: every ship has its own colour class`);
+  return classes;
+}
+const syntheticFleet = (count) => ({ ships: Array.from({ length: count }, (_, index) => ({ ship_id: index + 1 })) });
+assertPaletteCoversFleet(syntheticFleet(21), "synthetic 21-ship fleet (fleet_master_v7 size)");
+assertPaletteCoversFleet(syntheticFleet(39), "synthetic 39-ship fleet (GTOC12 record, Antipodes)");
+assertPaletteCoversFleet(syntheticFleet(shipColours.length), `synthetic ${shipColours.length}-ship fleet (palette size)`);
+const oversized = shipColours.length + 1;
+assert.throws(() => assertPaletteCoversFleet(syntheticFleet(oversized), `synthetic ${oversized}-ship fleet`), new RegExp(`${oversized} ships exceed the ${shipColours.length}-colour ship palette`), `a ${oversized}-ship fleet is refused with a clear message`);
+console.log(`Ship palette: ${shipColours.length} colours, min dE consecutive ${palette.neighbour.toFixed(1)}, pairwise ${palette.pairwise.toFixed(1)}, to reserved ${palette.reserved.toFixed(1)}; synthetic 21/39/${shipColours.length}-ship fleets pass, ${oversized} refused`);
 
 console.log(`Validated ${data.trajectories.length} ${plannerExport ? "planner-export" : "archive"} trajectories, ${data.trajectories.reduce((sum, item) => sum + item.replay.point_count, 0)} dense replay points`);
 console.log(`Data SHA-256 ${manifest.files["trajectories.json"].sha256}`);
@@ -203,7 +253,7 @@ if (!fleetBytes) {
   assert.ok(Math.abs(collected - fleet.score.total_collected_kg) < 1e-6, "fleet collected mass from events");
   // The official verifier prints six significant digits (7575.58, 10700.5), so compare at that precision.
   assert.equal(Number(collected.toPrecision(6)), fleet.score.official_total_mass_kg, "official score equals summed collects to 6 significant digits");
-  assert.ok(fleet.ships.length <= shipColours.length, `ship palette (${shipColours.length}) covers every ship (${fleet.ships.length}) without wrapping`);
+  assertPaletteCoversFleet(fleet, `GTOC12 fleet ${fleet.run_id}`);
   for (const asteroid of fleet.asteroids) {
     assert.ok(asteroid.a_au > 0 && asteroid.e >= 0 && asteroid.e < 1 && asteroid.epoch_mjd === 64328, `asteroid ${asteroid.id} elements`);
     assert.ok(asteroid.visited_by.every((shipId) => fleet.ships.some((ship) => ship.ship_id === shipId && ship.asteroids.includes(asteroid.id))), `asteroid ${asteroid.id} visitors`);

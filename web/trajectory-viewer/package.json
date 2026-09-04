@@ -1,6 +1,6 @@
 {
   "name": "spacepdhcg-trajectory-viewer",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "check": "node --check app.js && node --check gtoc12.js && node --check webgl.js && node --check kepler.js && node --check camera.js && node --check dom.js && node scripts/check.mjs",
     "import-data": "node scripts/import-data.mjs",
     "import-gtoc12": "node scripts/import-gtoc12.mjs",
+    "palette": "node scripts/palette.mjs",
     "test": "node --test"
   },
   "engines": {

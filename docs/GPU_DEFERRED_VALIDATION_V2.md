@@ -134,10 +134,12 @@ integration: `Validated 5 archive trajectories`, data SHA `b160734e…`).
 History: all four viewer checks failed in the first real-GPU run because `viewer_export.py` copied a
 frozen file list (`app.js`, `math.js`) while the viewer had grown `gtoc12.js`, `webgl.js`,
 `kepler.js`, `camera.js`, `dom.js`. The export now copies the ES-module graph discovered from
-`app.js` (`viewer_modules`), and `tests/test_planner_viewer_export.py` asserts every module and every
-non-data file `check.mjs` reads is present without needing node. The check's 20-ship palette
-assertion was also raised to the palette length (24 colours) so the 21-ship `fleet_master_v7` fleet
-validates.
+`app.js` (`viewer_modules`) and from each `scripts/` root (`viewer_scripts`: `check.mjs` imports
+`palette.mjs`), and `tests/test_planner_viewer_export.py` asserts every module, every script and every
+non-data file `check.mjs` reads unconditionally is present without needing node. The check's
+hard-coded 20-ship palette assertion was replaced by one that reads the palette length from
+`gtoc12.js` and regenerates it from `scripts/palette.mjs` (40 generated OKLCH colours after the
+`feat/viewer-40-ships` merge), so the 21-ship `fleet_master_v7` fleet validates.
 
 ## literature-device-time-dilated-ctest
 

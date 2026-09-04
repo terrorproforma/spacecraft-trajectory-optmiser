@@ -15,6 +15,7 @@ from spacepdhcg.planner.viewer_export import (
     build_viewer_dataset,
     export_viewer_bundle,
     viewer_modules,
+    viewer_scripts,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -75,8 +76,16 @@ def test_export_carries_the_whole_viewer_module_graph(exported: tuple[Path, dict
     assert set(modules) >= {"app.js", "math.js", "gtoc12.js", "webgl.js", "kepler.js", "camera.js"}
     for name in modules:
         assert (bundle / name).is_file(), name
+    # The scripts are discovered the same way: check.mjs imports palette.mjs (ship-palette
+    # regeneration), so a bundle without it cannot run `node scripts/check.mjs`.
+    scripts = viewer_scripts(VIEWER)
+    assert set(scripts) >= {"scripts/check.mjs", "scripts/palette.mjs", "scripts/serve.mjs"}
+    for name in scripts:
+        assert (bundle / name).is_file(), name
     check_source = (VIEWER / "scripts" / "check.mjs").read_text(encoding="utf-8")
-    read_targets = set(re.findall(r'read\("([^"]+)"\)', check_source))
+    # Unconditional reads only: `read("x").catch(...)` marks a file check.mjs treats as optional
+    # (the matplotlib palette mirror is a GTOC12 tool, not part of a planner export).
+    read_targets = set(re.findall(r'read\("([^"]+)"\)(?!\.catch\()', check_source))
     assert read_targets, "check.mjs read() calls not found"
     for name in sorted(read_targets):
         if name.startswith("data/"):
@@ -88,6 +97,18 @@ def test_viewer_modules_rejects_a_missing_import(tmp_path: Path) -> None:
     (tmp_path / "app.js").write_text('import { x } from "./gone.js";\n', encoding="utf-8")
     with pytest.raises(FileNotFoundError, match=r"gone\.js"):
         viewer_modules(tmp_path)
+
+
+def test_viewer_scripts_follow_each_root_import_graph(tmp_path: Path) -> None:
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    (scripts / "check.mjs").write_text('import { p } from "./palette.mjs";\n', encoding="utf-8")
+    (scripts / "palette.mjs").write_text("export const p = 1;\n", encoding="utf-8")
+    # serve.mjs absent: older viewer copies are tolerated, present roots are followed.
+    assert viewer_scripts(tmp_path) == ("scripts/check.mjs", "scripts/palette.mjs")
+    (scripts / "palette.mjs").unlink()
+    with pytest.raises(FileNotFoundError, match=r"scripts/palette\.mjs"):
+        viewer_scripts(tmp_path)
 
 
 def test_export_refuses_results_without_trajectories() -> None:
