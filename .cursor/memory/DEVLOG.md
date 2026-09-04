@@ -2256,3 +2256,75 @@
   tables, section 8 entry, next bottleneck (22nd ship needs 599.5 kg average).
 - Next: run joint-itinerary after every campaign before the master; new asteroid sets from
   the DP (member substitution, sweep cells) for the 22nd ship - re-timing is saturated.
+
+## 2026-09-05 06:30 AEST - Second release merge into main: v1 deadline fix, v2 H100 fixes + 40-ship viewer, joint itinerary
+
+- Task summary:
+  - Integrated every verified branch since main 689851b onto `release/single-gpu-v1-merge`
+    (WSL worktree `/home/angus/worktrees/spacepdhcg-release`, author/committer SpacePDHCG-Integration
+    via env; merge commits only, no rebase/squash/amend/force), verified the head, fast-forwarded
+    `main` and pushed from the Windows repo (WSL has no GitHub credentials).
+- Merge chain (parents in brackets):
+  - `a93982e` merge `integration/single-gpu-v1` 1dbcae0 [689851b, 1dbcae0] - G4 attempt-deadline
+    enforcement in the recovery kernel + solve preamble. Conflicts: the two memory files (both sides
+    appended entries) -> both kept chronologically.
+  - `b963259` merge `integration/single-gpu-v2-candidate` 211267d [a93982e, 211267d] - 5aabbfc,
+    45b1a1d, 2bca11d, 1a4f9b4, 41a1d1f, 1f5e034 and the `feat/viewer-40-ships` 7496c10 merge.
+    Conflicts: `src/spacepdhcg/planner/viewer_export.py` (main 68003c2 static list vs candidate
+    import-graph discovery -> candidate blob 5464fb38 verbatim); `cpp/cuda/internal/native_qoco_adapter.h`
+    (v1 `status_code`/`ruiz_iterations` vs candidate `last_status_inaccurate`/
+    `warm_inaccurate_cold_retries` -> both field sets). `native_qoco_adapter.cpp` auto-merged but
+    `report.status_code` was assigned before the candidate's cold retry -> re-assigned after the retry
+    so it describes the last solve. `device_scvx.cu` auto-merged in disjoint regions (v1: driver
+    create/solve/reset_attempt hunks; candidate: `hcw_exact_step`, numeric/replay kernels).
+  - `d52b3a5` merge `feat/gtoc12-joint-itinerary` 8e15b92 [b963259, 8e15b92] - jointopt /
+    jointcampaign / joint-itinerary CLI, fleet_master_v7 (21 ships, 12,346.48 kg). Conflicts: memory
+    files only.
+  - `1c0c32e` merge `refs/h100/gtoc12-asteroid-mining` c4e2c31 [d52b3a5, c4e2c31] - recursion-limit
+    fix (not an ancestor of 8e15b92 or 211267d; local `feat/gtoc12-asteroid-mining` 7d2e301+ NOT
+    merged). Conflict: `src/spacepdhcg/gtoc12/cooperative.py` -> `max(2 * n_usable + 200,
+    n_usable + 500)`, raised only when above the current limit, restored afterwards; both regression
+    tests kept (16/16 in `tests/test_gtoc12_cooperative.py`).
+  - `0ff4f7c` docs(integration): `benchmarks/gpu_deferred_validation_v2.json` +
+    `docs/GPU_DEFERRED_VALIDATION_V2.md` record the merged blobs of `persistent_pdhcg.cu`
+    (`e0099df7…`) and `device_scvx_integration_test.cu` (`642eeee2…`), moved by 1dbcae0; ids
+    computed with the test's own blob sha1 (`/home/angus/integ/refresh_manifest.py`), not hand-edited.
+  - status/memory commit (this entry): `docs/PROGRAM_STATUS_2026-08-31.md` integration note listing
+    what landed and what stays off main.
+- Validation of the integrated head (0ff4f7c tree + docs; WSL Ubuntu-22.04, 16 cores, RTX 5090 sm_120
+  with a foreign ~4 GB low-utilisation workload present throughout, not killed; logs in
+  `/home/angus/integ/logs/`):
+  - ruff check clean, ruff format --check clean (298 files); `generate_g4_policy_header.py --check`,
+    `generate_orbitweaver_g7_schemas.py --check`, `literature/build_provenance.py --check` (126
+    records), `sync_packaged_assets.py --check` (34 assets) all rc 0.
+  - Host `cpp` RelWithDebInfo `-Werror` (`build-rel-relwithdebinfo`, fresh): 0 warnings, ctest 50/50.
+    `cpp/native` RelWithDebInfo: 0 warnings, ctest 8/8.
+  - CUDA sm_120 Release `-Werror` clean rebuild (`build-rel-cuda-release --clean-first`, 33 CUDA + 51
+    CXX objects): 0 warnings; full CUDA CTest 70/70 (69 + `cancellation_deadline_test`, 226 s;
+    cuDSS libqoco sha256 `3db21490…` = pinned).
+  - Full CPU pytest (CPU libqoco `build-rel-qoco-cpu`, `CUDA_VISIBLE_DEVICES=''`): 659 passed,
+    35 skipped in 487 s (skips: 9 GPU planner, 13 deadline-matrix, G4 native/IPM session gates, 9
+    literature artefacts not cached offline).
+  - Planner GPU pytest (`SPACEPDHCG_PLANNER_GPU_TESTS=1`, `spacepdhcg_plan` from the new build): 9/9.
+  - `tests/test_g4_pdhcg_deadline_gpu.py` (executor = new `device_scvx_integration_test`): 13/13 in
+    1332 s (5 s / 20 s deadlines, N=100 / N=2000, adaptive / fixed-tight / hybrid-pdhcg-ipm, plus the
+    claim-core inner-limit cap).
+  - Viewer (node 20.18.1) with fleet_master_v7 imported from
+    `$GT/results/gtoc12/runs/fleet_master_v7/fleet` (21 ships, 177 asteroids, 12346.48 kg, fleet SHA
+    `e47af8fa…36ec`, Kepler max 3.57e-6 km): `npm run check` green (40-colour palette, synthetic
+    21/39/40 pass, 41 refused), `npm test` 36 pass / 2 environment skips.
+  - Manifest/benchmark tests (`test_gpu_deferred_manifest`, `test_benchmark_manifests`,
+    `test_experiment_manifest`): 14/14.
+  - Wheel + sdist (`python -m build`, scikit-build-core, cmake 4.4.3) -> fresh consumer venv:
+    import smoke (native ABI 1, planner/pd3_fft/pd6_fft symbols, gtoc12.cli, literature,
+    planner.cli, viewer_export, gtoc12.jointopt), `spacepdhcg --help`, `literature list`,
+    `gtoc12 --help` (joint-itinerary present), `gtoc12 reduced-instance --list-ids`
+    (`SPACEPDHCG_GTOC12_DATA` pointed at the repo data), `validate` hcw, `plan --backend cpu_reference`
+    certified, `python -m spacepdhcg --help`: all rc 0.
+- Push (after this commit): bundle `/home/angus/bundles/release-merge-2-<sha>.bundle` -> Windows repo
+  `git fetch <bundle>` -> `git push origin <sha>:refs/heads/main` + the feature branches from
+  PowerShell (credential manager lives there); `git ls-remote origin` confirmation and the final
+  hashes are recorded in the Windows working-copy `.cursor/memory` files, which are not committed here.
+- Off main after this merge: `feat/gtoc12-asteroid-mining` 7d2e301+ (v8 harvest substitution in
+  flight); H100 G4 claim-core campaign (running); sm_90 confirmation of the v2 fixes (pending an H100
+  GPU window); `perf/g4-batched-campaign` (provenance only).

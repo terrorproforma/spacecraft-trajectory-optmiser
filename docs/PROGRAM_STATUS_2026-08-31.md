@@ -8,6 +8,54 @@ historical evidence; where it describes physical 2/4/8-GPU work as blocking, tha
 **DEFERRED-NOT-IN-SCOPE**, with all tooling and acceptance preserved in
 [`DEFERRED_MULTI_GPU_BACKLOG.md`](DEFERRED_MULTI_GPU_BACKLOG.md).
 
+Integration note (2026-09-05, second release merge): `main` advanced from 689851b through a chain
+of merge commits on `release/single-gpu-v1-merge` (no rebase, no squash; every branch keeps its
+history). Landed:
+
+- `integration/single-gpu-v1` 1dbcae0 (merge a93982e): G4 attempt-deadline enforcement inside the
+  PDHCG recovery kernel and solve preamble (block-uniform `poll_cancellation`, polled recovery
+  phases, pre-loaded kernel modules, `inner_iteration_cap`, re-solve floor capped by the amendment).
+- `integration/single-gpu-v2-candidate` 211267d (merge b963259): the five H100-exposed defect fixes
+  (pd6_fft host quaternion projection 45b1a1d; hcw/pd3 GPU certification 2bca11d: exact HCW replay,
+  relative QOCO residual audit with one cold retry, accepted-solve residual; viewer export
+  import-graph discovery 1a4f9b4; deferred-manifest units 41a1d1f; literature H100 report twins
+  1f5e034), the preflight self-PID fix 5aabbfc and `feat/viewer-40-ships` 7496c10 (40-colour palette,
+  dense rail/legend layouts).
+- `feat/gtoc12-joint-itinerary` 8e15b92 (merge d52b3a5): whole-itinerary joint re-optimiser
+  (`jointopt`, `jointcampaign`, `joint-itinerary` CLI) and `fleet_master_v7` (21 ships, 177 asteroids,
+  12,346.48 kg, proven optimal, official + independent verifiers pass).
+- H100 fix c4e2c31 (merge 1c0c32e): fleet-master column DFS recursion limit, resolved as the maximum
+  of the WSL (ba9b764) and H100 formulas.
+- 0ff4f7c: GPU-deferred manifest/doc record the merged blobs of `persistent_pdhcg.cu` and
+  `device_scvx_integration_test.cu` (moved by 1dbcae0).
+
+Conflict resolutions: `viewer_export.py` takes the candidate's `viewer_modules()`/`viewer_scripts()`
+discovery over main's static list (68003c2); `native_qoco_adapter.h` keeps both report field sets
+(`status_code`/`ruiz_iterations` and `last_status_inaccurate`/`warm_inaccurate_cold_retries`) and
+`status_code` is refreshed after the cold retry; `device_scvx.cu` keeps the v1 deadline work and the
+2bca11d HCW changes (disjoint regions); `cooperative.py` recursion limit = `max(2n + 200, n + 500)`;
+memory files keep both sides' entries chronologically.
+
+Verification of the integrated head (WSL Ubuntu-22.04, RTX 5090 sm_120 shared with a foreign
+low-utilisation workload, CUDA 12.8): ruff check + format clean (298 files); full CPU pytest 659
+passed / 35 skipped (GPU-gated and offline-artifact tests only) with the CPU-built libqoco; host
+RelWithDebInfo `-Werror` build 0 warnings + ctest 50/50; `cpp/native` 8/8; CUDA sm_120 Release
+`-Werror` clean rebuild 0 warnings + full CUDA CTest 70/70 (69 + `cancellation_deadline_test`);
+planner GPU pytest 9/9; `tests/test_g4_pdhcg_deadline_gpu.py` 13/13 (5 s and 20 s deadlines, N=100
+and N=2000, all three policies, claim-core cap); viewer `npm run check` + `npm test` (36 pass, 2
+environment skips) with `fleet_master_v7` imported (fleet SHA `e47af8fa…36ec`); manifest/benchmark
+tests 14/14; generated-artefact checks (G4 policy header, G7 schemas, literature provenance, packaged
+assets) clean; wheel + sdist build and installed-wheel smoke (`spacepdhcg --help`, `literature list`,
+`gtoc12 --help`, `gtoc12 reduced-instance --list-ids`, `validate`, `plan --backend cpu_reference`
+certified, `python -m spacepdhcg`).
+
+Still off `main` after this merge: the local `feat/gtoc12-asteroid-mining` HEAD (7d2e301+, a v8
+harvest-substitution worker is committing there; only c4e2c31 was taken); the H100 G4 claim-core
+campaign (running on the Lambda H100; its capability/evidence are not in the tree); the sm_90
+(H100) confirmation of the v2 fixes, which so far are verified on sm_120 only (checklist
+`~/spacepdhcg/v2-PENDING-H100-GPU-VERIFY.txt` on the H100); `perf/g4-batched-campaign` (failed
+protocol-v2 experiment, pushed for provenance).
+
 This document distinguishes completed engineering from GPU-dependent experiments. “Implemented”
 does not mean “demonstrated faster”; performance claims require the benchmark protocol and real
 recorded hardware. The more detailed blocker classification is in

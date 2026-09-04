@@ -2648,3 +2648,65 @@ Use this file as persistent, repo-local execution memory.
 - Deterministic replay can trigger when all three lead attempts time out before the first PDHG
   iteration (identical zero-work traces); impossible at campaign deadlines, rule unchanged.
 - `H100` shipping: the bundle carries the fix; the campaign restart is the operator's decision.
+
+### 2026-09-05 06:30 AEST - Second release merge into main (v1 deadline fix, v2 H100 fixes, joint itinerary)
+
+#### Task Summary
+
+- In `/home/angus/worktrees/spacepdhcg-release` (`release/single-gpu-v1-merge` at 689851b == main)
+  merged, in order, `integration/single-gpu-v1` 1dbcae0 (a93982e), `integration/single-gpu-v2-candidate`
+  211267d (b963259), `feat/gtoc12-joint-itinerary` 8e15b92 (d52b3a5) and the H100 fix c4e2c31
+  (1c0c32e); refreshed the GPU-deferred manifest blobs (0ff4f7c); status/memory commit; verified the
+  head end to end (CPU + RTX 5090); then (after this commit) fast-forward `main` and push from
+  Windows via a bundle - the push confirmation lives in the Windows working-copy memory files.
+
+#### Mistakes And Fixes
+
+- `[self]` `python -S -m pytest` / `-S -m build` from `.venv-rel` fails with "No module named
+  pytest/build": `-S` skips site-packages, and the earlier release run only worked because it added
+  the site dir on `PYTHONPATH`. Rule: run the venv python without `-S`; if `-S` is needed, add
+  `<venv>/lib/python3.12/site-packages` to `PYTHONPATH` explicitly.
+- `[self]` Committed merge 4 before the cooperative pytest had actually run (the `-S` failure was
+  printed but the script did not stop). Rule: every "run tests then commit" script gates the commit on
+  the pytest exit code (`|| exit 1`), never on the output looking right.
+- `[tool]` `wsl -d ... -- bash -c "... \$? ..."` from PowerShell prints `True`/`False` for `$?`;
+  use `rc=$?` inside a script file, never inline.
+- `[tool]` `printf` inside `wsl -- bash -c '...'` from PowerShell mangled `$1`; write `run.sh`-style
+  wrappers with `[IO.File]::WriteAllText` (LF) or the Write tool + `sed -i 's/\r$//'`.
+- `[tool]` The installed-wheel `spacepdhcg gtoc12 reduced-instance --list-ids` from `/tmp` needs
+  `SPACEPDHCG_GTOC12_DATA=<repo>/benchmarks/gtoc12/data` (the catalogue lives in `~/.cache` or the
+  repo, not in the wheel); the earlier release run had the repo as cwd.
+
+#### What Worked
+
+- One semantic resolver for the memory files (`/home/angus/integ/resolve_memory.py`): split each
+  conflict side into dated `##`/`###` sections, stable-sort by (date, time), ours before theirs on
+  ties; then a `comm -23` line-coverage check that no line of either side was dropped.
+- Old-style `git merge-tree <base> HEAD <branch>` pre-scan before every merge lists the
+  changed-in-both files, so the hand-resolution list is known before `git merge --no-commit`.
+- For "keep both field sets" header conflicts, grep every writer/reader of each field in the
+  auto-merged `.cpp`/`.cu` afterwards: it exposed that `report.status_code` was set before the
+  candidate's cold retry and had to be refreshed after it.
+- Refreshing frozen blob ids with a script that computes the same `blob <len>\0` sha1 the test uses
+  and does exact-string replacement in the JSON (formatting preserved), then re-verifies all blobs.
+- Running the CUDA clean rebuild (46 s on this box, 33 CUDA + 51 CXX objects) in the background
+  while ruff/host builds ran; then one background GPU script (CTest 70/70 226 s, planner 9/9 22 s,
+  deadline matrix 13/13 1332 s) while CPU pytest (659/35 skipped, 487 s), viewer and wheel ran.
+
+#### Guardrails For Next Session
+
+- The four-branch merge order (v1 -> v2 -> gtoc12 -> H100 fix) produced only the predicted
+  conflicts; keep merging the v1 line before the v2 candidate so the adapter header conflict stays
+  a two-field-set union.
+- `tests/test_g4_pdhcg_deadline_gpu.py` full matrix is ~22 min on the 5090 with a foreign 4 GB
+  workload present; budget for it, do not use QUICK=1 for a release verification.
+- After any merge touching `persistent_pdhcg.cu` / `device_scvx_integration_test.cu` /
+  `recovery_test.cu`, expect `test_gpu_deferred_manifest.py` to fail until the blob table is refreshed
+  with provenance (JSON statement + doc table + paragraph).
+
+#### Follow-Ups / Risks
+
+- sm_90 confirmation of the v2 fixes is still pending an H100 GPU window; the G4 claim-core campaign
+  owns that device.
+- `feat/gtoc12-asteroid-mining` local HEAD (7d2e301+) stays off main while the v8 worker commits.
+- WSL still has no GitHub credential helper; pushes go through a bundle and the Windows repo.
