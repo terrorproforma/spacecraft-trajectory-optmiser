@@ -18,6 +18,7 @@ Antipodes solutions do) and may leave its own miners for another ship.  Two obje
 from __future__ import annotations
 
 import math
+import sys
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -983,7 +984,15 @@ def solve_fleet_master(
             )
         search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
 
-    search(0, (), 0.0, 0.0, {}, set(), zero_dual, np.ones(n_usable, dtype=bool))
+    # the skip branch recurses once per column, so the depth is the column count: 1019
+    # columns (fleet_master_v6) overflowed the default 1000-frame limit after 45 min of
+    # re-certification.  Raise it for the search only, with room for the callers.
+    previous_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(max(previous_limit, n_usable + 500))
+    try:
+        search(0, (), 0.0, 0.0, {}, set(), zero_dual, np.ones(n_usable, dtype=bool))
+    finally:
+        sys.setrecursionlimit(previous_limit)
     # LP-based branch and bound closes (or bounds) what the combinatorial search left open:
     # only the fleet sizes whose relaxation beats the incumbent are branched on
     lp_branch: LpBranchResult | None = None

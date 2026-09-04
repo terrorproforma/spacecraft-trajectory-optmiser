@@ -196,6 +196,22 @@ def test_master_respects_ship_count_rule_and_is_order_invariant() -> None:
     assert forward.summary()["ships"] == 4
 
 
+def test_master_search_depth_is_not_bounded_by_the_interpreter_recursion_limit() -> None:
+    """The skip branch recurses once per column: 1019 columns (fleet_master_v6) overflowed the
+    default 1000-frame limit after 45 min of re-certification.  The limit is raised for the
+    search and restored afterwards."""
+
+    import sys
+
+    before = sys.getrecursionlimit()
+    n = before + 200
+    # pairwise-compatible light columns: the rule caps the fleet, the DFS still walks the list
+    columns = [_column(k, {k: 100.0}, {k: 3000.0}, 560.0 + (k % 7)) for k in range(n)]
+    result = solve_fleet_master(columns, node_cap=50_000, max_ships=3)
+    assert len(result.selected) == 3 and fleet_feasible(result.selected) == ""
+    assert sys.getrecursionlimit() == before
+
+
 # -- pure: cooperative visit orders --------------------------------------------------------
 
 
