@@ -1,9 +1,9 @@
 # Reference reproduction report (Phase 0-1 of the comparative solver campaign)
 
-Generated: 2026-09-02T19:20:46+00:00  
-Repository commit: `8e18b93d628e779e7a3246a233a07d54e9385c63` (working tree dirty)
+Generated: 2026-09-04T17:05:23+00:00  
+Repository commit: `5aabbfc264ade11342c2cf0bd43d356f3058adae` (working tree dirty)
   
-Host: Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.35, Python 3.12.13
+Host: Linux-6.8.0-1046-nvidia-x86_64-with-glibc2.35, Python 3.12.14
 
 Machine-readable twin: `benchmarks/literature/reference_reproduction.json`; per-target details in `results/literature/<target>.json`; provenance in `benchmarks/literature/provenance.json`; target registry in `benchmarks/literature/targets.json`.
 
@@ -13,9 +13,9 @@ Status vocabulary: `reproduced` (within the declared envelope), `gap` (measured 
 
 | Target | Family | Status | Published | Measured | Gap |
 | --- | --- | --- | --- | --- | --- |
-| `acikmese-ploen-2007-pd3` | P1-C-pd3 | **reproduced** | 399.5 kg propellant | 400.63 kg (lossless SOCP); 399.361 kg (repo SCvx CPU, converged); GPU leg deferred (G4 owns the device; `literature gpu-run`) | 1.1299 kg (lossless); -0.139124 kg (SCvx CPU) |
-| `blackmore-2010-pd3-case1` | P1-C-pd3 | **reproduced** | 399.4 kg propellant | 400.088 kg (lossless SOCP); 398.84 kg (repo SCvx CPU, converged); GPU leg deferred (G4 owns the device; `literature gpu-run`) | 0.688345 kg (lossless); -0.559563 kg (SCvx CPU) |
-| `chari-2024-pd6-monte-carlo` | P1-D-pd6 | **gap** | batch 256 demonstrated (no objective printed) | N=1: conv 0.00, 0.03 traj/s; N=16: conv 0.00, 0.07 traj/s; N=64: conv 0.05, 0.10 traj/s | GPU pure-QOCO pd6_fft batch deferred (G4 owns the device; `literature gpu-run`); device SCvx blocked |
+| `acikmese-ploen-2007-pd3` | P1-C-pd3 | **reproduced** | 399.5 kg propellant | 400.63 kg (lossless SOCP); 399.361 kg (repo SCvx CPU, converged); 399.367 kg (repo SCvx QOCO-GPU) | 1.1299 kg (lossless); -0.139144 kg (SCvx CPU) |
+| `blackmore-2010-pd3-case1` | P1-C-pd3 | **reproduced** | 399.4 kg propellant | 400.088 kg (lossless SOCP); 398.848 kg (repo SCvx CPU, converged); 398.845 kg (repo SCvx QOCO-GPU) | 0.688345 kg (lossless); -0.551618 kg (SCvx CPU) |
+| `chari-2024-pd6-monte-carlo` | P1-D-pd6 | **gap** | batch 256 demonstrated (no objective printed) | N=1: conv 0.00, 0.01 traj/s; N=16: conv 0.00, 0.04 traj/s; N=64: conv 0.05, 0.05 traj/s | GPU pure-QOCO pd6_fft batch measured |
 | `esa-tops-2026` | P1-E-low-thrust | **reproduced** | no reference objectives | easy_two_body: converged; multi_revolution_two_body: converged; inclination_or_eccentricity_change: converged; cr3bp: unsupported | - |
 | `gtoc12-official-verifier` | P2-F | **reproduced** | official verifier acceptance | bundled_result_example: 0 asteroids, 0 kg; gtoc12.solution_37_self_cleaning: 338 asteroids, 27045.3 kg; gtoc12.solution_39_mass_optimal: 356 asteroids, 28975.1 kg | - |
 | `gtoc5-data-pin` | P2-F | **blocked** | asteroid_count=7075; evidence_label=published-reference | asteroid_count=7075 |  |
@@ -31,12 +31,13 @@ Status vocabulary: `reproduced` (within the declared envelope), `gap` (measured 
 
 - Family: P1-C-pd3
 - Status: **reproduced** (support: supported)
-- Wall time: 71.8 s
+- Wall time: 125.5 s
 - Evidence labels:
   - `published.fuel_used_kg`: `published-reference`
   - `measured.lossless_fuel_used_kg`: `measured-local`
   - `measured.scvx_cpu_fuel_used_kg`: `measured-local`
   - `measured.scvx_cpu_frozen_euler_fuel_used_kg`: `measured-local`
+  - `measured.scvx_qoco_gpu_fuel_used_kg`: `measured-local`
 - Published:
   - fuel_used_kg: 399.5
   - fuel_used_text: 399.5
@@ -50,43 +51,46 @@ Status vocabulary: `reproduced` (within the declared envelope), `gap` (measured 
   - lossless_replay_fuel_used_kg: 400.63
   - lossless_isp_only_alpha_fuel_used_kg: 362.618
   - lossless_forward_euler_diagnostic_fuel_used_kg: 404.479
-  - scvx_cpu_frozen_euler_fuel_used_kg: 405.65
+  - scvx_cpu_frozen_euler_fuel_used_kg: 406.887
   - scvx_cpu_frozen_euler_status: solver_failed
-  - scvx_cpu_frozen_euler_replay_terminal_position_error_m: 94.9776
+  - scvx_cpu_frozen_euler_replay_terminal_position_error_m: 94.8748
   - scvx_cpu_fuel_used_kg: 399.361
   - scvx_cpu_replay_fuel_used_kg: 399.361
   - scvx_cpu_status: converged
   - scvx_cpu_termination_reason: feasibility and step tolerances satisfied
-  - scvx_cpu_fuel_used_kg_by_dt: dt=1.0=399.361; dt=0.5=399.355
-  - scvx_qoco_gpu_status: deferred
+  - scvx_cpu_fuel_used_kg_by_dt: dt=1.0=399.361; dt=0.5=399.356
+  - scvx_qoco_gpu_fuel_used_kg: 399.367
+  - scvx_qoco_gpu_replay_fuel_used_kg: 399.367
+  - scvx_qoco_gpu_status: converged
 - Gap:
   - lossless_minus_published_kg: 1.1299
   - lossless_relative: 0.00282829
   - acceptance_tolerance_kg: 2
-  - scvx_cpu_minus_published_kg: -0.139124
-  - scvx_cpu_minus_lossless_kg: -1.26903
-  - scvx_cpu_frozen_euler_minus_published_kg: 6.15043
+  - scvx_cpu_minus_published_kg: -0.139144
+  - scvx_cpu_minus_lossless_kg: -1.26905
+  - scvx_cpu_frozen_euler_minus_published_kg: 7.38729
   - euler_discrete_optimum_minus_lossless_kg: 3.84943
+  - scvx_qoco_gpu_minus_lossless_kg: -1.26314
 - Discretisation envelope:
   - discretisation: zero-order hold, exact double-integrator map, exact log-mass step
   - scvx_discretisation: zero-order-hold thrust, variational RK4 coefficients, multiple-shooting exact-penalty merit
   - dt_values_s: 1, 0.5
   - fuel_spread_kg: 0.634684
-  - scvx_fuel_spread_kg: 0.00634712
+  - scvx_fuel_spread_kg: 0.00455245
   - declared_envelope_kg: 2
-- Commands: `spacepdhcg literature run acikmese-ploen-2007-pd3`; `spacepdhcg literature gpu-run acikmese-ploen-2007-pd3  # when the device is free`
-- Note: GPU pure-QOCO SCvx deferred by preflight: refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))
+- Commands: `spacepdhcg literature run acikmese-ploen-2007-pd3`
 
 ### `blackmore-2010-pd3-case1`
 
 - Family: P1-C-pd3
 - Status: **reproduced** (support: supported)
-- Wall time: 257.5 s
+- Wall time: 394.7 s
 - Evidence labels:
   - `published.fuel_used_kg`: `published-reference`
   - `measured.lossless_fuel_used_kg`: `measured-local`
   - `measured.scvx_cpu_fuel_used_kg`: `measured-local`
   - `measured.scvx_cpu_frozen_euler_fuel_used_kg`: `measured-local`
+  - `measured.scvx_qoco_gpu_fuel_used_kg`: `measured-local`
 - Published:
   - fuel_used_kg: 399.4
   - fuel_used_text: 399.4
@@ -104,35 +108,37 @@ Status vocabulary: `reproduced` (within the declared envelope), `gap` (measured 
   - scvx_cpu_frozen_euler_fuel_used_kg: 413.425
   - scvx_cpu_frozen_euler_status: solver_failed
   - scvx_cpu_frozen_euler_replay_terminal_position_error_m: 37.3089
-  - scvx_cpu_fuel_used_kg: 398.84
-  - scvx_cpu_replay_fuel_used_kg: 398.84
+  - scvx_cpu_fuel_used_kg: 398.848
+  - scvx_cpu_replay_fuel_used_kg: 398.848
   - scvx_cpu_status: converged
-  - scvx_cpu_termination_reason: merit stalled below 1e-07 over 3 iterations
-  - scvx_cpu_fuel_used_kg_by_dt: dt=0.4=398.84; dt=0.2=398.861
-  - scvx_qoco_gpu_status: deferred
+  - scvx_cpu_termination_reason: feasibility and step tolerances satisfied
+  - scvx_cpu_fuel_used_kg_by_dt: dt=0.4=398.848; dt=0.2=398.868
+  - scvx_qoco_gpu_fuel_used_kg: 398.845
+  - scvx_qoco_gpu_replay_fuel_used_kg: 398.845
+  - scvx_qoco_gpu_status: converged
 - Gap:
   - lossless_minus_published_kg: 0.688345
   - lossless_relative: 0.00172345
   - acceptance_tolerance_kg: 2
-  - scvx_cpu_minus_published_kg: -0.559563
-  - scvx_cpu_minus_lossless_kg: -1.24791
+  - scvx_cpu_minus_published_kg: -0.551618
+  - scvx_cpu_minus_lossless_kg: -1.23996
   - scvx_cpu_frozen_euler_minus_published_kg: 14.0251
   - euler_discrete_optimum_minus_lossless_kg: 1.17317
+  - scvx_qoco_gpu_minus_lossless_kg: -1.2431
 - Discretisation envelope:
   - discretisation: zero-order hold, exact double-integrator map, exact log-mass step
   - scvx_discretisation: zero-order-hold thrust, variational RK4 coefficients, multiple-shooting exact-penalty merit
   - dt_values_s: 0.4, 0.2
   - fuel_spread_kg: 0.674955
-  - scvx_fuel_spread_kg: 0.0204092
+  - scvx_fuel_spread_kg: 0.0193044
   - declared_envelope_kg: 2
-- Commands: `spacepdhcg literature run blackmore-2010-pd3-case1`; `spacepdhcg literature gpu-run blackmore-2010-pd3-case1  # when the device is free`
-- Note: GPU pure-QOCO SCvx deferred by preflight: refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))
+- Commands: `spacepdhcg literature run blackmore-2010-pd3-case1`
 
 ### `chari-2024-pd6-monte-carlo`
 
 - Family: P1-D-pd6
 - Status: **gap** (support: partial)
-- Wall time: 345.3 s
+- Wall time: 2796.6 s
 - Evidence labels:
   - `published.distribution`: `published-reference`
   - `published.batch_size_256`: `published-reference`
@@ -145,8 +151,8 @@ Status vocabulary: `reproduced` (within the declared envelope), `gap` (measured 
   - evidence_label: published-reference
   - verification_status: requires-source-verification (values imported from benchmarks/literature_baselines.json; paper body not retrieved)
 - Measured:
-  - cpu_independent_batch: 1=batch_size=1; seed=20240101; solved=1; converged=0; convergence_probability=0; accepted=1; accepted_probability=1; accepted_trajectories_per_second=0.0274627; wall_seconds=36.413; workers=1; tof_median=4.74687; tof_iqr=4.74687, 4.74687; fuel_median=0.189705; violation_max=2.46924e-07; defect_max=2.62424e-06; 16=batch_size=16; seed=20240116; solved=16; converged=0; convergence_probability=0; accepted=6; accepted_probability=0.375; accepted_trajectories_per_second=0.0729751; wall_seconds=82.2198; workers=15; tof_median=4.76356; tof_iqr=4.38464, 4.97145; fuel_median=0.191666; violation_max=3.13314e-05; defect_max=0.000127941; 64=batch_size=64; seed=20240164; solved=64; converged=3; convergence_probability=0.046875; accepted=22; accepted_probability=0.34375; accepted_trajectories_per_second=0.0970489; wall_seconds=226.69; workers=15; tof_median=4.67625; tof_iqr=4.50925, 4.86352; fuel_median=0.190153; violation_max=4.47661e-05; defect_max=0.000207929
-  - gpu_persistent_batch: persistent_device_scvx=status=blocked; reason=the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model; pure_qoco_native_pd6_fft=status=deferred; reason=pass run_gpu=true (spacepdhcg literature gpu-run) with SPACEPDHCG_QOCO_LIBRARY set; preflight=ok=False; reason=refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de)); nvidia_smi=/usr/lib/wsl/lib/nvidia-smi; g4_owned=True; processes=pid=827383; reported_name=[Not Found]; command_line=/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600; g4_owner=True, pid=828904; reported_name=[Not Found]; command_line=/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de; g4_owner=True; qoco_library=/home/angus/spacecraft-trajectory-optmiser/build/qoco-g4/libqoco.so
+  - cpu_independent_batch: 1=batch_size=1; seed=20240101; solved=1; converged=0; convergence_probability=0; accepted=1; accepted_probability=1; accepted_trajectories_per_second=0.0144817; wall_seconds=69.0527; workers=1; tof_median=4.74687; tof_iqr=4.74687, 4.74687; fuel_median=0.189705; violation_max=2.47224e-07; defect_max=2.62427e-06; 16=batch_size=16; seed=20240116; solved=16; converged=0; convergence_probability=0; accepted=6; accepted_probability=0.375; accepted_trajectories_per_second=0.0439416; wall_seconds=136.545; workers=16; tof_median=4.76356; tof_iqr=4.38464, 4.97145; fuel_median=0.191666; violation_max=3.13313e-05; defect_max=0.00012794; 64=batch_size=64; seed=20240164; solved=64; converged=3; convergence_probability=0.046875; accepted=22; accepted_probability=0.34375; accepted_trajectories_per_second=0.0508839; wall_seconds=432.357; workers=25; tof_median=4.67625; tof_iqr=4.50925, 4.86352; fuel_median=0.190154; violation_max=4.4766e-05; defect_max=0.000207929
+  - gpu_persistent_batch: persistent_device_scvx=status=blocked; reason=the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model; pure_qoco_native_pd6_fft=status=measured; label=measured-local; preflight=ok=True; reason=device free; nvidia_smi=/usr/bin/nvidia-smi; g4_owned=False; processes=pid=39228; reported_name=/home/ubuntu/spacepdhcg/v2/.venv/bin/python; command_line=/home/ubuntu/spacepdhcg/v2/.venv/bin/python /home/ubuntu/spacepdhcg/v2/.venv/bin/spacepdhcg literature gpu-run blackmore-2010-pd3-case1 chari-2024-pd6-monte-carlo; g4_owner=False; qoco_library=/home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so; batches=1=batch_size=1; seed=20240101; solved=1; converged=1; convergence_probability=1; accepted=1; accepted_probability=1; accepted_trajectories_per_second=0.0291871; wall_seconds=34.2617; workers=1; tof_median=4.75427; tof_iqr=4.75427, 4.75427; fuel_median=0.185099; violation_max=3.05821e-07; defect_max=4.47121e-07; 16=batch_size=16; seed=20240116; solved=16; converged=16; convergence_probability=1; accepted=16; accepted_probability=1; accepted_trajectories_per_second=0.0379827; wall_seconds=421.244; workers=1; tof_median=4.43576; tof_iqr=4.2888, 4.7746; fuel_median=0.173793; violation_max=8.70374e-07; defect_max=9.85377e-07; 64=batch_size=64; seed=20240164; solved=64; converged=64; convergence_probability=1; accepted=64; accepted_probability=1; accepted_trajectories_per_second=0.0375782; wall_seconds=1703.12; workers=1; tof_median=4.7875; tof_iqr=4.54565, 4.9458; fuel_median=0.181274; violation_max=7.58019e-07; defect_max=9.91345e-07
 - Discretisation envelope:
   - solver: independent CPU free-final-time 6-DoF SCvx (Szmuk 2018 vehicle model), one process per trajectory
   - acceptance: replay defect <= 1e-5 and path violation <= 1e-6

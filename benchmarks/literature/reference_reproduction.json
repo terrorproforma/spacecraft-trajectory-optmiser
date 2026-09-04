@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0.0",
-  "generated_utc": "2026-09-02T19:20:46+00:00",
-  "repository_commit": "8e18b93d628e779e7a3246a233a07d54e9385c63",
+  "generated_utc": "2026-09-04T17:05:23+00:00",
+  "repository_commit": "5aabbfc264ade11342c2cf0bd43d356f3058adae",
   "working_tree_dirty": true,
   "host": {
-    "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
-    "python": "3.12.13",
+    "platform": "Linux-6.8.0-1046-nvidia-x86_64-with-glibc2.35",
+    "python": "3.12.14",
     "machine": "x86_64"
   },
   "targets": [
@@ -33,33 +33,37 @@
         "lossless_replay_fuel_used_kg": 400.6295072229709,
         "lossless_isp_only_alpha_fuel_used_kg": 362.61786962048905,
         "lossless_forward_euler_diagnostic_fuel_used_kg": 404.47933388453475,
-        "scvx_cpu_frozen_euler_fuel_used_kg": 405.6504258476823,
+        "scvx_cpu_frozen_euler_fuel_used_kg": 406.88729190459617,
         "scvx_cpu_frozen_euler_status": "solver_failed",
-        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 94.97755832020803,
-        "scvx_cpu_fuel_used_kg": 399.36087632435624,
-        "scvx_cpu_replay_fuel_used_kg": 399.36087615928955,
+        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 94.87477736526797,
+        "scvx_cpu_fuel_used_kg": 399.36085557332194,
+        "scvx_cpu_replay_fuel_used_kg": 399.36085541917237,
         "scvx_cpu_status": "converged",
         "scvx_cpu_termination_reason": "feasibility and step tolerances satisfied",
         "scvx_cpu_fuel_used_kg_by_dt": {
-          "dt=1.0": 399.36087632435624,
-          "dt=0.5": 399.35452920249963
+          "dt=1.0": 399.36085557332194,
+          "dt=0.5": 399.35630311920613
         },
-        "scvx_qoco_gpu_status": "deferred"
+        "scvx_qoco_gpu_fuel_used_kg": 399.3667620523968,
+        "scvx_qoco_gpu_replay_fuel_used_kg": 399.3666866940657,
+        "scvx_qoco_gpu_status": "converged"
       },
       "gap": {
         "lossless_minus_published_kg": 1.1299014681901554,
         "lossless_relative": 0.002828289031765095,
         "acceptance_tolerance_kg": 2.0,
-        "scvx_cpu_minus_published_kg": -0.13912367564375927,
-        "scvx_cpu_minus_lossless_kg": -1.2690251438339146,
-        "scvx_cpu_frozen_euler_minus_published_kg": 6.1504258476823,
-        "euler_discrete_optimum_minus_lossless_kg": 3.849432416344598
+        "scvx_cpu_minus_published_kg": -0.13914442667805815,
+        "scvx_cpu_minus_lossless_kg": -1.2690458948682135,
+        "scvx_cpu_frozen_euler_minus_published_kg": 7.387291904596168,
+        "euler_discrete_optimum_minus_lossless_kg": 3.849432416344598,
+        "scvx_qoco_gpu_minus_lossless_kg": -1.2631394157933755
       },
       "labels": {
         "published.fuel_used_kg": "published-reference",
         "measured.lossless_fuel_used_kg": "measured-local",
         "measured.scvx_cpu_fuel_used_kg": "measured-local",
-        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local"
+        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local",
+        "measured.scvx_qoco_gpu_fuel_used_kg": "measured-local"
       },
       "envelope": {
         "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
@@ -69,18 +73,15 @@
           0.5
         ],
         "fuel_spread_kg": 0.6346842019263477,
-        "scvx_fuel_spread_kg": 0.0063471218566064636,
+        "scvx_fuel_spread_kg": 0.004552454115810178,
         "declared_envelope_kg": 2.0
       },
       "commands": [
-        "spacepdhcg literature run acikmese-ploen-2007-pd3",
-        "spacepdhcg literature gpu-run acikmese-ploen-2007-pd3  # when the device is free"
+        "spacepdhcg literature run acikmese-ploen-2007-pd3"
       ],
-      "notes": [
-        "GPU pure-QOCO SCvx deferred by preflight: refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))"
-      ],
+      "notes": [],
       "family": "P1-C-pd3",
-      "wall_seconds": 71.78841003200068,
+      "wall_seconds": 125.49383001000024,
       "support": "supported"
     },
     {
@@ -104,33 +105,37 @@
         "lossless_replay_fuel_used_kg": 400.0837542316119,
         "lossless_isp_only_alpha_fuel_used_kg": 362.4761965292025,
         "lossless_forward_euler_diagnostic_fuel_used_kg": 401.2615114278965,
-        "scvx_cpu_frozen_euler_fuel_used_kg": 413.42506517964966,
+        "scvx_cpu_frozen_euler_fuel_used_kg": 413.4250651815016,
         "scvx_cpu_frozen_euler_status": "solver_failed",
-        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 37.30892475378738,
-        "scvx_cpu_fuel_used_kg": 398.8404372792693,
-        "scvx_cpu_replay_fuel_used_kg": 398.8404283003547,
+        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 37.30892475533985,
+        "scvx_cpu_fuel_used_kg": 398.84838238449765,
+        "scvx_cpu_replay_fuel_used_kg": 398.84837949871326,
         "scvx_cpu_status": "converged",
-        "scvx_cpu_termination_reason": "merit stalled below 1e-07 over 3 iterations",
+        "scvx_cpu_termination_reason": "feasibility and step tolerances satisfied",
         "scvx_cpu_fuel_used_kg_by_dt": {
-          "dt=0.4": 398.8404372792693,
-          "dt=0.2": 398.8608464869337
+          "dt=0.4": 398.84838238449765,
+          "dt=0.2": 398.8676867504305
         },
-        "scvx_qoco_gpu_status": "deferred"
+        "scvx_qoco_gpu_fuel_used_kg": 398.84524372496,
+        "scvx_qoco_gpu_replay_fuel_used_kg": 398.8452436009993,
+        "scvx_qoco_gpu_status": "converged"
       },
       "gap": {
         "lossless_minus_published_kg": 0.6883453628407779,
         "lossless_relative": 0.0017234485799719026,
         "acceptance_tolerance_kg": 2.0,
-        "scvx_cpu_minus_published_kg": -0.5595627207306961,
-        "scvx_cpu_minus_lossless_kg": -1.247908083571474,
-        "scvx_cpu_frozen_euler_minus_published_kg": 14.025065179649687,
-        "euler_discrete_optimum_minus_lossless_kg": 1.1731660650557387
+        "scvx_cpu_minus_published_kg": -0.5516176155023231,
+        "scvx_cpu_minus_lossless_kg": -1.239962978343101,
+        "scvx_cpu_frozen_euler_minus_published_kg": 14.025065181501645,
+        "euler_discrete_optimum_minus_lossless_kg": 1.1731660650557387,
+        "scvx_qoco_gpu_minus_lossless_kg": -1.2431016378807271
       },
       "labels": {
         "published.fuel_used_kg": "published-reference",
         "measured.lossless_fuel_used_kg": "measured-local",
         "measured.scvx_cpu_fuel_used_kg": "measured-local",
-        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local"
+        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local",
+        "measured.scvx_qoco_gpu_fuel_used_kg": "measured-local"
       },
       "envelope": {
         "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
@@ -140,18 +145,15 @@
           0.2
         ],
         "fuel_spread_kg": 0.6749554679854555,
-        "scvx_fuel_spread_kg": 0.020409207664442874,
+        "scvx_fuel_spread_kg": 0.019304365932839573,
         "declared_envelope_kg": 2.0
       },
       "commands": [
-        "spacepdhcg literature run blackmore-2010-pd3-case1",
-        "spacepdhcg literature gpu-run blackmore-2010-pd3-case1  # when the device is free"
+        "spacepdhcg literature run blackmore-2010-pd3-case1"
       ],
-      "notes": [
-        "GPU pure-QOCO SCvx deferred by preflight: refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))"
-      ],
+      "notes": [],
       "family": "P1-C-pd3",
-      "wall_seconds": 257.4908510079986,
+      "wall_seconds": 394.7332978310005,
       "support": "supported"
     },
     {
@@ -179,17 +181,17 @@
             "convergence_probability": 0.0,
             "accepted": 1,
             "accepted_probability": 1.0,
-            "accepted_trajectories_per_second": 0.027462682570107137,
-            "wall_seconds": 36.41304877799848,
+            "accepted_trajectories_per_second": 0.014481688791063986,
+            "wall_seconds": 69.05271991599875,
             "workers": 1,
-            "tof_median": 4.7468733399230105,
+            "tof_median": 4.746873338861784,
             "tof_iqr": [
-              4.7468733399230105,
-              4.7468733399230105
+              4.746873338861784,
+              4.746873338861784
             ],
-            "fuel_median": 0.18970535014758205,
-            "violation_max": 2.469243431946211e-07,
-            "defect_max": 2.6242435666734565e-06
+            "fuel_median": 0.1897053506891353,
+            "violation_max": 2.472238873618693e-07,
+            "defect_max": 2.624271359330521e-06
           },
           "16": {
             "batch_size": 16,
@@ -199,17 +201,17 @@
             "convergence_probability": 0.0,
             "accepted": 6,
             "accepted_probability": 0.375,
-            "accepted_trajectories_per_second": 0.07297508495190681,
-            "wall_seconds": 82.21984262100159,
-            "workers": 15,
-            "tof_median": 4.763564564450784,
+            "accepted_trajectories_per_second": 0.043941551765402924,
+            "wall_seconds": 136.54501852900103,
+            "workers": 16,
+            "tof_median": 4.763564710396788,
             "tof_iqr": [
-              4.384642468253788,
-              4.971448622726616
+              4.3846425376301,
+              4.9714486101888
             ],
-            "fuel_median": 0.19166601173022602,
-            "violation_max": 3.1331416399105194e-05,
-            "defect_max": 0.00012794050029318882
+            "fuel_median": 0.19166621604924572,
+            "violation_max": 3.1331344955143337e-05,
+            "defect_max": 0.00012794009501870818
           },
           "64": {
             "batch_size": 64,
@@ -219,17 +221,17 @@
             "convergence_probability": 0.046875,
             "accepted": 22,
             "accepted_probability": 0.34375,
-            "accepted_trajectories_per_second": 0.0970489407888675,
-            "wall_seconds": 226.68974870999955,
-            "workers": 15,
-            "tof_median": 4.676253607308805,
+            "accepted_trajectories_per_second": 0.0508838966094308,
+            "wall_seconds": 432.3568253600006,
+            "workers": 25,
+            "tof_median": 4.67625348070687,
             "tof_iqr": [
-              4.509252450058329,
-              4.863520529455417
+              4.509252446616409,
+              4.863520462469879
             ],
-            "fuel_median": 0.19015342323388706,
-            "violation_max": 4.4766133368456806e-05,
-            "defect_max": 0.0002079288893579445
+            "fuel_median": 0.1901537465448634,
+            "violation_max": 4.476596646396658e-05,
+            "defect_max": 0.00020792856388318626
           }
         },
         "gpu_persistent_batch": {
@@ -238,28 +240,84 @@
             "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
           },
           "pure_qoco_native_pd6_fft": {
-            "status": "deferred",
-            "reason": "pass run_gpu=true (spacepdhcg literature gpu-run) with SPACEPDHCG_QOCO_LIBRARY set",
+            "status": "measured",
+            "label": "measured-local",
             "preflight": {
-              "ok": false,
-              "reason": "refused: the G4 measured campaign owns the device (pid 827383 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600), pid 828904 (/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de))",
-              "nvidia_smi": "/usr/lib/wsl/lib/nvidia-smi",
-              "g4_owned": true,
+              "ok": true,
+              "reason": "device free",
+              "nvidia_smi": "/usr/bin/nvidia-smi",
+              "g4_owned": false,
               "processes": [
                 {
-                  "pid": 827383,
-                  "reported_name": "[Not Found]",
-                  "command_line": "/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600",
-                  "g4_owner": true
-                },
-                {
-                  "pid": 828904,
-                  "reported_name": "[Not Found]",
-                  "command_line": "/home/angus/worktrees/spacepdhcg-single-gpu-integration/build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/angus/worktrees/spacepdhcg-single-gpu-integration/build-integration-report/g4-claim-core-9a4cbea/runs/g4-group-v1-5065362d5c50a13696c2992770028a85b0735ec070e1d6e56576be10b5532eb7/95087da9f9b84c68a5a37d093965cc35/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de",
-                  "g4_owner": true
+                  "pid": 39228,
+                  "reported_name": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python",
+                  "command_line": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python /home/ubuntu/spacepdhcg/v2/.venv/bin/spacepdhcg literature gpu-run blackmore-2010-pd3-case1 chari-2024-pd6-monte-carlo",
+                  "g4_owner": false
                 }
               ],
-              "qoco_library": "/home/angus/spacecraft-trajectory-optmiser/build/qoco-g4/libqoco.so"
+              "qoco_library": "/home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so"
+            },
+            "batches": {
+              "1": {
+                "batch_size": 1,
+                "seed": 20240101,
+                "solved": 1,
+                "converged": 1,
+                "convergence_probability": 1.0,
+                "accepted": 1,
+                "accepted_probability": 1.0,
+                "accepted_trajectories_per_second": 0.02918707170932341,
+                "wall_seconds": 34.26174471900049,
+                "workers": 1,
+                "tof_median": 4.754269198409219,
+                "tof_iqr": [
+                  4.754269198409219,
+                  4.754269198409219
+                ],
+                "fuel_median": 0.18509898382862588,
+                "violation_max": 3.058213564610668e-07,
+                "defect_max": 4.471214616330599e-07
+              },
+              "16": {
+                "batch_size": 16,
+                "seed": 20240116,
+                "solved": 16,
+                "converged": 16,
+                "convergence_probability": 1.0,
+                "accepted": 16,
+                "accepted_probability": 1.0,
+                "accepted_trajectories_per_second": 0.037982706953535235,
+                "wall_seconds": 421.2443315210003,
+                "workers": 1,
+                "tof_median": 4.435760168695871,
+                "tof_iqr": [
+                  4.2888049776777875,
+                  4.774604287686663
+                ],
+                "fuel_median": 0.17379256533818477,
+                "violation_max": 8.703735219217634e-07,
+                "defect_max": 9.853768596357337e-07
+              },
+              "64": {
+                "batch_size": 64,
+                "seed": 20240164,
+                "solved": 64,
+                "converged": 64,
+                "convergence_probability": 1.0,
+                "accepted": 64,
+                "accepted_probability": 1.0,
+                "accepted_trajectories_per_second": 0.03757818187768158,
+                "wall_seconds": 1703.1159253080004,
+                "workers": 1,
+                "tof_median": 4.787496107522541,
+                "tof_iqr": [
+                  4.545653402093834,
+                  4.945795800949339
+                ],
+                "fuel_median": 0.1812741968904752,
+                "violation_max": 7.580185583666577e-07,
+                "defect_max": 9.913449128262641e-07
+              }
             }
           }
         }
@@ -283,7 +341,7 @@
         "the paper's vehicle parameter table is not reproduced here; the Szmuk 2018 Table 1 vehicle is used with the published position dispersion"
       ],
       "family": "P1-D-pd6",
-      "wall_seconds": 345.3328620989996,
+      "wall_seconds": 2796.6169051669985,
       "support": "partial"
     },
     {
