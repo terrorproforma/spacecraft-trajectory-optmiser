@@ -505,6 +505,27 @@ class RouteSearch:
             "peak_growth_mb": 0.0,
         }
 
+    def release_caches(self) -> dict[str, int]:
+        """Drop the beam's memo tables once the slot is priced (Lambert hop/return/collect
+        candidates, look-ahead, harvest-window costs, the DP pair table); everything is recomputed
+        on demand, so a parked search stays usable for the orphan repair at a few MB instead of
+        ~110 MB.  Returns the entry counts released, for the bundle report."""
+
+        released = {
+            "hops": len(self._hop_cache),
+            "returns": len(self._return_cache),
+            "collects": len(self._collect_cache),
+            "lookahead": len(self._lookahead_cache),
+            "harvest": len(self._harvest_cache),
+            "pairs": self._collect_table.release_caches() if self._collect_table else 0,
+        }
+        self._hop_cache.clear()
+        self._return_cache.clear()
+        self._collect_cache.clear()
+        self._lookahead_cache.clear()
+        self._harvest_cache.clear()
+        return released
+
     @property
     def collect_table(self) -> CollectPairTable:
         """Pair/return cost table of the exact collect-tour DP (built on first use)."""

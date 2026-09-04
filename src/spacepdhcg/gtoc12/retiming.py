@@ -263,6 +263,16 @@ class Retimer:
         self.return_sweeps: dict[int, Any] = {}
         self._return_tables: dict[int, tuple[FloatArray, FloatArray]] = {}
 
+    def release_caches(self) -> int:
+        """Drop the memoised Lambert leg tables (one ``(n_t, n_tof)`` pair per leg and role;
+        recomputed on demand).  Bans, inflations and sweeps - the re-timer's learnt state - stay.
+        Returns the number of tables released."""
+
+        released = len(self._tables) + len(self._return_tables)
+        self._tables.clear()
+        self._return_tables.clear()
+        return released
+
     # -- Lambert tables ------------------------------------------------------------------
 
     def _tofs(self, role: str) -> FloatArray:

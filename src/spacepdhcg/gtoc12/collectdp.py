@@ -138,6 +138,18 @@ class CollectPairTable:
         )
         self.lambert_evaluations = 0
 
+    def release_caches(self) -> int:
+        """Drop the cached pair, return and geometry tables (recomputed on demand); returns the
+        number of pair tables released.  A parked slot keeps its table for the orphan repair,
+        which needs a handful of pairs, not the beam's thousands (14 kB each on the 15-day
+        lattice: ~110 MB of live growth per slot in a 35-member family)."""
+
+        released = len(self._hops)
+        self._hops.clear()
+        self._returns.clear()
+        self._geometry.clear()
+        return released
+
     # -- lattice -------------------------------------------------------------------------
 
     def index_at_or_after(self, epoch: float) -> int:

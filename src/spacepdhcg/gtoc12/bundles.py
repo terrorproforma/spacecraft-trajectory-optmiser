@@ -46,7 +46,7 @@ from .cooperative import EPOCH_TOLERANCE_DAYS, FleetColumn, MinerPool
 from .data import AsteroidCatalogue
 from .earthleg import EarthLegBounds, EarthLegModel, refine_leg_scvx
 from .low_thrust import ScvxSettings
-from .memory import PhaseMemory, bound_heap_growth
+from .memory import PhaseMemory, bound_heap_growth, release_heap
 from .memory import peak_rss_mb as _peak_rss_mb
 from .pipeline import RefinedRoute, refine_route
 from .proxies import phasing_edelbaum_proxy
@@ -769,6 +769,12 @@ def price_cluster(
         used |= set(best.plan.asteroids)
         bundle.ships.append(BundleShip(slot, best, variants, ship_report))
         retimers[slot] = retimer
+        # the parked search only serves the orphan repair: drop its memo tables (the DP pair
+        # table alone is ~110 MB per slot in a 35-member family - the live growth v7 measured
+        # across slots, 70 -> 535 MB after trim over four slots)
+        ship_report["released_caches"] = search.release_caches()
+        retimer.release_caches()
+        release_heap()
         searches[slot] = search
     bundle.earth_legs = earth_report
     if settings.collector_harvest and len(bundle.ships) >= 2 and remaining_budget() > 0.0:

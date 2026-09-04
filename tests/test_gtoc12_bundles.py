@@ -699,6 +699,12 @@ def test_single_slot_pricing_stays_inside_the_declared_memory_budget(bundle) -> 
     if trimmed:
         assert max(trimmed) <= records[0]["rss_mb"] + budget.slot_peak_mb / 2.0
     assert all(r["elapsed_seconds"] >= 0.0 for r in records)
+    # a priced slot parks its search for the orphan repair with its memo tables released (the
+    # per-slot live growth v7 measured): the report says what was dropped, and it was something
+    for ship in bundle.ships:
+        released = ship.report["released_caches"]
+        assert set(released) == {"hops", "returns", "collects", "lookahead", "harvest", "pairs"}
+        assert released["hops"] > 0 and all(v >= 0 for v in released.values())
 
 
 @requires_data
