@@ -1,0 +1,87 @@
+{
+  "artifacts": {
+    "solution": "results/gtoc12/runs/probe_v5_family247/fleet/Result.txt"
+  },
+  "elapsed_seconds": 826.0926391940156,
+  "fleet": {
+    "asteroids": [
+      100,
+      5050,
+      12747,
+      17436,
+      27438,
+      29746,
+      30332,
+      30520,
+      36236,
+      38774,
+      42339,
+      49438,
+      55977,
+      58743
+    ],
+    "average_collected_kg": 493.0184804928132,
+    "collected_kg_per_ship": [
+      547.0225872689939,
+      439.01437371663246
+    ],
+    "rule_satisfied": true,
+    "ship_limit": 14.37112668723354,
+    "ships": 2,
+    "total_collected_kg": 986.0369609856264
+  },
+  "independent": {
+    "max_mass_error_kg": 9.754330676514655e-11,
+    "max_position_error_km": 112.67736107094571,
+    "max_velocity_error_km_s": 6.252615435811993e-06,
+    "mined_asteroids": 14,
+    "ok": true,
+    "ship_limit": 14.371126687238531,
+    "ships": 2,
+    "total_mass_kg": 986.0369609858001,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 957.0126183812689
+  },
+  "master": {
+    "collected_kg": 986.0369609856263,
+    "columns": 5,
+    "cooperative": {
+      "bundle_columns": 1,
+      "collector_ships": 0,
+      "deployer_ships": 0,
+      "foreign_collects": 0
+    },
+    "exhaustive": true,
+    "gap_kg": 0.0,
+    "greedy_objective_kg": 957.0126183811175,
+    "lp_bound_kg": 957.0126183811175,
+    "lp_gap_kg": 0.0,
+    "lp_nodes": 0,
+    "lp_relaxations_kg": {
+      "1": 542.8419560427354,
+      "2": 957.0126183811175
+    },
+    "lp_seconds": 0.005835813994053751,
+    "lp_sizes_searched": [],
+    "mean_collected_kg": 493.0184804928131,
+    "nodes": 1,
+    "objective_kg": 957.0126183811175,
+    "proven_optimal": true,
+    "root_bound_kg": 957.0126183811175,
+    "ship_limit": 14.371126687233536,
+    "ships": 2,
+    "upper_bound_kg": 957.0126183811175
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 14,
+    "ok": true,
+    "return_code": 0,
+    "ships": 2,
+    "total_mass_kg": 986.037,
+    "wall_seconds": 0.055467016994953156
+  },
+  "ok": true,
+  "score_kg": 986.037
+}

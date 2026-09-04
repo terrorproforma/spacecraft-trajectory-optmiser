@@ -1,0 +1,93 @@
+{
+  "asteroids": [
+    6856,
+    21801
+  ],
+  "certified": true,
+  "collected_mass_kg": {
+    "6856": 99.0280629705681,
+    "21801": 75.20876112251882
+  },
+  "failures": [],
+  "final_mass_kg": 1800.0953802271922,
+  "legs": [
+    {
+      "certified": true,
+      "delta_v_km_s": 6.784070454380317,
+      "from": 0,
+      "mass_after": 2523.5498512579443,
+      "mass_before": 3000.0,
+      "position_error_km": 11.223855168817265,
+      "propellant_kg": 476.45004414301457,
+      "scvx_iterations": 40,
+      "solve_seconds": 11.30139353699633,
+      "status": "feasible",
+      "t0": 64508.0,
+      "tf": 65108.0,
+      "to": 6856,
+      "velocity_error_m_s": 0.0005395448499147246
+    },
+    {
+      "certified": true,
+      "delta_v_km_s": 1.9162844258605574,
+      "from": 6856,
+      "mass_after": 2365.1401280615996,
+      "mass_before": 2483.5498512579443,
+      "position_error_km": 0.025632341099103645,
+      "propellant_kg": 118.40972331255443,
+      "scvx_iterations": 8,
+      "solve_seconds": 0.7870824790006736,
+      "status": "feasible",
+      "t0": 65138.0,
+      "tf": 65498.0,
+      "to": 21801,
+      "velocity_error_m_s": 1.429526532945941e-06
+    },
+    {
+      "certified": true,
+      "delta_v_km_s": 4.008160040308226,
+      "from": 21801,
+      "mass_after": 2167.19662169879,
+      "mass_before": 2400.3488891841184,
+      "position_error_km": 0.02034178599580629,
+      "propellant_kg": 233.15226771526932,
+      "scvx_iterations": 5,
+      "solve_seconds": 0.7605111400043825,
+      "status": "feasible",
+      "t0": 68245.0,
+      "tf": 68725.0,
+      "to": 6856,
+      "velocity_error_m_s": 2.1330115032056957e-06
+    },
+    {
+      "certified": true,
+      "delta_v_km_s": 5.408763501048747,
+      "from": 6856,
+      "mass_after": 1974.332204320279,
+      "mass_before": 2266.224684669358,
+      "position_error_km": 0.5754126837561788,
+      "propellant_kg": 291.8924807301687,
+      "scvx_iterations": 8,
+      "solve_seconds": 2.646815414002049,
+      "status": "feasible",
+      "t0": 68725.0,
+      "tf": 69325.0,
+      "to": 0,
+      "velocity_error_m_s": 9.615859007294446e-05
+    }
+  ],
+  "master_certified": true,
+  "passes": 1,
+  "refined_arcs": 4,
+  "scheduler": {
+    "batches": 1,
+    "completed": 1,
+    "failed": 0,
+    "feasible": 1,
+    "numeric_updates": 4,
+    "submitted": 1,
+    "workspace_creations": 3
+  },
+  "total_collected_kg": 174.2368240930869,
+  "wall_seconds": 16.309114560994203
+}

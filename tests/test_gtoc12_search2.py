@@ -128,7 +128,10 @@ def test_first_level_is_block_invariant_and_search_deterministic(catalogue) -> N
     small = RouteSearch(catalogue, ids, SearchSettings(earth_block=7, **common))
     first_big = [(p.location, p.epoch, p.mass) for p in big._first_level()]
     first_small = [(p.location, p.epoch, p.mass) for p in small._first_level()]
-    assert first_big == first_small  # chunked screening changes memory, not results
+    # chunked screening changes memory, not results (masses may differ at the ULP level because
+    # NumPy's vectorised exp/log take a different code path for short array tails)
+    assert [(a, e) for a, e, _ in first_big] == [(a, e) for a, e, _ in first_small]
+    assert np.allclose([m for *_, m in first_big], [m for *_, m in first_small], rtol=1e-12)
     assert first_big  # the grids must actually admit Earth legs or the test is vacuous
     first = RouteSearch(catalogue, ids, SearchSettings(**common)).run()
     second = RouteSearch(catalogue, ids, SearchSettings(**common)).run()

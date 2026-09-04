@@ -55,6 +55,70 @@ def thrust_authority_km_s(
     return duty * acceleration * np.asarray(tof_days) * C.DAY_S
 
 
+# Low-thrust penalty over the impulsive (zero-revolution Lambert) ΔV as a function of the
+# authority ratio r = Lambert ΔV / (T_max / m x TOF).  Measured on the 1674 SCvx-certified
+# asteroid hops archived by the first three campaigns (results/gtoc12/runs/*): the median
+# measured/Lambert ratio is 1.04 at r < 0.1, 1.08 at 0.1-0.2, 1.13 at 0.2-0.3, 1.21 at 0.3-0.4,
+# 1.31 at 0.4-0.5 and 1.45 at 0.5-0.6 - a flat 1.2 over-prices slow hops by 10-15 % and
+# under-prices hops near the authority limit by 20 %.  ``1.05 + 0.65 r`` sits at the p60-p75 of
+# every bin (conservative, so the forward mass check closes), rms residual 0.10.
+LOW_THRUST_INFLATION_FLOOR = 1.05
+LOW_THRUST_INFLATION_SLOPE = 0.65
+
+
+def low_thrust_inflation(
+    lambert_dv_km_s: FloatArray,
+    mass_kg: FloatArray,
+    tof_days: FloatArray,
+    *,
+    floor: float = LOW_THRUST_INFLATION_FLOOR,
+    slope: float = LOW_THRUST_INFLATION_SLOPE,
+) -> FloatArray:
+    """Ratio-dependent propellant inflation ``floor + slope x r`` (see above); vectorised."""
+
+    authority = thrust_authority_km_s(mass_kg, tof_days, 1.0)
+    ratio = np.asarray(lambert_dv_km_s) / np.maximum(authority, 1e-12)
+    return floor + slope * ratio
+
+
+# Earth-return inflation (SCvx ΔV / zero-revolution Lambert ΔV with the 6 km/s arrival v∞
+# allowance) as a function of the return TOF, measured on the 2455 SCvx-certified returns of
+# the archive (results/gtoc12/runs/*, ``hopcalib.certified_returns``).  The zero-revolution
+# Lambert ΔV is nearly flat in TOF (6.0-6.4 km/s from 405 to 525 days) while the certified
+# low-thrust ΔV falls from 8.3 km/s at 405-435 d to 5.5 km/s at 525-555 d: a 420-day return
+# really costs 1.30x Lambert (p65 1.38) and a 540-day one 0.96x.  Pricing every TOF at a flat
+# factor (1.0 in the campaigns) therefore under-priced the short returns the re-timer chose by
+# 65 kg (median, 133 kg p90) on the v6 fleet and hid that a 120-day longer return is ~70 kg
+# cheaper.  Table: bin centre (days) -> p65 of the measured ratio; linear between centres,
+# clamped outside.  Within a bin the ratio still matters (405-465 d: 1.22 at r = 0.25, 1.39 at
+# r = 0.45), hence the ``RETURN_INFLATION_RATIO_SLOPE`` correction about the median ratio 0.33.
+RETURN_INFLATION_TOF_DAYS = (352.0, 420.0, 450.0, 480.0, 510.0, 540.0, 578.0, 630.0, 690.0, 810.0)
+RETURN_INFLATION_P65 = (1.323, 1.383, 1.295, 1.195, 1.099, 0.977, 0.885, 0.930, 0.932, 1.014)
+RETURN_INFLATION_RATIO_SLOPE = 0.6
+RETURN_INFLATION_RATIO_CENTRE = 0.33
+
+
+def return_inflation_model(
+    tof_days: FloatArray | float,
+    authority_ratio: FloatArray | float,
+    *,
+    floor: float = 0.85,
+) -> FloatArray:
+    """TOF- and ratio-dependent inflation of an Earth return (see the table above); vectorised.
+
+    ``floor`` keeps the model from crediting more than the archive supports at the long-TOF
+    end (the p25 of the 555-600 d bin is 0.72; SCvx does beat zero-revolution Lambert there
+    because the multi-revolution low-thrust arc is the natural solution, but the forward mass
+    check must still close).
+    """
+
+    tof = np.asarray(tof_days, dtype=np.float64)
+    ratio = np.asarray(authority_ratio, dtype=np.float64)
+    base = np.interp(tof, RETURN_INFLATION_TOF_DAYS, RETURN_INFLATION_P65)
+    correction = 1.0 + RETURN_INFLATION_RATIO_SLOPE * (ratio - RETURN_INFLATION_RATIO_CENTRE)
+    return np.maximum(base * np.clip(correction, 0.85, 1.2), floor)
+
+
 def edelbaum_proxy(
     a1_km: FloatArray,
     i1_rad: FloatArray,

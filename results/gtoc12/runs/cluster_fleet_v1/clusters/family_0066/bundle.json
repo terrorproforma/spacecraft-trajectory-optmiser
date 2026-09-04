@@ -1,0 +1,17 @@
+{
+  "cooperative": null,
+  "earth_legs": {},
+  "label": 66,
+  "members": 20,
+  "peak_rss_mb": 0.0,
+  "rejected": [
+    {
+      "reason": "worker exception",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/angus/worktrees/spacepdhcg-gtoc12/src/spacepdhcg/gtoc12/bundles.py\", line 881, in _price_in_worker\n    return price_cluster(\n           ^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-gtoc12/src/spacepdhcg/gtoc12/bundles.py\", line 602, in price_cluster\n    improvement = improve_and_certify(\n                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-gtoc12/src/spacepdhcg/gtoc12/retiming.py\", line 1013, in improve_and_certify\n    improved = improve_plan(\n               ^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-gtoc12/src/spacepdhcg/gtoc12/retiming.py\", line 910, in improve_plan\n    first = retimer.retime(current)\n            ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-gtoc12/src/spacepdhcg/gtoc12/retiming.py\", line 592, in retime\n    return self.retime_order(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-gtoc12/src/spacepdhcg/gtoc12/retiming.py\", line 509, in retime_order\n    visits = build_visits(deploy_order, collect_order, foreign)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-gtoc12/src/spacepdhcg/gtoc12/retiming.py\", line 658, in build_visits\n    raise ValueError(\"an asteroid appears twice in a visit order\")\nValueError: an asteroid appears twice in a visit order\n"
+    }
+  ],
+  "repairs": [],
+  "ships": [],
+  "stopped": "crashed: ValueError('an asteroid appears twice in a visit order')",
+  "wall_seconds": 0.0
+}

@@ -1,0 +1,194 @@
+{
+  "cooperative": null,
+  "earth_legs": {
+    "certified": 6,
+    "checked": 16,
+    "rejected": [
+      {
+        "authority_ratio": 0.7910891911109469,
+        "lambert_dv_km_s": 5.468008488958864,
+        "launch_epoch": 64538.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 18450,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.8111940950594783,
+        "lambert_dv_km_s": 5.606973585051113,
+        "launch_epoch": 64538.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 47388,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.7549101895010247,
+        "lambert_dv_km_s": 5.870181633559968,
+        "launch_epoch": 64508.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 54625,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.8645396512915104,
+        "lambert_dv_km_s": 5.97569806972692,
+        "launch_epoch": 64538.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 46935,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.8760126709365278,
+        "lambert_dv_km_s": 6.054999581513279,
+        "launch_epoch": 64538.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 54625,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.8815043123617841,
+        "lambert_dv_km_s": 6.854577532925232,
+        "launch_epoch": 64508.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 46935,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.8675379926425261,
+        "lambert_dv_km_s": 6.745975430788282,
+        "launch_epoch": 64568.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 47388,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.8701400403794719,
+        "lambert_dv_km_s": 6.766208953990772,
+        "launch_epoch": 64568.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 18450,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.7588083028848597,
+        "lambert_dv_km_s": 5.244882989540149,
+        "launch_epoch": 64538.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 22773,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.9068285628821736,
+        "lambert_dv_km_s": 7.051498904971781,
+        "launch_epoch": 64508.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 18450,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.7910891911109469,
+        "lambert_dv_km_s": 5.468008488958864,
+        "launch_epoch": 64538.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 18450,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.7549101895010247,
+        "lambert_dv_km_s": 5.870181633559968,
+        "launch_epoch": 64508.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 54625,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.8760126709365278,
+        "lambert_dv_km_s": 6.054999581513279,
+        "launch_epoch": 64538.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 54625,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.8701400403794719,
+        "lambert_dv_km_s": 6.766208953990772,
+        "launch_epoch": 64568.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 18450,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.9068285628821736,
+        "lambert_dv_km_s": 7.051498904971781,
+        "launch_epoch": 64508.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 18450,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.6828510360386397,
+        "lambert_dv_km_s": 7.079799541648615,
+        "launch_epoch": 64568.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 19925,
+        "tof_days": 600.0
+      }
+    ]
+  },
+  "label": 127,
+  "members": 13,
+  "peak_rss_mb": 524.96484375,
+  "rejected": [
+    {
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 2.736e-03",
+          "from": 13570,
+          "leg": 13,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 0
+        }
+      ],
+      "reason": "re-timed variant not certified",
+      "result": {
+        "banned": "13570->0",
+        "ratio": 0.32875229886497115,
+        "tof_days": 405.0
+      },
+      "slot": 1
+    },
+    {
+      "detail": "asteroid 18450 collected against a stale deploy epoch",
+      "reason": "inconsistent bundle"
+    }
+  ],
+  "repairs": [
+    {
+      "asteroid": 7457,
+      "collected_kg": 308.82956878850104,
+      "deployer": 2,
+      "kind": "dropped"
+    },
+    {
+      "asteroid": 18450,
+      "collected_kg": 397.5359342915811,
+      "collector": 1,
+      "deployer": 2,
+      "kind": "foreign_collect"
+    },
+    {
+      "asteroid": 50136,
+      "collected_kg": 347.02258726899385,
+      "deployer": 2,
+      "kind": "dropped"
+    },
+    {
+      "detail": "asteroid 18450 collected against a stale deploy epoch",
+      "kind": "bundle_discarded"
+    }
+  ],
+  "ships": [],
+  "stopped": "family exhausted before ship slot 3",
+  "wall_seconds": 587.7671537939896
+}

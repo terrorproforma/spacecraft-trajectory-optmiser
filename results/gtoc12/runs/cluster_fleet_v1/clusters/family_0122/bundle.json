@@ -1,0 +1,235 @@
+{
+  "cooperative": {
+    "asteroids": 12,
+    "collected_kg": 832.0328542094455,
+    "collectors_per_deployer": {
+      "1": 1,
+      "2": 0
+    },
+    "cooperative_collects": 4,
+    "deployers_with_collectors": 1,
+    "orphans_left": [],
+    "ships": 2
+  },
+  "earth_legs": {
+    "certified": 8,
+    "checked": 18,
+    "rejected": [
+      {
+        "authority_ratio": 0.8174968031513614,
+        "lambert_dv_km_s": 5.650537903382209,
+        "launch_epoch": 64448.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 23385,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.7202849480273343,
+        "lambert_dv_km_s": 6.845588146051785,
+        "launch_epoch": 64478.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 23153,
+        "tof_days": 550.0
+      },
+      {
+        "authority_ratio": 0.7188153755295595,
+        "lambert_dv_km_s": 5.589508360117854,
+        "launch_epoch": 64448.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53109,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.8557625061588654,
+        "lambert_dv_km_s": 6.654409247891336,
+        "launch_epoch": 64418.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 23385,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.8717987429035073,
+        "lambert_dv_km_s": 6.025872910949042,
+        "launch_epoch": 64448.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 49522,
+        "tof_days": 400.0
+      },
+      {
+        "authority_ratio": 0.7188153755295595,
+        "lambert_dv_km_s": 5.589508360117854,
+        "launch_epoch": 64448.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53109,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.8603789986854559,
+        "lambert_dv_km_s": 6.690307093778104,
+        "launch_epoch": 64928.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53109,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.7730098157730566,
+        "lambert_dv_km_s": 8.01456576993505,
+        "launch_epoch": 64478.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53109,
+        "tof_days": 600.0
+      },
+      {
+        "authority_ratio": 0.8581935303976669,
+        "lambert_dv_km_s": 7.4147921026358405,
+        "launch_epoch": 64868.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53109,
+        "tof_days": 500.0
+      },
+      {
+        "authority_ratio": 0.8887438476732638,
+        "lambert_dv_km_s": 8.446621528286698,
+        "launch_epoch": 64478.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 650,
+        "tof_days": 550.0
+      },
+      {
+        "authority_ratio": 0.6699348973881842,
+        "lambert_dv_km_s": 9.84000377283765,
+        "launch_epoch": 64508.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53109,
+        "tof_days": 850.0
+      },
+      {
+        "authority_ratio": 0.697507467829489,
+        "lambert_dv_km_s": 9.039696783070177,
+        "launch_epoch": 64958.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53109,
+        "tof_days": 750.0
+      }
+    ]
+  },
+  "label": 122,
+  "members": 12,
+  "peak_rss_mb": 601.359375,
+  "rejected": [],
+  "repairs": [],
+  "ships": [
+    {
+      "asteroids": [
+        35473,
+        51691,
+        3299,
+        23153,
+        3959,
+        52066,
+        49522,
+        36570,
+        52308,
+        23385
+      ],
+      "certified_variants": 2,
+      "collected_kg": 458.3162217659137,
+      "final_mass_kg": 535.8693846998619,
+      "foreign_collects": [],
+      "launch_epoch": 64448.0,
+      "orphaned": [
+        49522,
+        36570,
+        52308,
+        23385
+      ],
+      "refined_arcs": 17,
+      "refined_attempt": 0,
+      "refined_rank": 0,
+      "retiming": {
+        "after_kg": 458.3162217659137,
+        "attempts": 2,
+        "bans": {},
+        "before_kg": 426.611909650924,
+        "certified_variants": 1,
+        "wall_seconds": 52.35452875700139
+      },
+      "search": [
+        {
+          "attempt": 0,
+          "banned_earth": 0,
+          "banned_pairs": 0,
+          "best_by_depth": {
+            "5": 453.7987679671458,
+            "6": 486.57084188911705,
+            "7": 470.0616016427105
+          },
+          "candidates": 24,
+          "earth_legs": [
+            23153,
+            3959,
+            53109,
+            35473
+          ],
+          "failed_chains": 162,
+          "wall_seconds": 59.50170722199255
+        }
+      ],
+      "slot": 1
+    },
+    {
+      "asteroids": [
+        650,
+        53109,
+        36570,
+        23385,
+        49522,
+        52308
+      ],
+      "certified_variants": 3,
+      "collected_kg": 373.7166324435318,
+      "final_mass_kg": 534.0453040554374,
+      "foreign_collects": [
+        23385,
+        36570,
+        49522,
+        52308
+      ],
+      "launch_epoch": 64448.0,
+      "orphaned": [],
+      "refined_arcs": 8,
+      "refined_attempt": 0,
+      "refined_rank": 0,
+      "retiming": {
+        "after_kg": 373.7166324435318,
+        "attempts": 3,
+        "bans": {},
+        "before_kg": 156.16700889801507,
+        "certified_variants": 2,
+        "wall_seconds": 43.95311049900192
+      },
+      "search": [
+        {
+          "attempt": 0,
+          "banned_earth": 0,
+          "banned_pairs": 0,
+          "best_by_depth": {
+            "2": 156.16700889801507
+          },
+          "candidates": 2,
+          "earth_legs": [
+            53109,
+            53109,
+            650,
+            650
+          ],
+          "failed_chains": 0,
+          "wall_seconds": 1.2279300410009455
+        }
+      ],
+      "slot": 2
+    }
+  ],
+  "stopped": "family exhausted before ship slot 3",
+  "wall_seconds": 308.3347315380088
+}

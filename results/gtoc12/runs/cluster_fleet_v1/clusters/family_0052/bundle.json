@@ -1,0 +1,206 @@
+{
+  "cooperative": null,
+  "earth_legs": {
+    "certified": 8,
+    "checked": 17,
+    "rejected": [
+      {
+        "authority_ratio": 0.5777098950590496,
+        "lambert_dv_km_s": 5.490554842641207,
+        "launch_epoch": 64628.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 58224,
+        "tof_days": 550.0
+      },
+      {
+        "authority_ratio": 0.7803091692364096,
+        "lambert_dv_km_s": 6.06768409998232,
+        "launch_epoch": 64628.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53214,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.5777098950590496,
+        "lambert_dv_km_s": 5.490554842641207,
+        "launch_epoch": 64628.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 58224,
+        "tof_days": 550.0
+      },
+      {
+        "authority_ratio": 0.7803091692364096,
+        "lambert_dv_km_s": 6.06768409998232,
+        "launch_epoch": 64628.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53214,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.7194532716064663,
+        "lambert_dv_km_s": 6.216076266679869,
+        "launch_epoch": 64658.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 58224,
+        "tof_days": 500.0
+      },
+      {
+        "authority_ratio": 0.8378430767259645,
+        "lambert_dv_km_s": 7.238964182912332,
+        "launch_epoch": 64658.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 36670,
+        "tof_days": 500.0
+      },
+      {
+        "authority_ratio": 0.8637821158883084,
+        "lambert_dv_km_s": 7.463077481274984,
+        "launch_epoch": 64598.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 36670,
+        "tof_days": 500.0
+      },
+      {
+        "authority_ratio": 0.8457288270386081,
+        "lambert_dv_km_s": 7.307097065613573,
+        "launch_epoch": 64658.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53214,
+        "tof_days": 500.0
+      },
+      {
+        "authority_ratio": 0.8969114686216009,
+        "lambert_dv_km_s": 7.74931508889063,
+        "launch_epoch": 64598.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 53214,
+        "tof_days": 500.0
+      },
+      {
+        "authority_ratio": 0.8855354092957999,
+        "lambert_dv_km_s": 8.416128529947281,
+        "launch_epoch": 64598.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 47955,
+        "tof_days": 550.0
+      },
+      {
+        "authority_ratio": 0.9410768790465759,
+        "lambert_dv_km_s": 7.3178138114661735,
+        "launch_epoch": 65048.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 36670,
+        "tof_days": 450.0
+      },
+      {
+        "authority_ratio": 0.906082210353603,
+        "lambert_dv_km_s": 8.611405327200643,
+        "launch_epoch": 64598.0,
+        "reason": "earth leg not certified by SCvx",
+        "target": 58224,
+        "tof_days": 550.0
+      }
+    ]
+  },
+  "label": 52,
+  "members": 15,
+  "peak_rss_mb": 601.359375,
+  "rejected": [
+    {
+      "asteroid": 916,
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 8.167e-03",
+          "from": 0,
+          "leg": 0,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 14253
+        }
+      ],
+      "reason": "dropped-visit variant not certified",
+      "slot": 1
+    },
+    {
+      "asteroid": 15365,
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 2.431e-03",
+          "from": 14253,
+          "leg": 12,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 0
+        }
+      ],
+      "reason": "orphan repair variant not certified",
+      "slot": 1
+    },
+    {
+      "asteroid": 15365,
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 8.167e-03",
+          "from": 0,
+          "leg": 0,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 14253
+        }
+      ],
+      "reason": "orphan repair variant not certified",
+      "slot": 1
+    },
+    {
+      "asteroid": 15365,
+      "failures": [
+        {
+          "certification": "optimizer status is not certification",
+          "diagnostic": "virtual control remains 8.167e-03",
+          "from": 0,
+          "leg": 0,
+          "pass": 1,
+          "status": "infeasible",
+          "to": 14253
+        }
+      ],
+      "reason": "orphan repair variant not certified",
+      "slot": 1
+    },
+    {
+      "detail": "asteroid 58224 collected against a stale deploy epoch",
+      "reason": "inconsistent bundle"
+    }
+  ],
+  "repairs": [
+    {
+      "asteroid": 916,
+      "collected_kg": 317.3716632443532,
+      "deployer": 1,
+      "kind": "reverted"
+    },
+    {
+      "asteroid": 15365,
+      "collected_kg": 333.4702258726899,
+      "deployer": 2,
+      "kind": "dropped"
+    },
+    {
+      "asteroid": 58224,
+      "collected_kg": 364.6817248459959,
+      "collector": 1,
+      "deployer": 2,
+      "kind": "foreign_collect"
+    },
+    {
+      "detail": "asteroid 58224 collected against a stale deploy epoch",
+      "kind": "bundle_discarded"
+    }
+  ],
+  "ships": [],
+  "stopped": "family exhausted before ship slot 3",
+  "wall_seconds": 654.4729128150066
+}

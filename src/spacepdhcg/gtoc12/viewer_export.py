@@ -80,6 +80,7 @@ def ship_record(
     commit: str,
     verification: dict[str, Any],
     solution_sha256: str,
+    campaign: str = "gtoc12-full-catalogue",
 ) -> dict[str, Any]:
     arrays = history.arrays()
     times = arrays["epochs_mjd"]
@@ -180,7 +181,7 @@ def ship_record(
             **{key: value for key, value in verification.items() if key != "violations"},
         },
         "source": {
-            "campaign": "gtoc12-reduced-v1",
+            "campaign": campaign,
             "commit": commit,
             "run_id": run_id,
             "generator": "spacepdhcg.gtoc12.pipeline",
@@ -197,6 +198,24 @@ def ship_record(
     }
 
 
+def dataset_title(instance_id: str, ships: int, verification: dict[str, Any]) -> str:
+    """Viewer title from the instance the solution was built on (not a fixed constant).
+
+    ``gtoc12-reduced-*`` instances are labelled *reduced-instance*; anything else is the full
+    catalogue.  The fleet size and the verified score are appended when known.
+    """
+
+    label = "reduced-instance" if "reduced" in instance_id else "full-catalogue"
+    title = f"GTOC12 {label} OrbitWeaver solution"
+    details = []
+    if ships:
+        details.append(f"{ships} ship{'s' if ships != 1 else ''}")
+    score = verification.get("total_mass_kg")
+    if isinstance(score, int | float):
+        details.append(f"{float(score):.1f} kg")
+    return f"{title} ({', '.join(details)})" if details else title
+
+
 def write_viewer_dataset(
     directory: Path,
     solution: Solution,
@@ -207,6 +226,7 @@ def write_viewer_dataset(
     commit: str,
     verification: dict[str, Any],
     solution_path: Path,
+    instance_id: str = "gtoc12-full-catalogue",
 ) -> dict[str, Any]:
     directory.mkdir(parents=True, exist_ok=True)
     solution_sha256 = hashlib.sha256(solution_path.read_bytes()).hexdigest()
@@ -220,13 +240,14 @@ def write_viewer_dataset(
             commit=commit,
             verification=verification,
             solution_sha256=solution_sha256,
+            campaign=instance_id,
         )
         for ship_id in sorted(histories)
     ]
     payload = {
         "schema_version": VIEWER_SCHEMA_VERSION,
         "viewer_schema_version": VIEWER_SCHEMA_VERSION,
-        "title": "GTOC12 reduced-instance OrbitWeaver solution",
+        "title": dataset_title(instance_id, len(histories), verification),
         "generated_by_commit": commit,
         "imported_source_sha256": solution_sha256,
         "prohibitions": {

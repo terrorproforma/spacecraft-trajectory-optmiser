@@ -1,0 +1,88 @@
+{
+  "artifacts": {
+    "solution": "results/gtoc12/runs/cluster_fleet_v2_deep/fleets/fleet_002_05ships/Result.txt"
+  },
+  "elapsed_seconds": 1669.7348039219942,
+  "fleet": {
+    "asteroids": [
+      1283,
+      3048,
+      6139,
+      7798,
+      8634,
+      10771,
+      11174,
+      11308,
+      12659,
+      12930,
+      14880,
+      17199,
+      18087,
+      20805,
+      24662,
+      27463,
+      27651,
+      31094,
+      32661,
+      33458,
+      33475,
+      34436,
+      37167,
+      38934,
+      40868,
+      43685,
+      48297,
+      53590,
+      59321
+    ],
+    "average_collected_kg": 422.0944558521561,
+    "collected_kg_per_ship": [
+      486.24229979466116,
+      402.8747433264887,
+      498.56262833675567,
+      530.5954825462012,
+      192.1971252566735
+    ],
+    "rule_satisfied": true,
+    "ship_limit": 10.821392954209491,
+    "ships": 5,
+    "total_collected_kg": 2110.4722792607804
+  },
+  "independent": {
+    "max_mass_error_kg": 9.617906471248716e-11,
+    "max_position_error_km": 98.75245043687858,
+    "max_velocity_error_km_s": 5.28653571118238e-06,
+    "mined_asteroids": 29,
+    "ok": true,
+    "ship_limit": 10.821392954211392,
+    "ships": 5,
+    "total_mass_kg": 2110.472279261,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 1915.6998492538112
+  },
+  "master": {
+    "collected_kg": 2110.4722792607804,
+    "columns": 11,
+    "exhaustive": true,
+    "gap_kg": 3019.2153232282876,
+    "greedy_objective_kg": 1915.6998492535927,
+    "mean_collected_kg": 422.0944558521561,
+    "nodes": 145,
+    "objective_kg": 1915.6998492535927,
+    "ship_limit": 10.821392954209491,
+    "ships": 5,
+    "upper_bound_kg": 4934.91517248188
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 29,
+    "ok": true,
+    "return_code": 0,
+    "ships": 5,
+    "total_mass_kg": 2110.47,
+    "wall_seconds": 0.08703276800224558
+  },
+  "ok": true,
+  "score_kg": 2110.47
+}
