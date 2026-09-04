@@ -501,25 +501,40 @@ def test_forward_collection_tour_collects_in_deploy_order_after_one_repositionin
     again = RouteSearch(catalogue, members, settings).run()
     assert [p.summary() for p in again.candidates] == [p.summary() for p in result.candidates]
 
-    # collect look-ahead: every deploy pair is also priced ~3 years later; the cost is a finite
-    # hop propellant for reachable pairs (inf otherwise), cached per (source, departure), and
-    # a beam with the weight on is deterministic and only keeps pairs that are re-flyable
+    # collect look-ahead with the DP's pair table (the default): every deploy pair is priced at
+    # its calibrated harvest-window cost at the collector's reference mass - independent of the
+    # deploy-time mass, cached per unordered pair, an unreachable pair charged the fixed penalty
     hops = search.hops_from(int(members[0]), C.MISSION_START_MJD + 800.0)
     targets = np.asarray(hops["target_ids"], dtype=np.int64)
     cost = search.collect_lookahead(int(members[0]), targets, C.MISSION_START_MJD + 800.0, 2500.0)
+    assert cost.shape == targets.shape and np.all(cost > 0.0) and np.all(np.isfinite(cost))
+    assert np.all(cost <= settings.harvest_unreachable_kg)
+    heavier = search.collect_lookahead(
+        int(members[0]), targets, C.MISSION_START_MJD + 800.0, 2900.0
+    )
+    assert np.array_equal(heavier, cost)
+    assert all(
+        (min(int(members[0]), int(t)), max(int(members[0]), int(t))) in search._harvest_cache
+        for t in targets
+    )
+    # the Lambert look-ahead (no DP table) prices the deploy-time mass: heavier costs more
+    lambert = RouteSearch(catalogue, members, replace(settings, harvest_window_ranking=False))
+    cost = lambert.collect_lookahead(int(members[0]), targets, C.MISSION_START_MJD + 800.0, 2500.0)
     assert cost.shape == targets.shape and np.all(cost > 0.0)
     assert np.isfinite(cost).any()
-    heavier = search.collect_lookahead(
+    heavier = lambert.collect_lookahead(
         int(members[0]), targets, C.MISSION_START_MJD + 800.0, 2900.0
     )
     finite = np.isfinite(cost)
     assert np.all(heavier[finite] > cost[finite])  # same ΔV costs more propellant at higher mass
-    assert (int(members[0]), round(C.MISSION_START_MJD + 800.0, 6)) in search._lookahead_cache
-    weighted = replace(settings, collect_lookahead_weight=0.5)
-    first = RouteSearch(catalogue, members, weighted).run()
-    second = RouteSearch(catalogue, members, weighted).run()
-    assert [p.summary() for p in first.candidates] == [p.summary() for p in second.candidates]
-    assert first.lambert_evaluations > result.lambert_evaluations  # the look-ahead screens too
+    assert (int(members[0]), round(C.MISSION_START_MJD + 800.0, 6)) in lambert._lookahead_cache
+    # a beam with the weight on is deterministic, for either look-ahead
+    for ranking in (True, False):
+        weighted = replace(settings, collect_lookahead_weight=0.5, harvest_window_ranking=ranking)
+        first = RouteSearch(catalogue, members, weighted).run()
+        second = RouteSearch(catalogue, members, weighted).run()
+        assert [p.summary() for p in first.candidates] == [p.summary() for p in second.candidates]
+    assert first.lambert_evaluations > result.lambert_evaluations  # the Lambert look-ahead screens
 
 
 @requires_data
