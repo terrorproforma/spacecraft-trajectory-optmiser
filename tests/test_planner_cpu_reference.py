@@ -141,6 +141,22 @@ def test_warm_start_from_a_previous_result_reconverges_quickly(
     assert np.max(np.abs(result.states[0] - previous.states[0])) == 0.0
 
 
+def test_certificate_residual_is_the_accepted_solve_not_a_rejected_candidate() -> None:
+    # The short 6-DoF horizon converges by rejecting its second candidate (the fixed point).
+    # The first real-GPU sweep found the CPU reference reporting that rejected candidate's
+    # 1.197e-6 relative residual as the plan's canonical residual (against the accepted
+    # solve's 3.1e-8) and failing its own certificate on a certified trajectory.
+    result = plan(_short(example("powered_descent_6dof"), 10), PlanOptions(backend="cpu_reference"))
+    iterations = result.iterations
+    assert any(not record["accepted"] for record in iterations), "fixture must reject a candidate"
+    accepted = [record for record in iterations if record["accepted"]]
+    assert accepted, "fixture must accept a step"
+    canonical = result.document["solver_residuals"]["canonical_residual"]
+    assert canonical == accepted[-1]["natural_residual"]
+    assert canonical != iterations[-1]["natural_residual"] or iterations[-1]["accepted"]
+    assert result.certified, result.failed_gates
+
+
 def test_warm_start_document_shape_is_validated() -> None:
     document = example("hcw")
     document["warm_start"] = {"states": [[0.0] * 6] * 3, "controls": [[0.0] * 3] * 2}

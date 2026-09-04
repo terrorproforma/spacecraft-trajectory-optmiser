@@ -456,20 +456,17 @@ __global__ void variational_kernel(
     }
 }
 
-__global__ void hcw_exact_kernel(
-    const double* states,
-    const double* controls,
-    double* propagated,
-    double* transition,
-    double* sensitivity,
-    double* offset,
-    const size_t intervals,
-    const spacepdhcg_cuda_dynamics_config config
+/// Exact zero-order-hold HCW discretisation over `config.step_seconds`: the same closed-form
+/// state-transition and control matrices as the host `dynamics::discretise_hcw`.  Shared by the
+/// coefficient kernel and the trajectory replay so the device never mixes two HCW integrators
+/// (an RK4 replay of the continuous model drifted ~1e-6 from these exact rows per horizon,
+/// which the planner's 1e-9 host/device replay-parity certificate rejected and which made the
+/// SCvx merit ratio of an exactly-linear problem negative).
+__device__ void hcw_exact_matrices(
+    const spacepdhcg_cuda_dynamics_config& config,
+    double* state_matrix,
+    double* control_matrix
 ) {
-    const size_t interval = blockIdx.x;
-    if (threadIdx.x != 0 || interval >= intervals) {
-        return;
-    }
     const double n = config.mean_motion;
     const double t = config.step_seconds;
     const double angle = n * t;
@@ -477,8 +474,12 @@ __global__ void hcw_exact_kernel(
     const double s = sin(angle);
     const double inverse_n = 1.0 / n;
     const double inverse_n_squared = inverse_n * inverse_n;
-    double state_matrix[36]{};
-    double control_matrix[18]{};
+    for (int index = 0; index < 36; ++index) {
+        state_matrix[index] = 0.0;
+    }
+    for (int index = 0; index < 18; ++index) {
+        control_matrix[index] = 0.0;
+    }
     state_matrix[0 * 6 + 0] = 4.0 - 3.0 * c;
     state_matrix[0 * 6 + 3] = s * inverse_n;
     state_matrix[0 * 6 + 4] = 2.0 * (1.0 - c) * inverse_n;
@@ -507,6 +508,47 @@ __global__ void hcw_exact_kernel(
     control_matrix[4 * 3 + 0] = -2.0 * (1.0 - c) * inverse_n;
     control_matrix[4 * 3 + 1] = 4.0 * s * inverse_n - 3.0 * t;
     control_matrix[5 * 3 + 2] = s * inverse_n;
+}
+
+/// One exact HCW step x_{k+1} = Phi x_k + Gamma u_k (the replay counterpart of `hcw_exact_kernel`).
+__device__ void hcw_exact_step(
+    const double* state,
+    const double* control,
+    const spacepdhcg_cuda_dynamics_config& config,
+    double* output
+) {
+    double state_matrix[36];
+    double control_matrix[18];
+    hcw_exact_matrices(config, state_matrix, control_matrix);
+    for (int row = 0; row < 6; ++row) {
+        double value = 0.0;
+        for (int column = 0; column < 6; ++column) {
+            value += state_matrix[row * 6 + column] * state[column];
+        }
+        for (int column = 0; column < 3; ++column) {
+            value += control_matrix[row * 3 + column] * control[column];
+        }
+        output[row] = value;
+    }
+}
+
+__global__ void hcw_exact_kernel(
+    const double* states,
+    const double* controls,
+    double* propagated,
+    double* transition,
+    double* sensitivity,
+    double* offset,
+    const size_t intervals,
+    const spacepdhcg_cuda_dynamics_config config
+) {
+    const size_t interval = blockIdx.x;
+    if (threadIdx.x != 0 || interval >= intervals) {
+        return;
+    }
+    double state_matrix[36];
+    double control_matrix[18];
+    hcw_exact_matrices(config, state_matrix, control_matrix);
     const double* state = states + interval * 6U;
     const double* control = controls + interval * 3U;
     double* output = propagated + interval * 6U;
@@ -1345,7 +1387,17 @@ __global__ void update_scvx_numeric_kernel(
         const int variable =
             view_pointer<const int>(problem.control_variable_indices)[index];
         const int q_position = q_positions[state_elements + index];
-        c[variable] = -q[q_position] * controls[index];
+        // The powered-descent / low-thrust host transcriptions carry a proximal
+        // control-tracking term -w_u * u_ref (`fill_objective`), so the linear
+        // coefficient follows the reference.  `HcwRendezvousCqp::values` has no
+        // such term: its control cost is the plain 0.5 * w_u * |u|^2, and writing
+        // -w_u * u_ref here turned every re-linearised HCW QP into
+        // min 0.5 * w_u * |u - u_ref|^2, which walked the accepted trajectory away
+        // from the fixed QP optimum (objective 1.573e-4 -> 1.691e-4 on the
+        // short-horizon rendezvous) while the CPU reference stayed put.
+        c[variable] = problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+            ? 0.0
+            : -q[q_position] * controls[index];
     }
     if (problem.dynamics.model != SPACEPDHCG_CUDA_DYNAMICS_HCW) {
         const size_t sigma =
@@ -1493,12 +1545,24 @@ __global__ void replay_scvx_kernel(
         replay[state] = initial_state[state];
     }
     for (size_t interval = 0; interval < intervals; ++interval) {
-        state_rk4_step<Model, StateDimension, ControlDimension>(
-            replay + interval * StateDimension,
-            controls + interval * ControlDimension,
-            config,
-            replay + (interval + 1U) * StateDimension
-        );
+        if constexpr (Model == SPACEPDHCG_CUDA_DYNAMICS_HCW) {
+            // The HCW coefficients are the exact ZOH map (`hcw_exact_kernel`); the replay must
+            // be the same map, not an RK4 step of the continuous model, or the accepted
+            // reference disagrees with the host `hcw_step` replay by the RK4 truncation error.
+            hcw_exact_step(
+                replay + interval * StateDimension,
+                controls + interval * ControlDimension,
+                config,
+                replay + (interval + 1U) * StateDimension
+            );
+        } else {
+            state_rk4_step<Model, StateDimension, ControlDimension>(
+                replay + interval * StateDimension,
+                controls + interval * ControlDimension,
+                config,
+                replay + (interval + 1U) * StateDimension
+            );
+        }
     }
 }
 
@@ -2618,6 +2682,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     const double initial_outer_residual = maximum_outer_residual(current);
     double trust_radius = driver->options.initial_trust_radius;
     spacepdhcg_cuda_diagnostics last_diagnostics{};
+    // Natural residual of the inner solve whose candidate became the returned
+    // reference.  The certificate audits the trajectory we hand back, so it must
+    // not inherit the residual of a later *rejected* polish candidate (pd3 reported
+    // a 1.2e-4 stalled warm-start candidate against its 1.1e-9 accepted solve).
+    double accepted_natural_residual =
+        std::numeric_limits<double>::quiet_NaN();
 
     for (uint32_t outer = 0;
          outer < driver->options.maximum_outer_iterations;
@@ -3226,6 +3296,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 (state_elements + control_elements) * sizeof(double);
             current = candidate;
             ++result->accepted_steps;
+            accepted_natural_residual = last_diagnostics.natural_residual_inf;
             if (pure_qoco) {
                 spacepdhcg_native_qoco_accept(driver->qoco);
             }
@@ -3382,12 +3453,15 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         result->status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
     }
     result->objective = current.objective;
-    result->canonical_residual =
-        result->accepted_steps == 0U
-            && initial_outer_residual
-                <= driver->options.convergence_tolerance
-        ? 0.0
-        : last_diagnostics.natural_residual_inf;
+    if (result->accepted_steps == 0U
+        && initial_outer_residual <= driver->options.convergence_tolerance) {
+        result->canonical_residual = 0.0;
+    } else if (result->accepted_steps > 0U
+               && std::isfinite(accepted_natural_residual)) {
+        result->canonical_residual = accepted_natural_residual;
+    } else {
+        result->canonical_residual = last_diagnostics.natural_residual_inf;
+    }
     result->dynamics_defect = current.dynamics;
     result->path_violation = current.path;
     driver->path_inventory = spacepdhcg_cuda_scvx_path_inventory{

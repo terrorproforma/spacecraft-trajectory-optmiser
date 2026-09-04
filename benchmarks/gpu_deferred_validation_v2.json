@@ -69,7 +69,19 @@
         "0 skipped once SPACEPDHCG_QOCO_LIBRARY names the GPU QOCO (the pure_qoco leg otherwise skips)"
       ],
       "evidence": ["pytest output"],
-      "cpu_status_now": "6 functions / 9 tests SKIPPED (gated) in full-pytest-cpu-qoco.log"
+      "cpu_status_now": "6 functions / 9 tests SKIPPED (gated) in full-pytest-cpu-qoco.log",
+      "history": {
+        "h100_3373988": "4/9 failed (hcw objective mismatch + maximum_iterations, pd3 canonical_residual, pd6 CPU reference canonical_residual 1.197e-6, pdhcg selection not converged); reproduced identically on the RTX 5090, so not sm_90-specific",
+        "fixes": [
+          "device_scvx.cu: HCW replay_scvx_kernel uses the exact ZOH map shared with hcw_exact_kernel instead of RK4 (replay parity 1.386e-6 -> 4e-14)",
+          "device_scvx.cu: the numeric update no longer writes a -w_u*u_ref control linear term for HCW (HcwRendezvousCqp has no control tracking; the term made every re-linearised QP min |u-u_ref|^2 and drifted the objective 1.573e-4 -> 1.691e-4)",
+          "native_qoco_adapter.cpp: pure_qoco reports the relative KKT audit used by the certificate gate, the CPU reference and PDHCG instead of absolute residuals (pd3 2.5e-3 absolute == 1.2e-4 relative)",
+          "native_qoco_adapter.cpp: a warm-started solve that ends QOCO_SOLVED_INACCURATE (one stalled IPM iteration from the boundary optimum) is re-solved cold once (report.warm_inaccurate_cold_retries)",
+          "device_scvx.cu + cpu_reference.py: the certificate's canonical residual is the residual of the solve whose candidate was accepted, not of a later rejected polish candidate"
+        ],
+        "rtx5090_after_fix": "9 passed; four GPU examples certified (hcw 3.699459e-4 vs CPU 3.699459e-4, pd3 0.552214 vs 0.552214, pd6 0.512976, low_thrust 0.149922); CUDA CTest 69/69 sm_120",
+        "h100_reverification": "pending a GPU window (device reserved for the G4 claim-core campaign)"
+      }
     },
     {
       "id": "planner-memcheck",
@@ -85,7 +97,7 @@
       "expected": [
         "exit=0 for every sanitizer invocation",
         "`========= ERROR SUMMARY: 0 errors` (memcheck/initcheck/synccheck) and `========= RACECHECK SUMMARY: 0 hazards` in each log",
-        "both result documents report status.code == 'certified' and certificate.certified == true (HCW N=20 pdhcg; 3-DoF pure_qoco hover objective ~0.4927 as measured on 2026-09-03 before the campaign started)"
+        "both result documents report status.code == 'certified' and certificate.certified == true (HCW N=20; 3-DoF pure_qoco hover objective ~0.5522: CPU reference 0.552214 on the H100, GPU 0.552214 on the RTX 5090; the ~0.4927 quoted before the first real-GPU run was a pre-campaign prediction, not a measurement)"
       ],
       "evidence": ["build-v2-gpu-deferred/*.log", "build-v2-gpu-deferred/*.json"]
     },
@@ -117,7 +129,12 @@
         "exit=0 (certified) for each example; exit 2 would mean produced-but-not-certified and must be investigated",
         "each export passes `node scripts/check.mjs` as a planner-export dataset (the archive assertions remain in force for the default archive data: verified again in this integration)"
       ],
-      "evidence": ["build-v2-gpu-deferred/plan-*/plan-result.json", "plan-summary.md", "viewer/manifest.json"]
+      "evidence": ["build-v2-gpu-deferred/plan-*/plan-result.json", "plan-summary.md", "viewer/manifest.json"],
+      "history": {
+        "h100_3373988": "hcw exit 2 (independent replay parity/defect 1.386e-6), pd3 exit 2 (canonical residual 2.52e-3 after 14 QOCO numeric updates), pd6 and low_thrust certified; all four viewer checks failed on the export file list",
+        "rtx5090_after_fix": "all four exit=0 certified (see planner-gpu-pytest.history.fixes); pd3 now converges in 5 outer / 2 accepted with canonical residual 1.1e-10",
+        "h100_reverification": "pending a GPU window"
+      }
     },
     {
       "id": "literature-device-time-dilated-ctest",
