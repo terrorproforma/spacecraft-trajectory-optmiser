@@ -61,8 +61,8 @@ mkdir -p "${SHIM}"
 ln -sfn "${CUDSS_ROOT}/lib/libcudss.so.0" "${SHIM}/libcudss.so"
 
 "${VENV}/bin/cmake" -S "${SOURCE}" -B "${BUILD}" -G Ninja \
-  -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
-  -DCMAKE_CUDA_ARCHITECTURES=120 \
+  -DCMAKE_CUDA_COMPILER="${CUDACXX:-/usr/local/cuda/bin/nvcc}" \
+  "-DCMAKE_CUDA_ARCHITECTURES=${SPACEPDHCG_CUDA_ARCHITECTURES:-120}" \
   -DCMAKE_LIBRARY_PATH="${SHIM}" \
   -DCMAKE_C_FLAGS="-I${CUDSS_ROOT}/include" \
   -DCMAKE_CUDA_FLAGS="-I${CUDSS_ROOT}/include" \
