@@ -170,12 +170,20 @@ plus `planner_c_api_smoke`, `planner_problem_smoke`, `powered_descent_free_time_
 | `cpp/include/spacepdhcg/transcription/powered_descent_6dof.hpp` | `19817a9ac145bbc5cb4381fdca58f1d075747ee9` |
 | `cpp/include/spacepdhcg/transcription/low_thrust.hpp` | `c77fb96870cc2561d973ab04fcdf5d954ddb7a2d` |
 | `cpp/cuda/src/persistent_pdhcg.cu` | `8ce085181d7e1dc807c46ce44a1dcef11b936001` |
-| `cpp/cuda/tests/device_scvx_integration_test.cu` | `32ba26499dc741b3c05ceea84fb1fea15eef130d` |
-| `cpp/cuda/tests/recovery_test.cu` | `317ccdff9ed8719c16352eca4c808d0c7fd595c6` |
+| `cpp/cuda/tests/device_scvx_integration_test.cu` | `af788b0bf60e7c92f124147d0324908e71b8b616` (release merge; was `32ba2649…` at d7ca28f) |
+| `cpp/cuda/tests/recovery_test.cu` | `124afd35df935041d62d13b17697ef763555b6bd` (release merge; was `317ccdff…` at d7ca28f) |
 | `benchmarks/g4_policy.json` (sha256 `9ab3b444…`) | `07755ed79d77700ab2641259b414ddffcadc6cef` |
 | `benchmarks/g4_applicability.json` (sha256 `1c4e0d51…`) | `a5b4b0d751e11cd76c348800b39c4fffb2f83a73` |
 | `benchmarks/g4_h5_h6_claim_core.json` (sha256 `40dc2174…`) | `b16685b57f6aa2cd63d81e9ce2604daece6b394e` |
 | `benchmarks/paper2_instances.json` | `5825c94a1fe3f393f67d05d4938eeda2b238ecd3` |
+
+Release merge (`release/single-gpu-v1-merge`, 2026-09-05): two of these files legitimately moved
+after 63271d5 and the table now records the blobs of the merged tree. `device_scvx_integration_test.cu`
+carries the `integration/single-gpu-v1` claim-core amendment commits 26def2b, 8930817, 2ef27e1, 857f99a
+and aca6500 (GPU-validated on that line: CUDA CTest, executor selftests and capability probes recorded
+in `docs/G4_GATE_REPORT.md`); `recovery_test.cu` carries `proposal/g3-sanitizer-recovery-cap` 9fafee8 (a
+20,000-iteration budget for the cancellation solve only under `--sanitizer`; host build only, not yet
+executed on the GPU). Every other blob is unchanged from base 63271d5.
 
 Changed CUDA sources: `device_scvx.cu` +370/−0 (pd3_fft/pd6_fft branches only; the 9a4cbea
 workspace-wait fix retained), `device_scvx_c_api.h` +49 with CRLF→LF normalisation only
