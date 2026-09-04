@@ -26,6 +26,56 @@ Use this file as persistent, repo-local execution memory.
 - `[self]` Never use backslash-sensitive Perl through PowerShell/WSL for line endings; it changed `return`/`pattern` tokens. Use PowerShell `ReadAllText().Replace("`r`n", "`n")`, then rebuild.
 - `[self]` Run every GPU executable, QOCO test, and Compute Sanitizer command serially. A 2026-09-02 session briefly overlapped a native QOCO handback test; terminate, exclude, and rerun both commands independently.
 
+### Retained lessons carried from the Windows checkout (rolled over there on 2026-09-05)
+
+- The Windows checkout kept its own scratchpad; its detailed 2026-09-01..2026-09-04 history is preserved verbatim in `.cursor/memory/AGENT_SCRATCHPAD_2026-09-01_to_2026-09-04.md` and its retained lessons follow.
+
+### User preferences
+
+- [user] Use the learning-scratchpad and devlog loops for every meaningful task.
+- [user] When implementation is requested, make the change and explain it; do not stop at a proposal.
+- [user] The decisive outcome is objective evidence of usefulness relative to other approaches
+  (accuracy, speed, material performance), never kernel timing alone.
+- [user] Report measured throughput/ETAs only; never predict timeouts or quote stale HEADs.
+
+### Regression-prevention guardrails
+
+- PowerShell -> WSL/SSH: every command with quotes, `|`, `%`, `$`, heredocs or inline python goes
+  into a script file (LF via `[IO.File]::WriteAllText`), then `bash /path/x.sh`; helper functions
+  must be dot-sourced in every Shell call (they do not persist).
+- .NET file APIs (`[IO.File]::*`) resolve relative paths against the *process* cwd, not
+  `Set-Location`; use absolute paths, and never `Remove-Item` a source before the destination is
+  verified (size + first line). A rename is `Move-Item`, not read+write+delete.
+- Never edit, add or commit inside a worktree whose seal script (`run.sh`) is running; the gates
+  assert a clean tree at the pinned HEAD.
+- Any deadline/cancel path must be exercised end to end with a short deadline
+  (`SPACEPDHCG_G4_ATTEMPT_DEADLINE_SECONDS=20`) before a long campaign; the 1-outer-iteration
+  capability probe never reaches the deadline.
+- After every commit on a campaign branch: configure -> build -> regenerate capability
+  (`compiled_source_commit` must match) before `init`/restart; pause campaigns at the *journal*
+  boundary, then kill worker -> session -> server -> observer by PID.
+- Verify executor fixes on a *failing* coordinate, not only the capability probe coordinate.
+- Read the vendored solver's defaults (QOCO `ruiz_iters 0`) before writing a fairness rule.
+- Write tool -> `\\wsl.localhost` paths produces CRLF; `sed -i 's/\r$//'` before ruff/pytest/commit.
+- `AwaitShell` without a `shell_id` sleeps correctly in this harness only when given no id and a
+  `block_until_ms`; with an id and `pattern` it blocks correctly. Prefer real sleeps on the remote.
+- `nsys stats` must pass `--force-export=true`; `pkill -f` inside a remote `bash -c` matches itself.
+- scikit-build-core needs cmake>=3.24 on PATH: put the venv `bin` first (system cmake is 3.22 on
+  Ubuntu 22.04) for `python -m build`, editable installs and the G1 upstream PDHCG install.
+
+### Active workstreams / risks (as of 2026-09-05)
+
+- RTX 5090 campaign `g4-claim-core-4db5047` is paused (72 completed / 1 quarantined / 324 remaining);
+  the PDHCG-policy attempts ignore the attempt deadline until the 1M inner-iteration cap (~19.4 min);
+  a fix is being developed on `integration/single-gpu-v1` in WSL, bundle expected at
+  `/home/angus/bundles/single-gpu-v1-<sha>.bundle`.
+- Lambda H100 (`ubuntu@192.222.55.229`, key `traj-key.pem`, git-ignored): clones at
+  `/home/ubuntu/spacepdhcg/{v1,v2,gtoc12}`; env in `~/spacepdhcg/env.sh`; logs in `~/logs`;
+  helper scripts in `~/s`. See the 2026-09-05 session entry below and the devlog.
+- GTOC12 collect hop (85.6 kg / 225 d median vs references' 66 kg / 181-187 d) is the next bottleneck.
+
+## Session Entries
+
 ## Session Entries
 
 ### 2026-09-01 11:42 AEST - Complete G3
@@ -2331,3 +2381,110 @@ Use this file as persistent, repo-local execution memory.
 - [tool] Master DFS recursion depth = column count; > 1000 columns needs the raised recursion
   limit (ba9b764). It bit after a 45-min re-certification - there is no re-cert cache.
 - [tool] PowerShell rejects `&&` between two `wsl` invocations; issue separate Shell calls.
+
+### 2026-09-05 00:30 AEST - Viewer UI redesign with Anthropic frontend-design skill
+
+- Skill installed at `C:\Users\Angus\.cursor\skills\frontend-design\` (SKILL.md + LICENSE.txt + README),
+  upstream commit `41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f`; blob SHAs verified against the GitHub API.
+- Design plan (pass 1) for `web/trajectory-viewer`:
+  - Subject: mission-analysis evidence viewer; audience = researcher/reviewers auditing solver
+    output; job = inspect the 3D scene next to honest provenance. Vernacular: flight-dynamics
+    consoles (matte grey panel, warm-white legends, a time cursor over a strip chart), ephemeris
+    tables (tabular numerals, MJD + calendar).
+  - Tokens: panel graphite `#1b1f26`, page `#12151a`, raised `#242932`, hairline `#313845`,
+    bone `#ebe8e1` (text + light key buttons), slate `#9aa3b1`; status only: verified `#5fd3a0`,
+    caution `#f1b866`, alert `#ff6f80`; focus `#8fc6ff`. One family (Segoe UI Variable / SF Pro
+    / Helvetica system stack), 11/12/13/14/17/22 px scale, tabular numerals; monospace for hashes only.
+  - Layout: header (title, dataset select, renderer status) / rail (ships with per-ship mass
+    bars, camera) / porthole canvas / full-width timeline strip with a thin time cursor + year
+    ticks / verification strip / detail tables. Left-aligned, numbers right-aligned.
+  - Bold spent once: the timeline strip (cursor thumb, year ticks, mass bars filling with time).
+- Pass-2 review: current design = generic dashboard tells (uppercase tracked kickers, identical
+  rounded gradient cards with one shadow, single cyan accent, dot-joined meta strings, tinted
+  near-black). Replaced: no kickers; continuous rail with rules; chroma only for status; light
+  "key" primary buttons; radius hierarchy (0 rail / 4 controls / 6 porthole); no CSS transitions.
+- Test contracts to preserve: all `requiredIds`; `.camera-panel` text "Vertical exaggeration — not
+  physical"; `#trajectory-canvas { ... height: max(560px, 72vh) }`; `[hidden] { display: none
+  !important; }`; `.ship-colour-N { color: #hex; }` lines; legend caveat text; `.viewport-card`,
+  `.viewer-column`, `.archive-only`/`.fleet-only`; ship-list button count = ships + 1 and
+  `[data-counter]`; label texts "Dense replay"/"Transcription nodes".
+- Dev server restarted after the change: PID 45628 (`node scripts/serve.mjs --port=4173`, cwd =
+  Windows mirror viewer dir). Playwright (Windows, 1.62.1):
+  `C:/Users/Angus/AppData/Local/Temp/ptd-browser/node_modules/playwright`.
+- Outcome: v2 candidate `d7ca28fcf87e64caa82b4ceee380e17ec8ec7a5e`; Windows mirror
+  `d88eb5160d0ec67b129d5ca5852a2b633c6bdca8` (all 39 blobs identical; the Windows mirror records
+  PNG/GIF modes as 100755 for every artefact, old and new, vs 100644 on WSL - pre-existing quirk).
+- Lessons for future UI passes:
+  - Playwright strict clicks fail when an invisible radio input covers its label span ("intercepts
+    pointer events"); keep the hidden input 1x1 with `pointer-events: none` and let the label span
+    take the click.
+  - Mobile reordering across two columns: `display: contents` on the viewer column at <= 620 px lets
+    porthole / timeline / notice / rail / tables be ordered as workspace grid items.
+  - check.mjs "No external URLs" regex catches `xmlns='http://www.w3.org/2000/svg'` in data-URI CSS
+    backgrounds; use native select chrome instead of an inline SVG arrow.
+  - Linux Playwright: no module in WSL, but browsers `~/.cache/ms-playwright/chromium-1234` match
+    playwright 1.62.1; `npm i playwright@1.62.1` into `/tmp/pw-linux` with
+    `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` (Linux node at `/home/angus/.local/node/bin`, not on the
+    login PATH). WSL is NAT, so a Linux `serve.mjs --port=4173` coexists with the Windows server.
+  - The WSL v2 worktree's ignored `data/gtoc12/` holds fleet_master_v6 (20 ships, 168 asteroids,
+    11515.67 kg); the Windows mirror holds v4 (19 ships). Re-sync PNGs from Windows after a Linux
+    browser-check run so committed artefacts stay the v4 set the README describes.
+  - In fleet_master_v4 no collect happens before ~MJD 67000, so mass bars/counters legitimately
+    read 0.0 at T+7.3 yr; the browser check verifies the fleet bar is full at mission end.
+
+### 2026-09-05 02:30 AEST - Release merge into main (WSL release worktree + Windows push)
+
+#### Task Summary
+
+- Merged v1 addac2b, v2 d7ca28f, gtoc12 4dd4fdb and proposal 9fafee8 into
+  `release/single-gpu-v1-merge`, fixed four merge-only defects, verified (645 passed / 22 skipped,
+  CTest 49/49 + 8/8, wheel, viewer, CUDA build-only), fast-forwarded `main`, pushed from Windows.
+
+#### Mistakes And Fixes
+
+- `[self]` The merge script exited on the gtoc12 conflict before the planned fourth merge, and the
+  proposal branch was silently skipped until the GPU-deferred manifest check exposed the untouched
+  `recovery_test.cu`. Rule: after every conflict resolution re-run the remaining merge list, and
+  assert `git merge-base --is-ancestor <tip> HEAD` for every planned branch before verification.
+- `[tool]` `git merge` without an identity returns rc=128 with no conflict output; every scripted
+  git step must export `GIT_AUTHOR_*`/`GIT_COMMITTER_*` (no `user.*` config exists in WSL).
+- `[tool]` WSL git is 2.34: `git merge-tree --write-tree` is unavailable; trial merges need a
+  detached scratch worktree (`git merge --no-commit`, `git merge --abort`, remove afterwards).
+- `[tool]` `C:\Users\Angus\AppData\Local\Temp\relmerge\*` (all runner scripts) vanished mid-session;
+  keep helper scripts under `/home/angus/relmerge/` (written through `\\wsl.localhost`, CR stripped
+  by a LF `run.sh`), never under `%TEMP%`.
+- `[self]` Repeated the .NET relative-path mistake (`ReadAllBytes('web\...')` resolved against the
+  process cwd); absolute paths only.
+- `[self]` My "every benchmarks blob must equal v1" check was too strict: `paper1/paper2_matrix.json`
+  legitimately come from v2 (user spec import). Check blob provenance per file (v1 | v2 | gtoc12 |
+  none) instead of against one branch.
+
+#### What Worked
+
+- Audit recipe: `git cherry` + `merge-base --is-ancestor`, then per changed file classify
+  SAME(normalised) / SUPERSEDED (blob found in v2 history) / DIVERGED (unique lines absent from v2),
+  and `ast.dump` equality for Python formatting-only differences. It proved eight roadmap branches
+  were rebased copies and isolated the one unintegrated proposal.
+- Re-using `build-v2-verification/run.sh` (venv via `uv`, `python -S` + `PYTHONPATH=src:site`,
+  QOCO CPU library copy, GTOC12 data copy, `SPACEPDHCG_NATIVE_LIBRARY` from the fresh Release
+  build) reproduced the v2 matrix on the merged tree without touching the GPU.
+- Windows spec check: diff the working copies against `effc5ac` and test that every added line
+  exists in the merged file; comparing whole files against the import commit was misleading because
+  the branches evolved the same files afterwards.
+
+#### Guardrails For Next Session
+
+- Fresh Windows worktrees (`core.autocrlf=true`) break `web/trajectory-viewer` `npm run check` on the
+  data SHA; run the viewer checks on Linux or in the user's LF checkout until `.gitattributes` marks
+  the viewer data `-text`.
+- Merging any branch that touches `benchmarks/campaign_scopes/*.json` or other `PACKAGED_ASSETS`
+  requires `python scripts/sync_packaged_assets.py` (the mirror in `src/spacepdhcg/_data`).
+- Merging v1-line CUDA test changes requires refreshing `benchmarks/gpu_deferred_validation_v2.json`
+  blob ids (and the doc table) or `tests/test_gpu_deferred_manifest.py` fails.
+
+#### Follow-Ups / Risks
+
+- `perf/g4-batched-campaign` lane-batching commits remain intentionally unmerged (failed
+  protocol-v2 experiment); the branch is pushed for provenance.
+- Commits landing on `integration/single-gpu-v1` / `feat/gtoc12-asteroid-mining` after
+  addac2b / 4dd4fdb (concurrent workers) are not in main; merge them in a later pass.
