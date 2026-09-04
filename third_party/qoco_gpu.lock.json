@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "name": "QOCO-GPU",
+  "repository": "https://github.com/qoco-org/qoco",
+  "commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+  "tree": "c85fe82f71a67921868fc761c242de11ac46f4a2",
+  "reported_version": "0.3.2",
+  "source_status": "pinned post-release revision",
+  "cuda": {
+    "toolkit": "12.8.93",
+    "architecture": 120,
+    "cudss_distribution": "nvidia-cudss-cu12",
+    "cudss_version": "0.7.1.6",
+    "cudss_library_soname": "libcudss.so.0",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "driver": "595.97"
+  },
+  "build": {
+    "generator": "Ninja",
+    "type": "Release",
+    "algebra": "cuda",
+    "precision": "float64",
+    "integer_width": 32,
+    "flags": [
+      "-DCMAKE_CUDA_ARCHITECTURES=120",
+      "-DQOCO_ALGEBRA_BACKEND=cuda",
+      "-DQOCO_BUILD_TYPE=Release",
+      "-DQOCO_SINGLE_PRECISION=OFF"
+    ],
+    "linear_solver": "NVIDIA cuDSS sparse direct LDLT",
+    "factorization": "symbolic analysis at setup; numerical factorization during IPM"
+  },
+  "mathematical_contract": {
+    "objective": "0.5*x^T*P*x + c^T*x; upper triangular CSC P",
+    "constraints": "A*x=b and h-G*x in nonnegative/SOC product cone",
+    "cones": [
+      "zero/equality through A",
+      "nonnegative",
+      "second_order"
+    ],
+    "unsupported_native_cones": [
+      "rotated_second_order",
+      "exponential",
+      "power",
+      "positive_semidefinite"
+    ],
+    "rotated_soc_policy": "orthonormal linear map to SOC with transformed dimensions recorded",
+    "box_policy": "exact split into nonnegative lower and upper rows",
+    "precision": "float64"
+  },
+  "warm_start": {
+    "primal": true,
+    "dual": false,
+    "api": "qoco_set_x0",
+    "scaling": "input x0 is in original unequilibrated problem scaling",
+    "discarded_dual_must_be_recorded": true
+  },
+  "lifecycle": {
+    "numeric_vector_updates": true,
+    "same-pattern_matrix_updates": true,
+    "setup_cost_reported": true,
+    "failure_classes": [
+      "unsupported",
+      "oom",
+      "timeout",
+      "numerical_failure",
+      "infeasible"
+    ]
+  },
+  "qualification": {
+    "smoke_result": "executed on CUDA 12.8 / RTX 5090 with cuDSS 0.7.1.6",
+    "smoke_iterations": 6,
+    "smoke_objective": 4.042,
+    "smoke_native_primal_residual": 1.413e-08,
+    "smoke_native_dual_residual": 8.258e-09,
+    "note": "The smoke result qualifies availability only; no SpacePDHCG comparison is claimed until the production adapter executes and archived matched-quality records validate."
+  }
+}

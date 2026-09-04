@@ -1,0 +1,33 @@
+diff --git a/src/qoco_utils.c b/src/qoco_utils.c
+index 95acd1b..d6c86e7 100644
+--- a/src/qoco_utils.c
++++ b/src/qoco_utils.c
+@@ -329,7 +329,7 @@ unsigned char check_stopping(QOCOSolver* solver)
+   // means the current iterate satisfies the inaccurate stopping criterion.
+   // We track the best iterate seen so far so we can restore it on numerical
+   // error / max-iter exits.
+-  QOCOFloat pres_inacc_thresh = eabsinacc + erelinacc * pres_rel;
++  QOCOFloat pres_inacc_thresh = eabs;
+-  QOCOFloat dres_inacc_thresh = eabsinacc + erelinacc * dres_rel;
++  QOCOFloat dres_inacc_thresh = eabs;
+   QOCOFloat gap_inacc_thresh = eabsinacc + erelinacc * gap_rel;
+   QOCOFloat metric =
+@@ -369,7 +369,7 @@ unsigned char check_stopping(QOCOSolver* solver)
+     }
+ #endif
+     if (solver->settings->kkt_dynamic_reg > 1e-6) {
+-      if (pres < eabsinacc + erelinacc * pres_rel &&
++      if (pres < eabs &&
+-          dres < eabsinacc + erelinacc * dres_rel &&
++          dres < eabs &&
+           solver->sol->gap < eabsinacc + erelinacc * gap_rel) {
+         solver->sol->status = QOCO_SOLVED_INACCURATE;
+@@ -381,7 +381,7 @@ unsigned char check_stopping(QOCOSolver* solver)
+     return 0;
+   }
+ 
+-  if (pres < eabs + erel * pres_rel && dres < eabs + erel * dres_rel &&
++  if (pres < eabs && dres < eabs &&
+       solver->sol->gap < eabs + erel * gap_rel) {
+     solver->sol->status = QOCO_SOLVED;
+     return 1;

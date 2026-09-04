@@ -2,6 +2,12 @@
 
 Status date: **2026-08-31**.
 
+Scope update (2026-09-02): the active completion goal is now `single-gpu-v1`, defined by
+[`ACTIVE_SINGLE_GPU_ROADMAP.md`](ACTIVE_SINGLE_GPU_ROADMAP.md). This dated status snapshot remains
+historical evidence; where it describes physical 2/4/8-GPU work as blocking, that work is now
+**DEFERRED-NOT-IN-SCOPE**, with all tooling and acceptance preserved in
+[`DEFERRED_MULTI_GPU_BACKLOG.md`](DEFERRED_MULTI_GPU_BACKLOG.md).
+
 This document distinguishes completed engineering from GPU-dependent experiments. “Implemented”
 does not mean “demonstrated faster”; performance claims require the benchmark protocol and real
 recorded hardware. The more detailed blocker classification is in
@@ -39,6 +45,7 @@ J2 high-fidelity certification.
 - **GPU-BLOCKED** — implementation or validation intrinsically requires a CUDA device.
 - **OPEN-CPU** — useful work remains and does not require a GPU.
 - **EXPERIMENT-BLOCKED** — implementation may exist, but the paper result needs hardware runs.
+- **DEFERRED-NOT-IN-SCOPE** — preserved do/test-later work that does not block `single-gpu-v1`.
 
 # A — common modelling and benchmark foundation
 
@@ -120,7 +127,7 @@ J2 high-fidelity certification.
 | Native scenario-local CUDA shards | GPU-BLOCKED | device ownership and kernels required |
 | NCCL non-anticipativity reductions | GPU-BLOCKED | multi-GPU node required |
 | Communication/computation overlap | GPU-BLOCKED | real topology and profiling required |
-| Strong and weak scaling | EXPERIMENT-BLOCKED | 2/4/8-GPU experiments required |
+| Strong and weak scaling | DEFERRED-NOT-IN-SCOPE | preserved 2/4/8-GPU campaign |
 
 # E — OrbitWeaver multi-destination optimisation
 
@@ -146,7 +153,8 @@ J2 high-fidelity certification.
 | Exact multi-spacecraft route master | COMPLETE-REFERENCE | small-instance set-partitioning truth model |
 | Native restricted-master LP | COMPLETE-REFERENCE | dependency-free two-phase simplex and dual recovery |
 | Full iterative column-generation controller | COMPLETE-REFERENCE | executable master/pricing loop with incumbent and gap history |
-| Massive route × scenario throughput | EXPERIMENT-BLOCKED | central Paper 2 scaling result needs GPUs |
+| One-GPU coarse/refined/scenario/pricing/master/certification simulations | ACTIVE | required by `single-gpu-v1` |
+| Physical route × scenario throughput/scaling | DEFERRED-NOT-IN-SCOPE | preserved distributed Paper 2 campaign |
 
 # Native and reference quality gates
 
@@ -171,8 +179,10 @@ J2 high-fidelity certification.
 | Paper 2 experiment manifest | COMPLETE-REFERENCE |
 | Failure/OOM/timeout reporting rules | COMPLETE-REFERENCE |
 | Paper outlines and notation lock | OPEN-CPU |
-| Paper 1 real tables and plots | EXPERIMENT-BLOCKED |
-| Paper 2 large-scale tables and plots | EXPERIMENT-BLOCKED |
+| Paper 1 scoped one-GPU tables and plots | EXPERIMENT-BLOCKED | complete G4 evidence still required |
+| Paper 1 F07/F12/T06 physical products | DEFERRED-NOT-IN-SCOPE | never emitted empty or fabricated |
+| Paper 2 one-GPU simulation visualisations | EXPERIMENT-BLOCKED | active G7 completion product |
+| Paper 2 physical scaling/energy/crossover plots | DEFERRED-NOT-IN-SCOPE | separate future campaign |
 
 # Exactly what the absence of GPU runs blocks
 

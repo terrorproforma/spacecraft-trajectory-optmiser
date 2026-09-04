@@ -1,0 +1,281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spacepdhcg.dev/schema/g5-campaign-1.0.0.json",
+  "title": "SpacePDHCG Gate G5 physical campaign records",
+  "oneOf": [
+    {"$ref": "#/$defs/preflight"},
+    {"$ref": "#/$defs/command"},
+    {"$ref": "#/$defs/evidence"}
+  ],
+  "$defs": {
+    "coordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scaling", "gpu_count", "scenarios", "nodes", "partition", "risk", "seed"],
+      "properties": {
+        "scaling": {"enum": ["strong", "weak"]},
+        "gpu_count": {"enum": [1, 2, 4, 8]},
+        "scenarios": {"type": "integer", "minimum": 1},
+        "nodes": {"type": "integer", "minimum": 1},
+        "partition": {"enum": ["scenario_aware", "nonzero_balanced"]},
+        "risk": {"enum": ["expected", "worst", "cvar_0.9", "cvar_0.99"]},
+        "seed": {"type": "integer", "minimum": 0}
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rank", "gpu_index", "gpu_uuid", "pci_bus_id", "cpu_set", "numa_node", "nic"],
+      "properties": {
+        "rank": {"type": "integer", "minimum": 0},
+        "gpu_index": {"type": "integer", "minimum": 0},
+        "gpu_uuid": {"type": "string", "minLength": 1},
+        "pci_bus_id": {"type": "string", "minLength": 1},
+        "cpu_set": {"type": "string", "pattern": "^[0-9,-]+$"},
+        "numa_node": {"type": ["integer", "null"], "minimum": 0},
+        "nic": {"type": "string", "minLength": 1}
+      }
+    },
+    "preflight": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "record_type",
+        "captured_at_utc",
+        "primary_campaign",
+        "expected_gpu_count",
+        "status",
+        "failures",
+        "repository",
+        "upstream",
+        "toolchain",
+        "build",
+        "gpus",
+        "topology",
+        "network",
+        "active_compute_processes",
+        "raw_commands",
+        "fingerprint"
+      ],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "record_type": {"const": "g5-physical-preflight"},
+        "captured_at_utc": {"type": "string", "format": "date-time"},
+        "primary_campaign": {"type": "boolean"},
+        "expected_gpu_count": {"enum": [1, 2, 4, 8]},
+        "status": {"enum": ["passed", "failed"]},
+        "failures": {"type": "array", "items": {"type": "string"}},
+        "repository": {
+          "type": "object",
+          "required": ["commit", "branch", "dirty"],
+          "properties": {
+            "commit": {"type": ["string", "null"]},
+            "branch": {"type": ["string", "null"]},
+            "dirty": {"type": "boolean"}
+          }
+        },
+        "upstream": {
+          "type": "object",
+          "required": ["commit", "tree"],
+          "properties": {
+            "commit": {"type": ["string", "null"]},
+            "tree": {"type": ["string", "null"]}
+          }
+        },
+        "toolchain": {
+          "type": "object",
+          "required": ["driver", "cuda", "nccl", "mpi"],
+          "properties": {
+            "driver": {"type": ["string", "null"]},
+            "cuda": {"type": ["string", "null"]},
+            "nccl": {"type": ["string", "null"]},
+            "mpi": {"type": ["string", "null"]}
+          }
+        },
+        "build": {
+          "type": "object",
+          "required": ["cmake_cache_sha256", "harness_sha256", "cmake_flags"],
+          "properties": {
+            "cmake_cache_sha256": {"type": ["string", "null"]},
+            "harness_sha256": {"type": ["string", "null"]},
+            "cmake_flags": {"type": "object"}
+          }
+        },
+        "gpus": {"type": "array", "items": {"type": "object"}},
+        "topology": {"type": "object"},
+        "network": {"type": "object"},
+        "active_compute_processes": {"type": "array"},
+        "raw_commands": {"type": "object"},
+        "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "record_type",
+        "run_id",
+        "logical_only",
+        "physical_execution_permitted",
+        "qualification_permitted",
+        "repository_commit",
+        "executable",
+        "runtime_fingerprints",
+        "coordinate",
+        "warmups",
+        "repeats",
+        "timeout_seconds",
+        "failure_mode",
+        "bindings",
+        "rankfile",
+        "environment",
+        "argv",
+        "display_command",
+        "evidence",
+        "manifest_sha256"
+      ],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "record_type": {
+          "enum": ["g5-command-manifest", "g5-monolithic-reference-command"]
+        },
+        "run_id": {"type": "string", "pattern": "^[0-9a-f]{20}$"},
+        "logical_only": {"type": "boolean"},
+        "physical_execution_permitted": {"type": "boolean"},
+        "qualification_permitted": {"const": false},
+        "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "executable": {
+          "type": "object",
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "sha256": {"type": ["string", "null"]}
+          }
+        },
+        "runtime_fingerprints": {
+          "type": "object",
+          "required": ["topology", "partition"],
+          "properties": {
+            "topology": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+            "partition": {"type": "string", "pattern": "^[0-9a-f]{16}$"}
+          }
+        },
+        "coordinate": {"$ref": "#/$defs/coordinate"},
+        "warmups": {"type": "integer", "minimum": 0},
+        "repeats": {"type": "integer", "minimum": 1},
+        "timeout_seconds": {"type": "integer", "minimum": 1},
+        "failure_mode": {
+          "type": ["string", "null"],
+          "enum": [
+            null,
+            "rank_failure",
+            "communicator_error",
+            "collective_order",
+            "cancellation",
+            "checkpoint_restart",
+            "topology_mismatch",
+            "device_mismatch",
+            "timeout"
+          ]
+        },
+        "bindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "rankfile": {
+          "type": "object",
+          "required": ["path", "content"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "content": {"type": "string", "minLength": 1}
+          }
+        },
+        "environment": {"type": "object"},
+        "argv": {
+          "type": "array",
+          "minItems": 10,
+          "items": {"type": "string"}
+        },
+        "display_command": {"type": "string", "minLength": 1},
+        "evidence": {"type": "object"},
+        "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "record_type",
+        "created_at_utc",
+        "run_id",
+        "status",
+        "qualification_claim",
+        "multi_gpu_scaling_verified",
+        "manifest_sha256",
+        "preflight_fingerprint",
+        "coordinate",
+        "bindings",
+        "failure",
+        "rank_telemetry",
+        "missing_ranks",
+        "required_metrics",
+        "partial_logs"
+      ],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "record_type": {"const": "g5-physical-evidence"},
+        "created_at_utc": {"type": "string", "format": "date-time"},
+        "run_id": {"type": "string", "pattern": "^[0-9a-f]{20}$"},
+        "status": {"enum": ["complete", "partial"]},
+        "qualification_claim": {"const": false},
+        "multi_gpu_scaling_verified": {"const": false},
+        "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "preflight_fingerprint": {"type": ["string", "null"]},
+        "coordinate": {"$ref": "#/$defs/coordinate"},
+        "bindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "failure": {
+          "type": "object",
+          "required": ["return_code", "timed_out", "kinds", "primary_kind"],
+          "properties": {
+            "return_code": {"type": ["integer", "null"]},
+            "timed_out": {"type": "boolean"},
+            "kinds": {"type": "array", "items": {"type": "string"}},
+            "primary_kind": {"type": ["string", "null"]}
+          }
+        },
+        "rank_telemetry": {"type": "array", "items": {"type": "object"}},
+        "missing_ranks": {"type": "array", "items": {"type": "integer"}},
+        "required_metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "collective_bytes_count_frequency",
+            "communication_exposed_overlapped_seconds",
+            "local_compute_and_load_imbalance",
+            "memory_per_gpu_bytes",
+            "timing_seconds",
+            "energy_joules",
+            "residuals_nonanticipativity_risk",
+            "nonlinear_quality"
+          ],
+          "properties": {
+            "collective_bytes_count_frequency": {},
+            "communication_exposed_overlapped_seconds": {},
+            "local_compute_and_load_imbalance": {},
+            "memory_per_gpu_bytes": {},
+            "timing_seconds": {},
+            "energy_joules": {},
+            "residuals_nonanticipativity_risk": {},
+            "nonlinear_quality": {}
+          }
+        },
+        "partial_logs": {
+          "type": "object",
+          "required": ["stdout_captured", "stderr_captured"],
+          "properties": {
+            "stdout_captured": {"type": "boolean"},
+            "stderr_captured": {"type": "boolean"}
+          }
+        }
+      }
+    }
+  }
+}

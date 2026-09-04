@@ -13,6 +13,7 @@ from numpy.typing import NDArray
 
 from spacepdhcg.cqp import (
     CanonicalCQP,
+    CanonicalResidualAudit,
     ConeBlock,
     ConeKind,
     CQPSolution,
@@ -43,6 +44,8 @@ class PersistentClarabel:
     backend. The converter accepts PDHCG's native SOC slot ordering and transforms it to
     Clarabel's conventional cone coordinates.
     """
+
+    supports_dynamic_solve_settings = False
 
     def __init__(
         self,
@@ -94,6 +97,7 @@ class PersistentClarabel:
         self.setup_seconds = perf_counter() - start
         self._current = values
         self.update_count = 0
+        self._last_raw_dual: NDArray[np.float64] | None = None
 
     @property
     def current_values(self) -> CQPValues:
@@ -155,6 +159,7 @@ class PersistentClarabel:
             self._clarabel_constraint_structure.shape[0],
         )
         dual = self._canonical_dual(raw_dual)
+        self._last_raw_dual = raw_dual.copy()
 
         return CQPSolution(
             status=str(getattr(result, "status", "Unknown")),
@@ -166,6 +171,85 @@ class PersistentClarabel:
             iterations=int(getattr(result, "iterations", 0)),
             solve_seconds=float(getattr(result, "solve_time", wall_seconds)),
         )
+
+    def independent_residuals(
+        self,
+        primal: NDArray[np.float64],
+    ) -> CanonicalResidualAudit:
+        """Recompute unscaled KKT conditions in the expanded Clarabel formulation."""
+
+        if self._last_raw_dual is None:
+            raise RuntimeError("independent residuals require a completed solve")
+        x = np.asarray(primal, dtype=np.float64)
+        if x.shape != (self.structure.n_variables,) or not np.all(np.isfinite(x)):
+            return CanonicalResidualAudit(*(float("inf"),) * 5)
+        quadratic, constraint, right_hand_side = self._assemble(self._current)
+        full_quadratic = quadratic + sp.triu(quadratic, k=1).T
+        z = self._last_raw_dual
+        slack = right_hand_side - np.asarray(constraint @ x, dtype=np.float64)
+        stationarity = np.asarray(
+            full_quadratic @ x + self._current.linear + constraint.T @ z,
+            dtype=np.float64,
+        )
+        dual_residual = float(np.max(np.abs(stationarity), initial=0.0))
+        primal_residual = 0.0
+        cone_residual = 0.0
+        complementarity = 0.0
+        cursor = 0
+        if self._zero_rows:
+            count = len(self._zero_rows)
+            primal_residual = max(
+                primal_residual,
+                float(np.max(np.abs(slack[cursor : cursor + count]), initial=0.0)),
+            )
+            cursor += count
+        if self._nonnegative_rows:
+            count = len(self._nonnegative_rows)
+            primal_segment = slack[cursor : cursor + count]
+            dual_segment = z[cursor : cursor + count]
+            cone_residual = max(
+                cone_residual,
+                float(np.max(np.maximum(-primal_segment, 0.0), initial=0.0)),
+                float(np.max(np.maximum(-dual_segment, 0.0), initial=0.0)),
+            )
+            complementarity = max(
+                complementarity,
+                float(np.max(np.abs(primal_segment * dual_segment), initial=0.0)),
+            )
+            cursor += count
+        for _, cone in self._native_cones:
+            count = cone.slot_count
+            primal_segment = slack[cursor : cursor + count]
+            dual_segment = z[cursor : cursor + count]
+            if cone.kind in {ConeKind.SECOND_ORDER, ConeKind.ROTATED_SECOND_ORDER}:
+                cone_residual = max(
+                    cone_residual,
+                    self._soc_violation(primal_segment),
+                    self._soc_violation(dual_segment),
+                )
+            else:
+                raise NotImplementedError(
+                    f"independent Clarabel audit does not support {cone.kind}"
+                )
+            complementarity = max(
+                complementarity,
+                abs(float(primal_segment @ dual_segment)),
+            )
+            cursor += count
+        if cursor != slack.size:
+            raise AssertionError("Clarabel residual cone cursor mismatch")
+        primal_residual = max(primal_residual, cone_residual)
+        return CanonicalResidualAudit(
+            primal=primal_residual,
+            dual=dual_residual,
+            natural=max(primal_residual, dual_residual, complementarity),
+            cone=cone_residual,
+            complementarity=complementarity,
+        )
+
+    @staticmethod
+    def _soc_violation(value: NDArray[np.float64]) -> float:
+        return max(0.0, float(np.linalg.norm(value[1:]) - value[0]))
 
     def _make_bound_rows(self, values: CQPValues) -> tuple[list[_BoundRow], list[_BoundRow]]:
         zero: list[_BoundRow] = []
@@ -349,9 +433,9 @@ class PersistentClarabel:
             cursor += cone.slot_count
             if source == "affine":
                 transform = self._cone_transform(cone)
-                canonical[
-                    affine_offset + cone.start : affine_offset + cone.stop
-                ] = transform.T @ segment
+                canonical[affine_offset + cone.start : affine_offset + cone.stop] = (
+                    transform.T @ segment
+                )
         return canonical
 
     @staticmethod

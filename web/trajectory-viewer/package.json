@@ -1,0 +1,15 @@
+{
+  "name": "spacepdhcg-trajectory-viewer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "check": "node --check app.js && node scripts/check.mjs",
+    "import-data": "node scripts/import-data.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

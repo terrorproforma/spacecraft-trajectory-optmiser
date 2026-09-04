@@ -14,6 +14,12 @@ option(SPACEPDHCG_BUILD_C_API "Build the stable native C ABI library" ON)
 option(SPACEPDHCG_BUILD_NATIVE_TESTS "Build every host-only native smoke test" ON)
 option(SPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS "Treat native warnings as errors" ON)
 option(SPACEPDHCG_NATIVE_ENABLE_SANITIZERS "Enable ASan and UBSan" OFF)
+option(SPACEPDHCG_BUILD_CUDA "Build the persistent single-GPU CUDA workspace" OFF)
+option(
+    SPACEPDHCG_BUILD_DISTRIBUTED
+    "Build the Gate G5 MPI/NCCL scenario-aware runtime"
+    OFF
+)
 option(
     SPACEPDHCG_PYTHON_WHEEL
     "Install the native C ABI inside the spacepdhcg Python package"
@@ -82,9 +88,37 @@ if(BUILD_TESTING AND SPACEPDHCG_BUILD_NATIVE_TESTS)
         set(target_name spacepdhcg_${test_name})
         add_executable(${target_name} ${source})
         target_link_libraries(${target_name} PRIVATE spacepdhcg_interface)
+        if(test_name STREQUAL "orbitweaver_g7_c_api_smoke")
+            target_link_libraries(${target_name} PRIVATE spacepdhcg_c_api)
+        endif()
         spacepdhcg_apply_native_options(${target_name})
         add_test(NAME ${target_name} COMMAND ${target_name})
     endforeach()
+endif()
+
+add_executable(spacepdhcg_cpu_reference_emitter tools/cpu_reference_emitter.cpp)
+target_link_libraries(spacepdhcg_cpu_reference_emitter PRIVATE spacepdhcg_interface)
+spacepdhcg_apply_native_options(spacepdhcg_cpu_reference_emitter)
+if(BUILD_TESTING)
+    add_test(
+        NAME spacepdhcg_cpu_reference_pd6_emitter
+        COMMAND spacepdhcg_cpu_reference_emitter pd6 20 0.05 0.05 false
+    )
+    add_test(
+        NAME spacepdhcg_cpu_reference_low_thrust_emitter
+        COMMAND spacepdhcg_cpu_reference_emitter low-thrust 100 0.25 radius_raise
+    )
+endif()
+
+if(SPACEPDHCG_BUILD_CUDA)
+    add_subdirectory(cuda)
+endif()
+
+if(SPACEPDHCG_BUILD_DISTRIBUTED)
+    if(NOT SPACEPDHCG_BUILD_CUDA)
+        message(FATAL_ERROR "SPACEPDHCG_BUILD_DISTRIBUTED requires SPACEPDHCG_BUILD_CUDA=ON")
+    endif()
+    add_subdirectory(distributed)
 endif()
 
 if(SPACEPDHCG_PYTHON_WHEEL)

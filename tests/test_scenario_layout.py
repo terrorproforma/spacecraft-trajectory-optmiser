@@ -50,9 +50,7 @@ def test_block_arrow_operator_enforces_local_controls_against_consensus() -> Non
 
     vector = np.zeros(layout.total_variables)
     for block in layout.consensus_blocks:
-        consensus = np.array(
-            [block.node.stage + 1.0, -block.node.stage - 0.5]
-        )
+        consensus = np.array([block.node.stage + 1.0, -block.node.stage - 0.5])
         vector[block.variable_slice] = consensus
         for scenario_index in block.node.scenario_indices:
             vector[layout.control_slice(scenario_index, block.node.stage)] = consensus
@@ -87,9 +85,7 @@ def test_scenario_partition_is_deterministic_and_balances_heavy_blocks() -> None
     second = partition_scenarios(weights, 3)
 
     assert first == second
-    assigned = sorted(
-        index for assignment in first.assignments for index in assignment
-    )
+    assigned = sorted(index for assignment in first.assignments for index in assignment)
     assert assigned == list(range(len(weights)))
     assert first.imbalance <= 1.15
     assert all(first.owner(index) >= 0 for index in range(len(weights)))

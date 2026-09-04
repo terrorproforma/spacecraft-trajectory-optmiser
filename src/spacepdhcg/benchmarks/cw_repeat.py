@@ -11,6 +11,7 @@ from typing import Any
 import numpy as np
 
 from spacepdhcg.backends import PersistentOSQP
+from spacepdhcg.cqp import CanonicalCQP, independent_canonical_residuals
 from spacepdhcg.models import CWRendezvousConfig, CWRendezvousProblem
 
 
@@ -20,6 +21,7 @@ def run_benchmark(
     intervals: int = 40,
     seed: int = 7,
     tolerance: float = 1.0e-7,
+    update_magnitude: float | None = None,
 ) -> dict[str, Any]:
     """Run repeated numerical updates against one allocated OSQP workspace."""
 
@@ -35,11 +37,32 @@ def run_benchmark(
 
     initial_states: list[np.ndarray] = []
     target_states: list[np.ndarray] = []
+    if update_magnitude is not None and (
+        not np.isfinite(update_magnitude) or update_magnitude < 0.0
+    ):
+        raise ValueError("update_magnitude must be finite and non-negative")
+    base_initial = (
+        None
+        if update_magnitude is None
+        else np.concatenate((rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3)))
+    )
+    base_target = (
+        None
+        if update_magnitude is None
+        else np.concatenate((rng.uniform(-5.0, 5.0, 3), np.zeros(3)))
+    )
     for _ in range(repeats):
-        initial = np.concatenate(
-            (rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3))
-        )
-        target = np.concatenate((rng.uniform(-5.0, 5.0, 3), np.zeros(3)))
+        if update_magnitude is None:
+            initial = np.concatenate((rng.uniform(-100.0, 100.0, 3), rng.uniform(-0.05, 0.05, 3)))
+            target = np.concatenate((rng.uniform(-5.0, 5.0, 3), np.zeros(3)))
+        else:
+            assert base_initial is not None and base_target is not None
+            initial_delta = rng.normal(size=6)
+            target_delta = rng.normal(size=6)
+            initial_delta /= max(float(np.linalg.norm(initial_delta)), 1.0)
+            target_delta /= max(float(np.linalg.norm(target_delta)), 1.0)
+            initial = base_initial + update_magnitude * initial_delta
+            target = base_target + update_magnitude * target_delta
         initial_states.append(initial)
         target_states.append(target)
 
@@ -49,6 +72,10 @@ def run_benchmark(
     iterations: list[int] = []
     terminal_errors: list[float] = []
     dynamics_defects: list[float] = []
+    canonical_primals: list[float] = []
+    canonical_duals: list[float] = []
+    canonical_naturals: list[float] = []
+    objectives: list[float] = []
     previous = None
 
     for initial, target in zip(initial_states, target_states, strict=True):
@@ -64,6 +91,11 @@ def run_benchmark(
         if not solution.solved:
             raise RuntimeError(f"OSQP failed with status {solution.status!r}")
         diagnostics = problem.diagnostics(solution.primal, initial, target)
+        audit = independent_canonical_residuals(
+            CanonicalCQP(problem.structure, values),
+            solution.primal,
+            solution.dual,
+        )
         if not diagnostics.feasible(max(1.0e-5, 10.0 * tolerance)):
             raise RuntimeError(f"trajectory failed independent checks: {diagnostics}")
 
@@ -71,6 +103,10 @@ def run_benchmark(
         iterations.append(solution.iterations)
         terminal_errors.append(diagnostics.terminal_error_inf)
         dynamics_defects.append(diagnostics.dynamics_defect_inf)
+        canonical_primals.append(audit.primal)
+        canonical_duals.append(audit.dual)
+        canonical_naturals.append(audit.natural)
+        objectives.append(solution.objective)
         previous = solution
 
     return {
@@ -87,10 +123,15 @@ def run_benchmark(
         "mean_iterations": fmean(iterations),
         "maximum_terminal_error": max(terminal_errors),
         "maximum_dynamics_defect": max(dynamics_defects),
+        "maximum_canonical_primal_residual": max(canonical_primals),
+        "maximum_canonical_dual_residual": max(canonical_duals),
+        "maximum_canonical_natural_residual": max(canonical_naturals),
+        "maximum_objective": max(objectives),
         "workspace_updates": backend.update_count,
         "explicit_warm_starts": backend.warm_start_count,
         "seed": seed,
         "tolerance": tolerance,
+        "update_magnitude": update_magnitude,
     }
 
 

@@ -24,8 +24,19 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [g++, clang++]
+        configuration:
+          - name: Release
+            build_type: Release
+            sanitizers: "OFF"
+          - name: Debug
+            build_type: Debug
+            sanitizers: "OFF"
+          - name: ASan-UBSan
+            build_type: Debug
+            sanitizers: "ON"
     env:
       CXX: ${{ matrix.compiler }}
+    name: ${{ matrix.compiler }} / ${{ matrix.configuration.name }}
     steps:
       - uses: actions/checkout@v4
       - name: Configure native core
@@ -33,7 +44,8 @@ jobs:
           cmake
           -S cpp/native
           -B build/native-core
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=${{ matrix.configuration.build_type }}
+          -DSPACEPDHCG_NATIVE_ENABLE_SANITIZERS=${{ matrix.configuration.sanitizers }}
           -DSPACEPDHCG_NATIVE_BUILD_TESTS=ON
       - name: Build native core
         run: cmake --build build/native-core --parallel 2

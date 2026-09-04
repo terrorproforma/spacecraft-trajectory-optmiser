@@ -43,6 +43,39 @@ typedef struct spacepdhcg_lambert_result {
     double time_of_flight_residual;
 } spacepdhcg_lambert_result;
 
+typedef enum spacepdhcg_lambert_family_status {
+    SPACEPDHCG_LAMBERT_FAMILY_FEASIBLE = 0,
+    SPACEPDHCG_LAMBERT_FAMILY_NO_SOLUTION = 1,
+    SPACEPDHCG_LAMBERT_FAMILY_INVALID_INPUT = 2,
+    SPACEPDHCG_LAMBERT_FAMILY_UNSUPPORTED = 3,
+    SPACEPDHCG_LAMBERT_FAMILY_NUMERICAL_FAILURE = 4
+} spacepdhcg_lambert_family_status;
+
+typedef struct spacepdhcg_lambert_family_request {
+    uint64_t deterministic_id;
+    double departure_position[3];
+    double arrival_position[3];
+    double time_of_flight;
+    double gravitational_parameter;
+    double time_tolerance;
+    uint64_t maximum_iterations;
+    uint64_t maximum_revolutions;
+    uint64_t scan_samples_per_band;
+    int include_short_way;
+    int include_long_way;
+} spacepdhcg_lambert_family_request;
+
+typedef struct spacepdhcg_lambert_family_result {
+    uint64_t deterministic_id;
+    uint64_t input_index;
+    uint64_t family_index;
+    uint64_t revolutions;
+    int long_way;
+    int parameter_branch;
+    spacepdhcg_lambert_family_status status;
+    spacepdhcg_lambert_result solution;
+} spacepdhcg_lambert_family_result;
+
 /// ABI version, incremented only for an incompatible C interface change.
 SPACEPDHCG_C_API uint32_t spacepdhcg_c_api_version(void);
 
@@ -82,6 +115,21 @@ SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_lambert_zero_revolution(
     double time_tolerance,
     uint64_t maximum_iterations,
     spacepdhcg_lambert_result* result
+);
+
+/// Fixed output stride matching the CUDA batch layout for CPU/GPU parity.
+SPACEPDHCG_C_API size_t spacepdhcg_lambert_family_result_stride(
+    uint64_t supported_maximum_revolutions
+);
+
+/// Deterministic independent CPU truth path. Every input retains a fixed result
+/// region including unsupported and no-solution slots.
+SPACEPDHCG_C_API spacepdhcg_status_code spacepdhcg_lambert_family_batch_cpu(
+    const spacepdhcg_lambert_family_request* requests,
+    size_t request_count,
+    uint64_t supported_maximum_revolutions,
+    spacepdhcg_lambert_family_result* results,
+    size_t result_capacity
 );
 
 #ifdef __cplusplus

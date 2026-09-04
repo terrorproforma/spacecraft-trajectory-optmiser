@@ -39,8 +39,12 @@ class OuterResidual:
             raise ValueError("outer residual components must be finite and non-negative")
 
     @property
+    def feasibility(self) -> float:
+        return max(self.dynamics, self.path, self.terminal)
+
+    @property
     def maximum(self) -> float:
-        return max(self.dynamics, self.path, self.terminal, self.step)
+        return max(self.feasibility, self.step)
 
 
 @dataclass(frozen=True, slots=True)

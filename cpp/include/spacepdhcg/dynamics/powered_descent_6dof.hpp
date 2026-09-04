@@ -93,9 +93,11 @@ struct PoweredDescent6DofPathDiagnostics {
     double throttle_lower{0.0};
     double throttle_upper{0.0};
     double torque{0.0};
+    double pointing{0.0};
     double angular_rate{0.0};
     double minimum_mass{0.0};
     double altitude{0.0};
+    double glide_slope{0.0};
     double quaternion_norm_error{0.0};
 
     [[nodiscard]] double maximum_violation() const noexcept {
@@ -104,9 +106,11 @@ struct PoweredDescent6DofPathDiagnostics {
              throttle_lower,
              throttle_upper,
              torque,
+             pointing,
              angular_rate,
              minimum_mass,
              altitude,
+             glide_slope,
              quaternion_norm_error}
         );
     }
@@ -264,6 +268,11 @@ class PoweredDescent6DofModel {
             validate_state(state, false);
             result.minimum_mass = std::max(result.minimum_mass, config_.minimum_mass - state[13U]);
             result.altitude = std::max(result.altitude, -state[2U]);
+            result.glide_slope = std::max(
+                result.glide_slope,
+                std::hypot(state[0U], state[1U])
+                    - config_.glide_slope_tangent() * state[2U]
+            );
             const Quaternion quaternion{state[6U], state[7U], state[8U], state[9U]};
             result.quaternion_norm_error = std::max(
                 result.quaternion_norm_error,
@@ -296,14 +305,20 @@ class PoweredDescent6DofModel {
                 result.torque,
                 vector_norm(torque) - config_.maximum_torque
             );
+            result.pointing = std::max(
+                result.pointing,
+                config_.tilt_cosine() * sigma - control[2U]
+            );
         }
         result.thrust_epigraph = std::max(result.thrust_epigraph, 0.0);
         result.throttle_lower = std::max(result.throttle_lower, 0.0);
         result.throttle_upper = std::max(result.throttle_upper, 0.0);
         result.torque = std::max(result.torque, 0.0);
+        result.pointing = std::max(result.pointing, 0.0);
         result.angular_rate = std::max(result.angular_rate, 0.0);
         result.minimum_mass = std::max(result.minimum_mass, 0.0);
         result.altitude = std::max(result.altitude, 0.0);
+        result.glide_slope = std::max(result.glide_slope, 0.0);
         return result;
     }
 

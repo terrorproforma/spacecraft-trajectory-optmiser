@@ -1,0 +1,291 @@
+# G4 execution contract v1
+
+This contract corrects execution semantics without changing the frozen G4 regime
+matrix. The authoritative logical ledger remains:
+
+- 24,883,200 logical rows;
+- 19,353,600 measured rows;
+- 5,529,600 warm-up rows.
+
+No timeout, OOM, applicability decision, scheduler optimization, or H5/H6 early
+decision may rewrite those counts.
+
+## Four record layers
+
+1. **Logical ledger row**: one frozen matrix coordinate and repeat disposition.
+2. **Execution group**: one physical instance and solver-policy coordinate,
+   containing exactly two warm-ups followed by seven measurements.
+3. **Raw attempt record**: one separately retained warm-up or measurement,
+   including terminal disposition, reason, and timing. A completed measurement
+   contains a strict `paper1_result` with `record_scope=measured_attempt`.
+4. **Publication record**: a strict `paper1_result` aggregate built only from
+   schema-valid measured records and scoped `publication_aggregate`; warm-ups
+   never enter its statistic.
+
+The full ledger therefore schedules 2,764,800 process/session/workspace groups,
+each with nine raw attempts. Publication aggregation has 138,240 regime
+coordinates before product-specific filtering: the full group count divided by
+the 20 paired evaluation instances.
+
+An execution group is a hard process boundary. The executor must create one
+persistent session and workspace, run both warm-ups, and then run all seven
+measurements in that same process. It must restore the policy-declared
+independent reset boundary between attempts without destroying the persistent
+workspace. A capability record that does not declare
+`g4-persistent-group-v1` is rejected.
+
+## Applicability
+
+`benchmarks/g4_applicability.json` is the hash-pinned authoritative
+family×policy×axis contract.
+
+- All 18 family×policy pairs in the frozen matrix are executable.
+- Family class axes are executable only for their owning family. Unrelated
+  family axes are `not_applicable` with an authoritative reason; they are not
+  silently defaulted into physical identity.
+- Fixed-loose, adaptive, adaptive+polish, pure QOCO, and hybrid quality tiers
+  remain executable because the selected tier is an explicit final
+  matched-quality target even when the solver's internal tolerance is fixed.
+- QOCO scaling is executable campaign-side coefficient equilibration. QOCO
+  Ruiz iterations remain disabled; these are not the same mechanism.
+- A pure-QOCO `primal_dual` request is executable as a primal warm start with
+  `discarded_unsupported` dual disposition. This does not make the solver
+  unsupported.
+- Hybrid applies the requested warm state to PDHCG and records any QOCO dual
+  discard at handoff.
+
+Future pinned capabilities may classify a combination `unsupported` only with a
+specific technical reason. `not_applicable` requires the authoritative
+applicability reason. Neither disposition is winner-eligible.
+
+## Physical and order identity
+
+Physical instance IDs are versioned content addresses over:
+
+`family + intervals N + all applicable family classes + evaluation seed`.
+
+Repeat, policy, quality, scaling, and warm-start identities remain separate.
+Solver-order rotation hashes the complete physical coordinate plus quality tier,
+conditioning, scaling mode, and warm mode. Repeat does not change the group
+rotation; all nine attempts retain one policy order.
+
+## Terminal dispositions and censoring
+
+`hybrid_handoff_ineligible` means PDHCG construction actually ran but failed the
+frozen `1e-6` handoff gate. It is not max-iterations, generic unqualified, or
+unsupported. `hybrid_handoff_ineligible`, `not_applicable`, and `unsupported`
+all require a reason and explicit timing and are never winner-eligible.
+
+Timeout and OOM can be recorded only for an attempt that was actually launched.
+`timeout_deterministic_replay` (amendment `single-gpu-v1.1`, claim core only) is
+the single unlaunched timeout-class disposition: it may appear only on
+measured/1..6, must reference the executed `measured-0` attempt whose
+deterministic trace it repeats, and counts as timeout censoring.
+No failure at a smaller coordinate predicts or censors a larger coordinate.
+Every larger logical row remains pending until it is launched or receives a
+contract-authorized static applicability disposition.
+
+### `executor_defect` (fail closed, never evidence)
+
+`executor_defect` is the disposition of a launched attempt whose *executor*, not
+the solver, failed: the reset boundary between attempts returned an error, the
+IPM adapter reported an ABI fault, or the driver returned an API status that is
+not a solver outcome (invalid argument/state, topology mismatch, pointer
+contract, busy, runtime or internal error). It requires `launched: true`, a
+matching `failure_class`, a reason and timing, and is never winner-eligible.
+It must never be recorded as `numerical`; `numerical` is reserved for
+`SPACEPDHCG_CUDA_NUMERICAL_FAILURE` and the QOCO numerical-error status.
+
+A group containing an `executor_defect` attempt is **quarantined** by the
+scheduler (disposition `executor_defect`, records retained verbatim) and the
+decision step refuses any completed group carrying one. Evidence already
+committed as `completed` under a defective executor is retired with the
+`invalidate` ledger action (`run_g4_campaign.py invalidate --invalidate-policy
+<policy> --invalidate-reason ... --fix-commit <sha> --superseded-by <campaign>`):
+the attempt row moves to state `invalidated` with disposition
+`invalid_executor_defect`, an `invalidation.json` sidecar (create-only) is
+written beside the untouched `result.json`, the journal records the event, and
+the coordinate leaves the completed set. Nothing is deleted or re-run in place:
+the campaign's `source_commit` pin means the corrected executor lives at a later
+HEAD, so the invalidated groups are re-run by a new checkpoint initialised there
+(completed groups of unaffected policies may be imported exactly once with
+`migrate`).
+
+The executor prints one `g4_attempt_diagnostic` JSON line to stderr for every
+attempt that does not converge (API status, SCvx status, QOCO failure code,
+QOCO workspace creations/updates and timings); the scheduler retains it in the
+group's `stderr.log`. `SPACEPDHCG_QOCO_VERBOSE=1` additionally turns on QOCO's
+own iteration log (diagnostic only; never set by the scheduler).
+
+Independent attempts on the persistent QOCO workspace: QOCO (v0.3.2 fork) keeps
+two pieces of state across `qoco_solve` calls on one solver, the stall handler's
+escalated `kkt_dynamic_reg` (mutated in place, never restored) and the
+best-iterate tracker (`best_valid`/`best_metric`, reset only at setup). After a
+`numerical error`/`maximum iterations` exit the next solve on the same solver is
+therefore not an independent attempt (observed on P1-E `N=100`, conditioning
+4.0: 101, 62, then 1 iteration per solve on identical data). The adapter now
+restores the configured settings before every numeric update and, after any
+failed solve, tears the solver down and sets it up again on the current
+formulation before the next solve. That rebuild is reported honestly:
+`qoco_workspace_creations` in a group is 1 plus the number of solves that
+followed a failure, so "≥ 1 creation" (not "exactly 1") is the invariant.
+Successful solves keep the persistent workspace and its numeric-update path.
+
+### Capability preflight for the IPM policies
+
+`generate_g4_executor_capability.py` runs its real persistent-session probe on a
+`pure-gpu-ipm` coordinate and refuses the executor unless every one of the nine
+attempts launched, reports at least one QOCO workspace creation in the session,
+and ends in a solver disposition (`qualified`/`unqualified`). It pins the QOCO
+shared library (`ipm_library.path`/`sha256`, from `SPACEPDHCG_QOCO_LIBRARY`,
+which must be set and exist). `run_g4_campaign.py run` refuses to start unless
+the capability carries that probe and the worker's `SPACEPDHCG_QOCO_LIBRARY`
+hashes to the pinned library, so a durable worker launched without the library
+fails closed before claiming a group instead of recording fake IPM failures.
+
+## H5/H6 claim-resolution core
+
+`benchmarks/g4_h5_h6_claim_core.json` preregisters 360 persistent groups and
+3,240 solver invocations:
+
+- P1-E low-thrust at `N={100,500,2000}`, trust class 1.0, combined transfer:
+  fixed-tight, adaptive, pure-GPU-IPM, hybrid;
+- P1-C 3-DoF powered descent at `N={20,50,100}`, dispersion class 0.05:
+  fixed-tight and adaptive;
+- 20 paired evaluation instances;
+- two same-session warm-ups and seven measurements.
+
+Thus `(3×4 + 3×2) × 20 × (2+7) = 3,240`.
+
+The core may resolve only H5 and H6. Its definition explicitly permits no
+F01–F12 or T01–T08 regime product, and the publication builder rejects any
+claim-core run. It cannot replace, populate, complete, or freeze the full G4
+regime map.
+
+### Amendment `single-gpu-v1.1` (claim core only)
+
+`benchmarks/g4_claim_core_amendment_v1_1.json` (lock
+`benchmarks/g4_claim_core_amendment_v1_1.sha256`, schema
+`experiments/schema/g4_claim_core_amendment.schema.json`, document
+`docs/G4_CLAIM_CORE_AMENDMENT_V1_1.md`) is a preregistered amendment frozen
+before any claim-core group result was inspected. It is listed in the
+`single-gpu-v1` scope registry and recorded as `policy_amendment:
+"single-gpu-v1.1"` in the checkpoint metadata and in every raw attempt, group
+result, decision and aggregate record. It changes three execution rules and
+nothing else:
+
+1. contamination is run-and-flag: attempts overlapping foreign GPU compute are
+   flagged `contaminated` in place (timing/energy invalid, disposition and
+   quality retained, no re-run) and excluded from timing statistics with the
+   reduced `n` reported;
+2. deterministic-replay timeouts: when warm-up/0, warm-up/1 and measured/0 all
+   time out with identical `trace_hash`, measured/1..6 are recorded as
+   `timeout_deterministic_replay` (unlaunched, referencing measured/0) instead
+   of being executed; differing traces execute all seven;
+3. censoring 600 s / 1M → 120 s / 200k for the claim core, with a
+   hash-selected 10 % `censoring_sensitivity` stratum (36 twins, distinct group
+   ids) re-run at 600 s / 1M and a preregistered acceptance rule: any attempt
+   qualified at 600 s whose 120 s counterpart is censored invalidates the
+   amendment and reverts the whole core to 600 s.
+
+Scheduling under the amendment runs converging policies before fixed-tight;
+`solver_order` remains recorded unchanged as an execution-only axis. The
+original `single-gpu-v1` rules stay readable in the claim-core and policy JSON
+and in `censoring.original`.
+
+### Amendment `single-gpu-v1.2` (claim core only, supersedes v1.1)
+
+`benchmarks/g4_claim_core_amendment_v1_2.json` (lock
+`benchmarks/g4_claim_core_amendment_v1_2.sha256`, same schema with conditional
+v1.2 sections, document `docs/G4_CLAIM_CORE_AMENDMENT_V1_2.md`) was frozen at
+`2026-09-03T06:45:00Z` before any group ran under it. It supersedes v1.1 by
+hash and inherits `contamination`, `deterministic_replay`, `censoring` and
+`schedule` verbatim (schedule identity unchanged). Records carry
+`policy_amendment: "single-gpu-v1.2"`. It adds three rules:
+
+- **A. IPM baseline equilibration.** `pure-gpu-ipm` and the IPM stage of
+  `hybrid-pdhcg-ipm` use QOCO's native default equilibration regardless of the
+  campaign `scaling_mode` axis. At the pinned QOCO commit that default is
+  `ruiz_iters = 0`; Ruiz-on was probed and rejected (it NaNs on the pinned
+  build through two QOCO CUDA-backend defects, and still fails or regresses
+  once those are patched). Every IPM attempt echoes
+  `amendment.ipm_equilibration` (mode, ruiz iterations, QOCO status code);
+  `pure-gpu-ipm` records `scaling_mode: not_applicable_ipm_native`.
+- **B. Deadline classification.** A launched attempt whose measured wall time
+  exceeds the attempt deadline is `timeout` (reason `wall_exceeded_deadline`)
+  for every backend, never `numerical`; the completed solve's residuals and
+  the solver's own disposition ride along as diagnostics. `executor_defect`
+  takes precedence.
+- **C. N=2000 hard bound** (kill, one restart, error record) is unchanged and
+  recorded.
+
+Ledger consequences: v1.1 `pure-gpu-ipm` records become the labelled
+diagnostic stratum `ipm_no_equilibration_v1_1` (`label-stratum`; state
+`diagnostic`, records retained, excluded from H6, cited by the successor
+checkpoint's `diagnostic_strata` metadata and by the gate report). `migrate`
+refuses to import records taken under a different amendment; the decision
+refuses a v1.2 checkpoint that does not cite the stratum.
+
+Deterministic replay under v1.2: the `deterministic_replay` section is inherited
+verbatim, so a `timeout_deterministic_replay` record is valid when stamped with
+any supported amendment (`single-gpu-v1.1` or `single-gpu-v1.2`); the scheduler
+and the decision step separately require the stamp to be the amendment in force.
+The raw-attempt contract at `46bc895` accepted only the v1.1 stamp, which
+quarantined every conformant v1.2 replay group as `invalid_evidence` (checkpoint
+`g4-claim-core-46bc895`, ordinals 45, 47, 49 and 57). Such scheduler-caused
+quarantines are re-run by the successor checkpoint: `migrate --skip-quarantined`
+imports the completed rows exactly once and leaves the quarantined rows in the
+source ledger (records retained there), so the new worker claims them first.
+
+## Batched-executor integration
+
+The batched executor must add `--g4-session <execution-group.json>` and emit nine
+`case=g4_attempt` JSON records from one process. Each record must preserve the
+group/instance/repeat identity, indicate whether it was launched, carry an exact
+terminal disposition, reason, and elapsed time, and set
+`statistics_eligible=false` for warm-ups. Every measured record must carry a
+strict, semantically valid `paper1_result`.
+
+Before campaign launch:
+
+1. merge this branch's schemas, identity functions, applicability locks, and
+   group scheduler into the batched executor branch;
+2. implement the persistent session protocol in the native executable;
+3. regenerate an executor capability record declaring
+   `g4-persistent-group-v1`; the executor's `compiled_source_commit`
+   (`SPACEPDHCG_SOURCE_COMMIT`, baked at CMake *configure* time and echoed as
+   `identity.repository_commit` in every measured record) must equal the
+   pinned source commit, so a tree that was only rebuilt since an older
+   configure is refused by the generator and by the scheduler;
+4. initialize a new grouped checkpoint. Do not reuse the row-oriented active
+   campaign checkpoint because its lease and warm-up semantics are different;
+5. retain the old campaign evidence as historical attempts rather than
+   rewriting or deleting it.
+
+## Native session protocol and lifecycle
+
+The production CUDA executable accepts:
+
+`--g4-session <execution-group.json> <policy-sha256> <matrix-sha256> <capability-sha256>`
+
+It validates the process contract, hash syntax, leased group ID, coordinate, and exact
+`warmup-0,warmup-1,measured-0..6` order before CUDA work. It emits a flushed
+`g4_session_ready` record, one flushed `g4_attempt` record after every terminal attempt, and one
+`g4_session_complete` record. Usage/manifest errors exit 64, hash mismatches exit 65, and unknown
+native failures exit 70. Launched solver outcomes remain data dispositions rather than being
+collapsed into process exit codes.
+
+One family owner creates topology buffers, one PDHCG workspace, one SCvx driver, and at most one
+compatible QOCO workspace. Every attempt restores the immutable physical reference, performs
+values-only updates, solves, independently replays, and applies the trust/acceptance transaction.
+`cold` clears all iterates; `primal` retains primal but clears dual and momentum;
+`primal_dual` retains primal/dual while resetting momentum. Pinned QOCO retains only accepted
+primal state and reports a requested dual as `discarded_unsupported`. A failed attempt forces the
+next boundary to cold rather than leaking partial state.
+
+Raw records carry PID/context/workspace generations, workspace address, topology and coefficient
+fingerprints, allocation/copy counters, requested/actual warm mode, dual/recovery/QOCO
+dispositions, full timing identity, and direct-NVML attempt energy. Workspace setup occurs once;
+CUDA startup is separately reported and excluded. Group deadline expiry emits explicit unlaunched
+records, while an abnormal process is archived and restarted no more than once from a fresh group
+boundary.

@@ -16,7 +16,12 @@ from numpy.typing import NDArray
 
 from spacepdhcg.backends import PersistentClarabel
 from spacepdhcg.backends.base import PersistentCQPBackend
-from spacepdhcg.cqp import CQPSolution, CanonicalCQP, CQPValues
+from spacepdhcg.cqp import (
+    CQPSolution,
+    CanonicalCQP,
+    CanonicalResidualAudit,
+    CQPValues,
+)
 from spacepdhcg.models.powered_descent_3dof import (
     CONTROL_DIMENSION,
     STATE_DIMENSION,
@@ -36,7 +41,12 @@ from .forcing_rule import (
     OuterResidual,
     SolvePhase,
 )
-from .trust_region import TrustRegionConfig, TrustRegionController, TrustRegionUpdate
+from .trust_region import (
+    RadiusAction,
+    TrustRegionConfig,
+    TrustRegionController,
+    TrustRegionUpdate,
+)
 
 FloatArray = NDArray[np.float64]
 
@@ -106,6 +116,12 @@ class SCvxIterationRecord:
     solver_iterations: int
     primal_residual: float
     dual_residual: float
+    objective: float
+    independent_primal_residual: float
+    independent_dual_residual: float
+    independent_natural_residual: float
+    independent_cone_residual: float
+    independent_complementarity: float
     setup_seconds: float
     solve_seconds: float
     trust_radius_before: float
@@ -156,6 +172,7 @@ class PoweredDescentSCvxResult:
 @dataclass(frozen=True, slots=True)
 class _Candidate:
     solution: CQPSolution
+    independent_audit: CanonicalResidualAudit
     setup_seconds: float
     states: FloatArray
     controls: FloatArray
@@ -239,9 +256,7 @@ def make_dynamics_consistent_reference(
         )
         linear_term, quadratic_term = np.linalg.solve(system, right_hand_side)
         velocities[:, axis] = (
-            initial[3 + axis]
-            + linear_term * node_indices
-            + quadratic_term * node_indices**2
+            initial[3 + axis] + linear_term * node_indices + quadratic_term * node_indices**2
         )
 
     controls = np.empty((intervals, CONTROL_DIMENSION), dtype=np.float64)
@@ -249,9 +264,7 @@ def make_dynamics_consistent_reference(
     states[0] = initial
     for interval in range(intervals):
         acceleration = (velocities[interval + 1] - velocities[interval]) / step_seconds
-        requested_thrust = states[interval, 6] * (
-            acceleration - model.config.gravity_vector
-        )
+        requested_thrust = states[interval, 6] * (acceleration - model.config.gravity_vector)
         thrust = _project_thrust(model, requested_thrust)
         sigma = float(np.linalg.norm(thrust))
         controls[interval] = np.concatenate((thrust, np.asarray([sigma])))
@@ -336,7 +349,7 @@ class PoweredDescentSCvxSolver:
             rollout=current_states,
             target_position=target_position_vector,
             target_velocity=target_velocity_vector,
-            step_fraction=1.0,
+            step_fraction=0.0,
         )
         records: list[SCvxIterationRecord] = []
         accepted_streak = 0
@@ -345,62 +358,61 @@ class PoweredDescentSCvxSolver:
         warm_primal: FloatArray | None = None
         warm_dual: FloatArray | None = None
         status = "maximum_iterations"
+        backend: PersistentCQPBackend | None = None
+        backend_tolerance: float | None = None
+        backend_iteration_limit: int | None = None
 
-        for iteration in range(self.outer_config.max_iterations):
-            request = self.forcing.request(
-                iteration,
-                current_residual,
-                accepted_streak=accepted_streak,
-                agreement=previous_agreement,
-            )
-            values = self.subproblem.values(
-                current_states,
-                current_controls,
-                initial,
-                target_position_vector,
-                target_velocity_vector,
-                trust_radius=self.trust.radius,
-            )
-            problem = CanonicalCQP(self.subproblem.structure, values)
-            candidate = self._solve_candidate(
-                problem,
-                values,
-                request,
-                current_states,
-                current_controls,
-                initial,
-                target_position_vector,
-                target_velocity_vector,
-                current_merit,
-                current_residual,
-                warm_primal,
-                warm_dual,
-            )
-            effective_tolerance = request.tolerance
-            re_solved = False
-            for _ in range(self.outer_config.max_resolves_per_iteration):
-                if not self.forcing.should_resolve(
-                    accepted=candidate.accepted,
-                    primal_residual=candidate.solution.primal_residual,
-                    dual_residual=candidate.solution.dual_residual,
-                    requested_tolerance=effective_tolerance,
-                ):
-                    break
-                effective_tolerance = self.forcing.refined_tolerance(effective_tolerance)
-                refined_request = ForcingDecision(
-                    tolerance=effective_tolerance,
-                    raw_target=request.raw_target,
-                    iteration_limit=max(
-                        request.iteration_limit,
-                        self.forcing.config.convergence_iteration_limit,
-                    ),
-                    phase=request.phase,
-                    reason="re-solve rejected candidate before shrinking trust region",
+        try:
+            for iteration in range(self.outer_config.max_iterations):
+                request = self.forcing.request(
+                    iteration,
+                    current_residual,
+                    accepted_streak=accepted_streak,
+                    agreement=previous_agreement,
                 )
+                values = self.subproblem.values(
+                    current_states,
+                    current_controls,
+                    initial,
+                    target_position_vector,
+                    target_velocity_vector,
+                    trust_radius=self.trust.radius,
+                )
+                problem = CanonicalCQP(self.subproblem.structure, values)
+                setup_seconds = 0.0
+                rebuild_for_settings = (
+                    backend is not None
+                    and not getattr(backend, "supports_dynamic_solve_settings", True)
+                    and (
+                        request.tolerance != backend_tolerance
+                        or request.iteration_limit != backend_iteration_limit
+                    )
+                )
+                if rebuild_for_settings:
+                    close = getattr(backend, "close", None)
+                    if callable(close):
+                        close()
+                    backend = None
+                if backend is None:
+                    setup_start = perf_counter()
+                    backend = self.backend_builder(
+                        problem,
+                        tolerance=request.tolerance,
+                        iteration_limit=request.iteration_limit,
+                    )
+                    setup_seconds = float(
+                        getattr(backend, "setup_seconds", perf_counter() - setup_start)
+                    )
+                    if backend.structure != self.subproblem.structure:
+                        raise RuntimeError("backend builder returned incompatible CQP structure")
+                    backend_tolerance = request.tolerance
+                    backend_iteration_limit = request.iteration_limit
+                else:
+                    backend.update(values)
                 candidate = self._solve_candidate(
-                    problem,
+                    backend,
                     values,
-                    refined_request,
+                    request,
                     current_states,
                     current_controls,
                     initial,
@@ -410,52 +422,129 @@ class PoweredDescentSCvxSolver:
                     current_residual,
                     warm_primal,
                     warm_dual,
+                    setup_seconds,
                 )
-                re_solved = True
+                effective_tolerance = request.tolerance
+                re_solved = False
+                for _ in range(self.outer_config.max_resolves_per_iteration):
+                    if not self.forcing.should_resolve(
+                        accepted=candidate.accepted,
+                        primal_residual=candidate.solution.primal_residual,
+                        dual_residual=candidate.solution.dual_residual,
+                        requested_tolerance=effective_tolerance,
+                    ):
+                        break
+                    effective_tolerance = self.forcing.refined_tolerance(effective_tolerance)
+                    refined_request = ForcingDecision(
+                        tolerance=effective_tolerance,
+                        raw_target=request.raw_target,
+                        iteration_limit=max(
+                            request.iteration_limit,
+                            self.forcing.config.convergence_iteration_limit,
+                        ),
+                        phase=request.phase,
+                        reason="re-solve rejected candidate before shrinking trust region",
+                    )
+                    resolve_setup_seconds = 0.0
+                    if not getattr(backend, "supports_dynamic_solve_settings", True):
+                        close = getattr(backend, "close", None)
+                        if callable(close):
+                            close()
+                        setup_start = perf_counter()
+                        backend = self.backend_builder(
+                            problem,
+                            tolerance=refined_request.tolerance,
+                            iteration_limit=refined_request.iteration_limit,
+                        )
+                        resolve_setup_seconds = float(
+                            getattr(
+                                backend,
+                                "setup_seconds",
+                                perf_counter() - setup_start,
+                            )
+                        )
+                        backend_tolerance = refined_request.tolerance
+                        backend_iteration_limit = refined_request.iteration_limit
+                    candidate = self._solve_candidate(
+                        backend,
+                        values,
+                        refined_request,
+                        current_states,
+                        current_controls,
+                        initial,
+                        target_position_vector,
+                        target_velocity_vector,
+                        current_merit,
+                        current_residual,
+                        warm_primal,
+                        warm_dual,
+                        resolve_setup_seconds,
+                    )
+                    re_solved = True
 
-            trust_update = self.trust.update(
-                accepted=candidate.accepted,
-                agreement=candidate.agreement,
-                step_fraction=candidate.step_fraction,
-            )
-            records.append(
-                self._record(
-                    iteration,
-                    request,
-                    effective_tolerance,
-                    candidate,
-                    trust_update,
-                    current_merit,
-                    re_solved,
+                retained_converged = (
+                    current_residual.feasibility <= self.outer_config.convergence_tolerance
+                    and current_residual.step <= self.outer_config.step_tolerance
                 )
-            )
+                trust_update = (
+                    TrustRegionUpdate(
+                        radius_before=self.trust.radius,
+                        radius_after=self.trust.radius,
+                        action=RadiusAction.KEEP,
+                        reason="retained reference already satisfies outer convergence",
+                    )
+                    if retained_converged and not candidate.accepted
+                    else self.trust.update(
+                        accepted=candidate.accepted,
+                        agreement=candidate.agreement,
+                        step_fraction=candidate.step_fraction,
+                    )
+                )
+                records.append(
+                    self._record(
+                        iteration,
+                        request,
+                        effective_tolerance,
+                        candidate,
+                        trust_update,
+                        current_merit,
+                        re_solved,
+                    )
+                )
 
-            if not candidate.solution.solved:
-                status = "solver_failed"
-                break
-            if candidate.accepted and candidate.rollout is not None:
-                current_states = candidate.rollout
-                current_controls = candidate.controls
-                current_merit = candidate.actual_merit
-                current_residual = candidate.residual
-                warm_primal = candidate.solution.primal
-                warm_dual = candidate.solution.dual
-                accepted_streak += 1
-                accepted_iterations += 1
-                previous_agreement = candidate.agreement
-                if (
-                    iteration + 1 >= self.outer_config.minimum_iterations
-                    and current_residual.maximum <= self.outer_config.convergence_tolerance
-                    and candidate.step_fraction <= self.outer_config.step_tolerance
-                ):
+                if not candidate.solution.solved:
+                    status = "solver_failed"
+                    break
+                if retained_converged and not candidate.accepted:
                     status = "converged"
                     break
-            else:
-                accepted_streak = 0
-                previous_agreement = None
-                if self.trust.exhausted:
-                    status = "trust_region_exhausted"
-                    break
+                if candidate.accepted and candidate.rollout is not None:
+                    current_states = candidate.rollout
+                    current_controls = candidate.controls
+                    current_merit = candidate.actual_merit
+                    current_residual = candidate.residual
+                    warm_primal = candidate.solution.primal
+                    warm_dual = candidate.solution.dual
+                    accepted_streak += 1
+                    accepted_iterations += 1
+                    previous_agreement = candidate.agreement
+                    if (
+                        iteration + 1 >= self.outer_config.minimum_iterations
+                        and current_residual.feasibility <= self.outer_config.convergence_tolerance
+                        and candidate.step_fraction <= self.outer_config.step_tolerance
+                    ):
+                        status = "converged"
+                        break
+                else:
+                    accepted_streak = 0
+                    previous_agreement = None
+                    if self.trust.exhausted:
+                        status = "trust_region_exhausted"
+                        break
+        finally:
+            close = getattr(backend, "close", None)
+            if callable(close):
+                close()
 
         path = self.model.path_diagnostics(current_states, current_controls)
         return PoweredDescentSCvxResult(
@@ -473,7 +562,7 @@ class PoweredDescentSCvxSolver:
 
     def _solve_candidate(
         self,
-        problem: CanonicalCQP,
+        backend: PersistentCQPBackend,
         values: CQPValues,
         request: ForcingDecision,
         current_states: FloatArray,
@@ -485,22 +574,28 @@ class PoweredDescentSCvxSolver:
         current_residual: OuterResidual,
         warm_primal: FloatArray | None,
         warm_dual: FloatArray | None,
+        setup_seconds: float,
     ) -> _Candidate:
-        setup_start = perf_counter()
-        backend = self.backend_builder(
-            problem,
-            tolerance=request.tolerance,
-            iteration_limit=request.iteration_limit,
-        )
-        setup_seconds = float(getattr(backend, "setup_seconds", perf_counter() - setup_start))
         if warm_primal is not None or warm_dual is not None:
             try:
                 backend.warm_start(warm_primal, warm_dual)
             except NotImplementedError:
                 pass
-        solution = backend.solve()
+        if getattr(backend, "supports_dynamic_solve_settings", True):
+            solution = backend.solve(
+                tolerance=request.tolerance,
+                iteration_limit=request.iteration_limit,
+            )
+        else:
+            solution = backend.solve()
         if solution.primal.shape != (self.subproblem.layout.n_variables,):
             raise RuntimeError("backend returned an invalid primal vector")
+        audit_method = getattr(backend, "independent_residuals", None)
+        independent_audit = (
+            audit_method(solution.primal)
+            if callable(audit_method)
+            else CanonicalResidualAudit(*(float("inf"),) * 5)
+        )
         states, controls, virtual, _ = self.subproblem.decode(solution.primal)
         convex_diagnostics = self.subproblem.diagnostics(solution.primal, values)
         step_fraction = self._step_fraction(
@@ -558,8 +653,8 @@ class PoweredDescentSCvxSolver:
         )
         restoration = (
             rollout is not None
-            and residual.maximum
-            < self.outer_config.restoration_reduction * current_residual.maximum
+            and residual.feasibility
+            < self.outer_config.restoration_reduction * current_residual.feasibility
         )
         accepted = bool(
             solution.solved
@@ -575,6 +670,7 @@ class PoweredDescentSCvxSolver:
         )
         return _Candidate(
             solution=solution,
+            independent_audit=independent_audit,
             setup_seconds=setup_seconds,
             states=states,
             controls=controls,
@@ -612,6 +708,12 @@ class PoweredDescentSCvxSolver:
             solver_iterations=candidate.solution.iterations,
             primal_residual=candidate.solution.primal_residual,
             dual_residual=candidate.solution.dual_residual,
+            objective=candidate.solution.objective,
+            independent_primal_residual=candidate.independent_audit.primal,
+            independent_dual_residual=candidate.independent_audit.dual,
+            independent_natural_residual=candidate.independent_audit.natural,
+            independent_cone_residual=candidate.independent_audit.cone,
+            independent_complementarity=candidate.independent_audit.complementarity,
             setup_seconds=candidate.setup_seconds,
             solve_seconds=candidate.solution.solve_seconds,
             trust_radius_before=trust_update.radius_before,
@@ -721,9 +823,7 @@ class PoweredDescentSCvxSolver:
         )
 
     def _normalised_fuel(self, controls: FloatArray) -> float:
-        return float(
-            np.mean(controls[:, 3]) / self.model.config.maximum_thrust
-        )
+        return float(np.mean(controls[:, 3]) / self.model.config.maximum_thrust)
 
     def _step_fraction(
         self,

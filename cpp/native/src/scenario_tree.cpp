@@ -221,8 +221,10 @@ BlockArrowLayout::BlockArrowLayout(
         });
         offset += control_dimension_;
     }
-    checked_index(offset, "block-arrow variable count");
-    checked_index(nonanticipativity_rows(), "non-anticipativity row count");
+    static_cast<void>(checked_index(offset, "block-arrow variable count"));
+    static_cast<void>(
+        checked_index(nonanticipativity_rows(), "non-anticipativity row count")
+    );
 }
 
 std::size_t BlockArrowLayout::state_variables_per_scenario() const noexcept {

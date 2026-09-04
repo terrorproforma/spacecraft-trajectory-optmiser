@@ -37,9 +37,7 @@ def encode_condensed_primal(
     for scenario, local in enumerate(local_primals):
         vector = np.asarray(local, dtype=np.float64)
         if vector.shape != (expected_size,):
-            raise ValueError(
-                f"local primal {scenario} must have shape ({expected_size},)"
-            )
+            raise ValueError(f"local primal {scenario} must have shape ({expected_size},)")
         if not np.all(np.isfinite(vector)):
             raise ValueError(f"local primal {scenario} must be finite")
         mapping = bundle.local_to_global(scenario)
@@ -51,9 +49,7 @@ def encode_condensed_primal(
                 atol=consistency_tolerance,
                 rtol=0.0,
             ):
-                raise ValueError(
-                    "local primals disagree on a shared information-node control"
-                )
+                raise ValueError("local primals disagree on a shared information-node control")
             global_primal[global_index] = value
             assigned[global_index] = True
 

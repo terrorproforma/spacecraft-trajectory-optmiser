@@ -1,0 +1,36 @@
+source_commit=832aaf4317fd42ecf7ddcee8ad2c5051ca4a5428
+source_tree=434465e71cece7fdb57c0fdd02fa9dce205425b3
+branch=feat/device-scvx
+upstream_commit=167c8b72b4b96d2f94d405b8763e485514192b81
+upstream_tree=62b05e6c1bedd385f6c267af3645ae4aae0421b4
+patch_sha256=dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6  third_party/patches/pdhcg/0001-free-quadratic-state.patch
+paper1_matrix_sha256=4ae0b92f4518258fd696e75f4562db299f3cc966a43844b5bf7ccbcb0551cab5  benchmarks/paper1_matrix.json
+Linux DESKTOP-31AD96J 6.18.33.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Fri Jun  5 01:12:21 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Fri_Feb_21_20:23:50_PST_2025
+Cuda compilation tools, release 12.8, V12.8.93
+Build cuda_12.8.r12.8/compiler.35583870_0
+Tue Sep  1 10:00:27 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.58.02              Driver Version: 595.97         CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        On  |   00000000:02:00.0  On |                  N/A |
+|  0%   37C    P8             42W /  575W |    5262MiB /  32607MiB |      8%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+NVIDIA Nsight Systems version 2024.6.2.225-246235244400v0
+Python 3.12.13
+## feat/device-scvx

@@ -14,11 +14,17 @@ parameters, correctness checks, and complete timing breakdown are stored togethe
 No GPU or multi-GPU performance claim exists until the pinned workflows have run on recorded
 hardware and the returned trajectories pass independent checks.
 
+Every new campaign/product must also record a versioned `campaign_scope_id`. Evidence from
+`full-multi-gpu-v1` and `single-gpu-v1` may not be combined into one claim or silently filtered.
+Under `single-gpu-v1`, physical scaling products and H4 are explicitly deferred, not unresolved or
+supported by one-rank/logical evidence.
+
 # Reproducibility record
 
 Every run must record:
 
 - SpacePDHCG repository commit;
+- campaign scope ID and versioned scope-record path;
 - upstream PDHCG repository and exact commit;
 - every comparison solver name, version, commit, and build flags;
 - operating system and kernel;
@@ -89,6 +95,34 @@ Independently recompute:
 - actual versus predicted merit reduction.
 
 The independent checker must not reuse the solver's cached residual buffers.
+
+## Gate G4 matched-quality contract
+
+Primary G4 records are qualified only when all of the following are present and pass the frozen
+quality tier:
+
+- solver status is `converged` and the convergence criteria are met; `max_iterations` is
+  unqualified even when a reported residual is small;
+- canonical primal, dual, cone, and gap residuals pass the selected tier;
+- the objective is within the frozen absolute-plus-relative practical-equivalence margin;
+- an independent higher-order replay passes continuous-time, dynamics, terminal, and
+  virtual-control checks without reusing solver residual buffers;
+- the complete family-specific path inventory is independently checked;
+- requested and actual policy, quality tier, scaling mode, warm-start mode, re-solve rule, and
+  frozen policy SHA-256 agree;
+- the accepted-trajectory timing boundary and timing sum identities pass; and
+- raw artifacts have immutable URIs plus content and internal-index SHA-256 digests.
+
+Local-only historical evidence is retained, but portability is marked absent and the record is
+unqualified until an immutable artifact URI is supplied.
+
+## Gate G4 timing boundary
+
+The common accepted-trajectory boundary begins with numerical coefficient generation and includes
+workspace/update/scaling/transfers, solve, projected recovery, residual evaluation, hybrid
+conversion/setup/polish when applicable, independent replay, and acceptance. CUDA context/JIT
+startup is reported separately and explicitly excluded. `cqp_total_seconds` and
+`scvx_total_seconds` must carry their component identities and equal the corresponding sums.
 
 ## Robust scenario gate
 

@@ -49,7 +49,7 @@ def test_initial_reference_is_dynamics_consistent_and_reaches_easy_target() -> N
     assert model.path_diagnostics(states, controls).feasible(1.0e-9)
 
 
-def test_reference_scvx_outer_loop_accepts_a_finite_candidate() -> None:
+def test_reference_scvx_outer_loop_preserves_an_already_converged_reference() -> None:
     _, subproblem, initial, target_position, target_velocity = _problem()
     solver = PoweredDescentSCvxSolver(
         subproblem,
@@ -74,7 +74,8 @@ def test_reference_scvx_outer_loop_accepts_a_finite_candidate() -> None:
     result = solver.solve(initial, target_position, target_velocity)
 
     assert result.outer_iterations >= 1
-    assert result.accepted_iterations >= 1
+    assert result.converged
+    assert result.accepted_iterations == 0
     assert np.isfinite(result.merit)
     assert np.all(np.isfinite(result.states))
     assert np.all(np.isfinite(result.controls))
@@ -82,6 +83,7 @@ def test_reference_scvx_outer_loop_accepts_a_finite_candidate() -> None:
     assert result.residual.terminal < 5.0e-2
     assert result.residual.path < 2.0e-5
     for record in result.iterations:
+        assert record.trust_action == "keep"
         if record.accepted and not record.restoration_accepted:
             assert record.actual_reduction > 0.0
     assert all(record.solver_status.lower().startswith("solved") for record in result.iterations)
@@ -105,5 +107,39 @@ def test_outer_loop_records_tolerance_trust_and_reduction_evidence() -> None:
     assert record.trust_radius_after > 0.0
     assert np.isfinite(record.predicted_reduction)
     assert np.isfinite(record.actual_reduction)
+    assert np.isfinite(record.objective)
+    assert np.isfinite(record.independent_primal_residual)
+    assert np.isfinite(record.independent_dual_residual)
+    assert np.isfinite(record.independent_natural_residual)
+    assert np.isfinite(record.independent_cone_residual)
+    assert np.isfinite(record.independent_complementarity)
     assert payload["phase"] in {"exploration", "convergence", "polish"}
     assert isinstance(payload["residual"], dict)
+
+
+def test_model_and_nonlinear_merit_match_at_zero_virtual_zero_step() -> None:
+    model, subproblem, initial, target_position, target_velocity = _problem()
+    states, controls = make_dynamics_consistent_reference(
+        model,
+        initial,
+        target_position,
+        target_velocity,
+        intervals=subproblem.layout.intervals,
+        step_seconds=subproblem.config.step_seconds,
+    )
+    solver = PoweredDescentSCvxSolver(subproblem)
+    actual = solver._actual_merit(
+        states,
+        controls,
+        target_position,
+        target_velocity,
+    )
+    model_merit = solver._model_merit(
+        states,
+        controls,
+        np.zeros((subproblem.layout.intervals, 7)),
+        target_position,
+        target_velocity,
+    )
+
+    assert model_merit == actual

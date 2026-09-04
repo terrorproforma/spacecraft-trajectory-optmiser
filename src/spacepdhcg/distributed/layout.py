@@ -138,8 +138,7 @@ class BlockArrowLayout:
         self.consensus_blocks = tuple(consensus_blocks)
         self.total_variables = offset
         self._block_by_key = {
-            (block.node.stage, block.node.history): block
-            for block in self.consensus_blocks
+            (block.node.stage, block.node.history): block for block in self.consensus_blocks
         }
 
     @property
@@ -162,10 +161,7 @@ class BlockArrowLayout:
         self._validate_scenario(scenario_index)
         if not 0 <= node <= self.tree.horizon:
             raise IndexError("state node is outside the trajectory horizon")
-        start = (
-            scenario_index * self.local_variables_per_scenario
-            + node * self.state_dimension
-        )
+        start = scenario_index * self.local_variables_per_scenario + node * self.state_dimension
         return slice(start, start + self.state_dimension)
 
     def control_slice(self, scenario_index: int, stage: int) -> slice:
@@ -182,9 +178,7 @@ class BlockArrowLayout:
     def auxiliary_slice(self, scenario_index: int) -> slice:
         block = self.scenario_slice(scenario_index)
         start = (
-            block.start
-            + self.state_variables_per_scenario
-            + self.control_variables_per_scenario
+            block.start + self.state_variables_per_scenario + self.control_variables_per_scenario
         )
         return slice(start, block.stop)
 
@@ -221,9 +215,7 @@ class BlockArrowLayout:
     def nonanticipativity_violation(self, vector: np.ndarray) -> float:
         values = np.asarray(vector, dtype=np.float64)
         if values.shape != (self.total_variables,):
-            raise ValueError(
-                f"global vector must have shape ({self.total_variables},)"
-            )
+            raise ValueError(f"global vector must have shape ({self.total_variables},)")
         if not np.all(np.isfinite(values)):
             raise ValueError("global vector must be finite")
         residual = self.nonanticipativity_operator() @ values
@@ -241,17 +233,13 @@ class BlockArrowLayout:
         if device_count <= 0:
             raise ValueError("device_count must be positive")
         if scalar_bytes <= 0 or collective_count < 0:
-            raise ValueError(
-                "scalar_bytes must be positive and collective_count non-negative"
-            )
+            raise ValueError("scalar_bytes must be positive and collective_count non-negative")
         payload_bytes = self.consensus_dimension * scalar_bytes
         if device_count == 1 or payload_bytes == 0 or collective_count == 0:
             per_device = 0.0
             aggregate = 0.0
         else:
-            per_collective = (
-                2.0 * (device_count - 1) / device_count * payload_bytes
-            )
+            per_collective = 2.0 * (device_count - 1) / device_count * payload_bytes
             per_device = collective_count * per_collective
             aggregate = device_count * per_device
         return CommunicationProfile(

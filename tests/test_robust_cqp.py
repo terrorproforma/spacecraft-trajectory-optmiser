@@ -172,8 +172,7 @@ def test_known_incumbent_prevents_false_solver_qualification() -> None:
         objective_tolerance=2.0e-6,
     )
     expected_qualification = bool(
-        qualified_without_incumbent
-        and solution.objective <= incumbent_objective + 2.0e-6
+        qualified_without_incumbent and solution.objective <= incumbent_objective + 2.0e-6
     )
     assert qualified_with_incumbent is expected_qualification
 
@@ -271,6 +270,35 @@ def test_bundle_decodes_dual_blocks_and_consensus_controls() -> None:
                 atol=1.0e-7,
                 rtol=0.0,
             )
+
+
+@pytest.mark.parametrize(
+    ("measure", "alpha"),
+    (("worst", None), ("cvar", 0.9)),
+)
+def test_sparse_risk_epigraph_matches_identical_scenario_costs(measure, alpha) -> None:
+    subproblem, local_values = _local_problem(intervals=4)
+    bundle = _bundle(subproblem, scenario_count=2)
+    problem, layout = bundle.risk_problem(
+        [local_values, local_values],
+        measure,
+        alpha=alpha,
+    )
+    solution = PersistentClarabel(
+        problem,
+        tolerance=1.0e-8,
+        iteration_limit=2_000,
+    ).solve()
+
+    assert residual_qualified(solution, tolerance=2.0e-8)
+    decoded = bundle.decode_primal(solution.primal[: layout.base_variables])
+    local_objectives = bundle.local_objectives(
+        decoded.local,
+        [local_values, local_values],
+    )
+    represented = solution.primal[layout.scenario_costs]
+    assert np.max(local_objectives - represented) <= 2.0e-5
+    assert abs(solution.objective - np.max(local_objectives)) <= 2.0e-4
 
 
 def test_numerical_updates_preserve_global_sparse_structure() -> None:

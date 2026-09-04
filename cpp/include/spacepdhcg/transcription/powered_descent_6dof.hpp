@@ -832,6 +832,16 @@ class PoweredDescent6DofSubproblem {
     ) const {
         for (std::size_t node = 0; node < states.size(); ++node) {
             const auto row = layout_.quaternion_rows().start + node;
+            // The terminal quaternion is already fixed by exact target
+            // equalities.  A tangent plane about a displaced reference would
+            // otherwise exclude that fixed unit target and make the CQP
+            // infeasible.  Keep the reserved row as 0 == 0 so numeric updates
+            // preserve the frozen CSC topology.
+            if (node == layout_.intervals) {
+                values.scalar_lower[row] = 0.0;
+                values.scalar_upper[row] = 0.0;
+                continue;
+            }
             const auto state = layout_.state(node);
             double norm_squared{0.0};
             for (std::size_t component = 0; component < 4U; ++component) {

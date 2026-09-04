@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/paper1_campaign.schema.json",
+  "title": "Paper 1 campaign freeze configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "repository_commit",
+    "synthetic",
+    "units",
+    "required_coordinates",
+    "hardware_manifests",
+    "toolchain_manifests",
+    "solver_locks",
+    "claims"
+  ],
+  "anyOf": [
+    {
+      "properties": {"schema_version": {"const": "1.0.0"}},
+      "not": {"required": ["campaign_scope_id"]}
+    },
+    {
+      "required": ["campaign_scope_id"],
+      "properties": {
+        "schema_version": {"const": "1.1.0"},
+        "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]}
+      }
+    }
+  ],
+  "properties": {
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "campaign_scope_id": {"enum": ["single-gpu-v1", "full-multi-gpu-v1"]},
+    "campaign_id": {"type": "string", "minLength": 1},
+    "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "synthetic": {"type": "boolean"},
+    "units": {"type": "object"},
+    "required_coordinates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["selector"],
+        "properties": {
+          "selector": {"type": "object", "minProperties": 1},
+          "minimum_records": {"type": "integer", "minimum": 1},
+          "minimum_instances": {"type": "integer", "minimum": 1},
+          "minimum_measured_repeats": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "hardware_manifests": {"$ref": "#/$defs/pins"},
+    "toolchain_manifests": {"$ref": "#/$defs/pins"},
+    "solver_locks": {"$ref": "#/$defs/pins"},
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["H1", "H2", "H3", "H4", "H5", "H6"],
+      "properties": {
+        "H1": {"$ref": "#/$defs/claims"},
+        "H2": {"$ref": "#/$defs/claims"},
+        "H3": {"$ref": "#/$defs/claims"},
+        "H4": {"$ref": "#/$defs/claims"},
+        "H5": {"$ref": "#/$defs/claims"},
+        "H6": {"$ref": "#/$defs/claims"}
+      }
+    }
+  },
+  "$defs": {
+    "pins": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

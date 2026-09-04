@@ -47,12 +47,15 @@ def _assert_solution(
         raise RuntimeError(f"{name} failed with status {solution.status!r}")
     diagnostics = fixture.diagnostics(solution.primal)
     acceptance = max(1.0e-6, 100.0 * tolerance)
-    if max(
-        diagnostics.solution_error_inf,
-        diagnostics.scalar_violation_inf,
-        diagnostics.dynamics_defect_inf,
-        diagnostics.control_violation_inf,
-    ) > acceptance:
+    if (
+        max(
+            diagnostics.solution_error_inf,
+            diagnostics.scalar_violation_inf,
+            diagnostics.dynamics_defect_inf,
+            diagnostics.control_violation_inf,
+        )
+        > acceptance
+    ):
         raise RuntimeError(f"{name} failed independent checks: {diagnostics}")
 
 

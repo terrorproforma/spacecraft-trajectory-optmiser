@@ -1,0 +1,33 @@
+Generating SQLite file results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.sqlite from results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.nsys-rep
+Processing [results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.sqlite] with [/opt/nvidia/nsight-systems/2024.6.2/host-linux-x64/reports/cuda_api_sum.py]... 
+
+ ** CUDA API Summary (cuda_api_sum):
+
+ Time (%)  Total Time (ns)  Num Calls   Avg (ns)   Med (ns)  Min (ns)   Max (ns)   StdDev (ns)                Name               
+ --------  ---------------  ---------  ----------  --------  --------  ----------  -----------  ---------------------------------
+     92.3       2100075191         39  53848081.8  158904.0       214  1405089838  230873569.3  cudaEventSynchronize             
+      5.1        115919422          8  14489927.8    7653.5      2977   115872469   40964732.9  cudaStreamCreateWithFlags        
+      2.0         45046344         73    617073.2   10067.0      3670    26742497    3285114.6  cudaLaunchKernel                 
+      0.2          3554202          8    444275.3  344629.0      3789     1235523     497464.5  cudaHostAlloc                    
+      0.1          3188769        283     11267.7    6246.0      1523      175590      16171.2  cudaMemcpyAsync                  
+      0.1          2714440        223     12172.4    1141.0       781     1708523     116338.4  cudaFree                         
+      0.1          1930766          8    241345.8  217381.5      5633      556371     245065.7  cudaFreeHost                     
+      0.1          1614785        219      7373.4    1128.0       777      376366      43142.0  cudaMalloc                       
+      0.0           695259         69     10076.2    4800.0      1283      172196      21863.4  cudaEventRecord                  
+      0.0           509339         12     42444.9    6562.0      1857      199426      63389.5  cudaStreamSynchronize            
+      0.0           435935          4    108983.8   62233.5     13013      298455     133603.8  cudaMemsetAsync                  
+      0.0           125517          4     31379.3    1502.5       990      121522      60096.3  cudaEventCreateWithFlags         
+      0.0           109418         20      5470.9     275.0       177      100393      22347.0  cudaEventDestroy                 
+      0.0            47075        419       112.4      71.0        34        2860        166.7  cuGetProcAddress_v2              
+      0.0            27821          8      3477.6    2149.0      1866        8742       2414.2  cudaStreamDestroy                
+      0.0             8257          4      2064.3    1936.0      1541        2844        635.4  cudaGetDeviceProperties_v2_v12000
+      0.0             7576         16       473.5     301.0       188        1519        420.8  cudaEventCreate                  
+      0.0             3188          1      3188.0    3188.0      3188        3188          0.0  cuInit                           
+      0.0             1217          2       608.5     608.5        47        1170        794.1  cuModuleGetLoadingMode           
+
+Processing [results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.sqlite] with [/opt/nvidia/nsight-systems/2024.6.2/host-linux-x64/reports/cuda_gpu_kern_sum.py]... 
+SKIPPED: results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.sqlite does not contain CUDA kernel data.
+
+Processing [results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.sqlite] with [/opt/nvidia/nsight-systems/2024.6.2/host-linux-x64/reports/cuda_gpu_mem_time_sum.py]... 
+SKIPPED: results/gpu/g3/g3-20260901T000027Z-832aaf4/device-scvx.sqlite does not contain GPU memory data.
+

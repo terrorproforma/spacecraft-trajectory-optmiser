@@ -1,0 +1,86 @@
+source_commit=c804a2dcba2c70ee514bc5820aa46a84bb49ef0d
+upstream_commit=167c8b72b4b96d2f94d405b8763e485514192b81
+upstream_tree=62b05e6c1bedd385f6c267af3645ae4aae0421b4
+patch_sha256=dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6  third_party/patches/pdhcg/0001-free-quadratic-state.patch
+Linux DESKTOP-31AD96J 6.18.33.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Fri Jun  5 01:12:21 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Fri_Feb_21_20:23:50_PST_2025
+Cuda compilation tools, release 12.8, V12.8.93
+Build cuda_12.8.r12.8/compiler.35583870_0
+Tue Sep  1 09:25:13 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.58.02              Driver Version: 595.97         CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        On  |   00000000:02:00.0  On |                  N/A |
+|  0%   50C    P0             80W /  575W |    5251MiB /  32607MiB |      3%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Python 3.12.13
+Name: cupy-cuda12x
+Version: 14.2.0
+Summary: CuPy: NumPy & SciPy for GPU
+Home-page: https://cupy.dev/
+Author: 
+Author-email: Seiya Tokui <tokui@preferred.jp>
+License-Expression: MIT
+Location: /home/angus/spacecraft-trajectory-optmiser/.venv/lib/python3.12/site-packages
+Requires: cuda-pathfinder, numpy
+Required-by: 
+---
+Name: torch
+Version: 2.11.0+cu128
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org
+Author: 
+Author-email: PyTorch Team <packages@pytorch.org>
+License: BSD-3-Clause
+Location: /home/angus/spacecraft-trajectory-optmiser/.venv/lib/python3.12/site-packages
+Requires: cuda-bindings, cuda-toolkit, filelock, fsspec, jinja2, networkx, nvidia-cudnn-cu12, nvidia-cusparselt-cu12, nvidia-nccl-cu12, nvidia-nvshmem-cu12, setuptools, sympy, triton, typing-extensions
+Required-by: 
+---
+Name: jax
+Version: 0.11.1
+Summary: Differentiate, compile, and transform Numpy code.
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/angus/spacecraft-trajectory-optmiser/.venv/lib/python3.12/site-packages
+Requires: jaxlib, ml_dtypes, numpy, opt_einsum, scipy
+Required-by: 
+---
+Name: jaxlib
+Version: 0.11.1
+Summary: XLA library for JAX
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/angus/spacecraft-trajectory-optmiser/.venv/lib/python3.12/site-packages
+Requires: ml_dtypes, numpy, scipy
+Required-by: jax
+---
+Name: jax-cuda12-plugin
+Version: 0.11.1
+Summary: JAX Plugin for NVIDIA GPUs
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/angus/spacecraft-trajectory-optmiser/.venv/lib/python3.12/site-packages
+Requires: jax-cuda12-pjrt
+Required-by: 
+## feat/persistent-cuda-workspace

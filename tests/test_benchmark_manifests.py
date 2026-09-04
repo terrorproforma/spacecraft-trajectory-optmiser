@@ -24,9 +24,7 @@ def test_paper1_manifest_is_complete_and_gpu_explicit() -> None:
     _validate_repository_and_families(manifest)
     assert manifest["schema_version"] == "2.0.0"
     assert manifest["status"] == "preregistered pre-GPU matrix"
-    assert manifest["upstream_pdhcg_commit"] == (
-        "167c8b72b4b96d2f94d405b8763e485514192b81"
-    )
+    assert manifest["upstream_pdhcg_commit"] == ("167c8b72b4b96d2f94d405b8763e485514192b81")
     assert manifest["result_schema"] == "experiments/schema/paper1_result.schema.json"
     assert manifest["decision_rules"] == "papers/paper1/CLAIMS_AND_DECISION_RULES.md"
     assert manifest["figure_schema"] == "papers/paper1/FIGURE_SCHEMA.md"

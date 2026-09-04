@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "campaign": "G5-physical-launch-probe",
+  "qualification_status": "never-qualifying",
+  "gpu_counts": [1, 2, 4, 8],
+  "nodes": [20],
+  "partitions": ["scenario_aware"],
+  "risks": ["expected"],
+  "seeds": [17],
+  "warmups": 0,
+  "repeats": 1,
+  "timeout_seconds": 120,
+  "include_monolithic": false,
+  "strong": {
+    "scenario_counts": [8]
+  },
+  "weak": {
+    "scenarios_per_gpu": []
+  }
+}

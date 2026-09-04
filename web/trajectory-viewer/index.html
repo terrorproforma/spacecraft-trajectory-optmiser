@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta
+      name="description"
+      content="Standalone WebGL2 viewer for verified archived SpacePDHCG trajectory evidence."
+    >
+    <title>SpacePDHCG trajectory evidence viewer</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <noscript>
+      <div class="fatal-banner">JavaScript is required to load the archived trajectory viewer.</div>
+    </noscript>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SpacePDHCG / archived evidence</p>
+          <h1>Trajectory replay viewer</h1>
+        </div>
+        <div class="renderer-status pending" id="renderer-status" role="status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="renderer-status-text">Loading verified archive…</span>
+        </div>
+      </header>
+
+      <div class="error-banner" id="error-banner" role="alert" hidden></div>
+
+      <main class="workspace">
+        <aside class="sidebar" aria-label="Trajectory inventory and controls">
+          <section class="panel inventory-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="kicker">Evidence inventory</p>
+                <h2>Trajectories</h2>
+              </div>
+              <span class="count-badge" id="inventory-count">—</span>
+            </div>
+            <div class="trajectory-list" id="trajectory-list" role="list"></div>
+          </section>
+
+          <section class="panel controls-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="kicker">Data source</p>
+                <h2>Display mode</h2>
+              </div>
+            </div>
+            <fieldset class="segmented" id="data-mode">
+              <legend class="sr-only">Trajectory data mode</legend>
+              <label>
+                <input type="radio" name="mode" value="replay" checked>
+                <span>Dense replay</span>
+              </label>
+              <label>
+                <input type="radio" name="mode" value="transcription">
+                <span>Transcription nodes</span>
+              </label>
+            </fieldset>
+            <p class="help-text" id="mode-description">
+              Independently integrated archived replay samples. No visual interpolation.
+            </p>
+
+            <div class="control-row">
+              <button class="primary-button" id="play-button" type="button">
+                <span aria-hidden="true" id="play-icon">▶</span>
+                <span id="play-label">Play replay</span>
+              </button>
+              <button class="secondary-button" id="reset-button" type="button">Reset view</button>
+            </div>
+
+            <label class="timeline-label" for="timeline">
+              <span>Timeline</span>
+              <output id="timeline-output" for="timeline">100.0%</output>
+            </label>
+            <input
+              class="timeline"
+              id="timeline"
+              type="range"
+              min="0"
+              max="100"
+              step="0.1"
+              value="100"
+              aria-describedby="sample-output"
+            >
+            <p class="sample-output" id="sample-output">Sample — / —</p>
+            <p class="keyboard-help">
+              Drag orbit · right-drag or Shift+drag pan · wheel zoom<br>
+              Keyboard: arrows orbit · Shift+arrows pan · +/− zoom · Space play
+            </p>
+          </section>
+        </aside>
+
+        <section class="viewer-column" aria-label="Interactive trajectory scene">
+          <div class="viewport-card">
+            <div class="viewport-toolbar">
+              <div>
+                <p class="kicker" id="family-label">—</p>
+                <h2 id="trajectory-title">Loading trajectory…</h2>
+              </div>
+              <div class="qualification-badge" id="qualification-badge">—</div>
+            </div>
+
+            <div class="viewport-wrap" id="viewport-wrap">
+              <canvas
+                id="trajectory-canvas"
+                tabindex="0"
+                aria-label="Interactive WebGL2 trajectory scene"
+              ></canvas>
+              <div class="scene-label top-left" id="frame-overlay">
+                <strong>Physical frame</strong>
+                <span>—</span>
+              </div>
+              <div class="scene-label bottom-left" id="legend-overlay">
+                <span><i class="legend-mark start"></i>Start</span>
+                <span><i class="legend-mark current"></i>Current</span>
+                <span><i class="legend-mark target"></i>Target</span>
+              </div>
+              <div class="scene-label bottom-right" id="scene-overlay">—</div>
+            </div>
+          </div>
+
+          <section class="notice-panel" id="qualification-notice" aria-live="polite"></section>
+
+          <div class="detail-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="kicker">Selected sample</p>
+                  <h2>Current state</h2>
+                </div>
+              </div>
+              <dl class="metric-list" id="current-state"></dl>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="kicker">Model semantics</p>
+                  <h2>Frame &amp; body</h2>
+                </div>
+              </div>
+              <div id="frame-details"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="kicker">Validation</p>
+                  <h2>Evidence checks</h2>
+                </div>
+              </div>
+              <dl class="metric-list" id="validation-details"></dl>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="kicker">Runtime</p>
+                  <h2>GPU device</h2>
+                </div>
+              </div>
+              <dl class="metric-list" id="gpu-details">
+                <div><dt>Status</dt><dd>Initializing WebGL2…</dd></div>
+              </dl>
+            </section>
+          </div>
+
+          <details class="panel provenance-panel">
+            <summary>Source provenance and archive caveats</summary>
+            <div class="provenance-content" id="provenance-content"></div>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

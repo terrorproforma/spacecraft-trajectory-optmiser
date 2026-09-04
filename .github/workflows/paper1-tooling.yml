@@ -1,0 +1,63 @@
+name: paper1-tooling
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  schema-aggregation-and-freeze-refusal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install Paper 1 tooling
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
+      - name: Validate JSON schemas
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+          for path in sorted(Path("experiments/schema").glob("*.schema.json")):
+              Draft202012Validator.check_schema(json.loads(path.read_text()))
+              print(path)
+          PY
+      - name: Lint and test aggregation, decisions, and refusal paths
+        run: |
+          ruff check src/spacepdhcg/paper1 tests/test_paper1_g6.py
+          pytest -q tests/test_paper1_g6.py
+      - name: Build synthetic figures, tables, and claim decisions
+        run: |
+          spacepdhcg-paper1 synthetic-demo \
+            build/paper1-synthetic/campaign \
+            build/paper1-synthetic/bundle
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(
+              Path("build/paper1-synthetic/bundle/products/build-manifest.json").read_text()
+          )
+          expected = [
+              *(f"F{index:02d}" for index in range(1, 13)),
+              *(f"T{index:02d}" for index in range(1, 9)),
+          ]
+          assert manifest["product_ids"] == expected
+          PY
+          spacepdhcg-paper1 verify-reproducible \
+            build/paper1-synthetic/campaign --synthetic
+      - name: Assert synthetic freeze refusal
+        run: |
+          if spacepdhcg-paper1 freeze \
+            build/paper1-synthetic/campaign \
+            build/paper1-synthetic/campaign/campaign-config.synthetic.json \
+            build/paper1-synthetic/frozen --repository .; then
+            echo "synthetic campaign was incorrectly frozen" >&2
+            exit 1
+          fi

@@ -7,8 +7,7 @@ def _state_difference(model, state, control, index, step=1.0e-5):
     direction = np.zeros_like(state)
     direction[index] = step
     return (
-        model.dynamics(state + direction, control)
-        - model.dynamics(state - direction, control)
+        model.dynamics(state + direction, control) - model.dynamics(state - direction, control)
     ) / (2.0 * step)
 
 
@@ -16,8 +15,7 @@ def _control_difference(model, state, control, index, step=1.0e-5):
     direction = np.zeros_like(control)
     direction[index] = step
     return (
-        model.dynamics(state, control + direction)
-        - model.dynamics(state, control - direction)
+        model.dynamics(state, control + direction) - model.dynamics(state, control - direction)
     ) / (2.0 * step)
 
 
@@ -69,11 +67,7 @@ def test_affine_linearisation_is_exact_at_reference_and_second_order_nearby() ->
         candidate_state = state + scale * state_delta
         candidate_control = control + scale * control_delta
         nonlinear = model.dynamics(candidate_state, candidate_control)
-        affine = (
-            state_jacobian @ candidate_state
-            + control_jacobian @ candidate_control
-            + offset
-        )
+        affine = state_jacobian @ candidate_state + control_jacobian @ candidate_control + offset
         return np.linalg.norm(nonlinear - affine)
 
     full_error = error(1.0)
@@ -89,10 +83,7 @@ def test_rollout_mass_and_vertical_path_diagnostics() -> None:
     step_seconds = 2.0
     states = model.rollout(initial, controls, step_seconds)
     expected_mass = initial[6] - (
-        controls.shape[0]
-        * step_seconds
-        * model.config.mass_flow_coefficient
-        * controls[0, 3]
+        controls.shape[0] * step_seconds * model.config.mass_flow_coefficient * controls[0, 3]
     )
 
     assert states.shape == (6, 7)

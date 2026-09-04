@@ -1,0 +1,418 @@
+/*
+ * Production device-resident deterministic SCvx outer driver.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#pragma once
+
+#include "spacepdhcg/cuda/device_scvx_c_api.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct spacepdhcg_cuda_scvx_driver spacepdhcg_cuda_scvx_driver;
+
+typedef enum spacepdhcg_cuda_scvx_status {
+    SPACEPDHCG_CUDA_SCVX_CONVERGED = 0,
+    SPACEPDHCG_CUDA_SCVX_MAXIMUM_ITERATIONS = 1,
+    SPACEPDHCG_CUDA_SCVX_TRUST_REGION_EXHAUSTED = 2,
+    SPACEPDHCG_CUDA_SCVX_INNER_FAILURE = 3,
+    SPACEPDHCG_CUDA_SCVX_CANCELLED = 4,
+    SPACEPDHCG_CUDA_SCVX_INVALID = 5
+} spacepdhcg_cuda_scvx_status;
+
+typedef enum spacepdhcg_cuda_scvx_phase {
+    SPACEPDHCG_CUDA_SCVX_REPAIR = 0,
+    SPACEPDHCG_CUDA_SCVX_PROGRESS = 1,
+    SPACEPDHCG_CUDA_SCVX_REFINEMENT = 2,
+    SPACEPDHCG_CUDA_SCVX_POLISH = 3
+} spacepdhcg_cuda_scvx_phase;
+
+typedef enum spacepdhcg_cuda_scvx_policy {
+    SPACEPDHCG_CUDA_SCVX_ADAPTIVE = 0,
+    SPACEPDHCG_CUDA_SCVX_FIXED_TIGHT = 1,
+    SPACEPDHCG_CUDA_SCVX_FIXED_LOOSE = 2,
+    SPACEPDHCG_CUDA_SCVX_ADAPTIVE_POLISH = 3,
+    SPACEPDHCG_CUDA_SCVX_PURE_QOCO = 4,
+    SPACEPDHCG_CUDA_SCVX_HYBRID_QOCO = 5
+} spacepdhcg_cuda_scvx_policy;
+
+typedef enum spacepdhcg_cuda_scvx_trust_action {
+    SPACEPDHCG_CUDA_SCVX_TRUST_RETAIN = 0,
+    SPACEPDHCG_CUDA_SCVX_TRUST_SHRINK = 1,
+    SPACEPDHCG_CUDA_SCVX_TRUST_EXPAND = 2
+} spacepdhcg_cuda_scvx_trust_action;
+
+typedef enum spacepdhcg_cuda_qoco_mode {
+    SPACEPDHCG_CUDA_QOCO_PURE_GPU_IPM = 0,
+    SPACEPDHCG_CUDA_QOCO_HYBRID_PDHCG_IPM = 1
+} spacepdhcg_cuda_qoco_mode;
+
+typedef enum spacepdhcg_cuda_qoco_handback_disposition {
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_ACCEPTED = 0,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_NONLINEAR_REJECTED = 1,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_CQP_UNQUALIFIED = 2,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_HYBRID_INELIGIBLE = 3,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_PERMUTATION_MISMATCH = 4,
+    SPACEPDHCG_CUDA_QOCO_HANDBACK_STALE_CQP = 5
+} spacepdhcg_cuda_qoco_handback_disposition;
+
+typedef enum spacepdhcg_cuda_qoco_failure {
+    SPACEPDHCG_CUDA_QOCO_FAILURE_NONE = 0,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_UNAVAILABLE = 1,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_UNSUPPORTED = 2,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY = 3,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL = 4,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_INFEASIBLE = 5,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_MAX_ITERATIONS = 6,
+    SPACEPDHCG_CUDA_QOCO_FAILURE_ABI = 7
+} spacepdhcg_cuda_qoco_failure;
+
+typedef struct spacepdhcg_cuda_scvx_numeric_update {
+    uint32_t abi_version;
+    spacepdhcg_accelerator_buffer_view quadratic_diagonal_positions;
+    spacepdhcg_accelerator_buffer_view radial_positions;
+    spacepdhcg_accelerator_buffer_view quaternion_positions;
+    size_t terminal_row_start;
+    size_t radial_row_start;
+    size_t quaternion_row_start;
+    size_t stage_trust_row_start;
+    size_t stage_trust_stride;
+    size_t terminal_trust_row_start;
+    size_t virtual_variable_offset;
+    size_t epigraph_variable_offset;
+    double state_trust_scales[14];
+    double control_trust_scales[7];
+    double fuel_weight;
+    double virtual_l1_weight;
+    double maximum_thrust;
+    double maximum_torque;
+    double maximum_angular_rate;
+    double tilt_cosine;
+    double glide_slope_tangent;
+    double minimum_radius;
+    double conditioning_log10_span;
+} spacepdhcg_cuda_scvx_numeric_update;
+
+typedef struct spacepdhcg_cuda_scvx_problem {
+    uint32_t abi_version;
+    spacepdhcg_cuda_workspace* workspace;
+    uint64_t topology_fingerprint;
+    size_t intervals;
+    size_t state_dimension;
+    size_t control_dimension;
+    spacepdhcg_cuda_dynamics_config dynamics;
+    spacepdhcg_cqp_numeric_accelerator_views numeric;
+    spacepdhcg_cuda_variational_request variational;
+    spacepdhcg_cuda_csc_dynamics_fill dynamics_fill;
+    spacepdhcg_accelerator_buffer_view state_variable_indices;
+    spacepdhcg_accelerator_buffer_view control_variable_indices;
+    spacepdhcg_accelerator_buffer_view virtual_variable_indices;
+    spacepdhcg_accelerator_buffer_view reference_states;
+    spacepdhcg_accelerator_buffer_view reference_controls;
+    spacepdhcg_accelerator_buffer_view initial_state;
+    spacepdhcg_accelerator_buffer_view target_state;
+    spacepdhcg_cuda_scvx_numeric_update numeric_update;
+    spacepdhcg_cuda_structure canonical_structure;
+    spacepdhcg_cqp_topology_accelerator_views canonical_topology;
+} spacepdhcg_cuda_scvx_problem;
+
+typedef struct spacepdhcg_cuda_scvx_options {
+    uint32_t abi_version;
+    uint32_t maximum_outer_iterations;
+    uint32_t minimum_outer_iterations;
+    uint32_t maximum_resolves_per_iteration;
+    double convergence_tolerance;
+    double step_tolerance;
+    double acceptance_threshold;
+    double restoration_reduction;
+    double feasibility_penalty;
+    double virtual_penalty;
+    double initial_trust_radius;
+    double minimum_trust_radius;
+    double maximum_trust_radius;
+    double shrink_factor;
+    double expansion_factor;
+    double strong_agreement_threshold;
+    double near_boundary_fraction;
+    double fixed_inner_tolerance;
+    uint64_t fixed_inner_iteration_limit;
+    spacepdhcg_cuda_scvx_policy policy;
+    spacepdhcg_cuda_warm_start_mode warm_start_mode;
+    double adaptive_epsilon_max;
+    double adaptive_epsilon_floor;
+    double adaptive_epsilon_0;
+    double adaptive_coefficient;
+    double adaptive_alpha;
+    double adaptive_gamma;
+    double repair_tolerance_ceiling;
+    double progress_tolerance_ceiling;
+    double refinement_tolerance_ceiling;
+    double polish_tolerance_ceiling;
+    uint64_t repair_iteration_limit;
+    uint64_t progress_iteration_limit;
+    uint64_t refinement_iteration_limit;
+    uint64_t polish_iteration_limit;
+    double resolve_trigger_multiple;
+    double resolve_refinement_factor;
+    double resolve_minimum_tolerance;
+    double final_polish_tolerance;
+    uint64_t final_polish_iteration_limit;
+    /* Ruiz equilibration iterations requested from the native QOCO IPM
+     * (pure-QOCO policy and the hybrid hand-off stage). 0 keeps QOCO's
+     * pinned-commit default (no equilibration); the PDHCG scaling_mode axis
+     * never reaches the IPM. */
+    int32_t qoco_ruiz_iterations;
+} spacepdhcg_cuda_scvx_options;
+
+typedef struct spacepdhcg_cuda_scvx_iteration {
+    uint32_t outer_iteration;
+    spacepdhcg_cuda_scvx_phase phase;
+    double requested_tolerance;
+    double achieved_residual;
+    uint64_t inner_iterations;
+    double trust_radius_before;
+    double trust_radius_after;
+    double predicted_reduction;
+    double actual_reduction;
+    double reduction_ratio;
+    double step_fraction;
+    double objective;
+    double virtual_control;
+    double dynamics_defect;
+    double path_violation;
+    double terminal_residual;
+    int32_t accepted;
+    int32_t restoration_accepted;
+    int32_t re_solved;
+    int32_t scaling_refreshed;
+    int32_t recovery_used;
+    double native_primal_residual;
+    double native_dual_residual;
+    double complementarity_residual;
+    double scaling_min;
+    double scaling_max;
+    uint64_t matvecs;
+    uint64_t cone_projections;
+    uint64_t cqp_numeric_fingerprint;
+    uint64_t resolve_numeric_fingerprint;
+    int32_t resolve_fingerprint_match;
+    spacepdhcg_cuda_scvx_trust_action trust_action;
+    spacepdhcg_cuda_warm_start_mode warm_start_mode;
+    spacepdhcg_cuda_recovery_reason recovery_reason;
+    int32_t forcing_satisfied;
+    int32_t final_polish_handoff;
+    double current_merit;
+    double candidate_merit;
+    double candidate_model_merit;
+    double current_dynamics_defect;
+    double current_path_violation;
+    double current_terminal_residual;
+    double scalar_primal_residual;
+    double box_primal_residual;
+    double cone_primal_residual;
+    double stationarity_residual;
+    double natural_residual;
+    uint64_t recovery_attempt_count;
+    uint64_t recovery_accepted_count;
+    uint64_t recovery_rejected_count;
+    double recovery_seconds;
+    uint64_t recovery_iterations;
+    double recovery_initial_residual;
+    double recovery_final_residual;
+    double recovery_final_primal_residual;
+    double recovery_final_stationarity;
+    double recovery_final_complementarity;
+    double maximum_stage_trust_distance;
+    double terminal_trust_distance;
+} spacepdhcg_cuda_scvx_iteration;
+
+typedef struct spacepdhcg_cuda_scvx_result {
+    uint32_t abi_version;
+    spacepdhcg_cuda_scvx_status status;
+    uint32_t outer_iterations;
+    uint32_t accepted_steps;
+    uint32_t rejected_steps;
+    uint32_t resolved_steps;
+    uint64_t inner_iterations;
+    double objective;
+    double canonical_residual;
+    double dynamics_defect;
+    double path_violation;
+    double terminal_residual;
+    double virtual_control;
+    double trajectory_step;
+    double final_trust_radius;
+    double topology_seconds;
+    double coefficient_seconds;
+    double workspace_create_seconds;
+    double update_seconds;
+    double scaling_seconds;
+    double h2d_seconds;
+    double solve_seconds;
+    double recovery_seconds;
+    double residual_seconds;
+    double replay_seconds;
+    double acceptance_seconds;
+    double d2h_seconds;
+    double cqp_total_seconds;
+    double scvx_total_seconds;
+    uint64_t allocation_count;
+    uint64_t allocation_bytes;
+    uint64_t h2d_copy_count;
+    uint64_t h2d_bytes;
+    uint64_t d2h_copy_count;
+    uint64_t d2h_bytes;
+    uint64_t device_copy_count;
+    uint64_t device_copy_bytes;
+    uint64_t topology_allocation_count_after_create;
+    uint64_t topology_index_copy_count_after_create;
+    uint64_t recovery_iterations;
+    int32_t hidden_cpu_fallback;
+    int32_t used_declared_stream;
+    double qoco_conversion_seconds;
+    double qoco_setup_seconds;
+    double qoco_update_seconds;
+    double qoco_solve_seconds;
+    uint64_t qoco_workspace_creations;
+    uint64_t qoco_numeric_updates;
+    int32_t qoco_dual_discarded;
+    spacepdhcg_cuda_qoco_failure qoco_failure;
+    int32_t hybrid_handoff_eligible;
+    /* Ruiz iterations the QOCO workspace was configured with (0 = none). */
+    int32_t qoco_ruiz_iterations;
+    /* Raw QOCO status of the last IPM solve (-1 when QOCO never solved). */
+    int32_t qoco_status_code;
+} spacepdhcg_cuda_scvx_result;
+
+typedef struct spacepdhcg_cuda_scvx_path_inventory {
+    uint32_t abi_version;
+    double thrust_violation;
+    double mass_violation;
+    double altitude_violation;
+} spacepdhcg_cuda_scvx_path_inventory;
+
+typedef struct spacepdhcg_cuda_qoco_candidate {
+    uint32_t abi_version;
+    spacepdhcg_cuda_qoco_mode mode;
+    const double* canonical_primal_host;
+    size_t primal_elements;
+    const double* canonical_dual_host;
+    size_t dual_elements;
+    uint64_t topology_fingerprint;
+    uint64_t cqp_numeric_fingerprint;
+    double canonical_primal_residual;
+    double canonical_dual_residual;
+    double quality_tolerance;
+    double trust_radius;
+    double current_merit;
+    double current_outer_residual;
+    int32_t qoco_solved;
+    int32_t hybrid_handoff_eligible;
+    int32_t dual_discarded;
+    double conversion_seconds;
+    double setup_seconds;
+    double polish_seconds;
+} spacepdhcg_cuda_qoco_candidate;
+
+typedef struct spacepdhcg_cuda_qoco_handback_result {
+    uint32_t abi_version;
+    spacepdhcg_cuda_qoco_mode mode;
+    spacepdhcg_cuda_qoco_handback_disposition disposition;
+    int32_t accepted;
+    int32_t restoration_accepted;
+    int32_t fingerprint_match;
+    int32_t permutation_match;
+    int32_t device_replay;
+    int32_t hidden_cpu_fallback;
+    int32_t dual_discarded;
+    spacepdhcg_cuda_scvx_trust_action trust_action;
+    double trust_radius_before;
+    double trust_radius_after;
+    double predicted_reduction;
+    double actual_reduction;
+    double reduction_ratio;
+    double objective;
+    double dynamics_residual;
+    double path_residual;
+    double terminal_residual;
+    double virtual_control_residual;
+    double trajectory_step;
+    double thrust_violation;
+    double torque_violation;
+    double pointing_violation;
+    double mass_violation;
+    double altitude_violation;
+    double glide_slope_violation;
+    double angular_rate_violation;
+    double quaternion_violation;
+    uint64_t cqp_numeric_fingerprint;
+    double conversion_seconds;
+    double setup_seconds;
+    double polish_seconds;
+    double transfer_seconds;
+    double replay_seconds;
+    double acceptance_seconds;
+    uint64_t h2d_bytes;
+} spacepdhcg_cuda_qoco_handback_result;
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_update_numeric_async(
+    const spacepdhcg_cuda_scvx_problem* problem,
+    double trust_radius,
+    double virtual_penalty,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
+    const spacepdhcg_cuda_scvx_problem* problem,
+    const spacepdhcg_cuda_scvx_options* options,
+    spacepdhcg_cuda_scvx_driver** driver
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
+    spacepdhcg_cuda_scvx_driver* driver,
+    spacepdhcg_accelerator_stream stream,
+    spacepdhcg_cuda_scvx_iteration* iterations,
+    size_t iteration_capacity,
+    spacepdhcg_cuda_scvx_result* result
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_handback_qoco(
+    spacepdhcg_cuda_scvx_driver* driver,
+    const spacepdhcg_cuda_qoco_candidate* candidate,
+    spacepdhcg_accelerator_stream stream,
+    spacepdhcg_cuda_qoco_handback_result* result
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_cancel(
+    spacepdhcg_cuda_scvx_driver* driver
+);
+
+/*
+ * Restore the independent-attempt boundary without destroying the driver,
+ * its QOCO owner, or the compatible persistent PDHCG workspace.
+ *
+ * NONE clears all solver iterates and any accepted QOCO warm state. PRIMAL
+ * retains only the accepted primal and clears dual/internal momentum state.
+ * PRIMAL_DUAL retains primal and dual state. FULL_RETAINED is reserved for
+ * component tests and has the same cross-attempt retention as PRIMAL_DUAL.
+ */
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_reset_attempt(
+    spacepdhcg_cuda_scvx_driver* driver,
+    spacepdhcg_cuda_warm_start_mode mode,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_path_inventory(
+    const spacepdhcg_cuda_scvx_driver* driver,
+    spacepdhcg_cuda_scvx_path_inventory* inventory
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_destroy(
+    spacepdhcg_cuda_scvx_driver** driver
+);
+
+#ifdef __cplusplus
+}
+#endif

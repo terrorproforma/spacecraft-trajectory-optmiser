@@ -1,0 +1,343 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/terrorproforma/spacecraft-trajectory-optmiser/experiments/schema/g4_raw_attempt.schema.json",
+  "title": "G4 raw attempt evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_kind",
+    "group_id",
+    "attempt_id",
+    "family",
+    "intervals",
+    "policy",
+    "instance",
+    "seed",
+    "repeat_kind",
+    "repeat",
+    "launched",
+    "statistics_eligible",
+    "disposition",
+    "failure_class",
+    "reason",
+    "timing"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "record_kind": {"const": "raw_attempt"},
+    "group_id": {"type": "string", "pattern": "^g4-group-v1-[0-9a-f]{64}$"},
+    "attempt_id": {"type": "string", "minLength": 1},
+    "family": {"enum": ["P1-C-pd3", "P1-D-pd6", "P1-E-low-thrust"]},
+    "intervals": {"type": "integer", "minimum": 1},
+    "policy": {
+      "enum": [
+        "fixed-tight",
+        "fixed-loose",
+        "adaptive",
+        "adaptive+polish",
+        "pure-gpu-ipm",
+        "hybrid-pdhcg-ipm"
+      ]
+    },
+    "instance": {"type": "string", "pattern": "^g4-instance-v2-[0-9a-f]{64}$"},
+    "seed": {"type": "integer", "minimum": 0},
+    "repeat_kind": {"enum": ["warmup", "measured"]},
+    "repeat": {"type": "integer", "minimum": 0},
+    "launched": {"type": "boolean"},
+    "statistics_eligible": {"type": "boolean"},
+    "disposition": {
+      "enum": [
+        "qualified",
+        "unqualified",
+        "hybrid_handoff_ineligible",
+        "not_applicable",
+        "unsupported",
+        "oom",
+        "timeout",
+        "timeout_deterministic_replay",
+        "numerical",
+        "infeasible",
+        "executor_defect",
+        "unrun"
+      ]
+    },
+    "failure_class": {
+      "enum": [
+        "none",
+        "hybrid_handoff_ineligible",
+        "not_applicable",
+        "unsupported",
+        "oom",
+        "timeout",
+        "numerical",
+        "infeasible",
+        "executor_defect",
+        "max_iterations",
+        "unrun",
+        "evidence"
+      ]
+    },
+    "reason": {"type": "string", "minLength": 1},
+    "timing": {
+      "type": "object",
+      "required": ["elapsed_seconds"],
+      "properties": {
+        "elapsed_seconds": {"type": "number", "minimum": 0}
+      }
+    },
+    "case": {"const": "g4_attempt"},
+    "energy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "scope",
+        "sampling_interval_milliseconds",
+        "sample_count",
+        "maximum_gap_seconds",
+        "gap_valid",
+        "joules",
+        "errors"
+      ],
+      "properties": {
+        "source": {"const": "nvml-c-api"},
+        "scope": {"const": "GPU-only"},
+        "sampling_interval_milliseconds": {"const": 50},
+        "sample_count": {"type": "integer", "minimum": 0},
+        "maximum_gap_seconds": {"type": ["number", "null"], "minimum": 0},
+        "gap_valid": {"type": "boolean"},
+        "joules": {"type": ["number", "null"], "minimum": 0},
+        "errors": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "source_hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_sha256",
+        "matrix_sha256",
+        "capability_sha256",
+        "coefficient_hash",
+        "problem_hash",
+        "instance_hash"
+      ],
+      "properties": {
+        "policy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "matrix_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "capability_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "coefficient_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "problem_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "instance_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"}
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pid",
+        "cuda_context_generation",
+        "workspace_generation",
+        "attempt_ordinal",
+        "workspace_address",
+        "topology_fingerprint",
+        "topology_allocations_after_create",
+        "topology_index_copies_after_create",
+        "allocation_count",
+        "total_copy_count",
+        "reset_policy",
+        "warm_start_requested",
+        "warm_start_actual",
+        "dual_disposition",
+        "qoco_workspace_creations",
+        "qoco_numeric_updates"
+      ],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "cuda_context_generation": {"const": 1},
+        "workspace_generation": {"const": 1},
+        "attempt_ordinal": {"type": "integer", "minimum": 0, "maximum": 8},
+        "workspace_address": {"type": "string", "pattern": "^0x[0-9a-f]+$"},
+        "topology_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "topology_allocations_after_create": {"const": 0},
+        "topology_index_copies_after_create": {"const": 0},
+        "allocation_count": {"type": "integer", "minimum": 0},
+        "total_copy_count": {"type": "integer", "minimum": 0},
+        "reset_policy": {"type": "string", "minLength": 1},
+        "warm_start_requested": {"enum": ["cold", "primal", "primal_dual"]},
+        "warm_start_actual": {"enum": ["cold", "primal", "primal_dual"]},
+        "dual_disposition": {
+          "enum": ["transferred", "discarded_unsupported", "not-produced"]
+        },
+        "qoco_workspace_creations": {"type": "integer", "minimum": 0},
+        "qoco_numeric_updates": {"type": "integer", "minimum": 0}
+      }
+    },
+    "paper1_result": {"type": "object"},
+    "policy_amendment": {"enum": ["single-gpu-v1.1", "single-gpu-v1.2"]},
+    "amendment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "censoring_stratum",
+        "attempt_deadline_seconds",
+        "inner_iteration_cap",
+        "deterministic_replay"
+      ],
+      "properties": {
+        "censoring_stratum": {"enum": ["claim_core", "censoring_sensitivity"]},
+        "attempt_deadline_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "inner_iteration_cap": {"type": "integer", "minimum": 1},
+        "deterministic_replay": {"type": "boolean"},
+        "ipm_equilibration": {
+          "description": "Amendment single-gpu-v1.2 rule A: the QOCO equilibration the IPM attempt actually ran with (pure-gpu-ipm and hybrid-pdhcg-ipm); null for PDHCG-only policies.",
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mode",
+                "ruiz_iterations",
+                "requested_ruiz_iterations",
+                "scaling_mode",
+                "qoco_status_code"
+              ],
+              "properties": {
+                "mode": {"enum": ["qoco_native_default", "qoco_native_ruiz"]},
+                "ruiz_iterations": {"type": "integer", "minimum": 0},
+                "requested_ruiz_iterations": {"type": "integer", "minimum": 0},
+                "scaling_mode": {"const": "not_applicable_ipm_native"},
+                "qoco_status_code": {"type": "integer"}
+              }
+            }
+          ]
+        },
+        "deadline_classification": {
+          "description": "Amendment single-gpu-v1.2 rule B: the solver's own outcome behind the recorded disposition and whether measured wall time exceeded the attempt deadline.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rule",
+            "wall_exceeded_deadline",
+            "measured_wall_seconds",
+            "solver_disposition",
+            "solver_failure_class",
+            "canonical_residual",
+            "dynamics_residual",
+            "path_residual",
+            "terminal_residual",
+            "virtual_control_residual"
+          ],
+          "properties": {
+            "rule": {"const": "measured_wall_exceeds_attempt_deadline"},
+            "wall_exceeded_deadline": {"type": "boolean"},
+            "measured_wall_seconds": {"type": "number", "minimum": 0},
+            "solver_disposition": {"type": "string", "minLength": 1},
+            "solver_failure_class": {"type": "string", "minLength": 1},
+            "canonical_residual": {"type": "number", "minimum": 0},
+            "dynamics_residual": {"type": "number", "minimum": 0},
+            "path_residual": {"type": "number", "minimum": 0},
+            "terminal_residual": {"type": "number", "minimum": 0},
+            "virtual_control_residual": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "trace_hash": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inner_iterations",
+        "outer_iterations",
+        "canonical_residual",
+        "dynamics_residual",
+        "path_residual",
+        "terminal_residual",
+        "virtual_control_residual",
+        "checkpoints"
+      ],
+      "properties": {
+        "inner_iterations": {"type": "integer", "minimum": 0},
+        "outer_iterations": {"type": "integer", "minimum": 0},
+        "canonical_residual": {"type": "number", "minimum": 0},
+        "dynamics_residual": {"type": "number", "minimum": 0},
+        "path_residual": {"type": "number", "minimum": 0},
+        "terminal_residual": {"type": "number", "minimum": 0},
+        "virtual_control_residual": {"type": "number", "minimum": 0},
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "prefixItems": [
+              {"enum": ["repair", "progress", "refinement", "polish"]},
+              {"type": "number", "minimum": 0},
+              {"type": "number", "minimum": 0},
+              {"type": "boolean"},
+              {"type": "boolean"}
+            ]
+          }
+        }
+      }
+    },
+    "replay_source_attempt_id": {"type": "string", "pattern": "/measured-0$"},
+    "contaminated": {"type": "boolean"},
+    "contamination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "window_start_monotonic",
+        "window_end_monotonic",
+        "foreign_samples",
+        "total_samples",
+        "max_foreign_sm_percent",
+        "foreign_processes"
+      ],
+      "properties": {
+        "window_start_monotonic": {"type": "number"},
+        "window_end_monotonic": {"type": "number"},
+        "foreign_samples": {"type": "integer", "minimum": 0},
+        "total_samples": {"type": "integer", "minimum": 0},
+        "max_foreign_sm_percent": {"type": "integer", "minimum": 0},
+        "foreign_processes": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"repeat_kind": {"const": "warmup"}}},
+      "then": {"properties": {"statistics_eligible": {"const": false}}}
+    },
+    {
+      "if": {"properties": {"repeat_kind": {"const": "measured"}}},
+      "then": {"properties": {"statistics_eligible": {"const": true}}}
+    },
+    {
+      "if": {"properties": {"disposition": {"enum": ["timeout", "oom", "hybrid_handoff_ineligible"]}}},
+      "then": {"properties": {"launched": {"const": true}}}
+    },
+    {
+      "if": {"properties": {"disposition": {"const": "not_applicable"}}},
+      "then": {"properties": {"launched": {"const": false}}}
+    },
+    {
+      "if": {"properties": {"disposition": {"const": "timeout_deterministic_replay"}}},
+      "then": {
+        "properties": {
+          "launched": {"const": false},
+          "repeat_kind": {"const": "measured"},
+          "repeat": {"minimum": 1},
+          "failure_class": {"const": "timeout"}
+        },
+        "required": ["replay_source_attempt_id", "policy_amendment", "trace_hash", "trace"]
+      }
+    },
+    {
+      "if": {"required": ["policy_amendment"]},
+      "then": {"required": ["amendment", "trace_hash", "trace"]}
+    }
+  ]
+}

@@ -7,6 +7,7 @@ int main() {
     using spacepdhcg::scvx::InexactErrorLedger;
     using spacepdhcg::scvx::InexactSolveSample;
     using spacepdhcg::scvx::OuterResidual;
+    using spacepdhcg::scvx::QualityTier;
     using spacepdhcg::scvx::SolvePhase;
     using spacepdhcg::scvx::SolverStage;
     using spacepdhcg::scvx::TrustAction;
@@ -26,9 +27,17 @@ int main() {
     if (polish.phase != SolvePhase::polish || polish.tolerance > 1.0e-8) {
         return 3;
     }
-    if (!forcing.should_resolve(false, 3.0e-3, 2.0e-3, 1.0e-3)
+    if (!forcing.should_resolve(false, 6.0e-3, 2.0e-3, 1.0e-3)
         || std::abs(forcing.refined_tolerance(1.0e-3) - 1.0e-4) > 1.0e-15) {
         return 4;
+    }
+    if (forcing.config().residual_overshoot_factor != 5.0
+        || forcing.config().polish_tolerance != 1.0e-8
+        || spacepdhcg::scvx::quality_tolerance(QualityTier::coarse) != 1.0e-3
+        || spacepdhcg::scvx::quality_tolerance(QualityTier::medium) != 1.0e-4
+        || spacepdhcg::scvx::quality_tolerance(QualityTier::tight) != 1.0e-6
+        || spacepdhcg::scvx::quality_tolerance(QualityTier::ipm) != 1.0e-8) {
+        return 9;
     }
 
     TrustRegionController trust{};

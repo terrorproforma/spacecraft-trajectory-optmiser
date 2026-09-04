@@ -105,7 +105,7 @@ struct PoweredDescentCqpDiagnostics {
 class PoweredDescentCqp {
   public:
     explicit PoweredDescentCqp(
-        PoweredDescent3DofModel model = {},
+        PoweredDescent3DofModel model = PoweredDescent3DofModel{},
         PoweredDescentCqpConfig config = {}
     );
 
