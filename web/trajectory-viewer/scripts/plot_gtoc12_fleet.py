@@ -1,0 +1,276 @@
+"""Static matplotlib fallback for the viewer's GTOC12 fleet dataset (ecliptic XY projection).
+
+Reads ``data/gtoc12/fleet.json`` written by ``npm run import-gtoc12`` and draws, in the J2000
+heliocentric ecliptic frame in AU: the Sun, Earth's Keplerian orbit, the visited asteroids'
+Keplerian orbits (faint), every ship's low-thrust arc as straight segments between the exact
+archived propagated samples (per-ship colours matching the WebGL viewer), and the asteroid
+positions at the archived visit epochs (deploy = hollow, collect = filled).  Nothing is
+interpolated; the caption records the run, hashes and verifier status.
+
+    python scripts/plot_gtoc12_fleet.py [--data data/gtoc12/fleet.json]
+        [--output test-artifacts/gtoc12-fleet-ecliptic.png] [--epoch MJD] [--ship N]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+from pathlib import Path
+
+import matplotlib
+import numpy as np
+
+matplotlib.use("Agg")  # headless backend; must precede the pyplot import
+import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parents[1]
+AU_KM = 1.49597870691e8
+MU_SUN_KM3_S2 = 1.32712440018e11
+DAY_S = 86400.0
+SHIP_COLOURS = [
+    "#36d6ff", "#ff5d8f", "#ffd166", "#06d6a0", "#ff8c42", "#c77dff", "#7bf1a8", "#f95738",
+    "#6fa8ff", "#f9c74f", "#e0aaff", "#43aa8b", "#ff9de2", "#b8f2e6", "#f4a261",
+    "#ff4fd8", "#b5ff3d", "#9d4edd", "#ffe8a3", "#c9184a",
+]  # fmt: skip
+BACKGROUND = "#070b16"
+
+
+def mjd_to_date(mjd: float) -> str:
+    """Modified Julian Date -> Gregorian ``YYYY-MM-DD`` (Fliegel & Van Flandern)."""
+    days = math.floor(mjd) + 2400001 + 68569
+    n = 4 * days // 146097
+    days -= (146097 * n + 3) // 4
+    i = 4000 * (days + 1) // 1461001
+    days = days - 1461 * i // 4 + 31
+    j = 80 * days // 2447
+    day = days - 2447 * j // 80
+    days = j // 11
+    month = j + 2 - 12 * days
+    year = 100 * (n - 49) + i + days
+    return f"{year:04d}-{month:02d}-{day:02d}"
+
+
+def perifocal(elements: dict) -> tuple[np.ndarray, np.ndarray, float, float]:
+    a = elements.get("a_km") or elements["a_au"] * AU_KM
+    e = elements["e"]
+    inc, node, peri = (math.radians(elements[key]) for key in ("i_deg", "node_deg", "peri_deg"))
+    cos_n, sin_n, cos_p, sin_p = math.cos(node), math.sin(node), math.cos(peri), math.sin(peri)
+    cos_i, sin_i = math.cos(inc), math.sin(inc)
+    p = np.array(
+        [
+            cos_p * cos_n - sin_p * sin_n * cos_i,
+            cos_p * sin_n + sin_p * cos_n * cos_i,
+            sin_p * sin_i,
+        ]
+    )
+    q = np.array(
+        [
+            -sin_p * cos_n - cos_p * sin_n * cos_i,
+            -sin_p * sin_n + cos_p * cos_n * cos_i,
+            cos_p * sin_i,
+        ]
+    )
+    return p, q, a, e
+
+
+def orbit_au(elements: dict, samples: int = 361) -> np.ndarray:
+    p, q, a, e = perifocal(elements)
+    eccentric = np.linspace(0.0, 2.0 * math.pi, samples)
+    x = a * (np.cos(eccentric) - e)
+    y = a * math.sqrt(1.0 - e * e) * np.sin(eccentric)
+    return (np.outer(x, p) + np.outer(y, q)) / AU_KM
+
+
+def position_au(elements: dict, epoch_mjd: float) -> np.ndarray:
+    p, q, a, e = perifocal(elements)
+    mean_motion = math.sqrt(MU_SUN_KM3_S2 / a**3)
+    mean = (
+        math.radians(elements["m0_deg"]) + mean_motion * (epoch_mjd - elements["epoch_mjd"]) * DAY_S
+    )
+    mean = mean % (2.0 * math.pi)
+    eccentric = math.pi if e > 0.8 else mean
+    for _ in range(64):
+        step = (eccentric - e * math.sin(eccentric) - mean) / (1.0 - e * math.cos(eccentric))
+        eccentric -= step
+        if abs(step) < 1e-14:
+            break
+    x = a * (math.cos(eccentric) - e)
+    y = a * math.sqrt(1.0 - e * e) * math.sin(eccentric)
+    return (x * p + y * q) / AU_KM
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--data", type=Path, default=ROOT / "data" / "gtoc12" / "fleet.json")
+    parser.add_argument(
+        "--output", type=Path, default=ROOT / "test-artifacts" / "gtoc12-fleet-ecliptic.png"
+    )
+    parser.add_argument(
+        "--epoch", type=float, default=None, help="truncate arcs at this MJD; mark body positions"
+    )
+    parser.add_argument(
+        "--ship", type=int, default=None, help="highlight one ship (1-based); others are dimmed"
+    )
+    parser.add_argument("--dpi", type=int, default=130)
+    return parser.parse_args()
+
+
+def draw_ships(ax, fleet: dict, epoch: float, highlight: int | None) -> tuple[int, dict]:
+    """Ship arcs, current markers and archived event positions; returns samples drawn + events."""
+    events: dict[str, list] = {"deploy": [], "collect": [], "launch": [], "earth-return": []}
+    total_points = 0
+    for index, ship in enumerate(fleet["ships"]):
+        colour = SHIP_COLOURS[index % len(SHIP_COLOURS)]
+        points = np.asarray(ship["replay"]["points_txyz"], dtype=float)
+        visible = points[points[:, 0] <= epoch]
+        if visible.shape[0] == 0:
+            continue
+        total_points += visible.shape[0]
+        dim = highlight is not None and ship["ship_id"] != highlight
+        label = (
+            f"Ship {ship['ship_id']} · {ship['collected_kg']:.1f} kg · "
+            f"{len(ship['asteroids'])} asteroids · launch {mjd_to_date(ship['launch_epoch_mjd'])}"
+        )
+        ax.plot(
+            visible[:, 1] / AU_KM, visible[:, 2] / AU_KM, color=colour, lw=0.55 if dim else 0.9,
+            alpha=0.18 if dim else 0.9, zorder=3, solid_capstyle="round",
+            label=None if dim else label,
+        )  # fmt: skip
+        if dim:
+            continue
+        for event in ship["events"]:
+            if event["epoch_mjd"] <= epoch and event["role"] in events:
+                x, y = event["position_km"][0] / AU_KM, event["position_km"][1] / AU_KM
+                events[event["role"]].append((x, y, colour))
+        marker = visible[-1]
+        ax.scatter(
+            [marker[1] / AU_KM], [marker[2] / AU_KM], s=34, color=colour, edgecolor="white",
+            lw=0.7, zorder=8,
+        )  # fmt: skip
+    return total_points, events
+
+
+def draw_events(ax, events: dict) -> None:
+    xs = {role: [item[0] for item in items] for role, items in events.items()}
+    ys = {role: [item[1] for item in items] for role, items in events.items()}
+    colours = {role: [item[2] for item in items] for role, items in events.items()}
+    if events["deploy"]:
+        ax.scatter(
+            xs["deploy"], ys["deploy"], s=26, facecolors="none", edgecolors=colours["deploy"],
+            lw=0.9, zorder=5, label=f"Asteroid at deploy epoch (hollow, {len(events['deploy'])})",
+        )  # fmt: skip
+    if events["collect"]:
+        ax.scatter(
+            xs["collect"], ys["collect"], s=22, color=colours["collect"], edgecolors="white",
+            lw=0.4, zorder=5, label=f"Asteroid at collect epoch (filled, {len(events['collect'])})",
+        )  # fmt: skip
+    if events["launch"]:
+        ax.scatter(
+            xs["launch"], ys["launch"], s=70, facecolors="none", edgecolors="#48e89b", lw=1.3,
+            zorder=6, label=f"Launch from Earth ({len(events['launch'])})",
+        )  # fmt: skip
+    if events["earth-return"]:
+        ax.scatter(
+            xs["earth-return"], ys["earth-return"], s=70, facecolors="none", edgecolors="#ffc267",
+            lw=1.3, zorder=6, label=f"Earth return / delivery ({len(events['earth-return'])})",
+        )  # fmt: skip
+
+
+def caption_text(fleet: dict) -> str:
+    source, score, kepler = fleet["source"], fleet["score"], fleet["kepler_check"]
+    official = "pass" if source.get("official_verifier_ok") else "not recorded"
+    independent = "pass" if score["verifier_ok"] else "fail"
+    error_km = fleet["verification"].get("max_position_error_km", float("nan"))
+    return "\n".join(
+        [
+            f"Source: run {fleet['run_id']} · export commit {fleet['generated_by_commit'][:12]} · "
+            f"{source['generator']} · official verifier {official} · independent verifier "
+            f"{independent} (max propagation error {error_km:.1f} km).",
+            f"{source['solution_basename']} SHA-256 {source['solution_sha256']} "
+            f"({source['solution_bytes']:,} bytes) · catalogue {source['catalogue']['name']} "
+            f"SHA-256 {source['catalogue']['sha256'][:24]}…",
+            f"Export trajectories.json SHA-256 {source['export_trajectories_sha256']}",
+            "Earth/asteroid orbits: two-body Keplerian curves from the pinned GTOC12 elements "
+            f"(viewer propagation vs exporter {kepler['asteroid_max_error_km']:.1e} km over "
+            f"{kepler['context_points_checked']:,} samples).",
+        ]
+    )
+
+
+def main() -> int:
+    args = parse_arguments()
+    fleet = json.loads(args.data.read_text(encoding="utf-8"))
+    if fleet.get("dataset_kind") != "gtoc12-fleet":
+        raise SystemExit(f"{args.data} is not a viewer GTOC12 fleet dataset")
+    epoch = args.epoch if args.epoch is not None else fleet["constants"]["mission_end_mjd"]
+
+    plt.style.use("dark_background")
+    fig, ax = plt.subplots(figsize=(12, 12.6), facecolor=BACKGROUND)
+    ax.set_facecolor(BACKGROUND)
+
+    orbits = [orbit_au(asteroid) for asteroid in fleet["asteroids"]]
+    for orbit in orbits:
+        ax.plot(orbit[:, 0], orbit[:, 1], color="#a8bce6", lw=0.35, alpha=0.16, zorder=1)
+    earth = orbit_au(fleet["earth"], 721)
+    ax.plot(
+        earth[:, 0], earth[:, 1], color="#6badff", lw=1.1, alpha=0.9, zorder=2,
+        label="Earth orbit (GTOC12 Table 2 elements)",
+    )  # fmt: skip
+    ax.scatter(
+        [0.0],
+        [0.0],
+        s=90,
+        color="#ffd970",
+        edgecolor="#fff3c4",
+        zorder=6,
+        label="Sun (not to scale)",
+    )
+    earth_now = position_au(fleet["earth"], epoch)
+    ax.scatter(
+        [earth_now[0]], [earth_now[1]], s=60, color="#6badff", edgecolor="white", lw=0.8, zorder=7,
+        label=f"Earth at MJD {epoch:.0f} ({mjd_to_date(epoch)})",
+    )  # fmt: skip
+
+    total_points, events = draw_ships(ax, fleet, epoch, args.ship)
+    draw_events(ax, events)
+
+    limit = max(3.6, float(np.max(np.abs(np.concatenate([o[:, :2] for o in orbits])))) * 1.04)
+    ax.set_xlim(-limit, limit)
+    ax.set_ylim(-limit, limit)
+    ax.set_aspect("equal")
+    ax.grid(True, color="#263755", lw=0.4, alpha=0.6)
+    ax.set_xlabel("X — J2000 heliocentric ecliptic [AU] (vernal equinox →)")
+    ax.set_ylabel("Y — J2000 heliocentric ecliptic [AU]")
+    score = fleet["score"]
+    ax.set_title(
+        f"{fleet['title']}: {score['ships']} ships, {score['unique_asteroids']} asteroids, "
+        f"{score['official_total_mass_kg']} kg (official verifier)\n"
+        f"Ecliptic XY projection · arcs to MJD {epoch:.0f} ({mjd_to_date(epoch)}) · "
+        f"{total_points:,} exact archived samples, straight segments, no interpolation",
+        fontsize=11.5, loc="left", pad=12,
+    )  # fmt: skip
+    legend = ax.legend(
+        loc="upper center", bbox_to_anchor=(0.5, -0.07), ncol=3, fontsize=7.3, frameon=True,
+        facecolor="#0e1628", edgecolor="#263755",
+    )  # fmt: skip
+    legend.set_zorder(20)
+    fig.text(
+        0.02, 0.012, caption_text(fleet), fontsize=6.4, color="#92a3bc", ha="left", va="bottom",
+        family="monospace",
+    )  # fmt: skip
+    fig.subplots_adjust(left=0.07, right=0.98, top=0.93, bottom=0.2)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(args.output, dpi=args.dpi, facecolor=fig.get_facecolor())
+    print(
+        f"wrote {args.output} ({args.output.stat().st_size:,} bytes): {score['ships']} ships, "
+        f"{len(events['deploy'])} deploys, {len(events['collect'])} collects, "
+        f"{total_points:,} samples"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

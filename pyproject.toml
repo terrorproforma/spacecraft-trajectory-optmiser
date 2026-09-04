@@ -28,6 +28,7 @@ dev = [
 ]
 
 [project.scripts]
+spacepdhcg = "spacepdhcg.cli:main"
 spacepdhcg-banded-correctness = "spacepdhcg.benchmarks.banded_correctness:main"
 spacepdhcg-g1-correctness = "spacepdhcg.benchmarks.g1_correctness:main"
 spacepdhcg-cw-benchmark = "spacepdhcg.benchmarks.cw_repeat:main"
@@ -41,6 +42,10 @@ spacepdhcg-orbitweaver-g7 = "spacepdhcg.orbitweaver.cli:main"
 minimum-version = "build-system.requires"
 cmake.source-dir = "cpp"
 cmake.build-type = "Release"
+# The package tree is copied verbatim, so src/spacepdhcg/_data (byte-identical mirror of the
+# frozen benchmarks/ and experiments/schema/ assets listed in spacepdhcg.resources.PACKAGED_ASSETS,
+# maintained by scripts/sync_packaged_assets.py) ships inside the wheel.  Large pinned downloads
+# are never mirrored there.
 wheel.packages = ["src/spacepdhcg"]
 wheel.reproducible = true
 sdist.reproducible = true

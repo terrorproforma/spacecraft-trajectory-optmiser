@@ -1,0 +1,33 @@
+{
+  "id": "tafazzol-taheri-earth-mars",
+  "family": "P1-E-low-thrust",
+  "title": "Tafazzol & Taheri, fixed-time minimum-fuel Earth-to-Mars rendezvous (348.795 days)",
+  "source": {
+    "url": "https://arxiv.org/abs/2409.01490",
+    "version": "arXiv:2409.01490 (HTML version read 2026-09-03)",
+    "location": "Table 1"
+  },
+  "objective_convention": "final-mass",
+  "parameters": {
+    "sun_mu_km3_s2": 132712440018.0,
+    "initial_mass_kg": 1000.0,
+    "specific_impulse_s": 2000.0,
+    "maximum_thrust_n": 0.5,
+    "time_of_flight_days": 348.795,
+    "departure_position_km": [-140699693.0, -51614428.0, 980.0],
+    "departure_velocity_km_s": [9.774596, -28.07828, 0.0004337725],
+    "arrival_position_km": [-172682023.0, 176959469.0, 7948912.0],
+    "arrival_velocity_km_s": [-16.427384, -14.860506, 0.0921486],
+    "hyperbolic_excess_velocity": "zero at both ends (fixed heliocentric boundary states)"
+  },
+  "published": {
+    "final_mass_kg": 603.935,
+    "final_mass_text": "603.935",
+    "evidence_label": "published-reference",
+    "extraction": "text (Section 4.1: 'm(t_f) = m_f = 603.935 kg')"
+  },
+  "envelope_nodes": [150, 300],
+  "max_iterations": 40,
+  "declared_envelope_kg": 0.5,
+  "acceptance_tolerance_kg": 0.5
+}

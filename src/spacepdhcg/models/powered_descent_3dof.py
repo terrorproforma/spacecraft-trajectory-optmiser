@@ -184,13 +184,125 @@ class PoweredDescent3DOFModel:
         state_vector = self._state(state)
         return state_vector + step_seconds * self.dynamics(state_vector, control)
 
+    def rk4_step(
+        self,
+        state: FloatArray,
+        control: FloatArray,
+        step_seconds: float,
+        *,
+        substeps: int = 1,
+    ) -> FloatArray:
+        """Advance one zero-order-hold interval with classical RK4 (``substeps`` stages)."""
+
+        _check_step(step_seconds, substeps)
+        x = self._state(state)
+        u = self._control(control)
+        h = step_seconds / substeps
+        for _ in range(substeps):
+            k1 = self.dynamics(x, u)
+            k2 = self.dynamics(x + 0.5 * h * k1, u)
+            k3 = self.dynamics(x + 0.5 * h * k2, u)
+            k4 = self.dynamics(x + h * k3, u)
+            x = x + (h / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
+        return x
+
+    def linearised_rk4_dynamics(
+        self,
+        state: FloatArray,
+        control: FloatArray,
+        step_seconds: float,
+        *,
+        substeps: int = 1,
+    ) -> tuple[FloatArray, FloatArray, FloatArray]:
+        """Return the exact affine model ``x+ = A_d x + B_d u + d`` of :meth:`rk4_step`.
+
+        The state-transition and control-sensitivity matrices are propagated through the same
+        RK4 stages as the state (variational RK4), so ``A_d`` and ``B_d`` are the exact Jacobians
+        of the implemented discrete map and the affine model reproduces it at the reference to
+        roundoff.  This is the Python twin of the native ``rk4_variational`` discretisation.
+        """
+
+        _check_step(step_seconds, substeps)
+        x = self._state(state)
+        u = self._control(control)
+        phi = np.eye(STATE_DIMENSION)
+        psi = np.zeros((STATE_DIMENSION, CONTROL_DIMENSION))
+        h = step_seconds / substeps
+        for _ in range(substeps):
+            k1, kphi1, kpsi1 = self._variational_stage(x, u, phi, psi)
+            k2, kphi2, kpsi2 = self._variational_stage(
+                x + 0.5 * h * k1, u, phi + 0.5 * h * kphi1, psi + 0.5 * h * kpsi1
+            )
+            k3, kphi3, kpsi3 = self._variational_stage(
+                x + 0.5 * h * k2, u, phi + 0.5 * h * kphi2, psi + 0.5 * h * kpsi2
+            )
+            k4, kphi4, kpsi4 = self._variational_stage(
+                x + h * k3, u, phi + h * kphi3, psi + h * kpsi3
+            )
+            x = x + (h / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
+            phi = phi + (h / 6.0) * (kphi1 + 2.0 * kphi2 + 2.0 * kphi3 + kphi4)
+            psi = psi + (h / 6.0) * (kpsi1 + 2.0 * kpsi2 + 2.0 * kpsi3 + kpsi4)
+        offset = x - phi @ self._state(state) - psi @ u
+        return phi, psi, offset
+
+    def _variational_stage(
+        self,
+        x: FloatArray,
+        u: FloatArray,
+        phi: FloatArray,
+        psi: FloatArray,
+    ) -> tuple[FloatArray, FloatArray, FloatArray]:
+        a, b = self.jacobians(x, u)
+        return self.dynamics(x, u), a @ phi, a @ psi + b
+
+    def discrete_step(
+        self,
+        state: FloatArray,
+        control: FloatArray,
+        step_seconds: float,
+        *,
+        method: str = "forward_euler",
+        substeps: int = 1,
+    ) -> FloatArray:
+        """Advance one interval with the named discretisation."""
+
+        if method == "forward_euler":
+            return self.euler_step(state, control, step_seconds)
+        if method == "rk4":
+            return self.rk4_step(state, control, step_seconds, substeps=substeps)
+        raise ValueError(f"unknown discretisation {method!r}")
+
+    def linearised_discrete_dynamics(
+        self,
+        state: FloatArray,
+        control: FloatArray,
+        step_seconds: float,
+        *,
+        method: str = "forward_euler",
+        substeps: int = 1,
+    ) -> tuple[FloatArray, FloatArray, FloatArray]:
+        """Return the affine one-step model matching :meth:`discrete_step`."""
+
+        if method == "forward_euler":
+            return self.linearised_euler_dynamics(state, control, step_seconds)
+        if method == "rk4":
+            return self.linearised_rk4_dynamics(state, control, step_seconds, substeps=substeps)
+        raise ValueError(f"unknown discretisation {method!r}")
+
     def rollout(
         self,
         initial_state: FloatArray,
         controls: FloatArray,
         step_seconds: float,
+        *,
+        method: str = "forward_euler",
+        substeps: int = 1,
     ) -> FloatArray:
-        """Roll out zero-order-held controls with the reference Euler integrator."""
+        """Roll out zero-order-held controls with the reference integrator.
+
+        The default forward-Euler integrator is the frozen reference transcription; ``method="rk4"``
+        selects the variational RK4 map used by the accurate literature option.
+        """
 
         initial = self._state(initial_state)
         control_array = np.asarray(controls, dtype=np.float64)
@@ -204,7 +316,13 @@ class PoweredDescent3DOFModel:
         states = np.empty((control_array.shape[0] + 1, STATE_DIMENSION), dtype=np.float64)
         states[0] = initial
         for interval, control in enumerate(control_array):
-            states[interval + 1] = self.euler_step(states[interval], control, step_seconds)
+            states[interval + 1] = self.discrete_step(
+                states[interval],
+                control,
+                step_seconds,
+                method=method,
+                substeps=substeps,
+            )
             if states[interval + 1, 6] <= 0:
                 raise ValueError("rollout produced non-positive mass")
         return states
@@ -275,3 +393,13 @@ class PoweredDescent3DOFModel:
         if not np.all(np.isfinite(vector)):
             raise ValueError("control must be finite")
         return vector.copy()
+
+
+DISCRETISATION_METHODS = ("forward_euler", "rk4")
+
+
+def _check_step(step_seconds: float, substeps: int) -> None:
+    if not np.isfinite(step_seconds) or step_seconds <= 0:
+        raise ValueError("step_seconds must be finite and positive")
+    if int(substeps) != substeps or substeps < 1:
+        raise ValueError("substeps must be a positive integer")

@@ -1,0 +1,15 @@
+{
+  "id": "gtoc12-official-verifier",
+  "family": "P2-F",
+  "title": "GTOC12 official verification program on the bundled example and two published solution files",
+  "source": {
+    "url": "https://sophia.estec.esa.int/gtoc_portal/?page_id=1261",
+    "problem_site": "https://gtoc12.tsinghua.edu.cn/competition/theProblem"
+  },
+  "artifacts": ["gtoc12.verification_program", "gtoc12.asteroids", "gtoc12.solution_37_self_cleaning", "gtoc12.solution_39_mass_optimal"],
+  "published_solutions": ["gtoc12.solution_37_self_cleaning", "gtoc12.solution_39_mass_optimal"],
+  "published": {
+    "note": "the portal publishes the solution files without an accompanying printed score; the official verifier output (ships, mined asteroids, total resource mass) is the reproducible quantity",
+    "evidence_label": "published-reference"
+  }
+}

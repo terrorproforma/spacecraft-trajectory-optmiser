@@ -1221,3 +1221,568 @@ Use this file as persistent, repo-local execution memory.
   capability from the final clean report descendant before any claim-core launch.
 - G0-G3 scientifically authorise G4, but no G4 campaign was launched here and local archives have
   no immutable URI.
+
+### 2026-09-03 01:00 AEST - Planner CLI/API (in progress)
+
+#### Preflight (from prior entries)
+
+- `[user]` Work only in the new worktree `/home/angus/worktrees/spacepdhcg-planner`
+  (`feat/planner-cli` from `b6afb49`); never touch the integration tree.
+- `[user]` Serialize every GPU run; back off if `nvidia-smi --query-compute-apps` shows a
+  `device_scvx`/G4 session process. Short correctness runs only.
+- `[tool]` Windows `Write` tool emits CRLF into WSL files; `StrReplace` preserves LF. Run
+  `sed -i 's/\r$//'` on every newly written file before building/testing/committing.
+- `[tool]` PowerShell mangles inline quoting for `wsl -e bash -c`; write scripts to
+  `/home/angus/planner-scratch/*.sh` and execute those instead.
+- `[tool]` No CMake/Python 3.11+ on the WSL system path. Use the isolated
+  `/home/angus/planner-scratch/venv` (Python 3.12, cmake, ninja, deps) and run tests with
+  `PYTHONPATH=src` so the worktree source (not an installed wheel) is imported.
+- `[tool]` Pinned PDHCG checkout is read-only at
+  `/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg`; pass it as
+  `-DSPACEPDHCG_PDHCG_SOURCE_ROOT`. QOCO-GPU: `SPACEPDHCG_QOCO_LIBRARY=/home/angus/spacecraft-trajectory-optmiser/build/qoco-g4/libqoco.so`.
+
+#### Mistakes And Fixes (during task)
+
+- `[self]` Zero-filled fresh device buffers with synchronous `cudaMemset` (legacy stream) and then
+  uploaded on a `cudaStreamNonBlocking` consumer stream. Non-blocking streams do not order
+  against the legacy stream, so the memset raced the uploads and silently zeroed the CQP
+  (QOCO reported `numerical`, PDHCG stalled at residual 2000, coefficient parity was `inf`).
+  Fix: issue every fill with `cudaMemsetAsync` on the same consumer stream. Rule: never mix the
+  legacy default stream with the exchange consumer stream in planner/device code.
+- `[tool]` Background `wsl -e bash -c "... &"` jobs die when the wrapper shell exits; use
+  `setsid nohup ... < /dev/null & disown` for long builds.
+- `[tool]` `device_scvx_integration_test --p1c-qoco-repeatability` fails on this host because the
+  first cold QOCO candidate is rejected (known cold-execution variance noted on 2026-09-01);
+  QOCO itself solves. Do not treat that pre-existing flake as a planner regression.
+- `[self]` GPU overlap: another worker's `--g4-session` claim core started 2026-09-03 01:26 AEST
+  while my `nvidia-smi --query-compute-apps` guard only matched process *names*; under WSL the
+  name is `[Not Found]`, so the guard passed and my planner probes overlapped it from ~01:40 to
+  02:07 AEST (pd3 pure-QOCO 147 s, PDHCG hover 160 s, HCW 0.5 s, low-thrust fixed-tight up to
+  900 s). Their groups in that window are contaminated on my side. Fix: guard by *pid*
+  (`gpu_free.sh`: `pgrep -f 'device_scvx_integration_test|--g4-session'` plus compute-app pids
+  resolved through `ps`), and never run GPU work while it reports busy.
+- `[self]` Clarabel returns `AlmostSolved` on the badly scaled powered-descent CQPs and its
+  *absolute* KKT audit is ~1e-3 while the *relative* KKT audit is ~1e-8. The CPU reference
+  gates the relative audit (`PersistentClarabel.relative_kkt_residuals`) and records the
+  absolute value alongside; treat `AlmostSolved` like QOCO status 2 (usable candidate).
+- `[self]` SCvx convergence must also fire when a *rejected* candidate lies within the step
+  tolerance of a feasible retained reference (fixed point); otherwise convex families (HCW)
+  loop until the iteration budget with ratio noise.
+
+#### Task Summary (2026-09-03 04:10 AEST writeback)
+
+- Delivered `spacepdhcg plan` CLI + `spacepdhcg.planner.plan()` API, schema 1.0.0, native
+  `spacepdhcg_plan` executable, planner C ABI, CPU reference, viewer export, examples, tests, docs;
+  commit `27569ad` plus a follow-up commit on `feat/planner-cli`.
+
+#### What Worked
+
+- Reusing the frozen transcriptions through host adapters gave device/host coefficient parity
+  `1.6e-16` on the first certified GPU plan; the CPU reference and the pure-QOCO GPU plan agree to
+  `1e-7` in objective on the identical problem.
+- Compiling `cpp/src/c_api.cpp` on demand in `tests/conftest.py` keeps the CPU planner tests
+  independent of a wheel build.
+
+#### Guardrails For Next Session
+
+- Run `bash /home/angus/planner-scratch/gpu_free.sh` (pid-level) before *any* GPU command; the G4
+  claim-core campaign (`run_g4_campaign.py run --claim-core`) started ~03:54 AEST and will hold
+  the device for a long time.
+- Pending GPU validation lives in `/home/angus/planner-scratch/gpu_validation.sh` stages
+  (`tests`, `memcheck`, `sanitizers`, `examples`, `ctest`); run them serially when free.
+
+### 2026-09-03 02:35 AEST - Literature reference-reproduction track (feat/literature-targets)
+
+#### Task Summary
+
+- Imported the user's comparative-campaign spec as the first commit, then implemented campaign
+  Phase 0-1 as runnable targets: provenance store, pinned external sources, target registry,
+  `spacepdhcg literature` CLI, an independent CPU free-final-time SCvx core, and P1-C/P1-D/
+  P1-D-MC/P1-E/TOPS/GTOPX/GTOC reproductions with a generated reproduction report.
+
+#### Mistakes And Fixes
+
+- `[self]` `tr -d "\r"` inside `wsl -e bash -lc '...'` deleted every literal `r` from copied
+  files (double quotes are stripped by the Windows->WSL argument path). Detected by
+  `benchmaks/pape1_matix.json` in `git apply` output. Fix: never put quotes, `|`, `(` or
+  backslash escapes in inline `wsl` commands; write scripts with the Write tool to
+  `\\wsl.localhost\Ubuntu-22.04\tmp\*.sh`, strip CRLF once with PowerShell
+  `ReadAllText().Replace("`r`n","`n")`, then run everything through `/tmp/crlf-run.sh`.
+- `[self]` Files written through the UNC path carry CRLF; `/tmp/fix-crlf.sh` normalises every
+  modified/untracked text file before tests or commits (`.gitattributes` only covers two globs).
+- `[self]` The 2007 Mars profile with a hard dry-mass bound is infeasible at Delta t = 1 s (the
+  published solution uses 399.5 of 400 kg); the paper's convex problem bounds mass by
+  `m_wet - alpha rho2 t`. Detected by every SCvx candidate being rejected with virtual control.
+- `[self]` Replaying a constant-acceleration (lossless SOCP) control as constant thrust gave
+  37 m terminal errors; replay must hold `u = T/m`, not `T` (`replay_zoh(hold=...)`).
+- `[self]` `vars()` on `slots=True` dataclasses raises; use `dataclasses.asdict`.
+- `[self]` The user's P2-F family changed the Paper 2 matrix digest pinned by the G7 contracts
+  and the CPU ledger counts; resolved by enumerating both digests (sealed and extended) and
+  updating the frozen counts (2,648 -> 2,684; 16,324 -> 16,360), documented in the commit.
+
+#### User Preferences
+
+- `[user]` Deliver code and results, not plans; label every literature value; report gaps
+  honestly; never touch the integration or planner worktrees; back off the GPU when a G4
+  session owns it; no dataset commits above a few MB (pin by checksum + fetch script).
+
+#### What Worked
+
+- Reading paper text via ar5iv/arXiv HTML and open secondary sources (DLR thesis, Blackmore
+  2010 PDF) recovered every constant with digits; evaluating both `alpha` conventions settled the
+  formulation discrepancy (only `1/(Isp g0 cos phi)` reproduces 399.5/387.9 kg).
+- The independent FOH/STM free-final-time core reproduced Szmuk 2018 (ten guesses within
+  0.00054 UT) and Earth-Mars (603.925 vs 603.935 kg) without any repository transcription change.
+- GTOC12 official verifier runs headless from the pinned zip (`./GTOC12_Verify`, no arguments,
+  files named `Result.txt`/`GTOC12_Asteroids_Data.txt` in cwd).
+
+#### What Did Not Work
+
+- Earth-Dionysus (5 revolutions, 60.8 TU) did not converge with element-interpolation guesses,
+  hard trust regions, or thrust-bound homotopy; TOPS P3 (multirev) and P1 (free time) hit the
+  iteration limit. Needs a feasible spiral/shape-based guess or an MEE formulation.
+- The repository forward-Euler 3-DoF SCvx is 6-14 kg above the lossless optimum on the 2007/2010
+  profiles and stalls with the default virtual weight 1e5 (1e3 works better).
+
+#### Guardrails For Next Session
+
+- Regenerate `benchmarks/literature/provenance.json` after touching `pinned_values.py`
+  (`scripts/literature/build_provenance.py`; a test freezes it).
+- `spacepdhcg literature run all` needs `SPACEPDHCG_LITERATURE_CACHE` pointing at the verified
+  cache (`/home/angus/worktrees/spacepdhcg-literature-cache/raw`) and ~25 min on 16 cores.
+- Install `matplotlib` in any fresh venv before the full suite (paper1 G6 tests import it).
+
+#### Follow-Ups / Risks
+
+- P1-C pure-QOCO GPU leg and any P1-D-MC GPU batch remain blocked (device owned by the G4
+  session PID 471171 all night); the GPU 6-DoF path also lacks an arbitrary-initial-state entry.
+- Native/CUDA `sigma` (free final time) kernels are not implemented; doing so changes the frozen
+  CSC topology and G4 policy hashes and must be scheduled with a reseal.
+- This scratchpad is ~1,250 lines; roll it over (archive-first) at the next consolidation.
+
+### 2026-09-03 05:40 AEST - Literature gap closure (fuel gap, MEE multirev, native free final time)
+
+#### Task Summary
+
+- Closed the three gaps left by the reference reproduction on `feat/literature-targets`:
+  repository 3-DoF SCvx fuel gap (accurate discretisation option), multi-revolution low thrust
+  (MEE formulation), native free final time (`pd3_fft`/`pd6_fft` topologies, CUDA kernels built
+  but not executed), plus preflight-gated deferred GPU legs. Commits `d81c528`, `57cee5c`,
+  `1fa99ae`, `8e18b93` and the report commit after it.
+
+#### Mistakes And Fixes
+
+- `[self]` The 6-14 kg fuel gap was three coupled defects, not one: forward-Euler ZOH
+  discretisation (3.8 / 1.2 kg of it is the Euler *discrete optimum* itself), a single-shooting
+  merit that rejected every improving step once the rollout error dominated, and the frozen
+  virtual weight 1e5 with a stop that never fired. Fixing only the integrator left the solver
+  stalled; the multiple-shooting merit with a CQP-consistent defect penalty and an
+  objective-stall stop were required. Diagnose stall vs. optimum first (trace iterations).
+- `[self]` Blackmore 2010 module constant used the raw `alpha` while the profile document said
+  `cant-corrected`; only the profile document is authoritative - a test now freezes agreement.
+- `[self]` The Szmuk 2018 native reproduction converged to t_f ~ 2.97 UT because the attitude
+  tilt cone `|[q_x, q_y]| <= sqrt((1 - cos theta_max)/2)` was missing from `pd6_fft`, and the
+  glide-slope angle is measured from the horizontal in the paper but from the vertical in the
+  native model. Check every angle convention and every active constraint before tuning weights.
+- `[self]` Hard trust regions near feasibility: numerical noise in the defect term biased the
+  agreement ratio and collapsed the radius; zeroing the penalty below `defect_tolerance` fixed it.
+- `[self]` Default-argument binding (`command_line_of=_read_command_line`) defeated
+  monkeypatching in tests; resolve module-level callables lazily inside the function.
+- `[self]` Python `pytest.mark.slow` is not registered (`--strict-markers`); do not add markers.
+- `[tool]` PowerShell mangles quotes in `wsl -e bash -c "..."` (python -c, `$PATH`, heredocs);
+  write every non-trivial command to a `.sh`/`.py` under `%TEMP%`, `tr -d '\r'` it into `/tmp`,
+  and run that. `results/` is gitignored but tracked: `git add -f` for the record files.
+- `[self]` Central-difference sigma checks on the 6-DoF model are stiff under large direct
+  torque; use small torques in oracle tests rather than loosening tolerances.
+
+#### What Worked
+
+- Variational RK4 (exact Jacobian of the RK4 map, verified to 1e-9) plugged into the existing
+  fixed CSC pattern - the frozen Euler default and its fixture hashes are untouched; the accurate
+  path is an explicit option that the literature profiles select.
+- MEE with true-longitude revolution bookkeeping + Keplerian-spiral seed + trust-weight schedule
+  converged Dionysus (2717.43 vs 2718.33 kg) and TOPS P3/P1 where Cartesian SCvx never did.
+- Sigma-augmented variational RK4 as one shared header serves the C++ smoke tests, both
+  transcriptions and the CUDA kernel line by line, so CPU/GPU parity is structural.
+- The G4 preflight (`nvidia-smi` PIDs -> `/proc/<pid>/cmdline`) refused correctly all session.
+
+#### Guardrails / Follow-Ups
+
+- Deferred until `spacepdhcg literature gpu-preflight` passes (run serially): CUDA
+  `device_time_dilated_test`, one compute-sanitizer memcheck/racecheck pass over it,
+  `spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1
+  chari-2024-pd6-monte-carlo`.
+- The Chari CPU batch convergence probability is low (0-5 %) because the FOH core stops at the
+  iteration limit on dispersed initial states; that is the remaining P1-D-MC `gap`.
+- Rebuild the Release library (`SPACEPDHCG_NATIVE_LIBRARY`) before running
+  `tests/test_native_free_time.py`; it needs the `spacepdhcg_pd6_fft_create` symbol.
+- Scratchpad is ~1,330 lines; roll over (archive-first) at the next consolidation.
+
+### 2026-09-03 02:40 AEST - GTOC12 replay track (feat/gtoc12-asteroid-mining)
+
+#### Task Summary
+
+- Built the GTOC12 "Sustainable Asteroid Mining" track: pinned official data + verifier,
+  independent verifier reproducing official scores exactly, ephemeris, format, Lambert parity,
+  preregistered reduced instance, beam search, CPU SCvx arc refinement through the G7 adapters,
+  official-format emission, and a first officially verified solution.
+
+#### Mistakes And Fixes
+
+- `[model]` SCvx first propagated mass with the interpolated cone slack while the verifier uses
+  |T(t)| of the interpolated vector; 0.044 kg drift over 900 days moved the endpoint 3100 km.
+  Fix: nonlinear model uses |T(t)|; the linearisation keeps the Gamma channel (lossless surrogate,
+  well defined at a coasting reference).
+- `[model]` Cubic-Lagrange emission of bang-bang thrust creates |T(t)| kinks the organisers'
+  RKF78 integrates differently (official Error201 at 3143 km while our DOP853 model saw 1.9 km).
+  Fix: zero-order-hold transcription, one constant-thrust arc per segment (JPL's file uses the
+  same structure); official and independent verifiers then agree to 0.9 km.
+- `[bug]` `linearise` allocated the control sensitivity with the 4-node stencil in ZOH mode and
+  einsum silently broadcast the size-1 axis, corrupting the affine term; every SCvx step was
+  rejected. Fix: size the array from `stencils.shape[1]`.
+- `[bug]` Safeguarded universal-variable Kepler solver bisected with the stale bracket, so the
+  multi-revolution case "converged" at the midpoint (8.7e8 km). Fix: shrink the bracket before
+  choosing the next point.
+- `[format]` The official verifier rejects a trailing newline (`ErrorA09 ... empty`) and our
+  parser rejected arcs printed as all zeros from ~1e-15 N residuals. Fix: no trailing newline;
+  sub-nanonewton segments are emitted as coasts.
+- `[tool]` PowerShell -> `wsl.exe bash -c` mangles nested quotes; every non-trivial command is
+  written to `%TEMP%\gtoc12\*.sh|py`, CR-stripped, and run from `/tmp`. Background jobs need
+  `setsid nohup ... & disown` or WSL kills them with the session. Files written through the
+  `\\wsl.localhost` UNC path arrive CRLF; `/tmp/run.sh` normalises them before every run.
+
+#### What Worked
+
+- The official binary's diagnostic strings are a complete rule catalogue (Error001-901, A00-A23);
+  encoding them one-for-one made the independent verifier reproduce all three archived reference
+  solutions per asteroid to 0.0 kg on the first full run.
+- Probing the black-box verifier by perturbing thrust samples and reading the printed error
+  magnitude exposed that the mismatch depends on the profile shape, which pointed at |T| kinks.
+- ZOH arcs make the discrete model, the independent verifier and the official verifier agree.
+
+#### Guardrails For Next Session
+
+- Never emit cubic-interpolated bang-bang profiles; keep ZOH arcs (or smooth profiles) so any
+  integrator agrees. Certify every leg by DOP853 rollout before emission.
+- Keep the reduced-instance rule file untouched; its SHA-256 and selection SHA-256 are pinned in
+  tests.
+- GPU untouched (G4 owns it); all runs are CPU-only and say so in reports.
+
+#### Follow-Ups / Risks
+
+- `bonus_coefficients.txt` was served by the unauthenticated problem-file endpoint although the
+  UI gates it behind login; the pin records this.
+- Search proxies (Lambert x inflation) accept few multi-asteroid chains; the first scored route
+  has two asteroids (195.044 kg). Wider beams, phasing-aware neighbour selection, and cross-ship
+  deploy/collect are the obvious next steps.
+
+### 2026-09-03 03:35 AEST - GTOC12 track: search fixes and scored runs
+
+#### Mistakes And Fixes
+
+- `[search]` Element-space neighbours ignored phase drift: pairs with different mean motions drift
+  ~45 deg over a ten-year stay, so collect hops cost 20+ km/s and every multi-asteroid chain died
+  at the collection tour. Fix: phase-drift penalty in the proxy, wider return/collection windows,
+  return-feasibility pruning of the first asteroid, and at most two beam slots per deployed set.
+- `[emitter]` A camp-then-collect visit emitted a zero-mass rendezvous at arrival, giving the
+  asteroid three events (our Error805, official Error804). Fix: no arrival event; the collect
+  event sits at the departure epoch and the ship coasts on the asteroid's orbit in between.
+- `[verifier]` The archived JPL file carries 0.60000001 N samples; the official verifier accepts
+  them, so the thrust bound now has 1 uN of slack (our emitted files clamp to 0.6(1-1e-9)).
+- `[tool]` `setsid nohup ... & disown` from `wsl.exe` survived once and died twice; long runs
+  were executed in the foreground with `timeout` instead.
+
+#### What Worked
+
+- Vectorising the first beam level (grid-wide feasibility, propellant and score, then argsort)
+  made the 60,000-asteroid catalogue tractable: 39.1 M Lambert screens in 956 s, 11.2 GB.
+- Proxies calibrated within ~1 kg of refined masses on the reduced routes; optimistic by ~230 kg
+  on the full-catalogue route (still mass-feasible).
+
+#### Guardrails For Next Session
+
+- Each asteroid: at most two rendezvous events, ever; camping never emits an event.
+- Report unweighted (official verifier) and fixed-bonus scores side by side; they differ whenever
+  the chosen asteroids were mined during the competition (249.0 vs 203.0 kg on the full run).
+
+#### Follow-Ups / Risks
+
+- `tests/test_native_packaging.py` fails in this venv because no cmake-built wheel is present
+  (same on the base commit here); everything else in the 343-test suite passes.
+- Next quality steps: multi-revolution Lambert screening, cross-ship deploy/collect, PDHCG CQP
+  backend for the ZOH SCvx subproblem.
+
+### 2026-09-03 04:50 AEST - GTOC12 track: reference-driven search, fleets (feat/gtoc12-asteroid-mining)
+
+#### Mistakes And Fixes
+
+- `[search]` Position-space candidate ranking alone (Δa, Δe, Δi, phase) picked pairs that were
+  co-located at deploy time but on *different ellipses* (e ≈ 0.14, ΔΩ ≈ 100°): eight years later
+  they were 180° apart and every collection tour died (`no_collect_hop`). Fix: rank and filter
+  with eccentricity-vector and inclination-vector differences (relative inclination), not scalar
+  Δe/Δi; the same change lifted the Lambert-free proxy's Spearman from 0.47 to 0.63.
+- `[search]` Strict-reverse collection fallback indexed `remaining[-1]`; going backwards in time
+  the asteroid collected just before the current one is the *earliest*-deployed remaining
+  (`remaining[0]`). Symptom: `tour_not_ending_at_camp` on every chain.
+- `[search]` Collection scheduler minimised propellant with a tiny wait penalty and overran the
+  window (`camp_negative`). Fix: penalty counts the whole hop duration as lost mining and
+  escalates x4/x16 when the tour does not fit.
+- `[search]` Lowering Earth-leg inflation from 1.6 to 1.3 (proxy validation said 1.08x) admitted
+  450-500 day Earth legs that SCvx could not fly: the *authority* test must keep the conservative
+  factor even when the propellant estimate is calibrated (Earth-out tail reached 1.74x on the
+  catalogue pool). Pricing time in the beam heuristic (0.02-0.05 kg/day) or hop duty 0.75/0.7
+  likewise steered the beam into 120-180 day hops at the authority limit -> uncertifiable.
+  Reverted to the proven weights; documented all variants.
+- `[pipeline]` Three refine candidates shared one infeasible first leg and all failed. Fix:
+  skip plans containing a leg SCvx already proved infeasible (rescued fleet ship 2 at rank 8).
+- `[tool]` `pkill -f <pattern>` from a `bash -c` whose own command line contains the pattern kills
+  the shell itself (exit 15). Use `pkill -f 'run-id <id>'` with a token absent from the caller.
+- `[tool]` Redirecting a script's output to a file hid a crash; the "results" I read were the
+  stale JSON from the previous run. Always `tail` the log or check the exit code.
+- `[tests]` The old search-determinism test compared two empty candidate lists (coarse launch
+  grid -> no Earth leg passes the 1.6x authority). Assert non-emptiness in determinism tests.
+
+#### What Worked
+
+- Decoding the archived solutions first: the structural numbers (9-10 asteroids, 183-day 78-kg
+  hops, ±3.3° phase at departure, |Δa| ≤ 0.04 AU, final mass 500 kg) dictated the candidate
+  generator, the reserve rule and the pool box; single-ship score went 249 -> 548 kg and memory
+  11.2 GB -> 0.66 GB in one day.
+- Retaining failure reasons per chain (`last_failure` strings) turned "no feasible collection
+  tour" into actionable categories within minutes.
+- Background runs via the tool's own background shell (not `nohup` inside WSL) survived fine
+  when the log goes to a file and completion is checked with a small printer script.
+
+#### Guardrails For Next Session
+
+- Every proxy knob (inflation, duty, weights) must be validated on a *certified* run before it
+  becomes a default; the proxy-error table lives in `results/gtoc12/proxy_validation.json`.
+- Keep PowerShell out of the loop for anything with quotes: write the Python/bash to `%TEMP%`,
+  `tr -d '\r'`, run from `/tmp`.
+
+#### Follow-Ups / Risks
+
+- Time, not mass, binds: certified routes leave 230-430 kg propellant; deploy hops are 240-300 d
+  vs 140-240 d in the references. Next: cluster-first generation over the whole deploy window
+  and a joint re-timing pass that spends the margin on faster hops.
+- Greedy fleets thin the clusters for later ships (548 / 442 / 404 kg); joint assignment via the
+  G7 master is the natural upgrade.
+
+### 2026-09-03 06:20 AEST - Single-GPU v2 candidate consolidation (WSL, CPU only)
+
+#### Task Summary
+
+- Consolidated `feat/planner-cli` (c74fdb7), `feat/literature-targets` (f6e8140) and
+  `feat/gtoc12-asteroid-mining` @ fa91b43 into `integration/single-gpu-v2-candidate`
+  (worktree `/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 63271d5 = live tip of
+  `integration/single-gpu-v1`) without touching the G4 claim-core worktree, branch, or GPU.
+
+#### Mistakes And Fixes
+
+- `[self]` The brief said the integration HEAD was 9678134; the branch had moved to 63271d5 (five
+  G4 campaign commits). Based the candidate on 63271d5 so promotion is `--ff-only`; recorded the
+  deviation in the report. Rule: `git log --oneline -3 <branch>` before trusting a quoted HEAD.
+- `[self]` Ran `python -S -m pytest` with `PYTHONPATH=src` only; `-S` drops site-packages, so
+  pytest/build were "missing". The sealed G0 recipe puts the venv `site.getsitepackages()[0]` on
+  `PYTHONPATH` as well. Copy that line verbatim.
+- `[self]` The full suite died silently (rc=1, no summary, faulthandler silent) inside
+  `tests/test_qoco_cpu_reference.py` because `SPACEPDHCG_QOCO_LIBRARY` pointed at the cuDSS/CUDA
+  QOCO while `CUDA_VISIBLE_DEVICES=''`. The sealed G0 gate silently used the GPU there. Fix: build
+  the pinned QOCO 09f0495 + abstol patch with `-DQOCO_ALGEBRA_BACKEND=builtin` (115 KB, no CUDA
+  linkage) and point the suite at it; 490 passed.
+- `[self]` `rsync --exclude 'build*'` also dropped `docs/qocogen/build.rst` from the QOCO source copy
+  (harmless, but the copy shows a spurious deletion). Exclude `build/` and `build-*/` explicitly.
+- `[self]` Guessed `spacepdhcg defaults hcw_rendezvous`; the family id is `hcw`.
+- `[tool]` WSL system `python3` is 3.10 (no `tomllib`); always use the venv interpreter for repo
+  scripts.
+- `[tool]` A PowerShell session whose cwd is a `\\wsl.localhost` UNC path stops returning output for
+  every later command; pass `working_directory` explicitly or `Set-Location` back to `C:` first.
+- `[tool]` Windows `node` via WSL interop cannot serve the viewer from a WSL path (`npm test`
+  404s); the viewer's `npm test` is Windows-specific (`pathname.slice(1)`, UNC archive path). Use
+  `/home/angus/.local/node/bin` (Linux node 20) for `check.mjs`/pytest and Windows node on a
+  `git archive` export for `npm test`.
+- `[tool]` `git diff --cached --check` fails on the literature branch's generated
+  `docs/REFERENCE_REPRODUCTION_REPORT.md` (trailing double-space line breaks); do not gate merges
+  on it for generated files.
+
+#### What Worked
+
+- Merge order planner → literature → gtoc12 with three-way *union of insertions* for `c_api.h/.cpp`
+  (both sides only appended at the same anchors; `difflib` opcodes verified insert-only, includes
+  deduplicated, `g++ -fsyntax-only -Werror` before committing).
+- Additive conflict resolution for the tracked memory files (keep ours, then theirs).
+- Unified CLI: `planner.cli.add_commands(subparsers)` + umbrella `spacepdhcg.cli` accepting `func`
+  and `function` handlers; `python -m spacepdhcg` from gtoc12's `__main__.py`.
+- CUDA sm_120 Release/Debug configure+build (175 targets, ~40 s each with 6 jobs) needs no device;
+  `-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg` is
+  read-only for CMake (it copies the source into the build tree).
+- Blob-id comparison (`git rev-parse base:path` vs `HEAD:path`) is the cheapest byte-identity
+  evidence for frozen fixtures; the new manifest test recomputes the blob ids from the working tree.
+
+#### Guardrails For Next Session
+
+- Never run `ctest` in a CUDA tree (even `spacepdhcg_plan_capabilities`) while the G4 campaign owns
+  the device; build only, and keep `CUDA_VISIBLE_DEVICES=''` exported in CPU gates.
+- The GPU-variant `libqoco.so` touches the device on load-and-solve; CPU gates need the builtin
+  build (`build-v2-qoco-cpu/libqoco.so`, sha256 `089d5fa7…`).
+- Wheel consumers cannot run `spacepdhcg literature …`/`gtoc12 …` (registries resolved from
+  `__file__`); pre-existing on both branches, listed as a follow-up.
+- Promotion: `git merge --ff-only integration/single-gpu-v2-candidate` from the integration
+  worktree only after the claim-core finish script has run and `integration/single-gpu-v1` is
+  still 63271d5.
+
+#### Follow-Ups / Risks
+
+- All GPU work is deferred and enumerated in `benchmarks/gpu_deferred_validation_v2.json` /
+  `docs/GPU_DEFERRED_VALIDATION_V2.md` (planner GPU pytest, sanitizers, CUDA ctest subset, literature
+  `device_time_dilated_test` + `gpu-run`, GTOC12 GPU Lambert parity, current-head G2/G3 reseal).
+- The candidate's `libspacepdhcg_cuda.so` (`af835ad8…`) differs from the campaign's pinned
+  `84d98bcd…`; a new G0-G3 seal and capability are required before any G4-class claim from it.
+
+### 2026-09-03 08:05 AEST - Installed-wheel asset resolution fix (WSL, CPU only)
+
+#### Task Summary
+
+- Fixed the wheel-consumer defect on `integration/single-gpu-v2-candidate` (worktree
+  `/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 2c8c651): `spacepdhcg literature …` /
+  `gtoc12 …` resolved `benchmarks/` via `Path(__file__).parents[3]`. New `spacepdhcg.resources`
+  resolver (`$SPACEPDHCG_BENCHMARKS_DIR` authoritative → source checkout → `spacepdhcg/_data`
+  packaged copies), 34 frozen assets mirrored by `scripts/sync_packaged_assets.py`, every
+  `parents[n]` root assumption in `src/` replaced, `tests/test_resources.py` (30 tests), evidence in
+  `docs/WHEEL_ASSET_RESOLUTION_FIX.md` + `build-v2-wheel-fix/`. Commit b20e2ea. GPU and the G4
+  integration worktree untouched.
+
+#### Mistakes And Fixes
+
+- `[tool]` The Cursor `Write` tool writes **CRLF** when targeting `\\wsl.localhost\...` paths (the
+  `StrReplace` tool preserves the file's LF). `ruff format --check` catches `.py`, but Markdown/JSON
+  would slip through. Rule: after every whole-file write into WSL run
+  `for f in $(git status --porcelain --untracked-files=all | awk '{print $2}'); do file "$f" | grep -q CRLF && sed -i 's/\r$//' "$f"; done`
+  before linting/committing - restricted to the files you wrote: never touch the frozen
+  `benchmarks/*.json` (`benchmarks/g4_policy.json` is CRLF in the index, `i/crlf`, and its
+  `9ab3b444…` hash lock covers those bytes; the `_data` mirror copies it verbatim, so
+  `git diff --check` flags every line of that mirror - expected).
+- `[self]` First wheel audit asserted `"gtoc12/data" not in name` and tripped on
+  `spacepdhcg/gtoc12/data.py`. Match the full prefix (`spacepdhcg/_data/benchmarks/gtoc12/data/`)
+  when excluding the large-data directory.
+- `[self]` `PurePosixPath("benchmarks/./x")` collapses `.`; a "reject `.` segments" test was wrong.
+  Reject absolute paths, `..`, and empty names; normalise `.`.
+- `[tool]` PowerShell mangles `$f`/`\$` in `wsl -e bash -lc "…"`; the reliable loop is: `Write` the
+  script to `/tmp/v2fix/step_x.sh`, then `wsl -e bash -lc "tr -d '\r' < step_x.sh > step_xu.sh && bash step_xu.sh"`
+  (no `$` in the PowerShell string). Same for heredocs.
+
+#### User Preferences Learned Or Reinforced
+
+- `[user]` "Fix properly": one resolver module, packaged data through `wheel.packages`, never large
+  datasets, SHA-256 test for packaged copies, tests from a *fresh venv + built wheel*, frozen G4/G6/
+  topology hashes unchanged, commit with `GIT_*` env identity (no config edits/push/amend/reset).
+- `[user]` Report back files changed, resolver semantics, packaged asset list with sizes, test
+  results, commit hash, and explicit confirmation that frozen hashes are unchanged.
+
+#### What Worked
+
+- Resolver design: repository-relative POSIX asset names; the env override is *authoritative* for
+  `benchmarks/…` (a bogus override fails loudly - proven in the consumer venv with a `{}` registry);
+  `locate_directory()` for run-time dirs (GTOC12 data), `output_root()` for generated reports,
+  `cache_root()` (`$SPACEPDHCG_CACHE_DIR` / XDG / `~/.cache/spacepdhcg`).
+- Tracked mirror `src/spacepdhcg/_data` + `sync_packaged_assets.py --check` + a byte-identity test
+  (repo copy vs mirror vs `.sha256` lock) instead of CMake install rules: no `cpp/` change, works from
+  the sdist, testable from the checkout without building a wheel. `git rev-parse HEAD:<path>` blob ids
+  are identical for all 34 pairs.
+- Simulating the installed layout in pytest by `monkeypatch.setattr(resources, "repository_root",
+  lambda: None)` — every module calls `resources.<fn>()` through the module attribute, so one patch
+  covers literature, gtoc12, planner, orbitweaver.
+- Consumer gate from `/tmp` with `env -u PYTHONPATH -u SPACEPDHCG_NATIVE_LIBRARY -u SPACEPDHCG_GTOC12_DATA …`
+  and the repo's own `tests/test_gtoc12_verifier.py` run against the installed package (20 passed,
+  incl. the official-binary reproduction) - strongest evidence that rules + verifier work from a wheel.
+- Moving `scripts/gtoc12/fetch_gtoc12_data.py` into `spacepdhcg.gtoc12.fetch` (script = thin
+  wrapper) so `spacepdhcg gtoc12 fetch` works from a wheel; the packaged `libspacepdhcg.so` already
+  exports the Lambert ABI, so `NativeLambert()` falls back to it.
+
+#### What Failed Or Was Inefficient
+
+- `git diff --cached --check` flags every line of the mirrored `g4_policy.json` (source file is
+  CRLF and hash-locked) - expected; do not gate on `--check` for mirrored frozen files.
+- `tests/test_resources.py::test_lambert_library_resolution` first assumed `packaged_library_path()`
+  always succeeds; from `src/` there is no packaged `.so` unless `SPACEPDHCG_NATIVE_LIBRARY` is set,
+  so the test now accepts either outcome.
+
+#### Guardrails For Next Session
+
+- After changing any file in `spacepdhcg.resources.PACKAGED_ASSETS`, run
+  `python scripts/sync_packaged_assets.py` (the `--check` and `tests/test_resources.py` fail otherwise).
+- Never write generated outputs into `resources.asset_path(...)` locations (may be the wheel);
+  use `resources.output_root()` (report/provenance writers already do).
+- New repo-relative inputs in `src/` must go through `resources.asset_path()`; grep
+  `parents\[` in `src/` should only hit `resources.py`, the registry's explicit custom-path rule, and
+  `orbitweaver/adapters.py` (a dict named `parents`).
+- The scratchpad is ~1700 lines and the devlog ~1200: both are past the rollover threshold;
+  archive-first rollover is due at the next consolidation pass.
+
+#### Follow-Ups / Risks
+
+- `spacepdhcg literature run/report` from a wheel write below the working directory
+  (`benchmarks/literature/reference_reproduction.json`, `docs/…`, `results/literature/`); acceptable
+  and documented, but an explicit `--output` option would be cleaner.
+- `web/trajectory-viewer` is not packaged; planner exports from a wheel omit the static viewer files
+  unless `SPACEPDHCG_VIEWER_SOURCE` is set (pre-existing, now explicit).
+- Promotion of the candidate to `integration/single-gpu-v1` is unchanged (ff-only after the
+  claim-core finish script); this fix is one extra commit on the candidate.
+
+### 2026-09-04 01:40 AEST - GTOC12 fleet visualisation in the WebGL viewer (WSL + Windows, CPU only)
+
+#### Task Summary
+
+- Regenerated and verified the fleet_master_v1 viewer export, extended `web/trajectory-viewer` with
+  a dataset selector and a Sun-centred GTOC12 fleet view (Keplerian Earth/asteroid orbits, per-ship
+  arcs, deploy/collect markers, mission timeline, picking), captured browser screenshots and a
+  matplotlib fallback, committed on `integration/single-gpu-v2-candidate`.
+
+#### Mistakes And Fixes
+
+- [self] UA `[hidden]` lost to author `display: grid` on `.controls-panel`/`.dataset-panel`, so
+  archive panels stayed visible in fleet mode. Fix: `[hidden] { display: none !important; }`.
+  Preventive rule: every toggled panel with a `display:` class rule needs the global override.
+- [self] Switching renderers on one WebGL2 context left enabled vertex attribs pointing at deleted
+  buffers ("no buffer is bound to enabled attribute" warnings). Fix: `dispose()` disables all attrib
+  arrays and unbinds before deleting buffers/programs.
+- [self] `focusShip` at 2.3 r with a 45° vertical FOV cropped bounding-sphere extremes off-canvas and
+  the hover test hit nothing. Fix: distance 3 r; the test asserts the projected marker is inside the
+  canvas before hovering.
+- [tool] Playwright reports `requestfailed net::ERR_ABORTED` for a `HEAD` fetch on Chromium although
+  `response.ok` is true; probe optional datasets with GET (1.7 KB manifest).
+- [tool] Playwright actions have no default timeout, so a failing actionability check hangs
+  forever, and an uncaught assertion leaves the browser open (node never exits). Always
+  `page.setDefaultTimeout(...)` and close the browser in `finally`.
+- [tool] The server CSP `style-src 'self'` forbids inline `style=` attributes but not CSSOM; per-ship
+  colours live in `.ship-colour-N` classes (check.mjs asserts parity with `SHIP_COLOURS`), tooltips
+  and event labels are positioned through `element.style`.
+- [tool] Linux node 20 prints TAP (`ok N - …`, `# pass N`), not the `✔` reporter; grep accordingly.
+  `tests/server.test.mjs` used `pathname.slice(1)` (Windows-only) → `fileURLToPath`.
+
+#### What Worked
+
+- Regenerating the export into a fresh ignored directory (`results/gtoc12/viewer-exports/…`) kept
+  the GTOC12 worktree's tracked `fleet/viewer/manifest.json` untouched while its campaign ran; the
+  only difference from the committed export is the commit string.
+- Attaching pinned Keplerian elements at import and cross-checking the JS propagation against the
+  exporter's 41k context points (3.5e-6 km) gives exact Earth/asteroid positions at any epoch
+  without shipping 6 MB of sampled orbits.
+- Event markers are the transcription nodes (exact archived body states), so deploy/collect
+  positions need no ephemeris lookup and the legend can honestly say "no interpolation".
+
+#### Guardrails For Next Session
+
+- The v2 candidate is authoritative for the viewer; sync the Windows mirror with `tr -d '\r'` and
+  compare with `diff -rq --strip-trailing-cr` before committing anywhere.
+- `web/trajectory-viewer/data/gtoc12/` is ignored; regenerate with `npm run import-gtoc12 -- --export …
+  --catalogue … [--solution … --fleet …]` (README); `check.mjs` validates it only when present.
+- Browser check needs `PLAYWRIGHT_PATH=C:/Users/Angus/AppData/Local/Temp/ptd-browser/node_modules/playwright`
+  (Playwright 1.62.1, chromium-1234) and `npm run serve` on 4173; WSL has the browsers but no module.
+
+#### Follow-Ups / Risks
+
+- `cluster_fleet_v4` was still running at commit time (best 6975.69 kg / 14 ships < 7575.58);
+  export + import any fleet that beats fleet_master_v1.
+- The exporter title constant says "reduced-instance" for full-catalogue fleets; fix on the gtoc12
+  branch when it is next touched.

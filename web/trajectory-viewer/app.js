@@ -1,6 +1,16 @@
 import { clamp, lookAt, multiply, normalizePoint, orbitEye, perspective } from "./math.js";
+import { $, escapeHtml, format, metricRows } from "./dom.js";
+import { GlResources, flatten, hex, planeGrid, ribbonArrays, sphere } from "./webgl.js";
+import { MISSION_END_MJD, MISSION_START_MJD } from "./kepler.js";
+import {
+  CAMERA_PRESETS, EXAGGERATION, PITCH_LIMIT, applyVelocity, cameraEquals, clampCamera, createTransition, cursorPointOnFocalPlane,
+  decayVelocity, dollyTowards, inertiaActive, presetCamera, rescaleTarget, sampleTransition,
+} from "./camera.js";
+import {
+  FIELD_OF_VIEW, FLEET_CAMERA, FLEET_ZOOM, createFleetView, describeItem, fleetMassLabel, renderEventLabels, renderFleetProvenance,
+  renderFleetSummary, renderLegendShips, renderShipCounters, renderShipDetail, renderShipList, renderTimelineOutput,
+} from "./gtoc12.js";
 
-const $ = (id) => document.getElementById(id);
 const requiredIds = [
   "renderer-status", "renderer-status-text", "error-banner", "inventory-count",
   "trajectory-list", "data-mode", "mode-description", "play-button", "play-icon",
@@ -8,88 +18,50 @@ const requiredIds = [
   "trajectory-canvas", "family-label", "trajectory-title", "qualification-badge",
   "qualification-notice", "frame-overlay", "scene-overlay", "current-state",
   "frame-details", "validation-details", "gpu-details", "provenance-content",
+  "dataset-select", "dataset-help", "ship-list", "fleet-count", "mission-timeline",
+  "mission-timeline-output", "mission-play-button", "mission-play-icon", "mission-play-label",
+  "focus-ship-button", "fleet-reset-button", "fleet-summary", "ship-detail", "ship-detail-title",
+  "fleet-legend", "hover-tooltip", "fleet-provenance-content", "legend-overlay", "event-labels",
+  "speed-select", "camera-presets", "follow-ship-button", "exaggeration", "exaggeration-output", "legend-ships",
+  "timeline-ticks", "mission-timeline-ticks",
 ];
 for (const id of requiredIds) if (!$(id)) throw new Error(`Required DOM element #${id} is missing`);
 
+/** Paint the elapsed fraction of a range input into `--fill` (the track is a strip chart, not a bare slider). */
+function paintRange(input) {
+  const min = Number(input.min), max = Number(input.max), value = Number(input.value);
+  const fraction = max > min ? clamp((value - min) / (max - min), 0, 1) : 0;
+  input.style.setProperty("--fill", `${(fraction * 100).toFixed(2)}%`);
+}
+/** Year ticks under the mission timeline: 1 January of each mission year at its MJD position. */
+function renderMissionTicks(container) {
+  const span = MISSION_END_MJD - MISSION_START_MJD;
+  const ticks = [];
+  for (let year = 2035; year <= 2050; year += 1) {
+    const mjd = Date.UTC(year, 0, 1) / 86_400_000 + 40_587;
+    if (mjd < MISSION_START_MJD || mjd > MISSION_END_MJD) continue;
+    const tick = document.createElement("span");
+    tick.textContent = String(year);
+    if (year % 5 === 0) tick.classList.add("major");
+    tick.style.left = `${((mjd - MISSION_START_MJD) / span * 100).toFixed(3)}%`;
+    ticks.push(tick);
+  }
+  container.replaceChildren(...ticks);
+}
+renderMissionTicks($("mission-timeline-ticks"));
+paintRange($("exaggeration"));
+
 const canvas = $("trajectory-canvas");
+const ARCHIVE_CAMERA = { yaw: -0.72, pitch: 0.48, distance: 3.25, target: [0, 0, 0] };
+const ARCHIVE_ZOOM = { minimum: 1.35, maximum: 12 };
 const state = {
-  data: null, selected: 0, mode: "replay", progress: 100, playing: false,
-  animation: 0, lastTime: 0, renderer: null,
+  dataset: "archive", data: null, fleet: null, fleetAvailable: false, fleetView: null,
+  selected: 0, mode: "replay", progress: 100, playing: false, speedYearsPerSecond: 1,
+  frame: 0, lastTime: 0, renderer: null,
   camera: { yaw: -0.72, pitch: 0.48, distance: 3.25, target: [0, 0, 0] },
+  transition: null, velocity: { yaw: 0, pitch: 0 }, preset: null,
   pointer: null, contextLost: false,
 };
-
-function flatten(points) { return new Float32Array(points.flat()); }
-function format(value, unit = "") {
-  if (value == null) return "Not applicable";
-  if (!Number.isFinite(value)) return "Invalid";
-  const text = value === 0 ? "0" : Math.abs(value) < 0.001 || Math.abs(value) >= 10000
-    ? value.toExponential(3) : value.toFixed(4);
-  return `${text}${unit ? ` ${unit}` : ""}`;
-}
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (character) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[character]);
-}
-function metricRows(rows) {
-  return rows.map(([name, value]) =>
-    `<div><dt>${escapeHtml(name)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("");
-}
-
-function sphere(radius, center) {
-  const positions = [], normals = [], latitudes = 28, longitudes = 48;
-  const unit = (phi, theta) => [
-    Math.cos(phi) * Math.cos(theta), Math.cos(phi) * Math.sin(theta), Math.sin(phi),
-  ];
-  for (let latitude = 0; latitude < latitudes; latitude += 1) {
-    const p0 = -Math.PI / 2 + latitude / latitudes * Math.PI;
-    const p1 = -Math.PI / 2 + (latitude + 1) / latitudes * Math.PI;
-    for (let longitude = 0; longitude < longitudes; longitude += 1) {
-      const t0 = longitude / longitudes * Math.PI * 2;
-      const t1 = (longitude + 1) / longitudes * Math.PI * 2;
-      for (const normal of [unit(p0, t0), unit(p1, t0), unit(p1, t1), unit(p0, t0), unit(p1, t1), unit(p0, t1)]) {
-        normals.push(normal);
-        positions.push(normal.map((value, axis) => center[axis] + value * radius));
-      }
-    }
-  }
-  return { positions: flatten(positions), normals: flatten(normals) };
-}
-function plane(center, extent, z) {
-  return flatten([
-    [center[0] - extent, center[1] - extent, z], [center[0] + extent, center[1] - extent, z],
-    [center[0] + extent, center[1] + extent, z], [center[0] - extent, center[1] - extent, z],
-    [center[0] + extent, center[1] + extent, z], [center[0] - extent, center[1] + extent, z],
-  ]);
-}
-function planeGrid(center, extent, z) {
-  const result = [], divisions = 12;
-  for (let index = -divisions; index <= divisions; index += 1) {
-    const offset = index / divisions * extent;
-    result.push(
-      [center[0] - extent, center[1] + offset, z], [center[0] + extent, center[1] + offset, z],
-      [center[0] + offset, center[1] - extent, z], [center[0] + offset, center[1] + extent, z],
-    );
-  }
-  return flatten(result);
-}
-function sphereGrid(radius, center) {
-  const result = [], segments = 72;
-  const circle = (point) => {
-    for (let i = 0; i < segments; i += 1) {
-      result.push(point(i / segments * Math.PI * 2), point((i + 1) / segments * Math.PI * 2));
-    }
-  };
-  for (let latitude = -60; latitude <= 60; latitude += 30) {
-    const phi = latitude * Math.PI / 180;
-    circle((theta) => [center[0] + radius * Math.cos(phi) * Math.cos(theta), center[1] + radius * Math.cos(phi) * Math.sin(theta), center[2] + radius * Math.sin(phi)]);
-  }
-  for (let longitude = 0; longitude < 180; longitude += 30) {
-    const theta = longitude * Math.PI / 180;
-    circle((phi) => [center[0] + radius * Math.cos(phi) * Math.cos(theta), center[1] + radius * Math.cos(phi) * Math.sin(theta), center[2] + radius * Math.sin(phi)]);
-  }
-  return flatten(result);
-}
 
 function geometry(trajectory, mode) {
   const points = trajectory[mode].points_txyz;
@@ -126,124 +98,60 @@ function geometry(trajectory, mode) {
     grid = planeGrid(planeCenter, 1.35, z + 0.001);
     if (trajectory.viewer.scene_kind === "local-surface") surfaceZ = z;
   }
-  const ribbonPositions = [], ribbonPrevious = [], ribbonNext = [], ribbonSides = [];
-  pathPoints.forEach((point, index) => {
-    const previous = pathPoints[Math.max(0, index - 1)];
-    const next = pathPoints[Math.min(pathPoints.length - 1, index + 1)];
-    for (const side of [-1, 1]) {
-      ribbonPositions.push(...point); ribbonPrevious.push(...previous); ribbonNext.push(...next); ribbonSides.push(side);
-    }
-  });
+  const ribbon = ribbonArrays(pathPoints);
   return {
     center, scale, points, path, target, axes, surface, normals, grid, surfaceZ,
     start: path.slice(0, 3),
-    ribbonPositions: new Float32Array(ribbonPositions), ribbonPrevious: new Float32Array(ribbonPrevious),
-    ribbonNext: new Float32Array(ribbonNext), ribbonSides: new Float32Array(ribbonSides),
+    ribbonPositions: ribbon.positions, ribbonPrevious: ribbon.previous, ribbonNext: ribbon.next, ribbonSides: ribbon.sides,
   };
 }
-
-function compile(gl, type, source) {
-  const shader = gl.createShader(type);
-  if (!shader) throw new Error("Unable to allocate WebGL shader");
-  gl.shaderSource(shader, source); gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    const message = gl.getShaderInfoLog(shader); gl.deleteShader(shader); throw new Error(message);
-  }
-  return shader;
+function plane(center, extent, z) {
+  return flatten([
+    [center[0] - extent, center[1] - extent, z], [center[0] + extent, center[1] - extent, z],
+    [center[0] + extent, center[1] + extent, z], [center[0] - extent, center[1] - extent, z],
+    [center[0] + extent, center[1] + extent, z], [center[0] - extent, center[1] + extent, z],
+  ]);
 }
-function link(gl, vertexSource, fragmentSource) {
-  const vertex = compile(gl, gl.VERTEX_SHADER, vertexSource);
-  const fragment = compile(gl, gl.FRAGMENT_SHADER, fragmentSource);
-  const output = gl.createProgram();
-  if (!output) throw new Error("Unable to allocate WebGL program");
-  gl.attachShader(output, vertex); gl.attachShader(output, fragment); gl.linkProgram(output);
-  gl.deleteShader(vertex); gl.deleteShader(fragment);
-  if (!gl.getProgramParameter(output, gl.LINK_STATUS)) {
-    const message = gl.getProgramInfoLog(output); gl.deleteProgram(output); throw new Error(message);
+function sphereGrid(radius, center) {
+  const result = [], segments = 72;
+  const circle = (point) => {
+    for (let i = 0; i < segments; i += 1) {
+      result.push(point(i / segments * Math.PI * 2), point((i + 1) / segments * Math.PI * 2));
+    }
+  };
+  for (let latitude = -60; latitude <= 60; latitude += 30) {
+    const phi = latitude * Math.PI / 180;
+    circle((theta) => [center[0] + radius * Math.cos(phi) * Math.cos(theta), center[1] + radius * Math.cos(phi) * Math.sin(theta), center[2] + radius * Math.sin(phi)]);
   }
-  return output;
-}
-function hex(value) {
-  const text = value.replace("#", "");
-  return [0, 2, 4].map((index) => parseInt(text.slice(index, index + 2), 16) / 255).concat(1);
+  for (let longitude = 0; longitude < 180; longitude += 30) {
+    const theta = longitude * Math.PI / 180;
+    circle((phi) => [center[0] + radius * Math.cos(phi) * Math.cos(theta), center[1] + radius * Math.cos(phi) * Math.sin(theta), center[2] + radius * Math.sin(phi)]);
+  }
+  return flatten(result);
 }
 
-class Renderer {
+/** Archive renderer: one trajectory in its own physical frame. */
+class Renderer extends GlResources {
   constructor(canvasElement, scene) {
-    this.canvas = canvasElement; this.scene = scene; this.buffers = []; this.programs = [];
-    this.gl = canvasElement.getContext("webgl2", { antialias: true, alpha: false, depth: true, powerPreference: "high-performance" });
-    if (!this.gl) throw new Error("WebGL2 is unavailable. Enable hardware acceleration or use a WebGL2-capable browser.");
+    super(canvasElement);
+    this.scene = scene;
     const gl = this.gl;
-    this.lineProgram = this.makeProgram(`#version 300 es
-      in vec3 aPosition; uniform mat4 uMvp; uniform float uSize;
-      void main(){gl_Position=uMvp*vec4(aPosition,1.0);gl_PointSize=uSize;}`,
-      `#version 300 es
-      precision highp float; uniform vec4 uColor; uniform float uMarker; out vec4 color;
-      void main(){if(uMarker>0.5){float r=distance(gl_PointCoord,vec2(.5));if(r>.5)discard;if(uMarker>1.5&&r<.28)discard;}color=uColor;}`);
-    this.surfaceProgram = this.makeProgram(`#version 300 es
-      in vec3 aPosition;in vec3 aNormal;uniform mat4 uMvp;out vec3 normal;
-      void main(){normal=aNormal;gl_Position=uMvp*vec4(aPosition,1.0);}`,
-      `#version 300 es
-      precision highp float;in vec3 normal;uniform vec4 uColor;out vec4 color;
-      void main(){float d=max(dot(normalize(normal),normalize(vec3(-.45,.65,.8))),0.);color=vec4(uColor.rgb*(.2+.8*d),uColor.a);}`);
-    this.ribbonProgram = this.makeProgram(`#version 300 es
-      in vec3 aPosition;in vec3 aPrevious;in vec3 aNext;in float aSide;uniform mat4 uMvp;uniform vec2 uViewport;out float edge;
-      void main(){vec4 c=uMvp*vec4(aPosition,1.);vec4 p=uMvp*vec4(aPrevious,1.);vec4 n=uMvp*vec4(aNext,1.);
-      vec2 dir=normalize((n.xy/max(n.w,.001)-p.xy/max(p.w,.001))*uViewport);vec2 normal=vec2(-dir.y,dir.x);
-      c.xy+=normal*aSide*3.0/uViewport*c.w;gl_Position=c;edge=aSide;}`,
-      `#version 300 es
-      precision highp float;in float edge;uniform vec4 uColor;out vec4 color;
-      void main(){float alpha=1.-smoothstep(.72,1.,abs(edge));color=vec4(uColor.rgb,uColor.a*alpha);}`);
     const arrays = ["path", "target", "axes", "surface", "normals", "grid", "start", "ribbonPositions", "ribbonPrevious", "ribbonNext", "ribbonSides"];
     for (const name of arrays) this[`${name}Buffer`] = this.makeBuffer(scene[name]);
     this.currentBuffer = this.makeBuffer(new Float32Array(3), gl.DYNAMIC_DRAW);
     this.stemBuffer = this.makeBuffer(new Float32Array(6), gl.DYNAMIC_DRAW);
-    const debug = gl.getExtension("WEBGL_debug_renderer_info");
-    this.info = {
-      version: gl.getParameter(gl.VERSION),
-      renderer: gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER),
-      vendor: gl.getParameter(debug ? debug.UNMASKED_VENDOR_WEBGL : gl.VENDOR),
-      maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
-      maxVertexAttribs: gl.getParameter(gl.MAX_VERTEX_ATTRIBS),
-    };
-  }
-  makeProgram(vertex, fragment) { const value = link(this.gl, vertex, fragment); this.programs.push(value); return value; }
-  makeBuffer(data, usage = this.gl.STATIC_DRAW) {
-    const value = this.gl.createBuffer(); if (!value) throw new Error("Unable to allocate WebGL buffer");
-    this.buffers.push(value); this.gl.bindBuffer(this.gl.ARRAY_BUFFER, value); this.gl.bufferData(this.gl.ARRAY_BUFFER, data, usage); return value;
-  }
-  resize() {
-    const ratio = Math.min(devicePixelRatio || 1, 2);
-    const width = Math.max(1, Math.round(this.canvas.clientWidth * ratio));
-    const height = Math.max(1, Math.round(this.canvas.clientHeight * ratio));
-    if (this.canvas.width !== width || this.canvas.height !== height) { this.canvas.width = width; this.canvas.height = height; }
-    this.gl.viewport(0, 0, width, height);
-  }
-  attribute(program, name, buffer, size) {
-    const gl = this.gl, location = gl.getAttribLocation(program, name);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer); gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
-  }
-  line(mvp, buffer, mode, count, color, size = 1, marker = 0) {
-    const gl = this.gl, p = this.lineProgram; gl.useProgram(p); this.attribute(p, "aPosition", buffer, 3);
-    gl.uniformMatrix4fv(gl.getUniformLocation(p, "uMvp"), false, mvp); gl.uniform4fv(gl.getUniformLocation(p, "uColor"), color);
-    gl.uniform1f(gl.getUniformLocation(p, "uSize"), size); gl.uniform1f(gl.getUniformLocation(p, "uMarker"), marker); gl.drawArrays(mode, 0, count);
   }
   draw(visibleCount, camera) {
     const gl = this.gl, scene = this.scene; this.resize();
     const mvp = multiply(perspective(Math.PI / 4, this.canvas.width / this.canvas.height, 0.025, 80), lookAt(orbitEye(camera), camera.target, [0, 0, 1]));
     gl.clearColor(0.018, 0.027, 0.055, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    const p = this.surfaceProgram; gl.useProgram(p); this.attribute(p, "aPosition", this.surfaceBuffer, 3); this.attribute(p, "aNormal", this.normalsBuffer, 3);
-    gl.uniformMatrix4fv(gl.getUniformLocation(p, "uMvp"), false, mvp); gl.uniform4fv(gl.getUniformLocation(p, "uColor"), [0.10, 0.20, 0.34, scene.surfaceZ == null ? .96 : .48]);
-    gl.drawArrays(gl.TRIANGLES, 0, scene.surface.length / 3);
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(true);
+    this.surface(mvp, this.surfaceBuffer, this.normalsBuffer, scene.surface.length / 3, [0.10, 0.20, 0.34, scene.surfaceZ == null ? .96 : .48]);
     this.line(mvp, this.gridBuffer, gl.LINES, scene.grid.length / 3, [0.30, 0.46, 0.66, .32]);
     this.line(mvp, this.axesBuffer, gl.LINES, scene.axes.length / 3, [0.72, 0.8, 0.92, .72]);
     if (visibleCount > 1) {
-      const ribbon = this.ribbonProgram; gl.useProgram(ribbon);
-      this.attribute(ribbon, "aPosition", this.ribbonPositionsBuffer, 3); this.attribute(ribbon, "aPrevious", this.ribbonPreviousBuffer, 3);
-      this.attribute(ribbon, "aNext", this.ribbonNextBuffer, 3); this.attribute(ribbon, "aSide", this.ribbonSidesBuffer, 1);
-      gl.uniformMatrix4fv(gl.getUniformLocation(ribbon, "uMvp"), false, mvp); gl.uniform2f(gl.getUniformLocation(ribbon, "uViewport"), this.canvas.width, this.canvas.height);
-      gl.uniform4fv(gl.getUniformLocation(ribbon, "uColor"), hex("#36d6ff")); gl.drawArrays(gl.TRIANGLE_STRIP, 0, visibleCount * 2);
+      const buffers = { positions: this.ribbonPositionsBuffer, previous: this.ribbonPreviousBuffer, next: this.ribbonNextBuffer, sides: this.ribbonSidesBuffer };
+      this.ribbon(mvp, buffers, visibleCount * 2, hex("#36d6ff"), 3.0, { shade: 0 });
       this.line(mvp, this.pathBuffer, gl.LINE_STRIP, visibleCount, [0.35, .9, 1, .95]);
     }
     if (scene.surfaceZ != null) {
@@ -258,35 +166,44 @@ class Renderer {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.currentBuffer); gl.bufferSubData(gl.ARRAY_BUFFER, 0, scene.path.slice(offset, offset + 3));
     this.line(mvp, this.currentBuffer, gl.POINTS, 1, [1, 1, 1, 1], 11, 1);
   }
-  dispose() { for (const buffer of this.buffers) this.gl.deleteBuffer(buffer); for (const program of this.programs) this.gl.deleteProgram(program); this.buffers = []; this.programs = []; }
 }
 
+const isFleet = () => state.dataset === "gtoc12";
 function trajectory() { return state.data.trajectories[state.selected]; }
 function visibleCount() {
   const count = trajectory()[state.mode].point_count;
   return clamp(Math.ceil(count * state.progress / 100), 1, count);
 }
-function stopPlayback() {
-  state.playing = false; state.lastTime = 0;
-  if (state.animation) cancelAnimationFrame(state.animation);
-  state.animation = 0; $("play-icon").textContent = "▶"; $("play-label").textContent = "Play replay";
-}
-function resetCamera() {
-  Object.assign(state.camera, { yaw: -.72, pitch: .48, distance: 3.25, target: [0, 0, 0] }); draw();
-}
+function zoomBounds() { return isFleet() ? FLEET_ZOOM : ARCHIVE_ZOOM; }
+function pitchLimit() { return isFleet() ? PITCH_LIMIT : 1.45; }
 function setStatus(kind, text) {
   $("renderer-status").className = `renderer-status ${kind}`; $("renderer-status-text").textContent = text;
 }
-function createRenderer() {
-  state.renderer?.dispose(); state.renderer = null;
-  const scene = geometry(trajectory(), state.mode); state.scene = scene;
-  state.renderer = new Renderer(canvas, scene); setStatus("ready", "WebGL2 GPU renderer");
+function renderGpuDetails(info) {
   $("gpu-details").innerHTML = metricRows([
-    ["Status", "Active WebGL2"], ["Version", state.renderer.info.version],
-    ["Renderer", state.renderer.info.renderer], ["Vendor", state.renderer.info.vendor],
-    ["Max texture", `${state.renderer.info.maxTextureSize.toLocaleString()} px`],
-    ["Vertex attributes", String(state.renderer.info.maxVertexAttribs)],
+    ["Status", "Active WebGL2"], ["Version", info.version],
+    ["Renderer", info.renderer], ["Vendor", info.vendor],
+    ["Max texture", `${info.maxTextureSize.toLocaleString()} px`],
+    ["Vertex attributes", String(info.maxVertexAttribs)],
   ]);
+}
+function disposeRenderers() {
+  state.renderer?.dispose(); state.renderer = null;
+  state.fleetView?.dispose(); state.fleetView = null;
+}
+function createRenderer() {
+  disposeRenderers();
+  if (isFleet()) {
+    state.fleetView = createFleetView({ canvas, fleet: state.fleet, camera: state.camera });
+    state.fleetView.setEpoch(Number($("mission-timeline").value));
+    state.fleetView.setExaggeration(Number($("exaggeration").value));
+    renderGpuDetails(state.fleetView.info);
+  } else {
+    const scene = geometry(trajectory(), state.mode); state.scene = scene;
+    state.renderer = new Renderer(canvas, scene);
+    renderGpuDetails(state.renderer.info);
+  }
+  setStatus("ready", "WebGL2 GPU renderer");
 }
 function renderInventory() {
   $("inventory-count").textContent = String(state.data.trajectories.length);
@@ -307,10 +224,11 @@ function updateDetails() {
   $("qualification-badge").textContent = item.qualification.qualified ? "Qualified scope" : "Diagnostic only";
   $("qualification-notice").className = `notice-panel ${item.qualification.qualified ? "qualified" : "warning"}`;
   $("qualification-notice").innerHTML = `<strong>${item.qualification.qualified ? "Qualified evidence scope" : "Unqualified trajectory warning"}</strong><p>${escapeHtml(item.qualification.label)}. Qualification applies only to the stated archived evidence scope.</p>`;
-  $("frame-overlay").innerHTML = `<strong>${escapeHtml(item.frame)}</strong><span>${escapeHtml(item.viewer.axes.join(" · "))}</span>`;
-  $("scene-overlay").textContent = item.viewer.scene_kind === "hcw" ? "LVLH plane · Earthward −X" : item.viewer.radius_label;
+  $("frame-overlay").innerHTML = `<strong>${escapeHtml(item.frame)}</strong><span>${escapeHtml(item.viewer.axes.join(", "))}</span>`;
+  $("scene-overlay").textContent = item.viewer.scene_kind === "hcw" ? "LVLH plane, Earthward −X" : item.viewer.radius_label;
   $("timeline-output").textContent = `${state.progress.toFixed(1)}%`;
-  $("sample-output").textContent = `Sample ${index + 1} / ${source.point_count} · ${format(point[0], item.time_units)}`;
+  paintRange($("timeline"));
+  $("sample-output").textContent = `Sample ${index + 1} / ${source.point_count} at ${format(point[0], item.time_units)}`;
   $("current-state").innerHTML = metricRows([
     ["Replay time", format(point[0], item.time_units)], ["Position", `[${point.slice(1).map((v) => format(v)).join(", ")}] ${item.position_units}`],
     ["Physical measure", vertical], ["Camera scale", format(state.camera.distance * state.scene.scale, item.position_units)],
@@ -327,13 +245,226 @@ function updateDetails() {
     <p>Archive source SHA-256: <code>${escapeHtml(state.data.imported_source_sha256)}</code></p>
     <p>${source.point_count.toLocaleString()} exact selected archive points from ${source.original_point_count.toLocaleString()} original points. Selected indices and point hashes are retained. No visual interpolation is used.</p>`;
 }
+
+/** GTOC12 panels that depend on the selection (ship list, detail table, headings). */
+function updateFleetSelection() {
+  const fleetView = state.fleetView, fleet = state.fleet, selected = fleetView.view.selected;
+  renderShipList($("ship-list"), fleetView);
+  renderShipDetail($("ship-detail"), fleetView);
+  renderLegendShips($("legend-ships"), fleet);
+  $("fleet-count").textContent = String(fleet.ships.length);
+  $("family-label").textContent = `GTOC12 run ${fleet.run_id}`;
+  $("trajectory-title").textContent = selected == null
+    ? `${fleet.title} — ${fleet.score.ships} ships, ${fleet.score.unique_asteroids} asteroids, ${fleetMassLabel(fleet)} kg`
+    : `Ship ${fleet.ships[selected].ship_id} — ${fleet.ships[selected].collected_kg.toFixed(1)} kg from ${fleet.ships[selected].asteroids.length} asteroids`;
+  $("ship-detail-title").textContent = selected == null ? "Fleet totals" : `Ship ${fleet.ships[selected].ship_id} event sequence`;
+  $("focus-ship-button").disabled = selected == null;
+  $("follow-ship-button").disabled = selected == null;
+  const qualified = fleet.score.verifier_ok;
+  $("qualification-badge").className = `qualification-badge ${qualified ? "qualified" : "warning"}`;
+  $("qualification-badge").textContent = qualified ? "Verified fleet" : "Unverified";
+  $("qualification-notice").className = `notice-panel ${qualified ? "qualified" : "warning"}`;
+  $("qualification-notice").innerHTML = `<strong>${qualified ? "Verified GTOC12 fleet" : "Unverified GTOC12 fleet"}</strong><p>${escapeHtml(fleet.ships[0].qualification.label)}. ${fleetMassLabel(fleet)} kg collected by ${fleet.score.ships} ships from ${fleet.score.unique_asteroids} asteroids (official verifier ${fleet.score.official_total_mass_kg} kg; independent verifier ${fleet.score.independent_total_mass_kg?.toFixed(3)} kg; ship-count limit ${fleet.score.ship_limit?.toFixed(2)}). Arcs connect exact archived samples; Earth/asteroid orbits are Keplerian from the pinned catalogue.</p>`;
+  $("frame-overlay").innerHTML = `<strong>${escapeHtml(fleet.frame)}</strong><span>Sun-centred; 1 scene unit = ${fleetView.scene.scale.toFixed(2)} AU; rings every 1 AU</span>`;
+  updatePresetButtons();
+  renderFleetProvenance($("fleet-provenance-content"), fleetView);
+}
+function updateFleetEpoch() {
+  const fleetView = state.fleetView;
+  $("mission-timeline").value = String(fleetView.view.epoch);
+  paintRange($("mission-timeline"));
+  renderTimelineOutput($("mission-timeline-output"), fleetView);
+  renderFleetSummary($("fleet-summary"), fleetView);
+  renderShipCounters($("ship-list"), fleetView);
+  const passed = fleetView.view.selected == null ? -1 : state.fleet.ships[fleetView.view.selected].events.filter((event) => event.epoch_mjd <= fleetView.view.epoch).length;
+  if (passed !== state.lastPassed) { state.lastPassed = passed; if (fleetView.view.selected != null) renderShipDetail($("ship-detail"), fleetView); }
+}
+function updateSceneOverlay() {
+  const factor = state.fleetView?.exaggeration ?? 1;
+  $("exaggeration-output").textContent = `${factor % 1 === 0 ? factor.toFixed(0) : factor.toFixed(1)}×`;
+  paintRange($("exaggeration"));
+  $("scene-overlay").textContent = factor > 1
+    ? `Straight segments = connections between archived samples; Z exaggerated ${factor}× (not physical)`
+    : "Straight segments = connections between archived samples";
+}
+function updatePresetButtons() {
+  for (const button of $("camera-presets").querySelectorAll("[data-preset]")) {
+    const active = button.dataset.preset === state.preset;
+    button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active));
+  }
+}
 function draw() {
-  if (!state.renderer || state.contextLost) return;
-  state.renderer.draw(visibleCount(), state.camera); updateDetails();
+  if (state.contextLost) return;
+  if (isFleet()) {
+    if (!state.fleetView) return;
+    if (state.fleetView.view.follow) {
+      const target = state.fleetView.followTarget();
+      if (target && !state.transition) state.camera.target = target;
+    }
+    state.fleetView.draw(); renderEventLabels($("event-labels"), state.fleetView); updateFleetEpoch();
+  } else {
+    if (!state.renderer) return;
+    state.renderer.draw(visibleCount(), state.camera); updateDetails();
+  }
+}
+
+/* Single animation loop: camera transitions, pointer inertia and timeline playback. */
+function needsFrames() { return state.playing || state.transition != null || inertiaActive(state.velocity); }
+function requestFrame() { if (!state.frame) state.frame = requestAnimationFrame(tick); }
+function tick(time) {
+  state.frame = 0;
+  const previous = state.lastTime || time; state.lastTime = time;
+  const dt = Math.min(100, time - previous);
+  if (state.transition) {
+    const { camera, done } = sampleTransition(state.transition, time);
+    Object.assign(state.camera, camera);
+    if (done) state.transition = null;
+  } else if (inertiaActive(state.velocity)) {
+    Object.assign(state.camera, applyVelocity(state.camera, state.velocity, dt, pitchLimit()));
+    state.velocity = decayVelocity(state.velocity, dt);
+    if (!inertiaActive(state.velocity)) state.velocity = { yaw: 0, pitch: 0 };
+  }
+  if (state.playing) {
+    if (isFleet()) {
+      // Mission clock: `speedYearsPerSecond` mission years per wall-clock second; every frame lands on archived samples only.
+      const epoch = state.fleetView.view.epoch + dt / 1000 * state.speedYearsPerSecond * 365.25;
+      state.fleetView.setEpoch(Math.min(epoch, MISSION_END_MJD));
+      if (state.fleetView.view.epoch >= MISSION_END_MJD) stopPlayback();
+    } else {
+      state.progress = Math.min(100, state.progress + dt / 120);
+      $("timeline").value = String(state.progress);
+      if (state.progress >= 100) stopPlayback();
+    }
+  }
+  draw();
+  if (needsFrames()) requestFrame(); else state.lastTime = 0;
+}
+function stopPlayback() {
+  state.playing = false;
+  $("play-icon").textContent = "▶"; $("play-label").textContent = "Play replay";
+  $("mission-play-icon").textContent = "▶"; $("mission-play-label").textContent = "Play mission";
+}
+function togglePlayback() {
+  if (state.playing) return stopPlayback();
+  if (isFleet()) {
+    if (state.fleetView.view.epoch >= MISSION_END_MJD) state.fleetView.setEpoch(MISSION_START_MJD);
+    $("mission-play-icon").textContent = "❚❚"; $("mission-play-label").textContent = "Pause mission";
+  } else {
+    if (state.progress >= 100) state.progress = 0;
+    $("play-icon").textContent = "❚❚"; $("play-label").textContent = "Pause replay";
+  }
+  state.playing = true; requestFrame();
+}
+/** Smoothly move the camera to `target` (instantly when the browser prefers reduced motion). */
+function transitionTo(target, duration) {
+  const next = clampCamera(target, zoomBounds(), pitchLimit());
+  state.velocity = { yaw: 0, pitch: 0 };
+  if (cameraEquals(state.camera, next, 1e-6) || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    state.transition = null; Object.assign(state.camera, next); draw(); return;
+  }
+  state.transition = createTransition(state.camera, next, performance.now(), duration);
+  requestFrame();
+}
+function stopCameraMotion() { state.transition = null; state.velocity = { yaw: 0, pitch: 0 }; }
+function setPreset(name) {
+  if (!isFleet() || !state.fleetView) return;
+  const fleetView = state.fleetView;
+  if (name === "follow") {
+    const camera = fleetView.followCamera(state.camera);
+    if (!camera) return;
+    fleetView.view.follow = true; state.preset = "follow";
+    transitionTo(camera);
+  } else {
+    fleetView.view.follow = false; state.preset = name;
+    transitionTo(presetCamera(name, state.camera));
+  }
+  updatePresetButtons();
+}
+function leaveFollow() { if (state.fleetView?.view.follow) { state.fleetView.view.follow = false; state.preset = null; updatePresetButtons(); } }
+function resetCamera() {
+  stopCameraMotion();
+  const defaults = isFleet() ? FLEET_CAMERA : ARCHIVE_CAMERA;
+  if (isFleet()) { leaveFollow(); state.preset = "oblique"; updatePresetButtons(); }
+  transitionTo({ ...defaults, target: [...defaults.target] });
+}
+function focusShip() {
+  const camera = state.fleetView?.focusCamera();
+  if (!camera) return;
+  leaveFollow(); transitionTo(camera);
+}
+function setExaggeration(value) {
+  if (!state.fleetView) return;
+  const previous = state.fleetView.exaggeration;
+  const next = state.fleetView.setExaggeration(value);
+  $("exaggeration").value = String(next);
+  Object.assign(state.camera, rescaleTarget(state.camera, previous, next));
+  if (state.transition) state.transition = createTransition(state.camera, rescaleTarget(state.transition.to, previous, next), performance.now(), 1);
+  updateSceneOverlay(); draw();
+}
+function fatal(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  $("error-banner").hidden = false; $("error-banner").textContent = message; setStatus("error", "Viewer unavailable");
+  console.error(error);
+}
+
+/** Show the panels for the active dataset. */
+function applyDatasetVisibility() {
+  const fleet = isFleet();
+  for (const element of document.querySelectorAll(".archive-only")) element.hidden = fleet;
+  for (const element of document.querySelectorAll(".fleet-only")) element.hidden = !fleet;
+  if (!fleet) { $("event-labels").replaceChildren(); $("event-labels").dataset.ship = ""; }
+  hideTooltip();
+}
+async function loadFleet() {
+  if (state.fleet) return state.fleet;
+  const response = await fetch("./data/gtoc12/fleet.json", { cache: "no-store" });
+  if (!response.ok) throw new Error(`GTOC12 fleet dataset request failed: HTTP ${response.status}`);
+  const fleet = await response.json();
+  if (fleet.dataset_kind !== "gtoc12-fleet" || !Array.isArray(fleet.ships) || fleet.ships.length === 0) throw new Error("GTOC12 fleet dataset has an unexpected shape");
+  state.fleet = fleet;
+  return fleet;
+}
+async function setDataset(dataset, options = {}) {
+  stopPlayback(); stopCameraMotion();
+  if (dataset === "gtoc12" && !state.fleetAvailable) {
+    $("dataset-select").value = state.dataset;
+    $("dataset-help").textContent = "GTOC12 dataset not installed. Run `npm run import-gtoc12 -- --export <export dir> --catalogue <GTOC12_Asteroids_Data.txt>` (see README) and reload.";
+    return;
+  }
+  try {
+    state.dataset = dataset;
+    $("dataset-select").value = dataset;
+    applyDatasetVisibility();
+    if (dataset === "gtoc12") {
+      await loadFleet();
+      const preset = options.preset && CAMERA_PRESETS[options.preset] ? options.preset : "oblique";
+      Object.assign(state.camera, presetCamera(preset, { ...FLEET_CAMERA, target: [0, 0, 0] }));
+      state.preset = preset;
+      $("mission-timeline").min = String(MISSION_START_MJD); $("mission-timeline").max = String(MISSION_END_MJD);
+      if (options.epoch == null) $("mission-timeline").value = String(MISSION_END_MJD);
+      else $("mission-timeline").value = String(clamp(options.epoch, MISSION_START_MJD, MISSION_END_MJD));
+      $("exaggeration").value = String(clamp(options.exaggeration ?? EXAGGERATION.initial, EXAGGERATION.minimum, EXAGGERATION.maximum));
+      createRenderer();
+      state.fleetView.selectShip(options.ship == null ? null : options.ship);
+      state.lastPassed = null;
+      if (state.fleetView.view.selected != null) {
+        if (options.follow) { state.fleetView.view.follow = true; state.preset = "follow"; Object.assign(state.camera, state.fleetView.followCamera(state.camera)); }
+        else if (options.focus) Object.assign(state.camera, state.fleetView.focusCamera());
+      }
+      updateFleetSelection(); updateSceneOverlay(); draw();
+      $("dataset-help").textContent = `${state.fleet.title}: ${state.fleet.score.ships} ships, ${state.fleet.score.unique_asteroids} asteroids, ${fleetMassLabel(state.fleet)} kg (official verifier ${state.fleet.score.official_total_mass_kg} kg).`;
+    } else {
+      state.preset = null;
+      Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
+      state.progress = 100; $("timeline").value = "100";
+      createRenderer(); renderInventory(); draw();
+      $("dataset-help").textContent = "Verified archived P1/P2 evidence records, each in its own physical frame.";
+    }
+  } catch (error) { fatal(error); }
 }
 function select(index) {
-  stopPlayback(); state.selected = Number(index); state.progress = 100; $("timeline").value = "100";
-  Object.assign(state.camera, { yaw: -.72, pitch: .48, distance: 3.25, target: [0, 0, 0] });
+  stopPlayback(); stopCameraMotion(); state.selected = Number(index); state.progress = 100; $("timeline").value = "100";
+  Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
   try { createRenderer(); renderInventory(); draw(); } catch (error) { fatal(error); }
 }
 function setMode(mode) {
@@ -343,67 +474,126 @@ function setMode(mode) {
     : "Exact source solver/reference nodes. No visual interpolation.";
   try { createRenderer(); draw(); } catch (error) { fatal(error); }
 }
-function animate(time) {
-  if (!state.playing) return;
-  const previous = state.lastTime || time; state.lastTime = time;
-  state.progress = Math.min(100, state.progress + (time - previous) / 120);
-  $("timeline").value = String(state.progress); draw();
-  if (state.progress >= 100) stopPlayback(); else state.animation = requestAnimationFrame(animate);
+
+function hideTooltip() { const tooltip = $("hover-tooltip"); tooltip.hidden = true; tooltip.innerHTML = ""; }
+function showTooltip(item, x, y) {
+  const tooltip = $("hover-tooltip"), wrap = canvas.parentElement;
+  tooltip.innerHTML = describeItem(item, state.fleetView);
+  tooltip.hidden = false;
+  const bounds = wrap.getBoundingClientRect();
+  const left = clamp(x + 14, 8, Math.max(8, bounds.width - tooltip.offsetWidth - 8));
+  const top = y + 18 + tooltip.offsetHeight > bounds.height - 8 ? y - tooltip.offsetHeight - 10 : y + 18;
+  tooltip.style.left = `${left}px`; tooltip.style.top = `${Math.max(8, top)}px`;
 }
-function togglePlayback() {
-  if (state.playing) return stopPlayback();
-  if (state.progress >= 100) state.progress = 0;
-  state.playing = true; $("play-icon").textContent = "❚❚"; $("play-label").textContent = "Pause replay";
-  state.animation = requestAnimationFrame(animate);
-}
-function fatal(error) {
-  const message = error instanceof Error ? error.message : String(error);
-  $("error-banner").hidden = false; $("error-banner").textContent = message; setStatus("error", "Viewer unavailable");
-  console.error(error);
+function canvasPoint(event) {
+  const bounds = canvas.getBoundingClientRect();
+  return [event.clientX - bounds.left, event.clientY - bounds.top];
 }
 
+$("dataset-select").addEventListener("change", (event) => setDataset(event.target.value));
 $("trajectory-list").addEventListener("click", (event) => {
   const button = event.target.closest("[data-index]"); if (button) select(button.dataset.index);
 });
+$("ship-list").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-ship]"); if (!button || !state.fleetView) return;
+  state.fleetView.selectShip(button.dataset.ship === "all" ? null : Number(button.dataset.ship));
+  if (state.fleetView.view.selected == null) leaveFollow();
+  state.lastPassed = null; updateFleetSelection(); draw();
+});
+$("camera-presets").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-preset]"); if (button && !button.disabled) setPreset(button.dataset.preset);
+});
 $("data-mode").addEventListener("change", (event) => setMode(event.target.value));
 $("play-button").addEventListener("click", togglePlayback);
+$("mission-play-button").addEventListener("click", togglePlayback);
+$("speed-select").addEventListener("change", (event) => { state.speedYearsPerSecond = Number(event.target.value) || 1; });
 $("reset-button").addEventListener("click", resetCamera);
+$("fleet-reset-button").addEventListener("click", resetCamera);
+$("focus-ship-button").addEventListener("click", focusShip);
+$("exaggeration").addEventListener("input", (event) => setExaggeration(event.target.value));
 $("timeline").addEventListener("input", (event) => {
   stopPlayback(); state.progress = Number(event.target.value); draw();
 });
+$("mission-timeline").addEventListener("input", (event) => {
+  stopPlayback(); if (state.fleetView) { state.fleetView.setEpoch(Number(event.target.value)); draw(); }
+});
 canvas.addEventListener("pointerdown", (event) => {
-  event.preventDefault(); canvas.focus(); state.pointer = { x: event.clientX, y: event.clientY, id: event.pointerId, pan: event.button === 2 || event.shiftKey };
+  event.preventDefault(); canvas.focus(); stopCameraMotion();
+  state.pointer = { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, time: performance.now(), id: event.pointerId, pan: event.button === 2 || event.shiftKey, moved: false, velocity: { yaw: 0, pitch: 0 } };
   canvas.setPointerCapture(event.pointerId);
 });
 canvas.addEventListener("pointermove", (event) => {
-  if (!state.pointer) return;
+  if (!state.pointer) {
+    if (isFleet() && state.fleetView && event.pointerType !== "touch") {
+      const [x, y] = canvasPoint(event);
+      const item = state.fleetView.hover(x, y);
+      if (item) showTooltip(item, x, y); else hideTooltip();
+      draw();
+    }
+    return;
+  }
+  const now = performance.now(), dtMs = Math.max(1, now - state.pointer.time);
   const dx = event.clientX - state.pointer.x, dy = event.clientY - state.pointer.y;
-  state.pointer.x = event.clientX; state.pointer.y = event.clientY;
+  state.pointer.x = event.clientX; state.pointer.y = event.clientY; state.pointer.time = now;
+  if (Math.hypot(event.clientX - state.pointer.startX, event.clientY - state.pointer.startY) > 4) state.pointer.moved = true;
   if (state.pointer.pan || event.shiftKey) {
+    leaveFollow();
     const speed = state.camera.distance * .0015;
     state.camera.target[0] -= dx * speed; state.camera.target[2] += dy * speed;
   } else {
-    state.camera.yaw -= dx * .008; state.camera.pitch = clamp(state.camera.pitch + dy * .008, -1.45, 1.45);
+    const yaw = -dx * .008, pitch = dy * .008;
+    state.camera.yaw += yaw; state.camera.pitch = clamp(state.camera.pitch + pitch, -pitchLimit(), pitchLimit());
+    // Angular velocity (rad/ms) for release inertia, smoothed over the last few samples.
+    state.pointer.velocity = { yaw: state.pointer.velocity.yaw * 0.4 + (yaw / dtMs) * 0.6, pitch: state.pointer.velocity.pitch * 0.4 + (pitch / dtMs) * 0.6 };
   }
   draw();
 });
-for (const name of ["pointerup", "pointercancel"]) canvas.addEventListener(name, (event) => {
+canvas.addEventListener("pointerup", (event) => {
+  const pointer = state.pointer;
+  if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  state.pointer = null;
+  if (!pointer) return;
+  if (!pointer.moved && isFleet() && state.fleetView) {
+    const [x, y] = canvasPoint(event);
+    const item = state.fleetView.click(x, y);
+    if (item) showTooltip(item, x, y); else hideTooltip();
+    state.lastPassed = null; updateFleetSelection(); draw();
+  } else if (pointer.moved && !pointer.pan && performance.now() - pointer.time < 80 && isFleet()) {
+    state.velocity = pointer.velocity; requestFrame();
+  }
+});
+canvas.addEventListener("pointercancel", (event) => {
   if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId); state.pointer = null;
 });
+canvas.addEventListener("pointerleave", () => { if (isFleet() && state.fleetView && !state.pointer) { state.fleetView.view.hover = null; hideTooltip(); draw(); } });
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 canvas.addEventListener("wheel", (event) => {
-  event.preventDefault(); state.camera.distance = clamp(state.camera.distance * Math.exp(event.deltaY * .001), 1.35, 12); draw();
+  event.preventDefault(); const bounds = zoomBounds(); state.transition = null;
+  const factor = Math.exp(event.deltaY * .001);
+  if (isFleet() && state.fleetView && !state.fleetView.view.follow) {
+    // Dolly towards the cursor: the world point under the pointer (on the focal plane) stays put.
+    const [x, y] = canvasPoint(event);
+    const ndcX = (x / Math.max(1, canvas.clientWidth)) * 2 - 1, ndcY = 1 - (y / Math.max(1, canvas.clientHeight)) * 2;
+    const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
+    const point = cursorPointOnFocalPlane(state.camera, ndcX, ndcY, FIELD_OF_VIEW, aspect);
+    Object.assign(state.camera, dollyTowards(state.camera, point, factor, bounds));
+  } else {
+    state.camera.distance = clamp(state.camera.distance * factor, bounds.minimum, bounds.maximum);
+  }
+  draw();
 }, { passive: false });
 canvas.addEventListener("keydown", (event) => {
-  const pan = event.shiftKey, amount = pan ? .06 : .08;
+  const pan = event.shiftKey, amount = pan ? .06 : .08, bounds = zoomBounds(), limit = pitchLimit();
   if (event.key === " ") togglePlayback();
   else if (event.key === "ArrowLeft") pan ? state.camera.target[0] -= amount : state.camera.yaw += amount;
   else if (event.key === "ArrowRight") pan ? state.camera.target[0] += amount : state.camera.yaw -= amount;
-  else if (event.key === "ArrowUp") pan ? state.camera.target[2] += amount : state.camera.pitch = clamp(state.camera.pitch + amount, -1.45, 1.45);
-  else if (event.key === "ArrowDown") pan ? state.camera.target[2] -= amount : state.camera.pitch = clamp(state.camera.pitch - amount, -1.45, 1.45);
-  else if (["+", "="].includes(event.key)) state.camera.distance = clamp(state.camera.distance * .9, 1.35, 12);
-  else if (["-", "_"].includes(event.key)) state.camera.distance = clamp(state.camera.distance * 1.1, 1.35, 12);
+  else if (event.key === "ArrowUp") pan ? state.camera.target[2] += amount : state.camera.pitch = clamp(state.camera.pitch + amount, -limit, limit);
+  else if (event.key === "ArrowDown") pan ? state.camera.target[2] -= amount : state.camera.pitch = clamp(state.camera.pitch - amount, -limit, limit);
+  else if (["+", "="].includes(event.key)) state.camera.distance = clamp(state.camera.distance * .9, bounds.minimum, bounds.maximum);
+  else if (["-", "_"].includes(event.key)) state.camera.distance = clamp(state.camera.distance * 1.1, bounds.minimum, bounds.maximum);
+  else if (isFleet() && ["1", "2", "3", "4"].includes(event.key)) setPreset(["top", "oblique", "edge", "follow"][Number(event.key) - 1]);
   else return;
+  if (pan) leaveFollow();
   event.preventDefault(); draw();
 });
 canvas.addEventListener("webglcontextlost", (event) => {
@@ -411,14 +601,78 @@ canvas.addEventListener("webglcontextlost", (event) => {
 });
 canvas.addEventListener("webglcontextrestored", () => {
   state.contextLost = false;
-  try { createRenderer(); draw(); } catch (error) { fatal(error); }
+  try { createRenderer(); if (isFleet()) updateFleetSelection(); draw(); } catch (error) { fatal(error); }
 });
 new ResizeObserver(() => draw()).observe(canvas);
-window.addEventListener("pagehide", () => { stopPlayback(); state.renderer?.dispose(); state.renderer = null; }, { once: true });
+window.addEventListener("pagehide", () => { stopPlayback(); disposeRenderers(); }, { once: true });
+
+/** Read-only hooks for browser tests and tooling; never used by the UI itself. */
+window.viewerDebug = Object.freeze({
+  get dataset() { return state.dataset; },
+  get fleetAvailable() { return state.fleetAvailable; },
+  get epoch() { return state.fleetView?.view.epoch ?? null; },
+  get selectedShip() { return state.fleetView?.view.selected ?? null; },
+  get hover() { return state.fleetView?.view.hover?.type ?? null; },
+  get camera() { return { ...state.camera, target: [...state.camera.target] }; },
+  get preset() { return state.preset; },
+  get following() { return state.fleetView?.view.follow ?? false; },
+  get exaggeration() { return state.fleetView?.exaggeration ?? null; },
+  get transitioning() { return state.transition != null || inertiaActive(state.velocity); },
+  /** Rendering facts for the browser check: context attributes, depth state, instanced body count, tube sides. */
+  get glInfo() {
+    const renderer = state.fleetView?.renderer ?? state.renderer;
+    const gl = renderer?.gl;
+    if (!gl) return null;
+    const attributes = gl.getContextAttributes();
+    return {
+      antialias: attributes.antialias, depth: attributes.depth, depthTest: gl.isEnabled(gl.DEPTH_TEST),
+      devicePixelRatio: Math.min(devicePixelRatio || 1, 2), drawingBuffer: [gl.drawingBufferWidth, gl.drawingBufferHeight],
+      instances: state.fleetView?.renderer.lastInstanceCount ?? 0, tubeSides: state.fleetView?.scene.ships[0]?.tube.sides ?? 0,
+    };
+  },
+  eventScreenPosition(ship, index) { return state.fleetView?.eventScreenPosition(ship, index) ?? null; },
+  shipScreenPosition(ship) { return state.fleetView?.shipScreenPosition(ship) ?? null; },
+  earthScreenPosition() { return state.fleetView?.earthScreenPosition() ?? null; },
+  /** Finish any camera transition or inertia immediately and redraw (deterministic screenshots). */
+  settle() {
+    if (state.transition) { Object.assign(state.camera, state.transition.to); state.transition = null; }
+    state.velocity = { yaw: 0, pitch: 0 }; draw();
+  },
+});
+
+/** Optional GTOC12 dataset: present only after `npm run import-gtoc12` (data/gtoc12 is ignored by git). */
+async function probeFleetDataset() {
+  let manifest = null;
+  try {
+    const response = await fetch("./data/gtoc12/manifest.json", { cache: "no-store" });
+    if (response.ok) manifest = await response.json();
+    state.fleetAvailable = manifest?.dataset_kind === "gtoc12-fleet";
+  } catch { state.fleetAvailable = false; }
+  const option = $("dataset-select").querySelector('option[value="gtoc12"]');
+  option.disabled = !state.fleetAvailable;
+  const summary = manifest?.summary;
+  option.textContent = state.fleetAvailable
+    ? `GTOC12 fleet${summary ? ` (${summary.ships} ships, ${summary.unique_asteroids} asteroids, ${summary.official_total_mass_kg} kg)` : ""}`
+    : "GTOC12 fleet — not installed";
+  if (!state.fleetAvailable) $("dataset-help").textContent = "GTOC12 dataset not installed: run `npm run import-gtoc12` (see README) to add data/gtoc12/.";
+}
 
 try {
   const response = await fetch("./data/trajectories.json", { cache: "no-store" });
   if (!response.ok) throw new Error(`Trajectory archive request failed: HTTP ${response.status}`);
   state.data = await response.json();
-  createRenderer(); renderInventory(); draw();
+  await probeFleetDataset();
+  const params = new URLSearchParams(location.search);
+  const wantsFleet = params.get("dataset") === "gtoc12" && state.fleetAvailable;
+  if (wantsFleet) {
+    const ship = params.has("ship") ? Number(params.get("ship")) - 1 : null;
+    await setDataset("gtoc12", {
+      ship: Number.isInteger(ship) && ship >= 0 ? ship : null, epoch: params.has("epoch") ? Number(params.get("epoch")) : null,
+      focus: params.get("focus") === "1", follow: params.get("follow") === "1", preset: params.get("preset"),
+      exaggeration: params.has("z") ? Number(params.get("z")) : null,
+    });
+  } else {
+    applyDatasetVisibility(); createRenderer(); renderInventory(); draw();
+    if (state.fleetAvailable) $("dataset-help").textContent = "Verified archived P1/P2 evidence records, each in its own physical frame.";
+  }
 } catch (error) { fatal(error); }

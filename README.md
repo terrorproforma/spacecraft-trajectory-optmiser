@@ -49,6 +49,10 @@ See:
 
 - [`docs/PROJECT_BRIEF.md`](docs/PROJECT_BRIEF.md)
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/COMPARATIVE_SOLVER_CAMPAIGN.md`](docs/COMPARATIVE_SOLVER_CAMPAIGN.md)
+- [`docs/LITERATURE_TARGETS.md`](docs/LITERATURE_TARGETS.md)
+- [`docs/REFERENCE_REPRODUCTION_REPORT.md`](docs/REFERENCE_REPRODUCTION_REPORT.md)
+- [`docs/BENCHMARK_PROTOCOL.md`](docs/BENCHMARK_PROTOCOL.md)
 - [`docs/MILESTONES.md`](docs/MILESTONES.md)
 - [`docs/PDHCG_INTEGRATION.md`](docs/PDHCG_INTEGRATION.md)
 - [`docs/adr/0001-pdhcg-native-canonical-form.md`](docs/adr/0001-pdhcg-native-canonical-form.md)
@@ -62,7 +66,12 @@ src/spacepdhcg/
   models/       spacecraft dynamics and benchmark models
   backends/     persistent CPU references and accelerator adapters
   benchmarks/   reproducible latency, throughput and accuracy experiments
+  planner/      user-facing planner (schema, CLI/API, CPU reference, viewer export)
+  resources.py  locates frozen benchmark/spec assets (override, source checkout, wheel copy)
+  _data/        byte-identical mirror of those assets so installed wheels can run every command
 
+cpp/cuda/tools/spacepdhcg_plan.cu   native planner executable on the device SCvx stack
+examples/planner/                   one runnable problem document per family
 tests/          algebraic, solver and trajectory feasibility tests
 docs/           research scope, decisions, architecture and milestone gates
 ```
@@ -77,8 +86,37 @@ spacepdhcg-cw-benchmark --repeats 20 --intervals 40
 spacepdhcg-cw-socp-benchmark --repeats 20 --intervals 40
 ```
 
+## Planner
+
+`spacepdhcg plan problem.json --output out/` plans one trajectory (HCW rendezvous, 3-DoF or
+6-DoF powered descent, low-thrust transfer) on the validated single-GPU SCvx stack and emits
+node/dense histories, per-iteration telemetry, timings, and an independent-replay certificate.
+`--backend cpu_reference` runs the clearly labelled Clarabel SCvx reference over the same
+native transcription. See [`docs/PLANNER.md`](docs/PLANNER.md) and
+[`examples/planner/README.md`](examples/planner/README.md).
+
 The upstream PDHCG package is intentionally optional because it requires a compatible NVIDIA CUDA environment. CPU installation and CI do not import it.
+
+## Frozen assets from an installed wheel
+
+`spacepdhcg literature …`, `spacepdhcg gtoc12 …` and the other tools read their frozen JSON inputs
+(literature registry/provenance/pins and profiles, GTOC12 rules/pins/reduced-instance rule, G4
+policy/applicability/claim core with hash locks, campaign scopes, paper matrices, the provenance
+schema) through `spacepdhcg.resources`, which looks in this order:
+
+1. `SPACEPDHCG_BENCHMARKS_DIR` — an explicit `benchmarks/` directory; when set it is authoritative
+   for every `benchmarks/...` asset (a missing file there is an error, never a silent fallback);
+2. the source checkout containing the imported module (development trees, editable installs);
+3. the copies packaged in the wheel under `spacepdhcg/_data/`.
+
+`src/spacepdhcg/_data` is maintained by `python scripts/sync_packaged_assets.py` (`--check` in CI and
+`tests/test_resources.py` prove every copy is byte-identical to the repository original). Large
+pinned downloads are never packaged: GTOC12 data goes to `SPACEPDHCG_GTOC12_DATA`, the checkout's
+`benchmarks/gtoc12/data`, or `$SPACEPDHCG_CACHE_DIR`/`~/.cache/spacepdhcg/gtoc12` (fetch with
+`spacepdhcg gtoc12 fetch`); literature artefacts use `SPACEPDHCG_LITERATURE_CACHE`.
 
 ## Development status
 
 Research software under active construction. Numerical results are not claimed until they are reproduced by committed benchmark configurations, independent feasibility checks and CI artifacts.
+
+- [`docs/GTOC12_TRACK.md`](docs/GTOC12_TRACK.md) — GTOC12 asteroid-mining replay (pins, exact verifier, reduced instance, scored routes)

@@ -904,3 +904,382 @@
   - G4 is scientifically authorised, but launch is blocked until a new official capability is
     generated for the final clean report descendant. The old b0cd570 capability was not reused.
   - All archives remain local-only; no immutable URI exists.
+
+## 2026-09-03 02:45 AEST
+
+- Task summary:
+  - Built the user-facing planner (`spacepdhcg plan` CLI + `spacepdhcg.planner.plan()`) on the
+    validated single-GPU device SCvx stack in the isolated worktree
+    `/home/angus/worktrees/spacepdhcg-planner` (`feat/planner-cli` from `b6afb49`).
+- Changes:
+  - `cpp/include/spacepdhcg/planner/{json,problem,families,describe}.hpp`: strict JSON model,
+    schema-1.0.0 problem parser with the native default table, and per-family adapters that build
+    the frozen HCW/3-DoF/6-DoF/low-thrust transcriptions from user values, emit the device layout
+    metadata, generate dynamics-consistent references, replay controls (RK4 / exact HCW ZOH), and
+    evaluate device-equivalent path/terminal metrics.
+  - `cpp/cuda/tools/spacepdhcg_plan.cu`: native executable running the persistent SCvx driver
+    (pure_qoco / pdhcg / pdhcg_recovery), independent host replay, certificate gates, strict JSON
+    result, deterministic exit codes (0/2/3/64/65/66/70), optional wall-clock cancellation.
+  - `cpp/src/c_api.cpp` + `c_api.h`: `spacepdhcg_planner_*` transcription ABI (structure, values,
+    reference, rollout, evaluate, describe, defaults) used by the Python CPU reference.
+  - `src/spacepdhcg/planner/`: JSON Schema, unit normalisation, native runner, Clarabel CPU
+    reference SCvx loop (device acceptance/trust/convergence rules, relative KKT audit), PlanResult
+    writers (JSON/CSV/summary), viewer export bundle, CLI; `web/trajectory-viewer/scripts/check.mjs`
+    now validates `dataset_kind: planner-export` while keeping every archive assertion.
+  - `examples/planner/` (four problems + README), `docs/PLANNER.md`, README section, native smoke
+    tests `planner_problem_smoke` / `planner_c_api_smoke`, Python tests (schema, CPU reference,
+    viewer export, gated GPU).
+- Validation:
+  - Ruff lint/format clean (143 files). Python: 366 passed, 13 skipped (GPU/QOCO gated).
+  - Native host Release, Debug, Debug+ASan/UBSan Werror builds: 47/47 tests each. CUDA 12.8
+    `sm_120` Release and Debug Werror builds of `spacepdhcg_plan` succeeded.
+  - GPU correctness so far (before the other worker's G4 claim core started at 01:26 AEST):
+    3-DoF hover pure_qoco N=20 certified (objective 0.492694362, 3 outer, terminal 3.3e-11,
+    13.0 s); HCW pdhcg N=20 certified (0.28 s). CPU reference certifies all four examples in
+    < 1 s each; CPU vs GPU on the identical hover problem: objective rel. diff 1e-7, states within
+    6 mm.
+  - Viewer export `npm run check` passes for the planner export and still passes for the archive.
+- Follow-up notes / risks:
+  - My probes overlapped the other worker's `--g4-session` from ~01:40 to 02:07 AEST (see
+    scratchpad); their groups in that window should be treated as contaminated.
+  - Wheel check: `python -m build --wheel` + fresh venv install; `spacepdhcg validate`, `defaults`,
+    `plan --backend cpu_reference` (low thrust certified in 0.72 s) and the honest GPU-unavailable
+    exit 66 all passed from the packaged wheel (schema JSON packaged).
+  - Commit `27569ad` (planner), follow-up commit with summary rendering and memory writeback.
+  - BLOCKED (GPU occupied): from 01:26 AEST the other worker ran G4 claim-core sessions
+    (`device_scvx_integration_test --g4-session`), a deadline repro from 03:00, and at ~03:54 the
+    full `run_g4_campaign.py run --claim-core` campaign with two session processes. Waiting
+    windows: 02:07-03:11 and 03:11-04:06 with pid-level `gpu_free.sh` polling; the GPU never
+    became free. Not executed this session: `SPACEPDHCG_PLANNER_GPU_TESTS=1 pytest
+    tests/test_planner_gpu.py` (6-DoF and low-thrust GPU plans, warm start on GPU, backend
+    selection, native failure reporting), `compute-sanitizer --tool memcheck spacepdhcg_plan`,
+    and the CUDA CTest subset. `/home/angus/planner-scratch/gpu_validation.sh {tests,memcheck,
+    sanitizers,examples,ctest}` runs each stage after `gpu_free.sh` reports FREE.
+
+## 2026-09-03 02:35 AEST
+
+- Task summary:
+  - Turned the comparative-campaign specification into runnable Phase 0-1 targets on
+    `feat/literature-targets` (worktree `/home/angus/worktrees/spacepdhcg-literature`, based on
+    `b6afb49`); integration and planner worktrees untouched.
+- Changes:
+  - `715c1db` spec import (user's campaign doc, literature baselines, matrix/protocol/outline
+    edits, manifest tests; text verbatim, CRLF normalised).
+  - `196b3ba` G7 contracts accept both the sealed and the P2-F-extended Paper 2 matrix digests;
+    CPU ledger counts updated (2,684 / 16,360).
+  - `4f92133` `src/spacepdhcg/literature/` (provenance, external sources, registry, free-final-time
+    SCvx core, P1-C/P1-D/P1-D-MC/P1-E/TOPS/GTOPX/GTOC runners, report, CLI), `spacepdhcg`
+    console script, `benchmarks/literature/*` (targets, profiles, provenance store with 126
+    records, external pins, frozen TOPS/GTOC selections, seeded Chari samples), schema, six test
+    modules.
+  - Docs: `docs/LITERATURE_TARGETS.md`, `docs/REFERENCE_REPRODUCTION_REPORT.md` (+ JSON twin and
+    `results/literature/*.json`), Track L in `docs/ACTIVE_SINGLE_GPU_ROADMAP.md`, README links,
+    campaign-doc status section.
+- Validation:
+  - Ruff check (whole repository) and Ruff format on all touched files: clean.
+  - Full Python suite: 354 passed, 4 skipped, 1 environmental failure
+    (`test_native_packaging`, no native library in the fresh venv); the same test passes with
+    `SPACEPDHCG_NATIVE_LIBRARY` pointing at an existing build (2 passed). Literature tests: 46.
+  - `scripts/literature/build_provenance.py --check`: store up to date; `git diff --check` clean.
+  - Reproductions (CPU, RTX 5090 owned by a G4 session all night): Acikmese-Ploen 2007 lossless
+    SOCP 400.63 kg vs 399.5 kg (+1.13 kg, 0.28 %); Blackmore 2010 case 1 400.09 vs 399.4 kg;
+    repository Euler SCvx 405.65 / 413.43 kg (gap); Szmuk 2018 free-final-time t_f = 3.3901 UT
+    with all ten guesses within 0.00054 UT (published: within 0.01 UT); Earth-Mars 603.925 vs
+    603.935 kg; Earth-Dionysus not converged (gap); TOPS P4 converged, P3/P1 iteration-limited,
+    CR3BP unsupported; GTOPX Cassini1/Rosetta/Messenger-reduced/GTOC1 reproduce the official
+    objectives to printed precision (three exactly); GTOC12 official verifier accepts the bundled
+    example and both published solutions (338 asteroids / 27,045.3 kg; 356 / 28,975.1 kg);
+    GTOC9 examples 1 and 2 validate under the re-implemented rules 4-19; GTOC5 scoring blocked.
+  - No native C++/CUDA transcription or kernel was changed, so no Release/Debug Werror, CUDA
+    parity, or sanitizer pass was run; no GPU workload was launched.
+- Follow-up notes / risks:
+  - GPU legs (P1-C pure-QOCO, P1-D-MC persistent batch) blocked; commands recorded in the report.
+  - Native `sigma` free-final-time kernels deferred (topology and policy-hash impact).
+  - Multi-revolution low-thrust convergence (Dionysus, TOPS P3) needs a better initial guess.
+
+## 2026-09-03 05:40 AEST
+
+- Task summary:
+  - Closed the three substantive gaps of the literature reproduction on `feat/literature-targets`
+    (`/home/angus/worktrees/spacepdhcg-literature`): repository SCvx fuel gap, multi-revolution
+    low thrust, native free final time; added preflight-gated deferred GPU legs.
+- Changes:
+  - `d81c528` accurate 3-DoF option: variational RK4 (`rk4`, `integration_substeps`),
+    multiple-shooting merit with CQP-consistent defect penalty, objective-stall stop,
+    `accept_almost_solved`; frozen forward-Euler default and fixture hashes untouched; literature
+    profiles select the accurate option; regression tests assert gap <= envelope.
+  - `57cee5c` MEE low-thrust formulation (`low_thrust_mee.py`): revolution bookkeeping, spiral
+    seed, trust-weight continuation, complex-step Jacobians, Cartesian replay, revolution sweep;
+    Dionysus and TOPS profiles select `formulation: mee`.
+  - `1fa99ae` native `pd3_fft`/`pd6_fft` free-final-time topologies (sigma column, tangent rule,
+    Szmuk thrust-arm/tilt/gimbal/rate cones), C API, ctypes bridge + outer loop, Szmuk native
+    runner, CUDA time-dilated variational + sigma CSC kernels and parity test, C++ smoke tests.
+  - `8e18b93` `gpu_preflight.py`, `literature gpu-preflight|gpu-run`, deferred P1-C QOCO-GPU leg,
+    P1-D-MC pure-QOCO `pd6_fft` batch, report headlines, tests.
+  - Report/docs commit: regenerated `docs/REFERENCE_REPRODUCTION_REPORT.md` + JSON and the four
+    re-run records; `docs/LITERATURE_TARGETS.md`, roadmap Track L updated.
+- Validation:
+  - Ruff check + format clean on `src` and `tests`.
+  - Full Python suite: 388 passed, 4 skipped (native library from the Release build).
+  - Native Release and Debug `-Werror`: 47/47 ctest each (includes the two new smoke tests).
+  - CUDA workspace built for `sm_120` (nvcc 12.8) including `device_time_dilated_test`; not run.
+  - Before/after fuel: Acikmese-Ploen 2007 405.65 -> 399.36 kg (lossless 400.63, published
+    399.5); Blackmore 2010 case 1 413.43 -> 398.84 kg (lossless 400.09, published 399.4).
+  - Dionysus 2717.43 kg vs 2718.33 kg (envelope 2 kg); TOPS P3 converged (2 rev), TOPS P1
+    converged (1 rev), zero-revolution P1 recorded infeasible.
+  - Szmuk 2018: CPU core t_f 3.39008 UT; native `pd6_fft` 3.39254 UT (gap 0.0025 UT, envelope
+    0.01 UT), fuel 0.14286 vs 0.14263 UM.
+- Follow-ups / risks:
+  - GPU owned by the G4 campaign (`--g4-server 600`, `--g4-session`) throughout: CUDA parity
+    test, sanitizer pass, and both literature GPU legs deferred behind the preflight.
+  - P1-D-MC CPU batch convergence probability stays low (FOH core iteration limit on dispersed
+    states); persistent device SCvx batch still has no arbitrary-initial-state entry point.
+
+## 2026-09-03 02:40 AEST
+
+- Task summary:
+  - GTOC12 replay track end-to-end on `feat/gtoc12-asteroid-mining` (worktree
+    `/home/angus/worktrees/spacepdhcg-gtoc12`, base `96781349`, CPU only).
+- Changes:
+  - `benchmarks/gtoc12/`: `pins.json` (URLs, sizes, SHA-256 for nine official files),
+    `gtoc12_rules.json` (machine-readable rules), `reduced_instance_v1.json` (preregistered rule).
+  - `scripts/gtoc12/fetch_gtoc12_data.py`: checksummed fetch into the ignored data directory.
+  - `src/spacepdhcg/gtoc12/`: constants, data, ephemeris, solution format, independent verifier,
+    official-binary wrapper, Lambert (NumPy port + native ctypes parity), screening, reduced
+    instance, beam search, ZOH SCvx low-thrust arcs, G7-adapter pipeline, viewer export, CLI.
+  - `spacepdhcg` console script (`spacepdhcg gtoc12 verify|fetch|reduced-instance|run|export-viewer`).
+  - Imported the user's `docs/COMPARATIVE_SOLVER_CAMPAIGN.md` and `benchmarks/literature_baselines.json`.
+- Validation:
+  - Official verifier on archived references: 39/356/28975.1 kg, 37/338/27045.3 kg,
+    36/320/26062.6 kg; independent verifier reproduces every per-asteroid mass to 0.0 kg and the
+    fixed-bonus weighted scores (24474.15 for the 39-ship file vs published 24474.16).
+  - Lambert NumPy vs native kernel: 1e-13 km/s over 300 short/long-way legs.
+  - First pipeline route (reduced instance, 2 asteroids): official "Check successfully!"
+    195.044 kg; independent 195.04449 kg, max propagation error 0.91 km / 0.15 mm/s.
+  - Ruff clean; 24 fast GTOC12 tests pass; full suite launched in background.
+- Follow-up notes / risks:
+  - Reduced-instance search currently completes mostly one- and two-asteroid chains.
+  - Full-catalogue screening and docs/GTOC12_TRACK.md are the next commits.
+
+## 2026-09-03 03:35 AEST
+
+- Task summary:
+  - Fixed the route search and emitter, then produced officially verified GTOC12 solutions on the
+    preregistered reduced instance and on the full catalogue.
+- Changes:
+  - `search.py`: phase-drift-aware neighbour proxy, deploy waits, 600-day return/collection
+    windows, return-feasibility pruning, per-set diversity, vectorised first level.
+  - `pipeline.py`: camp-then-collect visits emit a single collect event at departure.
+  - `verifier.py`: 1 uN thrust slack (JPL reference file), 1 uday sample-interval slack.
+  - `docs/GTOC12_TRACK.md`, `benchmarks/gtoc12/reference_reproductions.json`, committed compact
+    result artifacts under `results/gtoc12/`.
+- Validation:
+  - Official verifier: reduced-v1-run2 1 ship / 4 asteroids / 253.744 kg (fixed bonus 249.059 kg),
+    47 s wall, 8 refined arcs; full-catalogue-run1 1 / 3 / 249.035 kg (fixed bonus 202.995 kg),
+    963 s wall; reduced-v1-run1 1 / 2 / 195.044 kg.
+  - Independent verifier agrees per asteroid to 1e-10 kg; max propagation error 0.46 km, 8e-5 m/s.
+  - Full pytest: 341 passed, 4 skipped, 1 environmental failure (native wheel absent); GTOC12
+    verifier tests (all three reference reproductions) pass after the thrust-slack fix.
+- Follow-up notes / risks:
+  - Scores are ~1/3 of a single archived reference ship; the search, not the refinement, is the
+    bottleneck at catalogue scale.
+
+## 2026-09-03 04:50 AEST
+
+- Task summary:
+  - Raised the officially verified GTOC12 scores by rebuilding the route search around the
+    structure of the archived JPL/Antipodes solutions, adding greedy fleets and bounded memory.
+- Changes:
+  - `gtoc12/references.py`: decode any solution file into per-ship itineraries and fleet
+    statistics (roles from global visit order, TOF/propellant/transfer angle/revolutions,
+    cooperative vs self-cleaning, launch spread, element spreads).
+  - `gtoc12/proxies.py`: Lambert-free phasing/Edelbaum ΔV pre-ranker (e/i vectors) and a
+    mass-consistent thrust-authority test; `scripts/gtoc12/proxy_validation.py` writes the
+    proxy-error distributions on 164 certified legs and 1882 reference hops.
+  - `gtoc12/search.py`: position-space candidate generation (Δa, Δe-vector, relative
+    inclination, phase at departure), element-band pool filter with sparse fallback,
+    collect-phase propellant reserve, greedy backward collection order with reverse fallback and
+    escalating wait penalty, separate collect-hop TOF grid (90-720 d), per-first-asteroid
+    diversity, block-wise Earth-leg screening, wall-clock budget with partial results, failure
+    reasons retained, asteroid exclusion for fleets.
+  - `gtoc12/fleet.py` + `cli.py --ships/--search-budget-seconds/--pool-*`: greedy fleet
+    construction, fleet-rule check, assembled multi-ship file verified as a whole, failed-leg
+    skipping across refine candidates, peak-RSS reporting.
+  - `docs/GTOC12_TRACK.md`: reference-structure table, proxy validation table, results table,
+    rejected variants, limitations and next bottleneck.
+- Validation:
+  - Official `GTOC12_Verify` "Check successfully!" on every emitted file; independent verifier
+    agrees per asteroid to 1e-10 kg.
+  - reduced-v1: 314.442 kg (5 asteroids, 10 arcs, 228 s, 0.55 GB) — was 253.744 kg.
+  - full catalogue single ship: 548.282 kg (8 asteroids, 16 arcs, 303 s, 0.66 GB) — was 249.035 kg
+    at 11.2 GB.
+  - 3-ship greedy fleet: 1394.11 kg (548.28 + 442.22 + 403.61; 20 asteroids, 40 arcs, 867 s,
+    0.77 GB; fixed-bonus 1318.12 kg; rule 3 ≤ 12.8).
+  - Proxies: refined/proxy propellant median 0.96 (p5 0.66, p95 1.08); refined/Lambert ΔV
+    median 1.165 (p95 1.49); reference true/Lambert 1.16 (p95 1.41), Spearman 0.90.
+  - `pytest`: 349 passed, 4 skipped (native packaging test deselected: no cmake wheel); Ruff clean.
+- Follow-up notes / risks:
+  - Chains stop at 8 asteroids because the collection tour no longer fits the window
+    (`camp_negative`), with 230-430 kg propellant unspent; cluster-first generation and joint
+    re-timing are the next levers. Greedy fleets thin the clusters for ships 2-3.
+  - `full_catalogue_search2` and `fleet3_full_catalogue` artifacts come from an intermediate
+    commit state (documented); `reduced_v1_search3` and `fleet3_full_catalogue_v2` reproduce from
+    HEAD.
+
+## 2026-09-03 06:20 AEST
+
+- Task summary:
+  - Consolidated `feat/planner-cli` (c74fdb7), `feat/literature-targets` (f6e8140) and
+    `feat/gtoc12-asteroid-mining` @ fa91b43 into `integration/single-gpu-v2-candidate` (worktree
+    `/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 63271d5 = current tip of
+    `integration/single-gpu-v1`, which already contains 9678134). The running G4 claim core
+    (`spacepdhcg-single-gpu-integration`, 9a4cbea capability `e546583b…`) was not touched; no GPU
+    use; `/home/angus/.spacepdhcg-gpu.lock` never created.
+- Changes (all committed as SpacePDHCG-Integration via `GIT_*` env; no push/amend/reset):
+  - `2e7548b` merge planner (memory files additive).
+  - `da0a96b` merge literature: three-way union of the appended `c_api.h`/`c_api.cpp` ABI blocks;
+    `pyproject` console script → `spacepdhcg.cli:main`; `planner.cli.add_commands()`; umbrella
+    `src/spacepdhcg/cli.py`; `src/spacepdhcg/__main__.py` (identical to gtoc12); `tests/test_cli_dispatch.py`.
+  - `2f4be21` merge gtoc12 @ fa91b43: dispatcher gains `gtoc12`, duplicate `pyproject` key dropped,
+    `COMPARATIVE_SOLVER_CAMPAIGN.md` appendix kept + GTOC12 pointer; `literature_baselines.json`
+    identical on both sides (deduplicated spec import).
+  - `f55a309` `docs/SINGLE_GPU_V2_CANDIDATE_REPORT.md`, `docs/GPU_DEFERRED_VALIDATION_V2.md`,
+    `benchmarks/gpu_deferred_validation_v2.json`, `tests/test_gpu_deferred_manifest.py`.
+- Validation (CPU only, `CUDA_VISIBLE_DEVICES=''`; evidence in `build-v2-verification/`):
+  - Ruff check/format clean (262 files). `cpp` RelWithDebInfo/Debug/ASan+UBSan Werror: 49/49 CTest
+    each (new planner + free-time smoke tests included); `cpp/native` 8/8 ×3; CMake consumer 1/1.
+  - Schema `--check` (G7 schemas, G4 policy header) pass.
+  - Full Python suite with the fresh library, pinned **CPU** QOCO (09f0495 + abstol patch, builtin
+    algebra) and GTOC12 data: 490 passed, 23 skipped (GPU-gated, offline artefacts, node).
+    Subsets: G4 contracts 67 passed (claim-core `40dc2174…`, policy `9ab3b444…`, applicability
+    `1c4e0d51…` unchanged), G6 freeze 37 passed, GTOC12 39 passed incl. official binary
+    reproduction, literature 81 passed / 11 offline skips, planner viewer export 4/4 with node.
+  - Wheel/sdist built; fresh venv import + ABI (`spacepdhcg_planner_create`, `spacepdhcg_pd3_fft_create`,
+    `spacepdhcg_pd6_fft_create`) + CLI (`--help`, `validate`, `defaults hcw`, `plan --backend
+    cpu_reference`, `gtoc12 --help`, `python -m spacepdhcg`, exit 66 without GPU) pass.
+  - CUDA sm_120 Release + Debug configure/build of all 175 targets (pinned PDHCG 167c8b7) pass;
+    68-test CTest inventory recorded, not executed.
+  - Web viewer: `npm run check` pass (Linux node 20, Windows node 24); `npm test` 6/6 on Windows
+    node 24 (suite is Windows-specific; 4/6 on Linux with two environment-only failures).
+  - Frozen artefacts blob-identical to 63271d5 (fixed-time transcription headers, persistent_pdhcg.cu,
+    device_scvx_integration_test.cu, recovery_test.cu, G4 JSON + .sha256, paper2_instances.json);
+    `device_scvx.cu` +370/−0; `device_scvx_c_api.h` +49 with CRLF→LF only.
+- Follow-up notes / risks:
+  - Wheel consumers cannot run `spacepdhcg literature …` / `gtoc12 …` (registries resolved via
+    `Path(__file__).parents[3]`; pre-existing on both branches).
+  - Promotion after the claim-core finish script:
+    `cd /home/angus/worktrees/spacepdhcg-single-gpu-integration && test -z "$(git status --porcelain=v1)" && test "$(git rev-parse HEAD)" = 63271d58b78df343c1ae694525e460db31696f5d && git merge --ff-only integration/single-gpu-v2-candidate`.
+  - Later commits on `feat/gtoc12-asteroid-mining` (after fa91b43) are not in the candidate.
+
+## 2026-09-03 08:05 AEST
+
+- Task summary:
+  - Fixed the installed-wheel defect on `integration/single-gpu-v2-candidate`
+    (`/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 2c8c651): `spacepdhcg literature …`,
+    `spacepdhcg gtoc12 …` and `spacepdhcg-orbitweaver-g7 validate-matrix` resolved `benchmarks/`
+    through `Path(__file__).parents[3]`. CPU only; `CUDA_VISIBLE_DEVICES=""`; the G4 integration
+    worktree and the GPU were not touched; `/home/angus/.spacepdhcg-gpu.lock` never created.
+- Changes (commit `b20e2ea`, author SpacePDHCG-Integration via `GIT_*` env; no push/amend/reset):
+  - `src/spacepdhcg/resources.py` (new): `asset_path()` resolves repository-relative names in the order
+    `$SPACEPDHCG_BENCHMARKS_DIR` (authoritative for `benchmarks/…`; missing file → `AssetNotFound`
+    naming the variable) → source checkout containing the module → `spacepdhcg/_data` packaged copies;
+    `AssetNotFound` lists every searched location; `locate_directory()`, `cache_root()`
+    (`$SPACEPDHCG_CACHE_DIR` / XDG / `~/.cache/spacepdhcg`), `output_root()`, `compare_packaged_assets()`.
+  - `src/spacepdhcg/_data/` (new, 34 files, 270,583 B + README): literature registry/provenance/
+    external sources/11 profiles/Chari samples/TOPS selection/GTOC subsets, GTOC12 rules/pins/
+    reduced-instance/reference reproductions, G4 policy/applicability/claim core + `.sha256` locks,
+    campaign scopes, paper1/paper2 matrices, paper2 instances, provenance schema. Maintained by
+    `scripts/sync_packaged_assets.py` (`--check`). No large data (gtoc12/data, downloads) packaged.
+  - Resolver adoption: `literature/{registry,external_sources,provenance,pd6_monte_carlo,report,cli}.py`,
+    `gtoc12/{data,reduced_instance,lambert,cli}.py`, new `gtoc12/fetch.py` (fetch logic moved from
+    `scripts/gtoc12/fetch_gtoc12_data.py`, now a thin wrapper), `planner/viewer_export.py`,
+    `orbitweaver/cli.py`. Module path constants became functions (`registry_path()`, `store_path()`,
+    `rules_path()`, `default_rule_path()`, …); `load_rules()` added; GTOC12 data dir falls back to
+    `<cache>/gtoc12`; `NativeLambert` falls back to the packaged `libspacepdhcg`.
+  - Tests: `tests/test_resources.py` (30 tests: order, override authority, error messages, SHA-256
+    byte identity incl. hash locks, sync-script drift/repair, commands from a simulated installed
+    layout); `test_gtoc12_rules_and_data.py`, `test_gtoc12_pipeline.py`, `test_literature_provenance.py`
+    and `scripts/literature/build_provenance.py` moved to the new accessors.
+  - Docs: README (layout + "Frozen assets from an installed wheel"), `docs/GTOC12_TRACK.md`,
+    `docs/LITERATURE_TARGETS.md`, new `docs/WHEEL_ASSET_RESOLUTION_FIX.md`, candidate report follow-up
+    closed; `pyproject.toml` comment on `wheel.packages`.
+- Validation (evidence `build-v2-wheel-fix/`: `summary.tsv`, `summary-py.tsv`, `commands.txt`, logs):
+  - Ruff check/format clean (268 files); G7 schema, G4 policy header, provenance store and packaged
+    mirror `--check` pass.
+  - Full Python suite (`python -S -m pytest`, RelWithDebInfo library, pinned CPU QOCO, GTOC12 data):
+    527 passed, 23 skipped (550 collected; same GPU/offline/node skips). G4 contracts 67 passed; G6
+    freeze 37 passed; topology/handback/G7/G5 hash tests 85 passed, 1 skipped; GTOC12 39 passed;
+    literature 81 passed / 11 offline skips; planner+CLI+resources 92 passed / 11 skips.
+  - Frozen hashes unchanged: `sha256sum -c` OK for `g4_policy` (`9ab3b444…`), `g4_applicability`
+    (`1c4e0d51…`), `g4_h5_h6_claim_core` (`40dc2174…`); `git diff HEAD -- benchmarks/ experiments/
+    cpp/ papers/ web/` empty; mirror blobs identical to the originals.
+  - Wheel `e3f51456…` + sdist `26dd1a1e…` built; wheel audit (34 assets byte-identical, no
+    `gtoc12/data`, native lib present); a wheel built from the extracted sdist has identical `_data`.
+  - Fresh `uv` venv from `/tmp` with repo env unset: `--help`, `capabilities`, `validate`, `defaults hcw`,
+    `plan --backend cpu_reference` (certified), `literature list/status/provenance`, `literature report`
+    (exit 1, "no reproduction records yet"), `gtoc12 --help`, `gtoc12 fetch --help`, rules unit path,
+    missing-data message, `gtoc12 reduced-instance` (with `SPACEPDHCG_GTOC12_DATA`), `NativeLambert()`
+    via the packaged library, `tests/test_gtoc12_rules_and_data.py` + `test_gtoc12_verifier.py` against
+    the installed package (20 passed), `spacepdhcg-orbitweaver-g7 validate-matrix`,
+    `spacepdhcg-paper1 --help`, override semantics, installed `_data` byte-identical to the repository.
+- Follow-ups / risks:
+  - `literature run/report` from a wheel write below the working directory (documented).
+  - `web/trajectory-viewer` remains unpackaged (export omits viewer files unless
+    `SPACEPDHCG_VIEWER_SOURCE`).
+  - Memory files are past the rollover threshold; archive-first rollover due next consolidation.
+
+## 2026-09-04 01:40 AEST
+
+- Task summary:
+  - Visualised the verified GTOC12 fleet `fleet_master_v1` (15 ships, 109 asteroids, 7575.58 kg
+    official) in the standalone WebGL viewer and as static matplotlib figures; regenerated and
+    cross-checked the viewer export; extended the viewer for heliocentric multi-body mission data.
+    CPU only; GPU/G4 worktrees untouched; the `cluster_fleet_v4` run in the GTOC12 worktree was left
+    running (best fleet so far 6975.69 kg / 14 ships, below 7575.58, so nothing newer to show).
+- Changes (viewer on `integration/single-gpu-v2-candidate`; Windows mirror `feat/webgl-trajectory-viewer`
+  synced byte-identical modulo CRLF, v2 authoritative):
+  - New modules `web/trajectory-viewer/kepler.js` (GTOC12 Appendix 6.1 Kepler propagation, MJD
+    calendar), `webgl.js` (shared GL resources/shaders, ribbon `uWidth`), `dom.js`, `gtoc12.js`
+    (scene builder in AU, `FleetRenderer`, screen-space picking, ship panels, HTML event labels).
+  - `app.js`: dataset selector (archive / GTOC12) that degrades gracefully when `data/gtoc12/` is
+    absent (GET probe of `manifest.json`, disabled option, import hint); mission epoch timeline
+    64328–69807 with play/scrub; per-ship selection, focus and dimming; hover/click tooltip; deep
+    links `?dataset=gtoc12&ship=N&epoch=MJD&focus=1`; read-only `window.viewerDebug` hooks.
+  - `scripts/import-gtoc12.mjs` (`npm run import-gtoc12`): verifies the export manifest hash, the
+    pinned catalogue SHA-256, the `Result.txt` hash and `fleet.json` cross-references, checks every
+    replay/transcription series, classifies events (launch / deploy / collect / earth-return),
+    attaches pinned Keplerian elements for the 109 visited asteroids + Earth, cross-checks the JS
+    propagation against the exporter's 41,179 context points (max 3.5e-6 km) and writes the ignored
+    `data/gtoc12/{fleet.json,manifest.json}` (1.38 MB, exact samples/indices/hashes verbatim).
+  - `scripts/plot_gtoc12_fleet.py`: matplotlib ecliptic XY fallback (ruff clean).
+  - `scripts/check.mjs` (new DOM ids, module checks, colour-class parity, optional fleet dataset
+    validation), `scripts/browser-check.cjs` (absent-dataset degrade, fleet scene, timeline, focus,
+    hover tooltip, click-select, play, dataset switch, mobile; 15 s action timeouts; browser closed in
+    `finally`), tests `kepler.test.mjs`, `gtoc12-import.test.mjs`; `server.test.mjs` made
+    Linux-portable (`fileURLToPath`), `data.test.mjs` skips when the WSL source is unreachable
+    (`TRAJECTORY_SOURCE` override).
+  - README (GTOC12 dataset section with export/import/launch commands, controls, evidence semantics),
+    `.gitignore` (`web/trajectory-viewer/data/gtoc12/`), `package.json` 1.1.0.
+  - Screenshots in `web/trajectory-viewer/test-artifacts/`: `gtoc12-fleet-heliocentric.png`,
+    `gtoc12-timeline-mid-mission.png`, `gtoc12-ship4-hop-sequence.png`, `gtoc12-desktop-fullpage.png`,
+    `gtoc12-mobile.png`, matplotlib `gtoc12-fleet-ecliptic.png` and `gtoc12-fleet-ecliptic-ship4.png`;
+    archive screenshots and `browser-report.json` refreshed.
+- Validation:
+  - Export regenerated in 16 s with `PYTHONPATH=src .venv/bin/python -m spacepdhcg gtoc12 export-viewer
+    results/gtoc12/runs/fleet_master_v1/fleet/Result.txt --output results/gtoc12/viewer-exports/fleet_master_v1
+    --run-id fleet_master_v1_fleet` (ignored path; tracked `fleet/viewer/manifest.json` untouched).
+    Identical to the committed export apart from `generated_by_commit`/`source.commit` (eb4a5be vs
+    f8fa226); manifest source SHA-256 `61603bb4…7c35` = `Result.txt` = `fleet.json` viewer_manifest;
+    6,044,143 bytes; 15 ships, 7,622 replay points (≤ 512/ship), per-ship events equal the Result.txt
+    event lines, per-ship collected kg equal `fleet.json` to 1e-6, 109 unique asteroids equal the
+    `fleet.json` set, sum 7575.578 kg → official 7575.58 kg.
+  - `npm run check` passes on Windows node 24 and Linux node 20, with and without the dataset;
+    `npm test` 16/16 on both (Linux 14 pass + 2 environment skips without source env vars); ruff
+    check/format clean repo-wide; browser check (Chromium 151, SwiftShader WebGL2, 1440×1000 and
+    390×844): zero console errors/warnings, all 10 requests < 400, tooltip identifies
+    "Ship 4 · Deploy miner · asteroid 24684".
+- Follow-up notes / risks:
+  - The exporter's title constant still says "reduced-instance" for full-catalogue fleets (gtoc12
+    branch); the importer relabels the dataset title and keeps `export_title`.
+  - Whole-fleet end-of-mission view is dense by nature; mid-mission frames and per-ship focus are
+    the legible views. Re-run export + import for any fleet that beats fleet_master_v1.

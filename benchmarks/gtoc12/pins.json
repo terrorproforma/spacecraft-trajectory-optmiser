@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0.0",
+  "problem": "GTOC12 Sustainable Asteroid Mining",
+  "pinned_utc": "2026-09-02T15:30:00Z",
+  "licence_note": "Competition materials are published by the GTOC12 organisers (Tsinghua University) and mirrored on the ESA ACT GTOC portal for research use. No explicit open licence accompanies the files; they are pinned by URL and SHA-256 and are not redistributed in this repository.",
+  "data_directory": "benchmarks/gtoc12/data",
+  "sources": {
+    "tsinghua_api": "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=",
+    "tsinghua_file_list": "https://gtoc12.tsinghua.edu.cn/prod-api/common/getCompetitionFileList",
+    "esa_portal_page": "https://sophia.estec.esa.int/gtoc_portal/?page_id=1261",
+    "esa_uploads": "http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/"
+  },
+  "files": [
+    {
+      "name": "GTOC12_Problem.pdf",
+      "role": "problem_statement",
+      "bytes": 5042269,
+      "sha256": "fcdc2dadb39dfa4e768c8ee2f9acd33028b4be1f675df1352e8ae45e9a1fba54",
+      "urls": [
+        "http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Problem.pdf",
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=GTOC12_Problem.pdf"
+      ],
+      "version": "Released 19 June 2023"
+    },
+    {
+      "name": "GTOC12_Submission_Format.pdf",
+      "role": "solution_file_format",
+      "bytes": 235250,
+      "sha256": "cb6ebcdaa5da30002fd139b639bef4e413c9c7ac36be185c0274c5287d15de20",
+      "urls": [
+        "http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Submission_Format.pdf",
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=GTOC12_Submission_Format.pdf"
+      ],
+      "version": "Released 19 June 2023"
+    },
+    {
+      "name": "GTOC12_Asteroids_Data.txt",
+      "role": "asteroid_catalogue",
+      "bytes": 6840111,
+      "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675",
+      "urls": [
+        "http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Asteroids_Data.txt",
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=GTOC12_Asteroids_Data.txt"
+      ],
+      "rows": 60000,
+      "columns": ["ID", "epoch(MJD)", "a(AU)", "e", "i(deg)", "LAN(deg)", "argperi(deg)", "M(deg)"]
+    },
+    {
+      "name": "bonus_coefficients.txt",
+      "role": "fixed_post_competition_bonus",
+      "bytes": 3660000,
+      "sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21",
+      "urls": [
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=bonus_coefficients.txt"
+      ],
+      "rows": 60000,
+      "columns": ["B_i", "total_mass_mined_kg"],
+      "note": "Frozen end-of-competition leaderboard state; the website UI gates this file behind login but the problem-file endpoint serves it. Row i corresponds to asteroid ID i."
+    },
+    {
+      "name": "GTOC12_Verification_Program.zip",
+      "role": "official_verifier",
+      "bytes": 4903509,
+      "sha256": "50657b23da4c754a4865d201bf19666bb3a2682cd0746b1d7fdfe08f519690ff",
+      "urls": [
+        "http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Verification_Program.zip",
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=GTOC12_Verification_Program.zip"
+      ],
+      "members": {
+        "GTOC12_Verification/Linux/GTOC12_Verify": "d4e4bc81129266420b27c9bde038bce9eda1960e7de9c695772fbfdb1cc82cd6",
+        "GTOC12_Verification/Windows/GTOC12_Verify.exe": "2296d3b78acd04a6d5f1adb9ff1e90d42a113ea501ed450048eee82e0cae3ed0",
+        "GTOC12_Verification/macOS/GTOC12_Verify": "1ef63cf9f24955120f47b63d0b9b51d082482d5956779232c49a118f9ce185a4",
+        "GTOC12_Verification/Linux/Result.txt": "6352147cfbc70def3563eb61804ad13e64891bc3537fbb76de50169c39d07ab5",
+        "GTOC12_Verification/README.md": "db42f60a718b655f3f9d621cac8c5ffa49ede498287b10ed024d457d9b9b0e50"
+      },
+      "note": "Contains the organisers' example Result.txt (one ship, one deploy, no return; verifier reports 0 kg) and the RKF78 + cubic-Lagrange verifier binaries."
+    },
+    {
+      "name": "GTOC12_JPL_merged_solution_36sc.txt",
+      "role": "reference_solution",
+      "bytes": 22371953,
+      "sha256": "7ab630def849fc45d6be2be33f753b6c75fe026089e7e2a44bc3dde45bfc6e5e",
+      "urls": [
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=GTOC12_JPL_merged_solution_36sc.txt"
+      ],
+      "published": {
+        "team": "JPL (post-competition 36-ship solution)",
+        "ships": 36,
+        "asteroids": 320,
+        "collected_mass_kg": 26062.6,
+        "weighted_score_kg": 21904.51,
+        "weighted_score_note": "bonus coefficients at the end of competition"
+      }
+    },
+    {
+      "name": "39_mass_optimal.txt",
+      "role": "reference_solution",
+      "bytes": 26353400,
+      "sha256": "5aff46f83fcad1182efa1a4b614104fc6e44349b87a5d0f1e69577ad0785d8a4",
+      "urls": [
+        "http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2024/04/39_mass_optimal.txt",
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=39_mass_optimal.txt"
+      ],
+      "published": {
+        "team": "TheAntipodes (post-competition, mixed strategy)",
+        "ships": 39,
+        "asteroids": 356,
+        "collected_mass_kg": 28975.1,
+        "weighted_score_kg": 24474.16
+      }
+    },
+    {
+      "name": "37_mass_optimal_self_cleaning.txt",
+      "role": "reference_solution",
+      "bytes": 24749100,
+      "sha256": "c7dbb8a697172f39bded497575dcb09b587909c301d93615a5ea5f93e9e64895",
+      "urls": [
+        "http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2024/04/37_mass_optimal_self_cleaning.txt",
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=37_mass_optimal_self_cleaning.txt"
+      ],
+      "published": {
+        "team": "TheAntipodes (post-competition, self-cleaning only)",
+        "ships": 37,
+        "asteroids": 338,
+        "collected_mass_kg": 27045.3,
+        "weighted_score_kg": 22847.92
+      }
+    },
+    {
+      "name": "ConferenceHandbook_GTOC12_Workshop.pdf",
+      "role": "workshop_handbook",
+      "bytes": 4548348,
+      "sha256": "dc7db8e8deceb3b55d679c8087d08ae215ac8402bbb411e6b201eba6bce4115b",
+      "urls": [
+        "https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=ConferenceHandbook_GTOC12_Workshop.pdf"
+      ],
+      "optional": true
+    }
+  ],
+  "not_pinned": [
+    {
+      "name": "GTOC12workshop_Presentations.zip",
+      "reason": "large presentation archive; not required by any code path"
+    }
+  ],
+  "independent_cross_check": "Every Tsinghua copy matched the ESA portal copy byte-for-byte and the literature worker's cache (2026-09-03)."
+}

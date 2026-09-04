@@ -2,10 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import { request } from "node:http";
+import { fileURLToPath } from "node:url";
 import { createStaticServer } from "../scripts/serve.mjs";
 
 async function withServer(run) {
-  const server = createStaticServer(new URL("..", import.meta.url).pathname.slice(1));
+  const server = createStaticServer(fileURLToPath(new URL("..", import.meta.url)));
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   try {

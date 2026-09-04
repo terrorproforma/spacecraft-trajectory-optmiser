@@ -1,0 +1,563 @@
+{
+ "schema_version": "1.0.0",
+ "revision": "24fe8849b403af376773f09b64b5132e5591b94e",
+ "problem_count": 34,
+ "rules": {
+  "easy_two_body": "fixed-time Cartesian two-body problem with the smallest tof/mean-period ratio",
+  "multi_revolution_two_body": "Cartesian two-body problem whose info string declares a multirev arc (lowest key)",
+  "inclination_or_eccentricity_change": "Cartesian two-body problem whose info string mentions inclination or highly-elliptic (lowest key)",
+  "cr3bp": "fixed-time CR3BP problem with the smallest tof/mean-period ratio"
+ },
+ "selected": {
+  "easy_two_body": "two_body_cartesian:P4",
+  "multi_revolution_two_body": "two_body_cartesian:P3",
+  "inclination_or_eccentricity_change": "two_body_cartesian:P1",
+  "cr3bp": "cr3bp:P0"
+ },
+ "problems": [
+  {
+   "key": "two_body_cartesian:P0",
+   "family": "two_body_cartesian",
+   "info": "Mildly-elliptic to mildly-elliptic transfer (e_s~0.201, e_f~0.210) in fixed tof -> T=0.22N, Isp=3000s",
+   "fixed_time": true,
+   "tof_bounds": [
+    11.0,
+    11.0
+   ],
+   "max_thrust": 0.03709897158414718,
+   "exhaust_velocity": 0.9877540504250252,
+   "initial_mass": 1.0,
+   "mu": 1.0,
+   "period_ratio": 0.7749129409189313,
+   "revolutions_estimate": 1.0731905527373382
+  },
+  {
+   "key": "two_body_cartesian:P1",
+   "family": "two_body_cartesian",
+   "info": "Highly-elliptic transfer (e_s~0.906, e_f~0.835).",
+   "fixed_time": false,
+   "tof_bounds": [
+    60.0,
+    110.0
+   ],
+   "max_thrust": 0.0058546435335345,
+   "exhaust_velocity": 0.9877540504250252,
+   "initial_mass": 1.0,
+   "mu": 1.0,
+   "period_ratio": 0.5097243044360481,
+   "revolutions_estimate": 0.6619591734673522
+  },
+  {
+   "key": "two_body_cartesian:P2",
+   "family": "two_body_cartesian",
+   "info": "Circular-to-highly-elliptic/high-inclination transfer (e_f~0.8, i_f~60 deg)",
+   "fixed_time": false,
+   "tof_bounds": [
+    10.0,
+    100.0
+   ],
+   "max_thrust": 0.03709897158414718,
+   "exhaust_velocity": 0.9877540504250252,
+   "initial_mass": 1.0,
+   "mu": 1.0,
+   "period_ratio": 8.505172717997155,
+   "revolutions_estimate": 2.5475237728198223
+  },
+  {
+   "key": "two_body_cartesian:P3",
+   "family": "two_body_cartesian",
+   "info": "Multirev arc transfer - Fixed Time",
+   "fixed_time": true,
+   "tof_bounds": [
+    13.0,
+    13.0
+   ],
+   "max_thrust": 0.03709897158414718,
+   "exhaust_velocity": 0.9877540504250252,
+   "initial_mass": 1.0,
+   "mu": 1.0,
+   "period_ratio": 8.505172717997155,
+   "revolutions_estimate": 0.3311780904665769
+  },
+  {
+   "key": "two_body_cartesian:P4",
+   "family": "two_body_cartesian",
+   "info": "Short arc transfer (GTOC style) - Fixed Time",
+   "fixed_time": true,
+   "tof_bounds": [
+    2.0,
+    2.0
+   ],
+   "max_thrust": 0.5709897158414718,
+   "exhaust_velocity": 0.9877540504250252,
+   "initial_mass": 1.0,
+   "mu": 1.0,
+   "period_ratio": 8.505172717997155,
+   "revolutions_estimate": 0.05095047545639645
+  },
+  {
+   "key": "modified_equinoctial:P0",
+   "family": "modified_equinoctial",
+   "info": "Dionysus problem (doi: 10.2514/1.G000379) - Fixed time",
+   "fixed_time": true,
+   "tof_bounds": [
+    60.79091977865148,
+    60.79091977865148
+   ],
+   "max_thrust": 0.013490919161437792,
+   "exhaust_velocity": 0.9877459715411968,
+   "initial_mass": 1.0,
+   "mu": 1.0,
+   "period_ratio": 3.2632558300707464,
+   "revolutions_estimate": 4.539045627820536
+  },
+  {
+   "key": "modified_equinoctial:P1",
+   "family": "modified_equinoctial",
+   "info": "Jiang problem (doi: 10.2514/1.52476) - 2 revs - Fixed time",
+   "fixed_time": true,
+   "tof_bounds": [
+    86400000.0,
+    86400000.0
+   ],
+   "max_thrust": 0.33,
+   "exhaust_velocity": 37265.27,
+   "initial_mass": 1500.0,
+   "mu": 1.32712440018e+20,
+   "period_ratio": null,
+   "revolutions_estimate": null
+  },
+  {
+   "key": "modified_equinoctial:P2",
+   "family": "modified_equinoctial",
+   "info": "Jiang problem (doi: 10.2514/1.52476) - 3 revs - Fixed time",
+   "fixed_time": true,
+   "tof_bounds": [
+    86400000.0,
+    86400000.0
+   ],
+   "max_thrust": 0.33,
+   "exhaust_velocity": 37265.27,
+   "initial_mass": 1500.0,
+   "mu": 1.32712440018e+20,
+   "period_ratio": null,
+   "revolutions_estimate": null
+  },
+  {
+   "key": "modified_equinoctial:P3",
+   "family": "modified_equinoctial",
+   "info": "Jiang problem (doi: 10.2514/1.52476) - 4 revs - Fixed time",
+   "fixed_time": true,
+   "tof_bounds": [
+    86400000.0,
+    86400000.0
+   ],
+   "max_thrust": 0.33,
+   "exhaust_velocity": 37265.27,
+   "initial_mass": 1500.0,
+   "mu": 1.32712440018e+20,
+   "period_ratio": null,
+   "revolutions_estimate": null
+  },
+  {
+   "key": "modified_equinoctial:P4",
+   "family": "modified_equinoctial",
+   "info": "Jiang problem (doi: 10.2514/1.52476) - 5 revs - Fixed time",
+   "fixed_time": true,
+   "tof_bounds": [
+    86400000.0,
+    86400000.0
+   ],
+   "max_thrust": 0.33,
+   "exhaust_velocity": 37265.27,
+   "initial_mass": 1500.0,
+   "mu": 1.32712440018e+20,
+   "period_ratio": null,
+   "revolutions_estimate": null
+  },
+  {
+   "key": "modified_equinoctial:P5",
+   "family": "modified_equinoctial",
+   "info": "GTO-GEO",
+   "fixed_time": true,
+   "tof_bounds": [
+    472800.0,
+    472800.0
+   ],
+   "max_thrust": 0.01,
+   "exhaust_velocity": 20.0,
+   "initial_mass": 1500.0,
+   "mu": 398601.877,
+   "period_ratio": 2.268643254162446,
+   "revolutions_estimate": 7.616987497345745
+  },
+  {
+   "key": "modified_equinoctial:P6",
+   "family": "modified_equinoctial",
+   "info": "GTO-Molniya EXTREME",
+   "fixed_time": true,
+   "tof_bounds": [
+    3064000.0,
+    3064000.0
+   ],
+   "max_thrust": 0.01,
+   "exhaust_velocity": 100.0,
+   "initial_mass": 2000.0,
+   "mu": 398601.877,
+   "period_ratio": 1.136778775080376,
+   "revolutions_estimate": 75.50965711222044
+  },
+  {
+   "key": "modified_equinoctial:P7",
+   "family": "modified_equinoctial",
+   "info": "GTO-Molniya Easy",
+   "fixed_time": true,
+   "tof_bounds": [
+    506400.0,
+    506400.0
+   ],
+   "max_thrust": 0.1,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 2000.0,
+   "mu": 398601.877,
+   "period_ratio": 1.136778775080376,
+   "revolutions_estimate": 12.479794504447922
+  },
+  {
+   "key": "modified_equinoctial:P8",
+   "family": "modified_equinoctial",
+   "info": "GTO-AOP shift",
+   "fixed_time": true,
+   "tof_bounds": [
+    123456.0,
+    123456.0
+   ],
+   "max_thrust": 0.1,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 2000.0,
+   "mu": 398601.877,
+   "period_ratio": 1.0,
+   "revolutions_estimate": 3.25053992214286
+  },
+  {
+   "key": "cr3bp:P0",
+   "family": "cr3bp",
+   "info": "Halo 2 Halo in fixed tof",
+   "fixed_time": true,
+   "tof_bounds": [
+    5.0,
+    5.0
+   ],
+   "max_thrust": 0.3010999584011414,
+   "exhaust_velocity": 11.56499372183432,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 1.4032747490383795,
+   "revolutions_estimate": 1.7677247744258038
+  },
+  {
+   "key": "cr3bp:P1",
+   "family": "cr3bp",
+   "info": "Halo to Halo",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    15.0
+   ],
+   "max_thrust": 0.3010999584011414,
+   "exhaust_velocity": 11.56499372183432,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 0.836466667808475,
+   "revolutions_estimate": 4.9455382593538895
+  },
+  {
+   "key": "cr3bp:P2",
+   "family": "cr3bp",
+   "info": "???",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.3010999584011414,
+   "exhaust_velocity": 11.56499372183432,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 6.588769814547267,
+   "revolutions_estimate": 0.7978733830494851
+  },
+  {
+   "key": "cr3bp:P3",
+   "family": "cr3bp",
+   "info": "Halo to DRO",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.37637494800142673,
+   "exhaust_velocity": 11.56499372183432,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 0.39641359431558265,
+   "revolutions_estimate": 4.336020123095614
+  },
+  {
+   "key": "cr3bp:P4",
+   "family": "cr3bp",
+   "info": "DRO to NHRO",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.15,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 0.5471280341624317,
+   "revolutions_estimate": 4.727593029182792
+  },
+  {
+   "key": "cr3bp:P5",
+   "family": "cr3bp",
+   "info": "Transfer between bretzel orbits",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.2,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 1.213143735475349,
+   "revolutions_estimate": 1.628806672707651
+  },
+  {
+   "key": "cr3bp:P6",
+   "family": "cr3bp",
+   "info": "Earth-Moon resonant orbit to high inclination lunar orbit",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 1.0,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 2.529476847096991,
+   "revolutions_estimate": 2.721210790630448
+  },
+  {
+   "key": "cr3bp:P7",
+   "family": "cr3bp",
+   "info": "High amplitude planar Earth orbit to high inclination lunar orbit",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.25,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 0.6181076243214532,
+   "revolutions_estimate": 1.9608061688759573
+  },
+  {
+   "key": "cr3bp:P8",
+   "family": "cr3bp",
+   "info": "Transfer between high inclination lunar orbits",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.04,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 1.684187073052642,
+   "revolutions_estimate": 1.892312245024163
+  },
+  {
+   "key": "cr3bp:P9",
+   "family": "cr3bp",
+   "info": "Transfer between high inclination lunar orbits",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.05,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 1.6387397284623006,
+   "revolutions_estimate": 1.8911788672386847
+  },
+  {
+   "key": "cr3bp:P10",
+   "family": "cr3bp",
+   "info": "L4 vertical orbit to L4 planar orbits",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    15.0
+   ],
+   "max_thrust": 0.15,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 0.9996730736033754,
+   "revolutions_estimate": 2.376584533145517
+  },
+  {
+   "key": "cr3bp:P11",
+   "family": "cr3bp",
+   "info": "Halo to Halo",
+   "fixed_time": false,
+   "tof_bounds": [
+    2.0,
+    10.0
+   ],
+   "max_thrust": 0.2,
+   "exhaust_velocity": 10.0,
+   "initial_mass": 1.0,
+   "mu": 0.01215058560962404,
+   "period_ratio": 0.9379613810719791,
+   "revolutions_estimate": 4.291102045683642
+  },
+  {
+   "key": "cr3bp:P12",
+   "family": "cr3bp",
+   "info": "Oshima problem (doi: 10.1016/j.asr.2023.05.055) - DRO to DRO - fixed time",
+   "fixed_time": true,
+   "tof_bounds": [
+    12.4155005583399,
+    12.4155005583399
+   ],
+   "max_thrust": 0.029371768613836582,
+   "exhaust_velocity": 28.76178289593944,
+   "initial_mass": 1.0,
+   "mu": 0.0121506683,
+   "period_ratio": 0.4057423605805143,
+   "revolutions_estimate": 3.1047381908263385
+  },
+  {
+   "key": "cr3bp:P13",
+   "family": "cr3bp",
+   "info": "Oshima problem (doi: 10.1016/j.asr.2023.05.055) - Vertical to Lyapunov",
+   "fixed_time": false,
+   "tof_bounds": [
+    10.0,
+    20.698633859117347
+   ],
+   "max_thrust": 0.029371768613836582,
+   "exhaust_velocity": 28.76178289593944,
+   "initial_mass": 1.0,
+   "mu": 0.0121506683,
+   "period_ratio": 1.0396263190443829,
+   "revolutions_estimate": 5.481470025209885
+  },
+  {
+   "key": "solar_sail:P0",
+   "family": "solar_sail",
+   "info": "Circular to quasi-circular - 1 rev",
+   "fixed_time": true,
+   "tof_bounds": [
+    7.8,
+    7.8
+   ],
+   "max_thrust": null,
+   "exhaust_velocity": null,
+   "initial_mass": null,
+   "mu": 1.0,
+   "period_ratio": 1.351217507153332,
+   "revolutions_estimate": 1.0559708341231118
+  },
+  {
+   "key": "solar_sail:P1",
+   "family": "solar_sail",
+   "info": "Eccentric (e=0.5, a=2) to highly-eccentric (e=0.9, a=10) orbit at periapsis (rp=1, nd)",
+   "fixed_time": true,
+   "tof_bounds": [
+    180.0,
+    180.0
+   ],
+   "max_thrust": null,
+   "exhaust_velocity": null,
+   "initial_mass": null,
+   "mu": 1.0,
+   "period_ratio": 11.180339887498949,
+   "revolutions_estimate": 1.6630994948117481
+  },
+  {
+   "key": "solar_sail:P2",
+   "family": "solar_sail",
+   "info": "15-degree inclination change (nd) - many revs",
+   "fixed_time": true,
+   "tof_bounds": [
+    40.0,
+    40.0
+   ],
+   "max_thrust": null,
+   "exhaust_velocity": null,
+   "initial_mass": null,
+   "mu": 1.0,
+   "period_ratio": 1.0,
+   "revolutions_estimate": 6.366197723675814
+  },
+  {
+   "key": "solar_sail:P3",
+   "family": "solar_sail",
+   "info": "Multi-rev outward spiral r=1 to r=1.3 (nd)",
+   "fixed_time": true,
+   "tof_bounds": [
+    50.0,
+    50.0
+   ],
+   "max_thrust": null,
+   "exhaust_velocity": null,
+   "initial_mass": null,
+   "mu": 1.0,
+   "period_ratio": 2.530859105800061,
+   "revolutions_estimate": 4.507541601715435
+  },
+  {
+   "key": "solar_sail:P4",
+   "family": "solar_sail",
+   "info": "Circular to mildly elliptic orbit (e=0.3, a=1) - 2-3 revs",
+   "fixed_time": true,
+   "tof_bounds": [
+    13.0,
+    13.0
+   ],
+   "max_thrust": null,
+   "exhaust_velocity": null,
+   "initial_mass": null,
+   "mu": 1.0,
+   "period_ratio": 1.0,
+   "revolutions_estimate": 2.0690142601946393
+  },
+  {
+   "key": "solar_sail:P5",
+   "family": "solar_sail",
+   "info": "Argument of periapsis rotation by 90 degrees (e=0.3, a=1) (nd)",
+   "fixed_time": true,
+   "tof_bounds": [
+    53.0,
+    53.0
+   ],
+   "max_thrust": null,
+   "exhaust_velocity": null,
+   "initial_mass": null,
+   "mu": 1.0,
+   "period_ratio": 1.0,
+   "revolutions_estimate": 8.435211983870452
+  }
+ ]
+}

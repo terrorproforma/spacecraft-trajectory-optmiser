@@ -278,8 +278,39 @@ if(BUILD_TESTING)
     endforeach()
 endif()
 
+# User-facing planner executable on the validated persistent SCvx stack.
+add_executable(spacepdhcg_plan tools/spacepdhcg_plan.cu)
+target_link_libraries(spacepdhcg_plan PRIVATE spacepdhcg_cuda ${CMAKE_DL_LIBS})
+target_compile_definitions(
+    spacepdhcg_plan
+    PRIVATE SPACEPDHCG_SOURCE_COMMIT="${SPACEPDHCG_SOURCE_COMMIT}"
+)
+target_compile_options(
+    spacepdhcg_plan
+    PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo;-Xcompiler=-Wall,-Wextra>
+)
+if(SPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS)
+    target_compile_options(
+        spacepdhcg_plan
+        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Werror>
+    )
+endif()
+set_target_properties(
+    spacepdhcg_plan
+    PROPERTIES
+        CUDA_STANDARD 20
+        CUDA_STANDARD_REQUIRED ON
+        CUDA_RESOLVE_DEVICE_SYMBOLS ON
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/cuda-tools"
+)
+if(BUILD_TESTING)
+    add_test(NAME spacepdhcg_plan_capabilities COMMAND spacepdhcg_plan --capabilities)
+    set_tests_properties(spacepdhcg_plan_capabilities PROPERTIES TIMEOUT 60)
+endif()
+
 install(
-    TARGETS spacepdhcg_cuda
+    TARGETS spacepdhcg_cuda spacepdhcg_plan
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

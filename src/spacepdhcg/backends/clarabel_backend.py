@@ -247,6 +247,53 @@ class PersistentClarabel:
             complementarity=complementarity,
         )
 
+    def relative_kkt_residuals(
+        self,
+        primal: NDArray[np.float64],
+    ) -> CanonicalResidualAudit:
+        """Independent KKT audit normalised by the problem data magnitudes.
+
+        The absolute audit from :meth:`independent_residuals` is divided by the standard
+        relative scales ``1 + |b| + |A x|`` (primal), ``1 + |q| + |Q x| + |A^T z|`` (dual)
+        and ``1 + |objective| + |b^T z|`` (complementarity) so badly scaled transcriptions
+        (thrust in newtons next to 1e-8 tracking weights) are judged like PDHCG/QOCO judge
+        their own canonical residuals.
+        """
+
+        absolute = self.independent_residuals(primal)
+        x = np.asarray(primal, dtype=np.float64)
+        if self._last_raw_dual is None or not np.all(np.isfinite(absolute.natural)):
+            return absolute
+        quadratic, constraint, right_hand_side = self._assemble(self._current)
+        full_quadratic = quadratic + sp.triu(quadratic, k=1).T
+        z = self._last_raw_dual
+        ax = np.asarray(constraint @ x, dtype=np.float64)
+        qx = np.asarray(full_quadratic @ x, dtype=np.float64)
+        atz = np.asarray(constraint.T @ z, dtype=np.float64)
+        primal_scale = (
+            1.0
+            + float(np.max(np.abs(right_hand_side), initial=0.0))
+            + float(np.max(np.abs(ax), initial=0.0))
+        )
+        dual_scale = (
+            1.0
+            + float(np.max(np.abs(self._current.linear), initial=0.0))
+            + float(np.max(np.abs(qx), initial=0.0))
+            + float(np.max(np.abs(atz), initial=0.0))
+        )
+        objective = 0.5 * float(x @ qx) + float(self._current.linear @ x)
+        gap_scale = 1.0 + abs(objective) + abs(float(right_hand_side @ z))
+        primal_relative = absolute.primal / primal_scale
+        dual_relative = absolute.dual / dual_scale
+        complementarity_relative = absolute.complementarity / gap_scale
+        return CanonicalResidualAudit(
+            primal=primal_relative,
+            dual=dual_relative,
+            natural=max(primal_relative, dual_relative, complementarity_relative),
+            cone=absolute.cone / primal_scale,
+            complementarity=complementarity_relative,
+        )
+
     @staticmethod
     def _soc_violation(value: NDArray[np.float64]) -> float:
         return max(0.0, float(np.linalg.norm(value[1:]) - value[0]))
