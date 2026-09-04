@@ -131,8 +131,15 @@
                 <span aria-hidden="true" id="mission-play-icon">▶</span>
                 <span id="mission-play-label">Play mission</span>
               </button>
-              <button class="secondary-button" id="focus-ship-button" type="button" disabled>Focus ship</button>
-              <button class="secondary-button" id="fleet-reset-button" type="button">Reset view</button>
+              <label class="speed-label" for="speed-select"><span class="sr-only">Playback speed</span>
+                <select class="dataset-select speed-select" id="speed-select" aria-label="Playback speed (mission years per second)">
+                  <option value="0.25">¼ yr/s</option>
+                  <option value="0.5">½ yr/s</option>
+                  <option value="1" selected>1 yr/s</option>
+                  <option value="2">2 yr/s</option>
+                  <option value="4">4 yr/s</option>
+                </select>
+              </label>
             </div>
             <label class="timeline-label" for="mission-timeline">
               <span>Epoch</span>
@@ -149,11 +156,47 @@
               aria-describedby="mission-timeline-output"
             >
             <p class="help-text">
-              Ships appear at launch and advance to the last archived sample at or before the epoch; nothing between samples is interpolated. Earth and asteroids move on their Keplerian orbits.
+              Ships appear at launch and advance to the last archived sample at or before the epoch; nothing between samples is interpolated. Earth and asteroids move on their Keplerian orbits; deploy/collect events flash and update the collected-mass counters.
+            </p>
+          </section>
+
+          <section class="panel controls-panel camera-panel fleet-only" hidden>
+            <div class="panel-heading">
+              <div>
+                <p class="kicker">Perspective camera</p>
+                <h2>View presets</h2>
+              </div>
+            </div>
+            <div class="preset-grid" id="camera-presets" role="group" aria-label="Camera presets">
+              <button class="secondary-button" type="button" data-preset="top">Top-down ecliptic</button>
+              <button class="secondary-button" type="button" data-preset="oblique">30° oblique</button>
+              <button class="secondary-button" type="button" data-preset="edge">Edge-on (inclinations)</button>
+              <button class="secondary-button" type="button" data-preset="follow" id="follow-ship-button" disabled>Follow ship</button>
+            </div>
+            <div class="control-row">
+              <button class="secondary-button" id="focus-ship-button" type="button" disabled>Frame ship arc</button>
+              <button class="secondary-button" id="fleet-reset-button" type="button">Reset view</button>
+            </div>
+            <label class="timeline-label" for="exaggeration">
+              <span>Vertical exaggeration — <em>not physical</em></span>
+              <output id="exaggeration-output" for="exaggeration">6×</output>
+            </label>
+            <input
+              class="timeline"
+              id="exaggeration"
+              type="range"
+              min="1"
+              max="20"
+              step="0.5"
+              value="6"
+              aria-describedby="exaggeration-output"
+            >
+            <p class="help-text">
+              Scales the Z (out-of-ecliptic) axis of every orbit and arc for display only, so inclinations read in 3D. Opens at 6×; 1× is the physical geometry.
             </p>
             <p class="keyboard-help">
               Hover to identify ships, events, asteroids and Earth · click to select<br>
-              Drag orbit · right-drag or Shift+drag pan · wheel zoom · Space play
+              Drag orbit (with inertia) · right-drag or Shift+drag pan · wheel dollies toward the cursor · Space play
             </p>
           </section>
         </aside>
@@ -184,28 +227,20 @@
                 <span><i class="legend-mark target"></i>Target</span>
               </div>
               <div class="scene-label bottom-left fleet-legend fleet-only" id="fleet-legend" hidden>
-                <div class="legend-row legend-ships" aria-label="Ship colours">
-                  <span><i class="ship-swatch ship-colour-1"></i>1</span><span><i class="ship-swatch ship-colour-2"></i>2</span>
-                  <span><i class="ship-swatch ship-colour-3"></i>3</span><span><i class="ship-swatch ship-colour-4"></i>4</span>
-                  <span><i class="ship-swatch ship-colour-5"></i>5</span><span><i class="ship-swatch ship-colour-6"></i>6</span>
-                  <span><i class="ship-swatch ship-colour-7"></i>7</span><span><i class="ship-swatch ship-colour-8"></i>8</span>
-                  <span><i class="ship-swatch ship-colour-9"></i>9</span><span><i class="ship-swatch ship-colour-10"></i>10</span>
-                  <span><i class="ship-swatch ship-colour-11"></i>11</span><span><i class="ship-swatch ship-colour-12"></i>12</span>
-                  <span><i class="ship-swatch ship-colour-13"></i>13</span><span><i class="ship-swatch ship-colour-14"></i>14</span>
-                  <span><i class="ship-swatch ship-colour-15"></i>15</span>
-                </div>
+                <div class="legend-row legend-ships" id="legend-ships" aria-label="Ship colours"></div>
                 <div class="legend-row">
-                  <span><i class="legend-mark ring ship-tone"></i>Deploy miner</span>
+                  <span><i class="legend-mark ring ship-tone"></i>Deploy</span>
                   <span><i class="legend-mark disc ship-tone"></i>Collect</span>
                   <span><i class="legend-mark start"></i>Launch</span>
                   <span><i class="legend-mark target"></i>Earth return</span>
-                </div>
-                <div class="legend-row">
+                  <span><i class="legend-mark sphere pending"></i>Asteroid pending</span>
+                  <span><i class="legend-mark sphere collected"></i>Asteroid mined</span>
                   <span><i class="legend-line earth"></i>Earth orbit</span>
-                  <span><i class="legend-line asteroid"></i>Asteroid orbits (Keplerian, pinned elements)</span>
-                  <span><i class="legend-mark sun"></i>Sun (not to scale)</span>
+                  <span><i class="legend-line asteroid"></i>Asteroid orbits (Keplerian)</span>
+                  <span><i class="legend-line trail"></i>Ship tube + 450-day trail</span>
+                  <span><i class="legend-mark sun"></i>Sun · spheres not to scale</span>
                 </div>
-                <div class="legend-row legend-note">Arcs: straight segments between exact archived samples — no interpolation.</div>
+                <div class="legend-row legend-note">Tube segments connect exact archived samples — no interpolation. Z exaggeration is display-only.</div>
               </div>
               <div class="scene-label bottom-right" id="scene-overlay">—</div>
               <div class="event-labels" id="event-labels" aria-hidden="true"></div>

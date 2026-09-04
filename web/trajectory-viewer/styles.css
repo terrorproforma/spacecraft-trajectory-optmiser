@@ -107,8 +107,9 @@ fieldset { border: 0; margin: 0; padding: 0; }
 .viewer-column { display: grid; gap: 14px; min-width: 0; }
 .viewport-card { overflow: hidden; }
 .viewport-toolbar { padding: 14px 16px; }
-.viewport-wrap { position: relative; min-height: 560px; background: #050914; }
-#trajectory-canvas { display: block; width: 100%; height: 560px; touch-action: none; cursor: grab; }
+/* Full-bleed viewport: the canvas fills the main column and at least 72% of the window height on desktop. */
+.viewport-wrap { position: relative; min-height: max(560px, 72vh); background: #050914; }
+#trajectory-canvas { display: block; width: 100%; height: max(560px, 72vh); touch-action: none; cursor: grab; }
 #trajectory-canvas:active { cursor: grabbing; }
 .scene-label {
   position: absolute; z-index: 2; max-width: min(420px, calc(100% - 24px)); padding: 8px 10px;
@@ -158,6 +159,8 @@ code { color: #b8eaff; font-family: ui-monospace, "Cascadia Code", monospace; }
 .ship-colour-7 { color: #7bf1a8; } .ship-colour-8 { color: #f95738; } .ship-colour-9 { color: #6fa8ff; }
 .ship-colour-10 { color: #f9c74f; } .ship-colour-11 { color: #e0aaff; } .ship-colour-12 { color: #43aa8b; }
 .ship-colour-13 { color: #ff9de2; } .ship-colour-14 { color: #b8f2e6; } .ship-colour-15 { color: #f4a261; }
+.ship-colour-16 { color: #ff4fd8; } .ship-colour-17 { color: #b5ff3d; } .ship-colour-18 { color: #9d4edd; }
+.ship-colour-19 { color: #ffe8a3; } .ship-colour-20 { color: #c9184a; }
 .fleet-swatch { color: var(--text); background: conic-gradient(#36d6ff, #ff5d8f, #ffd166, #06d6a0, #c77dff, #36d6ff); box-shadow: none; }
 .ship-list { max-height: 46vh; overflow: auto; padding-right: 2px; }
 .ship-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 1px solid transparent; border-radius: 9px; text-align: left; background: rgba(255, 255, 255, .025); cursor: pointer; }
@@ -167,8 +170,10 @@ code { color: #b8eaff; font-family: ui-monospace, "Cascadia Code", monospace; }
 .ship-item strong { font-size: .8rem; }
 .ship-item small { color: var(--muted); font-size: .7rem; }
 
-.fleet-legend { display: grid; gap: 5px; max-width: min(560px, calc(100% - 24px)); }
-.legend-row { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.fleet-legend { display: grid; gap: 3px; max-width: min(470px, calc(100% - 24px)); padding: 5px 8px; font-size: .58rem; line-height: 1.35; opacity: .92; }
+.fleet-legend .legend-mark, .fleet-legend .legend-mark.sphere { width: 7px; height: 7px; }
+#scene-overlay { font-size: .6rem; padding: 5px 8px; opacity: .9; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 3px 9px; align-items: center; }
 .legend-ships span { display: inline-flex; align-items: center; gap: 3px; }
 .legend-ships .ship-swatch { width: 8px; height: 8px; margin-right: 1px; }
 .legend-mark.ring { color: var(--text); }
@@ -178,7 +183,20 @@ code { color: #b8eaff; font-family: ui-monospace, "Cascadia Code", monospace; }
 .legend-line { display: inline-block; width: 16px; height: 0; margin-right: 5px; border-top: 2px solid currentColor; vertical-align: middle; }
 .legend-line.earth { color: #6badff; }
 .legend-line.asteroid { color: rgba(168, 188, 230, .55); border-top-style: dotted; }
+.legend-line.trail { color: #9fd9ff; border-top-width: 3px; border-image: linear-gradient(90deg, rgba(159, 217, 255, .3), #9fd9ff) 1; }
+.legend-mark.sphere { border-color: transparent; background: radial-gradient(circle at 35% 35%, #fff, currentColor 55%, #000 130%); }
+.legend-mark.sphere.pending { color: #7f8ead; }
+.legend-mark.sphere.collected { color: #36d6ff; box-shadow: 0 0 6px currentColor; }
 .legend-note { color: var(--muted); font-style: italic; }
+
+/* Perspective camera panel */
+.preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.preset-grid .secondary-button { padding: 7px 6px; font-size: .72rem; }
+.preset-grid .secondary-button.active, .preset-grid .secondary-button[aria-pressed="true"] { border-color: rgba(54, 214, 255, .58); background: rgba(54, 214, 255, .12); }
+.preset-grid .secondary-button:disabled, .control-row .secondary-button:disabled { opacity: .45; cursor: default; }
+.speed-label { flex: none; }
+.speed-select { width: auto; padding: 7px 8px; font-size: .74rem; }
+.timeline-label em { color: var(--amber); font-style: italic; }
 
 .hover-tooltip {
   position: absolute; z-index: 3; left: 0; top: 0; max-width: min(360px, calc(100% - 24px)); padding: 8px 10px;
@@ -212,7 +230,7 @@ code { color: #b8eaff; font-family: ui-monospace, "Cascadia Code", monospace; }
 @media (max-width: 900px) {
   .workspace { grid-template-columns: 1fr; }
   .sidebar { position: static; grid-template-columns: 1fr 1fr; }
-  .viewport-wrap, #trajectory-canvas { min-height: 470px; height: 470px; }
+  .viewport-wrap, #trajectory-canvas { min-height: 470px; height: max(470px, 60vh); }
 }
 @media (max-width: 620px) {
   .app-shell { padding: 10px; }
