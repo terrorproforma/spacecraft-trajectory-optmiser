@@ -986,8 +986,9 @@ def solve_fleet_master(
 
     # ``search`` recurses once per usable column (the skip branch always walks ``index`` to
     # ``len(usable)``), so an archive-wide master offers more columns than CPython's default
-    # 1000-frame limit; widen it for the search and restore it afterwards.
-    required_depth = 2 * n_usable + 200
+    # 1000-frame limit (1019 columns in fleet_master_v6, 1055 on the H100 host); widen it for
+    # the search and restore it afterwards.  Both fixes' margins are honoured.
+    required_depth = max(2 * n_usable + 200, n_usable + 500)
     previous_limit = sys.getrecursionlimit()
     if required_depth > previous_limit:
         sys.setrecursionlimit(required_depth)

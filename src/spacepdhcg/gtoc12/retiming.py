@@ -33,6 +33,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from . import constants as C
+from .collectdp import RETURN_SWEEP_REACH as _RETURN_SWEEP_REACH
 from .cooperative import MinerPool, orphan_credit_kg
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
@@ -56,8 +57,9 @@ from .search import (
 
 FloatArray = NDArray[np.float64]
 # grid cells within this many lattice steps (departure or TOF) of an SCvx-swept return cell are
-# priced by the nearest swept cell's measured inflation; 4 steps = 60 days
-RETURN_SWEEP_REACH = 2
+# priced by the nearest swept cell's measured inflation (2 steps = 30 days); the collect DP's
+# pair table applies the same reach (``collectdp.RETURN_SWEEP_REACH``)
+RETURN_SWEEP_REACH = _RETURN_SWEEP_REACH
 
 
 @dataclass(frozen=True, slots=True)

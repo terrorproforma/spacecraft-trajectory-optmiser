@@ -668,6 +668,10 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         collect_dp_step_days=args.collect_dp_step_days,
         collect_dp_inflation_fit=args.collect_dp_inflation_fit or "",
         earth_prescreen_ratio=args.earth_prescreen_ratio,
+        harvest_substitution=not args.no_harvest_substitution,
+        substitution_budget_seconds=args.substitution_budget_seconds,
+        return_sweep=not args.no_return_sweep,
+        return_sweep_budget_seconds=args.return_sweep_budget_seconds,
     )
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
@@ -1439,6 +1443,28 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         type=float,
         default=0.7,
         help="Earth legs above this Lambert authority ratio are flown last (default 0.7)",
+    )
+    cluster.add_argument(
+        "--no-harvest-substitution",
+        action="store_true",
+        help="disable the beam's harvest substitution pass (swap dear-to-harvest deploys)",
+    )
+    cluster.add_argument(
+        "--substitution-budget-seconds",
+        type=float,
+        default=180.0,
+        help="wall budget of the harvest substitution pass per beam run (default 180)",
+    )
+    cluster.add_argument(
+        "--no-return-sweep",
+        action="store_true",
+        help="disable the SCvx Earth-return sweep before each ship's joint re-timing",
+    )
+    cluster.add_argument(
+        "--return-sweep-budget-seconds",
+        type=float,
+        default=240.0,
+        help="wall budget of the per-ship Earth-return sweep (default 240)",
     )
     cluster.set_defaults(function=cmd_cluster_fleet)
 

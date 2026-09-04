@@ -62,10 +62,97 @@ from .retiming import (
     plan_value,
     visits_of,
 )
+from .returnsweep import return_leg_of, sweep_grid, sweep_return
 from .screening import propellant_for_delta_v, screen_earth_to_asteroids, thrust_authority_km_s
 from .search import EARTH_ID, EarthLeg, PlannedLeg, RoutePlan, RouteSearch, SearchSettings
 
 IntArray = NDArray[np.int64]
+
+
+def sweep_route_return(
+    route: RefinedRoute,
+    catalogue: AsteroidCatalogue,
+    settings: ClusterPricingSettings,
+    retimer: Retimer,
+    search: RouteSearch,
+    *,
+    scvx: ScvxSettings | None,
+    cache: dict[tuple[int, float, float], tuple[bool, float]],
+    time_budget_seconds: float,
+) -> dict[str, Any] | None:
+    """Sweep a certified route's Earth return with SCvx and hand the certified cells to the
+    re-timer and the slot's collect DP table (strict certified-cell pricing).
+
+    The grid is ``return_sweep_back_steps`` / ``return_sweep_forward_steps`` re-timer lattice
+    steps around the route's return departure x ``return_sweep_tofs``, flown at the route's
+    certified return-departure mass, nearest cells first within ``time_budget_seconds``.
+    Returns the report entry (``None`` when the route has no return or no cell fits the window).
+    """
+
+    plan = route.plan
+    leg = return_leg_of(plan)
+    if leg is None:
+        return None
+    step = settings.retime_step_days
+    # the re-timer prices cells on its own lattice: TOFs off the step are snapped onto it
+    tofs = tuple(sorted({float(step * round(float(t) / step)) for t in settings.return_sweep_tofs}))
+    grid = sweep_grid(
+        plan,
+        step_days=step,
+        back_steps=settings.return_sweep_back_steps,
+        forward_steps=settings.return_sweep_forward_steps,
+        tofs=tofs,
+        end_margin_days=retimer.settings.end_margin_days,
+    )
+    if grid is None or grid[0].shape[0] == 0:
+        return None
+    mass = next(
+        (
+            float(refined.mass_before)
+            for refined in route.legs
+            if refined.planned.role == "earth_return"
+        ),
+        float(plan.final_mass_proxy_kg + plan.propellant_proxy_kg),
+    )
+    sweep = sweep_return(
+        catalogue,
+        int(leg.from_id),
+        mass,
+        grid[0],
+        grid[1],
+        scvx=scvx,
+        end_margin_days=retimer.settings.end_margin_days,
+        cache=cache,
+        time_budget_seconds=time_budget_seconds,
+        nearest_to=(leg.departure_epoch, leg.tof_days),
+    )
+    flown_return = next(
+        (
+            float(refined.solution.propellant_kg)
+            for refined in route.legs
+            if refined.planned.role == "earth_return" and refined.solution is not None
+        ),
+        float("nan"),
+    )
+    report: dict[str, Any] = {
+        "asteroid": int(leg.from_id),
+        "mass_kg": mass,
+        "cells": int(sweep.attempted.sum()),
+        "certified": int(sweep.certified.sum()),
+        "solves": sweep.solves,
+        "wall_seconds": sweep.wall_seconds,
+        "flown_return_kg": flown_return,
+        "cheapest_certified_kg": (
+            float(np.min(sweep.propellant_kg)) if np.any(sweep.certified) else float("nan")
+        ),
+    }
+    if np.any(sweep.certified):
+        retimer.set_return_sweep(sweep)
+        if search.collect_dp_used:
+            search.collect_table.set_return_sweep(sweep)
+        i, j = np.unravel_index(int(np.argmin(sweep.propellant_kg)), sweep.propellant_kg.shape)
+        report["cheapest_cell"] = [float(sweep.departures[i]), float(sweep.tofs[j])]
+    return report
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +181,11 @@ class ClusterPricingSettings:
     collect_dp_propellant_weight: float = 1.0
     collect_dp_step_days: float = 15.0
     collect_dp_inflation_fit: str = ""  # hopcalib fit JSON for the DP pair table ("" = flat)
+    # harvest substitution in the beam (SearchSettings.harvest_substitution): the dearest collect
+    # hops of the best chains are attacked by swapping a deploy for a neighbour that is cheaper
+    # to harvest, re-flying the chain and re-solving the tour
+    harvest_substitution: bool = True
+    substitution_budget_seconds: float = 180.0
     # Lambert prescreen of Earth legs: legs above this authority ratio are not sent to SCvx
     # (the certified Earth legs of the archive all fly below 0.62; the 350-400 d legs at
     # 0.75-0.93 that the ranking used to try first never certified and cost 12 checks per slot)
@@ -118,6 +210,18 @@ class ClusterPricingSettings:
     # harder here than the 0.45 that was calibrated on the inner, eccentric region.
     hop_authority_ratio: float = 0.55
     retime_step_days: float = 15.0
+    # Earth-return sweep before the joint re-timing (``returnsweep.sweep_return``): the
+    # certified route's return is flown with SCvx on a compact (departure, TOF) grid around it,
+    # nearest cells first inside ``return_sweep_budget_seconds``, and the certified cells are
+    # handed to the re-timer and to the slot's collect DP table (strict certified-cell pricing:
+    # the return may be re-timed onto a swept cell and nowhere else).  This is how the archived
+    # ships gained their long, cheap returns (return_sweep_v1: -63 kg of return propellant
+    # median); doing it inside the slot lets the re-timing end the tour early and return long.
+    return_sweep: bool = True
+    return_sweep_back_steps: int = 4
+    return_sweep_forward_steps: int = 4
+    return_sweep_tofs: tuple[float, ...] = (420.0, 465.0, 510.0, 555.0, 600.0)
+    return_sweep_budget_seconds: float = 240.0
     time_budget_seconds: float = float("inf")  # per cluster
     seed: int = 0
     # beam grids (tests use coarse ones); ``None`` keeps the SearchSettings defaults
@@ -160,6 +264,8 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         collect_dp_propellant_weight=settings.collect_dp_propellant_weight,
         collect_dp_step_days=settings.collect_dp_step_days,
         collect_dp_inflation_fit=settings.collect_dp_inflation_fit,
+        harvest_substitution=settings.harvest_substitution,
+        substitution_budget_seconds=settings.substitution_budget_seconds,
         **grids,
     )
 
@@ -593,6 +699,8 @@ def price_cluster(
     # legs SCvx refused anywhere in this family: shared by every ship slot's beam
     banned_pairs: set[tuple[int, int]] = set()
     banned_earth: set[tuple[int, float, float]] = set()
+    # SCvx return cells flown in this family (asteroid, departure, TOF) -> (certified, ΔV)
+    return_sweep_cache: dict[tuple[int, float, float], tuple[bool, float]] = {}
 
     def remaining_budget() -> float:
         return settings.time_budget_seconds - (time.perf_counter() - started)
@@ -665,6 +773,7 @@ def price_cluster(
                     "banned_pairs": len(banned_pairs),
                     "banned_earth": len(banned_earth),
                     "collect_dp": dict(search.collect_dp_stats),
+                    "substitution": dict(search.substitution_stats),
                     "collect_table_pairs": (
                         search.collect_table.cached_pairs if search.collect_dp_used else 0
                     ),
@@ -727,6 +836,22 @@ def price_cluster(
         calibrate_from_route(retimer, refined)
         if settings.earth_leg_continuous:
             retimer.protect_earth_leg(refined.plan)
+        if settings.return_sweep and remaining_budget() > 60.0:
+            sweep_report = sweep_route_return(
+                refined,
+                catalogue,
+                settings,
+                retimer,
+                search,
+                scvx=scvx,
+                cache=return_sweep_cache,
+                time_budget_seconds=min(
+                    settings.return_sweep_budget_seconds, max(remaining_budget() - 60.0, 1.0)
+                ),
+            )
+            if sweep_report is not None:
+                ship_report["return_sweep"] = sweep_report
+            memory.mark(f"slot {slot} return sweep")
         improvement = improve_and_certify(
             refined.plan,
             search,

@@ -163,6 +163,19 @@ def test_discover_archives_groups_by_ship_parent_and_orders_variants(tmp_path: P
     # discovery is deterministic regardless of source order
     again = discover_archives([run, tmp_path / "runs" / "cluster_run"])
     assert [g.name for g in again] == [g.name for g in groups]
+    # an external archive directory (another machine's run handed over as a bundle) is one
+    # more source: same layout, its own group even when the family label coincides with ours
+    external = tmp_path / "external" / "cluster_fleet_h100_v1"
+    _write(external / "clusters" / "family_0007", "ship_01", _legacy_summary(deployer))
+    _write(external / "clusters" / "family_0007", "ship_03", _legacy_summary(collector))
+    merged = discover_archives([tmp_path / "runs" / "cluster_run", run, external])
+    assert [g.name for g in merged] == [
+        "cluster_fleet_h100_v1/clusters/family_0007",
+        "cluster_run/clusters/family_0007",
+        "fleet_run",
+    ]
+    assert len({g.directory for g in merged}) == 3
+    assert [s.slot for s in merged[0].ships] == [1, 3]
 
 
 def _fake_refine(plan: RoutePlan, catalogue, scvx=None) -> RefinedRoute:

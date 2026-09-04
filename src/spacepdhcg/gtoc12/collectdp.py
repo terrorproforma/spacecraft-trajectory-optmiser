@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -48,6 +49,9 @@ from .screening import (
 
 FloatArray = NDArray[np.float64]
 EARTH_ID = 0
+# a swept return cell certifies the grid nodes within this many index steps of it (departure
+# and TOF steps count alike); shared with the re-timer's ``_return_override``
+RETURN_SWEEP_REACH = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,6 +140,10 @@ class CollectPairTable:
         self._geometry: OrderedDict[tuple[int, int, float, int], tuple[float, FloatArray]] = (
             OrderedDict()
         )
+        # SCvx return sweeps (``returnsweep.ReturnSweep``) per camp asteroid, and the derived
+        # (inflation, ok) override tables on the return grid; see ``set_return_sweep``
+        self.return_sweeps: dict[int, Any] = {}
+        self._return_overrides: dict[int, tuple[FloatArray, NDArray[np.bool_]]] = {}
         self.lambert_evaluations = 0
 
     def release_caches(self) -> int:
@@ -148,7 +156,85 @@ class CollectPairTable:
         self._hops.clear()
         self._returns.clear()
         self._geometry.clear()
+        self._return_overrides.clear()  # rebuilt from the kept sweeps on demand
         return released
+
+    # -- certified return cells ------------------------------------------------------------
+
+    def set_return_sweep(self, sweep: Any) -> None:
+        """Price the DP's Earth return from ``sweep.asteroid`` with the SCvx-measured sweep.
+
+        With a sweep in hand the return out of that camp is priced strictly from certified
+        cells (:meth:`return_override`): the DP may end the tour on any cell SCvx certified (or
+        within ``RETURN_SWEEP_REACH`` grid steps of one) and nowhere else - the model is not
+        consulted for that asteroid.  Tours through other camps keep the model.
+        """
+
+        self.return_sweeps[int(sweep.asteroid)] = sweep
+        self._return_overrides.pop(int(sweep.asteroid), None)
+
+    def return_override(self, asteroid: int) -> tuple[FloatArray, NDArray[np.bool_]] | None:
+        """``(inflation, ok)`` on the table's ``(epochs, return_tofs)`` grid from the asteroid's
+        sweep, or ``None`` without one.
+
+        Each flown sweep cell is placed on its nearest grid node; its inflation is the measured
+        SCvx ΔV over the zero-revolution Lambert ΔV of the cell's own (departure, TOF).  Every
+        grid node within ``RETURN_SWEEP_REACH`` index steps of a certified cell takes the
+        nearest cell's inflation (ties -> the earlier sweep entry); nodes nearest to a refused
+        cell, or beyond the reach, are infeasible.
+        """
+
+        key = int(asteroid)
+        sweep = self.return_sweeps.get(key)
+        if sweep is None:
+            return None
+        cached = self._return_overrides.get(key)
+        if cached is not None:
+            return cached
+        step = self.settings.step_days
+        n_t, n_k = self.epochs.shape[0], self.return_tofs.shape[0]
+        cells: list[tuple[int, int, float, bool]] = []
+        flown: list[tuple[int, int, float, float, float]] = []  # (k, t, departure, tof, dv)
+        for i, departure in enumerate(sweep.departures):
+            k = round((float(departure) - self.epochs[0]) / step)
+            if not (0 <= k < n_t) or abs(self.epochs[k] - departure) > step / 2.0 + 1e-6:
+                continue
+            for j, tof in enumerate(sweep.tofs):
+                if not bool(sweep.attempted[i, j]):
+                    continue  # arrival past the window: not flown, not a refusal
+                t = int(np.argmin(np.abs(self.return_tofs - float(tof))))
+                certified = bool(sweep.certified[i, j])
+                flown.append((k, t, float(departure), float(tof), float(sweep.delta_v_km_s[i, j])))
+                cells.append((k, t, np.nan, certified))
+        if not cells:
+            return None
+        # Lambert ΔV of the flown cells themselves (their own geometry, not the grid node's)
+        deps = np.asarray([f[2] for f in flown])
+        tofs = np.asarray([f[3] for f in flown])
+        r_s, v_s = asteroid_state(self.catalogue, np.full(deps.shape[0], key), deps)
+        r_e, v_e = earth_state(deps + tofs)
+        hop = lambert_hops(
+            r_s, v_s, r_e, v_e, deps, tofs, arrival_allowance_km_s=C.MAX_VINF_EARTH_KM_S
+        )
+        self.lambert_evaluations += 2 * deps.shape[0]
+        lambert = np.where(hop.feasible, hop.total_delta_v, np.inf)
+        measured = np.asarray([f[4] for f in flown])
+        oks = np.asarray([c[3] for c in cells]) & np.isfinite(lambert) & (lambert > 1e-9)
+        oks &= np.isfinite(measured)
+        infl = np.where(oks, measured / np.where(lambert > 1e-9, lambert, 1.0), np.nan)
+        ks = np.asarray([c[0] for c in cells])
+        ts = np.asarray([c[1] for c in cells])
+        grid_k, grid_t = np.meshgrid(np.arange(n_t), np.arange(n_k), indexing="ij")
+        distance = (grid_k[:, :, None] - ks[None, None, :]) ** 2 + (
+            grid_t[:, :, None] - ts[None, None, :]
+        ) ** 2
+        nearest = np.argmin(distance, axis=2)
+        reached = np.min(distance, axis=2) <= RETURN_SWEEP_REACH**2
+        ok = reached & oks[nearest]
+        inflation = np.where(ok, infl[nearest], np.nan)
+        table = (inflation, ok)
+        self._return_overrides[key] = table
+        return table
 
     # -- lattice -------------------------------------------------------------------------
 
@@ -334,14 +420,56 @@ class CollectPairTable:
         ratio = np.where(np.isfinite(dv), dv, 0.0) / np.maximum(authority, 1e-12)
         return return_inflation_model(tofs, ratio)
 
-    def return_propellant(self, dv: FloatArray, mass: float, tofs: FloatArray) -> FloatArray:
+    def return_propellant(
+        self,
+        dv: FloatArray,
+        mass: float,
+        tofs: FloatArray,
+        *,
+        asteroid: int | None = None,
+        t0: int = 0,
+    ) -> FloatArray:
+        """Propellant (kg) of the Earth returns ``dv`` (rows = lattice epochs from ``t0``,
+        columns = ``tofs``) at ``mass``; ``inf`` where not flyable.
+
+        With ``asteroid`` given and a return sweep set for it, the rows are priced strictly from
+        the certified cells (:meth:`return_override`) - measured inflation, no authority model,
+        infeasible off the certified cells; otherwise the TOF/ratio model with the authority
+        limit.
+        """
+
         s = self.settings
         dv = np.asarray(dv, dtype=np.float64)
+        override = None if asteroid is None else self.return_override(asteroid)
+        if override is not None and dv.ndim == 2:
+            inflation, ok = override
+            rows = slice(t0, t0 + dv.shape[0])
+            inflation, ok = inflation[rows], ok[rows]
+            ok = ok & np.isfinite(dv)
+            propellant = propellant_for_delta_v(
+                mass, np.where(ok, dv, 0.0) * np.where(ok, inflation, 1.0)
+            )
+            return np.where(ok, propellant, np.inf)
         authority = thrust_authority_km_s(mass, tofs, 1.0)
         ok = np.isfinite(dv) & (dv <= s.return_authority_ratio * authority)
         inflation = self.return_inflation(dv, mass, tofs)
         propellant = propellant_for_delta_v(mass, np.where(ok, dv, 0.0) * inflation)
         return np.where(ok, propellant, np.inf)
+
+    def return_inflation_at(
+        self, asteroid: int, departure: float, tof: float, dv: float, mass: float
+    ) -> float:
+        """Inflation the table priced the return ``asteroid -> Earth`` at ``(departure, tof)``
+        with: the certified cell's measurement when a sweep covers it, else the model."""
+
+        override = self.return_override(int(asteroid))
+        if override is not None:
+            inflation, ok = override
+            k = round((float(departure) - self.epochs[0]) / self.settings.step_days)
+            t = int(np.argmin(np.abs(self.return_tofs - float(tof))))
+            if 0 <= k < inflation.shape[0] and ok[k, t]:
+                return float(inflation[k, t])
+        return float(self.return_inflation(dv, mass, tof)[()])
 
 
 @dataclass(slots=True)
@@ -583,7 +711,7 @@ def _solve_collect_dp(
             # terminal: everything collected once j is, return to Earth
             if collected_now == full:
                 ret = table.earth_return(aj)[t0:].astype(np.float64)
-                cost = table.return_propellant(ret, mass_hop, table.return_tofs)
+                cost = table.return_propellant(ret, mass_hop, table.return_tofs, asteroid=aj, t0=t0)
                 cand = depart_value[:, None] - w * cost
                 if np.any(np.isfinite(cand)):
                     flat = int(np.argmax(cand))

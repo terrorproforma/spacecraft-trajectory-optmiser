@@ -140,12 +140,17 @@ def sweep_return(
     end_margin_days: float = 2.0,
     minimum_final_mass_kg: float = C.DRY_MASS_KG,
     cache: dict[tuple[int, float, float], tuple[bool, float]] | None = None,
+    time_budget_seconds: float = float("inf"),
+    nearest_to: tuple[float, float] | None = None,
 ) -> ReturnSweep:
     """Fly ``asteroid -> Earth`` with SCvx at every grid cell whose arrival fits the window.
 
     A cell is certified when SCvx converges and the independent verifier-model rollout of the
     emitted arcs closes on Earth; its ΔV is measured from the certified final mass.  ``cache``
     (keyed by asteroid, departure, TOF) shares results between sweeps of the same ship.
+    Cells are flown in increasing grid distance from ``nearest_to`` (a (departure, TOF), e.g.
+    the route's flown return) when given, so a ``time_budget_seconds`` cut leaves the far
+    corners un-attempted (not refused) rather than the cells next to the current return.
     """
 
     started = time.perf_counter()
@@ -161,35 +166,41 @@ def sweep_return(
     diagnostics: list[dict[str, Any]] = []
     solves = 0
     end = C.MISSION_END_MJD - end_margin_days
-    for i, departure in enumerate(departures):
-        for j, tof in enumerate(tofs):
-            arrival = float(departure + tof)
-            if arrival > end + 1e-9:
-                continue
-            attempted[i, j] = True
-            key = (int(asteroid), float(departure), float(tof))
-            if key in cache:
-                ok, dv = cache[key]
-            else:
-                ok, dv, note = _fly(
-                    catalogue,
-                    asteroid,
-                    mass_kg,
-                    float(departure),
-                    arrival,
-                    scvx,
-                    minimum_final_mass_kg,
-                )
-                solves += 1
-                cache[key] = (ok, dv)
-                if note:
-                    diagnostics.append(
-                        {"departure": float(departure), "tof_days": float(tof), "note": note}
-                    )
-            if ok:
-                certified[i, j] = True
-                delta_v[i, j] = dv
-                propellant[i, j] = float(propellant_for_delta_v(mass_kg, dv))
+    cells = [(i, j) for i in range(shape[0]) for j in range(shape[1])]
+    if nearest_to is not None and departures.shape[0] and tofs.shape[0]:
+        i0 = int(np.argmin(np.abs(departures - nearest_to[0])))
+        j0 = int(np.argmin(np.abs(tofs - nearest_to[1])))
+        cells.sort(key=lambda c: (abs(c[0] - i0) + abs(c[1] - j0), c))
+    for i, j in cells:
+        departure, tof = float(departures[i]), float(tofs[j])
+        arrival = departure + tof
+        if arrival > end + 1e-9:
+            continue
+        key = (int(asteroid), departure, tof)
+        if key not in cache and time.perf_counter() - started > time_budget_seconds:
+            diagnostics.append({"departure": departure, "tof_days": tof, "note": "budget"})
+            continue  # left un-attempted: the budget is spent
+        attempted[i, j] = True
+        if key in cache:
+            ok, dv = cache[key]
+        else:
+            ok, dv, note = _fly(
+                catalogue,
+                asteroid,
+                mass_kg,
+                departure,
+                arrival,
+                scvx,
+                minimum_final_mass_kg,
+            )
+            solves += 1
+            cache[key] = (ok, dv)
+            if note:
+                diagnostics.append({"departure": departure, "tof_days": tof, "note": note})
+        if ok:
+            certified[i, j] = True
+            delta_v[i, j] = dv
+            propellant[i, j] = float(propellant_for_delta_v(mass_kg, dv))
     return ReturnSweep(
         int(asteroid),
         float(mass_kg),

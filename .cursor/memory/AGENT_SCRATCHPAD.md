@@ -1861,3 +1861,59 @@ Use this file as persistent, repo-local execution memory.
   the collect hop to 70 kg / 180 d; (iii) localise the native worker memory transient with a
   per-slot RSS trace (harvest seeding on/off) before another 4-worker run, else use 3 workers.
 - `fleet-master` sources are now eleven runs; add `cluster_fleet_v6` and `probe_v6_family`.
+
+- [self] The beam transient was the collect DP's `fractions` cache keyed (j, l, round(mass)):
+  every Held-Karp expansion has a distinct mass -> one (n_t x n_tof) float64 table per
+  expansion, 2^k x k^2 of them. A 512-entry LRU gives the same route bit-for-bit (664.1 kg)
+  and the single-slot peak went 695 -> 329 MB (all of it the Earth-leg SCvx phase now).
+  Geometry LRU / int32 back-pointers were worth only ~13 MB.
+- [self] Harvest-window deploy ranking (family 54, W = 0 / 0.2 / 0.5 / 1.0): 664.1 / 591.4 /
+  524.4 / 540.0 kg. Cheap-hop share rises (0.12 -> 0.38) but the deploy chain loses asteroids
+  or mass every time; the pruning-on-inf variant lost 124 kg at every weight. Default stays
+  W = 0; report as negative result.
+- [self] Return sweep on the certified archive (36 best stand-alone ships, 3 workers, 50 min,
+  worker peak 221 MB): 13 improved, +140.5 kg total, improved returns 172-247 kg (median of
+  the 36: 269 -> 236 kg). Biggest: v6 family 1 ship 2 598.4 -> 633.3 kg (return 410 -> 212).
+  Gains are small per ship because the ships are propellant-bound at the return: saved return
+  propellant only pays when the re-timer can extend stays or insert an asteroid.
+- [self] First sweep experiment: the re-timer picked (69203, 450 d) which the sweep had
+  certified at the same mass and SCvx refused on re-flight -> `refuse_return` retires the cell
+  and attempt 2 certified (215 kg). Strict override (only swept/certified cells feasible).
+- [tool] `retime-returns` CLI: `--top 36 --workers 3 --budget-seconds 5400` ~ 50 min.
+
+- [self] The beam transient was the collect DP's `fractions` cache keyed (j, l, round(mass)):
+  every Held-Karp expansion has a distinct mass -> one (n_t x n_tof) float64 table per
+  expansion, 2^k x k^2 of them. A 512-entry LRU gives the same route bit-for-bit (664.1 kg)
+  and the single-slot peak went 695 -> 329 MB (all of it the Earth-leg SCvx phase now).
+  Geometry LRU / int32 back-pointers were worth only ~13 MB.
+- [self] Harvest-window deploy ranking (family 54, W = 0 / 0.2 / 0.5 / 1.0): 664.1 / 591.4 /
+  524.4 / 540.0 kg. Cheap-hop share rises (0.12 -> 0.38) but the deploy chain loses asteroids
+  or mass every time; the pruning-on-inf variant lost 124 kg at every weight. Default stays
+  W = 0; report as negative result.
+- [self] Return sweep on the certified archive (36 best stand-alone ships, 3 workers, 50 min,
+  worker peak 221 MB): 13 improved, +140.5 kg total, improved returns 172-247 kg (median of
+  the 36: 269 -> 236 kg). Biggest: v6 family 1 ship 2 598.4 -> 633.3 kg (return 410 -> 212).
+  Gains are small per ship because the ships are propellant-bound at the return: saved return
+  propellant only pays when the re-timer can extend stays or insert an asteroid.
+- [self] First sweep experiment: the re-timer picked (69203, 450 d) which the sweep had
+  certified at the same mass and SCvx refused on re-flight -> `refuse_return` retires the cell
+  and attempt 2 certified (215 kg). Strict override (only swept/certified cells feasible).
+- [tool] `retime-returns` CLI: `--top 36 --workers 3 --budget-seconds 5400` ~ 50 min.
+
+- [self] cluster_fleet_v7 (3 workers, nice 19, radius 1.6 / min 18): 25 families / 76 ships in
+  4 h, own fleet 9920 kg / 18 ships; **process-tree PSS peak 1.19 GB** (target < 2 GB met).
+  Remaining live growth is per-slot parked state (searches/retimers kept for orphan repair):
+  RSS after trim 70 -> 535 MB over 4 slots of a 35-member family -> `release_caches` (c495dc0).
+  ru_maxrss in bundle.json is process-lifetime: pooled workers inherit it across families.
+- [self] fleet_master_v6 (fourteen archives, 1032 columns): proven optimal 10739.27 (LP
+  10744.85), 20 ships, 11515.67 kg, 575.78 avg; 166 kg better than v5 on the master's objective,
+  5.8 kg lower raw mass. Return 216.5 kg mean = the <= 216 target within 0.5 kg. Collect hop
+  84.5 kg / 225 d unchanged = the whole gap to references.
+- [self] The DP's return TOF model does move new tours: v7 return TOF median 480 d (v6 420,
+  refs 473-486) but at 233 kg mean - the sweep then buys the rest.
+- [tool] `/tmp/run.sh <name>` only passes the script name; extra args are dropped (a
+  parameterised fm5.sh silently re-ran as fleet_master_v5 and had to be killed; committed
+  artifacts were untouched, columns/ is regenerable). Write one script per run.
+- [tool] Master DFS recursion depth = column count; > 1000 columns needs the raised recursion
+  limit (ba9b764). It bit after a 45-min re-certification - there is no re-cert cache.
+- [tool] PowerShell rejects `&&` between two `wsl` invocations; issue separate Shell calls.

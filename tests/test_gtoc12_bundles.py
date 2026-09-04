@@ -433,7 +433,13 @@ def test_forward_collection_tour_collects_in_deploy_order_after_one_repositionin
         ClusterPricingSettings(**{**PRICING_SETTINGS, "beam_width": 6, "max_deploys": 3}),
         members.shape[0],
     )
-    settings = replace(settings, earth_leg_tofs=tuple(float(t) for t in range(300, 901, 50)))
+    # the substitution pass is covered by its own test; here every plan comes from the beam's
+    # own chains (the Lambert-count comparison below assumes no re-flown chains)
+    settings = replace(
+        settings,
+        earth_leg_tofs=tuple(float(t) for t in range(300, 901, 50)),
+        harvest_substitution=False,
+    )
     search = RouteSearch(catalogue, members, settings)
     result = search.run()
     assert result.candidates
@@ -537,6 +543,174 @@ def test_forward_collection_tour_collects_in_deploy_order_after_one_repositionin
     assert first.lambert_evaluations > result.lambert_evaluations  # the Lambert look-ahead screens
 
 
+def _replay_plan(search: RouteSearch, plan: RoutePlan) -> tuple[float, float, dict[int, float]]:
+    """Independent forward mass pass over a plan's legs with the beam's leg model: (final mass,
+    propellant, collected kg per asteroid).  Collection happens at the departure of the leg
+    leaving the collect epoch; one miner is dropped at every deploy arrival."""
+
+    mass = search.settings.initial_mass
+    propellant_total = 0.0
+    collected: dict[int, float] = {}
+    for leg in plan.legs:
+        if leg.role == "camp":
+            continue
+        if leg.role in ("collect_hop", "earth_return"):
+            asteroid = leg.from_id
+            if abs(plan.collect_epochs[asteroid] - leg.departure_epoch) < 1e-6:
+                gained = C.maximum_collected_mass(
+                    plan.collect_epochs[asteroid] - plan.deploy_epoch_of(asteroid)
+                )
+                collected[asteroid] = gained
+                mass += gained
+        inflation = leg.inflation
+        if leg.role == "collect_hop":
+            inflation = search.hop_inflation_for(leg.delta_v_proxy_km_s, mass, leg.tof_days)
+        propellant = search._propellant(mass, leg.delta_v_proxy_km_s, inflation)
+        propellant_total += propellant
+        mass -= propellant
+        if leg.role in ("earth_out", "deploy_hop"):
+            mass -= C.MINER_MASS_KG
+    return mass, propellant_total, collected
+
+
+def _assert_exact_bookkeeping(search: RouteSearch, plan: RoutePlan) -> None:
+    mass, propellant, collected = _replay_plan(search, plan)
+    assert mass == pytest.approx(plan.final_mass_proxy_kg, abs=1e-6)
+    assert propellant == pytest.approx(plan.propellant_proxy_kg, abs=1e-6)
+    assert collected == pytest.approx(plan.collected_mass)
+    assert set(plan.deploy_epochs) == set(plan.collect_epochs) == set(collected)
+    for asteroid, epoch in plan.deploy_epochs.items():
+        assert plan.collect_epochs[asteroid] - epoch >= C.MIN_MINING_STAY_YEARS * YEAR - 1e-6
+    arrivals = {}
+    for leg in plan.legs:
+        if leg.role == "deploy_hop" or leg.role == "earth_out":
+            arrivals[leg.to_id] = leg.arrival_epoch
+    assert arrivals == pytest.approx(plan.deploy_epochs)  # every deploy is one arrival
+    assert plan.feasible
+
+
+@requires_data
+def test_harvest_substitution_reflies_the_chain_exactly_and_only_adds_better_plans(
+    catalogue,
+) -> None:
+    """The substitution pass (a) re-flies the deploy chain through the substitute with the
+    beam's own leg model and an exact mass chain, (b) never drops a beam plan, (c) adds only
+    feasible self-cleaning plans that swap at most one deploy per accepted round against a beam
+    chain with the same Earth leg and score above the seed they came from, (d) keeps the exact
+    forward-pass bookkeeping on every emitted plan, and (e) is deterministic."""
+
+    from spacepdhcg.gtoc12.bundles import (
+        ClusterPricingSettings,
+        cluster_search_settings,
+        family_clusters,
+    )
+    from spacepdhcg.gtoc12.clusters import ClusterBands
+
+    a_au = catalogue.semi_major_axis_km / C.AU_KM
+    mask = (a_au >= 2.2) & (a_au <= 3.0) & (catalogue.eccentricity <= 0.15)
+    mask &= np.rad2deg(catalogue.inclination_rad) <= 8.0
+    bands = ClusterBands(radius=2.0, phase_deg=8.0, visit_epochs=ClusterBands().visit_epochs)
+    _label, members = family_clusters(catalogue, catalogue.ids[mask], bands=bands, min_members=12)[
+        0
+    ]
+    settings = cluster_search_settings(
+        ClusterPricingSettings(
+            **{**PRICING_SETTINGS, "beam_width": 4, "max_deploys": 4, "neighbours": 16}
+        ),
+        members.shape[0],
+    )
+    settings = replace(
+        settings,
+        earth_leg_tofs=tuple(float(t) for t in range(300, 901, 50)),
+        harvest_substitution=False,
+    )
+    base = RouteSearch(catalogue, members, settings)
+    base_result = base.run()
+    assert base_result.best is not None
+
+    # -- (a) the chain re-flight, on a beam chain of three deploys
+    level = base._select(base._first_level())
+    partial = base._select(base._expand(level[0]))[0]
+    partial = base._select(base._expand(partial))[0]
+    assert len(partial.deployed) == 3
+    chain = [a for a, _ in partial.deployed]
+    mass_after_earth = partial.mass + partial.hop_propellant + C.MINER_MASS_KG * 2
+    same = base._rebuild_chain(partial, 1, chain[1])
+    assert same is not None and [a for a, _ in same.deployed] == chain
+    assert same.mass + same.hop_propellant + C.MINER_MASS_KG * 2 == pytest.approx(mass_after_earth)
+    departure = base._deploy_departure(partial, chain[1])
+    pool = [
+        int(b) for b in base.hops_from(chain[0], departure)["target_ids"] if int(b) not in chain
+    ]
+    rebuilt = next(
+        (r for r in (base._rebuild_chain(partial, 1, b) for b in pool) if r is not None), None
+    )
+    assert rebuilt is not None
+    ids = [a for a, _ in rebuilt.deployed]
+    assert ids[0] == chain[0] and ids[2] == chain[2] and ids[1] not in chain
+    assert len(set(ids)) == 3 and rebuilt.location == ids[2]
+    assert rebuilt.legs[0] == partial.legs[0]  # the Earth leg is kept verbatim
+    assert rebuilt.mass + rebuilt.hop_propellant + C.MINER_MASS_KG * 2 == pytest.approx(
+        mass_after_earth
+    )
+    # the chain's own legs reproduce its mass: exact leg-by-leg replay
+    mass, burnt = mass_after_earth, 0.0
+    for leg in rebuilt.legs[1:]:
+        if leg.role != "deploy_hop":
+            continue
+        propellant = base._propellant(mass, leg.delta_v_proxy_km_s, leg.inflation)
+        assert leg.inflation == pytest.approx(
+            base.hop_inflation_for(leg.delta_v_proxy_km_s, mass, leg.tof_days)
+        )
+        burnt += propellant
+        mass -= propellant + C.MINER_MASS_KG
+    assert mass == pytest.approx(rebuilt.mass) and burnt == pytest.approx(rebuilt.hop_propellant)
+    assert [e for _a, e in rebuilt.deployed] == [
+        leg.arrival_epoch for leg in rebuilt.legs if leg.role != "camp"
+    ]
+    # a substitute outside the screened neighbours, a banned pair or a repeat is refused
+    assert base._rebuild_chain(partial, 1, chain[2]) is None
+    assert base._rebuild_chain(partial, 0, ids[1]) is None
+    base.banned_pairs.add((chain[0], ids[1]))
+    assert base._rebuild_chain(partial, 1, ids[1]) is None
+    base.banned_pairs.clear()
+
+    # -- (b)-(e) the pass itself
+    on = RouteSearch(
+        catalogue,
+        members,
+        replace(settings, harvest_substitution=True, substitution_budget_seconds=150.0),
+    )
+    on_result = on.run()
+    base_summaries = [p.summary() for p in base_result.candidates]
+    on_summaries = [p.summary() for p in on_result.candidates]
+    for summary in base_summaries:
+        assert summary in on_summaries
+    extra = [p for p in on_result.candidates if p.summary() not in base_summaries]
+    assert on.substitution_stats["tried"] > 0
+    assert len(extra) == on.substitution_stats["improved"]
+    assert on.plan_score(on_result.best) >= base.plan_score(base_result.best) - 1e-9
+    seeds = [p for p in base_result.candidates if p.feasible][: settings.substitution_top]
+    floor = min(base.plan_score(p) for p in seeds)
+    allowed = set(int(a) for a in members)
+    for plan in extra:
+        assert plan.feasible and plan.self_cleaning
+        assert len(set(plan.asteroids)) == len(plan.asteroids)
+        assert set(plan.asteroids) <= allowed
+        kin = [b for b in base_result.candidates if b.legs[0] == plan.legs[0]]
+        assert kin
+        swapped = min(len(set(b.deploy_epochs) ^ set(plan.deploy_epochs)) for b in kin)
+        assert 2 <= swapped <= 2 * settings.substitution_rounds
+        assert on.plan_score(plan) > floor
+        _assert_exact_bookkeeping(on, plan)
+    for plan in on_result.candidates:
+        _assert_exact_bookkeeping(on, plan)
+    again = RouteSearch(catalogue, members, on.settings).run()
+    assert [p.summary() for p in again.candidates] == on_summaries
+    if extra:
+        assert on.substitution_stats["gain_kg"] > 0.0 or on.plan_score(extra[0]) > floor
+
+
 @requires_data
 def test_injected_first_level_seeds_the_beam_at_the_certified_mass(catalogue, family) -> None:
     from spacepdhcg.gtoc12.search import SearchSettings
@@ -597,6 +771,7 @@ PRICING_SETTINGS = dict(
     retime_step_days=30.0,
     launch_epochs=SMALL_LAUNCH_EPOCHS,
     earth_leg_tofs=SMALL_EARTH_TOFS,
+    return_sweep=False,  # the SCvx return sweep is exercised with a stub in its own test
 )
 
 
@@ -668,6 +843,96 @@ def test_price_cluster_builds_a_consistent_orphan_free_bundle(catalogue, family,
         bundle_column = FleetColumn.from_bundle(99, "bundle", columns)
         assert bundle_column.foreign == {} and bundle_column.ships == len(columns)
         assert fleet_feasible([bundle_column]) == ""
+
+
+@requires_data
+def test_price_cluster_hands_the_swept_return_cells_to_the_retimer_and_the_dp(
+    catalogue, family, monkeypatch
+) -> None:
+    """With ``return_sweep`` on, every certified ship's return is swept (stubbed SCvx here) at
+    its return-departure mass around its flown cell, nearest cells first, and the certified
+    cells are set on the re-timer and the slot's DP pair table before the joint re-timing."""
+
+    from spacepdhcg.gtoc12 import bundles
+    from spacepdhcg.gtoc12.bundles import ClusterPricingSettings, price_cluster
+    from spacepdhcg.gtoc12.retiming import Retimer
+    from spacepdhcg.gtoc12.returnsweep import ReturnSweep
+
+    calls: list[dict] = []
+    handed: list[tuple[str, int]] = []
+
+    def fake_sweep_return(_catalogue, asteroid, mass, departures, tofs, **kwargs):
+        calls.append(
+            {
+                "asteroid": int(asteroid),
+                "mass": float(mass),
+                "departures": np.asarray(departures),
+                "tofs": np.asarray(tofs),
+                **kwargs,
+            }
+        )
+        shape = (departures.shape[0], tofs.shape[0])
+        certified = np.zeros(shape, dtype=bool)
+        certified[shape[0] // 2, 0] = True  # one certified cell near the flown return
+        return ReturnSweep(
+            int(asteroid),
+            float(mass),
+            np.asarray(departures),
+            np.asarray(tofs),
+            np.ones(shape, dtype=bool),
+            certified,
+            np.where(certified, 6.0, np.inf),
+            np.where(certified, 250.0, np.inf),
+            solves=int(np.prod(shape)),
+            wall_seconds=0.5,
+        )
+
+    real_set = Retimer.set_return_sweep
+
+    def spy_set(self, sweep):
+        handed.append(("retimer", int(sweep.asteroid)))
+        real_set(self, sweep)
+
+    monkeypatch.setattr(bundles, "sweep_return", fake_sweep_return)
+    monkeypatch.setattr(Retimer, "set_return_sweep", spy_set)
+    label, members = family
+    settings = ClusterPricingSettings(
+        **{**PRICING_SETTINGS, "return_sweep": True, "return_sweep_budget_seconds": 30.0}
+    )
+    bundle = price_cluster(
+        catalogue,
+        members,
+        label=label,
+        settings=settings,
+        certify_earth=_proxy_certify,
+        refine=_proxy_refine,
+    )
+    if not bundle.ships:
+        pytest.skip("no chain closes in this family on the coarse grids")
+    summary = bundle.summary()
+    reports = [s.get("return_sweep") for s in summary["ships"]]
+    assert calls and all(r is not None for r in reports)
+    assert [r["asteroid"] for r in reports] == [c["asteroid"] for c in calls]
+    assert [("retimer", c["asteroid"]) for c in calls] == handed
+    for call, report in zip(calls, reports, strict=True):
+        # the grid is the compact lattice-aligned box around the flown return; the TOFs are
+        # snapped onto the re-timer's (here 30-day) lattice
+        step = settings.retime_step_days
+        assert tuple(call["tofs"]) == tuple(
+            sorted({step * round(t / step) for t in settings.return_sweep_tofs})
+        )
+        assert call["departures"].shape[0] <= (
+            settings.return_sweep_back_steps + settings.return_sweep_forward_steps + 1
+        )
+        assert call["time_budget_seconds"] <= settings.return_sweep_budget_seconds
+        assert call["nearest_to"] is not None
+        assert np.all(call["departures"] + call["tofs"].min() <= C.MISSION_END_MJD)
+        # the proxy route has no SCvx legs, so the mass is the plan's return-departure proxy
+        assert call["mass"] > C.DRY_MASS_KG
+        assert report["certified"] == 1
+        assert report["cells"] == call["departures"].shape[0] * call["tofs"].shape[0]
+        assert report["cheapest_certified_kg"] == pytest.approx(250.0)
+        assert report["cheapest_cell"][1] == pytest.approx(call["tofs"][0])
 
 
 @requires_data
