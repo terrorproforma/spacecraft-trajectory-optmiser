@@ -606,7 +606,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     )
     from .clusters import ClusterBands
     from .cooperative import FleetColumn, solve_fleet_master
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
@@ -676,7 +676,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     verifier = Gtoc12Verifier(catalogue, bonus=bonus_table)
     report: dict[str, Any] = {
         "run_id": args.run_id,
-        "commit": _commit(REPOSITORY_ROOT),
+        "commit": _commit(resources.repository_root()),
         "instance": {
             "instance_id": "gtoc12-full-catalogue",
             "pool_asteroids": int(ids.shape[0]),
@@ -950,7 +950,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     from .archive import discover_archives, recertify_archives
     from .bundles import bundle_columns
     from .cooperative import FleetColumn, solve_fleet_master
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
@@ -973,7 +973,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     groups = discover_archives([Path(s) for s in args.source])
     report: dict[str, Any] = {
         "run_id": args.run_id,
-        "commit": _commit(REPOSITORY_ROOT),
+        "commit": _commit(resources.repository_root()),
         "sources": [str(s) for s in args.source],
         "groups": [
             {
@@ -1106,7 +1106,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
 def cmd_retime_returns(args: argparse.Namespace) -> int:
     """Archive-wide Earth-return sweep + re-timing; improved ships are archived for the master."""
 
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .low_thrust import ScvxSettings
     from .returncampaign import ReturnCampaignSettings, run_return_campaign
 
@@ -1171,7 +1171,7 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
     )
     log.close()
     report["run_id"] = args.run_id
-    report["commit"] = _commit(REPOSITORY_ROOT)
+    report["commit"] = _commit(resources.repository_root())
     report["sources"] = [str(s) for s in args.source]
     report["cpu_only"] = True
     report["gpu_used"] = False
@@ -1251,7 +1251,7 @@ def cmd_leg_stats(args: argparse.Namespace) -> int:
 
 
 def cmd_hop_calibration(args: argparse.Namespace) -> int:
-    from .data import REPOSITORY_ROOT, load_catalogue
+    from .data import load_catalogue
     from .hopcalib import certified_hops, fit_inflation
 
     catalogue = load_catalogue()
@@ -1263,7 +1263,7 @@ def cmd_hop_calibration(args: argparse.Namespace) -> int:
     summary["holdout_sources"] = [str(p) for p in args.holdout]
     summary["train_hops"] = len(train)
     summary["holdout_hops"] = 0 if holdout is None else len(holdout)
-    summary["commit"] = _commit(REPOSITORY_ROOT)
+    summary["commit"] = _commit(resources.repository_root())
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_text(_json(summary) + "\n", encoding="utf-8")
     names = ["1", "r", "TOF/yr", "|Δa|/0.1AU", "|Δλ|/π"]

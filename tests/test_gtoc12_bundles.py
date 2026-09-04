@@ -1176,10 +1176,10 @@ def test_retimer_reports_an_invalid_visit_order_instead_of_raising() -> None:
 
 @requires_data
 def test_leg_stats_decode_references_with_shared_roles(catalogue) -> None:
-    from spacepdhcg.gtoc12.data import REPOSITORY_ROOT
+    from spacepdhcg.gtoc12.data import data_directory
     from spacepdhcg.gtoc12.legstats import ROLES, compare, format_table, leg_costs
 
-    path = REPOSITORY_ROOT / "benchmarks/gtoc12/data/37_mass_optimal_self_cleaning.txt"
+    path = data_directory() / "37_mass_optimal_self_cleaning.txt"
     if not path.exists():
         pytest.skip("reference solution not fetched")
     report = leg_costs("antipodes37", path, catalogue)
