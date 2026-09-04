@@ -25,8 +25,20 @@ from spacepdhcg.planner.result import PlanResult, json_safe
 VIEWER_SCHEMA_VERSION = "1.0.0"
 DATASET_KIND = "planner-export"
 VIEWER_SOURCE_ENVIRONMENT = "SPACEPDHCG_VIEWER_SOURCE"
-_VIEWER_FILES = ("index.html", "app.js", "math.js", "styles.css", "package.json", "README.md")
-_VIEWER_SCRIPTS = ("check.mjs", "serve.mjs")
+_VIEWER_FILES = (
+    "index.html",
+    "app.js",
+    "math.js",
+    "camera.js",
+    "dom.js",
+    "gtoc12.js",
+    "kepler.js",
+    "webgl.js",
+    "styles.css",
+    "package.json",
+    "README.md",
+)
+_VIEWER_SCRIPTS = ("check.mjs", "palette.mjs", "serve.mjs")
 
 
 def _stable(value: Any) -> Any:
