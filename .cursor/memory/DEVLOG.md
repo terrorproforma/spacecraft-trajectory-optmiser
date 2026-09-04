@@ -1303,3 +1303,16 @@
 - Next bottleneck: collect-hop phase at the harvest epoch (87 vs 66 kg, 240 vs 181 d): tighter
   collect-window families (radius <= 1.0, more ships per family), certified pair costs in the DP
   table, finer Earth-return grid, cheaper Earth-leg pre-screen.
+
+## 2026-09-04 10:15 AEST
+
+- Sixth GTOC12 iteration started (harvest-epoch phase of the collect hop). Code committed as
+  b91b334: `hopcalib.py` (certified-hop calibration fit + `gtoc12 hop-calibration`), collect DP
+  with fitted per-pair/epoch inflation, 15-day lattice, 30-day 240-720 d return grid, per-move
+  mass with a two-pass burn schedule, Earth-leg prescreen (ratio > 0.7 deferred), process-tree
+  PSS sampler. Fit residuals (holdout 2925 hops): rms 0.093 (ratio-only 0.111, flat 0.123).
+- Probe `probe_v6_family` (radius 1.75 collect-window family of 51, 5 slots): 2720.2 kg / 5
+  ships (582.8, 598.4, 484.9, 558.5, 495.7), 41.5 min.
+- Campaign `cluster_fleet_v6` launched 10:09 AEST: 4 workers, 5 ships per family, radius 1.75,
+  >= 20 members, collector harvest, calibrated DP, 2400 s per family, 4 h budget; GPU busy and
+  locked by the G4 campaign (CPU only).

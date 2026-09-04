@@ -1775,3 +1775,54 @@ Use this file as persistent, repo-local execution memory.
 - A 19th ship needs the average above 562.8 kg; the LP says no 19-ship fleet exists in the
   726-column archive, so only new columns above 563 kg move the score.
 - Do not edit `src/` while a campaign runs: workers import the modules fresh per task.
+
+### 2026-09-04 10:15 AEST - GTOC12 harvest-epoch phase: calibrated DP costs, two-pass mass, v6 campaign (interim)
+
+#### Task Summary
+
+- Sixth iteration on the collect hop (median 87 vs 66 kg): calibrated per-pair hop costs in the
+  collect DP (`hopcalib.py`), 15-day DP lattice with 60-600 d TOFs and a 30-day return grid,
+  a two-pass DP mass schedule (the real bug found on the way), Earth-leg prescreen at ratio 0.7,
+  tighter collect-window families (radius 1.75, >= 20 members, 5 ships per family), campaign
+  `cluster_fleet_v6` (4 workers, 4 h, started 10:09 AEST).
+
+#### Mistakes And Fixes
+
+- [self] Set out to make the DP lattice finer for phasing; the archived tours showed the DP was
+  actually losing ~100 kg per tour to its *mass model*: every move was priced (feasibility and
+  propellant) at the heaviest reachable mass (camp mass + all miners mined to the window end),
+  which put the certified tours' Earth returns (7.4 km/s, ratio 0.36 at 1120 kg) at ratio 0.60
+  and over the 0.5 limit. Detection: priced the certified tour of a fleet ship by the DP's own
+  table (722 kg of hops) and compared with the DP's chosen tour (1030 kg): the DP can only be
+  worse than a feasible tour if that tour is infeasible for it. Fix: move mass per subset plus a
+  second pass crediting the pass-1 tour's mean hop propellant per hop flown.
+- [self] The user's item "skip Earth legs with authority ratio > 0.7" would have thrown away 28 %
+  of the legs that certified (certified Earth legs reach ratio 0.83 at p95 with the 6 km/s
+  credit). Measured first: certification 81 % below 0.6, 32 % at 0.6-0.7, 9 % at 0.7-0.8, 5 %
+  above - so the legs above 0.7 are *deferred* (flown after every cheaper pair), not skipped.
+- [self] "Radius <= 1.0 on collect-window bands" gives 0-1 families on the 10 612-asteroid pool
+  (the four-epoch phase features make the scaled distance larger than the two-epoch one); the
+  v5c families were at radius 2.0. Chose 1.75 / >= 20 members (47 families, median 26, max 54).
+- [tool] A stale `/tmp/inspect.py` shadowed the stdlib `inspect` for any script run from
+  `/tmp` (numpy import fails). Scripts now live in `/tmp/gtoc12_scripts/`.
+- [self] `design_matrix` built with `np.column_stack` flattened the (n_t, n_tof) tables the
+  pair table feeds it; use `np.stack(np.broadcast_arrays(...), axis=-1)`.
+- [self] `plan["deploy_epochs"]` in `route_summary.json` is a dict keyed by asteroid string,
+  not a list aligned with `asteroids`.
+- [tool] PowerShell parses `<` inside a `wsl -- bash -c "..."` heredoc; write memory entries
+  through a Python script file instead of inline heredocs.
+
+#### What Worked
+
+- Fit on 3285 certified hops, holdout 2925 (v5/v5c, out of sample): rms 0.093 vs 0.111 for the
+  ratio-only model and 0.123 for flat 1.2; median propellant error -0.9 kg, p10 -11.5, p90 +5.0.
+  Slope on the authority ratio 0.84, on the phase difference 0.39/pi; da carries nothing.
+- Probe of one radius-1.75 family with the full v6 configuration: 5 ships, 582.8 / 598.4 /
+  484.9 / 558.5 / 495.7 kg - two ships above the 563 kg a 19th ship needs (best archived single
+  ship was 564.0), 41 minutes, worker RSS 0.95 GB.
+
+#### Guardrails For Next Session
+
+- Do not edit `src/` or `results/gtoc12/hop_inflation_fit.json` while `cluster_fleet_v6` runs.
+- The user's "< 2 GB total" memory bound: report the measured process-tree PSS peak
+  (`memory_total_pss_peak_mb`, new sampler), not RSS sums - forked workers share pages.
