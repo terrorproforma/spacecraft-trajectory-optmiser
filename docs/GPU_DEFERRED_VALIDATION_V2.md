@@ -236,8 +236,8 @@ plus `planner_c_api_smoke`, `planner_problem_smoke`, `powered_descent_free_time_
 | `cpp/include/spacepdhcg/transcription/powered_descent_3dof.hpp` | `c1771cc617741634cf03269684b53428703f5aaf` |
 | `cpp/include/spacepdhcg/transcription/powered_descent_6dof.hpp` | `19817a9ac145bbc5cb4381fdca58f1d075747ee9` |
 | `cpp/include/spacepdhcg/transcription/low_thrust.hpp` | `c77fb96870cc2561d973ab04fcdf5d954ddb7a2d` |
-| `cpp/cuda/src/persistent_pdhcg.cu` | `8ce085181d7e1dc807c46ce44a1dcef11b936001` |
-| `cpp/cuda/tests/device_scvx_integration_test.cu` | `af788b0bf60e7c92f124147d0324908e71b8b616` (release merge; was `32ba2649…` at d7ca28f) |
+| `cpp/cuda/src/persistent_pdhcg.cu` | `e0099df7469745eeaf27c1ffece46c43c1b5cb3d` (second release merge; was `8ce08518…` at d7ca28f and 689851b) |
+| `cpp/cuda/tests/device_scvx_integration_test.cu` | `642eeee216d4c70c6be4f230a77e88724802c654` (second release merge; was `32ba2649…` at d7ca28f, `af788b0b…` at 689851b) |
 | `cpp/cuda/tests/recovery_test.cu` | `124afd35df935041d62d13b17697ef763555b6bd` (release merge; was `317ccdff…` at d7ca28f) |
 | `benchmarks/g4_policy.json` (sha256 `9ab3b444…`) | `07755ed79d77700ab2641259b414ddffcadc6cef` |
 | `benchmarks/g4_applicability.json` (sha256 `1c4e0d51…`) | `a5b4b0d751e11cd76c348800b39c4fffb2f83a73` |
@@ -251,6 +251,15 @@ and aca6500 (GPU-validated on that line: CUDA CTest, executor selftests and capa
 in `docs/G4_GATE_REPORT.md`); `recovery_test.cu` carries `proposal/g3-sanitizer-recovery-cap` 9fafee8 (a
 20,000-iteration budget for the cancellation solve only under `--sanitizer`; host build only, not yet
 executed on the GPU). Every other blob is unchanged from base 63271d5.
+
+Second release merge (`release/single-gpu-v1-merge` onto main 689851b, 2026-09-05): two more of these
+files moved with `integration/single-gpu-v1` 1dbcae0 (G4 attempt-deadline enforcement inside the
+recovery kernel and solve preamble: block-uniform `poll_cancellation`, polled recovery phases,
+pre-loaded kernel modules, `inner_iteration_cap`). `persistent_pdhcg.cu` now records
+`e0099df7…` and `device_scvx_integration_test.cu` `642eeee2…`; both blobs are exactly the merged
+tree's `git hash-object` (verified on the RTX 5090 on that line: `cancellation_deadline_test` 84/84,
+`tests/test_g4_pdhcg_deadline_gpu.py` 13/13, CUDA CTest 63/63 + 22/22, memcheck/racecheck clean).
+Every other blob is unchanged from the first release merge.
 
 Changed CUDA sources: `device_scvx.cu` +370/−0 (pd3_fft/pd6_fft branches only; the 9a4cbea
 workspace-wait fix retained), `device_scvx_c_api.h` +49 with CRLF→LF normalisation only
