@@ -905,6 +905,118 @@
     generated for the final clean report descendant. The old b0cd570 capability was not reused.
   - All archives remain local-only; no immutable URI exists.
 
+## 2026-09-01 22:18 AEST
+
+- Task summary:
+  - Researched spacecraft trajectory-optimization benchmarks used in current literature.
+  - Assessed GTOPX, TOPS, powered-descent, rendezvous, and low-thrust cases against the SpacePDHCG research question.
+- Changes:
+  - Initialized `.cursor/memory/AGENT_SCRATCHPAD.md` and this devlog.
+  - No product code or benchmark definitions changed.
+- Validation:
+  - Cross-checked project scope in `README.md`, `docs/PROJECT_BRIEF.md`, and `docs/BENCHMARK_PROTOCOL.md`.
+  - Verified benchmark definitions and availability using ESA, pykep, OpenSCvx, SCPToolbox, and cited paper sources.
+- Follow-up notes / risks:
+  - Recommended next step is a pinned benchmark manifest rather than importing every available trajectory family.
+  - GTOPX is a useful global-search benchmark but is not representative of SpacePDHCG's large repeated sparse CQP workload.
+
+## 2026-09-01 22:33 AEST
+
+- Task summary:
+  - Defined the comparative solver campaign and added historical GTOC challenge replay.
+- Changes:
+  - Added `docs/COMPARATIVE_SOLVER_CAMPAIGN.md`.
+  - Added `benchmarks/literature_baselines.json`.
+  - Extended `benchmarks/paper1_matrix.json` with comparison layers and complete-system baselines.
+  - Extended `benchmarks/paper2_matrix.json` with P2-F for reduced/full GTOC5, GTOC9, and GTOC12 replays.
+  - Updated benchmark protocol, Paper 1/2 outlines, README links, experiment guidance, and manifest tests.
+- Validation:
+  - `python -m pytest tests/test_benchmark_manifests.py`: 3 passed.
+  - Parsed Paper 1, Paper 2, and literature benchmark JSON successfully.
+  - `git diff --check`: passed.
+  - Trailing-whitespace checks for new campaign artifacts: passed.
+  - Ruff was unavailable in the active Python environment, so lint validation was not claimed.
+- Follow-up notes / risks:
+  - Published objectives and official scores are admissible quality references; direct speed comparisons require common-hardware reruns.
+  - GTOPX remains secondary because it does not exercise repeated sparse CQP architecture.
+  - Official external revisions, data, validators, and checksums must be pinned before running.
+  - GTOC11 and GTOC13 are deferred until the required models are supported.
+
+## 2026-09-02 23:30 AEST
+
+- Task summary:
+  - Read-only investigation of the slow current-head G0-G3 reseal on `integration/single-gpu-v1` (HEAD `b6afb49`) in WSL; the reseal worker's `g3/run.sh` (PID 399470) was still running.
+- Changes:
+  - No product code, evidence directory, or WSL worktree file changed; nothing killed or restarted (no hang found).
+  - Recorded findings in this devlog and the scratchpad only (Windows checkout, to keep the sealed WSL tree clean).
+- Validation:
+  - `ps`/`pstree`/`nvidia-smi`: the active step always owned ~100% of one core and 100% GPU utilisation; logs grew between samples.
+  - Reconstructed per-step durations from `run_log` log mtimes for the 090daa2 G3 pass (21:27-22:56) and the live b6afb49 run (23:20:49-).
+  - Confirmed `device_scvx_integration_test` flushes stdout per record, so empty fixed-tight timeout logs are genuine honest negatives, not lost buffers.
+- Findings:
+  - Total reseal so far ~5.5 h: three G0-G3 cycles (attempt failures at G3 displaced capability-hash and h1 JSON parsing, then fixes 090daa2 and b6afb49 each forcing a full re-seal), each G3 ~90 min.
+  - G3 breakdown (090daa2 pass): racecheck recovery_test 54m09s (60%), displaced fixed-tight honest-negative timeouts 3x150 s, h1 4m20s, initcheck recovery 3m53s, memcheck recovery 1m55s, release+debug build/ctest ~8 min, everything else <4 min.
+  - Redundant work per cycle: G3 rebuilds a Debug CUDA tree identical to G2's (~4 min), G0 (CPU-only) runs serially before GPU gates (~2 min).
+- Follow-up notes / risks:
+  - Do not change tolerances or limits during the seal; propose a sanitizer-mode iteration cap for the recovery cancellation solve only if another reseal cycle is needed anyway.
+  - Projected G3 completion ~00:50 AEST 3 Sep if displaced/h1 pass on the new HCW fixture.
+
+## 2026-09-03 00:55 AEST
+
+- Task summary:
+  - Monitored the b6afb49 G3 run to completion and delivered a side-branch proposal for the dominant sanitizer cost.
+- Changes:
+  - New branch `proposal/g3-sanitizer-recovery-cap` at 9fafee8 (worktree `/home/angus/worktrees/spacepdhcg-reseal-proposal`, based on b6afb49, committed with `GIT_AUTHOR_*`/`GIT_COMMITTER_*` = SpacePDHCG-Integration): `cpp/cuda/tests/recovery_test.cu` bounds the cancellation/destruction solve budget to 20,000 iterations only when `--sanitizer` is passed; the native 350,000 budget is unchanged.
+  - `integration/single-gpu-v1`, its worktree, and every evidence directory were left untouched; nothing was killed or restarted.
+- Validation:
+  - Proposal: Debug CUDA configure (pinned PDHCG read from the integration worktree via `-DSPACEPDHCG_PDHCG_SOURCE_ROOT`) and `--target recovery_test` build with warnings-as-errors passed in 25 s; `git diff --check` clean; build dir removed afterwards. Not executed on the GPU (device owned by the seal).
+  - Live G3 (b6afb49): displaced-regressions 9m10s (3 qualified-positive, 3 honest-negative timeouts), h1 `supported` at all six scales, all 16 sanitizer logs zero errors/hazards, `status=PASS completed_utc=2026-09-02T14:53:10Z corrected_nsys_export=true`.
+  - Per-step G3 wall clock: release build+ctest 4m05s, debug build 42 s, debug ctest 3m20s, device tests 3m44s, displaced 9m10s, h1 4m22s, memcheck x4 2m38s, racecheck x4 57m30s (recovery 54m33s), synccheck x4 53 s, initcheck x4 4m26s, nsys 6 s; total 92 min.
+- Follow-up notes / risks:
+  - The worker re-exported nsys stats with `--force-export=true` because the first `nsys stats` reused the 22:56 `.sqlite`; future G3 scripts should pass that flag.
+  - `seals/` is empty and G4 was not launched; the GPU became idle at 00:53, which arms a foreign idle watcher.
+
+## 2026-09-03 02:35 AEST
+
+- Task summary:
+  - Turned the comparative-campaign specification into runnable Phase 0-1 targets on
+    `feat/literature-targets` (worktree `/home/angus/worktrees/spacepdhcg-literature`, based on
+    `b6afb49`); integration and planner worktrees untouched.
+- Changes:
+  - `715c1db` spec import (user's campaign doc, literature baselines, matrix/protocol/outline
+    edits, manifest tests; text verbatim, CRLF normalised).
+  - `196b3ba` G7 contracts accept both the sealed and the P2-F-extended Paper 2 matrix digests;
+    CPU ledger counts updated (2,684 / 16,360).
+  - `4f92133` `src/spacepdhcg/literature/` (provenance, external sources, registry, free-final-time
+    SCvx core, P1-C/P1-D/P1-D-MC/P1-E/TOPS/GTOPX/GTOC runners, report, CLI), `spacepdhcg`
+    console script, `benchmarks/literature/*` (targets, profiles, provenance store with 126
+    records, external pins, frozen TOPS/GTOC selections, seeded Chari samples), schema, six test
+    modules.
+  - Docs: `docs/LITERATURE_TARGETS.md`, `docs/REFERENCE_REPRODUCTION_REPORT.md` (+ JSON twin and
+    `results/literature/*.json`), Track L in `docs/ACTIVE_SINGLE_GPU_ROADMAP.md`, README links,
+    campaign-doc status section.
+- Validation:
+  - Ruff check (whole repository) and Ruff format on all touched files: clean.
+  - Full Python suite: 354 passed, 4 skipped, 1 environmental failure
+    (`test_native_packaging`, no native library in the fresh venv); the same test passes with
+    `SPACEPDHCG_NATIVE_LIBRARY` pointing at an existing build (2 passed). Literature tests: 46.
+  - `scripts/literature/build_provenance.py --check`: store up to date; `git diff --check` clean.
+  - Reproductions (CPU, RTX 5090 owned by a G4 session all night): Acikmese-Ploen 2007 lossless
+    SOCP 400.63 kg vs 399.5 kg (+1.13 kg, 0.28 %); Blackmore 2010 case 1 400.09 vs 399.4 kg;
+    repository Euler SCvx 405.65 / 413.43 kg (gap); Szmuk 2018 free-final-time t_f = 3.3901 UT
+    with all ten guesses within 0.00054 UT (published: within 0.01 UT); Earth-Mars 603.925 vs
+    603.935 kg; Earth-Dionysus not converged (gap); TOPS P4 converged, P3/P1 iteration-limited,
+    CR3BP unsupported; GTOPX Cassini1/Rosetta/Messenger-reduced/GTOC1 reproduce the official
+    objectives to printed precision (three exactly); GTOC12 official verifier accepts the bundled
+    example and both published solutions (338 asteroids / 27,045.3 kg; 356 / 28,975.1 kg);
+    GTOC9 examples 1 and 2 validate under the re-implemented rules 4-19; GTOC5 scoring blocked.
+  - No native C++/CUDA transcription or kernel was changed, so no Release/Debug Werror, CUDA
+    parity, or sanitizer pass was run; no GPU workload was launched.
+- Follow-up notes / risks:
+  - GPU legs (P1-C pure-QOCO, P1-D-MC persistent batch) blocked; commands recorded in the report.
+  - Native `sigma` free-final-time kernels deferred (topology and policy-hash impact).
+  - Multi-revolution low-thrust convergence (Dionysus, TOPS P3) needs a better initial guess.
+
 ## 2026-09-03 02:40 AEST
 
 - Task summary:
@@ -931,6 +1043,57 @@
   - Reduced-instance search currently completes mostly one- and two-asteroid chains.
   - Full-catalogue screening and docs/GTOC12_TRACK.md are the next commits.
 
+## 2026-09-03 02:45 AEST
+
+- Task summary:
+  - Built the user-facing planner (`spacepdhcg plan` CLI + `spacepdhcg.planner.plan()`) on the
+    validated single-GPU device SCvx stack in the isolated worktree
+    `/home/angus/worktrees/spacepdhcg-planner` (`feat/planner-cli` from `b6afb49`).
+- Changes:
+  - `cpp/include/spacepdhcg/planner/{json,problem,families,describe}.hpp`: strict JSON model,
+    schema-1.0.0 problem parser with the native default table, and per-family adapters that build
+    the frozen HCW/3-DoF/6-DoF/low-thrust transcriptions from user values, emit the device layout
+    metadata, generate dynamics-consistent references, replay controls (RK4 / exact HCW ZOH), and
+    evaluate device-equivalent path/terminal metrics.
+  - `cpp/cuda/tools/spacepdhcg_plan.cu`: native executable running the persistent SCvx driver
+    (pure_qoco / pdhcg / pdhcg_recovery), independent host replay, certificate gates, strict JSON
+    result, deterministic exit codes (0/2/3/64/65/66/70), optional wall-clock cancellation.
+  - `cpp/src/c_api.cpp` + `c_api.h`: `spacepdhcg_planner_*` transcription ABI (structure, values,
+    reference, rollout, evaluate, describe, defaults) used by the Python CPU reference.
+  - `src/spacepdhcg/planner/`: JSON Schema, unit normalisation, native runner, Clarabel CPU
+    reference SCvx loop (device acceptance/trust/convergence rules, relative KKT audit), PlanResult
+    writers (JSON/CSV/summary), viewer export bundle, CLI; `web/trajectory-viewer/scripts/check.mjs`
+    now validates `dataset_kind: planner-export` while keeping every archive assertion.
+  - `examples/planner/` (four problems + README), `docs/PLANNER.md`, README section, native smoke
+    tests `planner_problem_smoke` / `planner_c_api_smoke`, Python tests (schema, CPU reference,
+    viewer export, gated GPU).
+- Validation:
+  - Ruff lint/format clean (143 files). Python: 366 passed, 13 skipped (GPU/QOCO gated).
+  - Native host Release, Debug, Debug+ASan/UBSan Werror builds: 47/47 tests each. CUDA 12.8
+    `sm_120` Release and Debug Werror builds of `spacepdhcg_plan` succeeded.
+  - GPU correctness so far (before the other worker's G4 claim core started at 01:26 AEST):
+    3-DoF hover pure_qoco N=20 certified (objective 0.492694362, 3 outer, terminal 3.3e-11,
+    13.0 s); HCW pdhcg N=20 certified (0.28 s). CPU reference certifies all four examples in
+    < 1 s each; CPU vs GPU on the identical hover problem: objective rel. diff 1e-7, states within
+    6 mm.
+  - Viewer export `npm run check` passes for the planner export and still passes for the archive.
+- Follow-up notes / risks:
+  - My probes overlapped the other worker's `--g4-session` from ~01:40 to 02:07 AEST (see
+    scratchpad); their groups in that window should be treated as contaminated.
+  - Wheel check: `python -m build --wheel` + fresh venv install; `spacepdhcg validate`, `defaults`,
+    `plan --backend cpu_reference` (low thrust certified in 0.72 s) and the honest GPU-unavailable
+    exit 66 all passed from the packaged wheel (schema JSON packaged).
+  - Commit `27569ad` (planner), follow-up commit with summary rendering and memory writeback.
+  - BLOCKED (GPU occupied): from 01:26 AEST the other worker ran G4 claim-core sessions
+    (`device_scvx_integration_test --g4-session`), a deadline repro from 03:00, and at ~03:54 the
+    full `run_g4_campaign.py run --claim-core` campaign with two session processes. Waiting
+    windows: 02:07-03:11 and 03:11-04:06 with pid-level `gpu_free.sh` polling; the GPU never
+    became free. Not executed this session: `SPACEPDHCG_PLANNER_GPU_TESTS=1 pytest
+    tests/test_planner_gpu.py` (6-DoF and low-thrust GPU plans, warm start on GPU, backend
+    selection, native failure reporting), `compute-sanitizer --tool memcheck spacepdhcg_plan`,
+    and the CUDA CTest subset. `/home/angus/planner-scratch/gpu_validation.sh {tests,memcheck,
+    sanitizers,examples,ctest}` runs each stage after `gpu_free.sh` reports FREE.
+
 ## 2026-09-03 03:35 AEST
 
 - Task summary:
@@ -953,6 +1116,49 @@
 - Follow-up notes / risks:
   - Scores are ~1/3 of a single archived reference ship; the search, not the refinement, is the
     bottleneck at catalogue scale.
+
+## 2026-09-03 03:40 AEST
+
+- Task summary:
+  - GTOC12 track delivered on `feat/gtoc12-asteroid-mining` (WSL). Official verifier: reduced
+    instance 253.744 kg (4 asteroids), full catalogue 249.035 kg (3 asteroids); independent
+    verifier reproduces the archived 39/37/36-ship references per asteroid to 0.0 kg.
+- Changes:
+  - None in this Windows checkout besides these memory notes; all code lives on the WSL branch.
+- Validation:
+  - See the branch devlog (`.cursor/memory/DEVLOG.md` at `accc5df`).
+- Follow-up notes / risks:
+  - `tests/test_native_packaging.py` needs a cmake-built wheel; it fails in the CPU venv on base
+    and branch alike.
+
+## 2026-09-03 04:05 AEST
+
+- Task summary:
+  - Launched the preregistered G4 H5/H6 claim core (360 groups, 3,240 invocations, core hash `40dc2174…`) on `integration/single-gpu-v1` from `/home/angus/worktrees/spacepdhcg-single-gpu-integration` (WSL), after verifying the sealed head and fixing a blocking executor defect found by the pilot.
+- Changes (all committed with `GIT_AUTHOR_*`/`GIT_COMMITTER_*` = SpacePDHCG-Integration; no push/amend/reset):
+  - `2e34d30` feat(g4): scheduler quarantines GPU-contaminated groups (`contaminated` disposition, full evidence retained, automatic re-run after foreign activity ends) using nvidia-smi samples, `/dev/dxg` holders, and Windows `nvidia-smi.exe pmon` compute contexts.
+  - `a68890b` fix(g4): `/dev/dxg` holders with `CUDA_VISIBLE_DEVICES` empty/-1 are recorded but do not censor (pilot false positive).
+  - `44e6939` feat(g4): `scripts/gpu/decide_g4_claim_core.py` re-validates groups, builds 18 `publication_aggregate` Paper 1 records, pairs measured attempts by instance+repeat (qualified-only), and applies `g4_decision` (bootstrap seed 20260901 + scale, 10,000 samples, frozen thresholds); refuses decisions on partial ledgers.
+  - `9a4cbea` fix(cuda): `spacepdhcg_cuda_workspace_wait` no longer holds the workspace mutex across `cudaEventSynchronize`, so the G4 deadline watchdog's cancel reaches the running kernel; cancelled inner solves report `SCVX_CANCELLED` (launched `timeout`) with spent time/iterations; cancelled attempts force a cold next boundary; capability pins `libspacepdhcg_cuda.so` (ldd) and the scheduler verifies it.
+- Validation:
+  - Preflight: HEAD 9678134 clean, PDHCG 167c8b7 (tree 62b05e6c) in both checkouts, libqoco `3db21490…` = G3 manifest, QOCO tree = pinned 09f0495 + declared abstol patch (`git apply --check -R`), all locks OK, `ninja: no work to do` with executable `4273cd8a…` = G3 manifest.
+  - Ruff clean; targeted pytest 52 passed; full python suite 314 passed with one pre-existing env-only failure (`test_native_packaging`, no wheel native library in `.venv-current-head`).
+  - Release ctest 62/62 after the fix (473 s); `recovery_test` gains a cross-thread cancel-during-wait check; real native-session pytest 14/14 with `SPACEPDHCG_G4_SESSION_EXECUTABLE`.
+  - 20 s-deadline `--g4-session` on claim-core group 0: nine strictly schema-valid launched `timeout` attempts at 20.0 s (≈19.3k PDHCG iterations each), direct-NVML energy valid; before the fix the same group emitted nothing in 91 minutes.
+  - Capability `/home/angus/g4-executor-capability-9a4cbea.json`: capability SHA `e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de`, file SHA `9b8888b5…`, executable `baab5602…`, libspacepdhcg_cuda.so `84d98bcd…`, real CUDA session probe passed, `--check` reproducible.
+- Second defect and relaunch (07:00–07:30 AEST):
+  - The first official group under 9a4cbea overran the 91-min boundary: gen 0 silent (no attempt in 91 min, foreign Windows compute at up to 99 % SM), gen 1 emitted seven 600.1 s `timeout` attempts (inner=1,000,000, residual ≈37) then one attempt ran >20 min. Cause: a cancel firing between inner solves (residual/replay/warm-start/re-solve window) never reaches the device and the next solve or identical-CQP re-solve spends its full budget.
+  - `26def2b` fix(cuda): driver checks `cancelled` before every inner solve and re-solve, rolls back a cancelled re-solve as `CANCELLED`; watchdog re-asserts cancel every second until the attempt returns; scheduler outer boundary = executor group deadline + 300 s. Verified by 20 s-deadline sessions on core groups 0/1/3 (fixed-tight/adaptive/hybrid): 9 valid `timeout` attempts each; ctest 62/62.
+  - `63271d5`, `cf0c780` docs(g4): honest interim gate-report updates.
+  - Capability `/home/angus/g4-executor-capability-26def2b.json`: capability SHA `93b6dac4c5035e9510db9d2c91b9e53ba6d8943e4c3be9947dd3cbaa5e868903`, file SHA `a2ec4a82…`, executable `16c1883f…`, libspacepdhcg_cuda.so `bf31e124…`.
+- Campaign state:
+  - Checkpoint `build-integration-report/g4-claim-core-26def2b` (ignored), worker PID 1169834 at launch (log `worker.log`), observer PID 1169835 (`observer.log`, 60 s cadence). Scripts: `build-integration-report/g4-claim-core-26def2b-{worker,status,observer,finish}.sh`; worker/status/finish run from the detached worktree `/home/angus/worktrees/spacepdhcg-g4-claim-core-26def2b` so the branch may advance.
+  - Superseded: `g4-claim-core-9a4cbea` checkpoint (one contaminated/overrun group, retained as evidence), `g4-claim-core-2e34d30-pilot` (pre-fix pilot, no attempt records).
+- Follow-up notes / risks:
+  - The GPU is shared with Reality-Simulator/weldsim agents, the planner worker, and Windows-side jobs; the worker logs `waiting_for_foreign_gpu_processes` and re-runs contaminated groups.
+  - Fixed-tight P1-E N=100 runs 0.5–1 ms per PDHCG iteration depending on contention and does not approach 1e-6 within the 1,000,000-iteration budget; groups whose attempts time out cost ≈91 min each, so the core is a multi-day campaign. Report measured throughput only.
+  - The 9a4cbea gen-0 silence is unexplained; the observer log localises attempt boundaries (deadline/NVML thread turnover) if it recurs.
+  - `test_native_packaging` fails in `.venv-current-head` for environment reasons only (no wheel native library).
 
 ## 2026-09-03 04:50 AEST
 
@@ -995,6 +1201,146 @@
   - `full_catalogue_search2` and `fleet3_full_catalogue` artifacts come from an intermediate
     commit state (documented); `reduced_v1_search3` and `fleet3_full_catalogue_v2` reproduce from
     HEAD.
+
+## 2026-09-03 05:40 AEST
+
+- Task summary:
+  - Closed the three substantive gaps of the literature reproduction on `feat/literature-targets`
+    (`/home/angus/worktrees/spacepdhcg-literature`): repository SCvx fuel gap, multi-revolution
+    low thrust, native free final time; added preflight-gated deferred GPU legs.
+- Changes:
+  - `d81c528` accurate 3-DoF option: variational RK4 (`rk4`, `integration_substeps`),
+    multiple-shooting merit with CQP-consistent defect penalty, objective-stall stop,
+    `accept_almost_solved`; frozen forward-Euler default and fixture hashes untouched; literature
+    profiles select the accurate option; regression tests assert gap <= envelope.
+  - `57cee5c` MEE low-thrust formulation (`low_thrust_mee.py`): revolution bookkeeping, spiral
+    seed, trust-weight continuation, complex-step Jacobians, Cartesian replay, revolution sweep;
+    Dionysus and TOPS profiles select `formulation: mee`.
+  - `1fa99ae` native `pd3_fft`/`pd6_fft` free-final-time topologies (sigma column, tangent rule,
+    Szmuk thrust-arm/tilt/gimbal/rate cones), C API, ctypes bridge + outer loop, Szmuk native
+    runner, CUDA time-dilated variational + sigma CSC kernels and parity test, C++ smoke tests.
+  - `8e18b93` `gpu_preflight.py`, `literature gpu-preflight|gpu-run`, deferred P1-C QOCO-GPU leg,
+    P1-D-MC pure-QOCO `pd6_fft` batch, report headlines, tests.
+  - Report/docs commit: regenerated `docs/REFERENCE_REPRODUCTION_REPORT.md` + JSON and the four
+    re-run records; `docs/LITERATURE_TARGETS.md`, roadmap Track L updated.
+- Validation:
+  - Ruff check + format clean on `src` and `tests`.
+  - Full Python suite: 388 passed, 4 skipped (native library from the Release build).
+  - Native Release and Debug `-Werror`: 47/47 ctest each (includes the two new smoke tests).
+  - CUDA workspace built for `sm_120` (nvcc 12.8) including `device_time_dilated_test`; not run.
+  - Before/after fuel: Acikmese-Ploen 2007 405.65 -> 399.36 kg (lossless 400.63, published
+    399.5); Blackmore 2010 case 1 413.43 -> 398.84 kg (lossless 400.09, published 399.4).
+  - Dionysus 2717.43 kg vs 2718.33 kg (envelope 2 kg); TOPS P3 converged (2 rev), TOPS P1
+    converged (1 rev), zero-revolution P1 recorded infeasible.
+  - Szmuk 2018: CPU core t_f 3.39008 UT; native `pd6_fft` 3.39254 UT (gap 0.0025 UT, envelope
+    0.01 UT), fuel 0.14286 vs 0.14263 UM.
+- Follow-ups / risks:
+  - GPU owned by the G4 campaign (`--g4-server 600`, `--g4-session`) throughout: CUDA parity
+    test, sanitizer pass, and both literature GPU legs deferred behind the preflight.
+  - P1-D-MC CPU batch convergence probability stays low (FOH core iteration limit on dispersed
+    states); persistent device SCvx batch still has no arbitrary-initial-state entry point.
+
+## 2026-09-03 06:20 AEST
+
+- Task summary:
+  - Consolidated `feat/planner-cli` (c74fdb7), `feat/literature-targets` (f6e8140) and
+    `feat/gtoc12-asteroid-mining` @ fa91b43 into `integration/single-gpu-v2-candidate` (worktree
+    `/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 63271d5 = current tip of
+    `integration/single-gpu-v1`, which already contains 9678134). The running G4 claim core
+    (`spacepdhcg-single-gpu-integration`, 9a4cbea capability `e546583b…`) was not touched; no GPU
+    use; `/home/angus/.spacepdhcg-gpu.lock` never created.
+- Changes (all committed as SpacePDHCG-Integration via `GIT_*` env; no push/amend/reset):
+  - `2e7548b` merge planner (memory files additive).
+  - `da0a96b` merge literature: three-way union of the appended `c_api.h`/`c_api.cpp` ABI blocks;
+    `pyproject` console script → `spacepdhcg.cli:main`; `planner.cli.add_commands()`; umbrella
+    `src/spacepdhcg/cli.py`; `src/spacepdhcg/__main__.py` (identical to gtoc12); `tests/test_cli_dispatch.py`.
+  - `2f4be21` merge gtoc12 @ fa91b43: dispatcher gains `gtoc12`, duplicate `pyproject` key dropped,
+    `COMPARATIVE_SOLVER_CAMPAIGN.md` appendix kept + GTOC12 pointer; `literature_baselines.json`
+    identical on both sides (deduplicated spec import).
+  - `f55a309` `docs/SINGLE_GPU_V2_CANDIDATE_REPORT.md`, `docs/GPU_DEFERRED_VALIDATION_V2.md`,
+    `benchmarks/gpu_deferred_validation_v2.json`, `tests/test_gpu_deferred_manifest.py`.
+- Validation (CPU only, `CUDA_VISIBLE_DEVICES=''`; evidence in `build-v2-verification/`):
+  - Ruff check/format clean (262 files). `cpp` RelWithDebInfo/Debug/ASan+UBSan Werror: 49/49 CTest
+    each (new planner + free-time smoke tests included); `cpp/native` 8/8 ×3; CMake consumer 1/1.
+  - Schema `--check` (G7 schemas, G4 policy header) pass.
+  - Full Python suite with the fresh library, pinned **CPU** QOCO (09f0495 + abstol patch, builtin
+    algebra) and GTOC12 data: 490 passed, 23 skipped (GPU-gated, offline artefacts, node).
+    Subsets: G4 contracts 67 passed (claim-core `40dc2174…`, policy `9ab3b444…`, applicability
+    `1c4e0d51…` unchanged), G6 freeze 37 passed, GTOC12 39 passed incl. official binary
+    reproduction, literature 81 passed / 11 offline skips, planner viewer export 4/4 with node.
+  - Wheel/sdist built; fresh venv import + ABI (`spacepdhcg_planner_create`, `spacepdhcg_pd3_fft_create`,
+    `spacepdhcg_pd6_fft_create`) + CLI (`--help`, `validate`, `defaults hcw`, `plan --backend
+    cpu_reference`, `gtoc12 --help`, `python -m spacepdhcg`, exit 66 without GPU) pass.
+  - CUDA sm_120 Release + Debug configure/build of all 175 targets (pinned PDHCG 167c8b7) pass;
+    68-test CTest inventory recorded, not executed.
+  - Web viewer: `npm run check` pass (Linux node 20, Windows node 24); `npm test` 6/6 on Windows
+    node 24 (suite is Windows-specific; 4/6 on Linux with two environment-only failures).
+  - Frozen artefacts blob-identical to 63271d5 (fixed-time transcription headers, persistent_pdhcg.cu,
+    device_scvx_integration_test.cu, recovery_test.cu, G4 JSON + .sha256, paper2_instances.json);
+    `device_scvx.cu` +370/−0; `device_scvx_c_api.h` +49 with CRLF→LF only.
+- Follow-up notes / risks:
+  - Wheel consumers cannot run `spacepdhcg literature …` / `gtoc12 …` (registries resolved via
+    `Path(__file__).parents[3]`; pre-existing on both branches).
+  - Promotion after the claim-core finish script:
+    `cd /home/angus/worktrees/spacepdhcg-single-gpu-integration && test -z "$(git status --porcelain=v1)" && test "$(git rev-parse HEAD)" = 63271d58b78df343c1ae694525e460db31696f5d && git merge --ff-only integration/single-gpu-v2-candidate`.
+  - Later commits on `feat/gtoc12-asteroid-mining` (after fa91b43) are not in the candidate.
+
+## 2026-09-03 08:05 AEST
+
+- Task summary:
+  - Fixed the installed-wheel defect on `integration/single-gpu-v2-candidate`
+    (`/home/angus/worktrees/spacepdhcg-single-gpu-v2`, base 2c8c651): `spacepdhcg literature …`,
+    `spacepdhcg gtoc12 …` and `spacepdhcg-orbitweaver-g7 validate-matrix` resolved `benchmarks/`
+    through `Path(__file__).parents[3]`. CPU only; `CUDA_VISIBLE_DEVICES=""`; the G4 integration
+    worktree and the GPU were not touched; `/home/angus/.spacepdhcg-gpu.lock` never created.
+- Changes (commit `b20e2ea`, author SpacePDHCG-Integration via `GIT_*` env; no push/amend/reset):
+  - `src/spacepdhcg/resources.py` (new): `asset_path()` resolves repository-relative names in the order
+    `$SPACEPDHCG_BENCHMARKS_DIR` (authoritative for `benchmarks/…`; missing file → `AssetNotFound`
+    naming the variable) → source checkout containing the module → `spacepdhcg/_data` packaged copies;
+    `AssetNotFound` lists every searched location; `locate_directory()`, `cache_root()`
+    (`$SPACEPDHCG_CACHE_DIR` / XDG / `~/.cache/spacepdhcg`), `output_root()`, `compare_packaged_assets()`.
+  - `src/spacepdhcg/_data/` (new, 34 files, 270,583 B + README): literature registry/provenance/
+    external sources/11 profiles/Chari samples/TOPS selection/GTOC subsets, GTOC12 rules/pins/
+    reduced-instance/reference reproductions, G4 policy/applicability/claim core + `.sha256` locks,
+    campaign scopes, paper1/paper2 matrices, paper2 instances, provenance schema. Maintained by
+    `scripts/sync_packaged_assets.py` (`--check`). No large data (gtoc12/data, downloads) packaged.
+  - Resolver adoption: `literature/{registry,external_sources,provenance,pd6_monte_carlo,report,cli}.py`,
+    `gtoc12/{data,reduced_instance,lambert,cli}.py`, new `gtoc12/fetch.py` (fetch logic moved from
+    `scripts/gtoc12/fetch_gtoc12_data.py`, now a thin wrapper), `planner/viewer_export.py`,
+    `orbitweaver/cli.py`. Module path constants became functions (`registry_path()`, `store_path()`,
+    `rules_path()`, `default_rule_path()`, …); `load_rules()` added; GTOC12 data dir falls back to
+    `<cache>/gtoc12`; `NativeLambert` falls back to the packaged `libspacepdhcg`.
+  - Tests: `tests/test_resources.py` (30 tests: order, override authority, error messages, SHA-256
+    byte identity incl. hash locks, sync-script drift/repair, commands from a simulated installed
+    layout); `test_gtoc12_rules_and_data.py`, `test_gtoc12_pipeline.py`, `test_literature_provenance.py`
+    and `scripts/literature/build_provenance.py` moved to the new accessors.
+  - Docs: README (layout + "Frozen assets from an installed wheel"), `docs/GTOC12_TRACK.md`,
+    `docs/LITERATURE_TARGETS.md`, new `docs/WHEEL_ASSET_RESOLUTION_FIX.md`, candidate report follow-up
+    closed; `pyproject.toml` comment on `wheel.packages`.
+- Validation (evidence `build-v2-wheel-fix/`: `summary.tsv`, `summary-py.tsv`, `commands.txt`, logs):
+  - Ruff check/format clean (268 files); G7 schema, G4 policy header, provenance store and packaged
+    mirror `--check` pass.
+  - Full Python suite (`python -S -m pytest`, RelWithDebInfo library, pinned CPU QOCO, GTOC12 data):
+    527 passed, 23 skipped (550 collected; same GPU/offline/node skips). G4 contracts 67 passed; G6
+    freeze 37 passed; topology/handback/G7/G5 hash tests 85 passed, 1 skipped; GTOC12 39 passed;
+    literature 81 passed / 11 offline skips; planner+CLI+resources 92 passed / 11 skips.
+  - Frozen hashes unchanged: `sha256sum -c` OK for `g4_policy` (`9ab3b444…`), `g4_applicability`
+    (`1c4e0d51…`), `g4_h5_h6_claim_core` (`40dc2174…`); `git diff HEAD -- benchmarks/ experiments/
+    cpp/ papers/ web/` empty; mirror blobs identical to the originals.
+  - Wheel `e3f51456…` + sdist `26dd1a1e…` built; wheel audit (34 assets byte-identical, no
+    `gtoc12/data`, native lib present); a wheel built from the extracted sdist has identical `_data`.
+  - Fresh `uv` venv from `/tmp` with repo env unset: `--help`, `capabilities`, `validate`, `defaults hcw`,
+    `plan --backend cpu_reference` (certified), `literature list/status/provenance`, `literature report`
+    (exit 1, "no reproduction records yet"), `gtoc12 --help`, `gtoc12 fetch --help`, rules unit path,
+    missing-data message, `gtoc12 reduced-instance` (with `SPACEPDHCG_GTOC12_DATA`), `NativeLambert()`
+    via the packaged library, `tests/test_gtoc12_rules_and_data.py` + `test_gtoc12_verifier.py` against
+    the installed package (20 passed), `spacepdhcg-orbitweaver-g7 validate-matrix`,
+    `spacepdhcg-paper1 --help`, override semantics, installed `_data` byte-identical to the repository.
+- Follow-ups / risks:
+  - `literature run/report` from a wheel write below the working directory (documented).
+  - `web/trajectory-viewer` remains unpackaged (export omits viewer files unless
+    `SPACEPDHCG_VIEWER_SOURCE`).
+  - Memory files are past the rollover threshold; archive-first rollover due next consolidation.
 
 ## 2026-09-03 09:40 AEST
 
@@ -1049,6 +1395,140 @@
   - `results/gtoc12/runs/fleet10_master_v1/fleet/viewer/trajectories.json` (3.6 MB) is not
     committed; regenerate with `python -m spacepdhcg gtoc12 export-viewer` from the committed
     `fleet/Result.txt`.
+
+## 2026-09-03 11:40 AEST
+
+- Task summary:
+  - G4 H5/H6 claim core relaunched under preregistered amendment `single-gpu-v1.1` with run-and-flag
+    contamination. Checkpoint `build-integration-report/g4-claim-core-a08f5e2` (WSL), worker PID
+    1380768, observer 1380849; pin worktree `/home/angus/worktrees/spacepdhcg-g4-claim-core-a08f5e2`.
+- Changes (all on `integration/single-gpu-v1` in WSL; this Windows checkout only carries memory notes):
+  - Amendment `benchmarks/g4_claim_core_amendment_v1_1.json` (sha256 `c691467e...5b8a1f5`) + lock,
+    schema, `docs/G4_CLAIM_CORE_AMENDMENT_V1_1.md`, scope-registry and contract references.
+  - Scheduler: per-attempt contamination flagging (before/during/after SM sampling, utilization
+    deltas, shared lock `/home/angus/.spacepdhcg-gpu.lock`), no idle wait, no re-run; amendment env
+    (120 s / 200k core, 600 s / 1M twins); deterministic-replay handling; `policy_amendment` echoed in
+    checkpoint metadata and every record.
+  - Executor: amendment env, FNV-1a trace hash, `timeout_deterministic_replay` records, selftest
+    mode, `compiled_source_commit` in `--g4-capabilities`.
+  - Decision: contaminated exclusion with n reported, replay = censoring, sensitivity acceptance
+    rule (exit 2 = amendment invalid), H6 null residuals instead of +/-inf.
+  - Commits: amendment/scheduler/executor/decision work through `cfc3d4d`; `2ef27e1` (compiled
+    source-commit provenance check); `a08f5e2` (H6 inf -> null).
+- Validation:
+  - Ruff clean; targeted G4 suites green (47 + 29); full Python suite 13 pre-existing env failures
+    (matplotlib / native packaging) only; CUDA CTest green; executor selftest; capability
+    `cf057e02...eefdaaef` (check mode agrees); one-group throwaway probe on `/tmp` completed and
+    its `--preview` decision ran end to end with `identity.repository_commit` = pinned head.
+- Follow-up notes / risks:
+  - Foreign Windows `python.exe` (PID 40636, ~96 % SM) is on the GPU; contamination rate is expected
+    to be 100 % until it stops. Timing-based H5/H6 statistics will have n=0 for those coordinates.
+  - Pure-gpu-ipm P1-E N=100 fails `numerical` in ~0.5 s with zero QOCO workspace creations
+    (pre-existing executor defect candidate).
+
+## 2026-09-03 14:40 AEST
+
+- Task summary:
+  - Urgent triage of the pure-gpu-ipm defect on `g4-claim-core-a08f5e2`; two executor fixes, two
+    campaign relaunches. Current checkpoint `build-integration-report/g4-claim-core-ccd5596`, pin
+    `/home/angus/worktrees/spacepdhcg-g4-claim-core-ccd5596`.
+- Root causes (all on `integration/single-gpu-v1`, WSL):
+  - Not the environment: worker env carried the QOCO library and cuDSS path; foreground replays with
+    the worker env and the planner's library reproduced the failure identically.
+  - (1) `spacepdhcg_cuda_scvx_driver_reset_attempt` requested a PDHCG FULL_RETAINED warm start for
+    pure QOCO -> INVALID_STATE -> recorded as launched `numerical` in 0.00 s. (2) Failure branch
+    never copied QOCO workspace counters (the "zero creations"). Genuine QOCO `numerical error` at
+    the core's conditioning 4.0 (same group qualifies at conditioning 0.0). (3) QOCO keeps the
+    stall-escalated `kkt_dynamic_reg` and best-iterate tracker across solves; re-solves after a
+    failure ran 62 then 1 iteration on identical data (FNV-1a data hash equal).
+- Changes:
+  - `857f99a`: warm boundary fix; QOCO counters + raw status on failure; `executor_defect` terminal
+    disposition (executor, schemas, contracts, scheduler quarantine, decision refusal);
+    `g4_attempt_diagnostic` stderr line; capability probe runs a real pure-gpu-ipm session and pins
+    the QOCO library hash, worker refuses a different library; `invalidate` ledger action
+    (`invalid_executor_defect`, records retained); `tests/test_g4_ipm_session_gpu.py`.
+  - `ccd5596`: adapter restores configured settings before each numeric update and rebuilds the
+    QOCO solver after any failed solve (counted in `workspace_creations`); docs.
+- Validation:
+  - Ruff clean; focused Python suites 81 passed; CUDA CTest 62/62 (857f99a) and qoco/scvx subset
+    (ccd5596); GPU regression test passed (2:17 under 99 % foreign load); capability probes
+    9/9 launched, >= 1 QOCO workspace, `unqualified`; foreground replay with per-solve data hash.
+- Campaign hygiene:
+  - a08f5e2: 26 completed pure-gpu-ipm groups invalidated; 857f99a: 9 invalidated; `migrate`
+    imported 0 (no other policy had completed). Option (b) each time: the checkpoint pins
+    `source_commit`, so re-runs live in a new checkpoint at the fix head.
+- Follow-up notes / risks:
+  - IPM attempts at conditioning 4.0 fail after 100-200 s (N=100) and are not interruptible at the
+    120 s deadline; projection is dominated by these and by the foreign GPU load.
+  - H6 caveats to raise before interpretation: IPM baseline has no Ruiz equilibration; deadline
+    overrun recorded as `numerical` not `timeout`; IPM failure is non-deterministic on cuDSS.
+
+## 2026-09-03 17:10 AEST
+
+- Task summary:
+  - Preregistered amendment `single-gpu-v1.2` (supersedes v1.1 by hash; inherits contamination,
+    replay, censoring, schedule verbatim) and relaunched the claim core under it:
+    `build-integration-report/g4-claim-core-46bc895`, pin
+    `/home/angus/worktrees/spacepdhcg-g4-claim-core-46bc895`, worker PID 1911827.
+- Probe evidence (rule A, P1-E N=100 group a8bdf61e, foreground, contaminated, 120 s deadline):
+  - Ruiz 0 / pinned library, conditioning 4.0 (campaign v1.1): `numerical` 8/8, QOCO status 3,
+    27-200 iterations, 28-213 s.
+  - Ruiz 5 / pinned library, conditioning 4.0: `numerical` 6/6 at iteration 8 with NaN iterates.
+    Root cause is QOCO's CUDA backend, not data: `safe_div(1,0)` returns `QOCOFloat_MAX` for empty
+    G/A rows, and `scale_arrayf` has no host fallback so P and c are never scaled.
+  - Ruiz 5 / scratch-fixed library: conditioning 4.0 still `numerical` (54 it, 183 s, no NaN);
+    conditioning 0.0 `numerical` 6/6 (21-24 it) where Ruiz 0 gives `qualified` 3/3 (11-13 QOCO it
+    per subproblem, 128-156 s walls under contamination).
+  - hybrid-pdhcg-ipm conditioning 4.0: PDHCG stage times out 6/6 with either setting; IPM stage
+    never reached.
+  - QOCO's default at pinned commit 09f0495 is `ruiz_iters = 0`, so "native default" is recorded as
+    `qoco_native_default` / 0. The conditioning-4.0 IPM result stands as a genuine IPM negative.
+- Changes:
+  - `aca6500` (executor/adapter): `spacepdhcg_native_qoco_create(..., ruiz_iterations, ...)`,
+    reported `ruiz_iterations` + raw QOCO status; rule A selection and `ipm_equilibration` echo;
+    `scaling_mode not_applicable_ipm_native` for pure-gpu-ipm; rule B `solver_disposition` ->
+    `timeout` when measured wall > deadline (`deadline_classification` echo); capability declares
+    v1.1+v1.2; `--g4-amendment-v1-2-selftest`; zero-row/column formulation diagnostics.
+  - `46bc895`: `benchmarks/g4_claim_core_amendment_v1_2.json` + `.sha256`
+    (`673e06707242cb224daa92a1a34f01a975b344f48920d54e10b4aa14bc73e1b9`), schema reuse with
+    conditional v1.2 sections, `docs/G4_CLAIM_CORE_AMENDMENT_V1_2.md`, contract/scope/gate-report
+    references; contract helpers (`policy_uses_ipm`, `recorded_scaling_mode`,
+    `expected_ipm_equilibration`, `classify_launched_attempt`, `validate_amendment_v1_2_sections`);
+    scheduler `label-stratum` action + `diagnostic` state + `init --cite-diagnostic-stratum`,
+    `migrate` refuses cross-amendment imports, per-record rule A/B echo validation; capability
+    generator pins v1.2 and probes pure-gpu-ipm under the amendment; decision re-derives rule B
+    and requires the stratum citation; tests (`tests/test_g4_claim_core_amendment_v1_2.py`,
+    scheduler, native-session probe refusals, GPU regression test extended).
+- Validation:
+  - Ruff clean; focused G4 suites 91 passed / 1 skipped; full suite 349 passed with 12
+    environmental failures (matplotlib / native wheel absent in that venv) and the fake-probe test
+    fixed; CUDA rebuild; `--g4-amendment-v1-2-selftest` pass; qoco/scvx CTest 7/7; GPU regression
+    test passed (9/9 QOCO solved/solved-inaccurate, echo `qoco_native_default`/0); capability
+    `827ce9e840a1090da4c39dfe8284aaee2de8169d306689086eb9e18aa051bce3` (probe 9/9 `unqualified`,
+    check mode agrees).
+- Campaign hygiene:
+  - ccd5596 paused at a group boundary (4 pure-gpu-ipm groups completed, all `numerical` and
+    contaminated; ordinal 4, a 600 s sensitivity twin, was interrupted before its result was
+    written and stays `running`, never resumed). The 4 groups are labelled
+    `ipm_no_equilibration_v1_1` (state `diagnostic`, `diagnostic_stratum.json` sidecars, records
+    retained). New checkpoint `g4-claim-core-46bc895` cites the stratum in `diagnostic_strata`;
+    `migrate` refused as designed (v1.1 records are not v1.2 evidence; no non-IPM group had
+    completed anyway). Worker relaunched, pure-gpu-ipm first.
+- First five amended IPM groups (P1-E N=100, conditioning 4.0, 07:05-08:48Z, foreign host compute
+  53-96 % SM): 35 launched attempts, all on fresh QOCO solvers with `ruiz 0 / qoco_native_default`
+  echoed and `scaling_mode not_applicable_ipm_native`; 25 `timeout` (wall 120.3-309.5 s, solver
+  `numerical`, QOCO status 3/4), 10 `numerical` (51-120 s, 37-99 iterations), 10 `unrun` at the
+  1140 s group deadline, 0 qualified, 35/35 contaminated; 1123-1362 s per group (~20.6 min). Rule B
+  consistent on every record. Docs commit `55d5fac`.
+- Projection (continuous foreign load): IPM N=100 22 groups ~7.5 h; N=500 22 groups ~10-13 h;
+  N=2000 22 groups up to ~17 h (hard bound: kill + one restart, error record); IPM twins ~3 h ->
+  IPM phase ~1.7 days; adaptive/hybrid/fixed-tight 198 groups ~0.8-2.8 days (PDHCG timeouts replay
+  deterministically at 3 x 120 s); total ~2.5-4.5 days from 07:05Z on 2026-09-03.
+- Follow-up notes / risks:
+  - Failing IPM attempts remain uninterruptible (50-310 s each); rule B relabels them `timeout`
+    but does not shorten groups (~20 min per failing N=100 IPM group under foreign load).
+  - ccd5596 ordinal 4 (sensitivity twin) was interrupted by the pause before its result was written;
+    it is `running`/lost there and is re-run by 46bc895 like every other row.
 
 ## 2026-09-03 17:45 AEST
 
@@ -1185,6 +1665,61 @@
   (phasing-aware), continuous Earth legs, `--collector-harvest`, 4 h declared budget
   (`timeout 15300`), log /tmp/cluster_fleet_v4.log.
 
+## 2026-09-04 01:40 AEST
+
+- Task summary:
+  - Visualised the verified GTOC12 fleet `fleet_master_v1` (15 ships, 109 asteroids, 7575.58 kg
+    official) in the standalone WebGL viewer and as static matplotlib figures; regenerated and
+    cross-checked the viewer export; extended the viewer for heliocentric multi-body mission data.
+    CPU only; GPU/G4 worktrees untouched; the `cluster_fleet_v4` run in the GTOC12 worktree was left
+    running (best fleet so far 6975.69 kg / 14 ships, below 7575.58, so nothing newer to show).
+- Changes (viewer on `integration/single-gpu-v2-candidate`; Windows mirror `feat/webgl-trajectory-viewer`
+  synced byte-identical modulo CRLF, v2 authoritative):
+  - New modules `web/trajectory-viewer/kepler.js` (GTOC12 Appendix 6.1 Kepler propagation, MJD
+    calendar), `webgl.js` (shared GL resources/shaders, ribbon `uWidth`), `dom.js`, `gtoc12.js`
+    (scene builder in AU, `FleetRenderer`, screen-space picking, ship panels, HTML event labels).
+  - `app.js`: dataset selector (archive / GTOC12) that degrades gracefully when `data/gtoc12/` is
+    absent (GET probe of `manifest.json`, disabled option, import hint); mission epoch timeline
+    64328–69807 with play/scrub; per-ship selection, focus and dimming; hover/click tooltip; deep
+    links `?dataset=gtoc12&ship=N&epoch=MJD&focus=1`; read-only `window.viewerDebug` hooks.
+  - `scripts/import-gtoc12.mjs` (`npm run import-gtoc12`): verifies the export manifest hash, the
+    pinned catalogue SHA-256, the `Result.txt` hash and `fleet.json` cross-references, checks every
+    replay/transcription series, classifies events (launch / deploy / collect / earth-return),
+    attaches pinned Keplerian elements for the 109 visited asteroids + Earth, cross-checks the JS
+    propagation against the exporter's 41,179 context points (max 3.5e-6 km) and writes the ignored
+    `data/gtoc12/{fleet.json,manifest.json}` (1.38 MB, exact samples/indices/hashes verbatim).
+  - `scripts/plot_gtoc12_fleet.py`: matplotlib ecliptic XY fallback (ruff clean).
+  - `scripts/check.mjs` (new DOM ids, module checks, colour-class parity, optional fleet dataset
+    validation), `scripts/browser-check.cjs` (absent-dataset degrade, fleet scene, timeline, focus,
+    hover tooltip, click-select, play, dataset switch, mobile; 15 s action timeouts; browser closed in
+    `finally`), tests `kepler.test.mjs`, `gtoc12-import.test.mjs`; `server.test.mjs` made
+    Linux-portable (`fileURLToPath`), `data.test.mjs` skips when the WSL source is unreachable
+    (`TRAJECTORY_SOURCE` override).
+  - README (GTOC12 dataset section with export/import/launch commands, controls, evidence semantics),
+    `.gitignore` (`web/trajectory-viewer/data/gtoc12/`), `package.json` 1.1.0.
+  - Screenshots in `web/trajectory-viewer/test-artifacts/`: `gtoc12-fleet-heliocentric.png`,
+    `gtoc12-timeline-mid-mission.png`, `gtoc12-ship4-hop-sequence.png`, `gtoc12-desktop-fullpage.png`,
+    `gtoc12-mobile.png`, matplotlib `gtoc12-fleet-ecliptic.png` and `gtoc12-fleet-ecliptic-ship4.png`;
+    archive screenshots and `browser-report.json` refreshed.
+- Validation:
+  - Export regenerated in 16 s with `PYTHONPATH=src .venv/bin/python -m spacepdhcg gtoc12 export-viewer
+    results/gtoc12/runs/fleet_master_v1/fleet/Result.txt --output results/gtoc12/viewer-exports/fleet_master_v1
+    --run-id fleet_master_v1_fleet` (ignored path; tracked `fleet/viewer/manifest.json` untouched).
+    Identical to the committed export apart from `generated_by_commit`/`source.commit` (eb4a5be vs
+    f8fa226); manifest source SHA-256 `61603bb4…7c35` = `Result.txt` = `fleet.json` viewer_manifest;
+    6,044,143 bytes; 15 ships, 7,622 replay points (≤ 512/ship), per-ship events equal the Result.txt
+    event lines, per-ship collected kg equal `fleet.json` to 1e-6, 109 unique asteroids equal the
+    `fleet.json` set, sum 7575.578 kg → official 7575.58 kg.
+  - `npm run check` passes on Windows node 24 and Linux node 20, with and without the dataset;
+    `npm test` 16/16 on both (Linux 14 pass + 2 environment skips without source env vars); ruff
+    check/format clean repo-wide; browser check (Chromium 151, SwiftShader WebGL2, 1440×1000 and
+    390×844): zero console errors/warnings, all 10 requests < 400, tooltip identifies
+    "Ship 4 · Deploy miner · asteroid 24684".
+- Follow-up notes / risks:
+  - The exporter's title constant still says "reduced-instance" for full-catalogue fleets (gtoc12
+    branch); the importer relabels the dataset title and keeps `export_title`.
+  - Whole-fleet end-of-mission view is dense by nature; mid-mission frames and per-ship focus are
+    the legible views. Re-run export + import for any fleet that beats fleet_master_v1.
 ## 2026-09-04 02:30 AEST
 
 - Scope: GTOC12 per-ship mass levers, part 4 (campaign v4 results, fleet_master_v2, docs,
@@ -1317,6 +1852,60 @@
   >= 20 members, collector harvest, calibrated DP, 2400 s per family, 4 h budget; GPU busy and
   locked by the G4 campaign (CPU only).
 
+## 2026-09-04 13:05 AEST
+
+- Task summary:
+  - Triage of the running G4 claim core `g4-claim-core-46bc895` (WSL): explained the five
+    `invalid_evidence` quarantines, fixed the scheduler/contract defect behind four of them, paused
+    the worker at a group boundary and relaunched as `g4-claim-core-4db5047` without discarding any
+    completed group.
+- Root causes:
+  - Ordinals 45, 47, 49, 57 (P1-E `N=2000` pure-gpu-ipm): `validate_attempt_record` accepted
+    `timeout_deterministic_replay` only with `policy_amendment == single-gpu-v1.1`; v1.2 inherits
+    replay verbatim and the executor stamps v1.2 -> "strict measured-result validation failed:
+    replayed timeouts exist only under amendment single-gpu-v1.1". Records are well formed (9 per
+    group, 3 launched `timeout` 270-347 s with identical traces, 6 replays referencing measured-0,
+    trace hashes consistent). The decider shares the check.
+  - Ordinal 56 (same coordinate class): preregistered rule C hard bound, not the defect and not the
+    gen-0 silence. Gen 0 emitted warmup-0 `numerical` 46 s, warmup-1 `timeout` 485 s, measured-0
+    `timeout` 466 s, then measured-1's QOCO solve was still running at the 1440 s outer boundary
+    (rc 124); gen 1 emitted two 512-531 s timeouts and was killed likewise. 2887 s, `raw_attempts`
+    empty by design, partial records retained in `stdout*.jsonl`. Foreign `python.exe` 51256 at
+    94-99 % SM throughout that group.
+- Changes (branch `integration/single-gpu-v1`, WSL; author via `GIT_*` env, no push/amend/reset):
+  - `4db5047` fix(g4): replay records valid under any `SUPPORTED_AMENDMENT_IDS`; `migrate
+    --skip-quarantined` (`migrate_terminal_rows(include_quarantined=False)`, reports
+    `skipped_quarantined`); tests in `tests/test_g4_claim_core_amendment_v1_2.py` (v1.2 replay
+    record accepted / unknown stamps refused; full replayed group passes contract + eligibility +
+    amendment consistency; migrate with/without the flag); `docs/G4_EXECUTION_CONTRACT.md`.
+  - `d1865a6`, `addac2b` docs(g4): IPM block outcome, defect, relaunch in `docs/G4_GATE_REPORT.md`.
+  - This Windows checkout: memory notes only.
+- Validation:
+  - Ruff check repo-wide clean, format clean on touched files, `git diff --check` clean.
+  - Focused suites in the integration worktree (`.venv-current-head`): 123 passed, 1 skipped
+    (native session executable not supplied).
+  - Offline re-validation of the quarantined groups' retained records with the patched code:
+    45/47/49/57 -> "all raw attempts and measured Paper 1 results validated"; 56 -> still invalid
+    ("executor did not emit all nine raw attempt records"), as designed.
+  - Relaunch: pin worktree `/home/angus/worktrees/spacepdhcg-g4-claim-core-4db5047`; reconfigure
+    + rebuild 22 s, `compiled_source_commit` = 4db5047, executable `6392c864...2ddd`;
+    `--g4-amendment-v1-2-selftest` pass; capability
+    `5c849945c954e438a8bbfef4df065674883b6f1ce0e85dc7077dfb7bb48c80b8` (probe 9/9 `unqualified`,
+    `--check` agrees); `init` cites `ipm_no_equilibration_v1_1` from ccd5596; `migrate
+    --skip-quarantined` imported 55, skipped 5; worker PID 3778145 claimed ordinal 45 at
+    02:58:58Z. GPU regression test `tests/test_g4_ipm_session_gpu.py` was not re-run (no CUDA
+    source changed; capability probe exercised a real session).
+- Campaign state at handoff (03:02Z): 55 completed (all pure-gpu-ipm P1-E: N=100 20+2 twins,
+  N=500 20+2, N=2000 9+2), 0 qualified attempts, 341 remaining incl. re-runs of 45/47/49/56/57
+  and ordinal 60; adaptive/hybrid/fixed-tight not started. Foreign host compute returned at
+  02:51Z (`python.exe` 49548, 95 % SM) after a clean window 01:36Z-02:51Z.
+- Follow-up notes / risks:
+  - ETA is assumption-bound for PDHCG policies (no measured group yet): IPM tail ≈ 4.4 h; 300 PDHCG
+    core groups ≈ 35 h and 30 twins ≈ 15.5 h on the deterministic-replay path (up to ≈ 2.7x longer
+    per block if replay does not trigger; much shorter if P1-C qualifies) -> ≈ 2.1-2.3 days from
+    03:00Z on 2026-09-04, i.e. late 2026-09-06 AEST. Recalibrate from ordinal 66 onward.
+  - Replay eligibility is vacuous for IPM groups with zero outer iterations; note it in H6 reading.
+
 ## 2026-09-04 15:40 AEST
 
 - `cluster_fleet_v6` finished (255 min, 4 workers, CPU only): 36 families, 136 certified ships
@@ -1348,6 +1937,47 @@
   harvest-window pair costs in the deploy beam; worker memory transient to localise.
 
 
+## 2026-09-04 16:10 AEST
+
+- Task summary:
+  - Addendum: the GTOC12 view had to look like a GPU-rendered mission-design tool. Rebuilt the
+    WebGL2 fleet scene for fleet_master_v4 (19 ships, 158 asteroids, 10700.48 kg summed collects,
+    official 10700.5 kg): instanced lit spheres, tube arcs, fog, procedural sky, full-bleed canvas,
+    3D-by-default camera, cursor dolly. CPU only; GPU/G4 worktrees untouched.
+- Changes (v2 candidate `integration/single-gpu-v2-candidate` 3373988 authoritative; Windows mirror
+  `feat/webgl-trajectory-viewer` ff994cf byte-identical modulo CRLF; `data/gtoc12/` ignored):
+  - `webgl.js`: `tubeArrays()` (6-sided lit tube mesh, parallel-transported frame, ring vertices
+    exactly on archived samples, segment-ordered Uint16 indices); instanced `BODY` shader
+    (aCenter/aRadius/aColor/aEmissive, Lambert + Blinn-Phong from the Sun, rim, sky ambient, fog);
+    `TUBE` shader (lighting + 450-day trail fade + fog); ribbon depth fade; `BACKGROUND` gradient/
+    vignette shader; `instancedAttribute()`, `makeIndexBuffer()`, `fogUniforms()`, divisor resets.
+  - `gtoc12.js`: `bodyInstances()` pure per-frame instance builder; `FleetRenderer` draw order sky ->
+    stars -> grid -> depth-faded orbit ribbons -> one instanced body draw -> per-ship tubes (selected/
+    hovered thicker, brighter) -> markers, layered Sun corona, flashes, hover ring; radii and tube
+    radius scale with camera distance; provenance text updated.
+  - `camera.js`: `EXAGGERATION.initial = 6`; `cameraBasis()`, `cursorPointOnFocalPlane()`,
+    `dollyTowards()` (wheel dolly keeps the pointed-at world point fixed).
+  - `app.js`/`index.html`/`styles.css`: canvas `max(560px, 72vh)`; opens oblique 30 deg at 6x
+    (labelled not physical); wheel dolly to cursor in fleet view; compact legend + small overlay;
+    `viewerDebug.glInfo`.
+  - `scripts/check.mjs` (6x default, 72vh, renderer feature tokens), `scripts/browser-check.cjs`
+    (opening state, >= 70% canvas height, antialias/depth/instances/tube sides, dolly + reset, hover
+    highlight, 10-frame sequence, `gtoc12-3d-desktop-window.png`), `scripts/build_gif.py` (10 frames),
+    README 3D section, tests: tube geometry, camera basis, cursor dolly (33 tests).
+  - Artefacts in `web/trajectory-viewer/test-artifacts/`: `gtoc12-3d-oblique-fleet.png`,
+    `gtoc12-3d-desktop-window.png`, `gtoc12-3d-desktop-fullpage.png`, `gtoc12-3d-edge-on.png`,
+    `gtoc12-3d-timeline-mid-mission.png`, `gtoc12-3d-follow-ship.png`, `gtoc12-3d-ship-arc-framed.png`,
+    `gtoc12-3d-frame-01..10.png`, `gtoc12-3d-preview.gif`, `gtoc12-3d-mobile.png`; static
+    `gtoc12-fleet-ecliptic.png`, `gtoc12-fleet-ecliptic-ship15.png`.
+- Validation:
+  - `npm run check` green (Windows node 24, Linux node 20); `npm test` 33/33 Windows, 31 pass + 2
+    environment skips Linux; ruff clean; browser check (Chromium SwiftShader, 1440x900 + 390x844)
+    zero console errors/warnings, `glInfo` = antialias true, depth test on, 179 instances, 6 tube sides.
+- Follow-up notes / risks:
+  - Sync gotcha: quoted escapes through `wsl -e bash -c` get re-quoted by PowerShell (a `tr -d "\r"`
+    deleted every `r`); use script files. Non-login WSL bash picks Windows node; set PATH explicitly.
+  - Dev server left running on http://127.0.0.1:4173/ (`?dataset=gtoc12`).
+
 ## 2026-09-04 17:20 AEST
 
 - Memory transient fixed and localised: the collect DP's unbounded per-mass propellant
@@ -1375,6 +2005,32 @@
 - Harvest-window ranking is a negative result on family 54 at every weight (see scratchpad).
 - `fleet_master_v5` running over the eleven archives + return_sweep_v1 (3 workers).
 
+
+## 2026-09-04 23:20 AEST - Paused G4 claim-core campaign 4db5047 (WSL, RTX 5090 freed)
+
+- What changed (campaign state only; no source, git or deletions except the shared lock file):
+  - Stopped worker 3778145, `--g4-session` executor 241196, `--g4-server` 3778162 and observer
+    3778194 by SIGTERM in that order (13:15:05Z-13:15:12Z, no SIGKILL needed).
+  - Ordinal 73 (`g4-group-v1-bc6f9f6f...`, adaptive / P1-E / N=100 / tight / censoring_sensitivity,
+    attempt `3c730b5b...`) set to `interrupted` (disposition `error`, operator-pause reason);
+    coordinate row left `running` so the resume path re-runs it; `interrupted` event appended to
+    `journal.jsonl`. Generation-0 partial logs (5 timeout attempts) retained in
+    `stdout.restart-0.jsonl`/`stderr.restart-0.log`; generation-1 output was never committed.
+  - `PRAGMA wal_checkpoint(TRUNCATE)`: 725 KB WAL folded into `checkpoint.sqlite3` (126976 B).
+  - Removed `/home/angus/.spacepdhcg-gpu.lock` (held by the campaign, flock free after exit).
+  - Wrote `g4-claim-core-4db5047/pause-2026-09-04T131504Z-manifest.json` and
+    `pause-2026-09-04T131504Z-worker-environ.txt` (redacted).
+- Validation:
+  - `integrity_check` ok before/after; 72 completed, 1 quarantined (65), 324 remaining,
+    `next_ordinal` 74; no duplicate ordinals/coordinate ids, one completed attempt per ordinal,
+    72/72 `result.json` readable with matching `group_id` and `completed_group`.
+  - No `device_scvx_integration_test`/`run_g4_campaign` processes; GPU 100 % / 5224 MiB / 108 W ->
+    10-14 % / 3716 MiB / 48 W (Windows desktop only, no compute contexts); RAM used 3442 -> 3072 MiB.
+  - GTOC12 `fleet_master_v6` (261346, 261347, 261379-261381) confirmed running and untouched.
+- Follow-ups / risks:
+  - Re-running ordinal 73 as-is reproduces the 5760 s boundary quarantine (attempts run to the
+    1M inner-iteration cap, ~19.4 min each); PDHCG groups need a deadline/cap triage before resume.
+  - Restart command is in the manifest (uses `>>` on `worker.log`).
 
 ## 2026-09-05 00:40 AEST
 
@@ -1418,3 +2074,285 @@
 - Next: the collect hop is a deploy-chain property - score partial chains in the beam by deploy
   propellant + the DP's actual tour cost (chain-level objective), reference-chain prior, LP
   duals into the pricing, all 35 families on the Lambda box.
+
+<!-- The entries below were written on the Windows checkout (feat/webgl-trajectory-viewer working tree, 2026-09-01..2026-09-05) and carried into the repository additively during the 2026-09-05 release merge; they are chronological among themselves and overlap in time with the WSL entries above. -->
+
+
+## 2026-09-05 01:20 AEST - Viewer UI redesign with Anthropic's frontend-design skill
+
+- Task summary:
+  - Installed Anthropic's `frontend-design` skill as a Cursor skill and applied it to the
+    trajectory viewer's chrome (index.html, styles.css, UI parts of app.js/gtoc12.js). The WebGL
+    scene (geometry, lighting, labels, tube arcs, animation, timeline semantics) is unchanged.
+    CPU only; GPU/G4 worktrees untouched.
+- Skill install:
+  - `C:\Users\Angus\.cursor\skills\frontend-design\` = `SKILL.md` + `LICENSE.txt` (original layout)
+    + `README.md` (source URL, pinned commit `41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f`, blob SHAs
+    `a5333457…` / `f433b1a5…` verified against the GitHub contents API).
+- Design decisions taken from the skill (plan -> review against generic defaults -> build -> critique):
+  - Subject-grounded direction: matte instrument panel (graphite `#1b1f26`/`#12151a`, bone
+    `#ebe8e1`, slate `#9aa3b1`) around a black porthole; chroma only for status (verified `#5fd3a0`,
+    caution `#f1b866`, alert `#ff6f80`) and the scene's ship colours.
+  - Removed the flagged tells: uppercase tracked eyebrows/kickers, identical rounded gradient cards
+    with one shadow, single cyan accent, dot-joined meta strings in panel markup, tinted-navy page,
+    decorative gradients, hover/entrance transitions.
+  - One system sans family, 11-22 px scale, tabular numerals everywhere data appears, monospace
+    only for hashes/commands; sentence-case headings; line lengths capped (60-96ch).
+  - Structure encodes information: timeline strip under the porthole with a thin time cursor,
+    elapsed fill and 1 January year ticks; per-ship collected-mass bars in the rail; qualification
+    dots repeated in toolbar chip, list rows and verification strip; radius hierarchy 0/4/6 px.
+  - Quality floor: 2 px focus rings on every control incl. canvas and ranges, reduced motion,
+    responsive (rail beside porthole >= 960, two-column rail on tablets, phone order scene ->
+    timeline -> verification -> rail -> tables via `display: contents`), honesty overlay moves
+    top-right on narrow portholes so it never hides behind the legend.
+- Changes (v2 candidate `integration/single-gpu-v2-candidate` `d7ca28f`; Windows mirror
+  `feat/webgl-trajectory-viewer` `d88eb51`, blobs identical; `.cursor/memory` Windows-only):
+  - `index.html` restructured (top bar, rail, porthole, timeline strips with `#timeline-ticks` /
+    `#mission-timeline-ticks`, verification strip, detail tables); `styles.css` rewritten with a
+    token system; `app.js` `paintRange()` + `renderMissionTicks()`, prose separators instead of
+    middle dots; `gtoc12.js` ship rows with `.mass-bar` filled by `renderShipCounters()`,
+    provenance text prints the tube side count; `scripts/check.mjs` + `browser-check.cjs` cover
+    the new ids, ticks and bars; README "Visual design" section; `package.json` 1.3.0.
+  - Screenshots: `test-artifacts/redesign-{before,after}-desktop-1440x900-{fleet,fleet-fullpage,
+    archive}.png` and `redesign-{before,after}-mobile-390x844-{fleet,archive}.png`; the
+    `gtoc12-3d-*.png`, `desktop-p2-earth.png`, `mobile-p1c-local-surface.png` and
+    `browser-report.json` artefacts were regenerated by the Windows browser check.
+- Validation:
+  - Windows (node 24.19): `npm run check` green, `npm test` 33/33, `scripts/browser-check.cjs`
+    green (Chromium 151 SwiftShader, zero console errors/warnings, 11 requests all 200).
+  - Linux (WSL, node 20.18.1, playwright 1.62.1 installed in `/tmp/pw-linux`): `npm run check`
+    green (against the worktree's fleet_master_v6 data), `npm test` 31 pass + 2 environment skips,
+    browser check green with zero console errors.
+  - `git diff --cached --check` clean on both commits; sync Windows -> WSL via script file with
+    per-file SHA-256 verification after CR stripping.
+  - Dev server restarted: PID 45628 on http://127.0.0.1:4173/ serving the redesigned files.
+- Follow-up notes / risks:
+  - Windows mirror stores every PNG/GIF artefact as mode 100755 (pre-existing quirk); WSL has 100644.
+  - A stale `node scripts/browser-check.cjs` process (PID 15932, started 2 Sep) is still alive on
+    Windows; left untouched.
+  - Linux fallback fonts (DejaVu Sans) wrap "Edge-on (inclinations)" to two lines in the preset
+    grid; layout holds.
+
+## 2026-09-05 02:30 AEST - Release merge of every completed SpacePDHCG branch into main
+
+- Task summary:
+  - Consolidated `integration/single-gpu-v1` (addac2b), `integration/single-gpu-v2-candidate`
+    (d7ca28f), `feat/gtoc12-asteroid-mining` (4dd4fdb) and `proposal/g3-sanitizer-recovery-cap`
+    (9fafee8) into `release/single-gpu-v1-merge` (WSL worktree `/home/angus/worktrees/spacepdhcg-release`
+    created from origin/main effc5ac) with real merge commits, verified the merged tree, then
+    fast-forwarded `main` and pushed it plus the provenance branches from the Windows repo.
+- Merge commits: a9e2434 (v1), a545ce5 (v2, clean), f4c68b3 (gtoc12: `.cursor/memory/*` resolved
+  additively - v2 entries then gtoc12 entries - and `gtoc12/cli.py` kept the cooperative import with
+  v2's REPOSITORY_ROOT-free data import), 99c4dea (proposal, clean), plus the merge of this
+  `chore/local-spec-edits` commit.
+- Merge-only fixes (focused commits): 5c0bfd1 (four gtoc12 fleet commands + one test imported the
+  `REPOSITORY_ROOT` that the v2 wheel fix removed from `gtoc12/data.py`; now
+  `_commit(resources.repository_root())` / `data_directory()`), 55bd108 (packaged benchmark mirror
+  re-synced after the v1.1/v1.2 amendment registry landed in `campaign_scopes/single-gpu-v1.json`),
+  68003c2 (planner viewer export now copies camera/dom/gtoc12/kepler/webgl.js; the test also failed
+  on d7ca28f), 3f31795 (`benchmarks/gpu_deferred_validation_v2.json` + doc record the merged blobs of
+  `device_scvx_integration_test.cu` (v1 amendments) and `recovery_test.cu` (proposal) with provenance).
+- Branch audit (patch-id + per-file blob/AST comparison against v2): `feat/planner-cli`,
+  `feat/literature-targets` are ancestors of v2; `sim/cpu-reference-campaign`,
+  `analysis/trajectory-visualization`, `feat/scenario-aware-multigpu`, `feat/paper1-freeze-tooling`,
+  `feat/orbitweaver-gpu`, `feat/orbitweaver-g3-g5-adapter`, `fix/g4-execution-contract`,
+  `chore/single-gpu-roadmap-scope` were folded into `27ef966`/single-gpu-v1 as rebased copies (every
+  changed file is byte-identical modulo CRLF or was superseded by later commits; `orbitweaver/g7.py`
+  differs only by Ruff formatting plus a stricter certification check added in 410e8ad).
+  `perf/g4-batched-campaign`: the persistent transport (cf82193 -> 66a0247) and the negative report
+  (d2bb219 -> c3104cc) are integrated; the lane-batching commits 70800f8/0193517/2d2adf6 were
+  deliberately excluded on 2026-09-02 ("failed protocol-v2 lane scheduling", devlog 18:22) and stay
+  unmerged (pushed for provenance). `proposal/g3-sanitizer-recovery-cap` was the only unintegrated
+  content (15 lines) and is merged.
+- Windows spec edits: every line the user added relative to effc5ac in README, both matrices,
+  BENCHMARK_PROTOCOL, experiments/README, both outlines, `tests/test_benchmark_manifests.py` (two
+  lines re-wrapped by Ruff), `literature_baselines.json` and `COMPARATIVE_SOLVER_CAMPAIGN.md` is
+  present in the merged tree (imports 715c1db/20d999b); the remaining differences are later branch
+  evolution, so no spec text was committed. This commit adds the `.gitignore` `*.pem`/`traj-key*`
+  rule and carries the Windows-checkout memory notes into the repository additively (13 devlog
+  entries, the rolled-over scratchpad lessons and the dated archive file).
+- Validation on the merged tree (WSL, CPU only, GPU never opened; logs in the ignored
+  `build-rel-verification/`): Ruff check/format clean (293 files); `cpp` Release + Werror + C API
+  build, CTest 49/49; `cpp/native` Release CTest 8/8; G7 schema, G4 policy header, literature
+  provenance and packaged-asset `--check`; wheel + sdist (`86043d8bâ€¦` / `5a65cf80â€¦`) with a fresh
+  consumer venv (native library, `c_api_version()==1`, planner/free-time ABI, CLI help/validate/
+  plan cpu_reference/literature list/gtoc12 reduced-instance/`python -m spacepdhcg`); full pytest
+  645 passed / 22 skipped (GPU-gated planner and G4 session, offline literature artefacts); G4
+  contract suites incl. amendment v1.2 green with the frozen `g4_policy`/`g4_applicability`/
+  `g4_h5_h6_claim_core` json + sha256 blobs identical on v1, v2, gtoc12 and the merge; gtoc12 suites
+  79 passed; viewer `npm run check` + `npm test` 31 pass + 2 environment skips (Linux node 20); CUDA
+  sm_120 Release configure + build only, 175 targets, PDHCG pin 167c8b7 clean.
+  Secrets scan (PRIVATE KEY / ghp_ / github_pat_ / AKIA / xox / sk- patterns over the tree and
+  `-G` over the 198 new commits, secret-like file names, .pem objects): clean. Large files: six
+  `results/gtoc12/runs/fleet_master_v*/fleet/Result.txt` of 6.2-8.2 MB (already committed on the
+  gtoc12 branch); nothing over 10 MB.
+- Follow-up notes / risks:
+  - A fresh Windows worktree with `core.autocrlf=true` checks out `web/trajectory-viewer/data/*.json`
+    with CRLF, so `npm run check` fails on the data SHA there (LF-normalised bytes hash to the expected
+    `b160734eâ€¦`; the user's checkout has LF). Consider `web/trajectory-viewer/data/*.json -text` in
+    `.gitattributes`.
+  - `integration/single-gpu-v1` and `feat/gtoc12-asteroid-mining` carried uncommitted worker changes
+    at merge time (deadline fix, v8 campaign); anything committed there after addac2b / 4dd4fdb is not
+    in main.
+  - The G4 amendment files are not in `resources.PACKAGED_ASSETS` (the campaign tooling reads them
+    from a checkout by explicit path); revisit if wheel consumers ever need them.
+## 2026-09-05 02:40 AEST
+
+- Task summary:
+  - Fixed the blocking executor defect behind campaign g4-claim-core-4db5047 ordinal 73 (adaptive
+    P1-E N=100 censoring twin: five 600 s timeouts, then a sixth attempt past the 5760 s safety
+    boundary) on `integration/single-gpu-v1`; the local campaign stayed paused.
+- Root cause (evidence in `/tmp/spx/repro73`, retained run dir under
+  `build-integration-report/g4-claim-core-4db5047/runs/g4-group-v1-bc6f9f6f…/3c730b5b…`):
+  - With the 1,000,000 inner cap and tight tolerance the inner PDHCG enables recovery: 300,000
+    PDHG iterations (~150 s at N=100 on an idle GPU) then `recovery_kernel`. That kernel read the
+    mapped cancellation flag per thread before `__syncthreads()` (barrier-divergence hazard) and
+    polled it only inside its 50,000-iteration projected-gradient loop; the polish projections,
+    32 KKT refinements and restarted CGLS never polled, and the cancelled path reported
+    `control->iteration_limit` (the 1,000,000 seen in the records) instead of the spent count.
+  - Faithful reproduction on the exact coordinate via `--g4-session`, 600 s deadline, free GPU:
+    the pre-fix executor produced no record within 900 s (killed); the fixed executor returned
+    the attempt at 600.06 s with honest `inner_iterations=300000` and exit 0.
+  - The five prompt 600 s cancels ran under a foreign Windows GPU load (220 W, ~1.9 GiB, flagged
+    contaminated on ordinals 70-72) that slowed the executor enough to keep the deadline inside
+    the polled loop; the load ended during attempt 4.
+  - Secondary: under CUDA lazy module loading the first solve launch loaded the module for ~7 s
+    inside `solve_async` (mutex held, state not yet SOLVING), so an N=2000 first attempt overran
+    a 5 s deadline to 11.96 s; the identical-CQP re-solve escalated to `max(limit, 350000)`
+    regardless of the amendment cap (exceeding the 200,000 claim-core cap).
+- Changes:
+  - `persistent_pdhcg.cu`: block-uniform `poll_cancellation` (one thread + shared memory) used at
+    recovery entry, per projected-gradient iteration, per polish projection, per refinement and
+    every fourth CGLS iteration (`recovery_reconstruct_dual` takes the flag); cancelled recovery
+    rolls back and reports PDHG iterations spent plus completed recovery iterations.
+    `initialise_control_kernel` polls between Ruiz/power passes, accumulates factors in recovery
+    scratch and writes `problem->scaling` atomically at the end. `workspace_create` pre-loads the
+    solve-path kernel modules (`cudaFuncGetAttributes`).
+  - `device_scvx_driver_c_api.h` / `device_scvx.cu`: trailing `inner_iteration_cap` option; the
+    re-solve floor and every phase limit are capped in the driver.
+  - `device_scvx_integration_test.cu`: passes the amendment cap, echoes effective limits
+    (`g4_inner_iteration_limits`) and phase seconds in the stderr diagnostics.
+  - New `cpp/cuda/tests/cancellation_deadline_test.cu` (ctest) and
+    `tests/test_g4_pdhcg_deadline_gpu.py` (skips without `SPACEPDHCG_G4_EXECUTOR`).
+- Validation:
+  - Stress (release): pre-fix 72/72 recovery-phase cancels reported the full 350,000 budget;
+    post-fix 84/84 cancels CANCELLED, max latency 4.8 ms, 0 late returns, 0 full-budget reports.
+  - `tests/test_g4_pdhcg_deadline_gpu.py`: 13/13 passed in 22:50 (adaptive, fixed-tight,
+    hybrid-pdhcg-ipm x N=100, N=2000 x 5 s, 20 s; claim-core cap check). Every launched attempt
+    within deadline + 2 s; N=2000 warm-up/0 at 5 s went from 11.96 s to 5.25 s.
+  - Existing GPU modules `test_g4_ipm_session_gpu.py` + `test_g4_native_session.py`: 16 passed.
+    CPU G4 contract/scheduler/amendment tests: 91 passed, 1 skip. Ruff clean.
+  - CUDA Release ctest 63/63 (new `cancellation_deadline_test` 53 s); CUDA Debug ctest 22/22;
+    sanitizer tree built. A first release run showed one SIGHUP on test 47 caused by the
+    launching WSL pty closing; the detached rerun passed.
+  - Compute Sanitizer memcheck on `cancellation_deadline_test --sanitizer`: 0 errors, 7/7 cancels
+    within 0.9 ms. Racecheck of the full test did not finish one 350,000-iteration solve in 50 min
+    (killed, no result); racecheck restricted to `--kernel-name kns=recovery_kernel` completed in
+    24 min: 0 hazards, 0 errors, 0 warnings, 4/4 cancels within 20 ms.
+- Follow-ups / risks:
+  - A new executor capability must be generated from the committed tree before any relaunch;
+    the campaign was not restarted here.
+  - Every cancelled attempt after a cancelled attempt re-equilibrates (the outer-0 checkpoint
+    predates the first scaling, so its restore zeroes the steps): ~5-9 s per attempt at N=2000,
+    negligible at N=100. Pre-existing, policy-neutral, not changed.
+  - Deterministic replay can trigger only when warm-up/0, warm-up/1 and measured/0 all time out
+    before the first PDHG iteration (identical zero-work traces; observed at N=2000 with a 5 s
+    deadline). Under campaign deadlines iteration counts and atomicAdd-ordered residuals differ
+    per attempt, so timeouts never replay. Rule left unchanged.
+  - A mangled PowerShell->WSL pipeline this session launched the `grok`, `agent`, `claude` and
+    `codex` CLIs; killing the strays also terminated a long-running Codex app-server process
+    (pid 400) that was not started by this session.
+## 2026-09-05 04:10 AEST
+
+- Change of direction: reference-methods work (subsets / chain BIP / TOF heuristic, memo)
+  dropped and reverted; branch renamed `feat/gtoc12-joint-itinerary`. New lever built:
+  whole-itinerary joint re-optimisation (`jointopt.py`, `jointcampaign.py`, `gtoc12
+  joint-itinerary`, `tests/test_gtoc12_jointopt.py`) - every epoch of a ship continuous, exact
+  mining bookkeeping, calibrated pair-cost surrogate + memoised SCvx-measured legs, pattern
+  search on a 45/20/8/3/1 d mesh, full-route SCvx re-certification, monotone certified
+  acceptance, one-asteroid insertion. Commit f81e834.
+- joint_itinerary_v2 (32 ships, 3 workers, 7 min, 0.12 GB): 32/32 improved, +280.4 kg; the 20
+  fleet_master_v6 ships 575.78 -> 586.20 kg average (+208.4; +1.1..+23.3 per ship), 101 SCvx
+  certifications / 95 accepted. Redistribution per ship: deploy hops +59 kg (earlier deploys),
+  return -12, collect -4, Earth-out 0, margin -> 0. Insertion: 0 of 32 (authority ratio).
+- fleet_master_v7 (sixteen archives, 837 routes, 1078 columns, 57 min): **21 ships / 177
+  asteroids / 12 346.48 kg / 587.93 avg (rule 21 <= 21.007), proven optimal (gap 5.6 kg),
+  both verifiers ok; +830.8 kg over v6.** All 21 columns are joint_itinerary_v2 routes.
+- Viewer v2 data re-imported from fleet_master_v7 (21 ships, hashes + Kepler check ok);
+  the viewer's check.mjs now trips its 20-colour palette assertion (viewer follow-up).
+- Docs: GTOC12_TRACK.md section 6.10, results rows, eighth-iteration narrative + two per-ship
+  tables, section 8 entry, next bottleneck (22nd ship needs 599.5 kg average).
+- Next: run joint-itinerary after every campaign before the master; new asteroid sets from
+  the DP (member substitution, sweep cells) for the 22nd ship - re-timing is saturated.
+
+## 2026-09-05 06:30 AEST - Second release merge into main: v1 deadline fix, v2 H100 fixes + 40-ship viewer, joint itinerary
+
+- Task summary:
+  - Integrated every verified branch since main 689851b onto `release/single-gpu-v1-merge`
+    (WSL worktree `/home/angus/worktrees/spacepdhcg-release`, author/committer SpacePDHCG-Integration
+    via env; merge commits only, no rebase/squash/amend/force), verified the head, fast-forwarded
+    `main` and pushed from the Windows repo (WSL has no GitHub credentials).
+- Merge chain (parents in brackets):
+  - `a93982e` merge `integration/single-gpu-v1` 1dbcae0 [689851b, 1dbcae0] - G4 attempt-deadline
+    enforcement in the recovery kernel + solve preamble. Conflicts: the two memory files (both sides
+    appended entries) -> both kept chronologically.
+  - `b963259` merge `integration/single-gpu-v2-candidate` 211267d [a93982e, 211267d] - 5aabbfc,
+    45b1a1d, 2bca11d, 1a4f9b4, 41a1d1f, 1f5e034 and the `feat/viewer-40-ships` 7496c10 merge.
+    Conflicts: `src/spacepdhcg/planner/viewer_export.py` (main 68003c2 static list vs candidate
+    import-graph discovery -> candidate blob 5464fb38 verbatim); `cpp/cuda/internal/native_qoco_adapter.h`
+    (v1 `status_code`/`ruiz_iterations` vs candidate `last_status_inaccurate`/
+    `warm_inaccurate_cold_retries` -> both field sets). `native_qoco_adapter.cpp` auto-merged but
+    `report.status_code` was assigned before the candidate's cold retry -> re-assigned after the retry
+    so it describes the last solve. `device_scvx.cu` auto-merged in disjoint regions (v1: driver
+    create/solve/reset_attempt hunks; candidate: `hcw_exact_step`, numeric/replay kernels).
+  - `d52b3a5` merge `feat/gtoc12-joint-itinerary` 8e15b92 [b963259, 8e15b92] - jointopt /
+    jointcampaign / joint-itinerary CLI, fleet_master_v7 (21 ships, 12,346.48 kg). Conflicts: memory
+    files only.
+  - `1c0c32e` merge `refs/h100/gtoc12-asteroid-mining` c4e2c31 [d52b3a5, c4e2c31] - recursion-limit
+    fix (not an ancestor of 8e15b92 or 211267d; local `feat/gtoc12-asteroid-mining` 7d2e301+ NOT
+    merged). Conflict: `src/spacepdhcg/gtoc12/cooperative.py` -> `max(2 * n_usable + 200,
+    n_usable + 500)`, raised only when above the current limit, restored afterwards; both regression
+    tests kept (16/16 in `tests/test_gtoc12_cooperative.py`).
+  - `0ff4f7c` docs(integration): `benchmarks/gpu_deferred_validation_v2.json` +
+    `docs/GPU_DEFERRED_VALIDATION_V2.md` record the merged blobs of `persistent_pdhcg.cu`
+    (`e0099df7…`) and `device_scvx_integration_test.cu` (`642eeee2…`), moved by 1dbcae0; ids
+    computed with the test's own blob sha1 (`/home/angus/integ/refresh_manifest.py`), not hand-edited.
+  - status/memory commit (this entry): `docs/PROGRAM_STATUS_2026-08-31.md` integration note listing
+    what landed and what stays off main.
+- Validation of the integrated head (0ff4f7c tree + docs; WSL Ubuntu-22.04, 16 cores, RTX 5090 sm_120
+  with a foreign ~4 GB low-utilisation workload present throughout, not killed; logs in
+  `/home/angus/integ/logs/`):
+  - ruff check clean, ruff format --check clean (298 files); `generate_g4_policy_header.py --check`,
+    `generate_orbitweaver_g7_schemas.py --check`, `literature/build_provenance.py --check` (126
+    records), `sync_packaged_assets.py --check` (34 assets) all rc 0.
+  - Host `cpp` RelWithDebInfo `-Werror` (`build-rel-relwithdebinfo`, fresh): 0 warnings, ctest 50/50.
+    `cpp/native` RelWithDebInfo: 0 warnings, ctest 8/8.
+  - CUDA sm_120 Release `-Werror` clean rebuild (`build-rel-cuda-release --clean-first`, 33 CUDA + 51
+    CXX objects): 0 warnings; full CUDA CTest 70/70 (69 + `cancellation_deadline_test`, 226 s;
+    cuDSS libqoco sha256 `3db21490…` = pinned).
+  - Full CPU pytest (CPU libqoco `build-rel-qoco-cpu`, `CUDA_VISIBLE_DEVICES=''`): 659 passed,
+    35 skipped in 487 s (skips: 9 GPU planner, 13 deadline-matrix, G4 native/IPM session gates, 9
+    literature artefacts not cached offline).
+  - Planner GPU pytest (`SPACEPDHCG_PLANNER_GPU_TESTS=1`, `spacepdhcg_plan` from the new build): 9/9.
+  - `tests/test_g4_pdhcg_deadline_gpu.py` (executor = new `device_scvx_integration_test`): 13/13 in
+    1332 s (5 s / 20 s deadlines, N=100 / N=2000, adaptive / fixed-tight / hybrid-pdhcg-ipm, plus the
+    claim-core inner-limit cap).
+  - Viewer (node 20.18.1) with fleet_master_v7 imported from
+    `$GT/results/gtoc12/runs/fleet_master_v7/fleet` (21 ships, 177 asteroids, 12346.48 kg, fleet SHA
+    `e47af8fa…36ec`, Kepler max 3.57e-6 km): `npm run check` green (40-colour palette, synthetic
+    21/39/40 pass, 41 refused), `npm test` 36 pass / 2 environment skips.
+  - Manifest/benchmark tests (`test_gpu_deferred_manifest`, `test_benchmark_manifests`,
+    `test_experiment_manifest`): 14/14.
+  - Wheel + sdist (`python -m build`, scikit-build-core, cmake 4.4.3) -> fresh consumer venv:
+    import smoke (native ABI 1, planner/pd3_fft/pd6_fft symbols, gtoc12.cli, literature,
+    planner.cli, viewer_export, gtoc12.jointopt), `spacepdhcg --help`, `literature list`,
+    `gtoc12 --help` (joint-itinerary present), `gtoc12 reduced-instance --list-ids`
+    (`SPACEPDHCG_GTOC12_DATA` pointed at the repo data), `validate` hcw, `plan --backend cpu_reference`
+    certified, `python -m spacepdhcg --help`: all rc 0.
+- Push (after this commit): bundle `/home/angus/bundles/release-merge-2-<sha>.bundle` -> Windows repo
+  `git fetch <bundle>` -> `git push origin <sha>:refs/heads/main` + the feature branches from
+  PowerShell (credential manager lives there); `git ls-remote origin` confirmation and the final
+  hashes are recorded in the Windows working-copy `.cursor/memory` files, which are not committed here.
+- Off main after this merge: `feat/gtoc12-asteroid-mining` 7d2e301+ (v8 harvest substitution in
+  flight); H100 G4 claim-core campaign (running); sm_90 confirmation of the v2 fixes (pending an H100
+  GPU window); `perf/g4-batched-campaign` (provenance only).

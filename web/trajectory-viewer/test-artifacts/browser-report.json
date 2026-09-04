@@ -18,6 +18,69 @@
     "trajectory": "P1-C",
     "replay_points": 201
   },
+  "gtoc12": {
+    "installed": true,
+    "title": "GTOC12 verified fleet fleet_master_v4_fleet — 19 ships, 158 asteroids, 10700.48 kg",
+    "run_id": "fleet_master_v4_fleet",
+    "ships": 19,
+    "asteroids": 158,
+    "collected_kg": 10700.48,
+    "official_kg": 10700.5,
+    "followed_ship": 15,
+    "follow_epoch": 68503,
+    "screenshots": [
+      "gtoc12-3d-oblique-fleet.png",
+      "gtoc12-3d-desktop-window.png",
+      "gtoc12-3d-desktop-fullpage.png",
+      "gtoc12-3d-edge-on.png",
+      "gtoc12-3d-timeline-mid-mission.png",
+      "gtoc12-3d-follow-ship.png",
+      "gtoc12-3d-ship-arc-framed.png",
+      "gtoc12-3d-frame-01.png",
+      "gtoc12-3d-frame-02.png",
+      "gtoc12-3d-frame-03.png",
+      "gtoc12-3d-frame-04.png",
+      "gtoc12-3d-frame-05.png",
+      "gtoc12-3d-frame-06.png",
+      "gtoc12-3d-frame-07.png",
+      "gtoc12-3d-frame-08.png",
+      "gtoc12-3d-frame-09.png",
+      "gtoc12-3d-frame-10.png",
+      "gtoc12-3d-mobile.png"
+    ],
+    "gl": {
+      "antialias": true,
+      "depth": true,
+      "depthTest": true,
+      "devicePixelRatio": 1,
+      "drawingBuffer": [
+        1090,
+        648
+      ],
+      "instances": 179,
+      "tubeSides": 6
+    },
+    "interactions": [
+      "absent-dataset-degrade",
+      "presets",
+      "exaggeration-default-6x",
+      "full-bleed",
+      "wheel-dolly-to-cursor",
+      "transition",
+      "timeline",
+      "counters",
+      "follow",
+      "play",
+      "frame-arc",
+      "hover-tooltip",
+      "hover-highlight",
+      "click-select",
+      "inertia",
+      "speed",
+      "dataset-switch",
+      "mobile"
+    ]
+  },
   "requests": [
     {
       "status": 200,
@@ -37,7 +100,31 @@
     },
     {
       "status": 200,
+      "url": "http://127.0.0.1:4173/dom.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/kepler.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/webgl.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/camera.js"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/gtoc12.js"
+    },
+    {
+      "status": 200,
       "url": "http://127.0.0.1:4173/data/trajectories.json"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:4173/data/gtoc12/manifest.json"
     }
   ],
   "errors": [],

@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Registry of literature reproduction targets (docs/COMPARATIVE_SOLVER_CAMPAIGN.md Phase 0-1). Consumed by tests, by `spacepdhcg literature run <id>`, and by the planner CLI once `spacepdhcg plan --literature <id>` lands.",
+  "planner_mapping": {
+    "status": "planner problem schema not yet available on feat/planner-cli (no commits beyond b6afb49 at freeze time)",
+    "profile_format": "benchmarks/literature/profiles/<id>.json: {id, family, title, source, parameters, published, ...}; parameters use SI or the paper's non-dimensional units as documented per file",
+    "adapter": "each runner exposes profile_from_document()/problem_from_document() helpers that the planner can call to build its problem object"
+  },
+  "targets": [
+    {
+      "id": "acikmese-ploen-2007-pd3",
+      "family": "P1-C-pd3",
+      "title": "Acikmese & Ploen 2007 Mars 3-DoF powered descent (t_f = 81 s, 4 deg glide slope)",
+      "runner": "spacepdhcg.literature.pd3_acikmese_ploen:run_target",
+      "profile": "benchmarks/literature/profiles/acikmese-ploen-2007-pd3.json",
+      "support": "supported",
+      "requires_artifacts": [],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local"],
+      "published_objective_convention": "propellant-used",
+      "notes": "independent lossless-convexification SOCP, repository CPU SCvx (Clarabel), optional pure-QOCO GPU SCvx"
+    },
+    {
+      "id": "blackmore-2010-pd3-case1",
+      "family": "P1-C-pd3",
+      "title": "Blackmore, Acikmese & Scharf 2010 case 1 (399.4 kg, t_f = 78.4 s)",
+      "runner": "spacepdhcg.literature.pd3_acikmese_ploen:run_target",
+      "profile": "benchmarks/literature/profiles/blackmore-2010-pd3-case1.json",
+      "support": "supported",
+      "requires_artifacts": [],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local"],
+      "published_objective_convention": "propellant-used"
+    },
+    {
+      "id": "szmuk-acikmese-2018-pd6-2d",
+      "family": "P1-D-pd6",
+      "title": "Szmuk & Acikmese 2018 free-final-time 6-DoF, 2-D in-plane example",
+      "runner": "spacepdhcg.literature.pd6_szmuk_2018:run_target",
+      "profile": "benchmarks/literature/profiles/szmuk-acikmese-2018-pd6-2d.json",
+      "support": "partial",
+      "requires_artifacts": [],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local", "descriptive-only"],
+      "published_objective_convention": "time-of-flight",
+      "notes": "free final time implemented in the independent CPU core; the converged t_f is figure-only in the paper (descriptive-only); alpha_mdot assumed"
+    },
+    {
+      "id": "chari-2024-pd6-monte-carlo",
+      "family": "P1-D-pd6",
+      "title": "Chari et al. 2024 independent 6-DoF Monte Carlo batch",
+      "runner": "spacepdhcg.literature.pd6_monte_carlo:run_target",
+      "profile": "benchmarks/literature/profiles/chari-2024-pd6-monte-carlo.json",
+      "support": "partial",
+      "requires_artifacts": [],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local"],
+      "published_objective_convention": null,
+      "notes": "CPU independent batch; GPU persistent batch blocked (see profile gpu_blocker)"
+    },
+    {
+      "id": "tafazzol-taheri-earth-mars",
+      "family": "P1-E-low-thrust",
+      "title": "Earth-to-Mars fixed-time minimum fuel (348.795 d)",
+      "runner": "spacepdhcg.literature.low_thrust:run_target",
+      "profile": "benchmarks/literature/profiles/tafazzol-taheri-earth-mars.json",
+      "support": "supported",
+      "requires_artifacts": [],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local"],
+      "published_objective_convention": "final-mass"
+    },
+    {
+      "id": "tafazzol-taheri-earth-dionysus",
+      "family": "P1-E-low-thrust",
+      "title": "Earth-to-Dionysus fixed-time minimum fuel (3534 d, five revolutions)",
+      "runner": "spacepdhcg.literature.low_thrust:run_target",
+      "profile": "benchmarks/literature/profiles/tafazzol-taheri-earth-dionysus.json",
+      "support": "supported",
+      "requires_artifacts": [],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local"],
+      "published_objective_convention": "final-mass"
+    },
+    {
+      "id": "esa-tops-2026",
+      "family": "P1-E-low-thrust",
+      "title": "ESA TOPS suite: ingestion, frozen metadata selection, supported Cartesian two-body runs",
+      "runner": "spacepdhcg.literature.tops:run_target",
+      "profile": "benchmarks/literature/profiles/esa-tops-2026.json",
+      "support": "partial",
+      "requires_artifacts": ["tops.twobody", "tops.mee", "tops.cr3bp", "tops.solar_sail"],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local"],
+      "published_objective_convention": "final-mass",
+      "notes": "MEE, CR3BP, and solar-sail families unsupported by the current dynamics"
+    },
+    {
+      "id": "gtopx-2021",
+      "family": null,
+      "title": "GTOPX evaluator build and best-known-vector verification",
+      "runner": "spacepdhcg.literature.gtopx:run_target",
+      "profile": "benchmarks/literature/profiles/gtopx-2021.json",
+      "support": "supported",
+      "requires_artifacts": ["gtopx.source", "gtopx.solution.cassini1", "gtopx.solution.rosetta", "gtopx.solution.messenger_reduced", "gtopx.solution.gtoc1"],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "reproduced-external"],
+      "published_objective_convention": "gtopx objective (delta-v km/s or GTOC1 score)"
+    },
+    {
+      "id": "gtoc12-official-verifier",
+      "family": "P2-F",
+      "title": "GTOC12 official verifier on bundled example and published solutions",
+      "runner": "spacepdhcg.literature.gtoc:run_gtoc12_target",
+      "profile": "benchmarks/literature/profiles/gtoc12-official-verifier.json",
+      "support": "supported",
+      "requires_artifacts": ["gtoc12.verification_program", "gtoc12.asteroids", "gtoc12.solution_37_self_cleaning", "gtoc12.solution_39_mass_optimal"],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "reproduced-external"],
+      "published_objective_convention": "total collected resource mass (kg)"
+    },
+    {
+      "id": "gtoc9-example-validation",
+      "family": "P2-F",
+      "title": "GTOC9 example submissions through the re-implemented Kelvins rules",
+      "runner": "spacepdhcg.literature.gtoc:run_gtoc9_target",
+      "profile": "benchmarks/literature/profiles/gtoc9-example-validation.json",
+      "support": "partial",
+      "requires_artifacts": ["gtoc9.debris", "gtoc9.example1", "gtoc9.example2"],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference", "measured-local"],
+      "published_objective_convention": "mission cost (MEUR)",
+      "notes": "no official offline evaluator exists; local implementation of rules 4-19"
+    },
+    {
+      "id": "gtoc5-data-pin",
+      "family": "P2-F",
+      "title": "GTOC5 data pin (scoring blocked)",
+      "runner": "spacepdhcg.literature.gtoc:run_gtoc5_target",
+      "profile": "benchmarks/literature/profiles/gtoc5-data-pin.json",
+      "support": "unsupported",
+      "unsupported_reason": "no official offline evaluator or example solution published; pinned research code requires pykep",
+      "requires_artifacts": ["gtoc5.problem_data"],
+      "requires_gpu": false,
+      "expected_labels": ["published-reference"],
+      "published_objective_convention": null
+    }
+  ]
+}

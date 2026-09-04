@@ -1,0 +1,242 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "g4-family-policy-axis-applicability-v1",
+  "gate": "G4",
+  "coordinate_states": [
+    "executable",
+    "not_applicable",
+    "unsupported"
+  ],
+  "matrix_semantics": {
+    "logical_rows": 24883200,
+    "measured_rows": 19353600,
+    "warmup_rows": 5529600,
+    "execution_groups": 2764800,
+    "attempts_per_group": 9,
+    "full_matrix_reduction_permitted": false,
+    "reason": "The frozen Cartesian ledger remains authoritative; applicability classifies evidence and execution behavior but does not silently remove rows."
+  },
+  "family_policy": {
+    "P1-C-pd3": {
+      "fixed-tight": "executable",
+      "fixed-loose": "executable",
+      "adaptive": "executable",
+      "adaptive+polish": "executable",
+      "pure-gpu-ipm": "executable",
+      "hybrid-pdhcg-ipm": "executable"
+    },
+    "P1-D-pd6": {
+      "fixed-tight": "executable",
+      "fixed-loose": "executable",
+      "adaptive": "executable",
+      "adaptive+polish": "executable",
+      "pure-gpu-ipm": "executable",
+      "hybrid-pdhcg-ipm": "executable"
+    },
+    "P1-E-low-thrust": {
+      "fixed-tight": "executable",
+      "fixed-loose": "executable",
+      "adaptive": "executable",
+      "adaptive+polish": "executable",
+      "pure-gpu-ipm": "executable",
+      "hybrid-pdhcg-ipm": "executable"
+    }
+  },
+  "family_axes": {
+    "P1-C-pd3": {
+      "dispersion_class": {
+        "state": "executable",
+        "reason": "Dispersion class changes the P1-C physical instance."
+      },
+      "attitude_class": {
+        "state": "not_applicable",
+        "reason": "P1-C has no six-DoF attitude state."
+      },
+      "rate_class": {
+        "state": "not_applicable",
+        "reason": "P1-C has no six-DoF angular-rate dispersion axis."
+      },
+      "trust_class": {
+        "state": "not_applicable",
+        "reason": "P1-C does not use the P1-E transfer trust-radius class."
+      },
+      "transfer_class": {
+        "state": "not_applicable",
+        "reason": "P1-C is powered descent, not the P1-E transfer family."
+      }
+    },
+    "P1-D-pd6": {
+      "dispersion_class": {
+        "state": "not_applicable",
+        "reason": "P1-D uses attitude and angular-rate classes instead of the P1-C scalar dispersion class."
+      },
+      "attitude_class": {
+        "state": "executable",
+        "reason": "Attitude class changes the P1-D physical instance."
+      },
+      "rate_class": {
+        "state": "executable",
+        "reason": "Angular-rate class changes the P1-D physical instance."
+      },
+      "trust_class": {
+        "state": "not_applicable",
+        "reason": "P1-D does not use the P1-E transfer trust-radius class."
+      },
+      "transfer_class": {
+        "state": "not_applicable",
+        "reason": "P1-D is powered descent, not the P1-E transfer family."
+      }
+    },
+    "P1-E-low-thrust": {
+      "dispersion_class": {
+        "state": "not_applicable",
+        "reason": "P1-E uses transfer and trust-radius classes instead of the P1-C dispersion class."
+      },
+      "attitude_class": {
+        "state": "not_applicable",
+        "reason": "P1-E has no P1-D six-DoF attitude class."
+      },
+      "rate_class": {
+        "state": "not_applicable",
+        "reason": "P1-E has no P1-D angular-rate class."
+      },
+      "trust_class": {
+        "state": "executable",
+        "reason": "Trust-radius class changes the P1-E physical instance."
+      },
+      "transfer_class": {
+        "state": "executable",
+        "reason": "Transfer class changes the P1-E physical instance."
+      }
+    }
+  },
+  "policy_axes": {
+    "fixed-tight": {
+      "quality_tier": {
+        "state": "executable",
+        "behavior": "selected_tier_sets_inner_and_final_tolerance",
+        "reason": "The selected quality tier controls the fixed-tight inner tolerance and final qualification gate."
+      },
+      "scaling_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_outer_scaling_policy",
+        "reason": "All three frozen outer scaling policies are implemented."
+      },
+      "warm_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_warm_start",
+        "reason": "Cold, primal, and primal-dual workspace starts are implemented."
+      }
+    },
+    "fixed-loose": {
+      "quality_tier": {
+        "state": "executable",
+        "behavior": "tier_is_final_qualification_target",
+        "reason": "The inner tolerance remains fixed at 1e-3; the selected tier is an explicit final matched-quality target and may produce an unqualified result."
+      },
+      "scaling_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_outer_scaling_policy",
+        "reason": "All three frozen outer scaling policies are implemented."
+      },
+      "warm_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_warm_start",
+        "reason": "Cold, primal, and primal-dual workspace starts are implemented."
+      }
+    },
+    "adaptive": {
+      "quality_tier": {
+        "state": "executable",
+        "behavior": "tier_sets_final_gate_with_frozen_forcing_policy",
+        "reason": "The tier controls final qualification while the forcing sequence remains frozen."
+      },
+      "scaling_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_outer_scaling_policy",
+        "reason": "All three frozen outer scaling policies are implemented."
+      },
+      "warm_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_warm_start",
+        "reason": "Cold, primal, and primal-dual workspace starts are implemented."
+      }
+    },
+    "adaptive+polish": {
+      "quality_tier": {
+        "state": "executable",
+        "behavior": "tier_sets_final_gate_before_frozen_polish",
+        "reason": "The selected tier remains a distinct qualification coordinate even though final polish targets 1e-8."
+      },
+      "scaling_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_outer_scaling_policy",
+        "reason": "All three frozen outer scaling policies are implemented."
+      },
+      "warm_mode": {
+        "state": "executable",
+        "behavior": "spacepdhcg_warm_start",
+        "reason": "Cold, primal, and primal-dual workspace starts are implemented."
+      }
+    },
+    "pure-gpu-ipm": {
+      "quality_tier": {
+        "state": "executable",
+        "behavior": "tier_is_final_qualification_target",
+        "reason": "QOCO tolerances remain pinned at 1e-8; the tier is the explicit common-quality qualification target."
+      },
+      "scaling_mode": {
+        "state": "executable",
+        "behavior": "campaign_outer_equilibration_qoco_ruiz_disabled",
+        "reason": "The axis controls campaign-side coefficient equilibration; QOCO Ruiz iterations remain disabled and are not being relabeled as this axis."
+      },
+      "warm_mode": {
+        "state": "executable",
+        "behavior": "primal_dual_discards_unsupported_dual_and_applies_primal",
+        "reason": "Pinned QOCO accepts the primal start only. A primal-dual request executes with the dual explicitly discarded; the solver itself is not unsupported."
+      }
+    },
+    "hybrid-pdhcg-ipm": {
+      "quality_tier": {
+        "state": "executable",
+        "behavior": "tier_is_final_qualification_target",
+        "reason": "The tier is the common final quality gate for the PDHCG construction plus QOCO polish."
+      },
+      "scaling_mode": {
+        "state": "executable",
+        "behavior": "campaign_outer_equilibration_qoco_ruiz_disabled",
+        "reason": "The axis controls the construction and handoff scaling contract while QOCO Ruiz iterations remain disabled."
+      },
+      "warm_mode": {
+        "state": "executable",
+        "behavior": "pdhcg_start_then_qoco_dual_discard",
+        "reason": "PDHCG receives the requested warm state; any dual handed toward pinned QOCO is explicitly discarded and recorded."
+      }
+    }
+  },
+  "terminal_dispositions": {
+    "hybrid_handoff_ineligible": {
+      "reason_required": true,
+      "timing_required": true,
+      "winner_eligible": false,
+      "meaning": "PDHCG construction ran, but the frozen 1e-6 handoff gate did not qualify the state for QOCO."
+    },
+    "not_applicable": {
+      "reason_required": true,
+      "timing_required": true,
+      "winner_eligible": false,
+      "meaning": "The versioned applicability contract proves the axis or coordinate has no scientific meaning."
+    },
+    "unsupported": {
+      "reason_required": true,
+      "timing_required": true,
+      "winner_eligible": false,
+      "meaning": "A pinned implementation lacks a technically required capability; the technical reason must identify it."
+    }
+  },
+  "censoring": {
+    "predictive_timeout_or_oom": "forbidden",
+    "terminal_timeout_or_oom_requires_launch": true,
+    "larger_coordinates_remain": "pending_until_actually_launched"
+  }
+}

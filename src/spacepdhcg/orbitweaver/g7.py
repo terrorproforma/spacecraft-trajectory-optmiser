@@ -23,7 +23,7 @@ from spacepdhcg.campaign_scope import (
     SCOPE_IDS,
 )
 
-from .contracts import PAPER2_MATRIX_SHA256, validate_named
+from .contracts import PAPER2_MATRIX_SHA256, PAPER2_MATRIX_SHA256_HISTORY, validate_named
 
 
 class ArcFidelity(StrEnum):
@@ -1080,7 +1080,7 @@ def expand_promising_scenarios(
 def load_frozen_paper2_matrix(path: str | Path) -> dict[str, Any]:
     raw = Path(path).read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
-    if digest != PAPER2_MATRIX_SHA256:
+    if digest not in PAPER2_MATRIX_SHA256_HISTORY:
         raise ValueError(f"Paper 2 matrix hash mismatch: {digest}")
     value = json.loads(raw)
     if value.get("schema_version") != 1 or value.get("programme") != "OrbitWeaver Paper 2":

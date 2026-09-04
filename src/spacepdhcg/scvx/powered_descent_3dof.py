@@ -50,6 +50,8 @@ from .trust_region import (
 
 FloatArray = NDArray[np.float64]
 
+MERIT_MODES = ("single_shooting", "multiple_shooting")
+
 
 class BackendBuilder(Protocol):
     """Construct a solver workspace for one numerical CQP."""
@@ -78,6 +80,24 @@ class PoweredDescentOuterConfig:
     minimum_predicted_reduction: float = 1.0e-12
     restoration_reduction: float = 0.9
     max_resolves_per_iteration: int = 1
+    # Opt-in: treat a residual-qualifiable inner status (Clarabel ``AlmostSolved``) as solved
+    # when every independent residual is below ``almost_solved_residual_bound`` (the nonlinear
+    # acceptance test still guards the step), instead of aborting with ``solver_failed``.
+    accept_almost_solved: bool = False
+    almost_solved_residual_bound: float = 1.0e-3
+    # ``single_shooting`` (frozen default) evaluates the actual merit on a full rollout of the
+    # candidate controls, so second-order linearisation error accumulates over the whole horizon
+    # and is charged at ``feasibility_penalty`` through the terminal error.  ``multiple_shooting``
+    # evaluates the actual merit on the decision states with per-interval nonlinear defects
+    # penalised at ``virtual_penalty`` (the textbook SCvx exact-penalty merit), which keeps
+    # model agreement first-order accurate on long horizons.
+    merit_mode: str = "single_shooting"
+    # Opt-in objective-stall termination: declare convergence when the merit has moved by less
+    # than ``stall_merit_tolerance`` over the last ``stall_iterations`` outer iterations while the
+    # nonlinear feasibility residual is below ``stall_feasibility_tolerance``.  ``0.0`` disables it.
+    stall_merit_tolerance: float = 0.0
+    stall_iterations: int = 3
+    stall_feasibility_tolerance: float = 1.0e-5
 
     def __post_init__(self) -> None:
         if self.max_iterations <= 0:
@@ -101,6 +121,20 @@ class PoweredDescentOuterConfig:
             raise ValueError("restoration_reduction must lie strictly between zero and one")
         if self.max_resolves_per_iteration < 0:
             raise ValueError("max_resolves_per_iteration must be non-negative")
+        if not np.isfinite(self.almost_solved_residual_bound) or (
+            self.almost_solved_residual_bound <= 0.0
+        ):
+            raise ValueError("almost_solved_residual_bound must be finite and positive")
+        if self.merit_mode not in MERIT_MODES:
+            raise ValueError(f"merit_mode must be one of {MERIT_MODES}")
+        if not np.isfinite(self.stall_merit_tolerance) or self.stall_merit_tolerance < 0.0:
+            raise ValueError("stall_merit_tolerance must be finite and non-negative")
+        if self.stall_iterations < 1:
+            raise ValueError("stall_iterations must be positive")
+        if not np.isfinite(self.stall_feasibility_tolerance) or (
+            self.stall_feasibility_tolerance <= 0.0
+        ):
+            raise ValueError("stall_feasibility_tolerance must be finite and positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +193,7 @@ class PoweredDescentSCvxResult:
     accepted_iterations: int
     total_setup_seconds: float
     total_solve_seconds: float
+    termination_reason: str = ""
 
     @property
     def converged(self) -> bool:
@@ -188,6 +223,7 @@ class _Candidate:
     agreement: float
     accepted: bool
     restoration_accepted: bool
+    requested_tolerance: float = 0.0
 
 
 def clarabel_reference_builder(
@@ -214,13 +250,16 @@ def make_dynamics_consistent_reference(
     *,
     intervals: int,
     step_seconds: float,
+    method: str = "forward_euler",
+    substeps: int = 1,
 ) -> tuple[FloatArray, FloatArray]:
     """Generate a path-feasible discrete reference without solving an optimiser.
 
     A quadratic velocity sequence is chosen to satisfy the desired terminal velocity
     and the forward-Euler position sum.  Required thrust is then projected into the
     throttle and tilt set before nonlinear rollout.  When no projection is active the
-    reference reaches the requested terminal position and velocity to roundoff.
+    reference reaches the requested terminal position and velocity to roundoff (with the
+    default forward-Euler map; the RK4 map lands within one step's curvature term).
     """
 
     initial = _vector(initial_state, STATE_DIMENSION, "initial_state")
@@ -268,10 +307,12 @@ def make_dynamics_consistent_reference(
         thrust = _project_thrust(model, requested_thrust)
         sigma = float(np.linalg.norm(thrust))
         controls[interval] = np.concatenate((thrust, np.asarray([sigma])))
-        states[interval + 1] = model.euler_step(
+        states[interval + 1] = model.discrete_step(
             states[interval],
             controls[interval],
             step_seconds,
+            method=method,
+            substeps=substeps,
         )
         if states[interval + 1, 6] <= model.config.minimum_mass:
             raise ValueError("initial reference consumes the available propellant reserve")
@@ -325,17 +366,15 @@ class PoweredDescentSCvxSolver:
                 target_velocity_vector,
                 intervals=self.subproblem.layout.intervals,
                 step_seconds=self.subproblem.config.step_seconds,
+                method=self.subproblem.config.discretisation,
+                substeps=self.subproblem.config.integration_substeps,
             )
         else:
             current_states, current_controls = self.subproblem._reference(
                 reference_states,
                 reference_controls,
             )
-            current_states = self.model.rollout(
-                initial,
-                current_controls,
-                self.subproblem.config.step_seconds,
-            )
+            current_states = self._rollout(initial, current_controls)
 
         current_merit = self._actual_merit(
             current_states,
@@ -358,6 +397,8 @@ class PoweredDescentSCvxSolver:
         warm_primal: FloatArray | None = None
         warm_dual: FloatArray | None = None
         status = "maximum_iterations"
+        termination_reason = "outer iteration budget exhausted"
+        merit_history: list[float] = [current_merit]
         backend: PersistentCQPBackend | None = None
         backend_tolerance: float | None = None
         backend_iteration_limit: int | None = None
@@ -512,14 +553,20 @@ class PoweredDescentSCvxSolver:
                     )
                 )
 
-                if not candidate.solution.solved:
+                if not self._inner_solved(candidate):
                     status = "solver_failed"
+                    termination_reason = f"inner solver status {candidate.solution.status}"
                     break
                 if retained_converged and not candidate.accepted:
                     status = "converged"
+                    termination_reason = "retained reference satisfies feasibility/step tolerances"
                     break
                 if candidate.accepted and candidate.rollout is not None:
-                    current_states = candidate.rollout
+                    current_states = (
+                        candidate.states
+                        if self.outer_config.merit_mode == "multiple_shooting"
+                        else candidate.rollout
+                    )
                     current_controls = candidate.controls
                     current_merit = candidate.actual_merit
                     current_residual = candidate.residual
@@ -534,13 +581,23 @@ class PoweredDescentSCvxSolver:
                         and candidate.step_fraction <= self.outer_config.step_tolerance
                     ):
                         status = "converged"
+                        termination_reason = "feasibility and step tolerances satisfied"
                         break
                 else:
                     accepted_streak = 0
                     previous_agreement = None
                     if self.trust.exhausted:
                         status = "trust_region_exhausted"
+                        termination_reason = "trust radius reached its minimum"
                         break
+                merit_history.append(current_merit)
+                if self._merit_stalled(merit_history, current_residual, iteration):
+                    status = "converged"
+                    termination_reason = (
+                        f"merit stalled below {self.outer_config.stall_merit_tolerance:g} over "
+                        f"{self.outer_config.stall_iterations} iterations"
+                    )
+                    break
         finally:
             close = getattr(backend, "close", None)
             if callable(close):
@@ -558,7 +615,28 @@ class PoweredDescentSCvxSolver:
             accepted_iterations=accepted_iterations,
             total_setup_seconds=float(sum(record.setup_seconds for record in records)),
             total_solve_seconds=float(sum(record.solve_seconds for record in records)),
+            termination_reason=termination_reason,
         )
+
+    def _merit_stalled(
+        self,
+        merit_history: list[float],
+        residual: OuterResidual,
+        iteration: int,
+    ) -> bool:
+        config = self.outer_config
+        if config.stall_merit_tolerance <= 0.0:
+            return False
+        if iteration + 1 < config.minimum_iterations:
+            return False
+        if len(merit_history) <= config.stall_iterations:
+            return False
+        if residual.feasibility > config.stall_feasibility_tolerance:
+            return False
+        window = np.asarray(merit_history[-(config.stall_iterations + 1) :], dtype=np.float64)
+        if not np.all(np.isfinite(window)):
+            return False
+        return bool(np.max(window) - np.min(window) <= config.stall_merit_tolerance)
 
     def _solve_candidate(
         self,
@@ -607,11 +685,7 @@ class PoweredDescentSCvxSolver:
         )
         rollout: FloatArray | None
         try:
-            rollout = self.model.rollout(
-                initial_state,
-                controls,
-                self.subproblem.config.step_seconds,
-            )
+            rollout = self._rollout(initial_state, controls)
         except ValueError:
             rollout = None
 
@@ -622,16 +696,24 @@ class PoweredDescentSCvxSolver:
             target_position,
             target_velocity,
         )
-        actual_merit = (
-            np.inf
-            if rollout is None
-            else self._actual_merit(
-                rollout,
+        if self.outer_config.merit_mode == "multiple_shooting":
+            actual_merit = self._multiple_shooting_merit(
+                states,
                 controls,
                 target_position,
                 target_velocity,
             )
-        )
+        else:
+            actual_merit = (
+                np.inf
+                if rollout is None
+                else self._actual_merit(
+                    rollout,
+                    controls,
+                    target_position,
+                    target_velocity,
+                )
+            )
         predicted_reduction = current_merit - model_merit
         actual_reduction = current_merit - actual_merit
         agreement = (
@@ -657,7 +739,7 @@ class PoweredDescentSCvxSolver:
             < self.outer_config.restoration_reduction * current_residual.feasibility
         )
         accepted = bool(
-            solution.solved
+            self._solution_usable(solution, independent_audit, request.tolerance)
             and rollout is not None
             and np.isfinite(actual_merit)
             and (
@@ -686,6 +768,40 @@ class PoweredDescentSCvxSolver:
             agreement=float(agreement),
             accepted=accepted,
             restoration_accepted=bool(accepted and restoration),
+            requested_tolerance=float(request.tolerance),
+        )
+
+    def _rollout(self, initial_state: FloatArray, controls: FloatArray) -> FloatArray:
+        return self.model.rollout(
+            initial_state,
+            controls,
+            self.subproblem.config.step_seconds,
+            method=self.subproblem.config.discretisation,
+            substeps=self.subproblem.config.integration_substeps,
+        )
+
+    def _solution_usable(
+        self,
+        solution: CQPSolution,
+        audit: CanonicalResidualAudit,
+        requested_tolerance: float,
+    ) -> bool:
+        if solution.solved:
+            return True
+        if not self.outer_config.accept_almost_solved:
+            return False
+        if solution.status.lower().replace("_", "") not in {"almostsolved", "solvedinaccurate"}:
+            return False
+        residuals = np.asarray([audit.primal, audit.dual, audit.cone], dtype=np.float64)
+        if not np.all(np.isfinite(residuals)):
+            return False
+        return bool(np.all(residuals <= self.outer_config.almost_solved_residual_bound))
+
+    def _inner_solved(self, candidate: _Candidate) -> bool:
+        return self._solution_usable(
+            candidate.solution,
+            candidate.independent_audit,
+            candidate.requested_tolerance,
         )
 
     def _record(
@@ -779,6 +895,61 @@ class PoweredDescentSCvxSolver:
             terminal_measure + path_measure
         )
 
+    def _multiple_shooting_merit(
+        self,
+        states: FloatArray,
+        controls: FloatArray,
+        target_position: FloatArray,
+        target_velocity: FloatArray,
+    ) -> float:
+        """Exact-penalty merit on the decision trajectory with nonlinear interval defects.
+
+        Mirrors :meth:`_model_merit` with the virtual control replaced by the true defect
+        ``x_{k+1} - F(x_k, u_k)`` of the configured discrete map, so predicted and actual
+        reductions differ only by the local second-order linearisation error of each interval.
+        """
+
+        if np.any(states[:, 6] <= 0.0):
+            return float(np.inf)
+        defects = np.empty((self.subproblem.layout.intervals, STATE_DIMENSION))
+        try:
+            for interval in range(self.subproblem.layout.intervals):
+                defects[interval] = states[interval + 1] - self.model.discrete_step(
+                    states[interval],
+                    controls[interval],
+                    self.subproblem.config.step_seconds,
+                    method=self.subproblem.config.discretisation,
+                    substeps=self.subproblem.config.integration_substeps,
+                )
+        except ValueError:
+            return float(np.inf)
+        return self._actual_merit(
+            states,
+            controls,
+            target_position,
+            target_velocity,
+        ) + self._consistent_defect_penalty(defects)
+
+    def _consistent_defect_penalty(self, defects: FloatArray) -> float:
+        """Penalise defects with the weight the convex subproblem itself uses.
+
+        The CQP minimises ``fuel_weight * dt * sum(sigma) + virtual_l1_weight * sum|nu|`` (plus
+        proximal terms that vanish at the reference).  Dividing by ``fuel_weight * dt * N * T_max``
+        expresses that objective in the merit's normalised-fuel units, so the merit's defect
+        weight is ``virtual_l1_weight / (fuel_weight * dt * N * T_max)`` per unit of summed defect.
+        Using the same weight in the model and actual merits guarantees a non-negative predicted
+        reduction and makes the agreement ratio measure linearisation error only.
+        """
+
+        config = self.subproblem.config
+        scale = (
+            config.fuel_weight
+            * config.step_seconds
+            * self.subproblem.layout.intervals
+            * self.model.config.maximum_thrust
+        )
+        return float(config.virtual_l1_weight / scale * np.sum(np.abs(defects)))
+
     def _model_merit(
         self,
         states: FloatArray,
@@ -796,11 +967,16 @@ class PoweredDescentSCvxSolver:
         )
         terminal_measure = float(np.sum(np.abs(terminal_error * state_scales[:6])))
         path_measure = float(sum(self._path_components(states, controls)))
-        virtual_measure = float(np.mean(np.abs(virtual) * state_scales))
+        if self.outer_config.merit_mode == "multiple_shooting":
+            virtual_term = self._consistent_defect_penalty(virtual)
+        else:
+            virtual_term = self.outer_config.virtual_penalty * float(
+                np.mean(np.abs(virtual) * state_scales)
+            )
         return (
             self._normalised_fuel(controls)
             + self.outer_config.feasibility_penalty * (terminal_measure + path_measure)
-            + self.outer_config.virtual_penalty * virtual_measure
+            + virtual_term
         )
 
     def _path_components(

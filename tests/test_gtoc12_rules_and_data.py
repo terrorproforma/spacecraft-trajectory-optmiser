@@ -9,14 +9,15 @@ from pathlib import Path
 import pytest
 
 from spacepdhcg.gtoc12 import constants as C
-from spacepdhcg.gtoc12.data import PINS_PATH, RULES_PATH, data_available, load_pins
+from spacepdhcg.gtoc12.data import data_available, load_pins, load_rules, pins_path, rules_path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_rules_json_matches_constants_module() -> None:
-    payload = json.loads(RULES_PATH.read_text(encoding="utf-8"))
+    payload = json.loads(rules_path().read_text(encoding="utf-8"))
     assert payload == C.rules_payload()
+    assert load_rules() == payload
 
 
 def test_official_constants_transcribed() -> None:
@@ -78,7 +79,7 @@ def test_pins_manifest_shape() -> None:
         assert len(entry["sha256"]) == 64
         assert entry["bytes"] > 0
         assert entry["urls"]
-    assert PINS_PATH.is_file()
+    assert pins_path().is_file()
     # large datasets are ignored, never committed
     ignored = (ROOT / ".gitignore").read_text(encoding="utf-8")
     assert "benchmarks/gtoc12/data/" in ignored

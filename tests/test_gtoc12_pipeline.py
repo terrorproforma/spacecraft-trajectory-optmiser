@@ -13,7 +13,7 @@ from spacepdhcg.gtoc12.data import data_available, load_catalogue
 from spacepdhcg.gtoc12.ephemeris import elements_to_state, propagate_kepler
 from spacepdhcg.gtoc12.lambert import NativeLambert, lambert_batch
 from spacepdhcg.gtoc12.low_thrust import LegBoundary, ScvxSettings, certify_leg, solve_leg
-from spacepdhcg.gtoc12.reduced_instance import DEFAULT_RULE_PATH, build_reduced_instance, load_rule
+from spacepdhcg.gtoc12.reduced_instance import build_reduced_instance, default_rule_path, load_rule
 
 requires_data = pytest.mark.skipif(not data_available(), reason="pinned GTOC12 data not fetched")
 REDUCED_RULE_SHA256 = "718dd7e76f8f09295ae53de58b56626c5d8eb42fa397a27ab190b6511b39bd25"
@@ -69,8 +69,9 @@ def test_numpy_lambert_matches_native_cpu_kernel(tmp_path: Path) -> None:
 
 
 def test_reduced_instance_rule_is_pinned() -> None:
-    rule, digest = load_rule(DEFAULT_RULE_PATH)
+    rule, digest = load_rule(default_rule_path())
     assert digest == REDUCED_RULE_SHA256
+    assert load_rule()[1] == digest
     assert rule["defined_before_any_search"] is True
     assert rule["selection"]["count"] == 1000 and rule["fleet"]["ships"] == 1
 

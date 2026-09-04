@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -8,6 +8,10 @@ import { importDataset } from "../scripts/import-data.mjs";
 
 const root = new URL("..", import.meta.url);
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
+// The authoritative compact archive lives in the WSL visualisation worktree; override with TRAJECTORY_SOURCE.
+const sourcePath = process.env.TRAJECTORY_SOURCE
+  || String.raw`\\wsl.localhost\Ubuntu-22.04\home\angus\worktrees\spacepdhcg-trajectory-visualization\visualization-output\final\spacepdhcg_verified_trajectories.compact.json`;
+const haveSource = await access(sourcePath).then(() => true, () => false);
 
 test("generated data has dense finite replay and qualifications", async () => {
   const data = JSON.parse(await readFile(new URL("data/trajectories.json", root)));
@@ -21,11 +25,10 @@ test("generated data has dense finite replay and qualifications", async () => {
   }
 });
 
-test("authoritative import is byte deterministic", async () => {
+test("authoritative import is byte deterministic", { skip: !haveSource && `authoritative source not reachable at ${sourcePath}` }, async () => {
   const first = await mkdtemp(join(tmpdir(), "trajectory-import-a-"));
   const second = await mkdtemp(join(tmpdir(), "trajectory-import-b-"));
   try {
-    const sourcePath = String.raw`\\wsl.localhost\Ubuntu-22.04\home\angus\worktrees\spacepdhcg-trajectory-visualization\visualization-output\final\spacepdhcg_verified_trajectories.compact.json`;
     await importDataset({ sourcePath, outputDirectory: first });
     await importDataset({ sourcePath, outputDirectory: second });
     const [aData, bData, aManifest, bManifest] = await Promise.all([

@@ -1,0 +1,108 @@
+{
+ "target_id": "gtopx-2021",
+ "status": "reproduced",
+ "published": {
+  "cassini1": "4.930708733982513",
+  "rosetta": "1.343367",
+  "messenger_reduced": "8.629944278158570",
+  "gtoc1": "-1581950.131840605288744"
+ },
+ "measured": {
+  "cassini1": 4.930708733982513,
+  "rosetta": 1.3433673365915426,
+  "messenger_reduced": 8.629944278159243,
+  "gtoc1": -1581950.1318406053
+ },
+ "gap": {
+  "cassini1": 0.0,
+  "rosetta": 3.3659154263787627e-07,
+  "messenger_reduced": 6.732392421326949e-13,
+  "gtoc1": 0.0
+ },
+ "labels": {
+  "published.cassini1": "published-reference",
+  "published.rosetta": "published-reference",
+  "published.messenger_reduced": "published-reference",
+  "published.gtoc1": "published-reference",
+  "measured.cassini1": "reproduced-external",
+  "measured.rosetta": "reproduced-external",
+  "measured.messenger_reduced": "reproduced-external",
+  "measured.gtoc1": "reproduced-external"
+ },
+ "envelope": {
+  "comparison": "exact evaluator re-evaluation of the official vector, compared at the precision printed in the official solution file",
+  "exact_relative_tolerance": 1e-09,
+  "exact_count": 3
+ },
+ "commands": [
+  "spacepdhcg literature run gtopx-2021"
+ ],
+ "notes": [
+  "no global optimiser run; evaluator provided as a test target"
+ ],
+ "details": {
+  "cassini1": {
+   "published_objective_text": "4.930708733982513",
+   "published_objective": 4.930708733982513,
+   "evaluated_objective": 4.930708733982513,
+   "difference": 0.0,
+   "relative_difference": 0.0,
+   "printed_decimals": 15,
+   "constraints": [
+    4.4706918743031565e-05,
+    2516.54821813095,
+    0.00017970529643207556,
+    161495.39002486656
+   ],
+   "constraints_satisfied": true,
+   "reproduced_exactly": true,
+   "reproduced_to_printed_precision": true
+  },
+  "rosetta": {
+   "published_objective_text": "1.343367",
+   "published_objective": 1.343367,
+   "evaluated_objective": 1.3433673365915426,
+   "difference": 3.3659154263787627e-07,
+   "relative_difference": 2.5055814430299113e-07,
+   "printed_decimals": 6,
+   "constraints": [],
+   "constraints_satisfied": true,
+   "reproduced_exactly": false,
+   "reproduced_to_printed_precision": true
+  },
+  "messenger_reduced": {
+   "published_objective_text": "8.629944278158570",
+   "published_objective": 8.62994427815857,
+   "evaluated_objective": 8.629944278159243,
+   "difference": 6.732392421326949e-13,
+   "relative_difference": 7.801200337255812e-14,
+   "printed_decimals": 15,
+   "constraints": [],
+   "constraints_satisfied": true,
+   "reproduced_exactly": true,
+   "reproduced_to_printed_precision": true
+  },
+  "gtoc1": {
+   "published_objective_text": "-1581950.131840605288744",
+   "published_objective": -1581950.1318406053,
+   "evaluated_objective": -1581950.1318406053,
+   "difference": 0.0,
+   "relative_difference": 0.0,
+   "printed_decimals": 15,
+   "constraints": [
+    0.0023351148047368042,
+    44197.38867509383,
+    55412.41751881809,
+    2256.4700455765596,
+    193105.13222492824,
+    14119.573171215961
+   ],
+   "constraints_satisfied": true,
+   "reproduced_exactly": true,
+   "reproduced_to_printed_precision": true
+  }
+ },
+ "family": null,
+ "wall_seconds": 0.003989411998190917,
+ "support": "supported"
+}

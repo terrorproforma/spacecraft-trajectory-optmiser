@@ -65,8 +65,10 @@
             "unsupported",
             "oom",
             "timeout",
+            "timeout_deterministic_replay",
             "numerical",
             "infeasible",
+            "executor_defect",
             "unrun",
             "failed"
           ]
@@ -83,7 +85,7 @@
         "quality_tier": {"enum": ["coarse", "medium", "tight", "ipm", null]},
         "conditioning": {"$ref": "#/$defs/nonnegativeOrNull"},
         "scaling_mode": {
-          "enum": ["always_refresh", "reuse", "refresh_if_needed", null]
+          "enum": ["always_refresh", "reuse", "refresh_if_needed", "not_applicable_ipm_native", null]
         },
         "warm_mode": {"enum": ["cold", "primal", "primal_dual", null]},
         "seed": {"type": ["integer", "null"], "minimum": 0},
@@ -100,6 +102,7 @@
             "timeout",
             "numerical",
             "infeasible",
+            "executor_defect",
             "max_iterations",
             "unrun",
             "evidence",
@@ -195,6 +198,7 @@
             "max_iterations",
             "numerical_failure",
             "infeasible",
+            "executor_defect",
             "hybrid_handoff_ineligible",
             "not_applicable",
             "unsupported",
@@ -544,7 +548,7 @@
       "properties": {
         "policy": {"type": "string", "minLength": 1},
         "quality_tier": {"enum": ["coarse", "medium", "tight", "ipm"]},
-        "scaling_mode": {"enum": ["always_refresh", "reuse", "refresh_if_needed"]},
+        "scaling_mode": {"enum": ["always_refresh", "reuse", "refresh_if_needed", "not_applicable_ipm_native"]},
         "warm_mode": {"enum": ["cold", "primal", "primal_dual"]}
       }
     },

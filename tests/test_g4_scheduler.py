@@ -12,6 +12,9 @@ from spacepdhcg.experiments.g4 import (
     load_policy,
 )
 from spacepdhcg.experiments.g4_scheduler import (
+    DIAGNOSTIC_STATE,
+    INVALID_EXECUTOR_DEFECT,
+    INVALIDATED_STATE,
     CampaignStore,
     atomic_create,
     coordinate_at,
@@ -77,6 +80,8 @@ def test_store_recovers_interrupted_attempt_without_overwrite(tmp_path: Path) ->
             "completed": 1,
             "running": 0,
             "quarantined": 0,
+            "invalidated": 0,
+            "diagnostic": 0,
             "remaining": 24_883_199,
         }
         attempts = recovered.database.execute(
@@ -149,3 +154,130 @@ def test_imported_terminal_row_is_exactly_once_and_skipped(tmp_path: Path) -> No
         assert next_claim is not None
         assert next_claim.ordinal != claim.ordinal
         assert target.status()["completed"] == 1
+
+
+def test_invalidation_retains_evidence_and_leaves_completed_set(tmp_path: Path) -> None:
+    """Executor-defect hygiene: records stay on disk, the ledger row leaves ``completed``."""
+
+    loaded = policy()
+    with CampaignStore(tmp_path, loaded.values, loaded.sha256, "a" * 40) as store:
+        claim = store.claim()
+        assert claim is not None
+        record = {"coordinate_id": claim.coordinate_id, "disposition": "numerical"}
+        store.finish(claim, disposition="completed_group", reason="ok", record=record, valid=True)
+        run_directory = tmp_path / "runs" / claim.coordinate_id / claim.attempt_id
+        before = (run_directory / "result.json").read_bytes()
+
+        # Only completed rows can be invalidated, and a reason is mandatory.
+        with pytest.raises(G4ContractError, match="requires a reason"):
+            store.invalidate(claim.ordinal, reason="", provenance={})
+        with pytest.raises(G4ContractError, match="only completed"):
+            store.invalidate(claim.ordinal + 1, reason="defect", provenance={})
+
+        written = store.invalidate(
+            claim.ordinal,
+            reason="pure-gpu-ipm warm boundary defect",
+            provenance={"fix_commit": "f" * 40, "superseded_by": "/tmp/next"},
+        )
+        assert written["disposition"] == INVALID_EXECUTOR_DEFECT
+        assert written["prior_disposition"] == "completed_group"
+        # Nothing was deleted or rewritten; the invalidation sits beside the result.
+        assert (run_directory / "result.json").read_bytes() == before
+        invalidation = json.loads((run_directory / "invalidation.json").read_text())
+        assert invalidation["fix_commit"] == "f" * 40
+        assert invalidation["attempt_id"] == claim.attempt_id
+        status = store.status()
+        assert status["completed"] == 0
+        assert status["invalidated"] == 1
+        assert status["remaining"] == status["total"]
+        row = store.database.execute(
+            "SELECT state, disposition FROM attempts WHERE attempt_id = ?", (claim.attempt_id,)
+        ).fetchone()
+        assert (row["state"], row["disposition"]) == (INVALIDATED_STATE, INVALID_EXECUTOR_DEFECT)
+        # A second invalidation of the same evidence is refused (create-only sidecar, state).
+        with pytest.raises(G4ContractError, match="only completed"):
+            store.invalidate(claim.ordinal, reason="again", provenance={})
+        # The invalidated row is never claimed again by this checkpoint: a fresh campaign owns it.
+        following = store.claim()
+        assert following is not None and following.ordinal != claim.ordinal
+
+    events = [json.loads(line) for line in (tmp_path / "journal.jsonl").read_text().splitlines()]
+    assert [event["event"] for event in events] == [
+        "claimed",
+        "completed",
+        INVALIDATED_STATE,
+        "claimed",
+    ]
+    assert events[2]["reason"] == "pure-gpu-ipm warm boundary defect"
+
+
+def test_diagnostic_stratum_label_retains_evidence_and_leaves_completed_set(
+    tmp_path: Path,
+) -> None:
+    """Amendment v1.2: superseded records become a labelled stratum, never claim evidence."""
+
+    loaded = policy()
+    with CampaignStore(tmp_path, loaded.values, loaded.sha256, "a" * 40) as store:
+        claim = store.claim()
+        assert claim is not None
+        record = {"coordinate_id": claim.coordinate_id, "disposition": "numerical"}
+        store.finish(claim, disposition="completed_group", reason="ok", record=record, valid=True)
+        run_directory = tmp_path / "runs" / claim.coordinate_id / claim.attempt_id
+        before = (run_directory / "result.json").read_bytes()
+
+        with pytest.raises(G4ContractError, match="stratum name and a reason"):
+            store.label_diagnostic_stratum(claim.ordinal, stratum="", reason="x", provenance={})
+        with pytest.raises(G4ContractError, match="only completed or quarantined"):
+            store.label_diagnostic_stratum(
+                claim.ordinal + 1, stratum="ipm_no_equilibration_v1_1", reason="x", provenance={}
+            )
+
+        written = store.label_diagnostic_stratum(
+            claim.ordinal,
+            stratum="ipm_no_equilibration_v1_1",
+            reason="records predate amendment v1.2 rules A and B",
+            provenance={"policy_amendment": "single-gpu-v1.1", "superseded_by": "/tmp/next"},
+        )
+        assert written["stratum"] == "ipm_no_equilibration_v1_1"
+        assert written["prior_state"] == "completed"
+        assert written["prior_disposition"] == "completed_group"
+        # Nothing deleted or rewritten; the label sits beside the result.
+        assert (run_directory / "result.json").read_bytes() == before
+        sidecar = json.loads((run_directory / "diagnostic_stratum.json").read_text())
+        assert sidecar["record_kind"] == "diagnostic_stratum"
+        assert sidecar["policy_amendment"] == "single-gpu-v1.1"
+        status = store.status()
+        assert status["completed"] == 0
+        assert status["diagnostic"] == 1
+        assert status["remaining"] == status["total"]
+        row = store.database.execute(
+            "SELECT state, disposition FROM attempts WHERE attempt_id = ?", (claim.attempt_id,)
+        ).fetchone()
+        assert (row["state"], row["disposition"]) == (
+            DIAGNOSTIC_STATE,
+            "ipm_no_equilibration_v1_1",
+        )
+        with pytest.raises(G4ContractError, match="only completed or quarantined"):
+            store.label_diagnostic_stratum(
+                claim.ordinal, stratum="ipm_no_equilibration_v1_1", reason="again", provenance={}
+            )
+        # The labelled row is never claimed again by this checkpoint.
+        following = store.claim()
+        assert following is not None and following.ordinal != claim.ordinal
+
+        # Annotation metadata is writable; identity metadata is not.
+        store.set_metadata("diagnostic_strata", json.dumps({"ipm_no_equilibration_v1_1": {}}))
+        assert json.loads(store.metadata()["diagnostic_strata"]) == {
+            "ipm_no_equilibration_v1_1": {}
+        }
+        with pytest.raises(G4ContractError, match="scheduler-owned"):
+            store.set_metadata("policy_sha256", "0" * 64)
+
+    events = [json.loads(line) for line in (tmp_path / "journal.jsonl").read_text().splitlines()]
+    assert [event["event"] for event in events] == [
+        "claimed",
+        "completed",
+        DIAGNOSTIC_STATE,
+        "claimed",
+        "metadata",
+    ]

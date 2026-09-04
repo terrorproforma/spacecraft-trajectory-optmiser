@@ -984,15 +984,21 @@ def solve_fleet_master(
             )
         search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
 
-    # the skip branch recurses once per column, so the depth is the column count: 1019
-    # columns (fleet_master_v6) overflowed the default 1000-frame limit after 45 min of
-    # re-certification.  Raise it for the search only, with room for the callers.
+    # ``search`` recurses once per usable column (the skip branch always walks ``index`` to
+    # ``len(usable)``), so an archive-wide master offers more columns than CPython's default
+    # 1000-frame limit: 1019 columns (fleet_master_v6) overflowed it after 45 min of
+    # re-certification.  Widen it for the search only - two frames per column (WSL fix
+    # ba9b764) or 500 frames of room for the callers (H100 fix c4e2c31), whichever is larger -
+    # and restore it afterwards.
+    required_depth = max(2 * n_usable + 200, n_usable + 500)
     previous_limit = sys.getrecursionlimit()
-    sys.setrecursionlimit(max(previous_limit, n_usable + 500))
+    if required_depth > previous_limit:
+        sys.setrecursionlimit(required_depth)
     try:
         search(0, (), 0.0, 0.0, {}, set(), zero_dual, np.ones(n_usable, dtype=bool))
     finally:
-        sys.setrecursionlimit(previous_limit)
+        if required_depth > previous_limit:
+            sys.setrecursionlimit(previous_limit)
     # LP-based branch and bound closes (or bounds) what the combinatorial search left open:
     # only the fleet sizes whose relaxation beats the incumbent are branched on
     lp_branch: LpBranchResult | None = None

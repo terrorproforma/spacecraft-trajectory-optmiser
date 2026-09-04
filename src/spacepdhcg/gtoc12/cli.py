@@ -6,17 +6,22 @@ import argparse
 import json
 import os
 import subprocess
-import sys
 import time
 from pathlib import Path
 from typing import Any
+
+from spacepdhcg import resources
 
 
 def _json(value: Any) -> str:
     return json.dumps(value, indent=2, sort_keys=True, default=float)
 
 
-def _commit(repository: Path) -> str:
+def _commit(repository: Path | None) -> str:
+    """HEAD of the source checkout, or ``"unknown"`` for an installed wheel."""
+
+    if repository is None:
+        return "unknown"
     try:
         return subprocess.run(
             ["git", "-C", str(repository), "rev-parse", "HEAD"],
@@ -29,13 +34,9 @@ def _commit(repository: Path) -> str:
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:
-    from .data import REPOSITORY_ROOT
+    from .fetch import run
 
-    script = REPOSITORY_ROOT / "scripts" / "gtoc12" / "fetch_gtoc12_data.py"
-    command = [sys.executable, str(script)]
-    if args.data_dir:
-        command += ["--data-dir", str(args.data_dir)]
-    return subprocess.run(command, check=False).returncode
+    return run(args)
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
@@ -193,7 +194,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     """
 
     from .cooperative import FleetColumn, MinerPool, solve_fleet_master
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
@@ -241,7 +242,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     report: dict[str, Any] = {
         "run_id": args.run_id,
-        "commit": _commit(REPOSITORY_ROOT),
+        "commit": _commit(resources.repository_root()),
         "instance": instance_summary,
         "settings": {
             "beam_width": args.beam_width,
@@ -605,7 +606,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     )
     from .clusters import ClusterBands
     from .cooperative import FleetColumn, solve_fleet_master
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
@@ -679,7 +680,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     verifier = Gtoc12Verifier(catalogue, bonus=bonus_table)
     report: dict[str, Any] = {
         "run_id": args.run_id,
-        "commit": _commit(REPOSITORY_ROOT),
+        "commit": _commit(resources.repository_root()),
         "instance": {
             "instance_id": "gtoc12-full-catalogue",
             "pool_asteroids": int(ids.shape[0]),
@@ -953,7 +954,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     from .archive import discover_archives, recertify_archives
     from .bundles import bundle_columns
     from .cooperative import FleetColumn, solve_fleet_master
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
@@ -976,7 +977,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     groups = discover_archives([Path(s) for s in args.source])
     report: dict[str, Any] = {
         "run_id": args.run_id,
-        "commit": _commit(REPOSITORY_ROOT),
+        "commit": _commit(resources.repository_root()),
         "sources": [str(s) for s in args.source],
         "groups": [
             {
@@ -1109,7 +1110,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
 def cmd_retime_returns(args: argparse.Namespace) -> int:
     """Archive-wide Earth-return sweep + re-timing; improved ships are archived for the master."""
 
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .low_thrust import ScvxSettings
     from .returncampaign import ReturnCampaignSettings, run_return_campaign
 
@@ -1174,7 +1175,7 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
     )
     log.close()
     report["run_id"] = args.run_id
-    report["commit"] = _commit(REPOSITORY_ROOT)
+    report["commit"] = _commit(resources.repository_root())
     report["sources"] = [str(s) for s in args.source]
     report["cpu_only"] = True
     report["gpu_used"] = False
@@ -1201,6 +1202,116 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_joint_itinerary(args: argparse.Namespace) -> int:
+    """Archive-wide whole-itinerary joint re-optimisation; improved ships are archived."""
+
+    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .jointcampaign import JointCampaignSettings, run_joint_campaign
+    from .low_thrust import ScvxSettings
+
+    started = time.perf_counter()
+    catalogue = load_catalogue()
+    bonus_table = _optional_bonus(load_bonus_table)
+    weights: dict[int, float] | None = None
+    if bonus_table is not None and not args.no_bonus_weights:
+        weights = {
+            int(asteroid): float(bonus_table.coefficient[asteroid - 1])
+            for asteroid in catalogue.ids
+        }
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    mesh = tuple(float(x) for x in args.mesh.split(",") if x.strip())
+    settings = JointCampaignSettings(
+        workers=args.workers,
+        top=args.top,
+        min_collected_kg=args.min_collected_kg,
+        time_budget_seconds=args.budget_seconds,
+        per_ship_seconds=args.per_ship_seconds,
+        fleet_report=args.fleet_report,
+        mesh_days=mesh or JointCampaignSettings().mesh_days,
+        max_certifications=args.max_certifications,
+        margin_price=args.margin_price,
+        insert=not args.no_insert,
+        insert_neighbours=args.insert_neighbours,
+        insert_radius=args.insert_radius,
+        insert_trials=args.insert_trials,
+    )
+    log = (output_dir / "ships.jsonl").open("w", encoding="utf-8")
+
+    def on_result(record: dict[str, Any]) -> None:
+        log.write(json.dumps(record, default=str) + "\n")
+        log.flush()
+        print(
+            _json(
+                {
+                    k: record.get(k)
+                    for k in (
+                        "done",
+                        "total",
+                        "group",
+                        "slot",
+                        "in_fleet",
+                        "status",
+                        "archived_kg",
+                        "after_kg",
+                        "gain_kg",
+                        "asteroids_before",
+                        "asteroids_after",
+                        "inserted",
+                        "certifications",
+                        "baseline_error_kg",
+                        "stopped",
+                        "wall_seconds",
+                        "peak_rss_mb",
+                        "elapsed_seconds",
+                    )
+                }
+            ),
+            flush=True,
+        )
+
+    report = run_joint_campaign(
+        catalogue,
+        [Path(s) for s in args.source],
+        output_dir / "ships",
+        settings=settings,
+        scvx=ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days),
+        weights=weights,
+        on_result=on_result,
+    )
+    log.close()
+    report["run_id"] = args.run_id
+    report["commit"] = _commit(REPOSITORY_ROOT)
+    report["sources"] = [str(s) for s in args.source]
+    report["cpu_only"] = True
+    report["gpu_used"] = False
+    report["wall_seconds_total"] = time.perf_counter() - started
+    report["peak_rss_mb"] = _peak_rss_mb()
+    (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
+    print(
+        _json(
+            {
+                k: report[k]
+                for k in (
+                    "run_id",
+                    "tasks",
+                    "fleet_ships",
+                    "attempted",
+                    "improved",
+                    "inserted",
+                    "gain_kg_total",
+                    "fleet_average_before_kg",
+                    "fleet_average_after_kg",
+                    "wall_seconds_total",
+                    "worker_peak_rss_mb",
+                    "peak_rss_mb",
+                )
+            }
+        )
+    )
+    return 0
+
+
 def summary_dir(bundle) -> str:
     """Directory name of an archived bundle's re-certified columns."""
 
@@ -1211,7 +1322,7 @@ def summary_dir(bundle) -> str:
 
 
 def cmd_export_viewer(args: argparse.Namespace) -> int:
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .solution import Solution
     from .verifier import Gtoc12Verifier
     from .viewer_export import write_viewer_dataset
@@ -1227,7 +1338,7 @@ def cmd_export_viewer(args: argparse.Namespace) -> int:
         histories,
         catalogue,
         run_id=args.run_id,
-        commit=_commit(REPOSITORY_ROOT),
+        commit=_commit(resources.repository_root()),
         verification=report.summary(),
         solution_path=Path(args.solution),
     )
@@ -1254,7 +1365,7 @@ def cmd_leg_stats(args: argparse.Namespace) -> int:
 
 
 def cmd_hop_calibration(args: argparse.Namespace) -> int:
-    from .data import REPOSITORY_ROOT, load_catalogue
+    from .data import load_catalogue
     from .hopcalib import certified_hops, fit_inflation
 
     catalogue = load_catalogue()
@@ -1266,7 +1377,7 @@ def cmd_hop_calibration(args: argparse.Namespace) -> int:
     summary["holdout_sources"] = [str(p) for p in args.holdout]
     summary["train_hops"] = len(train)
     summary["holdout_hops"] = 0 if holdout is None else len(holdout)
-    summary["commit"] = _commit(REPOSITORY_ROOT)
+    summary["commit"] = _commit(resources.repository_root())
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_text(_json(summary) + "\n", encoding="utf-8")
     names = ["1", "r", "TOF/yr", "|Δa|/0.1AU", "|Δλ|/π"]
@@ -1289,6 +1400,9 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
 
     fetch = commands.add_parser("fetch", help="download and checksum the pinned official data")
     fetch.add_argument("--data-dir", type=Path, default=None)
+    fetch.add_argument("--only", nargs="*", default=None, help="pinned file names to fetch")
+    fetch.add_argument("--skip-optional", action="store_true")
+    fetch.add_argument("--timeout", type=float, default=600.0)
     fetch.set_defaults(function=cmd_fetch)
 
     verify = commands.add_parser("verify", help="independently verify and score a solution file")
@@ -1543,6 +1657,54 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     returns.add_argument("--node-days", type=float, default=2.0)
     returns.add_argument("--no-bonus-weights", action="store_true")
     returns.set_defaults(function=cmd_retime_returns)
+
+    joint = commands.add_parser(
+        "joint-itinerary",
+        help="jointly re-optimise every epoch of archived ships (continuous pattern search on "
+        "the calibrated surrogate, SCvx re-certification of the whole itinerary, one-asteroid "
+        "insertion); fleet ships first",
+    )
+    joint.add_argument("--run-id", required=True)
+    joint.add_argument("--output", required=True)
+    joint.add_argument(
+        "--source",
+        action="append",
+        required=True,
+        help="run directory holding ship_NN/**/route_summary.json archives (repeatable)",
+    )
+    joint.add_argument(
+        "--fleet-report",
+        default=None,
+        help="fleet-master run_report.json whose selected ships are optimised first",
+    )
+    joint.add_argument("--workers", type=int, default=3)
+    joint.add_argument(
+        "--top", type=int, default=None, help="stand-alone ships beyond the fleet's, best first"
+    )
+    joint.add_argument("--min-collected-kg", type=float, default=450.0)
+    joint.add_argument("--budget-seconds", type=float, default=9000.0)
+    joint.add_argument("--per-ship-seconds", type=float, default=900.0)
+    joint.add_argument("--mesh", default="45,20,8,3,1", help="pattern-search mesh schedule in days")
+    joint.add_argument("--max-certifications", type=int, default=10)
+    joint.add_argument(
+        "--margin-price",
+        type=float,
+        default=0.05,
+        help="objective kg per kg of spare final-mass margin (freed propellant)",
+    )
+    joint.add_argument("--no-insert", action="store_true")
+    joint.add_argument("--insert-neighbours", type=int, default=40)
+    joint.add_argument(
+        "--insert-radius",
+        type=float,
+        default=2.5,
+        help="co-moving neighbourhood radius (band units) the insertion draws from",
+    )
+    joint.add_argument("--insert-trials", type=int, default=3)
+    joint.add_argument("--scvx-iterations", type=int, default=40)
+    joint.add_argument("--node-days", type=float, default=2.0)
+    joint.add_argument("--no-bonus-weights", action="store_true")
+    joint.set_defaults(function=cmd_joint_itinerary)
 
     export = commands.add_parser("export-viewer", help="propagate a solution and write viewer data")
     export.add_argument("solution")

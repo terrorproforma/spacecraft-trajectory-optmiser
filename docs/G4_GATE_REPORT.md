@@ -1,10 +1,285 @@
 # Gate G4 report — adaptive and hybrid matched-quality study
 
-Status date: **2026-09-01**
-Decision: **FAIL**
+Status date: **2026-09-03**
+Decision: **FAIL** (historical evidence unchanged; claim core in progress)
 H5: **unresolved**
 H6: **unresolved**
 G5 authorised: **no**
+
+## H5/H6 claim-core campaign (2026-09-03): launched, not yet resolved
+
+The preregistered 360-group, 3,240-invocation claim core (`benchmarks/g4_h5_h6_claim_core.json`,
+SHA-256 `40dc217467ffe32e919d4f901943e0200f69e302cf57cd15ccdfa88bfa0c8d0b`) was launched on
+`integration/single-gpu-v1` after the current-head G0–G3 seal (`results/gpu/current-head-b0cd570/`,
+evidence index SHA-256 `83b643bf81773b59941f7d7226a71f9283e535d1332b64b435f1acd6f2ba9e53`, source
+`b6afb49`). It resolves H5 and H6 only and may not populate any F01–F12 or T01–T08 regime product.
+Nothing in this section changes the historical FAIL evidence below, and the full 2,764,800-group
+grouped ledger has not been started.
+
+Executable provenance:
+
+- The G3-sealed release executable (`4273cd8a…`) was verified against the report-only head
+  `9678134`: `cmake --build` reported `ninja: no work to do` and the code paths were identical to
+  `b6afb49`.
+- The pre-campaign pilot found a genuine executor defect: a P1-E `N=100` fixed-tight group ran the
+  full 91-minute nine-attempt safety boundary without emitting one attempt record because
+  `spacepdhcg_cuda_workspace_wait` held the workspace mutex across `cudaEventSynchronize`, which
+  blocked the deadline watchdog's `spacepdhcg_cuda_workspace_cancel` until the persistent kernel
+  exhausted its 1,000,000-iteration budget. Commit `9a4cbea` releases the mutex while waiting,
+  reports a cancelled inner solve as `SPACEPDHCG_CUDA_SCVX_CANCELLED` (an honest launched
+  `timeout` with the spent time and iterations), forces a cold boundary after a cancelled attempt,
+  adds a native cross-thread cancel-during-wait check to `recovery_test`, and pins the dynamically
+  linked `libspacepdhcg_cuda.so` in the capability. The release tree passed 62/62 tests after the
+  fix; a 20 s-deadline `--g4-session` on claim-core group 0 emitted nine strictly schema-valid
+  `timeout` attempts at 20.0 s each. The G3 seal predates this library change and was not
+  re-run; the sanitizer evidence therefore covers `b6afb49`, not `9a4cbea`.
+- Scheduler commits `2e34d30`/`a68890b` add GPU contamination control: nvidia-smi samples at every
+  group boundary, `/dev/dxg` holders inside WSL2 (excluding the worker's own descendants and
+  holders whose `CUDA_VISIBLE_DEVICES` hides every device), and host `nvidia-smi.exe pmon`
+  compute contexts sampled every second during the group. A group observed alongside foreign
+  compute activity is quarantined as `contaminated` with all raw evidence retained and re-run
+  after the foreign activity ends. Commit `44e6939` adds `scripts/gpu/decide_g4_claim_core.py`
+  (group re-validation, publication aggregates, and the frozen H5/H6 decision functions).
+- The first official group under `9a4cbea` (checkpoint `g4-claim-core-9a4cbea`, retained as
+  evidence) exposed the residual gap: its attempts each reached the 600 s deadline with
+  1,000,000 PDHCG iterations and canonical residual ≈37 (far from the 1e-6 tier), but one
+  attempt ran more than 20 minutes and the group overran the safety boundary, discarding all nine
+  attempts. A cancel that fired while the workspace was between inner solves could not reach the
+  device, and the following inner solve or identical-CQP re-solve spent its full budget first.
+  Commit `26def2b` checks the driver's cancellation flag before every inner solve and re-solve,
+  rolls back and reports a cancelled re-solve as `CANCELLED`, makes the watchdog re-assert the
+  cancellation every second until the attempt returns, and moves the scheduler's outer boundary
+  300 s beyond the executor's own group deadline. Release ctest passed 62/62; 20 s-deadline
+  `--g4-session` runs on claim-core groups 0 (fixed-tight), 1 (adaptive) and 3 (hybrid) each
+  emitted nine strictly schema-valid launched `timeout` attempts at 20.0 s. The generation-0
+  silence of that first group (no attempt record in 91 minutes while foreign host compute ran at
+  up to 99 % SM) is recorded as an unexplained observation; the same group's generation 1
+  produced seven 600.1 s `timeout` attempts before the overrun.
+- Official capability: `/home/angus/g4-executor-capability-26def2b.json`, capability SHA-256
+  `93b6dac4c5035e9510db9d2c91b9e53ba6d8943e4c3be9947dd3cbaa5e868903`, source commit `26def2b`,
+  executable SHA-256 `16c1883f16f78bdfa4bbd00d341e1b0c90882ce2319742e358535e2a24f4923e`,
+  `libspacepdhcg_cuda.so` SHA-256
+  `bf31e1249af45e66d23b31ed559201402652048aaf6e16720060edbfa4a4823b`, real CUDA session probe
+  passed. The superseded `9a4cbea` capability (`e546583b…`) executed no completed group. Policy
+  SHA-256 `9ab3b444…`, matrix SHA-256 `50afe8ff…`, tolerances, seeds, repeats and order are
+  unchanged.
+
+Campaign state at the time of this report:
+
+- Checkpoint `build-integration-report/g4-claim-core-26def2b` (ignored, local-only), initialised
+  with `run_g4_campaign.py init --claim-core`; 0 of 360 groups completed. The checkpoint pins
+  `source_commit=26def2b`; a detached worktree at that commit
+  (`/home/angus/worktrees/spacepdhcg-g4-claim-core-26def2b`) hosts the restart, status,
+  observer and completion scripts (`build-integration-report/g4-claim-core-26def2b-*.sh`) so this
+  branch can advance without invalidating the pin.
+- The RTX 5090 is shared with other agents' GPU jobs (WSL and Windows-side); the worker waits for
+  foreign compute activity before claiming a group and re-runs contaminated groups. Fixed-tight
+  P1-E `N=100` attempts progressed at 0.5–1 ms per PDHCG iteration depending on contention, so
+  groups whose attempts reach the frozen 600 s deadline take about 91 minutes each; dispositions
+  are recorded only from launched attempts and are not predicted here.
+- On completion, `build-integration-report/g4-claim-core-26def2b-finish.sh` re-validates every
+  raw attempt and publication aggregate, applies the preregistered H5/H6 decision functions
+  (paired bootstrap, seed 20260901 plus scale, 10,000 samples, thresholds unchanged), and seals a
+  reproducible archive with an evidence index under `results/gpu/g4/claim-core-26def2b/`
+  (local-only; no immutable URI exists).
+
+Amendment `single-gpu-v1.1` and relaunch (2026-09-03): the `26def2b` worker was paused with 0 of
+360 groups completed (its one quarantined `contaminated` fixed-tight group and the wait /
+contamination logs are retained under `g4-claim-core-26def2b`). Before any group result was
+inspected, the preregistered amendment `benchmarks/g4_claim_core_amendment_v1_1.json` (SHA-256
+`c691467e77367c63d2ba4b0adc1b290d3e4d731f360cbccae45a7d3cf5b8a1f5`, document
+`docs/G4_CLAIM_CORE_AMENDMENT_V1_1.md`) was frozen and applied to the claim core only:
+
+- Contamination policy run-and-flag (Decision A): the worker never waits for GPU idle; foreign
+  SM utilisation is sampled before, during and after every attempt, the utilisation deltas and the
+  shared lock file `/home/angus/.spacepdhcg-gpu.lock` are recorded, and each measured attempt
+  executed alongside foreign compute is flagged `contaminated` (disposition and quality retained,
+  timing and energy excluded from every H5/H6 statistic; each coordinate row reports the pair count
+  n actually used and its censoring; no re-run).
+- Deterministic-replay timeouts: when both warm-ups and `measured/0` reach the attempt deadline
+  with bit-identical FNV-1a trace hashes, `measured/1..6` are recorded as
+  `timeout_deterministic_replay` (censored, not executed, referencing `measured/0`); any trace
+  difference executes all seven.
+- Attempt deadline 600 s → 120 s and inner iteration cap 1,000,000 → 200,000 for the claim core; a
+  hash-selected 10 % stratified subset (36 `censoring_sensitivity` twins, family × scale × policy,
+  committed in the amendment) additionally runs at 600 s / 1M immediately after its core group. The
+  preregistered acceptance rule (a twin qualifying where its 120 s core attempt is censored
+  invalidates the amendment and reverts the whole core to 600 s) is enforced by
+  `decide_g4_claim_core.py` (exit 2, decision withheld).
+- Execution order: pure-gpu-ipm → adaptive → hybrid-pdhcg-ipm → fixed-tight, definition order
+  within a policy. The claim core never bound execution order to the `solver_order` rotation (it
+  is recorded per group as an identity axis only), so the reordering is permitted. Tolerances,
+  seeds, repeats, group identities and quality gates are unchanged; `policy_amendment:
+  single-gpu-v1.1` is echoed in the checkpoint metadata and every raw and group record.
+
+Two defects were found and fixed before relaunch: the executor bakes `SPACEPDHCG_SOURCE_COMMIT`
+at CMake configure time, so a rebuilt-only tree emitted `identity.repository_commit=b6afb49` under
+a campaign pinned at the live head (commit `2ef27e1`: the executor reports
+`compiled_source_commit`, and the capability generator and scheduler refuse a mismatch); and
+`decide_h6` recorded missing residuals as ±inf, which the `allow_nan=False` decision writer would
+have rejected on the first failed coordinate (commit `a08f5e2`: null with explicit gates).
+New official capability `/home/angus/g4-executor-capability-a08f5e2.json`, SHA-256
+`cf057e02944c09573348025ff457544984ce75651220fe5777c1fe64eefdaaef`, source commit `a08f5e2`,
+executable SHA-256 `0a7c41c453bfabc6c1b9014d53c2b606f6b0723ef16a36c05a9c60cfbd070132`. Checkpoint
+`build-integration-report/g4-claim-core-a08f5e2` (396 groups, schedule SHA-256 `1123b8de…`,
+`policy_amendment=single-gpu-v1.1` in metadata) is driven from the detached worktree
+`/home/angus/worktrees/spacepdhcg-g4-claim-core-a08f5e2` by
+`build-integration-report/g4-claim-core-a08f5e2-{worker,status,observer,finish}.sh`. First ten
+groups (all P1-E `N=100` pure-gpu-ipm): every attempt `numerical` at outer iteration 0 with zero
+QOCO workspace creations (a pre-existing executor defect candidate, reproduced without the
+amendment environment), 90 of 90 measured attempts `contaminated` by a foreign Windows compute
+process at 80–98 % SM, 31–136 s per group. No H5/H6 statistic has been formed.
+
+Pure-gpu-ipm defect triage (2026-09-03, checkpoint `g4-claim-core-a08f5e2` paused at a group
+boundary after 26 completed groups, all P1-E pure-gpu-ipm, every attempt `numerical`):
+
+- Environment and wiring were not the cause. `/proc/<worker>/environ` and the executor server
+  carried `SPACEPDHCG_QOCO_LIBRARY=…/build-current-head-qoco/libqoco.so` (QOCO v0.3.2,
+  cuda/cuDSS algebra) and the cuDSS `LD_LIBRARY_PATH`; a foreground `--g4-session` replay of group
+  0 with the exact worker environment and with the planner's known-good library
+  (`build/qoco-g4/libqoco.so`) reproduced the same nine `numerical` attempts. A stderr diagnostic
+  added to the executor showed `api_status=7` (`NUMERICAL_FAILURE`), SCvx `INNER_FAILURE`,
+  `qoco_failure=4` (`NUMERICAL`), QOCO setup 0.08–0.19 s and a 5 s first solve: the adapter was
+  constructed and QOCO ran. The reported "zero workspace creations" was a reporting gap — the
+  driver's failure branch never copied `workspace_creations` into the result.
+- Root cause 1 (executor defect, fake `numerical`): with `warm_mode=primal` the reset boundary of
+  every attempt after a successful one calls `spacepdhcg_cuda_workspace_warm_start_async(…,
+  FULL_RETAINED)` on the PDHCG workspace. Pure IPM never runs the PDHCG kernel, the workspace holds
+  no retained solver state, the call returns `INVALID_STATE`, and the executor recorded the attempt
+  as a launched `numerical` failure in 0.00 s. On an unconditioned replay this produced the
+  alternating pattern `qualified, numerical, qualified, numerical, …` (warm-ups and measured/1,3,5
+  lost). Fix: for `SPACEPDHCG_CUDA_SCVX_PURE_QOCO` the warm boundary is the retained QOCO primal plus
+  the dual clear and the PDHCG warm start is skipped; the failure branch now reports QOCO
+  workspace creations/updates; the adapter records the raw QOCO status.
+- Root cause 2 (genuine solver outcome, not an executor defect): at the claim core's fixed axis
+  `conditioning=4.0` QOCO reports `numerical error` (P1-E `N=100`, 53 iterations, step lengths
+  ~0, `Pcost` 1e17–1e18, primal residual 1e6–1e8; constraint coefficient range 1e2 versus 1e0
+  unconditioned) and `maximum iterations reached` (`N=20`). Ruiz scaling (5 or 10 iterations),
+  static regularisation 1e-8/1e-10 and one IR step were tried for diagnosis only and diverged to
+  NaN at iteration 1; no adapter setting was changed. The same group with `conditioning=0.0`
+  qualified every executed attempt (100 outer iterations, canonical residual 2–8e-10, 65–96 s
+  per attempt, ≥1 QOCO workspace). Fixed-tight PDHCG on the same `N=100` conditioning-4.0
+  coordinate reached its 600 s deadline at residual ≈37 in `g4-claim-core-9a4cbea`. Genuine
+  `numerical` attempts at conditioning 4.0 therefore remain valid H6 evidence for the pure-IPM
+  baseline; they are not invalidated by this triage. Two caveats are recorded for the H6
+  interpretation rather than fixed here (either would be a solver-setting change requiring a
+  preregistered amendment): the pure-IPM baseline runs QOCO without equilibration
+  (`ruiz_iters=0`) while PDHCG uses the workspace's `refresh_if_needed` scaling, and a single
+  QOCO solve is not interruptible, so an IPM attempt whose one solve overruns the 120 s attempt
+  deadline is recorded by QOCO's own outcome (`numerical` after 101 iterations / 109–134 s under
+  the foreign load) rather than as `timeout`.
+- Root cause 3 (executor defect, found on the first re-run group under `857f99a`): QOCO keeps
+  state across `qoco_solve` calls on one persistent solver. Its stall handler multiplies
+  `solver->settings->kkt_dynamic_reg` by 10 in place and never restores it, and the best-iterate
+  tracker (`best_valid`/`best_metric`) is reset only at setup. After attempt 0 ended in
+  `numerical error` (101 iterations, 109 s), the numeric-update path re-solved the identical data
+  in 62 iterations, then 1 iteration (1.7 s) for every remaining attempt, each restoring "best
+  iterate (39)" from the first solve — same disposition, but not independent attempts. Fix
+  (adapter only; the vendored QOCO is untouched): restore the configured settings before every
+  numeric update and, after any failed solve, tear the solver down and set it up again on the
+  current formulation before the next solve, counted in `qoco_workspace_creations` (so the
+  invariant is ≥ 1 per group, not exactly 1). The stale-best hazard for a *successful* solve
+  followed by a failed one on different data (hybrid handoff) is bounded: the executor's quality
+  gate recomputes canonical residuals on the current data, so a stale iterate can be
+  `unqualified`, never `qualified`.
+- Fail-closed contract: new terminal disposition `executor_defect` (reset-boundary failure, QOCO
+  ABI fault, or any driver API status that is not a solver outcome) in the executor, raw-attempt
+  and Paper 1 schemas and Python contracts; a group containing one is quarantined, and the
+  decision refuses a completed group carrying one. The capability probe now runs a real
+  pure-gpu-ipm session and refuses the executor unless all nine attempts launch with ≥1 QOCO
+  workspace creation and solver dispositions; it pins the QOCO library hash, and the worker
+  refuses to start unless its `SPACEPDHCG_QOCO_LIBRARY` hashes to the pinned library.
+  `tests/test_g4_ipm_session_gpu.py` drives the real executor through that probe (9/9 attempts
+  ≥1 QOCO workspace, dispositions `unqualified` at one outer iteration, warm boundaries
+  `primal`); it passed on the fixed build with a foreign compute job at 99 % SM (12–20 s per
+  attempt).
+- Campaign hygiene: the 26 completed pure-gpu-ipm groups of `g4-claim-core-a08f5e2` (all P1-E,
+  22 × `N=100`, 4 × `N=500`; 182 measured attempts, 84 contaminated) were invalidated with the
+  new `invalidate` ledger action (`invalid_executor_defect`, records and result files retained,
+  `invalidation.json` sidecars, journal events, `fix_commit=857f99a`); the interrupted group 26
+  stays `running`/`interrupted` in that checkpoint, which is never resumed (`claim()` skips every
+  existing row and the checkpoint pins `source_commit=a08f5e2`). Option (b) was taken: fix commit
+  `857f99a`, CUDA CTest 62/62, capability `1d8c7527…25041` (probe: 9/9 launched, 1 QOCO
+  workspace, numeric updates 0..8, all `unqualified`), new checkpoint `g4-claim-core-857f99a`,
+  `migrate` from `a08f5e2` imported 0 (no untouched completed group of another policy existed).
+  Its first nine groups exposed root cause 3, so that worker was paused at a group boundary after
+  9 completed P1-E `N=100` groups (63 measured `numerical`, all contaminated) and those groups
+  were invalidated in turn (`fix_commit=ccd5596`, superseded by `g4-claim-core-ccd5596`).
+  Current checkpoint: `g4-claim-core-ccd5596` (fix commit `ccd5596`, qoco/scvx CTest 7/7,
+  GPU regression test 2:57, capability `d7d27454…b5319`, `migrate` imported 0). Order is
+  unchanged (pure-gpu-ipm first).
+- First valid IPM group (`ccd5596`, ordinal 0, P1-E `N=100`, conditioning 4.0, foreign job at
+  99 % SM): eight launched attempts, each on a freshly built QOCO solver (`workspace_creations`
+  1..8), 27–200 IPM iterations and 28–213 s per attempt, all genuine `numerical` (QOCO status 3;
+  one `maximum iterations` at 200), all `contaminated`; the ninth attempt is `unrun` because the
+  executor's 1140 s group deadline expired at 1216 s. Pure IPM therefore does not qualify on the
+  conditioning-4.0 P1-E core; each failing `N=100` IPM group costs ≈20 min. Risk to watch: a
+  single QOCO solve cannot be interrupted, so if an `N=2000` IPM solve exceeds the scheduler's
+  hard bound (1140 s + 300 s grace) the session is killed, restarted once, and the group ends as
+  an error record — nothing is recorded as solver evidence, but ≈48 min per such group is spent.
+- Amendment `single-gpu-v1.2` (`docs/G4_CLAIM_CORE_AMENDMENT_V1_2.md`, frozen
+  2026-09-03T06:45:00Z) resolves the two caveats above by preregistered rule rather than
+  interpretation. Rule A: the IPM baseline runs QOCO's native default equilibration and records
+  it; at the pinned commit that default is `ruiz_iters = 0`, and Ruiz-on was probed on the failing
+  P1-E `N=100` conditioning-4.0 coordinate and on conditioning 0.0 — with the pinned library it
+  NaNs at iteration 8 (two QOCO CUDA-backend defects: `safe_div(1,0)=DBL_MAX` on empty rows and a
+  `scale_arrayf` without host fallback), and with those defects patched in a scratch build it still
+  ends `numerical` at conditioning 4.0 (54 iterations, 183 s) and turns the qualified
+  conditioning-0.0 solves (3/3 qualified, 11–13 QOCO iterations) into `numerical` (6/6). The
+  conditioning-4.0 pure-IPM result is a genuine IPM negative. Rule B: a launched attempt whose
+  measured wall exceeds the 120 s deadline is `timeout`, never `numerical`, for every backend.
+  Rule C: the `N=2000` hard bound is unchanged. **Diagnostic stratum
+  `ipm_no_equilibration_v1_1`**: the `pure-gpu-ipm` groups completed under v1.1 in
+  `g4-claim-core-ccd5596` (all P1-E `N=100`, every launched attempt `numerical` and
+  `contaminated`, 27–200 IPM iterations, 28–304 s per attempt) are retained verbatim in the
+  `diagnostic` ledger state, excluded from H6, and cited by the successor checkpoint's
+  `diagnostic_strata` metadata. They agree with the amended runs in direction (IPM fails at
+  conditioning 4.0) but are not comparable records because they predate rules A and B.
+- First five amended IPM groups (`g4-claim-core-46bc895`, capability `827ce9e8…51bce3`, P1-E
+  `N=100` conditioning 4.0, foreign host compute at 53–96 % SM throughout): 35 launched attempts,
+  every one on a fresh QOCO solver with `ruiz_iterations 0 / qoco_native_default` echoed and
+  `scaling_mode not_applicable_ipm_native` recorded; 25 `timeout` (measured wall 120.3–309.5 s,
+  solver outcome `numerical` attached, QOCO status 3 or 4 = max-iterations at 200), 10 `numerical`
+  (51–120 s, 37–99 QOCO iterations), 10 `unrun` at the 1140 s group deadline, 0 qualified,
+  35/35 contaminated. Groups took 1123–1362 s (≈20.6 min each). Rule B is consistent on all 35
+  records (timeout ⇔ wall > 120 s). Pure IPM at this coordinate is a genuine negative.
+- IPM block outcome and scheduler defect (`g4-claim-core-46bc895`, 2026-09-03T07:05Z to
+  2026-09-04T02:57Z, 60 pure-gpu-ipm P1-E groups claimed): `N=100` 20 core + 2 twins and `N=500`
+  20 core + 2 twins completed; `N=2000` 8 core + 2 twins completed, 4 core groups quarantined by a
+  scheduler defect, 1 core group ended as the rule C error record, 1 core group completed on the
+  restart generation. 0 qualified attempts anywhere (core: 123/46/11 `numerical`/`timeout`/`unrun`
+  at `N=100`, 53/66/61 at `N=500`, 31/31/19 over the nine completed `N=2000` core groups; the
+  six 600 s twins are 52 `numerical` + 2 `timeout`). Per-group wall on a clean GPU: `N=100`
+  178–461 s (median 330 s, 7 groups), `N=500` 401 s and 1114 s (2 groups), `N=2000` 298, 310,
+  1169 and 1209 s (4 core groups; clean twin 314 s); under the foreign
+  host job (`python.exe`, 53–99 % SM until 2026-09-04T01:36Z) up to 1362 s / 2801 s / 1324 s.
+  IPM `N=2000` attempts spend 270–530 s in one uninterruptible QOCO solve at 4–9 % GPU
+  utilisation (cuDSS/host bound), so the 120 s deadline never shortens them.
+  **Defect**: the raw-attempt contract accepted `timeout_deterministic_replay` records only when
+  stamped `single-gpu-v1.1`; v1.2 inherits the replay section verbatim and the executor stamps
+  v1.2, so ordinals 45, 47, 49 and 57 (P1-E `N=2000`, warm-up/0, warm-up/1 and measured/0 all
+  `timeout` at 270–347 s with identical traces — QOCO max-iterations at 200, zero outer
+  iterations — plus six conformant replays) were quarantined `invalid_evidence` although their
+  nine records validate completely once the stamp check accepts every supported amendment. The
+  decision step shared the check. Fix commit `4db5047` (`validate_attempt_record` accepts
+  `SUPPORTED_AMENDMENT_IDS`; `migrate --skip-quarantined`; tests). Ordinal 56 is the
+  preregistered rule C outcome, not the defect: both generations were killed at the 1440 s outer
+  boundary after emitting 3 and 2 well-formed records (each attempt 460–530 s), so the group is
+  an error record with no retained attempts (2887 s spent); ordinal 59 survived the same path
+  because its restart generation finished nine records (1 `numerical`, 5 `timeout`, 3 `unrun`,
+  2841 s). Replay is trivially eligible for `N=2000` IPM because a solve that never completes an
+  outer iteration leaves an information-free trace; the amendment's trigger is met literally,
+  and the replays count only as timeout censoring, but this is worth stating when H6 is read.
+  Campaign hygiene (option (b) again): the 46bc895 worker was paused at the ordinal-59 boundary
+  (journal `completed` event, then TERM; ordinal 60 claimed but never launched), the executor
+  was rebuilt at `4db5047` (compiled_source_commit verified, executable `6392c864…2ddd`),
+  capability `5c849945c954e438a8bbfef4df065674883b6f1ce0e85dc7077dfb7bb48c80b8` (probe 9/9,
+  `--check` agrees), new checkpoint `g4-claim-core-4db5047` citing `ipm_no_equilibration_v1_1`,
+  `migrate --skip-quarantined` imported the 55 completed groups exactly once and left the five
+  quarantined rows in `46bc895` (records retained), so the new worker re-runs 45, 47, 49, 56
+  and 57 first (ordinal 45 claimed 2026-09-04T02:58:58Z), then 60–395. GPU idle ≈ 70 s. A new
+  foreign host `python.exe` (PID 49548, 95 % SM) appeared at 02:51Z and WSL weldsim pytest
+  processes hold `/dev/dxg`; run-and-flag continues to record contamination per attempt.
 
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core

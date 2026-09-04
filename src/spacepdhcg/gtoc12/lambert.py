@@ -5,9 +5,11 @@ Two implementations share one algorithm -- the universal-variable zero-revolutio
 bisection):
 
 * :func:`lambert_batch` is a vectorised NumPy port used for catalogue-scale screening;
-* :class:`NativeLambert` compiles the repository C API on demand (``g++``) and calls
-  ``spacepdhcg_lambert_zero_revolution`` / ``spacepdhcg_lambert_family_batch_cpu`` through
-  ``ctypes``.  It is the CPU-parity truth path and the parity test asserts both agree.
+* :class:`NativeLambert` calls ``spacepdhcg_lambert_zero_revolution`` /
+  ``spacepdhcg_lambert_family_batch_cpu`` through ``ctypes``.  In a source checkout it compiles
+  the repository C API on demand (``g++``) into ``build/gtoc12``; from an installed wheel it uses
+  the packaged ``libspacepdhcg``.  It is the CPU-parity truth path and the parity test asserts
+  both agree.
 
 The GPU Lambert batch (``spacepdhcg_orbitweaver_lambert_evaluate_async``) is deliberately not
 used here: this track is CPU-first while the G4 campaign owns the device.
@@ -25,10 +27,12 @@ from pathlib import Path
 import numpy as np
 from numpy.typing import NDArray
 
+from spacepdhcg import resources
+
 from .constants import MU_SUN_KM3_S2
 
 FloatArray = NDArray[np.float64]
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+LIBRARY_ENVIRONMENT_VARIABLE = "SPACEPDHCG_GTOC12_C_API"
 _PI = np.pi
 
 
@@ -246,14 +250,27 @@ class _FamilyResult(ctypes.Structure):
     ]
 
 
-def default_native_library_path() -> Path:
-    return REPOSITORY_ROOT / "build" / "gtoc12" / "libspacepdhcg_c_api.so"
+def default_native_library_path() -> Path | None:
+    """``build/gtoc12/libspacepdhcg_c_api.so`` in the source checkout; ``None`` when installed."""
+
+    root = resources.repository_root()
+    return None if root is None else root / "build" / "gtoc12" / "libspacepdhcg_c_api.so"
 
 
 def compile_native_library(destination: Path | None = None) -> Path:
-    """Compile ``cpp/src/c_api.cpp`` into a shared library (mirrors ``tests/test_cpp_c_api.py``)."""
+    """Compile ``cpp/src/c_api.cpp`` into a shared library (mirrors ``tests/test_cpp_c_api.py``).
 
-    destination = destination or default_native_library_path()
+    Only possible from a source checkout; an installed wheel uses its packaged library instead.
+    """
+
+    root = resources.repository_root()
+    if root is None:
+        raise RuntimeError(
+            "compiling the GTOC12 Lambert C API needs the source checkout (cpp/src/c_api.cpp); "
+            "an installed wheel uses the packaged libspacepdhcg or "
+            f"${LIBRARY_ENVIRONMENT_VARIABLE}"
+        )
+    destination = destination or root / "build" / "gtoc12" / "libspacepdhcg_c_api.so"
     compiler = shutil.which("c++") or shutil.which("g++") or shutil.which("clang++")
     if compiler is None:
         raise RuntimeError("a C++20 compiler is required for the native Lambert parity path")
@@ -266,28 +283,48 @@ def compile_native_library(destination: Path | None = None) -> Path:
             "-shared",
             "-fPIC",
             "-I",
-            str(REPOSITORY_ROOT / "cpp" / "include"),
-            str(REPOSITORY_ROOT / "cpp" / "src" / "c_api.cpp"),
+            str(root / "cpp" / "include"),
+            str(root / "cpp" / "src" / "c_api.cpp"),
             "-o",
             str(destination),
         ],
         check=True,
-        cwd=REPOSITORY_ROOT,
+        cwd=root,
         capture_output=True,
         text=True,
     )
     return destination
 
 
+def resolve_native_library_path(library_path: Path | None = None) -> Path:
+    """Pick the Lambert C API library.
+
+    Order: an explicit ``library_path``, ``$SPACEPDHCG_GTOC12_C_API`` (either is compiled on
+    demand when the file does not exist yet), the checkout's ``build/gtoc12`` library (compiled on
+    demand), and finally the ``libspacepdhcg`` packaged inside the installed wheel.
+    """
+
+    if library_path is None:
+        override = os.environ.get(LIBRARY_ENVIRONMENT_VARIABLE)
+        if override:
+            library_path = Path(override)
+    if library_path is not None:
+        return library_path if library_path.is_file() else compile_native_library(library_path)
+    checkout_default = default_native_library_path()
+    if checkout_default is not None:
+        if checkout_default.is_file():
+            return checkout_default
+        return compile_native_library(checkout_default)
+    from spacepdhcg.native import packaged_library_path
+
+    return packaged_library_path()
+
+
 class NativeLambert:
     """ctypes binding to the repository's CPU Lambert kernels (independent parity truth)."""
 
     def __init__(self, library_path: Path | None = None) -> None:
-        path = library_path or Path(
-            os.environ.get("SPACEPDHCG_GTOC12_C_API", default_native_library_path())
-        )
-        if not path.is_file():
-            path = compile_native_library(path)
+        path = resolve_native_library_path(library_path)
         self.library = ctypes.CDLL(str(path))
         lib = self.library
         lib.spacepdhcg_c_api_version.restype = ctypes.c_uint32

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -45,6 +46,13 @@ def test_versioned_scope_records_match_code_and_schema() -> None:
             "requires_physical_g5",
         ):
             assert record[key] == expected[key]
+        assert record.get("amendments", []) == expected.get("amendments", [])
+        for amendment in record.get("amendments", []):
+            for key in ("path", "lock", "document"):
+                assert (ROOT / amendment[key]).is_file(), amendment[key]
+            digest, name = (ROOT / amendment["lock"]).read_text().split()
+            assert name == Path(amendment["path"]).name
+            assert hashlib.sha256((ROOT / amendment["path"]).read_bytes()).hexdigest() == digest
     active = json.loads(
         (ROOT / f"benchmarks/campaign_scopes/{ACTIVE_SINGLE_GPU_SCOPE_ID}.json").read_text(
             encoding="utf-8"
