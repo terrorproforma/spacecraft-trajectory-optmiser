@@ -46,6 +46,8 @@ from .cooperative import EPOCH_TOLERANCE_DAYS, FleetColumn, MinerPool
 from .data import AsteroidCatalogue
 from .earthleg import EarthLegBounds, EarthLegModel, refine_leg_scvx
 from .low_thrust import ScvxSettings
+from .memory import PhaseMemory, bound_heap_growth
+from .memory import peak_rss_mb as _peak_rss_mb
 from .pipeline import RefinedRoute, refine_route
 from .proxies import phasing_edelbaum_proxy
 from .retiming import (
@@ -171,15 +173,6 @@ def cluster_retime_settings(settings: ClusterPricingSettings, *, last: bool) -> 
         # the re-timer moves Earth legs too: keep them inside the envelope SCvx flew
         earth_out_authority_ratio=0.85,
     )
-
-
-def _peak_rss_mb() -> float:
-    try:
-        import resource
-
-        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
-    except Exception:  # pragma: no cover - non-POSIX
-        return float("nan")
 
 
 # -- Earth legs ------------------------------------------------------------------------------
@@ -358,6 +351,7 @@ class ClusterBundle:
     harvest: dict[str, Any] = field(default_factory=dict)  # joint collect re-sequencing report
     wall_seconds: float = 0.0
     peak_rss_mb: float = 0.0
+    memory_phases: list[dict[str, Any]] = field(default_factory=list)  # PhaseMemory records
     stopped: str = ""
 
     @property
@@ -437,6 +431,7 @@ class ClusterBundle:
             "rejected": self.rejected,
             "wall_seconds": self.wall_seconds,
             "peak_rss_mb": self.peak_rss_mb,
+            "memory_phases": self.memory_phases,
             "stopped": self.stopped,
         }
 
@@ -602,6 +597,7 @@ def price_cluster(
     def remaining_budget() -> float:
         return settings.time_budget_seconds - (time.perf_counter() - started)
 
+    memory = PhaseMemory()
     for slot in range(1, settings.ships + 1):
         if remaining_budget() <= 0.0:
             bundle.stopped = f"time budget before ship slot {slot}"
@@ -610,6 +606,7 @@ def price_cluster(
         if free.shape[0] < 2:
             bundle.stopped = f"family exhausted before ship slot {slot}"
             break
+        memory.mark(f"slot {slot} start")
         before = len(earth_cache)
         legs, rejected_legs = certify_earth_legs(
             catalogue,
@@ -630,6 +627,7 @@ def price_cluster(
         earth_report["checked"] += len(earth_cache) - before
         earth_report["certified"] += len(legs)
         earth_report["rejected"].extend(rejected_legs)
+        memory.mark(f"slot {slot} earth legs")
         if not legs:
             bundle.rejected.append({"slot": slot, "reason": "no certified Earth leg"})
             continue
@@ -655,6 +653,7 @@ def price_cluster(
             if remaining_budget() <= 0.0:
                 break
             result = search.run()
+            memory.mark(f"slot {slot} beam {attempt}")
             ship_report["search"].append(
                 {
                     "attempt": attempt,
@@ -714,6 +713,7 @@ def price_cluster(
                     }
                 )
                 ban_failed_legs(plan, route.failures, banned_pairs, banned_earth)
+            memory.mark(f"slot {slot} refine {attempt}")
             if refined is not None or len(banned_pairs) + len(banned_earth) == bans_before:
                 break  # certified, or nothing new to exclude: a re-run would repeat itself
         if refined is None:
@@ -741,6 +741,7 @@ def price_cluster(
             # later slots harvest what the earlier ones left (all orphans, all positions)
             harvest=settings.collector_harvest and bool(pool.orphans()),
         )
+        memory.mark(f"slot {slot} retime/harvest")
         variants.extend(improvement.certified_routes)
         best = refined
         for route in improvement.certified_routes:
@@ -772,9 +773,12 @@ def price_cluster(
     bundle.earth_legs = earth_report
     if settings.collector_harvest and len(bundle.ships) >= 2 and remaining_budget() > 0.0:
         pool = _joint_harvest(bundle, retimers, refine, catalogue, search_settings) or pool
+        memory.mark("joint harvest")
     _repair_orphans(bundle, pool, retimers, searches, refine)
+    memory.mark("orphan repair")
     bundle.wall_seconds = time.perf_counter() - started
     bundle.peak_rss_mb = _peak_rss_mb()
+    bundle.memory_phases = memory.records
     return bundle
 
 
@@ -1218,6 +1222,9 @@ def _price_in_worker(task: tuple[int, list[int]]) -> ClusterBundle:
         from .data import load_catalogue
 
         state["catalogue"] = load_catalogue()
+    # per-worker heap policy (idempotent): large blocks mmap'd/unmapped, freed pages returned at
+    # phase marks - the v6 campaign's 3 GB PSS was retained-but-free heap, not live data
+    bound_heap_growth()
     try:
         return price_cluster(
             state["catalogue"],

@@ -119,10 +119,26 @@ def wrapped_longitude_difference(
     return out
 
 
-def certified_hops(
-    catalogue: AsteroidCatalogue, sources: list[Path] | tuple[Path, ...]
-) -> HopSamples:
-    """Certified asteroid-to-asteroid legs of every ``route_summary.json`` under ``sources``."""
+def _empty_samples() -> HopSamples:
+    empty = np.zeros(0)
+    return HopSamples(
+        np.zeros(0, np.int64),
+        np.zeros(0, np.int64),
+        empty,
+        empty,
+        empty,
+        empty,
+        empty,
+        empty,
+        empty,
+        [],
+    )
+
+
+def _certified_legs(
+    sources: list[Path] | tuple[Path, ...], keep
+) -> list[tuple[str, int, int, float, float, float, float]]:
+    """(run, from, to, t0, tof, mass_before, scvx_dv) of the certified legs ``keep`` accepts."""
 
     rows: list[tuple[str, int, int, float, float, float, float]] = []
     for root in sources:
@@ -135,7 +151,7 @@ def certified_hops(
                 if not leg.get("certified") or leg.get("status") != "feasible":
                     continue
                 a, b = int(leg["from"]), int(leg["to"])
-                if a == EARTH_ID or b == EARTH_ID or a == b:
+                if not keep(a, b):
                     continue
                 rows.append(
                     (
@@ -148,20 +164,69 @@ def certified_hops(
                         float(leg["delta_v_km_s"]),
                     )
                 )
+    return rows
+
+
+def certified_returns(
+    catalogue: AsteroidCatalogue, sources: list[Path] | tuple[Path, ...]
+) -> HopSamples:
+    """Certified asteroid-to-Earth legs (the Earth return) of the archives under ``sources``.
+
+    Same sample layout as :func:`certified_hops` with ``target = 0`` (Earth): the Lambert ΔV is
+    the zero-revolution transfer with the 6 km/s arrival v∞ allowance, ``Δa`` is ``1 AU - a`` and
+    ``Δλ`` the Earth-minus-asteroid mean longitude at departure, so the same design matrix and
+    :func:`fit_inflation` apply.
+    """
+
+    from .ephemeris import earth_state
+
+    rows = _certified_legs(sources, lambda a, b: a != EARTH_ID and b == EARTH_ID)
     if not rows:
-        empty = np.zeros(0)
-        return HopSamples(
-            np.zeros(0, np.int64),
-            np.zeros(0, np.int64),
-            empty,
-            empty,
-            empty,
-            empty,
-            empty,
-            empty,
-            empty,
-            [],
-        )
+        return _empty_samples()
+    run = [r[0] for r in rows]
+    source = np.array([r[1] for r in rows], dtype=np.int64)
+    target = np.zeros(len(rows), dtype=np.int64)
+    departure = np.array([r[3] for r in rows])
+    tof = np.array([r[4] for r in rows])
+    mass = np.array([r[5] for r in rows])
+    scvx = np.array([r[6] for r in rows])
+    r_s, v_s = asteroid_state(catalogue, source, departure)
+    r_e, v_e = earth_state(departure + tof)
+    hop = lambert_hops(
+        r_s, v_s, r_e, v_e, departure, tof, arrival_allowance_km_s=C.MAX_VINF_EARTH_KM_S
+    )
+    lambert = np.where(hop.feasible, hop.total_delta_v, np.nan)
+    src = np.searchsorted(catalogue.ids, source)
+    delta_a = 1.0 - catalogue.semi_major_axis_km[src] / C.AU_KM
+    delta_l = np.empty(len(rows))
+    for i in range(len(rows)):
+        l_s = mean_longitude(catalogue, np.asarray([src[i]]), float(departure[i]))[0]
+        l_e = earth_mean_longitude(float(departure[i]))
+        delta_l[i] = (l_e - l_s + np.pi) % (2.0 * np.pi) - np.pi
+    ok = np.isfinite(lambert) & (lambert > 1e-6) & np.isfinite(scvx)
+    samples = HopSamples(source, target, departure, tof, mass, lambert, scvx, delta_a, delta_l, run)
+    return samples.subset(ok)
+
+
+def earth_mean_longitude(epoch: float) -> float:
+    """Heliocentric mean longitude of Earth at ``epoch`` (rad) from the position vector's
+    longitude - Earth's orbit is nearly circular, so the true and mean longitudes agree to
+    ~2° which is far below the 0.39/π slope the fit puts on ``Δλ``."""
+
+    from .ephemeris import earth_state
+
+    r, _ = earth_state(np.asarray([epoch]))
+    return float(np.arctan2(r[0, 1], r[0, 0]))
+
+
+def certified_hops(
+    catalogue: AsteroidCatalogue, sources: list[Path] | tuple[Path, ...]
+) -> HopSamples:
+    """Certified asteroid-to-asteroid legs of every ``route_summary.json`` under ``sources``."""
+
+    rows = _certified_legs(sources, lambda a, b: a != EARTH_ID and b != EARTH_ID and a != b)
+    if not rows:
+        return _empty_samples()
     run = [r[0] for r in rows]
     source = np.array([r[1] for r in rows], dtype=np.int64)
     target = np.array([r[2] for r in rows], dtype=np.int64)

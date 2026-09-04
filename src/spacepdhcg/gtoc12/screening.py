@@ -81,6 +81,44 @@ def low_thrust_inflation(
     return floor + slope * ratio
 
 
+# Earth-return inflation (SCvx ΔV / zero-revolution Lambert ΔV with the 6 km/s arrival v∞
+# allowance) as a function of the return TOF, measured on the 2455 SCvx-certified returns of
+# the archive (results/gtoc12/runs/*, ``hopcalib.certified_returns``).  The zero-revolution
+# Lambert ΔV is nearly flat in TOF (6.0-6.4 km/s from 405 to 525 days) while the certified
+# low-thrust ΔV falls from 8.3 km/s at 405-435 d to 5.5 km/s at 525-555 d: a 420-day return
+# really costs 1.30x Lambert (p65 1.38) and a 540-day one 0.96x.  Pricing every TOF at a flat
+# factor (1.0 in the campaigns) therefore under-priced the short returns the re-timer chose by
+# 65 kg (median, 133 kg p90) on the v6 fleet and hid that a 120-day longer return is ~70 kg
+# cheaper.  Table: bin centre (days) -> p65 of the measured ratio; linear between centres,
+# clamped outside.  Within a bin the ratio still matters (405-465 d: 1.22 at r = 0.25, 1.39 at
+# r = 0.45), hence the ``RETURN_INFLATION_RATIO_SLOPE`` correction about the median ratio 0.33.
+RETURN_INFLATION_TOF_DAYS = (352.0, 420.0, 450.0, 480.0, 510.0, 540.0, 578.0, 630.0, 690.0, 810.0)
+RETURN_INFLATION_P65 = (1.323, 1.383, 1.295, 1.195, 1.099, 0.977, 0.885, 0.930, 0.932, 1.014)
+RETURN_INFLATION_RATIO_SLOPE = 0.6
+RETURN_INFLATION_RATIO_CENTRE = 0.33
+
+
+def return_inflation_model(
+    tof_days: FloatArray | float,
+    authority_ratio: FloatArray | float,
+    *,
+    floor: float = 0.85,
+) -> FloatArray:
+    """TOF- and ratio-dependent inflation of an Earth return (see the table above); vectorised.
+
+    ``floor`` keeps the model from crediting more than the archive supports at the long-TOF
+    end (the p25 of the 555-600 d bin is 0.72; SCvx does beat zero-revolution Lambert there
+    because the multi-revolution low-thrust arc is the natural solution, but the forward mass
+    check must still close).
+    """
+
+    tof = np.asarray(tof_days, dtype=np.float64)
+    ratio = np.asarray(authority_ratio, dtype=np.float64)
+    base = np.interp(tof, RETURN_INFLATION_TOF_DAYS, RETURN_INFLATION_P65)
+    correction = 1.0 + RETURN_INFLATION_RATIO_SLOPE * (ratio - RETURN_INFLATION_RATIO_CENTRE)
+    return np.maximum(base * np.clip(correction, 0.85, 1.2), floor)
+
+
 def edelbaum_proxy(
     a1_km: FloatArray,
     i1_rad: FloatArray,

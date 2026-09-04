@@ -656,6 +656,37 @@ def test_price_cluster_builds_a_consistent_orphan_free_bundle(catalogue, family,
 
 
 @requires_data
+def test_single_slot_pricing_stays_inside_the_declared_memory_budget(bundle) -> None:
+    """The regression guard for the v6 memory transient (3.04 GB PSS over 4 workers).
+
+    ``price_cluster`` marks every phase; the marks must show (a) the high-water mark the
+    pricing added stays under the declared per-slot budget and (b) freed heap is handed back
+    at each mark (the resident size after a phase is bounded, not ratcheting).  The declared
+    budget itself must fit three workers under the operator's 2 GB process-tree limit.
+    """
+
+    from spacepdhcg.gtoc12.memory import MemoryBudget
+
+    budget = MemoryBudget()
+    assert budget.workers == 3 and budget.fits(), budget.projected_tree_mb
+    records = bundle.memory_phases
+    assert records and records[0]["phase"] == "start"
+    phases = [r["phase"] for r in records]
+    assert any(p.endswith("earth legs") for p in phases) and "orphan repair" in phases
+    if any(np.isnan(r["peak_mb"]) for r in records):
+        pytest.skip("no resource usage on this platform")
+    baseline = records[0]["peak_mb"]  # whatever the test process held before the pricing
+    grown = sum(r["peak_growth_mb"] for r in records[1:])
+    assert budget.check_slot(baseline + grown, baseline_mb=baseline), (grown, records)
+    assert bundle.peak_rss_mb - baseline <= budget.slot_peak_mb
+    # the heap is trimmed at every mark: what stays resident is live data, not freed pages
+    trimmed = [r["rss_after_trim_mb"] for r in records if r["rss_after_trim_mb"] is not None]
+    if trimmed:
+        assert max(trimmed) <= records[0]["rss_mb"] + budget.slot_peak_mb / 2.0
+    assert all(r["elapsed_seconds"] >= 0.0 for r in records)
+
+
+@requires_data
 def test_drop_asteroid_removes_one_visit_and_keeps_the_rest_in_order(
     catalogue, family, bundle
 ) -> None:

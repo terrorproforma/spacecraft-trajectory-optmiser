@@ -42,6 +42,7 @@ from .screening import (
     lambert_hops,
     low_thrust_inflation,
     propellant_for_delta_v,
+    return_inflation_model,
     thrust_authority_km_s,
 )
 
@@ -83,7 +84,17 @@ class CollectDPSettings:
     hop_authority_ratio: float = 0.667
     return_inflation: float = 1.6
     return_authority_ratio: float = 0.5
+    # price the Earth return with the TOF/ratio model measured on the certified archive
+    # (``screening.return_inflation_model``: 1.38x Lambert at 420 d, 0.98x at 540 d) instead of
+    # the flat ``return_inflation``; the flat factor cannot see that the long return is cheaper
+    return_tof_model: bool = True
     cache_pairs: int = 20_000  # bounded pair cache (float32 (n_t, n_tof) per pair)
+    # bounded LRU of pair geometries (Δa, Δλ(t)); keyed by the epoch slice, so one pair is
+    # re-derived for every distinct deploy timing - a few vector ops, not worth the 80k-entry
+    # dict (~200 MB) the previous clear-on-overflow policy let a beam grow
+    cache_geometry: int = 2_048
+    # per-DP LRU of move-mass propellant fractions (see ``plan_collect_tour``); 512 x ~20 KB
+    fraction_cache_entries: int = 512
     # calibrated inflation model (``hopcalib.InflationFit``): when set, hop propellant uses
     # ``f(r, TOF, Δa, Δλ)`` fitted on the certified archive instead of the flat/ratio factor
     inflation_fit: InflationFit | None = None
@@ -122,7 +133,9 @@ class CollectPairTable:
         self.return_tofs: FloatArray = np.asarray(s.return_tofs, dtype=np.float64)
         self._hops: OrderedDict[tuple[int, int], NDArray[np.float32]] = OrderedDict()
         self._returns: dict[int, NDArray[np.float32]] = {}
-        self._geometry: dict[tuple[int, int, float, int], tuple[float, FloatArray]] = {}
+        self._geometry: OrderedDict[tuple[int, int, float, int], tuple[float, FloatArray]] = (
+            OrderedDict()
+        )
         self.lambert_evaluations = 0
 
     # -- lattice -------------------------------------------------------------------------
@@ -202,6 +215,7 @@ class CollectPairTable:
         key = (source, target, float(epochs[0]) if epochs.shape[0] else 0.0, epochs.shape[0])
         cached = self._geometry.get(key)
         if cached is not None:
+            self._geometry.move_to_end(key)
             return cached
         cat = self.catalogue
         src = int(np.searchsorted(cat.ids, source))
@@ -215,9 +229,9 @@ class CollectPairTable:
         l_t = float(mean_longitude(cat, np.asarray([tgt]), ref)[0])
         delta = (l_t - l_s) + (n_t - n_s) * (epochs - ref)
         result = (delta_a, (delta + np.pi) % (2.0 * np.pi) - np.pi)
-        if len(self._geometry) > 4 * self.settings.cache_pairs:
-            self._geometry.clear()
         self._geometry[key] = result
+        while len(self._geometry) > self.settings.cache_geometry:
+            self._geometry.popitem(last=False)
         return result
 
     def hop_propellant(
@@ -263,12 +277,58 @@ class CollectPairTable:
         propellant = propellant_for_delta_v(mass, np.where(ok, dv, 0.0) * inflation)
         return np.where(ok, propellant, np.inf)
 
+    def harvest_window_cost(
+        self,
+        a: int,
+        b: int,
+        mass: float,
+        *,
+        window: tuple[float, float],
+        max_tof_days: float,
+    ) -> float:
+        """Cheapest calibrated collect-hop propellant (kg) between ``a`` and ``b`` - either
+        direction - departing inside ``window`` (MJD) with a TOF of at most ``max_tof_days``.
+
+        This is what the pair will cost the collect DP if both asteroids end up in the same
+        tour: the DP picks the epoch and direction, so the window minimum (not the cost at one
+        epoch) is the deploy-time predictor of the harvest.  ``inf`` when the pair cannot be
+        re-flown inside the window.
+        """
+
+        lo = self.index_at_or_after(window[0])
+        hi = max(self.index_at_or_after(window[1]), lo)
+        keep = self.tofs <= max_tof_days + 1e-9
+        if lo >= hi or not np.any(keep):
+            return float("inf")
+        best = float("inf")
+        for source, target in ((int(a), int(b)), (int(b), int(a))):
+            dv = self.hop(source, target)[lo:hi][:, keep].astype(np.float64)
+            cost = self.hop_propellant(
+                dv, mass, self.tofs[keep], pair=(source, target), epochs=self.epochs[lo:hi]
+            )
+            best = min(best, float(np.min(cost)))
+        return best
+
+    def return_inflation(
+        self, dv: FloatArray | float, mass: float, tofs: FloatArray | float
+    ) -> FloatArray:
+        """Inflation of an Earth return: the TOF/ratio model or the flat setting; vectorised."""
+
+        s = self.settings
+        dv = np.asarray(dv, dtype=np.float64)
+        if not s.return_tof_model:
+            return np.full(dv.shape, s.return_inflation)
+        authority = thrust_authority_km_s(mass, tofs, 1.0)
+        ratio = np.where(np.isfinite(dv), dv, 0.0) / np.maximum(authority, 1e-12)
+        return return_inflation_model(tofs, ratio)
+
     def return_propellant(self, dv: FloatArray, mass: float, tofs: FloatArray) -> FloatArray:
         s = self.settings
         dv = np.asarray(dv, dtype=np.float64)
         authority = thrust_authority_km_s(mass, tofs, 1.0)
         ok = np.isfinite(dv) & (dv <= s.return_authority_ratio * authority)
-        propellant = propellant_for_delta_v(mass, np.where(ok, dv, 0.0) * s.return_inflation)
+        inflation = self.return_inflation(dv, mass, tofs)
+        propellant = propellant_for_delta_v(mass, np.where(ok, dv, 0.0) * inflation)
         return np.where(ok, propellant, np.inf)
 
 
@@ -360,7 +420,14 @@ def plan_collect_tour(
     )
     floor_mass = C.DRY_MASS_KG + 1.0
 
-    fractions: dict[tuple[int, int, int], FloatArray] = {}
+    # The fraction depends on the move mass (inflation is a function of the authority ratio),
+    # and the mass is the mined total of the collected subset: every (state, successor) of the
+    # Held-Karp pass asks for a distinct key, so an unbounded cache held one (n_t x n_tof)
+    # float64 table per expansion - 2^k x k^2 tables, the ~350 MB transient of a 26-member
+    # family's beam.  Reuse only exists within a state's expansion (and between the two burn
+    # passes for equal masses), which a small LRU captures; the tables are recomputed
+    # otherwise (a few vector ops on ~20 KB, ~10 % of the DP time), bit-for-bit identical.
+    fractions: OrderedDict[tuple[int, int, int], FloatArray] = OrderedDict()
     hop_tables: dict[tuple[int, int], FloatArray] = {}
 
     def fraction(j: int, l_i: int, mass: float) -> FloatArray:
@@ -369,16 +436,18 @@ def plan_collect_tour(
 
         key = (j, l_i, round(mass))
         cached = fractions.get(key)
-        if cached is None:
-            dv = hop_tables.get((j, l_i))
-            if dv is None:
-                dv = table.hop(ids[j], ids[l_i])[t0:].astype(np.float64)
-                hop_tables[(j, l_i)] = dv
-            cost = table.hop_propellant(
-                dv, mass, table.tofs, pair=(ids[j], ids[l_i]), epochs=epochs
-            )
-            cached = cost / mass
-            fractions[key] = cached
+        if cached is not None:
+            fractions.move_to_end(key)
+            return cached
+        dv = hop_tables.get((j, l_i))
+        if dv is None:
+            dv = table.hop(ids[j], ids[l_i])[t0:].astype(np.float64)
+            hop_tables[(j, l_i)] = dv
+        cost = table.hop_propellant(dv, mass, table.tofs, pair=(ids[j], ids[l_i]), epochs=epochs)
+        cached = cost / mass
+        fractions[key] = cached
+        while len(fractions) > s.fraction_cache_entries:
+            fractions.popitem(last=False)
         return cached
 
     def solve(burn_per_hop: float) -> CollectTour | None:
@@ -459,7 +528,7 @@ def _solve_collect_dp(
     arrive: dict[tuple[int, int], FloatArray] = {}
     # back-pointers on arrival: (previous location [+k when the camp was left uncollected],
     # departure index, tof index)
-    back: dict[tuple[int, int], tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]] = {}
+    back: dict[tuple[int, int], tuple[NDArray[np.int32], NDArray[np.int32], NDArray[np.int32]]] = {}
     start = np.full(n_t, neg)
     start[0] = 0.0
     arrive[(0, camp_i)] = start
@@ -535,10 +604,13 @@ def _solve_collect_dp(
                     if target is None:
                         target = np.full(n_t, neg)
                         arrive[new_key] = target
+                        # int32 back-pointers: the 2^k x k states x n_t lattice of a 10-asteroid
+                        # tour is ~10k arrays; halving the pointer width takes the per-DP
+                        # working set from ~32 to ~20 bytes per state-epoch
                         back[new_key] = (
-                            np.full(n_t, -1, dtype=np.int64),
-                            np.full(n_t, -1, dtype=np.int64),
-                            np.full(n_t, -1, dtype=np.int64),
+                            np.full(n_t, -1, dtype=np.int32),
+                            np.full(n_t, -1, dtype=np.int32),
+                            np.full(n_t, -1, dtype=np.int32),
                         )
                     better = best_val > target + 1e-9
                     if not np.any(better):

@@ -34,12 +34,14 @@ from .collectdp import CollectDPSettings, CollectPairTable, CollectTour, plan_co
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
 from .hopcalib import load_fit
+from .memory import peak_rss_mb as _peak_rss_mb
 from .proxies import phasing_edelbaum_proxy
 from .screening import (
     exhaust_velocity_km_s,
     lambert_hops,
     low_thrust_inflation,
     propellant_for_delta_v,
+    return_inflation_model,
     screen_asteroid_hops,
     screen_earth_to_asteroids,
     thrust_authority_km_s,
@@ -108,6 +110,11 @@ class SearchSettings:
     # not fly).
     earth_return_inflation: float = 1.6
     earth_return_authority_ratio: float = 0.5
+    # price the return with the archive's TOF/ratio model (``screening.return_inflation_model``)
+    # in the collect DP and the re-timer: certified returns cost 1.30x Lambert at 405-435 d but
+    # 0.96x at 525-555 d, which a flat factor cannot express (the v6 fleet's 420-day returns were
+    # under-priced by 65 kg median and cost 279 kg against the references' 208-216)
+    earth_return_tof_model: bool = True
     # hops: reference hops cost 1.16x Lambert (p90 1.34).  The beam keeps the 0.667 ratio
     # (1.2x ΔV within 0.8 duty) that found the 544-548 kg / 8-asteroid chains: tightening it
     # to the certified 0.49 envelope cut chains to depth 5-6 (376-446 kg) because collect hops
@@ -149,6 +156,21 @@ class SearchSettings:
     # beam score charges ``collect_lookahead_weight`` x that propellant.  0 = off.
     collect_lookahead_weight: float = 0.0
     collect_gap_days: float = 3.0 * C.YEAR_DAYS
+    # harvest-window ranking: with the collect DP on, the look-ahead prices the deploy pair with
+    # the DP's own calibrated pair table (``CollectPairTable.harvest_window_cost``) - the
+    # cheapest direction, epoch and TOF <= ``harvest_max_tof_days`` inside the harvest window
+    # ``[END - harvest_window_days[0], END - harvest_window_days[1]]`` - instead of the Lambert
+    # ΔV at one epoch three years ahead.  The window minimum is what the DP will actually pay
+    # for the pair, so ranking deploy candidates by it steers the tour towards asteroids whose
+    # collect hop is cheap when it is flown (target: ~70 kg / 180 d as in the references).
+    harvest_window_ranking: bool = True
+    harvest_window_days: tuple[float, float] = (1300.0, 400.0)
+    harvest_max_tof_days: float = 240.0
+    # mass the harvest-window table is priced at (a collector after its deploys, ~1400 kg with
+    # the mined mass); the per-ship cost is rescaled linearly, which is exact to first order
+    harvest_reference_mass: float = 1400.0
+    # charged (kg) to a deploy pair the window cannot re-fly - a deterrent, not a prune
+    harvest_unreachable_kg: float = 250.0
     # exact collect-tour pricing (collectdp.py): every completed partial with at least
     # ``collect_dp_min_deploys`` asteroids also gets the Held-Karp order + timing DP over the
     # pair-cost table at the actual collect epochs; the best of the heuristic tours and the DP
@@ -469,6 +491,7 @@ class RouteSearch:
         self._return_cache: dict[int, list[tuple[float, float, float]]] = {}
         self._collect_cache: dict[tuple[int, int, float], list[tuple[float, float, float]]] = {}
         self._lookahead_cache: dict[tuple[int, float], FloatArray] = {}
+        self._harvest_cache: dict[tuple[int, int], float] = {}  # unordered pair -> kg
         self.last_failure = ""
         self._band_cache: dict[int, NDArray[np.int64]] = {}
         self._clusters: ComovingClusters | None = None
@@ -479,6 +502,7 @@ class RouteSearch:
             "won": 0,
             "failed": 0,
             "seconds": 0.0,
+            "peak_growth_mb": 0.0,
         }
 
     @property
@@ -523,6 +547,7 @@ class RouteSearch:
                     hop_authority_ratio=s.hop_authority_ratio,
                     return_inflation=s.earth_return_inflation,
                     return_authority_ratio=s.earth_return_authority_ratio,
+                    return_tof_model=s.earth_return_tof_model,
                     cache_pairs=s.collect_dp_cache_pairs,
                 ),
             )
@@ -601,6 +626,15 @@ class RouteSearch:
                 delta_v, mass, tof, floor=s.hop_inflation_floor, slope=s.hop_inflation_slope
             )
         )
+
+    def return_inflation_for(self, delta_v: float, mass: float, tof: float) -> float:
+        """Propellant inflation of the Earth return: the TOF/ratio model or the flat setting."""
+
+        s = self.settings
+        if not s.earth_return_tof_model:
+            return s.earth_return_inflation
+        ratio = delta_v / max(float(thrust_authority_km_s(mass, tof, 1.0)), 1e-12)
+        return float(return_inflation_model(tof, ratio))
 
     def limits(self, role: str) -> tuple[float, float]:
         """(propellant inflation, Lambert-ΔV / full-authority ratio limit) for a leg role."""
@@ -690,6 +724,8 @@ class RouteSearch:
         """
 
         s = self.settings
+        if s.harvest_window_ranking and s.collect_dp:
+            return self.harvest_window_costs(asteroid_id, targets, mass)
         key = (asteroid_id, round(departure, 6))
         if key not in self._lookahead_cache:
             epoch = departure + s.collect_gap_days
@@ -707,6 +743,42 @@ class RouteSearch:
         cost = np.full(best.shape[0], np.inf)
         finite = np.isfinite(best)
         cost[finite] = propellant_for_delta_v(mass, best[finite] * s.hop_inflation)
+        return cost
+
+    def harvest_window_costs(
+        self, asteroid_id: int, targets: NDArray[np.int64], mass: float
+    ) -> FloatArray:
+        """Calibrated harvest-window cost (kg) of each ``asteroid_id <-> target`` pair from the
+        collect DP's pair table (cached per unordered pair).
+
+        Priced at the collector's reference mass - that is what the DP will pay for the hop,
+        not the deploy-time mass of the ship (``mass`` is unused; the signature matches the
+        Lambert lookahead).  A pair that cannot be re-flown inside the window is charged
+        ``harvest_unreachable_kg`` rather than pruned: the DP orders the tour itself, so a
+        deploy pair need not be a collect pair - the first probe pruned on ``inf`` and lost
+        124 kg on family 54 at every weight.
+        """
+
+        s = self.settings
+        window = (
+            C.MISSION_END_MJD - s.harvest_window_days[0],
+            C.MISSION_END_MJD - s.harvest_window_days[1],
+        )
+        table = self.collect_table
+        cost = np.empty(targets.shape[0])
+        for i, target in enumerate(targets):
+            key = (min(asteroid_id, int(target)), max(asteroid_id, int(target)))
+            cached = self._harvest_cache.get(key)
+            if cached is None:
+                cached = table.harvest_window_cost(
+                    key[0],
+                    key[1],
+                    s.harvest_reference_mass,
+                    window=window,
+                    max_tof_days=s.harvest_max_tof_days,
+                )
+                self._harvest_cache[key] = cached
+            cost[i] = cached if np.isfinite(cached) else s.harvest_unreachable_kg
         return cost
 
     def _reserve(self, partial: _Partial) -> float:
@@ -1239,9 +1311,13 @@ class RouteSearch:
             and s.collect_dp_min_deploys <= len(partial.deployed) <= s.collect_dp_max_deploys
         ):
             started = time.perf_counter()
+            peak_before = _peak_rss_mb()
             dp_plans = self._schedule_dp(partial)
             self.collect_dp_stats["seconds"] += time.perf_counter() - started
             self.collect_dp_stats["priced"] += 1
+            # share of the process high-water mark the DP itself pushed up (0 when the peak was
+            # set elsewhere): attributes the beam's memory transient
+            self.collect_dp_stats["peak_growth_mb"] += max(_peak_rss_mb() - peak_before, 0.0)
             if dp_plans:
                 plans.extend(dp_plans)
                 if max(self.plan_score(p) for p in dp_plans) > heuristic_best + 1e-9:
@@ -1357,7 +1433,11 @@ class RouteSearch:
         elif tour.return_departure < epoch - 1e-6:
             self.last_failure = "dp_return_before_arrival"
             return None
-        return_inflation, _ = self.limits("earth_return")
+        # the DP priced the return with the table's (TOF-dependent) inflation at the mass after
+        # the deploys plus the mined mass; the forward pass re-prices at the same model
+        return_inflation = float(
+            self.collect_table.return_inflation(tour.return_dv, mass_guess, tour.return_tof)[()]
+        )
         legs_forward.append(
             PlannedLeg(
                 location,
@@ -1420,7 +1500,6 @@ class RouteSearch:
             for _, deploy_epoch in partial.deployed
         )
         best_return = None
-        return_inflation, _ = self.limits("earth_return")
         for dv, departure, tof in self._return_options(first, end):
             if self._feasible(mass_guess, dv, tof, "earth_return"):
                 best_return = (dv, departure, tof)
@@ -1435,7 +1514,7 @@ class RouteSearch:
                 best_return[1],
                 best_return[1] + best_return[2],
                 best_return[0],
-                return_inflation,
+                self.return_inflation_for(best_return[0], mass_guess, best_return[2]),
                 "earth_return",
             )
         ]

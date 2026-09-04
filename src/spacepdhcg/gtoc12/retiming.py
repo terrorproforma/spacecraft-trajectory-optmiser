@@ -42,6 +42,7 @@ from .screening import (
     lambert_hops,
     low_thrust_inflation,
     propellant_for_delta_v,
+    return_inflation_model,
     thrust_authority_km_s,
 )
 from .search import (
@@ -54,6 +55,9 @@ from .search import (
 )
 
 FloatArray = NDArray[np.float64]
+# grid cells within this many lattice steps (departure or TOF) of an SCvx-swept return cell are
+# priced by the nearest swept cell's measured inflation; 4 steps = 60 days
+RETURN_SWEEP_REACH = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +85,12 @@ class RetimeSettings:
     hop_inflation_slope: float | None = 0.65
     hop_inflation_floor: float = 1.05
     hop_authority_ratio: float | None = 0.45
+    # Earth return priced with the archive's TOF/ratio model (``screening.return_inflation_model``)
+    # times the pair's calibrated residual, instead of one flat factor for every TOF: the flat
+    # factor made a 420-day return look as cheap as a 540-day one although SCvx charges 1.30x vs
+    # 0.96x Lambert, so the DP spent its margin on a late, short, expensive return.  ``None``
+    # inherits ``SearchSettings.earth_return_tof_model``.
+    return_tof_model: bool | None = None
     earth_out_authority_ratio: float | None = None
     earth_return_authority_ratio: float | None = None
     # a leg SCvx proved infeasible bans ratios >= ban_factor x its ratio for that body pair
@@ -247,6 +257,11 @@ class Retimer:
         # Lambert proxy barely depends on TOF, so without the floor the DP shortens the leg to
         # buy hop time and SCvx then costs 60-200 kg more (earthleg.py).
         self.earth_out_tof_floor: float | None = None
+        # SCvx sweeps of the Earth return per departure asteroid (``returnsweep.ReturnSweep``):
+        # where swept, the DP prices the return with the measured ΔV and SCvx's own feasibility
+        # instead of the Lambert proxy; unswept cells take the nearest swept cell's inflation
+        self.return_sweeps: dict[int, Any] = {}
+        self._return_tables: dict[int, tuple[FloatArray, FloatArray]] = {}
 
     # -- Lambert tables ------------------------------------------------------------------
 
@@ -276,6 +291,91 @@ class Retimer:
         if self.earth_out_tof_floor is None or floor != self.earth_out_tof_floor:
             self.earth_out_tof_floor = floor
             self._tables = {k: v for k, v in self._tables.items() if k[2] != "earth_out"}
+
+    def set_return_sweep(self, sweep: Any) -> None:
+        """Price the Earth return from ``sweep.asteroid`` with the SCvx-measured sweep."""
+
+        self.return_sweeps[int(sweep.asteroid)] = sweep
+        self._return_tables.pop(int(sweep.asteroid), None)
+
+    def _return_override(self, asteroid: int) -> tuple[FloatArray, FloatArray] | None:
+        """``(inflation, ok)`` on the DP's return grid from the asteroid's SCvx sweep.
+
+        ``inflation`` is the measured (SCvx ΔV / Lambert ΔV) of the nearest swept grid cell
+        (index distance on the lattice x TOF grid) and ``ok`` its SCvx feasibility, so every
+        cell is priced by what SCvx did on the closest flown return rather than by the model;
+        the flown cells themselves carry their own measurement.  ``None`` without a sweep.
+        """
+
+        sweep = self.return_sweeps.get(asteroid)
+        if sweep is None:
+            return None
+        if asteroid in self._return_tables:
+            return self._return_tables[asteroid]
+        tofs = self._tofs("earth_return")
+        step = self.settings.step_days
+        dv_table, _ = self.leg_table(asteroid, EARTH_ID, "earth_return")
+        cells: list[tuple[int, int, float, bool]] = []
+        for i, departure in enumerate(sweep.departures):
+            k = self.lattice.exact_index(float(departure))
+            if k is None:
+                continue
+            for j, tof in enumerate(sweep.tofs):
+                t = round((float(tof) - tofs[0]) / step)
+                if not (0 <= t < tofs.shape[0]) or abs(tofs[t] - tof) > 1e-6:
+                    continue
+                if not bool(sweep.attempted[i, j]):
+                    continue  # arrival past the window: not flown, not a refusal
+                certified = bool(sweep.certified[i, j])
+                lambert = float(dv_table[k, t])
+                measured = float(sweep.delta_v_km_s[i, j])
+                inflation = measured / lambert if certified and lambert > 1e-9 else np.nan
+                cells.append((k, t, inflation, certified and np.isfinite(inflation)))
+        if not cells:
+            return None
+        ks = np.asarray([c[0] for c in cells])
+        ts = np.asarray([c[1] for c in cells])
+        infl = np.asarray([c[2] for c in cells])
+        oks = np.asarray([c[3] for c in cells])
+        grid_k, grid_t = np.meshgrid(
+            np.arange(self.lattice.count), np.arange(tofs.shape[0]), indexing="ij"
+        )
+        # nearest swept cell in index space (departure steps count like TOF steps: both are
+        # one lattice step of 15 days); ties -> the earlier sweep entry (deterministic).  Cells
+        # farther than ``RETURN_SWEEP_REACH`` steps from every swept cell keep the model (NaN).
+        distance = (grid_k[:, :, None] - ks[None, None, :]) ** 2 + (
+            grid_t[:, :, None] - ts[None, None, :]
+        ) ** 2
+        nearest = np.argmin(distance, axis=2)
+        reached = np.min(distance, axis=2) <= RETURN_SWEEP_REACH**2
+        inflation = np.where(reached & oks[nearest], infl[nearest], np.nan)
+        # strict: with a sweep in hand the return may only be re-timed onto (or right next to)
+        # a cell SCvx certified - cells beyond the sweep's reach and cells next to a refusal are
+        # infeasible.  Pricing them by the model instead is what the first experiment did, and
+        # SCvx refused the model's pick (28079 -> Earth, 450 d at ratio 0.34).
+        ok = reached & oks[nearest]
+        table = (inflation, ok)
+        self._return_tables[asteroid] = table
+        return table
+
+    def refuse_return(self, asteroid: int, departure: float, tof_days: float) -> bool:
+        """Mark the swept return cell nearest ``(departure, tof)`` as refused (SCvx did not
+        certify the re-flown leg there) so the next re-timing avoids it; False without a sweep."""
+
+        sweep = self.return_sweeps.get(int(asteroid))
+        if sweep is None:
+            return False
+        i = int(np.argmin(np.abs(sweep.departures - float(departure))))
+        j = int(np.argmin(np.abs(sweep.tofs - float(tof_days))))
+        if not bool(sweep.certified[i, j]):
+            return False
+        sweep.certified[i, j] = False
+        sweep.propellant_kg[i, j] = np.inf
+        sweep.diagnostics.append(
+            {"cell": [float(sweep.departures[i]), float(sweep.tofs[j])], "refused": "re-flight"}
+        )
+        self._return_tables.pop(int(asteroid), None)
+        return True
 
     def _state(self, body: int, epochs: FloatArray) -> tuple[FloatArray, FloatArray]:
         if body == EARTH_ID:
@@ -335,7 +435,7 @@ class Retimer:
             overrides = (s.hop_inflation, s.hop_authority_ratio)
         inflation = inflation if overrides[0] is None else overrides[0]
         ratio = ratio if overrides[1] is None else overrides[1]
-        if not self._ratio_model(role):
+        if not self._modelled(role):
             inflation = self.inflations.get((from_body, to_body), inflation)
         return inflation, min(ratio, self.bans.get((from_body, to_body), np.inf))
 
@@ -347,6 +447,19 @@ class Retimer:
             "collect_hop",
         )
 
+    def _return_model(self, role: str) -> bool:
+        """True when the Earth return is priced with the TOF/ratio model."""
+
+        if role != "earth_return":
+            return False
+        flag = self.settings.return_tof_model
+        return self.search_settings.earth_return_tof_model if flag is None else flag
+
+    def _modelled(self, role: str) -> bool:
+        """Roles whose pair calibration is a residual on a model rather than a flat factor."""
+
+        return self._ratio_model(role) or self._return_model(role)
+
     def leg_inflation(
         self,
         role: str,
@@ -356,10 +469,17 @@ class Retimer:
         mass_kg: float,
         tof_days: FloatArray | float,
     ) -> FloatArray | float:
-        """Propellant inflation of a leg: flat per role (Earth legs, legacy hops) or the
-        ratio-dependent model times the pair's calibrated residual (hops)."""
+        """Propellant inflation of a leg: flat per role (Earth-out, legacy hops) or a model -
+        ratio-dependent for hops, TOF/ratio for the return - times the pair's calibrated
+        residual."""
 
         base, _ = self._limits(role, from_body, to_body)
+        if self._return_model(role):
+            authority = thrust_authority_km_s(mass_kg, tof_days, 1.0)
+            dv = np.asarray(delta_v_km_s, dtype=np.float64)
+            ratio = np.where(np.isfinite(dv), dv, 0.0) / np.maximum(authority, 1e-12)
+            model = return_inflation_model(tof_days, ratio)
+            return model * self.inflations.get((from_body, to_body), 1.0)
         if not self._ratio_model(role):
             return base
         s = self.settings
@@ -393,18 +513,30 @@ class Retimer:
         measured_inflation: float,
         *,
         authority_ratio: float | None = None,
+        tof_days: float | None = None,
     ) -> None:
         """Use the SCvx-measured ΔV ratio (x safety margin) as this pair's propellant inflation.
 
         With the ratio-dependent hop model the pair's entry is the *residual* measured / model
         at the flown ``authority_ratio`` (floored at 0.95), so a hop flown fast does not inflate
-        the same pair's slow hops by its own finite-thrust penalty.
+        the same pair's slow hops by its own finite-thrust penalty.  Likewise a return under the
+        TOF model calibrates the residual at the flown ``tof_days`` and ratio, so a 420-day
+        return flown at 1.3x does not price the same asteroid's 540-day return at 1.3x.
         """
 
         s = self.settings
         hop = from_body != EARTH_ID and to_body != EARTH_ID
         if hop and authority_ratio is not None and s.hop_inflation_slope is not None:
             model = s.hop_inflation_floor + s.hop_inflation_slope * max(authority_ratio, 0.0)
+            value = max(measured_inflation / model, 0.95) * s.calibration_margin
+        elif (
+            to_body == EARTH_ID
+            and from_body != EARTH_ID
+            and authority_ratio is not None
+            and tof_days is not None
+            and self._return_model("earth_return")
+        ):
+            model = float(return_inflation_model(tof_days, max(authority_ratio, 0.0)))
             value = max(measured_inflation / model, 0.95) * s.calibration_margin
         else:
             value = max(measured_inflation, 1.0) * s.calibration_margin
@@ -488,6 +620,14 @@ class Retimer:
             ok = feasible & (dv <= ratio_limit * authority[None, :])
             safe_dv = np.where(np.isfinite(dv), dv, 0.0)
             infl_p = self.leg_inflation(role, visit.body, nxt.body, safe_dv, mass, tofs[None, :])
+            override = self._return_override(visit.body) if role == "earth_return" else None
+            if override is not None:
+                # swept return: SCvx's feasibility replaces the authority check and the measured
+                # inflation replaces the model where a swept cell is near enough
+                swept_inflation, swept_ok = override
+                measured = ~np.isnan(swept_inflation)
+                ok = np.where(measured, feasible & swept_ok, ok & swept_ok)
+                infl_p = np.where(measured, swept_inflation, infl_p)
             propellant = propellant_for_delta_v(mass, dv * infl_p)
             leg_value = np.where(ok, departure_value[:, None] - price * propellant, neg_inf)
             next_value = np.full(n, neg_inf)
@@ -580,12 +720,19 @@ class Retimer:
                 return None, [], "leg_infeasible"
             _flat, ratio_limit = self._limits(role, visit.body, nxt.body)
             tof = arrivals[j + 1] - departures[j]
-            if self.authority_ratio(dv, mass, tof) > ratio_limit:
+            override = self._return_override(visit.body) if role == "earth_return" else None
+            swept = override is not None and not np.isnan(override[0][d_index, t_index])
+            if override is not None and not override[1][d_index, t_index]:
+                return None, [], "leg_infeasible"  # SCvx refused this (or the nearest) return
+            if not swept and self.authority_ratio(dv, mass, tof) > ratio_limit:
                 # include the refused leg's departure mass: it is the entry of the DP's profile
                 # that was too optimistic, and the mass rounds correct exactly that entry
                 return None, [*masses, mass], "leg_authority"
             masses.append(mass)
-            infl_p = float(self.leg_inflation(role, visit.body, nxt.body, dv, mass, tof))
+            if swept:
+                infl_p = float(override[0][d_index, t_index])  # type: ignore[index]
+            else:
+                infl_p = float(self.leg_inflation(role, visit.body, nxt.body, dv, mass, tof))
             propellant = float(propellant_for_delta_v(mass, dv * infl_p))
             propellant_total += propellant
             mass -= propellant
@@ -1148,6 +1295,7 @@ def calibrate_from_route(retimer: Retimer, route: RefinedRoute) -> int:
             authority_ratio=retimer.authority_ratio(
                 planned.delta_v_proxy_km_s, leg.mass_before, planned.tof_days
             ),
+            tof_days=planned.tof_days,
         )
         used += 1
     return used
@@ -1263,6 +1411,15 @@ def improve_and_certify(
             "banned": f"{failing.planned.from_id}->{failing.planned.to_id}",
             "ratio": ratio,
             "tof_days": failing.planned.tof_days,
+            "departure": failing.planned.departure_epoch,
+            "mass_before": failing.mass_before,
         }
+        if failing.planned.role == "earth_return":
+            # a swept return is priced from its cell, not the ratio ban: refuse the cell itself
+            record["result"]["sweep_cell_refused"] = retimer.refuse_return(
+                failing.planned.from_id,
+                failing.planned.departure_epoch,
+                failing.planned.tof_days,
+            )
         attempts.append(record)
     return CertifiedImprovement(best, attempts, time.perf_counter() - started, certified_routes)

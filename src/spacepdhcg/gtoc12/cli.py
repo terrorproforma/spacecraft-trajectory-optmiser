@@ -1102,6 +1102,101 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     return 0 if entry["ok"] else 1
 
 
+def cmd_retime_returns(args: argparse.Namespace) -> int:
+    """Archive-wide Earth-return sweep + re-timing; improved ships are archived for the master."""
+
+    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .low_thrust import ScvxSettings
+    from .returncampaign import ReturnCampaignSettings, run_return_campaign
+
+    started = time.perf_counter()
+    catalogue = load_catalogue()
+    bonus_table = _optional_bonus(load_bonus_table)
+    weights: dict[int, float] | None = None
+    if bonus_table is not None and not args.no_bonus_weights:
+        weights = {
+            int(asteroid): float(bonus_table.coefficient[asteroid - 1])
+            for asteroid in catalogue.ids
+        }
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    settings = ReturnCampaignSettings(
+        workers=args.workers,
+        top=args.top,
+        min_collected_kg=args.min_collected_kg,
+        time_budget_seconds=args.budget_seconds,
+        per_ship_seconds=args.per_ship_seconds,
+        back_steps=args.back_steps,
+        forward_steps=args.forward_steps,
+        max_attempts=args.max_attempts,
+    )
+    log = (output_dir / "ships.jsonl").open("w", encoding="utf-8")
+
+    def on_result(record: dict[str, Any]) -> None:
+        log.write(json.dumps(record, default=str) + "\n")
+        log.flush()
+        print(
+            _json(
+                {
+                    k: record.get(k)
+                    for k in (
+                        "done",
+                        "total",
+                        "group",
+                        "slot",
+                        "status",
+                        "archived_kg",
+                        "after_kg",
+                        "gain_kg",
+                        "return_before_kg",
+                        "return_after_kg",
+                        "wall_seconds",
+                        "peak_rss_mb",
+                        "elapsed_seconds",
+                    )
+                }
+            ),
+            flush=True,
+        )
+
+    report = run_return_campaign(
+        catalogue,
+        [Path(s) for s in args.source],
+        output_dir / "ships",
+        settings=settings,
+        scvx=ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days),
+        weights=weights,
+        on_result=on_result,
+    )
+    log.close()
+    report["run_id"] = args.run_id
+    report["commit"] = _commit(REPOSITORY_ROOT)
+    report["sources"] = [str(s) for s in args.source]
+    report["cpu_only"] = True
+    report["gpu_used"] = False
+    report["wall_seconds_total"] = time.perf_counter() - started
+    report["peak_rss_mb"] = _peak_rss_mb()
+    (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
+    print(
+        _json(
+            {
+                k: report[k]
+                for k in (
+                    "run_id",
+                    "tasks",
+                    "attempted",
+                    "improved",
+                    "gain_kg_total",
+                    "wall_seconds_total",
+                    "worker_peak_rss_mb",
+                    "peak_rss_mb",
+                )
+            }
+        )
+    )
+    return 0
+
+
 def summary_dir(bundle) -> str:
     """Directory name of an archived bundle's re-certified columns."""
 
@@ -1397,6 +1492,31 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     master.add_argument("--node-days", type=float, default=2.0)
     master.add_argument("--no-bonus-weights", action="store_true")
     master.set_defaults(function=cmd_fleet_master)
+
+    returns = commands.add_parser(
+        "retime-returns",
+        help="sweep and re-time the Earth returns of archived ships (SCvx-measured, best first)",
+    )
+    returns.add_argument("--run-id", required=True)
+    returns.add_argument("--output", required=True)
+    returns.add_argument(
+        "--source",
+        action="append",
+        required=True,
+        help="run directory holding ship_NN/**/route_summary.json archives (repeatable)",
+    )
+    returns.add_argument("--workers", type=int, default=3)
+    returns.add_argument("--top", type=int, default=None, help="ships to re-time, best first")
+    returns.add_argument("--min-collected-kg", type=float, default=450.0)
+    returns.add_argument("--budget-seconds", type=float, default=6000.0)
+    returns.add_argument("--per-ship-seconds", type=float, default=900.0)
+    returns.add_argument("--back-steps", type=int, default=6)
+    returns.add_argument("--forward-steps", type=int, default=6)
+    returns.add_argument("--max-attempts", type=int, default=2)
+    returns.add_argument("--scvx-iterations", type=int, default=40)
+    returns.add_argument("--node-days", type=float, default=2.0)
+    returns.add_argument("--no-bonus-weights", action="store_true")
+    returns.set_defaults(function=cmd_retime_returns)
 
     export = commands.add_parser("export-viewer", help="propagate a solution and write viewer data")
     export.add_argument("solution")

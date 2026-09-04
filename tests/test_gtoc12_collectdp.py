@@ -204,6 +204,40 @@ class _FakeTable:
 
     hop_propellant = CollectPairTable.hop_propellant
     return_propellant = CollectPairTable.return_propellant
+    return_inflation = CollectPairTable.return_inflation
+
+
+def test_harvest_window_cost_is_the_window_minimum_over_both_directions() -> None:
+    ids = [11, 12]
+    n_t = 40
+    # 11 -> 12 is dear except for a cheap window late in the lattice; 12 -> 11 cheap early only
+    forward = np.full(n_t, 3.0)
+    forward[30:34] = 0.4
+    backward = np.full(n_t, 3.0)
+    backward[2:6] = 0.3
+    table = _FakeTable(ids, {(11, 12): forward, (12, 11): backward}, n_t=n_t)
+    # every ΔV flyable: the test is about the window minimum, not the authority limit
+    table.settings = dataclasses.replace(table.settings, hop_authority_ratio=100.0)
+    table._geometry = {}
+    _FakeTable.harvest_window_cost = CollectPairTable.harvest_window_cost
+    early = (float(table.epochs[0]), float(table.epochs[8]))
+    late = (float(table.epochs[28]), float(table.epochs[36]))
+    mass = 1400.0
+    cost = table.harvest_window_cost
+    cheap_early = cost(11, 12, mass, window=early, max_tof_days=200.0)
+    cheap_late = cost(12, 11, mass, window=late, max_tof_days=200.0)
+    dear = cost(11, 12, mass, window=(early[1], late[0]), max_tof_days=200.0)
+    # the direction is the table's choice: early -> the 12 -> 11 cell, late -> 11 -> 12
+    one = np.asarray([120.0])
+    expected_early = float(table.hop_propellant(np.asarray([[0.3]]), mass, one)[0, 0])
+    expected_late = float(table.hop_propellant(np.asarray([[0.4]]), mass, one)[0, 0])
+    assert cheap_early == pytest.approx(expected_early)
+    assert cheap_late == pytest.approx(expected_late)
+    assert dear > 5.0 * cheap_late
+    # too short a TOF cap -> nothing flyable -> inf (the beam charges its deterrent, not a prune)
+    assert cost(11, 12, mass, window=late, max_tof_days=60.0) == math.inf
+    # an empty window is inf as well
+    assert cost(11, 12, mass, window=(late[1], late[0]), max_tof_days=200.0) == math.inf
 
 
 def test_collect_dp_bookkeeping_min_stay_single_collect_and_free_order() -> None:
