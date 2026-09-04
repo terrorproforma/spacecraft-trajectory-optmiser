@@ -1917,3 +1917,58 @@ Use this file as persistent, repo-local execution memory.
 - [tool] Master DFS recursion depth = column count; > 1000 columns needs the raised recursion
   limit (ba9b764). It bit after a 45-min re-certification - there is no re-cert cache.
 - [tool] PowerShell rejects `&&` between two `wsl` invocations; issue separate Shell calls.
+
+### 2026-09-05 (eighth iteration: harvest substitution, sweep cells in the DP, cluster_fleet_v8)
+
+- [self] "Substitute a miner inside `plan_collect_tour`" cannot be done inside the DP alone: a
+  ship only collects what it deployed, so a substitute changes the deploy chain too. Implemented
+  as a post-beam local search in `RouteSearch.run` (`_substitution_pass`): dearest collect hops
+  of the top-2 completed plans -> endpoints (never the certified Earth-leg target) -> substitutes
+  = deploy-hop neighbours of the chain predecessor ranked by summed harvest-window cost to the
+  endpoint's tour partners -> `_rebuild_chain` re-flies the chain (Earth leg verbatim, same camp
+  waits, cheapest feasible TOF into/out of the substitute, others re-priced at the shifted
+  departure) -> `_complete` (heuristics + DP + exact `_finish`). Exactness comes for free: the
+  candidate goes through the same forward mass pass as every beam plan; mass after the Earth leg
+  is recovered exactly as `partial.mass + hop_propellant + MINER x (n-1)`.
+- [self] Return sweep cells in the DP: `CollectPairTable.set_return_sweep` / `return_override`
+  mirror the re-timer's strict override on the table's (epochs x 30-day return TOF) grid; sweep
+  cells land on the nearest grid node with the inflation measured against the cell's *own*
+  Lambert ΔV. `_solve_collect_dp` terminal step and `_plan_from_tour` read it back. In the
+  family pricing the sweep is flown after the beam's route is certified (camp known) and before
+  `improve_and_certify` (`bundles.sweep_route_return`, nearest cells first inside a budget), and
+  set on both the re-timer and the slot's DP table.
+- [tool] `sweep_grid` rejects TOFs off the re-timer lattice: the family pricing snaps the sweep
+  TOFs to `retime_step_days` (tests run a 30-day lattice).
+- [tool] Tests that compare Lambert counts between beam runs must set `harvest_substitution=False`
+  (the pass re-screens hops at shifted departures).
+- [self] Substitution probe, family 7 (9 miners, 611.9 kg seed, dear hops 214-244 kg at the
+  reference mass): ranking on the harvest side alone -> every substitute chain died with +180 to
+  +260 kg of deploy propellant. Ranking on (harvest saved - paid) + deploy delta -> best
+  prediction +71.5 kg (no substitute predicted to pay); forcing 10 re-tours at slack 200 kg
+  (deploy delta +155..+233) -> all `mass_below_dry_plus_collected`. The beam already sits its
+  miners where the deploy hop is cheap; the dear collect hop is the price of a cheap deploy hop
+  and a substitute pays it back on the deploy side. Default kept on (slack 60 kg, ~10 s per beam)
+  so the campaign telemetry (`bundle.json` ships[].search.substitution) measures it across
+  families; if `improved` stays 0 in v8 the lever is closed like the harvest-window ranking.
+- [tool] Pickle the beam's `completed`/`origins` (`/tmp/probe_subst_dbg.py`) and replay only
+  `_substitution_pass` (`/tmp/probe_subst_replay.py <label> <slack> <candidates>`): 90 s per
+  ranking experiment instead of 400 s.
+- [tool] Another agent runs `joint-itinerary --run-id joint_itinerary_v1` (3 nice-19 workers)
+  from this worktree alongside `cluster_fleet_v8`, plus a G4 CUDA sanitizer test: load ~7 on
+  16 cores. The campaign's declared budget is wall time, so v8 sees fewer families than v7.
+- [self] v8 vs v7 is a paired A/B (same partition, same seeds): best ship per family +8.2 kg
+  median, up in 15/18; family 7 reaches 616.4 kg *inline* (v7 needed return_sweep_v2 for the
+  same number). The in-pricing sweep replaces the post-hoc `retime-returns` for new campaigns.
+- [self] Substitution across 59 beams: 612 chains re-toured, 15 accepted (+122 kg, ~2 kg/ship).
+  `best_predicted_kg` reaches -192 kg on some beams and still 0 accepted: the harvest-window
+  optimum is a lower bound the tour rarely realises (the tour has to arrive at that epoch). The
+  lever is closed as a per-pair local move; the gap is chain-level (references pay +70 kg on
+  deploy per ship to save ~150 kg on collect).
+- [self] `fleet_master_v7` = `v6` fleet exactly. A new campaign on the *same* partition mostly
+  re-derives the archive's own ships (deterministic beam) - a new campaign that should feed the
+  master needs a different partition or LP duals in the pricing.
+- [tool] Another agent used the run id `fleet_master_v7` (with `joint_itinerary_v1` as a
+  source) at 02:30 from a different results tree; check `ps` for a run id before launching.
+- [tool] `node` is at `/home/angus/.local/node/bin` (not on the non-interactive PATH); the v2
+  viewer import needs `export PATH="/home/angus/.local/node/bin:$PATH"`.
+- [tool] `python3` (system) has no numpy: analysis scripts must run under `.venv/bin/python`.

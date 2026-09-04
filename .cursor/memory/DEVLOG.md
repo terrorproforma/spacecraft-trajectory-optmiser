@@ -1390,3 +1390,31 @@
 - Suite: 421 passed / 4 skipped (+ pre-existing native-packaging failure); Ruff clean.
 - Next: collect-hop phase inside the DP (member substitution priced from the pair table); give
   the DP the camp's sweep cells; run retime-returns after every campaign before the master.
+
+## 2026-09-05 08:00 AEST
+
+- Harvest substitution (`RouteSearch._substitution_pass`, post-beam local search: dear collect
+  hop -> endpoint -> deploy-neighbour substitute ranked on (harvest saved - paid) + deploy delta
+  -> exact chain re-fly -> DP re-solve), sweep cells in the collect DP
+  (`CollectPairTable.set_return_sweep` / `return_override`, `bundles.sweep_route_return`),
+  `sweep_return` budget + nearest-first, external archive ingestion test; 6 new tests
+  (7d2e301). Suite 427 passed / 4 skipped; Ruff clean.
+- Substitution probe on family 7: harvest-only ranking -> every chain +180..+260 kg deploy, no
+  tour; with the deploy delta -> best prediction +71.5 kg; forced 10 re-tours at slack 200 ->
+  all `mass_below_dry_plus_collected`. Kept on (slack 60) for the campaign telemetry.
+- cluster_fleet_v8 (249 min, 3 workers, nice 19, same partition as v7; machine shared with
+  another agent's joint-itinerary workers + a CUDA build): 20 families / 59 ships, own fleet
+  10 697.60 kg / 19 ships / 563.0 avg (v7 9920.47 / 18); marks 60/120/240 min = 5155.8 / 8453.2 /
+  10 707.2; PSS peak 0.91 GB. Paired by family: best ship +8.2 kg median, up in 15 of 18.
+  Return integration: v8 fleet return 205.2 kg mean / 495 d median (refs 208-216 / 473-486) -
+  gap closed. Substitution: 15 swaps / 59 beams, +122 kg total (~2 kg per ship; target was 150).
+  Collect hop unchanged: 86.8 kg / 210 d median.
+- fleet_master_v7 (fifteen archives, 854 routes, 1109 columns, LP gap 5.6): the same twenty
+  ships as v6 - 11 515.67 kg / 575.78 avg, both verifiers ok. v8's best columns duplicate or
+  conflict with richer archived ships; a 21st ship would need 828 kg under the rule.
+  Another agent had used the `fleet_master_v7` run id from a different results tree at 02:30;
+  no directory collision here.
+- Viewer v2 data re-imported from fleet_master_v7 (identical fleet). leg_stats/after_v8.json.
+- Next: the collect hop is a deploy-chain property - score partial chains in the beam by deploy
+  propellant + the DP's actual tour cost (chain-level objective), reference-chain prior, LP
+  duals into the pricing, all 35 families on the Lambda box.
