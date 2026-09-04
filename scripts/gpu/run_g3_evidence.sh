@@ -38,6 +38,7 @@ run_expected_failure() {
 
 {
     printf 'source_commit=%s\n' "$(git rev-parse HEAD)"
+    printf 'cuda_architectures=%s\n' "${SPACEPDHCG_CUDA_ARCHITECTURES:-120}"
     printf 'source_tree=%s\n' "$(git rev-parse 'HEAD^{tree}')"
     printf 'branch=%s\n' "$(git branch --show-current)"
     printf 'upstream_commit=%s\n' "$(git -C _upstream/pdhcg rev-parse HEAD)"
@@ -70,7 +71,7 @@ for kind in debug release; do
         "-DCMAKE_BUILD_TYPE=${build_type}" \
         -DSPACEPDHCG_BUILD_CUDA=ON \
         -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON \
-        -DCMAKE_CUDA_ARCHITECTURES=120
+        "-DCMAKE_CUDA_ARCHITECTURES=${SPACEPDHCG_CUDA_ARCHITECTURES:-120}"
     run_log "${kind}-build.log" \
         .venv/bin/cmake --build "${build}" --parallel 4
     run_log "${kind}-ctest.log" \
@@ -153,7 +154,8 @@ run_log nsys-profile.log \
     --force-overwrite=true --output="${profile}" \
     "${debug_build}/cuda-tests/device_scvx_integration_test"
 run_log nsys-stats.log \
-    nsys stats --report cuda_api_sum,cuda_gpu_kern_sum,cuda_gpu_mem_time_sum \
+    nsys stats --force-export=true \
+    --report cuda_api_sum,cuda_gpu_kern_sum,cuda_gpu_mem_time_sum \
     "${profile}.nsys-rep"
 
 run_log summary-command.log \

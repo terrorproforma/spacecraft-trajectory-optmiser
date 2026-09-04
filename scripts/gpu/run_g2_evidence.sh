@@ -21,6 +21,7 @@ run_log() {
 
 {
     printf 'source_commit=%s\n' "$(git rev-parse HEAD)"
+    printf 'cuda_architectures=%s\n' "${SPACEPDHCG_CUDA_ARCHITECTURES:-120}"
     printf 'upstream_commit=%s\n' "$(git -C _upstream/pdhcg rev-parse HEAD)"
     printf 'upstream_tree=%s\n' "$(git -C _upstream/pdhcg rev-parse 'HEAD^{tree}')"
     printf 'patch_sha256='
@@ -59,7 +60,7 @@ for kind in debug release; do
         "-DCMAKE_BUILD_TYPE=${build_type}" \
         -DSPACEPDHCG_BUILD_CUDA=ON \
         -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON \
-        -DCMAKE_CUDA_ARCHITECTURES=120
+        "-DCMAKE_CUDA_ARCHITECTURES=${SPACEPDHCG_CUDA_ARCHITECTURES:-120}"
     run_log "cuda-${kind}-build.log" \
         .venv/bin/cmake --build "${cuda_build}" --parallel 4
     run_log "cuda-${kind}-ctest.log" \
