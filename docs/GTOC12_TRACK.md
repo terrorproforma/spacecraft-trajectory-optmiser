@@ -661,6 +661,71 @@ archived single ship was 564.0 kg.
   (0.12 → 0.38) but the deploy chain loses mass or an asteroid every time. The default stays
   `W = 0`; the collect-hop phase has to be attacked in the DP's window, not at deploy time.
 
+### 6.10 Whole-itinerary joint re-optimisation (eighth iteration: `jointopt.py`, `jointcampaign.py`, `gtoc12 joint-itinerary`)
+
+Until now a certified ship was improved one lever at a time: the lattice DP re-timed the visit
+order on a 15-day grid with Lambert leg costs, the return sweep measured one leg, SCvx certified
+the result afterwards. `jointopt.optimise_ship` treats **every epoch of the ship's timeline as
+one continuous decision vector** - launch, each visit's arrival and departure (hence every leg's
+TOF, every miner's deploy and collect epoch and dwell), the Earth return - and optimises them
+jointly against exact bookkeeping:
+
+- **Objective and constraints (`JointItinerary.evaluate`).** Bonus-weighted collected mass with
+  the mining-rate bookkeeping evaluated exactly (`10 kg/yr × (collect − deploy)`, deploy at the
+  arrival of the deploy visit, collect at the departure of the collect visit) plus
+  `margin_price` (0.05) kg per kg of spare final-mass margin - the exchange rate at which freed
+  propellant is worth keeping for the insertion step. Hard constraints: the 2035–2050 window
+  (`end_margin_days`), one-year minimum stay, non-negative dwell bounded by the re-timer's camp
+  limits, the per-role TOF envelopes (Earth legs 400–900 d with the certified Earth-out TOF as a
+  floor, hops 60–720 d), the authority-ratio limit per role including the re-timer's bans, no
+  double deploy or collect, and the final mass `≥ dry + collected`; a schedule whose propellant
+  does not close loads proportionally less ore (as `refine_route` sizes collected masses to
+  fit), so the surrogate degrades smoothly instead of failing.
+- **Leg costs.** Legs SCvx has flown at exactly these epochs (memoised by `(pair, departure,
+  arrival)` and reused while the departure mass is within 60 kg) are priced with the *measured*
+  verifier-model ΔV `v_e ln(m_before / m_after)`; every other leg uses the calibrated pair-cost
+  surrogate: zero-revolution Lambert at the continuous epochs × the ratio-dependent hop model /
+  TOF-ratio return model × the pair's SCvx-calibrated residual (`Retimer.leg_inflation`,
+  `calibrate_from_route`). At the warm start every leg is measured, so the surrogate reproduces
+  the archived route bit-exactly (`baseline_error_kg = 0` on all 32 ships) and the search
+  starts from the true incumbent value.
+- **Outer optimiser.** Deterministic steepest-ascent pattern search on a shrinking mesh
+  (45, 20, 8, 3, 1 days): moves are single epochs (an arrival = a deploy epoch and the hop's
+  TOF, a departure = a collect epoch or dwell), whole visits (dwell kept), the launch and the
+  return, *phase shifts* (everything up to visit k's arrival, everything from visit k's
+  departure) and the whole itinerary. Each mesh level runs to a local optimum; Lambert legs are
+  memoised so a move re-prices only the legs it touches (≈4000 evaluations, 1100 Lambert
+  solves, 2.6 s for a 16-leg ship).
+- **SCvx in the loop, monotone acceptance.** Whenever the surrogate finds ≥ 0.5 kg more ore the
+  whole itinerary is re-flown with the existing arc refiner (`refine_route`, 8–10 s per ship on
+  one core), every leg is certified by the verifier-model rollout, and the route replaces the
+  incumbent only if it certifies with more (weighted) collected mass. Each certification - accepted
+  or not - memoises its measured legs and calibrates the pairs; a leg SCvx refuses bans its pair's
+  authority ratio (`ban_factor`), and the level is re-searched from the incumbent. Because moved
+  legs are priced at the calibrated residual × 1.03 margin, the finer meshes (≤ 8 d) rarely
+  propose gains once the spare margin is spent: 1–5 certifications per ship, all but a handful
+  accepted, 12–70 s per ship.
+- **Insertion of one more asteroid.** After the schedule converges the co-moving neighbourhood
+  of the camp (`returnsweep.neighbourhood`, radius widened to 2.5 bands) is enumerated over
+  every (deploy slot, collect slot) with seeds that split the gap or lend camp dwell to the two
+  new hops; feasible seeds are pattern-searched and the best certified. **Negative result on the
+  v6 fleet**: 16–47 neighbours per ship, 0 feasible seeds - every candidate hop exceeds the
+  authority ratio (6–15 km/s Lambert to the chain's members), i.e. the families the beam
+  exhausted have no unused co-moving member left; the joint schedule frees 0–9 kg of margin,
+  far from a 40 kg miner plus two hops.
+- **Campaign (`jointcampaign.run_joint_campaign`).** The ships of a fleet report (matched to their
+  archives by asteroid set, all archived variants considered, orphan-leaving stand-alone ships
+  allowed) first, then the best remaining stand-alone archives; other fleet ships' asteroids are
+  never inserted. Improved routes are archived as columns for `fleet-master`.
+
+Tests (`tests/test_gtoc12_jointopt.py`): warm-start bookkeeping exactness (collected, spare,
+per-asteroid mining rule, mass identity, bit-identical re-evaluation), rule violations (window,
+dwell, stay, TOF envelope, double deploy/collect), pattern-search determinism and monotonicity,
+certified-only acceptance (proxy refiner: every accepted certification is a strict gain and the
+sequence is monotone; a refuser bans the pair and leaves the incumbent; a dearer refiner never
+gets a lighter route accepted), insertion structure (exactly one new asteroid, one deploy and one
+collect visit, sorted best first), fleet-first task selection with de-duplication.
+
 ### 6.3 Proxy validation (`results/gtoc12/proxy_validation.json`)
 
 | Data set | Quantity | p5 | p25 | median | p75 | p95 |
@@ -713,6 +778,8 @@ not needed: reference hops have zero revolutions (p95 0.004).
 | `cluster_fleet_v7` (seventh campaign: v6 configuration + return TOF model in the DP, bounded DP caches, radius-1.6 / ≥ 18-member families (new partition), 5 ships per family, **3 workers, `nice 19`**; 4 h budget) | full catalogue | 18 | 147 | **9920.47 kg** (551.3 kg average; marks: 60 min 5355.8 / 10 ships, 120 min 8571.1 / 16, 240 min 9922.5 / 18) | 9173.66 kg (LP bound 9186.18, gap 12.5 kg, exhaustive) | — | 25 families × 797–3046 s (3 in parallel), 76 ships | in the family pricing | 14950 s (249 min); main 0.43 GB, worker peak 0.68 GB, **process-tree PSS peak 1.19 GB** | CPU |
 | `return_sweep_v2` (return sweep + re-timing of the 21 best `cluster_fleet_v7` ships, 3 workers) | full catalogue | 13 improved of 21 | — | +225.5 kg (improved returns 159–274 kg; family 7 ship 3 528.3 → 602.9, ship 1 607.8 → 616.4) | — | — | 21 ships (3 in parallel) | in the re-timing | 2181 s (36 min); worker peak 0.21 GB | CPU |
 | **`fleet_master_v6`** (master over all fourteen runs: 779 routes re-flown through SCvx, 1032 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **20** | **168** (164 mined) | **11515.67 kg** (575.78 kg average; 5.8 kg below `v5` in raw mass, 166 kg above it in the score the master optimises) | **10739.27 kg** (LP bound 10744.85, gap 5.6 kg) | 343 | — | 2660 s re-certification (3 workers) + 69 s master | 2749 s, 0.49 GB main | CPU |
+| `joint_itinerary_v2` (eighth iteration, §6.10: whole-itinerary joint re-optimisation of the 20 `fleet_master_v6` ships + 12 best stand-alone archives, SCvx re-certification in the loop, 3 workers, `nice 19`) | full catalogue | 32 improved of 32 | — (0 inserted) | +280.4 kg (fleet ships +208.4: 575.78 → 586.20 kg average; +1.1 to +23.3 per ship) | — | — | 32 ships × 13–70 s (3 in parallel) | in the joint search (101 certifications, 95 accepted) | 435 s (7 min); main 0.12 GB, worker peak 0.12 GB | CPU |
+| **`fleet_master_v7`** (master over all sixteen runs incl. `joint_itinerary_v1/v2`: 837 routes re-flown through SCvx, 1078 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **21** | **177** (173 mined) | **12346.48 kg** (587.93 kg average vs the 21-ship threshold 587.8; rule 21 ≤ 21.007; all 21 columns are `joint_itinerary_v2` routes) | **11391.12 kg** (LP bound 11396.76, gap 5.6 kg) | 362 | — | 3237 s re-certification (3 workers) + 139 s master | 3398 s, 0.52 GB main | CPU |
 
 Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
 RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
@@ -1177,6 +1244,84 @@ columns as the table above): v6 collect hops n 164, mean 88.4, p25 63.5, median 
 Earth-out 409.6, **Earth-return 216.5 mean / 216.7 median, TOF median 450 d**; v7 collect hops n
 146, mean 87.3, median 85.9, TOF median 240 d, Earth-return 232.7 mean, TOF median 480 d.
 
+**Eighth iteration (whole-itinerary joint re-optimisation, §6.10).** `joint_itinerary_v2`
+(3 workers, `nice 19`, 435 s) re-optimised the 20 `fleet_master_v6` ships plus the 12 best
+remaining stand-alone archives: **32 of 32 ships improved, +280.4 kg; the 20 fleet ships gained
++208.4 kg (575.78 → 586.20 kg average, +1.1 to +23.3 kg per ship)** with 101 SCvx
+certifications, 95 accepted, 13–70 s per ship at 0.12 GB. Zero asteroids were inserted (the
+negative result of §6.10: every co-moving candidate hop fails the authority ratio). The
+propellant is *redistributed*, not saved: per fleet ship the deploy hops spend **767.5 → 826.8
+kg** (+59; the deploy phase shortens from 1870 to 1804 hop-days, i.e. earlier deploys buy
+mining time), the Earth return **216.5 → 204.1 kg** (−12), the collect hops 724.6 → 720.6
+(−4), the Earth-out leg is unchanged at 409.6 kg (its TOF is a protected floor and no launch
+moved), and the spare final-mass margin is spent to ≈ 0 (final masses 500.6–506.4 kg). Return
+arrivals move by at most ±20 d. Per ship (before → after, collected kg; certifications;
+propellant by role before → after):
+
+| # | Ship (archive / slot) | Ast. | Before | After | Gain | Cert. | Deploy hops | Collect hops | Return |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `return_sweep_v1` ← `cluster_fleet_v6/family_0001` s2 | 8 | 633.3 | 634.4 | +1.1 | 1 | 725 → 738 | 818 → 810 | 212 → 211 |
+| 2 | `return_sweep_v2` ← `cluster_fleet_v7/family_0007` s1 | 9 | 616.4 | 622.6 | +6.2 | 3 | 824 → 854 | 691 → 702 | 192 → 186 |
+| 3 | `cluster_fleet_v7/family_0011` s1 | 9 | 611.9 | 628.5 | +16.6 | 4 | 608 → 691 | 854 → 814 | 266 → 259 |
+| 4 | `cluster_fleet_v6/family_0054` s1 | 9 | 603.7 | 614.6 | +11.0 | 4 | 655 → 682 | 818 → 814 | 228 → 225 |
+| 5 | `cluster_fleet_v6/family_0025` s5 | 9 | 589.3 | 612.3 | +22.9 | 4 | 742 → 815 | 711 → 682 | 249 → 244 |
+| 6 | `fleet10_master_v1` s1 | 8 | 583.2 | 594.8 | +11.6 | 3 | 729 → 864 | 872 → 817 | 134 → 126 |
+| 7 | `cluster_fleet_v6/family_0001` s1 | 9 | 582.8 | 601.8 | +19.0 | 4 | 706 → 786 | 684 → 669 | 298 → 282 |
+| 8 | `return_sweep_v1` ← `cluster_fleet_v5/family_0004` s3 | 8 | 575.8 | 578.9 | +3.2 | 2 | 764 → 776 | 750 → 758 | 191 → 188 |
+| 9 | `cluster_fleet_v6/family_0007` s2 | 9 | 573.7 | 582.3 | +8.6 | 3 | 674 → 693 | 742 → 755 | 273 → 264 |
+| 10 | `return_sweep_v1` ← `cluster_fleet_v5c/family_0001` s3 | 8 | 568.0 | 583.0 | +15.0 | 5 | 707 → 821 | 759 → 746 | 204 → 184 |
+| 11 | `cluster_fleet_v7/family_0006` s1 | 8 | 567.0 | 570.0 | +3.0 | 4 | 716 → 733 | 794 → 794 | 241 → 237 |
+| 12 | `return_sweep_v1` ← `cluster_fleet_v6/family_0025` s1 | 8 | 564.7 | 573.2 | +8.5 | 4 | 843 → 913 | 622 → 630 | 222 → 206 |
+| 13 | `return_sweep_v2` ← `cluster_fleet_v7/family_0030` s1 | 8 | 564.3 | 567.6 | +3.3 | 3 | 671 → 713 | 841 → 816 | 221 → 210 |
+| 14 | `cluster_fleet_v4/family_0430` s1 | 8 | 564.3 | 566.7 | +2.5 | 1 | 1095 → 1112 | 569 → 571 | 155 → 152 |
+| 15 | `cluster_fleet_v6/family_0065` s1 | 9 | 563.4 | 581.9 | +18.5 | 3 | 762 → 848 | 588 → 583 | 259 → 241 |
+| 16 | `return_sweep_v1` ← `cluster_fleet_v5/family_0247` s3 | 8 | 562.6 | 568.7 | +6.0 | 3 | 872 → 948 | 682 → 647 | 189 → 181 |
+| 17 | `cluster_fleet_v5/family_0009` s1 | 8 | 558.1 | 581.4 | +23.3 | 4 | 638 → 749 | 723 → 781 | 285 → 197 |
+| 18 | `return_sweep_v1` ← `cluster_fleet_v5/family_0017` s1 | 8 | 552.8 | 557.3 | +4.5 | 3 | 829 → 858 | 651 → 655 | 201 → 175 |
+| 19 | `return_sweep_v2` ← `cluster_fleet_v7/family_0009` s1 | 8 | 542.9 | 555.6 | +12.7 | 4 | 716 → 848 | 753 → 743 | 187 → 169 |
+| 20 | `cluster_fleet_v4/family_0355` s1 | 9 | 537.6 | 548.4 | +10.8 | 5 | 1073 → 1093 | 570 → 623 | 122 → 145 |
+| — | *12 non-fleet archives* | 7–9 | 6997.9 | 7069.9 | +72.0 (+1.2 to +14.1) | 1–5 | | | |
+
+At 586.20 kg the re-optimised 20-ship fleet is still 1.6 kg per ship short of the 21-ship
+threshold (587.8 kg). `fleet_master_v7` over all sixteen archives (837 routes re-flown through
+SCvx, 0 failures, 1078 columns) closes that gap by *composition*: it is **proven optimal at 21
+ships — fixed-bonus objective 11 391.12 kg vs LP bound 11 396.76 (gap 5.6 kg), 177 asteroids
+(173 mined, 4 miners left), 12 346.48 kg collected, 587.93 kg average (rule 21 ≤ 21.007)**,
+both verifiers ok (`Check successfully!`; independent max position error 113 km, mass error
+1e-10 kg, no violations). That is **+830.8 kg over `fleet_master_v6`** (+7.2 %): +208.4 kg from
+the joint re-optimisation of the ships in place and the remainder from the 21st ship the rule
+now admits. All 21 selected columns are `joint_itinerary_v2` routes; 19 of them are the v6
+ships' asteroid sets, the master drops the 567.6 kg `cluster_fleet_v7/family_0030` ship and adds
+the re-optimised `return_sweep_v1 ← cluster_fleet_v6/family_0005` slot 2 (594.8) and
+`return_sweep_v2 ← cluster_fleet_v7/family_0014` slot 2 (595.2). The LP relaxation at 20 ships
+is 10 987.4 kg, so the 21st ship is worth ≈ 404 kg on the master's objective. Per ship (rank,
+source archive of the re-optimised column, slot, asteroids, collected kg, final mass kg,
+refined arcs, launch MJD):
+
+| # | Source (all via `joint_itinerary_v2`) | Slot | Ast. | Collected | Final mass | Arcs | Launch |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `return_sweep_v1` ← `cluster_fleet_v6/family_0001` | 2 | 8 | 634.4 | 503.4 | 17 | 64478 |
+| 2 | `cluster_fleet_v7/family_0011` | 1 | 9 | 628.5 | 501.8 | 18 | 64478 |
+| 3 | `return_sweep_v2` ← `cluster_fleet_v7/family_0007` | 1 | 9 | 622.6 | 504.9 | 18 | 64463 |
+| 4 | `cluster_fleet_v6/family_0054` | 1 | 9 | 614.6 | 503.5 | 19 | 64373 |
+| 5 | `cluster_fleet_v6/family_0025` | 5 | 9 | 612.3 | 502.2 | 19 | 64358 |
+| 6 | `cluster_fleet_v6/family_0001` | 1 | 9 | 601.8 | 503.0 | 19 | 64463 |
+| 7 | `return_sweep_v2` ← `cluster_fleet_v7/family_0014` | 2 | 8 | 595.2 | 503.3 | 17 | 64508 |
+| 8 | `return_sweep_v1` ← `cluster_fleet_v6/family_0005` | 2 | 9 | 594.8 | 502.0 | 19 | 64478 |
+| 9 | `fleet10_master_v1` | 1 | 8 | 594.8 | 501.8 | 16 | 64403 |
+| 10 | `return_sweep_v1` ← `cluster_fleet_v5c/family_0001` | 3 | 8 | 583.0 | 501.8 | 16 | 64403 |
+| 11 | `cluster_fleet_v6/family_0007` | 2 | 9 | 582.3 | 503.9 | 18 | 64448 |
+| 12 | `cluster_fleet_v6/family_0065` | 1 | 9 | 581.9 | 500.6 | 18 | 64343 |
+| 13 | `cluster_fleet_v5/family_0009` | 1 | 8 | 581.4 | 503.0 | 16 | 64433 |
+| 14 | `return_sweep_v1` ← `cluster_fleet_v5/family_0004` | 3 | 8 | 578.9 | 501.2 | 16 | 64448 |
+| 15 | `return_sweep_v1` ← `cluster_fleet_v6/family_0025` | 1 | 8 | 573.2 | 501.9 | 17 | 64358 |
+| 16 | `cluster_fleet_v7/family_0006` | 1 | 8 | 570.0 | 504.4 | 16 | 64553 |
+| 17 | `return_sweep_v1` ← `cluster_fleet_v5/family_0247` | 3 | 8 | 568.7 | 502.7 | 16 | 64568 |
+| 18 | `cluster_fleet_v4/family_0430` | 1 | 8 | 566.7 | 506.4 | 16 | 64373 |
+| 19 | `return_sweep_v1` ← `cluster_fleet_v5/family_0017` | 1 | 8 | 557.3 | 505.1 | 16 | 64388 |
+| 20 | `return_sweep_v2` ← `cluster_fleet_v7/family_0009` | 1 | 8 | 555.6 | 501.6 | 17 | 64568 |
+| 21 | `cluster_fleet_v4/family_0355` | 1 | 9 | 548.4 | 501.1 | 18 | 64763 |
+
 Per-leg detail of `reduced-v1-run2` (propellant, SCvx iterations, solve time, certified endpoint
 error): E→1265 600 d 364.7 kg 9 it 1.3 s 0.32 km; 1265→21191 360 d 128.7 kg 7 it 0.5 s 0.04 km;
 21191→27292 360 d 153.5 kg 5 it 0.3 s 0.04 km; 27292→40808 120 d 97.4 kg 24 it 0.7 s 0.01 km;
@@ -1309,6 +1454,21 @@ Commands: `cluster-fleet --run-id cluster_fleet_v7 --output <dir> --workers 3
 importer was run on `fleet_master_v6/fleet/viewer`: 20 ships, 168 asteroids, 10 150 exact replay
 samples, all hashes verified, Kepler cross-check 3.57e-6 km / 3.07e-7 km over 63 088 context
 points; output ignored.
+Eighth iteration: `joint_itinerary_v1` (27 ships, the pre-orphan task selection that matched 15
+of the 20 fleet ships) and `joint_itinerary_v2` (32 ships, final code) commit their
+`run_report.json`, `ships.jsonl` (per ship: before/after mass, legs by role before/after,
+certifications, wall) and every improved ship's `route_summary.json`; `fleet_master_v7` its
+`run_report.json`, `fleet/Result.txt` (the best verified fleet), `fleet/fleet.json` and
+`fleet/viewer/manifest.json`. Commands: `joint-itinerary --run-id joint_itinerary_v2 --output
+<dir> --fleet-report results/gtoc12/runs/fleet_master_v6/run_report.json --top 12 --workers 3
+--per-ship-seconds 600 --budget-seconds 5400 --insert-trials 4` with the fourteen `--source` directories under
+`nice -n 19` (7 min); `fleet-master --run-id fleet_master_v7 --output <dir>` with the sixteen
+`--source` directories `--workers 3` (57 min). The v2 viewer importer was run on
+`fleet_master_v7/fleet/viewer`: 21 ships, 177 asteroids, 10 664 exact replay samples, all hashes
+verified, Kepler cross-check 3.57e-6 km / 3.07e-7 km over 66 459 context points; output
+ignored. The viewer's `check.mjs` asserts a 20-colour ship palette (`fleet.ships.length <= 20`)
+and now fails on that assertion alone; the viewer itself wraps colours modulo the palette, so
+ship 21 shares ship 1's colour until the palette is extended.
 
 ## 8. Limitations
 
@@ -1403,12 +1563,27 @@ points; output ignored.
   0.7× the families of four in the same 4 h (v7's own fleet 9920 kg vs v6's 10 698); the archive
   master is what turns that into score. The archive-wide master is proven optimal over 1032
   columns; the LP at 21 ships is infeasible.
+- Eighth iteration (§6.10): jointly re-optimising every epoch of a certified ship is worth
+  +10.4 kg per ship on average (+1.1 to +23.3; 32 of 32 archived ships improved, 95 % of the
+  SCvx certifications accepted, 7 min for 32 ships on 3 workers) — enough, with the master's
+  re-composition, to admit the **21st ship at 587.93 kg average (`fleet_master_v7`, 12 346.5 kg,
+  +830.8 kg, proven optimal)**, and the fleet is binding on the rule again (21 ≤ 21.007). The
+  gain is a redistribution — deploy hops +59 kg per ship buy mining time, return −12, collect −4,
+  margin spent to zero — not a cheaper flight, and the search saturates once the margin is gone:
+  the ≤ 8 d meshes propose nothing because a moved leg is priced at its calibrated residual plus
+  a 3 % safety margin. Inserting a 9th/10th asteroid into a converged ship failed on every one of
+  the 32 ships: the co-moving neighbourhood (radius 2.5) offers 16–47 members but each hop to
+  them costs 6–15 km/s Lambert (authority ratio 2–6 vs 0.55), i.e. the beam already took every
+  reachable member of these families. The next ship needs a *new* set, not a re-timed one.
 
 Next bottleneck: the collect hop, inside the DP's window. The fleet rule `N ≤ 2 exp(0.004 M̄)`
-is binding at 20 ≤ 20.01 (average 575.78 kg); a 21st ship needs 587.8 kg average (5 ships of the
-fleet are above it), 22 ships 600 kg, the references' 740 kg would admit 38. Per ship the gap to
-a reference ship is now: collect hops 8 × (85 − 66) ≈ 150 kg, Earth return ≈ 0, deploy hops
-and Earth-out *better*. (i) **Collect-hop phase in the DP**: the deploy beam cannot fix it
+is binding at 21 ≤ 21.007 (average 587.93 kg); a 22nd ship needs 599.5 kg average (6 ships of the
+fleet are above it), 23 ships 610.6 kg, the references' 740 kg would admit 38. Per ship the gap
+to a reference ship is now: collect hops 8 × (85 − 66) ≈ 150 kg, Earth return ≈ 0, deploy hops
+and Earth-out *better*. The joint re-optimiser should be run after every future campaign
+(`joint-itinerary`, 7 min for 32 ships) before the master, and its evaluator is the natural
+place to price member substitution once the DP proposes it. (i) **Collect-hop phase in the
+DP**: the deploy beam cannot fix it
 (ranking on the harvest-window cost loses the deploy chain); the DP should be allowed to *drop*
 a deployed miner from the tour when its harvest hop is dear and re-deploy the slot's time at a
 neighbour whose phase crosses zero at the harvest epoch — i.e. member substitution inside

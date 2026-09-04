@@ -1917,3 +1917,110 @@ Use this file as persistent, repo-local execution memory.
 - [tool] Master DFS recursion depth = column count; > 1000 columns needs the raised recursion
   limit (ba9b764). It bit after a 45-min re-certification - there is no re-cert cache.
 - [tool] PowerShell rejects `&&` between two `wsl` invocations; issue separate Shell calls.
+
+### 2026-09-05 01:30 AEST - Joint whole-itinerary re-optimisation (new worktree)
+
+#### Task Summary
+
+- Worktree `/home/angus/worktrees/spacepdhcg-gtoc12-methods` from `4dd4fdb` (the v8 campaign
+  runs untouched in `spacepdhcg-gtoc12`). The lane started as a reference-methods study
+  (branch `feat/gtoc12-antipodes-methods`); at 01:54 the user redirected it: **do not study or
+  adopt the reference teams' methods** - their scores (28 975.1 kg all-time, 26 062.6 kg JPL)
+  are only the target; we win with our own machinery. The uncommitted reference-method code
+  (transfer-cost subsets, fixed-schedule chain BIP, TOF heuristic) was reverted, no memo was
+  written, and the branch was renamed `feat/gtoc12-joint-itinerary` (`git branch -m`).
+- [user] Superseded observation kept for the record only (not to be pursued): a proxy probe of
+  an exact fixed-schedule ordering search on v6 family 54 re-timed 9-asteroid orderings to
+  646-699 kg *proxy* (best certified beam ship there: 603.7 kg); the reference chains' pairs
+  average 2.9 km/s on a whole-window Lambert statistic where ours average 3.6.
+- New deliverable: per-ship joint optimisation of every epoch (launch, arrivals, departures,
+  deploy/collect epochs, return) with exact mining-rate bookkeeping, calibrated pair-cost
+  surrogate for screening, SCvx re-certification of changed legs in the inner loop, monotone
+  certified acceptance; applied to the 20 ships of `fleet_master_v6` + top archived chains,
+  then the LP master over all archives.
+
+#### Preflight (from the retained lessons)
+
+- [tool] Windows-side `Write` produces CRLF on `\\wsl.localhost` paths: every new file written
+  there is normalised with `/tmp/gtoc12_methods/fixcrlf.sh <file>` before tests/ruff/commit;
+  `StrReplace` on existing LF files keeps LF. Bash scripts live in `/tmp/gtoc12_methods/*.sh`
+  and run through `/tmp/gtoc12_methods/run.sh <name>` (strips CRs first).
+- [tool] `benchmarks/gtoc12/data` is a symlink to the gtoc12 worktree's fetched data (read
+  only); it is untracked - never `git add -A`, add files by name.
+- [tool] The venv is `/home/angus/worktrees/spacepdhcg-gtoc12/.venv/bin/python` with
+  `PYTHONPATH=src` of this worktree (verified: `spacepdhcg.__file__` resolves here).
+- [user] CPU only, <= 3 processes, `nice -n 19`; export `GIT_AUTHOR_*`/`GIT_COMMITTER_*`
+  (`SpacePDHCG GTOC12 Track <gtoc12-track@spacepdhcg.invalid>`, the branch's identity).
+
+#### Session Log (joint itinerary)
+
+- [self] Design: `jointopt.JointItinerary.evaluate(visits, arrivals, departures)` is the whole
+  per-ship problem - continuous epochs, exact mining bookkeeping, per-role TOF/dwell/authority
+  envelopes from the `Retimer`, propellant from the calibrated pair-cost surrogate *except* legs
+  SCvx has flown at exactly those epochs (memoised measured ΔV `v_e ln(m0/mf)`). Warm start =
+  archived certified legs -> the surrogate reproduces the archive bit-exactly
+  (`baseline_error_kg = 0.0` on all 32 ships), so acceptance compares against the true value.
+- [self] Pattern search (steepest ascent, mesh 45/20/8/3/1 d; single epochs, whole visits,
+  prefix/suffix phase shifts, whole itinerary) costs ~4000 evaluations / 1100 Lambert / 2.6 s
+  per ship because Lambert legs are memoised by `(pair, dep, arr)`. `refine_route` of a whole
+  16-leg ship is 8-10 s on one core, so full-route re-certification per accepted move is cheap:
+  1-5 certifications, 12-70 s per ship.
+- [self] Result on the 20 `fleet_master_v6` ships: every ship improved, 575.78 -> 586.20 kg
+  average (+208.4 kg, +1.1 to +23.3 per ship), 101 certifications / 95 accepted; 32/32 archived
+  ships improved (+280.4 kg). Redistribution per ship: deploy hops +59 kg (faster deploy phase,
+  1870 -> 1804 hop-days: earlier deploys buy mining time), return -12 kg, collect hops -4 kg,
+  Earth-out unchanged (protected floor; launch never moved), spare margin spent to ~0.
+- [self] Where the fine meshes stall: a moved leg is priced at calibrated residual x 1.03
+  margin, so once the spare is spent no <= 8 d move looks profitable. The margin is what keeps
+  95 % of certifications accepted; lowering it would trade acceptance rate for more proposals.
+- [self] **Insertion negative result**: neighbourhood radius 2.5 gives 16-47 co-moving
+  candidates per ship but 0 feasible seeds - every candidate hop is 6-15 km/s Lambert to the
+  chain's members (authority ratio 2-6 vs the 0.55 limit). The beam already took the usable
+  members; joint scheduling frees 0-9 kg, not a 40 kg miner plus two hops. Camp-dwell-lending
+  seeds (deploy phase later / collect phase earlier) also fail on authority, not on the stay.
+- [self] Four of v6's 20 ships are stand-alone ships that *leave one uncollected miner*
+  (`plan.orphaned`), one is an old `fleet10_master_v1` archive without `plan` - the first task
+  selection matched only 15/20; matching must consider every archived variant of a ship, allow
+  own orphans (nobody in a stand-alone fleet collects them) and fall back to `summary["asteroids"]`.
+- [tool] A background job started with plain `nohup ... &` from `wsl.exe -e bash -c` died when
+  the wsl session closed a second later (the v2 launch left an empty run directory); use
+  `setsid nohup ... < /dev/null &` and `sleep 8` before returning.
+- [tool] With `fork` workers that import `jointopt` lazily, edits to the module after the pool
+  starts are *not* picked up mid-run (children import once at their first task): v1 ran the
+  pre-orphan code, v2 the final code; both are deterministic and agree on the 15 shared ships.
+- [self] `fleet_master_v7` over sixteen archives (837 routes re-flown, 0 failures, 1078
+  columns, 57 min on 3 workers, main 0.52 GB): **21 ships, 177 asteroids (173 mined), 12 346.48
+  kg, 587.93 kg average, rule 21 <= 21.007, proven optimal (11 391.12 vs LP 11 396.76, gap 5.6
+  kg)**, both verifiers ok. +830.8 kg over v6 (11 515.67 / 20 ships). Every selected column is
+  a `joint_itinerary_v2` route; 19 are the v6 ships' asteroid sets, the master swapped the
+  567.6 kg v7/f0030 ship for rsv1<-v6/f0005 s2 (594.8) and rsv2<-v7/f0014 s2 (595.2). The
+  re-optimised 20 ships alone (586.20 avg) were 1.6 kg/ship short of the 21-ship threshold;
+  the master's re-composition closed it. LP at 20 ships 10 987.4 -> 21st ship ~404 kg on the
+  objective.
+- [self] Column labels in a master report are `a{10000+group_index}_s{slot}`; the group name is
+  `report["groups"][label-10000]["name"]` and the ship record
+  `report["bundles"][idx]["ships"][slot]` (asteroids, final_mass_kg, refined_arcs,
+  launch_epoch, orphaned). `selected[].identifier` is just the column number.
+- [tool] `Set-Location` onto a `\\wsl.localhost` UNC path in the Shell tool breaks every later
+  command (`spawn powershell.exe ENOENT`: the persisted cwd becomes a
+  `FileSystem::\\wsl.localhost\...` provider path). Recover by passing `working_directory`
+  explicitly; run Windows `node` on UNC paths with absolute script/data paths and
+  `Push-Location -LiteralPath` only inside a `try/finally` when a cwd is unavoidable.
+- [tool] Over UNC the methods worktree's `benchmarks/gtoc12/data` symlink is not traversable;
+  point the viewer importer at the gtoc12 worktree's real data directory.
+- [self] Viewer import of v7: 21 ships, 177 asteroids, 10 664 exact replay samples, hashes ok,
+  Kepler cross-check 3.57e-6 / 3.07e-7 km over 66 459 points. `check.mjs` then fails on
+  `fleet.ships.length <= 20` ("ship palette covers every ship without wrapping") - the viewer's
+  `SHIP_COLOURS` has 20 entries mirrored in `styles.css`; runtime wraps modulo 20. Not fixed
+  here (viewer branch, not this task); flagged to the user.
+
+#### Guardrails For Next Session
+
+- Run `joint-itinerary` (7 min for 32 ships, 3 workers) after every campaign / return sweep and
+  before the master; it is worth ~10 kg per ship and the master turns that into ships.
+- Insertion into converged ships is a dead end on these families (authority ratio, not time):
+  a 22nd ship (599.5 kg average) needs new asteroid sets from the DP (member substitution in
+  `plan_collect_tour`, the camp's sweep cells in the DP), not re-timing.
+- Fleet-master sources are now sixteen; add `joint_itinerary_v1`/`v2` to any master run.
+- Viewer palette: extend `SHIP_COLOURS` + `styles.css` + `check.mjs` in the v2 viewer worktree
+  before importing fleets with > 20 ships (the v7 dataset is installed and valid otherwise).
