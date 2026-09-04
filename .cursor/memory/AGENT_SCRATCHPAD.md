@@ -1776,7 +1776,7 @@ Use this file as persistent, repo-local execution memory.
   726-column archive, so only new columns above 563 kg move the score.
 - Do not edit `src/` while a campaign runs: workers import the modules fresh per task.
 
-### 2026-09-04 10:15 AEST - GTOC12 harvest-epoch phase: calibrated DP costs, two-pass mass, v6 campaign (interim)
+### 2026-09-04 10:15 AEST - GTOC12 harvest-epoch phase: calibrated DP costs, two-pass mass, v6 campaign (closed 15:40)
 
 #### Task Summary
 
@@ -1826,3 +1826,38 @@ Use this file as persistent, repo-local execution memory.
 - Do not edit `src/` or `results/gtoc12/hop_inflation_fit.json` while `cluster_fleet_v6` runs.
 - The user's "< 2 GB total" memory bound: report the measured process-tree PSS peak
   (`memory_total_pss_peak_mb`, new sampler), not RSS sums - forked workers share pages.
+
+#### Closing Notes (15:40 AEST)
+
+- Result: `cluster_fleet_v6` 10 698.0 kg / 19 ships / 159 asteroids / 563.05 kg avg (marks
+  60 min 8545.1 / 16, 120 min 9887.8 / 18, 240 min 10 697.1 / 19; 255 min wall; 36 families,
+  136 certified ships, 9 above 563 kg); `fleet_master_v4` over eleven archives (695 routes
+  re-certified, 0 failures, 903 columns) **10 700.48 kg / 19 ships / 158 asteroids / 563.18 kg**,
+  LP branch and bound proven optimal (10 146.60 vs bound 10 159.66 fixed-bonus, gap 13.1 kg),
+  official + independent verifier ok. The 20th ship needs 575.6 kg average; LP at 20 infeasible.
+- [self] Memory: the process-tree PSS peak was 3.04 GB for 4 workers (target < 2 GB). A
+  tracemalloc + RSS probe of one family with `ships=1` never exceeded 343 MB RSS / 77 MB traced
+  in 55 min, so the 0.9-1.1 GB worker peaks belong to the *collector* slots (harvest seeding
+  over pooled miners, SCvx/Clarabel) and are native allocations, not numpy arrays. Not localised
+  this session; documented in GTOC12_TRACK.md section 8. Do not claim the 2 GB budget was met.
+- [self] Earth return got dearer for the second iteration in a row (279 kg mean vs 227 vs
+  references 208-216) while the collect hop only moved 87.1 -> 84.4 kg median (TOF still 240 d).
+  The DP at `w = 1` trades return propellant 1:1 against a later last collect; the fleet rule
+  wants mass, so the return needs its own sweep at the fleet-rule exchange rate. First item next.
+- [tool] Windows PowerShell wrapper: `wsl -- bash -c "..."` breaks on `$(...)`, `|`, `<`,
+  `head`, `cut` inside the quoted string (PowerShell parses them first). Always write the bash
+  into a file under `/tmp` (or the repo `.tmp_*.sh` copied over) and run `bash /tmp/run.sh X`.
+- [tool] `Solution.ships[i].asteroid_visits()` is a method; `events`/`burns`/`launch` are
+  properties. `Result.txt` burn arcs (~820 per ship) are SCvx node arcs; the "refined arcs" of
+  the results table are `route_summary.json["refined_arcs"]` (14-19 per ship).
+- [tool] No Linux `node` in WSL; the viewer importer runs from PowerShell with Windows node over
+  `\\wsl.localhost\Ubuntu-22.04\...` UNC paths (works, 2 s).
+
+#### Guardrails For Next Session
+
+- Next work list (docs section 8): (i) Earth-return sweep at the fleet-rule exchange rate in the
+  re-timer / DP return pricing (~50 kg per ship, the 20th ship); (ii) deploy beam ranking by the
+  calibrated pair cost at the harvest window (`CollectPairTable` already has it per epoch) to get
+  the collect hop to 70 kg / 180 d; (iii) localise the native worker memory transient with a
+  per-slot RSS trace (harvest seeding on/off) before another 4-worker run, else use 3 workers.
+- `fleet-master` sources are now eleven runs; add `cluster_fleet_v6` and `probe_v6_family`.

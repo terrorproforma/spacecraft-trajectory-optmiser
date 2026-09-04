@@ -1316,3 +1316,33 @@
 - Campaign `cluster_fleet_v6` launched 10:09 AEST: 4 workers, 5 ships per family, radius 1.75,
   >= 20 members, collector harvest, calibrated DP, 2400 s per family, 4 h budget; GPU busy and
   locked by the G4 campaign (CPU only).
+
+## 2026-09-04 15:40 AEST
+
+- `cluster_fleet_v6` finished (255 min, 4 workers, CPU only): 36 families, 136 certified ships
+  (median 478.6 kg; 603.7 / 603.3 / 598.4 / 589.3 / 582.8 / 578.6 best; 9 above 563 kg), verified
+  fleet **10 698.0 kg / 19 ships / 159 asteroids (155 mined) / 563.05 kg avg**; budget marks
+  60 min 8545.1 kg (16 ships), 120 min 9887.8 (18), 240 min 10 697.1 (19); 19th ship admitted at
+  170 min. Memory: main 0.43 GB, worker peak 1.11 GB RSS, process-tree PSS peak 3.04 GB (target
+  2 GB missed; transient is native and sits in the collector slots - not localised).
+- `fleet_master_v4` over eleven archives: 695 routes re-flown through SCvx in 1020 s (8 workers,
+  0 failures), 903 columns, DFS 2 M nodes then LP B&B (635 LPs, 1.0 s): **19 ships, 158
+  asteroids (154 mined), 10 700.48 kg**, GTOC12_Verify "Check successfully!", independent ok
+  (121 km max propagation error, 9.5e-11 kg), fixed-bonus 10 146.60 vs LP bound 10 159.66 (gap
+  13.1 kg, proven optimal over the archive; LP infeasible at 20 ships), rule 19 <= 19.027.
+  Sources: v6 10, probe_v6 1, v5 3, v5c 2, v4 2, fleet10/coop 1. No cooperative column.
+- Leg stats (`after_v6.json`), best fleet before -> after: collect hop median 87.1 -> 84.4 kg,
+  p75 115.3 -> 104.1, p90 140.0 -> 133.9, share <= 75 kg 0.292 -> 0.342 (references 66 kg /
+  0.44-0.46), TOF median unchanged 240 d (references 181-187); deploy hop median 98.9 -> 91.3
+  (references 96-101); Earth-out 411.8 -> 414.6; Earth return 226.5 -> 279.3 (references
+  208-216). Per-ship hop propellant 1492 -> 1431 kg.
+- Calibration residuals (holdout 2925 hops): rms 0.093 vs 0.111 ratio-only vs 0.123 flat;
+  propellant error median -0.9 kg, p10 -11.5, p90 +5.0, rms 12.2 kg.
+- Viewer: `export-viewer` for `fleet_master_v4` (8.5 MB, title "... (19 ships, 10700.5 kg)");
+  v2 importer via Windows node: 19 ships, 158 asteroids, 9643 replay samples, hashes ok, Kepler
+  cross-check 3.57e-6 km over 59 356 points; data stays ignored.
+- Commits: b91b334 (code), 61469d4 (memory interim), 237f5b0 (v6 / probe_v6 / fleet_master_v4
+  artifacts, calibration fit, leg stats), docs + memory follow.
+- Next bottleneck: Earth return (+65 kg vs references, cheapest ~50 kg per ship -> the 20th
+  ship), then the collect-hop phase at the harvest window (84 vs 66 kg, 240 vs 181 d) via
+  harvest-window pair costs in the deploy beam; worker memory transient to localise.
