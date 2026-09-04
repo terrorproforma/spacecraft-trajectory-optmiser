@@ -581,7 +581,46 @@ def _optional_bonus(loader):
         return None
 
 
-BUDGET_MARKS_MINUTES = (30, 60, 120, 240)
+BUDGET_MARKS_MINUTES = (30, 60, 120, 240, 480)
+
+
+def cluster_band_partitions(args: argparse.Namespace) -> list[tuple[str, Any]]:
+    """The family partitions of a cluster-fleet run: one per radius x band set.
+
+    ``--cluster-radius`` accepts a comma-separated list; ``--all-family-bands`` prices both the
+    collect-window families (``--collect-epoch-families``) and the phasing-aware deploy/collect
+    families for every radius.  Deterministic order: radii as given, collect-window first.
+    """
+
+    from .clusters import ClusterBands
+
+    radii = [float(item) for item in str(args.cluster_radius).split(",") if item.strip()]
+    if not radii:
+        raise ValueError("--cluster-radius needs at least one radius")
+    all_bands = bool(getattr(args, "all_family_bands", False))
+    partitions: list[tuple[str, Any]] = []
+    for radius in radii:
+        tag = f"{radius:g}"
+        if args.collect_epoch_families or all_bands:
+            partitions.append(
+                (
+                    f"collect_r{tag}",
+                    ClusterBands.collect_window(radius=radius, phase_deg=args.cluster_phase_deg),
+                )
+            )
+        if not args.collect_epoch_families or all_bands:
+            kind = "static" if args.static_families else "phasing"
+            partitions.append(
+                (
+                    f"{kind}_r{tag}",
+                    ClusterBands(
+                        radius=radius,
+                        phase_deg=args.cluster_phase_deg,
+                        visit_epochs=None if args.static_families else ClusterBands().visit_epochs,
+                    ),
+                )
+            )
+    return partitions
 
 
 def cmd_cluster_fleet(args: argparse.Namespace) -> int:
@@ -599,11 +638,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         bundle_columns,
         bundle_settings_summary,
         cluster_search_settings,
-        family_clusters,
+        family_partitions,
         price_clusters,
-        rank_families,
     )
-    from .clusters import ClusterBands
     from .cooperative import FleetColumn, solve_fleet_master
     from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
@@ -624,23 +661,16 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
             for asteroid in catalogue.ids
         }
     ids = catalogue_pool(catalogue, args)
-    if args.collect_epoch_families:
-        bands = ClusterBands.collect_window(
-            radius=args.cluster_radius, phase_deg=args.cluster_phase_deg
-        )
-    else:
-        bands = ClusterBands(
-            radius=args.cluster_radius,
-            phase_deg=args.cluster_phase_deg,
-            visit_epochs=None if args.static_families else ClusterBands().visit_epochs,
-        )
-    clusters = family_clusters(catalogue, ids, bands=bands, min_members=args.min_members)
-    # cheapest families first (Earth access + internal hops over the visit epochs), not largest
-    ranked = rank_families(
+    partitions = cluster_band_partitions(args)
+    bands = partitions[0][1]
+    # cheapest families first (Earth access + internal hops over the visit epochs), not largest;
+    # several partitions (radii x band sets) are unioned without duplicate member sets
+    ranked = family_partitions(
         catalogue,
-        clusters,
-        cluster_search_settings(ClusterPricingSettings(), 2),
-        visit_epochs=bands.phase_epochs,
+        ids,
+        bands=partitions,
+        min_members=args.min_members,
+        settings=cluster_search_settings(ClusterPricingSettings(), 2),
     )
     if args.families:
         wanted = {int(item) for item in args.families.split(",") if item.strip()}
@@ -696,6 +726,18 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
                 "phasing_aware": bands.visit_epochs is not None,
                 "collect_epoch_families": bool(args.collect_epoch_families),
             },
+            "partitions": [
+                {
+                    "name": name,
+                    "radius": band.radius,
+                    "phase_deg": band.phase_deg,
+                    "visit_epochs": list(band.phase_epochs),
+                    "phase_weights": list(band.epoch_weights),
+                    "phasing_aware": band.visit_epochs is not None,
+                    "families": sum(1 for _l, _m, s in ranked if s["partition"] == name),
+                }
+                for name, band in partitions
+            ],
             "families_priced": [
                 {"label": int(label), "members": int(members.shape[0]), **family_stats[label]}
                 for label, members in clusters
@@ -1477,7 +1519,16 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="comma-separated family labels to price (default: all, cheapest first)",
     )
     cluster.add_argument("--min-members", type=int, default=12)
-    cluster.add_argument("--cluster-radius", type=float, default=1.5)
+    cluster.add_argument(
+        "--cluster-radius",
+        default="1.5",
+        help="neighbourhood radius in band units; a comma-separated list unions the partitions",
+    )
+    cluster.add_argument(
+        "--all-family-bands",
+        action="store_true",
+        help="price both the collect-window and the phasing-aware families of every radius",
+    )
     cluster.add_argument("--cluster-phase-deg", type=float, default=8.0)
     cluster.add_argument("--max-ships", type=int, default=100)
     cluster.add_argument("--node-cap", type=int, default=200_000, help="master node cap")
