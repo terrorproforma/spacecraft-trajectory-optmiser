@@ -20,18 +20,20 @@ const requiredIds = [
   "mission-timeline-output", "mission-play-button", "mission-play-icon", "mission-play-label",
   "focus-ship-button", "fleet-reset-button", "fleet-summary", "ship-detail", "ship-detail-title",
   "fleet-legend", "hover-tooltip", "fleet-provenance-content", "event-labels",
+  // Perspective 3D controls (camera presets, follow-ship, vertical exaggeration, playback speed).
+  "speed-select", "camera-presets", "follow-ship-button", "exaggeration", "exaggeration-output", "legend-ships",
 ];
 
-const [dataBytes, manifestBytes, htmlBytes, appBytes, cssBytes, gtocBytes, webglBytes, keplerBytes] = await Promise.all([
+const [dataBytes, manifestBytes, htmlBytes, appBytes, cssBytes, gtocBytes, webglBytes, keplerBytes, cameraBytes] = await Promise.all([
   read("data/trajectories.json"), read("data/manifest.json"), read("index.html"),
-  read("app.js"), read("styles.css"), read("gtoc12.js"), read("webgl.js"), read("kepler.js"),
+  read("app.js"), read("styles.css"), read("gtoc12.js"), read("webgl.js"), read("kepler.js"), read("camera.js"),
 ]);
 const data = JSON.parse(dataBytes);
 const manifest = JSON.parse(manifestBytes);
 const html = htmlBytes.toString();
 const app = appBytes.toString();
 const css = cssBytes.toString();
-const modules = `${app}\n${gtocBytes}\n${webglBytes}\n${keplerBytes}`;
+const modules = `${app}\n${gtocBytes}\n${webglBytes}\n${keplerBytes}\n${cameraBytes}`;
 
 // Two dataset kinds share the viewer: the verified archive (default) and planner
 // exports written by `spacepdhcg plan --export-viewer`.  Archive-specific assertions
@@ -114,11 +116,21 @@ assert.match(app, /webglcontextlost/);
 assert.match(app, /webglcontextrestored/);
 assert.match(app, /data\/gtoc12\/fleet\.json/, "GTOC12 dataset is fetched from data/gtoc12/");
 assert.match(html, /<option value="gtoc12"/, "dataset selector offers the GTOC12 fleet");
-assert.match(html, /straight segments between exact archived samples/i, "straight-segment caveat in the fleet legend");
+assert.match(html, /segments connect exact archived samples — no interpolation/i, "straight-segment caveat in the fleet legend");
+assert.match(html, /Vertical exaggeration — <em>not physical<\/em>/, "exaggeration slider is labelled as not physical");
+assert.match(html, /id="exaggeration"[\s\S]*?value="6"/, "the fleet view opens at 6x vertical exaggeration");
+assert.match(css, /#trajectory-canvas \{[^}]*height: max\(560px, 72vh\)/, "canvas fills >= 72% of the window height on desktop");
+for (const name of ["BACKGROUND_VERTEX", "TUBE_VERTEX", "drawArraysInstanced", "drawElements", "tubeArrays", "fogUniforms"]) {
+  assert.ok(gtocBytes.toString().includes(name), `${name} is used by the fleet renderer (instanced spheres, tube arcs, fog, procedural sky)`);
+}
+for (const preset of ["top", "oblique", "edge", "follow"]) assert.match(html, new RegExp(`data-preset="${preset}"`), `camera preset ${preset}`);
+assert.match(app, /from "\.\/camera\.js"/);
+for (const name of ["BODY_VERTEX", "STAR_VERTEX", "uZScale", "starField", "concatRibbons"]) assert.match(`${gtocBytes}\n${webglBytes}`, new RegExp(name), `3D scene uses ${name}`);
 assert.doesNotMatch(`${html}\n${css}\n${modules}`, /https?:\/\/(?!localhost|127\.0\.0\.1)/i, "No external URLs");
 // Ship colours are duplicated between gtoc12.js and styles.css because the CSP forbids inline styles.
-const shipColours = [...String(gtocBytes).matchAll(/"(#[0-9a-f]{6})"/g)].map((match) => match[1]).slice(0, 15);
-assert.equal(shipColours.length, 15, "fifteen ship colours");
+const shipColours = [...String(gtocBytes).matchAll(/"(#[0-9a-f]{6})"/g)].map((match) => match[1]).slice(0, 20);
+assert.equal(shipColours.length, 20, "twenty ship colours");
+assert.equal(new Set(shipColours).size, 20, "ship colours are distinct");
 shipColours.forEach((colour, index) => assert.match(css, new RegExp(`\\.ship-colour-${index + 1} \\{ color: ${colour}; \\}`), `ship colour ${index + 1} in styles.css`));
 assert.match(css, /\[hidden\] \{ display: none !important; \}/, "hidden panels stay hidden");
 
@@ -184,11 +196,13 @@ if (!fleetBytes) {
     collected += shipCollected;
   }
   assert.ok(Math.abs(collected - fleet.score.total_collected_kg) < 1e-6, "fleet collected mass from events");
-  assert.equal(Math.round(collected * 100) / 100, fleet.score.official_total_mass_kg, "official score equals summed collects to 0.01 kg");
+  // The official verifier prints six significant digits (7575.58, 10700.5), so compare at that precision.
+  assert.equal(Number(collected.toPrecision(6)), fleet.score.official_total_mass_kg, "official score equals summed collects to 6 significant digits");
+  assert.ok(fleet.ships.length <= 20, "ship palette covers every ship without wrapping");
   for (const asteroid of fleet.asteroids) {
     assert.ok(asteroid.a_au > 0 && asteroid.e >= 0 && asteroid.e < 1 && asteroid.epoch_mjd === 64328, `asteroid ${asteroid.id} elements`);
     assert.ok(asteroid.visited_by.every((shipId) => fleet.ships.some((ship) => ship.ship_id === shipId && ship.asteroids.includes(asteroid.id))), `asteroid ${asteroid.id} visitors`);
   }
-  console.log(`Validated GTOC12 fleet ${fleet.run_id}: ${fleet.ships.length} ships, ${fleet.asteroids.length} asteroids, ${fleet.ships.reduce((sum, ship) => sum + ship.replay.point_count, 0)} exact replay samples, ${fleet.score.official_total_mass_kg} kg`);
+  console.log(`Validated GTOC12 fleet ${fleet.run_id}: ${fleet.ships.length} ships, ${fleet.asteroids.length} asteroids, ${fleet.ships.reduce((sum, ship) => sum + ship.replay.point_count, 0)} exact replay samples, ${collected.toFixed(2)} kg collected (official verifier ${fleet.score.official_total_mass_kg} kg)`);
   console.log(`Fleet SHA-256 ${fleetManifest.files["fleet.json"].sha256} · solution ${fleet.source.solution_sha256}`);
 }

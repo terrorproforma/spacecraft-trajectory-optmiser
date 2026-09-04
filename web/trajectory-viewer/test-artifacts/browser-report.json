@@ -20,25 +20,63 @@
   },
   "gtoc12": {
     "installed": true,
-    "title": "GTOC12 verified fleet fleet_master_v1_fleet — 15 ships, 109 asteroids, 7575.58 kg",
-    "ships": 15,
-    "asteroids": 109,
-    "official_kg": 7575.58,
+    "title": "GTOC12 verified fleet fleet_master_v4_fleet — 19 ships, 158 asteroids, 10700.48 kg",
+    "run_id": "fleet_master_v4_fleet",
+    "ships": 19,
+    "asteroids": 158,
+    "collected_kg": 10700.48,
+    "official_kg": 10700.5,
+    "followed_ship": 15,
+    "follow_epoch": 68503,
     "screenshots": [
-      "gtoc12-fleet-heliocentric.png",
-      "gtoc12-desktop-fullpage.png",
-      "gtoc12-timeline-mid-mission.png",
-      "gtoc12-ship4-hop-sequence.png",
-      "gtoc12-mobile.png"
+      "gtoc12-3d-oblique-fleet.png",
+      "gtoc12-3d-desktop-window.png",
+      "gtoc12-3d-desktop-fullpage.png",
+      "gtoc12-3d-edge-on.png",
+      "gtoc12-3d-timeline-mid-mission.png",
+      "gtoc12-3d-follow-ship.png",
+      "gtoc12-3d-ship-arc-framed.png",
+      "gtoc12-3d-frame-01.png",
+      "gtoc12-3d-frame-02.png",
+      "gtoc12-3d-frame-03.png",
+      "gtoc12-3d-frame-04.png",
+      "gtoc12-3d-frame-05.png",
+      "gtoc12-3d-frame-06.png",
+      "gtoc12-3d-frame-07.png",
+      "gtoc12-3d-frame-08.png",
+      "gtoc12-3d-frame-09.png",
+      "gtoc12-3d-frame-10.png",
+      "gtoc12-3d-mobile.png"
     ],
+    "gl": {
+      "antialias": true,
+      "depth": true,
+      "depthTest": true,
+      "devicePixelRatio": 1,
+      "drawingBuffer": [
+        1082,
+        648
+      ],
+      "instances": 179,
+      "tubeSides": 6
+    },
     "interactions": [
       "absent-dataset-degrade",
-      "select",
+      "presets",
+      "exaggeration-default-6x",
+      "full-bleed",
+      "wheel-dolly-to-cursor",
+      "transition",
       "timeline",
-      "focus",
-      "hover-tooltip",
-      "click-select",
+      "counters",
+      "follow",
       "play",
+      "frame-arc",
+      "hover-tooltip",
+      "hover-highlight",
+      "click-select",
+      "inertia",
+      "speed",
       "dataset-switch",
       "mobile"
     ]
@@ -66,11 +104,15 @@
     },
     {
       "status": 200,
+      "url": "http://127.0.0.1:4173/kepler.js"
+    },
+    {
+      "status": 200,
       "url": "http://127.0.0.1:4173/webgl.js"
     },
     {
       "status": 200,
-      "url": "http://127.0.0.1:4173/kepler.js"
+      "url": "http://127.0.0.1:4173/camera.js"
     },
     {
       "status": 200,
