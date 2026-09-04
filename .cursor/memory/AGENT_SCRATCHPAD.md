@@ -25,6 +25,10 @@ Use this file as persistent, repo-local execution memory.
 - `[self]` Preserve machine-readable failures and censored benchmark points; report matched end-to-end nonlinear quality.
 - `[self]` Never use backslash-sensitive Perl through PowerShell/WSL for line endings; it changed `return`/`pattern` tokens. Use PowerShell `ReadAllText().Replace("`r`n", "`n")`, then rebuild.
 - `[self]` Run every GPU executable, QOCO test, and Compute Sanitizer command serially. A 2026-09-02 session briefly overlapped a native QOCO handback test; terminate, exclude, and rerun both commands independently.
+- `[tool]` PowerShell -> `wsl -e bash -lc '...'` strips inner double quotes and backslashes. A quoted regex such as `grep -E "a|b|c"` becomes the pipeline `grep a | b | c` and *executes* `b` and `c` (on 2026-09-04 it launched the `grok`, `agent`, `claude` and `codex` CLIs). Put every non-trivial command in a script file, copy it into WSL with `sed "s/.$//"` (CRLF strip), then run it.
+- `[tool]` The Write tool emits CRLF even for `\\wsl$` paths; StrReplace on an LF file keeps LF. Normalise every newly written file with a Python `replace(b"\r\n", b"\n")` before building or committing.
+- `[self]` Never issue several StrReplace calls against one file in the same batch: they race, some report "not found" after another's write, and the result can mix variable names. Edit one file sequentially and re-read the region afterwards.
+- `[self]` A GPU kernel that reads a mapped host flag must do so through one thread plus shared memory (`poll_cancellation`); per-thread `volatile` reads before `__syncthreads()` are a barrier-divergence hazard. Every long device loop (CGLS, projections, refinements) needs its own poll or a cross-thread cancel cannot bound it.
 
 ### Retained lessons carried from the Windows checkout (rolled over there on 2026-09-05)
 
@@ -1410,64 +1414,6 @@ Use this file as persistent, repo-local execution memory.
   CSC topology and G4 policy hashes and must be scheduled with a reseal.
 - This scratchpad is ~1,250 lines; roll it over (archive-first) at the next consolidation.
 
-### 2026-09-03 05:40 AEST - Literature gap closure (fuel gap, MEE multirev, native free final time)
-
-#### Task Summary
-
-- Closed the three gaps left by the reference reproduction on `feat/literature-targets`:
-  repository 3-DoF SCvx fuel gap (accurate discretisation option), multi-revolution low thrust
-  (MEE formulation), native free final time (`pd3_fft`/`pd6_fft` topologies, CUDA kernels built
-  but not executed), plus preflight-gated deferred GPU legs. Commits `d81c528`, `57cee5c`,
-  `1fa99ae`, `8e18b93` and the report commit after it.
-
-#### Mistakes And Fixes
-
-- `[self]` The 6-14 kg fuel gap was three coupled defects, not one: forward-Euler ZOH
-  discretisation (3.8 / 1.2 kg of it is the Euler *discrete optimum* itself), a single-shooting
-  merit that rejected every improving step once the rollout error dominated, and the frozen
-  virtual weight 1e5 with a stop that never fired. Fixing only the integrator left the solver
-  stalled; the multiple-shooting merit with a CQP-consistent defect penalty and an
-  objective-stall stop were required. Diagnose stall vs. optimum first (trace iterations).
-- `[self]` Blackmore 2010 module constant used the raw `alpha` while the profile document said
-  `cant-corrected`; only the profile document is authoritative - a test now freezes agreement.
-- `[self]` The Szmuk 2018 native reproduction converged to t_f ~ 2.97 UT because the attitude
-  tilt cone `|[q_x, q_y]| <= sqrt((1 - cos theta_max)/2)` was missing from `pd6_fft`, and the
-  glide-slope angle is measured from the horizontal in the paper but from the vertical in the
-  native model. Check every angle convention and every active constraint before tuning weights.
-- `[self]` Hard trust regions near feasibility: numerical noise in the defect term biased the
-  agreement ratio and collapsed the radius; zeroing the penalty below `defect_tolerance` fixed it.
-- `[self]` Default-argument binding (`command_line_of=_read_command_line`) defeated
-  monkeypatching in tests; resolve module-level callables lazily inside the function.
-- `[self]` Python `pytest.mark.slow` is not registered (`--strict-markers`); do not add markers.
-- `[tool]` PowerShell mangles quotes in `wsl -e bash -c "..."` (python -c, `$PATH`, heredocs);
-  write every non-trivial command to a `.sh`/`.py` under `%TEMP%`, `tr -d '\r'` it into `/tmp`,
-  and run that. `results/` is gitignored but tracked: `git add -f` for the record files.
-- `[self]` Central-difference sigma checks on the 6-DoF model are stiff under large direct
-  torque; use small torques in oracle tests rather than loosening tolerances.
-
-#### What Worked
-
-- Variational RK4 (exact Jacobian of the RK4 map, verified to 1e-9) plugged into the existing
-  fixed CSC pattern - the frozen Euler default and its fixture hashes are untouched; the accurate
-  path is an explicit option that the literature profiles select.
-- MEE with true-longitude revolution bookkeeping + Keplerian-spiral seed + trust-weight schedule
-  converged Dionysus (2717.43 vs 2718.33 kg) and TOPS P3/P1 where Cartesian SCvx never did.
-- Sigma-augmented variational RK4 as one shared header serves the C++ smoke tests, both
-  transcriptions and the CUDA kernel line by line, so CPU/GPU parity is structural.
-- The G4 preflight (`nvidia-smi` PIDs -> `/proc/<pid>/cmdline`) refused correctly all session.
-
-#### Guardrails / Follow-Ups
-
-- Deferred until `spacepdhcg literature gpu-preflight` passes (run serially): CUDA
-  `device_time_dilated_test`, one compute-sanitizer memcheck/racecheck pass over it,
-  `spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1
-  chari-2024-pd6-monte-carlo`.
-- The Chari CPU batch convergence probability is low (0-5 %) because the FOH core stops at the
-  iteration limit on dispersed initial states; that is the remaining P1-D-MC `gap`.
-- Rebuild the Release library (`SPACEPDHCG_NATIVE_LIBRARY`) before running
-  `tests/test_native_free_time.py`; it needs the `spacepdhcg_pd6_fft_create` symbol.
-- Scratchpad is ~1,330 lines; roll over (archive-first) at the next consolidation.
-
 ### 2026-09-03 02:40 AEST - GTOC12 replay track (feat/gtoc12-asteroid-mining)
 
 #### Task Summary
@@ -1617,6 +1563,64 @@ Use this file as persistent, repo-local execution memory.
   and a joint re-timing pass that spends the margin on faster hops.
 - Greedy fleets thin the clusters for later ships (548 / 442 / 404 kg); joint assignment via the
   G7 master is the natural upgrade.
+
+### 2026-09-03 05:40 AEST - Literature gap closure (fuel gap, MEE multirev, native free final time)
+
+#### Task Summary
+
+- Closed the three gaps left by the reference reproduction on `feat/literature-targets`:
+  repository 3-DoF SCvx fuel gap (accurate discretisation option), multi-revolution low thrust
+  (MEE formulation), native free final time (`pd3_fft`/`pd6_fft` topologies, CUDA kernels built
+  but not executed), plus preflight-gated deferred GPU legs. Commits `d81c528`, `57cee5c`,
+  `1fa99ae`, `8e18b93` and the report commit after it.
+
+#### Mistakes And Fixes
+
+- `[self]` The 6-14 kg fuel gap was three coupled defects, not one: forward-Euler ZOH
+  discretisation (3.8 / 1.2 kg of it is the Euler *discrete optimum* itself), a single-shooting
+  merit that rejected every improving step once the rollout error dominated, and the frozen
+  virtual weight 1e5 with a stop that never fired. Fixing only the integrator left the solver
+  stalled; the multiple-shooting merit with a CQP-consistent defect penalty and an
+  objective-stall stop were required. Diagnose stall vs. optimum first (trace iterations).
+- `[self]` Blackmore 2010 module constant used the raw `alpha` while the profile document said
+  `cant-corrected`; only the profile document is authoritative - a test now freezes agreement.
+- `[self]` The Szmuk 2018 native reproduction converged to t_f ~ 2.97 UT because the attitude
+  tilt cone `|[q_x, q_y]| <= sqrt((1 - cos theta_max)/2)` was missing from `pd6_fft`, and the
+  glide-slope angle is measured from the horizontal in the paper but from the vertical in the
+  native model. Check every angle convention and every active constraint before tuning weights.
+- `[self]` Hard trust regions near feasibility: numerical noise in the defect term biased the
+  agreement ratio and collapsed the radius; zeroing the penalty below `defect_tolerance` fixed it.
+- `[self]` Default-argument binding (`command_line_of=_read_command_line`) defeated
+  monkeypatching in tests; resolve module-level callables lazily inside the function.
+- `[self]` Python `pytest.mark.slow` is not registered (`--strict-markers`); do not add markers.
+- `[tool]` PowerShell mangles quotes in `wsl -e bash -c "..."` (python -c, `$PATH`, heredocs);
+  write every non-trivial command to a `.sh`/`.py` under `%TEMP%`, `tr -d '\r'` it into `/tmp`,
+  and run that. `results/` is gitignored but tracked: `git add -f` for the record files.
+- `[self]` Central-difference sigma checks on the 6-DoF model are stiff under large direct
+  torque; use small torques in oracle tests rather than loosening tolerances.
+
+#### What Worked
+
+- Variational RK4 (exact Jacobian of the RK4 map, verified to 1e-9) plugged into the existing
+  fixed CSC pattern - the frozen Euler default and its fixture hashes are untouched; the accurate
+  path is an explicit option that the literature profiles select.
+- MEE with true-longitude revolution bookkeeping + Keplerian-spiral seed + trust-weight schedule
+  converged Dionysus (2717.43 vs 2718.33 kg) and TOPS P3/P1 where Cartesian SCvx never did.
+- Sigma-augmented variational RK4 as one shared header serves the C++ smoke tests, both
+  transcriptions and the CUDA kernel line by line, so CPU/GPU parity is structural.
+- The G4 preflight (`nvidia-smi` PIDs -> `/proc/<pid>/cmdline`) refused correctly all session.
+
+#### Guardrails / Follow-Ups
+
+- Deferred until `spacepdhcg literature gpu-preflight` passes (run serially): CUDA
+  `device_time_dilated_test`, one compute-sanitizer memcheck/racecheck pass over it,
+  `spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1
+  chari-2024-pd6-monte-carlo`.
+- The Chari CPU batch convergence probability is low (0-5 %) because the FOH core stops at the
+  iteration limit on dispersed initial states; that is the remaining P1-D-MC `gap`.
+- Rebuild the Release library (`SPACEPDHCG_NATIVE_LIBRARY`) before running
+  `tests/test_native_free_time.py`; it needs the `spacepdhcg_pd6_fft_create` symbol.
+- Scratchpad is ~1,330 lines; roll over (archive-first) at the next consolidation.
 
 ### 2026-09-03 06:20 AEST - Single-GPU v2 candidate consolidation (WSL, CPU only)
 
@@ -1779,63 +1783,6 @@ Use this file as persistent, repo-local execution memory.
 - Promotion of the candidate to `integration/single-gpu-v1` is unchanged (ff-only after the
   claim-core finish script); this fix is one extra commit on the candidate.
 
-### 2026-09-04 01:40 AEST - GTOC12 fleet visualisation in the WebGL viewer (WSL + Windows, CPU only)
-
-#### Task Summary
-
-- Regenerated and verified the fleet_master_v1 viewer export, extended `web/trajectory-viewer` with
-  a dataset selector and a Sun-centred GTOC12 fleet view (Keplerian Earth/asteroid orbits, per-ship
-  arcs, deploy/collect markers, mission timeline, picking), captured browser screenshots and a
-  matplotlib fallback, committed on `integration/single-gpu-v2-candidate`.
-
-#### Mistakes And Fixes
-
-- [self] UA `[hidden]` lost to author `display: grid` on `.controls-panel`/`.dataset-panel`, so
-  archive panels stayed visible in fleet mode. Fix: `[hidden] { display: none !important; }`.
-  Preventive rule: every toggled panel with a `display:` class rule needs the global override.
-- [self] Switching renderers on one WebGL2 context left enabled vertex attribs pointing at deleted
-  buffers ("no buffer is bound to enabled attribute" warnings). Fix: `dispose()` disables all attrib
-  arrays and unbinds before deleting buffers/programs.
-- [self] `focusShip` at 2.3 r with a 45° vertical FOV cropped bounding-sphere extremes off-canvas and
-  the hover test hit nothing. Fix: distance 3 r; the test asserts the projected marker is inside the
-  canvas before hovering.
-- [tool] Playwright reports `requestfailed net::ERR_ABORTED` for a `HEAD` fetch on Chromium although
-  `response.ok` is true; probe optional datasets with GET (1.7 KB manifest).
-- [tool] Playwright actions have no default timeout, so a failing actionability check hangs
-  forever, and an uncaught assertion leaves the browser open (node never exits). Always
-  `page.setDefaultTimeout(...)` and close the browser in `finally`.
-- [tool] The server CSP `style-src 'self'` forbids inline `style=` attributes but not CSSOM; per-ship
-  colours live in `.ship-colour-N` classes (check.mjs asserts parity with `SHIP_COLOURS`), tooltips
-  and event labels are positioned through `element.style`.
-- [tool] Linux node 20 prints TAP (`ok N - …`, `# pass N`), not the `✔` reporter; grep accordingly.
-  `tests/server.test.mjs` used `pathname.slice(1)` (Windows-only) → `fileURLToPath`.
-
-#### What Worked
-
-- Regenerating the export into a fresh ignored directory (`results/gtoc12/viewer-exports/…`) kept
-  the GTOC12 worktree's tracked `fleet/viewer/manifest.json` untouched while its campaign ran; the
-  only difference from the committed export is the commit string.
-- Attaching pinned Keplerian elements at import and cross-checking the JS propagation against the
-  exporter's 41k context points (3.5e-6 km) gives exact Earth/asteroid positions at any epoch
-  without shipping 6 MB of sampled orbits.
-- Event markers are the transcription nodes (exact archived body states), so deploy/collect
-  positions need no ephemeris lookup and the legend can honestly say "no interpolation".
-
-#### Guardrails For Next Session
-
-- The v2 candidate is authoritative for the viewer; sync the Windows mirror with `tr -d '\r'` and
-  compare with `diff -rq --strip-trailing-cr` before committing anywhere.
-- `web/trajectory-viewer/data/gtoc12/` is ignored; regenerate with `npm run import-gtoc12 -- --export …
-  --catalogue … [--solution … --fleet …]` (README); `check.mjs` validates it only when present.
-- Browser check needs `PLAYWRIGHT_PATH=C:/Users/Angus/AppData/Local/Temp/ptd-browser/node_modules/playwright`
-  (Playwright 1.62.1, chromium-1234) and `npm run serve` on 4173; WSL has the browsers but no module.
-
-#### Follow-Ups / Risks
-
-- `cluster_fleet_v4` was still running at commit time (best 6975.69 kg / 14 ships < 7575.58);
-  export + import any fleet that beats fleet_master_v1.
-- The exporter title constant says "reduced-instance" for full-catalogue fleets; fix on the gtoc12
-  branch when it is next touched.
 ### 2026-09-03 09:00 AEST - GTOC12 track: joint re-timing, clusters, cooperative master (feat/gtoc12-asteroid-mining)
 
 #### Mistakes And Fixes
@@ -2111,6 +2058,63 @@ Use this file as persistent, repo-local execution memory.
 - `test_native_library_is_packaged_and_abi_compatible` fails in this worktree because no native
   library is built here; deselect it, do not "fix" it.
 
+### 2026-09-04 01:40 AEST - GTOC12 fleet visualisation in the WebGL viewer (WSL + Windows, CPU only)
+
+#### Task Summary
+
+- Regenerated and verified the fleet_master_v1 viewer export, extended `web/trajectory-viewer` with
+  a dataset selector and a Sun-centred GTOC12 fleet view (Keplerian Earth/asteroid orbits, per-ship
+  arcs, deploy/collect markers, mission timeline, picking), captured browser screenshots and a
+  matplotlib fallback, committed on `integration/single-gpu-v2-candidate`.
+
+#### Mistakes And Fixes
+
+- [self] UA `[hidden]` lost to author `display: grid` on `.controls-panel`/`.dataset-panel`, so
+  archive panels stayed visible in fleet mode. Fix: `[hidden] { display: none !important; }`.
+  Preventive rule: every toggled panel with a `display:` class rule needs the global override.
+- [self] Switching renderers on one WebGL2 context left enabled vertex attribs pointing at deleted
+  buffers ("no buffer is bound to enabled attribute" warnings). Fix: `dispose()` disables all attrib
+  arrays and unbinds before deleting buffers/programs.
+- [self] `focusShip` at 2.3 r with a 45° vertical FOV cropped bounding-sphere extremes off-canvas and
+  the hover test hit nothing. Fix: distance 3 r; the test asserts the projected marker is inside the
+  canvas before hovering.
+- [tool] Playwright reports `requestfailed net::ERR_ABORTED` for a `HEAD` fetch on Chromium although
+  `response.ok` is true; probe optional datasets with GET (1.7 KB manifest).
+- [tool] Playwright actions have no default timeout, so a failing actionability check hangs
+  forever, and an uncaught assertion leaves the browser open (node never exits). Always
+  `page.setDefaultTimeout(...)` and close the browser in `finally`.
+- [tool] The server CSP `style-src 'self'` forbids inline `style=` attributes but not CSSOM; per-ship
+  colours live in `.ship-colour-N` classes (check.mjs asserts parity with `SHIP_COLOURS`), tooltips
+  and event labels are positioned through `element.style`.
+- [tool] Linux node 20 prints TAP (`ok N - …`, `# pass N`), not the `✔` reporter; grep accordingly.
+  `tests/server.test.mjs` used `pathname.slice(1)` (Windows-only) → `fileURLToPath`.
+
+#### What Worked
+
+- Regenerating the export into a fresh ignored directory (`results/gtoc12/viewer-exports/…`) kept
+  the GTOC12 worktree's tracked `fleet/viewer/manifest.json` untouched while its campaign ran; the
+  only difference from the committed export is the commit string.
+- Attaching pinned Keplerian elements at import and cross-checking the JS propagation against the
+  exporter's 41k context points (3.5e-6 km) gives exact Earth/asteroid positions at any epoch
+  without shipping 6 MB of sampled orbits.
+- Event markers are the transcription nodes (exact archived body states), so deploy/collect
+  positions need no ephemeris lookup and the legend can honestly say "no interpolation".
+
+#### Guardrails For Next Session
+
+- The v2 candidate is authoritative for the viewer; sync the Windows mirror with `tr -d '\r'` and
+  compare with `diff -rq --strip-trailing-cr` before committing anywhere.
+- `web/trajectory-viewer/data/gtoc12/` is ignored; regenerate with `npm run import-gtoc12 -- --export …
+  --catalogue … [--solution … --fleet …]` (README); `check.mjs` validates it only when present.
+- Browser check needs `PLAYWRIGHT_PATH=C:/Users/Angus/AppData/Local/Temp/ptd-browser/node_modules/playwright`
+  (Playwright 1.62.1, chromium-1234) and `npm run serve` on 4173; WSL has the browsers but no module.
+
+#### Follow-Ups / Risks
+
+- `cluster_fleet_v4` was still running at commit time (best 6975.69 kg / 14 ships < 7575.58);
+  export + import any fleet that beats fleet_master_v1.
+- The exporter title constant says "reduced-instance" for full-catalogue fleets; fix on the gtoc12
+  branch when it is next touched.
 ### 2026-09-04 02:30 AEST - GTOC12 per-ship mass levers: campaign v4 + fleet_master_v2 (closed)
 
 #### Task Summary
@@ -2488,3 +2492,53 @@ Use this file as persistent, repo-local execution memory.
   protocol-v2 experiment); the branch is pushed for provenance.
 - Commits landing on `integration/single-gpu-v1` / `feat/gtoc12-asteroid-mining` after
   addac2b / 4dd4fdb (concurrent workers) are not in main; merge them in a later pass.
+### 2026-09-05 02:40 AEST - Ordinal-73 deadline defect (recovery kernel cancellation)
+
+#### Task Summary
+
+- Reproduced, root-caused and fixed the G4 attempt-deadline overrun of campaign
+  g4-claim-core-4db5047 ordinal 73 in the recovery kernel's unpolled phases; added a native
+  cancellation stress test and a GPU pytest deadline matrix; committed and bundled.
+
+#### Mistakes And Fixes
+
+- `[tool]` Quoted `|` regexes passed through `wsl -e bash -lc` became pipelines and launched
+  `grok`, `agent`, `claude`, `codex`. Killing strays also killed a pre-existing Codex app-server
+  (pid 400). Rule: every non-trivial command goes in a script file first (see Retained Lessons).
+- `[self]` Four StrReplace calls on one file in one batch raced and produced a mixed variable name;
+  re-read the region and repaired it. Sequential edits only.
+- `[self]` Assumed 20 s deadline tests covered the recovery path; they never reach it (300,000 PDHG
+  iterations take ~150 s at N=100). The faithful 600 s single-attempt reproduction was decisive.
+- `[self]` First fix left an N=2000 5 s attempt at 12 s: lazy module loading inside `solve_async`
+  (mutex held, state not SOLVING). Diagnosed with `CUDA_MODULE_LOADING=EAGER`; fixed by pre-loading
+  the solve-path kernels at workspace creation.
+
+#### What Worked
+
+- Per-record wall timestamps around `--g4-session` plus a 5 s `nvidia-smi` sampler separated
+  executor phases from the foreign 220 W Windows workload visible in the observer log.
+- The tiny inconsistent recovery fixture (PDHG 1.1 s, recovery 0.5 s) gives a fast, repeatable
+  probe of cancel latency in every kernel phase; the dishonest full-budget report showed on the
+  first run.
+- Block-uniform polling (`poll_cancellation`) plus per-loop polls bounded every phase within one
+  loop body; the atomic scaling write keeps a cancelled preamble consistent.
+
+#### Guardrails For Next Session
+
+- Any new device loop that can run longer than ~1 s must poll the cancellation flag through
+  `poll_cancellation`; never read the mapped flag per thread before a barrier.
+- Test deadlines against the phase they must interrupt: a deadline that cancels PDHG proves nothing
+  about recovery. Use the 600 s ordinal-73 run (`/tmp/spx/repro_long.sh`) or the stress test.
+- Verify first-attempt behaviour separately from later attempts (module loading, first
+  equilibration) and at N=2000 as well as N=100.
+- Generate a fresh capability from the committed tree before relaunching; the old 4db5047
+  capability pins the pre-fix library hashes.
+
+#### Follow-Ups / Risks
+
+- Cancelled-after-cancelled attempts re-equilibrate because the outer-0 checkpoint predates the
+  first scaling (steps restored to 0): ~5-9 s per attempt at N=2000. Pre-existing and policy
+  neutral; consider checkpointing after the first scaling if attempt fidelity at N=2000 matters.
+- Deterministic replay can trigger when all three lead attempts time out before the first PDHG
+  iteration (identical zero-work traces); impossible at campaign deadlines, rule unchanged.
+- `H100` shipping: the bundle carries the fix; the campaign restart is the operator's decision.
