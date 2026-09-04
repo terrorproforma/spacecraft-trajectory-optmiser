@@ -710,6 +710,9 @@ not needed: reference hops have zero revolutions (p95 0.004).
 | **`fleet_master_v4`** (master over every archived certified route of all eleven runs: 695 routes re-flown through SCvx, 903 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **19** | **158** (154 mined, 4 miners left) | **10700.48 kg** (per-ship table below) | **10146.60 kg** (LP bound 10159.66, gap 13.1 kg) | 324 | — | 1020 s re-certification (8 workers) + 68 s master | 1108 s, 0.45 GB main | CPU |
 | `return_sweep_v1` (SCvx Earth-return sweep + strict re-timing of the 36 best stand-alone archived ships, 3 workers, `nice 19`) | full catalogue | 13 improved of 36 | — | +140.5 kg (improved returns 172–247 kg; best ship 633.3 kg) | — | — | 36 ships × 99–590 s (3 in parallel) | in the re-timing | 2990 s (50 min); main 0.12 GB, worker peak 0.22 GB | CPU |
 | **`fleet_master_v5`** (master over the eleven runs + `return_sweep_v1`: 690 routes re-flown through SCvx, 918 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **20** | **168** (165 mined, 3 miners left) | **11521.42 kg** (576.07 kg average; per-ship table below) | **10573.17 kg** (LP bound 10589.13, gap 16.0 kg; LP infeasible at 21) | 344 | — | 2461 s re-certification (3 workers) + 71 s master | 2552 s, 0.46 GB main | CPU |
+| `cluster_fleet_v7` (seventh campaign: v6 configuration + return TOF model in the DP, bounded DP caches, radius-1.6 / ≥ 18-member families (new partition), 5 ships per family, **3 workers, `nice 19`**; 4 h budget) | full catalogue | 18 | 147 | **9920.47 kg** (551.3 kg average; marks: 60 min 5355.8 / 10 ships, 120 min 8571.1 / 16, 240 min 9922.5 / 18) | 9173.66 kg (LP bound 9186.18, gap 12.5 kg, exhaustive) | — | 25 families × 797–3046 s (3 in parallel), 76 ships | in the family pricing | 14950 s (249 min); main 0.43 GB, worker peak 0.68 GB, **process-tree PSS peak 1.19 GB** | CPU |
+| `return_sweep_v2` (return sweep + re-timing of the 21 best `cluster_fleet_v7` ships, 3 workers) | full catalogue | 13 improved of 21 | — | +225.5 kg (improved returns 159–274 kg; family 7 ship 3 528.3 → 602.9, ship 1 607.8 → 616.4) | — | — | 21 ships (3 in parallel) | in the re-timing | 2181 s (36 min); worker peak 0.21 GB | CPU |
+| **`fleet_master_v6`** (master over all fourteen runs: 779 routes re-flown through SCvx, 1032 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **20** | **168** (164 mined) | **11515.67 kg** (575.78 kg average; 5.8 kg below `v5` in raw mass, 166 kg above it in the score the master optimises) | **10739.27 kg** (LP bound 10744.85, gap 5.6 kg) | 343 | — | 2660 s re-certification (3 workers) + 69 s master | 2749 s, 0.49 GB main | CPU |
 
 Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
 RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
@@ -1118,6 +1121,62 @@ the collect-hop phase remains the next bottleneck and has to be attacked inside 
 the references' 473–486: the DP still prefers a later last collect to a longer return; only the
 SCvx sweep moves it.
 
+**Seventh campaign and the fourteen-archive master.** `cluster_fleet_v7` (3 workers, `nice 19`,
+4 h, radius-1.6 / ≥ 18-member families — a new partition so it does not replay v6, return TOF
+model in the DP, bounded DP caches) priced 25 families / 76 ships in 14 950 s; its own master
+fleet is 9920.47 kg / 18 ships / 551.3 kg average (marks 60 min 5355.8 / 10 ships, 120 min
+8571.1 / 16, 240 min 9922.5 / 18) — below v6's 10 698 kg at 4 workers because 3 workers price
+0.7× the families and this partition's families are larger (up to 35 members; 797–3046 s each
+against v6's 818–2630 s) — but it produced the two richest new columns of the archive (family 11
+ship 1 611.9 kg, family 7 ship 1 607.8 → 616.4 kg after the return sweep) and its DP now ends
+tours earlier: the return TOF median is 480 d (v6 420, references 473–486) at 232.7 kg mean.
+**Process-tree PSS peak 1.19 GB** (v6: 3.04 GB at 4 workers), main 0.43 GB, worker `ru_maxrss`
+peak 0.68 GB — the per-phase marks show the remaining live growth is per-slot state parked for
+the orphan repair (RSS after trim 70 → 184 → 324 → 437 → 535 MB over four slots of a
+35-member family: each slot's DP pair table and Lambert memo), released after the run in
+`RouteSearch.release_caches` / `Retimer.release_caches`. `return_sweep_v2` re-timed 13 of v7's
+21 best ships (+225.5 kg; family 7 ship 3 528.3 → 602.9 kg). `fleet_master_v6` over all
+fourteen archives (779 routes re-flown, 0 failures, 1032 columns — the column DFS overflowed the
+interpreter's 1000-frame recursion limit at this size and now raises it for the search) is
+**proven optimal: fixed-bonus objective 10 739.27 kg vs LP bound 10 744.85 (gap 5.6 kg), 20
+ships, 168 asteroids (164 mined), 11 515.67 kg collected, 575.78 kg average** (rule 20 ≤ 20.01),
+both verifiers ok. It collects 5.8 kg *less* raw mass than `v5` (11 521.42) while scoring 166 kg
+more on the bonus-weighted objective the master optimises — the two fleets share 13 ships; v6
+swaps in the v7 columns (611.9, 616.4, 567.0, 564.3, 542.9 kg) and two `v4` ships for five of
+v5's. Its Earth return is **216.5 kg mean / 216.7 median (references 208–216; return TOF median
+450 d)** — the ≤ 216 kg target of the work list, met to within 0.5 kg — and the collect hop is
+unchanged (84.5 kg / 225 d median; 88.4 mean, p75 111, share ≤ 75 kg 0.32). Per ship (rank,
+source, slot, asteroids, collected kg, final mass kg, refined arcs, launch MJD):
+
+| # | Source | Slot | Ast. | Collected | Final mass | Arcs | Launch |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `return_sweep_v1` ← `cluster_fleet_v6/family_0001` | 2 | 8 | 633.3 | 508.0 | 17 | 64478 |
+| 2 | `return_sweep_v2` ← `cluster_fleet_v7/family_0007` | 1 | 9 | 616.4 | 539.9 | 18 | 64463 |
+| 3 | `cluster_fleet_v7/family_0011` | 1 | 9 | 611.9 | 538.7 | 18 | 64478 |
+| 4 | `cluster_fleet_v6/family_0054` | 1 | 9 | 603.7 | 523.8 | 19 | 64373 |
+| 5 | `cluster_fleet_v6/family_0025` | 5 | 9 | 589.3 | 541.2 | 19 | 64358 |
+| 6 | `fleet10_master_v1` | 1 | 8 | 583.2 | 574.4 | 16 | 64403 |
+| 7 | `probe_v6_family/family_0001` | 1 | 9 | 582.8 | 551.4 | 19 | 64463 |
+| 8 | `return_sweep_v1` ← `cluster_fleet_v5/family_0004` | 3 | 8 | 575.8 | 517.7 | 16 | 64448 |
+| 9 | `cluster_fleet_v6/family_0007` | 2 | 9 | 573.7 | 527.0 | 18 | 64448 |
+| 10 | `return_sweep_v1` ← `cluster_fleet_v5c/family_0001` | 3 | 8 | 568.0 | 584.0 | 16 | 64403 |
+| 11 | `cluster_fleet_v7/family_0006` | 1 | 8 | 567.0 | 516.8 | 16 | 64553 |
+| 12 | `return_sweep_v1` ← `cluster_fleet_v6/family_0025` | 1 | 8 | 564.7 | 564.1 | 17 | 64358 |
+| 13 | `return_sweep_v2` ← `cluster_fleet_v7/family_0030` | 1 | 8 | 564.3 | 509.4 | 17 | 64373 |
+| 14 | `cluster_fleet_v4/family_0430` | 1 | 8 | 564.3 | 522.5 | 16 | 64373 |
+| 15 | `cluster_fleet_v6/family_0065` | 1 | 9 | 563.4 | 563.0 | 18 | 64343 |
+| 16 | `return_sweep_v1` ← `cluster_fleet_v5/family_0247` | 3 | 8 | 562.6 | 536.5 | 16 | 64568 |
+| 17 | `cluster_fleet_v5/family_0009` | 1 | 8 | 558.1 | 583.9 | 16 | 64433 |
+| 18 | `return_sweep_v1` ← `cluster_fleet_v5/family_0017` | 1 | 8 | 552.8 | 513.8 | 16 | 64388 |
+| 19 | `return_sweep_v2` ← `cluster_fleet_v7/family_0009` | 1 | 8 | 542.9 | 604.5 | 17 | 64568 |
+| 20 | `cluster_fleet_v4/family_0355` | 1 | 9 | 537.6 | 595.7 | 18 | 64763 |
+
+Leg-cost distribution of `fleet_master_v6` and `cluster_fleet_v7` (`after_v7.json`, same
+columns as the table above): v6 collect hops n 164, mean 88.4, p25 63.5, median 84.5, p75
+111.4, p90 140.0, share ≤ 75 kg 0.324, TOF median 225 d (165–300), deploy 767.5 kg per ship,
+Earth-out 409.6, **Earth-return 216.5 mean / 216.7 median, TOF median 450 d**; v7 collect hops n
+146, mean 87.3, median 85.9, TOF median 240 d, Earth-return 232.7 mean, TOF median 480 d.
+
 Per-leg detail of `reduced-v1-run2` (propellant, SCvx iterations, solve time, certified endpoint
 error): E→1265 600 d 364.7 kg 9 it 1.3 s 0.32 km; 1265→21191 360 d 128.7 kg 7 it 0.5 s 0.04 km;
 21191→27292 360 d 153.5 kg 5 it 0.3 s 0.04 km; 27292→40808 120 d 97.4 kg 24 it 0.7 s 0.01 km;
@@ -1233,6 +1292,23 @@ with the eleven sources plus `--source results/gtoc12/runs/return_sweep_v1` `--w
 (`fleet/viewer`, 9.1 MB `trajectories.json`, not committed); the importer was run on it: 20
 ships, 168 asteroids, 10 151 exact replay samples, all hashes verified, Kepler cross-check
 3.57e-6 km (asteroids) / 3.07e-7 km (Earth) over 63 088 context points; output ignored.
+Seventh campaign: `cluster_fleet_v7` commits `run_report.json` (`budget_marks`,
+`memory_samples`, `memory_total_pss_peak_mb`), every `bundle.json` (with `memory_phases`) and
+`route_summary.json` (25 families, 76 ships) and the intermediate fleets' `fleets/*/fleet.json`;
+`return_sweep_v2` its `run_report.json`, `ships.jsonl` and the 13 improved
+`route_summary.json`; `fleet_master_v6` its `run_report.json`, `fleet/Result.txt` (the best
+verified fleet by the master's objective), `fleet/fleet.json` and `fleet/viewer/manifest.json`.
+Commands: `cluster-fleet --run-id cluster_fleet_v7 --output <dir> --workers 3
+--ships-per-cluster 5 --cluster-radius 1.6 --min-members 18 --collect-epoch-families
+--collector-harvest --collect-dp-inflation-fit results/gtoc12/hop_inflation_fit.json
+--collect-dp-step-days 15 --earth-prescreen-ratio 0.7 --cluster-budget-seconds 2400
+--retime-budget-seconds 900 --budget-seconds 14400` under `nice -n 19` (249 min);
+`retime-returns --run-id return_sweep_v2 --output <dir> --source results/gtoc12/runs/cluster_fleet_v7
+--workers 3 --top 21 --budget-seconds 2700` (36 min); `fleet-master --run-id fleet_master_v6
+--output <dir>` with the fourteen `--source` directories `--workers 3` (46 min). The v2 viewer
+importer was run on `fleet_master_v6/fleet/viewer`: 20 ships, 168 asteroids, 10 150 exact replay
+samples, all hashes verified, Kepler cross-check 3.57e-6 km / 3.07e-7 km over 63 088 context
+points; output ignored.
 
 ## 8. Limitations
 
@@ -1318,17 +1394,20 @@ ships, 168 asteroids, 10 151 exact replay samples, all hashes verified, Kepler c
   propellant-fraction cache plus glibc heap retention, both fixed (single slot 695 → 329 MB,
   bit-identical routes). The SCvx return sweep re-timed 13 of 36 archived ships (+140.5 kg) and
   the master admitted the 20th ship at 576.07 kg average — 0.5 kg above the rule's 575.6, so the
-  fleet is again binding on the rule. The return is 228 kg mean (references 208–216) but 435 d
-  median TOF (references 473–486): the sweep only re-times ships whose tour is fixed; the DP that
-  builds new tours still ends the tour late and pays for the short return. The harvest-window
-  deploy ranking lost mass at every weight — the collect hop (85.6 kg / 225 d vs 66 kg / 181 d) is
-  unchanged and is now the whole gap. The archive-wide master is proven optimal over 918
+  fleet is again binding on the rule (`fleet_master_v6`, over the seventh campaign as well:
+  575.78 kg, 20 ≤ 20.01). The return of the best fleet is 216.5 kg mean (references 208–216) at
+  450 d median TOF (references 473–486): the sweep only re-times ships whose tour is fixed; the
+  DP that builds new tours got the TOF model and now returns at 480 d median (v7) but still pays
+  233 kg for it. The harvest-window deploy ranking lost mass at every weight — the collect hop
+  (84.5 kg / 225 d vs 66 kg / 181 d) is unchanged and is now the whole gap. Three workers price
+  0.7× the families of four in the same 4 h (v7's own fleet 9920 kg vs v6's 10 698); the archive
+  master is what turns that into score. The archive-wide master is proven optimal over 1032
   columns; the LP at 21 ships is infeasible.
 
 Next bottleneck: the collect hop, inside the DP's window. The fleet rule `N ≤ 2 exp(0.004 M̄)`
-is binding at 20 ≤ 20.03 (average 576.07 kg); a 21st ship needs 587.8 kg average (5 ships of the
+is binding at 20 ≤ 20.01 (average 575.78 kg); a 21st ship needs 587.8 kg average (5 ships of the
 fleet are above it), 22 ships 600 kg, the references' 740 kg would admit 38. Per ship the gap to
-a reference ship is now: collect hops 8 × (86 − 66) ≈ 160 kg, Earth return +15 kg, deploy hops
+a reference ship is now: collect hops 8 × (85 − 66) ≈ 150 kg, Earth return ≈ 0, deploy hops
 and Earth-out *better*. (i) **Collect-hop phase in the DP**: the deploy beam cannot fix it
 (ranking on the harvest-window cost loses the deploy chain); the DP should be allowed to *drop*
 a deployed miner from the tour when its harvest hop is dear and re-deploy the slot's time at a
