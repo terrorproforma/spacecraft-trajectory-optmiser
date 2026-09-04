@@ -13,7 +13,10 @@ The preflight is deliberately conservative:
 * any process whose command line names ``device_scvx_integration_test`` or a ``--g4-``
   argument marks the device as owned by G4 -> refused;
 * other compute processes are reported and, by default, also refuse (a shared device is not a
-  clean measurement either) unless ``allow_shared=True``.
+  clean measurement either) unless ``allow_shared=True``;
+* the calling process itself is never a foreign holder: a multi-target ``gpu-run`` keeps its CUDA
+  context between targets, and native-Linux ``nvidia-smi`` lists it (WSL never lists compute
+  apps, which hid this self-refusal on the RTX 5090 host).
 
 No environment variable can override a G4 refusal.
 """
@@ -150,7 +153,9 @@ def preflight(
     smi, processes, error = query_compute_apps(runner=runner)
     if error is not None:
         return GpuPreflight(False, f"refused: {error}", smi, processes, library_text)
-    owners = [process for process in processes if process.g4_owner]
+    own_pid = os.getpid()
+    foreign = [process for process in processes if process.pid != own_pid]
+    owners = [process for process in foreign if process.g4_owner]
     if owners:
         described = ", ".join(f"pid {p.pid} ({p.command_line or p.reported_name})" for p in owners)
         return GpuPreflight(
@@ -160,8 +165,8 @@ def preflight(
             processes,
             library_text,
         )
-    if processes and not allow_shared:
-        described = ", ".join(f"pid {p.pid}" for p in processes)
+    if foreign and not allow_shared:
+        described = ", ".join(f"pid {p.pid}" for p in foreign)
         return GpuPreflight(
             False,
             f"refused: other compute processes hold the device ({described}); "
