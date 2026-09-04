@@ -130,7 +130,8 @@
       ],
       "expected": [
         "100% tests passed, 0 tests failed out of 1 in each tree",
-        "the test's own gates: pd3_fft device A/B/z and sigma-column parity < 5.0e-11, affine reconstruction < 1.0e-8; pd6_fft parity < 2.0e-9, reconstruction < 1.0e-8 (cpp/cuda/tests/device_time_dilated_test.cu)"
+        "the test's own gates: pd3_fft device A/B/z and sigma-column parity < 5.0e-11, affine reconstruction < 1.0e-8; pd6_fft parity < 2.0e-9, reconstruction < 1.0e-8, and the host reference itself must satisfy the quaternion tangent rule (< 2.0e-10) so an unprojected reference is reported as a reference defect (cpp/cuda/tests/device_time_dilated_test.cu; per-block worst row/column is printed)",
+        "measured on the RTX 5090 (sm_120) on 2026-09-05 after the include-order fix: pd6_fft coefficients 2.2e-16, sigma 4.3e-19, reconstruction 1.4e-14; the pre-fix host reference was linearised without the quaternion projection and produced the 0.98 offset gap seen on the H100 (results/lambda-h100/v2-deferred-3373988/triage.md); H100 (sm_90) re-verification pending a GPU window"
       ],
       "evidence": ["ctest output"]
     },
@@ -196,7 +197,7 @@
         "cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure && ctest --test-dir build-v2-cuda-debug --output-on-failure"
       ],
       "expected": [
-        "full CUDA CTest: 100% tests passed out of 68 in Release and Debug (62 sealed tests at b6afb49 + planner_c_api_smoke, planner_problem_smoke, powered_descent_free_time_transcription_smoke, time_dilated_flow_smoke, device_time_dilated_test, spacepdhcg_plan_capabilities)",
+        "full CUDA CTest: 100% tests passed out of 69 in Release and Debug (62 sealed tests at b6afb49 + planner_c_api_smoke, planner_problem_smoke, powered_descent_free_time_transcription_smoke, time_dilated_flow_smoke, time_dilated_flow_include_order_smoke, device_time_dilated_test, spacepdhcg_plan_capabilities)",
         "G2/G3 status=PASS with the sealed b6afb49 topology fingerprints for HCW, P1-C pd3, P1-D pd6 and low-thrust unchanged: their transcription headers are blob-identical to 63271d5 (see frozen_hashes) and device_scvx.cu only gained the pd3_fft/pd6_fft branches (+370/-0 lines)",
         "the G4 capability e546583b... stays bound to source_commit 9a4cbea and libspacepdhcg_cuda.so 84d98bcd...; the candidate's Release library is af835ad8... (new kernels), so NO G4 claim-core evidence may be produced from the candidate until a new capability is generated after its own G0-G3 reseal"
       ],

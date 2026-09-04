@@ -95,7 +95,19 @@ cd $V2 && ctest --test-dir build-v2-cuda-debug   --output-on-failure -R device_t
 
 Expected: `100% tests passed, 0 tests failed out of 1` per tree. Internal gates: pd3_fft device
 A/B/z and sigma-column parity `< 5.0e-11`, affine reconstruction `< 1.0e-8`; pd6_fft parity
-`< 2.0e-9`, reconstruction `< 1.0e-8`.
+`< 2.0e-9`, reconstruction `< 1.0e-8`, and the host reference must itself obey the quaternion
+tangent rule (`< 2.0e-10`). The test prints the worst row/column per block (propagated, transition,
+sensitivity, sigma, offset) so a failure is localised from the log.
+
+History: the first real-GPU run (H100, 3373988) failed with pd6_fft parity 0.98 in `offset` row 6.
+Root cause was the host *reference*, not the kernel: `device_time_dilated_test.cu` included only
+the model and `time_dilated_flow_linearisation.hpp`, so the `requires`-expression that detects
+`project_rk4_variational` by ADL found nothing and the reference was linearised without the
+quaternion-normalisation Jacobian (the production `c_api.cpp` TU pulls the hook in through
+`variational_rk4.hpp`, which is why the chari pd6_fft GPU batch converged). The linearisation
+header now includes the hook and `static_assert`s it for the 6-DoF model;
+`cpp/tests/time_dilated_flow_include_order_smoke.cpp` guards the include-order case. Reproduced and
+fixed on the RTX 5090 (sm_120, parity 2.2e-16); H100 (sm_90) re-verification pending a GPU window.
 
 ## literature-device-time-dilated-sanitizers
 
@@ -156,10 +168,10 @@ cd $V2 && bash scripts/gpu/run_g3_evidence.sh   # pass --force-export=true to ns
 cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure && ctest --test-dir build-v2-cuda-debug --output-on-failure
 ```
 
-Expected: full CUDA CTest `100% tests passed out of 68` in Release and Debug (62 sealed at b6afb49
+Expected: full CUDA CTest `100% tests passed out of 69` in Release and Debug (62 sealed at b6afb49
 plus `planner_c_api_smoke`, `planner_problem_smoke`, `powered_descent_free_time_transcription_smoke`,
-`time_dilated_flow_smoke`, `device_time_dilated_test`, `spacepdhcg_plan_capabilities`); G2/G3
-`status=PASS`.
+`time_dilated_flow_smoke`, `time_dilated_flow_include_order_smoke`, `device_time_dilated_test`,
+`spacepdhcg_plan_capabilities`); G2/G3 `status=PASS`.
 
 **New topologies do not alter sealed ones.** Evidence, base 63271d5 vs candidate:
 

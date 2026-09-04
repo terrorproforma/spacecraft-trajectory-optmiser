@@ -1,5 +1,15 @@
 #pragma once
 
+// The 6-DoF quaternion projection hook must be visible in *every* translation unit that
+// instantiates the linearisation: `apply_projection` below detects it with a requires-expression
+// on the unqualified name `project_rk4_variational`, and an ADL lookup that fails only because a
+// TU forgot the include would silently produce an unprojected (non-tangent) linearisation that no
+// longer differentiates `PoweredDescent6DofModel::rk4_step`.  The CUDA parity test
+// `device_time_dilated_test` compared exactly such a reference against the (projected) device
+// kernel and reported a 0.98 offset mismatch on the quaternion rows.  Include the hook here and
+// assert its presence for the 6-DoF model so the fallback can never be silent again.
+#include "spacepdhcg/dynamics/powered_descent_6dof.hpp"
+#include "spacepdhcg/dynamics/powered_descent_6dof_variational.hpp"
 #include "spacepdhcg/transcription/linearisation_types.hpp"
 
 #include <algorithm>
@@ -7,6 +17,7 @@
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
+#include <type_traits>
 
 namespace spacepdhcg::transcription {
 
@@ -150,6 +161,14 @@ void apply_projection(
     const Model& model,
     Augmented<StateDimension, ControlDimension>& integrated
 ) {
+    // No silent fallback: the 6-DoF model's step normalises the quaternion, so its
+    // linearisation must be projected.  A missing hook is a build error, not a numerics change.
+    static_assert(
+        !std::is_same_v<std::remove_cvref_t<Model>, dynamics::PoweredDescent6DofModel>
+            || has_quaternion_projection<StateDimension, ControlDimension, Model>,
+        "PoweredDescent6DofModel requires project_rk4_variational "
+        "(spacepdhcg/dynamics/powered_descent_6dof_variational.hpp) to be visible"
+    );
     if constexpr (has_quaternion_projection<StateDimension, ControlDimension, Model>) {
         static_assert(StateDimension == 14U, "quaternion projection assumes the 6-DoF layout");
         constexpr std::size_t quaternion_offset = 6U;
