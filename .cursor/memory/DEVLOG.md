@@ -2049,6 +2049,7 @@
 
 <!-- The entries below were written on the Windows checkout (feat/webgl-trajectory-viewer working tree, 2026-09-01..2026-09-05) and carried into the repository additively during the 2026-09-05 release merge; they are chronological among themselves and overlap in time with the WSL entries above. -->
 
+
 ## 2026-09-05 01:20 AEST - Viewer UI redesign with Anthropic's frontend-design skill
 
 - Task summary:
@@ -2233,3 +2234,25 @@
   - A mangled PowerShell->WSL pipeline this session launched the `grok`, `agent`, `claude` and
     `codex` CLIs; killing the strays also terminated a long-running Codex app-server process
     (pid 400) that was not started by this session.
+## 2026-09-05 04:10 AEST
+
+- Change of direction: reference-methods work (subsets / chain BIP / TOF heuristic, memo)
+  dropped and reverted; branch renamed `feat/gtoc12-joint-itinerary`. New lever built:
+  whole-itinerary joint re-optimisation (`jointopt.py`, `jointcampaign.py`, `gtoc12
+  joint-itinerary`, `tests/test_gtoc12_jointopt.py`) - every epoch of a ship continuous, exact
+  mining bookkeeping, calibrated pair-cost surrogate + memoised SCvx-measured legs, pattern
+  search on a 45/20/8/3/1 d mesh, full-route SCvx re-certification, monotone certified
+  acceptance, one-asteroid insertion. Commit f81e834.
+- joint_itinerary_v2 (32 ships, 3 workers, 7 min, 0.12 GB): 32/32 improved, +280.4 kg; the 20
+  fleet_master_v6 ships 575.78 -> 586.20 kg average (+208.4; +1.1..+23.3 per ship), 101 SCvx
+  certifications / 95 accepted. Redistribution per ship: deploy hops +59 kg (earlier deploys),
+  return -12, collect -4, Earth-out 0, margin -> 0. Insertion: 0 of 32 (authority ratio).
+- fleet_master_v7 (sixteen archives, 837 routes, 1078 columns, 57 min): **21 ships / 177
+  asteroids / 12 346.48 kg / 587.93 avg (rule 21 <= 21.007), proven optimal (gap 5.6 kg),
+  both verifiers ok; +830.8 kg over v6.** All 21 columns are joint_itinerary_v2 routes.
+- Viewer v2 data re-imported from fleet_master_v7 (21 ships, hashes + Kepler check ok);
+  the viewer's check.mjs now trips its 20-colour palette assertion (viewer follow-up).
+- Docs: GTOC12_TRACK.md section 6.10, results rows, eighth-iteration narrative + two per-ship
+  tables, section 8 entry, next bottleneck (22nd ship needs 599.5 kg average).
+- Next: run joint-itinerary after every campaign before the master; new asteroid sets from
+  the DP (member substitution, sweep cells) for the 22nd ship - re-timing is saturated.
