@@ -1346,3 +1346,47 @@
 - Next bottleneck: Earth return (+65 kg vs references, cheapest ~50 kg per ship -> the 20th
   ship), then the collect-hop phase at the harvest window (84 vs 66 kg, 240 vs 181 d) via
   harvest-window pair costs in the deploy beam; worker memory transient to localise.
+
+
+## 2026-09-04 17:20 AEST
+
+- Memory transient fixed and localised: the collect DP's unbounded per-mass propellant
+  fraction cache (one 20 KB table per Held-Karp expansion) was the +350 MB beam transient; a
+  512-entry LRU keeps results bit-identical and the single-slot peak is 329 MB (was 695).
+  glibc retention (RSS 670 -> 167 MB on trim) handled by `bound_heap_growth` + `release_heap`
+  at every phase mark. `MemoryBudget` 3 x 450 + 250 MB declared; regression test on the
+  priced-bundle fixture. Commit 7d87a36.
+- Earth-return sweep campaign `return_sweep_v1` (36 best stand-alone archived ships): 13
+  improved, +140.5 kg, returns 172-247 kg where improved; v6 family 1 ship 2 +34.9 kg.
+- Harvest-window ranking is a negative result on family 54 at every weight (see scratchpad).
+- `fleet_master_v5` running over the eleven archives + return_sweep_v1 (3 workers).
+
+
+## 2026-09-04 17:20 AEST
+
+- Memory transient fixed and localised: the collect DP's unbounded per-mass propellant
+  fraction cache (one 20 KB table per Held-Karp expansion) was the +350 MB beam transient; a
+  512-entry LRU keeps results bit-identical and the single-slot peak is 329 MB (was 695).
+  glibc retention (RSS 670 -> 167 MB on trim) handled by `bound_heap_growth` + `release_heap`
+  at every phase mark. `MemoryBudget` 3 x 450 + 250 MB declared; regression test on the
+  priced-bundle fixture. Commit 7d87a36.
+- Earth-return sweep campaign `return_sweep_v1` (36 best stand-alone archived ships): 13
+  improved, +140.5 kg, returns 172-247 kg where improved; v6 family 1 ship 2 +34.9 kg.
+- Harvest-window ranking is a negative result on family 54 at every weight (see scratchpad).
+- `fleet_master_v5` running over the eleven archives + return_sweep_v1 (3 workers).
+
+
+## 2026-09-05 00:40 AEST
+
+- cluster_fleet_v7 done (249 min, 3 workers): 25 families, 76 ships, own fleet 9920.47 kg / 18
+  ships; marks 60/120/240 min = 5355.8 / 8571.1 / 9922.5 kg; PSS peak 1.19 GB, worker 0.68 GB.
+- return_sweep_v2 on v7's 21 best: 13 improved, +225.5 kg.
+- fleet_master_v6 (fourteen archives, 779 routes, 1032 columns): 20 ships / 168 asteroids /
+  11 515.67 kg / 575.78 avg, proven optimal (gap 5.6), both verifiers ok; Earth return 216.5 kg
+  mean. First attempt died on RecursionError in the column DFS (1019 > 1000 frames) after the
+  45-min re-certification -> fixed + test (ba9b764), re-run.
+- Slot cache release before orphan repair (c495dc0); test updates (930db57); docs + artifacts
+  (0c8a533, ded890f). Viewer v2 data re-imported from fleet_master_v6.
+- Suite: 421 passed / 4 skipped (+ pre-existing native-packaging failure); Ruff clean.
+- Next: collect-hop phase inside the DP (member substitution priced from the pair table); give
+  the DP the camp's sweep cells; run retime-returns after every campaign before the master.
