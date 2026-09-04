@@ -387,11 +387,27 @@ void check_warm_modes_and_checkpoint() {
     test::destroy_workspace(workspace);
 }
 
+// The inconsistent problem never converges at 1e-20, so both solves below end
+// only when the host cancellation flag is observed or the iteration budget is
+// exhausted.  Natively the flag wins within milliseconds.  Under Compute
+// Sanitizer the flag is usually observed only after the budget is exhausted
+// (the ITERATION_LIMIT outcome accepted below), and racecheck slows every
+// iteration by roughly two orders of magnitude: the native budget cost
+// 54 minutes per `--tool racecheck` run of `recovery_test --sanitizer` in the
+// current-head G3 evidence while exercising no additional kernels.  Keep the
+// native budget for the real cancellation race and bound the instrumented one.
+constexpr std::uint64_t cancellation_iteration_budget = 350'000U;
+constexpr std::uint64_t sanitizer_cancellation_iteration_budget = 20'000U;
+
 void check_cancellation_and_destruction(const bool sanitizer) {
     test::ProblemStorage problem(false, true);
     initialise_inconsistent_problem(problem);
     auto* workspace = test::create_workspace(problem);
-    const auto options = test::solve_options(1.0e-20, 350'000U);
+    const auto options = test::solve_options(
+        1.0e-20,
+        sanitizer ? sanitizer_cancellation_iteration_budget
+                  : cancellation_iteration_budget
+    );
     test::status_require(
         spacepdhcg_cuda_workspace_solve_async(
             workspace,
