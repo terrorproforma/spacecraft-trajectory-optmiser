@@ -243,6 +243,42 @@ boundary after 26 completed groups, all P1-E pure-gpu-ipm, every attempt `numeri
   (51–120 s, 37–99 QOCO iterations), 10 `unrun` at the 1140 s group deadline, 0 qualified,
   35/35 contaminated. Groups took 1123–1362 s (≈20.6 min each). Rule B is consistent on all 35
   records (timeout ⇔ wall > 120 s). Pure IPM at this coordinate is a genuine negative.
+- IPM block outcome and scheduler defect (`g4-claim-core-46bc895`, 2026-09-03T07:05Z to
+  2026-09-04T02:57Z, 60 pure-gpu-ipm P1-E groups claimed): `N=100` 20 core + 2 twins and `N=500`
+  20 core + 2 twins completed; `N=2000` 8 core + 2 twins completed, 4 core groups quarantined by a
+  scheduler defect, 1 core group ended as the rule C error record, 1 core group completed on the
+  restart generation. 0 qualified attempts anywhere (core: 123/46/11 `numerical`/`timeout`/`unrun`
+  at `N=100`, 53/66/61 at `N=500`, 34/31/19 at `N=2000`; the six 600 s twins are 52 `numerical`
+  + 2 `timeout`). Per-group wall on a clean GPU: `N=100` 178–461 s (median 330 s, 7 groups),
+  `N=500` 401–1114 s (2 groups), `N=2000` 298–1209 s (median 1169 s, 5 groups); under the foreign
+  host job (`python.exe`, 53–99 % SM until 2026-09-04T01:36Z) up to 1362 s / 2801 s / 1324 s.
+  IPM `N=2000` attempts spend 270–530 s in one uninterruptible QOCO solve at 4–9 % GPU
+  utilisation (cuDSS/host bound), so the 120 s deadline never shortens them.
+  **Defect**: the raw-attempt contract accepted `timeout_deterministic_replay` records only when
+  stamped `single-gpu-v1.1`; v1.2 inherits the replay section verbatim and the executor stamps
+  v1.2, so ordinals 45, 47, 49 and 57 (P1-E `N=2000`, warm-up/0, warm-up/1 and measured/0 all
+  `timeout` at 270–347 s with identical traces — QOCO max-iterations at 200, zero outer
+  iterations — plus six conformant replays) were quarantined `invalid_evidence` although their
+  nine records validate completely once the stamp check accepts every supported amendment. The
+  decision step shared the check. Fix commit `4db5047` (`validate_attempt_record` accepts
+  `SUPPORTED_AMENDMENT_IDS`; `migrate --skip-quarantined`; tests). Ordinal 56 is the
+  preregistered rule C outcome, not the defect: both generations were killed at the 1440 s outer
+  boundary after emitting 3 and 2 well-formed records (each attempt 460–530 s), so the group is
+  an error record with no retained attempts (2887 s spent); ordinal 59 survived the same path
+  because its restart generation finished nine records (1 `numerical`, 5 `timeout`, 3 `unrun`,
+  2841 s). Replay is trivially eligible for `N=2000` IPM because a solve that never completes an
+  outer iteration leaves an information-free trace; the amendment's trigger is met literally,
+  and the replays count only as timeout censoring, but this is worth stating when H6 is read.
+  Campaign hygiene (option (b) again): the 46bc895 worker was paused at the ordinal-59 boundary
+  (journal `completed` event, then TERM; ordinal 60 claimed but never launched), the executor
+  was rebuilt at `4db5047` (compiled_source_commit verified, executable `6392c864…2ddd`),
+  capability `5c849945c954e438a8bbfef4df065674883b6f1ce0e85dc7077dfb7bb48c80b8` (probe 9/9,
+  `--check` agrees), new checkpoint `g4-claim-core-4db5047` citing `ipm_no_equilibration_v1_1`,
+  `migrate --skip-quarantined` imported the 55 completed groups exactly once and left the five
+  quarantined rows in `46bc895` (records retained), so the new worker re-runs 45, 47, 49, 56
+  and 57 first (ordinal 45 claimed 2026-09-04T02:58:58Z), then 60–395. GPU idle ≈ 70 s. A new
+  foreign host `python.exe` (PID 49548, 95 % SM) appeared at 02:51Z and WSL weldsim pytest
+  processes hold `/dev/dxg`; run-and-flag continues to record contamination per attempt.
 
 Implementation update (2026-09-02): the authoritative `g4-persistent-group-v1` native executor,
 direct per-attempt NVML boundaries, hash-pinned capability probe, and separate 360-group claim-core
