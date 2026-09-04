@@ -381,3 +381,178 @@ def test_collect_window_families_weight_harvest_epoch_co_motion() -> None:
     assert checked > 0
     with pytest.raises(ValueError, match="one entry per visit epoch"):
         ClusterBands(visit_epochs=(T0, T0 + YEAR), phase_weights=(1.0,)).epoch_weights
+
+
+@requires_data
+def test_tighter_collect_window_radius_gives_smaller_denser_families() -> None:
+    from spacepdhcg.gtoc12.bundles import family_clusters
+
+    catalogue = load_catalogue()
+    ids = build_reduced_instance(catalogue).asteroid_ids
+    tight = family_clusters(
+        catalogue, ids, bands=ClusterBands.collect_window(radius=1.5), min_members=4
+    )
+    loose = family_clusters(
+        catalogue, ids, bands=ClusterBands.collect_window(radius=2.5), min_members=4
+    )
+    assert tight and loose
+    assert max(len(m) for _l, m in tight) <= max(len(m) for _l, m in loose)
+    # every member of a tight family is within the tight radius of some other member
+    # (the families are connected components of the radius graph), so the harvest-window phase
+    # spread inside a tight family is bounded by the band x radius x members
+    clusters = ComovingClusters(catalogue, ids, ClusterBands.collect_window(radius=1.5))
+    for _label, members in tight[:5]:
+        member_set = {int(a) for a in members}
+        for a in members:
+            assert any(int(n) in member_set for n in clusters.neighbours(int(a)))
+
+
+# -- mass schedule, phasing lattice and return grid of the DP --------------------------------
+
+
+def test_collect_dp_second_pass_credits_the_burnt_propellant() -> None:
+    ids = [1, 2, 3]
+    costs = {(a, b): 1.5 for a in ids for b in ids if a != b}
+    table = _FakeTable(ids, costs, return_dv=3.0)
+    deployed = [(1, T0 + 4.0 * YEAR), (2, T0 + 4.5 * YEAR), (3, T0 + 6.0 * YEAR)]
+    tour = plan_collect_tour(table, deployed, 3, T0 + 6.0 * YEAR, 1500.0)
+    assert tour is not None
+    assert len(tour.hop_propellant_kg) == len(tour.hops)
+    burn = tour.diagnostics["burn_per_hop_kg"]
+    assert burn > 0.0 and burn == pytest.approx(np.mean(tour.hop_propellant_kg), rel=0.5)
+    # pass 1 priced the same hops on a heavier ship: its objective is worse
+    assert tour.diagnostics["pass1_objective_kg"] < tour.objective_kg
+    # the fixed-schedule call reproduces the second pass exactly
+    fixed = plan_collect_tour(table, deployed, 3, T0 + 6.0 * YEAR, 1500.0, burn_per_hop=burn)
+    assert fixed is not None
+    assert fixed.order == tour.order and fixed.objective_kg == pytest.approx(tour.objective_kg)
+    # a heavier schedule (no credit) prices the same hops dearer than the credited one
+    heavy = plan_collect_tour(table, deployed, 3, T0 + 6.0 * YEAR, 1500.0, burn_per_hop=0.0)
+    assert heavy is not None and heavy.propellant_proxy_kg > tour.propellant_proxy_kg
+
+
+def test_collect_dp_heavy_return_only_closes_with_the_burn_credit() -> None:
+    """A return at the authority limit for the heavy pass-1 ship is flyable for the ship that
+    has burnt its hop propellant: the two-pass DP finds the tour the one-pass DP refused."""
+
+    from spacepdhcg.gtoc12.screening import thrust_authority_km_s
+
+    ids = [1, 2, 3, 4]
+    costs = {(a, b): 2.0 for a in ids for b in ids if a != b}  # ~100 kg per hop
+    deployed = [(a, T0 + (3.0 + 0.5 * i) * YEAR) for i, a in enumerate(ids)]
+    probe = _FakeTable(ids, costs, n_t=30)
+    heavy = 1500.0 + sum(C.maximum_collected_mass(probe.epochs[-1] - e) for _a, e in deployed)
+    # return ΔV at 1.02 x the 0.5 authority limit of the heavy (no burn credit) ship over 300 d:
+    # unflyable for pass 1, flyable once ~300 kg of hop propellant are credited
+    return_dv = 0.5 * float(thrust_authority_km_s(heavy, 300.0, 1.0)) * 1.02
+    table = _FakeTable(ids, costs, return_dv=return_dv, n_t=30)
+    single = plan_collect_tour(table, deployed, 4, T0 + 4.5 * YEAR, 1500.0, burn_per_hop=0.0)
+    assert single is None
+    two_pass = plan_collect_tour(table, deployed, 4, T0 + 4.5 * YEAR, 1500.0, burn_per_hop=100.0)
+    assert two_pass is not None and sorted(two_pass.order) == ids
+
+
+@requires_data
+def test_default_dp_lattice_resolves_fifteen_day_phasing_and_thirty_day_returns() -> None:
+    settings = CollectDPSettings()
+    assert settings.step_days == 15.0
+    assert 60.0 in settings.tofs and 180.0 in settings.tofs
+    assert settings.return_tofs[0] == 240.0 and settings.return_tofs[-1] == 720.0
+    assert np.all(np.diff(settings.return_tofs) == 30.0)
+    catalogue = load_catalogue()
+    table = CollectPairTable(catalogue, settings)
+    assert np.all(np.diff(table.epochs) == 15.0)
+    ids = build_reduced_instance(catalogue).asteroid_ids[:2].tolist()
+    hop = table.hop(ids[0], ids[1])
+    # a 15-day lattice sees the relative-phase window a 30-day lattice straddles: the cheapest
+    # departure of the fine lattice is never dearer than the coarse lattice's
+    coarse = CollectPairTable(
+        catalogue, CollectDPSettings(step_days=30.0, tofs=(60.0, 90.0, 180.0, 240.0))
+    ).hop(ids[0], ids[1])
+    assert (
+        np.nanmin(np.where(np.isfinite(hop), hop, np.nan))
+        <= np.nanmin(np.where(np.isfinite(coarse), coarse, np.nan)) + 1e-6
+    )
+
+
+# -- calibrated hop inflation --------------------------------------------------------------
+
+
+def _synthetic_hops(n: int, seed: int):
+    from spacepdhcg.gtoc12.hopcalib import HopSamples
+
+    rng = np.random.default_rng(seed)
+    mass = rng.uniform(1200.0, 2400.0, n)
+    tof = rng.choice([90.0, 120.0, 180.0, 240.0, 300.0, 360.0], n)
+    from spacepdhcg.gtoc12.screening import thrust_authority_km_s
+
+    ratio = rng.uniform(0.05, 0.6, n)
+    lambert = ratio * thrust_authority_km_s(mass, tof, 1.0)
+    delta_a = rng.normal(0.0, 0.02, n)
+    delta_l = rng.normal(0.0, 0.15, n)
+    truth = 1.0 + 0.7 * ratio + 0.05 * tof / YEAR + 0.3 * np.abs(delta_l) / np.pi
+    scvx = lambert * (truth + rng.normal(0.0, 0.02, n))
+    return HopSamples(
+        np.arange(1, n + 1, dtype=np.int64),
+        np.arange(2, n + 2, dtype=np.int64),
+        np.full(n, T0 + 8.0 * YEAR),
+        tof,
+        mass,
+        lambert,
+        scvx,
+        delta_a,
+        delta_l,
+        ["synthetic"] * n,
+    )
+
+
+def test_inflation_fit_recovers_the_model_and_reports_holdout_residuals() -> None:
+    from spacepdhcg.gtoc12.hopcalib import InflationFit, fit_inflation
+
+    train, holdout = _synthetic_hops(600, 0), _synthetic_hops(300, 1)
+    fit = fit_inflation(train, holdout, quantile=0.5)
+    c = fit.coefficients
+    assert c[1] == pytest.approx(0.7, abs=0.05)  # authority-ratio slope
+    assert c[4] == pytest.approx(0.3, abs=0.1)  # phase-difference slope
+    assert abs(c[3]) < 0.1  # Δa carries no signal here
+    stats = fit.residuals
+    assert stats["holdout"]["rms"] < 0.03 and abs(stats["holdout"]["median"]) < 0.01
+    assert stats["holdout"]["n"] == 300 and "holdout_propellant_error_kg" in stats
+    # a higher quantile only shifts the constant, towards heavier (conservative) pricing
+    heavier = fit_inflation(train, holdout, quantile=0.9)
+    assert heavier.coefficients[0] > c[0]
+    assert heavier.coefficients[1:] == pytest.approx(c[1:])
+    assert heavier.residuals["train"]["share_under_priced"] <= 0.12
+    # round trip through the JSON summary and vectorised evaluation on a (n_t, n_tof) table
+    again = InflationFit.from_summary(fit.summary())
+    assert again.coefficients == fit.coefficients
+    dv = np.full((7, 3), 1.0)
+    tofs = np.array([90.0, 180.0, 360.0])
+    table = again.inflation(dv, 1500.0, np.broadcast_to(tofs, dv.shape), 0.01, np.zeros((7, 1)))
+    assert table.shape == (7, 3) and np.all(table >= 1.0)
+    # more TOF at the same ΔV lowers the ratio term: slower hops are cheaper per km/s
+    assert table[0, 2] < table[0, 0]
+
+
+def test_fake_table_hop_propellant_uses_the_fit_per_pair_and_epoch() -> None:
+    from spacepdhcg.gtoc12.hopcalib import InflationFit
+
+    ids = [1, 2, 3]
+    costs = {(a, b): 1.0 for a in ids for b in ids if a != b}
+    flat = _FakeTable(ids, costs)
+    fitted = _FakeTable(ids, costs)
+    fitted.settings = dataclasses.replace(
+        fitted.settings, inflation_fit=InflationFit((0.9, 0.5, 0.0, 0.0, 0.0), 0.5)
+    )
+    fitted.pair_geometry = lambda s, t, epochs: (0.0, np.zeros(len(epochs)))
+    dv = np.full((5, 2), 1.0)
+    without = CollectPairTable.hop_propellant(flat, dv, 1500.0, flat.tofs)
+    with_fit = CollectPairTable.hop_propellant(
+        fitted, dv, 1500.0, fitted.tofs, pair=(1, 2), epochs=fitted.epochs[:5]
+    )
+    assert without.shape == with_fit.shape == (5, 2)
+    # flat 1.2 vs 0.9 + 0.5 r with r << 0.6: the fit prices these slow hops cheaper
+    assert np.all(with_fit < without)
+    # without pair/epochs the fit is not applied (falls back to the flat factor)
+    fallback = CollectPairTable.hop_propellant(fitted, dv, 1500.0, fitted.tofs)
+    np.testing.assert_allclose(fallback, without)

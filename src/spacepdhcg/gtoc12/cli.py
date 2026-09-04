@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -98,6 +99,72 @@ def _peak_rss_mb() -> float:
         return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
     except Exception:  # pragma: no cover - non-POSIX
         return float("nan")
+
+
+def _process_tree_pss_mb() -> float:
+    """Proportional set size (MB) of this process and its children, from ``/proc``.
+
+    Forked workers share the catalogue and the imported libraries copy-on-write, so the sum
+    of their RSS over-counts the memory the campaign really holds; PSS splits every shared
+    page between its owners and sums to the true total.  ``nan`` where ``/proc`` is absent.
+    """
+
+    try:
+        me = os.getpid()
+        pids = [me]
+        for entry in os.listdir("/proc"):
+            if not entry.isdigit():
+                continue
+            try:
+                with open(f"/proc/{entry}/status", encoding="utf-8") as handle:
+                    for line in handle:
+                        if line.startswith("PPid:"):
+                            if int(line.split()[1]) == me:
+                                pids.append(int(entry))
+                            break
+            except OSError:
+                continue
+        total_kb = 0
+        for pid in pids:
+            try:
+                with open(f"/proc/{pid}/smaps_rollup", encoding="utf-8") as handle:
+                    for line in handle:
+                        if line.startswith("Pss:"):
+                            total_kb += int(line.split()[1])
+                            break
+            except OSError:
+                continue
+        return total_kb / 1024.0
+    except Exception:  # pragma: no cover - non-Linux
+        return float("nan")
+
+
+class _MemorySampler:
+    """Background thread recording the peak process-tree PSS every ``interval`` seconds."""
+
+    def __init__(self, interval: float = 15.0) -> None:
+        import threading
+
+        self.interval = interval
+        self.peak_mb = 0.0
+        self.samples = 0
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, name="memory-sampler", daemon=True)
+
+    def _run(self) -> None:
+        while not self._stop.is_set():
+            value = _process_tree_pss_mb()
+            if value == value:  # not nan
+                self.peak_mb = max(self.peak_mb, value)
+                self.samples += 1
+            self._stop.wait(self.interval)
+
+    def start(self) -> _MemorySampler:
+        self._thread.start()
+        return self
+
+    def stop(self) -> None:
+        self._stop.set()
 
 
 def catalogue_pool(catalogue, args: argparse.Namespace):
@@ -598,6 +665,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         collect_lookahead_weight=args.collect_lookahead,
         collect_dp=not args.no_collect_dp,
         collect_dp_propellant_weight=args.collect_dp_weight,
+        collect_dp_step_days=args.collect_dp_step_days,
+        collect_dp_inflation_fit=args.collect_dp_inflation_fit or "",
+        earth_prescreen_ratio=args.earth_prescreen_ratio,
     )
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
@@ -662,6 +732,8 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         entry["ok"] = bool(independent.ok) and entry.get("official", {}).get("ok", True)
         return entry
 
+    memory = _MemorySampler().start()
+
     def checkpoint() -> None:
         report["wall_seconds_total"] = time.perf_counter() - started
         report["peak_rss_mb"] = _peak_rss_mb()
@@ -669,6 +741,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         report["memory_bound_mb"] = _peak_rss_mb() + args.workers * (
             max(worker_rss) if worker_rss else 0.0
         )
+        # measured total: peak PSS of the main process + live workers, sampled every 15 s
+        report["memory_total_pss_peak_mb"] = memory.peak_mb
+        report["memory_samples"] = memory.samples
         (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
 
     def add_bundle_columns(bundle) -> None:
@@ -834,6 +909,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         )
         for minutes in BUDGET_MARKS_MINUTES
     }
+    memory.stop()
     checkpoint()
     best = report["best"]
     print(
@@ -854,6 +930,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
                 "wall_seconds_total": report["wall_seconds_total"],
                 "peak_rss_mb": report["peak_rss_mb"],
                 "memory_bound_mb": report["memory_bound_mb"],
+                "memory_total_pss_peak_mb": report["memory_total_pss_peak_mb"],
             }
         )
     )
@@ -1077,6 +1154,36 @@ def cmd_leg_stats(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_hop_calibration(args: argparse.Namespace) -> int:
+    from .data import REPOSITORY_ROOT, load_catalogue
+    from .hopcalib import certified_hops, fit_inflation
+
+    catalogue = load_catalogue()
+    train = certified_hops(catalogue, [Path(p) for p in args.train])
+    holdout = certified_hops(catalogue, [Path(p) for p in args.holdout]) if args.holdout else None
+    fit = fit_inflation(train, holdout, quantile=args.quantile)
+    summary = fit.summary()
+    summary["train_sources"] = [str(p) for p in args.train]
+    summary["holdout_sources"] = [str(p) for p in args.holdout]
+    summary["train_hops"] = len(train)
+    summary["holdout_hops"] = 0 if holdout is None else len(holdout)
+    summary["commit"] = _commit(REPOSITORY_ROOT)
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.output).write_text(_json(summary) + "\n", encoding="utf-8")
+    names = ["1", "r", "TOF/yr", "|Δa|/0.1AU", "|Δλ|/π"]
+    terms = " ".join(f"{c:+.3f}·{n}" for c, n in zip(fit.coefficients, names, strict=True))
+    print(f"inflation = {terms}  (quantile {fit.quantile}, {len(train)} hops)")
+    for key in ("train", "holdout", "holdout_propellant_error_kg"):
+        stats = fit.residuals.get(key)
+        if isinstance(stats, dict) and stats.get("n"):
+            print(
+                f"{key:>28s}: n={stats['n']} rms={stats['rms']:.3f} median={stats['median']:+.3f}"
+                f" p10={stats['p10']:+.3f} p90={stats['p90']:+.3f}"
+                f" under-priced={stats['share_under_priced']:.2f}"
+            )
+    return 0
+
+
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("gtoc12", help="GTOC12 Sustainable Asteroid Mining replay track")
     commands = parser.add_subparsers(dest="gtoc12_command", required=True)
@@ -1221,7 +1328,44 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         default=1.0,
         help="collect DP objective: kg of value per kg of propellant (default 1.0)",
     )
+    cluster.add_argument(
+        "--collect-dp-step-days",
+        type=float,
+        default=15.0,
+        help="departure lattice of the collect DP in days (default 15)",
+    )
+    cluster.add_argument(
+        "--collect-dp-inflation-fit",
+        default="",
+        help="hop-calibration fit JSON pricing the DP pair table (default: flat inflation)",
+    )
+    cluster.add_argument(
+        "--earth-prescreen-ratio",
+        type=float,
+        default=0.7,
+        help="Earth legs above this Lambert authority ratio are flown last (default 0.7)",
+    )
     cluster.set_defaults(function=cmd_cluster_fleet)
+
+    calib = commands.add_parser(
+        "hop-calibration",
+        help="fit the low-thrust hop inflation model on archived SCvx-certified hops",
+    )
+    calib.add_argument(
+        "--train",
+        action="append",
+        required=True,
+        help="run directory whose route_summary.json legs train the fit (repeatable)",
+    )
+    calib.add_argument(
+        "--holdout",
+        action="append",
+        default=[],
+        help="run directory whose legs report out-of-sample residuals (repeatable)",
+    )
+    calib.add_argument("--quantile", type=float, default=0.65)
+    calib.add_argument("--output", required=True, help="fit JSON path")
+    calib.set_defaults(function=cmd_hop_calibration)
 
     master = commands.add_parser(
         "fleet-master",

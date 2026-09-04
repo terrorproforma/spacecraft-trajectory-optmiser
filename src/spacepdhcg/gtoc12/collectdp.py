@@ -34,8 +34,10 @@ import numpy as np
 from numpy.typing import NDArray
 
 from . import constants as C
+from .clusters import mean_longitude
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
+from .hopcalib import InflationFit
 from .screening import (
     lambert_hops,
     low_thrust_inflation,
@@ -49,10 +51,26 @@ EARTH_ID = 0
 
 @dataclass(frozen=True, slots=True)
 class CollectDPSettings:
-    step_days: float = 30.0
-    # collect hop TOFs (multiples of ``step_days``)
-    tofs: tuple[float, ...] = (90.0, 120.0, 150.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 600.0)
-    return_tofs: tuple[float, ...] = tuple(float(x) for x in range(300, 901, 60))
+    # departure lattice: every lattice epoch is a candidate departure, so the relative-phase
+    # windows (zero-crossings of the pair's phase drift) are found by enumeration; 15 days
+    # resolves a 60-180 d hop's window (the phase of co-moving pairs drifts < 1 deg/month)
+    step_days: float = 15.0
+    # collect hop TOFs (multiples of ``step_days``); the references' collect hops are 180 d
+    tofs: tuple[float, ...] = (
+        60.0,
+        90.0,
+        120.0,
+        150.0,
+        180.0,
+        210.0,
+        240.0,
+        300.0,
+        360.0,
+        450.0,
+        600.0,
+    )
+    # Earth return TOFs: 30-day grid over the certified return envelope (240-720 d)
+    return_tofs: tuple[float, ...] = tuple(float(x) for x in range(240, 721, 30))
     max_asteroids: int = 10
     end_margin_days: float = 2.0
     # objective: collected kg minus this many kg per kg of propellant (the propellant is a hard
@@ -66,6 +84,9 @@ class CollectDPSettings:
     return_inflation: float = 1.6
     return_authority_ratio: float = 0.5
     cache_pairs: int = 20_000  # bounded pair cache (float32 (n_t, n_tof) per pair)
+    # calibrated inflation model (``hopcalib.InflationFit``): when set, hop propellant uses
+    # ``f(r, TOF, Δa, Δλ)`` fitted on the certified archive instead of the flat/ratio factor
+    inflation_fit: InflationFit | None = None
 
     def __post_init__(self) -> None:
         for tof in self.tofs:
@@ -101,6 +122,7 @@ class CollectPairTable:
         self.return_tofs: FloatArray = np.asarray(s.return_tofs, dtype=np.float64)
         self._hops: OrderedDict[tuple[int, int], NDArray[np.float32]] = OrderedDict()
         self._returns: dict[int, NDArray[np.float32]] = {}
+        self._geometry: dict[tuple[int, int, float, int], tuple[float, FloatArray]] = {}
         self.lambert_evaluations = 0
 
     # -- lattice -------------------------------------------------------------------------
@@ -171,14 +193,64 @@ class CollectPairTable:
 
     # -- propellant model ----------------------------------------------------------------
 
-    def hop_propellant(self, dv: FloatArray, mass: float, tofs: FloatArray) -> FloatArray:
-        """Propellant (kg) of hops ``dv`` at ``mass`` over ``tofs``; ``inf`` when not flyable."""
+    def pair_geometry(
+        self, source: int, target: int, epochs: FloatArray
+    ) -> tuple[float, FloatArray]:
+        """``(Δa in AU, Δλ(t) in rad wrapped to [-π, π])`` of the pair at ``epochs``."""
+
+        epochs = np.asarray(epochs, dtype=np.float64)
+        key = (source, target, float(epochs[0]) if epochs.shape[0] else 0.0, epochs.shape[0])
+        cached = self._geometry.get(key)
+        if cached is not None:
+            return cached
+        cat = self.catalogue
+        src = int(np.searchsorted(cat.ids, source))
+        tgt = int(np.searchsorted(cat.ids, target))
+        delta_a = float(cat.semi_major_axis_km[tgt] - cat.semi_major_axis_km[src]) / C.AU_KM
+        epochs = np.asarray(epochs, dtype=np.float64)
+        n_s = float(np.sqrt(C.MU_SUN_KM3_S2 / cat.semi_major_axis_km[src] ** 3) * C.DAY_S)
+        n_t = float(np.sqrt(C.MU_SUN_KM3_S2 / cat.semi_major_axis_km[tgt] ** 3) * C.DAY_S)
+        ref = float(epochs[0]) if epochs.shape[0] else C.MISSION_START_MJD
+        l_s = float(mean_longitude(cat, np.asarray([src]), ref)[0])
+        l_t = float(mean_longitude(cat, np.asarray([tgt]), ref)[0])
+        delta = (l_t - l_s) + (n_t - n_s) * (epochs - ref)
+        result = (delta_a, (delta + np.pi) % (2.0 * np.pi) - np.pi)
+        if len(self._geometry) > 4 * self.settings.cache_pairs:
+            self._geometry.clear()
+        self._geometry[key] = result
+        return result
+
+    def hop_propellant(
+        self,
+        dv: FloatArray,
+        mass: float,
+        tofs: FloatArray,
+        *,
+        pair: tuple[int, int] | None = None,
+        epochs: FloatArray | None = None,
+    ) -> FloatArray:
+        """Propellant (kg) of hops ``dv`` at ``mass`` over ``tofs``; ``inf`` when not flyable.
+
+        With a calibrated ``inflation_fit`` and the pair + departure ``epochs`` (rows of ``dv``)
+        given, the inflation is the fitted ``f(r, TOF, Δa, Δλ)``; otherwise the flat or
+        ratio-only factor of the settings.
+        """
 
         s = self.settings
         dv = np.asarray(dv, dtype=np.float64)
         authority = thrust_authority_km_s(mass, tofs, 1.0)
         ok = np.isfinite(dv) & (dv <= s.hop_authority_ratio * authority)
-        if s.hop_inflation_slope is None:
+        fit = getattr(s, "inflation_fit", None)
+        if fit is not None and pair is not None and epochs is not None and dv.ndim == 2:
+            delta_a, delta_l = self.pair_geometry(pair[0], pair[1], epochs)
+            inflation = fit.inflation(
+                np.where(ok, dv, 0.0),
+                mass,
+                np.broadcast_to(np.asarray(tofs, dtype=np.float64)[None, :], dv.shape),
+                delta_a,
+                np.broadcast_to(delta_l[:, None], dv.shape),
+            )
+        elif s.hop_inflation_slope is None:
             inflation = np.full(dv.shape, s.hop_inflation)
         else:
             inflation = low_thrust_inflation(
@@ -218,6 +290,8 @@ class CollectTour:
     return_dv: float
     dp_states: int = 0
     diagnostics: dict[str, object] = field(default_factory=dict)
+    # model propellant (kg) of every entry of ``hops`` in flight order (return excluded)
+    hop_propellant_kg: list[float] = field(default_factory=list)
 
 
 def plan_collect_tour(
@@ -230,17 +304,25 @@ def plan_collect_tour(
     weights: dict[int, float] | None = None,
     banned_pairs: set[tuple[int, int]] | frozenset[tuple[int, int]] | None = None,
     propellant_weight: float | None = None,
+    burn_per_hop: float | None = None,
 ) -> CollectTour | None:
     """Best collect tour over ``deployed`` for a ship sitting at ``camp`` at ``camp_epoch``.
 
     ``deployed`` are ``(asteroid, deploy epoch)`` pairs (the camp asteroid among them);
     ``mass_after_deploys`` the ship mass at the camp.  ``propellant_weight`` overrides the
-    settings' objective weight.  Returns ``None`` when no tour closes.
+    settings' objective weight.  ``burn_per_hop`` (kg) fixes the burn schedule of the mass
+    model and skips the heavy first pass (a sweep over weights reuses the first tour's).
+    Returns ``None`` when no tour closes.
 
     Propellant is priced as ``mass x f`` with ``f = 1 - exp(-inflation x ΔV / v_e)`` tabulated
-    per pair once (feasibility and the inflation model evaluated at the heaviest mass the ship
-    can reach, so a lighter ship is never priced optimistically); the mass of a hop is the camp
-    mass plus the miners collected so far (mined to the window end).
+    per pair and move mass.  The mass of a hop (feasibility, inflation model and propellant)
+    is the camp mass plus the miners collected so far (mined to the window end) minus the
+    propellant burnt on the hops flown so far.  The DP state does not carry the burnt mass, so
+    the tour is solved twice: pass 1 with no burn credit (heavy ship), pass 2 with the burn
+    schedule of the pass-1 tour (mean hop propellant x hops flown).  Pricing every move at the
+    heavy pass-1 mass put the certified tours' returns (7.4 km/s at 1120 kg, ratio 0.36) over
+    the 0.5 authority limit (ratio 0.60 at 1900 kg) and made the DP settle for tours 100 kg
+    worse than the ones the re-timer later certified.
     """
 
     s = table.settings
@@ -262,8 +344,6 @@ def plan_collect_tour(
     epochs = table.epochs[t0:]  # local lattice: the collect phase starts at the camp
     n_t = epochs.shape[0]
     full = (1 << k) - 1
-    tof_steps = table.tof_steps
-    n_tof = tof_steps.shape[0]
     min_stay = C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS
     # mined mass on departure at every lattice epoch, per asteroid (-inf where the stay is short)
     mined = np.full((k, n_t), -np.inf)
@@ -274,27 +354,105 @@ def plan_collect_tour(
     mined_end = np.array(
         [C.maximum_collected_mass(max(epochs[-1] - deploy_epoch[a], 0.0)) for a in ids]
     )
-    mass_ref = mass_after_deploys + float(mined_end.sum())
-    mass_by_subset = np.array(
-        [
-            mass_after_deploys + sum(mined_end[i] for i in range(k) if m >> i & 1)
-            for m in range(full + 1)
-        ]
+    popcount = np.array([bin(m).count("1") for m in range(full + 1)])
+    mined_by_subset = np.array(
+        [sum(mined_end[i] for i in range(k) if m >> i & 1) for m in range(full + 1)]
     )
+    floor_mass = C.DRY_MASS_KG + 1.0
 
-    fractions: dict[tuple[int, int], FloatArray] = {}
+    fractions: dict[tuple[int, int, int], FloatArray] = {}
+    hop_tables: dict[tuple[int, int], FloatArray] = {}
 
-    def fraction(j: int, l_i: int) -> FloatArray:
-        """Propellant per kg of ship mass for hop ``j -> l`` on the local lattice x TOF grid."""
+    def fraction(j: int, l_i: int, mass: float) -> FloatArray:
+        """Propellant per kg of ship mass for hop ``j -> l`` on the local lattice x TOF grid,
+        flyable and priced at the mass the ship has on that move."""
 
-        key = (j, l_i)
+        key = (j, l_i, round(mass))
         cached = fractions.get(key)
         if cached is None:
-            dv = table.hop(ids[j], ids[l_i])[t0:].astype(np.float64)
-            cost = table.hop_propellant(dv, mass_ref, table.tofs)
-            cached = cost / mass_ref
+            dv = hop_tables.get((j, l_i))
+            if dv is None:
+                dv = table.hop(ids[j], ids[l_i])[t0:].astype(np.float64)
+                hop_tables[(j, l_i)] = dv
+            cost = table.hop_propellant(
+                dv, mass, table.tofs, pair=(ids[j], ids[l_i]), epochs=epochs
+            )
+            cached = cost / mass
             fractions[key] = cached
         return cached
+
+    def solve(burn_per_hop: float) -> CollectTour | None:
+        return _solve_collect_dp(
+            table,
+            ids,
+            camp_i,
+            t0,
+            epochs,
+            mined,
+            mined_by_subset,
+            popcount,
+            weights,
+            banned,
+            w,
+            mass_after_deploys,
+            burn_per_hop,
+            floor_mass,
+            fraction,
+            deploy_epoch,
+        )
+
+    if burn_per_hop is not None:
+        return solve(max(float(burn_per_hop), 0.0))
+    first = solve(0.0)
+    if first is None:
+        # nothing closes for the heavy ship: retry once with a nominal burn schedule (a 2 km/s
+        # hop at 1.2x costs 6 % of the mass); the forward mass pass judges the result
+        return solve(0.06 * mass_after_deploys)
+    if not first.hop_propellant_kg:
+        return first
+    burn_per_hop = float(np.mean(first.hop_propellant_kg))
+    if burn_per_hop <= 0.0:
+        return first
+    second = solve(burn_per_hop)
+    if second is None:
+        return first
+    second.diagnostics["pass1_objective_kg"] = first.objective_kg
+    second.diagnostics["burn_per_hop_kg"] = burn_per_hop
+    return second
+
+
+def _solve_collect_dp(
+    table: CollectPairTable,
+    ids: list[int],
+    camp_i: int,
+    t0: int,
+    epochs: FloatArray,
+    mined: FloatArray,
+    mined_by_subset: FloatArray,
+    popcount: NDArray[np.int64],
+    weights: dict[int, float],
+    banned: set[tuple[int, int]] | frozenset[tuple[int, int]],
+    w: float,
+    mass_after_deploys: float,
+    burn_per_hop: float,
+    floor_mass: float,
+    fraction,
+    deploy_epoch: dict[int, float],
+) -> CollectTour | None:
+    """One Held-Karp pass with the mass schedule ``camp mass + mined(S) - burn x hops flown``
+    (the hop out of the ``h``-th collected asteroid is the ``h``-th hop)."""
+
+    k = len(ids)
+    n_t = epochs.shape[0]
+    full = (1 << k) - 1
+    tof_steps = table.tof_steps
+    n_tof = tof_steps.shape[0]
+    # mass on the move out of location j once the set S (j included) is collected: hop number
+    # popcount(S) - 1 hops have been flown before it
+    mass_by_subset = np.maximum(
+        mass_after_deploys + mined_by_subset - burn_per_hop * np.maximum(popcount - 1, 0),
+        floor_mass,
+    )
 
     # DP tables: value on *arrival* at location j with collected set S, per lattice epoch
     neg = -np.inf
@@ -358,12 +516,12 @@ def plan_collect_tour(
                     continue
                 if (aj, ids[l_i]) in banned:
                     continue
-                frac = fraction(j, l_i)
                 # the skip move: leave the camp without collecting (only from the start state)
                 moves = [(collected_now, depart_value, mass_hop)]
                 if subset == 0 and j == camp_i:
                     moves.append((0, ready, mass_after_deploys))
                 for new_subset, base, mass in moves:
+                    frac = fraction(j, l_i, mass)
                     cand = base[:, None] - (w * mass) * frac  # (n_t, n_tof)
                     shifted.fill(neg)
                     for k_i in range(n_tof):
@@ -396,6 +554,7 @@ def plan_collect_tour(
     subset, j, t_dep, r_i = best_end
     collect: dict[int, float] = {}
     hops: list[tuple[int, int, float, float, float]] = []
+    hop_propellant: list[float] = []
     return_departure = float(epochs[t_dep])
     return_tof = float(table.return_tofs[r_i])
     return_dv = float(table.earth_return(ids[j])[t0 + t_dep, r_i])
@@ -415,6 +574,8 @@ def plan_collect_tour(
         tof = float(table.tofs[tof_i])
         dv = float(table.hop(ids[prev_j], ids[j])[t0 + dep_i, tof_i])
         hops.append((ids[prev_j], ids[j], float(epochs[dep_i]), tof, dv))
+        move_mass = mass_after_deploys if skipped else float(mass_by_subset[subset])
+        hop_propellant.append(move_mass * float(fraction(prev_j, j, move_mass)[dep_i, tof_i]))
         if skipped:
             reposition = True
             subset_prev = subset
@@ -426,6 +587,7 @@ def plan_collect_tour(
         _ready, src = ready_of(arrive[(subset, j)])
         t_arr = int(src[dep_i])
     hops.reverse()
+    hop_propellant.reverse()
     order.reverse()
     collected_proxy = sum(
         C.maximum_collected_mass(collect[a] - deploy_epoch[a]) for a in ids if a in collect
@@ -445,5 +607,11 @@ def plan_collect_tour(
         return_tof,
         return_dv,
         states,
-        {"lattice_start": float(epochs[0]), "asteroids": k, "propellant_weight": w},
+        {
+            "lattice_start": float(epochs[0]),
+            "asteroids": k,
+            "propellant_weight": w,
+            "burn_per_hop_kg": burn_per_hop,
+        },
+        hop_propellant,
     )

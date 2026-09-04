@@ -23,6 +23,7 @@ import math
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
@@ -32,6 +33,7 @@ from .clusters import ClusterBands, ComovingClusters
 from .collectdp import CollectDPSettings, CollectPairTable, CollectTour, plan_collect_tour
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
+from .hopcalib import load_fit
 from .proxies import phasing_edelbaum_proxy
 from .screening import (
     exhaust_velocity_km_s,
@@ -154,9 +156,18 @@ class SearchSettings:
     collect_dp: bool = True
     collect_dp_min_deploys: int = 2
     collect_dp_max_deploys: int = 10
-    collect_dp_step_days: float = 30.0
+    collect_dp_step_days: float = 15.0
+    # collect hop TOFs of the DP (multiples of the step; ``None`` = the CollectDPSettings grid)
+    collect_dp_tofs: tuple[float, ...] | None = None
+    # Earth-return TOFs of the DP (``None`` = the CollectDPSettings 30-day 240-720 d grid)
+    collect_dp_return_tofs: tuple[float, ...] | None = None
     collect_dp_propellant_weight: float = 1.0
-    collect_dp_cache_pairs: int = 20_000
+    # bounded pair cache: 15-day tables are 14 kB per pair; the campaigns' searches used 364-782
+    # pairs, so 6000 (84 MB worst case) never evicts a live pair and bounds the worker memory
+    collect_dp_cache_pairs: int = 6_000
+    # calibrated hop inflation for the DP table: path of a ``hopcalib`` fit JSON (``""`` = the
+    # flat ``hop_inflation``); fitted on the certified archive, evaluated per pair and epoch
+    collect_dp_inflation_fit: str = ""
     # cluster-first prior (clusters.py): Earth targets need at least ``cluster_min_density``
     # co-moving neighbours, and partials earn ``cluster_bonus_kg`` x (unvisited co-moving
     # neighbours of the current asteroid, capped at the remaining deploy slots) / max_deploys
@@ -477,17 +488,32 @@ class RouteSearch:
         if self._collect_table is None:
             s = self.settings
             step = s.collect_dp_step_days
-            tofs = tuple(
-                float(t)
-                for t in s.collect_hop_tofs
-                if abs(t / step - round(t / step)) < 1e-9 and t <= 720.0
+            defaults = CollectDPSettings()
+            if s.collect_dp_tofs is not None:
+                tofs = tuple(float(t) for t in s.collect_dp_tofs)
+            else:
+                tofs = tuple(
+                    float(t)
+                    for t in defaults.tofs
+                    if abs(t / step - round(t / step)) < 1e-9 and t <= 720.0
+                )
+            return_tofs = (
+                tuple(float(t) for t in s.collect_dp_return_tofs)
+                if s.collect_dp_return_tofs is not None
+                else defaults.return_tofs
             )
+            fit = load_fit(Path(s.collect_dp_inflation_fit)) if s.collect_dp_inflation_fit else None
+            if s.collect_dp_inflation_fit and fit is None:
+                raise FileNotFoundError(
+                    f"collect DP inflation fit not readable: {s.collect_dp_inflation_fit}"
+                )
             self._collect_table = CollectPairTable(
                 self.catalogue,
                 CollectDPSettings(
                     step_days=step,
                     tofs=tofs,
-                    return_tofs=tuple(float(t) for t in s.earth_leg_tofs),
+                    return_tofs=return_tofs,
+                    inflation_fit=fit,
                     max_asteroids=s.collect_dp_max_deploys,
                     end_margin_days=s.end_margin_days,
                     propellant_weight=s.collect_dp_propellant_weight,
@@ -1252,6 +1278,7 @@ class RouteSearch:
         weights = [s.collect_dp_propellant_weight]
         if s.propellant_weight > 0.0 and abs(s.propellant_weight - weights[0]) > 1e-9:
             weights.append(s.propellant_weight)
+        burn_per_hop: float | None = None  # the first tour's burn schedule prices the rest
         for weight in weights:
             tour = plan_collect_tour(
                 self.collect_table,
@@ -1262,10 +1289,13 @@ class RouteSearch:
                 weights=self.weights,
                 banned_pairs=self.banned_pairs,
                 propellant_weight=weight,
+                burn_per_hop=burn_per_hop,
             )
             if tour is None:
                 reasons.append(f"w{weight:g}:no_tour")
                 continue
+            if burn_per_hop is None and tour.hop_propellant_kg:
+                burn_per_hop = float(np.mean(tour.hop_propellant_kg))
             plan = self._plan_from_tour(partial, tour)
             if plan is None:
                 reasons.append(f"w{weight:g}:{self.last_failure}")
@@ -1274,6 +1304,18 @@ class RouteSearch:
         if not plans:
             self.last_failure = ",".join(reasons)
         return plans
+
+    def _dp_hop_inflation(
+        self, source: int, target: int, departure: float, dv: float, mass: float, tof: float
+    ) -> float:
+        """Inflation of a DP collect hop: the table's calibrated fit when it has one (so the
+        forward mass pass prices the leg as the DP did), else the beam's hop model."""
+
+        fit = self.collect_table.settings.inflation_fit
+        if fit is None:
+            return self.hop_inflation_for(dv, mass, tof)
+        delta_a, delta_l = self.collect_table.pair_geometry(source, target, np.asarray([departure]))
+        return float(fit.inflation(np.asarray([dv]), mass, np.asarray([tof]), delta_a, delta_l)[0])
 
     def _plan_from_tour(self, partial: _Partial, tour: CollectTour) -> RoutePlan | None:
         """Legs of a DP tour (camps inserted between arrivals and departures) -> RoutePlan."""
@@ -1303,7 +1345,7 @@ class RouteSearch:
                     departure,
                     departure + tof,
                     dv,
-                    self.hop_inflation_for(dv, mass_guess, tof),
+                    self._dp_hop_inflation(source, target, departure, dv, mass_guess, tof),
                     "collect_hop",
                 )
             )

@@ -241,6 +241,53 @@ def _tof_priced_certify(catalogue, target, launch, tof, lambert_dv, scvx):
 
 
 @requires_data
+def test_earth_leg_prescreen_flies_low_authority_ratio_legs_first(catalogue, family) -> None:
+    from spacepdhcg.gtoc12.bundles import (
+        ClusterPricingSettings,
+        certify_earth_legs,
+        cluster_search_settings,
+    )
+    from spacepdhcg.gtoc12.screening import thrust_authority_km_s
+
+    _label, members = family
+    settings = cluster_search_settings(
+        ClusterPricingSettings(launch_epochs=SMALL_LAUNCH_EPOCHS, earth_leg_tofs=SMALL_EARTH_TOFS),
+        members.shape[0],
+    )
+    flown: list[tuple[int, float, float, float]] = []
+
+    def refuse_all(_catalogue, target, launch, tof, lambert_dv, _scvx):
+        flown.append((target, launch, tof, lambert_dv))
+        return None
+
+    for prescreen in (0.7, float("inf")):
+        flown.clear()
+        legs, rejected = certify_earth_legs(
+            catalogue,
+            members,
+            settings,
+            count=1,
+            max_checks=8,
+            cache={},
+            certify=refuse_all,
+            continuous=False,
+            prescreen_ratio=prescreen,
+        )
+        assert not legs and len(rejected) == len(flown) == 8
+        ratios = [
+            dv / float(thrust_authority_km_s(settings.initial_mass, tof, 1.0))
+            for _t, _l, tof, dv in flown
+        ]
+        if prescreen == 0.7:
+            low = ratios
+            assert all(r <= 0.7 + 1e-9 for r in ratios)
+            assert rejected[0]["authority_ratio"] == pytest.approx(ratios[0])
+        else:
+            # the plain score order tries at least one leg the prescreen deferred
+            assert any(r > 0.7 for r in ratios) or ratios == low
+
+
+@requires_data
 def test_continuous_earth_leg_refinement_respects_bounds_and_is_deterministic(
     catalogue, family
 ) -> None:
@@ -270,6 +317,7 @@ def test_continuous_earth_leg_refinement_respects_bounds_and_is_deterministic(
             continuous=True,
             continuous_evaluations=10,
             optimiser_log=log,
+            prescreen_ratio=float("inf"),  # score order only: the fake certifier is parity-based
         )
         runs.append(([(leg.target, leg.launch_epoch, leg.tof_days) for leg in legs], log))
     assert runs[0] == runs[1]  # deterministic

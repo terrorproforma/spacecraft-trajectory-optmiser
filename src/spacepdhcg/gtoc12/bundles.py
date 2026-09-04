@@ -90,6 +90,12 @@ class ClusterPricingSettings:
     # collect epochs; the best of the heuristic tours and the DP tour is kept
     collect_dp: bool = True
     collect_dp_propellant_weight: float = 1.0
+    collect_dp_step_days: float = 15.0
+    collect_dp_inflation_fit: str = ""  # hopcalib fit JSON for the DP pair table ("" = flat)
+    # Lambert prescreen of Earth legs: legs above this authority ratio are not sent to SCvx
+    # (the certified Earth legs of the archive all fly below 0.62; the 350-400 d legs at
+    # 0.75-0.93 that the ranking used to try first never certified and cost 12 checks per slot)
+    earth_prescreen_ratio: float = 0.7
     # launch grid spans the mission start plus this window (the references launch over ~3 y)
     launch_window_days: float = 3.0 * C.YEAR_DAYS
     launch_step_days: float = 30.0
@@ -150,6 +156,8 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         collect_lookahead_weight=settings.collect_lookahead_weight,
         collect_dp=settings.collect_dp,
         collect_dp_propellant_weight=settings.collect_dp_propellant_weight,
+        collect_dp_step_days=settings.collect_dp_step_days,
+        collect_dp_inflation_fit=settings.collect_dp_inflation_fit,
         **grids,
     )
 
@@ -192,6 +200,7 @@ def certify_earth_legs(
     continuous_evaluations: int = 8,
     scvx_cache: dict[tuple[int, float, float], EarthLeg | None] | None = None,
     optimiser_log: list[dict[str, Any]] | None = None,
+    prescreen_ratio: float = 0.7,
 ) -> tuple[list[EarthLeg], list[dict[str, Any]]]:
     """SCvx-certified Earth legs to ``targets``: the beam's first level for one ship slot.
 
@@ -239,10 +248,16 @@ def certify_earth_legs(
     mined = C.MINING_RATE_KG_PER_YEAR * np.maximum(horizon - arrival, 0.0) / C.YEAR_DAYS
     weight = np.asarray([1.0 if weights is None else weights.get(int(a), 1.0) for a in targets])
     score = np.where(ok, weight[:, None, None] * mined - s.propellant_weight * propellant, -np.inf)
-    # best TOF per (target, launch); then rank the pairs
+    # best TOF per (target, launch); then rank the pairs.  Legs whose Lambert ratio exceeds
+    # ``prescreen_ratio`` go to the back of the queue: on the 10 217 archived checks legs at
+    # ratio 0.7-0.8 certified 9 % of the time, 0.8-0.9 5 %, against 81 % below 0.6 and 32 %
+    # at 0.6-0.7; they are only flown once every cheaper (target, launch) pair was tried.
     best_tof = np.argmax(score, axis=2)
     pair_score = np.take_along_axis(score, best_tof[:, :, None], axis=2)[:, :, 0]
-    order = np.argsort(-pair_score.ravel(), kind="stable")
+    full_authority = thrust_authority_km_s(s.initial_mass, tofs[None, None, :], 1.0)
+    ratio = np.take_along_axis(dv / full_authority, best_tof[:, :, None], axis=2)[:, :, 0]
+    deferred = (ratio > prescreen_ratio).ravel()
+    order = np.lexsort((-pair_score.ravel(), deferred))
     certified: list[EarthLeg] = []
     rejected: list[dict[str, Any]] = []
     checks = 0
@@ -610,6 +625,7 @@ def price_cluster(
             continuous_evaluations=settings.earth_leg_refinements,
             scvx_cache=earth_scvx_cache,
             optimiser_log=earth_report["optimised"],
+            prescreen_ratio=settings.earth_prescreen_ratio,
         )
         earth_report["checked"] += len(earth_cache) - before
         earth_report["certified"] += len(legs)
