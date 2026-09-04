@@ -248,9 +248,10 @@ boundary after 26 completed groups, all P1-E pure-gpu-ipm, every attempt `numeri
   20 core + 2 twins completed; `N=2000` 8 core + 2 twins completed, 4 core groups quarantined by a
   scheduler defect, 1 core group ended as the rule C error record, 1 core group completed on the
   restart generation. 0 qualified attempts anywhere (core: 123/46/11 `numerical`/`timeout`/`unrun`
-  at `N=100`, 53/66/61 at `N=500`, 34/31/19 at `N=2000`; the six 600 s twins are 52 `numerical`
-  + 2 `timeout`). Per-group wall on a clean GPU: `N=100` 178–461 s (median 330 s, 7 groups),
-  `N=500` 401–1114 s (2 groups), `N=2000` 298–1209 s (median 1169 s, 5 groups); under the foreign
+  at `N=100`, 53/66/61 at `N=500`, 31/31/19 over the nine completed `N=2000` core groups; the
+  six 600 s twins are 52 `numerical` + 2 `timeout`). Per-group wall on a clean GPU: `N=100`
+  178–461 s (median 330 s, 7 groups), `N=500` 401 s and 1114 s (2 groups), `N=2000` 298, 310,
+  1169 and 1209 s (4 core groups; clean twin 314 s); under the foreign
   host job (`python.exe`, 53–99 % SM until 2026-09-04T01:36Z) up to 1362 s / 2801 s / 1324 s.
   IPM `N=2000` attempts spend 270–530 s in one uninterruptible QOCO solve at 4–9 % GPU
   utilisation (cuDSS/host bound), so the 120 s deadline never shortens them.
