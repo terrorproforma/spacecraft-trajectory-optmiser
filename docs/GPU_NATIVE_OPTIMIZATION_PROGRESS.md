@@ -124,6 +124,61 @@ Reproduce with `numeric_fingerprint_test --benchmark`; raw logs and a matched JS
 study are in `build/performance/fingerprint-kernel-benchmark.log` and
 `artifacts/performance/fingerprint-hcw-2000-comparison.json`.
 
+## SCvx metrics and HCW replay follow-up
+
+The next measured tranche distributes interval/node metrics across up to 128 GPU
+blocks. FP64 tree reductions sum objective/merit values and take maxima for all
+constraint metrics. Partial results use retained driver storage; no allocation or
+host reduction occurs inside the iteration. Terminal sums have one owner.
+
+HCW replay retains the exact ZOH recurrence and its original accumulation order.
+Six lanes own the state components, exchange the preceding state through warp
+shuffles, and reuse the constant transition/control matrices. Time steps remain
+ordered; this is not a parallel prefix approximation. Nonlinear replay is unchanged.
+
+Local RTX 5090 measurements compare against an immutable library from `769b422`:
+
+| Measurement | Before | After | Ratio |
+|---|---:|---:|---:|
+| HCW SCvx wall time, 2,000 intervals | 67.759 ms | 41.305 ms | 1.64x |
+| HCW SCvx wall time, 10,000 intervals | 326.879 ms | 194.086 ms | 1.68x |
+| HCW reported replay/metrics phase, 2,000 intervals | 28.886 ms | 2.096 ms | 13.78x |
+| Complete HCW command, 2,000 intervals | 474.621 ms | 423.636 ms | 1.12x |
+| Isolated HCW replay, 2,000 intervals | 5.385 ms | 0.513 ms | 10.50x |
+
+The isolated metrics pass improved by 175–508x at 2,000 intervals across the four
+families, and 882–2,531x at 10,000. These kernel ratios are not whole-mission gains.
+Whole-SCvx measurements still use the already-feasible HCW fixture: one inner
+iteration, one outer iteration, zero accepted steps, and zero residuals. Each
+matched study alternates order with two warmups and seven measured repetitions.
+Metrics alone reduced the 2,000-interval SCvx median from 67.097 to 54.769 ms.
+
+Validation includes serial/parallel comparison of all 21 metrics with nonzero
+defects and violations, all four models, partial blocks, and virtual control both
+enabled and disabled. Maximum metrics match exactly; sum differences must stay
+within 3e-12 relative tolerance. Replay matches every state exactly through 10,000
+steps for three step sizes, nonzero controls, zero trajectories, and empty horizons.
+Both tests passed Compute Sanitizer memcheck, synccheck, and racecheck with zero
+errors/hazards. Variational dynamics and allocation/pointer/stream tests also pass.
+
+The final four-family production acceptance test, including CPU fingerprint checks,
+passed with maximum canonical residual 9.56640559e-9, nonlinear residual
+2.92768849e-8, zero CPU/GPU trajectory difference, and maximum coefficient difference
+2.7599450502791e-13. Displaced HCW retained three accepted steps and 1,050 inner
+iterations. Recovery counters remain subject to the previously documented bug.
+
+Reproduce kernel tests with `scvx_metrics_test --benchmark` and
+`hcw_replay_test --benchmark`. Raw results are in `build/performance/`; matched
+studies are `artifacts/performance/metrics-hcw-2000-comparison.json`,
+`metrics-replay-hcw-2000-comparison.json`, and
+`metrics-replay-hcw-10000-comparison.json`. Source and binary hashes are recorded
+by the benchmark runner (the first metrics-only study predates header hashing).
+
+Inspection after these measurements found that the standalone CQP residual API
+still launches the old single-block evaluator after the cooperative solve. Its time
+is also absent from `residual_seconds`. This is the next concrete target before
+attributing the remaining wall time to CPU orchestration.
+
 ## Work still required by the active goal
 
 1. Scale the large-trajectory measurements and tune operator ownership, especially
@@ -134,8 +189,9 @@ study are in `build/performance/fingerprint-kernel-benchmark.log` and
    Recovery's existing non-cancelled report also substitutes the requested iteration
    limit for completed PDHG iterations; correct that telemetry before using difficult
    recovery runs for a convergence cost model.
-3. Remove the remaining serial SCvx metrics/fingerprint work and repeated diagnostic
-   synchronization. Keep independent verification outside the production hot path.
+3. Parallelize the standalone CQP residual evaluator, repair its timing, and remove
+   repeated diagnostic synchronization. SCvx metrics and fingerprints are now
+   parallel; nonlinear trajectory replay and device outer decisions remain.
 4. Complete device-resident outer-loop decisions and the remaining GTOC12 native GPU
    refinement path. CPU Clarabel reuse is not the production destination for this goal.
 5. Remove/cache host-side QOCO conversion as part of a measured GPU-native backend

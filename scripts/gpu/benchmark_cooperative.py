@@ -54,6 +54,8 @@ def main() -> None:
                 Path("cpp/cuda/src/cooperative_pdhg.cuh"),
                 Path("cpp/cuda/src/device_scvx.cu"),
                 Path("cpp/cuda/internal/numeric_fingerprint.cuh"),
+                Path("cpp/cuda/internal/scvx_metrics.cuh"),
+                Path("cpp/cuda/internal/hcw_replay.cuh"),
             )
         },
         "baseline_sha256": hashlib.sha256(args.baseline_library.read_bytes()).hexdigest()
