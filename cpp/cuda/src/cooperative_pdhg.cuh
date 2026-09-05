@@ -562,6 +562,14 @@ __device__ void grid_evaluate_report(
     const std::uint64_t iteration
 ) {
     grid_compute_products(problem, problem->primal);
+    // Objective uses Qx, whereas stationarity additionally uses the dual gradient.
+    double objective = 0.0;
+    for (int variable = grid_rank(); variable < problem->variables; variable += grid_stride()) {
+        const double x = problem->primal[variable];
+        objective += problem->c[variable] * x
+            + 0.5 * x * problem->gradient[variable];
+    }
+    grid_barrier();
     grid_add_transpose_dual(problem);
     double scalar_violation = 0.0;
     double scalar_natural = 0.0;
@@ -594,7 +602,6 @@ __device__ void grid_evaluate_report(
 
     double box_violation = 0.0;
     double stationarity = 0.0;
-    double objective = 0.0;
     grid_barrier();
     for (int variable = grid_rank(); variable < problem->variables; variable += grid_stride()) {
         const double x = problem->primal[variable];
@@ -607,8 +614,6 @@ __device__ void grid_evaluate_report(
             problem->variable_lower[variable],
             problem->variable_upper[variable]
         );
-        objective += problem->c[variable] * x
-            + 0.5 * x * problem->gradient[variable];
     }
     grid_barrier();
     grid_project_cone_blocks(

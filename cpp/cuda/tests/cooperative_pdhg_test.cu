@@ -23,6 +23,26 @@ void compare_standalone_residuals(spacepdhcg_cuda_workspace* workspace,
     }
     const auto& serial = results[0];
     const auto& parallel = results[1];
+    spacepdhcg_cuda_pointer_snapshot pointers{};
+    test::status_require(spacepdhcg_cuda_workspace_pointer_snapshot(workspace, &pointers),
+                         "objective resident primal");
+    std::vector<double> primal(problem.variables);
+    test::cuda_require(cudaMemcpyAsync(primal.data(), reinterpret_cast<const void*>(pointers.primal),
+        primal.size() * sizeof(double), cudaMemcpyDeviceToHost, problem.stream), "objective primal download");
+    test::cuda_require(cudaStreamSynchronize(problem.stream), "objective primal wait");
+    // Independent definition: c'x + 1/2 x'Qx. The dual must never contribute
+    // to this value, including at equality-constrained optima with nonzero duals.
+    double expected_objective = 0.0;
+    for (int column = 0; column < problem.variables; ++column) {
+        expected_objective += problem.h_c[column] * primal[column];
+        for (int i = problem.h_q_offsets[column]; i < problem.h_q_offsets[column + 1]; ++i) {
+            expected_objective += 0.5 * problem.h_q[i] * primal[column] * primal[problem.h_q_indices[i]];
+        }
+    }
+    for (const auto& result : results) {
+        test::require_close(result.objective, expected_objective,
+            1e-10 * std::max(1.0, std::abs(expected_objective)), "objective excludes dual contributions");
+    }
 #define CHECK_RESIDUAL(field) \
     test::require_close(parallel.field, serial.field, \
         1e-10 * std::max(1.0, std::abs(serial.field)), "standalone residual parity: " #field)

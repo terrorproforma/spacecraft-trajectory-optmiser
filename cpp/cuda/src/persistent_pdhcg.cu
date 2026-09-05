@@ -955,6 +955,16 @@ __device__ void evaluate_report(
     const std::uint64_t iteration
 ) {
     compute_products(problem, problem->primal);
+    // Capture x'Qx before the residual gradient acquires A'y and F'z.
+    double objective = 0.0;
+    if (threadIdx.x == 0) {
+        for (int variable = 0; variable < problem->variables; ++variable) {
+            const double x = problem->primal[variable];
+            objective += problem->c[variable] * x
+                + 0.5 * x * problem->gradient[variable];
+        }
+    }
+    __syncthreads();
     add_transpose_dual(problem);
     if (threadIdx.x == 0) {
         double scalar_violation = 0.0;
@@ -987,7 +997,6 @@ __device__ void evaluate_report(
 
         double box_violation = 0.0;
         double stationarity = 0.0;
-        double objective = 0.0;
         for (int variable = 0; variable < problem->variables; ++variable) {
             const double x = problem->primal[variable];
             const double projection =
@@ -999,8 +1008,6 @@ __device__ void evaluate_report(
                 problem->variable_lower[variable],
                 problem->variable_upper[variable]
             );
-            objective += problem->c[variable] * x
-                + 0.5 * x * problem->gradient[variable];
         }
         project_cone_blocks(
             problem->average_primal,
@@ -2160,8 +2167,7 @@ __global__ void recovery_kernel(
     if (poll_cancellation(cancellation, &cancel_flag)) {
         return;
     }
-    // The PDHG iterations actually spent before recovery began; a cancelled recovery reports
-    // this honest count rather than the full iteration budget.
+    // Preserve the PDHG work separately from recovery, on every outcome.
     const std::uint64_t pdhg_iterations = report->iterations;
     if (threadIdx.x == 0) {
         ++control->recovery_attempt_count;
@@ -2304,7 +2310,7 @@ __global__ void recovery_kernel(
             cancelled = true;
             break;
         }
-        evaluate_report(problem, control, report, control->iteration_limit);
+        evaluate_report(problem, control, report, pdhg_iterations);
         if (threadIdx.x == 0) {
             kkt_converged = accepted
                 && isfinite(report->natural_residual_inf)
@@ -2391,7 +2397,7 @@ __global__ void recovery_kernel(
         }
         return;
     }
-    evaluate_report(problem, control, report, control->iteration_limit);
+    evaluate_report(problem, control, report, pdhg_iterations);
     __shared__ int qualified;
     if (threadIdx.x == 0) {
         problem->recovery_scalars[2] = report->natural_residual_inf;
@@ -2447,12 +2453,12 @@ __global__ void recovery_kernel(
             problem->dual[row] = problem->recovery_backup_dual[row];
         }
         __syncthreads();
-        evaluate_report(problem, control, report, control->iteration_limit);
+        evaluate_report(problem, control, report, pdhg_iterations);
     }
     if (threadIdx.x == 0) {
         report->recovery_count = control->recovery_count;
         report->recovery_rejected_count = control->recovery_rejected_count;
-        report->recovery_iterations = 50'000U;
+        report->recovery_iterations = completed_recovery_iterations;
         report->recovery_attempt_count = control->recovery_attempt_count;
         report->recovery_final_residual = problem->recovery_scalars[2];
         report->termination =

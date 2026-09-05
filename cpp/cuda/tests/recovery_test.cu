@@ -134,6 +134,11 @@ void check_rejected_recovery_rollback() {
             && std::isfinite(recovery_diagnostics.recovery_final_residual),
         "recovery cost or residual diagnostics are missing"
     );
+    test::require(baseline_diagnostics.iterations == 300'000U
+                      && recovery_diagnostics.iterations == baseline_diagnostics.iterations,
+                  "recovery must retain actual PDHG work rather than the requested budget");
+    test::require(recovery_diagnostics.recovery_iterations == 50'000U,
+                  "recovery reports its completed projection iterations separately");
     require_equal(
         baseline_primal,
         recovered_primal,

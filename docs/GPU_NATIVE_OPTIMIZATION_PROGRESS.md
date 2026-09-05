@@ -232,6 +232,26 @@ nonlinear, and CPU/GPU trajectory residuals. These are not general mission-plann
 speedup multipliers. Raw samples and provenance are in
 `artifacts/performance/gpu-native-hcw-2000-final.json`.
 
+## Objective and recovery-counter correctness
+
+Both CQP evaluators now form the objective from Qx before adding transpose-dual
+contributions to the stationarity gradient. A regression evaluated the same resident
+point independently as c'x + x'Qx/2: the old report returned about -0.5 where the
+correct value was -0.6666666823. It failed before the fix and passes afterward for
+legacy and cooperative modes, including deliberately infeasible points.
+
+Recovery now preserves the PDHG iteration count on every exit and reports completed
+projection iterations separately. The rejected-recovery regression previously
+substituted its 350,000 budget for 300,000 completed PDHG steps. Production 3DOF now
+reports 300,000 PDHG steps plus 50,000 recovery steps, rather than 1,000,000 PDHG
+steps. These corrections do not loosen tolerances or skip work.
+
+The recovery suite, analytic objective tests, standard native tests, and all three
+CUDA sanitizer tools pass. The four-family production check passes with maximum
+canonical residual 9.56640559e-9, nonlinear residual 2.92768853e-8, zero CPU/GPU
+trajectory difference, and exact numeric fingerprints. Logs are in
+`build/performance/native-checks/*objective*` and `*recovery-count-regression*`.
+
 ## Work still required by the active goal
 
 1. Scale the large-trajectory measurements and tune operator ownership, especially
@@ -239,12 +259,8 @@ speedup multipliers. Raw samples and provenance are in
 2. Parallelize recovery and improve convergence. The powered-descent validation
    fixtures still spend substantial time in recovery; the large zero-HCW setup gain
    does not address that bottleneck.
-   Recovery's existing non-cancelled report also substitutes the requested iteration
-   limit for completed PDHG iterations; correct that telemetry before using difficult
-   recovery runs for a convergence cost model.
-   Also correct the CQP report's objective: source inspection shows that its
-   quadratic term uses the gradient after adding dual contributions. Add an
-   independent analytic-objective regression before changing convergence policy.
+   The objective and completed-iteration counters are now corrected for subsequent
+   convergence experiments; earlier reports remain unsuitable as work counts.
 3. Remove repeated diagnostic synchronization. Standalone CQP residual evaluation,
    SCvx metrics, and fingerprints are now parallel; nonlinear trajectory replay
    and device outer decisions remain.
