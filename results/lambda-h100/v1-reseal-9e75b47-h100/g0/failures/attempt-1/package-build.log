@@ -1,0 +1,33 @@
+* Creating isolated environment: venv+pip...
+* Installing packages in isolated environment:
+  - scikit-build-core>=1.0,<2
+* Getting build dependencies for wheel...
+* Installing packages in isolated environment:
+  - cmake>=3.24
+* Installed build dependency versions:
+  - scikit-build-core==1.0.3
+* Building wheel...
+Traceback (most recent call last):
+  File "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+    main()
+  File "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+    json_out["return_val"] = hook(**hook_input["kwargs"])
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/pyproject_hooks/_in_process/_in_process.py", line 280, in build_wheel
+    return _build_backend().build_wheel(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/build-env-cqwjzeof/lib/python3.12/site-packages/scikit_build_core/build/__init__.py", line 53, in build_wheel
+    return _build_wheel_impl(
+           ^^^^^^^^^^^^^^^^^^
+  File "/tmp/build-env-cqwjzeof/lib/python3.12/site-packages/scikit_build_core/build/wheel.py", line 267, in _build_wheel_impl
+    return _build_wheel_impl_impl(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/build-env-cqwjzeof/lib/python3.12/site-packages/scikit_build_core/build/wheel.py", line 341, in _build_wheel_impl_impl
+    cmake = CMake.default_search(version=settings.cmake.version, env=os.environ)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/build-env-cqwjzeof/lib/python3.12/site-packages/scikit_build_core/cmake.py", line 90, in default_search
+    raise CMakeNotFoundError(msg)
+scikit_build_core.errors.CMakeNotFoundError: Could not find CMake with version >=3.24
+
+TIP pass --env-dir and --sdist-extract-dir to keep the build environment and sources, then see https://build.pypa.io/en/stable/how-to/troubleshooting.html#debug-a-failed-build for help debugging a failed build
+ERROR Backend subprocess exited when trying to invoke build_wheel

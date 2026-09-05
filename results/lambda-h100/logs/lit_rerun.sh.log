@@ -1,0 +1,88 @@
+[2026-09-04T16:12:11Z] preflight
+preflight exit=0
+[2026-09-04T16:12:12Z] gpu-run blackmore + chari (expected exit 2: chari stays gap by design)
+[2026-09-04T17:05:24Z] gpu-run exit=2 after 3192s
+status=PASS
+gpu_run_exit=2
+expected_exit=2
+completed_utc=2026-09-04T17:05:24Z
+== acikmese-ploen-2007-pd3 status: reproduced
+   scvx_qoco_gpu_fuel_used_kg = 399.3667620523968
+   scvx_qoco_gpu_replay_fuel_used_kg = 399.3666866940657
+   scvx_qoco_gpu_status = converged
+== blackmore-2010-pd3-case1 status: reproduced
+   scvx_qoco_gpu_fuel_used_kg = 398.84524372496
+   scvx_qoco_gpu_replay_fuel_used_kg = 398.8452436009993
+   scvx_qoco_gpu_status = converged
+== chari-2024-pd6-monte-carlo status: gap
+   gpu_persistent_batch = {"persistent_device_scvx": {"status": "blocked", "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"}, "pure_qoco_native_
+== blackmore keys with gpu/defer:
+  .measured.scvx_qoco_gpu_fuel_used_kg = 398.84524372496
+  .measured.scvx_qoco_gpu_replay_fuel_used_kg = 398.8452436009993
+  .measured.scvx_qoco_gpu_status = converged
+  .gap.scvx_qoco_gpu_minus_lossless_kg = -1.2431016378807271
+  .labels.measured.scvx_qoco_gpu_fuel_used_kg = measured-local
+  .details.repository_scvx.qoco-gpu-preflight.ok = True
+  .details.repository_scvx.qoco-gpu-preflight.reason = device free
+  .details.repository_scvx.qoco-gpu-preflight.nvidia_smi = /usr/bin/nvidia-smi
+  .details.repository_scvx.qoco-gpu-preflight.g4_owned = False
+  .details.repository_scvx.qoco-gpu-preflight.qoco_library = /home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so
+  .details.repository_scvx.qoco-gpu.backend = qoco-gpu
+  .details.repository_scvx.qoco-gpu.dt = 0.4
+  .details.repository_scvx.qoco-gpu.intervals = 196
+  .details.repository_scvx.qoco-gpu.discretisation = rk4
+  .details.repository_scvx.qoco-gpu.integration_substeps = 1
+  .details.repository_scvx.qoco-gpu.merit_mode = multiple_shooting
+  .details.repository_scvx.qoco-gpu.virtual_l1_weight = 10.0
+  .details.repository_scvx.qoco-gpu.status = converged
+  .details.repository_scvx.qoco-gpu.termination_reason = merit stalled below 1e-07 over 3 iterations
+  .details.repository_scvx.qoco-gpu.fuel_used = 398.84524372496
+  .details.repository_scvx.qoco-gpu.final_mass = 1506.15475627504
+  .details.repository_scvx.qoco-gpu.outer_iterations = 38
+  .details.repository_scvx.qoco-gpu.accepted_iterations = 32
+  .details.repository_scvx.qoco-gpu.residual_dynamics = 6.244799678174286e-09
+  .details.repository_scvx.qoco-gpu.residual_path = 3.0515518210651024e-08
+  .details.repository_scvx.qoco-gpu.residual_terminal = 6.2447996780345965e-09
+  .details.repository_scvx.qoco-gpu.path_max_violation = 0.0
+  .details.repository_scvx.qoco-gpu.replay_fuel_used = 398.8452436009993
+  .details.repository_scvx.qoco-gpu.replay_terminal_position_error = 6.582042277317521e-06
+  .details.repository_scvx.qoco-gpu.replay_terminal_velocity_error = 2.5037984587315943e-07
+  .details.repository_scvx.qoco-gpu.total_setup_seconds = 0.4761136039996927
+  .details.repository_scvx.qoco-gpu.total_solve_seconds = 9.546208757
+  .details.repository_scvx.qoco-gpu.wall_seconds = 54.454185958999005
+  .details.repository_scvx.qoco-gpu.workspace_creations = 1
+  .details.repository_scvx.qoco-gpu.numeric_updates = 37
+  .details.repository_scvx.qoco-gpu.solves = 42
+  .details.repository_scvx.qoco-gpu.error = None
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].iteration = 0
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].status = Solved (QOCO_SOLVED)
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].accepted = True
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].trust_radius = 8.0
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].step_fraction = 0.015057661558989783
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].agreement = 1.0000002258594043
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].merit_after = 0.7597444200944262
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].virtual_control_inf = 0.00288884314329436
+  .details.repository_scvx.qoco-gpu.iteration_trace[0].nonlinear_defect_inf = 0.0028888328064340385
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].iteration = 1
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].status = Solved (QOCO_SOLVED)
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].accepted = True
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].trust_radius = 8.0
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].step_fraction = 0.007966937358791141
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].agreement = 1.0000983685237177
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].merit_after = 0.7566960803698362
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].virtual_control_inf = 0.0009780253399981785
+  .details.repository_scvx.qoco-gpu.iteration_trace[1].nonlinear_defect_inf = 0.0009916341245968284
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].iteration = 2
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].status = Solved (QOCO_SOLVED)
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].accepted = True
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].trust_radius = 8.0
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].step_fraction = 0.00557880282707043
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].agreement = 1.0003743981043896
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].merit_after = 0.756019090397719
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].virtual_control_inf = 0.00027805370874380003
+  .details.repository_scvx.qoco-gpu.iteration_trace[2].nonlinear_defect_inf = 0.0002780437460074836
+Traceback (most recent call last):
+  File "/home/ubuntu/s/lit_peek3.py", line 20, in <module>
+    gp = c["details"]["gpu_persistent_batch"]
+         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'gpu_persistent_batch'

@@ -1,0 +1,28 @@
+[2026-09-04T13:19:39Z] == apt: base tools
+E: Error, pkgProblemResolver::Resolve generated breaks, this may be caused by held packages.
+[2026-09-04T13:19:47Z] mpicc: MISSING  mpirun: 
+[2026-09-04T13:19:47Z] nccl: 4 entries; libnccl-dev:amd64 2.26.2-0lambda1
+[2026-09-04T13:19:47Z] == apt: NVIDIA CUDA repo (toolkit-only: cuda-toolkit-12-8)
+[2026-09-04T13:19:49Z] simulate cuda-toolkit-12-8 (checking for any driver package):
+97 /tmp/cuda-toolkit-12-8.would-install.txt
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+[2026-09-04T13:23:40Z] cuda-12.8: nvcc=Build cuda_12.8.r12.8/compiler.35583870_0
+[2026-09-04T13:23:40Z] nsys: /usr/local/cuda-12.8/bin/nsys  compute-sanitizer: /usr/local/cuda-12.8/bin/compute-sanitizer
+lrwxrwxrwx 1 root root 22 Sep  4 13:23 /usr/local/cuda -> /etc/alternatives/cuda
+lrwxrwxrwx 1 root root 25 Sep  4 13:23 /usr/local/cuda-12 -> /etc/alternatives/cuda-12
+libcublas.so
+libcudart.so
+libcusolver.so
+libcusparse.so
+[2026-09-04T13:23:40Z] == uv + Python 3.12
+uv 0.12.9 (x86_64-unknown-linux-gnu)
+ + cpython-3.12.14-linux-x86_64-gnu (python3.12)
+/home/ubuntu/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/bin/python3.12
+[2026-09-04T13:23:42Z] == node 20 LTS (user-local)
+v20.20.2
+/usr/bin/env: ‘node’: No such file or directory
+[2026-09-04T13:23:44Z] == git identity (env-based, no global config)
+[2026-09-04T13:23:44Z] == shell env file
+[2026-09-04T13:23:44Z] == done provision

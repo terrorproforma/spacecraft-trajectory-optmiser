@@ -1,0 +1,87 @@
+[2026-09-04T13:35:46Z] == gtoc12 clone: c495dc0 feat/gtoc12-asteroid-mining dirty=0
+[2026-09-04T13:35:46Z] == venv
+spacepdhcg 0.1.0.dev0 native True
+[2026-09-04T13:36:04Z] == fetch pinned data
+OK  GTOC12_Problem.pdf: fetched from http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Problem.pdf
+OK  GTOC12_Submission_Format.pdf: fetched from http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Submission_Format.pdf
+OK  GTOC12_Asteroids_Data.txt: fetched from http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Asteroids_Data.txt
+OK  bonus_coefficients.txt: fetched from https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=bonus_coefficients.txt
+OK  GTOC12_Verification_Program.zip: fetched from http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2023/07/GTOC12_Verification_Program.zip
+OK  GTOC12_JPL_merged_solution_36sc.txt: fetched from https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=GTOC12_JPL_merged_solution_36sc.txt
+OK  39_mass_optimal.txt: fetched from http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2024/04/39_mass_optimal.txt
+OK  37_mass_optimal_self_cleaning.txt: fetched from http://sophia.estec.esa.int/gtoc_portal/wp-content/uploads/2024/04/37_mass_optimal_self_cleaning.txt
+OK  ConferenceHandbook_GTOC12_Workshop.pdf: fetched from https://gtoc12.tsinghua.edu.cn/prod-api/common/downloadProblemFile?fileName=ConferenceHandbook_GTOC12_Workshop.pdf
+total 96424
+drwxrwxr-x 3 ubuntu ubuntu     4096 Sep  4 13:36 .
+drwxrwxr-x 3 ubuntu ubuntu     4096 Sep  4 13:36 ..
+-rw------- 1 ubuntu ubuntu 24749100 Sep  4 13:36 37_mass_optimal_self_cleaning.txt
+-rw------- 1 ubuntu ubuntu 26353400 Sep  4 13:36 39_mass_optimal.txt
+-rw------- 1 ubuntu ubuntu  4548348 Sep  4 13:36 ConferenceHandbook_GTOC12_Workshop.pdf
+-rw------- 1 ubuntu ubuntu  6840111 Sep  4 13:36 GTOC12_Asteroids_Data.txt
+-rw------- 1 ubuntu ubuntu 22371953 Sep  4 13:36 GTOC12_JPL_merged_solution_36sc.txt
+-rw------- 1 ubuntu ubuntu  5042269 Sep  4 13:36 GTOC12_Problem.pdf
+-rw------- 1 ubuntu ubuntu   235250 Sep  4 13:36 GTOC12_Submission_Format.pdf
+-rw------- 1 ubuntu ubuntu  4903509 Sep  4 13:36 GTOC12_Verification_Program.zip
+-rw------- 1 ubuntu ubuntu  3660000 Sep  4 13:36 bonus_coefficients.txt
+-rw-rw-r-- 1 ubuntu ubuntu     2442 Sep  4 13:36 fetch_report.json
+drwxrwxr-x 3 ubuntu ubuntu     4096 Sep  4 13:36 verifier
+[2026-09-04T13:36:33Z] == official verifier (extract pinned Linux binary) + example solution
+binary: /home/ubuntu/spacepdhcg/gtoc12/benchmarks/gtoc12/data/verifier/GTOC12_Verification/Linux/GTOC12_Verify 187200 bytes
+available: True
+example: {'ok': True, 'ships': 1, 'mined_asteroids': 0, 'total_mass_kg': 0.0, 'return_code': 0, 'wall_seconds': 0.08294624899986047, 'message': 'Check successfully!'}
+[2026-09-04T13:36:34Z] == archived runs present (fleet-master sources)
+cluster_fleet_v1
+cluster_fleet_v2_deep
+cluster_fleet_v3_repair
+cluster_fleet_v4
+cluster_fleet_v5
+cluster_fleet_v5c
+cluster_fleet_v6
+fleet10_master_v1
+fleet3_full_catalogue
+fleet3_full_catalogue_v2
+fleet6_coop_v1
+fleet6_retime_v1
+fleet_master_v1
+fleet_master_v2
+fleet_master_v3
+fleet_master_v4
+fleet_master_v5
+full_catalogue_search2
+probe_v4_family
+probe_v5_family247
+probe_v6_family
+reduced_v1_search2
+reduced_v1_search3
+return_sweep_v1
+results/gtoc12/runs/cluster_fleet_v1 route_summaries=150
+results/gtoc12/runs/cluster_fleet_v2_deep route_summaries=7
+results/gtoc12/runs/cluster_fleet_v3_repair route_summaries=23
+results/gtoc12/runs/cluster_fleet_v4 route_summaries=119
+results/gtoc12/runs/cluster_fleet_v5 route_summaries=128
+results/gtoc12/runs/cluster_fleet_v5c route_summaries=94
+results/gtoc12/runs/cluster_fleet_v6 route_summaries=136
+results/gtoc12/runs/fleet10_master_v1 route_summaries=9
+results/gtoc12/runs/fleet3_full_catalogue route_summaries=2
+results/gtoc12/runs/fleet3_full_catalogue_v2 route_summaries=3
+results/gtoc12/runs/fleet6_coop_v1 route_summaries=5
+results/gtoc12/runs/fleet6_retime_v1 route_summaries=5
+results/gtoc12/runs/fleet_master_v1 route_summaries=0
+results/gtoc12/runs/fleet_master_v2 route_summaries=0
+results/gtoc12/runs/fleet_master_v3 route_summaries=0
+results/gtoc12/runs/fleet_master_v4 route_summaries=0
+results/gtoc12/runs/fleet_master_v5 route_summaries=0
+results/gtoc12/runs/full_catalogue_search2 route_summaries=2
+results/gtoc12/runs/probe_v4_family route_summaries=3
+results/gtoc12/runs/probe_v5_family247 route_summaries=2
+results/gtoc12/runs/probe_v6_family route_summaries=5
+results/gtoc12/runs/reduced_v1_search2 route_summaries=3
+results/gtoc12/runs/reduced_v1_search3 route_summaries=3
+results/gtoc12/runs/return_sweep_v1 route_summaries=13
+v6 report keys: ['best', 'budget_marks', 'bundles', 'commit', 'cpu_only', 'final_fleet', 'fleets', 'gpu_used', 'instance', 'master', 'memory_bound_mb', 'memory_samples', 'memory_total_pss_peak_mb', 'peak_rss_mb', 'run_id', 'settings', 'status', 'timeline', 'wall_seconds_total', 'worker_peak_rss_mb']
+memory_total_pss_peak_mb = 3042.1328125
+budget_marks = {'120_min': {'asteroids': 149, 'average_collected_kg': 549.3193398737546, 'elapsed_seconds': 6730.742584159016, 'path': 'results/gtoc12/runs/cluster_fleet_v6/fleets/fleet_007_18ships/Result.txt', 'score_kg': 9887.75, 'ships': 18}, '240_min': {'asteroids': 159, 'average_collected_kg': 563.00299002125
+args: None
+[2026-09-04T13:36:34Z] == quick tests (gtoc12 subset)
+....................                                                     [100%]
+[2026-09-04T13:36:41Z] == done

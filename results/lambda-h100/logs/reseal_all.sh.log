@@ -1,0 +1,56 @@
+[2026-09-04T13:32:59Z] START preflight-capture
+[2026-09-04T13:33:00Z] PASS  preflight-capture
+[2026-09-04T13:33:00Z] START preflight-build-qoco
+[2026-09-04T13:36:05Z] PASS  preflight-build-qoco
+[2026-09-04T13:36:05Z] START g0
+[2026-09-04T13:38:52Z] FAIL  g0 (exit 0) -- see /home/ubuntu/logs/reseal-9e75b47/g0.log
+PASS 2026-09-04T13:36:30Z debug-configure
+STEP 2026-09-04T13:36:30Z debug-build
+PASS 2026-09-04T13:36:40Z debug-build
+STEP 2026-09-04T13:36:40Z debug-ctest
+PASS 2026-09-04T13:36:50Z debug-ctest
+STEP 2026-09-04T13:36:50Z native-debug-configure
+PASS 2026-09-04T13:36:50Z native-debug-configure
+STEP 2026-09-04T13:36:50Z native-debug-build
+PASS 2026-09-04T13:36:53Z native-debug-build
+STEP 2026-09-04T13:36:53Z native-debug-ctest
+PASS 2026-09-04T13:36:53Z native-debug-ctest
+STEP 2026-09-04T13:36:53Z asan-configure
+PASS 2026-09-04T13:36:54Z asan-configure
+STEP 2026-09-04T13:36:54Z asan-build
+PASS 2026-09-04T13:37:13Z asan-build
+STEP 2026-09-04T13:37:13Z asan-ctest
+PASS 2026-09-04T13:37:36Z asan-ctest
+STEP 2026-09-04T13:37:36Z native-asan-configure
+PASS 2026-09-04T13:37:37Z native-asan-configure
+STEP 2026-09-04T13:37:37Z native-asan-build
+PASS 2026-09-04T13:37:41Z native-asan-build
+STEP 2026-09-04T13:37:41Z native-asan-ctest
+PASS 2026-09-04T13:37:41Z native-asan-ctest
+STEP 2026-09-04T13:37:41Z ruff-check
+PASS 2026-09-04T13:37:41Z ruff-check
+STEP 2026-09-04T13:37:41Z ruff-format
+PASS 2026-09-04T13:37:41Z ruff-format
+STEP 2026-09-04T13:37:41Z full-pytest
+PASS 2026-09-04T13:38:51Z full-pytest
+STEP 2026-09-04T13:38:51Z package-build
+[2026-09-04T13:43:57Z] preflight already sealed (status: preflight_complete_utc=2026-09-04T13:33:00Z, qoco: status=PASS)
+[2026-09-04T13:43:57Z] START g0
+[2026-09-04T13:47:11Z] PASS  g0
+[2026-09-04T13:47:11Z] START g1
+[2026-09-04T13:49:13Z] PASS  g1
+[2026-09-04T13:49:13Z] START g2
+[2026-09-04T13:57:28Z] PASS  g2
+[2026-09-04T13:57:28Z] START g3
+[2026-09-04T15:34:36Z] PASS  g3
+[2026-09-04T15:34:36Z] START seals-validate
+[2026-09-04T15:34:37Z] FAIL  seals-validate (exit 0) -- see /home/ubuntu/logs/reseal-9e75b47/seals-validate.log
+Traceback (most recent call last):
+  File "<stdin>", line 13, in <module>
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'results/gpu/current-head-9e75b47-h100/current-head-summary.json'

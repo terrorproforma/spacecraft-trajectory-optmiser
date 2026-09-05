@@ -1,0 +1,30 @@
+source_commit=9e75b470fd5378d9b20f6f13892ac909c43757cd
+source_tree=20e19f8411e465a05832f7ca719e053fe511546a
+branch=integration/single-gpu-v1
+upstream_commit=167c8b72b4b96d2f94d405b8763e485514192b81
+upstream_tree=62b05e6c1bedd385f6c267af3645ae4aae0421b4
+upstream_status=''
+{"pdhcg": "0.3.0", "spacepdhcg": "0.1.0.dev0"}
+affd0a06fa71a128c0d1f77602a38c2e505d1e5361c3de5fa52e6e7fb9052a14  third_party/pdhcg.lock.json
+235ff0d6373439657c1f42ec09e99085ec23d4f6efe79fbe3a1e7a8ed21f2996  /home/ubuntu/spacepdhcg/v1/build-current-head-g1-pdhcg/pdhcg
+769692ab8d55ed5b9f7ba0986c01f51d2e5cd98971d16dd8ffb9cb92c02b0088  /home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/lib/python3.12/site-packages/pdhcg/_pdhcg_core.cpython-312-x86_64-linux-gnu.so
+Fri Sep  4 13:49:13 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.105.08             Driver Version: 580.105.08     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:07:00.0 Off |                    0 |
+| N/A   44C    P0            131W /  700W |       0MiB /  81559MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+

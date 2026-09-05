@@ -1,0 +1,35 @@
+Usage: /home/ubuntu/spacepdhcg/v1/build-current-head-g1-pdhcg/pdhcg [OPTIONS] <problem_file> <output_dir>
+
+Arguments:
+  <problem_file>           Input problem: .mps, .qps, .cbf, and gzip-compressed variants.
+  <output_dir>             Directory where output files will be saved. It will contain:
+                             - <basename>_summary.txt
+                             - <basename>_primal_solution.txt
+                             - <basename>_dual_solution.txt
+
+Options:
+  -h, --help               Display this help message.
+  -v, --verbose <int>      Verbosity level: 0=silent, 1=summary, 2=detailed (default: 1).
+      --time_limit <sec>   Time limit in seconds (default: 3600.0).
+      --iter_limit <int>   Iteration limit (default: 2147483647).
+      --eps_opt <float>    Relative optimality tolerance (default: 1e-4).
+      --eps_feas <float>   Relative feasibility tolerance (default: 1e-4).
+      --eps_infeas_detect  Infeasibility detection tolerance (default: 1e-12).
+      --curtis_reid_iter   Iterations for Curtis-Reid scaling (default: 0, disabled).
+      --l_inf_ruiz_iter    Iterations for L-inf Ruiz rescaling (default: 10).
+      --no_pock_chambolle  Disable Pock-Chambolle rescaling (default: enabled).
+      --pock_chambolle_alpha Value for Pock-Chambolle alpha (default: 1.0).
+      --no_bound_obj_rescaling Disable bound objective rescaling.
+      --no_cone_preserving_scaling Disable cone-preserving scaling.
+      --eval_freq <int>    Termination evaluation frequency (default: 200).
+      --artificial_restart_threshold Artificial restart threshold (default: 0.36).
+      --sufficient_reduction_for_restart Sufficient reduction factor for restart (default: 0.2).
+      --necessary_reduction_for_restart Necessary reduction factor for restart (default: 0.8).
+      --sv_max_iter <int>  Max iterations for singular value estimation (default: 5000).
+      --sv_tol <float>     Tolerance for singular value estimation (default: 1e-4).
+      --opt_norm <type>    Norm for optimality criteria: l2 or linf (default: linf).
+      --inner_iter_limit   Max iterations for the inner solver (default: 1000).
+      --inner_init_tol     Initial tolerance for the inner solver (default: 1e-3).
+      --inner_min_tol      Minimum tolerance for the inner solver (default: 1e-9).
+      --no_diag_precond    Disable Jacobi diagonal preconditioner for inner subproblem (default: enabled).
+      --soc_form <form>    QCQP cone formulation: 'rotated' or 'standard' (default: rotated).

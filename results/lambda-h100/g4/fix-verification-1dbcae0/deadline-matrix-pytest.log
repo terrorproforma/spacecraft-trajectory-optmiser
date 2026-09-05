@@ -1,0 +1,54 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- /home/ubuntu/spacepdhcg/v1/.venv/bin/python
+rootdir: /home/ubuntu/spacepdhcg/v1
+configfile: pyproject.toml
+plugins: cov-7.1.0
+collecting ... collected 13 items
+
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-5.0] PASSED [  7%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-5.0] PASSED [ 15%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-5.0] PASSED [ 23%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-20.0] PASSED [ 30%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-20.0] PASSED [ 38%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-20.0] PASSED [ 46%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-5.0] PASSED [ 53%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-5.0] PASSED [ 61%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-5.0] PASSED [ 69%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-20.0] PASSED [ 76%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-20.0] PASSED [ 84%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-20.0] PASSED [ 92%]
+tests/test_g4_pdhcg_deadline_gpu.py::test_claim_core_cap_bounds_every_inner_limit_including_resolve_floor PASSED [100%]
+
+==================================== PASSES ====================================
+- generated xml file: /home/ubuntu/g4/fix-verification-1dbcae0/deadline-matrix-junit.xml -
+============================== slowest durations ===============================
+181.60s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-20.0]
+181.56s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-20.0]
+181.51s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-20.0]
+180.86s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-20.0]
+180.80s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-20.0]
+180.74s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-20.0]
+45.89s call     tests/test_g4_pdhcg_deadline_gpu.py::test_claim_core_cap_bounds_every_inner_limit_including_resolve_floor
+45.62s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-5.0]
+45.61s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-5.0]
+45.61s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-5.0]
+16.53s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-5.0]
+16.50s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-5.0]
+16.49s call     tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-5.0]
+
+(26 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_claim_core_cap_bounds_every_inner_limit_including_resolve_floor
+======================= 13 passed in 1319.38s (0:21:59) ========================

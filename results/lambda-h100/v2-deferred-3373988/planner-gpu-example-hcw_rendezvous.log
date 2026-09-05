@@ -1,0 +1,10 @@
+family:      hcw
+execution:   native_cuda (requested backend pure_qoco)
+status:      converged_not_certified - the solver reported convergence but independent replay failed the certificate gates
+certified:   False (failed gates: independent_replay_parity, independent_dynamics_defect)
+objective:   0.00036994593480984644
+iterations:  10 outer (1 accepted), 40 inner
+terminal:    scaled residual 5.823119764158946e-13, position error 5.823119764158946e-13, velocity error 9.853229343548264e-16
+wall time:   0.512 s
+output:      build-v2-gpu-deferred/plan-hcw_rendezvous
+viewer:      build-v2-gpu-deferred/plan-hcw_rendezvous/viewer

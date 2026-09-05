@@ -1,0 +1,68 @@
+{
+  "constraints": {
+    "glide_slope": 1.0471975511965976,
+    "maximum_tilt": 0.5235987755982988,
+    "minimum_altitude": 0.0
+  },
+  "environment": {
+    "gravity": [
+      0.0,
+      0.0,
+      -3.711
+    ]
+  },
+  "family": "powered_descent_3dof",
+  "horizon": {
+    "final_time": 20.0,
+    "free_final_time": false,
+    "intervals": 40
+  },
+  "initial_state": [
+    30.0,
+    -20.0,
+    150.0,
+    0.0,
+    0.0,
+    -10.0,
+    2000.0
+  ],
+  "name": "3-DoF powered descent: 150 m soft landing with a 30 m / -20 m horizontal offset in 20 s",
+  "output": {
+    "dense_replay_substeps": 10
+  },
+  "schema_version": "1.0.0",
+  "solver": {
+    "backend": "cpu_reference",
+    "maximum_outer_iterations": 30,
+    "time_limit_seconds": 600.0,
+    "tolerance": 1e-06
+  },
+  "terminal": {
+    "fixed": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ],
+    "state": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "vehicle": {
+    "dry_mass": 1000.0,
+    "specific_impulse": 221.6,
+    "thrust": {
+      "maximum": 15000.0,
+      "minimum": 0.0
+    }
+  }
+}

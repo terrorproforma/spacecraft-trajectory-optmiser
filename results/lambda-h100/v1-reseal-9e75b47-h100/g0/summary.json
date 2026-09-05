@@ -1,0 +1,32 @@
+{
+  "artifact_sha256": [
+    "ec2f7ebf87eed5cb661c58a898fb325b0929ed16d833307e349f175544458722  results/gpu/current-head-9e75b47-h100/g0/artifacts/spacepdhcg-0.1.0.dev0-cp312-cp312-linux_x86_64.whl",
+    "58b823424bb00dac4b746cdc5c66651974d37e35154f7312ca117b64027d1e06  results/gpu/current-head-9e75b47-h100/g0/artifacts/spacepdhcg-0.1.0.dev0.tar.gz",
+    "6c2ee5ee610f880e04a1294bad78db8979bb3fd3f0ea2a83d690b80cefae1bfd  build-current-head-g0-relwithdebinfo/libspacepdhcg.so.0.1.0",
+    "a4d806a71e5c4ba04ca6e776f85dcf13f0f56a11c9ea16e87806778e6263f3dc  build-current-head-g0-native-relwithdebinfo/libspacepdhcg_native_core.so.0.1.0",
+    "a89ec1b8ff46c9f05ce31b02b12d5618ddbe2cf07a0a37681e0a019ce708d502  build-current-head-g0-cmake-consumer/spacepdhcg_package_consumer"
+  ],
+  "cmake_consumer": 1,
+  "decision": "PASS",
+  "immutable_uri": null,
+  "local_only": true,
+  "native_inventory_ctest": {
+    "asan": 8,
+    "debug": 8,
+    "rel": 8
+  },
+  "python_passed": 366,
+  "python_skipped": 2,
+  "retained_failed_attempts": 1,
+  "ruff_format": "PASS",
+  "ruff_lint": "PASS",
+  "schema_version": "current-head-g0-1.0.0",
+  "source_commit": "9e75b470fd5378d9b20f6f13892ac909c43757cd",
+  "source_tree": "20e19f8411e465a05832f7ca719e053fe511546a",
+  "top_level_ctest": {
+    "asan": 45,
+    "debug": 45,
+    "rel": 45
+  },
+  "wheel_consumer": "PASS"
+}

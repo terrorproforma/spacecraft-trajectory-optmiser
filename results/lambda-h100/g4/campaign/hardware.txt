@@ -1,0 +1,12 @@
+hardware_id=lambda-h100-80gb-hbm3
+gpu=NVIDIA H100 80GB HBM3, 81559 MiB, 580.105.08, 9.0
+cuda=12.8 (Build cuda_12.8.r12.8/compiler.35583870_0)
+cuda_architecture=90
+source_commit=1dbcae098fd8871d4e0ac087e2306534704eff59 branch=g4/h100-1dbcae0
+executable=/home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test sha256=3703d52c4d9c057377ebd8deb8873d586a9d476c90695695c1ced2a4ce316d86
+capability=/home/ubuntu/g4/g4-executor-capability-1dbcae0-h100.json sha256=0b4c8c38a6ba34b45cdf1ee5ae72869da272df5d866801009930f2b235a6f7f5
+acceptance_criteria=single-gpu-v1.2 (benchmarks/g4_claim_core_amendment_v1_2.json 673e06707242cb224daa92a1a34f01a975b344f48920d54e10b4aa14bc73e1b9)
+rtx5090_rows_imported=none (stratum ipm_no_equilibration_v1_1 cited from /home/ubuntu/bundles/rtx5090-strata/g4-claim-core-ccd5596 by metadata only; the 4db5047 RTX 5090 ledger is a separate hardware stratum)
+qoco_pin=/home/ubuntu/g4/qoco-pin-1dbcae0-h100.txt
+initialised_utc=2026-09-04T18:50:15Z
+Linux 192-222-55-229 6.8.0-1046-nvidia #49~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Wed Jan 28 22:29:18 UTC 2 x86_64 x86_64 x86_64 GNU/Linux

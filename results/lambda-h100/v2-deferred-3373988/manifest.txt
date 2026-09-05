@@ -1,0 +1,18 @@
+source_commit=3373988057a251a4df11b9ac125583ed2a5ca65b
+source_tree=e22a350eb7be71d9164aca5218041b6be2971a2b
+branch=integration/single-gpu-v2-candidate
+hardware_id=lambda-h100-80gb-hbm3
+cuda_architectures=90
+qoco_library=/home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so
+5f778efba6fc47de651ea347d4edcd68cb1dae027aeba93d123da5e4b3f869b9  /home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so
+1ff6753364e5ee1efa938d976b79bdd1fa8a4fc2dfa27718edb1eb81fccbc319  /home/ubuntu/spacepdhcg/v2/build-v2-relwithdebinfo/libspacepdhcg.so
+cebd481a39243485ce5c11a3a2924b95723c709bd4e70dff93a1bf262966051b  build-v2-cuda-release/cuda/libspacepdhcg_cuda.so
+d5d3b2cbd306793bc6b92beb17a0cf96ac72e36088acb662188ac5da5985426e  build-v2-cuda-debug/cuda/libspacepdhcg_cuda.so
+23bcbf9d31bdafa538d56145d6d36c512e57566ba41e83817cd931129c2ab4b1  build-v2-cuda-release/cuda-tests/device_scvx_integration_test
+0c662b349f10d0ea4f3cb944e82241a9e96b29f5a26818207278784e6137a221  build-v2-cuda-release/cuda-tools/spacepdhcg_plan
+859dc72a36309f2f617bf1ac0c1e6b6a77720e16044594ecb676eb034ef49100  build-v2-cuda-release/cuda-tests/device_time_dilated_test
+NVIDIA H100 80GB HBM3, 580.105.08, 9.0, 81559 MiB
+Build cuda_12.8.r12.8/compiler.35583870_0
+cmake version 4.4.3
+v20.20.2
+Python 3.12.14

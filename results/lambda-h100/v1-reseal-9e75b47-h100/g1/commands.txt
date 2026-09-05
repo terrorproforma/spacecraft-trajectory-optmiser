@@ -1,0 +1,11 @@
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S /home/ubuntu/spacepdhcg/v1/_upstream/pdhcg -B /home/ubuntu/spacepdhcg/v1/build-current-head-g1-pdhcg -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CUDA_ARCHITECTURES=90 -DPDHCG_COMPILE_DISTRIBUTED=OFF -DPDHCG_BUILD_STATIC_LIB=ON -DPDHCG_BUILD_CLI=ON 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build /home/ubuntu/spacepdhcg/v1/build-current-head-g1-pdhcg --clean-first --parallel 8 
+/home/ubuntu/spacepdhcg/v1/build-current-head-g1-pdhcg/pdhcg --help 
+/home/ubuntu/.local/bin/uv venv --python 3.12 --clear /home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv 
+/home/ubuntu/.local/bin/uv pip install --python /home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/bin/python results/gpu/current-head-9e75b47-h100/g0/artifacts/spacepdhcg-0.1.0.dev0-cp312-cp312-linux_x86_64.whl 
+env CUDACXX=/usr/local/cuda-12.8/bin/nvcc SKBUILD_CMAKE_ARGS=-DCMAKE_CUDA_ARCHITECTURES=90 /home/ubuntu/.local/bin/uv pip install --python /home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/bin/python --no-deps --reinstall /home/ubuntu/spacepdhcg/v1/_upstream/pdhcg 
+/home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/bin/spacepdhcg-banded-correctness --pdhcg --seeds 17 29 41 53 71 --intervals 8 --tolerance 1e-6 
+/home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/bin/spacepdhcg-banded-correctness --pdhcg --seeds 17 29 41 53 71 --intervals 32 --tolerance 1e-6 
+/home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/bin/spacepdhcg-banded-correctness --pdhcg --seeds 17 29 41 53 71 --intervals 128 --tolerance 1e-6 
+/home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/bin/spacepdhcg-g1-correctness --intervals 20 50 100 500 --tolerances 1e-3 1e-4 1e-6 1e-8 --start-modes cold primal primal-dual --include-updates --output results/gpu/current-head-9e75b47-h100/g1/declared-expansion.json 
+env CUDA_VISIBLE_DEVICES= /home/ubuntu/spacepdhcg/v1/build-current-head-g1-venv/bin/spacepdhcg-g1-correctness --intervals 8 --tolerances 1e-6 --start-modes cold --output results/gpu/current-head-9e75b47-h100/g1/no-device-unexpected.json 

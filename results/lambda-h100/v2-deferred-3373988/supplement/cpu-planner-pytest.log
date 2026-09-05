@@ -1,0 +1,44 @@
+.....................................................F.                  [100%]
+=================================== FAILURES ===================================
+_____________________ test_viewer_check_accepts_the_export _____________________
+
+exported = (PosixPath('/tmp/pytest-of-ubuntu/pytest-9/viewer-export0/viewer'), {'dataset_kind': 'planner-export', 'generated_by':...commit': 'unknown', 'imported_source_sha256': 'd0daf88678ab26ca4a4975d8d762b0539434a780f0556839b6d6c82ed1c22194', ...})
+
+    def test_viewer_check_accepts_the_export(exported: tuple[Path, dict]) -> None:
+        bundle, _ = exported
+        node = shutil.which("node")
+        if node is None:
+            pytest.skip("node is unavailable; the viewer's npm run check cannot execute here")
+        completed = subprocess.run(
+            [node, "scripts/check.mjs"],
+            cwd=bundle,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+>       assert completed.returncode == 0, completed.stderr
+E       AssertionError: node:internal/fs/promises:637
+E           return new FileHandle(await PromisePrototypeThen(
+E                                 ^
+E         
+E         Error: ENOENT: no such file or directory, open '/tmp/pytest-of-ubuntu/pytest-9/viewer-export0/viewer/gtoc12.js'
+E             at async open (node:internal/fs/promises:637:25)
+E             at async readFile (node:internal/fs/promises:1249:14)
+E             at async Promise.all (index 5)
+E             at async file:///tmp/pytest-of-ubuntu/pytest-9/viewer-export0/viewer/scripts/check.mjs:27:116 {
+E           errno: -2,
+E           code: 'ENOENT',
+E           syscall: 'open',
+E           path: '/tmp/pytest-of-ubuntu/pytest-9/viewer-export0/viewer/gtoc12.js'
+E         }
+E         
+E         Node.js v20.20.2
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/ubuntu/.local/node/bin/node', 'scripts/check.mjs'], returncode=1, stdout='', stderr="nod...  syscall: 'open',\n  path: '/tmp/pytest-of-ubuntu/pytest-9/viewer-export0/viewer/gtoc12.js'\n}\n\nNode.js v20.20.2\n").returncode
+
+tests/test_planner_viewer_export.py:87: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_planner_viewer_export.py::test_viewer_check_accepts_the_export
+1 failed, 54 passed in 7.33s

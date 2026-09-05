@@ -1,0 +1,45 @@
+{
+ "verifier": "official GTOC12_Verify (scripts/gtoc12 build)",
+ "solutions_all_pass": true,
+ "classes": {
+  "per_ship_diagnostic": {
+   "total": 916,
+   "passed": 761,
+   "failed_count": 155
+  },
+  "fleet_solution": {
+   "total": 2,
+   "passed": 2,
+   "failed_count": 0
+  },
+  "cluster_fleet_candidate_solution": {
+   "total": 22,
+   "passed": 22,
+   "failed_count": 0
+  }
+ },
+ "fleet_solutions": [
+  {
+   "path": "results/gtoc12/runs/cluster_fleet_h100_v1/fleet/Result.txt",
+   "ok": true,
+   "ships": 19,
+   "mined_asteroids": 155,
+   "total_mass_kg": 10699.5,
+   "return_code": 0,
+   "wall_seconds": 0.30140085899984115,
+   "message": "Check successfully!"
+  },
+  {
+   "path": "results/gtoc12/runs/fleet_master_h100_v1/fleet/Result.txt",
+   "ok": true,
+   "ships": 20,
+   "mined_asteroids": 163,
+   "total_mass_kg": 11517.6,
+   "return_code": 0,
+   "wall_seconds": 0.3172186120009428,
+   "message": "Check successfully!"
+  }
+ ],
+ "per_ship_diagnostic_failures_note": "per-ship Result.txt files are diagnostic artefacts of cooperative clusters: a member ship that collects a miner deployed by another member (or deploys for another collector) cannot satisfy the single-file mass-balance check (Error803) on its own; the assembled fleet files these ships belong to pass. Slots of the failing files: {\"02\": 46, \"03\": 48, \"04\": 38, \"01\": 15, \"05\": 8}",
+ "raw": "official_verification.json"
+}

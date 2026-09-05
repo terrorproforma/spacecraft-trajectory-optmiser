@@ -1,0 +1,19 @@
+## integration/single-gpu-v1...bundle/integration/single-gpu-v1 [ahead 1]
+9e75b470fd5378d9b20f6f13892ac909c43757cd
+20e19f8411e465a05832f7ca719e053fe511546a
+integration/single-gpu-v1
+commit 9e75b470fd5378d9b20f6f13892ac909c43757cd
+Author:     SpacePDHCG-Integration <integration@spacepdhcg.local>
+AuthorDate: Fri Sep 4 13:27:44 2026 +0000
+Commit:     SpacePDHCG-Integration <integration@spacepdhcg.local>
+CommitDate: Fri Sep 4 13:27:44 2026 +0000
+
+    build(gpu): make the evidence scripts target the local CUDA architecture (H100 sm_90)
+    
+    The G2/G3 evidence scripts and the pinned QOCO build hard-coded
+    -DCMAKE_CUDA_ARCHITECTURES=120 (RTX 5090). They now read
+    SPACEPDHCG_CUDA_ARCHITECTURES (default unchanged: 120) and record the value in
+    environment.txt, so the same scripts reseal on an H100 (sm_90) without edits.
+    The QOCO build honours CUDACXX; run_g3_h1.py takes the Paper 1 hardware_id from
+    SPACEPDHCG_HARDWARE_ID (default unchanged: local-rtx-5090); nsys stats passes
+    --force-export=true so a stale .sqlite can never be reused.

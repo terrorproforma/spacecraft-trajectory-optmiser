@@ -1,0 +1,269 @@
+{
+ "ok": true,
+ "reason": "device free",
+ "nvidia_smi": "/usr/bin/nvidia-smi",
+ "g4_owned": false,
+ "processes": [],
+ "qoco_library": "/home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so"
+}
+{
+ "target_id": "blackmore-2010-pd3-case1",
+ "status": "reproduced",
+ "published": {
+  "fuel_used_kg": 399.4,
+  "fuel_used_text": "399.4",
+  "time_of_flight_text": "78.4",
+  "discretisation_points": 55,
+  "objective_convention": "propellant-used",
+  "evidence_label": "published-reference",
+  "extraction": "text (Section V, case 1: 'This solution requires 399.4 kg of fuel and has t_f = 78.4 s'; 55 time-discretisation points; golden search interval 3.0 s)"
+ },
+ "measured": {
+  "lossless_fuel_used_kg": 400.08834536284076,
+  "lossless_fuel_used_kg_by_dt": {
+   "dt=0.4": 400.08834536284076,
+   "dt=0.2": 400.7633008308262
+  },
+  "lossless_replay_fuel_used_kg": 400.0837542316119,
+  "lossless_isp_only_alpha_fuel_used_kg": 362.4761965292025,
+  "lossless_forward_euler_diagnostic_fuel_used_kg": 401.2615114278965,
+  "scvx_cpu_frozen_euler_fuel_used_kg": 413.4250651815016,
+  "scvx_cpu_frozen_euler_status": "solver_failed",
+  "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 37.30892475533985,
+  "scvx_cpu_fuel_used_kg": 398.84838238449765,
+  "scvx_cpu_replay_fuel_used_kg": 398.84837949871326,
+  "scvx_cpu_status": "converged",
+  "scvx_cpu_termination_reason": "feasibility and step tolerances satisfied",
+  "scvx_cpu_fuel_used_kg_by_dt": {
+   "dt=0.4": 398.84838238449765,
+   "dt=0.2": 398.8676867504305
+  },
+  "scvx_qoco_gpu_fuel_used_kg": 398.84524372496,
+  "scvx_qoco_gpu_replay_fuel_used_kg": 398.8452436009993,
+  "scvx_qoco_gpu_status": "converged"
+ },
+ "gap": {
+  "lossless_minus_published_kg": 0.6883453628407779,
+  "lossless_relative": 0.0017234485799719026,
+  "acceptance_tolerance_kg": 2.0,
+  "scvx_cpu_minus_published_kg": -0.5516176155023231,
+  "scvx_cpu_minus_lossless_kg": -1.239962978343101,
+  "scvx_cpu_frozen_euler_minus_published_kg": 14.025065181501645,
+  "euler_discrete_optimum_minus_lossless_kg": 1.1731660650557387,
+  "scvx_qoco_gpu_minus_lossless_kg": -1.2431016378807271
+ },
+ "labels": {
+  "published.fuel_used_kg": "published-reference",
+  "measured.lossless_fuel_used_kg": "measured-local",
+  "measured.scvx_cpu_fuel_used_kg": "measured-local",
+  "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local",
+  "measured.scvx_qoco_gpu_fuel_used_kg": "measured-local"
+ },
+ "envelope": {
+  "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
+  "scvx_discretisation": "zero-order-hold thrust, variational RK4 coefficients, multiple-shooting exact-penalty merit",
+  "dt_values_s": [
+   0.4,
+   0.2
+  ],
+  "fuel_spread_kg": 0.6749554679854555,
+  "scvx_fuel_spread_kg": 0.019304365932839573,
+  "declared_envelope_kg": 2.0
+ },
+ "commands": [
+  "spacepdhcg literature run blackmore-2010-pd3-case1"
+ ],
+ "notes": [],
+ "family": "P1-C-pd3",
+ "wall_seconds": 394.7332978310005,
+ "support": "supported"
+}
+{
+ "target_id": "chari-2024-pd6-monte-carlo",
+ "status": "gap",
+ "published": {
+  "initial_position_distribution": [
+   "uniform(6,9)",
+   "uniform(3,6)",
+   "uniform(1,2)"
+  ],
+  "published_demonstration_batch_size": 256,
+  "maximum_outer_iterations": 25,
+  "pipg_iterations_per_subproblem": 2500,
+  "evidence_label": "published-reference",
+  "verification_status": "requires-source-verification (values imported from benchmarks/literature_baselines.json; paper body not retrieved)"
+ },
+ "measured": {
+  "cpu_independent_batch": {
+   "1": {
+    "batch_size": 1,
+    "seed": 20240101,
+    "solved": 1,
+    "converged": 0,
+    "convergence_probability": 0.0,
+    "accepted": 1,
+    "accepted_probability": 1.0,
+    "accepted_trajectories_per_second": 0.014481688791063986,
+    "wall_seconds": 69.05271991599875,
+    "workers": 1,
+    "tof_median": 4.746873338861784,
+    "tof_iqr": [
+     4.746873338861784,
+     4.746873338861784
+    ],
+    "fuel_median": 0.1897053506891353,
+    "violation_max": 2.472238873618693e-07,
+    "defect_max": 2.624271359330521e-06
+   },
+   "16": {
+    "batch_size": 16,
+    "seed": 20240116,
+    "solved": 16,
+    "converged": 0,
+    "convergence_probability": 0.0,
+    "accepted": 6,
+    "accepted_probability": 0.375,
+    "accepted_trajectories_per_second": 0.043941551765402924,
+    "wall_seconds": 136.54501852900103,
+    "workers": 16,
+    "tof_median": 4.763564710396788,
+    "tof_iqr": [
+     4.3846425376301,
+     4.9714486101888
+    ],
+    "fuel_median": 0.19166621604924572,
+    "violation_max": 3.1331344955143337e-05,
+    "defect_max": 0.00012794009501870818
+   },
+   "64": {
+    "batch_size": 64,
+    "seed": 20240164,
+    "solved": 64,
+    "converged": 3,
+    "convergence_probability": 0.046875,
+    "accepted": 22,
+    "accepted_probability": 0.34375,
+    "accepted_trajectories_per_second": 0.0508838966094308,
+    "wall_seconds": 432.3568253600006,
+    "workers": 25,
+    "tof_median": 4.67625348070687,
+    "tof_iqr": [
+     4.509252446616409,
+     4.863520462469879
+    ],
+    "fuel_median": 0.1901537465448634,
+    "violation_max": 4.476596646396658e-05,
+    "defect_max": 0.00020792856388318626
+   }
+  },
+  "gpu_persistent_batch": {
+   "persistent_device_scvx": {
+    "status": "blocked",
+    "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
+   },
+   "pure_qoco_native_pd6_fft": {
+    "status": "measured",
+    "label": "measured-local",
+    "preflight": {
+     "ok": true,
+     "reason": "device free",
+     "nvidia_smi": "/usr/bin/nvidia-smi",
+     "g4_owned": false,
+     "processes": [
+      {
+       "pid": 39228,
+       "reported_name": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python",
+       "command_line": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python /home/ubuntu/spacepdhcg/v2/.venv/bin/spacepdhcg literature gpu-run blackmore-2010-pd3-case1 chari-2024-pd6-monte-carlo",
+       "g4_owner": false
+      }
+     ],
+     "qoco_library": "/home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so"
+    },
+    "batches": {
+     "1": {
+      "batch_size": 1,
+      "seed": 20240101,
+      "solved": 1,
+      "converged": 1,
+      "convergence_probability": 1.0,
+      "accepted": 1,
+      "accepted_probability": 1.0,
+      "accepted_trajectories_per_second": 0.02918707170932341,
+      "wall_seconds": 34.26174471900049,
+      "workers": 1,
+      "tof_median": 4.754269198409219,
+      "tof_iqr": [
+       4.754269198409219,
+       4.754269198409219
+      ],
+      "fuel_median": 0.18509898382862588,
+      "violation_max": 3.058213564610668e-07,
+      "defect_max": 4.471214616330599e-07
+     },
+     "16": {
+      "batch_size": 16,
+      "seed": 20240116,
+      "solved": 16,
+      "converged": 16,
+      "convergence_probability": 1.0,
+      "accepted": 16,
+      "accepted_probability": 1.0,
+      "accepted_trajectories_per_second": 0.037982706953535235,
+      "wall_seconds": 421.2443315210003,
+      "workers": 1,
+      "tof_median": 4.435760168695871,
+      "tof_iqr": [
+       4.2888049776777875,
+       4.774604287686663
+      ],
+      "fuel_median": 0.17379256533818477,
+      "violation_max": 8.703735219217634e-07,
+      "defect_max": 9.853768596357337e-07
+     },
+     "64": {
+      "batch_size": 64,
+      "seed": 20240164,
+      "solved": 64,
+      "converged": 64,
+      "convergence_probability": 1.0,
+      "accepted": 64,
+      "accepted_probability": 1.0,
+      "accepted_trajectories_per_second": 0.03757818187768158,
+      "wall_seconds": 1703.1159253080004,
+      "workers": 1,
+      "tof_median": 4.787496107522541,
+      "tof_iqr": [
+       4.545653402093834,
+       4.945795800949339
+      ],
+      "fuel_median": 0.1812741968904752,
+      "violation_max": 7.580185583666577e-07,
+      "defect_max": 9.913449128262641e-07
+     }
+    }
+   }
+  }
+ },
+ "gap": {},
+ "labels": {
+  "published.distribution": "published-reference",
+  "published.batch_size_256": "published-reference",
+  "measured.cpu_independent_batch": "measured-local"
+ },
+ "envelope": {
+  "solver": "independent CPU free-final-time 6-DoF SCvx (Szmuk 2018 vehicle model), one process per trajectory",
+  "acceptance": "replay defect <= 1e-5 and path violation <= 1e-6"
+ },
+ "commands": [
+  "spacepdhcg literature run chari-2024-pd6-monte-carlo",
+  "spacepdhcg literature gpu-run chari-2024-pd6-monte-carlo  # deferred GPU leg (preflight-gated)"
+ ],
+ "notes": [
+  "independent batch: no shared controls, no non-anticipativity constraints; not robust optimisation",
+  "the paper's vehicle parameter table is not reproduced here; the Szmuk 2018 Table 1 vehicle is used with the published position dispersion"
+ ],
+ "family": "P1-D-pd6",
+ "wall_seconds": 2796.6169051669985,
+ "support": "partial"
+}
+report updated: /home/ubuntu/spacepdhcg/v2/docs/REFERENCE_REPRODUCTION_REPORT.md

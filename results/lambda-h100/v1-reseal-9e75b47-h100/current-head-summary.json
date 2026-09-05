@@ -1,0 +1,59 @@
+{
+  "archives": [
+    {
+      "bytes": 3418374,
+      "evidence_index": "g0/evidence-index.json",
+      "gate": "G0",
+      "immutable_uri": null,
+      "local_only": true,
+      "path": "results/gpu/current-head-9e75b47-h100/seals/g0-9e75b470fd53.tar.gz",
+      "sha256": "3fc5f06e3fa645142aa347894b449f2860ad0c1bf6f601f9d43903d0326104cc"
+    },
+    {
+      "bytes": 43893,
+      "evidence_index": "g1/evidence-index.json",
+      "gate": "G1",
+      "immutable_uri": null,
+      "local_only": true,
+      "path": "results/gpu/current-head-9e75b47-h100/seals/g1-9e75b470fd53.tar.gz",
+      "sha256": "9a3a37821f8082bdb4eddfa2634c722c9c2b17e353a75f5327e23add53c20dc4"
+    },
+    {
+      "bytes": 21408,
+      "evidence_index": "g2/evidence-index.json",
+      "gate": "G2",
+      "immutable_uri": null,
+      "local_only": true,
+      "path": "results/gpu/current-head-9e75b47-h100/seals/g2-9e75b470fd53.tar.gz",
+      "sha256": "0c84e42aa7d5192f46e69715e43d0abdf5a0c9eb27f61f0b8d954399f6b73a8f"
+    },
+    {
+      "bytes": 341027,
+      "evidence_index": "g3/evidence-index.json",
+      "gate": "G3",
+      "immutable_uri": null,
+      "local_only": true,
+      "path": "results/gpu/current-head-9e75b47-h100/seals/g3-9e75b470fd53.tar.gz",
+      "sha256": "9ea8d0fc01c126ff54bfea2baebe61561d5bf927b0a3b4337bfdc7d198502ca7"
+    }
+  ],
+  "branch": "integration/single-gpu-v1",
+  "campaign_scope_id": "single-gpu-v1",
+  "cuda_architecture": 90,
+  "g4_claim_core_launch_ready": false,
+  "g4_gate_authorized": true,
+  "g4_launch_blocker": "H100 reseal: a new official G4 capability (IPM probe plus a 20 s-deadline PDHCG session probe) must be generated on this host from the final clean executable; the executor deadline defect found on the RTX 5090 campaign (adaptive attempts running to the 1,000,000-iteration cap) must be fixed and rebuilt first. No G4 campaign was launched from this evidence.",
+  "gates": {
+    "G0": "PASS",
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS"
+  },
+  "hardware_id": "lambda-h100-80gb-hbm3",
+  "immutable_uri": null,
+  "local_only": true,
+  "reseal_of_rtx5090_seal": "b6afb49d7fc7da5ed1ac9003c3bcae5d35506026 (results/gpu/current-head-b0cd570, WSL)",
+  "schema_version": "current-head-g0-g3-1.0.0",
+  "source_commit": "9e75b470fd5378d9b20f6f13892ac909c43757cd",
+  "source_tree": "20e19f8411e465a05832f7ca719e053fe511546a"
+}

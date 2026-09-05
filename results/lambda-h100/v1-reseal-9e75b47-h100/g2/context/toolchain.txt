@@ -1,0 +1,81 @@
+gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+Copyright (C) 2021 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+Copyright (C) 2021 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Fri_Feb_21_20:23:50_PST_2025
+Cuda compilation tools, release 12.8, V12.8.93
+Build cuda_12.8.r12.8/compiler.35583870_0
+1.10.2
+Python 3.12.14
+cmake version 4.4.3
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+ruff 0.16.5
+pytest 9.1.1
+Name: nvidia-cudss-cu12
+Version: 0.7.1.6
+Summary: cuDSS - runtime libraries
+Home-page: https://docs.nvidia.com/cuda/cudss/
+Author: 
+Author-email: Nvidia CUDA Installer Team <cuda_installer@nvidia.com>
+License-Expression: LicenseRef-Nvidia-cuDSS-License
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: cuda-toolkit
+Required-by: 
+---
+Name: cupy-cuda12x
+Version: 14.2.0
+Summary: CuPy: NumPy & SciPy for GPU
+Home-page: https://cupy.dev/
+Author: 
+Author-email: Seiya Tokui <tokui@preferred.jp>
+License-Expression: MIT
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: cuda-pathfinder, numpy
+Required-by: 
+---
+Name: torch
+Version: 2.11.0+cu128
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org
+Author: 
+Author-email: PyTorch Team <packages@pytorch.org>
+License: BSD-3-Clause
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: cuda-bindings, cuda-toolkit, filelock, fsspec, jinja2, networkx, nvidia-cudnn-cu12, nvidia-cusparselt-cu12, nvidia-nccl-cu12, nvidia-nvshmem-cu12, setuptools, sympy, triton, typing-extensions
+Required-by: 
+---
+Name: jax
+Version: 0.11.1
+Summary: Differentiate, compile, and transform Numpy code.
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: jaxlib, ml_dtypes, numpy, opt_einsum, scipy
+Required-by: 
+---
+Name: jaxlib
+Version: 0.11.1
+Summary: XLA library for JAX
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: ml_dtypes, numpy, scipy
+Required-by: jax
+git version 2.34.1
+NVIDIA Nsight Systems version 2024.6.2.225-246235244400v0
+NVIDIA (R) Compute Sanitizer
+Copyright (c) 2020-2025 NVIDIA Corporation
+Version 2025.1.0.0 (build 35583870) (public-release)

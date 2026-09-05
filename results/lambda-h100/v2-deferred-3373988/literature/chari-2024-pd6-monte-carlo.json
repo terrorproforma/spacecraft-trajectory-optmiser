@@ -1,0 +1,1267 @@
+{
+ "target_id": "chari-2024-pd6-monte-carlo",
+ "status": "gap",
+ "published": {
+  "initial_position_distribution": [
+   "uniform(6,9)",
+   "uniform(3,6)",
+   "uniform(1,2)"
+  ],
+  "published_demonstration_batch_size": 256,
+  "maximum_outer_iterations": 25,
+  "pipg_iterations_per_subproblem": 2500,
+  "evidence_label": "published-reference",
+  "verification_status": "requires-source-verification (values imported from benchmarks/literature_baselines.json; paper body not retrieved)"
+ },
+ "measured": {
+  "cpu_independent_batch": {
+   "1": {
+    "batch_size": 1,
+    "seed": 20240101,
+    "solved": 1,
+    "converged": 0,
+    "convergence_probability": 0.0,
+    "accepted": 1,
+    "accepted_probability": 1.0,
+    "accepted_trajectories_per_second": 0.0144379592877493,
+    "wall_seconds": 69.26186589600002,
+    "workers": 1,
+    "tof_median": 4.746873338861784,
+    "tof_iqr": [
+     4.746873338861784,
+     4.746873338861784
+    ],
+    "fuel_median": 0.1897053506891353,
+    "violation_max": 2.472238873618693e-07,
+    "defect_max": 2.624271359330521e-06
+   },
+   "16": {
+    "batch_size": 16,
+    "seed": 20240116,
+    "solved": 16,
+    "converged": 0,
+    "convergence_probability": 0.0,
+    "accepted": 6,
+    "accepted_probability": 0.375,
+    "accepted_trajectories_per_second": 0.048947623756073824,
+    "wall_seconds": 122.58000572000128,
+    "workers": 16,
+    "tof_median": 4.763564710396788,
+    "tof_iqr": [
+     4.3846425376301,
+     4.9714486101888
+    ],
+    "fuel_median": 0.19166621604924572,
+    "violation_max": 3.1331344955143337e-05,
+    "defect_max": 0.00012794009501870818
+   },
+   "64": {
+    "batch_size": 64,
+    "seed": 20240164,
+    "solved": 64,
+    "converged": 3,
+    "convergence_probability": 0.046875,
+    "accepted": 22,
+    "accepted_probability": 0.34375,
+    "accepted_trajectories_per_second": 0.057097741460027725,
+    "wall_seconds": 385.30420709200007,
+    "workers": 25,
+    "tof_median": 4.67625348070687,
+    "tof_iqr": [
+     4.509252446616409,
+     4.863520462469879
+    ],
+    "fuel_median": 0.1901537465448634,
+    "violation_max": 4.476596646396658e-05,
+    "defect_max": 0.00020792856388318626
+   }
+  },
+  "gpu_persistent_batch": {
+   "persistent_device_scvx": {
+    "status": "blocked",
+    "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
+   },
+   "pure_qoco_native_pd6_fft": {
+    "status": "deferred",
+    "preflight": {
+     "ok": false,
+     "reason": "refused: other compute processes hold the device (pid 37205); pass allow_shared to override",
+     "nvidia_smi": "/usr/bin/nvidia-smi",
+     "g4_owned": false,
+     "processes": [
+      {
+       "pid": 37205,
+       "reported_name": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python",
+       "command_line": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python /home/ubuntu/spacepdhcg/v2/.venv/bin/spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1 chari-2024-pd6-monte-carlo",
+       "g4_owner": false
+      }
+     ],
+     "qoco_library": "/home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so"
+    }
+   }
+  }
+ },
+ "gap": {},
+ "labels": {
+  "published.distribution": "published-reference",
+  "published.batch_size_256": "published-reference",
+  "measured.cpu_independent_batch": "measured-local"
+ },
+ "envelope": {
+  "solver": "independent CPU free-final-time 6-DoF SCvx (Szmuk 2018 vehicle model), one process per trajectory",
+  "acceptance": "replay defect <= 1e-5 and path violation <= 1e-6"
+ },
+ "commands": [
+  "spacepdhcg literature run chari-2024-pd6-monte-carlo",
+  "spacepdhcg literature gpu-run chari-2024-pd6-monte-carlo  # deferred GPU leg (preflight-gated)"
+ ],
+ "notes": [
+  "independent batch: no shared controls, no non-anticipativity constraints; not robust optimisation",
+  "the paper's vehicle parameter table is not reproduced here; the Szmuk 2018 Table 1 vehicle is used with the published position dispersion"
+ ],
+ "details": {
+  "1": [
+   {
+    "initial_position": [
+     7.772273409703772,
+     3.295391126028111,
+     1.2304760909048844
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.746873338861784,
+    "fuel_used": 0.1897053506891353,
+    "iterations": 25,
+    "replay_defect_inf": 2.624271359330521e-06,
+    "max_path_violation": 2.472238873618693e-07,
+    "wall_seconds": 69.26182783900003
+   }
+  ],
+  "16": [
+   {
+    "initial_position": [
+     6.131957132120792,
+     4.909709593631248,
+     1.0242462018809102
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.223250532621136,
+    "fuel_used": 0.16714961036540088,
+    "iterations": 25,
+    "replay_defect_inf": 4.80886516345258e-05,
+    "max_path_violation": 7.208245037970684e-06,
+    "wall_seconds": 102.93782265399932
+   },
+   {
+    "initial_position": [
+     7.494309348599213,
+     4.558436875962642,
+     1.6599022258902663
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.669472795424743,
+    "fuel_used": 0.18988938885803508,
+    "iterations": 25,
+    "replay_defect_inf": 1.0406752757319282e-06,
+    "max_path_violation": 2.9469420903538435e-07,
+    "wall_seconds": 119.74077375699926
+   },
+   {
+    "initial_position": [
+     8.919317118966472,
+     4.088548749982885,
+     1.6136302387469028
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.102556017555421,
+    "fuel_used": 0.2090182261015081,
+    "iterations": 25,
+    "replay_defect_inf": 3.1211792070884314e-06,
+    "max_path_violation": 9.392493809379232e-07,
+    "wall_seconds": 120.5893805120013
+   },
+   {
+    "initial_position": [
+     6.719352870359636,
+     5.7476999822265125,
+     1.3250064434827975
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.442382521628592,
+    "fuel_used": 0.17055881896573477,
+    "iterations": 25,
+    "replay_defect_inf": 6.314641825377887e-06,
+    "max_path_violation": 1.1272080049362643e-06,
+    "wall_seconds": 69.15439041100035
+   },
+   {
+    "initial_position": [
+     8.618645501817934,
+     3.4982360823643703,
+     1.0709984423971708
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.009379271795455,
+    "fuel_used": 0.20366937979269584,
+    "iterations": 25,
+    "replay_defect_inf": 1.9007498766043796e-06,
+    "max_path_violation": 5.848324020618634e-07,
+    "wall_seconds": 119.95577135699932
+   },
+   {
+    "initial_position": [
+     6.7244554005718395,
+     4.875670848292655,
+     1.0050567826158734
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.424844361179125,
+    "fuel_used": 0.17140939560715585,
+    "iterations": 25,
+    "replay_defect_inf": 7.679106501745636e-05,
+    "max_path_violation": 1.6827723519075022e-05,
+    "wall_seconds": 79.60669347300063
+   },
+   {
+    "initial_position": [
+     6.1765463520541894,
+     5.195532292030872,
+     1.6818618139085566
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.246240048444705,
+    "fuel_used": 0.17384257817019733,
+    "iterations": 25,
+    "replay_defect_inf": 5.712003346758365e-06,
+    "max_path_violation": 1.6681156622677662e-06,
+    "wall_seconds": 119.43690928999968
+   },
+   {
+    "initial_position": [
+     6.002250508998389,
+     3.8340347206538485,
+     1.143105208962626
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.155533422792787,
+    "fuel_used": 0.17116592305210343,
+    "iterations": 25,
+    "replay_defect_inf": 2.2066158448463824e-05,
+    "max_path_violation": 3.291663698723468e-06,
+    "wall_seconds": 119.83574716099974
+   },
+   {
+    "initial_position": [
+     7.739964530674191,
+     4.549012778723387,
+     1.45004369352298
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.747209997725795,
+    "fuel_used": 0.19215239814487073,
+    "iterations": 25,
+    "replay_defect_inf": 3.908747737702001e-06,
+    "max_path_violation": 1.1120200593683904e-06,
+    "wall_seconds": 102.28377591900062
+   },
+   {
+    "initial_position": [
+     6.054493902263066,
+     4.78796656914149,
+     1.1202814008070834
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.193281534756233,
+    "fuel_used": 0.1679116557928686,
+    "iterations": 25,
+    "replay_defect_inf": 2.450029700895584e-06,
+    "max_path_violation": 2.468274842293283e-07,
+    "wall_seconds": 119.62689244099965
+   },
+   {
+    "initial_position": [
+     6.433293526773969,
+     4.4284698738398545,
+     1.1119080954089502
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.32021797230907,
+    "fuel_used": 0.16947676605154616,
+    "iterations": 25,
+    "replay_defect_inf": 0.00012794009501870818,
+    "max_path_violation": 3.1331344955143337e-05,
+    "wall_seconds": 103.22098954300054
+   },
+   {
+    "initial_position": [
+     7.055610590599075,
+     5.162991203713096,
+     1.649586077903698
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.543741933008652,
+    "fuel_used": 0.1755453204612083,
+    "iterations": 25,
+    "replay_defect_inf": 1.774289677447527e-05,
+    "max_path_violation": 4.079668874945597e-06,
+    "wall_seconds": 107.56733806000011
+   },
+   {
+    "initial_position": [
+     8.123242968851935,
+     3.74853481594015,
+     1.0555519871624308
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.857656625368834,
+    "fuel_used": 0.19344304324045636,
+    "iterations": 25,
+    "replay_defect_inf": 1.7918211238088233e-06,
+    "max_path_violation": 5.335233574932374e-07,
+    "wall_seconds": 83.73272037599963
+   },
+   {
+    "initial_position": [
+     6.37560190737156,
+     3.723469175148455,
+     1.6596699198716323
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.289699118365219,
+    "fuel_used": 0.17731014805059075,
+    "iterations": 25,
+    "replay_defect_inf": 4.83838149989424e-06,
+    "max_path_violation": 8.379494913501873e-07,
+    "wall_seconds": 116.8000117369993
+   },
+   {
+    "initial_position": [
+     6.726104939131933,
+     3.9012176295939387,
+     1.58453572268228
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.417428929993784,
+    "fuel_used": 0.17155637982569694,
+    "iterations": 25,
+    "replay_defect_inf": 1.678251579079193e-05,
+    "max_path_violation": 3.114985468899434e-06,
+    "wall_seconds": 122.48061303500072
+   },
+   {
+    "initial_position": [
+     8.007093558359797,
+     3.350949246474234,
+     1.6198172338386163
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.823132370678108,
+    "fuel_used": 0.19763972739747837,
+    "iterations": 25,
+    "replay_defect_inf": 5.708747336075071e-06,
+    "max_path_violation": 2.037144630095966e-06,
+    "wall_seconds": 121.73408275100155
+   }
+  ],
+  "64": [
+   {
+    "initial_position": [
+     8.539282759796844,
+     5.910900177707246,
+     1.482820760194775
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.009255885407366,
+    "fuel_used": 0.19557338236606592,
+    "iterations": 25,
+    "replay_defect_inf": 4.8360031311700524e-06,
+    "max_path_violation": 2.0844249972729045e-06,
+    "wall_seconds": 141.22139684199828
+   },
+   {
+    "initial_position": [
+     7.8931884566756345,
+     5.771025023056069,
+     1.9005049747332243
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.81194540536272,
+    "fuel_used": 0.19021097916606933,
+    "iterations": 25,
+    "replay_defect_inf": 3.39940725395671e-05,
+    "max_path_violation": 1.8063366700182826e-06,
+    "wall_seconds": 140.5805007050003
+   },
+   {
+    "initial_position": [
+     8.924683069869651,
+     3.6596456682526366,
+     1.0218303195686906
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.101357444052744,
+    "fuel_used": 0.20504864915961662,
+    "iterations": 25,
+    "replay_defect_inf": 1.1307789213654829e-05,
+    "max_path_violation": 5.621641173902958e-06,
+    "wall_seconds": 142.8445414380003
+   },
+   {
+    "initial_position": [
+     6.448678027602697,
+     4.2755427119984,
+     1.1250293798026614
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.323425951758662,
+    "fuel_used": 0.16884036987779227,
+    "iterations": 25,
+    "replay_defect_inf": 8.239898955020308e-05,
+    "max_path_violation": 1.9424838461290506e-05,
+    "wall_seconds": 137.73469060099887
+   },
+   {
+    "initial_position": [
+     6.705401213881138,
+     4.899166746178584,
+     1.2300550645208015
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.417826885449675,
+    "fuel_used": 0.17604499575471122,
+    "iterations": 25,
+    "replay_defect_inf": 6.0128268355441605e-06,
+    "max_path_violation": 5.239052629502083e-07,
+    "wall_seconds": 141.80585372600035
+   },
+   {
+    "initial_position": [
+     7.898601050234166,
+     4.2334431856272765,
+     1.2225492475169464
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.792865652989683,
+    "fuel_used": 0.1915616962073141,
+    "iterations": 25,
+    "replay_defect_inf": 4.159407230641676e-06,
+    "max_path_violation": 2.1514767483132857e-06,
+    "wall_seconds": 141.56577017899872
+   },
+   {
+    "initial_position": [
+     8.76323877350562,
+     3.994128035761242,
+     1.9606270892587894
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.0560000705703985,
+    "fuel_used": 0.20946210308029545,
+    "iterations": 25,
+    "replay_defect_inf": 2.084472199292975e-06,
+    "max_path_violation": 6.22894277269026e-07,
+    "wall_seconds": 140.07865581299848
+   },
+   {
+    "initial_position": [
+     7.6653954638209925,
+     3.977518797050427,
+     1.5672283316592024
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.7164457720751605,
+    "fuel_used": 0.19204032321336295,
+    "iterations": 25,
+    "replay_defect_inf": 5.992079233130276e-06,
+    "max_path_violation": 2.4933032340967998e-06,
+    "wall_seconds": 141.9751894710007
+   },
+   {
+    "initial_position": [
+     7.936501688186095,
+     3.7015281888513183,
+     1.2694079510200948
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.799499425980771,
+    "fuel_used": 0.19134550606168044,
+    "iterations": 25,
+    "replay_defect_inf": 1.871770925587768e-06,
+    "max_path_violation": 8.534596398490635e-07,
+    "wall_seconds": 141.0978436309997
+   },
+   {
+    "initial_position": [
+     6.016561266725805,
+     4.839918071064306,
+     1.905553407583462
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.1833755629452645,
+    "fuel_used": 0.17595715290755254,
+    "iterations": 25,
+    "replay_defect_inf": 1.5702330772526807e-05,
+    "max_path_violation": 2.6389120082459527e-06,
+    "wall_seconds": 138.45773574599843
+   },
+   {
+    "initial_position": [
+     6.158700245610919,
+     3.405376339309754,
+     1.955698216737698
+    ],
+    "status": "converged",
+    "time_of_flight": 4.220122326433362,
+    "fuel_used": 0.17598186892154377,
+    "iterations": 18,
+    "replay_defect_inf": 2.6314883316835846e-07,
+    "max_path_violation": 6.954168374484482e-08,
+    "wall_seconds": 104.32767255699946
+   },
+   {
+    "initial_position": [
+     6.204057425752422,
+     4.008688245988889,
+     1.2970975540868348
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.231374892740241,
+    "fuel_used": 0.17257081554789266,
+    "iterations": 25,
+    "replay_defect_inf": 9.856954497333703e-05,
+    "max_path_violation": 1.8458749068805957e-05,
+    "wall_seconds": 141.92755815799865
+   },
+   {
+    "initial_position": [
+     6.706136812650493,
+     4.218234528876199,
+     1.9589149110642579
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.4080797406767624,
+    "fuel_used": 0.18498651539061917,
+    "iterations": 25,
+    "replay_defect_inf": 1.5464200269210693e-06,
+    "max_path_violation": 4.0522548494514865e-07,
+    "wall_seconds": 142.15817283700017
+   },
+   {
+    "initial_position": [
+     6.3528845477110485,
+     4.8727862289593045,
+     1.1702653578986468
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.299089943690634,
+    "fuel_used": 0.16991617484662824,
+    "iterations": 25,
+    "replay_defect_inf": 0.00013143332846832223,
+    "max_path_violation": 2.5142368881070354e-05,
+    "wall_seconds": 141.50404135699864
+   },
+   {
+    "initial_position": [
+     8.200619991349956,
+     4.325377378195663,
+     1.7152118321267256
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.887997151287429,
+    "fuel_used": 0.2002856872115475,
+    "iterations": 25,
+    "replay_defect_inf": 4.188793448767214e-07,
+    "max_path_violation": 2.1671151317903536e-07,
+    "wall_seconds": 143.48540441600016
+   },
+   {
+    "initial_position": [
+     7.359463144294334,
+     4.372513931173066,
+     1.9982998193692132
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.624670492233035,
+    "fuel_used": 0.19153682578994058,
+    "iterations": 25,
+    "replay_defect_inf": 3.9200110202308736e-07,
+    "max_path_violation": 1.1267331689879256e-07,
+    "wall_seconds": 140.254154794
+   },
+   {
+    "initial_position": [
+     7.583583458146814,
+     5.341814835503017,
+     1.0954593058872746
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.717527250774667,
+    "fuel_used": 0.17312482248649563,
+    "iterations": 25,
+    "replay_defect_inf": 8.948979331480089e-05,
+    "max_path_violation": 1.7946310863381498e-05,
+    "wall_seconds": 142.75405893100105
+   },
+   {
+    "initial_position": [
+     6.63985233830562,
+     3.1962295721935647,
+     1.5888703208578248
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.379042579187597,
+    "fuel_used": 0.17687406362673586,
+    "iterations": 25,
+    "replay_defect_inf": 3.1708060921342707e-07,
+    "max_path_violation": 4.5424360051171675e-08,
+    "wall_seconds": 143.28076005600087
+   },
+   {
+    "initial_position": [
+     7.87946810726724,
+     5.049723715918285,
+     1.9473183659565014
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.797305478645688,
+    "fuel_used": 0.19462582585391308,
+    "iterations": 25,
+    "replay_defect_inf": 5.661805228207584e-06,
+    "max_path_violation": 1.8882563730393542e-06,
+    "wall_seconds": 143.53550218300006
+   },
+   {
+    "initial_position": [
+     8.902880070705839,
+     3.412160435828003,
+     1.5558375009230243
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.0951956236787135,
+    "fuel_used": 0.20778828605125432,
+    "iterations": 25,
+    "replay_defect_inf": 4.055791035097178e-05,
+    "max_path_violation": 1.0068328103240987e-05,
+    "wall_seconds": 141.42139150299954
+   },
+   {
+    "initial_position": [
+     6.834851724925901,
+     4.943990075835484,
+     1.4486903217741585
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.461778024511435,
+    "fuel_used": 0.17952391920169108,
+    "iterations": 25,
+    "replay_defect_inf": 8.495540806396917e-06,
+    "max_path_violation": 1.4784998647598968e-06,
+    "wall_seconds": 142.73237875700033
+   },
+   {
+    "initial_position": [
+     7.6956480527961295,
+     5.089452376713181,
+     1.5442348629112757
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.75837203342723,
+    "fuel_used": 0.1729198689347764,
+    "iterations": 25,
+    "replay_defect_inf": 0.00014140167045573193,
+    "max_path_violation": 1.9323712805441318e-05,
+    "wall_seconds": 141.30466398600038
+   },
+   {
+    "initial_position": [
+     6.059027368729005,
+     4.677433201609134,
+     1.6966174169218111
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.194384851765932,
+    "fuel_used": 0.17579469392971525,
+    "iterations": 25,
+    "replay_defect_inf": 9.051848989916067e-06,
+    "max_path_violation": 1.1599788585225923e-06,
+    "wall_seconds": 140.87395679400106
+   },
+   {
+    "initial_position": [
+     7.454799080640777,
+     4.761946284937543,
+     1.8490385431604515
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.6599568970236795,
+    "fuel_used": 0.1897710939793753,
+    "iterations": 25,
+    "replay_defect_inf": 4.20455159644284e-06,
+    "max_path_violation": 1.544875102288401e-06,
+    "wall_seconds": 142.00435586799904
+   },
+   {
+    "initial_position": [
+     7.858993924166075,
+     3.4700099041852086,
+     1.6608768359068722
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.776751234627221,
+    "fuel_used": 0.19574559782913536,
+    "iterations": 25,
+    "replay_defect_inf": 5.890960898979891e-06,
+    "max_path_violation": 2.1803480898530125e-06,
+    "wall_seconds": 142.3024665770008
+   },
+   {
+    "initial_position": [
+     8.402971796896798,
+     5.610419972259576,
+     1.460298176789419
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.96499076198543,
+    "fuel_used": 0.19550226380175828,
+    "iterations": 25,
+    "replay_defect_inf": 6.073777818027537e-06,
+    "max_path_violation": 1.2054642202219412e-06,
+    "wall_seconds": 141.50363973599997
+   },
+   {
+    "initial_position": [
+     7.897332176772235,
+     5.212854601453926,
+     1.0419601183945977
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.820478306207009,
+    "fuel_used": 0.17342513299643914,
+    "iterations": 25,
+    "replay_defect_inf": 1.255378953657349e-05,
+    "max_path_violation": 3.5629602648246106e-06,
+    "wall_seconds": 140.93289803300104
+   },
+   {
+    "initial_position": [
+     8.583683778117917,
+     4.0530220973615325,
+     1.9624050561447377
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.0018443736419576,
+    "fuel_used": 0.20680822557372225,
+    "iterations": 25,
+    "replay_defect_inf": 1.6650333032330877e-06,
+    "max_path_violation": 5.733520456185914e-07,
+    "wall_seconds": 141.50015764099953
+   },
+   {
+    "initial_position": [
+     7.394818336739577,
+     4.062301222377402,
+     1.369678757284703
+    ],
+    "status": "converged",
+    "time_of_flight": 4.6307583870916815,
+    "fuel_used": 0.1873939332905803,
+    "iterations": 18,
+    "replay_defect_inf": 1.200698549475021e-07,
+    "max_path_violation": 2.7313391548489108e-09,
+    "wall_seconds": 101.22173930099962
+   },
+   {
+    "initial_position": [
+     7.735913600753587,
+     5.068225246267137,
+     1.6082613195287916
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.752520264427611,
+    "fuel_used": 0.1883205238309309,
+    "iterations": 25,
+    "replay_defect_inf": 4.728992037072999e-06,
+    "max_path_violation": 5.292051064031966e-07,
+    "wall_seconds": 140.7943153870001
+   },
+   {
+    "initial_position": [
+     7.58813034864337,
+     5.13814275356029,
+     1.4623247794721053
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.72454862347899,
+    "fuel_used": 0.1711789075834116,
+    "iterations": 25,
+    "replay_defect_inf": 0.00020792856388318626,
+    "max_path_violation": 2.2485884181966398e-05,
+    "wall_seconds": 141.30345425700034
+   },
+   {
+    "initial_position": [
+     7.043185633117664,
+     5.588972577497534,
+     1.3598405933864903
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.550037508561195,
+    "fuel_used": 0.17023976530747098,
+    "iterations": 25,
+    "replay_defect_inf": 0.00014921596502825984,
+    "max_path_violation": 4.476596646396658e-05,
+    "wall_seconds": 142.92110235700056
+   },
+   {
+    "initial_position": [
+     7.181304764919997,
+     3.071185600968677,
+     1.2748814377453646
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.558171212182216,
+    "fuel_used": 0.18318617837282214,
+    "iterations": 25,
+    "replay_defect_inf": 4.696046442487223e-05,
+    "max_path_violation": 1.2537383418109727e-05,
+    "wall_seconds": 137.5653324699997
+   },
+   {
+    "initial_position": [
+     6.976984820028879,
+     3.297876708458539,
+     1.3296158116120167
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.491828171114242,
+    "fuel_used": 0.1802194221440383,
+    "iterations": 25,
+    "replay_defect_inf": 6.215141340981667e-05,
+    "max_path_violation": 1.2985548027533156e-05,
+    "wall_seconds": 140.2224310090005
+   },
+   {
+    "initial_position": [
+     8.922765049998937,
+     5.468824617459252,
+     1.7659020812888961
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.115668000863664,
+    "fuel_used": 0.20377153623802013,
+    "iterations": 25,
+    "replay_defect_inf": 1.9287217873698026e-05,
+    "max_path_violation": 8.468653151405547e-06,
+    "wall_seconds": 142.82242733599924
+   },
+   {
+    "initial_position": [
+     7.475508549136797,
+     4.082969637834493,
+     1.505170663780774
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.656965097983956,
+    "fuel_used": 0.18896198702804634,
+    "iterations": 25,
+    "replay_defect_inf": 6.293245744526388e-07,
+    "max_path_violation": 3.129781485089467e-07,
+    "wall_seconds": 139.88026563399944
+   },
+   {
+    "initial_position": [
+     8.617779006973596,
+     5.089025397581621,
+     1.769657663103719
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.020873130055063,
+    "fuel_used": 0.19990426350222767,
+    "iterations": 25,
+    "replay_defect_inf": 3.7905746068656043e-06,
+    "max_path_violation": 1.4610996759145678e-06,
+    "wall_seconds": 143.2719083030006
+   },
+   {
+    "initial_position": [
+     6.621822524351371,
+     3.248148534017194,
+     1.0839525768762668
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.368791905097238,
+    "fuel_used": 0.17156894827609004,
+    "iterations": 25,
+    "replay_defect_inf": 1.5835967932087414e-05,
+    "max_path_violation": 1.8819019607096976e-06,
+    "wall_seconds": 144.40363594000155
+   },
+   {
+    "initial_position": [
+     6.844924779690677,
+     4.839112803649209,
+     1.9313531676882891
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.463211150753346,
+    "fuel_used": 0.18429869731330317,
+    "iterations": 25,
+    "replay_defect_inf": 6.636045327135243e-08,
+    "max_path_violation": 3.2663585169956377e-09,
+    "wall_seconds": 143.98896960200182
+   },
+   {
+    "initial_position": [
+     8.82610435277872,
+     3.6408662262991136,
+     1.836100940221871
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.071293843757597,
+    "fuel_used": 0.20384827118306026,
+    "iterations": 25,
+    "replay_defect_inf": 6.8400660955258985e-06,
+    "max_path_violation": 2.85320414583623e-06,
+    "wall_seconds": 140.77185582200036
+   },
+   {
+    "initial_position": [
+     8.142460409618062,
+     3.295026989198739,
+     1.0903059157126467
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.86597438349793,
+    "fuel_used": 0.1987072050129266,
+    "iterations": 25,
+    "replay_defect_inf": 2.094158427867754e-05,
+    "max_path_violation": 9.522399565531359e-06,
+    "wall_seconds": 141.95854477099965
+   },
+   {
+    "initial_position": [
+     6.846917232919084,
+     5.697045890561105,
+     1.0327756255664442
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.479644062068079,
+    "fuel_used": 0.17193758039240148,
+    "iterations": 25,
+    "replay_defect_inf": 1.1474872185779361e-06,
+    "max_path_violation": 5.85676525943768e-07,
+    "wall_seconds": 140.95304540100005
+   },
+   {
+    "initial_position": [
+     6.256736982790328,
+     4.406486008140412,
+     1.0033611970430039
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.25626615132984,
+    "fuel_used": 0.16951740613993405,
+    "iterations": 25,
+    "replay_defect_inf": 2.3814338549588143e-05,
+    "max_path_violation": 3.2339683904147876e-06,
+    "wall_seconds": 142.59232115100167
+   },
+   {
+    "initial_position": [
+     8.36876707378801,
+     5.060691253405168,
+     1.1160478662420465
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.951518491886441,
+    "fuel_used": 0.18815967474111717,
+    "iterations": 25,
+    "replay_defect_inf": 0.000203327318833324,
+    "max_path_violation": 3.97640825691159e-05,
+    "wall_seconds": 141.54307685999993
+   },
+   {
+    "initial_position": [
+     7.834016997418784,
+     4.578453250113977,
+     1.5615730540145982
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.777109746355584,
+    "fuel_used": 0.1930212750801621,
+    "iterations": 25,
+    "replay_defect_inf": 9.99381281507894e-06,
+    "max_path_violation": 1.2209269828478142e-06,
+    "wall_seconds": 140.3740820940002
+   },
+   {
+    "initial_position": [
+     7.92839722137567,
+     3.4671961411237864,
+     1.1881953700498649
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.797875157010665,
+    "fuel_used": 0.1962428636891138,
+    "iterations": 25,
+    "replay_defect_inf": 2.4890313229386507e-06,
+    "max_path_violation": 8.560108410993195e-07,
+    "wall_seconds": 142.88293432499995
+   },
+   {
+    "initial_position": [
+     8.248322540058709,
+     4.771787101254578,
+     1.8220446677901645
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.906004013217999,
+    "fuel_used": 0.1979557373152312,
+    "iterations": 25,
+    "replay_defect_inf": 9.428495217900235e-07,
+    "max_path_violation": 3.8454424267087006e-07,
+    "wall_seconds": 140.72872161799933
+   },
+   {
+    "initial_position": [
+     8.92441749260283,
+     5.256754400690632,
+     1.0693488378675489
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.1216325687652775,
+    "fuel_used": 0.1902239871951763,
+    "iterations": 25,
+    "replay_defect_inf": 2.2547713402154557e-05,
+    "max_path_violation": 2.764667635268836e-06,
+    "wall_seconds": 139.03636650000044
+   },
+   {
+    "initial_position": [
+     7.06608122538846,
+     3.082254764604899,
+     1.1183693268129045
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.5197755955592775,
+    "fuel_used": 0.18157205468294935,
+    "iterations": 25,
+    "replay_defect_inf": 3.585045576470769e-05,
+    "max_path_violation": 6.20318909261286e-06,
+    "wall_seconds": 141.97438647400122
+   },
+   {
+    "initial_position": [
+     7.390014374753882,
+     4.530185433556836,
+     1.2234537197807902
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.636658335739774,
+    "fuel_used": 0.18654978345748496,
+    "iterations": 25,
+    "replay_defect_inf": 4.766698463498642e-06,
+    "max_path_violation": 1.484145417229854e-06,
+    "wall_seconds": 142.3465113839993
+   },
+   {
+    "initial_position": [
+     7.894385731472116,
+     5.398829669548083,
+     1.778345886898908
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.806686374594928,
+    "fuel_used": 0.1924985057761024,
+    "iterations": 25,
+    "replay_defect_inf": 9.453913160539784e-06,
+    "max_path_violation": 3.4161892759065893e-07,
+    "wall_seconds": 113.00164383299852
+   },
+   {
+    "initial_position": [
+     8.424368156941345,
+     4.604327282104967,
+     1.767848782221571
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.958178702454375,
+    "fuel_used": 0.19719311789382643,
+    "iterations": 25,
+    "replay_defect_inf": 1.7586109786194015e-06,
+    "max_path_violation": 8.972646772242854e-07,
+    "wall_seconds": 89.28656760100057
+   },
+   {
+    "initial_position": [
+     8.778865395343825,
+     5.27037047577102,
+     1.7206157714403458
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.072064866379584,
+    "fuel_used": 0.20268283931193798,
+    "iterations": 25,
+    "replay_defect_inf": 1.896726290162576e-05,
+    "max_path_violation": 9.75139604886266e-06,
+    "wall_seconds": 72.09184018499946
+   },
+   {
+    "initial_position": [
+     8.961052080606002,
+     5.047492212495831,
+     1.048626630646992
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.128897348296662,
+    "fuel_used": 0.1917271782000407,
+    "iterations": 25,
+    "replay_defect_inf": 8.4670375821716e-06,
+    "max_path_violation": 2.2668800923053567e-06,
+    "wall_seconds": 72.59569997299877
+   },
+   {
+    "initial_position": [
+     7.50499206544975,
+     5.910601334627083,
+     1.4884260567614378
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.695541863429784,
+    "fuel_used": 0.182135060606186,
+    "iterations": 25,
+    "replay_defect_inf": 7.50495545792651e-07,
+    "max_path_violation": 1.6473218811263735e-07,
+    "wall_seconds": 103.71197257000131
+   },
+   {
+    "initial_position": [
+     8.984003648733623,
+     3.541965994947571,
+     1.533197133521784
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.118092975039985,
+    "fuel_used": 0.20873196443845798,
+    "iterations": 25,
+    "replay_defect_inf": 7.930883583195936e-06,
+    "max_path_violation": 3.867944677438118e-06,
+    "wall_seconds": 70.54247891200066
+   },
+   {
+    "initial_position": [
+     8.206785954105534,
+     4.6783906156761965,
+     1.5157445998730479
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.893107565711779,
+    "fuel_used": 0.19651727591467005,
+    "iterations": 25,
+    "replay_defect_inf": 3.2201681094967682e-06,
+    "max_path_violation": 1.7624783017478052e-06,
+    "wall_seconds": 70.78030212799968
+   },
+   {
+    "initial_position": [
+     7.380658261169252,
+     5.38045022387005,
+     1.8851523850197385
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.645409778228269,
+    "fuel_used": 0.18762862530054036,
+    "iterations": 25,
+    "replay_defect_inf": 8.110668416883016e-07,
+    "max_path_violation": 6.722208767406812e-08,
+    "wall_seconds": 91.83427646999917
+   },
+   {
+    "initial_position": [
+     8.153004737629697,
+     4.51573634996257,
+     1.5123000604741728
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.875511204282707,
+    "fuel_used": 0.1966104751531812,
+    "iterations": 25,
+    "replay_defect_inf": 7.591957667418825e-06,
+    "max_path_violation": 2.3854741582063355e-06,
+    "wall_seconds": 71.06256151100024
+   },
+   {
+    "initial_position": [
+     8.625534239691735,
+     4.137211295531854,
+     1.5328400466424736
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 5.015733531268853,
+    "fuel_used": 0.2041197901112406,
+    "iterations": 25,
+    "replay_defect_inf": 1.2954351900074101e-05,
+    "max_path_violation": 1.7173266213532656e-06,
+    "wall_seconds": 95.32434004600145
+   },
+   {
+    "initial_position": [
+     7.85514147644655,
+     3.73502822268432,
+     1.5665778827563095
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.774828827268805,
+    "fuel_used": 0.19532274168349129,
+    "iterations": 25,
+    "replay_defect_inf": 9.092824986484116e-06,
+    "max_path_violation": 3.163207589196304e-06,
+    "wall_seconds": 100.40635143899999
+   },
+   {
+    "initial_position": [
+     7.2812907945620555,
+     4.211904912804599,
+     1.9838282310015798
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.598077600261398,
+    "fuel_used": 0.19156608356557148,
+    "iterations": 25,
+    "replay_defect_inf": 2.0004356322544936e-06,
+    "max_path_violation": 2.983444833404292e-07,
+    "wall_seconds": 102.18917106700064
+   },
+   {
+    "initial_position": [
+     8.197653578098626,
+     3.1250270707807983,
+     1.72580227211081
+    ],
+    "status": "converged",
+    "time_of_flight": 4.882465158428195,
+    "fuel_used": 0.19535395189283178,
+    "iterations": 18,
+    "replay_defect_inf": 2.1264557217293145e-06,
+    "max_path_violation": 9.756489149914671e-07,
+    "wall_seconds": 82.95886841599895
+   },
+   {
+    "initial_position": [
+     8.29373472551151,
+     5.298513061063383,
+     1.5796610395349568
+    ],
+    "status": "maximum_iterations",
+    "time_of_flight": 4.928205073657589,
+    "fuel_used": 0.1961567894113967,
+    "iterations": 25,
+    "replay_defect_inf": 5.495506890884627e-06,
+    "max_path_violation": 1.8454811585577602e-06,
+    "wall_seconds": 94.15254632699907
+   }
+  ]
+ },
+ "family": "P1-D-pd6",
+ "wall_seconds": 577.1899038499996,
+ "support": "partial"
+}

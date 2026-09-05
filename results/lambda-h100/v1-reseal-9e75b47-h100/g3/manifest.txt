@@ -1,0 +1,33 @@
+source_commit=9e75b470fd5378d9b20f6f13892ac909c43757cd
+source_tree=20e19f8411e465a05832f7ca719e053fe511546a
+branch=integration/single-gpu-v1
+upstream_commit=167c8b72b4b96d2f94d405b8763e485514192b81
+upstream_tree=62b05e6c1bedd385f6c267af3645ae4aae0421b4
+9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024  benchmarks/g4_policy.json
+df23cc1c314604525884e720ec99e3c3c92b1b5da0347c6482ed04df0d88bfdf  benchmarks/g4_policy.sha256
+81c079198b6285c65546c4eaddf697e3ef300e7d73ce23e9b31b6c56fb8f770e  benchmarks/paper1_matrix.json
+73c7795d4dddf3506a46592ed08e76a21054d7d4b394fcecf328337da13bb083  results/gpu/current-head-9e75b47-h100/g3/displaced/execution-context.json
+c2f84d7fbf83865598e9cdea0ef2c2b3be423a1ea7d0a3f6d925a1645b617382  build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test
+b818b37331ec17c5ac4acdfeda439fb81747c6cce2461393e669190ed0df96cc  build-current-head-g3-debug/cuda-tests/device_scvx_integration_test
+5f778efba6fc47de651ea347d4edcd68cb1dae027aeba93d123da5e4b3f869b9  /home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so
+Fri Sep  4 15:34:36 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.105.08             Driver Version: 580.105.08     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:07:00.0 Off |                    0 |
+| N/A   45C    P0            130W /  700W |       0MiB /  81559MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+NVIDIA Nsight Systems version 2024.6.2.225-246235244400v0

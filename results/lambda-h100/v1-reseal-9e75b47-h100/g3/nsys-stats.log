@@ -1,0 +1,58 @@
+Generating SQLite file results/gpu/current-head-9e75b47-h100/g3/device-scvx.sqlite from results/gpu/current-head-9e75b47-h100/g3/device-scvx.nsys-rep
+Processing [results/gpu/current-head-9e75b47-h100/g3/device-scvx.sqlite] with [/opt/nvidia/nsight-systems/2024.6.2/host-linux-x64/reports/cuda_api_sum.py]... 
+
+ ** CUDA API Summary (cuda_api_sum):
+
+ Time (%)  Total Time (ns)  Num Calls   Avg (ns)   Med (ns)   Min (ns)  Max (ns)   StdDev (ns)                Name               
+ --------  ---------------  ---------  ----------  ---------  --------  ---------  -----------  ---------------------------------
+     80.6        607563257         36  16876757.1    86916.0      1719  487710061   81585645.5  cudaEventSynchronize             
+     15.4        115998883          8  14499860.4    10670.5      9231  115920766   40980234.4  cudaStreamCreateWithFlags        
+      1.8         13584937         76    178749.2     5269.5      3495    7199422     883813.0  cudaLaunchKernel                 
+      0.6          4871956          4   1217989.0  1224077.5   1073538    1350263     113810.8  cudaGetDeviceProperties_v2_v12000
+      0.5          3887890        280     13885.3     3674.0      1403    2297246     138024.0  cudaFree                         
+      0.5          3418134          8    427266.8   416136.0      6537     867616     449601.6  cudaHostAlloc                    
+      0.2          1579695          8    197461.9   192265.5     15713     393470     192240.8  cudaFreeHost                     
+      0.2          1400065        304      4605.5     4416.5      1865      31608       3343.2  cudaMemcpyAsync                  
+      0.1          1089381        276      3947.0     2355.5      1840     125931      11620.0  cudaMalloc                       
+      0.0           204157         80      2552.0     2161.5      1229       9379       1480.4  cudaEventRecord                  
+      0.0           152396         64      2381.2     1550.5      1330      13655       2724.3  cudaMemsetAsync                  
+      0.0           137709          8     17213.6    13657.0      7661      32603      10333.6  cudaStreamDestroy                
+      0.0            88788        419       211.9      156.0        85       4852        254.6  cuGetProcAddress_v2              
+      0.0            59442         12      4953.5     4410.0      3031       9631       1944.2  cudaStreamSynchronize            
+      0.0            17964         28       641.6      437.0       333       2061        503.0  cudaEventDestroy                 
+      0.0            16877         24       703.2      530.5       405       2112        412.3  cudaEventCreate                  
+      0.0             9895          4      2473.8     2445.0      2197       2808        271.2  cudaEventCreateWithFlags         
+      0.0             2035          1      2035.0     2035.0      2035       2035          0.0  cuInit                           
+      0.0             1930          2       965.0      965.0       127       1803       1185.1  cuModuleGetLoadingMode           
+
+Processing [results/gpu/current-head-9e75b47-h100/g3/device-scvx.sqlite] with [/opt/nvidia/nsight-systems/2024.6.2/host-linux-x64/reports/cuda_gpu_kern_sum.py]... 
+
+ ** CUDA GPU Kernel Summary (cuda_gpu_kern_sum):
+
+ Time (%)  Total Time (ns)  Instances   Avg (ns)   Med (ns)   Min (ns)  Max (ns)   StdDev (ns)                                                  Name                                                
+ --------  ---------------  ---------  ----------  ---------  --------  ---------  -----------  ----------------------------------------------------------------------------------------------------
+     90.8        553883943          8  69235492.9   681869.5     63872  470779763  163510113.2  <unnamed>::solve_kernel(<unnamed>::DeviceProblem *, <unnamed>::DeviceControl *, <unnamed>::DeviceRe…
+      8.4         51267836          8   6408479.5  2820663.0      1472   22807127    8821429.7  <unnamed>::initialise_control_kernel(<unnamed>::DeviceControl *, <unnamed>::DeviceProblem *)        
+      0.5          3107511          8    388438.9   339039.0    196447     684286     216772.5  <unnamed>::coefficient_change_kernel(<unnamed>::DeviceControl *, <unnamed>::NumericPointers, <unnam…
+      0.1           914556          2    457278.0   457278.0    444478     470078      18101.9  void <unnamed>::variational_kernel<(int)3, (int)14, (int)7>(const double *, const double *, double …
+      0.1           714526          8     89315.8    84975.5     58944     128831      30554.1  <unnamed>::residual_kernel(<unnamed>::DeviceProblem *, <unnamed>::DeviceControl *, <unnamed>::Devic…
+      0.0            74304          2     37152.0    37152.0     34816      39488       3303.6  void <unnamed>::variational_kernel<(int)1, (int)7, (int)4>(const double *, const double *, double *…
+      0.0            70304          2     35152.0    35152.0     34496      35808        927.7  void <unnamed>::variational_kernel<(int)2, (int)7, (int)4>(const double *, const double *, double *…
+      0.0            17696          8      2212.0     2128.0      1856       2880        351.1  <unnamed>::fill_dynamics_csc_kernel(const double *, const double *, const double *, const int *, co…
+      0.0             9664          8      1208.0     1152.0      1120       1440        120.6  <unnamed>::prepare_warm_start_kernel(double *, double *, const double *, int)                       
+      0.0             8000          2      4000.0     4000.0      3808       4192        271.5  <unnamed>::hcw_exact_kernel(const double *, const double *, double *, double *, double *, double *,…
+      0.0             8000          8      1000.0      992.0       992       1024         14.8  <unnamed>::recovery_kernel(<unnamed>::DeviceProblem *, <unnamed>::DeviceControl *, <unnamed>::Devic…
+      0.0             7648          8       956.0      960.0       928        960         11.3  <unnamed>::set_solve_options_kernel(<unnamed>::DeviceControl *, double, double, unsigned long, unsi…
+      0.0             3840          4       960.0      960.0       960        960          0.0  <unnamed>::set_constant_kernel(double *, int, double)                                               
+
+Processing [results/gpu/current-head-9e75b47-h100/g3/device-scvx.sqlite] with [/opt/nvidia/nsight-systems/2024.6.2/host-linux-x64/reports/cuda_gpu_mem_time_sum.py]... 
+
+ ** CUDA GPU MemOps Summary (by Time) (cuda_gpu_mem_time_sum):
+
+ Time (%)  Total Time (ns)  Count  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)            Operation           
+ --------  ---------------  -----  --------  --------  --------  --------  -----------  ------------------------------
+     41.9           166878    156    1069.7    1024.0       991      1568         98.9  [CUDA memcpy Device-to-Device]
+     33.0           131136    128    1024.5     816.0       704      1824        319.1  [CUDA memcpy Host-to-Device]  
+     17.5            69760     64    1090.0     992.0       736      1696        277.4  [CUDA memset]                 
+      7.6            30112     20    1505.6    1440.0      1408      1824        114.4  [CUDA memcpy Device-to-Host]  
+

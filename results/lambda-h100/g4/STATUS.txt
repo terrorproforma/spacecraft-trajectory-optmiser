@@ -1,0 +1,26 @@
+g4_state=RUNNING (worker launched 2026-09-04T18:55:16Z)
+recorded_utc=2026-09-04T23:16:37Z
+host=lambda-h100-80gb-hbm3 (NVIDIA H100 80GB HBM3, sm_90, driver 580.105.08, CUDA 12.8)
+source_commit=1dbcae098fd8871d4e0ac087e2306534704eff59 (checked out as branch g4/h100-1dbcae0 in /home/ubuntu/spacepdhcg/v1; integration/single-gpu-v1 on this host still points at 9e75b47 because 1dbcae0 is a sibling of 9e75b47 on addac2b, not a descendant)
+fix_bundle=/home/ubuntu/bundles/single-gpu-v1-1dbcae0.bundle sha256=5e4de5e3defaa53815260c7c79384fdcf8a7ff3776a33be6ffe564ffe1c811c5 (verified)
+fix_verification=/home/ubuntu/g4/fix-verification-1dbcae0 (fresh sm_90 configure+build Release+Debug; release ctest PASS; debug ctest PASS; deadline matrix 13/13 PASS in 1319 s; ordinal-73 600 s repro: warm-up/0 600.054 s, warm-up/1 600.029 s at inner_iterations=300000, measured/0 cancelled at 59.66 s under the clamped group deadline, rest unrun)
+executable=/home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test sha256=3703d52c4d9c057377ebd8deb8873d586a9d476c90695695c1ced2a4ce316d86
+capability=/home/ubuntu/g4/g4-executor-capability-1dbcae0-h100.json sha256=0b4c8c38a6ba34b45cdf1ee5ae72869da272df5d866801009930f2b235a6f7f5 (IPM probe: 9/9 QOCO workspace creations)
+qoco_pin=/home/ubuntu/g4/qoco-pin-1dbcae0-h100.txt (cuda-algebra 09f0495 + absolute-KKT patch, libqoco sha256 5f778efb..., same library as the 9e75b47 G1-G3 reseal)
+campaign=/home/ubuntu/spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100
+acceptance_criteria=single-gpu-v1.2 (fresh ledger; RTX 5090 rows not imported; ccd5596 stratum ipm_no_equilibration_v1_1 cited by metadata only)
+checkpoint_status={"completed": 75, "diagnostic": 0, "invalidated": 0, "quarantined": 0, "remaining": 321, "running": 1, "total": 396}
+worker_pid=53138 (taskset 0-3)  observer=53137
+logs=/home/ubuntu/logs/g4-h100/{worker.err (JSON events),worker.log,observer.log,launch.log,capability.log,init.log}
+contamination=run-and-flag per v1.2; host-context channel = /home/ubuntu/s/host-pmon-linux.sh (native nvidia-smi pmon with the worker's own process tree filtered); advisory lock /home/angus/.spacepdhcg-gpu.lock
+affinity_note=at launch 29 GTOC12 worker processes (another agent's cluster_fleet_h100_v2, affinity 0-25) were moved with 'taskset -a -cp 4-25' so cores 0-3 belong to the G4 worker
+
+monitor:   bash ~/s/g4-status.sh [N]          # checkpoint counts, worker/executor pids, GPU, last N group_finished events
+progress:  bash ~/s/g4_progress.sh            # per-policy group walls, cancel latencies, projected finish
+observer:  tail -f ~/logs/g4-h100/observer.log
+events:    grep group_finished ~/logs/g4-h100/worker.err | tail
+pause:     kill -TERM $(pgrep -f 'run_g4_campaign.py run --claim-core'); then kill the '--g4-session' executor and the '--g4-server' process if still alive; the interrupted group is resumed first on restart
+restart:   nohup bash ~/s/g4-worker.sh >> ~/logs/g4-h100/worker.log 2>> ~/logs/g4-h100/worker.err < /dev/null &
+observer restart: nohup bash ~/s/g4-observer.sh > ~/logs/g4-h100/observer.nohup.log 2>&1 < /dev/null &
+finish:    bash ~/s/g4-finish.sh [--preview]  # decide + seal under results/gpu/g4/claim-core-1dbcae0-h100 (refuses while the worker runs)
+stage home: bash ~/s/g4_stage_home.sh          # -> ~/evidence-home-g4.tar.gz

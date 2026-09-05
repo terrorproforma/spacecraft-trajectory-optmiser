@@ -1,0 +1,148 @@
+[2026-09-04T15:42:43Z] == gate
+[2026-09-04T15:42:43Z] STEP gate-gpu-preflight
+[2026-09-04T15:42:44Z] PASS  gate-gpu-preflight exit=0 (expected 0) 1s
+[2026-09-04T15:42:44Z] STEP planner-cuda-ctest-subset-release
+[2026-09-04T15:42:51Z] PASS  planner-cuda-ctest-subset-release exit=0 (expected 0) 7s
+[2026-09-04T15:42:51Z] STEP planner-cuda-ctest-subset-debug
+[2026-09-04T15:42:58Z] PASS  planner-cuda-ctest-subset-debug exit=0 (expected 0) 7s
+[2026-09-04T15:42:58Z] STEP literature-device-time-dilated-ctest-release
+[2026-09-04T15:42:59Z] FAIL  literature-device-time-dilated-ctest-release exit=8 (expected 0) 1s
+[2026-09-04T15:42:59Z] STEP literature-device-time-dilated-ctest-debug
+[2026-09-04T15:42:59Z] FAIL  literature-device-time-dilated-ctest-debug exit=8 (expected 0) 0s
+[2026-09-04T15:42:59Z] STEP gtoc12-gpu-lambert-parity-ctest
+[2026-09-04T15:43:00Z] PASS  gtoc12-gpu-lambert-parity-ctest exit=0 (expected 0) 1s
+[2026-09-04T15:43:00Z] STEP gtoc12-gpu-lambert-parity-pytest
+[2026-09-04T15:43:10Z] PASS  gtoc12-gpu-lambert-parity-pytest exit=0 (expected 0) 10s
+[2026-09-04T15:43:10Z] STEP planner-gpu-pytest
+[2026-09-04T15:43:25Z] FAIL  planner-gpu-pytest exit=1 (expected 0) 15s
+[2026-09-04T15:43:25Z] STEP planner-gpu-example-hcw_rendezvous
+[2026-09-04T15:43:27Z] FAIL  planner-gpu-example-hcw_rendezvous exit=2 (expected 0) 2s
+[2026-09-04T15:43:27Z] STEP planner-gpu-example-hcw_rendezvous-viewer-check
+[2026-09-04T15:43:27Z] FAIL  planner-gpu-example-hcw_rendezvous-viewer-check exit=1 (expected 0) 0s
+[2026-09-04T15:43:27Z] STEP planner-gpu-example-powered_descent_3dof
+[2026-09-04T15:43:28Z] FAIL  planner-gpu-example-powered_descent_3dof exit=2 (expected 0) 1s
+[2026-09-04T15:43:28Z] STEP planner-gpu-example-powered_descent_3dof-viewer-check
+[2026-09-04T15:43:28Z] FAIL  planner-gpu-example-powered_descent_3dof-viewer-check exit=1 (expected 0) 0s
+[2026-09-04T15:43:28Z] STEP planner-gpu-example-powered_descent_6dof
+[2026-09-04T15:43:30Z] PASS  planner-gpu-example-powered_descent_6dof exit=0 (expected 0) 2s
+[2026-09-04T15:43:30Z] STEP planner-gpu-example-powered_descent_6dof-viewer-check
+[2026-09-04T15:43:30Z] FAIL  planner-gpu-example-powered_descent_6dof-viewer-check exit=1 (expected 0) 0s
+[2026-09-04T15:43:30Z] STEP planner-gpu-example-low_thrust
+[2026-09-04T15:43:32Z] PASS  planner-gpu-example-low_thrust exit=0 (expected 0) 2s
+[2026-09-04T15:43:32Z] STEP planner-gpu-example-low_thrust-viewer-check
+[2026-09-04T15:43:32Z] FAIL  planner-gpu-example-low_thrust-viewer-check exit=1 (expected 0) 0s
+[2026-09-04T15:43:32Z] STEP planner-memcheck-hcw
+[2026-09-04T15:43:35Z] FAIL  planner-memcheck-hcw exit=2 (expected 0) 3s
+[2026-09-04T15:43:35Z] STEP planner-memcheck-pd3
+[2026-09-04T15:43:35Z] FAIL  planner-memcheck-pd3 exit=255 (expected 0) 0s
+[2026-09-04T15:43:35Z] STEP planner-initcheck-hcw
+[2026-09-04T15:43:38Z] FAIL  planner-initcheck-hcw exit=2 (expected 0) 3s
+[2026-09-04T15:43:38Z] STEP planner-synccheck-hcw
+[2026-09-04T15:43:40Z] FAIL  planner-synccheck-hcw exit=2 (expected 0) 2s
+[2026-09-04T15:43:40Z] STEP planner-racecheck-hcw
+[2026-09-04T15:44:20Z] FAIL  planner-racecheck-hcw exit=2 (expected 0) 40s
+[2026-09-04T15:44:20Z] STEP planner-memcheck-results
+[2026-09-04T15:44:20Z] PASS  planner-memcheck-results exit=0 (expected 0) 0s
+[2026-09-04T15:44:20Z] STEP literature-time-dilated-memcheck
+[2026-09-04T15:44:21Z] FAIL  literature-time-dilated-memcheck exit=1 (expected 0) 1s
+[2026-09-04T15:44:21Z] STEP literature-time-dilated-racecheck
+[2026-09-04T15:44:21Z] FAIL  literature-time-dilated-racecheck exit=1 (expected 0) 0s
+[2026-09-04T15:44:21Z] STEP literature-time-dilated-initcheck
+[2026-09-04T15:44:22Z] FAIL  literature-time-dilated-initcheck exit=1 (expected 0) 1s
+[2026-09-04T15:44:22Z] STEP literature-time-dilated-synccheck
+[2026-09-04T15:44:22Z] FAIL  literature-time-dilated-synccheck exit=1 (expected 0) 0s
+[2026-09-04T15:44:22Z] STEP literature-gpu-run
+[2026-09-04T16:01:47Z] PASS  literature-gpu-run exit=2 (expected 2) 1045s
+[2026-09-04T16:01:47Z] STEP literature-gpu-run-git-status
+[2026-09-04T16:01:47Z] PASS  literature-gpu-run-git-status exit=0 (expected 0) 0s
+[2026-09-04T16:01:47Z] STEP full-cuda-ctest-release
+[2026-09-04T16:04:10Z] FAIL  full-cuda-ctest-release exit=8 (expected 0) 143s
+[2026-09-04T16:04:10Z] STEP full-cuda-ctest-debug
+[2026-09-04T16:06:41Z] FAIL  full-cuda-ctest-debug exit=8 (expected 0) 151s
+[2026-09-04T16:06:41Z] == collect artefacts
+{
+ "all_pass": false,
+ "ctest_counts": {
+  "planner-cuda-ctest-subset-release": null,
+  "planner-cuda-ctest-subset-debug": null,
+  "literature-device-time-dilated-ctest-release": null,
+  "literature-device-time-dilated-ctest-debug": null,
+  "gtoc12-gpu-lambert-parity-ctest": null,
+  "full-cuda-ctest-release": null,
+  "full-cuda-ctest-debug": null
+ },
+ "sanitizer_clean": {
+  "planner-memcheck-hcw": true,
+  "planner-memcheck-pd3": false,
+  "planner-initcheck-hcw": true,
+  "planner-synccheck-hcw": true,
+  "planner-racecheck-hcw": true,
+  "literature-time-dilated-memcheck": true,
+  "literature-time-dilated-racecheck": true,
+  "literature-time-dilated-initcheck": true,
+  "literature-time-dilated-synccheck": true
+ },
+ "pytest": {
+  "gtoc12-gpu-lambert-parity-pytest": {
+   "passed": 2,
+   "skipped": 0
+  },
+  "planner-gpu-pytest": {
+   "passed": 5,
+   "skipped": 0
+  }
+ }
+}
+{
+ "acikmese-ploen-2007-pd3": {
+  "status": "reproduced",
+  "scvx_qoco_gpu_status": "converged",
+  "scvx_qoco_gpu_fuel_used_kg": 399.3667620523968,
+  "gpu_persistent_batch": null
+ },
+ "blackmore-2010-pd3-case1": {
+  "status": "reproduced",
+  "scvx_qoco_gpu_status": "deferred",
+  "scvx_qoco_gpu_fuel_used_kg": null,
+  "gpu_persistent_batch": null
+ },
+ "chari-2024-pd6-monte-carlo": {
+  "status": "gap",
+  "scvx_qoco_gpu_status": null,
+  "scvx_qoco_gpu_fuel_used_kg": null,
+  "gpu_persistent_batch": null
+ }
+}
+status=FAIL
+completed_utc=2026-09-04T16:06:41Z
+gate-gpu-preflight	PASS	exit=0	expected=0	1s
+planner-cuda-ctest-subset-release	PASS	exit=0	expected=0	7s
+planner-cuda-ctest-subset-debug	PASS	exit=0	expected=0	7s
+literature-device-time-dilated-ctest-release	FAIL	exit=8	expected=0	1s
+literature-device-time-dilated-ctest-debug	FAIL	exit=8	expected=0	0s
+gtoc12-gpu-lambert-parity-ctest	PASS	exit=0	expected=0	1s
+gtoc12-gpu-lambert-parity-pytest	PASS	exit=0	expected=0	10s
+planner-gpu-pytest	FAIL	exit=1	expected=0	15s
+planner-gpu-example-hcw_rendezvous	FAIL	exit=2	expected=0	2s
+planner-gpu-example-hcw_rendezvous-viewer-check	FAIL	exit=1	expected=0	0s
+planner-gpu-example-powered_descent_3dof	FAIL	exit=2	expected=0	1s
+planner-gpu-example-powered_descent_3dof-viewer-check	FAIL	exit=1	expected=0	0s
+planner-gpu-example-powered_descent_6dof	PASS	exit=0	expected=0	2s
+planner-gpu-example-powered_descent_6dof-viewer-check	FAIL	exit=1	expected=0	0s
+planner-gpu-example-low_thrust	PASS	exit=0	expected=0	2s
+planner-gpu-example-low_thrust-viewer-check	FAIL	exit=1	expected=0	0s
+planner-memcheck-hcw	FAIL	exit=2	expected=0	3s
+planner-memcheck-pd3	FAIL	exit=255	expected=0	0s
+planner-initcheck-hcw	FAIL	exit=2	expected=0	3s
+planner-synccheck-hcw	FAIL	exit=2	expected=0	2s
+planner-racecheck-hcw	FAIL	exit=2	expected=0	40s
+planner-memcheck-results	PASS	exit=0	expected=0	0s
+literature-time-dilated-memcheck	FAIL	exit=1	expected=0	1s
+literature-time-dilated-racecheck	FAIL	exit=1	expected=0	0s
+literature-time-dilated-initcheck	FAIL	exit=1	expected=0	1s
+literature-time-dilated-synccheck	FAIL	exit=1	expected=0	0s
+literature-gpu-run	PASS	exit=2	expected=2	1045s
+literature-gpu-run-git-status	PASS	exit=0	expected=0	0s
+full-cuda-ctest-release	FAIL	exit=8	expected=0	143s
+full-cuda-ctest-debug	FAIL	exit=8	expected=0	151s
+[2026-09-04T16:06:41Z] == done: /home/ubuntu/spacepdhcg/v2/results/gpu/h100-deferred-3373988

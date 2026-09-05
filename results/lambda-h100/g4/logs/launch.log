@@ -1,0 +1,46 @@
+[2026-09-04T18:55:16Z] pre-launch checks
+[2026-09-04T18:55:16Z] nvidia-smi compute apps: none (exclusive)
+NVIDIA H100 80GB HBM3, 0 %, 0 MiB, 73.79 W, 43
+[2026-09-04T18:55:16Z] gtoc12 pid 51586 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51605 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51609 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51610 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51611 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51612 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51613 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51833 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51834 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51835 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51836 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51837 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51838 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51839 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51840 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51841 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51842 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51843 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51844 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51845 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51846 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51847 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51848 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51849 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51850 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51851 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51852 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51853 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 pid 51854 affinity 0-25 overlaps cores 0-3 -> taskset -a -cp 4-25
+[2026-09-04T18:55:16Z] gtoc12 processes found: 29; moved to 4-25: 29
+[2026-09-04T18:55:16Z] load: 26.04 26.19 25.59; top cpu consumers:
+    PID PSR %CPU COMMAND
+  51612  16 97.0 python
+  51610  22 96.9 python
+  51844  13 96.9 python
+  51613   6 96.8 python
+[2026-09-04T18:55:16Z] LAUNCHED worker_pid=53138 observer_pid=53137
+[2026-09-04T18:56:01Z] worker alive: yes; affinity:  0-3
+executor: 54116  affinity:  0-3
+nvidia-smi compute apps now: 53183, /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test;54116, /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test;
+{"at": "2026-09-04T18:55:31Z", "attempt_dispositions": [["numerical", 9]], "censoring": {"attempt_deadline_seconds": 120, "group_deadline_seconds": 1140, "inner_iteration_cap": 200000, "stratum": "claim_core"}, "contaminated_attempts": 0, "deterministic_replay_applied": false, "disposition": "completed_group", "elapsed_seconds": 13.291900091997377, "event": "group_finished", "group_id": "g4-group-v1-a8bdf61eb37df953f4460a187e865a9a3ba090aeb329f71d4522047d8fa3e749", "ordinal": 0}
+{"at": "2026-09-04T18:55:44Z", "attempt_dispositions": [["numerical", 9]], "censoring": {"attempt_deadline_seconds": 120, "group_deadline_seconds": 1140, "inner_iteration_cap": 200000, "stratum": "claim_core"}, "contaminated_attempts": 0, "deterministic_replay_applied": false, "disposition": "completed_group", "elapsed_seconds": 12.186692264000158, "event": "group_finished", "group_id": "g4-group-v1-0ee84a8b4f815c44e07cb8972c10be8c54ca13e291d68e77a380096a79a3a9b1", "ordinal": 1}
+{"at": "2026-09-04T18:55:54Z", "attempt_dispositions": [["numerical", 9]], "censoring": {"attempt_deadline_seconds": 120, "group_deadline_seconds": 1140, "inner_iteration_cap": 200000, "stratum": "claim_core"}, "contaminated_attempts": 0, "deterministic_replay_applied": false, "disposition": "completed_group", "elapsed_seconds": 9.682698062999407, "event": "group_finished", "group_id": "g4-group-v1-7d1f69ab3536e1caa1d1e87bef1b8d7e73404f23c50998ed3d8a723e20cf4238", "ordinal": 2}

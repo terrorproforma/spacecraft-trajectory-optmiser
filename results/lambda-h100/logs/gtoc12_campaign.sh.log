@@ -1,0 +1,39 @@
+[2026-09-04T13:37:44Z] source c495dc0f81955ba9d6b7a49ac922548005d2f08e branch feat/gtoc12-asteroid-mining dirty=0; cpus=1 affinity= 10-25
+[2026-09-04T13:37:44Z] == cluster-fleet cluster_fleet_h100_v1 (16 workers, 21600 s budget, v6 recipe)
+[2026-09-04T16:05:40Z] cluster-fleet exit=0
+status: scored wall_s: 8875.57009465 pss_peak_mb: 2780.107421875
+best: {"artifacts": {"solution": "results/gtoc12/runs/cluster_fleet_h100_v1/fleet/Result.txt"}, "elapsed_seconds": 8874.261390575999, "fleet": {"asteroids": [333, 1897, 2009, 2311, 2363, 2526, 3750, 3909, 4105, 5100, 5145, 5312, 5634, 6736, 6737, 6872, 7060, 9443, 10341, 10787, 10938, 10972, 11253, 11721, 12711, 12944, 13215, 13847, 14516, 14787, 15060, 15641, 16349, 16591, 16940, 17222, 17697, 18258, 20210, 20732, 21016, 21958, 22811, 22867, 23057, 23067, 23308, 23402, 23459, 23660, 23967, 24020, 24428, 24677, 24684, 25102, 25279, 26270, 26515, 26652, 26896, 26975, 26994, 27087, 27157, 27262, 27344
+final_fleet: {"artifacts": {"solution": "results/gtoc12/runs/cluster_fleet_h100_v1/fleet/Result.txt"}, "elapsed_seconds": 8874.261390575999, "fleet": {"asteroids": [333, 1897, 2009, 2311, 2363, 2526, 3750, 3909, 4105, 5100, 5145, 5312, 5634, 6736, 6737, 6872, 7060, 9443, 10341, 10787, 10938, 10972, 11253, 11721, 12711, 12944, 13215, 13847, 14516, 14787, 15060, 15641, 16349, 16591, 16940, 17222, 17697, 18258, 20210, 20732, 21016, 21958, 22811, 22867, 23057, 23067, 23308, 23402, 23459, 23660, 23967, 24020, 24428, 24677, 24684, 25102, 25279, 26270, 26515, 26652, 26896, 26975, 26994, 27087, 27157, 27262, 27344
+bundles: 47 fleets: 19
+[2026-09-04T16:05:40Z] == fleet-master fleet_master_h100_v1 (archive-wide: 12 archived sources + cluster_fleet_h100_v1, 16 workers)
+[2026-09-04T16:35:20Z] fleet-master exit=1
+    search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
+  [Previous line repeated 12 more times]
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 974, in search
+    search(
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 984, in search
+    search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 984, in search
+    search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 984, in search
+    search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
+  [Previous line repeated 68 more times]
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 974, in search
+    search(
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 984, in search
+    search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 984, in search
+    search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 984, in search
+    search(index + 1, selected, value, mass, deployed, collected, used_dual, free)
+  [Previous line repeated 592 more times]
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 945, in search
+    ships = ship_count(selected)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 258, in ship_count
+    return sum(column.ships for column in columns)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/cooperative.py", line 258, in <genexpr>
+    return sum(column.ships for column in columns)
+               ^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded

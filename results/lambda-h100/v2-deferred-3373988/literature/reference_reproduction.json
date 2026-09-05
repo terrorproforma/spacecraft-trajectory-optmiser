@@ -1,0 +1,745 @@
+{
+  "schema_version": "1.0.0",
+  "generated_utc": "2026-09-04T16:01:47+00:00",
+  "repository_commit": "3373988057a251a4df11b9ac125583ed2a5ca65b",
+  "working_tree_dirty": true,
+  "host": {
+    "platform": "Linux-6.8.0-1046-nvidia-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "machine": "x86_64"
+  },
+  "targets": [
+    {
+      "target_id": "acikmese-ploen-2007-pd3",
+      "status": "reproduced",
+      "published": {
+        "fuel_used_kg": 399.5,
+        "fuel_used_text": "399.5",
+        "objective_convention": "propellant-used",
+        "evidence_label": "published-reference",
+        "extraction": "secondary-citation (Wenzel 2018 DLR thesis quoting Acikmese & Ploen 2007 Fig. results for t_f = 81 s with the 4 deg glide slope)",
+        "companion_case_no_glide_slope": {
+          "time_of_flight_s": 72.0,
+          "fuel_used_kg": 387.9,
+          "fuel_used_text": "387.9"
+        }
+      },
+      "measured": {
+        "lossless_fuel_used_kg": 400.62990146819016,
+        "lossless_fuel_used_kg_by_dt": {
+          "dt=1.0": 400.62990146819016,
+          "dt=0.5": 401.2645856701165
+        },
+        "lossless_replay_fuel_used_kg": 400.6295072229709,
+        "lossless_isp_only_alpha_fuel_used_kg": 362.61786962048905,
+        "lossless_forward_euler_diagnostic_fuel_used_kg": 404.47933388453475,
+        "scvx_cpu_frozen_euler_fuel_used_kg": 406.88729190459617,
+        "scvx_cpu_frozen_euler_status": "solver_failed",
+        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 94.87477736526797,
+        "scvx_cpu_fuel_used_kg": 399.36085557332194,
+        "scvx_cpu_replay_fuel_used_kg": 399.36085541917237,
+        "scvx_cpu_status": "converged",
+        "scvx_cpu_termination_reason": "feasibility and step tolerances satisfied",
+        "scvx_cpu_fuel_used_kg_by_dt": {
+          "dt=1.0": 399.36085557332194,
+          "dt=0.5": 399.35630311920613
+        },
+        "scvx_qoco_gpu_fuel_used_kg": 399.3667620523968,
+        "scvx_qoco_gpu_replay_fuel_used_kg": 399.3666866940657,
+        "scvx_qoco_gpu_status": "converged"
+      },
+      "gap": {
+        "lossless_minus_published_kg": 1.1299014681901554,
+        "lossless_relative": 0.002828289031765095,
+        "acceptance_tolerance_kg": 2.0,
+        "scvx_cpu_minus_published_kg": -0.13914442667805815,
+        "scvx_cpu_minus_lossless_kg": -1.2690458948682135,
+        "scvx_cpu_frozen_euler_minus_published_kg": 7.387291904596168,
+        "euler_discrete_optimum_minus_lossless_kg": 3.849432416344598,
+        "scvx_qoco_gpu_minus_lossless_kg": -1.2631394157933755
+      },
+      "labels": {
+        "published.fuel_used_kg": "published-reference",
+        "measured.lossless_fuel_used_kg": "measured-local",
+        "measured.scvx_cpu_fuel_used_kg": "measured-local",
+        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local",
+        "measured.scvx_qoco_gpu_fuel_used_kg": "measured-local"
+      },
+      "envelope": {
+        "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
+        "scvx_discretisation": "zero-order-hold thrust, variational RK4 coefficients, multiple-shooting exact-penalty merit",
+        "dt_values_s": [
+          1.0,
+          0.5
+        ],
+        "fuel_spread_kg": 0.6346842019263477,
+        "scvx_fuel_spread_kg": 0.004552454115810178,
+        "declared_envelope_kg": 2.0
+      },
+      "commands": [
+        "spacepdhcg literature run acikmese-ploen-2007-pd3"
+      ],
+      "notes": [],
+      "family": "P1-C-pd3",
+      "wall_seconds": 125.49383001000024,
+      "support": "supported"
+    },
+    {
+      "target_id": "blackmore-2010-pd3-case1",
+      "status": "reproduced",
+      "published": {
+        "fuel_used_kg": 399.4,
+        "fuel_used_text": "399.4",
+        "time_of_flight_text": "78.4",
+        "discretisation_points": 55,
+        "objective_convention": "propellant-used",
+        "evidence_label": "published-reference",
+        "extraction": "text (Section V, case 1: 'This solution requires 399.4 kg of fuel and has t_f = 78.4 s'; 55 time-discretisation points; golden search interval 3.0 s)"
+      },
+      "measured": {
+        "lossless_fuel_used_kg": 400.08834536284076,
+        "lossless_fuel_used_kg_by_dt": {
+          "dt=0.4": 400.08834536284076,
+          "dt=0.2": 400.7633008308262
+        },
+        "lossless_replay_fuel_used_kg": 400.0837542316119,
+        "lossless_isp_only_alpha_fuel_used_kg": 362.4761965292025,
+        "lossless_forward_euler_diagnostic_fuel_used_kg": 401.2615114278965,
+        "scvx_cpu_frozen_euler_fuel_used_kg": 413.4250651815016,
+        "scvx_cpu_frozen_euler_status": "solver_failed",
+        "scvx_cpu_frozen_euler_replay_terminal_position_error_m": 37.30892475533985,
+        "scvx_cpu_fuel_used_kg": 398.84838238449765,
+        "scvx_cpu_replay_fuel_used_kg": 398.84837949871326,
+        "scvx_cpu_status": "converged",
+        "scvx_cpu_termination_reason": "feasibility and step tolerances satisfied",
+        "scvx_cpu_fuel_used_kg_by_dt": {
+          "dt=0.4": 398.84838238449765,
+          "dt=0.2": 398.8676867504305
+        },
+        "scvx_qoco_gpu_status": "deferred"
+      },
+      "gap": {
+        "lossless_minus_published_kg": 0.6883453628407779,
+        "lossless_relative": 0.0017234485799719026,
+        "acceptance_tolerance_kg": 2.0,
+        "scvx_cpu_minus_published_kg": -0.5516176155023231,
+        "scvx_cpu_minus_lossless_kg": -1.239962978343101,
+        "scvx_cpu_frozen_euler_minus_published_kg": 14.025065181501645,
+        "euler_discrete_optimum_minus_lossless_kg": 1.1731660650557387
+      },
+      "labels": {
+        "published.fuel_used_kg": "published-reference",
+        "measured.lossless_fuel_used_kg": "measured-local",
+        "measured.scvx_cpu_fuel_used_kg": "measured-local",
+        "measured.scvx_cpu_frozen_euler_fuel_used_kg": "measured-local"
+      },
+      "envelope": {
+        "discretisation": "zero-order hold, exact double-integrator map, exact log-mass step",
+        "scvx_discretisation": "zero-order-hold thrust, variational RK4 coefficients, multiple-shooting exact-penalty merit",
+        "dt_values_s": [
+          0.4,
+          0.2
+        ],
+        "fuel_spread_kg": 0.6749554679854555,
+        "scvx_fuel_spread_kg": 0.019304365932839573,
+        "declared_envelope_kg": 2.0
+      },
+      "commands": [
+        "spacepdhcg literature run blackmore-2010-pd3-case1",
+        "spacepdhcg literature gpu-run blackmore-2010-pd3-case1  # when the device is free"
+      ],
+      "notes": [
+        "GPU pure-QOCO SCvx deferred by preflight: refused: other compute processes hold the device (pid 37205); pass allow_shared to override"
+      ],
+      "family": "P1-C-pd3",
+      "wall_seconds": 341.50794085300004,
+      "support": "supported"
+    },
+    {
+      "target_id": "chari-2024-pd6-monte-carlo",
+      "status": "gap",
+      "published": {
+        "initial_position_distribution": [
+          "uniform(6,9)",
+          "uniform(3,6)",
+          "uniform(1,2)"
+        ],
+        "published_demonstration_batch_size": 256,
+        "maximum_outer_iterations": 25,
+        "pipg_iterations_per_subproblem": 2500,
+        "evidence_label": "published-reference",
+        "verification_status": "requires-source-verification (values imported from benchmarks/literature_baselines.json; paper body not retrieved)"
+      },
+      "measured": {
+        "cpu_independent_batch": {
+          "1": {
+            "batch_size": 1,
+            "seed": 20240101,
+            "solved": 1,
+            "converged": 0,
+            "convergence_probability": 0.0,
+            "accepted": 1,
+            "accepted_probability": 1.0,
+            "accepted_trajectories_per_second": 0.0144379592877493,
+            "wall_seconds": 69.26186589600002,
+            "workers": 1,
+            "tof_median": 4.746873338861784,
+            "tof_iqr": [
+              4.746873338861784,
+              4.746873338861784
+            ],
+            "fuel_median": 0.1897053506891353,
+            "violation_max": 2.472238873618693e-07,
+            "defect_max": 2.624271359330521e-06
+          },
+          "16": {
+            "batch_size": 16,
+            "seed": 20240116,
+            "solved": 16,
+            "converged": 0,
+            "convergence_probability": 0.0,
+            "accepted": 6,
+            "accepted_probability": 0.375,
+            "accepted_trajectories_per_second": 0.048947623756073824,
+            "wall_seconds": 122.58000572000128,
+            "workers": 16,
+            "tof_median": 4.763564710396788,
+            "tof_iqr": [
+              4.3846425376301,
+              4.9714486101888
+            ],
+            "fuel_median": 0.19166621604924572,
+            "violation_max": 3.1331344955143337e-05,
+            "defect_max": 0.00012794009501870818
+          },
+          "64": {
+            "batch_size": 64,
+            "seed": 20240164,
+            "solved": 64,
+            "converged": 3,
+            "convergence_probability": 0.046875,
+            "accepted": 22,
+            "accepted_probability": 0.34375,
+            "accepted_trajectories_per_second": 0.057097741460027725,
+            "wall_seconds": 385.30420709200007,
+            "workers": 25,
+            "tof_median": 4.67625348070687,
+            "tof_iqr": [
+              4.509252446616409,
+              4.863520462469879
+            ],
+            "fuel_median": 0.1901537465448634,
+            "violation_max": 4.476596646396658e-05,
+            "defect_max": 0.00020792856388318626
+          }
+        },
+        "gpu_persistent_batch": {
+          "persistent_device_scvx": {
+            "status": "blocked",
+            "reason": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model"
+          },
+          "pure_qoco_native_pd6_fft": {
+            "status": "deferred",
+            "preflight": {
+              "ok": false,
+              "reason": "refused: other compute processes hold the device (pid 37205); pass allow_shared to override",
+              "nvidia_smi": "/usr/bin/nvidia-smi",
+              "g4_owned": false,
+              "processes": [
+                {
+                  "pid": 37205,
+                  "reported_name": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python",
+                  "command_line": "/home/ubuntu/spacepdhcg/v2/.venv/bin/python /home/ubuntu/spacepdhcg/v2/.venv/bin/spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1 chari-2024-pd6-monte-carlo",
+                  "g4_owner": false
+                }
+              ],
+              "qoco_library": "/home/ubuntu/spacepdhcg/v1/build-current-head-qoco/libqoco.so"
+            }
+          }
+        }
+      },
+      "gap": {},
+      "labels": {
+        "published.distribution": "published-reference",
+        "published.batch_size_256": "published-reference",
+        "measured.cpu_independent_batch": "measured-local"
+      },
+      "envelope": {
+        "solver": "independent CPU free-final-time 6-DoF SCvx (Szmuk 2018 vehicle model), one process per trajectory",
+        "acceptance": "replay defect <= 1e-5 and path violation <= 1e-6"
+      },
+      "commands": [
+        "spacepdhcg literature run chari-2024-pd6-monte-carlo",
+        "spacepdhcg literature gpu-run chari-2024-pd6-monte-carlo  # deferred GPU leg (preflight-gated)"
+      ],
+      "notes": [
+        "independent batch: no shared controls, no non-anticipativity constraints; not robust optimisation",
+        "the paper's vehicle parameter table is not reproduced here; the Szmuk 2018 Table 1 vehicle is used with the published position dispersion"
+      ],
+      "family": "P1-D-pd6",
+      "wall_seconds": 577.1899038499996,
+      "support": "partial"
+    },
+    {
+      "target_id": "esa-tops-2026",
+      "status": "reproduced",
+      "published": {
+        "reference_objectives": "none published for the Cartesian two-body problems at the pinned revision"
+      },
+      "measured": {
+        "easy_two_body": {
+          "problem": "two_body_cartesian:P4",
+          "status": "converged",
+          "formulation": "cartesian",
+          "final_mass": 0.6140572855841121,
+          "time_of_flight": 2.0,
+          "revolutions": null,
+          "reason": null
+        },
+        "multi_revolution_two_body": {
+          "problem": "two_body_cartesian:P3",
+          "status": "converged",
+          "formulation": "modified equinoctial elements, RTN thrust, FOH SCvx",
+          "final_mass": 0.692220338947444,
+          "time_of_flight": 13.0,
+          "revolutions": 2,
+          "reason": null
+        },
+        "inclination_or_eccentricity_change": {
+          "problem": "two_body_cartesian:P1",
+          "status": "converged",
+          "formulation": "modified equinoctial elements, RTN thrust, FOH SCvx",
+          "final_mass": 0.8726289224692987,
+          "time_of_flight": 90.60816097205658,
+          "revolutions": 1,
+          "reason": null
+        },
+        "cr3bp": {
+          "problem": "cr3bp:P0",
+          "status": "unsupported",
+          "formulation": null,
+          "final_mass": null,
+          "time_of_flight": null,
+          "revolutions": null,
+          "reason": "circular restricted three-body dynamics are not implemented"
+        }
+      },
+      "gap": {},
+      "labels": {
+        "measured.easy_two_body": "measured-local",
+        "measured.multi_revolution_two_body": "measured-local",
+        "measured.inclination_or_eccentricity_change": "measured-local",
+        "measured.cr3bp": "measured-local"
+      },
+      "envelope": {
+        "nodes": 120,
+        "mee_nodes": 200,
+        "problem_count_at_pinned_revision": 34
+      },
+      "commands": [
+        "spacepdhcg literature run esa-tops-2026"
+      ],
+      "notes": [
+        "the ISSFD paper describes 28 problems; the pinned repository revision contains 34 (database is actively expanding); selection made from metadata only"
+      ],
+      "family": "P1-E-low-thrust",
+      "wall_seconds": 336.5995381360044,
+      "support": "partial"
+    },
+    {
+      "target_id": "gtoc12-official-verifier",
+      "status": "reproduced",
+      "published": {
+        "note": "the portal publishes the solution files without an accompanying printed score; the official verifier output (ships, mined asteroids, total resource mass) is the reproducible quantity",
+        "evidence_label": "published-reference"
+      },
+      "measured": {
+        "bundled_result_example": {
+          "accepted": true,
+          "ships": 1,
+          "mined_asteroids": 0,
+          "total_resource_mass_kg": 0.0
+        },
+        "gtoc12.solution_37_self_cleaning": {
+          "accepted": true,
+          "ships": 37,
+          "mined_asteroids": 338,
+          "total_resource_mass_kg": 27045.3
+        },
+        "gtoc12.solution_39_mass_optimal": {
+          "accepted": true,
+          "ships": 39,
+          "mined_asteroids": 356,
+          "total_resource_mass_kg": 28975.1
+        }
+      },
+      "gap": {},
+      "labels": {
+        "measured.bundled_result_example": "reproduced-external",
+        "measured.gtoc12.solution_37_self_cleaning": "reproduced-external",
+        "measured.gtoc12.solution_39_mass_optimal": "reproduced-external"
+      },
+      "envelope": {
+        "evaluator": "official GTOC12 verification program (Linux binary, pinned)"
+      },
+      "commands": [
+        "spacepdhcg literature run gtoc12-official-verifier"
+      ],
+      "notes": [
+        "no route search run; official verifier accepted every file"
+      ],
+      "family": "P2-F",
+      "wall_seconds": 1.2896093719973578,
+      "support": "supported"
+    },
+    {
+      "target_id": "gtoc5-data-pin",
+      "status": "blocked",
+      "published": {
+        "asteroid_count": 7075,
+        "evidence_label": "published-reference"
+      },
+      "measured": {
+        "asteroid_count": 7075
+      },
+      "gap": {},
+      "labels": {
+        "measured.asteroid_count": "measured-local"
+      },
+      "envelope": {},
+      "commands": [
+        "spacepdhcg literature run gtoc5-data-pin"
+      ],
+      "notes": [
+        "blocked: no official offline GTOC5 evaluator or example solution file is published; the pinned Simoes et al. beam P-ACO implementation requires pykep, which is not installed in the campaign environment"
+      ],
+      "family": "P2-F",
+      "wall_seconds": 0.013857896003173664,
+      "support": "unsupported",
+      "unsupported_reason": "no official offline evaluator or example solution published; pinned research code requires pykep"
+    },
+    {
+      "target_id": "gtoc9-example-validation",
+      "status": "reproduced",
+      "published": {
+        "example1_debris": [
+          23,
+          3,
+          51
+        ],
+        "example1_text": "contains a possibly valid mission able to remove the debris with ids 23, 3 and 51",
+        "cost_function": "J = sum_i [c_i + alpha (m_0i - m_dry)^2], c_i in [45, 55] MEUR during the competition, alpha = 2.0e-6 MEUR/kg^2",
+        "evidence_label": "published-reference"
+      },
+      "measured": {
+        "example1": {
+          "valid": true,
+          "debris_removed": [
+            3,
+            23,
+            51
+          ],
+          "mission_cost_min_meur": 64.7192,
+          "mission_cost_max_meur": 74.7192
+        },
+        "example2": {
+          "valid": true,
+          "debris_removed": [
+            38,
+            46,
+            103,
+            114
+          ],
+          "mission_cost_min_meur": 65.0978,
+          "mission_cost_max_meur": 75.0978
+        }
+      },
+      "gap": {},
+      "labels": {
+        "measured.example1": "measured-local",
+        "measured.example2": "measured-local"
+      },
+      "envelope": {
+        "evaluator": "local implementation of Kelvins rules 4-19 (no official offline evaluator exists)",
+        "propagator": "scipy DOP853 rtol 1e-12 on the official J2 equations"
+      },
+      "commands": [
+        "spacepdhcg literature run gtoc9-example-validation"
+      ],
+      "notes": [
+        "the official GTOC9 scoring ran on the Kelvins server; both official example submissions must validate under the re-implemented rules"
+      ],
+      "family": "P2-F",
+      "wall_seconds": 0.11612968299596105,
+      "support": "partial"
+    },
+    {
+      "target_id": "gtopx-2021",
+      "status": "reproduced",
+      "published": {
+        "cassini1": "4.930708733982513",
+        "rosetta": "1.343367",
+        "messenger_reduced": "8.629944278158570",
+        "gtoc1": "-1581950.131840605288744"
+      },
+      "measured": {
+        "cassini1": 4.930708733982513,
+        "rosetta": 1.3433673365915426,
+        "messenger_reduced": 8.629944278159243,
+        "gtoc1": -1581950.1318406053
+      },
+      "gap": {
+        "cassini1": 0.0,
+        "rosetta": 3.3659154263787627e-07,
+        "messenger_reduced": 6.732392421326949e-13,
+        "gtoc1": 0.0
+      },
+      "labels": {
+        "published.cassini1": "published-reference",
+        "published.rosetta": "published-reference",
+        "published.messenger_reduced": "published-reference",
+        "published.gtoc1": "published-reference",
+        "measured.cassini1": "reproduced-external",
+        "measured.rosetta": "reproduced-external",
+        "measured.messenger_reduced": "reproduced-external",
+        "measured.gtoc1": "reproduced-external"
+      },
+      "envelope": {
+        "comparison": "exact evaluator re-evaluation of the official vector, compared at the precision printed in the official solution file",
+        "exact_relative_tolerance": 1e-09,
+        "exact_count": 3
+      },
+      "commands": [
+        "spacepdhcg literature run gtopx-2021"
+      ],
+      "notes": [
+        "no global optimiser run; evaluator provided as a test target"
+      ],
+      "family": null,
+      "wall_seconds": 0.003989411998190917,
+      "support": "supported"
+    },
+    {
+      "target_id": "szmuk-acikmese-2018-pd6-2d",
+      "status": "reproduced",
+      "published": {
+        "tf_guess_sweep_spread_ut": 0.01,
+        "tf_guess_sweep_spread_text": "within 0.01 [UT] of each other",
+        "tf_guesses_ut": [
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0
+        ],
+        "iterations_to_converge": 6,
+        "iterations_to_converge_text": "convergence was obtained by the sixth iteration",
+        "evidence_label": "published-reference",
+        "objective_value": "descriptive-only (Figure 2 only)"
+      },
+      "measured": {
+        "time_of_flight_by_guess": {
+          "1.0": 3.3902716500980388,
+          "2.0": 3.390166930201545,
+          "3.0": 3.3900896597398913,
+          "4.0": 3.390078221574658,
+          "5.0": 3.390228356045364,
+          "6.0": 3.3902737871304383,
+          "7.0": 3.390272170454522,
+          "8.0": 3.3906230803756676,
+          "9.0": 3.390244769041289,
+          "10.0": 3.3903298121399685
+        },
+        "time_of_flight_spread_ut": 0.0005448588010095179,
+        "iterations_by_guess": {
+          "1.0": 15,
+          "2.0": 15,
+          "3.0": 15,
+          "4.0": 15,
+          "5.0": 15,
+          "6.0": 15,
+          "7.0": 15,
+          "8.0": 15,
+          "9.0": 15,
+          "10.0": 15
+        },
+        "statuses_by_guess": {
+          "1.0": "maximum_iterations",
+          "2.0": "maximum_iterations",
+          "3.0": "maximum_iterations",
+          "4.0": "maximum_iterations",
+          "5.0": "maximum_iterations",
+          "6.0": "maximum_iterations",
+          "7.0": "maximum_iterations",
+          "8.0": "maximum_iterations",
+          "9.0": "maximum_iterations",
+          "10.0": "maximum_iterations"
+        },
+        "extended_run": {
+          "iterations": 30,
+          "status": "maximum_iterations",
+          "time_of_flight": 3.3900789150918,
+          "fuel_used": 0.14262691821200035,
+          "replay_defect_inf": 6.0637257437434755e-09,
+          "max_path_violation": 9.68834235060001e-10,
+          "final_trust_norm": 0.0015287484739095133,
+          "final_virtual_l1": 3.3105996025221175e-09
+        },
+        "native_pd6_fft": {
+          "status": "reproduced",
+          "time_of_flight": 3.39254351004221,
+          "fuel_used": 0.1428605892939614,
+          "converged": true,
+          "termination": "converged",
+          "iterations": 30,
+          "replay_defect_inf": 6.429411623098957e-07,
+          "max_path_violation": 8.07702065230842e-08,
+          "path_violations": {
+            "dry_mass": 0.0,
+            "glide_slope": 5.391088090314369e-16,
+            "tilt": 4.885546917191773e-09,
+            "angular_rate": 0.0,
+            "thrust_min": 0.0,
+            "thrust_max": 8.07702065230842e-08,
+            "gimbal": 0.0,
+            "quaternion_norm": 3.6144234050183854e-08
+          },
+          "topology_fingerprint": "8145343b74888a29",
+          "gap_vs_cpu_core_ut": 0.0024645949504100706,
+          "envelope_ut": 0.01,
+          "label": "measured-local"
+        }
+      },
+      "gap": {
+        "time_of_flight_spread_minus_published_ut": -0.009455141198990482,
+        "converged_time_of_flight": "descriptive-only: the paper prints no digits (Figure 2 only)"
+      },
+      "labels": {
+        "published.tf_guess_sweep_spread_ut": "published-reference",
+        "published.iterations_to_converge": "published-reference",
+        "published.converged_time_of_flight": "descriptive-only",
+        "measured.time_of_flight": "measured-local",
+        "measured.native_pd6_fft.time_of_flight": "measured-local",
+        "parameters.alpha_mdot": "descriptive-only"
+      },
+      "envelope": {
+        "discretisation": "K = 50 nodes, FOH, RK4 STM with 8 substeps per interval; free final time via sigma",
+        "paper_stop_rule": "||Delta||_2 <= 1e-3 and ||nu||_1 <= 1e-10 within 15 iterations",
+        "native_pd6_fft": "K = 50 nodes, ZOH, variational RK4 with 4 substeps per interval, sigma column analytic; hard-trust-region SCvx; declared envelope vs the FOH core 0.01 UT"
+      },
+      "commands": [
+        "spacepdhcg literature run szmuk-acikmese-2018-pd6-2d"
+      ],
+      "notes": [
+        "alpha_mdot = 0.01 UT/UL and a zero vertical initial velocity are assumptions (not printed in the paper)"
+      ],
+      "family": "P1-D-pd6",
+      "wall_seconds": 285.83055119200435,
+      "support": "partial"
+    },
+    {
+      "target_id": "tafazzol-taheri-earth-dionysus",
+      "status": "reproduced",
+      "published": {
+        "final_mass_kg": 2718.33,
+        "final_mass_text": "2718.33",
+        "best_reported_revolutions": 5,
+        "evidence_label": "published-reference",
+        "extraction": "text (Section 4.2: 'm(t_f) = m_f = 2718.33 kg'; 'The most optimal solution involves five orbital revolutions')"
+      },
+      "measured": {
+        "final_mass_kg_best": 2717.427485932241,
+        "final_mass_kg_by_nodes": {
+          "nodes=300": 2717.427485932241,
+          "nodes=400": 2717.6656802208654
+        },
+        "statuses": {
+          "nodes=300": "converged",
+          "nodes=400": "maximum_iterations"
+        }
+      },
+      "gap": {
+        "final_mass_minus_published_kg": -0.9025140677590571,
+        "relative": -0.0003320104872326234,
+        "acceptance_tolerance_kg": 2.0
+      },
+      "labels": {
+        "published.final_mass_kg": "published-reference",
+        "measured.final_mass_kg_best": "measured-local"
+      },
+      "envelope": {
+        "discretisation": "FOH successive convexification, RK4 STM, nodes swept; modified-equinoctial-element state with explicit revolution count",
+        "formulation": "mee",
+        "nodes_values": [
+          300,
+          400
+        ],
+        "final_mass_spread_kg": 0.0,
+        "declared_envelope_kg": 2.0
+      },
+      "commands": [
+        "spacepdhcg literature run tafazzol-taheri-earth-dionysus"
+      ],
+      "notes": [
+        "boundary states are the paper's fixed heliocentric states (zero hyperbolic excess); no ephemeris model is involved",
+        "revolution count swept [4, 5, 6] at the coarsest node count; best N = 5 (published: 5)"
+      ],
+      "family": "P1-E-low-thrust",
+      "wall_seconds": 397.92616659399937,
+      "support": "supported"
+    },
+    {
+      "target_id": "tafazzol-taheri-earth-mars",
+      "status": "reproduced",
+      "published": {
+        "final_mass_kg": 603.935,
+        "final_mass_text": "603.935",
+        "evidence_label": "published-reference",
+        "extraction": "text (Section 4.1: 'm(t_f) = m_f = 603.935 kg')"
+      },
+      "measured": {
+        "final_mass_kg_best": 603.9247492920667,
+        "final_mass_kg_by_nodes": {
+          "nodes=150": 603.8828253136182,
+          "nodes=300": 603.9247492920667
+        },
+        "statuses": {
+          "nodes=150": "converged",
+          "nodes=300": "converged"
+        }
+      },
+      "gap": {
+        "final_mass_minus_published_kg": -0.010250707933209924,
+        "relative": -1.69731973361536e-05,
+        "acceptance_tolerance_kg": 0.5
+      },
+      "labels": {
+        "published.final_mass_kg": "published-reference",
+        "measured.final_mass_kg_best": "measured-local"
+      },
+      "envelope": {
+        "discretisation": "FOH successive convexification, RK4 STM, nodes swept",
+        "nodes_values": [
+          150,
+          300
+        ],
+        "final_mass_spread_kg": 0.04192397844849438,
+        "declared_envelope_kg": 0.5
+      },
+      "commands": [
+        "spacepdhcg literature run tafazzol-taheri-earth-mars"
+      ],
+      "notes": [
+        "boundary states are the paper's fixed heliocentric states (zero hyperbolic excess); no ephemeris model is involved"
+      ],
+      "family": "P1-E-low-thrust",
+      "wall_seconds": 34.83436683200125,
+      "support": "supported"
+    }
+  ]
+}

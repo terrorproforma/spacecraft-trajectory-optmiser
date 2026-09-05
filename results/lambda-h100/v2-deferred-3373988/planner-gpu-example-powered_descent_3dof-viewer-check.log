@@ -1,0 +1,16 @@
+node:internal/fs/promises:637
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: ENOENT: no such file or directory, open '/home/ubuntu/spacepdhcg/v2/build-v2-gpu-deferred/plan-powered_descent_3dof/viewer/gtoc12.js'
+    at async open (node:internal/fs/promises:637:25)
+    at async readFile (node:internal/fs/promises:1249:14)
+    at async Promise.all (index 5)
+    at async file:///home/ubuntu/spacepdhcg/v2/build-v2-gpu-deferred/plan-powered_descent_3dof/viewer/scripts/check.mjs:27:116 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/ubuntu/spacepdhcg/v2/build-v2-gpu-deferred/plan-powered_descent_3dof/viewer/gtoc12.js'
+}
+
+Node.js v20.20.2

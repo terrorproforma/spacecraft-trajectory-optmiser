@@ -1,0 +1,83 @@
+Submodule 'benchmarks/data' (https://github.com/qoco-org/qoco-test-problems.git) registered for path 'benchmarks/data'
+Cloning into '/home/ubuntu/spacepdhcg/v1/_upstream/qoco-g4/benchmarks/data'...
+Submodule path 'benchmarks/data': checked out '15347cedb5222444426345157d6de6eb47b65ecf'
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Building QOCO v0.3.2
+-- We are on a Linux system
+-- Build Type: Release
+-- Build Flags: -O3 -Wall
+-- Using 32 bit integers
+-- Using double precision floating point
+-- Using double precision floats
+-- Long integers (64bit) are OFF
+-- Static library build is OFF
+-- Shared library build is OFF
+-- Unit testing suite build is OFF
+-- Using cuda algebra
+-- The CUDA compiler identification is NVIDIA 12.8.93 with host compiler GNU 11.4.0
+-- Detecting CUDA compiler ABI info
+-- Detecting CUDA compiler ABI info - done
+-- Check for working CUDA compiler: /usr/local/cuda-12.8/bin/nvcc - skipped
+-- Detecting CUDA compile features
+-- Detecting CUDA compile features - done
+-- Found CUDAToolkit: /usr/local/cuda-12.8/targets/x86_64-linux/include (found version "12.8.93")
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Configuring done (2.6s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/ubuntu/spacepdhcg/v1/build-current-head-qoco
+[1/1] Cleaning all built files...
+Cleaning... 0 files.
+[1/41] Building C object CMakeFiles/qoco.dir/src/qoco_status.c.o
+[2/41] Building C object CMakeFiles/qoco.dir/src/timer_linux.c.o
+[3/41] Building C object CMakeFiles/qoco.dir/src/input_validation.c.o
+[4/41] Building C object CMakeFiles/qoco.dir/src/equilibration.c.o
+[5/41] Building C object CMakeFiles/qoco.dir/src/qoco_utils.c.o
+[6/41] Building C object CMakeFiles/qoco.dir/src/qoco_api.c.o
+[7/41] Building C object CMakeFiles/qoco.dir/src/common_linalg.c.o
+[8/41] Building C object CMakeFiles/qocostatic.dir/src/input_validation.c.o
+[9/41] Building C object CMakeFiles/qoco.dir/src/kkt.c.o
+[10/41] Building C object CMakeFiles/qocostatic.dir/src/qoco_status.c.o
+[11/41] Building C object CMakeFiles/qocostatic.dir/src/qoco_api.c.o
+[12/41] Building C object CMakeFiles/qocostatic.dir/src/equilibration.c.o
+[13/41] Building C object CMakeFiles/qocostatic.dir/src/timer_linux.c.o
+[14/41] Building C object CMakeFiles/qocostatic.dir/src/common_linalg.c.o
+[15/41] Building C object CMakeFiles/qocostatic.dir/src/qoco_utils.c.o
+[16/41] Building C object CMakeFiles/qocostatic.dir/src/kkt.c.o
+[17/41] Building C object CMakeFiles/qoco_demo.dir/examples/qoco_demo.c.o
+[18/41] Building C object lib/qdldl/CMakeFiles/qdldlobject.dir/src/qdldl.c.o
+[19/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_1.c.o
+[20/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_aat.c.o
+[21/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_control.c.o
+[22/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_defaults.c.o
+[23/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_dump.c.o
+[24/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_info.c.o
+[25/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_order.c.o
+[26/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_2.c.o
+[27/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_post_tree.c.o
+[28/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_postorder.c.o
+[29/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_preprocess.c.o
+[30/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_valid.c.o
+[31/41] Building C object lib/amd/CMakeFiles/amd.dir/amd_version.c.o
+[32/41] Building C object lib/amd/CMakeFiles/amd.dir/SuiteSparse_config.c.o
+[33/41] Building CUDA object CMakeFiles/qoco.dir/src/cone.cu.o
+[34/41] Building CUDA object CMakeFiles/qoco.dir/algebra/cuda/cudss_backend.cu.o
+[35/41] Building CUDA object CMakeFiles/qoco.dir/algebra/cuda/cuda_linalg.cu.o
+[36/41] Linking CUDA shared library libqoco.so
+[37/41] Building CUDA object CMakeFiles/qocostatic.dir/src/cone.cu.o
+[38/41] Building CUDA object CMakeFiles/qocostatic.dir/algebra/cuda/cudss_backend.cu.o
+[39/41] Building CUDA object CMakeFiles/qocostatic.dir/algebra/cuda/cuda_linalg.cu.o
+[40/41] Linking CUDA static library libqocostatic.a
+[41/41] Linking CUDA executable qoco_demo

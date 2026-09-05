@@ -1,0 +1,41 @@
+* Creating isolated environment: venv+pip...
+* Installing packages in isolated environment:
+  - scikit-build-core>=1.0,<2
+* Getting build dependencies for wheel...
+* Installed build dependency versions:
+  - scikit-build-core==1.0.3
+* Building wheel...
+*** scikit-build-core 1.0.3 using CMake 4.4.3 (wheel)
+*** Configuring CMake...
+loading initial cache file /tmp/tmpk1xa3xfs/build/CMakeInit.txt
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/tmpk1xa3xfs/build
+*** Building project with Ninja...
+[1/5] Building CXX object CMakeFiles/spacepdhcg_c_api.dir/src/c_api.cpp.o
+[2/5] Linking CXX shared library libspacepdhcg.so.0.1.0
+[3/5] Creating library symlink libspacepdhcg.so.0 libspacepdhcg.so
+[4/5] Building CXX object CMakeFiles/spacepdhcg_cpu_reference_emitter.dir/tools/cpu_reference_emitter.cpp.o
+[5/5] Linking CXX executable spacepdhcg_cpu_reference_emitter
+*** Installing project into wheel...
+-- Install configuration: "Release"
+-- Installing: /tmp/tmpk1xa3xfs/wheel/platlib/spacepdhcg/native/libspacepdhcg.so.0.1.0
+-- Installing: /tmp/tmpk1xa3xfs/wheel/platlib/spacepdhcg/native/libspacepdhcg.so.0
+-- Installing: /tmp/tmpk1xa3xfs/wheel/platlib/spacepdhcg/native/libspacepdhcg.so
+*** Making wheel...
+*** Created spacepdhcg-0.1.0.dev0-cp312-cp312-linux_x86_64.whl
+* Creating isolated environment: venv+pip...
+* Installing packages in isolated environment:
+  - scikit-build-core>=1.0,<2
+* Getting build dependencies for sdist...
+* Installed build dependency versions:
+  - scikit-build-core==1.0.3
+* Building sdist...
+*** scikit-build-core 1.0.3 (sdist)
+Successfully built spacepdhcg-0.1.0.dev0-cp312-cp312-linux_x86_64.whl and spacepdhcg-0.1.0.dev0.tar.gz

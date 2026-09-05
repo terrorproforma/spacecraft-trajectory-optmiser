@@ -1,0 +1,17 @@
+Breakpoint 1 at 0x5f18: file /home/ubuntu/spacepdhcg/v2/cpp/cuda/tests/device_time_dilated_test.cu, line 372.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffd3bff000 (LWP 39048)]
+[New Thread 0x7fffd1f4a000 (LWP 39052)]
+
+Thread 1 "device_time_dil" hit Breakpoint 1, main () at /home/ubuntu/spacepdhcg/v2/cpp/cuda/tests/device_time_dilated_test.cu:372
+372	        test::require(parity->coefficients < 2.0e-9, "pd6_fft device A/B/z differ from CPU");
+$1 = {coefficients = 0.9801315761317787, sigma_column = 6.1505536811811042e-07, sigma_finite_difference = 1.171260241572547e-09, quaternion_radial = 1.3877787807814457e-17, reconstruction = 1.4210854715202004e-14}
+$2 = {coefficients = 0.9801315761317787, sigma_column = 6.1505536811811042e-07, sigma_finite_difference = 1.171260241572547e-09, quaternion_radial = 1.3877787807814457e-17, reconstruction = 1.4210854715202004e-14}
+$3 = {coefficients = 0.98013157613180113, sigma_column = 3.993337694061655e-05, sigma_finite_difference = 7.8587212848368893e-09, quaternion_radial = 2.7755575615628914e-17, reconstruction = 1.7763568394002505e-15}
+$4 = {coefficients = 1.7763568394002505e-15, sigma_column = 6.9388939039072284e-18, sigma_finite_difference = 1.6501050525974392e-11, quaternion_radial = 0, reconstruction = 1.7763568394002505e-15}
+$5 = {coefficients = 2.4424906541753444e-15, sigma_column = 0, sigma_finite_difference = 2.2034651880886713e-10, quaternion_radial = 0, reconstruction = 1.4210854715202004e-14}
+FAIL: pd6_fft device A/B/z differ from CPU
+[Thread 0x7fffd1f4a000 (LWP 39052) exited]
+[Thread 0x7fffd3bff000 (LWP 39048) exited]
+[Inferior 1 (process 39045) exited with code 01]

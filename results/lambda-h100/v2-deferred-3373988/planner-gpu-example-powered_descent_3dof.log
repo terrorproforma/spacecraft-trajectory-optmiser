@@ -1,0 +1,10 @@
+family:      powered_descent_3dof
+execution:   native_cuda (requested backend pure_qoco)
+status:      converged_not_certified - the solver reported convergence but independent replay failed the certificate gates
+certified:   False (failed gates: canonical_residual)
+objective:   0.5522196493895588
+iterations:  15 outer (1 accepted), 39 inner
+terminal:    scaled residual 1.350230451440948e-07, position error 0.0001350230451440948, velocity error 5.402128410103568e-06
+wall time:   0.700 s
+output:      build-v2-gpu-deferred/plan-powered_descent_3dof
+viewer:      build-v2-gpu-deferred/plan-powered_descent_3dof/viewer

@@ -1,0 +1,52 @@
+{
+  "constraints": {
+    "acceleration_bound": "norm",
+    "maximum_acceleration": 0.05
+  },
+  "environment": {
+    "mean_motion": 0.00113
+  },
+  "family": "hcw",
+  "horizon": {
+    "final_time": 800.0,
+    "free_final_time": false,
+    "intervals": 40
+  },
+  "initial_state": [
+    100.0,
+    -50.0,
+    20.0,
+    0.1,
+    -0.2,
+    0.05
+  ],
+  "name": "HCW rendezvous: 100 m radial / 50 m along-track approach to the origin in 800 s",
+  "output": {
+    "dense_replay_substeps": 10
+  },
+  "schema_version": "1.0.0",
+  "solver": {
+    "backend": "cpu_reference",
+    "maximum_outer_iterations": 10,
+    "time_limit_seconds": 300.0,
+    "tolerance": 1e-06
+  },
+  "terminal": {
+    "fixed": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "state": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}

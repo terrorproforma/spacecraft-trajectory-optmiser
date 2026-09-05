@@ -1,0 +1,30 @@
+# Shared G4 environment on the H100 (mirrors the sealed G3 run.sh environment of the 9e75b47 reseal).
+root=/home/ubuntu/spacepdhcg/v1
+tool=${root}/.venv/bin
+py=${root}/.venv/bin/python
+gpu_site=${root}/.venv/lib/python3.12/site-packages
+qoco=${root}/build-current-head-qoco/libqoco.so
+cudss=${gpu_site}/nvidia/cu12
+shim=${root}/build-current-head-qoco-cudss-lib
+release=build-g4-cuda-release
+debug=build-g4-cuda-debug
+exe=${root}/${release}/cuda-tests/device_scvx_integration_test
+head_sha=1dbcae098fd8871d4e0ac087e2306534704eff59
+head7=1dbcae0
+campaign=${root}/build-integration-report/g4-claim-core-${head7}-h100
+capability=/home/ubuntu/g4/g4-executor-capability-${head7}-h100.json
+g4logs=/home/ubuntu/logs/g4-h100
+export CUDA_HOME=/usr/local/cuda-12.8
+export CUDACXX=/usr/local/cuda-12.8/bin/nvcc
+export PATH="${tool}:/usr/local/cuda-12.8/bin:${PATH}"
+export CUDA_VISIBLE_DEVICES=0
+export SPACEPDHCG_HARDWARE_ID=lambda-h100-80gb-hbm3
+export SPACEPDHCG_CUDA_ARCHITECTURES=90
+export SPACEPDHCG_QOCO_LIBRARY="${qoco}"
+export LD_LIBRARY_PATH="${shim}:${cudss}/lib:/usr/local/cuda-12.8/lib64:${LD_LIBRARY_PATH:-}"
+export PYTHONPATH="${root}/src:${gpu_site}"
+export PYTHONHASHSEED=0
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+cd "${root}"

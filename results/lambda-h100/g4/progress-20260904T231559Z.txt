@@ -1,0 +1,15 @@
+campaign g4-claim-core-1dbcae0-h100  at 2026-09-04T23:16:00Z
+coordinates: {'completed': 75, 'running': 1, 'remaining': 320}  total=396  groups_finished_events=75  contaminated_attempts=0
+
+policy             stratum                  dl   n   mean_s    min_s    max_s  dispositions / cancel latency (s: n, median, max)
+adaptive           censoring_sensitivity   600   1   5400.7   5400.7   5400.7  {'timeout': 9} cancel n=9 med=+0.030 max=+0.051  remaining=11
+adaptive           claim_core              120   8   1080.6   1080.5   1080.7  {'timeout': 72} cancel n=72 med=+0.042 max=+0.052  remaining=112
+fixed-tight        censoring_sensitivity   600   0        -        -        -     remaining=12
+fixed-tight        claim_core              120   0        -        -        -     remaining=120
+hybrid-pdhcg-ipm   censoring_sensitivity   600   0        -        -        -     remaining=6
+hybrid-pdhcg-ipm   claim_core              120   0        -        -        -     remaining=60
+pure-gpu-ipm       censoring_sensitivity   600   6     21.5     11.6     32.3  {'numerical': 54}   remaining=0
+pure-gpu-ipm       claim_core              120  60     19.8      9.7     32.9  {'numerical': 540}   remaining=0
+
+projected remaining wall: 483,920 s = 134.4 h  (unsampled classes use 9 x deadline + 60 s: [('fixed-tight', 'censoring_sensitivity', 600), ('fixed-tight', 'claim_core', 120), ('hybrid-pdhcg-ipm', 'censoring_sensitivity', 600), ('hybrid-pdhcg-ipm', 'claim_core', 120)])
+projected finish (UTC): 2026-09-10T13:41:20Z

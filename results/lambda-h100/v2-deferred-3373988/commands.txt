@@ -1,0 +1,30 @@
+gate-gpu-preflight	spacepdhcg literature gpu-preflight 
+planner-cuda-ctest-subset-release	ctest --test-dir build-v2-cuda-release --output-on-failure -R spacepdhcg_plan_capabilities\|device_variational_test\|persistent_cw_test\|pointer_contract_test\|allocation_lifecycle_test\|stream_lifetime_test\|cone_inventory_test\|dlpack_contract_test\|recovery_test\|persistent_soc_test 
+planner-cuda-ctest-subset-debug	ctest --test-dir build-v2-cuda-debug --output-on-failure -R spacepdhcg_plan_capabilities\|device_variational_test\|persistent_cw_test\|pointer_contract_test\|allocation_lifecycle_test\|stream_lifetime_test\|cone_inventory_test\|dlpack_contract_test\|recovery_test\|persistent_soc_test 
+literature-device-time-dilated-ctest-release	ctest --test-dir build-v2-cuda-release --output-on-failure -R device_time_dilated_test 
+literature-device-time-dilated-ctest-debug	ctest --test-dir build-v2-cuda-debug --output-on-failure -R device_time_dilated_test 
+gtoc12-gpu-lambert-parity-ctest	ctest --test-dir build-v2-cuda-release --output-on-failure -R orbitweaver_gpu_test\|orbitweaver_g3_adapter_test 
+gtoc12-gpu-lambert-parity-pytest	python -m pytest -q -p no:cacheprovider tests/test_gtoc12_pipeline.py -k lambert 
+planner-gpu-pytest	env SPACEPDHCG_PLANNER_GPU_TESTS=1 SPACEPDHCG_PLAN_EXECUTABLE=/home/ubuntu/spacepdhcg/v2/build-v2-cuda-release/cuda-tools/spacepdhcg_plan python -m pytest -q -p no:cacheprovider tests/test_planner_gpu.py 
+planner-gpu-example-hcw_rendezvous	spacepdhcg plan examples/planner/hcw_rendezvous.json --executable build-v2-cuda-release/cuda-tools/spacepdhcg_plan --output build-v2-gpu-deferred/plan-hcw_rendezvous --export-viewer build-v2-gpu-deferred/plan-hcw_rendezvous/viewer 
+planner-gpu-example-hcw_rendezvous-viewer-check	bash -c cd\ build-v2-gpu-deferred/plan-hcw_rendezvous/viewer\ \&\&\ node\ scripts/check.mjs 
+planner-gpu-example-powered_descent_3dof	spacepdhcg plan examples/planner/powered_descent_3dof.json --executable build-v2-cuda-release/cuda-tools/spacepdhcg_plan --output build-v2-gpu-deferred/plan-powered_descent_3dof --export-viewer build-v2-gpu-deferred/plan-powered_descent_3dof/viewer 
+planner-gpu-example-powered_descent_3dof-viewer-check	bash -c cd\ build-v2-gpu-deferred/plan-powered_descent_3dof/viewer\ \&\&\ node\ scripts/check.mjs 
+planner-gpu-example-powered_descent_6dof	spacepdhcg plan examples/planner/powered_descent_6dof.json --executable build-v2-cuda-release/cuda-tools/spacepdhcg_plan --output build-v2-gpu-deferred/plan-powered_descent_6dof --export-viewer build-v2-gpu-deferred/plan-powered_descent_6dof/viewer 
+planner-gpu-example-powered_descent_6dof-viewer-check	bash -c cd\ build-v2-gpu-deferred/plan-powered_descent_6dof/viewer\ \&\&\ node\ scripts/check.mjs 
+planner-gpu-example-low_thrust	spacepdhcg plan examples/planner/low_thrust.json --executable build-v2-cuda-release/cuda-tools/spacepdhcg_plan --output build-v2-gpu-deferred/plan-low_thrust --export-viewer build-v2-gpu-deferred/plan-low_thrust/viewer 
+planner-gpu-example-low_thrust-viewer-check	bash -c cd\ build-v2-gpu-deferred/plan-low_thrust/viewer\ \&\&\ node\ scripts/check.mjs 
+planner-memcheck-hcw	compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet 
+planner-memcheck-pd3	compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/powered_descent_3dof.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet 
+planner-initcheck-hcw	compute-sanitizer --tool initcheck build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/initcheck-hcw.json --quiet 
+planner-synccheck-hcw	compute-sanitizer --tool synccheck build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/synccheck-hcw.json --quiet 
+planner-racecheck-hcw	compute-sanitizer --tool racecheck build-v2-cuda-release/cuda-tools/spacepdhcg_plan examples/planner/hcw_rendezvous.json --output build-v2-gpu-deferred/racecheck-hcw.json --quiet 
+planner-memcheck-results	python -c import\ json\;\ \[print\(f\,\ json.load\(open\(f\)\)\[\'status\'\]\[\'code\'\]\,\ json.load\(open\(f\)\)\[\'certificate\'\]\[\'certified\'\]\,\ json.load\(open\(f\)\).get\(\'objective\'\)\)\ for\ f\ in\ \(\'build-v2-gpu-deferred/memcheck-hcw.json\'\,\'build-v2-gpu-deferred/memcheck-pd3.json\'\)\] 
+literature-time-dilated-memcheck	compute-sanitizer --tool memcheck build-v2-cuda-release/cuda-tests/device_time_dilated_test 
+literature-time-dilated-racecheck	compute-sanitizer --tool racecheck build-v2-cuda-release/cuda-tests/device_time_dilated_test 
+literature-time-dilated-initcheck	compute-sanitizer --tool initcheck build-v2-cuda-release/cuda-tests/device_time_dilated_test 
+literature-time-dilated-synccheck	compute-sanitizer --tool synccheck build-v2-cuda-release/cuda-tests/device_time_dilated_test 
+literature-gpu-run	spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1 chari-2024-pd6-monte-carlo 
+literature-gpu-run-git-status	git status --porcelain -- results/literature docs/REFERENCE_REPRODUCTION_REPORT.md benchmarks/literature/reference_reproduction.json 
+full-cuda-ctest-release	ctest --test-dir build-v2-cuda-release --output-on-failure --no-tests=error 
+full-cuda-ctest-debug	ctest --test-dir build-v2-cuda-debug --output-on-failure --no-tests=error 

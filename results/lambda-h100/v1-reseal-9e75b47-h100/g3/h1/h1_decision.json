@@ -1,0 +1,152 @@
+{
+  "censored_points": [],
+  "confidence_method": "paired deterministic coordinates; median/IQR and 95% seeded nonparametric bootstrap with 10000 resamples",
+  "coordinates": [
+    {
+      "intervals": 20,
+      "summary": {
+        "censored_count": 0,
+        "omega_bootstrap_95": [
+          0.0,
+          0.0
+        ],
+        "omega_median": 0.0,
+        "qualified_count": 7,
+        "quality_matched": true,
+        "scvx_iqr_seconds": [
+          0.027470195,
+          0.0274936065
+        ],
+        "scvx_max_seconds": 0.027521352,
+        "scvx_median_seconds": 0.027479791,
+        "scvx_min_seconds": 0.027460913,
+        "status": "supported",
+        "topology_clean": true
+      }
+    },
+    {
+      "intervals": 50,
+      "summary": {
+        "censored_count": 0,
+        "omega_bootstrap_95": [
+          0.0,
+          0.0
+        ],
+        "omega_median": 0.0,
+        "qualified_count": 7,
+        "quality_matched": true,
+        "scvx_iqr_seconds": [
+          0.0660193875,
+          0.06603291250000001
+        ],
+        "scvx_max_seconds": 0.066038088,
+        "scvx_median_seconds": 0.066024038,
+        "scvx_min_seconds": 0.066012116,
+        "status": "supported",
+        "topology_clean": true
+      }
+    },
+    {
+      "intervals": 100,
+      "summary": {
+        "censored_count": 0,
+        "omega_bootstrap_95": [
+          0.0,
+          0.0
+        ],
+        "omega_median": 0.0,
+        "qualified_count": 7,
+        "quality_matched": true,
+        "scvx_iqr_seconds": [
+          0.13024648900000002,
+          0.130274271
+        ],
+        "scvx_max_seconds": 0.130322525,
+        "scvx_median_seconds": 0.130259047,
+        "scvx_min_seconds": 0.13024396,
+        "status": "supported",
+        "topology_clean": true
+      }
+    },
+    {
+      "intervals": 500,
+      "summary": {
+        "censored_count": 0,
+        "omega_bootstrap_95": [
+          0.0,
+          0.0
+        ],
+        "omega_median": 0.0,
+        "qualified_count": 7,
+        "quality_matched": true,
+        "scvx_iqr_seconds": [
+          0.7396422579999999,
+          0.740537724
+        ],
+        "scvx_max_seconds": 0.740828948,
+        "scvx_median_seconds": 0.739699241,
+        "scvx_min_seconds": 0.739610449,
+        "status": "supported",
+        "topology_clean": true
+      }
+    },
+    {
+      "intervals": 2000,
+      "summary": {
+        "censored_count": 0,
+        "omega_bootstrap_95": [
+          0.0,
+          0.0
+        ],
+        "omega_median": 0.0,
+        "qualified_count": 7,
+        "quality_matched": true,
+        "scvx_iqr_seconds": [
+          3.00832036,
+          3.0084763150000002
+        ],
+        "scvx_max_seconds": 3.00852026,
+        "scvx_median_seconds": 3.00842819,
+        "scvx_min_seconds": 3.00825913,
+        "status": "supported",
+        "topology_clean": true
+      }
+    },
+    {
+      "intervals": 10000,
+      "summary": {
+        "censored_count": 0,
+        "omega_bootstrap_95": [
+          0.0,
+          0.0
+        ],
+        "omega_median": 0.0,
+        "qualified_count": 7,
+        "quality_matched": true,
+        "scvx_iqr_seconds": [
+          15.2578524,
+          15.25841295
+        ],
+        "scvx_max_seconds": 15.2585753,
+        "scvx_median_seconds": 15.2580107,
+        "scvx_min_seconds": 15.2575852,
+        "status": "supported",
+        "topology_clean": true
+      }
+    }
+  ],
+  "decision": "supported",
+  "raw": {
+    "location": "/home/ubuntu/spacepdhcg/v1/results/gpu/current-head-9e75b47-h100/g3/h1/h1_raw.jsonl",
+    "sha256": "15805e5d7d538eadfa992abe0c045772c6cb39c224047326618ddb95905e6a50"
+  },
+  "repository_commit": "9e75b470fd5378d9b20f6f13892ac909c43757cd",
+  "run_id": "h1",
+  "scale_boundary_intervals": 20,
+  "schema_version": "g3-h1-1.0.0",
+  "thresholds": {
+    "median_omega_maximum": 0.05,
+    "rejection_median_minimum": 0.1,
+    "upper_95_omega_maximum": 0.08
+  }
+}

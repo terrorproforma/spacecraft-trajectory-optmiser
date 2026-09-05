@@ -1,0 +1,83 @@
+source_commit=9e75b470fd5378d9b20f6f13892ac909c43757cd
+source_tree=20e19f8411e465a05832f7ca719e053fe511546a
+branch=integration/single-gpu-v1
+upstream_commit=167c8b72b4b96d2f94d405b8763e485514192b81
+upstream_tree=62b05e6c1bedd385f6c267af3645ae4aae0421b4
+affd0a06fa71a128c0d1f77602a38c2e505d1e5361c3de5fa52e6e7fb9052a14  third_party/pdhcg.lock.json
+dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6  third_party/patches/pdhcg/0001-free-quadratic-state.patch
+6d3dd8b96cf7f7ab697b4c154f87f12981e585c769f1e2e9c74610f501a08c0f  build-current-head-g2-debug/cuda/libspacepdhcg_cuda.so
+b148e87db4f0efb64a86ee01fec1d44ac6c6babf251936fbeff52e4ac8a1fdac  build-current-head-g2-release/cuda/libspacepdhcg_cuda.so
+Fri Sep  4 13:57:27 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.105.08             Driver Version: 580.105.08     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:07:00.0 Off |                    0 |
+| N/A   45C    P0            129W /  700W |       0MiB /  81559MiB |      2%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Name: cupy-cuda12x
+Version: 14.2.0
+Summary: CuPy: NumPy & SciPy for GPU
+Home-page: https://cupy.dev/
+Author: 
+Author-email: Seiya Tokui <tokui@preferred.jp>
+License-Expression: MIT
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: cuda-pathfinder, numpy
+Required-by: 
+---
+Name: torch
+Version: 2.11.0+cu128
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org
+Author: 
+Author-email: PyTorch Team <packages@pytorch.org>
+License: BSD-3-Clause
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: cuda-bindings, cuda-toolkit, filelock, fsspec, jinja2, networkx, nvidia-cudnn-cu12, nvidia-cusparselt-cu12, nvidia-nccl-cu12, nvidia-nvshmem-cu12, setuptools, sympy, triton, typing-extensions
+Required-by: 
+---
+Name: jax
+Version: 0.11.1
+Summary: Differentiate, compile, and transform Numpy code.
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: jaxlib, ml_dtypes, numpy, opt_einsum, scipy
+Required-by: 
+---
+Name: jaxlib
+Version: 0.11.1
+Summary: XLA library for JAX
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: ml_dtypes, numpy, scipy
+Required-by: jax
+---
+Name: jax-cuda12-plugin
+Version: 0.11.1
+Summary: JAX Plugin for NVIDIA GPUs
+Home-page: https://github.com/jax-ml/jax
+Author: JAX team
+Author-email: jax-dev@google.com
+License: Apache-2.0
+Location: /home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages
+Requires: jax-cuda12-pjrt
+Required-by: 

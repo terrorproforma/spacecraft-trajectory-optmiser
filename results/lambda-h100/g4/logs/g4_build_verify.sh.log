@@ -1,0 +1,52 @@
+HEAD=1dbcae098fd8871d4e0ac087e2306534704eff59 branch=g4/h100-1dbcae0 dirty=0
+cpp/cuda/tests/cancellation_deadline_test.cu
+tests/test_g4_pdhcg_deadline_gpu.py
+[2026-09-04T17:55:53Z] START release-configure
+[2026-09-04T17:55:56Z] PASS  release-configure exit=0 3s
+[2026-09-04T17:55:56Z] START release-build
+[2026-09-04T17:56:17Z] PASS  release-build exit=0 21s
+[2026-09-04T17:56:17Z] START debug-configure
+[2026-09-04T17:56:19Z] PASS  debug-configure exit=0 2s
+[2026-09-04T17:56:19Z] START debug-build
+[2026-09-04T17:56:37Z] PASS  debug-build exit=0 18s
+CMAKE_CUDA_ARCHITECTURES:UNINITIALIZED=90
+compiled_source_commit 1dbcae098fd8871d4e0ac087e2306534704eff59
+[2026-09-04T17:56:37Z] START release-ctest
+[2026-09-04T17:59:47Z] PASS  release-ctest exit=0 190s
+[2026-09-04T17:59:47Z] START debug-ctest
+[2026-09-04T18:03:03Z] PASS  debug-ctest exit=0 196s
+100% tests passed out of 63
+Total Test time (real) = 190.12 sec
+100% tests passed out of 63
+Total Test time (real) = 196.35 sec
+      Start 47: cancellation_deadline_test
+47/63 Test #47: cancellation_deadline_test ............................   Passed   49.67 sec
+      Start 47: cancellation_deadline_test
+47/63 Test #47: cancellation_deadline_test ............................   Passed   48.76 sec
+[2026-09-04T18:03:03Z] START deadline-matrix-pytest
+[2026-09-04T18:25:03Z] PASS  deadline-matrix-pytest exit=0 1320s
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-100-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-100-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-100-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-5.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[adaptive-2000-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[fixed-tight-2000-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_attempt_deadline_bounds_every_launched_pdhcg_attempt[hybrid-pdhcg-ipm-2000-20.0]
+PASSED tests/test_g4_pdhcg_deadline_gpu.py::test_claim_core_cap_bounds_every_inner_limit_including_resolve_floor
+======================= 13 passed in 1319.38s (0:21:59) ========================
+[2026-09-04T18:25:03Z] START ordinal73-600s-repro
+[2026-09-04T18:46:04Z] PASS  ordinal73-600s-repro exit=0 1261s
+[2026-09-04T18:46:04Z] BUILD+VERIFY COMPLETE
+release-configure	PASS	exit=0	3s
+release-build	PASS	exit=0	21s
+debug-configure	PASS	exit=0	2s
+debug-build	PASS	exit=0	18s
+release-ctest	PASS	exit=0	190s
+debug-ctest	PASS	exit=0	196s
+deadline-matrix-pytest	PASS	exit=0	1320s
+ordinal73-600s-repro	PASS	exit=0	1261s

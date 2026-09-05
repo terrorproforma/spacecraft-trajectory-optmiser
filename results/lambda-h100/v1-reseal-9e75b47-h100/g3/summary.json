@@ -1,0 +1,123 @@
+{
+  "ctest": {
+    "debug": 62,
+    "release": 62
+  },
+  "decision": "PASS",
+  "g4_campaign_launched": false,
+  "h1_coordinates": 6,
+  "h1_decision": "supported",
+  "h1_measured_repeats_each": 7,
+  "h1_omega_bootstrap_95": [
+    0.0,
+    0.0
+  ],
+  "h1_scale_boundary_intervals": 20,
+  "hcw_displaced": {
+    "accepted_steps": 3,
+    "retained_change": 0.11845741,
+    "terminal_residual": 2.89659206e-08
+  },
+  "hidden_cpu_fallback": false,
+  "immutable_uri": null,
+  "local_only": true,
+  "maximum_cpu_gpu_coefficient_difference": 2.7599450502791e-13,
+  "maximum_tight_canonical_residual": 9.69295039e-07,
+  "no_device_negative_control": "PASS",
+  "nsight_gpu_kernel_records_available": true,
+  "nsight_gpu_memory_records_available": true,
+  "nsight_note": "Native Linux H100 host: Nsight Systems CUDA API, GPU kernel and GPU memory summaries are recorded when available (see nsys-stats.log); no timeline-residency claim is made.",
+  "pdhcg_negatives": [
+    {
+      "accepted_steps": 0,
+      "campaign_record": false,
+      "classification": "honest-negative",
+      "coordinate_id": "0793cf9c7541b4f2f75ece87535baaa3dc342d83e9e27843684f548fa39400ab",
+      "disposition": "returned",
+      "family": "P1-C-pd3",
+      "iteration_records": 1,
+      "ordinal": 792000,
+      "policy": "fixed-tight",
+      "qualified": false,
+      "repeat_kind": "warmup",
+      "retained_change": 0.0,
+      "returncode": 0
+    },
+    {
+      "accepted_steps": 0,
+      "campaign_record": false,
+      "classification": "honest-negative",
+      "coordinate_id": "a1cf44b472e2345c8da0cb9a5eef2c61310c394e65edb2963b5e0f52d49eaf45",
+      "disposition": "timeout",
+      "family": "P1-D-pd6",
+      "iteration_records": 0,
+      "ordinal": 6235200,
+      "policy": "fixed-tight",
+      "qualified": false,
+      "repeat_kind": "warmup",
+      "retained_change": 0.0,
+      "returncode": null
+    },
+    {
+      "accepted_steps": 0,
+      "campaign_record": false,
+      "classification": "honest-negative",
+      "coordinate_id": "3487e65ce7b33562f4582f829bc9cac6d4c619ec3ab5f6b51ec1a56f9fb06c91",
+      "disposition": "timeout",
+      "family": "P1-E-low-thrust",
+      "iteration_records": 0,
+      "ordinal": 13233600,
+      "policy": "fixed-tight",
+      "qualified": false,
+      "repeat_kind": "warmup",
+      "retained_change": 0.0,
+      "returncode": null
+    }
+  ],
+  "production_maximum_canonical_residual": 9.38972042e-09,
+  "production_maximum_cpu_gpu_trajectory_difference": 0,
+  "production_maximum_nonlinear_residual": 2.89659206e-08,
+  "pure_qoco_displaced": {
+    "P1-C-pd3": {
+      "accepted_steps": 2,
+      "canonical_residual": 1.2994494369422682e-11,
+      "dynamics_residual": 0,
+      "path_residual": 0,
+      "retained_change": 476.1477485463247,
+      "terminal_residual": 1.6041382198267452e-13,
+      "virtual_control": 0
+    },
+    "P1-D-pd6": {
+      "accepted_steps": 24,
+      "canonical_residual": 1.0667022820598504e-11,
+      "dynamics_residual": 0,
+      "path_residual": 0,
+      "retained_change": 1196.3211346912656,
+      "terminal_residual": 1.3543883354248666e-11,
+      "virtual_control": 0
+    },
+    "P1-E-low-thrust": {
+      "accepted_steps": 2,
+      "canonical_residual": 2.9103830456733704e-10,
+      "dynamics_residual": 0,
+      "path_residual": 0,
+      "retained_change": 0.15017245390304157,
+      "terminal_residual": 2.2790658249505213e-12,
+      "virtual_control": 0
+    }
+  },
+  "sanitizer_clean": true,
+  "sanitizer_logs": 16,
+  "schema_version": "current-head-g3-1.0.0",
+  "source_commit": "9e75b470fd5378d9b20f6f13892ac909c43757cd",
+  "source_tree": "20e19f8411e465a05832f7ca719e053fe511546a",
+  "tight_canonical_by_family": {
+    "case": "tight_all",
+    "hcw": 9.69295039e-07,
+    "low_thrust": 4.58086731e-07,
+    "pd3": 1.42322019e-10,
+    "pd6": 3.1976411e-08
+  },
+  "topology_allocation_delta": 0,
+  "topology_copy_delta": 0
+}

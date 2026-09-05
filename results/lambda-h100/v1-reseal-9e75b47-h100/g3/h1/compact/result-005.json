@@ -1,0 +1,121 @@
+{
+  "aggregation": {
+    "censored_count": 0,
+    "coefficient_of_variation": 0.0,
+    "maximum": 0.027521352,
+    "measured_repeats": 7,
+    "median": 0.027521352,
+    "minimum": 0.027521352,
+    "q1": 0.027521352,
+    "q3": 0.027521352,
+    "statistic": "median_iqr",
+    "warmup_repeats": 2
+  },
+  "artifacts": {
+    "compute_sanitizer": null,
+    "energy_trace": null,
+    "manifest": {
+      "location": "/home/ubuntu/spacepdhcg/v1/results/gpu/current-head-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "15805e5d7d538eadfa992abe0c045772c6cb39c224047326618ddb95905e6a50"
+    },
+    "ncu": null,
+    "nsys": null,
+    "raw": {
+      "location": "/home/ubuntu/spacepdhcg/v1/results/gpu/current-head-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "15805e5d7d538eadfa992abe0c045772c6cb39c224047326618ddb95905e6a50"
+    },
+    "stderr": {
+      "location": "/home/ubuntu/spacepdhcg/v1/results/gpu/current-head-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "15805e5d7d538eadfa992abe0c045772c6cb39c224047326618ddb95905e6a50"
+    },
+    "stdout": {
+      "location": "/home/ubuntu/spacepdhcg/v1/results/gpu/current-head-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "15805e5d7d538eadfa992abe0c045772c6cb39c224047326618ddb95905e6a50"
+    }
+  },
+  "dimensions": {
+    "a_nonzeros": 1212,
+    "affine_rows": 80,
+    "cone_inventory": {},
+    "control_dimension": 3,
+    "f_nonzeros": 60,
+    "gpus": 1,
+    "intervals": 20,
+    "q_nonzeros": 186,
+    "scalar_rows": 132,
+    "scenarios": 1,
+    "state_dimension": 6,
+    "variables": 186
+  },
+  "identity": {
+    "cold_start": false,
+    "family": "P1-B-hcw",
+    "hardware_id": "lambda-h100-80gb-hbm3",
+    "instance_id": "hcw-N20-repeat-5",
+    "policy": "deterministic-fixed-tight",
+    "precision": "float64",
+    "repository_commit": "9e75b470fd5378d9b20f6f13892ac909c43757cd",
+    "run_id": "h1",
+    "solver": "spacepdhcg-persistent",
+    "status": "qualified",
+    "warm_start": true
+  },
+  "notes": [
+    "CUDA startup is reported separately.",
+    "Only compact acceptance diagnostics cross to host in steady state."
+  ],
+  "quality": {
+    "achieved_residual": 0,
+    "canonical_cone_residual": 0.0,
+    "canonical_dual_residual": 0,
+    "canonical_gap": 0,
+    "canonical_primal_residual": 0,
+    "dynamics_residual": 0,
+    "nonanticipativity_residual": 0.0,
+    "objective": 0.0,
+    "path_residual": 0,
+    "qualified": true,
+    "requested_tolerance": 1e-06,
+    "risk_epigraph_residual": 0.0,
+    "terminal_residual": 0,
+    "virtual_control_residual": 0.0
+  },
+  "resources": {
+    "collective_bytes": 0,
+    "collective_count": 0,
+    "d2h_bytes": 2256,
+    "energy_joules": null,
+    "h2d_bytes": 0,
+    "peak_device_bytes": 12208,
+    "reserved_device_bytes": 12208,
+    "topology_allocation_count_after_create": 0
+  },
+  "schema_version": "1.0.0",
+  "timing": {
+    "acceptance_seconds": 5.24e-07,
+    "coefficient_seconds": 0.000216703996,
+    "collective_seconds": 0.0,
+    "cqp_total_seconds": 0.0255433607,
+    "d2h_seconds": 2.84799994e-05,
+    "h2d_seconds": 0.0,
+    "replay_seconds": 0.000519903988,
+    "residual_seconds": 0.0,
+    "scaling_seconds": 0.0,
+    "scvx_total_seconds": 0.027521352,
+    "solve_seconds": 0.0233754248,
+    "topology_seconds": 0.000261003,
+    "update_seconds": 0.00216793597,
+    "workspace_create_seconds": 0.010061959
+  },
+  "work": {
+    "accepted_steps": 3,
+    "cone_projections": null,
+    "factorisations": 0,
+    "inner_iterations": 0,
+    "matvecs": null,
+    "outer_iterations": 3,
+    "polish_used": true,
+    "rejected_steps": 0,
+    "resolved_steps": 0
+  }
+}

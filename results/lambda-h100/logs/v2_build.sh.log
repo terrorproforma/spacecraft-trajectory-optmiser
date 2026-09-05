@@ -1,0 +1,22 @@
+[2026-09-04T13:36:43Z] v2 HEAD 3373988057a251a4df11b9ac125583ed2a5ca65b dirty=1
+[2026-09-04T13:36:43Z] == configure build-v2-relwithdebinfo
+[2026-09-04T13:36:43Z] == build build-v2-relwithdebinfo
+[2026-09-04T13:37:05Z] == built build-v2-relwithdebinfo
+[2026-09-04T13:37:05Z] == configure build-v2-cuda-release
+[2026-09-04T13:37:08Z] == build build-v2-cuda-release
+[2026-09-04T13:37:39Z] == built build-v2-cuda-release
+[2026-09-04T13:37:39Z] == configure build-v2-cuda-debug
+[2026-09-04T13:37:42Z] == build build-v2-cuda-debug
+[2026-09-04T13:38:05Z] == built build-v2-cuda-debug
+cebd481a39243485ce5c11a3a2924b95723c709bd4e70dff93a1bf262966051b  build-v2-cuda-release/cuda/libspacepdhcg_cuda.so
+23bcbf9d31bdafa538d56145d6d36c512e57566ba41e83817cd931129c2ab4b1  build-v2-cuda-release/cuda-tests/device_scvx_integration_test
+0c662b349f10d0ea4f3cb944e82241a9e96b29f5a26818207278784e6137a221  build-v2-cuda-release/cuda-tools/spacepdhcg_plan
+859dc72a36309f2f617bf1ac0c1e6b6a77720e16044594ecb676eb034ef49100  build-v2-cuda-release/cuda-tests/device_time_dilated_test
+1ff6753364e5ee1efa938d976b79bdd1fa8a4fc2dfa27718edb1eb81fccbc319  build-v2-relwithdebinfo/libspacepdhcg.so
+ELF file    1: libspacepdhcg_cuda.1.sm_90.cubin
+[2026-09-04T13:38:05Z] == native ctest (CPU) on build-v2-relwithdebinfo
+native ctest exit=0
+100% tests passed out of 49
+
+Total Test time (real) =   1.29 sec
+[2026-09-04T13:38:07Z] == done v2 build

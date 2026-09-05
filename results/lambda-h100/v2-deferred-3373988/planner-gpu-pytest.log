@@ -1,0 +1,82 @@
+FFF..F...                                                                [100%]
+=================================== FAILURES ===================================
+_______ test_native_plans_converge_certify_and_match_cpu_reference[hcw] ________
+
+gpu_results = {'hcw': (PlanResult(document={'schema_version': '1.0.0', 'result_kind': 'spacepdhcg_plan_result', 'source_commit': '33...t0/cpu/iterations.csv'), 'summary': PosixPath('/tmp/pytest-of-ubuntu/pytest-7/gpu-low_thrust0/cpu/plan-summary.md')}))}
+family = 'hcw'
+
+    @pytest.mark.parametrize("family", FAMILIES)
+    def test_native_plans_converge_certify_and_match_cpu_reference(
+        gpu_results: dict[str, tuple[PlanResult, PlanResult]], family: str
+    ) -> None:
+        gpu, cpu = gpu_results[family]
+        assert gpu.backend_execution == "native_cuda", gpu.document["backend"]
+        assert gpu.document["backend"]["hidden_cpu_fallback"] is False
+>       assert gpu.converged, gpu.document["status"]
+E       AssertionError: {'code': 'maximum_iterations', 'message': 'the outer iteration budget was exhausted before convergence', 'exit_code': 2, 'solver_status': 'maximum_iterations', ...}
+E       assert False
+E        +  where False = PlanResult(document={'schema_version': '1.0.0', 'result_kind': 'spacepdhcg_plan_result', 'source_commit': '3373988057a...-7/gpu-hcw0/gpu/iterations.csv'), 'summary': PosixPath('/tmp/pytest-of-ubuntu/pytest-7/gpu-hcw0/gpu/plan-summary.md')}).converged
+
+tests/test_planner_gpu.py:100: AssertionError
+_ test_native_plans_converge_certify_and_match_cpu_reference[powered_descent_3dof] _
+
+gpu_results = {'hcw': (PlanResult(document={'schema_version': '1.0.0', 'result_kind': 'spacepdhcg_plan_result', 'source_commit': '33...t0/cpu/iterations.csv'), 'summary': PosixPath('/tmp/pytest-of-ubuntu/pytest-7/gpu-low_thrust0/cpu/plan-summary.md')}))}
+family = 'powered_descent_3dof'
+
+    @pytest.mark.parametrize("family", FAMILIES)
+    def test_native_plans_converge_certify_and_match_cpu_reference(
+        gpu_results: dict[str, tuple[PlanResult, PlanResult]], family: str
+    ) -> None:
+        gpu, cpu = gpu_results[family]
+        assert gpu.backend_execution == "native_cuda", gpu.document["backend"]
+        assert gpu.document["backend"]["hidden_cpu_fallback"] is False
+        assert gpu.converged, gpu.document["status"]
+>       assert gpu.certified, gpu.failed_gates
+E       AssertionError: ['canonical_residual']
+E       assert False
+E        +  where False = PlanResult(document={'schema_version': '1.0.0', 'result_kind': 'spacepdhcg_plan_result', 'source_commit': '3373988057a...terations.csv'), 'summary': PosixPath('/tmp/pytest-of-ubuntu/pytest-7/gpu-powered_descent_3dof0/gpu/plan-summary.md')}).certified
+
+tests/test_planner_gpu.py:101: AssertionError
+_ test_native_plans_converge_certify_and_match_cpu_reference[powered_descent_6dof] _
+
+gpu_results = {'hcw': (PlanResult(document={'schema_version': '1.0.0', 'result_kind': 'spacepdhcg_plan_result', 'source_commit': '33...t0/cpu/iterations.csv'), 'summary': PosixPath('/tmp/pytest-of-ubuntu/pytest-7/gpu-low_thrust0/cpu/plan-summary.md')}))}
+family = 'powered_descent_6dof'
+
+    @pytest.mark.parametrize("family", FAMILIES)
+    def test_native_plans_converge_certify_and_match_cpu_reference(
+        gpu_results: dict[str, tuple[PlanResult, PlanResult]], family: str
+    ) -> None:
+        gpu, cpu = gpu_results[family]
+        assert gpu.backend_execution == "native_cuda", gpu.document["backend"]
+        assert gpu.document["backend"]["hidden_cpu_fallback"] is False
+        assert gpu.converged, gpu.document["status"]
+        assert gpu.certified, gpu.failed_gates
+>       assert cpu.certified, cpu.failed_gates
+E       AssertionError: ['canonical_residual']
+E       assert False
+E        +  where False = PlanResult(document={'schema_version': '1.0.0', 'result_kind': 'spacepdhcg_plan_result', 'source_commit': None, 'statu...terations.csv'), 'summary': PosixPath('/tmp/pytest-of-ubuntu/pytest-7/gpu-powered_descent_6dof0/cpu/plan-summary.md')}).certified
+
+tests/test_planner_gpu.py:102: AssertionError
+_______________ test_native_pdhcg_backend_selection_is_recorded ________________
+
+    def test_native_pdhcg_backend_selection_is_recorded() -> None:
+        executable = _executable()
+        result = plan(
+            _short("hcw", backend="pdhcg"), PlanOptions(executable=executable, time_limit_seconds=300)
+        )
+        assert result.backend_execution == "native_cuda"
+        assert result.requested_backend == "pdhcg"
+        assert result.document["backend"]["device_policy"] == "adaptive_pdhcg"
+        assert result.document["backend"]["qoco_workspace_creations"] == 0
+>       assert result.certified, result.failed_gates
+E       AssertionError: ['converged', 'device_terminal_residual', 'independent_replay_parity', 'independent_dynamics_defect']
+E       assert False
+E        +  where False = PlanResult(document={'schema_version': '1.0.0', 'result_kind': 'spacepdhcg_plan_result', 'source_commit': '3373988057a...ched host/device coefficients; continuous-time violation is reported but not gated'}}, output_directory=None, files={}).certified
+
+tests/test_planner_gpu.py:152: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_planner_gpu.py::test_native_plans_converge_certify_and_match_cpu_reference[hcw]
+FAILED tests/test_planner_gpu.py::test_native_plans_converge_certify_and_match_cpu_reference[powered_descent_3dof]
+FAILED tests/test_planner_gpu.py::test_native_plans_converge_certify_and_match_cpu_reference[powered_descent_6dof]
+FAILED tests/test_planner_gpu.py::test_native_pdhcg_backend_selection_is_recorded
+4 failed, 5 passed in 14.32s

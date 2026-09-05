@@ -1,0 +1,9 @@
+campaign g4-claim-core-1dbcae0-h100  at 2026-09-04T19:00:20Z
+coordinates: {'completed': 23, 'running': 1}  total=24  groups_finished_events=23  contaminated_attempts=0
+
+policy             stratum                  dl   n   mean_s    min_s    max_s  dispositions / cancel latency (s: n, median, max)
+pure-gpu-ipm       censoring_sensitivity   600   2     11.7     11.6     11.7  {'numerical': 18}   remaining=0
+pure-gpu-ipm       claim_core              120  21     12.5      9.7     18.1  {'numerical': 189}   remaining=1
+
+projected remaining wall: 13 s = 0.0 h  (unsampled classes use 9 x deadline + 60 s: [])
+projected finish (UTC): 2026-09-04T19:00:33Z

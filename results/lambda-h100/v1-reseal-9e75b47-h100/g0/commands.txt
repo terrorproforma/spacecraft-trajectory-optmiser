@@ -1,0 +1,29 @@
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp -B build-current-head-g0-relwithdebinfo -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/home/ubuntu/spacepdhcg/v1/build-current-head-g0-install -DSPACEPDHCG_BUILD_CUDA=OFF -DSPACEPDHCG_BUILD_C_API=ON -DSPACEPDHCG_BUILD_NATIVE_TESTS=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-current-head-g0-relwithdebinfo --clean-first --parallel 8 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-current-head-g0-relwithdebinfo --output-on-failure --no-tests=error 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp/native -B build-current-head-g0-native-relwithdebinfo -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSPACEPDHCG_NATIVE_BUILD_TESTS=ON 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-current-head-g0-native-relwithdebinfo --clean-first --parallel 8 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-current-head-g0-native-relwithdebinfo --output-on-failure --no-tests=error 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp -B build-current-head-g0-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_BUILD_CUDA=OFF -DSPACEPDHCG_BUILD_C_API=ON -DSPACEPDHCG_BUILD_NATIVE_TESTS=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-current-head-g0-debug --clean-first --parallel 8 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-current-head-g0-debug --output-on-failure --no-tests=error 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp/native -B build-current-head-g0-native-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_NATIVE_BUILD_TESTS=ON 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-current-head-g0-native-debug --clean-first --parallel 8 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-current-head-g0-native-debug --output-on-failure --no-tests=error 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp -B build-current-head-g0-asan-ubsan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_BUILD_CUDA=OFF -DSPACEPDHCG_BUILD_C_API=ON -DSPACEPDHCG_BUILD_NATIVE_TESTS=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DSPACEPDHCG_NATIVE_ENABLE_SANITIZERS=ON 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-current-head-g0-asan-ubsan --clean-first --parallel 8 
+env ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 /home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-current-head-g0-asan-ubsan --output-on-failure --no-tests=error 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp/native -B build-current-head-g0-native-asan-ubsan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_NATIVE_BUILD_TESTS=ON -DSPACEPDHCG_NATIVE_ENABLE_SANITIZERS=ON 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-current-head-g0-native-asan-ubsan --clean-first --parallel 8 
+env ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 /home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-current-head-g0-native-asan-ubsan --output-on-failure --no-tests=error 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/ruff check . 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/ruff format --check . 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/python -S -m pytest -q 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/python -S -m build --wheel --sdist --outdir results/gpu/current-head-9e75b47-h100/g0/artifacts . 
+/home/ubuntu/.local/bin/uv venv --python 3.12 --clear /home/ubuntu/spacepdhcg/v1/build-current-head-g0-wheel-consumer 
+/home/ubuntu/.local/bin/uv pip install --python /home/ubuntu/spacepdhcg/v1/build-current-head-g0-wheel-consumer/bin/python results/gpu/current-head-9e75b47-h100/g0/artifacts/spacepdhcg-0.1.0.dev0-cp312-cp312-linux_x86_64.whl 
+/home/ubuntu/spacepdhcg/v1/build-current-head-g0-wheel-consumer/bin/python -c import\ json\,\ spacepdhcg\;\ from\ spacepdhcg.native\ import\ c_api_version\,\ native_available\,\ native_version\,\ packaged_library_path\;\ assert\ native_available\(\)\;\ assert\ c_api_version\(\)\ ==\ 1\;\ assert\ native_version\(\)\ ==\ spacepdhcg.__version__\;\ print\(json.dumps\(\{\"version\":\ spacepdhcg.__version__\,\ \"c_api_version\":\ c_api_version\(\)\,\ \"native_version\":\ native_version\(\)\,\ \"library\":\ str\(packaged_library_path\(\)\)\}\,\ sort_keys=True\)\) 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --install build-current-head-g0-relwithdebinfo 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp/package-smoke -B build-current-head-g0-cmake-consumer -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/home/ubuntu/spacepdhcg/v1/build-current-head-g0-install 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-current-head-g0-cmake-consumer --clean-first --parallel 8 
+/home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-current-head-g0-cmake-consumer --output-on-failure --no-tests=error 

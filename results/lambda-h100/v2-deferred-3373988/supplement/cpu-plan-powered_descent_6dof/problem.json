@@ -1,0 +1,96 @@
+{
+  "constraints": {
+    "glide_slope": 1.0471975511965976,
+    "maximum_angular_rate": 1.0,
+    "maximum_tilt": 0.5235987755982988,
+    "minimum_altitude": 0.0
+  },
+  "environment": {
+    "gravity": [
+      0.0,
+      0.0,
+      -3.711
+    ]
+  },
+  "family": "powered_descent_6dof",
+  "horizon": {
+    "final_time": 4.0,
+    "free_final_time": false,
+    "intervals": 20
+  },
+  "initial_state": [
+    0.0,
+    0.0,
+    100.0,
+    0.0,
+    0.0,
+    -1.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    2000.0
+  ],
+  "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+  "output": {
+    "dense_replay_substeps": 10
+  },
+  "schema_version": "1.0.0",
+  "solver": {
+    "backend": "cpu_reference",
+    "maximum_outer_iterations": 30,
+    "time_limit_seconds": 600.0,
+    "tolerance": 1e-06
+  },
+  "terminal": {
+    "fixed": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ],
+    "state": [
+      0.0,
+      0.0,
+      97.0,
+      0.0,
+      0.0,
+      -0.4,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "vehicle": {
+    "dry_mass": 1000.0,
+    "exhaust_velocity": 2173.913043478261,
+    "maximum_torque": 2000.0,
+    "principal_inertia": [
+      2500.0,
+      2200.0,
+      1800.0
+    ],
+    "thrust": {
+      "maximum": 15000.0,
+      "minimum": 0.0
+    }
+  }
+}

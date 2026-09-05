@@ -1,0 +1,8 @@
+release-configure	/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp -B build-g4-cuda-release -DCMAKE_BUILD_TYPE=Release -G Ninja -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_BUILD_DISTRIBUTED=OFF -DSPACEPDHCG_BUILD_C_API=ON -DSPACEPDHCG_BUILD_NATIVE_TESTS=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=90 
+release-build	/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-g4-cuda-release --parallel 12 
+debug-configure	/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake -S cpp -B build-g4-cuda-debug -DCMAKE_BUILD_TYPE=Debug -G Ninja -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_BUILD_DISTRIBUTED=OFF -DSPACEPDHCG_BUILD_C_API=ON -DSPACEPDHCG_BUILD_NATIVE_TESTS=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=90 
+debug-build	/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake --build build-g4-cuda-debug --parallel 12 
+release-ctest	/home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-g4-cuda-release --output-on-failure --no-tests=error 
+debug-ctest	/home/ubuntu/spacepdhcg/v1/.venv/bin/ctest --test-dir build-g4-cuda-debug --output-on-failure --no-tests=error 
+deadline-matrix-pytest	/home/ubuntu/spacepdhcg/v1/.venv/bin/python -m pytest -p no:cacheprovider -v -rA --durations=0 --junitxml=/home/ubuntu/g4/fix-verification-1dbcae0/deadline-matrix-junit.xml tests/test_g4_pdhcg_deadline_gpu.py 
+ordinal73-600s-repro	/home/ubuntu/spacepdhcg/v1/.venv/bin/python /home/ubuntu/s/ordinal73_repro.py /home/ubuntu/g4/fix-verification-1dbcae0/ordinal73-600s 
