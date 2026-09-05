@@ -791,6 +791,7 @@ def lp_asteroid_prices(
     max_ships: int = C.MAX_SHIPS,
     size: int | None = None,
     target_size: int | None = None,
+    bound_share: bool = False,
 ) -> AsteroidPrices | None:
     """Duals of the master LP as per-asteroid prices for the family pricing.
 
@@ -800,6 +801,16 @@ def lp_asteroid_prices(
     more ship.  Returns ``None`` when no size is LP-feasible.  Prices are non-negative; an
     asteroid appears only when its rows carry a positive dual.  Deterministic for a given
     column list (HiGHS on the same LP).
+
+    With ``bound_share`` the dual of every column's ``x_c <= 1`` bound is shared equally among
+    the asteroids the column uses.  A nearly integral LP is degenerate: the rent of a selected
+    ship sits on its bound, not on its asteroid rows (over the 915-column archive at N = 21 only
+    22 asteroids carried a row dual), so the row duals alone under-price what the fleet already
+    holds.  Moving the bound dual of ``c`` onto ``c``'s rows keeps every dual constraint
+    satisfied (``c``'s own is unchanged, every other column's reduced cost only falls) and the
+    dual objective (``sum y + sum z`` is invariant), so the shared prices are another optimal
+    dual solution - one that attributes the rent to the resources a new column would have to
+    take away.
     """
 
     import numpy as np
@@ -833,6 +844,16 @@ def lp_asteroid_prices(
         prices[asteroid] = prices.get(asteroid, 0.0) + float(y[row])
     for asteroid, row in model.collect_rows.items():
         prices[asteroid] = prices.get(asteroid, 0.0) + float(y[row])
+    if bound_share:
+        z = np.maximum(-np.asarray(result.upper.marginals), 0.0)
+        for c, column in enumerate(usable):
+            if z[c] <= 1e-9:
+                continue
+            asteroids = sorted(set(column.deploys) | set(column.collects))
+            if asteroids:
+                share = float(z[c]) / len(asteroids)
+                for asteroid in asteroids:
+                    prices[asteroid] = prices.get(asteroid, 0.0) + share
     prices = {a: p for a, p in sorted(prices.items()) if p > 1e-9}
     return AsteroidPrices(int(n_size), prices, mu, nu, float(-result.fun), solved)
 

@@ -353,6 +353,38 @@ def test_lp_asteroid_prices_are_nonnegative_duals_of_the_binding_rows() -> None:
     assert selected_priced > 0 or not priced.prices
 
 
+def test_bound_share_prices_dominate_the_row_duals_and_conserve_the_dual_value() -> None:
+    columns = _random_columns(1, 12, 16)
+    rows_only = lp_asteroid_prices(columns, target_size=6)
+    shared = lp_asteroid_prices(columns, target_size=6, bound_share=True)
+    assert rows_only is not None and shared is not None and shared.size == rows_only.size
+    # sharing only adds: every row-priced asteroid keeps at least its row dual, and the
+    # selected columns' asteroids (where the rent sat on the bound) now carry a price too
+    for asteroid, price in rows_only.prices.items():
+        assert shared.prices.get(asteroid, 0.0) >= price - 1e-9
+    assert set(rows_only.prices) <= set(shared.prices)
+    # the dual value is conserved: sum of shared prices = sum of row duals + sum of bound duals,
+    # which the LP's own dual objective fixes (weak duality with the same mu and nu)
+    assert shared.mu == pytest.approx(rows_only.mu) and shared.nu == pytest.approx(rows_only.nu)
+    assert sum(shared.prices.values()) >= sum(rows_only.prices.values()) - 1e-9
+    # deterministic
+    again = lp_asteroid_prices(columns, target_size=6, bound_share=True)
+    assert again is not None and again.prices == shared.prices
+
+
+def test_collect_tour_ignores_a_non_finite_burn_schedule() -> None:
+    ids = [1, 2, 3]
+    costs = {(a, b): 1.0 for a in ids for b in ids if a != b}
+    table = _FakeTable(ids, costs, n_t=20, return_dv=1.0)
+    deployed = [(1, T0 + 4.5 * YEAR), (2, T0 + 5.0 * YEAR), (3, T0 + 5.5 * YEAR)]
+    two_pass = plan_collect_tour(table, deployed, 3, T0 + 6.0 * YEAR, 1500.0)
+    nan_burn = plan_collect_tour(
+        table, deployed, 3, T0 + 6.0 * YEAR, 1500.0, burn_per_hop=float("nan")
+    )
+    assert two_pass is not None and nan_burn is not None
+    assert nan_burn.order == two_pass.order and nan_burn.hops == two_pass.hops
+
+
 def test_price_clusters_hands_the_dispatch_time_prices_to_each_family(monkeypatch) -> None:
     from spacepdhcg.gtoc12 import bundles
 
