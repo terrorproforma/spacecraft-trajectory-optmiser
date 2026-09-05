@@ -18,6 +18,75 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_batched_stopping(destination: Path) -> None:
+    """Keep scalar metrics on device until one packet completes the calculation."""
+    header = destination / "algebra/cuda/cudss_backend.h"
+    text = header.read_text().replace(
+        "  // cuBLAS function pointers",
+        "  decltype(&::cublasSetPointerMode) cublasSetPointerMode;\n"
+        "  decltype(&::cublasGetPointerMode) cublasGetPointerMode;\n"
+        "  // cuBLAS function pointers",
+    )
+    header.write_text(text)
+    backend = destination / "algebra/cuda/cudss_backend.cu"
+    text = backend.read_text().replace(
+        "  // Load cuBLAS functions",
+        """  g_cuda_funcs.cublasSetPointerMode =
+      reinterpret_cast<decltype(&::cublasSetPointerMode)>(
+          dlsym(g_cublas_handle, "cublasSetPointerMode_v2"));
+  g_cuda_funcs.cublasGetPointerMode =
+      reinterpret_cast<decltype(&::cublasGetPointerMode)>(
+          dlsym(g_cublas_handle, "cublasGetPointerMode_v2"));
+  if (!g_cuda_funcs.cublasSetPointerMode || !g_cuda_funcs.cublasGetPointerMode) {
+    fprintf(stderr, "QOCO cuBLAS pointer-mode symbols missing\\n");
+    dlclose(g_cublas_handle); dlclose(g_cusparse_handle); dlclose(g_cudss_handle);
+    return 0;
+  }
+  // Load cuBLAS functions""",
+    )
+    backend.write_text(text)
+    path = destination / "src/qoco_utils.c"
+    text = path.read_text()
+    function = text.index("unsigned char check_stopping(QOCOSolver* solver)")
+    begin = text.index("  QOCOFloat* xbuff", function)
+    end = text.index("  // Composite progress metric", begin)
+    reference = text[begin:end]
+    for field in ("pres", "dres", "gap"):
+        reference = reference.replace(f"  solver->sol->{field} = {field};\n", "")
+    reference = (
+        "void qoco_reference_stopping_metrics(QOCOSolver* solver, QOCOFloat* out)\n{\n"
+        "  QOCOWorkspace* work = solver->work;\n"
+        "  QOCOProblemData* data = work->data;\n" + reference
+        + "  out[0] = pres; out[1] = dres; out[2] = gap;\n"
+        "  out[3] = pres_rel; out[4] = dres_rel; out[5] = gap_rel;\n}\n\n"
+        "void qoco_gpu_stopping_metrics(QOCOSolver* solver, double* out);\n\n"
+    )
+    replacement = """  QOCOFloat metrics[6];
+  qoco_gpu_stopping_metrics(solver, metrics);
+  const char* compare = getenv("SPACEPDHCG_TEST_QOCO_BATCHED_STOPPING_COMPARE");
+  if (compare && compare[0] == '1') {
+    QOCOFloat reference[6];
+    qoco_reference_stopping_metrics(solver, reference);
+    for (int i = 0; i < 6; ++i) {
+      if (!isfinite(metrics[i]) || !isfinite(reference[i]) ||
+          fabs(metrics[i] - reference[i]) > 2e-12 * fmax(1.0, fabs(reference[i]))) {
+        fprintf(stderr, "QOCO batched stopping metric %d mismatch %.17g %.17g\\n",
+                i, metrics[i], reference[i]);
+        exit(1);
+      }
+    }
+  }
+  QOCOFloat pres = metrics[0], dres = metrics[1], gap = metrics[2];
+  QOCOFloat pres_rel = metrics[3], dres_rel = metrics[4], gap_rel = metrics[5];
+  solver->sol->pres = pres; solver->sol->dres = dres; solver->sol->gap = gap;
+
+"""
+    prefix = text[function:begin].replace(
+        "  QOCOProblemData* data = solver->work->data;\n", ""
+    )
+    path.write_text(text[:function] + reference + prefix + replacement + text[end:])
+
+
 def patch_cudss_abi(destination: Path) -> None:
     """Compile against the real API and reject a different runtime major/minor."""
     header = destination / "algebra/cuda/cudss_backend.h"
@@ -115,6 +184,10 @@ def main() -> None:
         "--device-scalar-reductions", action="store_true",
         help="reduce extrema and NaN checks on CUDA with retained scalar scratch",
     )
+    parser.add_argument(
+        "--batched-stopping", action="store_true",
+        help="compute stopping metrics on GPU and return one scalar packet",
+    )
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
@@ -126,6 +199,7 @@ def main() -> None:
         or args.values_only_updates
         or args.device_numeric_updates
         or args.device_scalar_reductions
+        or args.batched_stopping
     ):
         parser.error("--unmodified cannot be combined with backend changes")
     if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
@@ -136,6 +210,12 @@ def main() -> None:
         parser.error("--device-numeric-updates requires --gather")
     if args.device_scalar_reductions and not args.device_cone_reductions:
         parser.error("--device-scalar-reductions requires --device-cone-reductions")
+    if args.batched_stopping and not (args.device_scalar_reductions and args.queued_operators):
+        parser.error(
+            "--batched-stopping requires --device-scalar-reductions and --queued-operators"
+        )
+    if args.batched_stopping and not args.correct_stopping:
+        parser.error("--batched-stopping requires --correct-stopping")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -375,6 +455,10 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
                     "  return static_cast<QOCOInt>(qoco_device_scalar::run<"
                     "qoco_device_scalar::HasNan>(x->d_data, x->len));\n}\n"
                     + modified[end:])
+    if args.batched_stopping:
+        stopping = extension.with_name("qoco_batched_stopping.cuh")
+        shutil.copyfile(stopping, destination / "algebra/cuda/qoco_batched_stopping.cuh")
+        modified += '\n#include "qoco_batched_stopping.cuh"\n'
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -401,6 +485,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         backend_path.write_text(backend.replace(before, after))
     if args.checked_cudss_abi:
         patch_cudss_abi(destination)
+    if args.batched_stopping:
+        patch_batched_stopping(destination)
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -415,6 +501,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "values_only_updates": args.values_only_updates,
         "device_numeric_updates": args.device_numeric_updates,
         "device_scalar_reductions": args.device_scalar_reductions,
+        "batched_stopping": args.batched_stopping,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -439,6 +526,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
               if args.values_only_updates or args.device_numeric_updates else []),
             *(["algebra/cuda/qoco_device_update.cuh"] if args.device_numeric_updates else []),
             *(["algebra/cuda/qoco_device_scalar.cuh"] if args.device_scalar_reductions else []),
+            *(["algebra/cuda/qoco_batched_stopping.cuh"] if args.batched_stopping else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")

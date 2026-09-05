@@ -568,3 +568,17 @@ records 847 → 401 stream synchronizations with unchanged kernel launch count.
 [Evidence and scope](GPU_QOCO_LOCAL_BACKEND.md#gpu-scalar-extrema-and-retained-nan-checks)
 include raw timings, hashes and sanitizer output. Scalar decisions still return
 to the CPU; removing that control path remains part of the full active goal.
+
+## Batched stopping metrics checkpoint
+
+Twelve norms and five dot products now retain their results on the GPU and
+return one combined six-scalar packet. Existing sparse operators and cuBLAS dot
+products remain in use. Metric parity, independent CPU arithmetic and all four
+kernel sanitizers pass, together with unchanged landing/6DOF physics gates.
+
+Matched local SCvx medians improve 237.979 → 184.374 ms for landing (1.29x)
+and 1540.333 → 1269.197 ms for 6DOF (1.21x), with unchanged 28/179 iterations.
+The landing API trace removes 330 synchronous copies and 150 scalar-result
+stream waits. [Full evidence and scope](GPU_QOCO_LOCAL_BACKEND.md#batched-gpu-stopping-metrics)
+record measured binaries, raw timings and remaining host decisions. The existing
+cuDSS race and the full GPU-native goal remain open.

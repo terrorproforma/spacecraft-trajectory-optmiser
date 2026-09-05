@@ -215,7 +215,8 @@ if(BUILD_TESTING)
         # see docs/GPU_QOCO_LOCAL_BACKEND.md for its separate build command.
         if(test_name STREQUAL "qoco_gpu_operators_test"
            OR test_name STREQUAL "qoco_gpu_numeric_update_test"
-           OR test_name STREQUAL "qoco_gpu_scalar_test")
+           OR test_name STREQUAL "qoco_gpu_scalar_test"
+           OR test_name STREQUAL "qoco_gpu_stopping_test")
             continue()
         endif()
         add_executable("${test_name}" "${source}")

@@ -587,3 +587,64 @@ retain the measured binary hashes and complete representative planner results.
 Prepared-source hashes reproduce in a fresh directory. Remaining CPU decisions,
 initial structure/KKT assembly, dependency correctness, large trajectory scaling
 and GPU GTOC12 remain part of the active goal.
+
+## Batched GPU stopping metrics
+
+The optional `--batched-stopping` flag keeps twelve norm results and five dot
+products on the GPU, combines them there, and returns one six-double packet:
+primal residual, dual residual, gap and their three relative stopping scales.
+The prior implementation returned each norm/dot separately. Sparse operators and
+cuBLAS `Ddot` remain in use; dot results use device pointer mode and the prior
+pointer mode is restored before returning. This uses the asynchronous scalar
+result behavior documented by [NVIDIA](https://docs.nvidia.com/cuda/cublas/index.html#scalar-parameters).
+Retained scratch and default-stream ordering protect intermediate values when
+the next operation reuses a work vector. The six-scalar combination preserves
+the original expression order with explicit double multiplication/addition.
+
+The flag requires `--device-scalar-reductions`, `--queued-operators` and
+`--correct-stopping`. Add it to the v21 preparation command. The loader checks
+both cuBLAS pointer-mode symbols before using them. The standalone
+`qoco_gpu_stopping_test.cu` builds against the isolated headers/library using the
+same standalone recipe as the scalar test.
+
+`SPACEPDHCG_TEST_QOCO_BATCHED_STOPPING_COMPARE=1` compares all six metrics with
+the previous implementation at every stopping check. It is omitted in measured
+runs. The standalone test independently calculates the metrics on the CPU with
+long-double arithmetic, covering nontrivial scaling vectors, symmetric sparse
+quadratics, absent constraints, zero quadratic input, 17/4103 variables,
+successive iterate changes, nested/unscoped execution and restoration of cuBLAS
+host scalar mode. All four CUDA sanitizers pass, including zero leaks. Native
+Ruiz-4, seven repeated landing solves and the actual 6DOF planner pass metric
+comparison plus CPU conversion/KKT oracles. Full landing memory, initialization
+and synchronization checks also pass.
+
+Matched local RTX 5090 measurements use the same frozen 038695b core, v21 versus
+v22 backends, two warmups and seven alternating measured samples per variant:
+
+| Case | Previous SCvx | Batched stopping SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 237.979 ms | 184.374 ms | 724.607 → 661.227 ms |
+| 20-interval 6DOF planner, 1e-6 | 1540.333 ms | 1269.197 ms | 1918.977 → 1619.480 ms |
+
+These are 1.29x/1.21x SCvx speedups at unchanged 28/179 inner iterations, two
+accepted steps, objectives and independent physics gates. Complete process
+speedups are 1.10x/1.18x. Raw timing variability is retained; these measurements
+do not establish a universal multiplier.
+
+A separate qualified landing API trace shows synchronous copies falling
+925 → 595, asynchronous copies 786 → 636, and stream synchronizations
+401 → 251. There are thirty additional metric-combination launches
+(6065 → 6095 total launches), with unchanged 379 allocations/299 frees.
+The control trace is from the identical saved v21 binary. As above, these are
+API counts, not exclusive GPU kernel timings.
+
+The stop/continue policy, best-iterate bookkeeping and scalar work in objective,
+centering, line search and iterative refinement still involve the CPU. Initial
+structure/KKT assembly, outer control, larger trajectory scaling and GPU GTOC12
+also remain. The known cuDSS factorization race was not remeasured and stays open;
+this candidate remains optional. The full goal is active.
+
+[Checkpoint, source hashes, sanitizer output and API counts](../artifacts/performance/qoco-batched-stopping-checkpoint.json),
+[landing samples](../artifacts/performance/qoco-batched-stopping-pd3.json), and
+[planner comparison](../artifacts/performance/qoco-batched-stopping-planner-pd6.json)
+retain the evidence. Prepared-source hashes were reproduced in a fresh directory.

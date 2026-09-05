@@ -1,0 +1,509 @@
+{
+  "full_goal_complete": false,
+  "production_backend_changed": false,
+  "changes": [
+    "Twelve norms and five dot products retain scalar results on device",
+    "Existing cuBLAS Ddot uses device pointer mode, restored before returning",
+    "GPU combines metrics into one six-double result packet",
+    "Previous metrics retained as an opt-in oracle; independent CPU long-double test added"
+  ],
+  "measurements": {
+    "qoco-batched-stopping-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 0.7246074170107022,
+          "scvx_seconds": 0.237978969,
+          "qoco_solve_seconds": 0.19876169999999999,
+          "inner_iterations": 28
+        },
+        "optimized": {
+          "process_seconds": 0.6612272330094129,
+          "scvx_seconds": 0.184373653,
+          "qoco_solve_seconds": 0.146487879,
+          "inner_iterations": 28
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.0958523497479529,
+        "scvx_seconds": 1.2907428210472134,
+        "qoco_solve_seconds": 1.3568474153414427
+      }
+    },
+    "qoco-batched-stopping-planner-pd6.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 1.9189769809599966,
+          "scvx_total_seconds": 1.540333017,
+          "qoco_solve_seconds": 1.4403684270000001,
+          "plan_wall_seconds": 1.65419593,
+          "inner_iterations": 179
+        },
+        "optimized": {
+          "process_seconds": 1.6194803249672987,
+          "scvx_total_seconds": 1.269196548,
+          "qoco_solve_seconds": 1.1691699750000002,
+          "plan_wall_seconds": 1.381970329,
+          "inner_iterations": 179
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.1849338033784051,
+        "scvx_total_seconds": 1.2136284324340914,
+        "qoco_solve_seconds": 1.2319581051506219,
+        "plan_wall_seconds": 1.1969836799585876
+      }
+    }
+  },
+  "representative_planner_results": [
+    "qoco-batched-stopping-planner-pd6-baseline-sample.json",
+    "qoco-batched-stopping-planner-pd6-optimized-sample.json"
+  ],
+  "sanitizers": {
+    "qoco-v22-stopping-memcheck.log": {
+      "passed": true,
+      "sha256": "897e33aea7cc010dc4614df5e39ed42e8eb8a9759b36319dcfb1996930cbde50",
+      "output": "========= COMPUTE-SANITIZER\nGPU stopping metrics n=17 absent=0 zero_P=0 PASS\nGPU stopping metrics n=4103 absent=0 zero_P=0 PASS\nGPU stopping metrics n=17 absent=1 zero_P=0 PASS\nGPU stopping metrics n=17 absent=0 zero_P=1 PASS\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v22-stopping-initcheck.log": {
+      "passed": true,
+      "sha256": "501b4e2f6a311d34655de9745666109d4cadf03e20c33dabd06a455592e510fc",
+      "output": "========= COMPUTE-SANITIZER\nGPU stopping metrics n=17 absent=0 zero_P=0 PASS\nGPU stopping metrics n=4103 absent=0 zero_P=0 PASS\nGPU stopping metrics n=17 absent=1 zero_P=0 PASS\nGPU stopping metrics n=17 absent=0 zero_P=1 PASS\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v22-stopping-synccheck.log": {
+      "passed": true,
+      "sha256": "501b4e2f6a311d34655de9745666109d4cadf03e20c33dabd06a455592e510fc",
+      "output": "========= COMPUTE-SANITIZER\nGPU stopping metrics n=17 absent=0 zero_P=0 PASS\nGPU stopping metrics n=4103 absent=0 zero_P=0 PASS\nGPU stopping metrics n=17 absent=1 zero_P=0 PASS\nGPU stopping metrics n=17 absent=0 zero_P=1 PASS\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v22-stopping-racecheck.log": {
+      "passed": true,
+      "sha256": "eca62bc35769d1dea7819cac7916f24fc4584b3e977b66d62f3bfc84cce24cca",
+      "output": "========= COMPUTE-SANITIZER\nGPU stopping metrics n=17 absent=0 zero_P=0 PASS\nGPU stopping metrics n=4103 absent=0 zero_P=0 PASS\nGPU stopping metrics n=17 absent=1 zero_P=0 PASS\nGPU stopping metrics n=17 absent=0 zero_P=1 PASS\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n"
+    },
+    "qoco-v22-landing-memcheck.log": {
+      "passed": true,
+      "sha256": "af58a1f23a16a532f65a73b0841b126419d5b09a31f18f329e507835bc76035b",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":2.9187317,\"t_scvx\":2.97187754,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-0P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n8,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":2.9187316980000002,\"scvx_seconds\":2.9718775439999998,\"topology_seconds\":0.0024013540000000001,\"coefficient_seconds\":0.0027807039022445679,\"workspace_create_seconds\":0.153072397,\"update_seconds\":0.011580348000000001,\"scaling_seconds\":0,\"solve_seconds\":2.6624530920000002,\"residual_seconds\":0.032900659999999998,\"replay_seconds\":0.017755487918853761,\"acceptance_seconds\":4.3272000000000002e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00018918399885296824,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.020584270000000002,\"qoco_setup_seconds\":0.19121332800000002,\"qoco_update_seconds\":0.011580348000000001,\"qoco_solve_seconds\":2.6624530920000002,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v22-landing-initcheck.log": {
+      "passed": true,
+      "sha256": "250ec7e8c9a90d1fda8f1244cc8064653533dbbc393090b9d497f11f14c28e0a",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":2.07865749,\"t_scvx\":2.12757715,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n08,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":2.0786574930000001,\"scvx_seconds\":2.1275771529999998,\"topology_seconds\":0.002844765,\"coefficient_seconds\":0.001313536047935486,\"workspace_create_seconds\":0.149815801,\"update_seconds\":0.0068489839999999998,\"scaling_seconds\":0,\"solve_seconds\":1.8472177000000001,\"residual_seconds\":0.029119107999999998,\"replay_seconds\":0.016303711771965029,\"acceptance_seconds\":0.000363758,\"h2d_seconds\":0,\"d2h_seconds\":0.00035459199547767644,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.019213661999999999,\"qoco_setup_seconds\":0.17625803900000001,\"qoco_update_seconds\":0.0068489839999999998,\"qoco_solve_seconds\":1.8472177000000001,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v22-landing-synccheck.log": {
+      "passed": true,
+      "sha256": "59234106fc0ada9bb28eaebc61ada866a6d9ca83980af204a07cdb3342527ea4",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":2.41428646,\"t_scvx\":2.44578127,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n08,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":2.4142864639999999,\"scvx_seconds\":2.4457812749999999,\"topology_seconds\":0.001273291,\"coefficient_seconds\":0.00097289597988128667,\"workspace_create_seconds\":0.120902458,\"update_seconds\":0.006935124,\"scaling_seconds\":0,\"solve_seconds\":2.2505806559999999,\"residual_seconds\":0.024585116000000001,\"replay_seconds\":0.018351455867290499,\"acceptance_seconds\":4.3739000000000003e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00019337600097060203,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.015507778999999999,\"qoco_setup_seconds\":0.116677789,\"qoco_update_seconds\":0.006935124,\"qoco_solve_seconds\":2.2505806559999999,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= ERROR SUMMARY: 0 errors\n"
+    }
+  },
+  "synthetic_unit_output": "GPU stopping metrics n=17 absent=0 zero_P=0 PASS\nGPU stopping metrics n=4103 absent=0 zero_P=0 PASS\nGPU stopping metrics n=17 absent=1 zero_P=0 PASS\nGPU stopping metrics n=17 absent=0 zero_P=1 PASS\n",
+  "native_ruiz4_test_output": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+  "stopping_metric_comparison_enabled_during_validation": true,
+  "cpu_conversion_and_audit_oracle_repeated_qualified_landing_solves": 7,
+  "cpu_conversion_and_audit_oracle_pd6_certified": true,
+  "full_backend_racecheck_clear": false,
+  "vendor_issue": "Prior cuDSS deterministic factorization race remains open; not remeasured. Standalone stopping-metric racecheck excludes factorization.",
+  "prepared_source_reproduced": true,
+  "backend_provenance": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "6a1be5f58312d78a0293ad567af4f6773b2ad2d1811f0597ca3a9d076cf76ebf",
+    "extension_sha256": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+    "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+    "gather": true,
+    "original_handles": false,
+    "queued_operators": true,
+    "device_cone_reductions": true,
+    "values_only_updates": true,
+    "device_numeric_updates": true,
+    "device_scalar_reductions": true,
+    "batched_stopping": true,
+    "correct_stopping": true,
+    "deterministic": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "6a1be5f58312d78a0293ad567af4f6773b2ad2d1811f0597ca3a9d076cf76ebf",
+      "algebra/cuda/qoco_reduction_scope.cuh": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+      "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+      "algebra/cuda/cudss_backend.h": "793530d86a41a5f2d74b03c34f1565f6e2107032772d03b85c0460a4c4cae981",
+      "algebra/cuda/cudss_backend.cu": "b45722d02036c48716704ee6aabc5f61c3d1be722e317f1b489b105d29c7be0d",
+      "src/qoco_utils.c": "683fe06170d3a12a16f50647777633cf7714edd0b8c4ce8db9dd70ffa9ea7a50",
+      "algebra/cuda/qoco_gather.cuh": "637ea34a5a178254ad6ea40f30d515e28ab32eff43423b600e503e1d6537429d",
+      "src/cone.cu": "53e522d3be03cb21f7e057652d33e314d197308330d4ce9599792f24a1e68b03",
+      "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+      "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+      "src/qoco_api.c": "4ee3954df021240c56d07d95797cd70e18cb89598642eeef89dcaad370843fd1",
+      "algebra/cuda/qoco_device_update.cuh": "cf7e524d347ba06129005fddd899d3655fbef02d3d14b84e910f36051baec9d1",
+      "algebra/cuda/qoco_device_scalar.cuh": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92",
+      "algebra/cuda/qoco_batched_stopping.cuh": "5727f5a259a88fb9791923317b82a9a3d95e9a41517cc4a2e504536b33e8b020"
+    }
+  },
+  "sha256": {
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/libspacepdhcg_cuda.so": "f7c127c20becf2f9c4ec3d757e700c646adbf6dbb487339c76e35415ccac4df8",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/native_qoco_conversion_test": "24c8359be727c0e9dd2c78e8c5b52af16a9e8ef91cdd54c314cfa0eb15b0fe34",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/device_scvx_integration_test": "f2e9c286f26b7aa96579efea0a196e646aa40de802552dd0cd71ce643eb079e8",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan": "a2da0c76e90ffd42ee91532720cf67e33cd6b2de69f44a7ea45672cec4cffb09",
+    "/home/angus/build-qoco-gpu-scalars-v21/build/libqoco.so": "2d5927488a7ed658a7ef4fe51ad244e5e6c1d7f5c2bf4cbf30b78465dcc56965",
+    "/home/angus/build-qoco-gpu-stopping-v22/build/libqoco.so": "885fedc418b98770740f3542b5b89668be279fd4b7823f87a3c9036cb7e85e09",
+    "/home/angus/build-qoco-gpu-stopping-v22/qoco_gpu_stopping_test": "83da1755c215894ecc02b2f33966f1d912a2715a8ea3a93fd2b22243127e1153",
+    "/home/angus/spacecraft-trajectory-optmiser/build/qoco-cudss-lib/libcudss.so": "5f76a3698d6b7114e6cf6ebe38a38096ccb8af090aa5b8af92d72c9b369b2e86"
+  },
+  "api_profiles": {
+    "baseline": {
+      "apis": {
+        "cudaStreamCreateWithFlags": {
+          "calls": 2,
+          "total_ns": 199138631
+        },
+        "cudaMemcpyAsync": {
+          "calls": 786,
+          "total_ns": 81575282
+        },
+        "cudaMemcpy": {
+          "calls": 925,
+          "total_ns": 73096517
+        },
+        "cudaLaunchKernel": {
+          "calls": 6065,
+          "total_ns": 67684287
+        },
+        "cudaStreamSynchronize": {
+          "calls": 401,
+          "total_ns": 14713881
+        },
+        "cudaFree": {
+          "calls": 299,
+          "total_ns": 4447515
+        },
+        "cudaMalloc": {
+          "calls": 379,
+          "total_ns": 3065327
+        },
+        "cudaMemsetAsync": {
+          "calls": 513,
+          "total_ns": 2204686
+        },
+        "cudaDeviceSynchronize": {
+          "calls": 57,
+          "total_ns": 1861184
+        },
+        "cudaEventSynchronize": {
+          "calls": 18,
+          "total_ns": 1733162
+        },
+        "cudaEventRecord": {
+          "calls": 360,
+          "total_ns": 1601376
+        },
+        "cuLibraryUnload": {
+          "calls": 17,
+          "total_ns": 1550692
+        },
+        "cudaMemset": {
+          "calls": 378,
+          "total_ns": 1419124
+        },
+        "cudaHostAlloc": {
+          "calls": 4,
+          "total_ns": 909555
+        },
+        "cudaMemcpy2DAsync": {
+          "calls": 172,
+          "total_ns": 799138
+        },
+        "cudaFreeHost": {
+          "calls": 4,
+          "total_ns": 356229
+        },
+        "cudaEventCreateWithFlags": {
+          "calls": 56,
+          "total_ns": 234683
+        },
+        "cudaEventDestroy": {
+          "calls": 68,
+          "total_ns": 229963
+        },
+        "cuGetProcAddress_v2": {
+          "calls": 2095,
+          "total_ns": 189275
+        },
+        "cuStreamGetCaptureInfo_v2": {
+          "calls": 1630,
+          "total_ns": 97926
+        },
+        "cuInit": {
+          "calls": 7,
+          "total_ns": 9382
+        },
+        "cudaEventQuery": {
+          "calls": 3,
+          "total_ns": 8613
+        },
+        "cudaStreamDestroy": {
+          "calls": 2,
+          "total_ns": 7063
+        },
+        "cudaGetDeviceProperties_v2_v12000": {
+          "calls": 4,
+          "total_ns": 6636
+        },
+        "cudaEventCreate": {
+          "calls": 12,
+          "total_ns": 6549
+        },
+        "cudaStreamWaitEvent": {
+          "calls": 1,
+          "total_ns": 1401
+        },
+        "cuModuleGetLoadingMode": {
+          "calls": 6,
+          "total_ns": 1349
+        },
+        "cudaGetDriverEntryPoint_v11030": {
+          "calls": 2,
+          "total_ns": 535
+        }
+      },
+      "qualification": {
+        "case": "g4_sample",
+        "family": "P1-C-pd3",
+        "policy": "pure-gpu-ipm",
+        "intervals": 20,
+        "status": 0,
+        "trust_class": 0,
+        "transfer_class": "not_applicable",
+        "qualified": true,
+        "quality_tolerance": 1e-08,
+        "canonical_residual": 2.618510687647072e-11,
+        "objective": 0.49448537365291756,
+        "dynamics": 0,
+        "path": 0,
+        "terminal": 7.034629823099436e-13,
+        "path_inventory": {
+          "thrust": 0,
+          "mass": 0,
+          "altitude": 0
+        },
+        "virtual": 0,
+        "trajectory_difference": 476.1482579323556,
+        "cqp_seconds": 0.25623617000000004,
+        "scvx_seconds": 0.25935865,
+        "topology_seconds": 0.000942027,
+        "coefficient_seconds": 0.00035267199575901033,
+        "workspace_create_seconds": 0.037903235,
+        "update_seconds": 0.000508573,
+        "scaling_seconds": 0,
+        "solve_seconds": 0.21539031400000003,
+        "residual_seconds": 0.0005066,
+        "replay_seconds": 0.0010350399911403657,
+        "acceptance_seconds": 2.1745999999999998e-05,
+        "h2d_seconds": 0,
+        "d2h_seconds": 0.00026739199459552764,
+        "recovery_seconds": 0,
+        "recovery_iterations": 0,
+        "inner_iterations": 28,
+        "h2d_bytes": 286728,
+        "d2h_bytes": 110000,
+        "peak_device_bytes": 758744,
+        "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss",
+        "topology_allocations_after_create": 0,
+        "hidden_cpu_fallback": 0,
+        "qoco_conversion_seconds": 0.001735326,
+        "qoco_setup_seconds": 0.038095356999999996,
+        "qoco_update_seconds": 0.000508573,
+        "qoco_solve_seconds": 0.21539031400000003,
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": 1,
+        "hybrid_handoff_eligible": 0,
+        "qoco_failure": 0
+      },
+      "csv_sha256": "1c91972b4243761db8d2a83221d63c869a3fed3584f62cf70d161b9f08460e1e"
+    },
+    "optimized": {
+      "apis": {
+        "cudaStreamCreateWithFlags": {
+          "calls": 2,
+          "total_ns": 204807308
+        },
+        "cudaMemcpy": {
+          "calls": 595,
+          "total_ns": 83497218
+        },
+        "cudaLaunchKernel": {
+          "calls": 6095,
+          "total_ns": 66961776
+        },
+        "cudaMemcpyAsync": {
+          "calls": 636,
+          "total_ns": 24070467
+        },
+        "cudaStreamSynchronize": {
+          "calls": 251,
+          "total_ns": 11877184
+        },
+        "cudaFree": {
+          "calls": 299,
+          "total_ns": 4448520
+        },
+        "cudaMalloc": {
+          "calls": 379,
+          "total_ns": 3222496
+        },
+        "cudaMemsetAsync": {
+          "calls": 513,
+          "total_ns": 2202245
+        },
+        "cudaDeviceSynchronize": {
+          "calls": 57,
+          "total_ns": 1735393
+        },
+        "cuLibraryUnload": {
+          "calls": 17,
+          "total_ns": 1565366
+        },
+        "cudaEventSynchronize": {
+          "calls": 18,
+          "total_ns": 1446154
+        },
+        "cudaEventRecord": {
+          "calls": 360,
+          "total_ns": 1334780
+        },
+        "cudaMemset": {
+          "calls": 378,
+          "total_ns": 1274121
+        },
+        "cudaMemcpy2DAsync": {
+          "calls": 172,
+          "total_ns": 899241
+        },
+        "cudaHostAlloc": {
+          "calls": 4,
+          "total_ns": 858108
+        },
+        "cudaFreeHost": {
+          "calls": 4,
+          "total_ns": 344125
+        },
+        "cudaEventDestroy": {
+          "calls": 68,
+          "total_ns": 229180
+        },
+        "cudaEventCreateWithFlags": {
+          "calls": 56,
+          "total_ns": 208493
+        },
+        "cuGetProcAddress_v2": {
+          "calls": 2095,
+          "total_ns": 188491
+        },
+        "cuStreamGetCaptureInfo_v2": {
+          "calls": 1630,
+          "total_ns": 83858
+        },
+        "cudaEventQuery": {
+          "calls": 3,
+          "total_ns": 7725
+        },
+        "cuInit": {
+          "calls": 7,
+          "total_ns": 7715
+        },
+        "cudaEventCreate": {
+          "calls": 12,
+          "total_ns": 7031
+        },
+        "cudaGetDeviceProperties_v2_v12000": {
+          "calls": 4,
+          "total_ns": 6499
+        },
+        "cudaStreamDestroy": {
+          "calls": 2,
+          "total_ns": 5872
+        },
+        "cudaStreamWaitEvent": {
+          "calls": 1,
+          "total_ns": 1351
+        },
+        "cudaGetDriverEntryPoint_v11030": {
+          "calls": 2,
+          "total_ns": 891
+        },
+        "cuModuleGetLoadingMode": {
+          "calls": 6,
+          "total_ns": 877
+        }
+      },
+      "qualification": {
+        "case": "g4_sample",
+        "family": "P1-C-pd3",
+        "policy": "pure-gpu-ipm",
+        "intervals": 20,
+        "status": 0,
+        "trust_class": 0,
+        "transfer_class": "not_applicable",
+        "qualified": true,
+        "quality_tolerance": 1e-08,
+        "canonical_residual": 2.618510687647072e-11,
+        "objective": 0.49448537365291756,
+        "dynamics": 0,
+        "path": 0,
+        "terminal": 7.034629823099436e-13,
+        "path_inventory": {
+          "thrust": 0,
+          "mass": 0,
+          "altitude": 0
+        },
+        "virtual": 0,
+        "trajectory_difference": 476.1482579323556,
+        "cqp_seconds": 0.204851665,
+        "scvx_seconds": 0.207602031,
+        "topology_seconds": 0.001217651,
+        "coefficient_seconds": 0.00038047999143600466,
+        "workspace_create_seconds": 0.032502405,
+        "update_seconds": 0.000512515,
+        "scaling_seconds": 0,
+        "solve_seconds": 0.16337802299999998,
+        "residual_seconds": 0.000629388,
+        "replay_seconds": 0.000859008014202118,
+        "acceptance_seconds": 2.3800999999999998e-05,
+        "h2d_seconds": 0,
+        "d2h_seconds": 0.00027286399155855177,
+        "recovery_seconds": 0,
+        "recovery_iterations": 0,
+        "inner_iterations": 28,
+        "h2d_bytes": 286728,
+        "d2h_bytes": 110000,
+        "peak_device_bytes": 758744,
+        "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss",
+        "topology_allocations_after_create": 0,
+        "hidden_cpu_fallback": 0,
+        "qoco_conversion_seconds": 0.001828091,
+        "qoco_setup_seconds": 0.038503648,
+        "qoco_update_seconds": 0.000512515,
+        "qoco_solve_seconds": 0.16337802299999998,
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": 1,
+        "hybrid_handoff_eligible": 0,
+        "qoco_failure": 0
+      },
+      "csv_sha256": "2afa860751346595664c08d8caab1356882d811fc3ae1ab80228b6943e4ed5ae"
+    }
+  },
+  "profile_scope": "Nsight Systems 2024.6 CUDA API trace only; no RTX 5090 kernel/memory timeline. API time includes initialization and queued work; not exclusive GPU stage timings. Baseline profile reused from the identical saved v21 binary.",
+  "interpretation": "Paired SCvx medians improve 1.291x landing and 1.214x PD6 with unchanged iterations, objectives and independent physics gates; timing variability is retained in raw samples. No universal speedup claim.",
+  "remaining_work": [
+    "Stop/continue and best-iterate policy still on host",
+    "Objective, centering, line search and iterative refinement scalar decisions",
+    "Initial CPU structure discovery and KKT assembly",
+    "CPU outer control and warm state",
+    "cuDSS vendor issue",
+    "larger trajectories, conditioning and batching",
+    "GPU GTOC12"
+  ],
+  "reference": "https://docs.nvidia.com/cuda/cublas/index.html#scalar-parameters"
+}
