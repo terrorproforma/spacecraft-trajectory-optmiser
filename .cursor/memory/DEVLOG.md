@@ -399,3 +399,31 @@ branch's merged from `main`). Carried forward: GTOC12 best verified fleet and th
   bands and the beam's expansion order; sweep archived Earth legs with single-leg SCvx across the
   launch window (405 vs 430 kg legs exist); a deploy-phase time weight (deploy hops 240 d vs 183);
   the H100 host's per-core speed is ~0.6x the WSL box - size per-family budgets accordingly.
+
+## 2026-09-05 21:40 AEST - tenth GTOC12 iteration: ship 23 reached (fleet_master_v10 14044.80 kg / 23 ships / 610.65 avg)
+
+- Where: WSL worktree `/home/angus/worktrees/spacepdhcg-gtoc12`, branch `feat/gtoc12-asteroid-mining`
+  b55eb70 -> dfdeca8f (14 commits, clean; the long-form devlog/scratchpad entries are committed there in
+  `.cursor/memory/`). Helper scripts + logs `/home/angus/v10/` (`run.sh` strips CR and sets the git identity
+  env; `rput.sh`/`rrun.sh` for the H100). H100 clone `~/spacepdhcg/gtoc12` at c2730b1 (clean); bundle
+  `/home/angus/bundles/from-h100/gtoc12-h100-v10-c2730b1.bundle` fetched as `refs/h100/gtoc12-asteroid-mining`
+  and merged; compact copies in this repo's ignored `results/lambda-h100/gtoc12/{cluster_fleet_v10,
+  cluster_fleet_v10_control,joint_itinerary_v10,fleet_master_v10,leg_stats,logs,bundles}`.
+- Code: merge of the H100 v2 line 86a91d3 (both mechanisms, every CLI flag from both sides, both docs
+  blocks); Earth-out leg stage in the joint itinerary (`jointopt` `earth_leg`, single-leg SCvx oracle,
+  prefix seeds, monotone acceptance; `joint-itinerary --earth-leg`, `cluster-fleet --joint-earth-leg`);
+  harvest-phase prior (`harvestphase.py`, `benchmarks/gtoc12/harvest_phase_v1.json`, DP move penalty +
+  chain score; `cluster-fleet --harvest-phase`); `scripts/gtoc12_campaign_report.py`. Tests +6 (144 pass).
+- Runs: `joint_itinerary_v4` (562 sets, +316 kg), `joint_itinerary_v5` (`--earth-leg`, 300 ships, +494 kg,
+  126 accepted shifts), `fleet_master_v9` (local, 25 archives): 22 / 13188.61 / 599.48, proven optimal;
+  H100 paired arms `cluster_fleet_v10` vs `_control` (35 families each, median delta 0.0 kg: the phase
+  prior and the Earth-out stage are neutral), `joint_itinerary_v10` (+663.6 kg over 51 fresh chains),
+  **`fleet_master_v10` (36 archives): 23 ships / 196 asteroids / 14044.80 kg / 610.65 avg, LP gap 6.3 kg,
+  proven optimal, official GTOC12_Verify + independent verifier ok** (re-verified locally on the merged
+  tree, Result.txt sha256 3c052997...1b3e). Ship 24 needs 621.2 kg average.
+- Findings: our chains were already phase-aligned at harvest (|Δλ| 2.4-2.7 deg vs the references' 2.7);
+  the collect pairs differ in the orbital plane (relative inclination 2.5 vs 1.85 deg, node gap 34 vs
+  20 deg); a certified Earth leg is rarely the cheapest of its launch window (405 vs 430 kg); the H100's
+  per-core speed is ~0.6x the WSL box (1 ship slot less per 2400 s family).
+- Not done / follow-ups: plane-aware families; single-leg SCvx Earth-leg sweeps; deploy-phase time
+  weight. The G4 job on the H100 (cores 0-3 + GPU) was never touched; no GPU process of ours anywhere.

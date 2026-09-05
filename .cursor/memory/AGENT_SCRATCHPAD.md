@@ -163,6 +163,29 @@ Verbatim blocks from the Windows checkout's live file (entries other workers wro
   the blob table was refreshed in 0ff4f7c. `main` = origin/main = 8cb3759. The Windows checkout is
   still `feat/webgl-trajectory-viewer` d88eb51 (20-colour palette); `..\viewer-live` serves 211267d.
 
+### Active Risks / Workstreams (Windows checkout, 2026-09-05 21:40)
+
+Verbatim bullets of the Windows checkout's live `## Active Risks / Workstreams` section
+(written 2026-09-05 21:40 by the tenth-iteration worker, carried by the fourth release merge;
+the bullets already present above are not repeated).
+
+- GTOC12 (2026-09-05 21:40, tenth iteration): **`fleet_master_v10` = 23 ships / 14 044.80 kg /
+  610.65 avg** (H100, 36 archives, LP gap 6.3, proven optimal, both verifiers); local
+  `fleet_master_v9` (25 archives) 22 / 13 188.61 / 599.48. Branch `feat/gtoc12-asteroid-mining`
+  at dfdeca8f (WSL worktree clean; H100 clone c2730b1 clean). Ship 24 needs 621.2 kg average.
+  Levers that moved the fleet: breadth (all 35 families) + joint itinerary (+208 v2, +411 v3,
+  +316 v4, +664 v10); neutral: chain-level beam objective, reference prior, LP duals,
+  harvest-phase prior, Earth-out leg stage (+494 kg over 131 ships, nothing on the master).
+
+- Next: plane-aware families (relative inclination / node gap of consecutive collect pairs: ours
+  2.5 deg / 34 deg vs the references' 1.85 / 20); single-leg SCvx sweep of archived Earth legs
+  across the launch window (405 vs 430 kg legs exist); deploy-phase time weight (240 d vs 183).
+
+- [self] Session lessons (long form in the branch scratchpad): detached launch scripts must end
+  right after the `&` (`disown`, no trailing `sleep`/`cat`); `mkdir -p` every out-of-tree target
+  before writing; compute a reference statistic on *our* archives before building a term from
+  it; the H100's per-core speed is ~0.6x the WSL box, so pair arms on the same host.
+
 ## Session Entries
 
 ### 2026-09-05 06:50 AEST ? orchestrator: roadmap dashboard truncated and restored
