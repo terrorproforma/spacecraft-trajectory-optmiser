@@ -18,6 +18,38 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_gpu_kkt(destination: Path, extension: Path) -> None:
+    """Replace host KKT/CSR assembly and update-map construction with CUDA."""
+    path = destination / "algebra/cuda/cudss_backend.cu"
+    text = path.read_text()
+    start = text.index("  // Allocate memory for mappings to KKT matrix")
+    end = text.index("  // Store CSR data array.", start)
+    text = text[:start] + """  // Host mapping slots stay null; build GPU CSR maps directly.
+  linsys_data->nt2kkt = nullptr;
+  linsys_data->ntdiag2kkt = nullptr;
+  linsys_data->PregtoKKT = nullptr;
+  linsys_data->AttoKKT = nullptr;
+  linsys_data->GttoKKT = nullptr;
+  const int kkt_nnz = qoco_gpu_kkt::build(data, settings, linsys_data, Wnnz);
+  QOCOInt* csr_row_ptr = linsys_data->d_csr_rows;
+  QOCOInt* csr_col_ind = linsys_data->d_csr_columns;
+  QOCOFloat* csr_val = linsys_data->d_csr_val;
+
+""" + text[end:]
+    text = text.replace("(int64_t)Kcsc->nnz, csr_row_ptr", "(int64_t)kkt_nnz, csr_row_ptr")
+    start = text.index("  // CSR structure stays owned until vendor matrix destruction.")
+    end = text.index("  return linsys_data;", start)
+    text = text[:start] + text[end:]
+    start = text.index("static void csc_to_csr_device(")
+    end = text.index("\n}\n", start) + 3
+    text = text[:start] + text[end:]
+    marker = "static LinSysData* cudss_setup(QOCOProblemData* data, QOCOSettings* settings,"
+    if text.count(marker) != 1:
+        raise RuntimeError("unexpected GPU KKT extension site")
+    path.write_text(text.replace(marker, '#include "qoco_gpu_kkt.cuh"\n\n' + marker))
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_gpu_kkt.cuh")
+
+
 def patch_ruiz_vector_sync(destination: Path) -> None:
     """Legacy host equilibration must publish scaled c/b/h as well as matrices."""
     path = destination / "src/equilibration.c"
@@ -520,6 +552,8 @@ def main() -> None:
                         help="reset per-solve history (already enabled for all patched builds)")
     parser.add_argument("--device-io", action="store_true",
                         help="offer opt-in device solution output and GPU primal warm starts")
+    parser.add_argument("--gpu-kkt", action="store_true",
+                        help="assemble KKT CSR and numerical-update maps on CUDA")
     parser.add_argument(
         "--checked-cudss-abi", action="store_true", help="support and check cuDSS 0.7/0.8 APIs"
     )
@@ -577,6 +611,7 @@ def main() -> None:
         or args.superpanels
         or args.reset_solve_state
         or args.device_io
+        or args.gpu_kkt
         or args.checked_cudss_abi
         or args.queued_operators
         or args.device_cone_reductions
@@ -972,6 +1007,11 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_trajectory_ordering(destination, args.trajectory_tree)
     if args.profile_setup:
         patch_setup_profile(destination)
+    if args.gpu_kkt:
+        if not args.setup_lifetimes or args.profile_setup:
+            raise RuntimeError(
+                "GPU KKT requires setup lifetimes and excludes legacy setup profiling")
+        patch_gpu_kkt(destination, extension.with_name("qoco_gpu_kkt.cuh"))
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1003,6 +1043,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "superpanels": args.superpanels,
         "reset_solve_state": True,
         "device_io": args.device_io,
+        "gpu_kkt": args.gpu_kkt,
         "host_ruiz_vector_sync": True,
         "checked_cudss_abi": args.checked_cudss_abi,
     }
@@ -1022,6 +1063,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             "src/equilibration.c",
             *(["include/structs.h", "algebra/cuda/qoco_device_io.cuh"]
               if args.device_io else []),
+            *(["algebra/cuda/qoco_gpu_kkt.cuh"] if args.gpu_kkt else []),
             *(["algebra/cuda/qoco_gather.cuh"] if args.gather else []),
             *(["src/cone.cu", "src/qoco_device_cone_reductions.cuh"]
               if args.device_cone_reductions else []),

@@ -1367,3 +1367,134 @@ Prepared-file reproduction matches the frozen v62 source.
 The full GPU-native goal remains active. CPU KKT setup, host solver/SCvx
 control, production independent replay and numerical variability remain.
 Shared runtimes, pinned upstream sources and remote campaigns are unchanged.
+
+## GPU KKT CSR assembly
+
+The optional `--gpu-kkt` preparation mode replaces the backend's host
+`construct_kkt`, host CSC-to-CSR conversion and the serial construction/upload
+of P, A, G, NT and NT-diagonal update maps. It consumes the existing device CSC
+matrices. One CUDA thread handles each sparse entry; CUDA prefix scans locate
+cone blocks, and integer searches locate each upper-triangular cone entry.
+Stable sorting of 64-bit row/column keys produces ordered CSR, followed by
+parallel value/map scatter and row-offset generation. Matrix values are copied
+without numerical atomic additions. The exact original NT entry order and
+regularization values are preserved.
+
+The final implementation packs nine temporary arrays into one GPU allocation,
+with 256-byte alignment for each view. CUB sort/scan scratch uses one further
+allocation: ten temporary allocations become two. Final CSR arrays and maps
+remain separately owned by the solver until vendor teardown. Legacy host map
+slots remain null and the unused CPU CSR conversion routine is omitted from
+this build. There is no global assembly cache or CPU fallback in this path.
+
+The native input conversion, initial QOCO matrix creation, host transposes and
+regularization still precede this boundary. Moving KKT CSR construction does
+not make the entire setup or solver control loop GPU-native. The existing
+device coefficient/scaling updates consume the new maps without changing the
+numerical solver settings.
+
+### Construction and ownership validation
+
+`SPACEPDHCG_TEST_QOCO_KKT_COMPARE=1` runs the independent CPU constructor during
+testing and checks every CSR offset, column, value and all five map arrays.
+Production runs omit it. The direct assembly test calls an explicit test-only
+entry point, so it cannot silently pass against a library without GPU KKT
+support. Its seven fixtures include empty A/G blocks, empty equality rows,
+duplicate entries, pure SOCs, mixed orthant/SOCs, a 257-dimensional cone and
+513 separate cones. The latter cases exercise multiple GPU blocks and scans.
+
+The initial fixture coupled duplicate-entry assembly to cuDSS analysis, which
+rejects that raw duplicate input on both the old v62 and new v65 libraries.
+The final direct test isolates assembly from vendor analysis and confirms
+exact duplicate/map parity. Production integration uses the existing native
+canonicalization. The compile-placement error in v64 and the rejected fixture
+are preserved in the checkpoint rather than counted as passes.
+
+Final QOCO v67 with core v63 passes:
+
+- The seven direct assembly cases under memcheck with leak checking, initcheck,
+  synccheck and racecheck.
+- Native conversion/CPU audit at four Ruiz passes, seven landing repetitions,
+  N20/N500 qualification, and all independent numerical oracles.
+- Full landing and N20 runs under all four sanitizers.
+- Full N500 runs under memory, initialization and synchronization checking.
+  **N500 racecheck is not included.**
+- Forced numerical failure and solver reconstruction after caller index arrays
+  and the original stream are released, normally and under all four sanitizers.
+  The proxy exists only in the test directory; production code contains no
+  fault injection.
+
+### Timing results and limits
+
+The CPU-KKT control is QOCO v62. Both candidates use the same core v63,
+isolated cuDSS 0.8.0.10 standard kernels and RTX 5090. Full campaigns alternate
+two warmups and seven measured samples per variant. All samples in both
+campaigns pass the unchanged physics gates and absolute 1e-8 objective
+comparison. This does not invalidate earlier objective-repeatability failures.
+
+| Final pooled candidate v67 | Control SCvx median | GPU SCvx median | SCvx ratio | Complete-process ratio |
+|---|---:|---:|---:|---:|
+| Landing N20 | 151.384 ms | 162.474 ms | 0.932x | 0.969x |
+| 6DOF N20 | 956.487 ms | 629.467 ms | 1.520x | 1.351x |
+| 6DOF N500 | 444.173 ms | 448.727 ms | 0.990x | 0.987x |
+
+The favorable N20 result also changes the inner-iteration median from 189 to
+122. It cannot be attributed to faster assembly. In the earlier v66 batch,
+N20 regresses from 499.038 to 576.248 ms (0.866x); landing and N500 ratios are
+0.978x and 0.953x. All raw distributions remain available.
+
+An additional direct comparison of separate temporaries (v66) with pooled
+temporaries (v67) uses two warmups and **15 measured samples per variant** on
+landing, with 36 inner iterations throughout. SCvx medians are 163.307 →
+146.647 ms (1.114x), and whole-process medians improve 1.057x. However, QOCO
+setup medians are **30.028 → 30.038 ms**, effectively flat. The data confirms
+fewer allocation calls; it does not establish an 11% KKT-assembly speedup.
+Even the final CPU-versus-GPU setup medians are nearly flat at N20 6DOF
+(71.381 → 71.702 ms) and N500 (105.959 → 105.843 ms).
+
+Separately qualified landing Nsight Systems 2024.6 traces confirm the intended
+operation changes:
+
+| CUDA API | CPU KKT v62 | GPU v66 | Pooled GPU v67 |
+|---|---:|---:|---:|
+| Synchronous copy | 558 | 550 | 550 |
+| Allocation | 398 | 408 | 400 |
+| Free | 306 | 316 | 308 |
+| Kernel launch | 7046 | 7068 | 7068 |
+| Stream synchronization | 87 | 88 | 88 |
+
+Eight uploads disappear when CSR and update maps are generated on CUDA.
+Pooling removes eight allocations and frees from the first GPU version. The
+extra kernels perform the newly parallel assembly, scans and sorting. These
+are CUDA API counts, not an RTX5090 occupancy profile. The implementation is
+retained as an opt-in GPU-native setup capability; mixed timings do not earn
+a general speedup claim or a default backend change.
+
+### Reproduction and remaining work
+
+Add `--gpu-kkt` to the v62 preparation flags. It requires `--setup-lifetimes`
+and currently rejects combination with legacy `--profile-setup`, whose CPU
+phase markers no longer apply. Nsight/API evidence and full setup timing are
+recorded separately. Normal builds without `--gpu-kkt` retain the previous
+constructor. The new header is fingerprinted in preparation provenance, and
+the final prepared files reproduce exactly.
+
+Frozen final QOCO:
+`/home/angus/build-qoco-gpu-gpu-kkt-v67/final/libqoco.so`, SHA256
+`67c8981047fdbe756a5b361f112ed56a6dc43b215416245f8b06115a29c860dd`.
+It uses the unchanged frozen core
+`/home/angus/build-spacepdhcg-device-io-v63/final/libspacepdhcg_cuda.so`.
+The checkpoint fingerprints both, the runtime, direct test and recovery proxy,
+and preserves the earlier v66 source overrides.
+
+- [Checkpoint, failures, test scopes and helper sources](../artifacts/performance/qoco-gpu-kkt-v67-checkpoint.json).
+- [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v67-reproduction.json).
+- [Final landing campaign](../artifacts/performance/qoco-gpu-kkt-v67-pd3.json).
+- [Final N20 campaign](../artifacts/performance/qoco-gpu-kkt-v67-pd6.json).
+- [Final N500 campaign](../artifacts/performance/qoco-gpu-kkt-v67-pd6-500.json).
+- [Direct pooled-temporary comparison](../artifacts/performance/qoco-gpu-kkt-v67-packing.json).
+
+The complete goal remains active. Initial matrix setup/transposes/
+regularization, CPU solver and SCvx control, independent production replay,
+conditioning and broader physics-family qualification still require work.
+Shared runtimes, pinned upstreams and remote campaigns remain untouched.

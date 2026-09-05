@@ -755,3 +755,32 @@ warm-start copies removed, three setup copies added by the correctness fix.
 [Frozen binaries, complete distributions, failures and exact test scopes](GPU_QOCO_LOCAL_BACKEND.md#device-solution-ownership-and-host-ruiz-consistency)
 are retained. Conditioning, convergence variability, CPU setup/control and the
 rest of the GPU-native goal remain active work.
+
+## GPU KKT CSR assembly
+
+QOCO can now construct its upper-triangular KKT CSR matrix and all five update
+maps directly on CUDA (`--gpu-kkt`). This replaces the CPU KKT constructor,
+CPU CSC-to-CSR conversion and serial map conversion/upload loops. Per-entry
+kernels, prefix scans and stable integer-key sorting preserve the original
+matrix entries and their update identities. Temporary arrays share an aligned
+GPU allocation; the sort/scan workspace uses a second allocation.
+
+Exact CPU-reference comparisons cover empty blocks/rows, duplicates, pure and
+mixed cones, a 257-dimensional cone and 513 cones. Full trajectory qualification,
+independent numerical oracles, memory/synchronization checks and forced solver
+reconstruction pass at their documented scopes. Both complete benchmark batches
+pass the unchanged physics and objective-comparison gates.
+
+This is architectural progress, not a general speedup claim. The latest batch
+regresses landing SCvx by about 7%, improves N20 with substantially fewer inner
+iterations, and leaves N500 nearly flat. The earlier GPU batch regresses N20.
+An isolated 15-sample comparison of pooled versus separate GPU temporaries
+observes 163.307 → 146.647 ms landing SCvx, but setup stays approximately 30.03 ms;
+that does not establish faster KKT assembly itself. The API trace does confirm
+eight removed uploads and eight fewer allocations/frees than the first GPU
+implementation. No backend default or accuracy tolerance changes.
+
+[Complete evidence and remaining CPU work](GPU_QOCO_LOCAL_BACKEND.md#gpu-kkt-csr-assembly)
+include all distributions, construction parity checks and reconstruction tests.
+Initial matrix setup/transposes/regularization, host solver control, production
+independent replay and convergence variability remain under the active goal.
