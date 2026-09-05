@@ -876,6 +876,98 @@ iteration therefore scores partial chains *by their eventual tour*:
   archive-wide master (`fleet_master_v8`) with the LP bound. Same partition, seeds, workers and
   budgets as v7/v8 (paired A/B).
 
+### 6.13 Earth-out leg stage in the joint itinerary, harvest-phase prior, archive-wide joint pass, paired arms (tenth iteration: `jointopt.optimise_ship(earth_leg=)`, `harvestphase.py`, `collectdp` phase penalty, `scripts/gtoc12_campaign_report.py`)
+
+The ninth iteration left two structural differences to the references: the Earth-out leg (ours
+407 kg over 580–610 d against 460–474 kg over 490–565 d) and the collect hop (85 kg / 210 d
+against 66 / 181–187 d), the latter diagnosed as a phase problem — the references' consecutive
+miners sit within |Δλ| 2.7° (p75 4.8°) at the collect departure. The tenth iteration builds the
+two levers, measures both against the references, and runs the joint itinerary — the only lever
+that has moved the whole fleet — over every archived stand-alone ship.
+
+- **Earth-out leg stage (`JointSettings.earth_leg`, `optimise_ship` → `JointItinerary.
+  earth_leg_candidates` / `earth_leg_seed`).** The certified Earth leg's TOF was a hard floor
+  of the joint optimiser (§6.11: its Lambert surrogate is unreliable below it — the low-thrust
+  arc exploits the launch v∞ in directions Lambert cannot), so a chain could never start
+  earlier. The stage seeds the itinerary with the first asteroid reached 30–150 d earlier —
+  launch kept (a shorter leg), launch moved with the TOF kept, or half each — plus launch delays
+  at a fixed arrival (a shorter leg, no chain shift: a cheaper leg frees margin), and moves the
+  deploy phase with it. A *rigid* shift of the whole chain changes every hop's geometry and
+  breaks a hop's authority ratio (family 7's ship: hop 6 at Lambert 2.69 km/s, ratio 0.94 >
+  0.55, 60 d earlier), so every candidate leg is evaluated with every deploy-phase *prefix*
+  moved along (`prefix` 1 … first collect: the hop leaving the last shifted visit lengthens by
+  the shift, the collect phase and the return stay put) and each shifted miner mines exactly
+  `shift × 10 kg/yr` more — the evaluator's own mining-rate bookkeeping, tested against a forward
+  replay. Below the certified floor an Earth leg is admissible only where SCvx has measured it
+  (`free_earth_leg`; an unmeasured shorter leg fails `earth_out_unmeasured_below_floor`); for
+  the *ranking* of the seeds the shorter leg is priced at the certified leg's measured
+  inflation (0.83–0.89× Lambert; the pair calibration floors Earth legs at 1.03×, which never
+  closes on a propellant-bound ship). The best `earth_leg_certifications` (6) legs whose
+  surrogate promises ≥ 0.5 kg more ore or ≥ 20 kg more margin are flown *alone* with SCvx
+  (`bundles._certify_single_leg`, ~8 s each); a measured leg is memoised, the best exact seed is
+  pattern-searched on the 20/8/3 d meshes and the whole itinerary is certified with the existing
+  monotone acceptance. The mass identity `final ≥ dry + ore` cancels the ore, so the leg's extra
+  propellant must come out of the ship's margin or out of the lengthened hop: the exchange rate
+  is 0.027 kg of ore per asteroid-day (30 d earlier = +0.7 kg for 8 miners). Smoke on the three
+  best `joint_itinerary_v3` ships: 622.6 → 623.8 kg (−30 d: the 555-day leg measured **405 kg
+  against 430 kg at the certified 585 d** — a certified Earth leg is rarely the cheapest of its
+  launch window), 619.2 → 620.2 (−30 d), 601.2 unchanged (nothing closes); 435–480 d legs are
+  refused by SCvx; 24–28 s per ship. CLI: `joint-itinerary --earth-leg [--earth-leg-shifts
+  --earth-leg-certifications]`, `cluster-fleet --joint-earth-leg` (inline pass). Tests: seed
+  bookkeeping exact against a forward replay (shifted deploy epochs, untouched collect epochs,
+  the absorbing hop, floor refusal until measured, deterministic in-window ranking); stage
+  acceptance monotone and certified-only (trusting / refusing / dearer leg certifiers; the
+  refusing certifier changes nothing versus the plain run).
+- **Harvest-phase prior (`harvestphase.py`, `gtoc12 harvest-phase`,
+  `benchmarks/gtoc12/harvest_phase_v1.json`).** The reference archives are decoded with the
+  shared itinerary decoder and every collect hop's |Δλ| at departure (mean-longitude difference,
+  wrapped), propellant, TOF and Δa recorded; the document stores the |Δλ| quantiles and
+  histogram, the per-bin median propellant and TOF and two least-squares slopes over the
+  harvest hops (|Δλ| ≤ 30°, TOF ≤ 400 d: the 900–2000 d hops are repositioning legs between
+  loops) with the sources' SHA-256 (bit-identical re-extraction, test). Measured on 1 014 hops /
+  112 ships: median 2.67°, p75 4.81°, p90 7.32°; 99.8 % of the reference collect hops depart
+  within 15°; median propellant 56 kg at 0–1° and 93 kg at 10–15°; **2.46 kg and 2.62 d per
+  degree** of misalignment; at 9 asteroids per ship the mining time is 0.246 kg/day, so a
+  degree above p75 is worth 3.11 kg. `HarvestPhasePrior.penalty_kg` is zero at or below the
+  reference p75 and linear above it (monotone; every number a named quantity of the JSON). The
+  collect DP charges the penalty on every move like propellant (`CollectDPSettings.
+  harvest_phase`, `CollectPairTable.phase_penalty` from `pair_geometry`, free; kept out of
+  `propellant_proxy_kg` and reported as `hop_phase_deg` / `phase_penalty_kg`), so an aligned
+  180-day hop beats a misaligned 210-day one at comparable surrogate propellant (test: the
+  ranking flips on a synthetic pair whose misaligned hop is 1 kg cheaper), and `_chain_score`
+  subtracts the scored tour's penalty (`chain_tour_stats["phase_kg"]`). CLI: `cluster-fleet
+  --harvest-phase <json> --harvest-phase-weight`.
+- **What the measurement said before the campaign.** Our archived chains are *already*
+  phase-aligned at harvest: |Δλ| at the collect departure median 2.5° / p75 4.0° over
+  `cluster_fleet_v9`'s 393 collect hops and 2.4° / 4.1° over `fleet_master_v8`'s fleet, against
+  the references' 2.7° / 4.8° — so the prior bites on ~15 % of our hops and the "nothing scores
+  phase" diagnosis is not what separates our 210-day / 85 kg hops from the references' 181-day /
+  66 kg ones. With the same |Δλ| and the same Δa (median 0.013 AU both), our consecutive collect
+  pairs differ in the **orbital planes**: relative inclination median 2.7° (p75 4.3°) against the
+  references' 1.9° (3.5°), node gap |ΔΩ| 33° against 20° (`scripts/gtoc12_campaign_report.py`,
+  `collect_relative_inclination_deg` / `collect_delta_node_deg`); a 0.8° plane change at 18 km/s
+  is ~0.25 km/s ≈ 9 kg per hop, and our hops fly 2.64 km/s median where the references' 69 kg
+  imply ~2.0 km/s. The natural-drift alignment (sign of Δλ against sign of Δa) is the same in
+  both (37–40 % of hops) and does not price. See §8 for what this means for the next iteration.
+- **Archive-wide joint pass (`joint_itinerary_v4`, `joint_itinerary_v5`).** `v4` re-optimises
+  every archived stand-alone ship ≥ 450 kg of the nineteen local archives and the four H100
+  archives (`cluster_fleet_h100_v1/v2`, `joint_itinerary_h100_v1/v2`; 562 unique asteroid sets,
+  the heaviest variant of each), plain joint as in §6.11; `v5` runs the Earth-out leg stage over
+  the 300 best stand-alone ships including `v4`'s. Results in §7.
+- **Paired arms on the Lambda H100 (`cluster_fleet_v10`, `cluster_fleet_v10_control`).** The v9
+  campaign line (radius-1.6 / ≥ 18-member collect-window partition, seed 0, 2400 s per family,
+  4 h budget, chain-tour scoring, prior 0.5, the seventeen v9 dual archives at N = 22, inline
+  joint) is run twice at once on cores 4–25 of the H100 host (CPU only, `nice 5`, 11 workers
+  each, the G4 campaign untouched on cores 0–3): arm A adds `--harvest-phase … --joint-earth-leg`,
+  arm B is the v9 line unchanged — the same host, the same wall budget, the same families, so
+  the per-family comparison isolates the two new terms; `v9` (3 workers on the WSL box) is the
+  third column. The wrapper is `timeout 19800` = the 14 400 s campaign budget + one 2400 s family
+  in flight + ≥ 30 min for the final master/fleet/verify stage (v9's wrapper killed its final
+  master). Then `joint_itinerary_v10 --earth-leg` over both arms' chains and `fleet_master_v10`
+  over `fleet_master_h100_v3`'s 29 archives + `cluster_fleet_v9`, `joint_itinerary_v3/v4/v5/v10`
+  and both arms, with the LP bound; every emitted fleet through `GTOC12_Verify` and the
+  independent verifier.
+
 ### 6.3 Proxy validation (`results/gtoc12/proxy_validation.json`)
 
 | Data set | Quantity | p5 | p25 | median | p75 | p95 |
@@ -942,6 +1034,13 @@ not needed: reference hops have zero revolutions (p95 0.004).
 | `joint_itinerary_h100_v1` (§6.10 joint re-optimisation of every archived chain ≥ 450 kg of the 16 local archives + `cluster_fleet_h100_v1`, `fleet_master_v7` ships first, 4 workers alongside the campaign) | full catalogue | 294 improved of 339 | 0 inserted | +4665.0 kg (chains ≥ 600 kg 9 → 10, ≥ 650 0 → 0; best +67.2) | — | — | 339 ships × 1–419 s | in the joint search | 11033 s; worker peak 0.13 GB | CPU (H100 host) |
 | `joint_itinerary_h100_v2` (§6.10 joint re-optimisation of every `cluster_fleet_h100_v2` chain ≥ 450 kg, 22 workers) | full catalogue | 219 improved of 231 | 0 inserted | +3211.6 kg (chains ≥ 600 kg 6 → 13, ≥ 650 0 → 0; best +71.7) | — | — | 231 ships × 1–236 s | in the joint search | 1217 s; worker peak 0.12 GB | CPU (H100 host) |
 | **`fleet_master_h100_v2`** (archive-wide master over 21 archives (1902 routes re-flown through SCvx, 2480 columns, LP-bounded), 22 workers) | full catalogue | **22** | **187** | **13189.60 kg** (599.53 kg average) | 12203.96 kg (LP bound 12207.39, gap 3.4 kg) | — | 2411 s re-certification + 1135 s master | — | 3588 s | CPU (H100 host) |
+| `joint_itinerary_v4` (tenth iteration, §6.13: plain joint re-optimisation of every archived stand-alone ship ≥ 450 kg of the nineteen local archives + `cluster_fleet_h100_v1/v2` + `joint_itinerary_h100_v1/v2`, one task per unique asteroid set, 3 workers, `nice 19`) | full catalogue | 99 improved of 562 | 0 inserted | +316.0 kg (median +1.1, p90 +7.3 per improved ship; most sets were already joint-optimised on the H100) | — | — | 562 ships (3 in parallel) | in the joint search | 1076 s (18 min); worker peak 0.17 GB | CPU |
+| `joint_itinerary_v5` (§6.13: the Earth-out leg stage over the 300 best stand-alone ships incl. `v4`'s, 3 workers, `nice 19`) | full catalogue | 131 improved of 300 | 0 inserted | +494.0 kg (median +2.3, p90 +7.7, max +28.8 per improved ship); 296 ships ran the stage, 720 Earth legs flown alone with SCvx, 534 measured, **126 accepted shifts** (87 × −30 d, 33 × −60, 5 × −90, 1 × −150: a 720 → 570 d leg); Earth-out TOF of the improved ships 600 → 570 d median at 416 → 433 kg | — | — | 300 ships (3 in parallel) | in the joint search + single-leg SCvx | 1827 s (30 min); worker peak 0.17 GB | CPU |
+| **`fleet_master_v9`** (archive-wide master over 25 archives — the nineteen local + the four H100 + `joint_itinerary_v4/v5`: 2235 routes re-flown through SCvx, 2849 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **22** | **187** | **13188.61 kg** (599.48 kg average; rule 22 ≤ 22.0007 — binding; 1.0 kg below `fleet_master_h100_v2`, whose `joint_itinerary_h100_v8` source is not archived locally; masses 654.1 … 568.7, 9 ≥ 600) | **12249.84 kg** (LP bound 12250.79, gap 0.95 kg) | — | — | 6969 s re-certification (3 workers) + 380 s master | 7419 s, 1.30 GB main | CPU |
+| `cluster_fleet_v10` (tenth campaign, arm A on the Lambda H100 host: the v9 line + `--harvest-phase benchmarks/gtoc12/harvest_phase_v1.json --joint-earth-leg`; same radius-1.6 / ≥ 18 partition, seeds and 2400 s family budget as v7–v9, **11 workers on cores 4–25, `nice 5`**, 4 h budget) | full catalogue | 20 | — | **11516.2 kg** (incumbent at 151 min; 35 families / 61 ships; 1–2 ships per family: at 2400 s the H100 cores reach ship slot 2–3 where the WSL box reached 3–4) | — | — | 35 families × 2401–3727 s (11 in parallel) | in the family pricing | 172 min; process-tree PSS peak 2.23 GB (11 workers) | CPU (H100 host) |
+| `cluster_fleet_v10_control` (arm B: the v9 line unchanged, run at the same time on the same host, 11 workers) | full catalogue | 20 | — | **11520.3 kg** (incumbent at 153 min; 35 families / 63 ships) | — | — | 35 families × 2494–3937 s (11 in parallel) | in the family pricing | 173 min; PSS peak 2.24 GB | CPU (H100 host) |
+| `joint_itinerary_v10` (`--earth-leg` over both arms' chains ≥ 450 kg, 22 workers) | full catalogue | 47 improved of 51 | 0 inserted | +663.6 kg; union of the arms after it: 70 chains, 24 ≥ 550, 7 ≥ 600, 0 ≥ 650 (best 644.4) | — | — | 51 ships (22 in parallel) | in the joint search | 398 s | CPU (H100 host) |
+| **`fleet_master_v10`** (archive-wide master over 36 archives — `fleet_master_h100_v3`'s 29 + `cluster_fleet_v9`, `joint_itinerary_v3/v4/v5/v10`, both arms: 2449 routes re-flown through SCvx, 3142 columns, 2 M nodes + LP branch and bound, **proven optimal**; 22 workers) | full catalogue | **23** | **196** (193 mined) | **14044.80 kg** (610.65 kg average against the 23-ship threshold 610.6; rule 23 ≤ 23.005 — binding; masses 654.1, 644.4, 635.7, 632.3, 628.5, 625.4, 624.0, 623.8, 622.2, 617.4, 617.1, 614.4, 610.0, 600.6, 597.1, 594.8, 591.9, 590.7, 586.9, 585.1, 583.9, 582.6, 582.0; the 23rd ship is bought by six new chains of the two arms + `joint_itinerary_v10` — 644.4, 635.7, 624.0, 617.1, 614.4, 610.0 — and by the archive-wide joint/Earth-leg passes' 654.1 / 623.8 / 622.2; official `GTOC12_Verify` "Check successfully!", independent verifier ok) | **12590.37 kg** (LP bound 12596.64, gap 6.3 kg) | — | — | 3265 s re-certification (22 workers) + 385 s master | 3693 s | CPU (H100 host) |
 
 Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
 RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
@@ -1781,6 +1880,37 @@ Chain-mass distribution over the 21 master sources (unique asteroid sets): 1207 
 `fleet_master_h100_v2` over 21 archives (2480 columns): **13189.60 kg, 22 ships, 187 asteroids, 599.53 kg average**; master objective 12203.96 kg, LP bound 12207.39 kg, gap 3.4 kg (not proven; LP relaxation infeasible or below the incumbent beyond 22 ships: {"22": 12207.4}). The 22-ship threshold is 599.5 kg average, 23 ships ~611 kg. Official `GTOC12_Verify`: 2492/2826 emitted `Result.txt` files pass (per-ship diagnostic files of cooperative members fail Error803 by construction); the independent verifier agrees on the fleet (`independent_verify.txt`).
 Commands: `~/s/gtoc12_v2_campaign.sh` on the host (cluster-fleet `--workers 22 --ships-per-cluster 5 --cluster-radius 1.75,1.6 --all-family-bands --collect-epoch-families --min-members 20 --beam-width 32 --refine-top 3 --cluster-budget-seconds 6600 --retime-budget-seconds 900 --budget-seconds 28800 --max-clusters 400` with the v6 DP/harvest flags; `joint-itinerary --top 100000 --min-collected-kg 450 --per-ship-seconds 600 --insert-trials 4`; `fleet-master --workers 22`). Artefacts committed as for the earlier campaigns (run reports, `bundle.json`, `route_summary.json`, `ships.jsonl`, verified `fleet.json`s, the master's `fleet/Result.txt`, `official_verification.json`, `chain_stats.json`, `results/gtoc12/leg_stats/after_h100_v2.json`).
 
+**Tenth iteration (§6.13).** `joint_itinerary_v4` and `joint_itinerary_v5` commit their
+`run_report.json`, `ships.jsonl` (per ship: legs before/after, the Earth-leg stage's seeds,
+flown / measured legs and per-candidate results) and every improved ship's `route_summary.json`;
+`fleet_master_v9` its `run_report.json`, `fleet/Result.txt`, `fleet/fleet.json`,
+`fleet/viewer/manifest.json` and `independent_verify.txt`; the prior is
+`benchmarks/gtoc12/harvest_phase_v1.json` (1 014 reference collect hops, `gtoc12 harvest-phase`);
+the report `results/gtoc12/leg_stats/v10_report_local.json` (roles, TOFs, |Δλ|, relative
+inclination and node gap of the collect pairs, chain-mass counts, joint totals and the masters;
+`scripts/gtoc12_campaign_report.py`). The H100 runs (`cluster_fleet_v10`, `cluster_fleet_v10_control`,
+`joint_itinerary_v10`, `fleet_master_v10`, `results/gtoc12/leg_stats/after_v10.json`,
+`v10_report.json`) are committed on the host's line and merged from its bundle (compact copies
+under the Windows repository's `results/lambda-h100/gtoc12/`). Commands: `joint-itinerary
+--run-id joint_itinerary_v4 --output <dir>` with the twenty-three `--source` directories
+`--workers 3 --min-collected-kg 450 --budget-seconds 10800 --per-ship-seconds 600 --no-insert`
+(18 min); the same with `--run-id joint_itinerary_v5 --source results/gtoc12/runs/joint_itinerary_v4
+--top 300 --earth-leg` (30 min); `fleet-master --run-id fleet_master_v9 --output <dir>` with the
+twenty-five `--source` directories `--workers 3` (124 min); on the H100 `~/s/gtoc12_v10_campaign.sh`
+(two `cluster-fleet` arms: the v9 line — `--ships-per-cluster 5 --cluster-radius 1.6 --min-members 18
+--collect-epoch-families --collector-harvest --collect-dp-inflation-fit results/gtoc12/hop_inflation_fit.json
+--collect-dp-step-days 15 --earth-prescreen-ratio 0.7 --cluster-budget-seconds 2400
+--retime-budget-seconds 900 --budget-seconds 14400 --substitution-budget-seconds 150
+--return-sweep-budget-seconds 180 --chain-tour-scoring --chain-tour-candidates 48 --chain-prior
+benchmarks/gtoc12/chain_prior_v1.json --chain-prior-weight 0.5 --dual-archive <the seventeen v9
+archives> --dual-target-size 22 --joint-itinerary --joint-budget-seconds 150 --seed 0 --workers 11`,
+arm A additionally `--harvest-phase benchmarks/gtoc12/harvest_phase_v1.json --harvest-phase-weight 1.0
+--joint-earth-leg`, each under `timeout 19800 nice -n 5 taskset -c 4-25`; then `joint-itinerary
+--run-id joint_itinerary_v10 --earth-leg --workers 22` over both arms) and `~/s/master_v10.sh`
+(`fleet-master --workers 22` over the 36 sources, official + independent verification, leg
+stats, chain stats, the report). Tests: `tests/test_gtoc12_harvestphase.py` (4),
+`tests/test_gtoc12_jointopt.py` (+2).
+
 ## 8. Limitations
 
 - Cooperative collection is modelled end to end (plans, re-timer, refinement, emission, pool,
@@ -1979,6 +2109,67 @@ propellant for arrival time at the fleet's exchange rate (≈ 0.03 kg of ore per
 (iii) Ship 22 needs +11.1 kg on every ship at once; the joint itinerary is the only lever that has
 moved the whole fleet (+208 kg in `v2`, +411 kg over v8/v9 in `v3`), so it should run over every
 archived stand-alone ship (992 columns, ~3 h on 3 workers) before the next master.
+
+- Tenth iteration (§6.13): both levers were built, calibrated on the references and measured;
+  neither moves the fleet. (i) The **Earth-out leg stage** works as specified — 126 of 300
+  ships accept an earlier chain start (87 × 30 d, 33 × 60 d, 5 × 90 d, one 150 d), the stage
+  pays 16 kg of Earth-leg propellant (416 → 433 kg median) for a 30-day earlier start — but on
+  propellant-bound ships the exchange rate is 0.027 kg of ore per asteroid-day, so a ship gains
+  +2.3 kg median (+494 kg over 131 ships) and the 22-ship master gains nothing
+  (`fleet_master_v9` 13 188.6 kg, proven optimal over 2849 columns, LP gap 0.95 kg; the rule is
+  binding at 22 ≤ 22.0007). The references' 460–474 kg Earth legs are not "60 kg spent to start
+  earlier"; a certified Earth leg is simply not the cheapest of its launch window (the 555-day
+  leg of the 622.6 kg ship measured 405 kg against 430 kg at 585 d), and the stage recovers
+  that where a launch window has slack. (ii) The **harvest-phase prior** was calibrated
+  (2.46 kg + 2.62 d per degree above p75 = 4.81°) and wired into the DP and the chain score,
+  but the measurement that should have preceded the design shows our chains are *already*
+  phase-aligned at harvest (|Δλ| median 2.4–2.7°, p75 4.0–4.7° in the v8/v9 fleets against
+  2.7° / 4.8° in the references), so the term prices ~15–24 % of our hops and the paired arms
+  on the H100 (`cluster_fleet_v10` vs `cluster_fleet_v10_control`, same host, same wall budget,
+  35 families) are neutral: best ship per family identical in 18 families, 7 up / 10 down,
+  median 0.0 kg, mean −1.6 kg (family 0 +42.3, family 45 −74.5 — one closing chain each way);
+  the arms' collect hops are the same 93–95 kg / 210 d, |Δλ| 2.3° / p75 3.9° both, 19 chains
+  ≥ 550 and 5 ≥ 600 each; against `v9` (19 common families, 3 WSL workers) both arms sit at
+  −0.4 kg median with the H100's slower cores reaching one ship slot less per family. The
+  geometric quantity that *does* separate our
+  consecutive collect pairs from the references' is the orbital plane, not the phase: relative
+  inclination median 2.4–2.7° (p75 3.8–4.4°) against 1.85° (3.45°), node gap |ΔΩ| median 34–35°
+  against 20°, at the same Δa (0.013 AU) and the same natural-drift alignment (37–40 %); our
+  collect hops fly 2.64 km/s median where the references' 69 kg imply ~2.0 km/s, and a 0.8°
+  plane change at 18 km/s is ~0.25 km/s ≈ 9 kg per hop. (iii) What did move the fleet is, once
+  more, *breadth plus the joint pass*: the two H100 arms priced all 35 families of the partition
+  (v9 reached 20 of them) and `joint_itinerary_v10 --earth-leg` lifted their 51 chains ≥ 450 kg by
+  +663.6 kg (47 of 51, +11.3 kg median, 40 Earth legs shortened 615 → 570 d median — fresh chains
+  still carry margin), producing 7 chains ≥ 600 kg (best 644.4) where the arms alone had 5; with
+  them **`fleet_master_v10` admits the 23rd ship: 14 044.80 kg, 23 ships, 196 asteroids, 610.65 kg
+  average against the 610.6 threshold (rule 23 ≤ 23.005), LP gap 6.3 kg, proven optimal over 3142
+  columns, both verifiers ok** — +855.2 kg over the 22-ship masters (`fleet_master_v9` 13 188.6 on
+  the local archives, `fleet_master_h100_v2/v3` 13 189.6). The fleet's Earth-out legs are 424 kg
+  over 585 d median (v8: 407 / 600), deploy hops 797 kg per ship, collect hops 88 kg / 210 d
+  median, return 210 kg / 466 d, 8.5 asteroids per ship, |Δλ| at harvest 2.4° / p75 4.2°,
+  relative inclination 2.5° / 4.1°. Ship 24 needs 621.2 kg average (+865 kg on this fleet); the
+  archives now hold 12 chains ≥ 610.6 kg in the fleet and one ≥ 650.
+
+Next bottleneck (after the tenth iteration): the 24th ship needs 621.2 kg average — every ship
++10.6 kg or a conflict-free 24th chain of 865 kg — and the two per-ship levers built here are
+spent (the Earth-out stage converts existing margin, the phase term prices a geometry we already
+have). The remaining per-ship gap to the references is in the collect pairs' **orbital planes**. The families
+are built from element bands whose radius admits pairs 1.9–3.3° apart in inclination-node space
+where the references' consecutive miners lie within 1.85° (p75 3.45°); every such pair costs a
+plane change the Lambert proxy prices correctly (so the DP and the beam already pay for it) but
+nothing in the family construction or the beam's expansion prefers low-relative-inclination
+neighbours, and the co-moving pool a family offers is what the beam chooses from. (i) Weight the
+relative inclination (the angle between the orbit normals, not |Δi| alone — the node gap is the
+larger term: 34° vs 20°) in `ClusterBands` / `family_partitions` and re-partition; (ii) add a
+relative-inclination prior to the beam's expansion order the way the harvest-phase prior was
+added (data: `collect_relative_inclination_deg` in `scripts/gtoc12_campaign_report.py`, the
+references' distribution from `harvest_phase_v1.json`'s hops); (iii) sweep every archived ship's
+Earth leg with single-leg SCvx across its launch window independently of a chain shift (the
+stage's launch-delay candidates rarely passed the 20 kg margin filter under the surrogate; a
+direct sweep would find the 405-vs-430 kg legs), because freed Earth-leg margin is the only
+propellant the joint pass can still convert; (iv) the deploy-hop TOF (240 d median against the
+references' 183 d) delays every deploy by up to 1.5 years and is the largest remaining
+mining-time gap — a deploy-phase time weight in the beam at the fleet's exchange rate.
 
 ## 9. How this feeds Paper 2 / OrbitWeaver
 
