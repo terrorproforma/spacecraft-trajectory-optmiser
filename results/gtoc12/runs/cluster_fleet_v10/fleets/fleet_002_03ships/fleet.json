@@ -1,0 +1,98 @@
+{
+  "artifacts": {
+    "solution": "results/gtoc12/runs/cluster_fleet_v10/fleets/fleet_002_03ships/Result.txt"
+  },
+  "elapsed_seconds": 2839.2823354260036,
+  "fleet": {
+    "asteroids": [
+      2005,
+      5879,
+      8601,
+      12656,
+      14569,
+      14932,
+      19678,
+      21620,
+      23054,
+      25198,
+      26575,
+      27457,
+      32485,
+      33020,
+      38730,
+      40903,
+      47537,
+      48056,
+      50566,
+      51629,
+      53692,
+      56296,
+      57580
+    ],
+    "average_collected_kg": 510.70955966233174,
+    "collected_kg_per_ship": [
+      567.8576317590691,
+      506.36550308008214,
+      457.90554414784395
+    ],
+    "rule_satisfied": true,
+    "ship_limit": 15.424935977402754,
+    "ships": 3,
+    "total_collected_kg": 1532.1286789869953
+  },
+  "independent": {
+    "max_mass_error_kg": 9.049472282640636e-11,
+    "max_position_error_km": 1.1745403401980683,
+    "max_velocity_error_km_s": 2.0024379266340503e-07,
+    "mined_asteroids": 23,
+    "ok": true,
+    "ship_limit": 15.424935977400802,
+    "ships": 3,
+    "total_mass_kg": 1532.1286789869002,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 1434.9291596247374
+  },
+  "master": {
+    "collected_kg": 1532.1286789869953,
+    "columns": 7,
+    "cooperative": {
+      "bundle_columns": 0,
+      "collector_ships": 0,
+      "deployer_ships": 0,
+      "foreign_collects": 0
+    },
+    "exhaustive": true,
+    "gap_kg": 0.0,
+    "greedy_objective_kg": 1434.9291596248202,
+    "lp_bound_kg": 1434.9291596248202,
+    "lp_gap_kg": 0.0,
+    "lp_nodes": 0,
+    "lp_relaxations_kg": {
+      "1": 500.3234775159427,
+      "2": 983.6872940110005,
+      "3": 1434.9291596248202
+    },
+    "lp_seconds": 0.019396768999285996,
+    "lp_sizes_searched": [],
+    "mean_collected_kg": 510.70955966233174,
+    "nodes": 1,
+    "objective_kg": 1434.9291596248202,
+    "proven_optimal": true,
+    "root_bound_kg": 1434.9291596248202,
+    "ship_limit": 15.424935977402754,
+    "ships": 3,
+    "upper_bound_kg": 1434.9291596248202
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 23,
+    "ok": true,
+    "return_code": 0,
+    "ships": 3,
+    "total_mass_kg": 1532.13,
+    "wall_seconds": 0.24859599299088586
+  },
+  "ok": true,
+  "score_kg": 1532.13
+}
