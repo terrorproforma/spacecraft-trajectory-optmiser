@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from .bundles import BundleShip, ClusterBundle, make_consistent
+from .cooperative import FleetColumn
 from .data import AsteroidCatalogue
 from .low_thrust import ScvxSettings
 from .pipeline import RefinedRoute, plan_from_route_summary, refine_route
@@ -106,6 +107,44 @@ def group_plans(group: ArchivedGroup) -> dict[int, list[RoutePlan]]:
         ship.slot: [plan_from_route_summary(s, deployers=deployers) for _p, s in ship.summaries]
         for ship in group.ships
     }
+
+
+def pricing_columns(
+    sources: list[Path], *, first_identifier: int = 1_000_000, prefix: str = "archive"
+) -> list[FleetColumn]:
+    """Every certified archived route as a *pricing-only* master column (no re-certification).
+
+    The master LP only needs each column's asteroid sets and archived collected masses to price
+    the asteroids (``cooperative.lp_asteroid_prices``); these columns carry no ``route`` and
+    must never be assembled into a fleet.  Cooperative groups keep their structure: a collector
+    of another archived ship's miners has ``foreign`` deploys the LP ties to that deployer's
+    column.  Deterministic order (``discover_archives``).
+    """
+
+    columns: list[FleetColumn] = []
+    for group in discover_archives(sources):
+        plans = group_plans(group)
+        for ship in group.ships:
+            for index, ((_path, summary), plan) in enumerate(
+                zip(ship.summaries, plans[ship.slot], strict=True)
+            ):
+                collected = {
+                    int(a): float(m) for a, m in summary.get("collected_mass_kg", {}).items()
+                }
+                if not collected:
+                    continue
+                label = f"{prefix}:{group.name}/s{ship.slot}" + (f"/v{index}" if index else "")
+                columns.append(
+                    FleetColumn.from_plan(
+                        first_identifier + len(columns),
+                        ship.slot,
+                        label,
+                        plan,
+                        collected,
+                        certified=True,
+                    )
+                )
+    return columns
 
 
 _WORKER: dict[str, Any] = {}

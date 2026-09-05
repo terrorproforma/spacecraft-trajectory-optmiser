@@ -380,6 +380,46 @@ def test_price_clusters_hands_the_dispatch_time_prices_to_each_family(monkeypatc
     assert seen[2][1] == {7: 20.0}
 
 
+@requires_data
+def test_archive_pricing_columns_price_the_archived_fleet_without_recertification() -> None:
+    from pathlib import Path
+
+    from spacepdhcg.gtoc12.archive import pricing_columns
+
+    source = Path("results/gtoc12/runs/probe_v6_family")
+    if not source.is_dir():
+        pytest.skip("archived probe run not present")
+    columns = pricing_columns([source])
+    assert columns, "the archive has certified routes"
+    for column in columns:
+        assert column.route is None and column.certified  # pricing only, never assembled
+        assert column.label.startswith("archive:")
+        assert column.collected_kg > 0.0
+        # a ship collects its own miners or another archived ship's (foreign) ones
+        assert set(column.collected_mass) <= set(column.deploys) | set(column.foreign)
+    assert len({c.identifier for c in columns}) == len(columns)
+    # the same directory prices the same way twice (deterministic discovery and LP)
+    again = pricing_columns([source])
+    assert [c.label for c in again] == [c.label for c in columns]
+    # one family's ships share no asteroid: the LP takes them all and no packing row binds, so
+    # nothing is priced (a price is a *conflict* price, not a value)
+    priced = lp_asteroid_prices(columns, target_size=len(columns) + 5)
+    assert priced is not None and priced.prices == {}
+    assert priced.size <= sum(c.ships for c in columns)
+    # a re-timed twin of every ship (the return-sweep / joint-itinerary archives do exactly this)
+    # conflicts with its original on every asteroid: now the rows bind and the ships' asteroids
+    # carry prices, and only theirs
+    twins = [
+        dataclasses.replace(c, identifier=c.identifier + 500, label=c.label + "/twin")
+        for c in columns
+    ]
+    priced = lp_asteroid_prices(columns + twins, target_size=len(columns))
+    assert priced is not None and priced.prices
+    used = {a for c in columns for a in c.deploys}
+    assert set(priced.prices) <= used
+    assert all(p > 0.0 for p in priced.prices.values())
+
+
 # -- prior extraction (data-backed) -----------------------------------------------------------
 
 

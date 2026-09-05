@@ -595,6 +595,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     fleets the budget report refers to).  The final fleet is written to ``fleet/Result.txt``.
     """
 
+    from .archive import pricing_columns
     from .bundles import (
         ClusterPricingSettings,
         bundle_columns,
@@ -766,9 +767,46 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
 
     previous: list[FleetColumn] = []
     # dual feedback: per-asteroid prices of the last master LP, read by ``price_clusters`` when
-    # it dispatches the next family (column generation across the campaign)
+    # it dispatches the next family (column generation across the campaign).  The families of
+    # one campaign are disjoint, so prices only bite when the LP also holds the *archive's*
+    # columns (``--dual-archive``: every earlier run's certified routes, pricing-only, no
+    # re-certification): the asteroids the archive-wide fleet already uses are what a new
+    # family must price around.
     current_prices: dict[int, float] = {}
     report["dual_prices"] = []
+    archive_columns: list[FleetColumn] = []
+    if not args.no_lp_duals and args.dual_archive:
+        archive_columns = pricing_columns([Path(p) for p in args.dual_archive])
+    report["dual_archive"] = {
+        "sources": list(args.dual_archive or []),
+        "columns": len(archive_columns),
+        "target_size": args.dual_target_size or None,
+    }
+
+    def reprice(master_ships: int) -> None:
+        if args.no_lp_duals:
+            return
+        # price at the requested size when its LP is feasible (which asteroids stand between
+        # the archive and that many ships), else at N* + 1, else at the largest feasible size
+        target = args.dual_target_size or (master_ships + 1)
+        priced = lp_asteroid_prices(
+            archive_columns + columns,
+            weights=weights,
+            max_ships=args.max_ships,
+            target_size=max(target, master_ships + 1),
+        )
+        current_prices.clear()
+        if priced is not None:
+            current_prices.update(priced.prices)
+            report["dual_prices"].append(
+                {
+                    "elapsed_seconds": time.perf_counter() - started,
+                    "columns": len(columns),
+                    "archive_columns": len(archive_columns),
+                    "master_ships": master_ships,
+                    **priced.summary(),
+                }
+            )
 
     def run_master():
         # the previous selection stays feasible (columns are only added): warm start so the
@@ -783,27 +821,24 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         previous[:] = list(master.selected)
         report["master"] = master.summary()
         report["master"]["columns"] = len(columns)
-        if not args.no_lp_duals:
-            # price at N* + 1 when that LP is feasible (which asteroids stand between the
-            # archive and one more ship), else at the largest feasible size
-            priced = lp_asteroid_prices(
-                columns,
-                weights=weights,
-                max_ships=args.max_ships,
-                target_size=master.ships + 1,
-            )
-            current_prices.clear()
-            if priced is not None:
-                current_prices.update(priced.prices)
-                report["dual_prices"].append(
-                    {
-                        "elapsed_seconds": time.perf_counter() - started,
-                        "columns": len(columns),
-                        "master_ships": master.ships,
-                        **priced.summary(),
-                    }
-                )
+        reprice(master.ships)
         return master
+
+    if archive_columns:
+        reprice(0)  # the first families already price around the archive's fleet
+        if report["dual_prices"]:
+            print(
+                _json(
+                    {
+                        "dual_archive_columns": len(archive_columns),
+                        "initial_prices": {
+                            k: report["dual_prices"][-1][k]
+                            for k in ("size", "priced_asteroids", "max_kg", "sum_kg", "mu", "nu")
+                        },
+                    }
+                ),
+                flush=True,
+            )
 
     def try_fleet(master, final: bool) -> dict[str, Any] | None:
         nonlocal incumbent
@@ -1680,6 +1715,22 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         type=float,
         default=1.0,
         help="scale on the LP duals the beam subtracts (1.0 = exact reduced cost)",
+    )
+    cluster.add_argument(
+        "--dual-archive",
+        action="append",
+        default=[],
+        help=(
+            "archive directory whose certified routes join the dual-pricing LP as pricing-only "
+            "columns (repeatable; the campaign's disjoint families only price around asteroids "
+            "the archive-wide fleet already uses)"
+        ),
+    )
+    cluster.add_argument(
+        "--dual-target-size",
+        type=int,
+        default=0,
+        help="fleet size the dual LP prices at when feasible (0 = master ships + 1)",
     )
     cluster.add_argument(
         "--joint-itinerary",
