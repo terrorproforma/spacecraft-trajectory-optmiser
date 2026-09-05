@@ -655,3 +655,25 @@ errors, which remain unresolved.
 
 [Measured results, rejected experiment and reproduction details](GPU_QOCO_LOCAL_BACKEND.md#setup-profiling-rejected-gpu-ordering-and-ownership-fixes)
 include frozen binaries and full sanitizer output. The complete goal stays active.
+
+## GPU separator-tree checkpoint
+
+CUDA now generates a trajectory permutation and separator sizes from explicit
+device index maps. Supplying the tree as well as the permutation avoids the
+documented loss of cuDSS factorization parallelism. The native adapter retains
+its own GPU metadata; forced-failure reconstruction passes after the original
+maps and stream are released.
+
+In matched RTX 5090 runs, 500-interval 6DOF SCvx improves **745.262 → 553.157 ms
+(1.347x)**, and the complete process improves **1.223 → 1.048 s (1.167x)**.
+All physics gates and tolerances agree, with unchanged 34 inner iterations.
+Setup falls from 356.258 to 135.697 ms; solving itself regresses about 16%.
+Both small fixtures regress, so no general/default backend promotion is made.
+
+Independent graph/tree tests and all four standalone sanitizers pass. Full
+numerical oracles and memory/initialization/synchronization checks pass.
+Full vendor racecheck still fails: 38 cuDSS factorization reports versus 30
+with the reference ordering. This remains an experimental large-case candidate.
+[Results, frozen artifacts and limits](GPU_QOCO_LOCAL_BACKEND.md#gpu-trajectory-ordering-and-separator-trees)
+retain intermediate failures and matched measurements. CPU KKT assembly, host
+control, further factorization/ordering work and the full GPU-native goal remain open.

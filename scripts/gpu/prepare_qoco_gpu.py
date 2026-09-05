@@ -71,6 +71,28 @@ def patch_setup_profile(destination: Path) -> None:
                                                    "CUDSS_PHASE_SYMBOLIC_FACTORIZATION")
                                 + "\n  } else {\n" + original + "\n  }\n")
             declaration = 'extern "C" int qoco_gpu_setup_profiling();\n' + declaration
+            stats = '''  if (qoco_gpu_setup_profiling()) {
+    auto get_stats = reinterpret_cast<decltype(&::cudssDataGet)>(
+        dlsym(g_cudss_handle, "cudssDataGet"));
+    int64_t nnz = -1, flops = -1;
+    size_t nnz_bytes = 0, flops_bytes = 0;
+    if (get_stats) {
+      const int nnz_status = get_stats(linsys_data->handle, linsys_data->data,
+          CUDSS_DATA_LU_NNZ, &nnz, sizeof(nnz), &nnz_bytes);
+      int flops_status = CUDSS_STATUS_NOT_SUPPORTED;
+#if CUDSS_VERSION >= 800
+      flops_status = get_stats(linsys_data->handle, linsys_data->data,
+          CUDSS_DATA_FLOPS, &flops, sizeof(flops), &flops_bytes);
+#endif
+      fprintf(stderr, "{\\"case\\":\\"qoco_factor_statistics\\","
+          "\\"nnz\\":%lld,\\"flops\\":%lld,\\"nnz_status\\":%d,\\"flops_status\\":%d,"
+          "\\"nnz_bytes\\":%zu,\\"flops_bytes\\":%zu}\\n",
+          (long long)nnz, (long long)flops, nnz_status, flops_status, nnz_bytes, flops_bytes);
+    }
+  }
+'''
+            body = body.replace('  qoco_gpu_setup_mark("symbolic_analysis");',
+                                '  qoco_gpu_setup_mark("symbolic_analysis");\n' + stats)
         text = (text[:start] + declaration + "void qoco_gpu_setup_mark(const char*);\n\n"
                 + body + text[end:])
         path.write_text(text)
@@ -129,6 +151,63 @@ def patch_setup_lifetimes(destination: Path) -> None:
     before = "  cudaFree(linsys_data->d_csr_val);"
     text = text.replace(before, before + "\n  cudaFree(linsys_data->d_csr_rows);\n"
                         "  cudaFree(linsys_data->d_csr_columns);")
+    path.write_text(text)
+
+
+def patch_trajectory_ordering(destination: Path, with_tree: bool = False) -> None:
+    path = destination / "algebra/cuda/cudss_backend.cu"
+    text = path.read_text()
+    before = "static LinSysData* cudss_setup("
+    text = text.replace(before, 'extern "C" int qoco_gpu_trajectory_ordering(int, int, '
+                        'const int*, const int*, int*);\n\n' + before)
+    before = "  // Run analysis phase."
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected trajectory ordering site")
+    text = text.replace(before, '''  int* trajectory_permutation = nullptr;
+  CUDA_CHECK(cudaMalloc(&trajectory_permutation, linsys_data->Kn * sizeof(int)));
+  const int trajectory_ordered = qoco_gpu_trajectory_ordering(linsys_data->Kn, data->n,
+      csr_row_ptr, csr_col_ind, trajectory_permutation);
+  if (trajectory_ordered < 0) {
+    fprintf(stderr, "Invalid trajectory ordering metadata\\n"); exit(1);
+  }
+  if (trajectory_ordered > 0) {
+    auto set_permutation = reinterpret_cast<decltype(&::cudssDataSet)>(
+        dlsym(g_cudss_handle, "cudssDataSet"));
+    if (!set_permutation) { fprintf(stderr, "cuDSS user permutation API unavailable\\n"); exit(1); }
+    CUDSS_CHECK(set_permutation(linsys_data->handle, linsys_data->data,
+        CUDSS_DATA_USER_PERM, trajectory_permutation, linsys_data->Kn * sizeof(int)));
+  }
+
+''' + before)
+    before = "  // CSR structure stays owned until vendor matrix destruction."
+    if text.count(before) != 1:
+        raise RuntimeError("trajectory ordering requires corrected setup lifetimes")
+    text = text.replace(before, "  CUDA_CHECK(cudaFree(trajectory_permutation));\n\n" + before)
+    if with_tree:
+        text = text.replace('extern "C" int qoco_gpu_trajectory_ordering(int, int, '
+                            'const int*, const int*, int*);',
+                            'extern "C" int qoco_gpu_trajectory_ordering_with_tree(int, int, '
+                            'const int*, const int*, int*, int**, int*);')
+        text = text.replace("  const int trajectory_ordered = qoco_gpu_trajectory_ordering(",
+                            "  int* trajectory_tree = nullptr;\n  int trajectory_levels = 0;\n"
+                            "  const int trajectory_ordered = "
+                            "qoco_gpu_trajectory_ordering_with_tree(")
+        text = text.replace("      csr_row_ptr, csr_col_ind, trajectory_permutation);",
+                            "      csr_row_ptr, csr_col_ind, trajectory_permutation,\n"
+                            "      &trajectory_tree, &trajectory_levels);")
+        before = ("        CUDSS_DATA_USER_PERM, trajectory_permutation, "
+                  "linsys_data->Kn * sizeof(int)));")
+        if text.count(before) != 1:
+            raise RuntimeError("unexpected trajectory permutation submission")
+        text = text.replace(before, before + '''
+    CUDSS_CHECK(g_cuda_funcs.cudssConfigSet(linsys_data->config,
+        CUDSS_CONFIG_ND_NLEVELS, &trajectory_levels, sizeof(trajectory_levels)));
+    CUDSS_CHECK(set_permutation(linsys_data->handle, linsys_data->data,
+        CUDSS_DATA_USER_ELIMINATION_TREE, trajectory_tree,
+        ((1 << trajectory_levels) - 1) * sizeof(int)));''')
+        text = text.replace("  CUDA_CHECK(cudaFree(trajectory_permutation));",
+                            "  CUDA_CHECK(cudaFree(trajectory_permutation));\n"
+                            "  CUDA_CHECK(cudaFree(trajectory_tree));")
     path.write_text(text)
 
 
@@ -386,6 +465,10 @@ def main() -> None:
                         help="experimental GPU static-degree KKT ordering (not AMD)")
     parser.add_argument("--setup-lifetimes", action="store_true",
                         help="fix KKT scratch ownership and vendor matrix lifetimes")
+    parser.add_argument("--trajectory-ordering", action="store_true",
+                        help="experimental GPU separators from explicit trajectory index maps")
+    parser.add_argument("--trajectory-tree", action="store_true",
+                        help="submit GPU separator sizes with the permutation (cuDSS 0.7.1+)")
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
@@ -405,6 +488,8 @@ def main() -> None:
         or args.profile_setup
         or args.gpu_degree_ordering
         or args.setup_lifetimes
+        or args.trajectory_ordering
+        or args.trajectory_tree
     ):
         parser.error("--unmodified cannot be combined with backend changes")
     if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
@@ -433,6 +518,12 @@ def main() -> None:
         parser.error("--gpu-degree-ordering requires --checked-cudss-abi")
     if args.profile_setup and not args.checked_cudss_abi:
         parser.error("--profile-setup requires --checked-cudss-abi")
+    if args.trajectory_ordering and (not args.checked_cudss_abi or not args.setup_lifetimes):
+        parser.error("--trajectory-ordering requires --checked-cudss-abi and --setup-lifetimes")
+    if args.trajectory_ordering and args.gpu_degree_ordering:
+        parser.error("choose only one ordering strategy")
+    if args.trajectory_tree and not args.trajectory_ordering:
+        parser.error("--trajectory-tree requires --trajectory-ordering")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -707,6 +798,10 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         shutil.copyfile(extension.with_name("qoco_gpu_ordering.cuh"),
                         destination / "algebra/cuda/qoco_gpu_ordering.cuh")
         modified += '\n#include "qoco_gpu_ordering.cuh"\n'
+    if args.trajectory_ordering:
+        shutil.copyfile(extension.with_name("qoco_trajectory_ordering.cuh"),
+                        destination / "algebra/cuda/qoco_trajectory_ordering.cuh")
+        modified += '\n#include "qoco_trajectory_ordering.cuh"\n'
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -739,6 +834,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_gpu_ordering(destination)
     if args.setup_lifetimes:
         patch_setup_lifetimes(destination)
+    if args.trajectory_ordering:
+        patch_trajectory_ordering(destination, args.trajectory_tree)
     if args.profile_setup:
         patch_setup_profile(destination)
     provenance = {
@@ -763,6 +860,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "profile_setup": args.profile_setup,
         "gpu_degree_ordering": args.gpu_degree_ordering,
         "setup_lifetimes": args.setup_lifetimes,
+        "trajectory_ordering": args.trajectory_ordering,
+        "trajectory_tree": args.trajectory_tree,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -796,6 +895,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
               if args.device_combined_rhs else []),
             *(["algebra/cuda/qoco_setup_profile.cuh"] if args.profile_setup else []),
             *(["algebra/cuda/qoco_gpu_ordering.cuh"] if args.gpu_degree_ordering else []),
+            *(["algebra/cuda/qoco_trajectory_ordering.cuh"] if args.trajectory_ordering else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")

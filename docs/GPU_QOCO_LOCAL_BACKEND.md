@@ -955,3 +955,110 @@ degree-ordering option. The next ordering design should use explicit trajectory
 stage metadata and separators, with factorization cost measured as well as
 ordering time. CPU assembly, generic reordering, host solver and outer control,
 the vendor race and the full GPU-native goal remain open.
+
+## GPU trajectory ordering and separator trees
+
+The next checkpoint moves trajectory graph labeling, ordering and separator
+size generation to CUDA. The optional native adapter extension supplies actual
+device state/control/virtual index maps; it does not infer the problem family
+from matrix dimensions. The adapter owns one device copy of those maps, records
+the allocation and three device copies in telemetry, and retains them across
+solver reconstruction. A test-only proxy forces a numerical failure after the
+caller frees its maps and destroys its original stream. Reconstruction and
+independent KKT comparisons pass on a new stream.
+
+The GPU algorithm labels constraint supports from the sparse graph, propagates
+labels through cone blocks before assigning epigraphs, and constructs interval
+separators. Local auxiliary vertices are assigned to descendant leaf groups.
+A GPU edge check moves endpoints of unexpected cross-partition edges to the
+root. Sorting creates contiguous groups, and GPU integer reductions count their
+sizes. Both the permutation and the separator-size array are supplied directly
+from device memory to cuDSS. This still leaves generic host KKT assembly and
+host solver/SCvx control; it is not a fully GPU-native pipeline yet.
+
+Passing only a permutation was insufficient. The local-elimination prototype
+reduced the 500-interval factor count from 1,089,492 to 976,632 entries, yet its
+single probe spent 1.837 s solving. NVIDIA documents that omitting separator-tree
+information can lose factorization/solve parallelism, and supports externally
+generated trees with contiguous node groups in bottom-up level order.
+[cuDSS tree format and reuse](https://docs.nvidia.com/cuda/archive/13.1.1/cudss/advanced_features.html#user-provided-elimination-tree-data-saving-reordering)
+describes that contract; the installed 0.7.1 runtime accepts the generated tree.
+The final ordering also changes grouping within the permutation, so the trials
+do not isolate a speedup caused solely by adding metadata.
+
+The current option chooses at most eight levels, with a minimum of two: a direct
+runtime probe showed that cuDSS 0.7.1 rejects `ND_NLEVELS=1`. It does not silently
+substitute a CPU ordering when supplied maps contain duplicate/out-of-range
+indices. Synthetic native tests without trajectory metadata continue to use the
+ordinary backend; trajectory production probes confirm the GPU extension runs.
+
+Enable `--trajectory-ordering --trajectory-tree` in addition to the v31 flags
+(`--setup-lifetimes` plus all v25 options). The permutation-only option remains
+available for comparisons. The reference backend and routing defaults are
+unchanged. **Retain the tree option as an experimental large-case candidate;
+do not promote it generally or claim full sanitizer qualification.**
+
+Matched RTX 5090 measurements use frozen v31/v42 QOCO libraries and the same
+frozen native core containing the metadata ownership fix. Each variant has two
+warmups and seven alternating measured samples; test/profiling environments are
+disabled. All paired objectives and independent physics gates agree:
+
+| Case | Reference SCvx | GPU tree SCvx | Complete process | Inner iterations |
+| --- | ---: | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 154.919 ms | 180.697 ms | 564.663 → 581.701 ms | 28 → 36 |
+| 20-interval 6DOF, 1e-6 | 1038.735 ms | 1159.789 ms | 1396.007 → 1503.814 ms | 179 → 176 |
+| 500-interval 6DOF, 1e-6 | 745.262 ms | 553.157 ms | 1223.355 → 1048.186 ms | 34 → 34 |
+
+The large case improves **1.347x in SCvx and 1.167x including process startup**.
+Its median QOCO setup falls 356.258 → 135.697 ms, while the solver subphase
+regresses 261.967 → 303.429 ms. Smaller cases regress. These are case-specific
+results at unchanged tolerances, not a universal multiplier or a scaling curve.
+
+A separate completion-fenced 500-interval diagnostic measures 3.046 ms for the
+stage containing GPU ordering/tree creation and submission, 10.951 ms for the
+vendor reordering phase, and 49.514 ms for symbolic factorization. The final
+factor count is 976,603. The installed cuDSS version has no factor-FLOP query;
+recorded `-1`, status 4, and zero output bytes mean unsupported. Diagnostic
+fences and statistics queries perturb overlap and are excluded from benchmarks.
+
+The standalone test checks permutation bijection, repeatability, shuffled device
+maps, offset views in native integration, duplicate and out-of-range metadata,
+output guards and non-default streams. Independent CPU elimination bounds the
+front size for chain graphs. For trees, a CPU check reconstructs contiguous
+groups from the returned counts and verifies every graph edge joins comparable
+tree nodes. Cases include long-range couplings and a 70,001-vertex graph.
+All four standalone sanitizers pass. The owned-metadata reconstruction test
+passes memory, initialization and synchronization checks, with no leaked device
+allocations. Native Ruiz-4, seven repeated landing solves, and 20/500-interval
+conversion/KKT/step/eight-metric comparisons also pass.
+
+Full production landing memory/initialization/synchronization checks pass.
+Full racecheck **still exits 99**, now reporting **38 errors**, all in
+`cudss::factorize_dtmn_ker`, versus 30 reports with the reference ordering.
+These are retained unsuppressed. Standalone kernel checks do not clear this
+vendor failure, and report counts alone do not measure its severity.
+
+Frozen artifacts:
+
+- QOCO: `/home/angus/build-qoco-gpu-trajectory-v42/final/libqoco.so`, SHA256
+  `8c96980e396412aaeda225d71578feaa7bf906ebff34c004e369d6b8f794e203`.
+- Native core: `/home/angus/build-spacepdhcg-trajectory-v41/final/libspacepdhcg_cuda.so`,
+  SHA256 `ba045295670b421e049fa1fc21d399279fbfa523d71b2062d3f07b9620823d14`.
+- The [checkpoint](../artifacts/performance/qoco-gpu-tree-checkpoint.json) contains
+  complete sanitizer output, commands, additional binary hashes and measurement
+  summaries. [Source reproduction](../artifacts/performance/qoco-gpu-tree-reproduction.json)
+  confirms every prepared QOCO source hash.
+- [Matched large-case samples](../artifacts/performance/qoco-gpu-tree-pd6-500.json),
+  [factor/tree profile](../artifacts/performance/qoco-gpu-tree-factor-profile.json),
+  [permutation-only factor profile](../artifacts/performance/qoco-trajectory-factor-profile.json)
+  and [rejected/intermediate trials](../artifacts/performance/qoco-trajectory-ordering-history.json)
+  retain the evidence and historical ordering source.
+
+Build `qoco_trajectory_ordering_test.cu` against the isolated library using NVCC
+C++17/SM120 as for the previous ordering test. For the ownership test, build
+`qoco_recreate_probe.cpp` as a shared test proxy with isolated QOCO includes,
+`-Wl,--no-as-needed -lqoco -ldl`; point `SPACEPDHCG_QOCO_LIBRARY` at the proxy
+and run `native_qoco_conversion_test 4 trajectory`. Other native test invocations
+use the actual backend. The proxy and diagnostic environments are never used
+for timing. Tree-depth/within-group ordering, the remaining factorization
+regression and the vendor race are the next local targets. The whole goal stays active.

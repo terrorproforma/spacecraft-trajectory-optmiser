@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <dlfcn.h>
 #include <limits>
 #include <vector>
 
@@ -63,8 +65,22 @@ int main(int argc, char** argv) {
     problem.numeric.linear_objective = c.view(); problem.numeric.scalar_lower = lo.view(); problem.numeric.scalar_upper = hi.view();
     problem.numeric.affine_offset = offset.view(); problem.numeric.variable_lower = vlo.view(); problem.numeric.variable_upper = vhi.view();
     spacepdhcg_native_qoco* workspace{};
-    require(spacepdhcg_native_qoco_create(&problem, stream, ruiz_iterations, &workspace) == SPACEPDHCG_CUDA_SUCCESS,
-        "compile mixed scalar/box/SOC/RSOC conversion with duplicate sparse entries");
+    const bool trajectory_test = argc > 2 && std::strcmp(argv[2], "trajectory") == 0;
+    const auto create = [&] {
+        require(spacepdhcg_native_qoco_create(&problem, stream, ruiz_iterations, &workspace) == SPACEPDHCG_CUDA_SUCCESS,
+            "compile mixed scalar/box/SOC/RSOC conversion with duplicate sparse entries");
+    };
+    if (trajectory_test) {
+        Array<int> states({0,1,2},stream),controls({3,4},stream),virtuals({5,6},stream);
+        problem.intervals=2; problem.state_dimension=1; problem.control_dimension=1;
+        auto indices=[](const Array<int>& a) {
+            auto view=a.view(); view.device.type=SPACEPDHCG_DEVICE_CUDA;
+            view.scalar_type=SPACEPDHCG_SCALAR_INT32; return view;
+        };
+        problem.state_variable_indices=indices(states); problem.control_variable_indices=indices(controls);
+        problem.virtual_variable_indices=indices(virtuals); create();
+        problem.state_variable_indices={}; problem.control_variable_indices={}; problem.virtual_variable_indices={};
+    } else create();
     double *primal{}, *dual{}; check(cudaMalloc(&primal, 8 * sizeof(double))); check(cudaMalloc(&dual, 13 * sizeof(double)));
     spacepdhcg_native_qoco_report report{};
     const auto solve = [&] { return spacepdhcg_native_qoco_update_solve(workspace, &problem, stream,
@@ -98,6 +114,21 @@ int main(int argc, char** argv) {
     f.values.back() = 0.02; f.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_SUCCESS, "restored inputs usable after rejected conversions");
     require(report.primal_residual <= 1e-8 && report.dual_residual <= 1e-8, "independent KKT accuracy after updates");
+    if (trajectory_test) {
+        const auto creations=report.workspace_creations;
+        check(cudaStreamDestroy(stream));
+        check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
+        void* probe=dlopen(std::getenv("SPACEPDHCG_QOCO_LIBRARY"),RTLD_NOW|RTLD_LOCAL);
+        require(probe!=nullptr,"load recovery fault probe");
+        auto fail_next=reinterpret_cast<void(*)()>(dlsym(probe,"qoco_test_fail_next_solve"));
+        require(fail_next!=nullptr,"trajectory lifetime mode requires test-only recovery proxy");
+        fail_next();
+        require(solve()==SPACEPDHCG_CUDA_NUMERICAL_FAILURE,"forced numerical exit requires fresh solver");
+        require(solve()==SPACEPDHCG_CUDA_SUCCESS && report.workspace_creations>creations,
+            "recovery setup uses owned metadata after caller index buffers were freed");
+        require(report.primal_residual<=1e-8 && report.dual_residual<=1e-8,"recovered KKT accuracy");
+        dlclose(probe);
+    }
     spacepdhcg_native_qoco_destroy(workspace);
     check(cudaFree(primal)); check(cudaFree(dual)); check(cudaStreamDestroy(stream));
     std::puts("Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS");

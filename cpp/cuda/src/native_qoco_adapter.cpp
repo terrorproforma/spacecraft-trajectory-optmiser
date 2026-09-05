@@ -163,6 +163,7 @@ using DeviceSolutionFn = int (*)(SolverAbi*, int, int, int, const double**, cons
 using CreateNumericUpdateFn = int (*)(SolverAbi*, int, int, int, void**);
 using DeviceNumericUpdateFn = int (*)(void*, const double*, cudaStream_t);
 using DestroyNumericUpdateFn = void (*)(void*);
+using SetTrajectoryFn = int (*)(int, int, int, const int*, const int*, const int*, cudaStream_t);
 
 template <typename T>
 spacepdhcg_cuda_status download(
@@ -391,6 +392,12 @@ struct spacepdhcg_native_qoco {
     CreateNumericUpdateFn create_numeric_update{};
     DeviceNumericUpdateFn device_numeric_update{};
     DestroyNumericUpdateFn destroy_numeric_update{};
+    SetTrajectoryFn set_trajectory{};
+    int trajectory_intervals{}, trajectory_nx{}, trajectory_nu{};
+    const int *trajectory_states{}, *trajectory_controls{}, *trajectory_virtual{};
+    int* trajectory_indices{};
+    std::size_t trajectory_bytes{};
+    cudaStream_t trajectory_stream{};
     void* numeric_update_context{};
     QocoGpuAudit* gpu_audit{};
     TopologyCache topology{};
@@ -423,6 +430,7 @@ struct spacepdhcg_native_qoco {
             static_cast<void>(cleanup(solver));
             solver = nullptr;
         }
+        if (trajectory_indices) cudaFree(trajectory_indices);
         if (library != nullptr) {
             dlclose(library);
             library = nullptr;
@@ -1160,6 +1168,14 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
     // The device update performs the requested initial Ruiz passes below.
     if (workspace->create_numeric_update) settings.ruiz_iters = 0;
     const auto setup_start = std::chrono::steady_clock::now();
+    if (workspace->set_trajectory && workspace->set_trajectory(
+            workspace->trajectory_intervals, workspace->trajectory_nx, workspace->trajectory_nu,
+            workspace->trajectory_states, workspace->trajectory_controls,
+            workspace->trajectory_virtual, workspace->trajectory_stream) != 0) {
+        std::free(workspace->solver);
+        workspace->solver = nullptr;
+        return -1;
+    }
     int code = workspace->setup(
         workspace->solver,
         workspace->variables,
@@ -1176,6 +1192,8 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
         workspace->formulation.soc.empty() ? nullptr : workspace->formulation.soc.data(),
         &settings
     );
+    if (workspace->set_trajectory)
+        static_cast<void>(workspace->set_trajectory(0, 0, 0, nullptr, nullptr, nullptr, nullptr));
     if (code == 0 && workspace->create_numeric_update) {
         int created = workspace->create_numeric_update(workspace->solver, p.nnz, a.nnz, g.nnz,
             &workspace->numeric_update_context);
@@ -1246,6 +1264,52 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_create_numeric_update", &result->create_numeric_update);
     symbol(result->library, "qoco_gpu_update_numeric", &result->device_numeric_update);
     symbol(result->library, "qoco_gpu_destroy_numeric_update", &result->destroy_numeric_update);
+    symbol(result->library, "qoco_gpu_set_trajectory", &result->set_trajectory);
+    if (result->set_trajectory && problem->intervals > 0
+        && problem->intervals < static_cast<std::size_t>(std::numeric_limits<int>::max())
+        && problem->state_dimension > 0 && problem->state_dimension <= 64
+        && problem->control_dimension > 0 && problem->control_dimension <= 64) {
+        auto indices = [](const spacepdhcg_accelerator_buffer_view& view, std::size_t count) {
+            return view.data && view.elements == count && view.element_stride == 1
+                && view.scalar_type == SPACEPDHCG_SCALAR_INT32
+                && (view.device.type == SPACEPDHCG_DEVICE_CUDA
+                    || view.device.type == SPACEPDHCG_DEVICE_CUDA_MANAGED)
+                ? reinterpret_cast<const int*>(static_cast<const unsigned char*>(view.data)
+                    + view.byte_offset) : nullptr;
+        };
+        result->trajectory_intervals = static_cast<int>(problem->intervals);
+        result->trajectory_nx = static_cast<int>(problem->state_dimension);
+        result->trajectory_nu = static_cast<int>(problem->control_dimension);
+        result->trajectory_states = indices(problem->state_variable_indices,
+            (problem->intervals + 1) * problem->state_dimension);
+        result->trajectory_controls = indices(problem->control_variable_indices,
+            problem->intervals * problem->control_dimension);
+        result->trajectory_virtual = indices(problem->virtual_variable_indices,
+            problem->intervals * problem->state_dimension);
+        result->trajectory_stream = stream;
+        if (!result->trajectory_states || !result->trajectory_controls || !result->trajectory_virtual)
+            return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+        const std::size_t counts[]{(problem->intervals + 1) * problem->state_dimension,
+            problem->intervals * problem->control_dimension,
+            problem->intervals * problem->state_dimension};
+        result->trajectory_bytes = (counts[0] + counts[1] + counts[2]) * sizeof(int);
+        if (cudaMalloc(&result->trajectory_indices, result->trajectory_bytes) != cudaSuccess)
+            return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+        const int* sources[]{result->trajectory_states, result->trajectory_controls,
+            result->trajectory_virtual};
+        std::size_t offset = 0;
+        for (int part = 0; part < 3; ++part) {
+            if (cudaMemcpyAsync(result->trajectory_indices + offset, sources[part],
+                    counts[part] * sizeof(int), cudaMemcpyDeviceToDevice, stream) != cudaSuccess)
+                return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+            offset += counts[part];
+        }
+        result->report.d2d_copy_count += 3;
+        result->report.d2d_bytes += result->trajectory_bytes;
+        result->trajectory_states = result->trajectory_indices;
+        result->trajectory_controls = result->trajectory_indices + counts[0];
+        result->trajectory_virtual = result->trajectory_controls + counts[1];
+    }
     const int update_symbols = (result->create_numeric_update != nullptr)
         + (result->device_numeric_update != nullptr) + (result->destroy_numeric_update != nullptr);
     if (update_symbols != 0 && update_symbols != 3) return SPACEPDHCG_CUDA_UNSUPPORTED;
@@ -1310,6 +1374,9 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         return code == 5 ? SPACEPDHCG_CUDA_OUT_OF_MEMORY
                          : SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
     }
+    // The first setup completed metadata copies. Subsequent recovery setups
+    // borrow neither the caller's index arrays nor its original stream handle.
+    result->trajectory_stream = nullptr;
     const auto audit_start = std::chrono::steady_clock::now();
     result->dual_transfer = make_dual_transfer(result->formulation, problem->canonical_structure);
     const auto audit_status = qoco_gpu_audit_create(audit_input(result.get()),
@@ -1362,6 +1429,8 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         const auto conversion_memory = qoco_gpu_conversion_memory(workspace->conversion.device);
         report->audit_allocations += conversion_memory.allocations;
         report->audit_peak_bytes += conversion_memory.peak_bytes;
+        report->audit_allocations += workspace->trajectory_indices != nullptr ? 1U : 0U;
+        report->audit_peak_bytes += workspace->trajectory_bytes;
         return status;
     };
     if (workspace->solver == nullptr) {

@@ -1,0 +1,581 @@
+{
+  "scope": "Diagnostic setup fences and factor statistics, not matched speedup timings",
+  "samples": [
+    {
+      "variant": "tree",
+      "intervals": 20,
+      "command": [
+        "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+        "build/performance/planner-pd6-canonical.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/qoco-factor-tree-20-result.json"
+      ],
+      "records": [
+        {
+          "case": "qoco_setup_stage",
+          "stage": "copy_input",
+          "seconds": 0.00171616
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "transposes",
+          "seconds": 0.00168925
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "ruiz",
+          "seconds": 0.000826849
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "regularize_P",
+          "seconds": 0.000158751
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "cone_indices",
+          "seconds": 4.9167e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "pre_vendor",
+          "seconds": 6.01e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_handles",
+          "seconds": 0.049309146
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_buffers",
+          "seconds": 3.74e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "assemble_KKT",
+          "seconds": 9.2058e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "convert_KKT",
+          "seconds": 0.000235954
+        },
+        {
+          "case": "qoco_trajectory_ordering",
+          "vertices": 3026,
+          "intervals": 20,
+          "root_promotions": 0
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "create_csr",
+          "seconds": 0.001312344
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_reordering",
+          "seconds": 0.006257331
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "symbolic_analysis",
+          "seconds": 0.014966714
+        },
+        {
+          "case": "qoco_factor_statistics",
+          "nnz": 37838,
+          "flops": -1,
+          "nnz_status": 0,
+          "flops_status": 4,
+          "nnz_bytes": 8,
+          "flops_bytes": 0
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_finish",
+          "seconds": 0.000218636
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "linsys_return",
+          "seconds": 5.99e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "workspace_vectors",
+          "seconds": 0.000738088
+        }
+      ],
+      "stderr": "{\"case\":\"qoco_setup_stage\",\"stage\":\"copy_input\",\"seconds\":0.00171616}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"transposes\",\"seconds\":0.00168925}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"ruiz\",\"seconds\":0.000826849}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"regularize_P\",\"seconds\":0.000158751}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"cone_indices\",\"seconds\":4.9167e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"pre_vendor\",\"seconds\":6.01e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_handles\",\"seconds\":0.049309146}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_buffers\",\"seconds\":3.74e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"assemble_KKT\",\"seconds\":9.2058e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"convert_KKT\",\"seconds\":0.000235954}\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"create_csr\",\"seconds\":0.001312344}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_reordering\",\"seconds\":0.006257331}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"symbolic_analysis\",\"seconds\":0.014966714}\n{\"case\":\"qoco_factor_statistics\",\"nnz\":37838,\"flops\":-1,\"nnz_status\":0,\"flops_status\":4,\"nnz_bytes\":8,\"flops_bytes\":0}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_finish\",\"seconds\":0.000218636}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"linsys_return\",\"seconds\":5.99e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"workspace_vectors\",\"seconds\":0.000738088}\n",
+      "summary": {
+        "objective": 0.5129756934077938,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 176,
+        "final_trust_radius": 1,
+        "trajectory_step": 0,
+        "propellant_used": 14.158129138055074,
+        "final_mass": 1985.841870861945,
+        "terminal_position_error": 2.7566784410737455e-09,
+        "terminal_velocity_error": 1.4413149007630466e-09
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.23234047,
+        "topology_seconds": 0.003158492,
+        "coefficient_seconds": 0.05854053,
+        "workspace_create_seconds": 0.025728515,
+        "update_seconds": 0.000542103,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 1.0722191280000002,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.00066468,
+        "replay_seconds": 0.0026667200326919555,
+        "acceptance_seconds": 2.2731e-05,
+        "d2h_seconds": 0.00017983999848365784,
+        "cqp_total_seconds": 1.1548536670000003,
+        "scvx_total_seconds": 1.161519134,
+        "solve_wall_seconds": 1.161523804,
+        "qoco_conversion_seconds": 0.002812453,
+        "qoco_setup_seconds": 0.078615303,
+        "qoco_update_seconds": 0.000542103,
+        "qoco_solve_seconds": 1.0722191280000002,
+        "independent_replay_seconds": 3.2098e-05,
+        "plan_wall_seconds": 1.297669807
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.545806850398481e-09,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 1.4413149007630465e-11,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 1.4413149007630465e-11,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "result_sha256": "531b204cbfb1785572659c2d24c711a34fac6e3490a0d89a49823e3eaa6490e2",
+      "provenance": {
+        "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+        "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+        "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+        "modified_cuda_linalg_sha256": "f0976d47c3b684a22463e436b5438ea83296810a61bd2b655df6937825ce13c1",
+        "extension_sha256": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+        "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+        "gather": true,
+        "original_handles": false,
+        "queued_operators": true,
+        "device_cone_reductions": true,
+        "values_only_updates": true,
+        "device_numeric_updates": true,
+        "device_scalar_reductions": true,
+        "batched_stopping": true,
+        "batched_iteration_scalars": true,
+        "device_step_control": true,
+        "device_combined_rhs": false,
+        "queued_centering_metadata": false,
+        "profile_setup": true,
+        "gpu_degree_ordering": false,
+        "setup_lifetimes": true,
+        "trajectory_ordering": true,
+        "trajectory_tree": true,
+        "correct_stopping": true,
+        "deterministic": true,
+        "checked_cudss_abi": true,
+        "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+        "prepared_files_sha256": {
+          "algebra/cuda/cuda_linalg.cu": "f0976d47c3b684a22463e436b5438ea83296810a61bd2b655df6937825ce13c1",
+          "algebra/cuda/qoco_reduction_scope.cuh": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+          "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+          "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+          "algebra/cuda/cudss_backend.h": "793530d86a41a5f2d74b03c34f1565f6e2107032772d03b85c0460a4c4cae981",
+          "algebra/cuda/cudss_backend.cu": "56f9f52f07d6debdc9e9dd5f1a34ab358eebf7ad6679ae67a6b10997ecb8abc6",
+          "src/qoco_utils.c": "d837f94c3d91f2fcf6d9eb601b53a4fb1f333214f499c345f983e498d69fedc5",
+          "algebra/cuda/qoco_gather.cuh": "637ea34a5a178254ad6ea40f30d515e28ab32eff43423b600e503e1d6537429d",
+          "src/cone.cu": "40c0edbd6572eb6879d548f3b0b01f05afe08c4d2cce5cefe92ae448fc81b24a",
+          "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+          "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+          "src/qoco_api.c": "630ba7364ac68b1a8522ada168566732f1d5a567c7274c0189554d62f5184cfd",
+          "algebra/cuda/qoco_device_update.cuh": "cf7e524d347ba06129005fddd899d3655fbef02d3d14b84e910f36051baec9d1",
+          "algebra/cuda/qoco_device_scalar.cuh": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92",
+          "algebra/cuda/qoco_batched_stopping.cuh": "50d72b5f1a1257240bc95e409740ffb901a450b552963519ded646f8b11a344d",
+          "src/kkt.c": "2a7368c3e9f301f4132d160bbc93a7903a4c019c759dcf4e2c3879aa4e7eaaab",
+          "src/qoco_device_step_cones.cuh": "4b19c1e3d79ad26d19cc77c61a3d23969a1b6812c5680d6335ce7d41d506ca1e",
+          "algebra/cuda/qoco_device_step_control.cuh": "4a935bf41858ad9c85e4455179a0fd09401b7a2ce20a84b2f2d748c2d3566972",
+          "algebra/cuda/qoco_setup_profile.cuh": "b19876487cf25c8d7d7ec436a7a412b6be2e871729de2aa2c40d49d8cf86928d",
+          "algebra/cuda/qoco_trajectory_ordering.cuh": "63e87e187d65fbfe2f0d171a404e1ce817fe48d089c75393b3d6c89307e02045"
+        }
+      }
+    },
+    {
+      "variant": "tree",
+      "intervals": 500,
+      "command": [
+        "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+        "artifacts/performance/qoco-rhs-scaling-input-500.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/qoco-factor-tree-500-result.json"
+      ],
+      "records": [
+        {
+          "case": "qoco_setup_stage",
+          "stage": "copy_input",
+          "seconds": 0.004131408
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "transposes",
+          "seconds": 0.00434775
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "ruiz",
+          "seconds": 0.002786972
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "regularize_P",
+          "seconds": 0.000501087
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "cone_indices",
+          "seconds": 6.1662e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "pre_vendor",
+          "seconds": 6.51e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_handles",
+          "seconds": 0.048428589
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_buffers",
+          "seconds": 0.000539693
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "assemble_KKT",
+          "seconds": 0.00219411
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "convert_KKT",
+          "seconds": 0.004078724
+        },
+        {
+          "case": "qoco_trajectory_ordering",
+          "vertices": 74066,
+          "intervals": 500,
+          "root_promotions": 0
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "create_csr",
+          "seconds": 0.003046358
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_reordering",
+          "seconds": 0.010950594
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "symbolic_analysis",
+          "seconds": 0.04951402
+        },
+        {
+          "case": "qoco_factor_statistics",
+          "nnz": 976603,
+          "flops": -1,
+          "nnz_status": 0,
+          "flops_status": 4,
+          "nnz_bytes": 8,
+          "flops_bytes": 0
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_finish",
+          "seconds": 0.000979792
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "linsys_return",
+          "seconds": 8.14e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "workspace_vectors",
+          "seconds": 0.00331489
+        }
+      ],
+      "stderr": "{\"case\":\"qoco_setup_stage\",\"stage\":\"copy_input\",\"seconds\":0.004131408}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"transposes\",\"seconds\":0.00434775}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"ruiz\",\"seconds\":0.002786972}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"regularize_P\",\"seconds\":0.000501087}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"cone_indices\",\"seconds\":6.1662e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"pre_vendor\",\"seconds\":6.51e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_handles\",\"seconds\":0.048428589}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_buffers\",\"seconds\":0.000539693}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"assemble_KKT\",\"seconds\":0.00219411}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"convert_KKT\",\"seconds\":0.004078724}\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":74066,\"intervals\":500,\"root_promotions\":0}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"create_csr\",\"seconds\":0.003046358}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_reordering\",\"seconds\":0.010950594}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"symbolic_analysis\",\"seconds\":0.04951402}\n{\"case\":\"qoco_factor_statistics\",\"nnz\":976603,\"flops\":-1,\"nnz_status\":0,\"flops_status\":4,\"nnz_bytes\":8,\"flops_bytes\":0}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_finish\",\"seconds\":0.000979792}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"linsys_return\",\"seconds\":8.14e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"workspace_vectors\",\"seconds\":0.00331489}\n",
+      "summary": {
+        "objective": 0.512975691290699,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 34,
+        "final_trust_radius": 1,
+        "trajectory_step": 0,
+        "propellant_used": 14.15812907962345,
+        "final_mass": 1985.8418709203766,
+        "terminal_position_error": 1.489155465606018e-10,
+        "terminal_velocity_error": 7.410838609445136e-11
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.14708614,
+        "topology_seconds": 0.101143564,
+        "coefficient_seconds": 0.053552838,
+        "workspace_create_seconds": 0.024048765,
+        "update_seconds": 0.000528815,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.320255214,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000591765,
+        "replay_seconds": 0.05670713520050049,
+        "acceptance_seconds": 8.6835e-05,
+        "d2h_seconds": 0.00019382400065660478,
+        "cqp_total_seconds": 0.515958986,
+        "scvx_total_seconds": 0.577772108,
+        "solve_wall_seconds": 0.577777839,
+        "qoco_conversion_seconds": 0.052778223,
+        "qoco_setup_seconds": 0.141804969,
+        "qoco_update_seconds": 0.000528815,
+        "qoco_solve_seconds": 0.320255214,
+        "independent_replay_seconds": 0.001030522,
+        "plan_wall_seconds": 0.767980948
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 6.601810973897625e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 7.410838609445136e-13,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 7.410838609445136e-13,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "result_sha256": "157fc77e9440308840dd835564007e3915f265efb55c2f89e553243db9fa5dd5",
+      "provenance": {
+        "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+        "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+        "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+        "modified_cuda_linalg_sha256": "f0976d47c3b684a22463e436b5438ea83296810a61bd2b655df6937825ce13c1",
+        "extension_sha256": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+        "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+        "gather": true,
+        "original_handles": false,
+        "queued_operators": true,
+        "device_cone_reductions": true,
+        "values_only_updates": true,
+        "device_numeric_updates": true,
+        "device_scalar_reductions": true,
+        "batched_stopping": true,
+        "batched_iteration_scalars": true,
+        "device_step_control": true,
+        "device_combined_rhs": false,
+        "queued_centering_metadata": false,
+        "profile_setup": true,
+        "gpu_degree_ordering": false,
+        "setup_lifetimes": true,
+        "trajectory_ordering": true,
+        "trajectory_tree": true,
+        "correct_stopping": true,
+        "deterministic": true,
+        "checked_cudss_abi": true,
+        "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+        "prepared_files_sha256": {
+          "algebra/cuda/cuda_linalg.cu": "f0976d47c3b684a22463e436b5438ea83296810a61bd2b655df6937825ce13c1",
+          "algebra/cuda/qoco_reduction_scope.cuh": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+          "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+          "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+          "algebra/cuda/cudss_backend.h": "793530d86a41a5f2d74b03c34f1565f6e2107032772d03b85c0460a4c4cae981",
+          "algebra/cuda/cudss_backend.cu": "56f9f52f07d6debdc9e9dd5f1a34ab358eebf7ad6679ae67a6b10997ecb8abc6",
+          "src/qoco_utils.c": "d837f94c3d91f2fcf6d9eb601b53a4fb1f333214f499c345f983e498d69fedc5",
+          "algebra/cuda/qoco_gather.cuh": "637ea34a5a178254ad6ea40f30d515e28ab32eff43423b600e503e1d6537429d",
+          "src/cone.cu": "40c0edbd6572eb6879d548f3b0b01f05afe08c4d2cce5cefe92ae448fc81b24a",
+          "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+          "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+          "src/qoco_api.c": "630ba7364ac68b1a8522ada168566732f1d5a567c7274c0189554d62f5184cfd",
+          "algebra/cuda/qoco_device_update.cuh": "cf7e524d347ba06129005fddd899d3655fbef02d3d14b84e910f36051baec9d1",
+          "algebra/cuda/qoco_device_scalar.cuh": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92",
+          "algebra/cuda/qoco_batched_stopping.cuh": "50d72b5f1a1257240bc95e409740ffb901a450b552963519ded646f8b11a344d",
+          "src/kkt.c": "2a7368c3e9f301f4132d160bbc93a7903a4c019c759dcf4e2c3879aa4e7eaaab",
+          "src/qoco_device_step_cones.cuh": "4b19c1e3d79ad26d19cc77c61a3d23969a1b6812c5680d6335ce7d41d506ca1e",
+          "algebra/cuda/qoco_device_step_control.cuh": "4a935bf41858ad9c85e4455179a0fd09401b7a2ce20a84b2f2d748c2d3566972",
+          "algebra/cuda/qoco_setup_profile.cuh": "b19876487cf25c8d7d7ec436a7a412b6be2e871729de2aa2c40d49d8cf86928d",
+          "algebra/cuda/qoco_trajectory_ordering.cuh": "63e87e187d65fbfe2f0d171a404e1ce817fe48d089c75393b3d6c89307e02045"
+        }
+      }
+    }
+  ],
+  "sha256": {
+    "/home/angus/build-spacepdhcg-trajectory-v41/final/libspacepdhcg_cuda.so": "ba045295670b421e049fa1fc21d399279fbfa523d71b2062d3f07b9620823d14",
+    "/home/angus/build-qoco-gpu-trajectory-tree-profile-v46/final/libqoco.so": "e1e05873a666b0e44ceaa8049ca396ae3ebd5a51c6b6e4279593c79c93fa73a8"
+  }
+}
