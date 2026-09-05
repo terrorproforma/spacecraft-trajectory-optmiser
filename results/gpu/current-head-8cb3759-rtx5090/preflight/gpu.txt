@@ -1,0 +1,59 @@
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Fri_Feb_21_20:23:50_PST_2025
+Cuda compilation tools, release 12.8, V12.8.93
+Build cuda_12.8.r12.8/compiler.35583870_0
+Sat Sep  5 11:49:06 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.58.02              Driver Version: 595.97         CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        On  |   00000000:02:00.0  On |                  N/A |
+| 30%   36C    P3             86W /  575W |    9741MiB /  32607MiB |     17%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A         1794260      C   /python3.12                           N/A      |
++-----------------------------------------------------------------------------------------+
+0, NVIDIA GeForce RTX 5090, GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, 12.0, 595.97, 32607 MiB, 22447 MiB, 9741 MiB, 36, 86.46 W
+pid, process_name, used_gpu_memory [MiB]
+1794260, [Not Found], [N/A]
+    0          -     -      -      -      -      -      -      -    -              
+windows_nvidia_smi_compute_apps:
+pid, process_name, used_gpu_memory [MiB]
+2740, [Insufficient Permissions], [N/A]
+11872, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\CrossDeviceResume.exe, [N/A]
+11368, C:\Windows\explorer.exe, [N/A]
+13492, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\SearchHost.exe, [N/A]
+13504, C:\Windows\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe, [N/A]
+16720, C:\Program Files (x86)\Microsoft\EdgeWebView\Application\151.0.4129.107\msedgewebview2.exe, [N/A]
+16472, C:\Program Files\WindowsApps\B9ECED6F.ArmouryCrate_6.5.7.0_x64__qmba6cd70vzyy\ArmouryCrate.exe, [N/A]
+10684, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\TextInputHost.exe, [N/A]
+23520, C:\Program Files\Corsair\Corsair iCUE5 Software\iCUE.exe, [N/A]
+21164, C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy\ShellExperienceHost.exe, [N/A]
+26252, C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe, [N/A]
+29232, C:\Program Files\Google\Chrome\Application\chrome.exe, [N/A]
+33240, C:\Program Files (x86)\Microsoft\EdgeWebView\Application\151.0.4129.107\msedgewebview2.exe, [N/A]
+19616, C:\Users\Angus\AppData\Local\Discord\app-1.0.9256\Discord.exe, [N/A]
+12760, [Insufficient Permissions], [N/A]
+2804, C:\Program Files\Google\Chrome\Application\chrome.exe, [N/A]
+36328, C:\Users\Angus\AppData\Local\AnthropicClaude\app-1.40609.1\claude.exe, [N/A]
+40504, C:\Users\Angus\AppData\Local\AnthropicClaude\app-1.40609.1\claude.exe, [N/A]
+40688, C:\Users\Angus\AppData\Local\Programs\cursor\Cursor.exe, [N/A]
+45212, C:\Windows\System32\ShellHost.exe, [N/A]
+9828, C:\Windows\System32\ApplicationFrameHost.exe, [N/A]
+13240, C:\Windows\ImmersiveControlPanel\SystemSettings.exe, [N/A]
+49984, C:\Program Files\WindowsApps\Microsoft.ScreenSketch_11.2605.38.0_x64__8wekyb3d8bbwe\SnippingTool\SnippingTool.exe, [N/A]
+8000, C:\Users\Angus\AppData\Local\GitHubDesktop\app-3.6.4\GitHubDesktop.exe, [N/A]
+41756, C:\Program Files\WindowsApps\Microsoft.ScreenSketch_11.2605.38.0_x64__8wekyb3d8bbwe\SnippingTool\SnippingTool.exe, [N/A]
+45860, C:\Program Files\Epic Games\Launcher\Engine\Binaries\Win64\EpicWebHelper.exe, [N/A]
+7520, C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe, [N/A]
+4, [Insufficient Permissions], [N/A]

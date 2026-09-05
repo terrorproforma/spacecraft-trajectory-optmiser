@@ -1,5 +1,12 @@
 # Gate G3 report — device-resident deterministic SCvx
 
+## Reseal on main 8cb3759 — 2026-09-05 (RTX 5090)
+
+G3 **PASS** re-established on main `8cb3759b29ea8c7d843322a940a7ebcabfd9ff21` (sm_120, WSL RTX 5090) after the shared
+CUDA library changed through `1dbcae0` and `2bca11d`. Maximum tight canonical residual
+`9.69295039e-07`; displaced HCW accepts 3 steps; pure-QOCO P1-C/P1-D/P1-E warmup regressions accept 2/24/2 steps; fixed-tight representatives remain 3 honest negatives; CTest 70/70 Release and 70/70 Debug; H1 supported from 20 intervals; 16 sanitizer runs clean.
+Archive `results/gpu/current-head-8cb3759-rtx5090/seals/g3-8cb3759b29ea.tar.gz`, SHA-256 `609e0acbed65d7c4449148677cbd69b2703ba23ea277a53a7034da742c439de6`. Details in `CURRENT_HEAD_G0_G3_REPORT.md`.
+
 ## Current-head regression closure — 2026-09-03
 
 G3 **PASS** on tested source commit

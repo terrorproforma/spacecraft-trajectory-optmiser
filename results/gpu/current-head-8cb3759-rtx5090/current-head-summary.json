@@ -1,0 +1,70 @@
+{
+  "archives": [
+    {
+      "bytes": 26161,
+      "evidence_index": "g2/evidence-index.json",
+      "gate": "G2",
+      "immutable_uri": null,
+      "local_only": true,
+      "path": "results/gpu/current-head-8cb3759-rtx5090/seals/g2-8cb3759b29ea.tar.gz",
+      "sha256": "095f33dc83328290ea1533d0bc9531b17a316f004f0c7f8b5cd0057471fda45d"
+    },
+    {
+      "bytes": 328964,
+      "evidence_index": "g3/evidence-index.json",
+      "gate": "G3",
+      "immutable_uri": null,
+      "local_only": true,
+      "path": "results/gpu/current-head-8cb3759-rtx5090/seals/g3-8cb3759b29ea.tar.gz",
+      "sha256": "609e0acbed65d7c4449148677cbd69b2703ba23ea277a53a7034da742c439de6"
+    }
+  ],
+  "branch": "chore/g2g3-reseal-8cb3759",
+  "branch_note": "chore/g2g3-reseal-8cb3759 was cut from main at 8cb3759 with no source change; the sealed SOURCE is main 8cb3759 (evidence recorded against that commit before any commit was made on the branch).",
+  "campaign_scope_id": "single-gpu-v1",
+  "cuda_architecture": 120,
+  "foreign_gpu_waits": {
+    "g2": {
+      "checks": 19,
+      "records": [],
+      "total_wait_seconds": 0,
+      "waits": 0
+    },
+    "g3": {
+      "checks": 29,
+      "records": [],
+      "total_wait_seconds": 0,
+      "waits": 0
+    },
+    "orchestrator_before_gates": {
+      "checks": 2,
+      "records": [
+        "[2026-09-05T01:49:32Z] GPU BUSY before g2: wsl=[1794260, [Not Found], [N/A]] windows=[] -- waiting"
+      ],
+      "total_wait_seconds": 180,
+      "waits": 1
+    }
+  },
+  "g4_claim_core_launch_ready": false,
+  "g4_gate_authorized": true,
+  "g4_launch_blocker": "No G4 campaign was launched from this evidence. The G4 claim core runs on the Lambda H100 from 1dbcae0 under its own capability; any RTX 5090 relaunch needs a new official capability generated from this reseal's clean Release executable.",
+  "gates": {
+    "G2": "PASS",
+    "G3": "PASS"
+  },
+  "hardware_id": "local-rtx-5090",
+  "immutable_uri": null,
+  "local_only": true,
+  "reseal_of": [
+    "b6afb49d7fc7da5ed1ac9003c3bcae5d35506026 (results/gpu/current-head-b0cd570, WSL RTX 5090)",
+    "9e75b470fd5378d9b20f6f13892ac909c43757cd (results/gpu/current-head-9e75b47-h100, Lambda H100)"
+  ],
+  "schema_version": "current-head-g2-g3-1.0.0",
+  "scope": [
+    "G2",
+    "G3"
+  ],
+  "scope_note": "G2 and G3 only: the shared CUDA library changed after the b6afb49 (RTX 5090) and 9e75b47 (H100) seals through 1dbcae0 (recovery-kernel cancel polling, kernel pre-load, inner_iteration_cap) and 2bca11d (HCW exact matrix-exponential step, control-tracking term removal, relative KKT audit). G0/G1 were not re-run here.",
+  "source_commit": "8cb3759b29ea8c7d843322a940a7ebcabfd9ff21",
+  "source_tree": "6d27f2552d882b4418d16e4342e6854a436a952d"
+}
