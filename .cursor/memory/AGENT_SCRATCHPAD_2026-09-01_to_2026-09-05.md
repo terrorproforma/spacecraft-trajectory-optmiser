@@ -2669,6 +2669,79 @@ Use this file as persistent, repo-local execution memory.
   protocol-v2 experiment); the branch is pushed for provenance.
 - Commits landing on `integration/single-gpu-v1` / `feat/gtoc12-asteroid-mining` after
   addac2b / 4dd4fdb (concurrent workers) are not in main; merge them in a later pass.
+### 2026-09-05 02:30 AEST - Release merge into main (WSL release worktree + Windows push) (Windows checkout copy)
+
+#### Task Summary
+
+- Merged v1 addac2b, v2 d7ca28f, gtoc12 4dd4fdb and proposal 9fafee8 into
+  `release/single-gpu-v1-merge`, fixed four merge-only defects, verified (645 passed / 22 skipped,
+  CTest 49/49 + 8/8, wheel, viewer, CUDA build-only), fast-forwarded `main`, pushed from Windows.
+
+#### Mistakes And Fixes
+
+- `[self]` The merge script exited on the gtoc12 conflict before the planned fourth merge, and the
+  proposal branch was silently skipped until the GPU-deferred manifest check exposed the untouched
+  `recovery_test.cu`. Rule: after every conflict resolution re-run the remaining merge list, and
+  assert `git merge-base --is-ancestor <tip> HEAD` for every planned branch before verification.
+- `[tool]` `git merge` without an identity returns rc=128 with no conflict output; every scripted
+  git step must export `GIT_AUTHOR_*`/`GIT_COMMITTER_*` (no `user.*` config exists in WSL).
+- `[tool]` WSL git is 2.34: `git merge-tree --write-tree` is unavailable; trial merges need a
+  detached scratch worktree (`git merge --no-commit`, `git merge --abort`, remove afterwards).
+- `[tool]` `C:\Users\Angus\AppData\Local\Temp\relmerge\*` (all runner scripts) vanished mid-session;
+  keep helper scripts under `/home/angus/relmerge/` (written through `\\wsl.localhost`, CR stripped
+  by a LF `run.sh`), never under `%TEMP%`.
+- `[self]` Repeated the .NET relative-path mistake (`ReadAllBytes('web\...')` resolved against the
+  process cwd); absolute paths only.
+- `[self]` My "every benchmarks blob must equal v1" check was too strict: `paper1/paper2_matrix.json`
+  legitimately come from v2 (user spec import). Check blob provenance per file (v1 | v2 | gtoc12 |
+  none) instead of against one branch.
+
+#### What Worked
+
+- Audit recipe: `git cherry` + `merge-base --is-ancestor`, then per changed file classify
+  SAME(normalised) / SUPERSEDED (blob found in v2 history) / DIVERGED (unique lines absent from v2),
+  and `ast.dump` equality for Python formatting-only differences. It proved eight roadmap branches
+  were rebased copies and isolated the one unintegrated proposal.
+- Re-using `build-v2-verification/run.sh` (venv via `uv`, `python -S` + `PYTHONPATH=src:site`,
+  QOCO CPU library copy, GTOC12 data copy, `SPACEPDHCG_NATIVE_LIBRARY` from the fresh Release
+  build) reproduced the v2 matrix on the merged tree without touching the GPU.
+- Windows spec check: diff the working copies against `effc5ac` and test that every added line
+  exists in the merged file; comparing whole files against the import commit was misleading because
+  the branches evolved the same files afterwards.
+
+#### Guardrails For Next Session
+
+- Fresh Windows worktrees (`core.autocrlf=true`) break `web/trajectory-viewer` `npm run check` on the
+  data SHA; run the viewer checks on Linux or in the user's LF checkout until `.gitattributes` marks
+  the viewer data `-text`.
+- Merging any branch that touches `benchmarks/campaign_scopes/*.json` or other `PACKAGED_ASSETS`
+  requires `python scripts/sync_packaged_assets.py` (the mirror in `src/spacepdhcg/_data`).
+- Merging v1-line CUDA test changes requires refreshing `benchmarks/gpu_deferred_validation_v2.json`
+  blob ids (and the doc table) or `tests/test_gpu_deferred_manifest.py` fails.
+
+#### Follow-Ups / Risks
+
+- `perf/g4-batched-campaign` lane-batching commits remain intentionally unmerged (failed
+  protocol-v2 experiment); the branch is pushed for provenance.
+- Commits landing on `integration/single-gpu-v1` / `feat/gtoc12-asteroid-mining` after
+  addac2b / 4dd4fdb (concurrent workers) are not in main; merge them in a later pass.
+
+#### Push Result
+
+- Push result (03:05 AEST): `origin/main` effc5ac -> 689851b (plain push, fast-forward; GitHub API
+  confirms main = 689851b, compare effc5ac...689851b ahead by 200 commits / 300 files). Provenance
+  branches pushed: integration/single-gpu-v1 addac2b, integration/single-gpu-v2-candidate d7ca28f,
+  feat/gtoc12-asteroid-mining 4dd4fdb, feat/planner-cli c74fdb7, feat/literature-targets f6e8140,
+  feat/webgl-trajectory-viewer d88eb51, release/single-gpu-v1-merge 689851b, chore/local-spec-edits
+  4f187d9, sim/cpu-reference-campaign 318e22e, analysis/trajectory-visualization ab5847b,
+  feat/scenario-aware-multigpu 7799742, feat/paper1-freeze-tooling 34e1fbe, feat/orbitweaver-gpu
+  bf9d10a, feat/orbitweaver-g3-g5-adapter 887450c, fix/g4-execution-contract e519831,
+  chore/single-gpu-roadmap-scope fb37eb5, perf/g4-batched-campaign d2bb219,
+  proposal/g3-sanitizer-recovery-cap 9fafee8. WSL clone `git fetch origin` done; campaign worktrees
+  (g4-claim-core-4db5047 detached, spacepdhcg-gtoc12 on feat/gtoc12-asteroid-mining) untouched.
+  The committed memory files on main carry this entry too; this Windows working copy keeps its slim
+  rolled-over layout (the WSL-side merged scratchpad is the long-form one).
+
 ### 2026-09-05 02:40 AEST - Ordinal-73 deadline defect (recovery kernel cancellation)
 
 #### Task Summary
@@ -2719,6 +2792,246 @@ Use this file as persistent, repo-local execution memory.
 - Deterministic replay can trigger when all three lead attempts time out before the first PDHG
   iteration (identical zero-work traces); impossible at campaign deadlines, rule unchanged.
 - `H100` shipping: the bundle carries the fix; the campaign restart is the operator's decision.
+
+### 2026-09-05 03:40 AEST - Lambda H100 provisioning, v1 reseal, v2 deferred sweep, GTOC12 search
+
+#### Task Summary
+
+- Provisioned Lambda H100 80GB HBM3 (driver 580.105.08, CUDA 12.8, Ubuntu 22.04.5, 26 cores Xeon
+  8480+, Python 3.12.14 via uv, cmake 4.4.3, node 20, existing OpenMPI + NCCL 2.x). Bundles from WSL
+  cloned into `/home/ubuntu/spacepdhcg/{v1,v2,gtoc12}`; upstream PDHCG 167c8b7 and QOCO pinned.
+- v1 9e75b47 (sm_90 evidence-script commit on top of addac2b): native Release/Debug-Werror + CUDA
+  Release/Debug for sm_90; G0-G3 reseal PASS, `results/gpu/current-head-9e75b47-h100/`, root
+  evidence index sha256 `7e4d9c92...12a06d8`, `hardware_id lambda-h100-80gb-hbm3`,
+  `cuda_architecture 90`, `g4_claim_core_launch_ready false` (blocker text names the deadline defect).
+- G4: WSL fix bundle absent at both checks (`/home/angus/bundles/single-gpu-v1-*.bundle`), so the
+  step stopped at "capability regeneration pending fix" (`~/g4/STATUS.txt` on the instance, copy in
+  `results/lambda-h100/g4/`). No capability, checkpoint or worker on the H100. Zero foreign processes.
+- v2 3373988 deferred sweep `results/gpu/h100-deferred-3373988` (32 items): preflight, planner CUDA
+  ctest subsets, GTOC12 Lambert parity, pd6/low_thrust GPU examples and the literature gpu-run pass;
+  hcw/pd3 GPU planner examples not certified, pd6_fft device parity 0.98, viewer export check fails,
+  manifest pd3 memcheck passes degrees. Sanitizers themselves are clean. CPU reference certifies
+  all four examples on the same host. Fix 5aabbfc (preflight self-PID) + rerun: blackmore 398.845 kg
+  reproduced, chari pd6_fft GPU batch 81/81 converged (report twins as a patch, not committed).
+- GTOC12 (gtoc12 branch, 16 workers pinned to cores 10-25, 6 h budget): `cluster_fleet_h100_v1`
+  10699.5 kg (19 ships, 155 asteroids); archive-wide `fleet_master_h100_v1` (13 sources, 1055
+  columns, recert 1454 s, master 126 s) 11517.6 kg (20 ships, 163 asteroids) after fix c4e2c31
+  (RecursionError on attempt 1, retained as `.attempt1-c495dc0-recursionerror`). Official
+  `GTOC12_Verify`: all 24 fleet/candidate solutions pass; 155/916 per-ship diagnostic files fail
+  Error803 by construction (cooperative members). 11517.6 kg edges the WSL fleet_master_v6
+  (11515.67 kg) by 1.9 kg; the collect-hop bottleneck still bounds both.
+- Evidence home: `results/lambda-h100/` (593 files, 28.6 MB, sizes verified against the remote).
+  Fix bundles fetched into WSL as `refs/h100/*`.
+
+#### Mistakes And Fixes
+
+- `[self]` Ran the seals stage in template order (validate before summarize) and let
+  `archive_run.py` log into the tree it was indexing; two seals reruns. Rule recorded above.
+- `[self]` Deleted the live scratchpad in a rollover by mixing a relative .NET path with
+  `Remove-Item`; reconstructed from the verbatim read. Rule already recorded.
+- `[tool]` `v2_deferred.sh` refused on a dirty tree because the build left an untracked `.venv-v2`
+  symlink; `.git/info/exclude` it before launching gates that assert a clean tree.
+- `[tool]` First regression test for the recursion fix passed without the fix (search pruned before
+  going deep); a test must lower the limit to just above the current depth and use columns that
+  all remain usable.
+
+#### What Worked
+
+- One `h.ps1` of dot-sourced helpers (`rsh`/`rput`/`rrun`/`rbg`/`wrun`) plus every remote step as a
+  script under `~/s` with `nohup` logs in `~/logs` and a `status.txt` per campaign; polling only.
+- Adapting the WSL reseal template with a Python rewrite (`adapt_reseal.py`) rather than editing
+  six shell scripts by hand; hashes and paths substituted in one pass.
+- Running the CPU-only v2 builds and the GTOC12 search on cores 10-25 while the reseal owned the GPU.
+
+#### Follow-Ups / Risks
+
+- G4 on the H100 waits for the WSL deadline-fix bundle: fetch, rebuild CUDA Release sm_90,
+  regenerate capability (IPM + 20 s PDHCG session probe), init a new checkpoint, launch.
+- The v2 defects above are candidate bugs, not sm_90 effects; take them back to the v2 branch.
+- The instance is billing while idle; nothing is running on it now.
+
+### 2026-09-05 04:10-08:10 AEST - H100 GTOC12 v2 campaign (launched, handed off running)
+
+#### Task Summary
+
+- H100 gtoc12 clone `c4e2c31` -> `282be45`: merged WSL `feat/gtoc12-asteroid-mining` 7d2e301
+  (950fea7) and `feat/gtoc12-joint-itinerary` f81e834 + 8e15b92 (fd59ad9, 282be45), plus new
+  commit e9c9cd8 (`family_partitions`: `--cluster-radius 1.75,1.6 --all-family-bands` unions
+  four family partitions = 167 unique families vs 47; 480-min budget mark). gtoc12 suite on the
+  merged tree 126 passed. Bundles: `/home/angus/bundles/to-h100/*.bundle` (WSL -> H100).
+- Pipeline `~/s/gtoc12_v2_campaign.sh` (setsid/nohup, logs `~/logs/gtoc12-*.log`, status
+  `~/logs/gtoc12-v2-RESULT`): cluster_fleet_h100_v2 (22 workers, nice 5, 8 h, 6600 s/family,
+  5 ships, beam 32) || joint_itinerary_h100_v1 (4 workers) -> joint_itinerary_h100_v2 ->
+  fleet_master_h100_v2 (21 sources incl. cluster_fleet_v8 copied from WSL) -> official +
+  independent verification, leg stats, chain stats. Then `bash ~/s/finalize_v2.sh` (docs ?7,
+  export-viewer + v2 importer, two commits, bundle `~/bundles/from-h100/gtoc12-h100-v2-<sha>.bundle`,
+  tarball `~/stage/gtoc12-h100-v2-compact.tgz`) and locally `C:\Users\Angus\h100work\pull_v2.ps1`
+  (results -> `results/lambda-h100/gtoc12/`, bundle -> WSL `refs/h100/gtoc12-asteroid-mining`).
+  `~/s/resume_v2.sh` re-runs joint v2 -> master -> verify if the orchestrator dies.
+- Measured at 4 h: 44 families, 146 ships, incumbent 11522.0 kg / 20 ships / 167 asteroids /
+  576.1 avg; chains 38 >= 550, 4 >= 600, 1 >= 650 (652.6 kg, new best chain). Joint v1: 339 ships,
+  294 improved, +4665 kg, but >= 600 kg chains 9 -> 10 only; fm7's 21 ships 587.93 -> 588.21.
+  Union of all archives: 569 chains, 115 >= 550, 15 >= 600, 1 >= 650.
+
+#### Mistakes And Fixes
+
+- `[tool]` `nproc` honours `OMP_NUM_THREADS`: export it *after* logging the CPU count (the v2
+  launch line printed `cpus=1` on a 26-core box; affinity was 0-25 all along - check with
+  `taskset -pc <pid>` before panicking).
+- `[tool]` `ssh host 'nohup x > log 2>&1 < /dev/null & ...'` from PowerShell kept the ssh client
+  open after the remote command list ended (had to kill the local ssh; the remote nohup job
+  survived). Detach with `setsid nohup ... &` and keep the launch command list short.
+- `[tool]` PowerShell `rsh "... python3 -c \"...\""` with dict/set comprehensions breaks the
+  PowerShell parser even inside double quotes; every remote Python goes into a `~/s/*.py` file.
+- `[self]` The H100 gtoc12 clone diverged from WSL in *both* directions (c4e2c31 vs
+  ba9b764/7d2e301 both patched `cooperative.py`'s recursion limit); merged with
+  `.git/info/attributes` `merge=union` for the shared test file and a scripted resolution
+  (`resolve_coop.py`: `max(2*n+200, n+500)`), then merged `feat/gtoc12-joint-itinerary` 8e15b92.
+- Another agent runs the G4 capability probe on the GPU (`device_scvx_integration_test
+  --g4-session`, ~1 GB) while this CPU campaign runs; `CUDA_VISIBLE_DEVICES=""` on every gtoc12
+  process, so the two never touch.
+- `[tool]` System python on the H100 is 3.10: nested same-quote f-strings (`f"{p['a']}"` inside
+  another f"...") fail there; compile helper scripts with the venv python (3.12) *and* python3.
+- `[self]` `scp` to `~/stage/...` failed because the directory did not exist; `mkdir -p` remote
+  targets before `rput`.
+
+#### What Worked
+
+- Bash `merge=union` in `.git/info/attributes` for the doubly-extended test file + a scripted
+  resolution for the one real conflict; `bash -n` + `py_compile` on every helper before launch.
+- Running the family-count/ranking probe (203 s) before choosing `--cluster-budget-seconds`:
+  47 families would have starved 22 workers again; four partitions give 167.
+- Running the joint pass on the 4 spare cores while the 22-worker campaign owned the rest;
+  `setsid nohup` launches return immediately over ssh.
+
+#### Guardrails / Follow-Ups
+
+- The orchestrator's source list is fixed at stage time; a `joint_itinerary_h100_v8` run
+  (cluster_fleet_v8 chains, 35 ships, +369 kg) exists on the host but is NOT in
+  fleet_master_h100_v2's sources - add it (and any later joint run) to a follow-up master.
+- The 22-ship threshold (599.5 kg average) is far from the 15 chains >= 600 kg the archives
+  hold; expect fleet_master_h100_v2 at 21 ships. The bottleneck is the number of >= 600 kg
+  chains, i.e. the collect-hop cost, not the master.
+- The v2 viewer `check.mjs` asserts <= 20 ships; a 21-ship import passes the importer but fails
+  that check until the palette is extended.
+
+### 2026-09-05 04:30 AEST - Viewer 40-ship palette (feat/viewer-40-ships 7496c10, WSL worktree)
+
+#### Task Summary
+
+- New worktree `/home/angus/worktrees/spacepdhcg-viewer-40` from the v2 candidate; 40-entry OKLCH
+  ship palette (`scripts/palette.mjs`), dense rail/legend layouts above 20 ships, check.mjs palette
+  checks + synthetic 21/39/40-ship fleets, browser-check palette/overflow step at 1440x900 and
+  1920x1080, planner export copy list completed. Verified on fleet_master_v7 (21 ships). Details in
+  the devlog entry.
+
+#### Mistakes And Fixes
+
+- `[self]` A uniform 18-degree hue grid gave min pairwise dE 10.8 and only 7.8 to the focus blue;
+  placing hues at equal CIELAB arc length along the max-chroma curve with forbidden zones around the
+  reserved colours lifted this to 14.8 / 15.5. Rule: for large palettes on sRGB, space hues by Lab
+  arc length, not by hue angle (blue/violet has far less chroma than yellow-green).
+- `[self]` A CSS comment claimed "three rows" for 40 legend entries; measurement said two. Rule:
+  write layout numbers into comments only after measuring them in the browser check.
+- `[tool]` `$!` inside a PowerShell double-quoted `wsl -e bash -lc "..."` string was expanded by
+  PowerShell (pid file contained a literal `$!`); the existing "script file for anything with `$`"
+  rule applies even to a single token.
+
+#### What Worked
+
+- Regeneration check: `check.mjs` rebuilds the palette from `SHIP_PALETTE_SPEC` and compares per
+  channel (<= 2) instead of hashing hex strings, so a platform's last-ulp `Math.cbrt` difference
+  cannot break the check while a hand-edited colour still does.
+- Serving the WSL worktree from Windows node through the `\\wsl.localhost` UNC path
+  (`node \\wsl.localhost\...\scripts\serve.mjs --port=4181`) is the only way a Windows browser reaches
+  a WSL checkout here: WSL -> Windows localhost forwarding is off (Windows `localhost:4180` could not
+  reach a WSL server bound to 127.0.0.1:4180).
+- `BROWSER_CHECK_ARTIFACTS=/tmp/...` keeps a browser-check run against a different fleet from
+  overwriting the committed `gtoc12-3d-*.png` set; copy only the new files into `test-artifacts/`.
+- Layout robustness for the 39/40-ship case came from a scratch synthetic fleet (ships replicated
+  from v7, manifest hash regenerated) served from a `/tmp` copy of the viewer; nothing entered the repo.
+
+#### Guardrails For Next Session
+
+- `[tool]` The Cursor browser MCP (`cursor-ide-browser`) can be absent in a subagent session
+  ("Server not found ... did not re-register"); do not retry more than twice, fall back to Linux
+  Playwright (`/tmp/pw-linux`, browsers in `~/.cache/ms-playwright`) and say so.
+- `[tool]` `nohup node serve.mjs &` started inside `wsl -e bash -lc` dies when that shell exits;
+  start the server inside the same script that needs it (or `setsid`) and expect it gone afterwards.
+- `integration/single-gpu-v2-candidate` moves while other workers commit (96df9ac -> 45b1a1d in one
+  session); branch from it with `git worktree add -b`, never edit its worktree.
+
+#### Follow-Ups
+
+- Merge `feat/viewer-40-ships` (7496c10) into the v2 candidate and re-sync the Windows mirror
+  `feat/webgl-trajectory-viewer` (still 20 colours); `main` 689851b also carries the 20-entry palette.
+- Windows node server for the worktree left on http://127.0.0.1:4181/?dataset=gtoc12 (PID 11748).
+
+### 2026-09-05 05:30 AEST - v2 candidate H100 defects fixed on the RTX 5090 (5aabbfc -> 1f5e034)
+
+- Where things live: WSL worktree `/home/angus/worktrees/spacepdhcg-single-gpu-v2` (branch
+  `integration/single-gpu-v2-candidate` 1f5e034, clean); env `/tmp/v2env.sh` (V2, TOOL venv, git
+  identity); helper scripts + logs `/home/angus/h100fix/{NN_*.sh,logs/}`; bundle
+  `/home/angus/bundles/single-gpu-v2-h100fix-1f5e034.bundle` (sha a05425fb...f9bb, also at
+  `~/bundles/` on the H100). Builds: `build-v2-relwithdebinfo` (host, Werror), `build-v2-cuda-release`
+  (sm_120, Werror), `build-v2-qoco` (cuDSS) / `build-v2-qoco-cpu` (CPU) libqoco.
+- Root causes (one line each): D1 host reference skipped quaternion projection via ADL/include order;
+  D2 device HCW replay RK4 vs host exact ZOH, HCW linear control term, absolute-vs-relative QOCO
+  audit + warm SOLVED_INACCURATE, rejected-candidate residual reported; D3 stale static viewer copy
+  list + 20-colour palette vs 21 ships; D4 manifest handed a degrees document to the radians
+  executable; D5 report twins were an uncommitted working-tree diff on the H100.
+- GPU verification matrix: RTX 5090 = everything (ctest 69/69, planner GPU pytest 9/9, 4/4 examples
+  certified, 5 sanitizer passes clean). H100 = nothing run (device reserved for G4); checklist at
+  `~/spacepdhcg/v2-PENDING-H100-GPU-VERIFY.txt` on the H100.
+- Foreign GPU load seen on the 5090 from ~04:55: WSL pid 1082087 `gpu_compile_census.py`
+  (Reality-Simulator project), ~4 GB, 6-7% util - not killed; correctness runs only overlapped it.
+- H100 clone update recipe that worked (CPU-only): scp bundle -> `git fetch <bundle> <branch>` ->
+  `git stash push` the dirty twins -> `git merge --ff-only FETCH_HEAD` -> `git diff --quiet stash@{0}
+  HEAD -- <files>` -> `stash drop`; every python step under `nice -n 10 taskset -c 22-25` with
+  `CUDA_VISIBLE_DEVICES=''` re-exported *after* sourcing `env.sh` (which sets it to 0).
+
+### 2026-09-05 05:40 AEST - Merge feat/viewer-40-ships into the v2 candidate (211267d) + Windows viewer-live
+
+#### Task Summary
+
+- Merge commit 211267d (parents 1f5e034, 7496c10) in `/home/angus/worktrees/spacepdhcg-single-gpu-v2`;
+  four content conflicts resolved semantically (viewer_export.py, gtoc12.js, styles.css, check.mjs);
+  verified with fleet_master_v7 (21 ships); Windows `..\viewer-live` served on :4173 (PID 47428).
+  Helper scripts + logs: `/home/angus/merge40/` (`run.sh` strips CR then execs the script).
+
+#### What Worked
+
+- `git merge --no-ff --no-commit`, then `git checkout --theirs` only for files whose *ours* delta was
+  a strict subset of *theirs* (verified with `git hash-object == git rev-parse 7496c10:<path>` after
+  checking `git diff --stat base..ours -- <file>` was the 1-3 interim palette lines).
+- "Both sides survive" for a test collision: keep the source-of-truth read (palette size from
+  gtoc12.js) and the spec-derived equality (regeneration), and turn literal pins (`== 40`,
+  `/41 ships exceed the 40-colour/`) into values derived from the read size so neither branch's
+  intent is lost. Optional reads in check.mjs are detectable by `read("x").catch(` ->
+  test regex `read\("([^"]+)"\)(?!\.catch\()`.
+- Extending discovery instead of re-adding a list: `viewer_scripts()` follows each `scripts/` root's
+  import graph, so `palette.mjs` (imported by check.mjs) travels with the bundle without a new pin.
+- Byte-exact Windows mirror without autocrlf damage: `git archive --format=tar <commit>:web/trajectory-viewer`
+  on Linux, `tar -xf` on Windows, then verify every file's SHA-256 against `git cat-file blob` hashes
+  (69/69). Windows node imports the GTOC12 export straight from `\\wsl.localhost` UNC paths and
+  produced the same fleet SHA (e47af8fa...36ec) as the Linux import.
+- Old-style `git merge-tree <base> <ours> <theirs>` (git 2.34) is enough to pre-scan a future merge
+  for `changed in both` files and conflict markers without a scratch worktree.
+
+#### Mistakes And Fixes
+
+- `[self]` The brief said the Windows checkout was "main at 689851b"; it is `feat/webgl-trajectory-viewer`
+  d88eb51 with the same 9 modified spec files. Rule: `git rev-parse --abbrev-ref HEAD` before acting
+  on a brief's branch claim; the instruction (no checkout, no working-tree change) still held.
+- `[tool]` PowerShell `git rev-parse --short HEAD main` fails ("Needed a single revision"); one rev
+  per call.
+
+#### Guardrails For Next Session
+
+- Browser checks against a non-committed fleet: always `BROWSER_CHECK_ARTIFACTS=/tmp/...`; the
+  committed `gtoc12-3d-*.png` set stays fleet_master_v4 and `viewer40-*.png` stays the 7496c10 set.
+- Windows viewer servers: :4173 PID 47428 = `..\viewer-live` (merged 211267d + v7 data);
+  :4181 PID 11748 = the `spacepdhcg-viewer-40` worktree over UNC (left running, still 7496c10).
 
 ### 2026-09-05 06:30 AEST - Second release merge into main (v1 deadline fix, v2 H100 fixes, joint itinerary)
 
@@ -2781,6 +3094,45 @@ Use this file as persistent, repo-local execution memory.
   owns that device.
 - `feat/gtoc12-asteroid-mining` local HEAD (7d2e301+) stays off main while the v8 worker commits.
 - WSL still has no GitHub credential helper; pushes go through a bundle and the Windows repo.
+
+### 2026-09-05 06:30 AEST - Second release merge into main (8cb3759) + GitHub push
+
+#### Task Summary
+
+- WSL release worktree `/home/angus/worktrees/spacepdhcg-release` (`release/single-gpu-v1-merge`,
+  clean at 689851b): merged v1 1dbcae0 (a93982e), v2 211267d (b963259), gtoc12 joint 8e15b92
+  (d52b3a5), H100 fix c4e2c31 (1c0c32e); manifest blob refresh 0ff4f7c; status + memory 8cb3759.
+  Verified (CPU + RTX 5090), fast-forwarded WSL `main`, bundled, pushed from this Windows repo.
+- Push (06:38 AEST): `git ls-remote origin` = main 8cb3759, release/single-gpu-v1-merge 8cb3759,
+  integration/single-gpu-v1 1dbcae0, integration/single-gpu-v2-candidate 211267d,
+  feat/gtoc12-joint-itinerary 8e15b92 (new), feat/viewer-40-ships 7496c10 (new); all plain
+  fast-forward pushes. Windows local `main`/`integration/single-gpu-v1`/`release/single-gpu-v1-merge`
+  moved with `git branch -f` (HEAD `feat/webgl-trajectory-viewer` d88eb51 and the dirty tree untouched);
+  bundle `C:\Users\Angus\Desktop\projects\release-merge-2-8cb3759.bundle` (sha256 79504415...476f).
+- The long-form session entry (mistakes, what worked, guardrails) is committed on main in
+  `.cursor/memory/AGENT_SCRATCHPAD.md` (8cb3759); helper scripts + logs: `/home/angus/integ/`.
+
+#### Mistakes And Fixes (short form; full list on main)
+
+- `[self]` `.venv-rel/bin/python -S -m pytest|build` -> "No module named ..." (`-S` drops
+  site-packages). Run venv pythons without `-S`.
+- `[self]` A "test then commit" script committed although its pytest step had errored; gate commits
+  on the test exit code.
+- `[tool]` `nohup setsid ... & disown` inside `wsl -- bash -c` dies when the outer shell exits
+  immediately (worked only when a `sleep` followed); run short follow-up jobs in the foreground.
+- `[tool]` PowerShell `$?` inside `wsl -- bash -c "..."` prints `True`; use `rc=$?` in script files.
+
+#### Guardrails
+
+- Installed-wheel `spacepdhcg gtoc12 ...` from `/tmp` needs `SPACEPDHCG_GTOC12_DATA=<repo>/benchmarks/gtoc12/data`.
+- Full `test_g4_pdhcg_deadline_gpu.py` matrix = ~22 min on the 5090; never QUICK=1 for a release check.
+- Any merge touching `persistent_pdhcg.cu`/`device_scvx_integration_test.cu`/`recovery_test.cu`
+  needs the deferred-manifest blob table refreshed with provenance (JSON statement + doc table).
+
+#### Still off main
+
+- `feat/gtoc12-asteroid-mining` 7d2e301+ (v8 harvest substitution worker); H100 G4 claim-core
+  campaign; sm_90 confirmation of the v2 fixes; `perf/g4-batched-campaign` (provenance only).
 
 ### 2026-09-05 (ninth iteration: chain-aware beam, reference prior, LP duals) - interim
 
