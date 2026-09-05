@@ -198,6 +198,10 @@ class ClusterPricingSettings:
     # the kg of beam score per kg of deviation from the reference manifold
     chain_prior_path: str = ""
     chain_prior_weight: float = 0.5
+    # harvest-phase prior (harvestphase.py, tenth iteration): path of the extracted document
+    # ("" = off) and the weight of its kg in the collect DP objective and the chain score
+    harvest_phase_path: str = ""
+    harvest_phase_weight: float = 1.0
     # master LP duals handed to the family (per-asteroid prices, kg); scaled by this weight
     # before the beam subtracts them (1.0 = the exact column-generation reduced cost)
     dual_price_weight: float = 1.0
@@ -294,6 +298,8 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         chain_tour_candidates=settings.chain_tour_candidates,
         chain_tour_min_deploys=settings.chain_tour_min_deploys,
         chain_prior_weight=settings.chain_prior_weight if settings.chain_prior_path else 0.0,
+        harvest_phase_path=settings.harvest_phase_path,
+        harvest_phase_weight=settings.harvest_phase_weight if settings.harvest_phase_path else 0.0,
         **grids,
     )
 

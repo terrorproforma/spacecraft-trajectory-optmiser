@@ -228,6 +228,14 @@ class SearchSettings:
     # the reference p25 while the harvest is dear); 0 = off.  The targets are data
     # (benchmarks/gtoc12/chain_prior_v1.json, extracted by ``gtoc12 chain-prior``).
     chain_prior_weight: float = 0.0
+    # harvest-phase prior (``harvestphase.HarvestPhasePrior``, tenth iteration): path of the
+    # extracted document ("" = off) and the kg of score per kg of its penalty.  Applied in two
+    # places: the collect DP charges every hop departing beyond the references' p75 of |Δλ|
+    # (so an aligned 180-day hop beats a misaligned 210-day one at comparable propellant), and
+    # ``_chain_score`` subtracts the scored tour's total penalty, so the beam prefers chains
+    # whose consecutive miners are phase-aligned at the projected harvest epochs.
+    harvest_phase_path: str = ""
+    harvest_phase_weight: float = 0.0
     # cluster-first prior (clusters.py): Earth targets need at least ``cluster_min_density``
     # co-moving neighbours, and partials earn ``cluster_bonus_kg`` x (unvisited co-moving
     # neighbours of the current asteroid, capped at the remaining deploy slots) / max_deploys
@@ -413,6 +421,8 @@ class _Partial:
     chain_collect_kg: float = math.nan
     chain_return_kg: float = math.nan
     chain_collected_kg: float = math.nan
+    # harvest-phase penalty (kg) the scored tour paid for misaligned collect departures
+    chain_phase_kg: float = math.nan
 
 
 @dataclass(slots=True)
@@ -584,6 +594,7 @@ class RouteSearch:
             "seconds": 0.0,
             "reranked": 0,
             "levels": 0,
+            "phase_kg": 0.0,  # harvest-phase penalty summed over the scored closing tours
         }
         self._chain_tour_cache: dict[tuple, CollectTour | None] = {}
 
@@ -636,6 +647,11 @@ class RouteSearch:
                 raise FileNotFoundError(
                     f"collect DP inflation fit not readable: {s.collect_dp_inflation_fit}"
                 )
+            phase = None
+            if s.harvest_phase_path and s.harvest_phase_weight > 0.0:
+                from .harvestphase import load_harvest_phase
+
+                phase = load_harvest_phase(s.harvest_phase_path)
             self._collect_table = CollectPairTable(
                 self.catalogue,
                 CollectDPSettings(
@@ -643,6 +659,8 @@ class RouteSearch:
                     tofs=tofs,
                     return_tofs=return_tofs,
                     inflation_fit=fit,
+                    harvest_phase=phase,
+                    phase_weight=s.harvest_phase_weight,
                     max_asteroids=s.collect_dp_max_deploys,
                     end_margin_days=s.end_margin_days,
                     propellant_weight=s.collect_dp_propellant_weight,
@@ -1721,10 +1739,17 @@ class RouteSearch:
         partial.chain_collected_kg = float(sum(plan.collected_mass.values()))
         if tour.hop_propellant_kg:
             partial.chain_burn = collect_kg / len(tour.hop_propellant_kg)
+        partial.chain_phase_kg = float(tour.phase_penalty_kg)
+        self.chain_tour_stats["phase_kg"] = self.chain_tour_stats.get("phase_kg", 0.0) + float(
+            tour.phase_penalty_kg
+        )
         score = (
             self.plan_score(plan)
             - s.time_weight * (partial.epoch - partial.legs[0].departure_epoch)
             + self._cluster_potential_kg(partial)
+            # harvest-phase prior: the DP already charged the tour's misaligned departures
+            # (``phase_weight`` inside the table), so the chain pays the same kg here
+            - tour.phase_penalty_kg
         )
         if self.chain_prior is not None and s.chain_prior_weight > 0.0:
             score -= s.chain_prior_weight * self.chain_prior.penalty(
