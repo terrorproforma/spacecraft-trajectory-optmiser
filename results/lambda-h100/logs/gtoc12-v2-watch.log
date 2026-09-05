@@ -1,0 +1,295 @@
+
+===== POLL 2026-09-04T22:44:43Z =====
+== 2026-09-04T22:44:46Z load=23.07 23.17 23.39 mem_used=7G gpu=100 %, 1603 MiB
+status=RUNNING stage=cluster-fleet+joint-v1 started_utc=2026-09-04T18:03:18Z
+processes: 23 cluster-fleet, 0 joint, 0 master
+-- orchestrator:
+[2026-09-04T18:03:18Z] source 282be45120c7c802fb8261fa8a19ad4859130f3d branch feat/gtoc12-asteroid-mining dirty=0; cpus=1; load=2.00 2.00 1.83
+[2026-09-04T18:03:18Z] == joint-itinerary joint_itinerary_h100_v1 (4 workers, 16 local sources + cluster_fleet_h100_v1, fleet_master_v7 ships first)
+[2026-09-04T18:03:18Z] joint v1 pid 51605
+[2026-09-04T18:03:18Z] == cluster-fleet cluster_fleet_h100_v2 (22 workers, nice 5, 28800 s budget, radii 1.75,1.6 x collect+phasing bands, >=20 members, 5 ships, beam 32)
+-- cluster_fleet_h100_v2: families done 44
+  "family": 3,
+  "family": 100004,
+  "family": 300007,
+   wall 256.1 min, bundles 44, pss_peak 5190.8662109375 MB, verified fleets 17
+   incumbent 11522.0 kg 20 ships 167 asteroids avg 576.1 at 236 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 146 >=550 38 >=600 4 >=650 1 >=700 0 max 652.6
+   stopped: {'family exhausted before ship slot 4': 9, 'time budget before ship slot 4': 16, 'time budget before ship slot 3': 1, 'time budget before ship slot 5': 9, 'family exhausted before ship slot 5': 9}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=915 bytes=14720 mtime=2026-09-04T22:19:22Z
+   gtoc12_v2_campaign.sh.log lines=4 bytes=505 mtime=2026-09-04T18:03:18Z
+   run_report.json mtime=2026-09-04T22:19:22Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-04T23:18:24Z =====
+== 2026-09-04T23:18:27Z load=22.88 22.74 22.90 mem_used=7G gpu=100 %, 1603 MiB
+status=RUNNING stage=cluster-fleet+joint-v1 started_utc=2026-09-04T18:03:18Z
+processes: 23 cluster-fleet, 0 joint, 0 master
+-- orchestrator:
+[2026-09-04T18:03:18Z] source 282be45120c7c802fb8261fa8a19ad4859130f3d branch feat/gtoc12-asteroid-mining dirty=0; cpus=1; load=2.00 2.00 1.83
+[2026-09-04T18:03:18Z] == joint-itinerary joint_itinerary_h100_v1 (4 workers, 16 local sources + cluster_fleet_h100_v1, fleet_master_v7 ships first)
+[2026-09-04T18:03:18Z] joint v1 pid 51605
+[2026-09-04T18:03:18Z] == cluster-fleet cluster_fleet_h100_v2 (22 workers, nice 5, 28800 s budget, radii 1.75,1.6 x collect+phasing bands, >=20 members, 5 ships, beam 32)
+-- cluster_fleet_h100_v2: families done 49
+  "family": 200012,
+  "family": 200013,
+  "family": 54,
+   wall 315.0 min, bundles 49, pss_peak 5190.8662109375 MB, verified fleets 18
+   incumbent 11525.1 kg 20 ships 170 asteroids avg 576.3 at 315 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 162 >=550 41 >=600 4 >=650 1 >=700 0 max 652.6
+   stopped: {'time budget before ship slot 5': 9, 'time budget before ship slot 3': 1, 'time budget before ship slot 4': 17, 'family exhausted before ship slot 4': 12, 'family exhausted before ship slot 5': 10}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=1022 bytes=16424 mtime=2026-09-04T23:18:15Z
+   gtoc12_v2_campaign.sh.log lines=4 bytes=505 mtime=2026-09-04T18:03:18Z
+   run_report.json mtime=2026-09-04T23:18:15Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-04T23:53:45Z =====
+== 2026-09-04T23:53:49Z load=23.02 22.98 22.87 mem_used=7G gpu=100 %, 1603 MiB
+status=RUNNING stage=cluster-fleet+joint-v1 started_utc=2026-09-04T18:03:18Z
+processes: 23 cluster-fleet, 0 joint, 0 master
+-- orchestrator:
+[2026-09-04T18:03:18Z] source 282be45120c7c802fb8261fa8a19ad4859130f3d branch feat/gtoc12-asteroid-mining dirty=0; cpus=1; load=2.00 2.00 1.83
+[2026-09-04T18:03:18Z] == joint-itinerary joint_itinerary_h100_v1 (4 workers, 16 local sources + cluster_fleet_h100_v1, fleet_master_v7 ships first)
+[2026-09-04T18:03:18Z] joint v1 pid 51605
+[2026-09-04T18:03:18Z] == cluster-fleet cluster_fleet_h100_v2 (22 workers, nice 5, 28800 s budget, radii 1.75,1.6 x collect+phasing bands, >=20 members, 5 ships, beam 32)
+-- cluster_fleet_h100_v2: families done 61
+  "family": 15,
+  "family": 6,
+  "family": 100056,
+   wall 349.9 min, bundles 61, pss_peak 5190.8662109375 MB, verified fleets 18
+   incumbent 11525.1 kg 20 ships 170 asteroids avg 576.3 at 315 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 205 >=550 45 >=600 4 >=650 1 >=700 0 max 652.6
+   stopped: {'': 1, 'family exhausted before ship slot 5': 13, 'family exhausted before ship slot 4': 17, 'time budget before ship slot 3': 1, 'time budget before ship slot 5': 12, 'time budget before ship slot 4': 17}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=1273 bytes=20474 mtime=2026-09-04T23:53:14Z
+   gtoc12_v2_campaign.sh.log lines=4 bytes=505 mtime=2026-09-04T18:03:18Z
+   run_report.json mtime=2026-09-04T23:53:14Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-05T01:35:47Z =====
+== 2026-09-05T01:35:50Z load=23.00 22.97 22.90 mem_used=7G gpu=100 %, 1603 MiB
+status=RUNNING stage=cluster-fleet+joint-v1 started_utc=2026-09-04T18:03:18Z
+processes: 23 cluster-fleet, 0 joint, 0 master
+-- orchestrator:
+[2026-09-04T18:03:18Z] source 282be45120c7c802fb8261fa8a19ad4859130f3d branch feat/gtoc12-asteroid-mining dirty=0; cpus=1; load=2.00 2.00 1.83
+[2026-09-04T18:03:18Z] == joint-itinerary joint_itinerary_h100_v1 (4 workers, 16 local sources + cluster_fleet_h100_v1, fleet_master_v7 ships first)
+[2026-09-04T18:03:18Z] joint v1 pid 51605
+[2026-09-04T18:03:18Z] == cluster-fleet cluster_fleet_h100_v2 (22 workers, nice 5, 28800 s budget, radii 1.75,1.6 x collect+phasing bands, >=20 members, 5 ships, beam 32)
+-- cluster_fleet_h100_v2: families done 85
+  "family": 100009,
+  "family": 52,
+  "family": 35,
+   wall 449.0 min, bundles 85, pss_peak 5190.8662109375 MB, verified fleets 19
+   incumbent 12348.7 kg 21 ships 183 asteroids avg 588.0 at 403 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 289 >=550 56 >=600 6 >=650 1 >=700 0 max 652.6
+   stopped: {'': 3, 'family exhausted before ship slot 4': 28, 'time budget before ship slot 4': 18, 'time budget before ship slot 5': 17, 'family exhausted before ship slot 5': 18, 'time budget before ship slot 3': 1}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=1778 bytes=28597 mtime=2026-09-05T01:32:17Z
+   gtoc12_v2_campaign.sh.log lines=4 bytes=505 mtime=2026-09-04T18:03:18Z
+   run_report.json mtime=2026-09-05T01:32:17Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-05T02:06:11Z =====
+== 2026-09-05T02:06:14Z load=23.00 23.00 23.00 mem_used=8G gpu=100 %, 1603 MiB
+status=RUNNING stage=cluster-fleet+joint-v1 started_utc=2026-09-04T18:03:18Z
+processes: 23 cluster-fleet, 0 joint, 0 master
+-- orchestrator:
+[2026-09-04T18:03:18Z] source 282be45120c7c802fb8261fa8a19ad4859130f3d branch feat/gtoc12-asteroid-mining dirty=0; cpus=1; load=2.00 2.00 1.83
+[2026-09-04T18:03:18Z] == joint-itinerary joint_itinerary_h100_v1 (4 workers, 16 local sources + cluster_fleet_h100_v1, fleet_master_v7 ships first)
+[2026-09-04T18:03:18Z] joint v1 pid 51605
+[2026-09-04T18:03:18Z] == cluster-fleet cluster_fleet_h100_v2 (22 workers, nice 5, 28800 s budget, radii 1.75,1.6 x collect+phasing bands, >=20 members, 5 ships, beam 32)
+-- cluster_fleet_h100_v2: families done 89
+  "family": 100039,
+  "family": 100018,
+  "family": 8,
+   wall 476.9 min, bundles 89, pss_peak 5190.8662109375 MB, verified fleets 19
+   incumbent 12348.7 kg 21 ships 183 asteroids avg 588.0 at 403 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 307 >=550 57 >=600 7 >=650 1 >=700 0 max 652.6
+   stopped: {'': 6, 'family exhausted before ship slot 4': 28, 'time budget before ship slot 4': 18, 'family exhausted before ship slot 5': 18, 'time budget before ship slot 5': 18, 'time budget before ship slot 3': 1}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=1866 bytes=29987 mtime=2026-09-05T02:00:09Z
+   gtoc12_v2_campaign.sh.log lines=4 bytes=505 mtime=2026-09-04T18:03:18Z
+   run_report.json mtime=2026-09-05T02:00:09Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-05T02:36:37Z =====
+== 2026-09-05T02:36:41Z load=14.37 16.01 18.55 mem_used=7G gpu=100 %, 1603 MiB
+status=RUNNING stage=cluster-fleet+joint-v1 started_utc=2026-09-04T18:03:18Z
+processes: 23 cluster-fleet, 0 joint, 0 master
+-- orchestrator:
+[2026-09-04T18:03:18Z] source 282be45120c7c802fb8261fa8a19ad4859130f3d branch feat/gtoc12-asteroid-mining dirty=0; cpus=1; load=2.00 2.00 1.83
+[2026-09-04T18:03:18Z] == joint-itinerary joint_itinerary_h100_v1 (4 workers, 16 local sources + cluster_fleet_h100_v1, fleet_master_v7 ships first)
+[2026-09-04T18:03:18Z] joint v1 pid 51605
+[2026-09-04T18:03:18Z] == cluster-fleet cluster_fleet_h100_v2 (22 workers, nice 5, 28800 s budget, radii 1.75,1.6 x collect+phasing bands, >=20 members, 5 ships, beam 32)
+-- cluster_fleet_h100_v2: families done 98
+  "family": 200010,
+  "family": 100033,
+  "family": 300063,
+   wall 513.1 min, bundles 98, pss_peak 5190.8662109375 MB, verified fleets 19
+   incumbent 12348.7 kg 21 ships 183 asteroids avg 588.0 at 403 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 334 >=550 59 >=600 7 >=650 1 >=700 0 max 652.6
+   stopped: {'': 6, 'time budget before ship slot 4': 18, 'family exhausted before ship slot 5': 21, 'time budget before ship slot 3': 1, 'time budget before ship slot 5': 18, 'family exhausted before ship slot 4': 33, "crashed: ValueError('cannot convert float NaN to integer')": 1}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=2052 bytes=33204 mtime=2026-09-05T02:36:22Z
+   gtoc12_v2_campaign.sh.log lines=4 bytes=505 mtime=2026-09-04T18:03:18Z
+   run_report.json mtime=2026-09-05T02:36:22Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-05T03:32:56Z =====
+== 2026-09-05T03:33:00Z load=23.00 22.38 16.98 mem_used=3G gpu=100 %, 1603 MiB
+status=RUNNING stage=joint-v2
+processes: 0 cluster-fleet, 23 joint, 0 master
+-- orchestrator:
+  "wall_seconds_total": 11033.162764494002,
+  "worker_peak_rss_mb": 133.3125
+}
+[2026-09-05T03:15:35Z] == joint-itinerary joint_itinerary_h100_v2 over cluster_fleet_h100_v2 (22 workers)
+-- cluster_fleet_h100_v2: families done 111
+  "family": 36,
+  "family": 12,
+  "family": 100011,
+   wall 552.3 min, bundles 111, pss_peak 5190.8662109375 MB, verified fleets 20
+   incumbent 12348.9 kg 21 ships 182 asteroids avg 588.0 at 530 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 386 >=550 62 >=600 7 >=650 1 >=700 0 max 652.6
+   stopped: {'': 9, 'time budget before ship slot 4': 18, "crashed: ValueError('cannot convert float NaN to integer')": 1, 'family exhausted before ship slot 5': 27, 'time budget before ship slot 5': 19, 'time budget before ship slot 3': 1, 'family exhausted before ship slot 4': 36}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint_itinerary_h100_v2: 192 ships done (192/231 tasks), improved 182, gain 2665.9 kg; >=600 before 6 after 13; >=650 after 0; best gain 71.7
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=2346 bytes=38081 mtime=2026-09-05T03:15:35Z
+   gtoc12-joint_itinerary_h100_v2.log lines=3840 bytes=92844 mtime=2026-09-05T03:32:54Z
+   gtoc12_v2_campaign.sh.log lines=33 bytes=3112 mtime=2026-09-05T03:15:35Z
+   run_report.json mtime=2026-09-05T03:15:35Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-05T03:55:47Z =====
+== 2026-09-05T03:55:50Z load=23.00 22.95 21.32 mem_used=4G gpu=100 %, 1603 MiB
+status=RUNNING stage=fleet-master
+processes: 0 cluster-fleet, 0 joint, 23 master
+-- orchestrator:
+  "wall_seconds_total": 1217.406354865001,
+  "worker_peak_rss_mb": 119.0703125
+}
+[2026-09-05T03:35:53Z] == fleet-master fleet_master_h100_v2 (21 sources, 22 workers): results/gtoc12/runs/cluster_fleet_v1 results/gtoc12/runs/cluster_fleet_v2_deep results/gtoc12/runs/cluster_fleet_v3_repair results/gto
+-- cluster_fleet_h100_v2: families done 111
+  "family": 36,
+  "family": 12,
+  "family": 100011,
+   wall 552.3 min, bundles 111, pss_peak 5190.8662109375 MB, verified fleets 20
+   incumbent 12348.9 kg 21 ships 182 asteroids avg 588.0 at 530 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 386 >=550 62 >=600 7 >=650 1 >=700 0 max 652.6
+   stopped: {'time budget before ship slot 3': 1, '': 9, "crashed: ValueError('cannot convert float NaN to integer')": 1, 'time budget before ship slot 5': 19, 'time budget before ship slot 4': 18, 'family exhausted before ship slot 4': 36, 'family exhausted before ship slot 5': 27}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint_itinerary_h100_v2: 231 ships done (231/231 tasks), improved 219, gain 3211.6 kg; >=600 before 6 after 13; >=650 after 0; best gain 71.7
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- master log:
+  "slot": 1,
+  "total": 1911
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=2346 bytes=38081 mtime=2026-09-05T03:15:35Z
+   gtoc12-joint_itinerary_h100_v2.log lines=4634 bytes=112158 mtime=2026-09-05T03:35:53Z
+   gtoc12-fleet_master_h100_v2.log lines=12498 bytes=213134 mtime=2026-09-05T03:55:47Z
+   gtoc12_v2_campaign.sh.log lines=40 bytes=4190 mtime=2026-09-05T03:35:53Z
+   run_report.json mtime=2026-09-05T03:15:35Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0
+
+===== POLL 2026-09-05T04:21:42Z =====
+== 2026-09-05T04:21:46Z load=2.05 7.53 15.54 mem_used=4G gpu=100 %, 1609 MiB
+status=RUNNING stage=fleet-master
+processes: 0 cluster-fleet, 0 joint, 1 master
+-- orchestrator:
+  "wall_seconds_total": 1217.406354865001,
+  "worker_peak_rss_mb": 119.0703125
+}
+[2026-09-05T03:35:53Z] == fleet-master fleet_master_h100_v2 (21 sources, 22 workers): results/gtoc12/runs/cluster_fleet_v1 results/gtoc12/runs/cluster_fleet_v2_deep results/gtoc12/runs/cluster_fleet_v3_repair results/gto
+-- cluster_fleet_h100_v2: families done 111
+  "family": 36,
+  "family": 12,
+  "family": 100011,
+   wall 552.3 min, bundles 111, pss_peak 5190.8662109375 MB, verified fleets 20
+   incumbent 12348.9 kg 21 ships 182 asteroids avg 588.0 at 530 min
+   partitions: [('collect_r1.75', 47), ('phasing_r1.75', 56), ('collect_r1.6', 29), ('phasing_r1.6', 35)]
+   ships 386 >=550 62 >=600 7 >=650 1 >=700 0 max 652.6
+   stopped: {'family exhausted before ship slot 4': 36, '': 9, 'time budget before ship slot 5': 19, "crashed: ValueError('cannot convert float NaN to integer')": 1, 'family exhausted before ship slot 5': 27, 'time budget before ship slot 3': 1, 'time budget before ship slot 4': 18}
+-- joint_itinerary_h100_v1: 339 ships done (339/339 tasks), improved 294, gain 4665.0 kg; >=600 before 9 after 10; >=650 after 0; best gain 67.2
+-- joint_itinerary_h100_v2: 231 ships done (231/231 tasks), improved 219, gain 3211.6 kg; >=600 before 6 after 13; >=650 after 0; best gain 71.7
+-- joint v1 log:
+  "worker_peak_rss_mb": 133.3125
+}
+-- master log:
+  "slot": 1,
+  "total": 1911
+}
+-- tests: ................................................                   [100%] 126 passed, 1 deselected in 672.26s (0:11:12) 
+-- progress signals:
+   gtoc12-cluster_fleet_h100_v2.log lines=2346 bytes=38081 mtime=2026-09-05T03:15:35Z
+   gtoc12-joint_itinerary_h100_v2.log lines=4634 bytes=112158 mtime=2026-09-05T03:35:53Z
+   gtoc12-fleet_master_h100_v2.log lines=24848 bytes=441885 mtime=2026-09-05T04:14:54Z
+   gtoc12_v2_campaign.sh.log lines=40 bytes=4190 mtime=2026-09-05T03:35:53Z
+   run_report.json mtime=2026-09-05T03:15:35Z
+-- orchestrator alive: 2 resume alive: 0
+-- error scan (Traceback/Error/Killed/MemoryError):
+-- dmesg oom: 0

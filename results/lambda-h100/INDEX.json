@@ -1,6 +1,6 @@
 {
  "schema": "spacepdhcg.lambda-h100-evidence-index/1",
- "generated_utc": "2026-09-05T06:15:07Z",
+ "generated_utc": "2026-09-05T11:44:03Z",
  "source": "Windows checkout results/lambda-h100 (evidence scp'd from the Lambda H100 host ubuntu@192.222.55.229 on 2026-09-05)",
  "policy": {
   "kept": "files under 200 KB except the raw categories below",
@@ -12,12 +12,15 @@
    "stdout.jsonl, *.sqlite3 (raw G4 executor streams / checkpoint db)",
    "seals/*.tar.gz (seal tarballs; their .sha256 files are kept)",
    "*.csv replays, *.patch, any file of 200 KB or more"
+  ],
+  "history": [
+   "2026-09-05 fourth release merge: compact GTOC12 v10 evidence added under gtoc12/{cluster_fleet_v10,cluster_fleet_v10_control,joint_itinerary_v10,fleet_master_v10,leg_stats} + new logs/ files under the same rules; INDEX regenerated over every tracked file (regen_index.py)"
   ]
  },
- "kept_files": 608,
- "kept_bytes": 5954410,
- "skipped_files": 1171,
- "skipped_bytes": 94724556,
+ "kept_files": 636,
+ "kept_bytes": 6188629,
+ "skipped_files": 1569,
+ "skipped_bytes": 462072975,
  "kept": [
   {
    "path": "STAGED_UTC.txt",
@@ -430,9 +433,19 @@
    "sha256": "2829cf85a377d755c1a7734ae254e7e2990908e5cd152e35ae43069fdff5fe5c"
   },
   {
+   "path": "gtoc12/after_h100_v3.json",
+   "bytes": 8615,
+   "sha256": "2829cf85a377d755c1a7734ae254e7e2990908e5cd152e35ae43069fdff5fe5c"
+  },
+  {
    "path": "gtoc12/cluster_fleet_h100_v2/chain_stats.json",
    "bytes": 4101,
    "sha256": "4ffc5da2696abae5b71bcee2debd13ea9c0b42a97562158bdf8ad23f76b80a60"
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/chain_stats.json",
+   "bytes": 904,
+   "sha256": "8b6b6d08a6343dc4ea07515ea723043ca9f2918b9adc2c910ba14835212b5cee"
   },
   {
    "path": "gtoc12/fleet_master_h100_v1.attempt1-c495dc0-recursionerror/fleet-master.log",
@@ -455,6 +468,36 @@
    "sha256": "aee306e4bdb0e563a04c0ce2cf75a716a0e1bd2c519c5f44ade2c61d1484653d"
   },
   {
+   "path": "gtoc12/fleet_master_h100_v3/chain_stats.json",
+   "bytes": 6353,
+   "sha256": "e7107eefb6900de7a72d1e17b10fdf4a09329c5aa549843dae838fe05c004d53"
+  },
+  {
+   "path": "gtoc12/fleet_master_h100_v3/independent_verify.txt",
+   "bytes": 13246,
+   "sha256": "31edfbf833f9c9d393a31b07201bdb5f57d615740a15d2aba2f767d9dd05a773"
+  },
+  {
+   "path": "gtoc12/fleet_master_h100_v3/sources.txt",
+   "bytes": 1141,
+   "sha256": "f97ac21df3b66b2c7f3cf1eafaf3938ab08839d3809a4a37a433a21ffac87c3d"
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/chain_stats.json",
+   "bytes": 7887,
+   "sha256": "a7d0a2af7bcaceab9f574ae1bb34eeced90aa8d26a9d1b3b7e6893290644656d"
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/independent_verify.txt",
+   "bytes": 13884,
+   "sha256": "6d22cb9b3e68dd0a759e278c15a8efe82deb5f6127a5a2082aedb3758ed06431"
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/sources.txt",
+   "bytes": 1419,
+   "sha256": "d712b373e8a7ba03cbcc96e2fb7a404f57232125432267aa8dc6189fc9148076"
+  },
+  {
    "path": "gtoc12/gtoc12-cluster_fleet_h100_v1.log",
    "bytes": 15349,
    "sha256": "86f6be52cee78d9ea2b6e37fd7b3cdbc1b59d5e4f43f2b706476f3e31bca2247"
@@ -465,9 +508,29 @@
    "sha256": "302b1839b4ae6fab61e952c261ba0078aed3e8636982b623720c2a3d006b8106"
   },
   {
+   "path": "gtoc12/leg_stats/after_v10.json",
+   "bytes": 8646,
+   "sha256": "8924b8b7d4d796a7fe9dfcc9cc6a24d79e4f06e30e9c35130334cecc111412b7"
+  },
+  {
+   "path": "gtoc12/leg_stats/v10_report.json",
+   "bytes": 44845,
+   "sha256": "4ce47eb632df4f19ff76e272dc5d1ee4056fd047fd466f4b5d6f29c84bf420b7"
+  },
+  {
    "path": "logs/gtoc12-RESULT",
    "bytes": 294,
    "sha256": "9921ead8de348baca642a5dcec93199607862f6ea7477c17809942c6737fb01c"
+  },
+  {
+   "path": "logs/gtoc12-chainstats_h100_v3.log",
+   "bytes": 3468,
+   "sha256": "e4ea4c377a1d7e230995d038332615a2d5359100f8124edd88eae6f95bfb3009"
+  },
+  {
+   "path": "logs/gtoc12-chainstats_v10.log",
+   "bytes": 4259,
+   "sha256": "0e3cdaf673dafbd91a15074bc01ce385f7473eaeadbfa9573166ad349ce906e8"
   },
   {
    "path": "logs/gtoc12-cluster_fleet_h100_v1.log",
@@ -478,6 +541,16 @@
    "path": "logs/gtoc12-cluster_fleet_h100_v2.log",
    "bytes": 38081,
    "sha256": "409737ded1b786c580242d790239a18b7091641e1ddb42bc15f53a7bcf85fbb8"
+  },
+  {
+   "path": "logs/gtoc12-cluster_fleet_v10.log",
+   "bytes": 11525,
+   "sha256": "98a4384504f7bca70de815d2f41e7538121497465a40fd05718a98441449e631"
+  },
+  {
+   "path": "logs/gtoc12-cluster_fleet_v10_control.log",
+   "bytes": 11549,
+   "sha256": "76278f972e260f027b36897d8989175812bc7f9e345f158b30bfa7fcb693d132"
   },
   {
    "path": "logs/gtoc12-fleet_master_h100_v1.log",
@@ -495,14 +568,69 @@
    "sha256": "6a2be25d00ad3602aaf8728fb3187bd5fc97e65e3c0d497024129da4ac3478de"
   },
   {
+   "path": "logs/gtoc12-joint_itinerary_h100_v8.log",
+   "bytes": 16909,
+   "sha256": "216fb435180c5fbb8226b405844324357e101ee67d9363defcd7c198f0b6d077"
+  },
+  {
+   "path": "logs/gtoc12-joint_itinerary_v10.log",
+   "bytes": 30065,
+   "sha256": "77cb687fefb64b69fc3e5abffbc32286bc39cdab60813fb82a5644aa3ab293ce"
+  },
+  {
+   "path": "logs/gtoc12-legstats_h100_v3.log",
+   "bytes": 1120,
+   "sha256": "576c6f0477675261fdbf57461dc40865191cf5f74753b442eac40ed6965f8d29"
+  },
+  {
+   "path": "logs/gtoc12-legstats_v10.log",
+   "bytes": 1120,
+   "sha256": "6e2207c74f784acbe71cd7b8c8e1b9deb39fedd6cbf31483bda9ad848bd88410"
+  },
+  {
+   "path": "logs/gtoc12-report_v10.log",
+   "bytes": 318,
+   "sha256": "25486c190eca2f2f6eaa8aabdf834b548aee43901eb141296cc8ed0e6b4bcbe2"
+  },
+  {
+   "path": "logs/gtoc12-v10-RESULT",
+   "bytes": 92,
+   "sha256": "ae9b48d44c30c9dcc7bf95bdc0d9d65476fab0366f9801ed7c2151455d4ab3c0"
+  },
+  {
+   "path": "logs/gtoc12-v10-master-RESULT",
+   "bytes": 71,
+   "sha256": "a0f4c38522e074f947b39e8bb78462b716daea553e6e38ed9bd0efd00465314a"
+  },
+  {
    "path": "logs/gtoc12-v2-RESULT",
    "bytes": 71,
    "sha256": "97988a500370c79cc8b4d65e0b95025f7702abc25e81c0293b45fa7b75a638c7"
   },
   {
+   "path": "logs/gtoc12-v2-watch.log",
+   "bytes": 19111,
+   "sha256": "40550e91e5774a7f8600165a81180098bf51f7bf6676c9d680a96fdd1896e826"
+  },
+  {
+   "path": "logs/gtoc12-v3-RESULT",
+   "bytes": 71,
+   "sha256": "cd75021958ddf63d4f54520c701abbad889126132b948d8e00e574ba3e32edf7"
+  },
+  {
    "path": "logs/gtoc12-verify_h100_v2.log",
    "bytes": 6926,
    "sha256": "6299b56484bffbcb8b492db53feb487f9fbbddac4149ca20ce898ea4909fae17"
+  },
+  {
+   "path": "logs/gtoc12-verify_h100_v3.log",
+   "bytes": 7262,
+   "sha256": "c2ded8bd16af3f6794fa10a2e2398e1e875070ee75bee5907e4a71d22272782b"
+  },
+  {
+   "path": "logs/gtoc12-verify_v10.log",
+   "bytes": 7307,
+   "sha256": "6dad75f84c71c89059f76a8435d859c9f1e94dbc781e894a2ac5ca304cedf3b0"
   },
   {
    "path": "logs/gtoc12_campaign.sh.log",
@@ -520,6 +648,11 @@
    "sha256": "1f9014119e87c2baab224e2e297e1ee47f7193c65c3c2635e2a6c689945c3bb6"
   },
   {
+   "path": "logs/gtoc12_v10_campaign.log",
+   "bytes": 1227,
+   "sha256": "a8dddcd5bc1191edc933e3808ad152ffdecfd98c6be046cc49f1de5038aacbb4"
+  },
+  {
    "path": "logs/gtoc12_v2_campaign.sh.log",
    "bytes": 12126,
    "sha256": "4130acdb8aaa6e35dc0b719955870b51d34b418d64d79475de7fe63fbb38764d"
@@ -528,6 +661,16 @@
    "path": "logs/lit_rerun.sh.log",
    "bytes": 6123,
    "sha256": "a03b4f5b5356386db6557275536f19f6b47bbb0bdc418355801dbe703bc5b352"
+  },
+  {
+   "path": "logs/master_v10.sh.log",
+   "bytes": 5903,
+   "sha256": "ffe5899be86f3c0ceaaf2467fededf01335c77df1c3af858890a5050b09b04f5"
+  },
+  {
+   "path": "logs/master_v3.sh.log",
+   "bytes": 5902,
+   "sha256": "bd57d51c31d0994b7bee3ed39be1426e04bc92b1e6c402eaf600960aa43b3f17"
   },
   {
    "path": "logs/provision.sh.log",
@@ -3074,8 +3217,24 @@
    "bytes": 89
   },
   {
+   "path": "bundles/gtoc12-h100-v10-c2730b1.bundle",
+   "bytes": 4941376
+  },
+  {
    "path": "bundles/gtoc12-h100-v2-86a91d3.bundle",
    "bytes": 12785417
+  },
+  {
+   "path": "bundles/gtoc12-h100-v2-SHA256",
+   "bytes": 239
+  },
+  {
+   "path": "bundles/gtoc12-h100-v3-48e5fb7.bundle",
+   "bytes": 13043123
+  },
+  {
+   "path": "bundles/gtoc12-h100-v3-SHA256",
+   "bytes": 239
   },
   {
    "path": "bundles/single-gpu-v1-h100-fixes-9e75b47.bundle",
@@ -3224,10 +3383,6 @@
   {
    "path": "gtoc12/cluster_fleet_h100_v1/run_report.json",
    "bytes": 551779
-  },
-  {
-   "path": "gtoc12/cluster_fleet_h100_v2.partial-4h/run_report.json",
-   "bytes": 863140
   },
   {
    "path": "gtoc12/cluster_fleet_h100_v2/clusters/family_0000/bundle.json",
@@ -5326,6 +5481,1210 @@
    "bytes": 2176050
   },
   {
+   "path": "gtoc12/cluster_fleet_h100_v2.partial-4h/run_report.json",
+   "bytes": 863140
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0000/bundle.json",
+   "bytes": 25604
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0000/ship_01/route_summary.json",
+   "bytes": 12566
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0000/ship_02/route_summary.json",
+   "bytes": 14969
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0001/bundle.json",
+   "bytes": 25715
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0001/ship_01/route_summary.json",
+   "bytes": 13613
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0001/ship_02/route_summary.json",
+   "bytes": 12754
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0002/bundle.json",
+   "bytes": 23733
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0002/ship_01/route_summary.json",
+   "bytes": 12293
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0003/bundle.json",
+   "bytes": 18846
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0003/ship_01/route_summary.json",
+   "bytes": 13397
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0004/bundle.json",
+   "bytes": 23110
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0004/ship_01/route_summary.json",
+   "bytes": 13819
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0004/ship_02/route_summary.json",
+   "bytes": 13945
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0005/bundle.json",
+   "bytes": 22931
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0005/ship_01/route_summary.json",
+   "bytes": 14125
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0006/bundle.json",
+   "bytes": 25939
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0006/ship_01/route_summary.json",
+   "bytes": 13838
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0006/ship_02/route_summary.json",
+   "bytes": 13960
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0007/bundle.json",
+   "bytes": 19550
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0007/ship_01/route_summary.json",
+   "bytes": 14685
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0007/ship_02/route_summary.json",
+   "bytes": 12697
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0008/bundle.json",
+   "bytes": 25162
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0008/ship_01/route_summary.json",
+   "bytes": 14675
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0008/ship_02/route_summary.json",
+   "bytes": 12735
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0009/bundle.json",
+   "bytes": 17943
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0009/ship_01/route_summary.json",
+   "bytes": 13425
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0010/bundle.json",
+   "bytes": 20294
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0010/ship_01/route_summary.json",
+   "bytes": 15890
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0011/bundle.json",
+   "bytes": 22647
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0011/ship_01/route_summary.json",
+   "bytes": 14685
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0011/ship_02/route_summary.json",
+   "bytes": 14271
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0012/bundle.json",
+   "bytes": 21615
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0012/ship_01/route_summary.json",
+   "bytes": 14671
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0012/ship_02/route_summary.json",
+   "bytes": 13422
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0013/bundle.json",
+   "bytes": 17656
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0013/ship_01/route_summary.json",
+   "bytes": 13943
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0014/bundle.json",
+   "bytes": 24328
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0014/ship_01/route_summary.json",
+   "bytes": 16069
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0016/bundle.json",
+   "bytes": 30979
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0016/ship_01/route_summary.json",
+   "bytes": 14854
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0016/ship_02/route_summary.json",
+   "bytes": 12726
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0017/bundle.json",
+   "bytes": 26811
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0017/ship_01/route_summary.json",
+   "bytes": 10351
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0017/ship_02/route_summary.json",
+   "bytes": 13949
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0018/bundle.json",
+   "bytes": 24878
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0018/ship_01/route_summary.json",
+   "bytes": 10665
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0018/ship_02/route_summary.json",
+   "bytes": 12330
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0019/bundle.json",
+   "bytes": 24614
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0019/ship_01/route_summary.json",
+   "bytes": 14675
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0021/bundle.json",
+   "bytes": 19632
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0021/ship_01/route_summary.json",
+   "bytes": 11877
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0022/bundle.json",
+   "bytes": 16611
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0022/ship_01/route_summary.json",
+   "bytes": 11883
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0024/bundle.json",
+   "bytes": 24089
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0024/ship_01/route_summary.json",
+   "bytes": 13630
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0024/ship_02/route_summary.json",
+   "bytes": 11906
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0025/bundle.json",
+   "bytes": 24163
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0025/ship_01/route_summary.json",
+   "bytes": 13166
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0025/ship_02/route_summary.json",
+   "bytes": 13435
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0027/bundle.json",
+   "bytes": 37943
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0027/ship_01/route_summary.json",
+   "bytes": 13162
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0027/ship_02/route_summary.json",
+   "bytes": 12696
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0029/bundle.json",
+   "bytes": 28052
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0029/ship_01/route_summary.json",
+   "bytes": 14538
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0029/ship_02/route_summary.json",
+   "bytes": 12772
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0030/bundle.json",
+   "bytes": 26353
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0030/ship_01/route_summary.json",
+   "bytes": 14714
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0030/ship_02/route_summary.json",
+   "bytes": 9639
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0032/bundle.json",
+   "bytes": 24659
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0032/ship_01/route_summary.json",
+   "bytes": 15873
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0032/ship_02/route_summary.json",
+   "bytes": 12705
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0036/bundle.json",
+   "bytes": 26952
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0036/ship_01/route_summary.json",
+   "bytes": 13926
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0036/ship_02/route_summary.json",
+   "bytes": 11880
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0041/bundle.json",
+   "bytes": 23125
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0041/ship_01/route_summary.json",
+   "bytes": 12767
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0041/ship_02/route_summary.json",
+   "bytes": 11799
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0042/bundle.json",
+   "bytes": 32859
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0042/ship_01/route_summary.json",
+   "bytes": 11885
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0042/ship_02/route_summary.json",
+   "bytes": 14498
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0043/bundle.json",
+   "bytes": 29095
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0043/ship_01/route_summary.json",
+   "bytes": 13926
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0043/ship_02/route_summary.json",
+   "bytes": 12739
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0044/bundle.json",
+   "bytes": 31191
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0044/ship_01/route_summary.json",
+   "bytes": 14676
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0044/ship_02/route_summary.json",
+   "bytes": 11151
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0045/bundle.json",
+   "bytes": 24189
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0045/ship_01/route_summary.json",
+   "bytes": 12530
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0045/ship_02/route_summary.json",
+   "bytes": 12167
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0055/bundle.json",
+   "bytes": 24951
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0055/ship_01/route_summary.json",
+   "bytes": 14072
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0055/ship_02/route_summary.json",
+   "bytes": 13430
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0064/bundle.json",
+   "bytes": 36871
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0064/ship_01/route_summary.json",
+   "bytes": 13786
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0064/ship_02/route_summary.json",
+   "bytes": 13153
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/clusters/family_0064/ship_03/route_summary.json",
+   "bytes": 5001
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleet/Result.txt",
+   "bytes": 8691167
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleet/fleet.json",
+   "bytes": 5074
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleet/viewer/manifest.json",
+   "bytes": 467
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_000_01ships/Result.txt",
+   "bytes": 435695
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_000_01ships/fleet.json",
+   "bytes": 2001
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_001_02ships/Result.txt",
+   "bytes": 878538
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_001_02ships/fleet.json",
+   "bytes": 2149
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_002_03ships/Result.txt",
+   "bytes": 1289760
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_002_03ships/fleet.json",
+   "bytes": 2307
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_003_04ships/Result.txt",
+   "bytes": 1715382
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_003_04ships/fleet.json",
+   "bytes": 2455
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_004_06ships/Result.txt",
+   "bytes": 2566935
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_004_06ships/fleet.json",
+   "bytes": 2765
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_005_08ships/Result.txt",
+   "bytes": 3439912
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_005_08ships/fleet.json",
+   "bytes": 3083
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_006_10ships/Result.txt",
+   "bytes": 4311879
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_006_10ships/fleet.json",
+   "bytes": 3412
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_007_12ships/Result.txt",
+   "bytes": 5181992
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_007_12ships/fleet.json",
+   "bytes": 3696
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_008_14ships/Result.txt",
+   "bytes": 6063764
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_008_14ships/fleet.json",
+   "bytes": 4012
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_009_15ships/Result.txt",
+   "bytes": 6509697
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_009_15ships/fleet.json",
+   "bytes": 4138
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_010_16ships/Result.txt",
+   "bytes": 6932601
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_010_16ships/fleet.json",
+   "bytes": 4330
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_011_16ships/Result.txt",
+   "bytes": 6932601
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_011_16ships/fleet.json",
+   "bytes": 4313
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_011_17ships/Result.txt",
+   "bytes": 7320329
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_011_17ships/fleet.json",
+   "bytes": 4466
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_012_17ships/Result.txt",
+   "bytes": 7372025
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_012_17ships/fleet.json",
+   "bytes": 4480
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_013_17ships/Result.txt",
+   "bytes": 7383428
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_013_17ships/fleet.json",
+   "bytes": 4494
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_014_18ships/Result.txt",
+   "bytes": 7803581
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_014_18ships/fleet.json",
+   "bytes": 4675
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_015_18ships/Result.txt",
+   "bytes": 7794663
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_015_18ships/fleet.json",
+   "bytes": 4723
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_016_18ships/Result.txt",
+   "bytes": 7825224
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_016_18ships/fleet.json",
+   "bytes": 4755
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_016_19ships/Result.txt",
+   "bytes": 8230997
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_016_19ships/fleet.json",
+   "bytes": 4886
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_017_19ships/Result.txt",
+   "bytes": 8260837
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_017_19ships/fleet.json",
+   "bytes": 4911
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_018_19ships/Result.txt",
+   "bytes": 8268778
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_018_19ships/fleet.json",
+   "bytes": 4895
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_019_20ships/Result.txt",
+   "bytes": 8650688
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_019_20ships/fleet.json",
+   "bytes": 5106
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_020_20ships/Result.txt",
+   "bytes": 8691167
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_020_20ships/fleet.json",
+   "bytes": 5094
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_021_20ships/Result.txt",
+   "bytes": 8691167
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/fleets/fleet_021_20ships/fleet.json",
+   "bytes": 5092
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10/run_report.json",
+   "bytes": 504919
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0000/bundle.json",
+   "bytes": 27013
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0000/ship_01/route_summary.json",
+   "bytes": 11973
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0000/ship_02/route_summary.json",
+   "bytes": 14255
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0001/bundle.json",
+   "bytes": 24203
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0001/ship_01/route_summary.json",
+   "bytes": 13606
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0001/ship_02/route_summary.json",
+   "bytes": 12756
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0002/bundle.json",
+   "bytes": 23356
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0002/ship_01/route_summary.json",
+   "bytes": 13637
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0003/bundle.json",
+   "bytes": 20478
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0003/ship_01/route_summary.json",
+   "bytes": 13392
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0003/ship_02/route_summary.json",
+   "bytes": 11872
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0004/bundle.json",
+   "bytes": 22045
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0004/ship_01/route_summary.json",
+   "bytes": 13463
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0004/ship_02/route_summary.json",
+   "bytes": 13939
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0005/bundle.json",
+   "bytes": 22913
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0005/ship_01/route_summary.json",
+   "bytes": 14119
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0006/bundle.json",
+   "bytes": 23675
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0006/ship_01/route_summary.json",
+   "bytes": 13462
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0006/ship_02/route_summary.json",
+   "bytes": 13962
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0007/bundle.json",
+   "bytes": 19526
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0007/ship_01/route_summary.json",
+   "bytes": 14686
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0007/ship_02/route_summary.json",
+   "bytes": 12698
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0008/bundle.json",
+   "bytes": 25136
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0008/ship_01/route_summary.json",
+   "bytes": 14685
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0008/ship_02/route_summary.json",
+   "bytes": 12738
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0009/bundle.json",
+   "bytes": 17292
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0009/ship_01/route_summary.json",
+   "bytes": 13530
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0010/bundle.json",
+   "bytes": 22790
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0010/ship_01/route_summary.json",
+   "bytes": 15898
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0010/ship_02/route_summary.json",
+   "bytes": 12679
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0011/bundle.json",
+   "bytes": 22607
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0011/ship_01/route_summary.json",
+   "bytes": 14685
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0011/ship_02/route_summary.json",
+   "bytes": 14274
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0012/bundle.json",
+   "bytes": 21582
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0012/ship_01/route_summary.json",
+   "bytes": 14668
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0012/ship_02/route_summary.json",
+   "bytes": 13429
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0013/bundle.json",
+   "bytes": 17624
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0013/ship_01/route_summary.json",
+   "bytes": 13944
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0014/bundle.json",
+   "bytes": 21400
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0014/ship_01/route_summary.json",
+   "bytes": 16057
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0016/bundle.json",
+   "bytes": 30955
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0016/ship_01/route_summary.json",
+   "bytes": 14853
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0016/ship_02/route_summary.json",
+   "bytes": 12726
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0017/bundle.json",
+   "bytes": 26780
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0017/ship_01/route_summary.json",
+   "bytes": 10347
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0017/ship_02/route_summary.json",
+   "bytes": 13946
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0018/bundle.json",
+   "bytes": 29923
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0018/ship_01/route_summary.json",
+   "bytes": 10665
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0018/ship_02/route_summary.json",
+   "bytes": 12331
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0019/bundle.json",
+   "bytes": 22804
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0019/ship_01/route_summary.json",
+   "bytes": 14854
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0021/bundle.json",
+   "bytes": 19621
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0021/ship_01/route_summary.json",
+   "bytes": 11875
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0022/bundle.json",
+   "bytes": 16589
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0022/ship_01/route_summary.json",
+   "bytes": 11883
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0024/bundle.json",
+   "bytes": 22506
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0024/ship_01/route_summary.json",
+   "bytes": 13443
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0024/ship_02/route_summary.json",
+   "bytes": 11904
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0025/bundle.json",
+   "bytes": 24136
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0025/ship_01/route_summary.json",
+   "bytes": 13168
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0025/ship_02/route_summary.json",
+   "bytes": 13441
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0027/bundle.json",
+   "bytes": 36871
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0027/ship_01/route_summary.json",
+   "bytes": 13160
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0027/ship_02/route_summary.json",
+   "bytes": 12690
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0029/bundle.json",
+   "bytes": 26982
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0029/ship_01/route_summary.json",
+   "bytes": 14512
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0029/ship_02/route_summary.json",
+   "bytes": 12770
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0030/bundle.json",
+   "bytes": 26326
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0030/ship_01/route_summary.json",
+   "bytes": 14712
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0030/ship_02/route_summary.json",
+   "bytes": 9641
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0032/bundle.json",
+   "bytes": 22362
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+   "bytes": 15682
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_02/route_summary.json",
+   "bytes": 12591
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0036/bundle.json",
+   "bytes": 26910
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0036/ship_01/route_summary.json",
+   "bytes": 13925
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0036/ship_02/route_summary.json",
+   "bytes": 11882
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0041/bundle.json",
+   "bytes": 23100
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0041/ship_01/route_summary.json",
+   "bytes": 12766
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0041/ship_02/route_summary.json",
+   "bytes": 11797
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0042/bundle.json",
+   "bytes": 31782
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0042/ship_01/route_summary.json",
+   "bytes": 11884
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0042/ship_02/route_summary.json",
+   "bytes": 14312
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0043/bundle.json",
+   "bytes": 29067
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0043/ship_01/route_summary.json",
+   "bytes": 13925
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0043/ship_02/route_summary.json",
+   "bytes": 12742
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0044/bundle.json",
+   "bytes": 40236
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0044/ship_01/route_summary.json",
+   "bytes": 13408
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0044/ship_02/route_summary.json",
+   "bytes": 12059
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0045/bundle.json",
+   "bytes": 22365
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0045/ship_01/route_summary.json",
+   "bytes": 13970
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0045/ship_02/route_summary.json",
+   "bytes": 12002
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0055/bundle.json",
+   "bytes": 25572
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0055/ship_01/route_summary.json",
+   "bytes": 14075
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0055/ship_02/route_summary.json",
+   "bytes": 13328
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0064/bundle.json",
+   "bytes": 34526
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0064/ship_01/route_summary.json",
+   "bytes": 13776
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0064/ship_02/route_summary.json",
+   "bytes": 13150
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/clusters/family_0064/ship_03/route_summary.json",
+   "bytes": 4998
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleet/Result.txt",
+   "bytes": 8743820
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleet/fleet.json",
+   "bytes": 5058
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleet/viewer/manifest.json",
+   "bytes": 467
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_000_01ships/Result.txt",
+   "bytes": 439300
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_000_01ships/fleet.json",
+   "bytes": 2012
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_001_02ships/Result.txt",
+   "bytes": 882143
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_001_02ships/fleet.json",
+   "bytes": 2159
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_002_03ships/Result.txt",
+   "bytes": 1293365
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_002_03ships/fleet.json",
+   "bytes": 2311
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_003_04ships/Result.txt",
+   "bytes": 1718987
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_003_04ships/fleet.json",
+   "bytes": 2490
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_004_06ships/Result.txt",
+   "bytes": 2570540
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_004_06ships/fleet.json",
+   "bytes": 2777
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_005_08ships/Result.txt",
+   "bytes": 3445597
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_005_08ships/fleet.json",
+   "bytes": 3096
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_006_10ships/Result.txt",
+   "bytes": 4320119
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_006_10ships/fleet.json",
+   "bytes": 3412
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_007_12ships/Result.txt",
+   "bytes": 5194352
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_007_12ships/fleet.json",
+   "bytes": 3701
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_008_14ships/Result.txt",
+   "bytes": 6076124
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_008_14ships/fleet.json",
+   "bytes": 4015
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_009_16ships/Result.txt",
+   "bytes": 7009180
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_009_16ships/fleet.json",
+   "bytes": 4304
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_010_16ships/Result.txt",
+   "bytes": 7021088
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_010_16ships/fleet.json",
+   "bytes": 4328
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_011_16ships/Result.txt",
+   "bytes": 7021088
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_011_16ships/fleet.json",
+   "bytes": 4327
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_011_17ships/Result.txt",
+   "bytes": 7408816
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_011_17ships/fleet.json",
+   "bytes": 4477
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_012_17ships/Result.txt",
+   "bytes": 7430951
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_012_17ships/fleet.json",
+   "bytes": 4486
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_013_17ships/Result.txt",
+   "bytes": 7442354
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_013_17ships/fleet.json",
+   "bytes": 4511
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_014_18ships/Result.txt",
+   "bytes": 7862507
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_014_18ships/fleet.json",
+   "bytes": 4702
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_015_18ships/Result.txt",
+   "bytes": 7869142
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_015_18ships/fleet.json",
+   "bytes": 4736
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_016_18ships/Result.txt",
+   "bytes": 7848502
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_016_18ships/fleet.json",
+   "bytes": 4766
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_017_18ships/Result.txt",
+   "bytes": 7795766
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_017_18ships/fleet.json",
+   "bytes": 4763
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_017_19ships/Result.txt",
+   "bytes": 8266954
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_017_19ships/fleet.json",
+   "bytes": 4923
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_018_19ships/Result.txt",
+   "bytes": 8261661
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_018_19ships/fleet.json",
+   "bytes": 4939
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_019_19ships/Result.txt",
+   "bytes": 8291644
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_019_19ships/fleet.json",
+   "bytes": 4905
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_020_20ships/Result.txt",
+   "bytes": 8697058
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_020_20ships/fleet.json",
+   "bytes": 5104
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_021_20ships/Result.txt",
+   "bytes": 8743820
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_021_20ships/fleet.json",
+   "bytes": 5090
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_022_20ships/Result.txt",
+   "bytes": 8743820
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/fleets/fleet_022_20ships/fleet.json",
+   "bytes": 5077
+  },
+  {
+   "path": "gtoc12/cluster_fleet_v10_control/run_report.json",
+   "bytes": 488447
+  },
+  {
    "path": "gtoc12/fleet_master_h100_v1/fleet/Result.txt",
    "bytes": 8648834
   },
@@ -5366,12 +6725,48 @@
    "bytes": 2657641
   },
   {
-   "path": "gtoc12/joint_itinerary_h100_v1/run_report.json",
-   "bytes": 3347944
+   "path": "gtoc12/fleet_master_h100_v3/fleet/Result.txt",
+   "bytes": 9720079
   },
   {
-   "path": "gtoc12/joint_itinerary_h100_v1/ships.jsonl",
-   "bytes": 2172345
+   "path": "gtoc12/fleet_master_h100_v3/fleet/fleet.json",
+   "bytes": 5978
+  },
+  {
+   "path": "gtoc12/fleet_master_h100_v3/fleet/viewer/manifest.json",
+   "bytes": 468
+  },
+  {
+   "path": "gtoc12/fleet_master_h100_v3/official_verification.json",
+   "bytes": 752837
+  },
+  {
+   "path": "gtoc12/fleet_master_h100_v3/run_report.json",
+   "bytes": 2730618
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/fleet/Result.txt",
+   "bytes": 10099331
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/fleet/fleet.json",
+   "bytes": 6150
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/fleet/viewer/manifest.json",
+   "bytes": 469
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/official_verification.json",
+   "bytes": 990568
+  },
+  {
+   "path": "gtoc12/fleet_master_v10/run_report.json",
+   "bytes": 3678235
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v1/run_report.json",
+   "bytes": 3347944
   },
   {
    "path": "gtoc12/joint_itinerary_h100_v1/ships/cluster_fleet_h100_v1_clusters_family_0000/ship_01/route_summary.json",
@@ -6550,12 +7945,12 @@
    "bytes": 14103
   },
   {
-   "path": "gtoc12/joint_itinerary_h100_v2/run_report.json",
-   "bytes": 2455790
+   "path": "gtoc12/joint_itinerary_h100_v1/ships.jsonl",
+   "bytes": 2172345
   },
   {
-   "path": "gtoc12/joint_itinerary_h100_v2/ships.jsonl",
-   "bytes": 1590306
+   "path": "gtoc12/joint_itinerary_h100_v2/run_report.json",
+   "bytes": 2455790
   },
   {
    "path": "gtoc12/joint_itinerary_h100_v2/ships/cluster_fleet_h100_v2_clusters_family_0000/ship_01/route_summary.json",
@@ -7434,16 +8829,348 @@
    "bytes": 13408
   },
   {
+   "path": "gtoc12/joint_itinerary_h100_v2/ships.jsonl",
+   "bytes": 1590306
+  },
+  {
    "path": "gtoc12/joint_itinerary_h100_v8/run_report.json",
    "bytes": 362930
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0000/ship_02/route_summary.json",
+   "bytes": 15107
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0000/ship_03/route_summary.json",
+   "bytes": 14312
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0001/ship_01/route_summary.json",
+   "bytes": 13792
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0001/ship_03/route_summary.json",
+   "bytes": 14908
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0002/ship_01/route_summary.json",
+   "bytes": 13622
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0003/ship_01/route_summary.json",
+   "bytes": 14497
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0003/ship_02/route_summary.json",
+   "bytes": 13576
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0006/ship_01/route_summary.json",
+   "bytes": 13446
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0006/ship_02/route_summary.json",
+   "bytes": 15115
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0006/ship_03/route_summary.json",
+   "bytes": 13362
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0007/ship_01/route_summary.json",
+   "bytes": 14959
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0007/ship_02/route_summary.json",
+   "bytes": 15794
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0007/ship_03/route_summary.json",
+   "bytes": 12780
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0011/ship_01/route_summary.json",
+   "bytes": 15652
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0011/ship_02/route_summary.json",
+   "bytes": 13810
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0011/ship_03/route_summary.json",
+   "bytes": 10333
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0012/ship_01/route_summary.json",
+   "bytes": 14864
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0013/ship_01/route_summary.json",
+   "bytes": 15101
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0014/ship_01/route_summary.json",
+   "bytes": 15689
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0014/ship_02/route_summary.json",
+   "bytes": 14900
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0016/ship_01/route_summary.json",
+   "bytes": 15055
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0017/ship_02/route_summary.json",
+   "bytes": 14919
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0019/ship_02/route_summary.json",
+   "bytes": 15072
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0021/ship_01/route_summary.json",
+   "bytes": 14134
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0021/ship_02/route_summary.json",
+   "bytes": 13356
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0022/ship_02/route_summary.json",
+   "bytes": 13539
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0025/ship_01/route_summary.json",
+   "bytes": 13940
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0025/ship_02/route_summary.json",
+   "bytes": 14897
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0029/ship_01/route_summary.json",
+   "bytes": 15886
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0029/ship_02/route_summary.json",
+   "bytes": 13552
+  },
+  {
+   "path": "gtoc12/joint_itinerary_h100_v8/ships/cluster_fleet_v8_clusters_family_0030/ship_01/route_summary.json",
+   "bytes": 14145
   },
   {
    "path": "gtoc12/joint_itinerary_h100_v8/ships.jsonl",
    "bytes": 234123
   },
   {
+   "path": "gtoc12/joint_itinerary_v10/run_report.json",
+   "bytes": 579058
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0000/ship_01/route_summary.json",
+   "bytes": 13121
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0000/ship_02/route_summary.json",
+   "bytes": 15456
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0001/ship_01/route_summary.json",
+   "bytes": 13792
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0001/ship_02/route_summary.json",
+   "bytes": 13124
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0003/ship_01/route_summary.json",
+   "bytes": 13788
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0004/ship_02/route_summary.json",
+   "bytes": 14302
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0005/ship_01/route_summary.json",
+   "bytes": 14305
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0006/ship_01/route_summary.json",
+   "bytes": 13829
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0006/ship_02/route_summary.json",
+   "bytes": 14358
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0007/ship_01/route_summary.json",
+   "bytes": 15074
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0009/ship_01/route_summary.json",
+   "bytes": 13810
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0010/ship_01/route_summary.json",
+   "bytes": 15889
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0011/ship_01/route_summary.json",
+   "bytes": 15638
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0012/ship_01/route_summary.json",
+   "bytes": 15060
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0013/ship_01/route_summary.json",
+   "bytes": 14338
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0016/ship_01/route_summary.json",
+   "bytes": 15063
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0017/ship_02/route_summary.json",
+   "bytes": 14150
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0018/ship_02/route_summary.json",
+   "bytes": 13337
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0021/ship_01/route_summary.json",
+   "bytes": 11882
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0022/ship_01/route_summary.json",
+   "bytes": 11891
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0025/ship_01/route_summary.json",
+   "bytes": 13360
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0025/ship_02/route_summary.json",
+   "bytes": 13453
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0027/ship_01/route_summary.json",
+   "bytes": 13552
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0029/ship_02/route_summary.json",
+   "bytes": 12794
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0030/ship_01/route_summary.json",
+   "bytes": 14918
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0032/ship_01/route_summary.json",
+   "bytes": 15868
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0036/ship_01/route_summary.json",
+   "bytes": 14326
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0041/ship_01/route_summary.json",
+   "bytes": 12966
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0042/ship_01/route_summary.json",
+   "bytes": 11894
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0042/ship_02/route_summary.json",
+   "bytes": 14680
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0043/ship_01/route_summary.json",
+   "bytes": 14301
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0044/ship_01/route_summary.json",
+   "bytes": 14894
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0045/ship_01/route_summary.json",
+   "bytes": 12810
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0055/ship_01/route_summary.json",
+   "bytes": 14287
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0055/ship_02/route_summary.json",
+   "bytes": 13439
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0064/ship_02/route_summary.json",
+   "bytes": 13347
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0000/ship_01/route_summary.json",
+   "bytes": 11986
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0003/ship_02/route_summary.json",
+   "bytes": 11873
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0014/ship_01/route_summary.json",
+   "bytes": 15691
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0019/ship_01/route_summary.json",
+   "bytes": 14850
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0024/ship_01/route_summary.json",
+   "bytes": 13451
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0029/ship_01/route_summary.json",
+   "bytes": 14720
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0032/ship_02/route_summary.json",
+   "bytes": 12774
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0044/ship_01/route_summary.json",
+   "bytes": 13769
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0044/ship_02/route_summary.json",
+   "bytes": 12253
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0045/ship_01/route_summary.json",
+   "bytes": 14354
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0064/ship_01/route_summary.json",
+   "bytes": 13787
+  },
+  {
+   "path": "gtoc12/joint_itinerary_v10/ships.jsonl",
+   "bytes": 376298
+  },
+  {
    "path": "logs/gtoc12-fleet_master_h100_v2.log",
    "bytes": 442172
+  },
+  {
+   "path": "logs/gtoc12-fleet_master_h100_v3.log",
+   "bytes": 453735
+  },
+  {
+   "path": "logs/gtoc12-fleet_master_v10.log",
+   "bytes": 579394
   },
   {
    "path": "v1-reseal-9e75b47-h100/seals/g0-9e75b470fd53.tar.gz",
@@ -7743,6 +9470,14 @@
   },
   {
    "path": "viewer/fleet_master_h100_v2/manifest.json",
+   "bytes": 1735
+  },
+  {
+   "path": "viewer/fleet_master_h100_v3/fleet.json",
+   "bytes": 2069063
+  },
+  {
+   "path": "viewer/fleet_master_h100_v3/manifest.json",
    "bytes": 1735
   }
  ]

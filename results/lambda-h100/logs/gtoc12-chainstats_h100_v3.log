@@ -1,0 +1,31 @@
+cluster_fleet_v1                       routes  150 chains  150 >=550   1 >=600   0 >=650   0 >=700   0 max 553.6
+cluster_fleet_v2_deep                  routes    7 chains    7 >=550   0 >=600   0 >=650   0 >=700   0 max 530.6
+cluster_fleet_v3_repair                routes   23 chains   23 >=550   0 >=600   0 >=650   0 >=700   0 max 516.6
+cluster_fleet_v4                       routes  119 chains  119 >=550   1 >=600   0 >=650   0 >=700   0 max 564.3
+fleet10_master_v1                      routes    9 chains    9 >=550   1 >=600   0 >=650   0 >=700   0 max 583.2
+probe_v4_family                        routes    3 chains    3 >=550   0 >=600   0 >=650   0 >=700   0 max 354.0
+cluster_fleet_v5                       routes  128 chains  128 >=550   6 >=600   0 >=650   0 >=700   0 max 570.8
+cluster_fleet_v5c                      routes   94 chains   94 >=550   7 >=600   1 >=650   0 >=700   0 max 620.1
+probe_v5_family247                     routes    2 chains    2 >=550   0 >=600   0 >=650   0 >=700   0 max 547.0
+cluster_fleet_v6                       routes  136 chains  136 >=550  16 >=600   2 >=650   0 >=700   0 max 603.7
+probe_v6_family                        routes    5 chains    5 >=550   3 >=600   0 >=650   0 >=700   0 max 598.4
+return_sweep_v1                        routes   13 chains   13 >=550  12 >=600   1 >=650   0 >=700   0 max 633.3
+cluster_fleet_v7                       routes   76 chains   76 >=550  13 >=600   2 >=650   0 >=700   0 max 611.9
+return_sweep_v2                        routes   13 chains   13 >=550   9 >=600   2 >=650   0 >=700   0 max 616.4
+joint_itinerary_v1                     routes   27 chains   27 >=550  27 >=600   8 >=650   0 >=700   0 max 634.4
+joint_itinerary_v2                     routes   32 chains   32 >=550  31 >=600   8 >=650   0 >=700   0 max 634.4
+cluster_fleet_h100_v1                  routes  116 chains  116 >=550  17 >=600   3 >=650   0 >=700   0 max 604.1
+joint_itinerary_h100_v1                routes  294 chains  294 >=550  47 >=600   3 >=650   0 >=700   0 max 620.8
+cluster_fleet_h100_v2                  routes  386 chains  386 >=550  62 >=600   7 >=650   1 >=700   0 max 652.6
+joint_itinerary_h100_v2                routes  219 chains  219 >=550  81 >=600  13 >=650   0 >=700   0 max 649.7
+cluster_fleet_v8                       routes   59 chains   59 >=550  14 >=600   1 >=650   0 >=700   0 max 616.4
+joint_itinerary_h100_v8                routes   31 chains   31 >=550  15 >=600   2 >=650   0 >=700   0 max 622.6
+fleet3_full_catalogue                  routes    2 chains    2 >=550   0 >=600   0 >=650   0 >=700   0 max 544.2
+fleet3_full_catalogue_v2               routes    3 chains    3 >=550   0 >=600   0 >=650   0 >=700   0 max 548.3
+fleet6_coop_v1                         routes    5 chains    5 >=550   1 >=600   0 >=650   0 >=700   0 max 557.3
+fleet6_retime_v1                       routes    5 chains    5 >=550   1 >=600   0 >=650   0 >=700   0 max 592.6
+full_catalogue_search2                 routes    2 chains    1 >=550   0 >=600   0 >=650   0 >=700   0 max 548.3
+reduced_v1_search2                     routes    3 chains    2 >=550   0 >=600   0 >=650   0 >=700   0 max 314.4
+reduced_v1_search3                     routes    3 chains    2 >=550   0 >=600   0 >=650   0 >=700   0 max 314.4
+UNION (unique asteroid sets)                       chains 1220 >=550 162 >=600  22 >=650   1 >=700   0 max 652.6
+top10: [652.6, 649.7, 634.4, 632.3, 628.5, 625.4, 624.0, 622.6, 620.8, 620.1]

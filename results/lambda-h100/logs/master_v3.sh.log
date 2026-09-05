@@ -1,0 +1,34 @@
+[2026-09-05T05:09:43Z] source 86a91d3a6311f898418054869bf77512c2fa2185 branch feat/gtoc12-asteroid-mining dirty=0; affinity  4-25; load=1.00 1.04 1.80
+[2026-09-05T05:09:43Z] == fleet-master fleet_master_h100_v3: 29 sources = v2's 21 + 8 added (joint_itinerary_h100_v8 fleet3_full_catalogue fleet3_full_catalogue_v2 fleet6_coop_v1 fleet6_retime_v1 full_catalogue_search2 reduced_v1_search2 reduced_v1_search3); 22 workers, nice 5
+[2026-09-05T06:13:30Z] fleet-master exit=0
+[2026-09-05T06:13:30Z] == official GTOC12_Verify (v3 master + joint_itinerary_h100_v8 Result.txt files) + independent verifier + leg stats + chain stats
+FAIL results/gtoc12/runs/fleet_master_h100_v3/columns/cluster_fleet_h100_v1__clusters__family_0033/ship_03/Result.txt {'ok': False, 'ships': None, 'mined_asteroids': None, 'total_mass_kg': None, 'return_code': 0, 'wall_seconds': 0.08839360199635848, 'message': 'Error803. Mining Data Error on the line3122: The mass change of the Mining Ship does not match the mass of the miner on the first rendezvous to the asteroid (exceeding the allowable error).'}
+FAIL results/gtoc12/runs/fleet_master_h100_v3/columns/cluster_fleet_h100_v1__clusters__family_0033/ship_04/Result.txt {'ok': False, 'ships': None, 'mined_asteroids': None, 'total_mass_kg': None, 'return_code': 0, 'wall_seconds': 0.08923599599802401, 'message': 'Error803. Mining Data Error on the line2164: The mass change of the Mining Ship does not match the mass of the miner on the first rendezvous to the asteroid (exceeding the allowable error).'}
+FAIL results/gtoc12/runs/fleet_master_h100_v3/columns/cluster_fleet_h100_v1__clusters__family_0035/ship_03/Result.txt {'ok': False, 'ships': None, 'mined_asteroids': None, 'total_mass_kg': None, 'return_code': 0, 'wall_seconds': 0.08811181200144347, 'message': 'Error803. Mining Data Error on the line2609: The mass change of the Mining Ship does not match the mass of the miner on the first rendezvous to the asteroid (exceeding the allowable error).'}
+FAIL results/gtoc12/runs/fleet_master_h100_v3/columns/cluster_fleet_h100_v1__clusters__family_0065/ship_03/Result.txt {'ok': False, 'ships': None, 'mined_asteroids': None, 'total_mass_kg': None, 'return_code': 0, 'wall_seconds': 0.0883353269964573, 'message': 'Error803. Mining Data Error on the line2074: The mass change of the Mining Ship does not match the mass of the miner on the first rendezvous to the asteroid (exceeding the allowable error).'}
+FAIL results/gtoc12/runs/fleet_master_h100_v3/columns/cluster_fleet_h100_v1__clusters__family_0096/ship_03/Result.txt {'ok': False, 'ships': None, 'mined_asteroids': None, 'total_mass_kg': None, 'return_code': 0, 'wall_seconds': 0.08757402600167552, 'message': 'Error803. Mining Data Error on the line2909: The mass change of the Mining Ship does not match the mass of the miner on the first rendezvous to the asteroid (exceeding the allowable error).'}
+FAIL results/gtoc12/runs/fleet_master_h100_v3/columns/cluster_fleet_h100_v1__clusters__family_0103/ship_03/Result.txt {'ok': False, 'ships': None, 'mined_asteroids': None, 'total_mass_kg': None, 'return_code': 0, 'wall_seconds': 0.0863890020045801, 'message': 'Error803. Mining Data Error on the line2783: The mass change of the Mining Ship does not match the mass of the miner on the first rendezvous to the asteroid (exceeding the allowable error).'}
+FAIL results/gtoc12/runs/fleet_master_h100_v3/columns/cluster_fleet_h100_v2__clusters__family_0002/ship_02/Result.txt {'ok': False, 'ships': None, 'mined_asteroids': None, 'total_mass_kg': None, 'return_code': 0, 'wall_seconds': 0.08821115399769042, 'message': 'Error803. Mining Data Error on the line2314: The mass change of the Mining Ship does not match the mass of the miner on the first rendezvous to the asteroid (exceeding the allowable error).'}
+master fleet: [{'run': 'fleet_master_h100_v3', 'path': 'results/gtoc12/runs/fleet_master_h100_v3/fleet/Result.txt', 'ok': True, 'ships': 22, 'mined_asteroids': 184, 'total_mass_kg': 13189.6, 'return_code': 0, 'wall_seconds': 0.34949655999662355, 'message': 'Check successfully!'}]
+    "total_mass_kg": 13189.6,
+    "wall_seconds": 0.347371296993515
+  }
+}
+hops         <= cheap fraction                     0.31
+per ship     earth_out [kg]                       417.7
+per ship     hops [kg]                           1524.4
+joint_itinerary_h100_v1                routes  294 chains  294 >=550  47 >=600   3 >=650   0 >=700   0 max 620.8
+cluster_fleet_h100_v2                  routes  386 chains  386 >=550  62 >=600   7 >=650   1 >=700   0 max 652.6
+joint_itinerary_h100_v2                routes  219 chains  219 >=550  81 >=600  13 >=650   0 >=700   0 max 649.7
+cluster_fleet_v8                       routes   59 chains   59 >=550  14 >=600   1 >=650   0 >=700   0 max 616.4
+joint_itinerary_h100_v8                routes   31 chains   31 >=550  15 >=600   2 >=650   0 >=700   0 max 622.6
+fleet3_full_catalogue                  routes    2 chains    2 >=550   0 >=600   0 >=650   0 >=700   0 max 544.2
+fleet3_full_catalogue_v2               routes    3 chains    3 >=550   0 >=600   0 >=650   0 >=700   0 max 548.3
+fleet6_coop_v1                         routes    5 chains    5 >=550   1 >=600   0 >=650   0 >=700   0 max 557.3
+fleet6_retime_v1                       routes    5 chains    5 >=550   1 >=600   0 >=650   0 >=700   0 max 592.6
+full_catalogue_search2                 routes    2 chains    1 >=550   0 >=600   0 >=650   0 >=700   0 max 548.3
+reduced_v1_search2                     routes    3 chains    2 >=550   0 >=600   0 >=650   0 >=700   0 max 314.4
+reduced_v1_search3                     routes    3 chains    2 >=550   0 >=600   0 >=650   0 >=700   0 max 314.4
+UNION (unique asteroid sets)                       chains 1220 >=550 162 >=600  22 >=650   1 >=700   0 max 652.6
+top10: [652.6, 649.7, 634.4, 632.3, 628.5, 625.4, 624.0, 622.6, 620.8, 620.1]
+[2026-09-05T06:17:41Z] == done

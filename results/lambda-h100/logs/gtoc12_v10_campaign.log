@@ -1,0 +1,13 @@
+[2026-09-05T06:56:15Z] source 735aa1abf9f961dbfcb03c03860f0c2ff85ee9d1 branch feat/gtoc12-asteroid-mining dirty=0; load=1.52 1.16 1.43
+[2026-09-05T06:56:15Z] == arm A cluster_fleet_v10 (11 workers, v9 line + phase prior + Earth-out leg) || arm B cluster_fleet_v10_control (11 workers, v9 line)
+[2026-09-05T06:56:15Z] arm A pid 874815, arm B pid 874816
+[2026-09-05T09:48:27Z] arm A exit=0
+[2026-09-05T09:48:48Z] arm B exit=0
+[2026-09-05T09:48:48Z] == joint-itinerary joint_itinerary_v10 (--earth-leg, 22 workers) over both arms' chains
+[2026-09-05T09:55:27Z] joint v10 exit=0
+cluster_fleet_v10                      routes   61 chains   61 >=550  19 >=600   5 >=650   0 >=700   0 max 641.6
+cluster_fleet_v10_control              routes   63 chains   63 >=550  19 >=600   5 >=650   0 >=700   0 max 641.1
+joint_itinerary_v10                    routes   47 chains   47 >=550  22 >=600   6 >=650   0 >=700   0 max 644.4
+UNION (unique asteroid sets)                       chains   70 >=550  24 >=600   7 >=650   0 >=700   0 max 644.4
+top10: [644.4, 620.6, 617.1, 614.5, 614.4, 612.7, 600.6, 597.7, 596.4, 591.3]
+[2026-09-05T09:55:27Z] == arms + joint done; run master_v10.sh once the local joint_itinerary_v4/v5 archives are in place
