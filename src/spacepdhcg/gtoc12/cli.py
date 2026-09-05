@@ -781,6 +781,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         "sources": list(args.dual_archive or []),
         "columns": len(archive_columns),
         "target_size": args.dual_target_size or None,
+        "bound_share": bool(args.dual_bound_share),
     }
 
     def reprice(master_ships: int) -> None:
@@ -794,6 +795,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
             weights=weights,
             max_ships=args.max_ships,
             target_size=max(target, master_ships + 1),
+            bound_share=bool(args.dual_bound_share),
         )
         current_prices.clear()
         if priced is not None:
@@ -1275,7 +1277,7 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
 def cmd_joint_itinerary(args: argparse.Namespace) -> int:
     """Archive-wide whole-itinerary joint re-optimisation; improved ships are archived."""
 
-    from .data import REPOSITORY_ROOT, load_bonus_table, load_catalogue
+    from .data import load_bonus_table, load_catalogue
     from .jointcampaign import JointCampaignSettings, run_joint_campaign
     from .low_thrust import ScvxSettings
 
@@ -1351,7 +1353,7 @@ def cmd_joint_itinerary(args: argparse.Namespace) -> int:
     )
     log.close()
     report["run_id"] = args.run_id
-    report["commit"] = _commit(REPOSITORY_ROOT)
+    report["commit"] = _commit(resources.repository_root())
     report["sources"] = [str(s) for s in args.source]
     report["cpu_only"] = True
     report["gpu_used"] = False
@@ -1731,6 +1733,14 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         type=int,
         default=0,
         help="fleet size the dual LP prices at when feasible (0 = master ships + 1)",
+    )
+    cluster.add_argument(
+        "--dual-bound-share",
+        action="store_true",
+        help=(
+            "share each selected column's bound dual among its asteroids (prices what the fleet "
+            "already holds; the row duals alone are degenerate on a near-integral LP)"
+        ),
     )
     cluster.add_argument(
         "--joint-itinerary",

@@ -610,6 +610,11 @@ def plan_collect_tour(
             deploy_epoch,
         )
 
+    # a caller's burn schedule that is not a number (the mean of a tour whose hop propellant
+    # came back NaN: cluster_fleet_v9 family 10 crashed in the substitution pass on it) falls
+    # back to the two-pass schedule instead of poisoning every move mass
+    if burn_per_hop is not None and not np.isfinite(float(burn_per_hop)):
+        burn_per_hop = None
     if burn_per_hop is not None:
         return solve(max(float(burn_per_hop), 0.0))
     first = solve(0.0)
@@ -620,7 +625,7 @@ def plan_collect_tour(
     if not first.hop_propellant_kg:
         return first
     burn_per_hop = float(np.mean(first.hop_propellant_kg))
-    if burn_per_hop <= 0.0:
+    if not np.isfinite(burn_per_hop) or burn_per_hop <= 0.0:
         return first
     second = solve(burn_per_hop)
     if second is None:

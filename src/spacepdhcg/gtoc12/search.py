@@ -1959,7 +1959,9 @@ class RouteSearch:
                 reasons.append(f"w{weight:g}:no_tour")
                 continue
             if burn_per_hop is None and tour.hop_propellant_kg:
-                burn_per_hop = float(np.mean(tour.hop_propellant_kg))
+                mean_burn = float(np.mean(tour.hop_propellant_kg))
+                if np.isfinite(mean_burn):
+                    burn_per_hop = mean_burn
             plan = self._plan_from_tour(partial, tour)
             if plan is None:
                 reasons.append(f"w{weight:g}:{self.last_failure}")
