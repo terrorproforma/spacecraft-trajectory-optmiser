@@ -8,6 +8,41 @@ namespace test = spacepdhcg::cuda::test;
 
 namespace {
 
+void compare_standalone_residuals(spacepdhcg_cuda_workspace* workspace,
+                                test::ProblemStorage& problem, int blocks) {
+    spacepdhcg_cuda_diagnostics results[2]{};
+    for (int variant = 0; variant < 2; ++variant) {
+        test::status_require(spacepdhcg_cuda_workspace_set_execution_blocks(
+            workspace, variant == 0 ? 0 : std::max(1, blocks)), "residual execution policy");
+        test::status_require(spacepdhcg_cuda_workspace_residuals_async(
+            workspace, problem.exchange.consumer_stream), "standalone residual recomputation");
+        test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "standalone residual wait");
+        test::status_require(spacepdhcg_cuda_workspace_diagnostics(workspace, &results[variant]),
+                             "standalone residual diagnostics");
+        test::require(results[variant].residual_seconds > 0.0, "residual time is measured");
+    }
+    const auto& serial = results[0];
+    const auto& parallel = results[1];
+#define CHECK_RESIDUAL(field) \
+    test::require_close(parallel.field, serial.field, \
+        1e-10 * std::max(1.0, std::abs(serial.field)), "standalone residual parity: " #field)
+    CHECK_RESIDUAL(objective);
+    CHECK_RESIDUAL(scalar_primal_violation_inf); CHECK_RESIDUAL(box_violation_inf);
+    CHECK_RESIDUAL(affine_cone_distance_inf); CHECK_RESIDUAL(stationarity_inf);
+    CHECK_RESIDUAL(natural_residual_inf); CHECK_RESIDUAL(complementarity_inf);
+    CHECK_RESIDUAL(relative_primal_residual); CHECK_RESIDUAL(relative_dual_residual);
+    CHECK_RESIDUAL(scaling_min); CHECK_RESIDUAL(scaling_max);
+#undef CHECK_RESIDUAL
+    test::require(serial.iterations == parallel.iterations, "residual retains completed iterations");
+    test::require(serial.termination == parallel.termination, "residual retains termination");
+    test::require(serial.recovery_iterations == parallel.recovery_iterations,
+                  "residual retains recovery iterations");
+    test::require(serial.allocation_count == parallel.allocation_count,
+                  "standalone residual uses persistent scratch");
+    test::status_require(spacepdhcg_cuda_workspace_set_execution_blocks(workspace, blocks),
+                         "restore execution policy");
+}
+
 // Repeated equality-constrained QPs have the independent analytic solution
 // x=(2/3,1/3). Replication changes the grid size without changing each solution.
 void replicated_box(test::ProblemStorage& problem, int count) {
@@ -44,11 +79,13 @@ void run_case(test::ProblemStorage& problem, int blocks, bool soc) {
         test::require_close(primal[i], expected, 2.0e-6, "independent analytic solution");
     }
     test::require(result.natural_residual_inf <= 2.0e-6, "unchanged canonical tolerance");
+    compare_standalone_residuals(workspace, problem, blocks);
     std::printf("{\"case\":\"cooperative_%s\",\"variables\":%d,\"blocks\":%d,\"scaling_seconds\":%.9g,\"solve_seconds\":%.9g,\"iterations\":%llu,\"residual\":%.9g}\n",
                 soc ? "soc" : "box", problem.variables, blocks, result.scaling_seconds,
                 result.solve_seconds, static_cast<unsigned long long>(result.iterations), result.natural_residual_inf);
     // Reuse path must take a uniform branch even when its counters change.
     const auto repeated = test::solve_and_wait(workspace, problem);
+    test::require(repeated.residual_seconds == 0.0, "new solve clears old residual timing");
     test::require(repeated.termination == SPACEPDHCG_CUDA_TERMINATION_OPTIMAL, "cooperative repeated solve");
     test::require(repeated.allocation_count == result.allocation_count, "persistent grid buffers");
     auto numeric = problem.numeric_views();
@@ -73,6 +110,16 @@ void run_case(test::ProblemStorage& problem, int blocks, bool soc) {
     test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "explicit refresh wait");
     updated = test::solve_and_wait(workspace, problem);
     test::require(updated.termination == SPACEPDHCG_CUDA_TERMINATION_OPTIMAL, "solve after explicit refresh");
+    // Recompute a deliberately infeasible resident point, not merely the cached
+    // converged report. This exercises nonzero box/equality/cone/stationarity terms.
+    spacepdhcg_cuda_pointer_snapshot pointers{};
+    test::status_require(spacepdhcg_cuda_workspace_pointer_snapshot(workspace, &pointers),
+                         "resident primal for residual regression");
+    auto displaced = primal;
+    for (size_t i = 0; i < displaced.size(); ++i) displaced[i] += i % 2 == 0 ? -2.0 : 3.0;
+    test::cuda_require(cudaMemcpyAsync(reinterpret_cast<void*>(pointers.primal), displaced.data(),
+        displaced.size() * sizeof(double), cudaMemcpyHostToDevice, problem.stream), "displace resident primal");
+    compare_standalone_residuals(workspace, problem, blocks);
     test::destroy_workspace(workspace);
 }
 

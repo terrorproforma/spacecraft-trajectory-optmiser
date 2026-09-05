@@ -2528,6 +2528,7 @@ cudaError_t preload_solve_kernels() {
              reinterpret_cast<const void*>(solve_kernel),
              reinterpret_cast<const void*>(cooperative_initialise_kernel),
              reinterpret_cast<const void*>(cooperative_solve_kernel),
+             reinterpret_cast<const void*>(cooperative_residual_kernel),
              reinterpret_cast<const void*>(recovery_kernel),
              reinterpret_cast<const void*>(residual_kernel),
              reinterpret_cast<const void*>(set_constant_kernel),
@@ -2828,6 +2829,7 @@ struct spacepdhcg_cuda_workspace {
     TimingEvents scaling_timer{};
     TimingEvents solve_timer{};
     TimingEvents recovery_timer{};
+    TimingEvents residual_timer{};
     LastOperation last_operation{LastOperation::none};
     std::uint64_t topology_index_copy_count{0};
     std::uint64_t total_copy_count{0};
@@ -2848,6 +2850,7 @@ struct spacepdhcg_cuda_workspace {
     double update_seconds{0.0};
     double scaling_seconds{0.0};
     double solve_seconds{0.0};
+    double residual_seconds{0.0};
     double recovery_seconds{0.0};
 };
 
@@ -3149,6 +3152,8 @@ spacepdhcg_cuda_status finalize_if_complete(spacepdhcg_cuda_workspace* workspace
         finish_solve(workspace);
     } else if (workspace->last_operation == LastOperation::update) {
         workspace->update_seconds = workspace->update_timer.elapsed_seconds();
+    } else if (workspace->last_operation == LastOperation::residual) {
+        workspace->residual_seconds = workspace->residual_timer.elapsed_seconds();
     }
     workspace->pending_dlpack_borrows.clear();
     return SPACEPDHCG_CUDA_SUCCESS;
@@ -3317,6 +3322,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
         cuda_status = cudaGetDeviceProperties(&properties, exchange->consumer_stream.device.id);
         int initialise_occupancy = 0;
         int solve_occupancy = 0;
+        int residual_occupancy = 0;
         if (cuda_status == cudaSuccess && properties.cooperativeLaunch != 0) {
             cuda_status = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
                 &initialise_occupancy, cooperative_initialise_kernel, kThreads, 0);
@@ -3324,8 +3330,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
                 cuda_status = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
                     &solve_occupancy, cooperative_solve_kernel, kThreads, 0);
             }
+            if (cuda_status == cudaSuccess) {
+                cuda_status = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+                    &residual_occupancy, cooperative_residual_kernel, kThreads, 0);
+            }
             result->cooperative_capacity = properties.multiProcessorCount
-                * std::min(initialise_occupancy, solve_occupancy);
+                * std::min({initialise_occupancy, solve_occupancy, residual_occupancy});
             const std::uint64_t coefficients = structure->quadratic_nonzeros
                 + structure->scalar_nonzeros + structure->affine_nonzeros
                 + 3ULL * structure->variables + 2ULL * structure->scalar_rows
@@ -3875,7 +3885,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             || result->update_timer.create() != cudaSuccess
             || result->scaling_timer.create() != cudaSuccess
             || result->solve_timer.create() != cudaSuccess
-            || result->recovery_timer.create() != cudaSuccess) {
+            || result->recovery_timer.create() != cudaSuccess
+            || result->residual_timer.create() != cudaSuccess) {
             status = cuda_failure(result, cudaGetLastError(), "CUDA stream/event creation");
             cleanup_workspace(result);
             delete result;
@@ -4181,6 +4192,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
         std::memory_order_release
     );
     cuda_status = workspace->scaling_timer.begin(cuda_stream);
+    workspace->residual_seconds = 0.0;
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "solve timing start");
     }
@@ -4315,6 +4327,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_wait(
         finish_solve(workspace);
     } else if (workspace->last_operation == LastOperation::update) {
         workspace->update_seconds = workspace->update_timer.elapsed_seconds();
+    } else if (workspace->last_operation == LastOperation::residual) {
+        workspace->residual_seconds = workspace->residual_timer.elapsed_seconds();
     }
     workspace->pending_dlpack_borrows.clear();
     return SPACEPDHCG_CUDA_SUCCESS;
@@ -4393,6 +4407,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_diagnostics(
     diagnostics->update_seconds = workspace->update_seconds;
     diagnostics->scaling_seconds = workspace->scaling_seconds;
     diagnostics->solve_seconds = workspace->solve_seconds;
+    diagnostics->residual_seconds = workspace->residual_seconds;
     diagnostics->allocation_count = workspace->ledger.allocation_count();
     diagnostics->free_count = workspace->ledger.free_count();
     diagnostics->active_allocation_count = workspace->ledger.active_count();
@@ -4441,14 +4456,28 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_residuals_async(
         return status;
     }
     const auto cuda_stream = native_stream(stream);
-    residual_kernel<<<1, kThreads, 0, cuda_stream>>>(
-        workspace->device_problem,
-        workspace->control,
-        workspace->report
-    );
-    const auto cuda_status = cudaGetLastError();
+    auto cuda_status = workspace->residual_timer.begin(cuda_stream);
+    if (cuda_status != cudaSuccess) {
+        return cuda_failure(workspace, cuda_status, "residual timing start");
+    }
+    if (workspace->cooperative_scaling_blocks == 0) {
+        residual_kernel<<<1, kThreads, 0, cuda_stream>>>(
+            workspace->device_problem, workspace->control, workspace->report);
+        cuda_status = cudaGetLastError();
+    } else {
+        void* arguments[] = {&workspace->device_problem, &workspace->control,
+                             &workspace->report};
+        cuda_status = cudaLaunchCooperativeKernel(
+            reinterpret_cast<const void*>(cooperative_residual_kernel),
+            dim3(workspace->cooperative_scaling_blocks), dim3(kThreads),
+            arguments, 0, cuda_stream);
+    }
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "independent residual kernel");
+    }
+    cuda_status = workspace->residual_timer.end(cuda_stream);
+    if (cuda_status != cudaSuccess) {
+        return cuda_failure(workspace, cuda_status, "residual timing stop");
     }
     status = copy_async(
         workspace,

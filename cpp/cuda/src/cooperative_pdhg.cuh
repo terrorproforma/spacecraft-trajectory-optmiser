@@ -752,6 +752,12 @@ __device__ void grid_evaluate_report(
     grid_barrier();
 }
 
+__global__ void cooperative_residual_kernel(
+    DeviceProblem* problem, DeviceControl* control, DeviceReport* report
+) {
+    grid_evaluate_report(problem, control, report, report->iterations);
+}
+
 __global__ void cooperative_solve_kernel(
     DeviceProblem* problem,
     DeviceControl* control,

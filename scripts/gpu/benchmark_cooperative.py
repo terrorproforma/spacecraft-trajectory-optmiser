@@ -155,10 +155,17 @@ def main() -> None:
                 "update_seconds",
                 "scaling_seconds",
                 "solve_seconds",
+                "residual_seconds",
+                "replay_seconds",
                 "cqp_total_seconds",
                 "scvx_total_seconds",
             )
         }
+        medians[configuration]["process_seconds"] = statistics.median(
+            sample["process_seconds"]
+            for sample in samples
+            if sample["configuration"] == configuration and not sample["warmup"]
+        )
     args.output.write_text(
         json.dumps({"provenance": provenance, "medians": medians, "samples": samples}, indent=2)
         + "\n"

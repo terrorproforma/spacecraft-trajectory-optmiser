@@ -175,9 +175,62 @@ studies are `artifacts/performance/metrics-hcw-2000-comparison.json`,
 by the benchmark runner (the first metrics-only study predates header hashing).
 
 Inspection after these measurements found that the standalone CQP residual API
-still launches the old single-block evaluator after the cooperative solve. Its time
-is also absent from `residual_seconds`. This is the next concrete target before
-attributing the remaining wall time to CPU orchestration.
+still launched the old single-block evaluator after the cooperative solve. Its time
+was also absent from `residual_seconds`.
+
+## Standalone CQP residual follow-up
+
+The residual API now recomputes the current resident iterate with the cooperative
+evaluator, using the retained reduction buffers and the parallel preamble's grid
+policy. Occupancy validation includes this kernel. Tiny problems and the explicit
+zero-block override retain the legacy evaluator. Both wait and diagnostic polling
+collect a dedicated CUDA-event timer; a new solve clears the preceding residual time.
+
+Against the preceding metrics/replay build (`f876abb`), the matched 2,000-interval
+HCW SCvx median fell from **41.456 ms to 5.023 ms (8.25x)**. The residual phase now
+reports 0.159 ms. The old zero measurement did not mean the residual check was free.
+Reported CQP totals are consequently not directly comparable across these builds:
+the new total includes a phase that was previously omitted. Complete-command
+medians were both about 429 ms in this study; process startup and the surrounding
+test harness are much larger than the optimized SCvx operation.
+
+At 10,000 intervals, the corresponding SCvx medians were 195.420 ms and 13.437 ms
+(14.54x); complete-command medians were 868.729 ms and 720.622 ms (1.21x).
+The measured residual phase was 0.187 ms. This study is recorded in
+`artifacts/performance/standalone-residual-hcw-10000-comparison.json`.
+
+Regression tests recompute all reported residual components at both converged and
+deliberately infeasible resident points. They compare legacy and cooperative modes,
+retain iteration/termination counters, verify allocation stability, and check timing
+reset between solves. The extended cooperative suite passed normal execution and
+CUDA memcheck, synccheck, and racecheck with zero errors/hazards. The matched record
+is `artifacts/performance/standalone-residual-hcw-2000-comparison.json`; validation
+logs are in `build/performance/native-checks/standalone-residual-*.log`.
+
+The final four-family production run passed with maximum canonical residual
+9.56640559e-9, nonlinear residual 2.92768846e-8, zero CPU/GPU trajectory difference,
+and exact CPU/GPU numeric fingerprints. Displaced HCW again accepted three steps
+with 1,050 inner iterations. The 6DOF fixture used one recovery attempt in this
+run rather than two in the preceding build; its returned trajectory still matched.
+No recovery speedup is claimed from this unpaired change in the numerical path.
+
+## Final matched original-library checkpoint
+
+The complete set of GPU changes was also measured directly against the saved
+pre-optimization library, using the same executable, two warmups, seven measured
+repetitions, and alternating order on the local RTX 5090:
+
+| 2,000-interval HCW measurement | Original | Current |
+|---|---:|---:|
+| Complete command, including startup and test harness | 5.172190 s | 0.423660 s |
+| SCvx wall time | 4.746820 s | 0.005080 s |
+
+This is **12.21x for the complete command** and approximately 934x for the SCvx
+operation on this setup-heavy, already-feasible fixture. Every sample retained one
+inner iteration, one outer iteration, zero accepted steps, and zero canonical,
+nonlinear, and CPU/GPU trajectory residuals. These are not general mission-planning
+speedup multipliers. Raw samples and provenance are in
+`artifacts/performance/gpu-native-hcw-2000-final.json`.
 
 ## Work still required by the active goal
 
@@ -189,9 +242,12 @@ attributing the remaining wall time to CPU orchestration.
    Recovery's existing non-cancelled report also substitutes the requested iteration
    limit for completed PDHG iterations; correct that telemetry before using difficult
    recovery runs for a convergence cost model.
-3. Parallelize the standalone CQP residual evaluator, repair its timing, and remove
-   repeated diagnostic synchronization. SCvx metrics and fingerprints are now
-   parallel; nonlinear trajectory replay and device outer decisions remain.
+   Also correct the CQP report's objective: source inspection shows that its
+   quadratic term uses the gradient after adding dual contributions. Add an
+   independent analytic-objective regression before changing convergence policy.
+3. Remove repeated diagnostic synchronization. Standalone CQP residual evaluation,
+   SCvx metrics, and fingerprints are now parallel; nonlinear trajectory replay
+   and device outer decisions remain.
 4. Complete device-resident outer-loop decisions and the remaining GTOC12 native GPU
    refinement path. CPU Clarabel reuse is not the production destination for this goal.
 5. Remove/cache host-side QOCO conversion as part of a measured GPU-native backend
