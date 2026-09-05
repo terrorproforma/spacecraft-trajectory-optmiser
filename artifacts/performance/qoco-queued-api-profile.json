@@ -1,0 +1,79 @@
+{
+  "scope": "CUDA API trace only; this Nsight version does not capture RTX 5090 kernel/memory timeline",
+  "profiles": {
+    "baseline": {
+      "cudaMemcpyAsync": {
+        "calls": 2301,
+        "total_ns": 218987300
+      },
+      "cudaDeviceSynchronize": {
+        "calls": 5809,
+        "total_ns": 193591852
+      },
+      "cudaMemcpy": {
+        "calls": 2188,
+        "total_ns": 126589517
+      },
+      "cudaLaunchKernel": {
+        "calls": 12287,
+        "total_ns": 90407674
+      },
+      "cudaStreamSynchronize": {
+        "calls": 1636,
+        "total_ns": 45155368
+      },
+      "cudaMalloc": {
+        "calls": 1183,
+        "total_ns": 20862069
+      },
+      "cudaFree": {
+        "calls": 951,
+        "total_ns": 4791806
+      },
+      "qualification": {
+        "inner_iterations": 54,
+        "qualified": true,
+        "canonical_residual": 8.519603114298186e-12,
+        "terminal": 5.735494440495259e-12,
+        "objective": 0.4944853733489821
+      }
+    },
+    "queued-cones": {
+      "cudaMemcpyAsync": {
+        "calls": 1229,
+        "total_ns": 142586778
+      },
+      "cudaLaunchKernel": {
+        "calls": 6073,
+        "total_ns": 84287091
+      },
+      "cudaMemcpy": {
+        "calls": 981,
+        "total_ns": 34476562
+      },
+      "cudaStreamSynchronize": {
+        "calls": 868,
+        "total_ns": 29924015
+      },
+      "cudaFree": {
+        "calls": 301,
+        "total_ns": 4174484
+      },
+      "cudaMalloc": {
+        "calls": 381,
+        "total_ns": 3525330
+      },
+      "cudaDeviceSynchronize": {
+        "calls": 65,
+        "total_ns": 2580011
+      },
+      "qualification": {
+        "inner_iterations": 28,
+        "qualified": true,
+        "canonical_residual": 2.618510687647072e-11,
+        "terminal": 7.034629823099436e-13,
+        "objective": 0.49448537365291756
+      }
+    }
+  }
+}

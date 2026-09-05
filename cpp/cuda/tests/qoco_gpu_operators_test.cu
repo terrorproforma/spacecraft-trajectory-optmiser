@@ -13,7 +13,9 @@ extern "C" {
 #include "qoco_linalg.h"
 #include "qoco_api.h"
 #include "qoco_utils.h"
+#include "cone.h"
 }
+QOCOFloat cone_residual(const QOCOFloat*, QOCOInt, QOCOInt, const QOCOInt*, QOCOInt*);
 // Pinned CUDA backend's loader (normally invoked by qoco_setup).
 bool load_cuda_libraries();
 
@@ -21,6 +23,149 @@ static void require(bool value, const char* message) {
     if (!value) { std::fprintf(stderr, "FAIL: %s\n", message); std::exit(1); }
 }
 static void check(cudaError_t status) { require(status == cudaSuccess, cudaGetErrorString(status)); }
+
+static void cone_reduction_case(int lp, const std::vector<int>& sizes, int edge = 0) {
+    std::vector<int> starts;
+    int n = lp;
+    for (int size : sizes) { starts.push_back(n); n += size; }
+    std::vector<double> x(n), direction(n);
+    for (int i = 0; i < n; ++i) { x[i] = 1.1 + 0.1 * std::sin(i); direction[i] = 3.0 * std::cos(0.7 * i); }
+    for (int j = 0; j < static_cast<int>(sizes.size()); ++j) {
+        long double norm = 0;
+        for (int k = 1; k < sizes[j]; ++k) { double v = x[starts[j] + k]; norm += v * v; }
+        x[starts[j]] = static_cast<double>(std::sqrt(norm)) + 0.5;
+    }
+    if (edge) {
+        require(lp == 0 && n == 3, "SOC edge fixture shape");
+        x = (edge == 1 || edge == 5) ? std::vector<double>{1, 0, 0} : std::vector<double>{1, 1, 0};
+        if (edge == 1) direction = {-1, 1, 0};
+        if (edge == 2) direction = {-2, -1, 0};
+        if (edge == 3) direction = {0, 1, 0};
+        if (edge == 4) direction = {1, -1, 0};
+        if (edge == 5) direction = {-1, 1 + 2e-15, 0};
+        if (edge == 6) direction = {0, -3, 0};
+    }
+    auto violation = [&](long double alpha) {
+        long double result = -1e7L;
+        for (int i = 0; i < lp; ++i) result = std::max(result, -(x[i] + alpha * direction[i]));
+        for (int j = 0; j < static_cast<int>(sizes.size()); ++j) {
+            long double norm = 0;
+            for (int k = 1; k < sizes[j]; ++k) {
+                long double v = x[starts[j] + k] + alpha * direction[starts[j] + k]; norm += v * v;
+            }
+            result = std::max(result, std::sqrt(norm) - (x[starts[j]] + alpha * direction[starts[j]]));
+        }
+        return result;
+    };
+    // Independent feasibility bisection, not the implementation's quadratic formula.
+    long double lower = 0, upper = 1;
+    if (violation(upper) <= 0) lower = upper;
+    else for (int i = 0; i < 90; ++i) {
+        long double middle = (lower + upper) / 2;
+        if (violation(middle) <= 0) lower = middle; else upper = middle;
+    }
+    QOCOProblemData data{}; data.l = lp; data.nsoc = static_cast<int>(sizes.size()); data.m = n;
+    data.q = new_qoco_vectori(sizes.data(), data.nsoc);
+    QOCOWorkspace work{}; work.data = &data; work.soc_idx = new_qoco_vectori(starts.data(), data.nsoc);
+    QOCOSolver solver{}; solver.work = &work;
+    double *dx{}, *dd{};
+    check(cudaMalloc(&dx, std::max(1, n) * sizeof(double)));
+    check(cudaMalloc(&dd, std::max(1, n) * sizeof(double)));
+    if (n) {
+        check(cudaMemcpy(dx, x.data(), n * sizeof(double), cudaMemcpyHostToDevice));
+        check(cudaMemcpy(dd, direction.data(), n * sizeof(double), cudaMemcpyHostToDevice));
+    }
+    for (int repeat = 0; repeat < 3; ++repeat) {
+        double step = linesearch(dx, dd, 0.99, &solver);
+        require(std::isfinite(step) && std::abs(step - 0.99L * lower) < 2e-12L, "GPU line search versus independent feasibility bisection");
+        require(violation(step) <= 1e-12L, "line search preserves cone feasibility");
+        double residual = cone_residual(dx, lp, data.nsoc, get_data_vectori(data.q), get_data_vectori(work.soc_idx));
+        require(std::abs(residual - violation(0)) < 2e-12L, "GPU cone residual independent reference");
+    }
+    if (lp > 262144) {
+        // The old final reduction inspected only the first 1024 partial blocks.
+        const double violated = -7.0;
+        check(cudaMemcpy(dx + lp - 1, &violated, sizeof(double), cudaMemcpyHostToDevice));
+        require(cone_residual(dx, lp, data.nsoc, get_data_vectori(data.q), get_data_vectori(work.soc_idx)) == 7.0,
+                "cone residual must include partial blocks beyond 1024");
+    }
+    check(cudaFree(dx)); check(cudaFree(dd));
+    free_qoco_vectori(work.soc_idx); free_qoco_vectori(data.q);
+}
+
+static void cone_reduction_cases() {
+    auto begin = reinterpret_cast<int (*)()>(dlsym(RTLD_DEFAULT, "qoco_gpu_begin_reduction_scope"));
+    auto end = reinterpret_cast<void (*)()>(dlsym(RTLD_DEFAULT, "qoco_gpu_end_reduction_scope"));
+    for (int scoped = 0; scoped < 2; ++scoped) {
+        if (scoped && begin) require(begin() == 0, "cone reduction scope");
+        cone_reduction_case(0, {});
+        cone_reduction_case(13, {});
+        cone_reduction_case(0, {3, 5, 33});
+        cone_reduction_case(8193, std::vector<int>(1027, 4));
+        cone_reduction_case(262145, {});
+        for (int edge = 1; edge <= 6; ++edge) cone_reduction_case(0, {3}, edge);
+        if (scoped && end) end();
+    }
+    std::puts("QOCO device cone reductions: independent feasibility, mixed cones, >1024 blocks PASS");
+}
+
+static void queued_chain_case(int (*begin)(), void (*end)()) {
+    // A dependent sequence with in-place updates and both sparse directions.
+    // No downloads or scalar reductions are allowed to hide missing ordering.
+    constexpr int n = 513;
+    std::vector<int> offsets(n + 1), indices;
+    std::vector<double> values, x(n), y(n), output(n);
+    std::vector<long double> expected(n), temporary(n);
+    for (int col = 0; col < n; ++col) {
+        offsets[col] = static_cast<int>(values.size());
+        for (int row = std::max(0, col - 1); row <= std::min(n - 1, col + 1); ++row) {
+            indices.push_back(row); values.push_back(row == col ? 0.75 : -0.125);
+        }
+        x[col] = std::sin(col * 0.13); y[col] = std::cos(col * 0.07);
+    }
+    offsets[n] = static_cast<int>(values.size());
+    QOCOCscMatrix csc{n, n, static_cast<int>(values.size()), indices.data(), offsets.data(), values.data()};
+    auto* matrix = new_qoco_matrix(&csc);
+    double *dx{}, *dy{}, *dz{}, *dt{};
+    for (auto** ptr : {&dx, &dy, &dz, &dt}) check(cudaMalloc(ptr, n * sizeof(double)));
+    check(cudaMemcpy(dx, x.data(), n * sizeof(double), cudaMemcpyHostToDevice));
+    check(cudaMemcpy(dy, y.data(), n * sizeof(double), cudaMemcpyHostToDevice));
+    cudaEvent_t done{}; check(cudaEventCreateWithFlags(&done, cudaEventDisableTiming));
+    for (int scoped = 0; scoped < 2; ++scoped) {
+        if (scoped && begin) { require(begin() == 0, "queued scope"); require(begin() == 0, "queued nested scope"); }
+        copy_arrayf(dx, dz, n);
+        expected.assign(x.begin(), x.end());
+        for (int repeat = 0; repeat < 12; ++repeat) {
+            ew_product(dz, dy, dz, n);
+            qoco_axpy(dz, dx, dz, 0.125, n);
+            scale_arrayf(dz, dz, 0.5, n);
+            copy_and_negate_arrayf(dz, dt, n);
+            SpMv(matrix, dt, dz);
+            SpMtv(matrix, dz, dt);
+            copy_arrayf(dt, dz, n);
+            for (int i = 0; i < n; ++i) expected[i] = -0.5L * (0.125L * expected[i] * y[i] + x[i]);
+            std::fill(temporary.begin(), temporary.end(), 0);
+            for (int col = 0; col < n; ++col)
+                for (int k = offsets[col]; k < offsets[col + 1]; ++k)
+                    temporary[indices[k]] += values[k] * expected[col];
+            std::fill(expected.begin(), expected.end(), 0);
+            for (int col = 0; col < n; ++col)
+                for (int k = offsets[col]; k < offsets[col + 1]; ++k)
+                    expected[col] += values[k] * temporary[indices[k]];
+        }
+        // The event precedes scope teardown; query it before any synchronizing copy.
+        check(cudaEventRecord(done, nullptr));
+        if (scoped && end) { end(); end(); check(cudaEventQuery(done)); }
+        else check(cudaEventSynchronize(done));
+        check(cudaMemcpy(output.data(), dz, n * sizeof(double), cudaMemcpyDeviceToHost));
+        for (int i = 0; i < n; ++i) require(std::isfinite(output[i])
+            && std::abs(output[i] - expected[i]) < 2e-12L * (1 + std::abs(expected[i])),
+            "queued chain differs from independent arithmetic");
+    }
+    check(cudaEventDestroy(done));
+    for (auto* ptr : {dx, dy, dz, dt}) check(cudaFree(ptr));
+    free_qoco_matrix(matrix);
+}
 
 static void stopping_scale_case() {
     // min x subject to x = 1e9. This feasible point with y=-0.5 has
@@ -119,6 +264,15 @@ static void matrix_case(int rows, int cols, bool symmetric, bool empty, bool rep
 
 int main(int argc, char** argv) {
     require(load_cuda_libraries(), "load CUDA algebra libraries");
+    if (argc == 2 && std::strcmp(argv[1], "--cone-reductions-only") == 0) {
+        cone_reduction_cases();
+        return 0;
+    }
+    if (argc == 2 && std::strcmp(argv[1], "--cone-boundaries-only") == 0) {
+        for (int edge = 1; edge <= 6; ++edge) cone_reduction_case(0, {3}, edge);
+        std::puts("QOCO SOC linear and boundary directions PASS");
+        return 0;
+    }
     if (argc == 2 && std::strcmp(argv[1], "--stopping-only") == 0) {
         stopping_scale_case();
         return 0;
@@ -137,6 +291,7 @@ int main(int argc, char** argv) {
     auto begin = reinterpret_cast<Begin>(dlsym(RTLD_DEFAULT, "qoco_gpu_begin_reduction_scope"));
     auto end = reinterpret_cast<End>(dlsym(RTLD_DEFAULT, "qoco_gpu_end_reduction_scope"));
     require((begin == nullptr) == (end == nullptr), "partial reduction-scope extension");
+    queued_chain_case(begin, end);
     std::vector<double> x(1027), y(1027);
     long double reference = 0;
     for (int i = 0; i < 1027; ++i) { x[i] = std::sin(i); y[i] = std::cos(0.37 * i); reference += static_cast<long double>(x[i]) * y[i]; }

@@ -467,3 +467,27 @@ remove upstream solution downloads, host warm-start state, conversion, scaling,
 KKT assembly, or outer decisions. Native memory exports now include driver and
 audit-owned allocations and explicitly exclude opaque QOCO/cuDSS memory. See
 [implementation and evidence](GPU_QOCO_LOCAL_BACKEND.md#device-residual-audit-and-dual-mapping).
+
+## Queued GPU operators and device cone reductions
+
+The next optional backend queues vector/sparse kernels within a checked solve
+scope, reuses cone scratch buffers, and finishes line-search reductions on CUDA.
+It also corrects a residual reduction that ignored partial blocks beyond 1024
+and SOC line-search branches that could leave the cone or stall unnecessarily.
+Independent feasibility and large-grid regressions fail on the prior code and
+pass on the candidate. New kernels pass all four CUDA sanitizers.
+
+Matched local RTX 5090 benchmarks (two warmups/seven measured samples) preserve
+the same independent accuracy gates: the 1e-8 landing falls 617.517 → 242.203 ms
+(2.55x, 54 → 28 inner iterations); the actual 40-interval 3DOF planner example
+falls 638.399 → 426.664 ms (1.50x), and the 20-interval 6DOF planner example falls
+2045.458 → 1684.074 ms (1.21x). Both planner examples certify at their unchanged
+1e-6 tolerance with matching objectives and independent replay. Their complete
+process gains are 1.27x and 1.19x respectively. These are not universal gains.
+
+Full landing memory/initialization/synchronization checks pass, but full racecheck
+still reports 30 hazards inside cuDSS's deterministic factorization. An alternative
+factorization-mode probe fails the unchanged qualification and is rejected.
+The optional candidate is not promoted to the default production dependency.
+[Details, regressions and benchmark artifacts](GPU_QOCO_LOCAL_BACKEND.md#queued-operators-device-cone-reductions-and-soc-step-safety)
+record the improvements and remaining CPU/dependency work. The full goal remains active.

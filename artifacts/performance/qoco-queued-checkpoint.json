@@ -1,0 +1,294 @@
+{
+  "full_goal_complete": false,
+  "production_backend_changed": false,
+  "measured_candidate": "/home/angus/build-qoco-gpu-cones-v14",
+  "measurements": {
+    "qoco-queued-operators-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 1.0708171309670433,
+          "scvx_seconds": 0.62311127,
+          "qoco_solve_seconds": 0.584989383,
+          "inner_iterations": 54
+        },
+        "optimized": {
+          "process_seconds": 0.8861447449889965,
+          "scvx_seconds": 0.495659729,
+          "qoco_solve_seconds": 0.440681022,
+          "inner_iterations": 54
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.2083997981394563,
+        "scvx_seconds": 1.2571351545083866,
+        "qoco_solve_seconds": 1.3274667022080204
+      }
+    },
+    "qoco-device-cone-reductions-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 0.9669326440198347,
+          "scvx_seconds": 0.536114361,
+          "qoco_solve_seconds": 0.483123062,
+          "inner_iterations": 54
+        },
+        "optimized": {
+          "process_seconds": 0.9227096739923581,
+          "scvx_seconds": 0.486666269,
+          "qoco_solve_seconds": 0.431809792,
+          "inner_iterations": 54
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.04792728555249,
+        "scvx_seconds": 1.1016057515175763,
+        "qoco_solve_seconds": 1.1188330393396915
+      }
+    },
+    "qoco-queued-device-cones-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 1.0128213739953935,
+          "scvx_seconds": 0.617516826,
+          "qoco_solve_seconds": 0.574331233,
+          "inner_iterations": 54
+        },
+        "optimized": {
+          "process_seconds": 0.6533667899784632,
+          "scvx_seconds": 0.242203437,
+          "qoco_solve_seconds": 0.19707038500000001,
+          "inner_iterations": 28
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.5501574146870534,
+        "scvx_seconds": 2.5495791209602037,
+        "qoco_solve_seconds": 2.914345719677769
+      }
+    },
+    "qoco-queued-planner-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 0.9525177750037983,
+          "scvx_total_seconds": 0.638398554,
+          "qoco_solve_seconds": 0.5526187920000001,
+          "plan_wall_seconds": 0.725344319,
+          "inner_iterations": 44
+        },
+        "optimized": {
+          "process_seconds": 0.7507260670536198,
+          "scvx_total_seconds": 0.426663518,
+          "qoco_solve_seconds": 0.33990219,
+          "plan_wall_seconds": 0.501589043,
+          "inner_iterations": 41
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.2687953926285682,
+        "scvx_total_seconds": 1.4962576528513976,
+        "qoco_solve_seconds": 1.6258170975597424,
+        "plan_wall_seconds": 1.4460928306203054
+      }
+    },
+    "qoco-queued-planner-pd6.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 2.4521203309996054,
+          "scvx_total_seconds": 2.045458191,
+          "qoco_solve_seconds": 1.943431799,
+          "plan_wall_seconds": 2.171438855,
+          "inner_iterations": 162
+        },
+        "optimized": {
+          "process_seconds": 2.0598817280260846,
+          "scvx_total_seconds": 1.684073953,
+          "qoco_solve_seconds": 1.5592599699999998,
+          "plan_wall_seconds": 1.798783894,
+          "inner_iterations": 179
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.190418021402321,
+        "scvx_total_seconds": 1.2145892924454011,
+        "qoco_solve_seconds": 1.2463808706639217,
+        "plan_wall_seconds": 1.2071705012720109
+      }
+    }
+  },
+  "representative_planner_results": [
+    "qoco-queued-planner-pd3-baseline-sample.json",
+    "qoco-queued-planner-pd3-optimized-sample.json",
+    "qoco-queued-planner-pd6-baseline-sample.json",
+    "qoco-queued-planner-pd6-optimized-sample.json"
+  ],
+  "sanitizers": {
+    "qoco-v11-operators-memcheck.log": {
+      "passed": true,
+      "sha256": "3f9de6010ea4917e7096e74f48e422a1e8452d71e33f6b1491c1cd6fcdeb7d3a"
+    },
+    "qoco-v11-operators-initcheck.log": {
+      "passed": true,
+      "sha256": "6766179dab2d1f54fe839cda1427fb457755d9ba051513e8558a0035d607eb0e"
+    },
+    "qoco-v11-operators-synccheck.log": {
+      "passed": true,
+      "sha256": "6766179dab2d1f54fe839cda1427fb457755d9ba051513e8558a0035d607eb0e"
+    },
+    "qoco-v11-operators-racecheck.log": {
+      "passed": true,
+      "sha256": "2935d83a37d42cc728889c8714640699c1c17ad7e81c4ad37aa2175bdc859e4d"
+    },
+    "qoco-v14-cones-final-memcheck.log": {
+      "passed": true,
+      "sha256": "2b596d568a57204f7912f9c559cbb377ca637da1a7ed57f1fc0fda997049e0ed"
+    },
+    "qoco-v14-cones-final-initcheck.log": {
+      "passed": true,
+      "sha256": "9263b285ab182d6abaecc53ddcdfdf87b20bb41865d4b941fef5ba07436b8d01"
+    },
+    "qoco-v14-cones-final-synccheck.log": {
+      "passed": true,
+      "sha256": "9263b285ab182d6abaecc53ddcdfdf87b20bb41865d4b941fef5ba07436b8d01"
+    },
+    "qoco-v14-cones-final-racecheck.log": {
+      "passed": true,
+      "sha256": "26d33035af669e0a74dcc2e3b9a7ee22999ab82a85a20152b4bb1459126fef8d"
+    },
+    "qoco-v14-landing-memcheck.log": {
+      "passed": true,
+      "sha256": "7112330d505f183629a1103bcb38a005e8a9127cace9a8fe282cec1cbedc9d42"
+    },
+    "qoco-v14-landing-initcheck.log": {
+      "passed": true,
+      "sha256": "5e2d50a332a48add916ce46591069829012a8d8634265fd97ac3311d04194d92"
+    },
+    "qoco-v14-landing-synccheck.log": {
+      "passed": true,
+      "sha256": "f76b3f70870ad1ae28e34be318cd55e130feb8aef1d13b79b823219fd90b4b06"
+    },
+    "qoco-v14-operators-memcheck.log": {
+      "passed": true,
+      "sha256": "3f9de6010ea4917e7096e74f48e422a1e8452d71e33f6b1491c1cd6fcdeb7d3a"
+    },
+    "qoco-v14-stopping-memcheck.log": {
+      "passed": true,
+      "sha256": "a5a1b90310970117ddcfe68bf641c46ae1fe35f0149a994a98ddabdb9c678ce2"
+    }
+  },
+  "cpu_audit_oracle_repeated_qualified_solves": 7,
+  "fixed_regressions": [
+    "residual partial blocks beyond 1024",
+    "SOC linear and boundary step feasibility"
+  ],
+  "full_backend_racecheck_clear": false,
+  "racecheck": {
+    "displayed_hazards": 30,
+    "location": "cuDSS deterministic factorization",
+    "sha256": "eb7773227c12f4561499b5ec89560fc5c41a670ede24e298fed67a90c7d2773b"
+  },
+  "rejected_alternative": {
+    "candidate": "v15 nondeterministic cuDSS",
+    "sample": {
+      "case": "g4_sample",
+      "family": "P1-C-pd3",
+      "policy": "pure-gpu-ipm",
+      "intervals": 20,
+      "status": 1,
+      "trust_class": 0,
+      "transfer_class": "not_applicable",
+      "qualified": false,
+      "quality_tolerance": 1e-08,
+      "canonical_residual": 8.526348112650969e-12,
+      "objective": 0.4944853783843941,
+      "dynamics": 0,
+      "path": 0,
+      "terminal": 5.4844079940608025e-08,
+      "path_inventory": {
+        "thrust": 0,
+        "mass": 0,
+        "altitude": 0
+      },
+      "virtual": 0,
+      "trajectory_difference": 476.11016833206577,
+      "cqp_seconds": 0.396013903,
+      "scvx_seconds": 0.399023459,
+      "topology_seconds": 0.03372037,
+      "coefficient_seconds": 0.00035126399993896484,
+      "workspace_create_seconds": 0.023389718,
+      "update_seconds": 0.001756064,
+      "scaling_seconds": 0,
+      "solve_seconds": 0.360013069,
+      "residual_seconds": 0.000509121,
+      "replay_seconds": 0.0008559359908103944,
+      "acceptance_seconds": 6.3734e-05,
+      "h2d_seconds": 0,
+      "d2h_seconds": 0.00018403199687600134,
+      "recovery_seconds": 0,
+      "recovery_iterations": 0,
+      "inner_iterations": 48,
+      "h2d_bytes": 116552,
+      "d2h_bytes": 151008,
+      "peak_device_bytes": 506880,
+      "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss",
+      "topology_allocations_after_create": 0,
+      "hidden_cpu_fallback": 0,
+      "qoco_conversion_seconds": 0.000682193,
+      "qoco_setup_seconds": 0.033053456,
+      "qoco_update_seconds": 0.001756064,
+      "qoco_solve_seconds": 0.360013069,
+      "qoco_workspace_creations": 1,
+      "qoco_numeric_updates": 1,
+      "qoco_dual_discarded": 0,
+      "hybrid_handoff_eligible": 0,
+      "qoco_failure": 0
+    },
+    "reason": "Fails unchanged landing qualification"
+  },
+  "sha256": {
+    "/home/angus/build-qoco-gpu-gather-v10/build/libqoco.so": "9c0a10809daf791bbee5bfdef7d1a1b2d6b934b9dc3f8cf9e47b6d8f44b9e04b",
+    "/home/angus/build-qoco-gpu-queued-v11/build/libqoco.so": "c6385e0ed0a504f14ff166d9b45cf4661ad72c14f444e3865c784b78efe60904",
+    "/home/angus/build-qoco-gpu-cones-v13/build/libqoco.so": "d6d8f2716ee328b70084e0ee05b8e542e38c6d0556d6518f2c76b771135c7b5b",
+    "/home/angus/build-qoco-gpu-cones-v14/build/libqoco.so": "1be09444fa3e420364a2aa3c40d84232786dc8038718c8b967dee427cb47f569",
+    "/home/angus/build-qoco-gpu-cones-v15/build/libqoco.so": "d6ae97c99d4336460428db202bfa551fb861dce3fddd6e302c995f8e01a98092",
+    "/home/angus/build-qoco-gpu-cones-v14/qoco_gpu_operators_test": "ba37461d1a0dced5afee0501f7e5a18b55aae39c71bb71c14b6387ead32d76f3",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda/libspacepdhcg_cuda.so": "d415f48881f5ecd699c024becd49f1f216744fd3a3b29d050ea21d0c555efdec",
+    "/home/angus/spacecraft-trajectory-optmiser/build/qoco-cudss-lib/libcudss.so": "5f76a3698d6b7114e6cf6ebe38a38096ccb8af090aa5b8af92d72c9b369b2e86"
+  },
+  "prepared_source": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "7cd73d2cb6660a541833ede4817d8b45eb1c10de580d90616cf8e71df1629e1e",
+    "extension_sha256": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+    "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+    "gather": true,
+    "original_handles": false,
+    "queued_operators": true,
+    "device_cone_reductions": true,
+    "correct_stopping": true,
+    "deterministic": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "7cd73d2cb6660a541833ede4817d8b45eb1c10de580d90616cf8e71df1629e1e",
+      "algebra/cuda/qoco_reduction_scope.cuh": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+      "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+      "algebra/cuda/cudss_backend.h": "77a555ac37e624be6dd0758367eb929f67cdab44812b33fd1f8c19cc31594e4a",
+      "algebra/cuda/cudss_backend.cu": "b108c9a5f4d187f519d10df1d9a68d767d9f6956b96b5d7e21967df2c707a9fa",
+      "src/qoco_utils.c": "654298c51d80606f8d5b757d7f3f7b1f38b2f7860d08e42c52692f279f3786de",
+      "algebra/cuda/qoco_gather.cuh": "637ea34a5a178254ad6ea40f30d515e28ab32eff43423b600e503e1d6537429d",
+      "src/cone.cu": "53e522d3be03cb21f7e057652d33e314d197308330d4ce9599792f24a1e68b03",
+      "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59"
+    }
+  },
+  "remaining_work": [
+    "CPU conversion/equilibration/KKT setup",
+    "host scalar and outer decisions",
+    "warm-state transfers",
+    "vendor factorization hazards",
+    "large trajectory scaling",
+    "batching",
+    "GPU GTOC12 search/refinement"
+  ]
+}

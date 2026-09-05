@@ -94,14 +94,29 @@ def main() -> None:
     parser.add_argument(
         "--checked-cudss-abi", action="store_true", help="support and check cuDSS 0.7/0.8 APIs"
     )
+    parser.add_argument(
+        "--queued-operators",
+        action="store_true",
+        help="queue vector/gather operations within a solve",
+    )
+    parser.add_argument(
+        "--device-cone-reductions", action="store_true",
+        help="GPU cone reductions, retained scratch and SOC boundary fixes",
+    )
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
         or args.correct_stopping
         or args.deterministic
         or args.checked_cudss_abi
+        or args.queued_operators
+        or args.device_cone_reductions
     ):
         parser.error("--unmodified cannot be combined with backend changes")
+    if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
+        parser.error("queued operators and device cone reductions require scoped handles")
+    if args.queued_operators and not args.gather:
+        parser.error("--queued-operators requires --gather")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -211,6 +226,54 @@ def main() -> None:
         '#include "cudss_backend.h"',
         '#include "cudss_backend.h"\n#include "qoco_device_solution.cuh"',
     )
+    if args.queued_operators:
+        modified = modified.replace(
+            '#include "qoco_reduction_scope.cuh"',
+            '#define SPACEPDHCG_QOCO_QUEUED_OPERATORS 1\n#include "qoco_reduction_scope.cuh"',
+        )
+        # After gather replacement there are exactly six vector/transpose waits.
+        # Setup, matrix refresh, cuDSS, and all host reads retain their barriers.
+        if not args.gather or modified.count("cudaDeviceSynchronize()") != 6:
+            raise RuntimeError("queued operators require reviewed gather/vector implementation")
+        modified = modified.replace("cudaDeviceSynchronize()", "qoco_complete_vector_operation()")
+        gather_path = destination / "algebra/cuda/qoco_gather.cuh"
+        contents = gather_path.read_text()
+        before, separator, after = contents.rpartition("cudaDeviceSynchronize()")
+        if not separator or contents.count(separator) != 2:
+            raise RuntimeError("unexpected gather completion sites")
+        gather_path.write_text(before + "qoco_complete_vector_operation()" + after)
+    if args.device_cone_reductions:
+        modified = modified.replace(
+            '#include "qoco_reduction_scope.cuh"',
+            '#define SPACEPDHCG_QOCO_DEVICE_CONE_REDUCTIONS 1\n'
+            '#include "qoco_reduction_scope.cuh"',
+        )
+        cone_path = destination / "src/cone.cu"
+        cones = cone_path.read_text()
+        # The pinned linear/boundary branches can step outside an SOC. Preserve
+        # the quadratic formula, but enforce the first boundary of c+b*t+a*t^2.
+        linear = "  if (qoco_abs(a) < 1e-14)\n    return alpha;"
+        boundary = (
+            "  if (c == 0.0) {\n    if (a >= 0.0)\n      return alpha;\n"
+            "    else\n      return 0.0;\n  }"
+        )
+        for before, after in (
+            (linear, "  if (a == 0.0)\n    return b < 0.0 ? qoco_min(alpha, -c / b) : alpha;"),
+            (boundary, "  if (c == 0.0) {\n"
+             "    if (b < 0.0 || (b == 0.0 && a < 0.0)) return 0.0;\n"
+             "    return a < 0.0 ? qoco_min(alpha, -b / a) : alpha;\n  }"),
+        ):
+            if cones.count(before) != 1:
+                raise RuntimeError("unexpected SOC step-length boundary implementation")
+            cones = cones.replace(before, after)
+        for signature in ("QOCOFloat linesearch(", "QOCOFloat cone_residual("):
+            start = cones.index(signature)
+            end = cones.index("\n}\n", start) + 3
+            declaration = cones[start:cones.index("\n{", start)] + ";\n"
+            cones = cones[:start] + declaration + cones[end:]
+        replacement = extension.with_name("qoco_device_cone_reductions.cuh")
+        shutil.copyfile(replacement, destination / "src/qoco_device_cone_reductions.cuh")
+        cone_path.write_text(cones + '\n#include "qoco_device_cone_reductions.cuh"\n')
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -246,6 +309,8 @@ def main() -> None:
         "device_solution_sha256": hashlib.sha256(device_solution.read_bytes()).hexdigest(),
         "gather": args.gather,
         "original_handles": args.original_handles,
+        "queued_operators": args.queued_operators,
+        "device_cone_reductions": args.device_cone_reductions,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -256,10 +321,15 @@ def main() -> None:
         relative: hashlib.sha256((destination / relative).read_bytes()).hexdigest()
         for relative in (
             "algebra/cuda/cuda_linalg.cu",
+            "algebra/cuda/qoco_reduction_scope.cuh",
+            "algebra/cuda/qoco_device_solution.cuh",
             "algebra/cuda/cuda_types.h",
             "algebra/cuda/cudss_backend.h",
             "algebra/cuda/cudss_backend.cu",
             "src/qoco_utils.c",
+            *(["algebra/cuda/qoco_gather.cuh"] if args.gather else []),
+            *(["src/cone.cu", "src/qoco_device_cone_reductions.cuh"]
+              if args.device_cone_reductions else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")

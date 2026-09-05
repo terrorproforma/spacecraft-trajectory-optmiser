@@ -206,3 +206,103 @@ arguments to reproduce a core-adapter comparison. The tool hashes both core
 libraries and selects them through the process library search path. The full
 CUDA build now excludes the standalone QOCO operator test from its automatic
 test glob, since that test requires the isolated upstream headers and library.
+
+## Queued operators, device cone reductions and SOC step safety
+
+Two additional opt-in preparation flags enable the next measured candidate:
+`--queued-operators --device-cone-reductions`, alongside `--gather
+--correct-stopping --deterministic --checked-cudss-abi`. The queued-operator flag
+requires gathers and scoped handles. No remote campaign or pinned checkout was
+modified, and the experimental backend remains opt-in.
+
+Within a solve, vector and sparse-product kernels remain ordered on the default
+CUDA stream without waiting for the entire device after each operation. Host
+scalar reads retain their synchronization, as do matrix setup/refresh and cuDSS
+operations. The outermost scope checks stream completion before destroying its
+resources. Unscoped calls retain synchronous behavior. Independent chained
+operations cover in-place updates, both sparse directions, nested scopes and
+completion before returning to the caller.
+
+Cone line-search block reductions now finish on CUDA and download one scalar,
+including the step safeguard and scaling. The LP step stays on the device while
+SOC limits are calculated. Cone residual and line-search scratch buffers are
+retained for the solve and reused between calls; scope teardown frees them.
+There are no host block-reduction loops in this path.
+
+The tests also exposed two correctness defects in the pinned backend:
+
+- The final cone residual reduction inspected at most 1024 partial blocks. A
+  violated LP constraint at index 262144 was ignored. The replacement uses a
+  grid-stride reduction covering every partial. The old binary fails this
+  regression and the new binary reports the expected residual of 7.
+- The SOC line-search branches for a linear quadratic expression or an initial
+  boundary point could return an infeasible step, or unnecessarily return zero.
+  For example, `x=(1,0,0), dx=(-1,1,0)` permits a maximum step of 0.5, whereas the
+  old branch allowed 1. The corrected code enforces the first boundary of
+  `c + b*t + a*t*t`, handles `a=0` explicitly, and retains the stable quadratic
+  root calculation for nonzero `a`. Six exact/near-linear and boundary fixtures
+  agree with independent long-double feasibility bisection. The old binary fails
+  the boundary test.
+
+These corrections change the convergence path; iteration counts must not be
+assumed equal. The combined candidate is measured against the previous GPU-audit
+backend, with two warmups and seven fresh-process measured samples per variant:
+
+| Case | Previous median SCvx | New median SCvx | Speedup | Inner iterations |
+| --- | ---: | ---: | ---: | ---: |
+| 20-interval displaced landing, 1e-8 gate | 617.517 ms | 242.203 ms | 2.55x | 54 → 28 |
+| Planner 3DOF example, 40 intervals, 1e-6 gate | 638.399 ms | 426.664 ms | 1.50x | 44 → 41 |
+| Planner 6DOF example, 20 intervals, 1e-6 gate | 2045.458 ms | 1684.074 ms | 1.21x | 162 → 179 |
+
+Complete-process speedups are respectively 1.55x, 1.27x and 1.19x. Every sample
+passes its unchanged qualification gates, with two accepted steps and objectives
+within an absolute 1e-8 of its control. Both planner examples also pass independent
+replay, coefficient parity and the continuous-time checks. The 6DOF candidate
+requires six outer attempts instead of five, so it is faster despite additional
+solver work. These are scoped results, not a universal speedup multiplier.
+
+For the 1e-8 landing, the final objective is 0.49448537365291756 (control
+0.49448537334898213), canonical residual 2.618510687647072e-11 and terminal
+residual 7.034629823099436e-13. All seven additional CPU-audit-oracle solves also
+qualify. The prior native-audit migration remains a separate measurement.
+
+Intermediate comparisons isolate queued operators (623.111 → 495.660 ms, same
+54 iterations) and GPU cone reductions/scratch reuse before the SOC boundary
+correction (536.114 → 486.666 ms, same 54 iterations). The full-solve API profile
+records device-wide waits 5809 → 65 and allocations 1183 → 381. That profile also
+changes 54 → 28 iterations, so its call-count reductions include both improved
+convergence and implementation changes. Nsight captures API calls only here,
+not an RTX 5090 kernel/memory timeline.
+
+Validation includes all four CUDA sanitizers for the new cone kernels, queued
+operator chains, independent feasibility checks, scope cleanup and large-grid
+coverage. Full landing memcheck (zero leaks), initcheck and synccheck pass.
+**Full landing racecheck still reports 30 hazards inside cuDSS 0.7.1.6's
+deterministic factorization kernel.** This run returns a numerically qualified
+point but is not racecheck-clean. A separate candidate using cuDSS's
+nondeterministic mode fails the unchanged landing gate (one accepted step,
+terminal residual 5.4844079940608025e-8 versus 1e-8). It is rejected; disabling
+deterministic mode is not a qualified workaround.
+
+The final prepared candidate is `/home/angus/build-qoco-gpu-cones-v14`; the
+nondeterministic rejected probe is `build-qoco-gpu-cones-v15`. Evidence is in
+[the checkpoint](../artifacts/performance/qoco-queued-checkpoint.json),
+[landing samples](../artifacts/performance/qoco-queued-device-cones-pd3.json),
+[3DOF planner samples](../artifacts/performance/qoco-queued-planner-pd3.json),
+[6DOF planner samples](../artifacts/performance/qoco-queued-planner-pd6.json), and
+[API counts](../artifacts/performance/qoco-queued-api-profile.json). Full
+representative planner results are linked by the checkpoint.
+
+Use `qoco_gpu_operators_test --cone-reductions-only` for the new numerical and
+large-grid checks, and `--cone-boundaries-only` for the SOC regression alone.
+`scripts/gpu/benchmark_planner.py` benchmarks a canonical problem document,
+locks the local GPU, hashes its inputs and executables, checks every physics
+gate plus objective agreement, and retains the full result for each sample.
+Normalize an example first with `spacepdhcg validate`; the native executable
+expects radians/canonical units. Unit normalization is outside these timings;
+native independent replay is included.
+
+CPU conversion, equilibration, KKT setup, upstream scalar decisions, accepted
+warm-state storage and outer decisions remain. The dependency race issue, large
+trajectory scaling, batching and the GPU GTOC12 path remain open work under the
+full GPU-native goal.
