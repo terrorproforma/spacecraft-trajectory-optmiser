@@ -84,7 +84,8 @@ Landed:
   `results/lambda-h100/` compact evidence (608 files, 5.95 MB, `INDEX.json` with sha256 per file and
   the 1171 skipped files listed).
 
-**GTOC12 headline (2026-09-05):** best verified fleet `fleet_master_h100_v2` = `fleet_master_h100_v3`
+**GTOC12 headline (2026-09-05, 16:40; superseded by the fourth merge's headline below):** best verified
+fleet `fleet_master_h100_v2` = `fleet_master_h100_v3`
 (byte-identical `fleet/Result.txt`, sha256 `beffeeff…0548`): **22 ships, 187 asteroids,
 13,189.60 kg, 599.53 kg average**, master objective 12,203.96 kg, LP bound 12,207.39 kg (gap 3.4 kg;
 not proven optimal - node cap), official `GTOC12_Verify` + independent verifier pass on the host and
@@ -125,6 +126,77 @@ continued committing there); the H100 G4 claim-core campaign on 1dbcae0 (running
 evidence to date is under `results/lambda-h100/g4/`); the sm_90 confirmation of the v2 fixes
 (pending an H100 GPU window); `perf/g4-batched-campaign` (provenance only); the raw Lambda H100
 artefacts listed as skipped in `results/lambda-h100/INDEX.json` (Windows disk and the host).
+
+Integration note (2026-09-05, fourth release merge): `main` advanced from 2aecc65 through merge
+commits on `release/single-gpu-v1-merge` (merge commits only; every branch keeps its history).
+Landed:
+
+- `feat/gtoc12-asteroid-mining` dfdeca8f (merge fd7ef6d; the branch tip at merge time, 12 commits
+  past b55eb70 / 48e5fb7): the tenth GTOC12 iteration - the branch's own merge of the H100 v2 line
+  86a91d3 with both mechanisms kept (bc7ef8e); the Earth-out leg stage in the joint itinerary
+  (`jointopt.optimise_ship(earth_leg=...)`: single-leg SCvx oracle, prefix seeds, monotone
+  certified-only acceptance; `joint-itinerary --earth-leg --earth-leg-shifts
+  --earth-leg-certifications`, `cluster-fleet --joint-earth-leg`); the harvest-phase prior
+  (`gtoc12/harvestphase.py`, `gtoc12 harvest-phase`, `benchmarks/gtoc12/harvest_phase_v1.json`,
+  DP move penalty + chain score, `cluster-fleet --harvest-phase --harvest-phase-weight`);
+  `scripts/gtoc12_campaign_report.py` (leg roles, |Δλ| at harvest vs the references, chain-mass
+  distribution, paired families, collect-pair planes, masters). Results `joint_itinerary_v4`
+  (+316 kg), `joint_itinerary_v5` (`--earth-leg`, +494 kg), `fleet_master_v9` (22 ships /
+  13,188.61 kg / 599.48 kg average, proven optimal), and from the H100 host (c2730b1, merged on the
+  branch as dfdeca8f) the paired arms `cluster_fleet_v10` / `cluster_fleet_v10_control` (neutral,
+  median 0.0 kg over 35 families), `joint_itinerary_v10` (+663.6 kg) and `fleet_master_v10`.
+  `GTOC12_TRACK.md` gains section 6.13, seven section 7 rows and the section 8 entry. Tests +6.
+- ed71737: the Windows checkout's 21:40 tenth-iteration memory notes folded insert-only into the
+  live memory files.
+- f4028b3: `results/lambda-h100/` compact evidence of the v10 campaign and the H100 v3 master (+28
+  files; `INDEX.json` regenerated over every tracked file: 636 kept with sha256, 1569 skipped).
+
+**GTOC12 headline (2026-09-05, fourth merge):** best verified fleet **`fleet_master_v10`** (Lambda
+H100 host, archive-wide master over 36 archives, 2449 routes re-flown through SCvx, 3142 columns,
+`fleet/Result.txt` sha256 `3c052997…1b3e`): **23 ships, 196 asteroids (193 mined), 14,044.80 kg,
+610.65 kg average** against the 23-ship threshold of 610.6 kg (rule 23 ≤ 23.005, binding); master
+objective 12,590.37 kg, LP bound 12,596.64 kg (gap 6.3 kg), **proven optimal** (2 M nodes + LP
+branch and bound); official `GTOC12_Verify` "Check successfully!" and the independent verifier pass
+on the host and locally on the merged tree. Ship 24 needs 621.2 kg average. The 23rd ship comes from
+breadth (35 families × 2 arms) plus `joint_itinerary_v10 --earth-leg`, not from the two new per-ship
+terms (both neutral in the paired arms). Best local proven-optimal fleet: `fleet_master_v9`, 22 ships
+/ 13,188.61 kg / 599.48 kg average (LP gap 0.95 kg). Details and the per-run table: `GTOC12_TRACK.md`
+sections 6.13, 7 and 8.
+
+Conflict resolutions (four files, one hunk each): `.cursor/memory/AGENT_SCRATCHPAD.md` and
+`DEVLOG.md` keep main's 16:40 third-merge entries followed by the branch's tenth-iteration entries
+(chronological; line coverage 0 branch lines missing, the 8 main lines missing are the superseded
+`fleet_master_v8` Active-Risks bullet); `GTOC12_TRACK.md` section 7 keeps main's H100 v3 row and
+appends the branch's seven tenth-iteration rows (the H100 joint rows keep the 6.11 citation);
+`cooperative.py` recursion-limit comment takes the branch's wording (code identical on both sides).
+
+Verification of the integrated head f4028b3 (WSL Ubuntu-22.04; `cpp/` and `scripts/gpu/` are
+byte-identical to 2aecc65, so the host, native and CUDA builds and the GPU test matrix of the third
+merge stand and were not repeated; the RTX 5090 carried a foreign ~3.6 GB workload and was not
+touched): ruff check + format clean (305 files); generated-artefact checks (G4 policy header, G7
+schemas, literature provenance 126 records, packaged assets 34) clean; full CPU pytest with the
+CPU-built libqoco and `CUDA_VISIBLE_DEVICES=""`: 683 passed / 35 skipped in 631 s (+6 tests over
+2aecc65; the skips are the GPU-gated and offline-artifact tests as before); gtoc12 suites + CLI
+dispatch 153 passed (478 s; the branch reported 144 for the gtoc12 files alone); manifest /
+benchmark / experiment tests 14/14; viewer `npm run check` + `npm test` (36 pass, 2 environment
+skips, palette 40 colours with the synthetic 21/39/40-ship fleets passing and 41 refused) with
+`fleet_master_v10` regenerated by `gtoc12 export-viewer` and imported (23 ships, 196 asteroids,
+11,681 exact replay samples, 14,044.8 kg, fleet SHA `b9b3b6ba…aa62`, solution SHA = the committed
+manifest, Kepler cross-check max 3.59e-6 km); wheel + sdist build and installed-wheel smoke in a
+fresh venv (`spacepdhcg --help`, `literature list`, `gtoc12 --help` listing `chain-prior`,
+`harvest-phase`, `joint-itinerary`, `export-viewer`; `gtoc12 joint-itinerary --help` with
+`--earth-leg --earth-leg-shifts --earth-leg-certifications`; `gtoc12 cluster-fleet --help` with
+`--chain-prior`, `--harvest-phase`, `--joint-earth-leg`, `--joint-itinerary`, `--dual-bound-share`,
+`--all-family-bands`; `harvest-phase --help`, `chain-prior --help`, `reduced-instance --list-ids`,
+`validate`, `plan --backend cpu_reference` certified, `python -m spacepdhcg`). The status/memory
+commit after f4028b3 is docs/memory only.
+
+Still off `main` after this merge: `feat/gtoc12-asteroid-mining` beyond dfdeca8f if the v11 worker
+has started committing there; the H100 G4 claim-core campaign on 1dbcae0 (running; compact G4
+evidence to date under `results/lambda-h100/g4/`); the sm_90 confirmation of the v2 fixes (pending
+an H100 GPU window); `perf/g4-batched-campaign` (provenance only); the raw Lambda H100 artefacts
+listed as skipped in `results/lambda-h100/INDEX.json` (Windows disk and the host); the sdist still
+packs `web/trajectory-viewer` and `tests/__pycache__` (31.8 MB).
 
 This document distinguishes completed engineering from GPU-dependent experiments. “Implemented”
 does not mean “demonstrated faster”; performance claims require the benchmark protocol and real

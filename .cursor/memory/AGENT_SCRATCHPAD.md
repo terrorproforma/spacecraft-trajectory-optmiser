@@ -592,3 +592,50 @@ the bullets already present above are not repeated).
   archives first (`gtoc12_campaign_report.py --run <ours> --fleet-ships <master>`).
 - Ship 23 needs 610.6 kg average: the archives hold 24-25 chains >= 600 and one >= 650; the
   next lever must produce *new* chains (plane-aware families), not re-time old ones.
+
+### 2026-09-05 22:10 AEST - Fourth release merge into main (gtoc12 v10: fleet_master_v10 23 ships)
+
+#### Task Summary
+
+- Merged `feat/gtoc12-asteroid-mining` dfdeca8f onto `release/single-gpu-v1-merge` from 2aecc65
+  (fd7ef6d, criss-cross bases 48e5fb7 + b55eb70, four one-hunk conflicts), folded the Windows
+  checkout's 21:40 memory notes (ed71737), extended `results/lambda-h100` with the v10 compact
+  evidence + regenerated INDEX.json (f4028b3), verified, wrote the status note (this commit).
+- Headline: **`fleet_master_v10` 23 ships / 196 asteroids / 14,044.80 kg / 610.65 avg, LP gap 6.3,
+  proven optimal, both verifiers** (H100, 36 archives). Helper scripts + logs `/home/angus/integ4/`.
+
+#### Mistakes And Fixes
+
+- `[self]` First run of a Write-tool script through a fresh `run.sh` executed with CRLF intact (the
+  bootstrap `sed` went through `wsl -- bash -c '...'` and lost its quoting): `cd "$R"` failed on
+  `$'...\r'` and the read-only inspection commands ran in the *Windows checkout* (the `wsl` cwd).
+  Nothing was written, but the rule is now mechanical: bootstrap a new helper dir's `run.sh` through
+  an existing LF-clean runner (`bash /home/angus/integ3/run.sh /home/angus/integ4/run.sh <script>`),
+  make `run.sh` `cd` into the helper dir before exec, and write every `cd "$X"` as `cd "$X" || exit 1`.
+- `[tool]` `wsl -d ... -- <cmd>` from PowerShell re-splits the command line in the Linux shell:
+  parentheses, `|`, `$` and quotes are lost (`grep -n -E "^(<<<<<<<|...)"` -> syntax error). Use the
+  Grep/Read tools on `\\wsl.localhost\...` paths for ad-hoc inspection, scripts for everything else.
+- `[self]` `git merge-tree <base> HEAD <tip>` picked one of two merge bases and reported 0 conflict
+  hunks; the real merge (recursive over both bases) conflicted in four files. Same lesson as the third
+  pass: the pre-scan is a hint; go straight to `git merge --no-ff --no-commit`.
+- `[self]` Commit message of f4028b3 says "637 kept" where INDEX.json has 636 (608 + 28); recorded in
+  the DEVLOG since amending is forbidden. Compute the number in the script and paste it, do not
+  pre-write counts into message files.
+
+#### What Worked
+
+- `resolve_conflicts.py` with a per-file mode (`both` = HEAD side then incoming side, `theirs`,
+  `ours`) + the `sort -u` / `comm -23` coverage check per parent: every missing line explained.
+- `win_mem_fold.py`: section/bullet-level insert-only fold with an in-order survival assertion and an
+  ASCII-folded "every Windows line present" check - a 30-line replacement for the third pass's tool.
+- `regen_index.py` walks `git ls-files` rather than the copy list, so "every tracked file has a hash"
+  is asserted, not assumed (tracked == kept, 0 hashed-but-untracked).
+- Reusing the third pass's host build for the CPU pytest after proving `git diff 2aecc65 -- cpp/` is
+  empty: the whole matrix (gtoc12 8 min, full pytest 10.5 min, viewer + wheel 1 min) in ~11 min wall.
+
+#### Guardrails For Next Session
+
+- The Windows checkout is not "clean on main" while a worker writes memory notes there: check
+  `git status --porcelain` with *Windows* git before planning the final `git pull --ff-only`, fold the
+  notes into main first, and never touch that tree with `checkout -- .` / `clean`.
+- The live scratchpad is ~600 lines after two folds - roll it over at the next quiet point (archive-first).
