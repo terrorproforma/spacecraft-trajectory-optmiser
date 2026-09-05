@@ -18,6 +18,30 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_solve_state(destination: Path) -> None:
+    """Keep allocation reuse without retaining a previous problem's best iterate."""
+    path = destination / "src/qoco_api.c"
+    text = path.read_text()
+    start = text.index("QOCOInt qoco_solve(QOCOSolver* solver)")
+    before = "  start_timer(&(work->solve_timer));"
+    body = text[start:]
+    if body.count(before) != 1:
+        raise RuntimeError("unexpected QOCO solve-state reset site")
+    body = body.replace(
+        before, """  // Best iterates are valid only for this solve's coefficients and scaling.
+  // Keep device allocations and the explicitly requested primal warm start.
+  work->best_valid = 0;
+  work->best_iter = -1;
+  work->best_metric = 0.0;
+  work->ir_iters = 0;
+  solver->sol->iters = 0;
+  solver->sol->ir_iters = 0;
+  solver->sol->status = QOCO_UNSOLVED;
+
+""" + before)
+    path.write_text(text[:start] + body)
+
+
 def patch_setup_profile(destination: Path) -> None:
     """Insert optional completion-fenced stage markers into setup only."""
     sites = {
@@ -430,6 +454,8 @@ def main() -> None:
                         help="experimental cuDSS multiblock factorization algorithm")
     parser.add_argument("--superpanels", action="store_true",
                         help="experimental cuDSS superpanel optimization")
+    parser.add_argument("--reset-solve-state", action="store_true",
+                        help="reset per-solve history (already enabled for all patched builds)")
     parser.add_argument(
         "--checked-cudss-abi", action="store_true", help="support and check cuDSS 0.7/0.8 APIs"
     )
@@ -485,6 +511,7 @@ def main() -> None:
         or args.deterministic
         or args.multiblock_factorization
         or args.superpanels
+        or args.reset_solve_state
         or args.checked_cudss_abi
         or args.queued_operators
         or args.device_cone_reductions
@@ -843,6 +870,9 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         backend_path.write_text(backend.replace(before, after))
     if args.checked_cudss_abi:
         patch_cudss_abi(destination)
+    # --unmodified returned above. Every patched build must isolate recovery
+    # history, independent of which performance experiments are selected.
+    patch_solve_state(destination)
     if args.superpanels:
         backend_path = destination / "algebra/cuda/cudss_backend.cu"
         backend = backend_path.read_text()
@@ -902,6 +932,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "deterministic": args.deterministic,
         "multiblock_factorization": args.multiblock_factorization,
         "superpanels": args.superpanels,
+        "reset_solve_state": True,
         "checked_cudss_abi": args.checked_cudss_abi,
     }
     if args.gather:

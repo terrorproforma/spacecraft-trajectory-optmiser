@@ -2953,7 +2953,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     : driver->options.warm_start_mode),
             last_diagnostics.recovery_outcome_reason,
             last_diagnostics.natural_residual_inf
-                    <= driver->options.resolve_trigger_multiple
+                    <= (pure_qoco ? 1.0 : driver->options.resolve_trigger_multiple)
                         * solve_options.optimality_tolerance
                 ? 1
                 : 0,

@@ -1140,3 +1140,92 @@ the next investigation should address conditioning and SCvx progress sensitivity
 while retaining the same terminal certificate, then revisit faster kernels.
 CPU KKT assembly and host control still prevent claiming the whole pipeline
 is GPU-native. The full goal remains active.
+
+## Per-solve recovery-state isolation
+
+The v58 patch fixes recovery state that outlives the convex problem it describes.
+The pinned `qoco_solve` calls `initialize_ipm` but does not invalidate
+`work->best_valid`, `best_iter` or `best_metric`. SCvx updates coefficients and
+scaling between calls. If the new solve stalls before beating the old metric,
+`restore_best_iterate` copies the old scaled vectors into the new solve and may
+label them solved-inaccurate using an obsolete residual. This explains why the
+failed v54 trace repeatedly returns the preceding trajectory. The independent
+canonical and nonlinear gates correctly prevent its certification.
+
+`prepare_qoco_gpu.py` now resets best-iterate validity and per-solve iteration
+counters before initialization in every patched build. The explicit
+`--reset-solve-state` flag remains accepted; `--unmodified` preserves the original
+benchmark control. Existing device allocations
+and explicit primal warm starts are retained. The prepared v58 QOCO tree differs
+from v54 in **only `src/qoco_api.c`**; source hashes reproduce from a fresh copy.
+The native core additionally corrects `forcing_satisfied`: pure QOCO requires
+the requested tolerance itself, whereas its previous telemetry used the
+PDHCG re-solve trigger multiplier (5). No acceptance gate or tolerance changes.
+
+The [standalone regression](../cpp/cuda/tests/qoco_solve_state_test.cu) solves a
+scalar equality-constrained QP, updates its right-hand side from 1 to 4, and
+forces iteration-limit recovery after installing an unbeatable old progress
+metric. The original library restores old best-iteration metadata; the patched
+one returns a point satisfying the new equality and clears old counters.
+The test then verifies that an explicit warm start and the same allocated
+workspace remain usable. Both zero and four Ruiz iterations are covered.
+The test initially violated QOCO's ownership contract by allocating the solver
+on the stack; that harness error was corrected before the final passing runs.
+Its failure output is retained separately.
+
+Before finding this bug, tighter linear refinement (v56: 10 iterations, 1e-10)
+and smaller equality regularization (v57: 1e-13) both failed repeated 6DOF
+qualification. Cold-start-only runs failed on repetition four. These changes
+were rejected and the original numerical settings restored. The old v54
+6DOF memory/initialization/synchronization checks passed; its racecheck timed
+out after 240 seconds and is not a pass. These experiments separate a
+demonstrated state-lifetime bug from unproven conditioning explanations.
+
+The candidate uses frozen QOCO v58 with standard cuDSS 0.8.0.10 kernels and
+native core v58, against v42 with deterministic cuDSS 0.7.1.6 and core v41.
+GPU tree ordering and physics settings are otherwise unchanged. Initial
+qualification includes nine consecutive 20-interval 6DOF runs, one 500-interval
+run and seven landing repetitions. Independent numerical oracles pass at both
+6DOF sizes and another seven landing repetitions. Each matched campaign uses
+two warmups and seven alternating measured samples per variant; every sample
+passes its unchanged certificate and objective comparison.
+
+| Median SCvx | v42 reference | v58 candidate | Ratio |
+| --- | ---: | ---: | ---: |
+| Landing, 20 intervals | 203.147 ms | 164.095 ms | 1.238x |
+| 6DOF, 20 intervals | 1169.896 ms | 806.350 ms | 1.451x |
+| 6DOF, 500 intervals | 549.632 ms | 462.553 ms | 1.188x |
+
+Complete-process median ratios are 1.101x, 1.309x and 1.058x. These compare
+the **combined runtime/kernel choice and state fix**; they do not measure a
+reset-only speedup. The 20-interval candidate's SCvx mean is **1.252 s versus
+1.173 s**, and its maximum is **2.887 s versus 1.204 s**. At 500 intervals,
+means are 0.526 versus 0.555 s, but maxima are 0.689 versus 0.593 s.
+All outliers remain in the reports. The runtime configuration is therefore
+experimental; no blanket/default promotion or uniform-speedup claim is made.
+
+Full landing memory, initialization, synchronization and race checks pass.
+Full 20-interval 6DOF memory, initialization, synchronization and race checks pass.
+At 500 intervals, memory, initialization and synchronization checks pass.
+The standalone state-isolation regression passes all four sanitizers with both
+zero and four Ruiz iterations, including leak checking.
+The [checkpoint](../artifacts/performance/qoco-reset-v58-checkpoint.json) records
+each additional sanitizer's exact fixture and terminal result; missing scopes
+and timeouts must not be interpreted as passes. In particular, no 500-interval
+racecheck is claimed. The numerical regression's original/patched results,
+frozen hashes, rejected experiments and helper sources are included there.
+
+The deterministic cuDSS 0.8 retry (v59, now including the state reset) still
+fails 20-interval 6DOF with an illegal memory access after passing native and
+landing probes. It is rejected without a timing claim. The state-lifetime fix
+does not resolve that separate vendor-kernel failure.
+
+- [Prepared-source reproduction](../artifacts/performance/qoco-reset-v58-reproduction.json).
+- [Landing measurements](../artifacts/performance/qoco-reset-v58-pd3.json).
+- [20-interval 6DOF measurements](../artifacts/performance/qoco-reset-v58-pd6.json).
+- [500-interval 6DOF measurements](../artifacts/performance/qoco-reset-v58-pd6-500.json).
+
+The full objective remains active. CPU KKT assembly, host solver/SCvx control,
+remaining runtime variance and broader physics-family qualification still need
+work. Existing shared runtimes, pinned upstream checkouts and Lambda campaigns
+remain untouched.

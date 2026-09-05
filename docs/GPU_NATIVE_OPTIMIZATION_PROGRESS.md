@@ -702,3 +702,26 @@ they are not default changes. The next target is numerical conditioning and
 SCvx progress sensitivity, alongside the remaining host numerical work.
 [Evidence and exact scope](GPU_QOCO_LOCAL_BACKEND.md#factorization-and-cudss-runtime-variants)
 retain passing probes, failed repetitions and vendor error reports. The goal is active.
+
+## Per-solve recovery-state isolation
+
+The next investigation finds a concrete state-reuse bug: QOCO retains its best
+iterate and progress metric across solves, although SCvx changes the coefficients
+and scaling. A stalled solve can restore the previous problem's trajectory.
+Patched preparation now invalidates that history and resets iteration counters
+at every solve, retaining GPU allocations and explicit primal warm starts. A
+regression test changes an equality right-hand side, forces iteration-limit
+recovery, and fails on the old library while passing with the patch at zero and
+four Ruiz iterations. Pure-QOCO forcing telemetry now uses the same threshold
+as its actual acceptance gate.
+
+The patched standard-kernel cuDSS 0.8 candidate passes repeated qualification
+and matched campaigns on landing and 20/500-interval 6DOF. Relative to v42, SCvx
+medians improve **1.238x / 1.451x / 1.188x** respectively. This does not establish
+a uniformly faster backend: the 20-interval mean regresses from 1.173 to 1.252 s,
+with a 2.887 s worst measured run. The state reset is retained as a correctness
+fix; the runtime configuration remains experimental and no backend default
+is changed. The full timing distributions, rejected refinement/regularization/
+cold-start hypotheses and explicit sanitizer scopes are in the
+[solve-state checkpoint](GPU_QOCO_LOCAL_BACKEND.md#per-solve-recovery-state-isolation).
+Host numerical work, runtime variability and the complete GPU-native goal remain open.
