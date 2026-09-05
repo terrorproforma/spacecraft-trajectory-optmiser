@@ -160,8 +160,8 @@ typedef struct spacepdhcg_cuda_diagnostics {
     double scaling_min;
     double scaling_max;
     double update_seconds;
-    double scaling_seconds;
-    double solve_seconds;
+    double scaling_seconds; /* Preamble, measured separately from solve_seconds. */
+    double solve_seconds;   /* Iteration and recovery time; excludes scaling. */
     double residual_seconds;
     uint64_t allocation_count;
     uint64_t free_count;
@@ -247,6 +247,16 @@ spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
     spacepdhcg_cuda_workspace* workspace,
     const spacepdhcg_cuda_solve_options* options,
     spacepdhcg_accelerator_stream stream
+);
+
+/* Select execution without changing numerical tolerances or checkpoint layout.
+ * blocks == 0 selects the legacy single-block implementation; blocks > 0 selects
+ * a cooperative grid. The grid must fit the device's occupancy limit. Call only
+ * after pending workspace work has completed. This is intended for reproducible
+ * tuning; create selects a size-dependent default on supported devices. */
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks(
+    spacepdhcg_cuda_workspace* workspace,
+    int32_t blocks
 );
 
 spacepdhcg_cuda_status spacepdhcg_cuda_workspace_query(

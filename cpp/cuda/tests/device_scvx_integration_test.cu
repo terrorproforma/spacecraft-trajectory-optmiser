@@ -1871,6 +1871,43 @@ IntegrationResult run_resident_sequence(
         }
     }
     auto* workspace = test::create_workspace(problem, create_options);
+    if (const char* blocks = std::getenv("SPACEPDHCG_TEST_GRID_BLOCKS")) {
+        const auto select_blocks = reinterpret_cast<decltype(&spacepdhcg_cuda_workspace_set_execution_blocks)>(
+            dlsym(RTLD_DEFAULT, "spacepdhcg_cuda_workspace_set_execution_blocks"));
+        test::require(select_blocks != nullptr, "library does not support a grid override");
+        test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "grid override create wait");
+        test::status_require(select_blocks(workspace, std::stoi(blocks)),
+                             "test grid override");
+        if (std::getenv("SPACEPDHCG_TEST_SCALING_PARITY")) {
+            size_t bytes = 0;
+            test::status_require(spacepdhcg_cuda_workspace_checkpoint_bytes(workspace, &bytes), "parity checkpoint size");
+            test::CudaBuffer<double> buffer(bytes / sizeof(double), false);
+            auto checkpoint = test::view(buffer.get(), buffer.size(), false,
+                SPACEPDHCG_SCALAR_FLOAT64, SPACEPDHCG_ACCESS_READ_WRITE);
+            std::vector<double> serial;
+            for (const int grid : {0, std::stoi(blocks)}) {
+                test::status_require(select_blocks(workspace, grid), "parity grid");
+                test::status_require(spacepdhcg_cuda_workspace_refresh_scaling_async(workspace, problem.exchange.consumer_stream), "parity refresh");
+                test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "parity refresh wait");
+                test::status_require(spacepdhcg_cuda_workspace_checkpoint_async(workspace, checkpoint, problem.exchange.consumer_stream), "parity checkpoint");
+                test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "parity checkpoint wait");
+                const auto values = buffer.download(problem.stream);
+                const size_t scaling_start = 3U * problem.variables + problem.scalar_rows + problem.affine_rows;
+                if (grid == 0) serial = values;
+                else {
+                    double maximum = 0.0;
+                    size_t worst = 0;
+                    for (size_t i = scaling_start; i < values.size(); ++i) {
+                        const double error = std::abs(values[i] - serial[i]) / std::max(1.0e-30, std::abs(serial[i]));
+                        if (error > maximum) { maximum = error; worst = i; }
+                    }
+                    std::fprintf(stderr, "scaling parity: max_relative=%.17g index=%zu serial=%.17g cooperative=%.17g steps=(%.17g %.17g) vs (%.17g %.17g)\n",
+                        maximum, worst, serial[worst], values[worst], serial[serial.size()-2], serial.back(), values[values.size()-2], values.back());
+                    std::exit(maximum < 1.0e-10 ? 0 : 1);
+                }
+            }
+        }
+    }
     const double workspace_create_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - workspace_create_started
     ).count();
@@ -2950,8 +2987,48 @@ IntegrationResult run_resident_sequence(
         }
         outer.topology_seconds = topology_seconds;
         outer.workspace_create_seconds = workspace_create_seconds;
+        if (std::getenv("SPACEPDHCG_TEST_FINGERPRINT_PARITY") && outer.outer_iterations > 0U) {
+            const test::CudaBuffer<double>* arrays[] = {
+                &problem.q, &problem.a, &problem.f, &problem.c, &problem.scalar_lower,
+                &problem.scalar_upper, &problem.affine_offset, &problem.variable_lower,
+                &problem.variable_upper,
+            };
+            unsigned long long expected = 0;
+            for (size_t view = 0; view < std::size(arrays); ++view) {
+                const auto values = arrays[view]->download(problem.stream);
+                const auto tag = 0x100000001b3ULL * (view + 1U);
+                for (size_t index = 0; index < values.size(); ++index) {
+                    unsigned long long word = 0;
+                    std::memcpy(&word, &values[index], sizeof(word));
+                    word ^= (tag ^ index) + 0x9e3779b97f4a7c15ULL + (word << 6U) + (word >> 2U);
+                    word ^= word >> 30U;
+                    word *= 0xbf58476d1ce4e5b9ULL;
+                    word ^= word >> 27U;
+                    word *= 0x94d049bb133111ebULL;
+                    expected ^= word ^ (word >> 31U);
+                }
+            }
+            const auto actual = records[outer.outer_iterations - 1U].cqp_numeric_fingerprint;
+            std::fprintf(stderr, "fingerprint parity: CPU=%016llx GPU=%016llx\n", expected,
+                         static_cast<unsigned long long>(actual));
+            test::require(expected == actual, "independent CPU/device numeric fingerprint parity");
+        }
         const double quality_tolerance = sanitizer_mode ? 1.0e-2 : 1.0e-6;
         if (!g4_sample_mode) {
+            if (outer.status != SPACEPDHCG_CUDA_SCVX_CONVERGED) {
+                std::fprintf(stderr,
+                    "outer failure: status=%d outer=%u inner=%llu accepted=%u rejected=%u canonical=%.17g dynamics=%.17g path=%.17g terminal=%.17g\n",
+                    static_cast<int>(outer.status), outer.outer_iterations,
+                    static_cast<unsigned long long>(outer.inner_iterations), outer.accepted_steps,
+                    outer.rejected_steps, outer.canonical_residual, outer.dynamics_defect,
+                    outer.path_violation, outer.terminal_residual);
+                for (size_t i = 0; i < outer.outer_iterations; ++i) {
+                    const auto& record = records[i];
+                    std::fprintf(stderr, "outer[%zu]: requested=%.9g achieved=%.9g predicted=%.9g actual=%.9g ratio=%.9g\n",
+                        i, record.requested_tolerance, record.achieved_residual,
+                        record.predicted_reduction, record.actual_reduction, record.reduction_ratio);
+                }
+            }
             test::require(
                 outer.status == SPACEPDHCG_CUDA_SCVX_CONVERGED,
                 "production outer driver did not converge"
@@ -5168,6 +5245,8 @@ int run_invocation(const int argc, char** argv) {
                 "\"recovery_iterations\":%llu,"
                 "\"canonical_residual\":%.9g,\"nonlinear_residual\":%.9g,"
                 "\"cpu_gpu_trajectory\":%.9g,"
+                "\"outer_iterations\":%u,\"inner_iterations\":%llu,"
+                "\"accepted_steps\":%u,\"rejected_steps\":%u,"
                 "\"omega_persist\":0.0,"
                 "\"modes\":[\"cold\",\"first-persistent\",\"warm\","
                 "\"repeated\",\"primal\",\"primal-dual\",\"full-state\"]}\n",
@@ -5215,7 +5294,11 @@ int run_invocation(const int argc, char** argv) {
                     timing.path_violation,
                     timing.terminal_residual,
                 }),
-                hcw.cpu_gpu_trajectory_max
+                hcw.cpu_gpu_trajectory_max,
+                timing.outer_iterations,
+                static_cast<unsigned long long>(timing.inner_iterations),
+                timing.accepted_steps,
+                timing.rejected_steps
             );
             return 0;
         }

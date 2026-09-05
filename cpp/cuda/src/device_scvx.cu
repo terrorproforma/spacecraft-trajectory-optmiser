@@ -8,6 +8,7 @@
 #include "native_qoco_adapter.h"
 
 #include <cuda_runtime.h>
+#include "../internal/numeric_fingerprint.cuh"
 
 #include <algorithm>
 #include <atomic>
@@ -1331,9 +1332,8 @@ __global__ void update_scvx_numeric_kernel(
     const double trust_radius,
     const double virtual_penalty
 ) {
-    if (blockIdx.x != 0 || threadIdx.x != 0) {
-        return;
-    }
+    const size_t rank = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    const size_t stride = static_cast<size_t>(blockDim.x) * gridDim.x;
     const auto& update = problem.numeric_update;
     const auto* states = view_pointer<const double>(problem.reference_states);
     const auto* controls = view_pointer<const double>(problem.reference_controls);
@@ -1351,7 +1351,7 @@ __global__ void update_scvx_numeric_kernel(
         (problem.intervals + 1U) * problem.state_dimension;
     const size_t control_elements =
         problem.intervals * problem.control_dimension;
-    for (size_t index = 0U; index < state_elements; ++index) {
+    for (size_t index = rank; index < state_elements; index += stride) {
         const int q_position = q_positions[index];
         const size_t component = index % problem.state_dimension;
         const size_t node = index / problem.state_dimension;
@@ -1373,17 +1373,16 @@ __global__ void update_scvx_numeric_kernel(
             : (problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_HCW
                 ? problem.state_dimension
                 : 6U);
-    for (size_t component = 0U;
-         component < problem.state_dimension;
-         ++component) {
+    for (size_t component = rank;
+         component < problem.state_dimension; component += stride) {
         scalar_lower[component] = initial[component];
         scalar_upper[component] = initial[component];
     }
-    for (size_t component = 0U; component < terminal_dimension; ++component) {
+    for (size_t component = rank; component < terminal_dimension; component += stride) {
         scalar_lower[update.terminal_row_start + component] = target[component];
         scalar_upper[update.terminal_row_start + component] = target[component];
     }
-    for (size_t index = 0U; index < control_elements; ++index) {
+    for (size_t index = rank; index < control_elements; index += stride) {
         const int variable =
             view_pointer<const int>(problem.control_variable_indices)[index];
         const int q_position = q_positions[state_elements + index];
@@ -1398,25 +1397,21 @@ __global__ void update_scvx_numeric_kernel(
         c[variable] = problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_HCW
             ? 0.0
             : -q[q_position] * controls[index];
+        if (problem.dynamics.model != SPACEPDHCG_CUDA_DYNAMICS_HCW) {
+            const size_t sigma = problem.dynamics.model
+                == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF ? 6U : 3U;
+            if (index % problem.control_dimension == sigma) {
+                c[variable] += update.fuel_weight * problem.dynamics.step_seconds;
+            }
+        }
     }
     if (problem.dynamics.model != SPACEPDHCG_CUDA_DYNAMICS_HCW) {
-        const size_t sigma =
-            problem.dynamics.model
-                    == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF
-                ? 6U
-                : 3U;
-        for (size_t interval = 0U; interval < problem.intervals; ++interval) {
-            const int variable = view_pointer<const int>(
-                problem.control_variable_indices
-            )[interval * problem.control_dimension + sigma];
-            c[variable] += update.fuel_weight * problem.dynamics.step_seconds;
-        }
         const size_t virtual_elements =
             problem.intervals * problem.state_dimension;
-        for (size_t index = 0U; index < virtual_elements; ++index) {
+        for (size_t index = rank; index < virtual_elements; index += stride) {
             c[update.epigraph_variable_offset + index] = virtual_penalty;
         }
-        for (size_t interval = 0U; interval < problem.intervals; ++interval) {
+        for (size_t interval = rank; interval < problem.intervals; interval += stride) {
             const size_t row =
                 update.stage_trust_row_start
                 + interval * update.stage_trust_stride;
@@ -1436,20 +1431,19 @@ __global__ void update_scvx_numeric_kernel(
             }
             affine_offset[row + update.stage_trust_stride - 1U] = trust_radius;
         }
-        for (size_t component = 0U;
-             component < problem.state_dimension;
-             ++component) {
+        for (size_t component = rank;
+             component < problem.state_dimension; component += stride) {
             affine_offset[update.terminal_trust_row_start + component] =
                 -update.state_trust_scales[component]
                 * states[problem.intervals * problem.state_dimension + component];
         }
-        affine_offset[
-            update.terminal_trust_row_start + problem.state_dimension
-        ] = trust_radius;
+        if (rank == 0U) {
+            affine_offset[update.terminal_trust_row_start + problem.state_dimension] = trust_radius;
+        }
     }
     if (problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST) {
         const auto* positions = view_pointer<const int>(update.radial_positions);
-        for (size_t node = 0U; node <= problem.intervals; ++node) {
+        for (size_t node = rank; node <= problem.intervals; node += stride) {
             const double* state = states + node * problem.state_dimension;
             const double radius = sqrt(
                 state[0U] * state[0U]
@@ -1466,7 +1460,7 @@ __global__ void update_scvx_numeric_kernel(
         == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
         const auto* positions =
             view_pointer<const int>(update.quaternion_positions);
-        for (size_t node = 0U; node <= problem.intervals; ++node) {
+        for (size_t node = rank; node <= problem.intervals; node += stride) {
             const size_t row = update.quaternion_row_start + node;
             if (node == problem.intervals) {
                 for (size_t component = 0U; component < 4U; ++component) {
@@ -2032,36 +2026,6 @@ spacepdhcg_cuda_status launch_replay(
         : SPACEPDHCG_CUDA_RUNTIME_ERROR;
 }
 
-__device__ unsigned long long mix_numeric_word(
-    unsigned long long value,
-    const unsigned long long index
-) {
-    value ^= index + 0x9e3779b97f4a7c15ULL + (value << 6U) + (value >> 2U);
-    value ^= value >> 30U;
-    value *= 0xbf58476d1ce4e5b9ULL;
-    value ^= value >> 27U;
-    value *= 0x94d049bb133111ebULL;
-    return value ^ (value >> 31U);
-}
-
-__global__ void hash_numeric_kernel(
-    const double* values,
-    const size_t elements,
-    const unsigned long long tag,
-    unsigned long long* fingerprint
-) {
-    unsigned long long local = 0ULL;
-    for (size_t index = blockIdx.x * blockDim.x + threadIdx.x;
-         index < elements;
-         index += blockDim.x * gridDim.x) {
-        local ^= mix_numeric_word(
-            static_cast<unsigned long long>(__double_as_longlong(values[index])),
-            tag ^ static_cast<unsigned long long>(index)
-        );
-    }
-    atomicXor(fingerprint, local);
-}
-
 spacepdhcg_cuda_scvx_phase forcing_phase(
     const double residual,
     const uint32_t outer_iteration,
@@ -2324,7 +2288,7 @@ spacepdhcg_cuda_status collect_numeric_fingerprint(
             256U,
             (views[view_index].elements + 255U) / 256U
         ));
-        hash_numeric_kernel<<<blocks, 256, 0, stream>>>(
+        spacepdhcg::cuda::detail::hash_numeric_kernel<<<blocks, 256, 0, stream>>>(
             view_pointer<const double>(views[view_index]),
             views[view_index].elements,
             0x100000001b3ULL * static_cast<unsigned long long>(view_index + 1U),
@@ -2376,7 +2340,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_update_numeric_async(
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     update_scvx_numeric_kernel<<<
-        1, 1, 0, reinterpret_cast<cudaStream_t>(stream.native_handle)
+        static_cast<unsigned int>((tracked_variables + 255U) / 256U),
+        256, 0, reinterpret_cast<cudaStream_t>(stream.native_handle)
     >>>(*problem, trust_radius, virtual_penalty);
     if (cudaGetLastError() != cudaSuccess) {
         return SPACEPDHCG_CUDA_RUNTIME_ERROR;
@@ -3264,6 +3229,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                         driver->problem.workspace,
                         &last_diagnostics
                     ));
+                    result->scaling_seconds += last_diagnostics.scaling_seconds;
                     result->solve_seconds += std::max(
                         0.0,
                         last_diagnostics.solve_seconds
@@ -3298,7 +3264,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 }
                 re_solved = true;
                 ++result->resolved_steps;
-                result->solve_seconds += last_diagnostics.solve_seconds;
+                result->scaling_seconds += last_diagnostics.scaling_seconds;
+                result->solve_seconds += std::max(0.0,
+                    last_diagnostics.solve_seconds - last_diagnostics.recovery_seconds);
                 result->recovery_seconds += last_diagnostics.recovery_seconds;
                 result->residual_seconds += last_diagnostics.residual_seconds;
                 result->inner_iterations += last_diagnostics.iterations;

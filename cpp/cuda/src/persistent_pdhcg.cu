@@ -11,6 +11,7 @@
 #include "spacepdhcg/cuda/stream_event.hpp"
 
 #include <cuda_runtime.h>
+#include <cooperative_groups.h>
 #include <cusparse.h>
 
 #include <algorithm>
@@ -179,6 +180,8 @@ struct DeviceProblem {
     int affine_cone_count;
     const DeviceCone* variable_cones;
     int variable_cone_count;
+    double* grid_partials;
+    int* grid_flags;
 };
 
 struct DeviceControl {
@@ -427,15 +430,18 @@ __global__ void coefficient_change_kernel(
     NumericPointers source,
     DeviceProblem* problem
 ) {
-    if (blockIdx.x != 0 || threadIdx.x != 0) {
-        return;
-    }
+    __shared__ double maxima[kThreads];
+    __shared__ double squares[kThreads];
     double maximum = 0.0;
     double norm_squared = 0.0;
 #define SPACEPDHCG_ACCUMULATE_CHANGE(SOURCE, TARGET, COUNT) \
-    for (int i = 0; i < (COUNT); ++i) { \
-        const double difference = (SOURCE)[i] - (TARGET)[i]; \
-        maximum = fmax(maximum, positive_relative_change((TARGET)[i], (SOURCE)[i])); \
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (COUNT); i += blockDim.x * gridDim.x) { \
+        const double before = (TARGET)[i]; \
+        const double after = (SOURCE)[i]; \
+        const double difference = before == after ? 0.0 : after - before; \
+        const double relative = before == after ? 0.0 \
+            : (isinf(before) || isinf(after) ? INFINITY : positive_relative_change(before, after)); \
+        maximum = fmax(maximum, relative); \
         norm_squared += difference * difference; \
     }
     SPACEPDHCG_ACCUMULATE_CHANGE(source.q, problem->q, problem->q_nonzeros)
@@ -468,8 +474,56 @@ __global__ void coefficient_change_kernel(
         problem->variables
     )
 #undef SPACEPDHCG_ACCUMULATE_CHANGE
-    control->coefficient_change_max = maximum;
-    control->coefficient_change_norm = sqrt(norm_squared);
+    maxima[threadIdx.x] = maximum;
+    squares[threadIdx.x] = norm_squared;
+    __syncthreads();
+    for (unsigned int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (threadIdx.x < stride) {
+            maxima[threadIdx.x] = fmax(maxima[threadIdx.x], maxima[threadIdx.x + stride]);
+            squares[threadIdx.x] += squares[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) {
+        if (gridDim.x == 1) {
+            control->coefficient_change_max = maxima[0];
+            control->coefficient_change_norm = sqrt(squares[0]);
+        } else {
+            problem->grid_partials[2 * blockIdx.x] = maxima[0];
+            problem->grid_partials[2 * blockIdx.x + 1] = squares[0];
+        }
+    }
+}
+
+__global__ void finish_coefficient_change_kernel(
+    DeviceControl* control, const DeviceProblem* problem, const int blocks
+) {
+    __shared__ double maxima[kThreads];
+    __shared__ double squares[kThreads];
+    double maximum = 0.0;
+    double norm_squared = 0.0;
+    for (int block = threadIdx.x; block < blocks; block += blockDim.x) {
+        maximum = fmax(maximum, problem->grid_partials[2 * block]);
+        norm_squared += problem->grid_partials[2 * block + 1];
+    }
+    maxima[threadIdx.x] = maximum;
+    squares[threadIdx.x] = norm_squared;
+    __syncthreads();
+    for (unsigned int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (threadIdx.x < stride) {
+            maxima[threadIdx.x] = fmax(maxima[threadIdx.x], maxima[threadIdx.x + stride]);
+            squares[threadIdx.x] += squares[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) {
+        control->coefficient_change_max = maxima[0];
+        control->coefficient_change_norm = sqrt(squares[0]);
+    }
+}
+
+__global__ void request_scaling_refresh_kernel(DeviceControl* control) {
+    if (threadIdx.x == 0) control->force_scaling_refresh = 1;
 }
 
 // Single-thread solve preamble: decides whether the scaling is refreshed and, if so, runs the
@@ -2461,13 +2515,19 @@ __global__ void restore_steps_kernel(DeviceControl* control, const double* sourc
 // for the whole load (about 7 s on WSL2 for an N=2000 first attempt). Loading at create time
 // keeps that cost out of every attempt window. cudaFuncGetAttributes triggers the load without
 // enqueueing work and without touching the workspace's allocation accounting.
+#include "cooperative_pdhg.cuh"
+
 cudaError_t preload_solve_kernels() {
     cudaFuncAttributes attributes{};
     for (const void* kernel : std::initializer_list<const void*>{
              reinterpret_cast<const void*>(coefficient_change_kernel),
+             reinterpret_cast<const void*>(finish_coefficient_change_kernel),
+             reinterpret_cast<const void*>(request_scaling_refresh_kernel),
              reinterpret_cast<const void*>(initialise_control_kernel),
              reinterpret_cast<const void*>(set_solve_options_kernel),
              reinterpret_cast<const void*>(solve_kernel),
+             reinterpret_cast<const void*>(cooperative_initialise_kernel),
+             reinterpret_cast<const void*>(cooperative_solve_kernel),
              reinterpret_cast<const void*>(recovery_kernel),
              reinterpret_cast<const void*>(residual_kernel),
              reinterpret_cast<const void*>(set_constant_kernel),
@@ -2751,6 +2811,12 @@ struct spacepdhcg_cuda_workspace {
     DeviceControl* control{nullptr};
     DeviceReport* report{nullptr};
     DeviceReport* host_report{nullptr};
+    double* grid_partials{nullptr};
+    int* grid_flags{nullptr};
+    int cooperative_capacity{0};
+    int cooperative_blocks{0};
+    int cooperative_scaling_blocks{0};
+    int coefficient_blocks{1};
     int* host_cancellation{nullptr};
     cusparseHandle_t sparse{nullptr};
     cusparseSpMatDescr_t q_descriptor{nullptr};
@@ -2759,6 +2825,7 @@ struct spacepdhcg_cuda_workspace {
     cudaStream_t control_stream{nullptr};
     StreamEvent completion{};
     TimingEvents update_timer{};
+    TimingEvents scaling_timer{};
     TimingEvents solve_timer{};
     TimingEvents recovery_timer{};
     LastOperation last_operation{LastOperation::none};
@@ -3059,6 +3126,7 @@ void finish_solve(spacepdhcg_cuda_workspace* workspace) {
         workspace->state = SPACEPDHCG_CUDA_SOLVED;
     }
     workspace->solve_seconds = workspace->solve_timer.elapsed_seconds();
+    workspace->scaling_seconds = workspace->scaling_timer.elapsed_seconds();
     workspace->recovery_seconds =
         workspace->host_report->recovery_attempt_count > 0U
         ? workspace->recovery_timer.elapsed_seconds()
@@ -3245,6 +3313,50 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             delete result;
             return status;
         }
+        cudaDeviceProp properties{};
+        cuda_status = cudaGetDeviceProperties(&properties, exchange->consumer_stream.device.id);
+        int initialise_occupancy = 0;
+        int solve_occupancy = 0;
+        if (cuda_status == cudaSuccess && properties.cooperativeLaunch != 0) {
+            cuda_status = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+                &initialise_occupancy, cooperative_initialise_kernel, kThreads, 0);
+            if (cuda_status == cudaSuccess) {
+                cuda_status = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+                    &solve_occupancy, cooperative_solve_kernel, kThreads, 0);
+            }
+            result->cooperative_capacity = properties.multiProcessorCount
+                * std::min(initialise_occupancy, solve_occupancy);
+            const std::uint64_t coefficients = structure->quadratic_nonzeros
+                + structure->scalar_nonzeros + structure->affine_nonzeros
+                + 3ULL * structure->variables + 2ULL * structure->scalar_rows
+                + structure->affine_rows;
+            result->coefficient_blocks = std::max(1, static_cast<int>(std::min(
+                static_cast<std::uint64_t>(result->cooperative_capacity),
+                (coefficients + kThreads - 1) / kThreads)));
+            // The local sweep favors a single parallel block for short trajectories
+            // and about 128 blocks for the denser, long HCW operator. Tiny QPs retain
+            // the lower-overhead legacy loop. Overrides remain available for tuning.
+            if (structure->variables >= 128) {
+                const auto nonzeros = structure->quadratic_nonzeros
+                    + structure->scalar_nonzeros + structure->affine_nonzeros;
+                const int target = structure->variables >= 4096
+                    && nonzeros > 4ULL * structure->variables
+                    ? 128 : static_cast<int>((static_cast<std::uint64_t>(structure->variables)
+                        + kThreads - 1) / kThreads);
+                result->cooperative_blocks = std::min(result->cooperative_capacity,
+                    std::min(properties.multiProcessorCount, target));
+                result->cooperative_scaling_blocks = result->cooperative_blocks;
+                // Small operators benefit from parallel scaling but not from a grid
+                // barrier at every iterative operation. Keep their block-local loop.
+                if (structure->variables < 4096) result->cooperative_blocks = 0;
+            }
+        }
+        if (cuda_status != cudaSuccess) {
+            status = cuda_failure(result, cuda_status, "cooperative launch capability");
+            cleanup_workspace(result);
+            delete result;
+            return status;
+        }
         const auto storage = exchange->topology.quadratic_offsets.device;
         if ((storage.type != SPACEPDHCG_DEVICE_CUDA
              && storage.type != SPACEPDHCG_DEVICE_CUDA_MANAGED)
@@ -3414,6 +3526,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
         SPACEPDHCG_ALLOC(result->device_problem, 1, DeviceProblem, AllocationCategory::descriptor_scratch)
         SPACEPDHCG_ALLOC(result->control, 1, DeviceControl, AllocationCategory::scaling)
         SPACEPDHCG_ALLOC(result->report, 1, DeviceReport, AllocationCategory::diagnostics)
+        SPACEPDHCG_ALLOC(result->grid_partials, 2 * std::max(1, result->cooperative_capacity), double, AllocationCategory::residual)
+        SPACEPDHCG_ALLOC(result->grid_flags, 2, int, AllocationCategory::diagnostics)
 #undef SPACEPDHCG_ALLOC
         cuda_status = result->ledger.allocate_pinned(
             reinterpret_cast<void**>(&result->host_report),
@@ -3645,6 +3759,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             static_cast<int>(structure->affine_cone_count),
             result->variable_cones,
             static_cast<int>(structure->variable_cone_count),
+            result->grid_partials,
+            result->grid_flags,
         };
         DeviceControl host_control{
             1.0e-6,
@@ -3757,6 +3873,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
         if (cuda_status != cudaSuccess
             || result->completion.create() != cudaSuccess
             || result->update_timer.create() != cudaSuccess
+            || result->scaling_timer.create() != cudaSuccess
             || result->solve_timer.create() != cudaSuccess
             || result->recovery_timer.create() != cudaSuccess) {
             status = cuda_failure(result, cudaGetLastError(), "CUDA stream/event creation");
@@ -3831,11 +3948,15 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_update_async(
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "update timing start");
     }
-    coefficient_change_kernel<<<1, 1, 0, cuda_stream>>>(
+    coefficient_change_kernel<<<workspace->coefficient_blocks, kThreads, 0, cuda_stream>>>(
         workspace->control,
         source_pointers(*values),
         workspace->device_problem
     );
+    if (workspace->coefficient_blocks > 1) {
+        finish_coefficient_change_kernel<<<1, kThreads, 0, cuda_stream>>>(
+            workspace->control, workspace->device_problem, workspace->coefficient_blocks);
+    }
     cuda_status = cudaGetLastError();
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "coefficient change kernel");
@@ -3992,6 +4113,35 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_warm_start_async(
     return record_completion(workspace, cuda_stream, LastOperation::warm_start);
 }
 
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks(
+    spacepdhcg_cuda_workspace* workspace,
+    const int32_t blocks
+) {
+    if (workspace == nullptr || blocks < 0) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::lock_guard lock(workspace->mutex);
+    const auto status = finalize_if_complete(workspace);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    if (blocks > workspace->cooperative_capacity) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    workspace->cooperative_blocks = blocks;
+    workspace->cooperative_scaling_blocks = blocks;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+namespace {
+cudaError_t launch_initialise(spacepdhcg_cuda_workspace* workspace,
+                             volatile int* cancellation, cudaStream_t stream) {
+    if (workspace->cooperative_scaling_blocks == 0) {
+        initialise_control_kernel<<<1, 1, 0, stream>>>(
+            workspace->control, workspace->device_problem, cancellation);
+        return cudaGetLastError();
+    }
+    void* arguments[] = {&workspace->control, &workspace->device_problem, &cancellation};
+    return cudaLaunchCooperativeKernel(
+        reinterpret_cast<const void*>(cooperative_initialise_kernel),
+        dim3(workspace->cooperative_scaling_blocks), dim3(kThreads), arguments, 0, stream);
+}
+}  // namespace
+
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
     spacepdhcg_cuda_workspace* workspace,
     const spacepdhcg_cuda_solve_options* options,
@@ -4030,21 +4180,34 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
         0,
         std::memory_order_release
     );
-    cuda_status = workspace->solve_timer.begin(cuda_stream);
+    cuda_status = workspace->scaling_timer.begin(cuda_stream);
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "solve timing start");
     }
-    initialise_control_kernel<<<1, 1, 0, cuda_stream>>>(
-        workspace->control,
-        workspace->device_problem,
-        workspace->solver.cancellation
-    );
-    solve_kernel<<<1, kThreads, 0, cuda_stream>>>(
-        workspace->device_problem,
-        workspace->control,
-        workspace->report,
-        workspace->solver.cancellation
-    );
+    cuda_status = launch_initialise(workspace, workspace->solver.cancellation, cuda_stream);
+    if (cuda_status != cudaSuccess) {
+        return cuda_failure(workspace, cuda_status, "initialise kernel launch");
+    }
+    cuda_status = workspace->scaling_timer.end(cuda_stream);
+    if (cuda_status == cudaSuccess) cuda_status = workspace->solve_timer.begin(cuda_stream);
+    if (cuda_status != cudaSuccess) {
+        return cuda_failure(workspace, cuda_status, "scaling/solve timing boundary");
+    }
+    if (workspace->cooperative_blocks == 0) {
+        solve_kernel<<<1, kThreads, 0, cuda_stream>>>(
+            workspace->device_problem, workspace->control,
+            workspace->report, workspace->solver.cancellation);
+        cuda_status = cudaGetLastError();
+    } else {
+        void* arguments[] = {&workspace->device_problem, &workspace->control,
+                             &workspace->report, &workspace->solver.cancellation};
+        cuda_status = cudaLaunchCooperativeKernel(
+            reinterpret_cast<const void*>(cooperative_solve_kernel),
+            dim3(workspace->cooperative_blocks), dim3(kThreads), arguments, 0, cuda_stream);
+    }
+    if (cuda_status != cudaSuccess) {
+        return cuda_failure(workspace, cuda_status, "solve kernel launch");
+    }
     cuda_status = workspace->recovery_timer.begin(cuda_stream);
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "recovery timing start");
@@ -4419,30 +4582,13 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_refresh_scaling_asyn
     if (status != SPACEPDHCG_CUDA_SUCCESS) {
         return status;
     }
-    DeviceControl host_control{};
-    auto cuda_status =
-        cudaMemcpy(&host_control, workspace->control, sizeof(host_control), cudaMemcpyDeviceToHost);
-    if (cuda_status != cudaSuccess) {
-        return cuda_failure(workspace, cuda_status, "scaling refresh read");
-    }
-    host_control.force_scaling_refresh = 1;
     const auto cuda_stream = native_stream(stream);
-    cuda_status = cudaMemcpyAsync(
-        workspace->control,
-        &host_control,
-        sizeof(host_control),
-        cudaMemcpyHostToDevice,
-        cuda_stream
-    );
+    request_scaling_refresh_kernel<<<1, 1, 0, cuda_stream>>>(workspace->control);
+    auto cuda_status = cudaGetLastError();
     if (cuda_status != cudaSuccess) {
-        return cuda_failure(workspace, cuda_status, "scaling refresh write");
+        return cuda_failure(workspace, cuda_status, "scaling refresh request");
     }
-    initialise_control_kernel<<<1, 1, 0, cuda_stream>>>(
-        workspace->control,
-        workspace->device_problem,
-        nullptr
-    );
-    cuda_status = cudaGetLastError();
+    cuda_status = launch_initialise(workspace, nullptr, cuda_stream);
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "scaling refresh kernel");
     }
