@@ -52,6 +52,11 @@ class JointCampaignSettings:
     insert_trials: int = 3
     neighbourhood: int = 40
     inflation_fit: str | None = "results/gtoc12/hop_inflation_fit.json"
+    # Earth-out leg stage (jointopt.JointSettings.earth_leg): earlier chain start bought with
+    # Earth-leg propellant, single-leg SCvx measurements, monotone whole-route acceptance
+    earth_leg: bool = False
+    earth_leg_shifts_days: tuple[float, ...] = (30.0, 60.0, 90.0, 120.0, 150.0)
+    earth_leg_certifications: int = 4
 
 
 @dataclass(slots=True)
@@ -201,6 +206,9 @@ def _optimise_in_worker(
             insert_neighbours=settings.insert_neighbours,
             insert_radius=settings.insert_radius,
             insert_trials=settings.insert_trials,
+            earth_leg=settings.earth_leg,
+            earth_leg_shifts_days=tuple(settings.earth_leg_shifts_days),
+            earth_leg_certifications=settings.earth_leg_certifications,
         )
         result = optimise_ship(
             route,
@@ -311,6 +319,23 @@ def run_joint_campaign(
         "improved": len(improved),
         "inserted": sum(1 for r in improved if r.get("inserted") is not None),
         "gain_kg_total": round(sum(float(r.get("gain_kg", 0.0)) for r in improved), 2),
+        "earth_leg": {
+            "ships_with_stage": sum(1 for r in records if r.get("earth_leg")),
+            "legs_flown": sum(int((r.get("earth_leg") or {}).get("flown") or 0) for r in records),
+            "legs_measured": sum(
+                int((r.get("earth_leg") or {}).get("measured") or 0) for r in records
+            ),
+            "accepted": sum(
+                1
+                for r in records
+                if (r.get("earth_leg") or {}).get("accepted_shift_days") is not None
+            ),
+            "accepted_shift_days": [
+                (r.get("earth_leg") or {}).get("accepted_shift_days")
+                for r in records
+                if (r.get("earth_leg") or {}).get("accepted_shift_days") is not None
+            ],
+        },
         "fleet_average_before_kg": (sum(before) / len(before)) if before else None,
         "fleet_average_after_kg": (sum(after) / len(after)) if after else None,
         "records": records,
@@ -330,5 +355,8 @@ def run_joint_campaign(
             "insert_neighbours": settings.insert_neighbours,
             "insert_radius": settings.insert_radius,
             "insert_trials": settings.insert_trials,
+            "earth_leg": settings.earth_leg,
+            "earth_leg_shifts_days": list(settings.earth_leg_shifts_days),
+            "earth_leg_certifications": settings.earth_leg_certifications,
         },
     }

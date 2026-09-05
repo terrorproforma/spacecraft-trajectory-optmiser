@@ -198,6 +198,10 @@ class ClusterPricingSettings:
     # the kg of beam score per kg of deviation from the reference manifold
     chain_prior_path: str = ""
     chain_prior_weight: float = 0.5
+    # harvest-phase prior (harvestphase.py, tenth iteration): path of the extracted document
+    # ("" = off) and the weight of its kg in the collect DP objective and the chain score
+    harvest_phase_path: str = ""
+    harvest_phase_weight: float = 1.0
     # master LP duals handed to the family (per-asteroid prices, kg); scaled by this weight
     # before the beam subtracts them (1.0 = the exact column-generation reduced cost)
     dual_price_weight: float = 1.0
@@ -207,6 +211,9 @@ class ClusterPricingSettings:
     joint_itinerary: bool = False
     joint_budget_seconds: float = 150.0
     joint_insert: bool = False
+    # Earth-out leg stage of the inline joint pass (JointSettings.earth_leg): the emitted
+    # ship's chain start is traded against Earth-leg propellant with single-leg SCvx
+    joint_earth_leg: bool = False
     # Lambert prescreen of Earth legs: legs above this authority ratio are not sent to SCvx
     # (the certified Earth legs of the archive all fly below 0.62; the 350-400 d legs at
     # 0.75-0.93 that the ranking used to try first never certified and cost 12 checks per slot)
@@ -291,6 +298,8 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         chain_tour_candidates=settings.chain_tour_candidates,
         chain_tour_min_deploys=settings.chain_tour_min_deploys,
         chain_prior_weight=settings.chain_prior_weight if settings.chain_prior_path else 0.0,
+        harvest_phase_path=settings.harvest_phase_path,
+        harvest_phase_weight=settings.harvest_phase_weight if settings.harvest_phase_path else 0.0,
         **grids,
     )
 
@@ -959,7 +968,9 @@ def price_cluster(
                     weights=weights,
                     scvx=scvx,
                     settings=JointSettings(
-                        time_budget_seconds=budget, insert=settings.joint_insert
+                        time_budget_seconds=budget,
+                        insert=settings.joint_insert,
+                        earth_leg=settings.joint_earth_leg,
                     ),
                     search_settings=search_settings,
                     excluded=taken,

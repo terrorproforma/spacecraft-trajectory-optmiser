@@ -102,6 +102,13 @@ class CollectDPSettings:
     # calibrated inflation model (``hopcalib.InflationFit``): when set, hop propellant uses
     # ``f(r, TOF, Δa, Δλ)`` fitted on the certified archive instead of the flat/ratio factor
     inflation_fit: InflationFit | None = None
+    # harvest-phase prior (``harvestphase.HarvestPhasePrior``, tenth iteration): every collect
+    # hop departing with the pair misaligned beyond the references' p75 of |Δλ| is charged
+    # ``phase_weight x penalty_kg(|Δλ| at departure)`` in the DP objective (priced like
+    # propellant, kept out of the propellant accounting), so an aligned 180-day hop beats a
+    # misaligned 210-day one when their surrogate propellant is comparable
+    harvest_phase: Any = None
+    phase_weight: float = 1.0
 
     def __post_init__(self) -> None:
         for tof in self.tofs:
@@ -332,6 +339,23 @@ class CollectPairTable:
             self._geometry.popitem(last=False)
         return result
 
+    def phase_deg(self, source: int, target: int, epochs: FloatArray) -> FloatArray:
+        """``|Δλ|`` (deg) of the pair at every departure epoch (from :meth:`pair_geometry`)."""
+
+        _delta_a, delta_l = self.pair_geometry(int(source), int(target), epochs)
+        return np.degrees(np.abs(delta_l))
+
+    def phase_penalty(self, source: int, target: int, epochs: FloatArray) -> FloatArray:
+        """Kilograms the harvest-phase prior charges a hop of the pair departing at each of
+        ``epochs`` (zeros without a prior); ``phase_weight`` applied."""
+
+        s = self.settings
+        epochs = np.asarray(epochs, dtype=np.float64)
+        if s.harvest_phase is None or s.phase_weight <= 0.0:
+            return np.zeros(epochs.shape[0])
+        penalty = np.asarray(s.harvest_phase.penalty_kg(self.phase_deg(source, target, epochs)))
+        return s.phase_weight * penalty
+
     def hop_propellant(
         self,
         dv: FloatArray,
@@ -492,6 +516,11 @@ class CollectTour:
     diagnostics: dict[str, object] = field(default_factory=dict)
     # model propellant (kg) of every entry of ``hops`` in flight order (return excluded)
     hop_propellant_kg: list[float] = field(default_factory=list)
+    # harvest-phase prior (when the table carries one): |Δλ| (deg) of every hop's pair at its
+    # departure and the kg the prior charged the tour (inside ``objective_kg``, outside
+    # ``propellant_proxy_kg``)
+    hop_phase_deg: list[float] = field(default_factory=list)
+    phase_penalty_kg: float = 0.0
 
 
 def plan_collect_tour(
@@ -569,6 +598,15 @@ def plan_collect_tour(
     # otherwise (a few vector ops on ~20 KB, ~10 % of the DP time), bit-for-bit identical.
     fractions: OrderedDict[tuple[int, int, int], FloatArray] = OrderedDict()
     hop_tables: dict[tuple[int, int], FloatArray] = {}
+    # harvest-phase penalty (kg) per departure epoch of the local lattice, per ordered pair
+    penalties: dict[tuple[int, int], FloatArray] = {}
+
+    def phase_penalty(j: int, l_i: int) -> FloatArray:
+        cached = penalties.get((j, l_i))
+        if cached is None:
+            cached = table.phase_penalty(ids[j], ids[l_i], epochs)
+            penalties[(j, l_i)] = cached
+        return cached
 
     def fraction(j: int, l_i: int, mass: float) -> FloatArray:
         """Propellant per kg of ship mass for hop ``j -> l`` on the local lattice x TOF grid,
@@ -608,6 +646,7 @@ def plan_collect_tour(
             floor_mass,
             fraction,
             deploy_epoch,
+            phase_penalty if (s.harvest_phase is not None and s.phase_weight > 0.0) else None,
         )
 
     # a caller's burn schedule that is not a number (the mean of a tour whose hop propellant
@@ -652,9 +691,11 @@ def _solve_collect_dp(
     floor_mass: float,
     fraction,
     deploy_epoch: dict[int, float],
+    phase_penalty=None,
 ) -> CollectTour | None:
     """One Held-Karp pass with the mass schedule ``camp mass + mined(S) - burn x hops flown``
-    (the hop out of the ``h``-th collected asteroid is the ``h``-th hop)."""
+    (the hop out of the ``h``-th collected asteroid is the ``h``-th hop).  ``phase_penalty(j,
+    l)`` (kg per local departure epoch) is charged on every move like propellant."""
 
     k = len(ids)
     n_t = epochs.shape[0]
@@ -734,9 +775,12 @@ def _solve_collect_dp(
                 moves = [(collected_now, depart_value, mass_hop)]
                 if subset == 0 and j == camp_i:
                     moves.append((0, ready, mass_after_deploys))
+                penalty = None if phase_penalty is None else phase_penalty(j, l_i)
                 for new_subset, base, mass in moves:
                     frac = fraction(j, l_i, mass)
                     cand = base[:, None] - (w * mass) * frac  # (n_t, n_tof)
+                    if penalty is not None:
+                        cand = cand - (w * penalty)[:, None]
                     shifted.fill(neg)
                     for k_i in range(n_tof):
                         step = int(tof_steps[k_i])
@@ -772,6 +816,8 @@ def _solve_collect_dp(
     collect: dict[int, float] = {}
     hops: list[tuple[int, int, float, float, float]] = []
     hop_propellant: list[float] = []
+    hop_phase: list[float] = []
+    penalty_total = 0.0
     return_departure = float(epochs[t_dep])
     return_tof = float(table.return_tofs[r_i])
     return_dv = float(table.earth_return(ids[j])[t0 + t_dep, r_i])
@@ -793,6 +839,11 @@ def _solve_collect_dp(
         hops.append((ids[prev_j], ids[j], float(epochs[dep_i]), tof, dv))
         move_mass = mass_after_deploys if skipped else float(mass_by_subset[subset])
         hop_propellant.append(move_mass * float(fraction(prev_j, j, move_mass)[dep_i, tof_i]))
+        if phase_penalty is not None:
+            hop_phase.append(
+                float(table.phase_deg(ids[prev_j], ids[j], epochs[dep_i : dep_i + 1])[0])
+            )
+            penalty_total += float(phase_penalty(prev_j, j)[dep_i])
         if skipped:
             reposition = True
             subset_prev = subset
@@ -805,6 +856,7 @@ def _solve_collect_dp(
         t_arr = int(src[dep_i])
     hops.reverse()
     hop_propellant.reverse()
+    hop_phase.reverse()
     order.reverse()
     collected_proxy = sum(
         C.maximum_collected_mass(collect[a] - deploy_epoch[a]) for a in ids if a in collect
@@ -819,7 +871,8 @@ def _solve_collect_dp(
         reposition,
         best_final,
         collected_proxy,
-        (weighted - best_final) / w,  # objective = weighted - w x propellant
+        # objective = weighted - w x (propellant + phase penalty)
+        (weighted - best_final) / w - penalty_total,
         return_departure,
         return_tof,
         return_dv,
@@ -831,4 +884,6 @@ def _solve_collect_dp(
             "burn_per_hop_kg": burn_per_hop,
         },
         hop_propellant,
+        hop_phase,
+        penalty_total,
     )

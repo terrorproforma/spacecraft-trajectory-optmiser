@@ -709,12 +709,19 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         chain_tour_candidates=args.chain_tour_candidates,
         chain_prior_path=args.chain_prior or "",
         chain_prior_weight=args.chain_prior_weight,
+        harvest_phase_path=args.harvest_phase or "",
+        harvest_phase_weight=args.harvest_phase_weight,
         dual_price_weight=args.dual_price_weight,
         joint_itinerary=args.joint_itinerary,
         joint_budget_seconds=args.joint_budget_seconds,
+        joint_earth_leg=bool(args.joint_earth_leg),
     )
     if settings.chain_prior_path:
         load_chain_prior(settings.chain_prior_path)  # fail early on a bad path
+    if settings.harvest_phase_path:
+        from .harvestphase import load_harvest_phase
+
+        load_harvest_phase(settings.harvest_phase_path)  # fail early on a bad path
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1349,6 +1356,12 @@ def cmd_joint_itinerary(args: argparse.Namespace) -> int:
         insert_neighbours=args.insert_neighbours,
         insert_radius=args.insert_radius,
         insert_trials=args.insert_trials,
+        earth_leg=bool(args.earth_leg),
+        earth_leg_shifts_days=tuple(
+            float(x) for x in str(args.earth_leg_shifts).split(",") if x.strip()
+        )
+        or JointCampaignSettings().earth_leg_shifts_days,
+        earth_leg_certifications=args.earth_leg_certifications,
     )
     log = (output_dir / "ships.jsonl").open("w", encoding="utf-8")
 
@@ -1379,6 +1392,14 @@ def cmd_joint_itinerary(args: argparse.Namespace) -> int:
                         "peak_rss_mb",
                         "elapsed_seconds",
                     )
+                }
+                | {
+                    "earth_leg": None
+                    if not record.get("earth_leg")
+                    else {
+                        k: record["earth_leg"].get(k)
+                        for k in ("seeds", "flown", "measured", "accepted_shift_days")
+                    }
                 }
             ),
             flush=True,
@@ -1502,6 +1523,41 @@ def cmd_chain_prior(args: argparse.Namespace) -> int:
                 "ships_decoded": document["ships_decoded"],
                 "sources": document["sources"],
                 "targets": {k: round(v, 3) for k, v in targets.items()},
+            }
+        )
+    )
+    return 0
+
+
+def cmd_harvest_phase(args: argparse.Namespace) -> int:
+    """Extract the harvest-phase prior (|Δλ| of consecutive collect stops) from the references."""
+
+    from .chainprior import reference_solution_files
+    from .data import data_directory, load_catalogue
+    from .harvestphase import extract_harvest_phase
+
+    paths = [Path(p) for p in args.solution] or reference_solution_files(data_directory())
+    if not paths:
+        print("no reference solution files (fetch the pinned data first)")
+        return 1
+    document = extract_harvest_phase(
+        load_catalogue(), paths, commit=_commit(resources.repository_root())
+    )
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(_json(document) + "\n", encoding="utf-8")
+    print(
+        _json(
+            {
+                "output": str(output),
+                "hops_decoded": document["hops_decoded"],
+                "sources": document["sources"],
+                "targets": {k: round(v, 4) for k, v in document["targets"].items()},
+                "fits": document["fits"],
+                "histogram": [
+                    {k: (round(v, 2) if isinstance(v, float) else v) for k, v in b.items()}
+                    for b in document["distributions"]["histogram"]
+                ],
             }
         )
     )
@@ -1759,6 +1815,18 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="kg of beam score per kg the chain lies off the reference manifold (default 0.5)",
     )
     cluster.add_argument(
+        "--harvest-phase",
+        default="",
+        help="harvest-phase prior JSON (gtoc12 harvest-phase): the collect DP and the chain "
+        "score charge collect hops departing beyond the references' p75 of |Δλ|",
+    )
+    cluster.add_argument(
+        "--harvest-phase-weight",
+        type=float,
+        default=1.0,
+        help="weight of the harvest-phase penalty (kg of objective per kg; default 1.0)",
+    )
+    cluster.add_argument(
         "--no-lp-duals",
         action="store_true",
         help="do not feed the master LP's asteroid duals back into the family pricing",
@@ -1804,6 +1872,12 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         default=150.0,
         help="wall budget of the per-ship joint itinerary re-optimisation (default 150)",
     )
+    cluster.add_argument(
+        "--joint-earth-leg",
+        action="store_true",
+        help="Earth-out leg stage inside the joint pass: trade Earth-leg propellant for an "
+        "earlier chain start (single-leg SCvx measurements, monotone acceptance)",
+    )
     cluster.set_defaults(function=cmd_cluster_fleet)
 
     prior = commands.add_parser(
@@ -1822,6 +1896,24 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="where to write the prior document",
     )
     prior.set_defaults(function=cmd_chain_prior)
+
+    phase = commands.add_parser(
+        "harvest-phase",
+        help="extract the harvest-phase prior (|Δλ| of consecutive collect stops at the collect "
+        "departure, kg and days per degree of misalignment) from the reference solutions",
+    )
+    phase.add_argument(
+        "--solution",
+        action="append",
+        default=[],
+        help="reference solution file (repeatable; default: the pinned JPL/Antipodes files)",
+    )
+    phase.add_argument(
+        "--output",
+        default="benchmarks/gtoc12/harvest_phase_v1.json",
+        help="where to write the prior document",
+    )
+    phase.set_defaults(function=cmd_harvest_phase)
 
     calib = commands.add_parser(
         "hop-calibration",
@@ -1942,6 +2034,23 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="co-moving neighbourhood radius (band units) the insertion draws from",
     )
     joint.add_argument("--insert-trials", type=int, default=3)
+    joint.add_argument(
+        "--earth-leg",
+        action="store_true",
+        help="Earth-out leg stage: seed an earlier chain start (launch kept / moved), fly the "
+        "best seeds' Earth legs alone with SCvx, re-search and certify the whole itinerary",
+    )
+    joint.add_argument(
+        "--earth-leg-shifts",
+        default="30,60,90,120,150",
+        help="days the first asteroid is reached earlier in the Earth-leg seeds",
+    )
+    joint.add_argument(
+        "--earth-leg-certifications",
+        type=int,
+        default=4,
+        help="single Earth legs flown with SCvx per ship in the Earth-leg stage",
+    )
     joint.add_argument("--scvx-iterations", type=int, default=40)
     joint.add_argument("--node-days", type=float, default=2.0)
     joint.add_argument("--no-bonus-weights", action="store_true")

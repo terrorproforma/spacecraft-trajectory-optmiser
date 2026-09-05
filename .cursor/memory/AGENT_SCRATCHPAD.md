@@ -55,14 +55,16 @@ Use this file as persistent, repo-local execution memory. Detailed history: see
 
 ## Active Risks / Workstreams
 
-- GTOC12: `fleet_master_v8` = 21 ships / 12 356.30 kg / 588.40 avg (proven optimal over 1296
-  columns, LP(22) infeasible). Ship 22 needs 599.5 kg average. Levers that moved the fleet:
-  joint itinerary (+208 kg v2, +411 kg v3 over v8/v9 ships); levers that did not: chain-level
-  beam objective (paired median 0.0), reference prior at 0.5, LP duals (nothing to price).
-- Next: score phase alignment of consecutive deploys at the projected harvest epoch in the beam;
-  Earth-leg optimiser trading propellant for arrival time; joint itinerary over every archived
-  stand-alone ship (~3 h) before the next master; `Result.txt` -> column ingester for the H100
-  fleets copied to the Windows repo.
+- GTOC12: `fleet_master_v9` (local, 25 archives) = 22 ships / 13 188.61 kg / 599.48 avg, proven
+  optimal, rule binding at 22 <= 22.0007; `fleet_master_h100_v2/v3` = 22 / 13 189.60 / 599.53;
+  **`fleet_master_v10` (H100, 36 archives) = 23 ships / 14 044.80 kg / 610.65 avg** (rule
+  binding at 23 <= 23.005; ship 24 needs 621.2 kg average, +865 kg). Levers that moved the
+  fleet: breadth (all 35 families priced) + joint itinerary (+208 v2, +411 v3, +316 v4, +664 v10);
+  neutral: chain-level beam objective, reference prior, LP duals, harvest-phase prior, Earth-out
+  leg stage (+494 kg over 131 ships but nothing on the 22-ship master).
+- Next: plane-aware families (relative inclination / node gap of consecutive pairs: ours 2.4-2.7
+  deg / 34 deg vs the references' 1.85 / 20); single-leg SCvx sweep of archived Earth legs
+  across the launch window; deploy-phase time weight (deploy hops 240 d vs 183).
 - Unlocalised: the NaN pass-1 burn schedule that crashed `cluster_fleet_v9` family 10 (guarded).
 
 ## Windows-Checkout Notes Carried On 2026-09-05
@@ -486,3 +488,84 @@ Verbatim blocks from the Windows checkout's live file (entries other workers wro
   and `tests/__pycache__` are packed; not touched here - fix the sdist include list separately.
 - `feat/gtoc12-asteroid-mining` moved past b55eb70 (bc7ef8e) while this merge ran; only b55eb70 is
   on main.
+### 2026-09-05 (tenth iteration: Earth-out leg stage, harvest-phase prior, archive-wide joint, H100 paired arms) - in progress
+
+#### Captured during the work
+
+- [self] `setsid nohup ... &` at the end of a script run through `wsl -- bash run.sh` died with the
+  wsl session (empty log, empty output dir, no process) - the first `joint_itinerary_v4` launch
+  never ran. The recorded rule (`disown` + a `sleep` after the launch line) applies to *every*
+  detached launch, not only to `wsl -- bash -c`.
+- [self] `scp file host:~/dir/` with a missing remote directory fails with "Is a directory"
+  under OpenSSH's SFTP mode; the standing rule "mkdir -p the remote target before rput" was
+  skipped once more. Now `rput.sh` targets an explicit remote file name after `mkdir -p`.
+- [self] A rigid 60-day shift of a whole deploy chain breaks a hop's authority ratio (hop 6 of
+  the family-7 ship: Lambert 2.69 km/s at the shifted epochs, ratio 0.94 > 0.55): hops are
+  phase-sensitive, so Earth-leg seeds must shift a *prefix* of the chain and let one hop absorb
+  the shift (`earth_leg_seed(prefix=)`); the stage evaluates every prefix per candidate leg.
+- [self] The joint evaluator's "proportional ore scaling" cannot close a propellant deficit:
+  the closure rule `final >= dry + ore` cancels the ore, so scaling recovers only the ore's
+  own propellant (~3 %). An unmeasured shorter Earth leg at the pair-calibrated 1.03x Lambert
+  never closes on a propellant-bound ship; the seeds are ranked at the certified leg's
+  *measured* inflation (0.83-0.89) instead (`_screen_earth_out`) and SCvx decides.
+- Finding (measured, not assumed): our archived chains are already phase-aligned at harvest -
+  `cluster_fleet_v9` |Δλ| at collect departure median 2.5 deg / p75 4.0 deg, `fleet_master_v8`
+  2.4 / 4.1, references 2.7 / 4.8 - so the brief's "nothing scores phase" diagnosis is not
+  what separates the 210-day hops from the references' 181-day ones. The harvest-phase prio
+  is calibrated and wired but bites on ~15 % of hops; measure it, do not expect it to move the
+  fleet. The 210 vs 181 d and 85 vs 66 kg gap needs a different explanation (Δa / Δi of the
+  pairs, deploy-hop TOF 255 vs 183 d).
+- Finding: a certified Earth leg is rarely the cheapest of its launch window - the 555-day leg
+  of the 622.6 kg ship measured 405 kg against 430 kg at the certified 585 d. Earth legs are
+  worth sweeping with SCvx around the certified point even when no chain shift is wanted.
+- Finding: the Earth-leg exchange rate is tiny on a propellant-bound ship - 30 d earlier is
+  +0.7 kg of ore for 8 miners while the leg's propellant delta must come out of margin; the
+  stage yields ~+1 kg/ship where margin exists and nothing elsewhere.
+- [tool] `pgrep -c -f fleet-master` inside a remote `bash -c` returns 1 when nothing runs
+  (matches itself): read the ps listing, not the count, before deciding a host is idle.
+- [self] `tar czf /home/angus/stage/x.tgz` failed because `/home/angus/stage` did not exist -
+  the third "create the target directory first" miss in one session; every script that writes
+  outside the worktree now starts with `mkdir -p`.
+- [tool] `rput.sh` ran `bash -n` on a `.py` file; helpers that syntax-check must dispatch on
+  the extension (`py_compile` for Python).
+- [self] A `setsid nohup ... &` launch script followed by `sleep`/`cat` kept the ssh client
+  attached for minutes (the harness backgrounded it); killed only the wsl process that was
+  mine (PID checked), the remote job survived. Launch scripts must end right after the `&`.
+- [tool] The H100 host's per-core speed is ~0.6x the WSL box for this workload: at the v9
+  2400 s family budget its families reach ship slot 2-3 where the WSL box reached 3-4, so a
+  paired comparison against a WSL campaign needs the same *hardware*, not the same budget; the
+  two arms on the same host (`cluster_fleet_v10` vs `_control`) are the valid pair.
+
+#### Task Summary
+
+- Merge of the H100 v2 line (bc7ef8e), Earth-out leg stage (9ce3162), harvest-phase prio
+  (f8e870c), campaign report script (8e2b6bf..ec23f01), results `joint_itinerary_v4/v5`
+  (bfaee6e), `fleet_master_v9` (bfaa429): 22 ships / 13188.61 kg / 599.48 avg, proven
+  optimal, both verifiers ok - the same 22-ship level as the H100 v2 master. H100 paired arms
+  neutral (median 0.0 kg over 35 families); `fleet_master_v10` over 36 archives (H100, 22
+  workers): **23 ships / 14 044.80 kg / 610.65 avg, LP gap 6.3, proven optimal, both verifiers
+  ok** - ship 23 reached through breadth (35 families x 2 arms) + `joint_itinerary_v10
+  --earth-leg` (+663.6 kg over 51 fresh chains), not through the two new per-ship terms.
+
+#### What Worked
+
+- Measuring first: `scripts/gtoc12_campaign_report.py` over the existing archives showed in
+  minutes that the phase hypothesis was already satisfied and pointed at the orbital planes.
+- Single-leg SCvx as the Earth-leg oracle (8 s) with the surrogate only ranking seeds; every
+  accepted itinerary still goes through the whole-route certification and both verifiers.
+- Two arms on one host at once (11 + 11 workers on cores 4-25): a paired A/B in 3 h with the
+  same wall budget, the same families and the same hardware.
+- Pipeline scripts with a status file per stage (`pipeline_a.status`, `gtoc12-v10-RESULT`) and
+  polling only; nothing was babysat.
+
+#### What Failed Or Was Inefficient
+
+- Both new levers are neutral on the fleet: +2.3 kg median per ship from the Earth-leg stage,
+  the phase prior inert on 76-85 % of our hops. One relaunch (joint_v4, dead detached launch).
+
+#### Guardrails For Next Session
+
+- Before building a term from a reference statistic, compute the same statistic on our own
+  archives first (`gtoc12_campaign_report.py --run <ours> --fleet-ships <master>`).
+- Ship 23 needs 610.6 kg average: the archives hold 24-25 chains >= 600 and one >= 650; the
+  next lever must produce *new* chains (plane-aware families), not re-time old ones.
