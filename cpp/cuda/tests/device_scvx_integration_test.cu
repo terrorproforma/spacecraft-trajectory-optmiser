@@ -5312,7 +5312,9 @@ int run_invocation(const int argc, char** argv) {
         if (g4_sample_mode) {
             if (g4_family == "P1-C-pd3") {
                 if (p1c_qoco_repeatability_mode) {
-                    constexpr std::uint32_t repeats = 7U;
+                    const std::uint32_t repeats = argc == 3 ? std::stoul(argv[2]) : 7U;
+                    test::require((argc == 2 || argc == 3) && repeats > 0U,
+                                  "QOCO repeatability accepts an optional positive repeat count");
                     for (std::uint32_t repeat = 0U; repeat < repeats; ++repeat) {
                         const auto result = run_pd3();
                         test::require(

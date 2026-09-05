@@ -1,0 +1,333 @@
+{
+  "production_backend_changed": false,
+  "full_goal_complete": false,
+  "benchmark": "qoco-deterministic-scoped-handles-pd3.json",
+  "earlier_failed_comparisons": [
+    "qoco-scoped-handles-pd3.json",
+    "qoco-gather-scopes-correct-stopping-pd3.json"
+  ],
+  "sha256": {
+    "/home/angus/build-qoco-gpu-gather-v9/build/libqoco.so": "d07e743cfa047c7530b8aa4d0c228790aea2623e747af952a1ff936623db9f50",
+    "/home/angus/build-qoco-gpu-gather-v4/build/libqoco.so": "bcc63921aa7ed6fd5dd11be4d1aa9c1b046c5efda9c6bed069fc58c872ae809f",
+    "/home/angus/build-qoco-gpu-deterministic-control/build/libqoco.so": "233ff205454e94bec78716f9614c91effbdc6daccef76de2970b6972b6b18878",
+    "/home/angus/build-qoco-gpu-gather-v7/build/libqoco.so": "5855e6210cd27a1beba51960d66dd8c6032f90c39bec359543975e04f0d028af",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda/libspacepdhcg_cuda.so": "b948ddd898c4f7388d187e0c776e14108272bb90c64f7b4635eca489dbf648cc",
+    "/home/angus/spacecraft-trajectory-optmiser/.venv/lib/python3.12/site-packages/nvidia/cu12/lib/libcudss.so.0": "5f76a3698d6b7114e6cf6ebe38a38096ccb8af090aa5b8af92d72c9b369b2e86",
+    "/home/angus/tools/cudss-0.8.0.10/nvidia/cu12/lib/libcudss.so.0": "0740250950abbbbc7690c4edb1506f8432558658764d6c1f7cba29615acb3dfc"
+  },
+  "final_prepared_source": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "29fcd4ce8e5dd98ea84ade9669173289e31ba22845bae265df761da5aa394338",
+    "extension_sha256": "37e17af17914299062be7fda3df58fd1221758dceb0fd24519bffd331e9f44e0",
+    "gather": true,
+    "original_handles": false,
+    "correct_stopping": true,
+    "deterministic": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "29fcd4ce8e5dd98ea84ade9669173289e31ba22845bae265df761da5aa394338",
+      "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+      "algebra/cuda/cudss_backend.h": "77a555ac37e624be6dd0758367eb929f67cdab44812b33fd1f8c19cc31594e4a",
+      "algebra/cuda/cudss_backend.cu": "b108c9a5f4d187f519d10df1d9a68d767d9f6956b96b5d7e21967df2c707a9fa",
+      "src/qoco_utils.c": "654298c51d80606f8d5b757d7f3f7b1f38b2f7860d08e42c52692f279f3786de"
+    }
+  },
+  "cuda_api_profile": {
+    "control": {
+      "cudaMalloc": {
+        "calls": 5752,
+        "total_ns": 345512411
+      },
+      "cudaFree": {
+        "calls": 7059,
+        "total_ns": 331554603
+      },
+      "cudaMemcpyAsync": {
+        "calls": 2279,
+        "total_ns": 295943918
+      },
+      "cudaDeviceSynchronize": {
+        "calls": 11965,
+        "total_ns": 239817915
+      },
+      "cudaStreamCreateWithFlags": {
+        "calls": 2,
+        "total_ns": 195492162
+      },
+      "cudaLaunchKernel": {
+        "calls": 12263,
+        "total_ns": 123171597
+      },
+      "cudaMemcpy": {
+        "calls": 2188,
+        "total_ns": 81641318
+      },
+      "cudaStreamSynchronize": {
+        "calls": 1629,
+        "total_ns": 67884554
+      },
+      "cudaEventRecord": {
+        "calls": 1575,
+        "total_ns": 9031167
+      },
+      "cudaEventCreateWithFlags": {
+        "calls": 27775,
+        "total_ns": 8322213
+      },
+      "cudaMemset": {
+        "calls": 939,
+        "total_ns": 5575253
+      },
+      "cudaMemsetAsync": {
+        "calls": 1221,
+        "total_ns": 5067125
+      },
+      "cudaEventDestroy": {
+        "calls": 27787,
+        "total_ns": 5007206
+      },
+      "cudaMemcpy2DAsync": {
+        "calls": 474,
+        "total_ns": 2396242
+      },
+      "cudaEventQuery": {
+        "calls": 1543,
+        "total_ns": 2326606
+      },
+      "cuLibraryUnload": {
+        "calls": 17,
+        "total_ns": 1631235
+      },
+      "cudaEventSynchronize": {
+        "calls": 18,
+        "total_ns": 1597269
+      },
+      "cudaHostAlloc": {
+        "calls": 4,
+        "total_ns": 1017283
+      },
+      "cuStreamGetCaptureInfo_v2": {
+        "calls": 7710,
+        "total_ns": 975694
+      },
+      "cudaFreeHost": {
+        "calls": 4,
+        "total_ns": 386685
+      },
+      "cuGetProcAddress_v2": {
+        "calls": 2095,
+        "total_ns": 205789
+      },
+      "cuInit": {
+        "calls": 7,
+        "total_ns": 10836
+      },
+      "cudaEventCreate": {
+        "calls": 12,
+        "total_ns": 8265
+      },
+      "cudaGetDeviceProperties_v2_v12000": {
+        "calls": 4,
+        "total_ns": 6606
+      },
+      "cudaStreamDestroy": {
+        "calls": 2,
+        "total_ns": 6117
+      },
+      "cuModuleGetLoadingMode": {
+        "calls": 6,
+        "total_ns": 1569
+      },
+      "cudaGetDriverEntryPoint_v11030": {
+        "calls": 2,
+        "total_ns": 509
+      }
+    },
+    "scoped": {
+      "cudaMemcpyAsync": {
+        "calls": 2279,
+        "total_ns": 244911912
+      },
+      "cudaStreamCreateWithFlags": {
+        "calls": 2,
+        "total_ns": 221475586
+      },
+      "cudaDeviceSynchronize": {
+        "calls": 5809,
+        "total_ns": 188867143
+      },
+      "cudaMemcpy": {
+        "calls": 2188,
+        "total_ns": 132525325
+      },
+      "cudaLaunchKernel": {
+        "calls": 12263,
+        "total_ns": 100379453
+      },
+      "cudaStreamSynchronize": {
+        "calls": 1629,
+        "total_ns": 49744198
+      },
+      "cudaMemsetAsync": {
+        "calls": 1221,
+        "total_ns": 22163283
+      },
+      "cudaEventRecord": {
+        "calls": 1575,
+        "total_ns": 5918553
+      },
+      "cudaFree": {
+        "calls": 903,
+        "total_ns": 5180820
+      },
+      "cudaMalloc": {
+        "calls": 1135,
+        "total_ns": 5113000
+      },
+      "cudaMemset": {
+        "calls": 939,
+        "total_ns": 4167954
+      },
+      "cudaMemcpy2DAsync": {
+        "calls": 474,
+        "total_ns": 2337223
+      },
+      "cuLibraryUnload": {
+        "calls": 17,
+        "total_ns": 1498385
+      },
+      "cudaEventSynchronize": {
+        "calls": 18,
+        "total_ns": 1457805
+      },
+      "cudaHostAlloc": {
+        "calls": 4,
+        "total_ns": 894778
+      },
+      "cuStreamGetCaptureInfo_v2": {
+        "calls": 7710,
+        "total_ns": 482330
+      },
+      "cudaFreeHost": {
+        "calls": 4,
+        "total_ns": 391630
+      },
+      "cudaEventDestroy": {
+        "calls": 85,
+        "total_ns": 273993
+      },
+      "cuGetProcAddress_v2": {
+        "calls": 2095,
+        "total_ns": 199872
+      },
+      "cudaEventCreateWithFlags": {
+        "calls": 73,
+        "total_ns": 169983
+      },
+      "cuInit": {
+        "calls": 7,
+        "total_ns": 11248
+      },
+      "cudaEventQuery": {
+        "calls": 4,
+        "total_ns": 10711
+      },
+      "cudaEventCreate": {
+        "calls": 12,
+        "total_ns": 8739
+      },
+      "cudaGetDeviceProperties_v2_v12000": {
+        "calls": 4,
+        "total_ns": 8485
+      },
+      "cudaStreamDestroy": {
+        "calls": 2,
+        "total_ns": 7602
+      },
+      "cuModuleGetLoadingMode": {
+        "calls": 6,
+        "total_ns": 1311
+      },
+      "cudaGetDriverEntryPoint_v11030": {
+        "calls": 2,
+        "total_ns": 477
+      }
+    }
+  },
+  "profile_limit": "Nsight Systems 2024.6.2 captured CUDA API calls, but no RTX 5090 GPU kernel timeline.",
+  "final_repeat_summary": {
+    "case": "p1c_qoco_repeatability",
+    "repeats": 7,
+    "qualified": 7,
+    "outer_attempt_budget": 2
+  },
+  "checks": {
+    "operators-memcheck": {
+      "log": "build/performance/native-checks/qoco-v9-operators-memcheck.log",
+      "sha256": "3f9de6010ea4917e7096e74f48e422a1e8452d71e33f6b1491c1cd6fcdeb7d3a",
+      "passed": true
+    },
+    "operators-initcheck": {
+      "log": "build/performance/native-checks/qoco-v9-operators-initcheck.log",
+      "sha256": "6766179dab2d1f54fe839cda1427fb457755d9ba051513e8558a0035d607eb0e",
+      "passed": true
+    },
+    "operators-synccheck": {
+      "log": "build/performance/native-checks/qoco-v9-operators-synccheck.log",
+      "sha256": "6766179dab2d1f54fe839cda1427fb457755d9ba051513e8558a0035d607eb0e",
+      "passed": true
+    },
+    "operators-racecheck": {
+      "log": "build/performance/native-checks/qoco-v9-operators-racecheck.log",
+      "sha256": "2935d83a37d42cc728889c8714640699c1c17ad7e81c4ad37aa2175bdc859e4d",
+      "passed": true
+    },
+    "stopping-memcheck": {
+      "log": "build/performance/native-checks/qoco-v9-stopping-memcheck.log",
+      "sha256": "a5a1b90310970117ddcfe68bf641c46ae1fe35f0149a994a98ddabdb9c678ce2",
+      "passed": true
+    },
+    "landing-memcheck": {
+      "log": "build/performance/native-checks/qoco-v9-landing-memcheck.log",
+      "sha256": "8e9d8d82e36f8c1e1ce53638b72b9f2c8ba877b84375610926c2b8bcf35ed8a3",
+      "passed": true
+    },
+    "unavailable": {
+      "log": "build/performance/native-checks/qoco-v9-unavailable.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    "abi-mismatch": {
+      "log": "build/performance/native-checks/qoco-v9-abi-mismatch.log",
+      "sha256": "da094220d3e8aa13dca2120acdb3291bae6b785cf5a770aad960540ccc6059e0",
+      "expected_rejection_observed": true
+    },
+    "stopping-before": {
+      "log": "build/performance/native-checks/qoco-v9-stopping-before.log",
+      "sha256": "7d5115652516a8e4e1125b9c7fc54f1af437f581fa848744f91bd0fdcc89760e",
+      "expected_rejection_observed": true
+    }
+  },
+  "open_findings": [
+    {
+      "backend": "cuDSS 0.7.1.6 deterministic",
+      "finding": "Full racecheck reports hazards in cudss::factorize_dtmn_ker with both CUDA12.8 and13.2 sanitizer. First-kernel-only check passes and does not clear full-run finding.",
+      "logs": [
+        "qoco-v4-landing-racecheck.log",
+        "qoco-v4-full-racecheck-13.2.log"
+      ]
+    },
+    {
+      "backend": "cuDSS 0.8.0.10 deterministic with migrated API",
+      "finding": "Memcheck reports out-of-bounds shared read in cudss::fwd_dtmn_ker, then solve fails. Enabling superpanels also fails. Upgrade rejected.",
+      "logs": [
+        "qoco-v7-memcheck.log",
+        "qoco-v8-repeat7.err"
+      ]
+    }
+  ],
+  "sanitizer_13_2_package_sha256": "8899b0126b75be7ff0df6b11b685312b180c5928f567c67f1e4962d4df6b4aad"
+}

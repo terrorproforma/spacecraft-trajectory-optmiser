@@ -131,6 +131,8 @@ using UpdateMatrixFn = void (*)(SolverAbi*, double*, double*, double*);
 using SetX0Fn = void (*)(SolverAbi*, double*);
 using SolveFn = int (*)(SolverAbi*);
 using CleanupFn = int (*)(SolverAbi*);
+using BeginReductionScopeFn = int (*)();
+using EndReductionScopeFn = void (*)();
 
 template <typename T>
 spacepdhcg_cuda_status download(
@@ -353,6 +355,8 @@ struct spacepdhcg_native_qoco {
     SetX0Fn set_x0{};
     SolveFn solve{};
     CleanupFn cleanup{};
+    BeginReductionScopeFn begin_reduction_scope{};
+    EndReductionScopeFn end_reduction_scope{};
     Formulation formulation{};
     // The settings handed to qoco_setup. QOCO's stall handler mutates
     // solver->settings->kkt_dynamic_reg in place (x10 per stalled step) and never
@@ -386,6 +390,17 @@ struct spacepdhcg_native_qoco {
 };
 
 namespace {
+
+bool solve_with_reduction_scope(spacepdhcg_native_qoco* workspace, int* status) {
+    if (workspace->begin_reduction_scope != nullptr
+        && workspace->begin_reduction_scope() != 0) return false;
+    struct Scope {
+        EndReductionScopeFn end;
+        ~Scope() { if (end != nullptr) end(); }
+    } scope{workspace->end_reduction_scope};
+    *status = workspace->solve(workspace->solver);
+    return true;
+}
 
 spacepdhcg_cuda_status convert(
     const spacepdhcg_cuda_scvx_problem& problem,
@@ -890,6 +905,13 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         || !symbol(result->library, "qoco_cleanup", &result->cleanup)) {
         return SPACEPDHCG_CUDA_UNSUPPORTED;
     }
+    // Optional paired extension; unpatched pinned libraries retain their original
+    // execution. A scope is destroyed before returning, including failed solves.
+    symbol(result->library, "qoco_gpu_begin_reduction_scope", &result->begin_reduction_scope);
+    symbol(result->library, "qoco_gpu_end_reduction_scope", &result->end_reduction_scope);
+    if ((result->begin_reduction_scope == nullptr) != (result->end_reduction_scope == nullptr)) {
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
     const auto conversion_start = std::chrono::steady_clock::now();
     auto status = convert(
         *problem,
@@ -1159,10 +1181,15 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             || requested_warm == SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED)
         ? 1 : 0;
     const auto solve_start = std::chrono::steady_clock::now();
-    int status_code = workspace->solve(workspace->solver);
+    int status_code = 0;
+    const bool invoked = solve_with_reduction_scope(workspace, &status_code);
     workspace->report.solve_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - solve_start
     ).count();
+    if (!invoked) {
+        workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+        return finish(SPACEPDHCG_CUDA_RUNTIME_ERROR);
+    }
     ++workspace->report.solves;
     workspace->report.status_code = status_code;
     if (workspace->solver->sol == nullptr
@@ -1183,10 +1210,14 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         workspace->report.warm_primal_accepted = 0;
         ++workspace->report.warm_inaccurate_cold_retries;
         const auto retry_start = std::chrono::steady_clock::now();
-        status_code = workspace->solve(workspace->solver);
+        const bool retried = solve_with_reduction_scope(workspace, &status_code);
         workspace->report.solve_seconds += std::chrono::duration<double>(
             std::chrono::steady_clock::now() - retry_start
         ).count();
+        if (!retried) {
+            workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+            return finish(SPACEPDHCG_CUDA_RUNTIME_ERROR);
+        }
         ++workspace->report.solves;
         if (workspace->solver->sol->status != status_code) {
             workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;

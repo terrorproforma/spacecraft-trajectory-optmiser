@@ -431,3 +431,21 @@ and `medium-dispatch` prefixes.
    them. Cooperative residency and cancellation must remain correct.
 
 The implementation is not yet a completely GPU-resident end-to-end mission planner.
+
+## GPU IPM checkpoint: scoped handles and ordered sparse products
+
+The optional local QOCO CUDA backend now supports scoped cuBLAS handles, GPU-built
+ordered sparse gathers, a corrected relative stopping scale, deterministic cuDSS
+factorization, and checked cuDSS function signatures/runtime versions. A matched
+20-interval displaced landing benchmark isolates handle reuse: median SCvx
+1.474888 -> 0.623454 seconds (2.37x), complete process 1.929623 -> 1.045398 seconds
+(1.85x), with identical 54 inner iterations, two accepted steps, objective and
+final residuals in every sample. Qualification remains at 1e-8.
+
+Operator memcheck/initcheck/synccheck/racecheck and the complete landing
+memcheck/initcheck/synccheck pass. Full racecheck reports hazards inside cuDSS
+0.7.1.6's deterministic factorization; an isolated 0.8.0.10 upgrade instead fails
+inside its deterministic forward solve. These findings remain open, and the
+backend is not promoted automatically. The pinned upstream and remote campaigns
+are untouched. [Implementation, raw evidence and reproduction instructions](GPU_QOCO_LOCAL_BACKEND.md)
+describe the measured improvement, rejected experiments and remaining CPU work.
