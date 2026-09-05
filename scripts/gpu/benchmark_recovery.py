@@ -19,7 +19,7 @@ def main() -> None:
     parser.add_argument("--executable", type=Path, required=True)
     parser.add_argument("--baseline-library", type=Path, required=True)
     parser.add_argument("--optimized-library", type=Path)
-    parser.add_argument("--family", choices=("pd3", "pd6", "low-thrust"), default="pd3")
+    parser.add_argument("--family", choices=("hcw", "pd3", "pd6", "low-thrust"), default="pd3")
     parser.add_argument("--intervals", type=int, default=2)
     parser.add_argument("--warmups", type=int, default=1)
     parser.add_argument("--repeats", type=int, default=3)

@@ -322,6 +322,95 @@ larger case, and a paired baseline has not been measured. Its empty output log i
 `build/performance/native-checks/bounded-recovery-pd3-20.log`. Instrumenting progress
 inside that solve is required before further scaling claims.
 
+## Parallel cone projection and recovery reductions
+
+The single-block execution strategy still assigned all cone projections to thread
+zero, including medium-size problems selected by the automatic policy. Independent
+cones now have separate thread owners in PDHG and recovery. Validated topology
+guarantees disjoint cone ranges, and component arithmetic within each cone retains
+its original order. Existing block barriers protect producers and consumers.
+
+The six repeated CGLS sum-of-squares calculations in recovery now use FP64 warp
+reductions and eight shared warp sums. Vectors with at most 32 elements retain the
+serial path. These changes add no allocations, transfers, or host decisions and do
+not change tolerances or the final qualification gate.
+
+A new diagnostic mode runs the actual production CQP with an explicit iteration
+budget and cooperative deadline cancellation, without running the surrounding
+outer loop:
+
+```text
+device_scvx_integration_test --production-cqp pd3 20 350000 40
+```
+
+Diagnostic completion is not qualification. The output includes termination,
+objective, natural residual, PDHG/recovery counts, wall time, and recovery phase
+cycles. Before parallelisation, this 20-interval CQP reached 300,000 PDHG steps and
+5,400 recovery steps before cancellation at 40 seconds. Afterward it completed
+300,000 PDHG and all 50,000 recovery steps in 34.623 seconds. Both returned the same
+PDHG residual, 0.00056897551530710189, after recovery rollback. The larger CQP is
+still unqualified at its 1e-8 request; these observations establish faster work,
+not a qualified larger solve. Logs: `cqp-probe-pd3-20-before.log` and
+`cqp-probe-pd3-20-parallel.log` under `build/performance/native-checks/`.
+
+The deadline probe also exposed stale PDHG reports on cancellation between scheduled
+residual checks. Both execution strategies now evaluate the returned resident point
+and report the actual completed iterations at cancellation. The regression uses a
+long check interval and independently evaluates the returned primal's objective,
+then recomputes its residual. Before the fix it caught a reported residual of zero
+where the returned point's residual was one; the normal regression passes after
+the fix. This adds work only on the cancellation exit.
+
+Fixed-work sweeps (one warmup, three measured repetitions, alternating order)
+also exposed an overly conservative dispatch cutoff. For the 507-variable,
+20-interval 3DOF CQP, 1,000 steps took 63.54 ms in the automatic block-local loop
+versus 30.83 ms with two cooperative blocks. Five intervals favoured the legacy
+loop (21.00 ms versus 24.72 ms with two blocks); ten intervals favoured two blocks
+(34.82 ms versus 28.59 ms); fifty favoured four/eight blocks (159.19 ms legacy,
+34.01/32.41 ms). Objectives and residuals agreed within 1e-9 in these fixed-work,
+unqualified diagnostic runs. Raw data: `artifacts/performance/medium-dispatch-screen*.json`.
+
+Automatic execution now retains the legacy loop below 256 variables and uses
+roughly one cooperative block per 256 variables above that threshold. The prior
+dense-large-operator policy is unchanged. This heuristic remains overridable for
+different GPUs and sparsity patterns.
+
+Matched qualification measurements on the local RTX 5090:
+
+| Measurement | Before | Current | Change |
+|---|---:|---:|---:|
+| 2-interval 3DOF SCvx | 5.115960 s | 4.020861 s | 1.27x |
+| 2-interval 3DOF recovery | 43.114 ms | 29.679 ms | 1.45x |
+| 2-interval 3DOF complete process | 5.588654 s | 4.405835 s | 1.27x |
+| Displaced 50-interval HCW SCvx, dispatch change only | 64.503 ms | 38.969 ms | 1.66x |
+| Displaced 50-interval HCW complete process | 446.063 ms | 403.257 ms | 1.11x |
+
+The 3DOF comparison used the d36c5c6 library, one warmup and five measured samples;
+all samples retained 300,000 PDHG steps, 100 recovery steps, objective 0.494783333,
+and inner qualification at 1e-8. The HCW comparison isolated dispatch against
+the saved parallel-cones/reductions library: two warmups and seven measured samples,
+with a common 12-outer-step protocol, 882 inner iterations and six accepted steps
+in every sample. Both comparisons passed unchanged trajectory qualification,
+objective-equivalence and CPU/GPU trajectory checks. Raw samples and hashes:
+`parallel-recovery-pd3.json` and `medium-dispatch-hcw-50.json` in `artifacts/performance/`.
+
+With the new dispatch, the full 20-interval 3DOF production probe returned in
+51.351 seconds, instead of hitting the earlier 120-second process limit. It spent
+600,000 PDHG and 100,000 recovery steps, returned the qualified unchanged reference
+trajectory, and still missed the inner tolerance (5.58219e-4 versus 1e-8). It
+accepted no outer steps. This is not evidence that the larger optimization problem
+is solved. Log: `build/performance/native-checks/parallel-medium-production-pd3-20.log`.
+
+The cone and recovery changes passed CUDA memcheck, synccheck and racecheck,
+including mixed SOC/rotated-SOC problems and early recovery success. The cancellation
+regression passed all three tools as well. Native solver, rollback/cancellation,
+allocation, pointer and stream checks pass. Four-family production qualification
+with independent CPU coefficient fingerprints passed after the kernel changes;
+maximum canonical residual 9.56640559e-9, nonlinear residual 2.92768851e-8,
+CPU/GPU trajectory difference zero, coefficient difference 2.75994505e-13.
+Logs are under `build/performance/native-checks/` with `parallel`, `cancelled-report`
+and `medium-dispatch` prefixes.
+
 ## Work still required by the active goal
 
 1. Scale the large-trajectory measurements and tune operator ownership, especially

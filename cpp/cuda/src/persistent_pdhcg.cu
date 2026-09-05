@@ -428,6 +428,16 @@ __device__ double positive_relative_change(const double before, const double aft
     return device_abs(after - before) / fmax(1.0, device_abs(before));
 }
 
+// Cone ranges are disjoint by the validated topology contract. Each owner
+// retains the serial component order; callers synchronize before consuming output.
+__device__ void block_project_cone_blocks(
+    double* values, const DeviceCone* cones, const int count
+) {
+    for (int cone = threadIdx.x; cone < count; cone += blockDim.x) {
+        project_cone_blocks(values, cones + cone, 1);
+    }
+}
+
 __global__ void coefficient_change_kernel(
     DeviceControl* control,
     NumericPointers source,
@@ -1168,7 +1178,8 @@ __global__ void solve_kernel(
     const std::uint64_t pdhg_limit =
         recovery_enabled ? 300'000U : control->iteration_limit;
 
-    for (std::uint64_t iteration = 1; iteration <= pdhg_limit; ++iteration) {
+    std::uint64_t iteration = 1;
+    for (; iteration <= pdhg_limit; ++iteration) {
         if (threadIdx.x == 0 && *cancellation != 0) {
             atomicExch(&cancelled, 1);
             atomicExch(&should_stop, 1);
@@ -1224,13 +1235,11 @@ __global__ void solve_kernel(
                 value / row_step + problem->affine_offset[row];
         }
         __syncthreads();
-        if (threadIdx.x == 0) {
-            project_cone_blocks(
-                problem->cone_scratch,
-                problem->affine_cones,
-                problem->affine_cone_count
-            );
-        }
+        block_project_cone_blocks(
+            problem->cone_scratch,
+            problem->affine_cones,
+            problem->affine_cone_count
+        );
         __syncthreads();
         for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
             const int dual_row = problem->scalar_rows + row;
@@ -1271,13 +1280,11 @@ __global__ void solve_kernel(
             );
         }
         __syncthreads();
-        if (threadIdx.x == 0) {
-            project_cone_blocks(
-                problem->primal,
-                problem->variable_cones,
-                problem->variable_cone_count
-            );
-        }
+        block_project_cone_blocks(
+            problem->primal,
+            problem->variable_cones,
+            problem->variable_cone_count
+        );
         __syncthreads();
         for (int variable = threadIdx.x; variable < problem->variables; variable += blockDim.x) {
             problem->extrapolated_primal[variable] =
@@ -1311,9 +1318,39 @@ __global__ void solve_kernel(
             }
         }
     }
-    if (threadIdx.x == 0 && atomicAdd(&cancelled, 0) != 0) {
-        report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+    if (atomicAdd(&cancelled, 0) != 0) {
+        // Cancellation is sampled before an iteration starts. Refresh the report
+        // for the actual returned point, including work since the last check.
+        evaluate_report(problem, control, report, iteration - 1U);
+        if (threadIdx.x == 0) report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
     }
+}
+
+// All threads participate; only thread zero consumes the returned norm.
+// The caller's following block barrier protects reuse of the shared warp sums.
+__device__ double recovery_squared_norm(const double* values, const int count) {
+    if (count <= 32) {
+        double sum = 0.0;
+        if (threadIdx.x == 0) {
+            for (int i = 0; i < count; ++i) sum += values[i] * values[i];
+        }
+        return sum;
+    }
+    __shared__ double warp_sums[kThreads / 32];
+    double sum = 0.0;
+    for (int i = threadIdx.x; i < count; i += blockDim.x) {
+        sum += values[i] * values[i];
+    }
+    for (int offset = 16; offset > 0; offset >>= 1) {
+        sum += __shfl_down_sync(0xffffffffU, sum, offset);
+    }
+    if ((threadIdx.x & 31) == 0) warp_sums[threadIdx.x / 32] = sum;
+    __syncthreads();
+    sum = 0.0;
+    if (threadIdx.x == 0) {
+        for (int warp = 0; warp < kThreads / 32; ++warp) sum += warp_sums[warp];
+    }
+    return sum;
 }
 
 __device__ void recovery_project_image(
@@ -1344,13 +1381,8 @@ __device__ void recovery_project_image(
          variable += blockDim.x) {
         problem->previous_primal[variable] = problem->gradient[variable];
     }
-    if (threadIdx.x == 0) {
-        double gamma = 0.0;
-        for (int variable = 0; variable < problem->variables; ++variable) {
-            gamma += problem->gradient[variable] * problem->gradient[variable];
-        }
-        problem->recovery_scalars[0] = gamma;
-    }
+    const double gamma = recovery_squared_norm(problem->gradient, problem->variables);
+    if (threadIdx.x == 0) problem->recovery_scalars[0] = gamma;
     __syncthreads();
     for (int iteration = 0; iteration < cgls_iterations; ++iteration) {
         zero_vector(product, rows);
@@ -1364,11 +1396,8 @@ __device__ void recovery_project_image(
             product
         );
         __syncthreads();
+        const double denominator = recovery_squared_norm(product, rows);
         if (threadIdx.x == 0) {
-            double denominator = 0.0;
-            for (int row = 0; row < rows; ++row) {
-                denominator += product[row] * product[row];
-            }
             problem->recovery_scalars[1] =
                 denominator > 1.0e-30
                 ? problem->recovery_scalars[0] / denominator
@@ -1396,12 +1425,8 @@ __device__ void recovery_project_image(
             problem->gradient
         );
         __syncthreads();
+        const double next_gamma = recovery_squared_norm(problem->gradient, problem->variables);
         if (threadIdx.x == 0) {
-            double next_gamma = 0.0;
-            for (int variable = 0; variable < problem->variables; ++variable) {
-                next_gamma +=
-                    problem->gradient[variable] * problem->gradient[variable];
-            }
             problem->recovery_scalars[2] =
                 problem->recovery_scalars[0] > 1.0e-30
                 ? next_gamma / problem->recovery_scalars[0]
@@ -1433,13 +1458,11 @@ __device__ void recovery_project_image(
         );
     }
     __syncthreads();
-    if (threadIdx.x == 0) {
-        project_cone_blocks(
-            problem->primal,
-            problem->variable_cones,
-            problem->variable_cone_count
-        );
-    }
+    block_project_cone_blocks(
+        problem->primal,
+        problem->variable_cones,
+        problem->variable_cone_count
+    );
     __syncthreads();
 }
 
@@ -1488,13 +1511,11 @@ __device__ void recovery_affine_projection(DeviceProblem* problem) {
         problem->average_dual[row] = value;
     }
     __syncthreads();
-    if (threadIdx.x == 0) {
-        project_cone_blocks(
-            problem->cone_scratch,
-            problem->affine_cones,
-            problem->affine_cone_count
-        );
-    }
+    block_project_cone_blocks(
+        problem->cone_scratch,
+        problem->affine_cones,
+        problem->affine_cone_count
+    );
     __syncthreads();
     for (int row = threadIdx.x; row < problem->affine_rows; row += blockDim.x) {
         problem->average_dual[row] =
@@ -2001,14 +2022,8 @@ __device__ bool recovery_reconstruct_dual(
         for (int index = threadIdx.x; index < coefficients; index += blockDim.x) {
             problem->recovery_direction_dual[index] = problem->average_dual[index];
         }
-        if (threadIdx.x == 0) {
-            double gamma = 0.0;
-            for (int index = 0; index < coefficients; ++index) {
-                gamma +=
-                    problem->average_dual[index] * problem->average_dual[index];
-            }
-            problem->recovery_scalars[0] = gamma;
-        }
+        const double gamma = recovery_squared_norm(problem->average_dual, coefficients);
+        if (threadIdx.x == 0) problem->recovery_scalars[0] = gamma;
         __syncthreads();
         for (int iteration = 0; iteration < iterations_per_restart; ++iteration) {
             if ((iteration & 3) == 3
@@ -2020,12 +2035,8 @@ __device__ bool recovery_reconstruct_dual(
                 problem->recovery_direction_dual,
                 problem->gradient
             );
+            const double denominator = recovery_squared_norm(problem->gradient, problem->variables);
             if (threadIdx.x == 0) {
-                double denominator = 0.0;
-                for (int variable = 0; variable < problem->variables; ++variable) {
-                    denominator +=
-                        problem->gradient[variable] * problem->gradient[variable];
-                }
                 problem->recovery_scalars[1] =
                     denominator > 1.0e-30
                     ? problem->recovery_scalars[0] / denominator
@@ -2051,13 +2062,8 @@ __device__ bool recovery_reconstruct_dual(
                 problem->average_primal,
                 problem->average_dual
             );
+            const double next_gamma = recovery_squared_norm(problem->average_dual, coefficients);
             if (threadIdx.x == 0) {
-                double next_gamma = 0.0;
-                for (int index = 0; index < coefficients; ++index) {
-                    next_gamma +=
-                        problem->average_dual[index]
-                        * problem->average_dual[index];
-                }
                 problem->recovery_scalars[2] =
                     problem->recovery_scalars[0] > 1.0e-30
                     ? next_gamma / problem->recovery_scalars[0]
@@ -2191,13 +2197,11 @@ __device__ bool recovery_refine_primal(
         );
     }
     __syncthreads();
-    if (threadIdx.x == 0) {
-        project_cone_blocks(
-            problem->primal,
-            problem->variable_cones,
-            problem->variable_cone_count
-        );
-    }
+    block_project_cone_blocks(
+        problem->primal,
+        problem->variable_cones,
+        problem->variable_cone_count
+    );
     __syncthreads();
     for (int projection = 0; projection < 100; ++projection) {
         if (poll_cancellation(cancellation, shared_flag)) {
@@ -2405,13 +2409,11 @@ __global__ void recovery_kernel(
             );
         }
         __syncthreads();
-        if (threadIdx.x == 0) {
-            project_cone_blocks(
-                problem->primal,
-                problem->variable_cones,
-                problem->variable_cone_count
-            );
-        }
+        block_project_cone_blocks(
+            problem->primal,
+            problem->variable_cones,
+            problem->variable_cone_count
+        );
         __syncthreads();
         recovery_scalar_projection(problem);
         recovery_affine_projection(problem);
@@ -3461,9 +3463,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             result->coefficient_blocks = std::max(1, static_cast<int>(std::min(
                 static_cast<std::uint64_t>(result->cooperative_capacity),
                 (coefficients + kThreads - 1) / kThreads)));
-            // The local sweep favors a single parallel block for short trajectories
-            // and about 128 blocks for the denser, long HCW operator. Tiny QPs retain
-            // the lower-overhead legacy loop. Overrides remain available for tuning.
+            // Local fixed-work sweeps favor the legacy loop below one block of
+            // variables, then cooperative ownership of roughly 256 variables per
+            // block. Dense large operators retain the measured 128-block strategy.
+            // Overrides remain available for other devices and sparsity patterns.
             if (structure->variables >= 128) {
                 const auto nonzeros = structure->quadratic_nonzeros
                     + structure->scalar_nonzeros + structure->affine_nonzeros;
@@ -3474,9 +3477,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
                 result->cooperative_blocks = std::min(result->cooperative_capacity,
                     std::min(properties.multiProcessorCount, target));
                 result->cooperative_scaling_blocks = result->cooperative_blocks;
-                // Small operators benefit from parallel scaling but not from a grid
-                // barrier at every iterative operation. Keep their block-local loop.
-                if (structure->variables < 4096) result->cooperative_blocks = 0;
+                if (structure->variables < kThreads) result->cooperative_blocks = 0;
             }
         }
         if (cuda_status != cudaSuccess) {

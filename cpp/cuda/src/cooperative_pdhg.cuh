@@ -801,7 +801,8 @@ __global__ void cooperative_solve_kernel(
     const std::uint64_t pdhg_limit =
         recovery_enabled ? 300'000U : control->iteration_limit;
 
-    for (std::uint64_t iteration = 1; iteration <= pdhg_limit; ++iteration) {
+    std::uint64_t iteration = 1;
+    for (; iteration <= pdhg_limit; ++iteration) {
         grid_barrier(); // Finish every reader of the preceding stop decision before polling again.
         if (grid_rank() == 0 && *cancellation != 0) {
             atomicExch(&cancelled, 1);
@@ -941,7 +942,8 @@ __global__ void cooperative_solve_kernel(
             }
         }
     }
-    if (grid_rank() == 0 && atomicAdd(&cancelled, 0) != 0) {
-        report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+    if (atomicAdd(&cancelled, 0) != 0) {
+        grid_evaluate_report(problem, control, report, iteration - 1U);
+        if (grid_rank() == 0) report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
     }
 }

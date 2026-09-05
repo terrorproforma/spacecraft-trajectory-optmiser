@@ -162,7 +162,9 @@ void cancellation_case(int blocks, int delay_ms) {
     auto* workspace = test::create_workspace(problem);
     test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "cancellation create wait");
     test::status_require(spacepdhcg_cuda_workspace_set_execution_blocks(workspace, blocks), "cancellation grid");
-    const auto options = test::solve_options(1.0e-12, 100'000'000U);
+    auto options = test::solve_options(1.0e-12, 100'000'000U);
+    // Cancellation must report the final resident point even between scheduled checks.
+    options.residual_check_frequency = 1'000'000U;
     for (int repeat = 0; repeat < 3; ++repeat) {
         test::status_require(spacepdhcg_cuda_workspace_solve_async(
             workspace, &options, problem.exchange.consumer_stream), "cancellation solve");
@@ -178,6 +180,18 @@ void cancellation_case(int blocks, int delay_ms) {
         spacepdhcg_cuda_diagnostics diagnostics{};
         test::status_require(spacepdhcg_cuda_workspace_diagnostics(workspace, &diagnostics), "cancellation report");
         test::require(diagnostics.termination == SPACEPDHCG_CUDA_TERMINATION_CANCELLED, "uniform cancelled result");
+        const auto primal = problem.primal.download(problem.stream);
+        test::require_close(diagnostics.objective,
+            0.5 * primal[0] * primal[0] - 0.25 * primal[0], 1.0e-12,
+            "cancelled objective must describe the returned resident primal");
+        test::status_require(spacepdhcg_cuda_workspace_residuals_async(
+            workspace, problem.exchange.consumer_stream), "cancelled residual recheck");
+        test::status_require(spacepdhcg_cuda_workspace_wait(workspace), "cancelled residual wait");
+        spacepdhcg_cuda_diagnostics fresh{};
+        test::status_require(spacepdhcg_cuda_workspace_diagnostics(workspace, &fresh),
+                             "cancelled residual diagnostics");
+        test::require_close(diagnostics.natural_residual_inf, fresh.natural_residual_inf,
+                            1.0e-12, "cancelled report must describe the current residual");
     }
     test::destroy_workspace(workspace);
 }
@@ -280,6 +294,7 @@ int main(int argc, char** argv) {
         run_case(large, blocks, false);
     }
     for (const int delay : {0, 1, 10}) cancellation_case(8, delay);
+    cancellation_case(0, 10);
     signed_zero_scaling_case();
     for (int blocks : {0, 8, 32}) mixed_variable_cones_case(blocks);
     return 0;

@@ -63,6 +63,9 @@ bool g4_probe_mode = false;
 bool g4_diagnostic_mode = false;
 bool p1d_path_audit_mode = false;
 bool p1d_diagnostic_mode = false;
+bool production_cqp_mode = false;
+std::uint64_t production_cqp_iterations = 0U;
+double production_cqp_deadline = 0.0;
 bool qoco_handback_mode = false;
 bool qoco_unavailable_mode = false;
 bool p1c_qoco_repeatability_mode = false;
@@ -2269,7 +2272,7 @@ IntegrationResult run_resident_sequence(
             test::destroy_workspace(workspace);
             return {};
         }
-        if (p1d_diagnostic_mode) {
+        if (p1d_diagnostic_mode || production_cqp_mode) {
             auto updated = problem.numeric_views();
             test::status_require(
                 spacepdhcg_cuda_workspace_update_async(
@@ -2280,6 +2283,55 @@ IntegrationResult run_resident_sequence(
                 ),
                 "P1-D diagnostic numeric update"
             );
+            if (production_cqp_mode) {
+                auto options = test::solve_options(1.0e-8, production_cqp_iterations);
+                const auto started = std::chrono::steady_clock::now();
+                test::status_require(spacepdhcg_cuda_workspace_solve_async(
+                    workspace, &options, problem.exchange.consumer_stream), "CQP probe launch");
+                std::mutex mutex;
+                std::condition_variable condition;
+                bool finished = false;
+                std::thread watchdog([&] {
+                    std::unique_lock lock(mutex);
+                    if (!condition.wait_for(lock, std::chrono::duration<double>(production_cqp_deadline),
+                                            [&] { return finished; })) {
+                        test::status_require(spacepdhcg_cuda_workspace_cancel(workspace),
+                                             "CQP probe deadline cancellation");
+                    }
+                });
+                const auto status = spacepdhcg_cuda_workspace_wait(workspace);
+                {
+                    std::lock_guard lock(mutex);
+                    finished = true;
+                }
+                condition.notify_one();
+                watchdog.join();
+                test::status_require(status, "CQP probe wait");
+                spacepdhcg_cuda_diagnostics d{};
+                test::status_require(spacepdhcg_cuda_workspace_diagnostics(workspace, &d),
+                                     "CQP probe diagnostics");
+                spacepdhcg_cuda_recovery_profile p{};
+                test::status_require(spacepdhcg_cuda_workspace_recovery_profile(workspace, &p),
+                                     "CQP probe profile");
+                const double wall = std::chrono::duration<double>(
+                    std::chrono::steady_clock::now() - started).count();
+                std::printf("{\"case\":\"production_cqp_probe\",\"intervals\":%zu,"
+                    "\"variables\":%llu,\"termination\":%d,\"requested\":1e-8,"
+                    "\"natural\":%.17g,\"objective\":%.17g,\"wall\":%.9g,"
+                    "\"scaling\":%.9g,\"solve\":%.9g,\"recovery\":%.9g,"
+                    "\"pdhg_iterations\":%llu,\"recovery_iterations\":%llu,"
+                    "\"projection_cycles\":%llu,\"certificate_cycles\":%llu,"
+                    "\"certificate_residual\":%.17g}\n", intervals,
+                    static_cast<unsigned long long>(problem.variables),
+                    static_cast<int>(d.termination), d.natural_residual_inf, d.objective,
+                    wall, d.scaling_seconds, d.solve_seconds, d.recovery_seconds,
+                    static_cast<unsigned long long>(d.iterations),
+                    static_cast<unsigned long long>(d.recovery_iterations),
+                    static_cast<unsigned long long>(p.projection_cycles),
+                    static_cast<unsigned long long>(p.certificate_cycles), p.last_certificate_residual);
+                test::destroy_workspace(workspace);
+                return {};
+            }
             const auto diagnostic = test::solve_and_wait(
                 workspace,
                 problem,
@@ -4042,7 +4094,8 @@ std::vector<double> flatten_controls(const std::vector<Control>& controls) {
 
 IntegrationResult run_hcw() {
     transcription::HcwRendezvousConfig config;
-    config.intervals = h1_intervals > 0U ? h1_intervals : 20U;
+    config.intervals = h1_intervals > 0U ? h1_intervals
+        : g4_intervals > 0U ? g4_intervals : 20U;
     config.step_seconds = 10.0;
     transcription::HcwRendezvousCqp subproblem(config);
     const dynamics::HcwState initial =
@@ -4915,6 +4968,7 @@ int run_invocation(const int argc, char** argv) {
     tight_pd6_mode = mode == "--tight-pd6";
     production_driver_mode =
         mode == "--production-outer"
+        || mode == "--production-cqp"
         || mode == "--production-outer-sanitizer"
         || mode == "--h1-hcw"
         || mode == "--g4-sample"
@@ -5209,6 +5263,23 @@ int run_invocation(const int argc, char** argv) {
         return 0;
     }
     if (production_driver_mode) {
+        if (mode == "--production-cqp") {
+            test::require(argc == 6, "CQP probe needs family, intervals, iterations, deadline seconds");
+            production_cqp_mode = true;
+            g4_intervals = std::stoull(argv[3]);
+            production_cqp_iterations = std::stoull(argv[4]);
+            production_cqp_deadline = std::stod(argv[5]);
+            test::require(g4_intervals > 0U && production_cqp_iterations > 0U
+                && std::isfinite(production_cqp_deadline) && production_cqp_deadline > 0.0,
+                "CQP probe budgets must be positive");
+            const std::string_view family(argv[2]);
+            if (family == "pd3") static_cast<void>(run_pd3());
+            else if (family == "pd6") static_cast<void>(run_pd6());
+            else if (family == "low-thrust") static_cast<void>(run_low_thrust());
+            else if (family == "hcw") static_cast<void>(run_hcw());
+            else test::require(false, "CQP probe family must be hcw, pd3, pd6, or low-thrust");
+            return 0; // Diagnostic completion is not a qualification claim.
+        }
         if (mode == "--production-outer" && (argc == 3 || argc == 4)) {
             // Focused local hill climbs use the same production fixtures and
             // qualification path as the four-family suite.
@@ -5222,7 +5293,12 @@ int run_invocation(const int argc, char** argv) {
             if (family == "pd3") selected = run_pd3();
             else if (family == "pd6") selected = run_pd6();
             else if (family == "low-thrust") selected = run_low_thrust();
-            else test::require(false, "production family must be pd3, pd6, or low-thrust");
+            else if (family == "hcw") {
+                // Longer displaced trajectories need more trust-region steps.
+                // Compare both libraries with the same 12-step protocol and accuracy gate.
+                production_outer_iterations = 12U;
+                selected = run_hcw();
+            } else test::require(false, "production family must be hcw, pd3, pd6, or low-thrust");
             const double nonlinear = std::max({selected.outer.dynamics_defect,
                 selected.outer.path_violation, selected.outer.terminal_residual,
                 selected.outer.virtual_control});
