@@ -1,0 +1,19 @@
+{
+  "cooperative": null,
+  "earth_legs": {},
+  "harvest": {},
+  "label": 200010,
+  "members": 27,
+  "memory_phases": [],
+  "peak_rss_mb": 0.0,
+  "rejected": [
+    {
+      "reason": "worker exception",
+      "traceback": "ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/bundles.py\", line 1418, in _price_in_worker\n    return price_cluster(\n           ^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/bundles.py\", line 763, in price_cluster\n    result = search.run()\n             ^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/search.py\", line 1158, in run\n    substituted = self._substitution_pass(completed, origins)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/search.py\", line 1205, in _substitution_pass\n    step = self._substitute_once(plan, partial, deadline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/search.py\", line 1323, in _substitute_once\n    candidate = self._complete(rebuilt)\n                ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/search.py\", line 1719, in _complete\n    dp_plans = self._schedule_dp(partial)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/search.py\", line 1763, in _schedule_dp\n    tour = plan_collect_tour(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/collectdp.py\", line 614, in plan_collect_tour\n    return solve(max(float(burn_per_hop), 0.0))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/collectdp.py\", line 594, in solve\n    return _solve_collect_dp(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/collectdp.py\", line 733, in _solve_collect_dp\n    frac = fraction(j, l_i, mass)\n           ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/ubuntu/spacepdhcg/gtoc12/src/spacepdhcg/gtoc12/collectdp.py\", line 577, in fraction\n    key = (j, l_i, round(mass))\n                   ^^^^^^^^^^^\nValueError: cannot convert float NaN to integer\n"
+    }
+  ],
+  "repairs": [],
+  "ships": [],
+  "stopped": "crashed: ValueError('cannot convert float NaN to integer')",
+  "wall_seconds": 0.0
+}
