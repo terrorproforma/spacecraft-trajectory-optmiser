@@ -774,3 +774,81 @@ The existing cuDSS factorization race remains open and was not remeasured.
 This optional backend has not replaced the production default. Host control,
 initial structure/KKT assembly, iterative refinement, larger trajectory
 scaling, batching and GPU GTOC12 remain part of the active full goal.
+
+## Combined RHS experiments: no general promotion
+
+Two opt-in experiments move the combined search-direction RHS further onto
+CUDA. `--device-combined-rhs` requires `--device-step-control`. It consumes the
+device centering factor and the existing s-dot-z result, computes mu on CUDA,
+and replaces two Jordan products, the identity shift, negation and correction
+with one cone kernel. The identity shift uses cached SOC offsets, removing its
+quadratic prefix scan. The original cone products and subtraction order remain
+the numerical reference.
+
+`--queued-centering-metadata` additionally pins the existing workspace allocation
+without changing its layout. Sigma's metadata copy is queued, so the host can
+dispatch the next solve without waiting for that copy. No production host code
+reads sigma before a later synchronous result or scope completion. Workspace
+destruction explicitly completes the stream before freeing the pinned storage.
+The existing standalone centering API still returns its scalar synchronously.
+
+The extended standalone test checks the full combined RHS against independent
+long-double Jordan products/inversion with identity NT scaling, as well as the
+old implementation. Real landing and 6DOF tests exercise nonidentity scalings.
+Tests cover empty/mixed cones, large cone sets, direction/iterate preservation,
+canaries, pinned allocation, metadata completion at a stream event, scope
+lifetime, and execution with and without test oracles. Native Ruiz-4, seven
+landing solves and the 20-interval planner pass the step/RHS/eight-metric
+comparisons and independent conversion/KKT/physics checks. All four standalone
+sanitizers and full landing memory/initialization/synchronization checks pass;
+the latter also pass with all test oracles disabled. Memory checks report zero
+leaks. The existing cuDSS factorization race remains open and was not rerun.
+
+The first, synchronous-metadata v26 trial regressed landing SCvx from
+151.187 to 165.627 ms. Its 6DOF SCvx median improved only 1.009x, although its
+solver subphase improved 1.041x. The 463.112 ms optimized landing sample remains
+in the evidence. This trial did not replace v25.
+
+The queued-metadata v27 trial compares against frozen v25 with two warmups and
+seven alternating measured samples per variant, unchanged core and tolerances:
+
+| Case | v25 SCvx | v27 SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 148.964 ms | 157.818 ms | 537.325 → 582.600 ms |
+| 20-interval 6DOF, 1e-6 | 1042.609 ms | 1031.575 ms | 1400.294 → 1421.922 ms |
+| 500-interval 6DOF, 1e-6 | 721.923 ms | 713.041 ms | 1227.712 → 1220.916 ms |
+
+The small solver subphase medians are effectively flat. At 500 intervals the
+solver subphase regresses 252.728 → 258.415 ms despite a 1.012x SCvx improvement.
+These results do **not** establish a reliable general speedup. Frozen v25 remains
+the performance baseline; the new options remain experiments, disabled unless
+explicitly selected. Separate v26/v27 timing batches do not establish the cause
+of either regression.
+
+All paired objectives and physics gates agree, with 28/179/34 inner iterations
+for the three respective cases. Single 100/500-interval qualification probes
+also pass, but are not speedup benchmarks. The full 500-interval planner passes
+all enabled conversion/KKT/RHS/metric comparisons. Its lower iteration count
+than the 20-interval case prevents treating these as monotonic scaling timings.
+
+The v27 landing API trace confirms 483 → 455 synchronous copies,
+460 → 488 asynchronous copies and 5697 → 5585 launches. Stream waits increase
+75 → 76 for pinned workspace destruction; pinned allocations/frees increase
+4 → 5. Device allocations/frees remain 379/299. This is API evidence, not an
+RTX 5090 GPU timeline or proof that fewer calls improve total time.
+
+The 500-interval baseline now spends a median 343.772 ms in QOCO setup versus
+252.728 ms solving. Setup includes both host and GPU work; split that phase
+before attributing its cost to a particular routine. This is the next profiling
+target, rather than continuing to assume iteration scalar calls dominate.
+
+[v26 evidence](../artifacts/performance/qoco-device-combined-rhs-checkpoint.json),
+[v27 evidence](../artifacts/performance/qoco-queued-combined-rhs-checkpoint.json),
+[500-interval matched samples](../artifacts/performance/qoco-queued-combined-rhs-planner-pd6-500.json)
+and [larger qualification probes](../artifacts/performance/qoco-rhs-scaling-probes.json)
+retain regressions, hashes, sanitizer logs and complete representative results.
+Frozen candidates are `/home/angus/build-qoco-gpu-combined-rhs-v26/final/libqoco.so`
+(SHA256 `811e7bd2b198cda88e78caa97f468388651bb875adf9612f5f0c2527e726c7f1`)
+and `/home/angus/build-qoco-gpu-combined-rhs-v27/final/libqoco.so`
+(SHA256 `e99226f73b2f1c1d9f9fb988cc2a0fd24b6e7a4b1e245cb05d4b99c6ccb89e6c`).
+Both were frozen before validation and measurement. The full goal remains active.

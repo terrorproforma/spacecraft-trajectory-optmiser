@@ -59,7 +59,7 @@ __global__ void update_iterates(double* x, double* y, double* s, double* z,
 }
 } // namespace qoco_device_step_control
 
-extern "C" void qoco_gpu_compute_centering(QOCOSolver* solver) {
+static void qoco_gpu_compute_centering_impl(QOCOSolver* solver, bool download) {
     using namespace qoco_device_step_control;
     begin();
     const bool audit = compare_enabled();
@@ -85,9 +85,14 @@ extern "C" void qoco_gpu_compute_centering(QOCOSolver* solver) {
     finish_sigma<<<1, 1>>>(scalar, scalar + 5);
     CUDA_CHECK(cudaGetLastError());
     blas(f->cublasSetPointerMode(handle, mode));
-    CUDA_CHECK(cudaMemcpy(&w->sigma, scalar + 5, sizeof(double), cudaMemcpyDeviceToHost));
+    if (download || audit)
+        CUDA_CHECK(cudaMemcpy(&w->sigma, scalar + 5, sizeof(double), cudaMemcpyDeviceToHost));
     if (audit) compare(w->sigma, reference);
     qoco_gpu_end_reduction_scope();
+}
+
+extern "C" void qoco_gpu_compute_centering(QOCOSolver* solver) {
+    qoco_gpu_compute_centering_impl(solver, true);
 }
 
 extern "C" void qoco_gpu_take_step(QOCOSolver* solver) {

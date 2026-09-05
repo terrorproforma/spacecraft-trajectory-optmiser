@@ -614,3 +614,23 @@ A qualified trace removes 112 synchronous copies, 56 stream waits and 308
 launches. [Evidence and limits](GPU_QOCO_LOCAL_BACKEND.md#gpu-centering-and-fused-iterate-updates)
 include frozen binary hashes and reproduced source. Two scalar metadata returns,
 host control and the known cuDSS factorization race remain; the full goal is active.
+
+## Combined RHS experiments and larger qualification
+
+The optional fused RHS consumes device sigma/mu and cached cone offsets.
+A second option pins the workspace and queues sigma metadata, removing 28
+synchronous copies from the landing API trace. Both versions pass numerical
+oracles, unchanged physics gates and standalone sanitizers; metadata event
+completion and pinned-storage lifetime are tested explicitly.
+
+Neither experiment establishes a reliable general speedup. In the final trial,
+20-interval landing regresses, 20-interval 6DOF SCvx improves about 1%, and a
+matched 500-interval run improves SCvx 1.2% while its solver subphase regresses.
+Frozen v25 remains the performance baseline; new options are opt-in experiments.
+[Full results and limits](GPU_QOCO_LOCAL_BACKEND.md#combined-rhs-experiments-no-general-promotion)
+retain both candidates, regression samples and 100/500-interval qualification.
+
+The 500-interval case passes independent conversion/KKT/RHS/metric comparisons
+with the same 34 inner iterations. Its baseline QOCO setup median is 344 ms,
+larger than the 253 ms solve. Split setup into measured stages next; the whole
+GPU-native goal and existing cuDSS race remain open.

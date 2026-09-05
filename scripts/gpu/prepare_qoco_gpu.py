@@ -18,7 +18,9 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
-def patch_device_step_control(destination: Path, extension: Path) -> None:
+def patch_device_step_control(
+    destination: Path, extension: Path, combined: bool = False
+) -> None:
     """Queue cone step consumers while preserving the reference centering oracle."""
     for name, directory in (("qoco_device_step_cones.cuh", "src"),
                             ("qoco_device_step_control.cuh", "algebra/cuda")):
@@ -44,6 +46,19 @@ void compute_centering(QOCOSolver* solver) { qoco_gpu_compute_centering(solver);
     text = text[:start] + "  qoco_gpu_take_step(solver);\n" + text[end:]
     before = "void predictor_corrector(QOCOSolver* solver)"
     text = text.replace(before, "void qoco_gpu_take_step(QOCOSolver* solver);\n\n" + before)
+    if combined:
+        for name, directory in (("qoco_device_combined_cones.cuh", "src"),
+                                ("qoco_device_combined_rhs.cuh", "algebra/cuda")):
+            shutil.copyfile(extension.with_name(name), destination / directory / name)
+        cone = destination / "src/cone.cu"
+        cone.write_text(cone.read_text() + '\n#include "qoco_device_combined_cones.cuh"\n')
+        before = ("  // Compute centering parameter.\n  compute_centering(solver);\n\n"
+                  "  // Construct rhs for combined direction.\n  construct_kkt_comb_rhs(work);")
+        if text.count(before) != 1:
+            raise RuntimeError("unexpected predictor centering/RHS sequence")
+        text = text.replace(before, "  qoco_gpu_center_and_combine(solver);")
+        before = "void qoco_gpu_take_step(QOCOSolver* solver);"
+        text = text.replace(before, before + "\nvoid qoco_gpu_center_and_combine(QOCOSolver*);")
     path.write_text(text)
 
 
@@ -247,6 +262,10 @@ def main() -> None:
     )
     parser.add_argument("--device-step-control", action="store_true",
                         help="queue GPU centering and fused iterate updates")
+    parser.add_argument("--device-combined-rhs", action="store_true",
+                        help="fuse combined cone correction using device centering scalars")
+    parser.add_argument("--queued-centering-metadata", action="store_true",
+                        help="pin the workspace and queue the sigma metadata download")
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
@@ -261,6 +280,8 @@ def main() -> None:
         or args.batched_stopping
         or args.batched_iteration_scalars
         or args.device_step_control
+        or args.device_combined_rhs
+        or args.queued_centering_metadata
     ):
         parser.error("--unmodified cannot be combined with backend changes")
     if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
@@ -281,6 +302,10 @@ def main() -> None:
         parser.error("--batched-iteration-scalars requires --batched-stopping")
     if args.device_step_control and not args.batched_stopping:
         parser.error("--device-step-control requires --batched-stopping")
+    if args.device_combined_rhs and not args.device_step_control:
+        parser.error("--device-combined-rhs requires --device-step-control")
+    if args.queued_centering_metadata and not args.device_combined_rhs:
+        parser.error("--queued-centering-metadata requires --device-combined-rhs")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -528,7 +553,25 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         modified += '\n#include "qoco_batched_stopping.cuh"\n'
     if args.device_step_control:
         modified += '\n#include "qoco_device_step_control.cuh"\n'
-        patch_device_step_control(destination, extension)
+        patch_device_step_control(destination, extension, args.device_combined_rhs)
+    if args.device_combined_rhs:
+        if args.queued_centering_metadata:
+            modified += '\n#define SPACEPDHCG_QOCO_QUEUED_CENTERING_METADATA 1\n'
+            api_path = destination / "src/qoco_api.c"
+            api = api_path.read_text()
+            for before, after in (
+                ("solver->work = qoco_malloc(sizeof(QOCOWorkspace));",
+                 "solver->work = qoco_gpu_allocate_workspace(sizeof(QOCOWorkspace));"),
+                ("qoco_free(solver->work);", "qoco_gpu_free_workspace(solver->work);"),
+            ):
+                if api.count(before) != 1:
+                    raise RuntimeError("unexpected workspace lifetime site")
+                api = api.replace(before, after)
+            before = "QOCOInt qoco_setup("
+            api = api.replace(before, "void* qoco_gpu_allocate_workspace(size_t);\n"
+                              "void qoco_gpu_free_workspace(void*);\n\n" + before)
+            api_path.write_text(api)
+        modified += '\n#include "qoco_device_combined_rhs.cuh"\n'
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -574,6 +617,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "batched_stopping": args.batched_stopping,
         "batched_iteration_scalars": args.batched_iteration_scalars,
         "device_step_control": args.device_step_control,
+        "device_combined_rhs": args.device_combined_rhs,
+        "queued_centering_metadata": args.queued_centering_metadata,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -596,12 +641,14 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["include/qoco_linalg.h"] if args.values_only_updates else []),
             *(["src/qoco_api.c"]
               if args.values_only_updates or args.device_numeric_updates
-              or args.batched_iteration_scalars else []),
+              or args.batched_iteration_scalars or args.queued_centering_metadata else []),
             *(["algebra/cuda/qoco_device_update.cuh"] if args.device_numeric_updates else []),
             *(["algebra/cuda/qoco_device_scalar.cuh"] if args.device_scalar_reductions else []),
             *(["algebra/cuda/qoco_batched_stopping.cuh"] if args.batched_stopping else []),
             *(["src/kkt.c", "src/qoco_device_step_cones.cuh",
                "algebra/cuda/qoco_device_step_control.cuh"] if args.device_step_control else []),
+            *(["src/qoco_device_combined_cones.cuh", "algebra/cuda/qoco_device_combined_rhs.cuh"]
+              if args.device_combined_rhs else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
