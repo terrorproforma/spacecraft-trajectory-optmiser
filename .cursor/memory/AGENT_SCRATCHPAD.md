@@ -639,3 +639,24 @@ the bullets already present above are not repeated).
   `git status --porcelain` with *Windows* git before planning the final `git pull --ff-only`, fold the
   notes into main first, and never touch that tree with `checkout -- .` / `clean`.
 - The live scratchpad is ~600 lines after two folds - roll it over at the next quiet point (archive-first).
+
+### 2026-09-05 22:20 AEST - Fourth release merge landed (pushed refs, Windows checkout, live viewer)
+
+- Pushed as fast-forwards from PowerShell after a bundle round-trip: `main` and
+  `release/single-gpu-v1-merge` 2aecc65 -> 05d972f, `feat/gtoc12-asteroid-mining` b55eb70 -> dfdeca8f,
+  `h100/gtoc12-asteroid-mining` 48e5fb7 -> c2730b1; `ls-remote` confirmed from both sides.
+- `[user]` The Windows checkout was described as clean, but another worker had written memory notes into
+  it. Resolution that respects "never `checkout -- .` / `clean`": fold the notes into main first
+  (ed71737), copy the files to `%LOCALAPPDATA%\Temp\spacepdhcg-tmp\win-checkout-backup-<ts>\`, then
+  `git stash push -- <exact files>` (recoverable, stash@{0}) and `git pull --ff-only`. Report the
+  deviation. Rule: re-run Windows `git status --porcelain` immediately before the pull; a stash of the
+  named files is the only working-tree touch allowed, and it is never popped over folded content.
+- `[tool]` Windows autocrlf turns the force-added `results/lambda-h100` files into CRLF copies on
+  checkout (592 "differing" files, 0 after CR stripping); compare evidence trees CR-stripped, never
+  byte-wise, before deciding anything changed.
+- `[tool]` The viewer-live importer accepts absolute Windows paths for every input; staging the WSL
+  export/catalogue/Result.txt/fleet.json under `%LOCALAPPDATA%\Temp\viewer23\inputs\` avoids both UNC
+  quirks and the Windows checkout's CRLF copy of `Result.txt` (whose hash would not match the export).
+- Live viewer: `data/gtoc12.bak-h100v3-22ships` holds the previous 22-ship dataset; `data/gtoc12` is
+  `fleet_master_v10` (23 ships, fleet sha `b9b3b6ba…aa62`); `browser-check.cjs` rc 0 with 23 distinct
+  colours; screenshots in `C:\Users\Angus\AppData\Local\Temp\viewer23\`.

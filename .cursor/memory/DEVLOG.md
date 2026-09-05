@@ -473,3 +473,37 @@ branch's merged from `main`). Carried forward: GTOC12 best verified fleet and th
 - Off main: `feat/gtoc12-asteroid-mining` beyond dfdeca8f (v11 worker, if started); H100 G4 claim core
   (running); sm_90 confirmation of the v2 fixes; `perf/g4-batched-campaign`; raw Lambda artefacts per
   INDEX.json; sdist include list (web/ + `tests/__pycache__`).
+
+## 2026-09-05 22:20 AEST - Fourth release merge landed: pushed refs, Windows checkout on 05d972f, live viewer on fleet_master_v10 (23 ships)
+
+- Landing: `main` fast-forwarded in `/home/angus/worktrees/spacepdhcg-main` 2aecc65 -> 05d972f (16 commits, first
+  parents fd7ef6d / ed71737 / f4028b3 / 05d972f); bundle `release-merge-4-05d972f1.bundle` (6.9 MB, sha256
+  `f10130a9…6a9a` identical in `/home/angus/bundles/` and on the Windows desktop) fetched by Windows git into
+  `refs/integ4/*` (left in place, refs only), fast-forwardness of every target checked with
+  `merge-base --is-ancestor`, then pushed from PowerShell: `main` 2aecc65 -> 05d972f,
+  `release/single-gpu-v1-merge` 2aecc65 -> 05d972f, `feat/gtoc12-asteroid-mining` b55eb70 -> dfdeca8f (the tip
+  merged; the branch had not moved, its worktree carried 5 uncommitted v11 files at bundle time),
+  `h100/gtoc12-asteroid-mining` 48e5fb7 -> c2730b1. `git ls-remote` from Windows and from WSL both show the four
+  refs at those SHAs.
+- Windows checkout (`C:\Users\Angus\Desktop\projects\spacecraft-trajectory-optmiser`): it was *not* clean - the
+  tenth-iteration worker had written the 21:40 notes into `.cursor/memory/{AGENT_SCRATCHPAD,DEVLOG}.md`
+  (+42/-8 lines, unchanged since the fold). Those two files were copied to
+  `%LOCALAPPDATA%\Temp\spacepdhcg-tmp\win-checkout-backup-20260905-220632\.cursor\memory\` and then saved
+  with `git stash push -- <the two files>` (stash@{0}, message names the fold commit ed71737 and the backup);
+  no `checkout -- .`, no `clean`. `git pull --ff-only origin main` -> 05d972f, `git status --porcelain` empty,
+  `_upstream/` and `traj-key.pem` present. The stash is not popped: its content is on main (ed71737).
+- Live viewer (`C:\Users\Angus\Desktop\projects\viewer-live`, node pid 47428 on :4173, `Cache-Control:
+  no-store`): `data/gtoc12` (22 ships, `fleet_master_h100_v3_fleet`, fleet sha `f7c53c1e…aa6e`) copied to
+  `data/gtoc12.bak-h100v3-22ships`; inputs staged in `%LOCALAPPDATA%\Temp\viewer23\inputs\` from the WSL
+  release worktree (export `trajectories.json` 10,557,185 B + `manifest.json`, catalogue sha `99a42cc3…c46675`,
+  `Result.txt` sha `3c052997…1b3e`, `fleet.json`); `node scripts/import-gtoc12.mjs ... --output data/gtoc12`:
+  23 ships, 196 asteroids, 11,681 exact replay samples, 14,044.8 kg, fleet sha `b9b3b6ba…aa62`, Kepler max
+  3.59e-6 km; `node scripts/check.mjs` rc 0 (palette 40 colours; validated `fleet_master_v10`);
+  `Invoke-WebRequest http://127.0.0.1:4173/data/gtoc12/fleet.json` -> 200, 2,162,208 bytes, 23 ships,
+  run_id `fleet_master_v10`; `browser-check.cjs` (Playwright from `reducers-vc-stuff\website-v2`, Chromium
+  151.0.7922.34, WebGL2) rc 0, 0 errors, 23 distinct colours, dense layout + no-overflow at 1440x900 and
+  1920x1080, followed ship 23; artefacts in `C:\Users\Angus\AppData\Local\Temp\viewer23\`, opening view
+  `C:\Users\Angus\AppData\Local\Temp\viewer23\gtoc12-3d-oblique-fleet.png`.
+- Off main: `feat/gtoc12-asteroid-mining` beyond dfdeca8f (v11 worker, uncommitted at bundle time); H100 G4
+  claim core (running); sm_90 confirmation of the v2 fixes; `perf/g4-batched-campaign`; raw Lambda artefacts
+  per INDEX.json.
