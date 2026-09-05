@@ -41,10 +41,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 from . import constants as C
+from .chainprior import load_chain_prior
 from .clusters import ClusterBands, ComovingClusters
 from .cooperative import EPOCH_TOLERANCE_DAYS, FleetColumn, MinerPool
 from .data import AsteroidCatalogue
 from .earthleg import EarthLegBounds, EarthLegModel, refine_leg_scvx
+from .jointopt import JointSettings, optimise_ship
 from .low_thrust import ScvxSettings
 from .memory import PhaseMemory, bound_heap_growth, release_heap
 from .memory import peak_rss_mb as _peak_rss_mb
@@ -62,10 +64,97 @@ from .retiming import (
     plan_value,
     visits_of,
 )
+from .returnsweep import return_leg_of, sweep_grid, sweep_return
 from .screening import propellant_for_delta_v, screen_earth_to_asteroids, thrust_authority_km_s
 from .search import EARTH_ID, EarthLeg, PlannedLeg, RoutePlan, RouteSearch, SearchSettings
 
 IntArray = NDArray[np.int64]
+
+
+def sweep_route_return(
+    route: RefinedRoute,
+    catalogue: AsteroidCatalogue,
+    settings: ClusterPricingSettings,
+    retimer: Retimer,
+    search: RouteSearch,
+    *,
+    scvx: ScvxSettings | None,
+    cache: dict[tuple[int, float, float], tuple[bool, float]],
+    time_budget_seconds: float,
+) -> dict[str, Any] | None:
+    """Sweep a certified route's Earth return with SCvx and hand the certified cells to the
+    re-timer and the slot's collect DP table (strict certified-cell pricing).
+
+    The grid is ``return_sweep_back_steps`` / ``return_sweep_forward_steps`` re-timer lattice
+    steps around the route's return departure x ``return_sweep_tofs``, flown at the route's
+    certified return-departure mass, nearest cells first within ``time_budget_seconds``.
+    Returns the report entry (``None`` when the route has no return or no cell fits the window).
+    """
+
+    plan = route.plan
+    leg = return_leg_of(plan)
+    if leg is None:
+        return None
+    step = settings.retime_step_days
+    # the re-timer prices cells on its own lattice: TOFs off the step are snapped onto it
+    tofs = tuple(sorted({float(step * round(float(t) / step)) for t in settings.return_sweep_tofs}))
+    grid = sweep_grid(
+        plan,
+        step_days=step,
+        back_steps=settings.return_sweep_back_steps,
+        forward_steps=settings.return_sweep_forward_steps,
+        tofs=tofs,
+        end_margin_days=retimer.settings.end_margin_days,
+    )
+    if grid is None or grid[0].shape[0] == 0:
+        return None
+    mass = next(
+        (
+            float(refined.mass_before)
+            for refined in route.legs
+            if refined.planned.role == "earth_return"
+        ),
+        float(plan.final_mass_proxy_kg + plan.propellant_proxy_kg),
+    )
+    sweep = sweep_return(
+        catalogue,
+        int(leg.from_id),
+        mass,
+        grid[0],
+        grid[1],
+        scvx=scvx,
+        end_margin_days=retimer.settings.end_margin_days,
+        cache=cache,
+        time_budget_seconds=time_budget_seconds,
+        nearest_to=(leg.departure_epoch, leg.tof_days),
+    )
+    flown_return = next(
+        (
+            float(refined.solution.propellant_kg)
+            for refined in route.legs
+            if refined.planned.role == "earth_return" and refined.solution is not None
+        ),
+        float("nan"),
+    )
+    report: dict[str, Any] = {
+        "asteroid": int(leg.from_id),
+        "mass_kg": mass,
+        "cells": int(sweep.attempted.sum()),
+        "certified": int(sweep.certified.sum()),
+        "solves": sweep.solves,
+        "wall_seconds": sweep.wall_seconds,
+        "flown_return_kg": flown_return,
+        "cheapest_certified_kg": (
+            float(np.min(sweep.propellant_kg)) if np.any(sweep.certified) else float("nan")
+        ),
+    }
+    if np.any(sweep.certified):
+        retimer.set_return_sweep(sweep)
+        if search.collect_dp_used:
+            search.collect_table.set_return_sweep(sweep)
+        i, j = np.unravel_index(int(np.argmin(sweep.propellant_kg)), sweep.propellant_kg.shape)
+        report["cheapest_cell"] = [float(sweep.departures[i]), float(sweep.tofs[j])]
+    return report
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +183,30 @@ class ClusterPricingSettings:
     collect_dp_propellant_weight: float = 1.0
     collect_dp_step_days: float = 15.0
     collect_dp_inflation_fit: str = ""  # hopcalib fit JSON for the DP pair table ("" = flat)
+    # harvest substitution in the beam (SearchSettings.harvest_substitution): the dearest collect
+    # hops of the best chains are attacked by swapping a deploy for a neighbour that is cheaper
+    # to harvest, re-flying the chain and re-solving the tour
+    harvest_substitution: bool = True
+    substitution_budget_seconds: float = 180.0
+    # chain-level objective in the beam (SearchSettings.chain_tour_scoring, ninth iteration):
+    # the best ``chain_tour_candidates`` partials of every level are re-scored by deploy
+    # propellant + their actual Held-Karp collect tour
+    chain_tour_scoring: bool = False
+    chain_tour_candidates: int = 48
+    chain_tour_min_deploys: int = 3
+    # reference-chain prior (chainprior.py): path of the extracted prior JSON ("" = off) and
+    # the kg of beam score per kg of deviation from the reference manifold
+    chain_prior_path: str = ""
+    chain_prior_weight: float = 0.5
+    # master LP duals handed to the family (per-asteroid prices, kg); scaled by this weight
+    # before the beam subtracts them (1.0 = the exact column-generation reduced cost)
+    dual_price_weight: float = 1.0
+    # whole-itinerary joint re-optimisation (jointopt.optimise_ship) of every emitted ship
+    # inside the pricing, with SCvx in the loop; insertion of a further asteroid is off (the
+    # eighth iteration found no feasible insertion on 32 ships)
+    joint_itinerary: bool = False
+    joint_budget_seconds: float = 150.0
+    joint_insert: bool = False
     # Lambert prescreen of Earth legs: legs above this authority ratio are not sent to SCvx
     # (the certified Earth legs of the archive all fly below 0.62; the 350-400 d legs at
     # 0.75-0.93 that the ranking used to try first never certified and cost 12 checks per slot)
@@ -118,6 +231,18 @@ class ClusterPricingSettings:
     # harder here than the 0.45 that was calibrated on the inner, eccentric region.
     hop_authority_ratio: float = 0.55
     retime_step_days: float = 15.0
+    # Earth-return sweep before the joint re-timing (``returnsweep.sweep_return``): the
+    # certified route's return is flown with SCvx on a compact (departure, TOF) grid around it,
+    # nearest cells first inside ``return_sweep_budget_seconds``, and the certified cells are
+    # handed to the re-timer and to the slot's collect DP table (strict certified-cell pricing:
+    # the return may be re-timed onto a swept cell and nowhere else).  This is how the archived
+    # ships gained their long, cheap returns (return_sweep_v1: -63 kg of return propellant
+    # median); doing it inside the slot lets the re-timing end the tour early and return long.
+    return_sweep: bool = True
+    return_sweep_back_steps: int = 4
+    return_sweep_forward_steps: int = 4
+    return_sweep_tofs: tuple[float, ...] = (420.0, 465.0, 510.0, 555.0, 600.0)
+    return_sweep_budget_seconds: float = 240.0
     time_budget_seconds: float = float("inf")  # per cluster
     seed: int = 0
     # beam grids (tests use coarse ones); ``None`` keeps the SearchSettings defaults
@@ -160,6 +285,12 @@ def cluster_search_settings(settings: ClusterPricingSettings, members: int) -> S
         collect_dp_propellant_weight=settings.collect_dp_propellant_weight,
         collect_dp_step_days=settings.collect_dp_step_days,
         collect_dp_inflation_fit=settings.collect_dp_inflation_fit,
+        harvest_substitution=settings.harvest_substitution,
+        substitution_budget_seconds=settings.substitution_budget_seconds,
+        chain_tour_scoring=settings.chain_tour_scoring,
+        chain_tour_candidates=settings.chain_tour_candidates,
+        chain_tour_min_deploys=settings.chain_tour_min_deploys,
+        chain_prior_weight=settings.chain_prior_weight if settings.chain_prior_path else 0.0,
         **grids,
     )
 
@@ -353,6 +484,8 @@ class ClusterBundle:
     peak_rss_mb: float = 0.0
     memory_phases: list[dict[str, Any]] = field(default_factory=list)  # PhaseMemory records
     stopped: str = ""
+    # master LP duals (kg) of the family's members at dispatch time (dual feedback telemetry)
+    asteroid_prices: dict[int, float] = field(default_factory=dict)
 
     @property
     def routes(self) -> list[RefinedRoute]:
@@ -433,6 +566,11 @@ class ClusterBundle:
             "peak_rss_mb": self.peak_rss_mb,
             "memory_phases": self.memory_phases,
             "stopped": self.stopped,
+            "asteroid_prices": {
+                "priced_members": len(self.asteroid_prices),
+                "max_kg": max(self.asteroid_prices.values(), default=0.0),
+                "sum_kg": sum(self.asteroid_prices.values()),
+            },
         }
 
 
@@ -564,11 +702,16 @@ def price_cluster(
     earth_cache: dict[tuple[int, float, float], EarthLeg | None] | None = None,
     certify_earth=None,
     refine=None,
+    asteroid_prices: dict[int, float] | None = None,
+    joint_optimise=None,
 ) -> ClusterBundle:
     """Price one co-moving family: deployer + collector itineraries, all SCvx-certified.
 
     ``certify_earth`` and ``refine`` are injection points for tests (proxy-trusting stand-ins for
-    the SCvx single-leg check and :func:`refine_route`).
+    the SCvx single-leg check and :func:`refine_route`); ``joint_optimise`` replaces
+    :func:`jointopt.optimise_ship`.  ``asteroid_prices`` are the master LP's per-asteroid duals
+    (kg) at the time the family was dispatched; the beam subtracts them
+    (``dual_price_weight``-scaled) from every chain so the family prices conflict-free ships.
     """
 
     started = time.perf_counter()
@@ -578,6 +721,13 @@ def price_cluster(
     used: set[int] = set(excluded or ())
     pool = MinerPool()
     bundle = ClusterBundle(label, tuple(int(a) for a in members), [])
+    prices = {
+        int(a): settings.dual_price_weight * float(p)
+        for a, p in (asteroid_prices or {}).items()
+        if settings.dual_price_weight * float(p) > 0.0
+    }
+    bundle.asteroid_prices = {a: p for a, p in prices.items() if a in set(members.tolist())}
+    prior = load_chain_prior(settings.chain_prior_path) if settings.chain_prior_path else None
     earth_cache = {} if earth_cache is None else earth_cache
     earth_scvx_cache: dict[tuple[int, float, float], EarthLeg | None] = {}
     search_settings = cluster_search_settings(settings, members.shape[0])
@@ -593,6 +743,8 @@ def price_cluster(
     # legs SCvx refused anywhere in this family: shared by every ship slot's beam
     banned_pairs: set[tuple[int, int]] = set()
     banned_earth: set[tuple[int, float, float]] = set()
+    # SCvx return cells flown in this family (asteroid, departure, TOF) -> (certified, ΔV)
+    return_sweep_cache: dict[tuple[int, float, float], tuple[bool, float]] = {}
 
     def remaining_budget() -> float:
         return settings.time_budget_seconds - (time.perf_counter() - started)
@@ -640,6 +792,8 @@ def price_cluster(
             weights=weights,
             seeds=pool.orphans(),
             first_level=legs,
+            asteroid_prices=prices,
+            chain_prior=prior,
         )
         search.banned_pairs = banned_pairs
         search.banned_earth = banned_earth
@@ -665,6 +819,9 @@ def price_cluster(
                     "banned_pairs": len(banned_pairs),
                     "banned_earth": len(banned_earth),
                     "collect_dp": dict(search.collect_dp_stats),
+                    "substitution": dict(search.substitution_stats),
+                    "chain_tour": dict(search.chain_tour_stats),
+                    "priced_asteroids": len(search.asteroid_prices),
                     "collect_table_pairs": (
                         search.collect_table.cached_pairs if search.collect_dp_used else 0
                     ),
@@ -727,6 +884,22 @@ def price_cluster(
         calibrate_from_route(retimer, refined)
         if settings.earth_leg_continuous:
             retimer.protect_earth_leg(refined.plan)
+        if settings.return_sweep and remaining_budget() > 60.0:
+            sweep_report = sweep_route_return(
+                refined,
+                catalogue,
+                settings,
+                retimer,
+                search,
+                scvx=scvx,
+                cache=return_sweep_cache,
+                time_budget_seconds=min(
+                    settings.return_sweep_budget_seconds, max(remaining_budget() - 60.0, 1.0)
+                ),
+            )
+            if sweep_report is not None:
+                ship_report["return_sweep"] = sweep_report
+            memory.mark(f"slot {slot} return sweep")
         improvement = improve_and_certify(
             refined.plan,
             search,
@@ -765,6 +938,52 @@ def price_cluster(
                         "failures": record["refined"].get("failures", [])[:2],
                     }
                 )
+        # whole-itinerary joint re-optimisation of the emitted ship (every epoch of the
+        # timeline as one decision vector, SCvx in the loop): stand-alone ships only - a
+        # collector's collect epochs are tied to the deployer's miners
+        if (
+            settings.joint_itinerary
+            and best.plan.self_cleaning
+            and not best.plan.foreign_deploy_epochs
+            and remaining_budget() > 60.0
+        ):
+            taken = used | pool.touched()
+
+            def run_joint(route, rt, budget, taken=taken):
+                if joint_optimise is not None:
+                    return joint_optimise(route, rt, budget)
+                return optimise_ship(
+                    route,
+                    catalogue,
+                    rt,
+                    weights=weights,
+                    scvx=scvx,
+                    settings=JointSettings(
+                        time_budget_seconds=budget, insert=settings.joint_insert
+                    ),
+                    search_settings=search_settings,
+                    excluded=taken,
+                    refine=refine,
+                )
+
+            joint_result = run_joint(
+                best,
+                retimer,
+                min(settings.joint_budget_seconds, max(remaining_budget() - 60.0, 1.0)),
+            )
+            ship_report["joint_itinerary"] = {
+                k: v
+                for k, v in joint_result.summary().items()
+                if k not in ("legs_before", "legs_after", "attempts")
+            } | {"attempts": len(joint_result.attempts)}
+            if joint_result.route is not None and joint_result.route.certified:
+                variants.append(joint_result.route)
+                if (
+                    plan_value(joint_result.route.plan, retimer)
+                    > plan_value(best.plan, retimer) + 1e-9
+                ):
+                    best = joint_result.route
+            memory.mark(f"slot {slot} joint itinerary")
         pool.register(best.plan, slot)
         used |= set(best.plan.asteroids)
         bundle.ships.append(BundleShip(slot, best, variants, ship_report))
@@ -1221,8 +1440,10 @@ def rank_families(
 _WORKER: dict[str, Any] = {}
 
 
-def _price_in_worker(task: tuple[int, list[int]]) -> ClusterBundle:
-    label, members = task
+def _price_in_worker(task: tuple[int, list[int]] | tuple[int, list[int], dict]) -> ClusterBundle:
+    label, members = task[0], task[1]
+    # per-asteroid master prices captured when the family was dispatched (dual feedback)
+    prices: dict[int, float] | None = task[2] if len(task) > 2 else None  # type: ignore[misc]
     state = _WORKER
     if "catalogue" not in state:  # spawned (not forked) worker: load lazily
         from .data import load_catalogue
@@ -1240,6 +1461,7 @@ def _price_in_worker(task: tuple[int, list[int]]) -> ClusterBundle:
             weights=state.get("weights"),
             settings=state.get("settings"),
             scvx=state.get("scvx"),
+            asteroid_prices=prices,
         )
     except Exception as error:  # one family's crash must not end the campaign
         import traceback
@@ -1263,12 +1485,16 @@ def price_clusters(
     workers: int = 2,
     on_result=None,
     budget_seconds: float = float("inf"),
+    prices=None,
 ):
     """Price many families in forked worker processes (``workers`` at a time).
 
     Results are delivered to ``on_result(bundle)`` as they complete and returned in cluster
     order.  A worker's memory is bounded by one family's pricing (the per-family search,
-    re-timer and SCvx objects are released when the task returns).
+    re-timer and SCvx objects are released when the task returns).  ``prices`` is an optional
+    callable returning the current per-asteroid master prices (kg); it is evaluated when a
+    family is *dispatched*, so the duals of the last master solve steer every family that
+    starts after it (column generation across the campaign).
     """
 
     started = time.perf_counter()
@@ -1277,12 +1503,19 @@ def price_clusters(
         catalogue=catalogue, excluded=excluded, weights=weights, settings=settings, scvx=scvx
     )
     tasks = [(int(label), [int(a) for a in members]) for label, members in clusters]
+
+    def dispatch(task: tuple[int, list[int]]) -> tuple:
+        if prices is None:
+            return task
+        current = prices() or {}
+        return (task[0], task[1], {int(a): float(p) for a, p in current.items()})
+
     results: dict[int, ClusterBundle] = {}
     if workers <= 1:
         for task in tasks:
             if time.perf_counter() - started > budget_seconds:
                 break
-            bundle = _price_in_worker(task)
+            bundle = _price_in_worker(dispatch(task))
             results[task[0]] = bundle
             if on_result is not None:
                 on_result(bundle)
@@ -1301,7 +1534,7 @@ def price_clusters(
                 queue and len(running) < workers and time.perf_counter() - started <= budget_seconds
             ):
                 task = queue.pop(0)
-                running[executor.submit(_price_in_worker, task)] = task[0]
+                running[executor.submit(_price_in_worker, dispatch(task))] = task[0]
             if not running:
                 break
             done, _ = concurrent.futures.wait(

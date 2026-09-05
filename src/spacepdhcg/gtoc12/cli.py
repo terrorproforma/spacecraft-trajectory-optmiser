@@ -595,6 +595,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     fleets the budget report refers to).  The final fleet is written to ``fleet/Result.txt``.
     """
 
+    from .archive import pricing_columns
     from .bundles import (
         ClusterPricingSettings,
         bundle_columns,
@@ -604,8 +605,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         price_clusters,
         rank_families,
     )
+    from .chainprior import load_chain_prior
     from .clusters import ClusterBands
-    from .cooperative import FleetColumn, solve_fleet_master
+    from .cooperative import FleetColumn, lp_asteroid_prices, solve_fleet_master
     from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .low_thrust import ScvxSettings
@@ -669,7 +671,20 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         collect_dp_step_days=args.collect_dp_step_days,
         collect_dp_inflation_fit=args.collect_dp_inflation_fit or "",
         earth_prescreen_ratio=args.earth_prescreen_ratio,
+        harvest_substitution=not args.no_harvest_substitution,
+        substitution_budget_seconds=args.substitution_budget_seconds,
+        return_sweep=not args.no_return_sweep,
+        return_sweep_budget_seconds=args.return_sweep_budget_seconds,
+        chain_tour_scoring=args.chain_tour_scoring,
+        chain_tour_candidates=args.chain_tour_candidates,
+        chain_prior_path=args.chain_prior or "",
+        chain_prior_weight=args.chain_prior_weight,
+        dual_price_weight=args.dual_price_weight,
+        joint_itinerary=args.joint_itinerary,
+        joint_budget_seconds=args.joint_budget_seconds,
     )
+    if settings.chain_prior_path:
+        load_chain_prior(settings.chain_prior_path)  # fail early on a bad path
     scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -751,6 +766,47 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         columns.extend(bundle_columns(bundle, len(columns)))
 
     previous: list[FleetColumn] = []
+    # dual feedback: per-asteroid prices of the last master LP, read by ``price_clusters`` when
+    # it dispatches the next family (column generation across the campaign).  The families of
+    # one campaign are disjoint, so prices only bite when the LP also holds the *archive's*
+    # columns (``--dual-archive``: every earlier run's certified routes, pricing-only, no
+    # re-certification): the asteroids the archive-wide fleet already uses are what a new
+    # family must price around.
+    current_prices: dict[int, float] = {}
+    report["dual_prices"] = []
+    archive_columns: list[FleetColumn] = []
+    if not args.no_lp_duals and args.dual_archive:
+        archive_columns = pricing_columns([Path(p) for p in args.dual_archive])
+    report["dual_archive"] = {
+        "sources": list(args.dual_archive or []),
+        "columns": len(archive_columns),
+        "target_size": args.dual_target_size or None,
+    }
+
+    def reprice(master_ships: int) -> None:
+        if args.no_lp_duals:
+            return
+        # price at the requested size when its LP is feasible (which asteroids stand between
+        # the archive and that many ships), else at N* + 1, else at the largest feasible size
+        target = args.dual_target_size or (master_ships + 1)
+        priced = lp_asteroid_prices(
+            archive_columns + columns,
+            weights=weights,
+            max_ships=args.max_ships,
+            target_size=max(target, master_ships + 1),
+        )
+        current_prices.clear()
+        if priced is not None:
+            current_prices.update(priced.prices)
+            report["dual_prices"].append(
+                {
+                    "elapsed_seconds": time.perf_counter() - started,
+                    "columns": len(columns),
+                    "archive_columns": len(archive_columns),
+                    "master_ships": master_ships,
+                    **priced.summary(),
+                }
+            )
 
     def run_master():
         # the previous selection stays feasible (columns are only added): warm start so the
@@ -765,7 +821,24 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         previous[:] = list(master.selected)
         report["master"] = master.summary()
         report["master"]["columns"] = len(columns)
+        reprice(master.ships)
         return master
+
+    if archive_columns:
+        reprice(0)  # the first families already price around the archive's fleet
+        if report["dual_prices"]:
+            print(
+                _json(
+                    {
+                        "dual_archive_columns": len(archive_columns),
+                        "initial_prices": {
+                            k: report["dual_prices"][-1][k]
+                            for k in ("size", "priced_asteroids", "max_kg", "sum_kg", "mu", "nu")
+                        },
+                    }
+                ),
+                flush=True,
+            )
 
     def try_fleet(master, final: bool) -> dict[str, Any] | None:
         nonlocal incumbent
@@ -892,6 +965,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         workers=args.workers,
         on_result=on_result,
         budget_seconds=args.budget_seconds,
+        prices=None if args.no_lp_duals else (lambda: dict(current_prices)),
     )
     if columns:
         master = run_master()
@@ -1360,6 +1434,36 @@ def cmd_leg_stats(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_chain_prior(args: argparse.Namespace) -> int:
+    """Extract the reference-chain prior from the archived solutions (data, not constants)."""
+
+    from .chainprior import extract_chain_prior, reference_solution_files
+    from .data import data_directory, load_catalogue
+
+    paths = [Path(p) for p in args.solution] or reference_solution_files(data_directory())
+    if not paths:
+        print("no reference solution files (fetch the pinned data first)")
+        return 1
+    document = extract_chain_prior(
+        load_catalogue(), paths, commit=_commit(resources.repository_root())
+    )
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(_json(document) + "\n", encoding="utf-8")
+    targets = document["targets"]
+    print(
+        _json(
+            {
+                "output": str(output),
+                "ships_decoded": document["ships_decoded"],
+                "sources": document["sources"],
+                "targets": {k: round(v, 3) for k, v in targets.items()},
+            }
+        )
+    )
+    return 0
+
+
 def cmd_hop_calibration(args: argparse.Namespace) -> int:
     from .data import load_catalogue
     from .hopcalib import certified_hops, fit_inflation
@@ -1554,7 +1658,109 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         default=0.7,
         help="Earth legs above this Lambert authority ratio are flown last (default 0.7)",
     )
+    cluster.add_argument(
+        "--no-harvest-substitution",
+        action="store_true",
+        help="disable the beam's harvest substitution pass (swap dear-to-harvest deploys)",
+    )
+    cluster.add_argument(
+        "--substitution-budget-seconds",
+        type=float,
+        default=180.0,
+        help="wall budget of the harvest substitution pass per beam run (default 180)",
+    )
+    cluster.add_argument(
+        "--no-return-sweep",
+        action="store_true",
+        help="disable the SCvx Earth-return sweep before each ship's joint re-timing",
+    )
+    cluster.add_argument(
+        "--return-sweep-budget-seconds",
+        type=float,
+        default=240.0,
+        help="wall budget of the per-ship Earth-return sweep (default 240)",
+    )
+    cluster.add_argument(
+        "--chain-tour-scoring",
+        action="store_true",
+        help=(
+            "ninth iteration: re-score the best partial chains of every beam level by deploy "
+            "propellant + their actual Held-Karp collect tour (chain-level objective)"
+        ),
+    )
+    cluster.add_argument(
+        "--chain-tour-candidates",
+        type=int,
+        default=48,
+        help="partials per level re-scored by their collect tour (default 48)",
+    )
+    cluster.add_argument(
+        "--chain-prior",
+        default="",
+        help="reference-chain prior JSON (chainprior.extract_chain_prior) for the beam ('' = off)",
+    )
+    cluster.add_argument(
+        "--chain-prior-weight",
+        type=float,
+        default=0.5,
+        help="kg of beam score per kg the chain lies off the reference manifold (default 0.5)",
+    )
+    cluster.add_argument(
+        "--no-lp-duals",
+        action="store_true",
+        help="do not feed the master LP's asteroid duals back into the family pricing",
+    )
+    cluster.add_argument(
+        "--dual-price-weight",
+        type=float,
+        default=1.0,
+        help="scale on the LP duals the beam subtracts (1.0 = exact reduced cost)",
+    )
+    cluster.add_argument(
+        "--dual-archive",
+        action="append",
+        default=[],
+        help=(
+            "archive directory whose certified routes join the dual-pricing LP as pricing-only "
+            "columns (repeatable; the campaign's disjoint families only price around asteroids "
+            "the archive-wide fleet already uses)"
+        ),
+    )
+    cluster.add_argument(
+        "--dual-target-size",
+        type=int,
+        default=0,
+        help="fleet size the dual LP prices at when feasible (0 = master ships + 1)",
+    )
+    cluster.add_argument(
+        "--joint-itinerary",
+        action="store_true",
+        help="jointly re-optimise every emitted ship's epochs (jointopt) inside the pricing",
+    )
+    cluster.add_argument(
+        "--joint-budget-seconds",
+        type=float,
+        default=150.0,
+        help="wall budget of the per-ship joint itinerary re-optimisation (default 150)",
+    )
     cluster.set_defaults(function=cmd_cluster_fleet)
+
+    prior = commands.add_parser(
+        "chain-prior",
+        help="extract the reference-chain prior (deploy/collect split, hop geometry) as data",
+    )
+    prior.add_argument(
+        "--solution",
+        action="append",
+        default=[],
+        help="reference solution file (repeatable; default: the pinned JPL/Antipodes files)",
+    )
+    prior.add_argument(
+        "--output",
+        default="benchmarks/gtoc12/chain_prior_v1.json",
+        help="where to write the prior document",
+    )
+    prior.set_defaults(function=cmd_chain_prior)
 
     calib = commands.add_parser(
         "hop-calibration",

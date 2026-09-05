@@ -187,6 +187,8 @@ class _FakeTable:
         self.costs = costs
         self.return_dv = return_dv
         self.hops_requested: list[tuple[int, int]] = []
+        self.return_sweeps: dict = {}
+        self._return_overrides: dict = {}
 
     def index_at_or_after(self, epoch):
         return int(np.searchsorted(self.epochs, epoch - 1e-9))
@@ -205,6 +207,10 @@ class _FakeTable:
     hop_propellant = CollectPairTable.hop_propellant
     return_propellant = CollectPairTable.return_propellant
     return_inflation = CollectPairTable.return_inflation
+    return_inflation_at = CollectPairTable.return_inflation_at
+
+    def return_override(self, asteroid):
+        return self._return_overrides.get(int(asteroid))
 
 
 def test_harvest_window_cost_is_the_window_minimum_over_both_directions() -> None:
@@ -303,6 +309,71 @@ def test_collect_dp_leaves_the_camp_uncollected_when_a_revisit_is_cheaper() -> N
     assert abs(tour.collect_epochs[3] - first[2]) > 1.0
     assert tour.collect_epochs[3] == pytest.approx(tour.return_departure)
     assert len(tour.hops) == 3  # reposition + two collect hops
+
+
+def test_collect_dp_prices_the_return_strictly_from_certified_sweep_cells() -> None:
+    """With a return sweep set for the camp the DP may only end the tour on a certified cell:
+    the return departs where the override is ``ok`` (even though the model would rather leave
+    at the last lattice epoch), it is priced at the cell's measured inflation, and a sweep with
+    no certified cell closes no tour at all."""
+
+    ids = [11, 12, 13]
+    cheap, dear = 0.3, 3.0
+    costs = {
+        (13, 11): cheap,
+        (11, 12): cheap,
+        (12, 13): cheap,
+        (13, 12): dear,
+        (12, 11): dear,
+        (11, 13): dear,
+    }
+    deployed = [(11, T0 + 5.0 * YEAR), (12, T0 + 5.5 * YEAR), (13, T0 + 6.0 * YEAR)]
+    camp_epoch = T0 + 6.0 * YEAR
+    table = _FakeTable(ids, costs)
+    free = plan_collect_tour(table, deployed, 13, camp_epoch, 1500.0)
+    assert free is not None and free.return_departure == pytest.approx(table.epochs[-1])
+    # certified cells: a single departure epoch, well before the lattice end, out of the last
+    # collected asteroid 12 (the cheap cycle ends there); every other cell of every camp is
+    # infeasible (a sweep in hand for every asteroid, all refused but that one cell)
+    n_t, n_k = table.epochs.shape[0], table.return_tofs.shape[0]
+    certified_index = 30
+    ok = np.zeros((n_t, n_k), dtype=bool)
+    ok[certified_index, 0] = True
+    inflation = np.where(ok, 1.37, np.nan)
+    refused = (np.full((n_t, n_k), np.nan), np.zeros((n_t, n_k), dtype=bool))
+    for asteroid in ids:
+        table._return_overrides[asteroid] = refused
+        table.return_sweeps[asteroid] = object()
+    table._return_overrides[12] = (inflation, ok)
+    swept = plan_collect_tour(table, deployed, 13, camp_epoch, 1500.0)
+    assert swept is not None
+    assert swept.order[-1] == 12
+    assert swept.return_departure == pytest.approx(table.epochs[certified_index])
+    # the last collect moved with the return (collected on departure), the others are free
+    assert swept.collect_epochs[12] == pytest.approx(swept.return_departure)
+    assert swept.collected_proxy_kg < free.collected_proxy_kg
+    # priced at the cell's measured inflation, not the model's, and no authority limit applied;
+    # the DP's move mass is the camp mass + the miners mined to the window end - the burn
+    # schedule of the two hops flown before the return
+    mass = (
+        1500.0
+        + sum(C.maximum_collected_mass(table.epochs[-1] - e) for _a, e in deployed)
+        - swept.diagnostics.get("burn_per_hop_kg", 0.0) * 2
+    )
+    from spacepdhcg.gtoc12.screening import propellant_for_delta_v
+
+    measured = float(propellant_for_delta_v(mass, table.return_dv * 1.37))
+    hop_propellant = sum(swept.hop_propellant_kg)
+    assert swept.propellant_proxy_kg == pytest.approx(hop_propellant + measured, rel=1e-6)
+    assert table.return_inflation_at(12, swept.return_departure, 300.0, 1.0, mass) == 1.37
+    assert table.return_inflation_at(11, swept.return_departure, 300.0, 1.0, mass) != 1.37
+    # a camp whose sweep refused every cell cannot end the tour (strict: the model is not a
+    # fallback); a camp without a sweep is priced by the model and still closes
+    table._return_overrides[12] = refused
+    assert plan_collect_tour(table, deployed, 13, camp_epoch, 1500.0) is None
+    del table.return_sweeps[13], table._return_overrides[13]
+    modelled = plan_collect_tour(table, deployed, 13, camp_epoch, 1500.0)
+    assert modelled is not None and modelled.order[-1] == 13
 
 
 def test_collect_dp_returns_none_when_no_tour_fits() -> None:

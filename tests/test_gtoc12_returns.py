@@ -205,6 +205,128 @@ def test_retimer_prices_a_swept_return_from_the_measurement(catalogue) -> None:
     )
 
 
+@requires_data
+def test_collect_table_prices_a_swept_return_from_the_certified_cells(catalogue) -> None:
+    """The DP pair table's sweep override mirrors the re-timer's: certified cells carry their
+    measured/Lambert inflation (the cell's own geometry), neighbours within the reach inherit
+    it, refused cells and far cells are infeasible, and ``return_propellant`` prices the rows
+    strictly from it (no authority limit, ``inf`` off the certified cells)."""
+
+    from spacepdhcg.gtoc12.collectdp import (
+        RETURN_SWEEP_REACH,
+        CollectDPSettings,
+        CollectPairTable,
+    )
+    from spacepdhcg.gtoc12.ephemeris import asteroid_state, earth_state
+    from spacepdhcg.gtoc12.returnsweep import ReturnSweep
+    from spacepdhcg.gtoc12.screening import lambert_hops, propellant_for_delta_v
+
+    table = CollectPairTable(catalogue, CollectDPSettings())
+    asteroid = int(catalogue.ids[0])
+    n_t, n_k = table.epochs.shape[0], table.return_tofs.shape[0]
+    k = n_t - 45  # ~675 days before the lattice end
+    departures = table.epochs[[k, k + 1]]
+    # 465 d is not on the table's 30-day return grid: the cell lands on the nearest node (450)
+    swept_tofs = np.asarray([420.0, 465.0])
+    certified = np.asarray([[True, True], [False, True]])
+    r_s, v_s = asteroid_state(catalogue, np.full(4, asteroid), np.repeat(departures, 2))
+    tofs4 = np.tile(swept_tofs, 2)
+    r_e, v_e = earth_state(np.repeat(departures, 2) + tofs4)
+    lambert = lambert_hops(
+        r_s, v_s, r_e, v_e, np.repeat(departures, 2), tofs4, arrival_allowance_km_s=6.0
+    ).total_delta_v.reshape(2, 2)
+    factors = np.asarray([[1.3, 0.95], [1.0, 0.95]])
+    measured = np.where(certified, lambert * factors, np.inf)
+    sweep = ReturnSweep(
+        asteroid,
+        1400.0,
+        departures,
+        swept_tofs,
+        np.ones((2, 2), dtype=bool),
+        certified,
+        measured,
+        np.where(certified, 200.0, np.inf),
+    )
+    assert table.return_override(asteroid) is None
+    table.set_return_sweep(sweep)
+    override = table.return_override(asteroid)
+    assert override is not None
+    inflation, ok = override
+    assert inflation.shape == (n_t, n_k) and ok.shape == (n_t, n_k)
+    t420 = int(np.argmin(np.abs(table.return_tofs - 420.0)))
+    t450 = int(np.argmin(np.abs(table.return_tofs - 465.0)))
+    assert inflation[k, t420] == pytest.approx(1.3) and ok[k, t420]
+    assert inflation[k, t450] == pytest.approx(0.95) and ok[k, t450]
+    assert not ok[k + 1, t420] and np.isnan(inflation[k + 1, t420])  # refused
+    assert inflation[k + 1, t450] == pytest.approx(0.95) and ok[k + 1, t450]
+    assert inflation[k - 1, t420] == pytest.approx(1.3) and ok[k - 1, t420]  # inherits
+    far = k - RETURN_SWEEP_REACH - 3
+    assert not ok[far, t420] and np.isnan(inflation[far, t420])
+    assert not ok[k, n_k - 1]  # a long return no cell certified
+    # strict pricing of the DP rows: the certified cell costs its measurement at any mass (no
+    # authority limit), everything else is inf; the model prices the same rows without a sweep
+    dv = table.earth_return(asteroid)[k - 1 :].astype(np.float64)
+    priced = table.return_propellant(dv, 2600.0, table.return_tofs, asteroid=asteroid, t0=k - 1)
+    assert priced.shape == dv.shape
+    assert priced[1, t420] == pytest.approx(
+        float(propellant_for_delta_v(2600.0, dv[1, t420] * 1.3))
+    )
+    assert np.isinf(priced[1, n_k - 1]) and np.isinf(priced[RETURN_SWEEP_REACH + 4, t420])
+    assert np.array_equal(np.isfinite(priced), ok[k - 1 :] & np.isfinite(dv))
+    modelled = table.return_propellant(dv, 2600.0, table.return_tofs)
+    assert np.isfinite(modelled).sum() != np.isfinite(priced).sum()
+    other = int(catalogue.ids[1])
+    assert table.return_propellant(dv, 2600.0, table.return_tofs, asteroid=other, t0=k - 1)[
+        1, t420
+    ] == pytest.approx(modelled[1, t420])
+    # the forward pass reads the same figure back for the cell, the model elsewhere
+    assert table.return_inflation_at(asteroid, departures[0], 420.0, 6.0, 2600.0) == 1.3
+    assert table.return_inflation_at(other, departures[0], 420.0, 6.0, 2600.0) == pytest.approx(
+        float(table.return_inflation(6.0, 2600.0, 420.0)[()])
+    )
+    # releasing the caches keeps the sweep (the override is rebuilt on demand)
+    table.release_caches()
+    assert table.return_sweeps[asteroid] is sweep
+    assert table.return_override(asteroid)[1][k, t420]
+
+
+def test_sweep_return_flies_the_nearest_cells_first_and_stops_at_the_budget(monkeypatch) -> None:
+    from spacepdhcg.gtoc12 import returnsweep
+
+    flown: list[tuple[float, float]] = []
+
+    def fake_fly(_catalogue, _asteroid, _mass, departure, arrival, _scvx, _minimum):
+        flown.append((departure, arrival - departure))
+        return True, 6.0, ""
+
+    monkeypatch.setattr(returnsweep, "_fly", fake_fly)
+    departures = C.MISSION_START_MJD + 15.0 * np.arange(300, 305)
+    tofs = np.asarray([420.0, 465.0, 510.0])
+    sweep = returnsweep.sweep_return(
+        None,
+        7,
+        1400.0,
+        departures,
+        tofs,
+        nearest_to=(float(departures[2]), 465.0),
+    )
+    assert flown[0] == (float(departures[2]), 465.0)  # the route's own cell first
+    assert len(flown) == int(sweep.attempted.sum()) == sweep.solves
+    # every attempted cell certified at the stub's ΔV, ordered by grid distance from the centre
+    assert bool(sweep.certified[sweep.attempted].all())
+    distances = [abs(d - departures[2]) / 15.0 + abs(t - 465.0) / 45.0 for d, t in flown]
+    assert distances == sorted(distances)
+    # a spent budget leaves the un-flown cells un-attempted (not refused); cached cells still count
+    flown.clear()
+    cache = {(7, float(departures[2]), 465.0): (True, 6.0)}
+    cut = returnsweep.sweep_return(
+        None, 7, 1400.0, departures, tofs, cache=cache, time_budget_seconds=-1.0
+    )
+    assert flown == [] and cut.solves == 0
+    assert int(cut.attempted.sum()) == 1 and bool(cut.certified[2, 1])
+    assert any(d.get("note") == "budget" for d in cut.diagnostics)
+
+
 # -- archive-wide campaign -----------------------------------------------------------------
 
 
