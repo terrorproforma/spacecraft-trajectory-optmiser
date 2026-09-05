@@ -196,7 +196,7 @@ def _compact_result(
             "solver": "spacepdhcg-persistent",
             "policy": "deterministic-fixed-tight",
             "status": status,
-            "hardware_id": "local-rtx-5090",
+            "hardware_id": os.environ.get("SPACEPDHCG_HARDWARE_ID", "local-rtx-5090"),
             "precision": "float64",
             "warm_start": True,
             "cold_start": False,
