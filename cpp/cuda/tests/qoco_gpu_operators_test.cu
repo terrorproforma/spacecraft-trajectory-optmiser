@@ -198,6 +198,8 @@ static void stopping_scale_case() {
 }
 
 static void matrix_case(int rows, int cols, bool symmetric, bool empty, bool repeatability) {
+    auto values_only = reinterpret_cast<void (*)(QOCOMatrix*)>(
+        dlsym(RTLD_DEFAULT, "sync_matrix_values_to_device"));
     std::vector<int> offsets(cols + 1), indices;
     std::vector<double> values;
     for (int col = 0; col < cols; ++col) {
@@ -230,7 +232,8 @@ static void matrix_case(int rows, int cols, bool symmetric, bool empty, bool rep
                 host->x[j] = values[j];
                 if (!symmetric && update == 2) host->i[j] = indices[j] = (indices[j] + 1) % rows;
             }
-            sync_matrix_to_device(matrix);
+            if (update == 1 && values_only) values_only(matrix);
+            else sync_matrix_to_device(matrix);
             set_cpu_mode(0);
         }
         for (int transpose = 0; transpose < (symmetric ? 1 : 2); ++transpose) {

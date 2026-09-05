@@ -47,3 +47,17 @@ cudaError_t qoco_gpu_audit_run(QocoGpuAudit*, const double*, const double*, cons
 QocoAuditTransfers qoco_gpu_audit_transfers(const QocoGpuAudit*);
 QocoAuditMemory qoco_gpu_audit_memory(const QocoGpuAudit*);
 void qoco_gpu_audit_destroy(QocoGpuAudit*);
+
+struct QocoTopologyInput {
+    int counts[6]{};
+    const int* arrays[6]{};
+};
+struct QocoGpuTopology;
+// Create from host topology once; subsequent validation compares device arrays
+// exactly and downloads a single mismatch flag, rather than the sparse indices.
+cudaError_t qoco_gpu_topology_create(const QocoTopologyInput&, cudaStream_t, QocoGpuTopology**);
+cudaError_t qoco_gpu_topology_validate(QocoGpuTopology*, const QocoTopologyInput&,
+                                     cudaStream_t, bool* match);
+QocoAuditTransfers qoco_gpu_topology_transfers(const QocoGpuTopology*);
+QocoAuditMemory qoco_gpu_topology_memory(const QocoGpuTopology*);
+void qoco_gpu_topology_destroy(QocoGpuTopology*);

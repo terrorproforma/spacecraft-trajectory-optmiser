@@ -25,6 +25,8 @@ def main() -> None:
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--warmups", type=int, default=2)
     parser.add_argument("--repeats", type=int, default=7)
+    parser.add_argument("--baseline-core", type=Path)
+    parser.add_argument("--optimized-core", type=Path)
     args = parser.parse_args()
     if args.warmups < 0 or args.repeats < 1:
         parser.error("warmups must be nonnegative and repeats positive")
@@ -37,12 +39,18 @@ def main() -> None:
     raw_dir.mkdir(parents=True, exist_ok=False)
     paths = [args.executable, args.problem, args.baseline, args.optimized]
     paths.append(args.executable.parent.parent / "cuda/libspacepdhcg_cuda.so")
+    cores = {
+        "baseline": args.baseline_core or paths[-1],
+        "optimized": args.optimized_core or paths[-1],
+    }
+    paths.extend(cores.values())
     report = {
         "problem": problem,
         "timing_boundary": "fresh native process including replay; unit parsing excluded",
         "objective_comparison_absolute_tolerance": 1e-8,
         "warmups": args.warmups,
         "repeats": args.repeats,
+        "core_libraries": {k: str(v.resolve()) for k, v in cores.items()},
         "sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         "gpu": subprocess.check_output(
@@ -58,6 +66,9 @@ def main() -> None:
         for variant, backend in variants:
             env = {k: v for k, v in os.environ.items() if not k.startswith("SPACEPDHCG_TEST_")}
             env["SPACEPDHCG_QOCO_LIBRARY"] = str(backend.resolve())
+            env["LD_LIBRARY_PATH"] = (
+                str(cores[variant].resolve().parent) + ":" + env.get("LD_LIBRARY_PATH", "")
+            )
             output = raw_dir / f"{variant}-{repeat}.json"
             started = time.perf_counter()
             run = subprocess.run(

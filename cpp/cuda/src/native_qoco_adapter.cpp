@@ -123,6 +123,22 @@ struct Formulation {
     int nonnegative{};
 };
 
+struct TopologyCache {
+    std::vector<int> arrays[6];
+    std::uint64_t fingerprint{};
+    QocoGpuTopology* device{};
+    ~TopologyCache() { qoco_gpu_topology_destroy(device); }
+};
+
+// Complete queued downloads before their destination vectors can be destroyed,
+// including allocation/validation failures while assembling a batch.
+struct DownloadBatch {
+    cudaStream_t stream;
+    bool pending{true};
+    cudaError_t finish() { pending = false; return cudaStreamSynchronize(stream); }
+    ~DownloadBatch() { if (pending) cudaStreamSynchronize(stream); }
+};
+
 using SetupFn = int (*)(
     SolverAbi*, int, int, int, CscAbi*, double*, CscAbi*, double*,
     CscAbi*, double*, int, int, int*, SettingsAbi*
@@ -161,7 +177,7 @@ spacepdhcg_cuda_status download(
         cudaMemcpyDeviceToHost,
         stream
     );
-    if (status != cudaSuccess || cudaStreamSynchronize(stream) != cudaSuccess) {
+    if (status != cudaSuccess) {
         return status == cudaErrorMemoryAllocation
             ? SPACEPDHCG_CUDA_OUT_OF_MEMORY
             : SPACEPDHCG_CUDA_RUNTIME_ERROR;
@@ -362,6 +378,7 @@ struct spacepdhcg_native_qoco {
     EndReductionScopeFn end_reduction_scope{};
     DeviceSolutionFn device_solution{};
     QocoGpuAudit* gpu_audit{};
+    TopologyCache topology{};
     Csc dual_transfer{};
     Formulation formulation{};
     // The settings handed to qoco_setup. QOCO's stall handler mutates
@@ -447,7 +464,8 @@ spacepdhcg_cuda_status convert(
     cudaStream_t stream,
     Formulation* output,
     std::uint64_t* copy_count,
-    std::uint64_t* copy_bytes
+    std::uint64_t* copy_bytes,
+    TopologyCache* topology
 ) {
     const auto& structure = problem.canonical_structure;
     if (structure.abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
@@ -456,12 +474,12 @@ spacepdhcg_cuda_status convert(
         return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
     }
     const int n = structure.variables;
-    std::vector<int> q_offsets{};
-    std::vector<int> q_indices{};
-    std::vector<int> a_offsets{};
-    std::vector<int> a_indices{};
-    std::vector<int> f_offsets{};
-    std::vector<int> f_indices{};
+    auto& q_offsets = topology->arrays[0];
+    auto& q_indices = topology->arrays[1];
+    auto& a_offsets = topology->arrays[2];
+    auto& a_indices = topology->arrays[3];
+    auto& f_offsets = topology->arrays[4];
+    auto& f_indices = topology->arrays[5];
     std::vector<double> q_values{};
     std::vector<double> a_values{};
     std::vector<double> f_values{};
@@ -471,7 +489,35 @@ spacepdhcg_cuda_status convert(
     std::vector<double> variable_lower{};
     std::vector<double> variable_upper{};
 
+    if (topology->device) {
+        if (topology->fingerprint != problem.topology_fingerprint)
+            return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+        const auto& t = problem.canonical_topology;
+        const spacepdhcg_accelerator_buffer_view views[]{t.quadratic_offsets,
+            t.quadratic_indices, t.scalar_offsets, t.scalar_indices, t.affine_offsets, t.affine_indices};
+        const std::size_t counts[]{static_cast<std::size_t>(n) + 1, structure.quadratic_nonzeros,
+            static_cast<std::size_t>(n) + 1, structure.scalar_nonzeros,
+            structure.affine_rows == 0 ? 0 : static_cast<std::size_t>(n) + 1, structure.affine_nonzeros};
+        QocoTopologyInput input{};
+        for (int i = 0; i < 6; ++i) {
+            if (counts[i] != topology->arrays[i].size()) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+            if (counts[i] && (!views[i].data || views[i].elements != counts[i] || views[i].element_stride != 1))
+                return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+            input.counts[i] = static_cast<int>(counts[i]);
+            input.arrays[i] = counts[i] ? reinterpret_cast<const int*>(
+                static_cast<const unsigned char*>(views[i].data) + views[i].byte_offset) : nullptr;
+        }
+        bool matches{};
+        const auto status = qoco_gpu_topology_validate(topology->device, input, stream, &matches);
+        if (status != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        if (!matches) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+    }
+
+    DownloadBatch downloads{stream};
+    bool loading_topology = true;
+
     const auto load = [&](const auto& view, std::size_t count, auto* values) {
+        if (loading_topology && topology->device) return SPACEPDHCG_CUDA_SUCCESS;
         const auto status = download(view, count, stream, values);
         if (status == SPACEPDHCG_CUDA_SUCCESS && count != 0U) {
             ++*copy_count;
@@ -513,6 +559,7 @@ spacepdhcg_cuda_status convert(
         structure.affine_nonzeros,
         f_indices
     )
+    loading_topology = false;
     SPACEPDHCG_QOCO_LOAD(
         problem.numeric.quadratic,
         structure.quadratic_nonzeros,
@@ -559,8 +606,23 @@ spacepdhcg_cuda_status convert(
         variable_upper
     )
 #undef SPACEPDHCG_QOCO_LOAD
+    const auto downloaded = downloads.finish();
     if (status != SPACEPDHCG_CUDA_SUCCESS) {
         return status;
+    }
+    if (downloaded != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    if (!topology->device) {
+        QocoTopologyInput input{};
+        for (int i = 0; i < 6; ++i) {
+            if (topology->arrays[i].size() > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+                return SPACEPDHCG_CUDA_UNSUPPORTED;
+            input.counts[i] = static_cast<int>(topology->arrays[i].size());
+            input.arrays[i] = topology->arrays[i].data();
+        }
+        const auto created = qoco_gpu_topology_create(input, stream, &topology->device);
+        if (created != cudaSuccess) return created == cudaErrorMemoryAllocation
+            ? SPACEPDHCG_CUDA_OUT_OF_MEMORY : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        topology->fingerprint = problem.topology_fingerprint;
     }
 
     std::vector<Triplet> p_entries{};
@@ -959,7 +1021,8 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         stream,
         &result->formulation,
         &result->report.d2h_copy_count,
-        &result->report.d2h_bytes
+        &result->report.d2h_bytes,
+        &result->topology
     );
     result->report.conversion_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - conversion_start
@@ -1046,6 +1109,14 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         const auto memory = qoco_gpu_audit_memory(workspace->gpu_audit);
         report->audit_allocations = memory.allocations;
         report->audit_peak_bytes = memory.peak_bytes;
+        const auto topology_transfers = qoco_gpu_topology_transfers(workspace->topology.device);
+        report->h2d_copy_count += topology_transfers.h2d_count;
+        report->h2d_bytes += topology_transfers.h2d_bytes;
+        report->d2h_copy_count += topology_transfers.d2h_count;
+        report->d2h_bytes += topology_transfers.d2h_bytes;
+        const auto topology_memory = qoco_gpu_topology_memory(workspace->topology.device);
+        report->audit_allocations += topology_memory.allocations;
+        report->audit_peak_bytes += topology_memory.peak_bytes;
         return status;
     };
     if (workspace->solver == nullptr) {
@@ -1061,7 +1132,8 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             stream,
             &updated,
             &workspace->report.d2h_copy_count,
-            &workspace->report.d2h_bytes
+            &workspace->report.d2h_bytes,
+            &workspace->topology
         );
         if (status != SPACEPDHCG_CUDA_SUCCESS) {
             workspace->report.failure =

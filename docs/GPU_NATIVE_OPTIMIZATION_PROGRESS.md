@@ -491,3 +491,25 @@ factorization-mode probe fails the unchanged qualification and is rejected.
 The optional candidate is not promoted to the default production dependency.
 [Details, regressions and benchmark artifacts](GPU_QOCO_LOCAL_BACKEND.md#queued-operators-device-cone-reductions-and-soc-step-safety)
 record the improvements and remaining CPU/dependency work. The full goal remains active.
+
+## Retained topology checkpoint
+
+The adapter now retains sparse topology and checks it exactly on CUDA instead
+of repeatedly downloading indices. Numeric downloads share a stream completion,
+and an optional QOCO values-only update retains device indices and gather maps.
+New kernels and updated operators pass all four sanitizers; real landing solves
+pass the independent CPU audit, memory, initialization and synchronization checks.
+The previously reported cuDSS factorization race finding remains unresolved.
+
+Paired benchmarks show essentially flat incremental runtime: landing SCvx
+260.056 → 255.066 ms, actual 6DOF planner 1662.863 → 1657.908 ms; complete
+processes are slightly slower. Accuracy and iteration counts are unchanged.
+The change reduces repeated topology transfers, with extra initial upload and
+retained memory, and does not establish another speedup. A stricter
+nondeterministic factorization probe passed ten solves then failed the eleventh
+at the unchanged physics gate and was rejected.
+
+[Evidence and remaining work](GPU_QOCO_LOCAL_BACKEND.md#retained-topology-and-values-only-updates)
+separate these results from the earlier measured gains. CPU numerical conversion,
+equilibration, KKT updates and outer control still need migration; the full
+GPU-native goal remains active.

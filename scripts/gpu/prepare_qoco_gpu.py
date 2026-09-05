@@ -103,6 +103,10 @@ def main() -> None:
         "--device-cone-reductions", action="store_true",
         help="GPU cone reductions, retained scratch and SOC boundary fixes",
     )
+    parser.add_argument(
+        "--values-only-updates", action="store_true",
+        help="retain sparse topology during numeric updates",
+    )
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
@@ -111,6 +115,7 @@ def main() -> None:
         or args.checked_cudss_abi
         or args.queued_operators
         or args.device_cone_reductions
+        or args.values_only_updates
     ):
         parser.error("--unmodified cannot be combined with backend changes")
     if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
@@ -274,6 +279,34 @@ def main() -> None:
         replacement = extension.with_name("qoco_device_cone_reductions.cuh")
         shutil.copyfile(replacement, destination / "src/qoco_device_cone_reductions.cuh")
         cone_path.write_text(cones + '\n#include "qoco_device_cone_reductions.cuh"\n')
+    if args.values_only_updates:
+        # qoco_update_matrix_data changes coefficients only. Public full matrix
+        # synchronization still uploads indices and refreshes gather topology.
+        header_path = destination / "include/qoco_linalg.h"
+        header = header_path.read_text()
+        declaration = "void sync_matrix_to_device(QOCOMatrix* M);"
+        if header.count(declaration) != 1:
+            raise RuntimeError("unexpected matrix synchronization declaration")
+        header_path.write_text(header.replace(
+            declaration, declaration + "\nvoid sync_matrix_values_to_device(QOCOMatrix* M);"
+        ))
+        modified += """
+void sync_matrix_values_to_device(QOCOMatrix* M)
+{
+  if (M && M->d_csc_host && M->csc->nnz > 0) {
+    CUDA_CHECK(cudaMemcpy(M->d_csc_host->x, M->csc->x,
+                          M->csc->nnz * sizeof(QOCOFloat), cudaMemcpyHostToDevice));
+  }
+}
+"""
+        api_path = destination / "src/qoco_api.c"
+        api = api_path.read_text()
+        for matrix in ("P", "A", "G"):
+            before = f"  sync_matrix_to_device(data->{matrix});"
+            if api.count(before) != 1:
+                raise RuntimeError("unexpected QOCO numeric update synchronization")
+            api = api.replace(before, f"  sync_matrix_values_to_device(data->{matrix});")
+        api_path.write_text(api)
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -311,6 +344,7 @@ def main() -> None:
         "original_handles": args.original_handles,
         "queued_operators": args.queued_operators,
         "device_cone_reductions": args.device_cone_reductions,
+        "values_only_updates": args.values_only_updates,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -330,6 +364,8 @@ def main() -> None:
             *(["algebra/cuda/qoco_gather.cuh"] if args.gather else []),
             *(["src/cone.cu", "src/qoco_device_cone_reductions.cuh"]
               if args.device_cone_reductions else []),
+            *(["include/qoco_linalg.h"] if args.values_only_updates else []),
+            *(["src/qoco_api.c"] if args.values_only_updates else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")

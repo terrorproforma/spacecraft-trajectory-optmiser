@@ -159,9 +159,60 @@ void run_case(int n, int equalities, int nonnegative, const std::vector<int>& co
         && after.peak_bytes == memory.peak_bytes, "updates and audit must reuse allocations");
     qoco_gpu_audit_destroy(audit); if (mapped) check(cudaFree(mapped)); check(cudaStreamDestroy(stream));
 }
+void topology_case() {
+    cudaStream_t stream{}; check(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    QocoTopologyInput host{}, device{};
+    const int counts[]{0, 1, 257, 513, 4097, 131073};
+    std::vector<int> expected[6];
+    int* allocated[6]{};
+    for (int i = 0; i < 6; ++i) {
+        expected[i].resize(counts[i]);
+        for (int j = 0; j < counts[i]; ++j) expected[i][j] = j % 123 + i;
+        host.counts[i] = device.counts[i] = counts[i];
+        host.arrays[i] = expected[i].data();
+        if (counts[i]) {
+            check(cudaMalloc(&allocated[i], counts[i] * sizeof(int)));
+            check(cudaMemcpyAsync(allocated[i], expected[i].data(), counts[i] * sizeof(int), cudaMemcpyHostToDevice, stream));
+        }
+        device.arrays[i] = allocated[i];
+    }
+    QocoGpuTopology* cache{}; check(qoco_gpu_topology_create(host, stream, &cache));
+    const auto before = qoco_gpu_topology_memory(cache);
+    bool matches{}; check(qoco_gpu_topology_validate(cache, device, stream, &matches));
+    require(matches, "unchanged topology matches");
+    for (int i = 1; i < 6; ++i) {
+        const int changed = -1;
+        check(cudaMemcpyAsync(allocated[i] + counts[i] - 1, &changed, sizeof(int), cudaMemcpyHostToDevice, stream));
+        check(qoco_gpu_topology_validate(cache, device, stream, &matches));
+        require(!matches, "in-place topology mutation must be rejected, including grid-stride tail");
+        check(cudaMemcpyAsync(allocated[i] + counts[i] - 1, &expected[i].back(), sizeof(int), cudaMemcpyHostToDevice, stream));
+        check(qoco_gpu_topology_validate(cache, device, stream, &matches));
+        require(matches, "restored topology matches");
+    }
+    int* replacement{}; check(cudaMalloc(&replacement, counts[2] * sizeof(int)));
+    check(cudaMemcpyAsync(replacement, expected[2].data(), counts[2] * sizeof(int), cudaMemcpyHostToDevice, stream));
+    device.arrays[2] = replacement;
+    check(qoco_gpu_topology_validate(cache, device, stream, &matches));
+    require(matches, "equal topology at a different device address matches");
+    ++device.counts[2];
+    require(qoco_gpu_topology_validate(cache, device, stream, &matches) == cudaErrorInvalidValue && !matches,
+        "changed topology dimensions rejected");
+    const auto after = qoco_gpu_topology_memory(cache);
+    const auto transfers = qoco_gpu_topology_transfers(cache);
+    require(before.allocations == after.allocations && before.peak_bytes == after.peak_bytes,
+        "topology validation must not allocate");
+    require(transfers.d2h_count == 12 && transfers.d2h_bytes == 12 * sizeof(int),
+        "topology validation downloads only one flag per successful invocation");
+    qoco_gpu_topology_destroy(cache);
+    check(cudaFree(replacement));
+    for (auto* pointer : allocated) if (pointer) check(cudaFree(pointer));
+    check(cudaStreamDestroy(stream));
+    std::puts("GPU topology cache: exact mutation detection, stream ordering, retained buffers PASS");
+}
 } // namespace
 
 int main() {
+    topology_case();
     run_case(1, 0, 0, {});
     run_case(7, 0, 3, {4, 8});
     run_case(17, 9, 2, {3, 5});

@@ -365,3 +365,75 @@ cudaError_t qoco_gpu_audit_run(QocoGpuAudit* w, const double* x, const double* y
 QocoAuditTransfers qoco_gpu_audit_transfers(const QocoGpuAudit* w) { return w ? w->transfers : QocoAuditTransfers{}; }
 QocoAuditMemory qoco_gpu_audit_memory(const QocoGpuAudit* w) { return w ? w->memory : QocoAuditMemory{}; }
 void qoco_gpu_audit_destroy(QocoGpuAudit* w) { delete w; }
+
+struct QocoGpuTopology {
+    QocoAuditMemory memory{};
+    QocoAuditTransfers transfers{};
+    Buffer<int> arrays[6], mismatch;
+    QocoTopologyInput expected{};
+    int maximum_count{};
+};
+
+namespace {
+__global__ void validate_topology(QocoTopologyInput expected, QocoTopologyInput actual,
+                                  int* mismatch) {
+    const int array = blockIdx.y;
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < expected.counts[array];
+         i += gridDim.x * blockDim.x) {
+        if (expected.arrays[array][i] != actual.arrays[array][i]) atomicExch(mismatch, 1);
+    }
+}
+}
+
+cudaError_t qoco_gpu_topology_create(const QocoTopologyInput& input, cudaStream_t stream,
+                                    QocoGpuTopology** output) {
+    if (!output) return cudaErrorInvalidValue;
+    *output = nullptr;
+    try {
+        auto result = std::make_unique<QocoGpuTopology>();
+        for (int i = 0; i < 6; ++i) {
+            if (input.counts[i] < 0 || (input.counts[i] && !input.arrays[i]))
+                return cudaErrorInvalidValue;
+            result->arrays[i].allocate(input.counts[i], result->memory);
+            upload(result->arrays[i].data, input.arrays[i], input.counts[i], stream, result->transfers);
+            result->expected.counts[i] = input.counts[i];
+            result->expected.arrays[i] = result->arrays[i].data;
+            result->maximum_count = std::max(result->maximum_count, input.counts[i]);
+        }
+        result->mismatch.allocate(1, result->memory);
+        check(cudaStreamSynchronize(stream));
+        *output = result.release();
+        return cudaSuccess;
+    } catch (const Failure& e) { return e.status; }
+      catch (const std::bad_alloc&) { return cudaErrorMemoryAllocation; }
+}
+
+cudaError_t qoco_gpu_topology_validate(QocoGpuTopology* cache, const QocoTopologyInput& input,
+                                      cudaStream_t stream, bool* match) {
+    if (!cache || !match) return cudaErrorInvalidValue;
+    *match = false;
+    for (int i = 0; i < 6; ++i)
+        if (input.counts[i] != cache->expected.counts[i] || (input.counts[i] && !input.arrays[i]))
+            return cudaErrorInvalidValue;
+    try {
+        check(cudaMemsetAsync(cache->mismatch.data, 0, sizeof(int), stream));
+        if (cache->maximum_count) {
+            const int blocks = std::min(256, (cache->maximum_count - 1) / 256 + 1);
+            validate_topology<<<dim3(blocks, 6), 256, 0, stream>>>(cache->expected, input, cache->mismatch.data);
+            check(cudaGetLastError());
+        }
+        int mismatch = 0;
+        check(cudaMemcpyAsync(&mismatch, cache->mismatch.data, sizeof(int), cudaMemcpyDeviceToHost, stream));
+        ++cache->transfers.d2h_count; cache->transfers.d2h_bytes += sizeof(int);
+        check(cudaStreamSynchronize(stream));
+        *match = mismatch == 0;
+        return cudaSuccess;
+    } catch (const Failure& e) { return e.status; }
+}
+QocoAuditTransfers qoco_gpu_topology_transfers(const QocoGpuTopology* cache) {
+    return cache ? cache->transfers : QocoAuditTransfers{};
+}
+QocoAuditMemory qoco_gpu_topology_memory(const QocoGpuTopology* cache) {
+    return cache ? cache->memory : QocoAuditMemory{};
+}
+void qoco_gpu_topology_destroy(QocoGpuTopology* cache) { delete cache; }

@@ -306,3 +306,60 @@ CPU conversion, equilibration, KKT setup, upstream scalar decisions, accepted
 warm-state storage and outer decisions remain. The dependency race issue, large
 trajectory scaling, batching and the GPU GTOC12 path remain open work under the
 full GPU-native goal.
+
+## Retained topology and values-only updates
+
+The native adapter now downloads the six sparse index arrays once. Subsequent
+updates compare the device arrays exactly against retained device copies and
+download a four-byte mismatch flag. This detects in-place changes even when
+the pointer and supplied fingerprint are unchanged. Numeric downloads are
+queued as a batch with one stream completion; destination lifetimes remain
+valid on errors. Coefficient conversion, bound classification, cone mapping
+and CSC assembly still execute on the CPU. This is not a GPU conversion yet.
+
+The additional opt-in preparation flag `--values-only-updates` makes QOCO's
+numeric update entry point upload values without uploading indices or rebuilding
+GPU sparse gather maps. Explicit full-matrix synchronization still refreshes
+topology. The measured source/binary is `/home/angus/build-qoco-gpu-values-v16`,
+using all v14 flags plus this flag. It is not promoted to the default dependency.
+
+The device topology tests cover empty arrays, nonblocking stream ordering,
+in-place mutations, grid-stride tails, equal contents at a changed address,
+dimension rejection and no allocations during validation. They pass all four
+CUDA sanitizers. QOCO arithmetic tests cover values-only updates followed by
+full topology updates against independent dense arithmetic; all four sanitizers
+pass. Seven landing solves agree with the independent CPU audit at the unchanged
+1e-8 gate. Full landing memcheck (zero leaks), initcheck and synccheck pass. The
+previous cuDSS race finding remains open; it was not remeasured in this checkpoint.
+
+Two warmups and seven alternating fresh-process samples per variant show no
+clear additional speedup over v14:
+
+| Case | Before SCvx | Cached SCvx | Before process | Cached process |
+| --- | ---: | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 260.056 ms | 255.066 ms | 644.094 ms | 652.264 ms |
+| 20-interval 6DOF planner, 1e-6 | 1662.863 ms | 1657.908 ms | 2027.960 ms | 2046.950 ms |
+
+Iteration counts are unchanged (28 and 179 respectively), as are accepted steps
+and physics gates. The retained topology saves repeated data movement, but its
+creation and exact validation have costs. In the two-step landing, native D2H
+traffic falls 137504 → 118172 bytes, initial H2D rises 116552 → 135888 bytes,
+and native memory rises 506880 → 526220 bytes. These counters exclude opaque
+QOCO/cuDSS traffic and memory; they are not whole-process transfer measurements.
+The initial upload is amortized across updates. Do not claim a runtime win here.
+
+A separate nondeterministic cuDSS probe tightened accurate inner tolerances by
+10x. Ten solves qualified, but the eleventh failed the unchanged gate: first
+inner natural residual 2.338862291e-7 and final terminal residual
+5.484484238e-8 versus 1e-8. The planned 15 repeats stopped at that failure.
+The candidate is rejected and its experimental stopping-margin flag removed;
+the source wrapper, provenance and failed sample are retained in the evidence.
+Neither factorization-mode change nor extra accuracy has resolved the vendor issue.
+
+See [checkpoint and validation](../artifacts/performance/qoco-cached-topology-checkpoint.json),
+[landing samples](../artifacts/performance/qoco-cached-topology-pd3.json), and
+[6DOF planner samples](../artifacts/performance/qoco-cached-topology-planner-pd6.json).
+The planner benchmark now accepts `--baseline-core` and `--optimized-core` to
+compare native adapter changes with separately hashed libraries. The next
+architectural work is compiled numerical conversion on CUDA, then device
+equilibration and KKT updates; topology caching alone does not remove these CPU paths.
