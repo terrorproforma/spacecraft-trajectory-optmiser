@@ -1560,3 +1560,104 @@ def test_master_warm_start_never_regresses_when_columns_are_added() -> None:
     # an incumbent that lost a column is ignored (never trusted blindly)
     stale = solve_fleet_master([big, left], node_cap=0, incumbent=exact.selected)
     assert stale.objective == pytest.approx(600.0) and fleet_feasible(stale.selected) == ""
+
+
+@requires_data
+def test_family_partitions_unions_radii_and_bands_without_duplicates(catalogue, monkeypatch):
+    """Several partitions are priced as one cheapest-first list: labels offset per partition,
+    duplicate member sets dropped, every partition ranked at its own visit epochs."""
+
+    from spacepdhcg.gtoc12 import bundles
+    from spacepdhcg.gtoc12.bundles import (
+        FAMILY_LABEL_STRIDE,
+        family_clusters,
+        family_partitions,
+    )
+    from spacepdhcg.gtoc12.clusters import ClusterBands
+    from spacepdhcg.gtoc12.reduced_instance import build_reduced_instance
+
+    ids = build_reduced_instance(catalogue).asteroid_ids
+    seen_epochs: list[tuple[float, ...]] = []
+
+    def cheap_rank(_catalogue, families, _settings=None, *, visit_epochs=None, **_kw):
+        seen_epochs.append(tuple(visit_epochs))
+        # cheaper the larger the family; ties on the label like the real ranker
+        ranked = [
+            (
+                int(label),
+                members,
+                {"members": float(members.shape[0]), "score": 1000.0 - members.shape[0]},
+            )
+            for label, members in families
+        ]
+        ranked.sort(key=lambda item: (item[2]["score"], item[0]))
+        return ranked
+
+    monkeypatch.setattr(bundles, "rank_families", cheap_rank)
+    collect = ClusterBands.collect_window(radius=2.0, phase_deg=12.0)
+    phasing = ClusterBands(radius=2.0, phase_deg=12.0)
+    partitions = [("collect_r2", collect), ("phasing_r2", phasing), ("collect_r2_again", collect)]
+    ranked = family_partitions(catalogue, ids, bands=partitions, min_members=8)
+    assert ranked, "the reduced instance has co-moving families at radius 2.0"
+    # every partition was ranked at its own visit epochs, in order
+    assert seen_epochs == [collect.phase_epochs, phasing.phase_epochs, collect.phase_epochs]
+    # the first partition is present verbatim (labels unchanged) and the repeat adds nothing
+    first = sorted(
+        (label, tuple(int(a) for a in m))
+        for label, m, s in ranked
+        if s["partition"] == "collect_r2"
+    )
+    single = sorted(
+        (int(label), tuple(int(a) for a in m))
+        for label, m in family_clusters(catalogue, ids, bands=collect, min_members=8)
+    )
+    assert first == single
+    assert not any(s["partition"] == "collect_r2_again" for _l, _m, s in ranked)
+    # member sets and labels are unique; later partitions carry the stride offset
+    keys = [frozenset(int(a) for a in m) for _l, m, _s in ranked]
+    assert len(keys) == len(set(keys))
+    labels = [label for label, _m, _s in ranked]
+    assert len(labels) == len(set(labels))
+    for label, _m, stats in ranked:
+        assert label == stats["label_in_partition"] + stats["partition_index"] * FAMILY_LABEL_STRIDE
+        assert stats["radius"] == 2.0
+    assert any(s["partition_index"] == 1 for _l, _m, s in ranked)
+    # cheapest first across partitions
+    scores = [s["score"] for _l, _m, s in ranked]
+    assert scores == sorted(scores)
+
+
+def test_cluster_band_partitions_parses_radius_lists_and_band_sets():
+    import argparse
+
+    from spacepdhcg.gtoc12.cli import cluster_band_partitions
+
+    args = argparse.Namespace(
+        cluster_radius="1.75, 1.6",
+        cluster_phase_deg=8.0,
+        collect_epoch_families=True,
+        static_families=False,
+        all_family_bands=False,
+    )
+    only_collect = cluster_band_partitions(args)
+    assert [name for name, _b in only_collect] == ["collect_r1.75", "collect_r1.6"]
+    assert [b.radius for _n, b in only_collect] == [1.75, 1.6]
+    assert all(len(b.phase_epochs) == 4 for _n, b in only_collect)
+    args.all_family_bands = True
+    both = cluster_band_partitions(args)
+    assert [name for name, _b in both] == [
+        "collect_r1.75",
+        "phasing_r1.75",
+        "collect_r1.6",
+        "phasing_r1.6",
+    ]
+    assert [len(b.phase_epochs) for _n, b in both] == [4, 2, 4, 2]
+    # the legacy single float still works
+    args = argparse.Namespace(
+        cluster_radius=1.5,
+        cluster_phase_deg=8.0,
+        collect_epoch_families=False,
+        static_families=True,
+        all_family_bands=False,
+    )
+    assert [name for name, _b in cluster_band_partitions(args)] == ["static_r1.5"]
