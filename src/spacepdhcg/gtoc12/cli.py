@@ -712,6 +712,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         dual_price_weight=args.dual_price_weight,
         joint_itinerary=args.joint_itinerary,
         joint_budget_seconds=args.joint_budget_seconds,
+        joint_earth_leg=bool(args.joint_earth_leg),
     )
     if settings.chain_prior_path:
         load_chain_prior(settings.chain_prior_path)  # fail early on a bad path
@@ -1349,6 +1350,12 @@ def cmd_joint_itinerary(args: argparse.Namespace) -> int:
         insert_neighbours=args.insert_neighbours,
         insert_radius=args.insert_radius,
         insert_trials=args.insert_trials,
+        earth_leg=bool(args.earth_leg),
+        earth_leg_shifts_days=tuple(
+            float(x) for x in str(args.earth_leg_shifts).split(",") if x.strip()
+        )
+        or JointCampaignSettings().earth_leg_shifts_days,
+        earth_leg_certifications=args.earth_leg_certifications,
     )
     log = (output_dir / "ships.jsonl").open("w", encoding="utf-8")
 
@@ -1379,6 +1386,14 @@ def cmd_joint_itinerary(args: argparse.Namespace) -> int:
                         "peak_rss_mb",
                         "elapsed_seconds",
                     )
+                }
+                | {
+                    "earth_leg": None
+                    if not record.get("earth_leg")
+                    else {
+                        k: record["earth_leg"].get(k)
+                        for k in ("seeds", "flown", "measured", "accepted_shift_days")
+                    }
                 }
             ),
             flush=True,
@@ -1804,6 +1819,12 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         default=150.0,
         help="wall budget of the per-ship joint itinerary re-optimisation (default 150)",
     )
+    cluster.add_argument(
+        "--joint-earth-leg",
+        action="store_true",
+        help="Earth-out leg stage inside the joint pass: trade Earth-leg propellant for an "
+        "earlier chain start (single-leg SCvx measurements, monotone acceptance)",
+    )
     cluster.set_defaults(function=cmd_cluster_fleet)
 
     prior = commands.add_parser(
@@ -1942,6 +1963,23 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         help="co-moving neighbourhood radius (band units) the insertion draws from",
     )
     joint.add_argument("--insert-trials", type=int, default=3)
+    joint.add_argument(
+        "--earth-leg",
+        action="store_true",
+        help="Earth-out leg stage: seed an earlier chain start (launch kept / moved), fly the "
+        "best seeds' Earth legs alone with SCvx, re-search and certify the whole itinerary",
+    )
+    joint.add_argument(
+        "--earth-leg-shifts",
+        default="30,60,90,120,150",
+        help="days the first asteroid is reached earlier in the Earth-leg seeds",
+    )
+    joint.add_argument(
+        "--earth-leg-certifications",
+        type=int,
+        default=4,
+        help="single Earth legs flown with SCvx per ship in the Earth-leg stage",
+    )
     joint.add_argument("--scvx-iterations", type=int, default=40)
     joint.add_argument("--node-days", type=float, default=2.0)
     joint.add_argument("--no-bonus-weights", action="store_true")

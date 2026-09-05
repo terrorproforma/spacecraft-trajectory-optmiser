@@ -207,6 +207,9 @@ class ClusterPricingSettings:
     joint_itinerary: bool = False
     joint_budget_seconds: float = 150.0
     joint_insert: bool = False
+    # Earth-out leg stage of the inline joint pass (JointSettings.earth_leg): the emitted
+    # ship's chain start is traded against Earth-leg propellant with single-leg SCvx
+    joint_earth_leg: bool = False
     # Lambert prescreen of Earth legs: legs above this authority ratio are not sent to SCvx
     # (the certified Earth legs of the archive all fly below 0.62; the 350-400 d legs at
     # 0.75-0.93 that the ranking used to try first never certified and cost 12 checks per slot)
@@ -959,7 +962,9 @@ def price_cluster(
                     weights=weights,
                     scvx=scvx,
                     settings=JointSettings(
-                        time_budget_seconds=budget, insert=settings.joint_insert
+                        time_budget_seconds=budget,
+                        insert=settings.joint_insert,
+                        earth_leg=settings.joint_earth_leg,
                     ),
                     search_settings=search_settings,
                     excluded=taken,
