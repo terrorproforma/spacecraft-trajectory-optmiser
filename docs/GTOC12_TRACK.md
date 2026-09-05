@@ -783,6 +783,99 @@ sequence is monotone; a refuser bans the pair and leaves the incumbent; a dearer
 gets a lighter route accepted), insertion structure (exactly one new asteroid, one deploy and one
 collect visit, sorted best first), fleet-first task selection with de-duplication.
 
+### 6.12 Chain-level objective in the beam, reference-chain prior, LP-dual feedback, joint itinerary in the pricing (ninth iteration: `chainprior.py`, `search.RouteSearch._chain_score`, `cooperative.lp_asteroid_prices`, `archive.pricing_columns`)
+
+The eighth iteration's diagnosis was that the collect hop (ours 85–87 kg / 210–225 d median
+against the references' 66–67 kg / 181–187 d) is a *deploy-chain* property: the references pay
+~70 kg more per ship on deploy hops (837–851 kg against our 768–773) so that consecutive miners are
+also cheap harvest pairs, and neither a per-pair deploy-time surcharge (§6.9) nor a post-beam
+substitution (§6.10) can move a chain the beam has already closed one pair at a time. The ninth
+iteration therefore scores partial chains *by their eventual tour*:
+
+- **Chain-level objective (`SearchSettings.chain_tour_scoring`, `RouteSearch._select` →
+  `_chain_score`).** From `chain_tour_min_deploys` (3) deploys on, the `chain_tour_candidates`
+  (48) best partials of a beam level by the heuristic score — after the same reserve, per-set and
+  per-first-asteroid caps and the return-feasibility prune the heuristic selection applies — are
+  re-scored by their actual collect tour: one Held-Karp pass of `plan_collect_tour` over the chain
+  so far (the slot's calibrated pair table, sweep-cell returns, propellant weight 1.0) with the
+  *parent chain's measured burn schedule* as the mass model (`_Partial.chain_burn`, the mean
+  collect-hop propellant of the parent's scored tour; the nominal `chain_tour_burn_fraction` ×
+  mass at the first scored level), and the tour is turned into a plan by the same exact forward
+  mass pass every completed plan goes through (`_plan_from_tour` → `_finish`). The chain's score
+  is then exactly the `plan_score` its completion would get — bonus-weighted collected mass at the
+  tour's epochs − `propellant_weight` × everything spent from launch to Earth arrival − the
+  master's asteroid prices — minus `chain_prior_weight` × the prior penalty below; a chain with no
+  tour, or whose plan does not close on the true mass profile, keeps its heuristic score minus
+  10 000 kg so it ranks below every closing chain but can still fill an otherwise empty beam. The
+  beam is the best `beam_width` of the re-scored shortlist, so a costlier deploy hop is taken
+  whenever it puts the miner on a cheaper collect loop *at the exchange rate the DP measures*.
+  Everything is deterministic (fixed shortlist size, stable sorts, ties on epoch and asteroid
+  IDs) and tours are cached per (deployed set with epochs, camp, camp epoch, mass, burn). Cost:
+  the DP is 3 ms at k = 3 and 0.65 s at k = 8 on a warm pair table (1.7 s at k = 9, two passes) but
+  a *cold* pair table costs ~0.19 s per ordered pair (366 lattice epochs × 11 TOFs of Lambert) and
+  0.3 s per return table, so adding an asteroid to a k-chain costs 1.3–1.9 s the first time; the
+  shortlist is what keeps a beam at +140–180 s (48 candidates × 8 levels; ~8 500 children per
+  level, so the shortlist is the top 0.6 %), and `_complete`'s own DP gets the warmed pairs back
+  (family 7: beam 392 s with scoring against 610 s without on a loaded machine). Judging closure
+  on the DP's own mass model instead of the exact pass was the first version's mistake: the DP
+  prices every move at the collected set mined to the window end and rejected every 9-asteroid
+  chain of family 7 that `_complete` closes (`chain-scored 0` at level 9; 9 of 24 after the fix).
+  Telemetry per beam: `search.chain_tour` (`scored`, `no_tour`, `not_closing`, `cache_hits`,
+  `seconds`, `reranked` = selected partials the tour ranking moved into the beam, `levels`).
+- **Reference-chain prior (`chainprior.py`, `gtoc12 chain-prior`,
+  `benchmarks/gtoc12/chain_prior_v1.json`).** The three archived reference files (JPL 36,
+  Antipodes 37 and 39 ships) are decoded with the shared itinerary decoder and, per ship, the
+  propellant split by role, every hop's propellant and TOF, every hop's geometry (mean-longitude
+  difference of the pair at departure and arrival, semi-major-axis gap) and the loop's compactness
+  (a-spread of the deployed set, largest phase gap between consecutive collect stops) are
+  recorded; the document stores the quantile tables, the per-ship records, the source files'
+  SHA-256 and the commit, and a second extraction on the same pins is bit-identical (test).
+  Measured on 112 ships / 1 014 collect hops / 903 deploy hops: collect hop median 66.3 kg (p75
+  82.9, p90 102.1), TOF median 183 d; deploy hop median 97.9 kg (p25 75.7); per ship collect
+  609 ± (p10 473, p90 724) against deploy 845 (p10 746, p90 942), collect share of the hop
+  propellant 0.42 (p90 0.50); |Δλ| at collect departure median 2.7° (p75 4.8°), Δa median
+  0.01 AU; loop a-spread median 0.05 AU, largest phase gap 7.8°. `ChainPrior.penalty` is two
+  per-hop terms so partial chains of any depth compare: the projected collect propellant above
+  `collect hops × p75` (dear harvest), plus — when the collect hops run above the reference median
+  — the deploy propellant *below* `deploy hops × p25` (the "cheap deploy, dear harvest" signature
+  of §6.10: the references buy their cheap harvest with dearer deploy hops and a chain that has not
+  paid that is charged the shortfall). It is non-decreasing in the collect propellant,
+  non-increasing in the deploy propellant and zero on the reference manifold (tests); the beam
+  subtracts `chain_prior_weight` (0.5) × penalty from the chain score — at 0.5 a chain whose eight
+  collect hops run 20 kg above the reference p75 loses 80 kg of score, about one asteroid's mining,
+  so it ranks below an equal-depth reference-like chain but not below a chain one asteroid
+  shorter. Every threshold is a named quantile of the JSON; the weight is the one free parameter.
+- **LP duals into the family pricing (`cooperative.lp_asteroid_prices`,
+  `archive.pricing_columns`, `RouteSearch(asteroid_prices=)`).** After every master solve the
+  campaign re-solves the master's LP relaxation (§6.7's `_LpModel`) at the requested fleet size
+  when feasible (`--dual-target-size 22`: which asteroids stand between the archive and a 22nd
+  ship), else at N* + 1, else at the largest feasible size, and reads the duals of each asteroid's
+  deploy and collect rows as its *price* (kg of master objective the fleet already pays for it);
+  `price_clusters` evaluates the price provider when a family is *dispatched*, so every family that
+  starts after a master solve prices around its duals (dual feedback monotonicity test: the
+  dispatch-time snapshot per family). The beam subtracts the prices of the asteroids a chain claims
+  from its heuristic score, its chain score and `plan_score` (the column's reduced cost;
+  `dual_price_weight` 1.0), never from the reported mass, so a family emits the ship the master
+  would take. Because one campaign's families are disjoint, prices only bite when the LP also
+  holds the *archive's* columns: `--dual-archive <run>` adds every earlier run's certified routes
+  as pricing-only columns (`pricing_columns`: asteroid sets and archived collected masses from the
+  `route_summary.json`, no re-certification, never assembled; 915 columns from the seventeen
+  archives in 0.5 s). Over those the LP reproduces `fleet_master_v7`'s bound (11 396.8 kg at N = 21,
+  LP(22) infeasible) with ship-count dual μ = 1 316 kg, mass-floor dual ν = 1.40 (the rule is
+  binding: a column enters the basis when 2.4 m_c − Σ prices > 1 316, i.e. a conflict-free ship of
+  ≥ 548 kg) and 22 priced asteroids (max 131 kg, median 35): a price is a *conflict* price, not a
+  value (a single family's disjoint ships price nothing — test).
+- **Joint itinerary inside the pricing (`ClusterPricingSettings.joint_itinerary`).** Every
+  emitted stand-alone ship is handed to §6.11's `optimise_ship` right after `improve_and_certify`
+  (same calibrated re-timer, SCvx in the loop, insertion off, `joint_budget_seconds` 150 inside
+  the family budget) and the certified result replaces the slot's route when `plan_value` rises;
+  collectors (foreign miners) are skipped as in §6.11. Probe on family 7 slot 1: 616.4 → 622.6 kg in
+  17 s (2 certifications), the same chain v8 found.
+- **Pipeline (`cluster_fleet_v9`).** beam with chain-tour scoring + prior + prices → collect DP
+  with sweep cells → harvest substitution → SCvx → return sweep → re-timing → joint itinerary →
+  archive-wide master (`fleet_master_v8`) with the LP bound. Same partition, seeds, workers and
+  budgets as v7/v8 (paired A/B).
+
 ### 6.3 Proxy validation (`results/gtoc12/proxy_validation.json`)
 
 | Data set | Quantity | p5 | p25 | median | p75 | p95 |
@@ -840,6 +933,9 @@ not needed: reference hops have zero revolutions (p95 0.004).
 
 | `joint_itinerary_v2` (eighth iteration, §6.11: whole-itinerary joint re-optimisation of the 20 `fleet_master_v6` ships + 12 best stand-alone archives, SCvx re-certification in the loop, 3 workers, `nice 19`) | full catalogue | 32 improved of 32 | — (0 inserted) | +280.4 kg (fleet ships +208.4: 575.78 → 586.20 kg average; +1.1 to +23.3 per ship) | — | — | 32 ships × 13–70 s (3 in parallel) | in the joint search (101 certifications, 95 accepted) | 435 s (7 min); main 0.12 GB, worker peak 0.12 GB | CPU |
 | **`fleet_master_v7`** (master over all sixteen runs incl. `joint_itinerary_v1/v2`: 837 routes re-flown through SCvx, 1078 columns, 2 M nodes + LP branch and bound, **proven optimal**) | full catalogue | **21** | **177** (173 mined) | **12346.48 kg** (587.93 kg average vs the 21-ship threshold 587.8; rule 21 ≤ 21.007; all 21 columns are `joint_itinerary_v2` routes) | **11391.12 kg** (LP bound 11396.76, gap 5.6 kg) | 362 | — | 3237 s re-certification (3 workers) + 139 s master | 3398 s, 0.52 GB main | CPU |
+| `cluster_fleet_v9` (ninth campaign: v8 configuration + chain-tour scoring (48 candidates per level), reference-chain prior (0.5), archive-seeded LP duals (915 pricing columns, priced at N = 21: 22–24 asteroids), joint itinerary on self-cleaning slots; same radius-1.6 / ≥ 18 partition and seeds as v7/v8, **3 workers, `nice 19`**, 4 h budget; the 260-min wrapper timeout killed the run in the last family's tail, so the last verified incumbent stands) | full catalogue | 18 | 155 | **9960.33 kg** (553.4 kg average; marks: 60 min 5197.9 / 10 ships, 120 min 8343.8 / 16, 240 min 9960.3 / 18) | 9015.34 kg (LP bound 9017.0, exhaustive; the killed final master would have repeated it) | — | 19 families × 1619–2636 s (3 in parallel), 60 ships, family 10 lost to a NaN burn schedule in the substitution pass (guarded since) | in the family pricing | 14750 s (246 min logged); main 0.44 GB, worker peak 0.53 GB, **process-tree PSS peak 0.92 GB** | CPU |
+| `joint_itinerary_v3` (whole-itinerary joint re-optimisation of the 40 best stand-alone `cluster_fleet_v8` / `cluster_fleet_v9` ships, no insertion, 3 workers, `nice 19`) | full catalogue | 35 improved of 40 | — | +411.5 kg (v8 22 of 24, +241.0; v9 13 of 16, +170.5; best 622.6, 619.2, 601.2, 600.6) | — | — | 40 ships × 12–60 s (3 in parallel) | in the joint search | 466 s (7.8 min); worker peak 0.11 GB | CPU |
+| **`fleet_master_v8`** (master over all nineteen runs incl. `cluster_fleet_v9` and `joint_itinerary_v3`: 1006 routes re-flown through SCvx, 0 failures, 1296 columns, 2 M nodes + LP branch and bound (7481 LPs), **proven optimal**) | full catalogue | **21** | **177** | **12356.30 kg** (588.40 kg average vs the 21-ship threshold 587.8; rule 21 ≤ 21.046; +9.8 kg over `fleet_master_v7`: three ships swapped, all 21 columns are joint-itinerary routes — 16 `v2`, 5 `v3`) | **11441.59 kg** (LP bound 11448.02, gap 6.4 kg; LP infeasible at 22) | — | — | 3271 s re-certification (3 workers) + 186 s master | 3477 s, 0.59 GB main | CPU |
 
 Runs are single-process CPU (16-core WSL2, load shared with an unrelated G4 GPU campaign; the
 RTX 5090 was at 100 % throughout and was not used). "Search v2" is the position-space,
@@ -1425,6 +1521,67 @@ refined arcs, launch MJD):
 | 20 | `return_sweep_v2` ← `cluster_fleet_v7/family_0009` | 1 | 8 | 555.6 | 501.6 | 17 | 64568 |
 | 21 | `cluster_fleet_v4/family_0355` | 1 | 9 | 548.4 | 501.1 | 18 | 64763 |
 
+**Ninth iteration (chain-level objective, prior, duals, joint itinerary in the pricing; §6.12).**
+`cluster_fleet_v9` (3 workers, `nice 19`, the v7/v8 partition and seeds, launched 10:01 AEST on a
+machine that also carried another agent's 7 GB test run for the first hour) priced 20 families /
+60 ships in 246 logged minutes; the 260-min wrapper timeout — sized on v8's 249 min — killed the
+process in the last family's tail, before the final master and `fleet/` were written, so the
+campaign's fleet is its last verified incumbent: **9960.33 kg / 18 ships / 155 asteroids /
+553.4 kg average** (v8: 10 697.60 / 19 / 563.0; marks 60 min 5197.9 / 10, 120 min 8343.8 / 16,
+240 min 9960.3 / 18), PSS peak 0.92 GB. *Paired by family (19 common), the chain-level objective
+is neutral*: the best ship rose in 7 families and fell in 6 (median Δ 0.0 kg, mean −4.6; family 17
++40.7, 25 +19.3, 29 +9.0 and 1 +5.1 via the inline joint step; family 8 −53.8, 6 −52.0, 3 −30.0,
+7 −10.3), 6 families reproduced v8's ship exactly. The beam's telemetry says why: over 63 beams the
+tour scorer re-scored 9 562 partials (4 935 s, 78 s per beam), 845 of them did not close on the
+exact pass and 811 had no tour, and the re-ranking moved 582 partials into the beams (9 per beam,
+of 24 × ~7 levels) — but the chain the heuristic ranks first is also the chain the DP ranks first
+on most families (family 7 diagnostic: identical `best_by_depth` from depth 5 on, at 48 and at 144
+candidates), because at the beam's exchange rate (0.15 kg of score per kg of propellant) both
+scores are dominated by the collected mass and the DP-collected spread among a level's survivors
+(76 kg at depth 7) tracks the heuristic's deploy-epoch term. Where it did change the winner the
+outcome is a coin toss, hence the variance. The *direction* is the reference one, though: over
+all 60 campaign ships the collect hop fell from 97.5 to 90.6 kg median (mean 105.1 → 100.5, the
+collect tour per ship 696 → 658 kg) and the deploy hops rose 716 → 729 kg per ship — but the
+propellant moved was not converted into ore (collected mean 465 → 456 kg per ship, chains
+≥ 587.8 kg 3 → 3, ≥ 600 kg 1 → 1, best 616.4 → 606.2). *The inline joint itinerary* ran on 11
+self-cleaning slots (8 improved, +146.9 kg, 35 certifications, 389 s) and was skipped on every
+deployer that leaves orphans and every collector, which is most slots of a cooperative family.
+*The LP duals had nothing to bite on*: the archive LP at N = 21 (LP(22) infeasible) carries
+μ = 1316 kg on the ship count and ν = 1.40 on the mass floor and only 22–24 asteroids with a
+positive row dual (max 131 kg, median 31; the rent of a selected ship sits on its `x ≤ 1` bound in
+a near-integral LP), of which one lay in a priced family (3.2 kg on one member of family 29) — so
+63 slots were priced and none was steered. `--dual-bound-share` (added afterwards, tested) moves
+the bound duals onto the columns' asteroids — another optimal dual solution — and prices 61
+asteroids (median 3.8 kg, sum 1047 kg against 943): still small, because the fleet's rent is
+almost entirely the uniform ship-count price μ. `joint_itinerary_v3` (the 40 best stand-alone v8
+and v9 ships, 7.8 min) improved 35 of 40 for **+411.5 kg** — v8's ships had never had the joint
+pass (22 of 24, +241.0; family 0 slot 3 565.1 → 600.6, family 7 slot 1 616.4 → 622.6) and v9's 13
+of 16 (+170.5; family 7 606.2 → 619.2, family 29 588.9 → 601.2) — moving, per ship, 68 kg from
+the collect hops (683 → 669) and the return (198 → 190) into the deploy hops (801 → 869), the
+reference split. `fleet_master_v8` over all nineteen archives (1006 routes re-flown, 0 failures,
+1296 columns, LP bound 11 448.02, gap 6.4 kg, proven optimal, LP(22) infeasible) is **21 ships /
+177 asteroids / 12 356.30 kg / 588.40 kg average** (rule 21 ≤ 21.046), both verifiers ok
+(official "Check successfully!" 12 356.3 kg; independent 12 356.304 kg, mass error 1e-10 kg, max
+position error 113 km): **+9.8 kg over `fleet_master_v7`**, three ships swapped (in: `v3`
+re-optimised `cluster_fleet_v9/family_0029` slot 1 601.2, `cluster_fleet_v8/family_0000` slot 3
+600.6, `cluster_fleet_v8/family_0030` slot 1 577.0; out: the `v2` 594.8, 595.2 and 578.9 ships),
+all 21 columns joint-itinerary routes (16 `v2`, 5 `v3`; one from the v9 campaign). Ship 22 is not
+reached: the rule needs 599.5 kg average, i.e. a 22nd ship of 832.7 kg *or* +11.1 kg on every
+ship. Leg-cost table `results/gtoc12/leg_stats/after_v9.json` (per-ship split before → after):
+
+| Fleet | Collect hops n | mean | p25 | median | p75 | p90 | share ≤ 75 kg | collect TOF median (p25–p75) d | Deploy hop per ship | Earth-out mean | Earth-return mean / median | return TOF median |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `cluster_fleet_v8` (19) | 154 | 87.9 | 66.7 | 86.8 | 107.5 | 129.1 | 0.292 | 210 (150–300) | 772.9 | 422.5 | 205.2 / 204.8 | 495 |
+| `cluster_fleet_v9` (18) | 144 | 86.8 | 64.9 | 84.6 | 101.2 | 128.6 | 0.292 | 210 (150–300) | 796.6 | 417.6 | 207.7 / 206.1 | 480 |
+| `fleet_master_v7` (21) | 173 | 87.3 | 62.7 | 85.7 | 110.7 | 129.6 | 0.301 | 210 (165–300) | 822.9 | 412.7 | 205.6 / 204.0 | 450 |
+| **`fleet_master_v8`** (21) | 172 | 86.7 | 64.1 | 84.3 | 110.5 | 129.7 | 0.293 | 210 (161–300) | **838.5** | 407.0 | 204.3 / 198.8 | 450 |
+| Antipodes 37 / 39, JPL 36 | 338 / 356 / 320 | 65.9–69.2 | 48.2–52.5 | 66.0–67.1 | 82.4–84.9 | 101.1–103.0 | 0.443–0.459 | 181–187 | 837–851 | 460.1–473.5 | 208.0–215.9 / 206.1–214.2 | 473–486 |
+
+The fleet's deploy spend now *equals* the references' (838.5 vs 837–851 kg per ship) — the joint
+re-optimiser bought it — while the collect hop is unchanged at 84 kg / 210 d against 66 / 181–187,
+the Earth-out leg is 55–65 kg cheaper (407 vs 460–474: slower, later arrival) and the collected
+mass 588 vs 730 kg per ship. Paying the reference deploy price did not buy the reference harvest.
+
 Per-leg detail of `reduced-v1-run2` (propellant, SCvx iterations, solve time, certified endpoint
 error): E→1265 600 d 364.7 kg 9 it 1.3 s 0.32 km; 1265→21191 360 d 128.7 kg 7 it 0.5 s 0.04 km;
 21191→27292 360 d 153.5 kg 5 it 0.3 s 0.04 km; 27292→40808 120 d 97.4 kg 24 it 0.7 s 0.01 km;
@@ -1587,6 +1744,27 @@ verified, Kepler cross-check 3.57e-6 km / 3.07e-7 km over 66 459 context points;
 ignored. The viewer's `check.mjs` asserts a 20-colour ship palette (`fleet.ships.length <= 20`)
 and now fails on that assertion alone; the viewer itself wraps colours modulo the palette, so
 ship 21 shares ship 1's colour until the palette is extended.
+Ninth iteration: `cluster_fleet_v9` commits `run_report.json` (`dual_prices`, `dual_archive`,
+`memory_total_pss_peak_mb`), every `bundle.json` (with `ships[].search[].chain_tour`,
+`ships[].joint_itinerary`, `asteroid_prices`) and `route_summary.json` (20 families, 60 ships) and
+the intermediate fleets' `fleets/*/fleet.json` (no final `fleet/`: the wrapper timeout, see §7);
+`joint_itinerary_v3` its `run_report.json`, `ships.jsonl` and every improved ship's
+`route_summary.json`; `fleet_master_v8` its `run_report.json`, `fleet/Result.txt` (the best
+verified fleet), `fleet/fleet.json` and `fleet/viewer/manifest.json`; the prior is
+`benchmarks/gtoc12/chain_prior_v1.json`, the leg-cost table `results/gtoc12/leg_stats/after_v9.json`
+and the campaign report `results/gtoc12/leg_stats/v9_report.json`. Commands: `gtoc12 chain-prior
+--output benchmarks/gtoc12/chain_prior_v1.json`; the v8 `cluster-fleet` line with `--run-id
+cluster_fleet_v9 --chain-tour-scoring --chain-tour-candidates 48 --chain-prior
+benchmarks/gtoc12/chain_prior_v1.json --chain-prior-weight 0.5 --dual-archive <each of the
+seventeen earlier runs> --dual-target-size 22 --joint-itinerary --joint-budget-seconds 150` under
+`nice -n 19` (killed by `timeout 15600` at 260 min); `joint-itinerary --run-id joint_itinerary_v3
+--source results/gtoc12/runs/cluster_fleet_v8 --source results/gtoc12/runs/cluster_fleet_v9 --top 40
+--workers 3 --per-ship-seconds 600 --budget-seconds 5400 --no-insert` (7.8 min); `fleet-master
+--run-id fleet_master_v8 --output <dir>` with the nineteen `--source` directories `--workers 3`
+(58 min). Not ingested: the methods worktree's `fleet_master_v7/columns` (833 re-certified copies
+of these archives — 0 new asteroid sets, none heavier) and the Windows-side
+`results/lambda-h100/gtoc12` copies (fleet `Result.txt` files and run reports only, no
+`route_summary.json`; a `Result.txt` → column ingester would be needed).
 
 ## 8. Limitations
 
@@ -1745,6 +1923,47 @@ LP duals back into the pricing (a per-asteroid price the family search subtracts
 generation step would) so each family prices the ships the master would actually take, and
 price on the Lambda box's 26 cores where a 4 h budget covers all 35 families of the partition
 instead of 20–25.
+
+- Ninth iteration (§6.12): the chain-level objective is implemented as specified (exact DP tour
+  of every shortlisted partial, closure judged by the exact forward pass, deterministic, cached)
+  and is *neutral* on the paired campaign (7 families up, 6 down, median 0.0 kg): the heuristic
+  and the DP rank the same chain first on most families because both are dominated by the
+  collected mass at the beam's 0.15 exchange rate, and the alternative chains the references fly
+  (dearer deploy, cheaper harvest) are either not among a level's ~8 500 children or not
+  better by the DP's own measure. The collect hop moved 97.5 → 90.6 kg median across the
+  campaign's ships and the deploy hops +13 kg per ship — the reference direction — without more
+  ore. The reference-chain prior is data (112 ships, 1 014 collect hops) and its penalty is
+  exact and monotone, but at weight 0.5 it did not change the winners either. The LP duals are
+  correct column-generation prices and cannot steer a campaign whose families are disjoint from
+  the archive's contested asteroids: 22–24 priced asteroids at N = 21, one inside a priced
+  family; the bound-share variant prices 61 and is still dominated by the ship-count dual. The
+  joint itinerary inside the pricing applies to self-cleaning slots only (11 of 60); as a
+  post-pass over the best 40 stand-alone v8/v9 ships it is the lever that moved the master:
+  +411.5 kg, three swapped fleet ships, `fleet_master_v8` 12 356.30 kg (+9.8 over `v7`). The
+  wrapper timeout (`timeout 15600`, sized on v8's 249 min) killed `cluster_fleet_v9` at 260 min
+  before its final master; the last verified incumbent (9960.3 kg / 18 ships) stands and every
+  emitted ship is archived. One family (10) crashed on a NaN burn schedule reaching
+  `plan_collect_tour` from the substitution pass (guarded since: a non-finite burn falls back to
+  the two-pass schedule; the NaN's origin in the pass-1 tour is not localised).
+
+Next bottleneck (after the ninth iteration): the fleet's deploy spend now equals the
+references' (838.5 vs 837–851 kg per ship) and the return is closed (204 vs 208–216), yet the
+collect hop is still 84 kg / 210 d against 66 / 181–187 and the ore 588 vs 730 kg per ship. The
+remaining differences are (i) the **Earth-out leg**: ours 407 kg over 580–610 d against 460–474 kg
+over 490–565 d — the references spend ~60 kg to arrive ~100 d earlier, which shifts the whole
+deploy chain and buys ~2.7 kg per asteroid-year × 9 asteroids; our certified Earth legs are
+optimised for propellant with a time term that stops at ~590 d, and every chain of a family
+inherits them; (ii) the **collect TOF**: 210 vs 181–187 d median with the same lattice — the DP
+picks long hops because at the calibrated inflation a 240-day hop is cheaper than a 150-day one
+for the phase our chains present at harvest; the references' consecutive miners sit within
+|Δλ| 2.7° (p75 4.8°) at the collect departure (`chain_prior_v1.json`), a geometric target the beam
+does not see (the prior prices propellant, not phase). The chain-level objective should therefore
+score the *phase alignment of consecutive deploys at the projected harvest epoch* (Δλ from
+`CollectPairTable.pair_geometry`, available for free) and the Earth-leg optimiser should trade
+propellant for arrival time at the fleet's exchange rate (≈ 0.03 kg of ore per asteroid-day).
+(iii) Ship 22 needs +11.1 kg on every ship at once; the joint itinerary is the only lever that has
+moved the whole fleet (+208 kg in `v2`, +411 kg over v8/v9 in `v3`), so it should run over every
+archived stand-alone ship (992 columns, ~3 h on 3 workers) before the next master.
 
 ## 9. How this feeds Paper 2 / OrbitWeaver
 
