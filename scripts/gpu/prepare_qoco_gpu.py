@@ -111,6 +111,10 @@ def main() -> None:
         "--device-numeric-updates", action="store_true",
         help="expose device coefficient updates and GPU Ruiz equilibration",
     )
+    parser.add_argument(
+        "--device-scalar-reductions", action="store_true",
+        help="reduce extrema and NaN checks on CUDA with retained scalar scratch",
+    )
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
@@ -121,6 +125,7 @@ def main() -> None:
         or args.device_cone_reductions
         or args.values_only_updates
         or args.device_numeric_updates
+        or args.device_scalar_reductions
     ):
         parser.error("--unmodified cannot be combined with backend changes")
     if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
@@ -129,6 +134,8 @@ def main() -> None:
         parser.error("--queued-operators requires --gather")
     if args.device_numeric_updates and not args.gather:
         parser.error("--device-numeric-updates requires --gather")
+    if args.device_scalar_reductions and not args.device_cone_reductions:
+        parser.error("--device-scalar-reductions requires --device-cone-reductions")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -346,6 +353,28 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         update_extension = extension.with_name("qoco_device_update.cuh")
         shutil.copyfile(update_extension, destination / "algebra/cuda/qoco_device_update.cuh")
         modified += '\n#include "qoco_device_update.cuh"\n'
+    if args.device_scalar_reductions:
+        scalar = extension.with_name("qoco_device_scalar.cuh")
+        shutil.copyfile(scalar, destination / "algebra/cuda/qoco_device_scalar.cuh")
+        modified = modified.replace(
+            "QOCOFloat inf_norm(const QOCOFloat* x, QOCOInt n)",
+            '#include "qoco_device_scalar.cuh"\n\n'
+            "QOCOFloat inf_norm(const QOCOFloat* x, QOCOInt n)",
+        )
+        for function, operation in (("inf_norm", "Maximum"), ("min_abs_val", "Minimum")):
+            start = modified.index(f"QOCOFloat {function}(const QOCOFloat* x,")
+            begin = modified.index("  if (is_device_pointer(x)) {", start)
+            end = modified.index("  else {", begin)
+            modified = (modified[:begin] + "  if (is_device_pointer(x)) {\n"
+                        "    return qoco_device_scalar::run<"
+                        f"qoco_device_scalar::{operation}>(x, n);\n"
+                        "  }\n" + modified[end:])
+        start = modified.index("QOCOInt check_nan(const QOCOVectorf* x)")
+        end = modified.index("\n}\n", start) + 3
+        modified = (modified[:start] + "QOCOInt check_nan(const QOCOVectorf* x)\n{\n"
+                    "  return static_cast<QOCOInt>(qoco_device_scalar::run<"
+                    "qoco_device_scalar::HasNan>(x->d_data, x->len));\n}\n"
+                    + modified[end:])
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -385,6 +414,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "device_cone_reductions": args.device_cone_reductions,
         "values_only_updates": args.values_only_updates,
         "device_numeric_updates": args.device_numeric_updates,
+        "device_scalar_reductions": args.device_scalar_reductions,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -408,6 +438,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["src/qoco_api.c"]
               if args.values_only_updates or args.device_numeric_updates else []),
             *(["algebra/cuda/qoco_device_update.cuh"] if args.device_numeric_updates else []),
+            *(["algebra/cuda/qoco_device_scalar.cuh"] if args.device_scalar_reductions else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")

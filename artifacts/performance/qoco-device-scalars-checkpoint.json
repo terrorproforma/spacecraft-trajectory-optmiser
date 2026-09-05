@@ -1,0 +1,504 @@
+{
+  "full_goal_complete": false,
+  "production_backend_changed": false,
+  "changes": [
+    "GPU extrema return one scalar instead of index then value",
+    "Retained scratch replaces per-call NaN allocation/upload/free",
+    "Grid-stride partial reductions for large inputs; no floating-point atomic reductions",
+    "Explicit NaN propagation in device extrema"
+  ],
+  "measurements": {
+    "qoco-device-scalars-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 0.6608293550089002,
+          "scvx_seconds": 0.245660622,
+          "qoco_solve_seconds": 0.208794018,
+          "inner_iterations": 28
+        },
+        "optimized": {
+          "process_seconds": 0.6052402069908567,
+          "scvx_seconds": 0.227428327,
+          "qoco_solve_seconds": 0.17741364799999998,
+          "inner_iterations": 28
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.0918464229176421,
+        "scvx_seconds": 1.080167212415892,
+        "qoco_solve_seconds": 1.1768768657527409
+      }
+    },
+    "qoco-device-scalars-planner-pd6.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 2.0276596500189044,
+          "scvx_total_seconds": 1.662881627,
+          "qoco_solve_seconds": 1.5654605449999999,
+          "plan_wall_seconds": 1.775621049,
+          "inner_iterations": 179
+        },
+        "optimized": {
+          "process_seconds": 1.905294177995529,
+          "scvx_total_seconds": 1.536695984,
+          "qoco_solve_seconds": 1.4313868429999999,
+          "plan_wall_seconds": 1.647352131,
+          "inner_iterations": 179
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.0642239258570088,
+        "scvx_total_seconds": 1.0821149038676734,
+        "qoco_solve_seconds": 1.0936669934166776,
+        "plan_wall_seconds": 1.0778636914271245
+      }
+    }
+  },
+  "representative_planner_results": [
+    "qoco-device-scalars-planner-pd6-baseline-sample.json",
+    "qoco-device-scalars-planner-pd6-optimized-sample.json"
+  ],
+  "sanitizers": {
+    "qoco-v21-scalars-memcheck.log": {
+      "passed": true,
+      "sha256": "e551e75843bf72a9742625e94384b3225697e0a267aee690623e087581c23777",
+      "output": "========= COMPUTE-SANITIZER\nGPU scalar reductions: exact extrema, tails, empty, subnormal, infinity, NaN, offset and nested/unscoped lifecycle PASS\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v21-scalars-initcheck.log": {
+      "passed": true,
+      "sha256": "7e6d03ded8a999ee29f4b4c84b1e8c4029050b007d90a5e3ac2fdf74ca68eb10",
+      "output": "========= COMPUTE-SANITIZER\nGPU scalar reductions: exact extrema, tails, empty, subnormal, infinity, NaN, offset and nested/unscoped lifecycle PASS\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v21-scalars-synccheck.log": {
+      "passed": true,
+      "sha256": "7e6d03ded8a999ee29f4b4c84b1e8c4029050b007d90a5e3ac2fdf74ca68eb10",
+      "output": "========= COMPUTE-SANITIZER\nGPU scalar reductions: exact extrema, tails, empty, subnormal, infinity, NaN, offset and nested/unscoped lifecycle PASS\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v21-scalars-racecheck.log": {
+      "passed": true,
+      "sha256": "881df33cf8470a0d0d6e9f05fd2bfb3f2a93691040ed645a94964227117118a7",
+      "output": "========= COMPUTE-SANITIZER\nGPU scalar reductions: exact extrema, tails, empty, subnormal, infinity, NaN, offset and nested/unscoped lifecycle PASS\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n"
+    },
+    "qoco-v21-landing-memcheck.log": {
+      "passed": true,
+      "sha256": "e2ea56dd058d1a006da0098ed90aa899b1e54def0b43e3a2ea8dcb156dd41c02",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":2.60720827,\"t_scvx\":2.64471456,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n08,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":2.6072082659999998,\"scvx_seconds\":2.6447145590000001,\"topology_seconds\":0.001837095,\"coefficient_seconds\":0.0028071041107177734,\"workspace_create_seconds\":0.16135944799999999,\"update_seconds\":0.0097762979999999992,\"scaling_seconds\":0,\"solve_seconds\":2.328401377,\"residual_seconds\":0.039568691000000003,\"replay_seconds\":0.018951519727706909,\"acceptance_seconds\":3.0128e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00018348800018429755,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.022260710999999999,\"qoco_setup_seconds\":0.20720118900000001,\"qoco_update_seconds\":0.0097762979999999992,\"qoco_solve_seconds\":2.328401377,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v21-landing-initcheck.log": {
+      "passed": true,
+      "sha256": "fd497e30accb66bd1b0f0ad40ccc62fdf926f58b6d06dde477463daf05c7fb56",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":1.88940419,\"t_scvx\":1.92387432,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n08,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":1.8894041939999997,\"scvx_seconds\":1.9238743229999999,\"topology_seconds\":0.0027852319999999999,\"coefficient_seconds\":0.0012406399846076966,\"workspace_create_seconds\":0.15242498900000001,\"update_seconds\":0.0087253980000000005,\"scaling_seconds\":0,\"solve_seconds\":1.6504362389999998,\"residual_seconds\":0.029917375999999999,\"replay_seconds\":0.016400703787803651,\"acceptance_seconds\":0.000398649,\"h2d_seconds\":0,\"d2h_seconds\":0.00032255999743938449,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.020120989999999998,\"qoco_setup_seconds\":0.18020419099999999,\"qoco_update_seconds\":0.0087253980000000005,\"qoco_solve_seconds\":1.6504362389999998,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v21-landing-synccheck.log": {
+      "passed": true,
+      "sha256": "ddc7756a6c8a94926b8a46091d884b562bb03dad781666223a48991201c2a0e2",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":2.10146053,\"t_scvx\":2.1331189,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-0P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n8,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":2.1014605270000004,\"scvx_seconds\":2.133118896,\"topology_seconds\":0.0014390049999999999,\"coefficient_seconds\":0.00086160001158714294,\"workspace_create_seconds\":0.121533242,\"update_seconds\":0.0087683369999999993,\"scaling_seconds\":0,\"solve_seconds\":1.958262248,\"residual_seconds\":0.024610547999999999,\"replay_seconds\":0.018604544073343277,\"acceptance_seconds\":3.0880000000000002e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.0001785919964313507,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.016010937999999999,\"qoco_setup_seconds\":0.093808455999999998,\"qoco_update_seconds\":0.0087683369999999993,\"qoco_solve_seconds\":1.958262248,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= ERROR SUMMARY: 0 errors\n"
+    }
+  },
+  "synthetic_unit_output": "GPU scalar reductions: exact extrema, tails, empty, subnormal, infinity, NaN, offset and nested/unscoped lifecycle PASS\n",
+  "native_ruiz4_test_output": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+  "cpu_conversion_and_audit_oracle_repeated_qualified_landing_solves": 7,
+  "cpu_conversion_and_audit_oracle_pd6_certified": true,
+  "full_backend_racecheck_clear": false,
+  "vendor_issue": "Prior cuDSS deterministic factorization race remains open; not remeasured. Standalone scalar racecheck excludes factorization.",
+  "prepared_source_reproduced": true,
+  "backend_provenance": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "2667ecdf36bb164c5b7bb9ec70024f91f45f021bc311b10ec433c5df7660818c",
+    "extension_sha256": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+    "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+    "gather": true,
+    "original_handles": false,
+    "queued_operators": true,
+    "device_cone_reductions": true,
+    "values_only_updates": true,
+    "device_numeric_updates": true,
+    "device_scalar_reductions": true,
+    "correct_stopping": true,
+    "deterministic": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "2667ecdf36bb164c5b7bb9ec70024f91f45f021bc311b10ec433c5df7660818c",
+      "algebra/cuda/qoco_reduction_scope.cuh": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+      "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+      "algebra/cuda/cudss_backend.h": "77a555ac37e624be6dd0758367eb929f67cdab44812b33fd1f8c19cc31594e4a",
+      "algebra/cuda/cudss_backend.cu": "b108c9a5f4d187f519d10df1d9a68d767d9f6956b96b5d7e21967df2c707a9fa",
+      "src/qoco_utils.c": "654298c51d80606f8d5b757d7f3f7b1f38b2f7860d08e42c52692f279f3786de",
+      "algebra/cuda/qoco_gather.cuh": "637ea34a5a178254ad6ea40f30d515e28ab32eff43423b600e503e1d6537429d",
+      "src/cone.cu": "53e522d3be03cb21f7e057652d33e314d197308330d4ce9599792f24a1e68b03",
+      "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+      "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+      "src/qoco_api.c": "4ee3954df021240c56d07d95797cd70e18cb89598642eeef89dcaad370843fd1",
+      "algebra/cuda/qoco_device_update.cuh": "cf7e524d347ba06129005fddd899d3655fbef02d3d14b84e910f36051baec9d1",
+      "algebra/cuda/qoco_device_scalar.cuh": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92"
+    }
+  },
+  "sha256": {
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/libspacepdhcg_cuda.so": "f7c127c20becf2f9c4ec3d757e700c646adbf6dbb487339c76e35415ccac4df8",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/native_qoco_conversion_test": "24c8359be727c0e9dd2c78e8c5b52af16a9e8ef91cdd54c314cfa0eb15b0fe34",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/device_scvx_integration_test": "f2e9c286f26b7aa96579efea0a196e646aa40de802552dd0cd71ce643eb079e8",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan": "a2da0c76e90ffd42ee91532720cf67e33cd6b2de69f44a7ea45672cec4cffb09",
+    "/home/angus/build-qoco-gpu-updates-v20/build-fixed/libqoco.so": "98be90fe7d249b3eb6a8b0da43cf8f145c5c2634921c177e491d756dcfc29e38",
+    "/home/angus/build-qoco-gpu-scalars-v21/build/libqoco.so": "2d5927488a7ed658a7ef4fe51ad244e5e6c1d7f5c2bf4cbf30b78465dcc56965",
+    "/home/angus/build-qoco-gpu-scalars-v21/qoco_gpu_scalar_test": "4d5f087637a802c0fb732029ab4fd5579a69f688f86f45278917a9d72794ef36",
+    "/home/angus/spacecraft-trajectory-optmiser/build/qoco-cudss-lib/libcudss.so": "5f76a3698d6b7114e6cf6ebe38a38096ccb8af090aa5b8af92d72c9b369b2e86"
+  },
+  "api_profiles": {
+    "baseline": {
+      "apis": {
+        "cudaStreamCreateWithFlags": {
+          "calls": 2,
+          "total_ns": 231038565
+        },
+        "cudaMemcpyAsync": {
+          "calls": 1232,
+          "total_ns": 119804762
+        },
+        "cudaLaunchKernel": {
+          "calls": 6065,
+          "total_ns": 68803661
+        },
+        "cudaMemcpy": {
+          "calls": 953,
+          "total_ns": 32414871
+        },
+        "cudaMalloc": {
+          "calls": 405,
+          "total_ns": 29454767
+        },
+        "cudaStreamSynchronize": {
+          "calls": 847,
+          "total_ns": 26756734
+        },
+        "cudaFree": {
+          "calls": 325,
+          "total_ns": 4184800
+        },
+        "cudaEventRecord": {
+          "calls": 806,
+          "total_ns": 2840755
+        },
+        "cudaMemsetAsync": {
+          "calls": 513,
+          "total_ns": 2156841
+        },
+        "cudaDeviceSynchronize": {
+          "calls": 57,
+          "total_ns": 1794312
+        },
+        "cudaEventSynchronize": {
+          "calls": 18,
+          "total_ns": 1580509
+        },
+        "cuLibraryUnload": {
+          "calls": 17,
+          "total_ns": 1432503
+        },
+        "cudaMemset": {
+          "calls": 378,
+          "total_ns": 1250976
+        },
+        "cudaHostAlloc": {
+          "calls": 4,
+          "total_ns": 901354
+        },
+        "cudaMemcpy2DAsync": {
+          "calls": 172,
+          "total_ns": 788486
+        },
+        "cudaFreeHost": {
+          "calls": 4,
+          "total_ns": 335205
+        },
+        "cudaEventCreateWithFlags": {
+          "calls": 56,
+          "total_ns": 215042
+        },
+        "cuStreamGetCaptureInfo_v2": {
+          "calls": 3860,
+          "total_ns": 203873
+        },
+        "cudaEventDestroy": {
+          "calls": 68,
+          "total_ns": 199220
+        },
+        "cuGetProcAddress_v2": {
+          "calls": 2095,
+          "total_ns": 198426
+        },
+        "cudaEventQuery": {
+          "calls": 3,
+          "total_ns": 10986
+        },
+        "cuInit": {
+          "calls": 7,
+          "total_ns": 9210
+        },
+        "cudaEventCreate": {
+          "calls": 12,
+          "total_ns": 7027
+        },
+        "cudaGetDeviceProperties_v2_v12000": {
+          "calls": 4,
+          "total_ns": 6683
+        },
+        "cudaStreamDestroy": {
+          "calls": 2,
+          "total_ns": 5941
+        },
+        "cuModuleGetLoadingMode": {
+          "calls": 6,
+          "total_ns": 1454
+        },
+        "cudaStreamWaitEvent": {
+          "calls": 1,
+          "total_ns": 1286
+        },
+        "cudaGetDriverEntryPoint_v11030": {
+          "calls": 2,
+          "total_ns": 382
+        }
+      },
+      "qualification": {
+        "case": "g4_sample",
+        "family": "P1-C-pd3",
+        "policy": "pure-gpu-ipm",
+        "intervals": 20,
+        "status": 0,
+        "trust_class": 0,
+        "transfer_class": "not_applicable",
+        "qualified": true,
+        "quality_tolerance": 1e-08,
+        "canonical_residual": 2.618510687647072e-11,
+        "objective": 0.49448537365291756,
+        "dynamics": 0,
+        "path": 0,
+        "terminal": 7.034629823099436e-13,
+        "path_inventory": {
+          "thrust": 0,
+          "mass": 0,
+          "altitude": 0
+        },
+        "virtual": 0,
+        "trajectory_difference": 476.1482579323556,
+        "cqp_seconds": 0.29490229199999995,
+        "scvx_seconds": 0.297801955,
+        "topology_seconds": 0.000890262,
+        "coefficient_seconds": 0.00035513600707054135,
+        "workspace_create_seconds": 0.030264895,
+        "update_seconds": 0.000468255,
+        "scaling_seconds": 0,
+        "solve_seconds": 0.25494891399999997,
+        "residual_seconds": 0.000495984,
+        "replay_seconds": 0.0008699840009212495,
+        "acceptance_seconds": 2.905e-05,
+        "h2d_seconds": 0,
+        "d2h_seconds": 0.00024780800193548207,
+        "recovery_seconds": 0,
+        "recovery_iterations": 0,
+        "inner_iterations": 28,
+        "h2d_bytes": 286728,
+        "d2h_bytes": 110000,
+        "peak_device_bytes": 758744,
+        "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss",
+        "topology_allocations_after_create": 0,
+        "hidden_cpu_fallback": 0,
+        "qoco_conversion_seconds": 0.001749612,
+        "qoco_setup_seconds": 0.037239527,
+        "qoco_update_seconds": 0.000468255,
+        "qoco_solve_seconds": 0.25494891399999997,
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": 1,
+        "hybrid_handoff_eligible": 0,
+        "qoco_failure": 0
+      },
+      "csv_sha256": "91cc13911d62a2d054d143db9959332f5757adcd65afe2dcbca0383c54607ee4"
+    },
+    "optimized": {
+      "apis": {
+        "cudaStreamCreateWithFlags": {
+          "calls": 2,
+          "total_ns": 199138631
+        },
+        "cudaMemcpyAsync": {
+          "calls": 786,
+          "total_ns": 81575282
+        },
+        "cudaMemcpy": {
+          "calls": 925,
+          "total_ns": 73096517
+        },
+        "cudaLaunchKernel": {
+          "calls": 6065,
+          "total_ns": 67684287
+        },
+        "cudaStreamSynchronize": {
+          "calls": 401,
+          "total_ns": 14713881
+        },
+        "cudaFree": {
+          "calls": 299,
+          "total_ns": 4447515
+        },
+        "cudaMalloc": {
+          "calls": 379,
+          "total_ns": 3065327
+        },
+        "cudaMemsetAsync": {
+          "calls": 513,
+          "total_ns": 2204686
+        },
+        "cudaDeviceSynchronize": {
+          "calls": 57,
+          "total_ns": 1861184
+        },
+        "cudaEventSynchronize": {
+          "calls": 18,
+          "total_ns": 1733162
+        },
+        "cudaEventRecord": {
+          "calls": 360,
+          "total_ns": 1601376
+        },
+        "cuLibraryUnload": {
+          "calls": 17,
+          "total_ns": 1550692
+        },
+        "cudaMemset": {
+          "calls": 378,
+          "total_ns": 1419124
+        },
+        "cudaHostAlloc": {
+          "calls": 4,
+          "total_ns": 909555
+        },
+        "cudaMemcpy2DAsync": {
+          "calls": 172,
+          "total_ns": 799138
+        },
+        "cudaFreeHost": {
+          "calls": 4,
+          "total_ns": 356229
+        },
+        "cudaEventCreateWithFlags": {
+          "calls": 56,
+          "total_ns": 234683
+        },
+        "cudaEventDestroy": {
+          "calls": 68,
+          "total_ns": 229963
+        },
+        "cuGetProcAddress_v2": {
+          "calls": 2095,
+          "total_ns": 189275
+        },
+        "cuStreamGetCaptureInfo_v2": {
+          "calls": 1630,
+          "total_ns": 97926
+        },
+        "cuInit": {
+          "calls": 7,
+          "total_ns": 9382
+        },
+        "cudaEventQuery": {
+          "calls": 3,
+          "total_ns": 8613
+        },
+        "cudaStreamDestroy": {
+          "calls": 2,
+          "total_ns": 7063
+        },
+        "cudaGetDeviceProperties_v2_v12000": {
+          "calls": 4,
+          "total_ns": 6636
+        },
+        "cudaEventCreate": {
+          "calls": 12,
+          "total_ns": 6549
+        },
+        "cudaStreamWaitEvent": {
+          "calls": 1,
+          "total_ns": 1401
+        },
+        "cuModuleGetLoadingMode": {
+          "calls": 6,
+          "total_ns": 1349
+        },
+        "cudaGetDriverEntryPoint_v11030": {
+          "calls": 2,
+          "total_ns": 535
+        }
+      },
+      "qualification": {
+        "case": "g4_sample",
+        "family": "P1-C-pd3",
+        "policy": "pure-gpu-ipm",
+        "intervals": 20,
+        "status": 0,
+        "trust_class": 0,
+        "transfer_class": "not_applicable",
+        "qualified": true,
+        "quality_tolerance": 1e-08,
+        "canonical_residual": 2.618510687647072e-11,
+        "objective": 0.49448537365291756,
+        "dynamics": 0,
+        "path": 0,
+        "terminal": 7.034629823099436e-13,
+        "path_inventory": {
+          "thrust": 0,
+          "mass": 0,
+          "altitude": 0
+        },
+        "virtual": 0,
+        "trajectory_difference": 476.1482579323556,
+        "cqp_seconds": 0.25623617000000004,
+        "scvx_seconds": 0.25935865,
+        "topology_seconds": 0.000942027,
+        "coefficient_seconds": 0.00035267199575901033,
+        "workspace_create_seconds": 0.037903235,
+        "update_seconds": 0.000508573,
+        "scaling_seconds": 0,
+        "solve_seconds": 0.21539031400000003,
+        "residual_seconds": 0.0005066,
+        "replay_seconds": 0.0010350399911403657,
+        "acceptance_seconds": 2.1745999999999998e-05,
+        "h2d_seconds": 0,
+        "d2h_seconds": 0.00026739199459552764,
+        "recovery_seconds": 0,
+        "recovery_iterations": 0,
+        "inner_iterations": 28,
+        "h2d_bytes": 286728,
+        "d2h_bytes": 110000,
+        "peak_device_bytes": 758744,
+        "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss",
+        "topology_allocations_after_create": 0,
+        "hidden_cpu_fallback": 0,
+        "qoco_conversion_seconds": 0.001735326,
+        "qoco_setup_seconds": 0.038095356999999996,
+        "qoco_update_seconds": 0.000508573,
+        "qoco_solve_seconds": 0.21539031400000003,
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": 1,
+        "hybrid_handoff_eligible": 0,
+        "qoco_failure": 0
+      },
+      "csv_sha256": "1c91972b4243761db8d2a83221d63c869a3fed3584f62cf70d161b9f08460e1e"
+    }
+  },
+  "profile_scope": "Nsight Systems 2024.6 CUDA API trace only; no RTX 5090 kernel/memory timeline. API time includes initialization and overlapping/queued work; not exclusive GPU stage timings.",
+  "interpretation": "Paired SCvx medians improve about 1.08x on both fixtures with identical iterations, objectives and independent physics gates. Local measurements include timing variability, not universal speedups.",
+  "remaining_work": [
+    "Batch remaining scalar decisions on device",
+    "Initial CPU structure discovery and KKT assembly",
+    "CPU outer control and warm state",
+    "cuDSS vendor issue",
+    "larger trajectories, conditioning and batching",
+    "GPU GTOC12"
+  ]
+}

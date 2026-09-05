@@ -553,3 +553,18 @@ exclude backend-owned traffic and memory. Iterations and physics results are
 unchanged. Mission timings use Ruiz 0; synthetic tests validate nonzero Ruiz.
 [Detailed evidence and remaining work](GPU_QOCO_LOCAL_BACKEND.md#device-coefficient-updates-and-ruiz-equilibration)
 separate phase improvements from total runtime. The full goal remains active.
+
+## GPU scalar reduction checkpoint
+
+Infinity norms and minimum-absolute-value reductions now return their result
+directly from CUDA, removing the intermediate index download. NaN checks reuse
+scalar scratch within the solve. Exact-value tests through 1048579 entries and
+all four kernel sanitizers pass; real landing/6DOF qualification and iteration
+counts remain unchanged. The known cuDSS factorization race is still open.
+
+Paired local SCvx medians improve 245.661 → 227.428 ms for landing and
+1662.882 → 1536.696 ms for 6DOF, about 1.08x each. A separate landing API trace
+records 847 → 401 stream synchronizations with unchanged kernel launch count.
+[Evidence and scope](GPU_QOCO_LOCAL_BACKEND.md#gpu-scalar-extrema-and-retained-nan-checks)
+include raw timings, hashes and sanitizer output. Scalar decisions still return
+to the CPU; removing that control path remains part of the full active goal.

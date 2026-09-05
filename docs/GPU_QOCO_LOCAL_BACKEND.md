@@ -531,3 +531,59 @@ is Ruiz-0. `SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE=1` and
 `SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE=1` enable the independent host oracles.
 Omit test-oracle variables from performance runs. The final local build directory
 was named `build-fixed`; adjust the link/runtime path when using that saved build.
+
+## GPU scalar extrema and retained NaN checks
+
+The next optional backend adds `--device-scalar-reductions` to the preceding
+preparation flags. Infinity norms and minimum-absolute-value reductions now
+return the value directly from CUDA. The previous implementation downloaded a
+cuBLAS extremum index, then downloaded the selected element in a second operation.
+NaN checks now use retained scalar scratch instead of allocating, initializing
+from the host and freeing a flag for every call. These operations use the same
+default stream and shared scope lifecycle as the existing cone reductions.
+
+Inputs through 4096 entries use one block; larger inputs use bounded grid-stride
+partial reductions followed by a device reduction. All threads participate in
+the block barriers. Finite extrema remain exact FP64 values; NaNs explicitly
+propagate through the extrema reduction. No floating-point atomics or changed
+stopping tolerances are involved. Host scalar decisions and one scalar result
+transfer per call remain; batching those decisions is still required for the
+fully resident iteration loop.
+
+The standalone `qoco_gpu_scalar_test.cu` checks exact extrema, empty inputs,
+subnormals, infinities, signed zeros, NaNs, offset pointers, block/grid tails up
+to 1048579 entries, and nested/unscoped calls before and after cleanup. Build it
+using the preceding standalone command with the scalar test filename. All four
+CUDA sanitizers pass, with zero leaked allocations. The native Ruiz-4 case,
+seven repeated landing solves and actual 6DOF planner pass the independent CPU
+conversion/KKT oracles. Full landing memory, initialization and synchronization
+checks also pass. The prior cuDSS factorization race remains unresolved and was
+not rerun; this optional backend is not promoted to the default dependency.
+
+Matched RTX 5090 measurements use the same frozen 038695b core with v20 versus
+v21 backends, two warmups and seven alternating measured samples per variant:
+
+| Case | Previous SCvx | Scalar reduction SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 245.661 ms | 227.428 ms | 660.829 → 605.240 ms |
+| 20-interval 6DOF planner, 1e-6 | 1662.882 ms | 1536.696 ms | 2027.660 → 1905.294 ms |
+
+Both SCvx medians improve about 1.08x (7.4%/7.6% less time). Iterations remain
+28/179, with two accepted steps and the same objectives and independent physics
+results. These are local matched measurements, not universal speedup claims;
+the raw samples retain timing variability, including a slow baseline warmup.
+
+A separate qualified landing API trace supports the reduction in round trips:
+`cudaStreamSynchronize` calls fall 847 → 401, `cudaMemcpyAsync` 1232 → 786,
+`cudaMemcpy` 953 → 925 and allocations/frees 405/325 → 379/299. Kernel launches
+remain 6065. This is an Nsight Systems 2024.6 CUDA API trace, not an RTX 5090 GPU
+kernel timeline; API durations include initialization and queued work and should
+not be treated as exclusive GPU phase times.
+
+[Checkpoint, sanitizer output, source provenance and API counts](../artifacts/performance/qoco-device-scalars-checkpoint.json),
+[landing samples](../artifacts/performance/qoco-device-scalars-pd3.json), and
+[planner samples](../artifacts/performance/qoco-device-scalars-planner-pd6.json)
+retain the measured binary hashes and complete representative planner results.
+Prepared-source hashes reproduce in a fresh directory. Remaining CPU decisions,
+initial structure/KKT assembly, dependency correctness, large trajectory scaling
+and GPU GTOC12 remain part of the active goal.
