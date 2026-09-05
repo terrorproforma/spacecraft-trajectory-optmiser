@@ -14,6 +14,7 @@ struct spacepdhcg_native_qoco_report {
     double setup_seconds;
     double update_seconds;
     double solve_seconds;
+    double residual_seconds;
     /// Relative KKT residuals in the `canonical_residual_audit` normalisation used by the
     /// planner certificate and the CPU reference: `primal_residual` covers equality /
     /// primal-cone / dual-cone violation over (1 + |rhs| + |Ax|); `dual_residual` covers
@@ -32,6 +33,14 @@ struct spacepdhcg_native_qoco_report {
     std::uint64_t solves;
     std::uint64_t d2h_copy_count;
     std::uint64_t d2h_bytes;
+    // Adapter-owned transfers; opaque QOCO-internal transfers are separate.
+    std::uint64_t h2d_copy_count;
+    std::uint64_t h2d_bytes;
+    std::uint64_t d2d_copy_count;
+    std::uint64_t d2d_bytes;
+    // Audit-owned memory, including temporary setup scratch in the peak.
+    std::uint64_t audit_allocations;
+    std::uint64_t audit_peak_bytes;
     int iterations;
     int warm_primal_accepted;
     int dual_discarded;

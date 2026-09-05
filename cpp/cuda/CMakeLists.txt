@@ -99,6 +99,7 @@ add_library(
     SHARED
         src/device_scvx.cu
         src/native_qoco_adapter.cpp
+        src/native_qoco_gpu.cu
         src/orbitweaver_gpu.cu
         src/persistent_pdhcg.cu
 )
@@ -210,6 +211,11 @@ if(BUILD_TESTING)
     )
     foreach(source IN LISTS SPACEPDHCG_CUDA_TEST_SOURCES)
         get_filename_component(test_name "${source}" NAME_WE)
+        # This standalone test needs the isolated QOCO source headers/library;
+        # see docs/GPU_QOCO_LOCAL_BACKEND.md for its separate build command.
+        if(test_name STREQUAL "qoco_gpu_operators_test")
+            continue()
+        endif()
         add_executable("${test_name}" "${source}")
         target_include_directories(
             "${test_name}"

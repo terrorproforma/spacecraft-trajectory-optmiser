@@ -2340,6 +2340,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         const bool hybrid_qoco =
             driver->options.policy == SPACEPDHCG_CUDA_SCVX_HYBRID_QOCO;
         bool qoco_used = pure_qoco;
+        const double qoco_audit_before = driver->qoco_report.residual_seconds;
         // A deadline that fired between inner solves (while the workspace was
         // not solving) cannot reach the device; honour it here instead of
         // launching another full-budget solve.
@@ -2540,6 +2541,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         if (pure_qoco) {
             result->update_seconds = driver->qoco_report.update_seconds;
             result->solve_seconds = driver->qoco_report.solve_seconds;
+            result->residual_seconds = driver->qoco_report.residual_seconds;
             result->qoco_conversion_seconds =
                 driver->qoco_report.conversion_seconds;
             result->qoco_setup_seconds = driver->qoco_report.setup_seconds;
@@ -2566,6 +2568,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             result->recovery_seconds += last_diagnostics.recovery_seconds;
             result->residual_seconds += last_diagnostics.residual_seconds;
             if (qoco_used) {
+                result->residual_seconds +=
+                    driver->qoco_report.residual_seconds - qoco_audit_before;
                 result->qoco_conversion_seconds +=
                     driver->qoco_report.conversion_seconds;
                 result->qoco_setup_seconds += driver->qoco_report.setup_seconds;
@@ -3046,19 +3050,15 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     result->scvx_total_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - started
     ).count();
-    result->allocation_count = driver->allocation_count;
-    result->allocation_bytes = driver->allocation_bytes;
+    result->allocation_count = driver->allocation_count + driver->qoco_report.audit_allocations;
+    result->allocation_bytes = driver->allocation_bytes + driver->qoco_report.audit_peak_bytes;
     const bool pure_qoco =
         driver->options.policy == SPACEPDHCG_CUDA_SCVX_PURE_QOCO;
     result->h2d_copy_count = pure_qoco
-        ? 2U * driver->qoco_report.solves
+        ? driver->qoco_report.h2d_copy_count
         : last_diagnostics.h2d_copy_count - transfer_before.h2d_copy_count;
     result->h2d_bytes = pure_qoco
-        ? driver->qoco_report.solves
-            * (driver->problem.canonical_structure.variables
-               + driver->problem.canonical_structure.scalar_rows
-               + driver->problem.canonical_structure.affine_rows)
-            * sizeof(double)
+        ? driver->qoco_report.h2d_bytes
         : last_diagnostics.h2d_copy_bytes - transfer_before.h2d_copy_bytes;
     result->d2h_copy_count =
         (pure_qoco
@@ -3073,12 +3073,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 - transfer_before.d2h_copy_bytes)
         + driver->d2h_bytes - driver_d2h_bytes_before;
     result->device_copy_count =
-        (pure_qoco ? 0U
+        (pure_qoco ? driver->qoco_report.d2d_copy_count
                    : last_diagnostics.d2d_copy_count
                        - transfer_before.d2d_copy_count)
         + driver->device_copy_count - driver_device_count_before;
     result->device_copy_bytes =
-        (pure_qoco ? 0U
+        (pure_qoco ? driver->qoco_report.d2d_bytes
                    : last_diagnostics.d2d_copy_bytes
                        - transfer_before.d2d_copy_bytes)
         + driver->device_copy_bytes - driver_device_bytes_before;

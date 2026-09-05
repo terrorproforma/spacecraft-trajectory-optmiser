@@ -24,6 +24,8 @@ def main() -> None:
     parser.add_argument("--executable", type=Path, required=True)
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--optimized", type=Path, required=True)
+    parser.add_argument("--baseline-core", type=Path)
+    parser.add_argument("--optimized-core", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--warmups", type=int, default=2)
     parser.add_argument("--repeats", type=int, default=7)
@@ -38,10 +40,16 @@ def main() -> None:
         args.optimized,
         args.executable.parent.parent / "cuda/libspacepdhcg_cuda.so",
     ]
+    cores = {
+        "baseline": args.baseline_core or paths[-1],
+        "optimized": args.optimized_core or paths[-1],
+    }
+    paths.extend(cores.values())
     document = {
         "fixture": "P1-C-pd3, 20 intervals, two accepted outer steps, tolerance 1e-8",
         "warmups_per_variant": args.warmups,
         "measured_samples_per_variant": args.repeats,
+        "core_libraries": {k: str(v.resolve()) for k, v in cores.items()},
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         "sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
         "gpu": subprocess.check_output(
@@ -58,6 +66,9 @@ def main() -> None:
         for variant, library in variants:
             env = {k: v for k, v in os.environ.items() if not k.startswith("SPACEPDHCG_TEST_")}
             env["SPACEPDHCG_QOCO_LIBRARY"] = str(library.resolve())
+            env["LD_LIBRARY_PATH"] = (
+                str(cores[variant].resolve().parent) + ":" + env.get("LD_LIBRARY_PATH", "")
+            )
             start = time.perf_counter()
             run = subprocess.run(
                 [str(args.executable), "--p1c-qoco-repeatability", "1"],

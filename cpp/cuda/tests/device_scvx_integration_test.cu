@@ -1011,7 +1011,8 @@ void emit_g4_attempt(
                             || g4_policy == "pure-gpu-ipm"
                             || g4_policy == "hybrid-pdhcg-ipm")
                << "},\"resources\":{\"peak_device_bytes\":"
-               << attempt.diagnostics.peak_active_bytes
+               << attempt.diagnostics.peak_active_bytes + attempt.result.allocation_bytes
+               << ",\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\""
                << ",\"reserved_device_bytes\":"
                << attempt.diagnostics.active_bytes
                << ",\"h2d_bytes\":" << attempt.result.h2d_bytes
@@ -3705,6 +3706,7 @@ IntegrationResult run_resident_sequence(
                 "\"recovery_seconds\":%.17g,\"recovery_iterations\":%llu,"
                 "\"inner_iterations\":%llu,\"h2d_bytes\":%llu,"
                 "\"d2h_bytes\":%llu,\"peak_device_bytes\":%llu,"
+                "\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\","
                 "\"topology_allocations_after_create\":%llu,"
                 "\"hidden_cpu_fallback\":%d,"
                 "\"qoco_conversion_seconds\":%.17g,"
@@ -3754,7 +3756,7 @@ IntegrationResult run_resident_sequence(
                 static_cast<unsigned long long>(outer.inner_iterations),
                 static_cast<unsigned long long>(outer.h2d_bytes),
                 static_cast<unsigned long long>(outer.d2h_bytes),
-                static_cast<unsigned long long>(diagnostics.peak_active_bytes),
+                static_cast<unsigned long long>(diagnostics.peak_active_bytes + outer.allocation_bytes),
                 static_cast<unsigned long long>(
                     outer.topology_allocation_count_after_create
                 ),

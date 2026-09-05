@@ -1,0 +1,136 @@
+{
+  "full_goal_complete": false,
+  "production_backend_changed": false,
+  "benchmark": "qoco-gpu-audit-pd3.json",
+  "benchmark_memory_counter_scope": "Persistent CQP workspace only; final exporter correction is demonstrated separately below.",
+  "additional_speedup_demonstrated": false,
+  "medians": {
+    "baseline": {
+      "process_seconds": 1.0689914819668047,
+      "scvx_seconds": 0.660848182,
+      "qoco_solve_seconds": 0.621197942,
+      "inner_iterations": 54
+    },
+    "optimized": {
+      "process_seconds": 1.1129264759947546,
+      "scvx_seconds": 0.668247346,
+      "qoco_solve_seconds": 0.628651089,
+      "inner_iterations": 54
+    }
+  },
+  "sanitizers": {
+    "memcheck": {
+      "passed": true,
+      "log_sha256": "b5be143f12c58ecbff1c2dda45da585a90d36e8ef72dae3ef5019b384c0f7b77"
+    },
+    "initcheck": {
+      "passed": true,
+      "log_sha256": "45df37328a26409e2e912a675e1f49735385cd405d6ffe84dd0ca1c9f1ae95ba"
+    },
+    "synccheck": {
+      "passed": true,
+      "log_sha256": "45df37328a26409e2e912a675e1f49735385cd405d6ffe84dd0ca1c9f1ae95ba"
+    },
+    "racecheck": {
+      "passed": true,
+      "log_sha256": "6db1921b8816f1d3fb0536f7a53446313159ee05ddf359de217d808f85da67d8"
+    },
+    "landing_memcheck": {
+      "passed": true,
+      "log_sha256": "0baba85e7d005f1b30e0cd0e23b0c2ef5151d906f852ccef813047d184369109"
+    },
+    "landing_synccheck": {
+      "passed": true,
+      "log_sha256": "d30b466aa8733b3d180a084f904da1782828adab1a1ec3381793213ebd791bf4"
+    }
+  },
+  "cpu_oracle_qualified_repeated_solves": 7,
+  "legacy_device_view_compatibility_qualified": true,
+  "accounted_memory_sample": {
+    "case": "g4_sample",
+    "family": "P1-C-pd3",
+    "policy": "pure-gpu-ipm",
+    "intervals": 20,
+    "status": 0,
+    "trust_class": 0,
+    "transfer_class": "not_applicable",
+    "qualified": true,
+    "quality_tolerance": 1e-08,
+    "canonical_residual": 8.519603114298186e-12,
+    "objective": 0.4944853733489821,
+    "dynamics": 0,
+    "path": 0,
+    "terminal": 5.735494440495259e-12,
+    "path_inventory": {
+      "thrust": 0,
+      "mass": 0,
+      "altitude": 0
+    },
+    "virtual": 0,
+    "trajectory_difference": 476.14829470618133,
+    "cqp_seconds": 0.621171175,
+    "scvx_seconds": 0.624022311,
+    "topology_seconds": 0.033072321,
+    "coefficient_seconds": 0.00034252800047397615,
+    "workspace_create_seconds": 0.031139926,
+    "update_seconds": 0.00163783,
+    "scaling_seconds": 0,
+    "solve_seconds": 0.584076664,
+    "residual_seconds": 0.0005015320000000001,
+    "replay_seconds": 0.0008473599851131441,
+    "acceptance_seconds": 1.7514999999999997e-05,
+    "h2d_seconds": 0,
+    "d2h_seconds": 0.00017766400054097177,
+    "recovery_seconds": 0,
+    "recovery_iterations": 0,
+    "inner_iterations": 54,
+    "h2d_bytes": 116552,
+    "d2h_bytes": 151008,
+    "peak_device_bytes": 506880,
+    "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss",
+    "topology_allocations_after_create": 0,
+    "hidden_cpu_fallback": 0,
+    "qoco_conversion_seconds": 0.0007539,
+    "qoco_setup_seconds": 0.034201249,
+    "qoco_update_seconds": 0.00163783,
+    "qoco_solve_seconds": 0.584076664,
+    "qoco_workspace_creations": 1,
+    "qoco_numeric_updates": 1,
+    "qoco_dual_discarded": 1,
+    "hybrid_handoff_eligible": 0,
+    "qoco_failure": 0
+  },
+  "pd6_existing_handback_contract": {
+    "case": "qoco_handback",
+    "family": "P1-D-pd6",
+    "mode": "pure-gpu-ipm",
+    "accepted": 0,
+    "fingerprint_match": 1,
+    "permutation_match": 1,
+    "device_replay": 1,
+    "hidden_cpu_fallback": 0,
+    "quaternion": 0,
+    "terminal": 0.04722905061086531,
+    "predicted": 5.438318040860541,
+    "actual": -2.3836491344999375,
+    "ratio": -0.4383063139357618
+  },
+  "pd6_handback_is_convergence_evidence": false,
+  "full_backend_racecheck_clear": false,
+  "open_vendor_issue": "Previously reproduced cuDSS 0.7.1.6 deterministic factorization hazards; not suppressed or reclassified by these audit tests.",
+  "remaining_cpu_work": [
+    "QOCO conversion",
+    "scaling",
+    "KKT assembly",
+    "upstream scalar reductions",
+    "solution download and warm-state retention",
+    "outer decisions"
+  ],
+  "sha256": {
+    "/home/angus/build-spacepdhcg-gpu-native/cuda/libspacepdhcg_cuda.so": "d415f48881f5ecd699c024becd49f1f216744fd3a3b29d050ea21d0c555efdec",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/device_scvx_integration_test": "47af757b01afdef37c861b7d3889d320c077bae74e51cb945fff49c55d75f215",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/qoco_gpu_audit_test": "5a5e50f7e12c3804f270d659eb8f10292e3b0c665067ca72205f988a80991245",
+    "/home/angus/build-qoco-gpu-gather-v10/build/libqoco.so": "9c0a10809daf791bbee5bfdef7d1a1b2d6b934b9dc3f8cf9e47b6d8f44b9e04b",
+    "/home/angus/build-qoco-gpu-gather-v9/build/libqoco.so": "d07e743cfa047c7530b8aa4d0c228790aea2623e747af952a1ff936623db9f50"
+  }
+}

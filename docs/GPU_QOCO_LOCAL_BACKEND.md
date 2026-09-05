@@ -97,7 +97,8 @@ operator/stopping checks. The existing 6DOF handback contract passes; its candid
 is rejected by the outer loop, so this is not a 6DOF convergence result.
 
 The pipeline still has CPU numerical work: QOCO conversion, scaling, KKT assembly,
-dual mapping and residual evaluation, plus host decisions and scalar reductions.
+plus host decisions and upstream scalar reductions. The adapter's residual audit
+and dual mapping now run on CUDA, as described below.
 GPU sparse maps and handle reuse do not make the complete planner GPU resident.
 The maps also consume additional retained device memory (indices and sort scratch).
 Large trajectories, other dynamics families, batching, stream-safe concurrency and
@@ -140,3 +141,68 @@ For the matched control, prepare a second source copy with the same options plus
 control and cannot be combined with other changes. Run
 `scripts/gpu/benchmark_qoco.py --help` for the alternating benchmark; it acquires
 the shared local GPU lock and aborts while saving evidence if qualification fails.
+
+## Device residual audit and dual mapping
+
+The native adapter now evaluates the unscaled KKT certificate and maps QOCO duals
+on CUDA. Fixed CSC topology is converted to ordered row gathers on the GPU once;
+numeric updates reuse retained buffers. Parallel row and variable tasks evaluate
+the equality, conic, stationarity and complementarity terms, followed by
+deterministic reductions. Each SOC is an independent task. Non-finite inputs and
+intermediates fail the certificate instead of disappearing through max operations.
+The mathematical normalization and acceptance tolerances are unchanged.
+
+Prepared backends expose `qoco_gpu_get_solution`, a borrowed view of completed,
+unscaled device vectors. The adapter copies the primal device-to-device, maps
+duals directly into the driver's buffer, and downloads only six audit scalars.
+Older libraries without the optional export upload their host solution into
+retained audit buffers; the audit itself still runs on CUDA. This compatibility
+path is measured separately. Upstream QOCO still downloads its solution, and the
+adapter still retains a host primal for accepted warm starts. Those transfers
+and the CPU conversion/scaling/KKT assembly have **not** been eliminated.
+
+`qoco_gpu_audit_test` checks an independent dense long-double reference, empty
+constraint blocks, duplicate sparse entries, multiple SOC sizes, numeric updates,
+dual transforms, reproducibility, a nonblocking stream, and NaN/infinity rejection.
+Repeated updates and audits allocate no further buffers. CUDA memcheck (including
+leaks), initcheck, synccheck and racecheck all pass for this test. Full landing
+memcheck and synccheck pass with `SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE=1`, which
+compares the old CPU certificate and mapping to the new device outputs. Seven
+repeated landing solves and the older-library compatibility path also pass this
+oracle. Production runs leave that flag unset. The existing 6DOF handback
+contract passes, but it rejects its candidate; it does not establish 6DOF solver
+convergence or exercise the new audit on a converged 6DOF problem.
+
+The paired fresh-process benchmark uses the same prepared backend for both core
+libraries, two warmups and seven measured samples per variant:
+
+| Measurement | Previous CPU audit | GPU audit |
+| --- | ---: | ---: |
+| Median SCvx | 660.848 ms | 668.247 ms |
+| Median complete process | 1068.991 ms | 1112.926 ms |
+| Inner iterations / accepted steps | 54 / 2 | 54 / 2 |
+
+Every sample qualifies at 1e-8 with objective 0.49448537334898213 and terminal
+residual 5.735494440495259e-12. The GPU certificate differs only at roundoff
+(8.519603114298186e-12 versus 8.519603114298199e-12). This small fixture does
+**not** demonstrate an additional speedup: SCvx is 1.1% slower and process time
+4.1% slower by these medians. The earlier scoped-handle speedup is a separate
+measurement. Large-problem audit scaling remains to be measured.
+
+Evidence: [paired samples](../artifacts/performance/qoco-gpu-audit-pd3.json) and
+[validation checkpoint](../artifacts/performance/qoco-gpu-audit-checkpoint.json).
+The benchmark predates the final memory-export correction: its `peak_device_bytes`
+field covers only the persistent CQP workspace. Current exports add driver and
+audit-owned peak allocations and label the result
+`native_owned_peak_upper_bound_excludes_qoco_cudss`; the validated landing reports
+506880 bytes instead of the old partial 187660-byte count. The sum is a conservative
+bound on known allocations, **not** total device memory: opaque QOCO/cuDSS
+allocations remain outside this counter. Adapter transfer counters likewise do
+not instrument upstream library-internal copies.
+
+Use `benchmark_qoco.py --baseline-core OLD/libspacepdhcg_cuda.so
+--optimized-core NEW/libspacepdhcg_cuda.so` in addition to its existing backend
+arguments to reproduce a core-adapter comparison. The tool hashes both core
+libraries and selects them through the process library search path. The full
+CUDA build now excludes the standalone QOCO operator test from its automatic
+test glob, since that test requires the isolated upstream headers and library.

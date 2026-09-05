@@ -205,6 +205,12 @@ def main() -> None:
                 + "}\n"
                 + modified[end:]
             )
+    device_solution = extension.with_name("qoco_device_solution.cuh")
+    shutil.copyfile(device_solution, destination / "algebra/cuda/qoco_device_solution.cuh")
+    modified = modified.replace(
+        '#include "cudss_backend.h"',
+        '#include "cudss_backend.h"\n#include "qoco_device_solution.cuh"',
+    )
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -237,6 +243,7 @@ def main() -> None:
         "original_cuda_linalg_sha256": hashlib.sha256(original.encode()).hexdigest(),
         "modified_cuda_linalg_sha256": hashlib.sha256(modified.encode()).hexdigest(),
         "extension_sha256": hashlib.sha256(extension.read_bytes()).hexdigest(),
+        "device_solution_sha256": hashlib.sha256(device_solution.read_bytes()).hexdigest(),
         "gather": args.gather,
         "original_handles": args.original_handles,
         "correct_stopping": args.correct_stopping,

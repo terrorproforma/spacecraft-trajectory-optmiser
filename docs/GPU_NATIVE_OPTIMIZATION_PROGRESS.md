@@ -449,3 +449,21 @@ inside its deterministic forward solve. These findings remain open, and the
 backend is not promoted automatically. The pinned upstream and remote campaigns
 are untouched. [Implementation, raw evidence and reproduction instructions](GPU_QOCO_LOCAL_BACKEND.md)
 describe the measured improvement, rejected experiments and remaining CPU work.
+
+## GPU certificate and dual handback checkpoint
+
+The QOCO adapter's KKT residual certificate and dual transformation now run on
+CUDA with retained topology, parallel sparse gathers and deterministic reductions.
+The prepared backend supplies resident device solutions; legacy backends use
+retained upload buffers. Independent long-double reference tests and all four
+CUDA sanitizer tools pass for the new kernels. Real landing solves pass a CPU
+oracle, repeatability and full-solve memory/synchronization checks at unchanged
+1e-8 accuracy. The known cuDSS race finding remains open.
+
+This migration does not add a measured speedup on the 20-interval landing:
+paired medians are 660.848 ms before and 668.247 ms after (54 inner iterations,
+two accepted steps throughout). It removes CPU numerical work; it does not yet
+remove upstream solution downloads, host warm-start state, conversion, scaling,
+KKT assembly, or outer decisions. Native memory exports now include driver and
+audit-owned allocations and explicitly exclude opaque QOCO/cuDSS memory. See
+[implementation and evidence](GPU_QOCO_LOCAL_BACKEND.md#device-residual-audit-and-dual-mapping).
