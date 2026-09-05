@@ -1,0 +1,80 @@
+{
+  "artifacts": {
+    "solution": "results/gtoc12/runs/cluster_fleet_v10/fleets/fleet_000_01ships/Result.txt"
+  },
+  "elapsed_seconds": 2542.3738728669996,
+  "fleet": {
+    "asteroids": [
+      2005,
+      19678,
+      21620,
+      23054,
+      32485,
+      33020,
+      47537,
+      48056,
+      51629
+    ],
+    "average_collected_kg": 567.8576317590691,
+    "collected_kg_per_ship": [
+      567.8576317590691
+    ],
+    "rule_satisfied": true,
+    "ship_limit": 19.386514734712733,
+    "ships": 1,
+    "total_collected_kg": 567.8576317590691
+  },
+  "independent": {
+    "max_mass_error_kg": 9.049472282640636e-11,
+    "max_position_error_km": 0.5375377358445221,
+    "max_velocity_error_km_s": 9.163244951611296e-08,
+    "mined_asteroids": 9,
+    "ok": true,
+    "ship_limit": 19.386514734707394,
+    "ships": 1,
+    "total_mass_kg": 567.8576317590002,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 483.36381649500214
+  },
+  "master": {
+    "collected_kg": 567.8576317590691,
+    "columns": 3,
+    "cooperative": {
+      "bundle_columns": 0,
+      "collector_ships": 0,
+      "deployer_ships": 0,
+      "foreign_collects": 0
+    },
+    "exhaustive": true,
+    "gap_kg": 0.0,
+    "greedy_objective_kg": 483.3638164950578,
+    "lp_bound_kg": 483.3638164950578,
+    "lp_gap_kg": 0.0,
+    "lp_nodes": 0,
+    "lp_relaxations_kg": {
+      "1": 483.3638164950578
+    },
+    "lp_seconds": 0.008131052003591321,
+    "lp_sizes_searched": [],
+    "mean_collected_kg": 567.8576317590691,
+    "nodes": 1,
+    "objective_kg": 483.3638164950578,
+    "proven_optimal": true,
+    "root_bound_kg": 483.3638164950578,
+    "ship_limit": 19.386514734712733,
+    "ships": 1,
+    "upper_bound_kg": 483.3638164950578
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 9,
+    "ok": true,
+    "return_code": 0,
+    "ships": 1,
+    "total_mass_kg": 567.858,
+    "wall_seconds": 0.19476814901281614
+  },
+  "ok": true,
+  "score_kg": 567.858
+}
