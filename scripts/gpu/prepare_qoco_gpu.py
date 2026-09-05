@@ -107,6 +107,10 @@ def main() -> None:
         "--values-only-updates", action="store_true",
         help="retain sparse topology during numeric updates",
     )
+    parser.add_argument(
+        "--device-numeric-updates", action="store_true",
+        help="expose device coefficient updates and GPU Ruiz equilibration",
+    )
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
@@ -116,12 +120,15 @@ def main() -> None:
         or args.queued_operators
         or args.device_cone_reductions
         or args.values_only_updates
+        or args.device_numeric_updates
     ):
         parser.error("--unmodified cannot be combined with backend changes")
     if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
         parser.error("queued operators and device cone reductions require scoped handles")
     if args.queued_operators and not args.gather:
         parser.error("--queued-operators requires --gather")
+    if args.device_numeric_updates and not args.gather:
+        parser.error("--device-numeric-updates requires --gather")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -307,6 +314,38 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
                 raise RuntimeError("unexpected QOCO numeric update synchronization")
             api = api.replace(before, f"  sync_matrix_values_to_device(data->{matrix});")
         api_path.write_text(api)
+    if args.device_numeric_updates:
+        # Initial Ruiz setup still uses host algebra. The pinned CUDA backend's
+        # host scale_arrayf branch is absent, silently dropping cost scaling.
+        start = modified.index("void scale_arrayf(const QOCOFloat*")
+        end = modified.index("\n}\n", start)
+        modified = (modified[:end] + "\n  else {\n"
+                    "    for (QOCOInt i = 0; i < n; ++i) y[i] = s * x[i];\n  }"
+                    + modified[end:])
+        api_path = destination / "src/qoco_api.c"
+        api = api_path.read_text()
+        for matrix in ("A", "G"):
+            before = f"{matrix}tx[i] = {matrix}xnew[data->{matrix}to{matrix}t[i]];"
+            if api.count(before) != 1:
+                raise RuntimeError("unexpected transpose update map")
+            api = api.replace(
+                before, f"{matrix}tx[data->{matrix}to{matrix}t[i]] = {matrix}xnew[i];"
+            )
+        start = api.index("    QOCOInt avoid = data->Pnum_nzadded")
+        end = api.index("\n  }\n", start)
+        api = api[:start] + """    QOCOInt source = 0, added = 0;
+    for (QOCOInt i = 0; i < Pnnz; ++i) {
+      if (added < data->Pnum_nzadded && i == data->Pnzadded_idx[added]) {
+        Px[i] = 0.0;
+        ++added;
+      } else {
+        Px[i] = Pxnew[source++];
+      }
+    }""" + api[end:]
+        api_path.write_text(api)
+        update_extension = extension.with_name("qoco_device_update.cuh")
+        shutil.copyfile(update_extension, destination / "algebra/cuda/qoco_device_update.cuh")
+        modified += '\n#include "qoco_device_update.cuh"\n'
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -345,6 +384,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "queued_operators": args.queued_operators,
         "device_cone_reductions": args.device_cone_reductions,
         "values_only_updates": args.values_only_updates,
+        "device_numeric_updates": args.device_numeric_updates,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -365,7 +405,9 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["src/cone.cu", "src/qoco_device_cone_reductions.cuh"]
               if args.device_cone_reductions else []),
             *(["include/qoco_linalg.h"] if args.values_only_updates else []),
-            *(["src/qoco_api.c"] if args.values_only_updates else []),
+            *(["src/qoco_api.c"]
+              if args.values_only_updates or args.device_numeric_updates else []),
+            *(["algebra/cuda/qoco_device_update.cuh"] if args.device_numeric_updates else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")

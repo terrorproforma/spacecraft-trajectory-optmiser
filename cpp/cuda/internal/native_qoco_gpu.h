@@ -81,7 +81,7 @@ struct QocoConversionInputs { const double* arrays[9]{}; };
 struct QocoGpuConversion;
 cudaError_t qoco_gpu_conversion_create(const QocoConversionPlan&, cudaStream_t, QocoGpuConversion**);
 // invalid: bit 1=changed bound classification, bit 2=nonfinite arithmetic,
-// bit 4=asymmetric quadratic. Retained output is also available for device consumers.
+// bit 4=asymmetric quadratic. A null host_output retains values only on the device.
 cudaError_t qoco_gpu_conversion_run(QocoGpuConversion*, const QocoConversionInputs&,
     double* host_output, int* invalid, cudaStream_t);
 const double* qoco_gpu_conversion_values(const QocoGpuConversion*);

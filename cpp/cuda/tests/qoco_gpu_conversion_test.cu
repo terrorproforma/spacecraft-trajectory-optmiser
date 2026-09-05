@@ -90,6 +90,12 @@ void run_case(int outputs) {
     set(1, 131072, std::numeric_limits<double>::max()); run();
     if (outputs) require(invalid & 2, "nonfinite transformed coefficient must reject");
     set(1, 131072, 0.25); run(); require(invalid == 0, "rejected update poisoned retained workspace");
+    const auto transfers = qoco_gpu_conversion_transfers(conversion);
+    check(qoco_gpu_conversion_run(conversion, input, nullptr, &invalid, stream));
+    const auto resident_transfers = qoco_gpu_conversion_transfers(conversion);
+    require(invalid == 0 && resident_transfers.d2h_count == transfers.d2h_count + 1
+        && resident_transfers.d2h_bytes == transfers.d2h_bytes + sizeof(int),
+        "device-only conversion downloads only validation status");
     const auto after = qoco_gpu_conversion_memory(conversion);
     require(before.allocations == after.allocations && before.bytes == after.bytes && before.peak_bytes == after.peak_bytes,
         "numeric conversion must not allocate");

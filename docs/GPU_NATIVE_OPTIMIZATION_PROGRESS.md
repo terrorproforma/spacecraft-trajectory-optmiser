@@ -531,3 +531,25 @@ cuDSS race remains unresolved. Paired landing SCvx is 258.174 → 249.038 ms and
 These are modest measured changes; initial map setup, transfers and memory grow.
 [Full evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#compiled-cuda-numerical-conversion)
 are recorded. The complete GPU-native goal remains active.
+
+## Device numerical updates and GPU Ruiz checkpoint
+
+The optional QOCO backend now consumes converted coefficients directly from GPU
+storage and performs initial and repeated requested Ruiz equilibration on CUDA.
+The adapter skips repeated converted-array downloads. Tests also exposed and
+fixed pinned-backend cost-scaling, transpose-permutation and inserted-diagonal
+update bugs. Numerical KKT updates already ran on CUDA; initial KKT assembly,
+structure discovery and scalar/outer control still require migration.
+
+The new update kernels pass all four CUDA sanitizers, including racecheck.
+Native Ruiz-4 and real landing memory/initialization/synchronization checks pass,
+as do independent CPU conversion/KKT oracles and unchanged physics gates. The
+existing cuDSS factorization race remains unresolved; the backend stays optional.
+
+Final matched landing SCvx is 259.198 → 259.853 ms and the 6DOF planner is
+1675.632 → 1667.908 ms: essentially flat overall. The landing's repeated update
+phase improves 1.137 → 0.488 ms and native D2H traffic falls 27.1%; these counters
+exclude backend-owned traffic and memory. Iterations and physics results are
+unchanged. Mission timings use Ruiz 0; synthetic tests validate nonzero Ruiz.
+[Detailed evidence and remaining work](GPU_QOCO_LOCAL_BACKEND.md#device-coefficient-updates-and-ruiz-equilibration)
+separate phase improvements from total runtime. The full goal remains active.

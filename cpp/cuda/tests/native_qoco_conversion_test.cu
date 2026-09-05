@@ -24,7 +24,9 @@ template<class T> struct Array {
     }
 };
 }
-int main() {
+int main(int argc, char** argv) {
+    const int ruiz_iterations = argc > 1 ? std::atoi(argv[1]) : 0;
+    require(ruiz_iterations >= 0 && ruiz_iterations <= 100, "Ruiz iteration argument");
     if (!std::getenv("SPACEPDHCG_QOCO_LIBRARY")) { std::puts("SKIP: isolated QOCO library required"); return 0; }
     setenv("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE", "1", 1);
     setenv("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE", "1", 1);
@@ -61,7 +63,7 @@ int main() {
     problem.numeric.linear_objective = c.view(); problem.numeric.scalar_lower = lo.view(); problem.numeric.scalar_upper = hi.view();
     problem.numeric.affine_offset = offset.view(); problem.numeric.variable_lower = vlo.view(); problem.numeric.variable_upper = vhi.view();
     spacepdhcg_native_qoco* workspace{};
-    require(spacepdhcg_native_qoco_create(&problem, stream, 0, &workspace) == SPACEPDHCG_CUDA_SUCCESS,
+    require(spacepdhcg_native_qoco_create(&problem, stream, ruiz_iterations, &workspace) == SPACEPDHCG_CUDA_SUCCESS,
         "compile mixed scalar/box/SOC/RSOC conversion with duplicate sparse entries");
     double *primal{}, *dual{}; check(cudaMalloc(&primal, 8 * sizeof(double))); check(cudaMalloc(&dual, 13 * sizeof(double)));
     spacepdhcg_native_qoco_report report{};
@@ -72,6 +74,9 @@ int main() {
     offset.values[6] += 0.25; offset.upload(stream);
     c.values[6] -= 0.01; c.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_SUCCESS && report.numeric_updates == 1, "compiled update agrees with CPU conversion and KKT audit");
+    if (std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_UPDATE_REQUIRED"))
+        require(report.device_numeric_updates == (ruiz_iterations > 0 ? 2U : 1U),
+            "device extension must perform requested initial equilibration and numeric update");
     lo.values[1] = -1; lo.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH, "new finite scalar bound rejected");
     lo.values[1] = -inf; lo.upload(stream);
@@ -92,6 +97,7 @@ int main() {
         "nonfinite coefficients rejected and correctly reported");
     f.values.back() = 0.02; f.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_SUCCESS, "restored inputs usable after rejected conversions");
+    require(report.primal_residual <= 1e-8 && report.dual_residual <= 1e-8, "independent KKT accuracy after updates");
     spacepdhcg_native_qoco_destroy(workspace);
     check(cudaFree(primal)); check(cudaFree(dual)); check(cudaStreamDestroy(stream));
     std::puts("Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS");

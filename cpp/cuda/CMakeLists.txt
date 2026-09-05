@@ -213,7 +213,7 @@ if(BUILD_TESTING)
         get_filename_component(test_name "${source}" NAME_WE)
         # This standalone test needs the isolated QOCO source headers/library;
         # see docs/GPU_QOCO_LOCAL_BACKEND.md for its separate build command.
-        if(test_name STREQUAL "qoco_gpu_operators_test")
+        if(test_name STREQUAL "qoco_gpu_operators_test" OR test_name STREQUAL "qoco_gpu_numeric_update_test")
             continue()
         endif()
         add_executable("${test_name}" "${source}")

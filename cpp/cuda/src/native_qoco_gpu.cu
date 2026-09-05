@@ -558,7 +558,7 @@ cudaError_t qoco_gpu_conversion_create(const QocoConversionPlan& in, cudaStream_
 
 cudaError_t qoco_gpu_conversion_run(QocoGpuConversion* w, const QocoConversionInputs& in,
                                     double* host_output, int* invalid, cudaStream_t stream) {
-    if (!w || !invalid || (w->plan.outputs && !host_output)) return cudaErrorInvalidValue;
+    if (!w || !invalid) return cudaErrorInvalidValue;
     for (int i = 0; i < 9; ++i) if (w->plan.input_counts[i] && !in.arrays[i]) return cudaErrorInvalidValue;
     try {
         check(cudaMemsetAsync(w->invalid.data, 0, sizeof(int), stream));
@@ -571,7 +571,7 @@ cudaError_t qoco_gpu_conversion_run(QocoGpuConversion* w, const QocoConversionIn
         check(cudaGetLastError());
         check(cudaMemcpyAsync(invalid, w->invalid.data, sizeof(int), cudaMemcpyDeviceToHost, stream));
         ++w->transfers.d2h_count; w->transfers.d2h_bytes += sizeof(int);
-        if (w->plan.outputs) {
+        if (w->plan.outputs && host_output) {
             check(cudaMemcpyAsync(host_output, w->values.data, w->plan.outputs * sizeof(double), cudaMemcpyDeviceToHost, stream));
             ++w->transfers.d2h_count; w->transfers.d2h_bytes += w->plan.outputs * sizeof(double);
         }

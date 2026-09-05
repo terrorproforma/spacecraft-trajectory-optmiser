@@ -1,0 +1,213 @@
+{
+  "full_goal_complete": false,
+  "production_backend_changed": false,
+  "changes": [
+    "Optional retained device numerical update interface",
+    "Initial and repeated requested Ruiz equilibration on CUDA",
+    "Repeated converted coefficients stay resident; existing GPU KKT value update reused",
+    "Correct host cost scaling, transpose update permutation, and inserted P diagonal update mapping"
+  ],
+  "measurements": {
+    "qoco-device-updates-final-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 0.653672541026026,
+          "scvx_seconds": 0.259198246,
+          "qoco_solve_seconds": 0.221535037,
+          "inner_iterations": 28
+        },
+        "optimized": {
+          "process_seconds": 0.6446727199945599,
+          "scvx_seconds": 0.25985269,
+          "qoco_solve_seconds": 0.22212167,
+          "inner_iterations": 28
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.0139602945065553,
+        "scvx_seconds": 0.9974814807574246,
+        "qoco_solve_seconds": 0.9973589564674171
+      }
+    },
+    "qoco-device-updates-final-planner-pd6.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 2.0644895709701814,
+          "scvx_total_seconds": 1.67563229,
+          "qoco_solve_seconds": 1.557662186,
+          "plan_wall_seconds": 1.805547438,
+          "inner_iterations": 179
+        },
+        "optimized": {
+          "process_seconds": 2.047172846039757,
+          "scvx_total_seconds": 1.667908129,
+          "qoco_solve_seconds": 1.5674168960000001,
+          "plan_wall_seconds": 1.800361253,
+          "inner_iterations": 179
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.0084588484865473,
+        "scvx_total_seconds": 1.0046310470377233,
+        "qoco_solve_seconds": 0.9937765695745058,
+        "plan_wall_seconds": 1.002880635756495
+      }
+    }
+  },
+  "landing_phase_medians": {
+    "baseline": {
+      "qoco_conversion_seconds": 0.001595453,
+      "qoco_update_seconds": 0.001137233,
+      "qoco_setup_seconds": 0.03179797
+    },
+    "optimized": {
+      "qoco_conversion_seconds": 0.001684001,
+      "qoco_update_seconds": 0.000488178,
+      "qoco_setup_seconds": 0.032021446
+    }
+  },
+  "native_landing_transfer_counters": {
+    "baseline": {
+      "h2d_bytes": 286728,
+      "d2h_bytes": 150840,
+      "peak_device_bytes": 758744,
+      "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss"
+    },
+    "optimized": {
+      "h2d_bytes": 286728,
+      "d2h_bytes": 110000,
+      "peak_device_bytes": 758744,
+      "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss"
+    }
+  },
+  "counter_scope": "Native-owned counters exclude the optional backend and cuDSS; backend update downloads 72 scalar bytes, no numerical arrays, and performs no new allocations.",
+  "representative_planner_results": [
+    "qoco-device-updates-final-planner-pd6-baseline-sample.json",
+    "qoco-device-updates-final-planner-pd6-optimized-sample.json"
+  ],
+  "sanitizers": {
+    "qoco-v20-updates-memcheck.log": {
+      "passed": true,
+      "sha256": "d8e2c1d21097dac6ccb3b9cb9f5754ee25fc5853e6c9321e32d60e27eb0498c6",
+      "output": "========= COMPUTE-SANITIZER\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=1 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=1031 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=1 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=1 PASS\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-updates-initcheck.log": {
+      "passed": true,
+      "sha256": "13e67f5182ead810faddd39f5fed98d4fe1bb2b9b1eb52482930d1b285f0be85",
+      "output": "========= COMPUTE-SANITIZER\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=1 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=1031 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=1 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=1 PASS\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-updates-synccheck.log": {
+      "passed": true,
+      "sha256": "13e67f5182ead810faddd39f5fed98d4fe1bb2b9b1eb52482930d1b285f0be85",
+      "output": "========= COMPUTE-SANITIZER\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=1 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=1031 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=1 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=1 PASS\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-updates-racecheck.log": {
+      "passed": true,
+      "sha256": "363a843faab7cfa8f417e58df9ab7d9d4d426fd342c0d9b8df2f5a46553da5cf",
+      "output": "========= COMPUTE-SANITIZER\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=1 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=1031 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=1 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=1 PASS\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n"
+    },
+    "qoco-v20-landing-memcheck.log": {
+      "passed": true,
+      "sha256": "5e61e5f07fdb12bca8171cd87f4e0938963b335755a2bdc80dca8fa14e9c4606",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":2.56090437,\"t_scvx\":2.59553902,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n08,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":2.5609043720000004,\"scvx_seconds\":2.5955390249999999,\"topology_seconds\":0.0013897880000000001,\"coefficient_seconds\":0.0026277120113372804,\"workspace_create_seconds\":0.16241889000000001,\"update_seconds\":0.0078083559999999998,\"scaling_seconds\":0,\"solve_seconds\":2.3105800890000001,\"residual_seconds\":0.032263673999999999,\"replay_seconds\":0.017409343600273134,\"acceptance_seconds\":3.9328e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00020044799521565435,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.019535141999999998,\"qoco_setup_seconds\":0.19071711099999999,\"qoco_update_seconds\":0.0078083559999999998,\"qoco_solve_seconds\":2.3105800890000001,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-landing-initcheck.log": {
+      "passed": true,
+      "sha256": "06051a7b78d2aad8f7fe6c5f5d15b5dba367561c5dd7ede90e8b556ec2c43e1e",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":1.88479601,\"t_scvx\":1.93728123,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n08,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":1.8847960130000001,\"scvx_seconds\":1.937281231,\"topology_seconds\":0.002554242,\"coefficient_seconds\":0.0012425920367240906,\"workspace_create_seconds\":0.14782281899999999,\"update_seconds\":0.0060118890000000003,\"scaling_seconds\":0,\"solve_seconds\":1.6458914680000001,\"residual_seconds\":0.047346654000000002,\"replay_seconds\":0.016980255842208861,\"acceptance_seconds\":0.00036885900000000003,\"h2d_seconds\":0,\"d2h_seconds\":0.00033568000048398973,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.020749944999999999,\"qoco_setup_seconds\":0.164796057,\"qoco_update_seconds\":0.0060118890000000003,\"qoco_solve_seconds\":1.6458914680000001,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-landing-synccheck.log": {
+      "passed": true,
+      "sha256": "a5bac72772a67fb5ec9a94a2505b94265cd81dcab8994b8585c6be1d8c6d2f85",
+      "output": "========= COMPUTE-SANITIZER\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":1.63239321e-10,\"ratio\":0.99993172861466284,\"canonical\":2.61851069e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.03462982e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148258,\"t_cqp\":2.12993799,\"t_scvx\":2.16164192,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":1.6323932104002956e-10,\"native_primal\":8.6381216871893881e-11,\"native_dual\":1.6323932104002956e-10,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499794185733307,\"actual\":0.16498667721926469,\"ratio\":0.99993172861466284,\"step_fraction\":0.044910538383599069,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830443565504e-07,\"candidate_path\":1.3181549244715523e-10,\"candidate_terminal\":5.4844713005763877e-08,\"candidate_virtual\":3.8446959912229955e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449665611406862,\"candidate_model_merit\":0.49448539147600024,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.6323932104002956e-10,\"natural\":1.6323932104002956e-10,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-P1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.0346298230994362e-13 canonical=2.618510687647072e-11 qoco_failure=0 ratios=0.99993172861466284/0.99999207299501192\n08,\"achieved\":2.618510687647072e-11,\"native_primal\":1.0337183532107616e-17,\"native_dual\":2.618510687647072e-11,\"complementarity\":0,\"inner_iterations\":11,\"matvecs\":66,\"cone_projections\":22,\"re_solved\":0,\"cqp_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint\":\"703b4a66d871047f\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1282461069128669e-05,\"actual\":1.1282371633003496e-05,\"ratio\":0.99999207299501192,\"step_fraction\":0.00011413885907211321,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.0346159453116286e-13,\"candidate_path\":0,\"candidate_terminal\":7.0346298230994362e-13,\"candidate_virtual\":3.9649844469960827e-14,\"current_merit\":0.49449665611406862,\"candidate_merit\":0.49448537374243562,\"candidate_model_merit\":0.49448537365299949,\"current_dynamics\":2.0267830443565504e-07,\"current_path\":1.3181549244715523e-10,\"current_terminal\":5.4844713005763877e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":2.618510687647072e-11,\"natural\":2.618510687647072e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":2.618510687647072e-11,\"objective\":0.49448537365291756,\"dynamics\":0,\"path\":0,\"terminal\":7.0346298230994362e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14825793235559,\"cqp_seconds\":2.129937993,\"scvx_seconds\":2.1616419229999999,\"topology_seconds\":0.001317836,\"coefficient_seconds\":0.00086201599240303046,\"workspace_create_seconds\":0.12559124399999999,\"update_seconds\":0.0061467400000000004,\"scaling_seconds\":0,\"solve_seconds\":1.9736097990000001,\"residual_seconds\":0.023726252000000003,\"replay_seconds\":0.018763648360967639,\"acceptance_seconds\":2.6897000000000004e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.0001807680018246174,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":28,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":758744,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.015750202000000001,\"qoco_setup_seconds\":0.110705,\"qoco_update_seconds\":0.0061467400000000004,\"qoco_solve_seconds\":1.9736097990000001,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":1,\"qualified\":1,\"outer_attempt_budget\":2}\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-native-memcheck.log": {
+      "passed": true,
+      "sha256": "013d53d5ccc662238de92d4f00e10af3c7f9a467efb1f0df1fc8cb34ea10a0a8",
+      "output": "========= COMPUTE-SANITIZER\nNative GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-native-initcheck.log": {
+      "passed": true,
+      "sha256": "f577be14d73249c4d5eda63610ac44a2a4dbb75c7897cd0f260cb311171c14c3",
+      "output": "========= COMPUTE-SANITIZER\nNative GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n========= ERROR SUMMARY: 0 errors\n"
+    },
+    "qoco-v20-native-synccheck.log": {
+      "passed": true,
+      "sha256": "f577be14d73249c4d5eda63610ac44a2a4dbb75c7897cd0f260cb311171c14c3",
+      "output": "========= COMPUTE-SANITIZER\nNative GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n========= ERROR SUMMARY: 0 errors\n"
+    }
+  },
+  "synthetic_unit_output": "GPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=1 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=1031 Ruiz=4 missing_diagonal=0 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=0 missing_diagonal=0 unconstrained=1 zero_quadratic=0 PASS\nGPU numeric updates n=17 Ruiz=4 missing_diagonal=1 unconstrained=0 zero_quadratic=1 PASS\n",
+  "native_ruiz_tests": [
+    0,
+    4
+  ],
+  "cpu_conversion_and_audit_oracle_repeated_qualified_landing_solves": 7,
+  "cpu_conversion_and_audit_oracle_pd6_certified": true,
+  "mission_benchmark_ruiz_iterations": 0,
+  "full_backend_racecheck_clear": false,
+  "vendor_issue": "Existing cuDSS deterministic factorization race finding remains open; not remeasured. Standalone update racecheck excludes factorization.",
+  "interpretation": "Whole-solve runtime is essentially flat. Numeric-update phase and native D2H traffic improve; extra retained backend maps are excluded from native memory counters. Nonzero Ruiz is validated on synthetic solver cases, not measured on these mission fixtures.",
+  "prepared_source_reproduced": true,
+  "backend_provenance": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "553f10c8e5a843521083726cd62fc46856507d328daaaea7e0b0ce28da9a9f9c",
+    "extension_sha256": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+    "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+    "gather": true,
+    "original_handles": false,
+    "queued_operators": true,
+    "device_cone_reductions": true,
+    "values_only_updates": true,
+    "device_numeric_updates": true,
+    "correct_stopping": true,
+    "deterministic": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "553f10c8e5a843521083726cd62fc46856507d328daaaea7e0b0ce28da9a9f9c",
+      "algebra/cuda/qoco_reduction_scope.cuh": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+      "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+      "algebra/cuda/cudss_backend.h": "77a555ac37e624be6dd0758367eb929f67cdab44812b33fd1f8c19cc31594e4a",
+      "algebra/cuda/cudss_backend.cu": "b108c9a5f4d187f519d10df1d9a68d767d9f6956b96b5d7e21967df2c707a9fa",
+      "src/qoco_utils.c": "654298c51d80606f8d5b757d7f3f7b1f38b2f7860d08e42c52692f279f3786de",
+      "algebra/cuda/qoco_gather.cuh": "637ea34a5a178254ad6ea40f30d515e28ab32eff43423b600e503e1d6537429d",
+      "src/cone.cu": "53e522d3be03cb21f7e057652d33e314d197308330d4ce9599792f24a1e68b03",
+      "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+      "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+      "src/qoco_api.c": "4ee3954df021240c56d07d95797cd70e18cb89598642eeef89dcaad370843fd1",
+      "algebra/cuda/qoco_device_update.cuh": "cf7e524d347ba06129005fddd899d3655fbef02d3d14b84e910f36051baec9d1"
+    }
+  },
+  "sha256": {
+    "/home/angus/build-spacepdhcg-gpu-native/cuda/libspacepdhcg_cuda.so": "f7c127c20becf2f9c4ec3d757e700c646adbf6dbb487339c76e35415ccac4df8",
+    "/home/angus/build-spacepdhcg-gpu-native/4556941/libspacepdhcg_cuda.so": "130f0f174729ddbb581b0b7f70df52f85bac8ee8b998e27586b8c6bbe4fe695c",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/qoco_gpu_conversion_test": "c2c02da414ff62b35f6066e208595d84d89c3f158f5d907228ed56fd12883030",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/native_qoco_conversion_test": "24c8359be727c0e9dd2c78e8c5b52af16a9e8ef91cdd54c314cfa0eb15b0fe34",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/device_scvx_integration_test": "f2e9c286f26b7aa96579efea0a196e646aa40de802552dd0cd71ce643eb079e8",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tools/spacepdhcg_plan": "a2da0c76e90ffd42ee91532720cf67e33cd6b2de69f44a7ea45672cec4cffb09",
+    "/home/angus/build-qoco-gpu-values-v16/build/libqoco.so": "5ed6531d1988c0104ff72f548ce2aa1bfe83b2b05b571f08be77f825a1762533",
+    "/home/angus/build-qoco-gpu-updates-v20/build-fixed/libqoco.so": "98be90fe7d249b3eb6a8b0da43cf8f145c5c2634921c177e491d756dcfc29e38",
+    "/home/angus/build-qoco-gpu-updates-v20/qoco_gpu_numeric_update_test": "d12f529842af9b445d421baf6b1b06405415a9badfb4ac5b7baca610f86802d8",
+    "/home/angus/spacecraft-trajectory-optmiser/build/qoco-cudss-lib/libcudss.so": "5f76a3698d6b7114e6cf6ebe38a38096ccb8af090aa5b8af92d72c9b369b2e86"
+  },
+  "rejected_prototypes": {
+    "v18": "CPU reference comparison failed; exposed omitted host cost scaling and initial device-vector synchronization.",
+    "v19": "CPU reference comparison failed; exposed wrong transpose permutation direction.",
+    "paths": [
+      "/home/angus/build-qoco-gpu-updates-v18",
+      "/home/angus/build-qoco-gpu-updates-v19"
+    ]
+  },
+  "intermediate_measurement": "qoco-device-updates-pd3.json retains pre-initial-GPU-Ruiz core measurement and saved core alias; no speedup established.",
+  "remaining_work": [
+    "Initial CPU structure discovery/conversion and KKT assembly",
+    "CPU scalar/outer decisions and warm state",
+    "cuDSS vendor issue",
+    "large trajectories, conditioning and batching",
+    "GPU GTOC12"
+  ]
+}

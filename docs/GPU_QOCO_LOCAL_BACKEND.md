@@ -422,3 +422,112 @@ updates into QOCO are still needed to remove the remaining output round trip.
 [landing samples](../artifacts/performance/qoco-device-conversion-pd3.json), and
 [full planner comparison](../artifacts/performance/qoco-device-conversion-planner-pd6.json)
 retain the measured binaries' hashes and representative complete planner results.
+
+## Device coefficient updates and Ruiz equilibration
+
+The optional `--device-numeric-updates` preparation flag now exposes a retained
+device update context. The native adapter supplies the resident converted
+P/A/G/c/b/h buffer directly. CUDA inserts regularization-only diagonal entries,
+updates transpose values, scales matrices and vectors, and reduces diagnostic
+ranges. Requested Ruiz passes run on CUDA during both initial native setup and
+later updates. Norms and scaling span multiple blocks; each cone uses a block
+reduction to preserve its common scaling factor. FP64 arithmetic and independent
+physics qualification remain unchanged.
+
+Correction to the earlier CPU-path inventory: QOCO's numerical KKT coefficient
+updates already ran on CUDA through retained CSR maps. This extension reuses
+that path. Initial KKT assembly and symbolic setup still use CPU structure.
+The new work removes CPU numerical update/equilibration and the converted-array
+round trip; it does not complete the entire GPU-native pipeline.
+
+Preparation also fixes three pinned-backend update bugs exposed by the new
+tests: the missing host `scale_arrayf` branch silently omitted objective
+scaling, transpose updates used the permutation in the wrong direction, and
+quadratic updates mishandled inserted diagonal entries. External callers that
+use CPU Ruiz setup receive the initially scaled device c/b/h vectors when they
+create the device context. The native adapter avoids that CPU Ruiz setup.
+
+The extension owns its solver's numerical updates: do not mix it with legacy
+host update calls. Host matrix/vector shadows become stale. The adapter still
+supports older libraries without the extension; a partial extension or a device
+update failure is rejected. A failed update requires fresh solver setup before
+reuse. The context is destroyed before the solver, and a producer-stream event
+orders the input before QOCO's default-stream work. Each update downloads nine
+scalar doubles (72 bytes), with no numerical-array download or new allocation.
+Initial structure discovery, sparse assembly, scalar/outer decisions and warm
+state remain host work. Verbose mode and explicit CPU audit/conversion oracles
+still request host converted values.
+
+The standalone test compares three successive updates against the corrected
+CPU reference and checks scaling equations independently with long-double
+expressions. Seven cases cover Ruiz 0/1/4, 17/1031 variables, mixed linear/SOC
+constraints, absent constraints, missing quadratic diagonal entries, and a zero
+quadratic objective. It uses an offset device pointer and a nonblocking producer
+stream. All four CUDA sanitizers pass; memcheck reports zero leaks. Native
+mixed-cone conversion tests pass with Ruiz 0 and 4 and an independent 1e-8 KKT
+gate. The Ruiz-4 native case and real landing pass memory, initialization and
+synchronization checks. Seven landing solves and the actual 6DOF planner also
+pass both CPU conversion and KKT audit oracles.
+
+The prior cuDSS deterministic-factorization race finding remains open and was
+not remeasured here. The clean standalone update racecheck excludes
+factorization. This backend remains optional and is not promoted to the default.
+Intermediate v18/v19 comparisons failed and led to the fixes above; their local
+prepared sources are retained, and neither is a qualified candidate.
+
+Final paired RTX 5090 results compare frozen 4556941/v16 against the new core/v20
+with two warmups and seven alternating measured samples per variant:
+
+| Case | Previous SCvx | Device update SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 259.198 ms | 259.853 ms | 653.673 → 644.673 ms |
+| 20-interval 6DOF planner, 1e-6 | 1675.632 ms | 1667.908 ms | 2064.490 → 2047.173 ms |
+
+Overall runtime is essentially flat. Both cases retain 28/179 inner iterations,
+two accepted steps and the same objectives and independent physics gates. These
+mission benchmark policies request zero Ruiz iterations; nonzero Ruiz is tested
+in the synthetic solver cases, not benchmarked on these missions.
+
+The landing's median complete numerical-update phase improves 1.137 → 0.488 ms
+(2.33x for that phase), but it is a small fraction of total time. Initial
+conversion/setup remain about 1.68/32.02 ms. Native D2H counters fall
+150840 → 110000 bytes (27.1%); native H2D remains 286728 bytes and native peak
+758744 bytes. Those counters exclude QOCO/cuDSS, including this extension's
+retained buffers and scalar downloads, and must not be presented as whole-process
+memory or traffic. The earlier pre-initial-Ruiz implementation also measured
+flat landing performance and is retained separately.
+
+[Checkpoint, source provenance and sanitizer outputs](../artifacts/performance/qoco-device-updates-checkpoint.json),
+[final landing samples](../artifacts/performance/qoco-device-updates-final-pd3.json),
+and [final planner comparison](../artifacts/performance/qoco-device-updates-final-planner-pd6.json)
+record hashes and representative complete planner results. Prepared-source hashes
+were reproduced in a fresh directory. The full GPU-native goal remains active.
+
+To reproduce this candidate, use the existing isolated CUDA build recipe with
+all these preparation flags (the destination must be a new directory):
+
+```bash
+python3 scripts/gpu/prepare_qoco_gpu.py --source "$PINNED_QOCO" \
+  --destination "$CANDIDATE/source" --gather --correct-stopping --deterministic \
+  --checked-cudss-abi --queued-operators --device-cone-reductions \
+  --values-only-updates --device-numeric-updates
+```
+
+The standalone update test intentionally stays outside the native test glob;
+compile it against that prepared source and library, then run under the same
+cuDSS runtime and GPU lock as the operator tests:
+
+```bash
+nvcc -std=c++17 -O3 -arch=sm_120 \
+  -I"$CANDIDATE/source/include" -I"$CANDIDATE/source/lib/qdldl/include" \
+  cpp/cuda/tests/qoco_gpu_numeric_update_test.cu \
+  -L"$CANDIDATE/build" -lqoco -ldl -o "$CANDIDATE/qoco_gpu_numeric_update_test"
+```
+
+With this backend selected, `SPACEPDHCG_TEST_QOCO_DEVICE_UPDATE_REQUIRED=1`
+makes `native_qoco_conversion_test` assert that the device path was used.
+Pass positional argument `4` to exercise initial and repeated Ruiz-4; the default
+is Ruiz-0. `SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE=1` and
+`SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE=1` enable the independent host oracles.
+Omit test-oracle variables from performance runs. The final local build directory
+was named `build-fixed`; adjust the link/runtime path when using that saved build.

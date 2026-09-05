@@ -160,6 +160,9 @@ using CleanupFn = int (*)(SolverAbi*);
 using BeginReductionScopeFn = int (*)();
 using EndReductionScopeFn = void (*)();
 using DeviceSolutionFn = int (*)(SolverAbi*, int, int, int, const double**, const double**, const double**);
+using CreateNumericUpdateFn = int (*)(SolverAbi*, int, int, int, void**);
+using DeviceNumericUpdateFn = int (*)(void*, const double*, cudaStream_t);
+using DestroyNumericUpdateFn = void (*)(void*);
 
 template <typename T>
 spacepdhcg_cuda_status download(
@@ -385,6 +388,10 @@ struct spacepdhcg_native_qoco {
     BeginReductionScopeFn begin_reduction_scope{};
     EndReductionScopeFn end_reduction_scope{};
     DeviceSolutionFn device_solution{};
+    CreateNumericUpdateFn create_numeric_update{};
+    DeviceNumericUpdateFn device_numeric_update{};
+    DestroyNumericUpdateFn destroy_numeric_update{};
+    void* numeric_update_context{};
     QocoGpuAudit* gpu_audit{};
     TopologyCache topology{};
     ConversionCache conversion{};
@@ -411,6 +418,7 @@ struct spacepdhcg_native_qoco {
 
     ~spacepdhcg_native_qoco() {
         qoco_gpu_audit_destroy(gpu_audit);
+        if (numeric_update_context) destroy_numeric_update(numeric_update_context);
         if (solver != nullptr && cleanup != nullptr) {
             static_cast<void>(cleanup(solver));
             solver = nullptr;
@@ -946,11 +954,16 @@ spacepdhcg_cuda_status refresh_conversion(spacepdhcg_native_qoco* w,
         inputs.arrays[i] = reinterpret_cast<const double*>(static_cast<const unsigned char*>(views[i].data) + views[i].byte_offset);
     }
     int invalid{};
-    const auto status = qoco_gpu_conversion_run(cache.device, inputs, cache.values.data(), &invalid, stream);
+    const auto enabled = [](const char* name) { const auto* value = std::getenv(name); return value && value[0] == '1'; };
+    const bool host_values = !w->numeric_update_context || w->needs_fresh_solver || w->configured_settings.verbose
+        || enabled("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE") || enabled("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE");
+    const auto status = qoco_gpu_conversion_run(cache.device, inputs,
+        host_values ? cache.values.data() : nullptr, &invalid, stream);
     if (status != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
     if (invalid & 1) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
     if (invalid & 2) return SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
     if (invalid & 4) return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if (!host_values) return SPACEPDHCG_CUDA_SUCCESS;
     if (const char* compare = std::getenv("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE"); compare && compare[0] == '1') {
         Formulation reference;
         auto checked = convert(problem, stream, &reference, &w->report.d2h_copy_count, &w->report.d2h_bytes, &w->topology);
@@ -1143,8 +1156,11 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
     auto a = workspace->formulation.a.abi();
     auto g = workspace->formulation.g.abi();
     SettingsAbi settings = workspace->configured_settings;
+    // Establish storage and symbolic KKT structure without CPU equilibration.
+    // The device update performs the requested initial Ruiz passes below.
+    if (workspace->create_numeric_update) settings.ruiz_iters = 0;
     const auto setup_start = std::chrono::steady_clock::now();
-    const int code = workspace->setup(
+    int code = workspace->setup(
         workspace->solver,
         workspace->variables,
         static_cast<int>(workspace->formulation.h.size()),
@@ -1160,6 +1176,25 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
         workspace->formulation.soc.empty() ? nullptr : workspace->formulation.soc.data(),
         &settings
     );
+    if (code == 0 && workspace->create_numeric_update) {
+        int created = workspace->create_numeric_update(workspace->solver, p.nnz, a.nnz, g.nnz,
+            &workspace->numeric_update_context);
+        if (created == 0 && workspace->configured_settings.ruiz_iters > 0) {
+            created = workspace->update_settings(workspace->solver, &workspace->configured_settings);
+            if (created == 0) created = workspace->device_numeric_update(workspace->numeric_update_context,
+                qoco_gpu_conversion_values(workspace->conversion.device), nullptr);
+            if (created == 0) ++workspace->report.device_numeric_updates;
+        }
+        if (created != 0) {
+            if (workspace->numeric_update_context) {
+                workspace->destroy_numeric_update(workspace->numeric_update_context);
+                workspace->numeric_update_context = nullptr;
+            }
+            workspace->cleanup(workspace->solver);
+            workspace->solver = nullptr;
+            code = -created;
+        }
+    }
     workspace->report.setup_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - setup_start
     ).count();
@@ -1208,6 +1243,12 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_begin_reduction_scope", &result->begin_reduction_scope);
     symbol(result->library, "qoco_gpu_end_reduction_scope", &result->end_reduction_scope);
     symbol(result->library, "qoco_gpu_get_solution", &result->device_solution);
+    symbol(result->library, "qoco_gpu_create_numeric_update", &result->create_numeric_update);
+    symbol(result->library, "qoco_gpu_update_numeric", &result->device_numeric_update);
+    symbol(result->library, "qoco_gpu_destroy_numeric_update", &result->destroy_numeric_update);
+    const int update_symbols = (result->create_numeric_update != nullptr)
+        + (result->device_numeric_update != nullptr) + (result->destroy_numeric_update != nullptr);
+    if (update_symbols != 0 && update_symbols != 3) return SPACEPDHCG_CUDA_UNSUPPORTED;
     if ((result->begin_reduction_scope == nullptr) != (result->end_reduction_scope == nullptr)) {
         return SPACEPDHCG_CUDA_UNSUPPORTED;
     }
@@ -1355,6 +1396,10 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             // would not give an independent attempt (observed: 101, 62, then 1
             // iteration per solve on the same data). Rebuild the solver instead and
             // report the extra workspace creation.
+            if (workspace->numeric_update_context) {
+                workspace->destroy_numeric_update(workspace->numeric_update_context);
+                workspace->numeric_update_context = nullptr;
+            }
             workspace->cleanup(workspace->solver);
             workspace->solver =
                 static_cast<SolverAbi*>(std::calloc(1U, sizeof(SolverAbi)));
@@ -1376,22 +1421,33 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             workspace->needs_fresh_solver = false;
             workspace->has_accepted = false;
         } else {
-            workspace->update_matrix(
-                workspace->solver,
-                workspace->formulation.p.values.data(),
-                workspace->formulation.a.values.empty()
-                    ? nullptr : workspace->formulation.a.values.data(),
-                workspace->formulation.g.values.empty()
-                    ? nullptr : workspace->formulation.g.values.data()
-            );
-            workspace->update_vector(
-                workspace->solver,
-                workspace->formulation.c.data(),
-                workspace->formulation.b.empty()
-                    ? nullptr : workspace->formulation.b.data(),
-                workspace->formulation.h.empty()
-                    ? nullptr : workspace->formulation.h.data()
-            );
+            if (workspace->numeric_update_context) {
+                const int updated = workspace->device_numeric_update(workspace->numeric_update_context,
+                    qoco_gpu_conversion_values(workspace->conversion.device), stream);
+                if (updated != 0) {
+                    workspace->needs_fresh_solver = true;
+                    workspace->report.failure = updated == 3 ? SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL : SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+                    return finish(updated == 3 ? SPACEPDHCG_CUDA_NUMERICAL_FAILURE : SPACEPDHCG_CUDA_RUNTIME_ERROR);
+                }
+                ++workspace->report.device_numeric_updates;
+            } else {
+                workspace->update_matrix(
+                    workspace->solver,
+                    workspace->formulation.p.values.data(),
+                    workspace->formulation.a.values.empty()
+                        ? nullptr : workspace->formulation.a.values.data(),
+                    workspace->formulation.g.values.empty()
+                        ? nullptr : workspace->formulation.g.values.data()
+                );
+                workspace->update_vector(
+                    workspace->solver,
+                    workspace->formulation.c.data(),
+                    workspace->formulation.b.empty()
+                        ? nullptr : workspace->formulation.b.data(),
+                    workspace->formulation.h.empty()
+                        ? nullptr : workspace->formulation.h.data()
+                );
+            }
             // Restore the configured settings: QOCO's stall handler mutates
             // solver->settings->kkt_dynamic_reg in place. A settings validation
             // failure here is an adapter/ABI fault, never a solver outcome.

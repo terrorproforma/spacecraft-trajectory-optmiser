@@ -30,6 +30,7 @@ struct spacepdhcg_native_qoco_report {
     double complementarity_residual;
     std::uint64_t workspace_creations;
     std::uint64_t numeric_updates;
+    std::uint64_t device_numeric_updates;
     std::uint64_t solves;
     std::uint64_t d2h_copy_count;
     std::uint64_t d2h_bytes;
