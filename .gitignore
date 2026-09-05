@@ -49,3 +49,22 @@ web/trajectory-viewer/data/gtoc12/
 # SSH private keys (never commit)
 *.pem
 traj-key*
+
+# Root scratch files (moved to %LOCALAPPDATA%\Temp\spacepdhcg-tmp\ on Windows)
+.tmp_*
+
+# Lambda H100 evidence: compact summaries/manifests/verification JSON/small logs are force-added under
+# results/lambda-h100 (see its INDEX.json); the raw parts stay out even if results/ is ever un-ignored
+results/lambda-h100/bundles/
+results/lambda-h100/viewer/
+results/lambda-h100/**/viewer/
+results/lambda-h100/gtoc12/*/fleet/
+results/lambda-h100/gtoc12/*/fleets/
+results/lambda-h100/gtoc12/*/clusters/
+results/lambda-h100/gtoc12/*/ships.jsonl
+results/lambda-h100/gtoc12/*/official_verification.json
+results/lambda-h100/**/stdout.jsonl
+results/lambda-h100/**/*.sqlite3
+results/lambda-h100/**/*.tar.gz
+results/lambda-h100/**/*.csv
+results/lambda-h100/*.patch
