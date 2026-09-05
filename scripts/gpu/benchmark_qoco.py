@@ -3,6 +3,7 @@
 Run under WSL with the CUDA/cuDSS runtime directories in LD_LIBRARY_PATH. Each
 sample starts a new process. Iteration counts are recorded, not assumed equal:
 GPU factorization/reductions can change the convergence path at roundoff level.
+Optional per-variant cuDSS paths isolate and fingerprint runtime comparisons.
 """
 
 from __future__ import annotations
@@ -26,6 +27,8 @@ def main() -> None:
     parser.add_argument("--optimized", type=Path, required=True)
     parser.add_argument("--baseline-core", type=Path)
     parser.add_argument("--optimized-core", type=Path)
+    parser.add_argument("--baseline-cudss", type=Path)
+    parser.add_argument("--optimized-cudss", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--warmups", type=int, default=2)
     parser.add_argument("--repeats", type=int, default=7)
@@ -45,11 +48,18 @@ def main() -> None:
         "optimized": args.optimized_core or paths[-1],
     }
     paths.extend(cores.values())
+    runtimes = {"baseline": args.baseline_cudss, "optimized": args.optimized_cudss}
+    for runtime in runtimes.values():
+        if runtime is not None:
+            if (runtime.parent / "libcudss.so").resolve() != runtime.resolve():
+                parser.error("cuDSS directory must expose libcudss.so for the selected runtime")
+            paths.append(runtime)
     document = {
         "fixture": "P1-C-pd3, 20 intervals, two accepted outer steps, tolerance 1e-8",
         "warmups_per_variant": args.warmups,
         "measured_samples_per_variant": args.repeats,
         "core_libraries": {k: str(v.resolve()) for k, v in cores.items()},
+        "cudss_libraries": {k: str(v.resolve()) if v else None for k, v in runtimes.items()},
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         "sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
         "gpu": subprocess.check_output(
@@ -66,8 +76,11 @@ def main() -> None:
         for variant, library in variants:
             env = {k: v for k, v in os.environ.items() if not k.startswith("SPACEPDHCG_TEST_")}
             env["SPACEPDHCG_QOCO_LIBRARY"] = str(library.resolve())
+            runtime = runtimes[variant]
+            runtime_path = str(runtime.parent.resolve()) + ":" if runtime else ""
             env["LD_LIBRARY_PATH"] = (
-                str(cores[variant].resolve().parent) + ":" + env.get("LD_LIBRARY_PATH", "")
+                runtime_path + str(cores[variant].resolve().parent)
+                + ":" + env.get("LD_LIBRARY_PATH", "")
             )
             start = time.perf_counter()
             run = subprocess.run(

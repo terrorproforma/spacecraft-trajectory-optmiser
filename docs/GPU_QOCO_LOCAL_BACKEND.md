@@ -1062,3 +1062,81 @@ and run `native_qoco_conversion_test 4 trajectory`. Other native test invocation
 use the actual backend. The proxy and diagnostic environments are never used
 for timing. Tree-depth/within-group ordering, the remaining factorization
 regression and the vendor race are the next local targets. The whole goal stays active.
+## Factorization and cuDSS runtime variants
+
+The v48–v55 hill climb changes only private local builds. No shared cuDSS
+installation, pinned upstream checkout, production default or H100 campaign
+changes. All variants use FP64, int32 indices and sm_120 without fast-math;
+the native core stays frozen at v41. Physics tolerances and independent
+qualification remain unchanged.
+
+| Build | Runtime and change from trajectory-tree v42 | Result |
+| --- | --- | --- |
+| v48 | 0.7.1.6, force multiblock factors | Physics probes pass; full landing initcheck fails in vendor `preprocess_block_mapping` with an uninitialized host-copy source. |
+| v49 | v48 with deterministic mode disabled | Probes pass with more iterations; same initialization failure. |
+| v50 | 0.7.1.6, standard kernels, default factor algorithm | 20-interval 6DOF fails its terminal certificate and exhausts the trust region. |
+| v51 | 0.8.0.10, deterministic, default factor algorithm | Native/landing probes pass; 6DOF crashes. Diagnostic memcheck first reports an invalid shared read in `cudss::fwd_dtmn_ker`. |
+| v52 | v51 with forced multiblock factors | 6DOF still reports an illegal memory access. |
+| v53 | 0.8.0.10, deterministic, vendor ordering without our permutation/tree | Landing crashes; memcheck reports the same forward-solve kernel's invalid shared read. |
+| v54 | 0.8.0.10, standard kernels, trajectory tree | Initial probes and oracles pass; later 6DOF repeat fails qualification. Rejected. |
+| v55 | v51 with superpanels enabled | 6DOF still reports an illegal memory access. |
+
+No variant is promoted. The standard-kernel failures return API success but
+fail the independent nonlinear terminal gate. In v54's failed warmup, canonical
+residual is 3.297e-10 while terminal residual is 4.517e-6 against a 1e-6 limit:
+1988 inner iterations, 18 outer attempts, 3 accepted and 15 rejected steps.
+The final trust radius reaches 0.0001. This is a convergence/qualification
+failure, not evidence that the smaller canonical residual permits a faster
+result. It follows earlier successful v54 20/500-interval probes and independent
+conversion/KKT/stopping/step-control comparisons, making repeatability essential.
+
+v54 passes all four **full landing** sanitizers, including racecheck with zero
+hazards. That narrows the older race problem but does not qualify this candidate
+for production or establish sanitizer coverage of 6DOF. The prepared 6DOF
+sanitizer helper was not run after its repeatability failure. v48/v49 stop at
+initcheck; v51's diagnostic memcheck permits kernel-level error recovery and
+reports 800 errors, whose later entries can be cascades. v52/v55 have no further
+sanitizer claims. No sanitizer reports are suppressed.
+
+The completed v54 landing benchmark uses two warmups and seven alternating
+measured samples per variant, the same core and explicit per-variant runtimes:
+
+| Median | v42 / cuDSS 0.7.1.6 deterministic | v54 / cuDSS 0.8.0.10 standard | Ratio |
+| --- | ---: | ---: | ---: |
+| SCvx | 194.813 ms | 151.352 ms | 1.287x |
+| QOCO solve | 143.096 ms | 114.191 ms | 1.253x |
+| Complete process | 600.362 ms | 571.919 ms | 1.050x |
+| Inner iterations | 36 | 36 | — |
+
+This is a landing-only result for a rejected candidate. The 6DOF campaign
+stops at its first optimized warmup; there is no 6DOF median or completed
+500-interval matched campaign for v54. Earlier single probes are diagnostic,
+not speedup evidence. The prior v42 experimental large-case result remains
+the last retained trajectory-tree checkpoint, with its previously documented
+small-case regressions and vendor race limitations.
+
+Reproduction and evidence:
+
+- [Frozen variants, source snapshots, CMake caches, hashes, complete check logs and compact results](../artifacts/performance/qoco-factor-runtime-checkpoint.json).
+- [Completed matched landing campaign](../artifacts/performance/qoco-cudss08-v54-pd3.json).
+- [Interrupted 6DOF campaign, including failed warmup](../artifacts/performance/qoco-cudss08-v54-pd6.json).
+- [Failed native 6DOF result with trajectory and iterations](../artifacts/performance/qoco-cudss08-v54-rejected-pd6.json).
+
+`prepare_qoco_gpu.py --multiblock-factorization` and `--superpanels` are opt-in
+experiments requiring `--checked-cudss-abi`. The trajectory-tree submission
+selects the renamed enum for 0.8. The optional benchmark arguments
+`--baseline-cudss /path/to/libcudss.so` and
+`--optimized-cudss /path/to/libcudss.so` select separate runtime search directories
+and record each library's SHA-256. Their directories must expose `libcudss.so`
+pointing to the selected runtime. This allows a private pip `--target`
+installation without changing the shared environment; the ordinary default
+benchmark behavior is preserved when these arguments are omitted.
+
+NVIDIA documents the [0.8 enum/CSR API migration](https://docs.nvidia.com/cuda/cudss/migration_guide.html)
+and [symmetric-indefinite and user-tree fixes](https://docs.nvidia.com/cuda/cudss/release_notes.html).
+Those release notes do not establish that our failures are fixed.
+[Deterministic mode uses different kernels](https://docs.nvidia.com/cuda/cudss/types.html);
+the next investigation should address conditioning and SCvx progress sensitivity
+while retaining the same terminal certificate, then revisit faster kernels.
+CPU KKT assembly and host control still prevent claiming the whole pipeline
+is GPU-native. The full goal remains active.

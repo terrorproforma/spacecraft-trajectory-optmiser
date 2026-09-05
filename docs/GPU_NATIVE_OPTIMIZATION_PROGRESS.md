@@ -677,3 +677,28 @@ with the reference ordering. This remains an experimental large-case candidate.
 [Results, frozen artifacts and limits](GPU_QOCO_LOCAL_BACKEND.md#gpu-trajectory-ordering-and-separator-trees)
 retain intermediate failures and matched measurements. CPU KKT assembly, host
 control, further factorization/ordering work and the full GPU-native goal remain open.
+
+## Factorization and runtime hill climb: rejected variants
+
+Eight further frozen local builds (v48–v55) do not earn promotion. Explicit
+multiblock factorization on cuDSS 0.7.1 introduces an initialization error in
+vendor setup. Standard kernels lose 6DOF qualification. An isolated cuDSS
+0.8.0.10 trial reveals a deterministic forward-solve memory error with both
+trajectory and vendor ordering; multiblock factorization and superpanels do
+not remove the observed 6DOF crash.
+
+The 0.8 standard-kernel candidate initially passes both 6DOF sizes, independent
+numerical oracles, seven landing repetitions, and all four full landing
+sanitizers. Its matched landing SCvx median improves 194.813 → 151.352 ms
+(1.287x versus v42), but its first measured-campaign 6DOF warmup fails:
+terminal residual 4.517e-6 exceeds the unchanged 1e-6 certificate tolerance.
+The benchmark stops and the candidate is rejected. Initial qualification and
+landing-only speed do not establish reliable performance for the whole pipeline.
+
+The existing reference remains unchanged. Benchmark tools now select and hash
+each variant's cuDSS runtime explicitly. Optional factorization/superpanel
+switches and 0.8 tree enum compatibility support reproducible experiments;
+they are not default changes. The next target is numerical conditioning and
+SCvx progress sensitivity, alongside the remaining host numerical work.
+[Evidence and exact scope](GPU_QOCO_LOCAL_BACKEND.md#factorization-and-cudss-runtime-variants)
+retain passing probes, failed repetitions and vendor error reports. The goal is active.

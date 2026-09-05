@@ -203,7 +203,12 @@ def patch_trajectory_ordering(destination: Path, with_tree: bool = False) -> Non
     CUDSS_CHECK(g_cuda_funcs.cudssConfigSet(linsys_data->config,
         CUDSS_CONFIG_ND_NLEVELS, &trajectory_levels, sizeof(trajectory_levels)));
     CUDSS_CHECK(set_permutation(linsys_data->handle, linsys_data->data,
-        CUDSS_DATA_USER_ELIMINATION_TREE, trajectory_tree,
+#if CUDSS_VERSION >= 800
+        CUDSS_DATA_USER_ND_PARTITION_TREE,
+#else
+        CUDSS_DATA_USER_ELIMINATION_TREE,
+#endif
+        trajectory_tree,
         ((1 << trajectory_levels) - 1) * sizeof(int)));''')
         text = text.replace("  CUDA_CHECK(cudaFree(trajectory_permutation));",
                             "  CUDA_CHECK(cudaFree(trajectory_permutation));\n"
@@ -421,6 +426,10 @@ def main() -> None:
     parser.add_argument(
         "--deterministic", action="store_true", help="use deterministic cuDSS factors"
     )
+    parser.add_argument("--multiblock-factorization", action="store_true",
+                        help="experimental cuDSS multiblock factorization algorithm")
+    parser.add_argument("--superpanels", action="store_true",
+                        help="experimental cuDSS superpanel optimization")
     parser.add_argument(
         "--checked-cudss-abi", action="store_true", help="support and check cuDSS 0.7/0.8 APIs"
     )
@@ -474,6 +483,8 @@ def main() -> None:
         args.gather
         or args.correct_stopping
         or args.deterministic
+        or args.multiblock_factorization
+        or args.superpanels
         or args.checked_cudss_abi
         or args.queued_operators
         or args.device_cone_reductions
@@ -524,6 +535,10 @@ def main() -> None:
         parser.error("choose only one ordering strategy")
     if args.trajectory_tree and not args.trajectory_ordering:
         parser.error("--trajectory-tree requires --trajectory-ordering")
+    if args.multiblock_factorization and not args.checked_cudss_abi:
+        parser.error("--multiblock-factorization requires --checked-cudss-abi")
+    if args.superpanels and not args.checked_cudss_abi:
+        parser.error("--superpanels requires --checked-cudss-abi")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -828,6 +843,27 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         backend_path.write_text(backend.replace(before, after))
     if args.checked_cudss_abi:
         patch_cudss_abi(destination)
+    if args.superpanels:
+        backend_path = destination / "algebra/cuda/cudss_backend.cu"
+        backend = backend_path.read_text()
+        before = "  int value = 0;\n  CUDSS_CHECK(g_cuda_funcs.cudssConfigSet(linsys_data->config,"
+        if backend.count(before) != 1:
+            raise RuntimeError("unexpected cuDSS superpanel configuration site")
+        backend_path.write_text(backend.replace(before, before.replace("value = 0", "value = 1")))
+    if args.multiblock_factorization:
+        backend_path = destination / "algebra/cuda/cudss_backend.cu"
+        backend = backend_path.read_text()
+        before = "  // Initialize cuSPARSE"
+        if backend.count(before) != 1:
+            raise RuntimeError("unexpected cuDSS factorization configuration site")
+        backend_path.write_text(backend.replace(before, '''#if CUDSS_VERSION >= 800
+  cudssFactorizationAlg_t factor_algorithm = CUDSS_FACTORIZATION_ALG_MULTIBLOCK;
+#else
+  cudssAlgType_t factor_algorithm = CUDSS_ALG_1;
+#endif
+  CUDSS_CHECK(g_cuda_funcs.cudssConfigSet(linsys_data->config,
+      CUDSS_CONFIG_FACTORIZATION_ALG, &factor_algorithm, sizeof(factor_algorithm)));
+''' + before))
     if args.batched_stopping:
         patch_batched_stopping(destination, args.batched_iteration_scalars)
     if args.gpu_degree_ordering:
@@ -864,6 +900,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "trajectory_tree": args.trajectory_tree,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
+        "multiblock_factorization": args.multiblock_factorization,
+        "superpanels": args.superpanels,
         "checked_cudss_abi": args.checked_cudss_abi,
     }
     if args.gather:

@@ -3,6 +3,7 @@
 Use `spacepdhcg validate` to normalize user units before this benchmark. Each
 sample includes the native planner's independent replay. Full result documents
 are retained beside the report; compact records include their SHA-256 hashes.
+Optional per-variant cuDSS paths isolate and fingerprint runtime comparisons.
 """
 
 from __future__ import annotations
@@ -27,6 +28,8 @@ def main() -> None:
     parser.add_argument("--repeats", type=int, default=7)
     parser.add_argument("--baseline-core", type=Path)
     parser.add_argument("--optimized-core", type=Path)
+    parser.add_argument("--baseline-cudss", type=Path)
+    parser.add_argument("--optimized-cudss", type=Path)
     args = parser.parse_args()
     if args.warmups < 0 or args.repeats < 1:
         parser.error("warmups must be nonnegative and repeats positive")
@@ -44,6 +47,12 @@ def main() -> None:
         "optimized": args.optimized_core or paths[-1],
     }
     paths.extend(cores.values())
+    runtimes = {"baseline": args.baseline_cudss, "optimized": args.optimized_cudss}
+    for runtime in runtimes.values():
+        if runtime is not None:
+            if (runtime.parent / "libcudss.so").resolve() != runtime.resolve():
+                parser.error("cuDSS directory must expose libcudss.so for the selected runtime")
+            paths.append(runtime)
     report = {
         "problem": problem,
         "timing_boundary": "fresh native process including replay; unit parsing excluded",
@@ -51,6 +60,7 @@ def main() -> None:
         "warmups": args.warmups,
         "repeats": args.repeats,
         "core_libraries": {k: str(v.resolve()) for k, v in cores.items()},
+        "cudss_libraries": {k: str(v.resolve()) if v else None for k, v in runtimes.items()},
         "sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         "gpu": subprocess.check_output(
@@ -66,8 +76,11 @@ def main() -> None:
         for variant, backend in variants:
             env = {k: v for k, v in os.environ.items() if not k.startswith("SPACEPDHCG_TEST_")}
             env["SPACEPDHCG_QOCO_LIBRARY"] = str(backend.resolve())
+            runtime = runtimes[variant]
+            runtime_path = str(runtime.parent.resolve()) + ":" if runtime else ""
             env["LD_LIBRARY_PATH"] = (
-                str(cores[variant].resolve().parent) + ":" + env.get("LD_LIBRARY_PATH", "")
+                runtime_path + str(cores[variant].resolve().parent)
+                + ":" + env.get("LD_LIBRARY_PATH", "")
             )
             output = raw_dir / f"{variant}-{repeat}.json"
             started = time.perf_counter()
