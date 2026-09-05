@@ -327,7 +327,7 @@ def main() -> int:
         "--fleet-ships",
         action="append",
         default=[],
-        help="fleet-master run id whose fleet's ships are summarised (columns of the selected fleet)",
+        help="fleet-master run id whose selected fleet's ships are summarised",
     )
     args = parser.parse_args()
 
