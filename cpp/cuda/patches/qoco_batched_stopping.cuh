@@ -3,7 +3,7 @@
 // operators and cuBLAS summation; only scalar result placement is changed.
 namespace qoco_batched_stopping {
 enum Slot { B, S, C, H, ATY, GTZ, PX, AX, GX, EQ, CONIC, DUAL,
-            XPX, GAP, CTX, BTY, HTZ, Count };
+            XPX, GAP, CTX, BTY, HTZ, Count, RAW_XPX = Count, XX, SZ };
 inline void blas(cublasStatus_t status) {
     if (status != CUBLAS_STATUS_SUCCESS) {
         fprintf(stderr, "QOCO batched stopping cuBLAS error %d\n", static_cast<int>(status));
@@ -18,7 +18,8 @@ inline void norm(const double* input, int count, double* output, double* partial
     if (blocks > 1) reduce<Maximum, true><<<1, 256>>>(partial, blocks, output);
     CUDA_CHECK(cudaGetLastError());
 }
-__global__ void finish(const double* v, double kinv, double* out) {
+template<bool Iteration>
+__global__ void finish(const double* v, double kinv, double k, double reg, int m, double* out) {
     const double pres = qoco_max(v[EQ], v[CONIC]);
     double pres_rel = qoco_max(v[AX], v[B]);
     pres_rel = qoco_max(pres_rel, v[GX]);
@@ -33,18 +34,27 @@ __global__ void finish(const double* v, double kinv, double* out) {
     const double gap_rel = qoco_max(qoco_max(1.0, pobj), dobj);
     out[0] = pres; out[1] = v[DUAL]; out[2] = __dmul_rn(v[GAP], kinv);
     out[3] = pres_rel; out[4] = __dmul_rn(dres_rel, kinv); out[5] = gap_rel;
+    if constexpr (Iteration) {
+        const double corrected = __dadd_rn(v[RAW_XPX], -__dmul_rn(reg, v[XX]));
+        const double obj = __dadd_rn(v[CTX], __dmul_rn(0.5, corrected));
+        out[6] = fabs(k) > 1e-15 ? __ddiv_rn(obj, k) : QOCOFloat_MAX;
+        out[7] = m ? __ddiv_rn(v[SZ], static_cast<double>(m)) : 0.0;
+    }
 }
 } // namespace qoco_batched_stopping
 
 // Returns [primal, dual, gap, primal scale, dual scale, gap scale]. Scratch and
 // cuBLAS pointer mode belong to the enclosing scope, including unscoped callers.
-extern "C" void qoco_gpu_stopping_metrics(QOCOSolver* solver, double* output) {
+template<bool Iteration>
+static void qoco_gpu_metrics(QOCOSolver* solver, double* output) {
     using namespace qoco_batched_stopping;
     if (qoco_gpu_begin_reduction_scope() != 0) { fprintf(stderr, "QOCO stopping scope failed\n"); exit(1); }
     double* scratch{}; int temporary{};
-    CUDA_CHECK(qoco_gpu_acquire_scalar_workspace(Count + 6 + 256, &scratch, &temporary));
-    double* result = scratch + Count;
-    double* partial = result + 6;
+    constexpr int slots = Iteration ? SZ + 1 : Count;
+    constexpr int results = Iteration ? 8 : 6;
+    CUDA_CHECK(qoco_gpu_acquire_scalar_workspace(slots + results + 256, &scratch, &temporary));
+    double* result = scratch + slots;
+    double* partial = result + results;
     auto* funcs = get_cuda_funcs();
     bool temporary_handle{};
     auto handle = qoco_acquire_reduction_handle(&temporary_handle);
@@ -75,6 +85,7 @@ extern "C" void qoco_gpu_stopping_metrics(QOCOSolver* solver, double* output) {
     if (d->m) SpMtv(d->G, z, xb);
     product_norm(xb, di, xb, d->m ? d->n : 0, GTZ);
     USpMv(d->P, x, xb);
+    if constexpr (Iteration) dot(xb, x, d->n, RAW_XPX);
     qoco_axpy(x, xb, xb, -solver->settings->kkt_static_reg_P, d->n);
     product_norm(xb, di, xb, d->n, PX);
     dot(x, xb, d->n, XPX);
@@ -90,9 +101,20 @@ extern "C" void qoco_gpu_stopping_metrics(QOCOSolver* solver, double* output) {
     if (d->m) { ew_product(s, f, u1, d->m); ew_product(z, f, u2, d->m); }
     dot(u1, u2, d->m, GAP);
     dot(c, x, d->n, CTX); dot(b, y, d->p, BTY); dot(h, z, d->m, HTZ);
-    finish<<<1, 1>>>(scratch, scale->kinv, result);
+    if constexpr (Iteration) { dot(x, x, d->n, XX); dot(s, z, d->m, SZ); }
+    finish<Iteration><<<1, 1>>>(scratch, scale->kinv, scale->k,
+        solver->settings->kkt_static_reg_P, d->m, result);
     CUDA_CHECK(cudaGetLastError());
     blas(funcs->cublasSetPointerMode(handle, mode));
-    CUDA_CHECK(cudaMemcpy(output, result, 6 * sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(output, result, results * sizeof(double), cudaMemcpyDeviceToHost));
     qoco_gpu_end_reduction_scope();
 }
+extern "C" void qoco_gpu_stopping_metrics(QOCOSolver* solver, double* output) {
+    qoco_gpu_metrics<false>(solver, output);
+}
+#ifdef SPACEPDHCG_QOCO_BATCHED_ITERATION
+// Appends the objective and mu, sharing P*x and c'*x with the stopping metrics.
+extern "C" void qoco_gpu_iteration_metrics(QOCOSolver* solver, double* output) {
+    qoco_gpu_metrics<true>(solver, output);
+}
+#endif

@@ -1,6 +1,7 @@
 // Independent CPU arithmetic plus the previous stopping-metric implementation.
 #include "qoco.h"
 #include "../algebra/cuda/cuda_types.h"
+#include "kkt.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -38,7 +39,7 @@ template<class T> long double norm(const std::vector<T>& x, const std::vector<do
 long double dot(const std::vector<double>& a, const std::vector<double>& b) {
     long double out = 0; for (size_t i = 0; i < a.size(); ++i) out += static_cast<long double>(a[i]) * b[i]; return out;
 }
-void run(int n, bool absent, bool zero_p) {
+void run(int n, bool absent, bool zero_p, bool iteration_required) {
     const int p = absent ? 0 : 5, m = absent ? 0 : 9;
     Sparse P{n, n}, A{p, n}, G{m, n};
     for (int col = 0; col < n; ++col) {
@@ -65,9 +66,11 @@ void run(int n, bool absent, bool zero_p) {
     using Metrics = void (*)(QOCOSolver*, double*);
     auto gpu = reinterpret_cast<Metrics>(dlsym(RTLD_DEFAULT, "qoco_gpu_stopping_metrics"));
     auto reference = reinterpret_cast<Metrics>(dlsym(RTLD_DEFAULT, "qoco_reference_stopping_metrics"));
+    auto iteration_metrics = reinterpret_cast<Metrics>(dlsym(RTLD_DEFAULT, "qoco_gpu_iteration_metrics"));
     auto begin = reinterpret_cast<int (*)()>(dlsym(RTLD_DEFAULT, "qoco_gpu_begin_reduction_scope"));
     auto end = reinterpret_cast<void (*)()>(dlsym(RTLD_DEFAULT, "qoco_gpu_end_reduction_scope"));
     require(gpu && reference && begin && end, "complete stopping interface");
+    require(!iteration_required || iteration_metrics, "iteration metrics required");
     for (int iteration = 0; iteration < 3; ++iteration) {
         std::vector<double> x(n), y(p), z(m), s(m), di(n), ei(p), fi(m), f(m), residual(n + p + m);
         for (int i = 0; i < n; ++i) { x[i] = .4 * std::sin(i * .13 + iteration); di[i] = .7 + .1 * (i % 9); }
@@ -78,6 +81,7 @@ void run(int n, bool absent, bool zero_p) {
         upload(w->scaling->Dinvruiz->d_data, di); upload(w->scaling->Einvruiz->d_data, ei);
         upload(w->scaling->Finvruiz->d_data, fi); upload(w->scaling->Fruiz->d_data, f); upload(w->kktres->d_data, residual);
         const double kinv = w->scaling->kinv = .37 + iteration * .11;
+        const double k = w->scaling->k = 1.0 / kinv;
         auto px = P.product(x, false, true), aty = A.product(y, true), gtz = G.product(z, true), ax = A.product(x), gx = G.product(x);
         long double xpx = 0, gap = 0;
         for (int i = 0; i < n; ++i) xpx += x[i] * px[i] * di[i];
@@ -90,11 +94,29 @@ void run(int n, bool absent, bool zero_p) {
         if (iteration == 1) { require(begin() == 0 && begin() == 0, "nested metrics scope"); }
         double got[6], old[6]; gpu(solver, got); reference(solver, old);
         for (int i = 0; i < 6; ++i) { compare(got[i], old[i], "legacy metric parity"); compare(got[i], expected[i], "independent long-double metrics"); }
+        if (iteration_metrics) {
+            double all[8]; iteration_metrics(solver, all);
+            for (int i = 0; i < 6; ++i) compare(all[i], got[i], "combined stopping parity");
+            compare(all[6], compute_objective(w->data, w->x, w->xbuff, settings.kkt_static_reg_P, k), "legacy objective parity");
+            compare(all[7], compute_mu(w->s, w->z, m), "legacy mu parity");
+            long double unscaled_xpx = 0;
+            for (int i = 0; i < n; ++i) unscaled_xpx += x[i] * px[i];
+            compare(all[6], (.5L * unscaled_xpx + dot(c, x)) / k, "independent objective");
+            compare(all[7], m ? dot(s, z) / m : 0, "independent mu");
+            w->scaling->k = 0;
+            iteration_metrics(solver, all);
+            require(all[6] == QOCOFloat_MAX, "objective safe division contract");
+            w->scaling->k = k;
+        }
         compare(qoco_dot(w->x->d_data, w->x->d_data, n), dot(x, x), "host dot after pointer mode restoration");
         if (iteration == 1) { end(); end(); }
     }
     qoco_cleanup(solver);
-    std::printf("GPU stopping metrics n=%d absent=%d zero_P=%d PASS\n", n, absent, zero_p);
+    std::printf("GPU stopping metrics n=%d absent=%d zero_P=%d iteration=%d PASS\n", n, absent, zero_p, iteration_metrics != nullptr);
 }
 } // namespace
-int main() { run(17, false, false); run(4103, false, false); run(17, true, false); run(17, false, true); }
+int main(int argc, char**) {
+    const bool required = argc > 1;
+    run(17, false, false, required); run(4103, false, false, required);
+    run(17, true, false, required); run(17, false, true, required);
+}

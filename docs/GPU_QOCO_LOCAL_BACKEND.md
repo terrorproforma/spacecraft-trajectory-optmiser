@@ -648,3 +648,67 @@ this candidate remains optional. The full goal is active.
 [landing samples](../artifacts/performance/qoco-batched-stopping-pd3.json), and
 [planner comparison](../artifacts/performance/qoco-batched-stopping-planner-pd6.json)
 retain the evidence. Prepared-source hashes were reproduced in a fresh directory.
+
+## Shared objective and complementarity calculation
+
+`--batched-iteration-scalars` extends the stopping packet with the objective and
+mu (the mean slack/dual dot product). It requires `--batched-stopping` and uses
+the same FP64 cuBLAS dot products. The quadratic product is consumed before its
+regularization/scaling correction changes the work vector, and `c' * x` is shared
+with the stopping calculation. CUDA preserves the separate quadratic
+regularization correction and guarded division by the objective scale. An absent
+inequality block produces mu zero. The production loop now gets eight doubles
+in one packet instead of separately computing/downloading objective and mu.
+The six-metric entry point remains available.
+
+The standalone stopping test accepts `--iteration` to require and exercise the
+extended entry point. It checks both interfaces, independent long-double
+objective/mu formulas with nontrivial scales, the zero-scale division contract,
+regularization removal, empty constraints and zero quadratic input. The native
+comparison mode now checks all eight values against the previous calculations
+at every iteration. Native Ruiz-4, seven landing solves and the actual 6DOF
+planner pass this comparison plus independent conversion/KKT/physics checks.
+All four standalone kernel sanitizers pass; full landing memory, initialization
+and synchronization checks pass with zero leaks.
+
+The initial v23 integration comparison failed because the new C oracle calls
+lacked their function declarations. The corrected v24 includes `kkt.h` and was
+built with `-Werror=implicit-function-declaration`. The failed prototype and
+its output are retained. A subsequent comment cleanup rebuild changed binary
+hashes, including after the original source was restored. The initial timing
+artifacts remain as superseded evidence; their original optimized binary is no
+longer retained. The final dependency was copied to an immutable `final/`
+directory, then fully revalidated and remeasured. Use those final artifacts and
+hashes for subsequent comparisons.
+
+Final paired RTX 5090 measurements compare frozen v22 with the final v24 library,
+using the same 038695b core, two warmups and seven alternating measured samples:
+
+| Case | Previous SCvx | Shared iteration SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 186.770 ms | 175.702 ms | 575.536 → 575.912 ms |
+| 20-interval 6DOF planner, 1e-6 | 1240.639 ms | 1163.785 ms | 1613.479 → 1530.128 ms |
+
+SCvx medians improve 1.063x/1.066x. Landing complete-process time is flat;
+6DOF improves 1.054x including startup/replay. The landing QOCO solve subphase
+alone is slightly slower (132.608 → 136.713 ms); these independently computed
+medians and raw variability must not be presented as a uniform gain in every
+phase. Iterations remain 28/179, with two accepted steps, unchanged objectives
+and the same independent physics gates.
+
+A qualified API trace of the final library shows 251 → 131 stream waits,
+636 → 516 asynchronous copies and 6095 → 6005 launches. Synchronous copies
+remain 595 and allocations/frees remain 379/299. These counts support fewer
+round trips and duplicated operations; they are not exclusive GPU timings.
+
+[Final checkpoint and validation](../artifacts/performance/qoco-batched-iteration-checkpoint.json),
+[final landing samples](../artifacts/performance/qoco-batched-iteration-final-pd3.json),
+and [final planner samples](../artifacts/performance/qoco-batched-iteration-final-planner-pd6.json)
+record the immutable binaries, source provenance and representative complete
+planner outputs. The final backend is
+`/home/angus/build-qoco-gpu-iteration-v24/final/libqoco.so`.
+
+Stop/best-iterate policy, centering, line search, iterative-refinement control,
+initial structure/KKT assembly, outer control and GPU GTOC12 remain unfinished.
+The known cuDSS factorization race remains open and was not remeasured; this
+backend stays optional. The full GPU-native goal is active.

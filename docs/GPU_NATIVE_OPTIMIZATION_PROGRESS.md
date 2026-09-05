@@ -582,3 +582,18 @@ The landing API trace removes 330 synchronous copies and 150 scalar-result
 stream waits. [Full evidence and scope](GPU_QOCO_LOCAL_BACKEND.md#batched-gpu-stopping-metrics)
 record measured binaries, raw timings and remaining host decisions. The existing
 cuDSS race and the full GPU-native goal remain open.
+
+## Shared iteration scalar checkpoint
+
+Objective and mu now join the GPU stopping packet, sharing the quadratic product
+and cost dot product instead of recomputing them. The extended path passes
+independent arithmetic, all eight metric comparisons, unchanged physics gates
+and all four kernel sanitizers. Final binaries were frozen before full
+revalidation and matched measurement.
+
+Final SCvx medians improve 186.770 → 175.702 ms for landing and
+1240.639 → 1163.785 ms for 6DOF, about 1.06x each. Complete-process landing time
+is flat; complete-process 6DOF improves 1.054x. A separate trace shows 120 fewer
+scalar waits and 90 fewer launches per landing solve. [Evidence and limits](GPU_QOCO_LOCAL_BACKEND.md#shared-objective-and-complementarity-calculation)
+retain superseded trials as well as the final results. Host control and the
+cuDSS race remain unfinished; the full goal stays active.
