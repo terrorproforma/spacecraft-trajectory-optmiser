@@ -312,7 +312,17 @@ branch's merged from `main`). Carried forward: GTOC12 best verified fleet and th
 - Windows checkout: spec edits (README, BENCHMARK_PROTOCOL, matrices, OUTLINEs, test_benchmark_manifests,
   literature_baselines, COMPARATIVE_SOLVER_CAMPAIGN) - every line added there is already on main
   (only Ruff re-wraps differ) -> nothing committed; `.gitignore` edits already on main; scratch
-  `.tmp_*` (6 files) moved to `%LOCALAPPDATA%\Temp\spacepdhcg-tmp\`.
+  `.tmp_*` (6 files) moved to `%LOCALAPPDATA%\Temp\spacepdhcg-tmp\`. Landing: bundle
+  `release-merge-3-e259809.bundle` (14.4 MB, sha256 `454adbcc…854c` on both sides) fetched by
+  Windows git; pushed as fast-forwards `main` 8cb3759 -> e259809, `release/single-gpu-v1-merge`
+  8cb3759 -> e259809, `integration/single-gpu-v1` 1dbcae0 -> bf4cf0f, `feat/gtoc12-asteroid-mining`
+  4dd4fdb -> b55eb70, new `chore/g2g3-reseal-8cb3759` 06e70b6 and `h100/gtoc12-asteroid-mining`
+  48e5fb7. Windows checkout: dirty files backed up to
+  `%LOCALAPPDATA%\Temp\spacepdhcg-tmp\win-checkout-backup-20260905-164309\`, tree restored,
+  `git checkout main` -> e259809 clean. Incident: the pre-checkout `git checkout -- .` reverted the
+  local `.gitignore` edits before `git clean -f`, which deleted the ignored `_upstream/` checkouts
+  and `traj-key.pem`; both restored (key from `Downloads`, upstreams re-cloned at the pinned
+  commits, trees verified). See the scratchpad entry.
 - Validation (head 5784e64; `cpp/` byte-identical to 8cb3759; RTX 5090 with a foreign 3.5 GB
   workload left alone; logs `/home/angus/integ3/logs/`): ruff check/format clean (302 files);
   generated-artefact checks clean; host RelWithDebInfo -Werror fresh 0 warnings, ctest 50/50;

@@ -453,6 +453,18 @@ Verbatim blocks from the Windows checkout's live file (entries other workers wro
   first - check the validated run id in the output, not just the rc.
 - `[tool]` `npm ci` fails in `web/trajectory-viewer` (no lockfile / no dependencies); `check` and
   `test` need no install.
+- `[self]` **Data loss on the Windows checkout, recovered.** Cleaning the dirty tree before
+  `git checkout main` ran `git checkout -- .` and then `git clean -f`. The first command reverted
+  the locally edited `.gitignore` to d88eb51's version, which lacked `_upstream/`, `*.pem` and
+  `traj-key*`; the second then deleted the (previously ignored) `_upstream/` upstream checkouts and
+  the Lambda key `traj-key.pem`, which the backup step had not copied because they were ignored
+  when it ran. Recovered: `traj-key.pem` restored from `Downloads\traj-key.pem` (the original
+  download, sha256 `479e5275…69ef`); `_upstream/{pdhcg,qoco,qoco-g4}` re-cloned at the pinned
+  commits 167c8b72 (lock tree 62b05e6c matches), 89706f60 and 09f04959 (tree c85fe82f matches),
+  mirroring the WSL checkouts. Rules: (1) never run `git clean` after reverting `.gitignore` -
+  revert `.gitignore` last, or remove untracked files by explicit list from the pre-revert status;
+  (2) before any clean, list `git status --ignored --porcelain` too and treat `!!` entries as
+  precious; (3) no `-d` and no wildcard clean on a checkout that holds keys or vendored trees.
 
 #### What Worked
 
