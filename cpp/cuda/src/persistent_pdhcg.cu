@@ -175,6 +175,8 @@ struct DeviceProblem {
     double* recovery_scalars;
     double* recovery_backup_primal;
     double* recovery_backup_dual;
+    double* recovery_trial_primal;
+    double* recovery_trial_dual;
     double* scaling;
     const DeviceCone* affine_cones;
     int affine_cone_count;
@@ -236,6 +238,7 @@ struct DeviceReport {
     double recovery_final_complementarity;
     int recovery_stationarity_index;
     double recovery_stationarity_value;
+    spacepdhcg_cuda_recovery_profile recovery_profile;
 };
 
 struct NumericPointers {
@@ -1137,6 +1140,7 @@ __global__ void solve_kernel(
     __shared__ int cancelled;
     if (threadIdx.x == 0) {
         report->termination = SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT;
+        report->recovery_profile = {};
         report->iterations = 0;
         report->recovery_iterations = 0U;
         report->recovery_trigger_reason = SPACEPDHCG_CUDA_RECOVERY_NOT_TRIGGERED;
@@ -1894,7 +1898,9 @@ __device__ void recovery_dual_adjoint(
 __device__ bool recovery_reconstruct_dual(
     DeviceProblem* problem,
     volatile int* cancellation,
-    int* shared_flag
+    int* shared_flag,
+    const int maximum_restarts = 8,
+    const int maximum_iterations = 0
 ) {
     zero_vector(problem->scalar_product, problem->scalar_rows);
     zero_vector(problem->affine_product, problem->affine_rows);
@@ -1981,7 +1987,9 @@ __device__ bool recovery_reconstruct_dual(
     // Restart CGLS from the current stationarity residual.  Fixed-pattern
     // trajectory CQPs can be strongly rank-deficient, so finite-precision
     // conjugacy may be exhausted well before the nominal dimension bound.
-    for (int restart = 0; restart < 8; ++restart) {
+    const int iterations_per_restart = maximum_iterations > 0
+        && maximum_iterations < 2 * coefficients ? maximum_iterations : 2 * coefficients;
+    for (int restart = 0; restart < maximum_restarts; ++restart) {
         if (poll_cancellation(cancellation, shared_flag)) {
             return false;
         }
@@ -2002,7 +2010,7 @@ __device__ bool recovery_reconstruct_dual(
             problem->recovery_scalars[0] = gamma;
         }
         __syncthreads();
-        for (int iteration = 0; iteration < 2 * coefficients; ++iteration) {
+        for (int iteration = 0; iteration < iterations_per_restart; ++iteration) {
             if ((iteration & 3) == 3
                 && poll_cancellation(cancellation, shared_flag)) {
                 return false;
@@ -2149,6 +2157,120 @@ __device__ bool recovery_reconstruct_dual(
     return problem->recovery_scalars[3] != 0.0;
 }
 
+// Applies the same primal correction in speculative and final KKT refinement.
+// Cancellation decisions are block-uniform before every barrier.
+__device__ bool recovery_refine_primal(
+    DeviceProblem* problem, volatile int* cancellation, int* shared_flag
+) {
+    for (int variable = threadIdx.x;
+         variable < problem->variables;
+         variable += blockDim.x) {
+        double diagonal = 0.0;
+        for (int index = problem->q_offsets[variable];
+             index < problem->q_offsets[variable + 1];
+             ++index) {
+            if (problem->q_indices[index] == variable) {
+                diagonal += device_abs(problem->q[index]);
+            }
+        }
+        const double reduced_gradient =
+            problem->gradient[variable] + problem->c[variable];
+        const double maximum_change =
+            0.05 * fmax(1.0, device_abs(problem->primal[variable]));
+        const double change = fmin(
+            maximum_change,
+            fmax(
+                -maximum_change,
+                -reduced_gradient / fmax(1.0e-6, diagonal)
+            )
+        );
+        problem->primal[variable] = project_interval(
+            problem->primal[variable] + change,
+            problem->variable_lower[variable],
+            problem->variable_upper[variable]
+        );
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        project_cone_blocks(
+            problem->primal,
+            problem->variable_cones,
+            problem->variable_cone_count
+        );
+    }
+    __syncthreads();
+    for (int projection = 0; projection < 100; ++projection) {
+        if (poll_cancellation(cancellation, shared_flag)) {
+            return false;
+        }
+        recovery_scalar_projection(problem);
+        recovery_active_cone_projection(problem);
+    }
+    return true;
+}
+
+__device__ bool recovery_try_certificate(
+    DeviceProblem* problem, DeviceControl* control, DeviceReport* report,
+    const std::uint64_t pdhg_iterations, volatile int* cancellation, int* shared_flag
+) {
+    __shared__ unsigned long long started;
+    __shared__ int qualified;
+    if (threadIdx.x == 0) {
+        started = clock64();
+        qualified = 0;
+        ++report->recovery_profile.certificate_attempts;
+    }
+    const double recovery_step = problem->recovery_scalars[3];
+    const int duals = problem->scalar_rows + problem->affine_rows;
+    for (int i = threadIdx.x; i < problem->variables; i += blockDim.x)
+        problem->recovery_trial_primal[i] = problem->primal[i];
+    for (int i = threadIdx.x; i < duals; i += blockDim.x)
+        problem->recovery_trial_dual[i] = problem->dual[i];
+    __syncthreads();
+    bool cancelled = false;
+    for (int polish = 0; polish < 100; ++polish) {
+        if (poll_cancellation(cancellation, shared_flag)) {
+            cancelled = true;
+            break;
+        }
+        recovery_scalar_projection(problem);
+        recovery_active_cone_projection(problem);
+    }
+    for (int refinement = 0; !cancelled && refinement <= 4; ++refinement) {
+        // Cap speculative CGLS work while retaining the same primal refinement
+        // and complete KKT gate as the final recovery phase.
+        const bool dual_valid = recovery_reconstruct_dual(problem, cancellation, shared_flag, 8, 256);
+        cancelled = *shared_flag != 0;
+        if (cancelled) break;
+        evaluate_report(problem, control, report, pdhg_iterations);
+        if (threadIdx.x == 0) {
+            report->recovery_profile.last_certificate_residual = report->natural_residual_inf;
+            report->recovery_profile.last_certificate_primal = fmax(
+                report->scalar_primal_violation_inf,
+                fmax(report->box_violation_inf, report->affine_cone_distance_inf));
+            qualified = dual_valid && isfinite(report->objective)
+                && isfinite(report->natural_residual_inf)
+                && report->natural_residual_inf
+                    <= 0.9 * fmin(control->feasibility_tolerance, control->optimality_tolerance);
+        }
+        __syncthreads();
+        if (qualified != 0 || refinement == 4) break;
+        cancelled = !recovery_refine_primal(problem, cancellation, shared_flag);
+    }
+    __syncthreads();
+    if (qualified == 0 && !cancelled) {
+        for (int i = threadIdx.x; i < problem->variables; i += blockDim.x)
+            problem->primal[i] = problem->recovery_trial_primal[i];
+        for (int i = threadIdx.x; i < duals; i += blockDim.x)
+            problem->dual[i] = problem->recovery_trial_dual[i];
+        if (threadIdx.x == 0) problem->recovery_scalars[3] = recovery_step;
+    }
+    __syncthreads();
+    if (threadIdx.x == 0) report->recovery_profile.certificate_cycles += clock64() - started;
+    __syncthreads();
+    return qualified != 0;
+}
+
 __global__ void recovery_kernel(
     DeviceProblem* problem,
     DeviceControl* control,
@@ -2170,6 +2292,10 @@ __global__ void recovery_kernel(
     // Preserve the PDHG work separately from recovery, on every outcome.
     const std::uint64_t pdhg_iterations = report->iterations;
     if (threadIdx.x == 0) {
+        report->recovery_profile.initial_primal_residual = fmax(
+            report->scalar_primal_violation_inf,
+            fmax(report->box_violation_inf, report->affine_cone_distance_inf));
+        report->recovery_profile.initial_stationarity = report->stationarity_inf;
         ++control->recovery_attempt_count;
         report->recovery_attempt_count = control->recovery_attempt_count;
         report->recovery_trigger_reason =
@@ -2234,7 +2360,12 @@ __global__ void recovery_kernel(
     // values: every poll result is published through shared memory, so all threads take the
     // same branches and count the same iterations.
     bool cancelled = false;
+    bool accepted = false;
+    bool certified = false;
     std::uint64_t completed_recovery_iterations = 0U;
+    __shared__ unsigned long long phase_started;
+    if (threadIdx.x == 0) phase_started = clock64();
+    __syncthreads();
     for (int outer = 0; outer < 50'000; ++outer) {
         if (poll_cancellation(cancellation, &cancel_flag)) {
             cancelled = true;
@@ -2285,12 +2416,28 @@ __global__ void recovery_kernel(
         recovery_scalar_projection(problem);
         recovery_affine_projection(problem);
         ++completed_recovery_iterations;
+        if (outer == 99) {
+            certified = recovery_try_certificate(problem, control, report, pdhg_iterations,
+                                                  cancellation, &cancel_flag);
+            cancelled = cancel_flag != 0;
+            if (certified || cancelled) {
+                accepted = certified;
+                break;
+            }
+        }
     }
+    if (threadIdx.x == 0) {
+        const auto now = clock64();
+        report->recovery_profile.projection_cycles = now - phase_started
+            - report->recovery_profile.certificate_cycles;
+        phase_started = now;
+    }
+    __syncthreads();
     // Feasibility polish, KKT reconstruction and refinement follow the projected-gradient
     // loop. Each phase polls the flag at its own loop granularity (and inside CGLS), so a
     // deadline that lands after the projected-gradient loop is still honoured promptly
     // instead of waiting for the whole reconstruction to finish.
-    for (int iteration = 0; !cancelled && iteration < 100; ++iteration) {
+    for (int iteration = 0; !cancelled && !certified && iteration < 100; ++iteration) {
         if (poll_cancellation(cancellation, &cancel_flag)) {
             cancelled = true;
             break;
@@ -2298,9 +2445,14 @@ __global__ void recovery_kernel(
         recovery_scalar_projection(problem);
         recovery_active_cone_projection(problem);
     }
-    bool accepted = false;
+    if (threadIdx.x == 0) {
+        const auto now = clock64();
+        report->recovery_profile.feasibility_cycles = now - phase_started;
+        phase_started = now;
+    }
+    __syncthreads();
     __shared__ int kkt_converged;
-    for (int refinement = 0; !cancelled && refinement < 32; ++refinement) {
+    for (int refinement = 0; !cancelled && !certified && refinement < 32; ++refinement) {
         if (poll_cancellation(cancellation, &cancel_flag)) {
             cancelled = true;
             break;
@@ -2324,56 +2476,16 @@ __global__ void recovery_kernel(
         if (kkt_converged != 0) {
             break;
         }
-        for (int variable = threadIdx.x;
-             variable < problem->variables;
-             variable += blockDim.x) {
-            double diagonal = 0.0;
-            for (int index = problem->q_offsets[variable];
-                 index < problem->q_offsets[variable + 1];
-                 ++index) {
-                if (problem->q_indices[index] == variable) {
-                    diagonal += device_abs(problem->q[index]);
-                }
-            }
-            const double reduced_gradient =
-                problem->gradient[variable] + problem->c[variable];
-            const double maximum_change =
-                0.05 * fmax(1.0, device_abs(problem->primal[variable]));
-            const double change = fmin(
-                maximum_change,
-                fmax(
-                    -maximum_change,
-                    -reduced_gradient / fmax(1.0e-6, diagonal)
-                )
-            );
-            problem->primal[variable] = project_interval(
-                problem->primal[variable] + change,
-                problem->variable_lower[variable],
-                problem->variable_upper[variable]
-            );
-        }
-        __syncthreads();
-        if (threadIdx.x == 0) {
-            project_cone_blocks(
-                problem->primal,
-                problem->variable_cones,
-                problem->variable_cone_count
-            );
-        }
-        __syncthreads();
-        for (int projection = 0; projection < 100; ++projection) {
-            if (poll_cancellation(cancellation, &cancel_flag)) {
-                cancelled = true;
-                break;
-            }
-            recovery_scalar_projection(problem);
-            recovery_active_cone_projection(problem);
-        }
+        cancelled = !recovery_refine_primal(problem, cancellation, &cancel_flag);
     }
-    if (!cancelled) {
+    if (!cancelled && !certified) {
         accepted = recovery_reconstruct_dual(problem, cancellation, &cancel_flag);
         cancelled = cancel_flag != 0;
     }
+    if (threadIdx.x == 0) {
+        report->recovery_profile.dual_refinement_cycles = clock64() - phase_started;
+    }
+    __syncthreads();
     if (cancelled) {
         // Transactional rollback: the pre-recovery PDHG iterate is the attempt's honest
         // state. Report the PDHG iterations spent and the recovery iterations completed.
@@ -3536,6 +3648,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
         SPACEPDHCG_ALLOC(result->solver.recovery_scalars, 4, double, AllocationCategory::residual)
         SPACEPDHCG_ALLOC(result->solver.recovery_backup_primal, variables, double, AllocationCategory::iterate)
         SPACEPDHCG_ALLOC(result->solver.recovery_backup_dual, duals, double, AllocationCategory::iterate)
+        SPACEPDHCG_ALLOC(result->solver.recovery_trial_primal, variables, double, AllocationCategory::iterate)
+        SPACEPDHCG_ALLOC(result->solver.recovery_trial_dual, duals, double, AllocationCategory::iterate)
         SPACEPDHCG_ALLOC(result->solver.scaling, variables + duals, double, AllocationCategory::scaling)
         SPACEPDHCG_ALLOC(result->affine_cones, structure->affine_cone_count, DeviceCone, AllocationCategory::cone)
         SPACEPDHCG_ALLOC(result->variable_cones, structure->variable_cone_count, DeviceCone, AllocationCategory::cone)
@@ -3605,6 +3719,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             {result->solver.recovery_backup_primal,
              static_cast<std::size_t>(variables) * sizeof(double)},
             {result->solver.recovery_backup_dual,
+             static_cast<std::size_t>(duals) * sizeof(double)},
+            {result->solver.recovery_trial_primal,
+             static_cast<std::size_t>(variables) * sizeof(double)},
+            {result->solver.recovery_trial_dual,
              static_cast<std::size_t>(duals) * sizeof(double)},
             {result->solver.scaling,
              static_cast<std::size_t>(variables + duals) * sizeof(double)},
@@ -3770,6 +3888,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             result->solver.recovery_scalars,
             result->solver.recovery_backup_primal,
             result->solver.recovery_backup_dual,
+            result->solver.recovery_trial_primal,
+            result->solver.recovery_trial_dual,
             result->solver.scaling,
             result->affine_cones,
             static_cast<int>(structure->affine_cone_count),
@@ -4443,6 +4563,19 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_diagnostics(
     diagnostics->warm_start_accepted = workspace->warm_accepted ? 1 : 0;
     diagnostics->used_declared_stream = 1;
     diagnostics->hidden_cpu_fallback = 0;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_recovery_profile(
+    spacepdhcg_cuda_workspace* workspace, spacepdhcg_cuda_recovery_profile* profile
+) {
+    if (workspace == nullptr || profile == nullptr) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::lock_guard lock(workspace->mutex);
+    const auto status = finalize_if_complete(workspace);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    *profile = workspace->solve_epoch == 0U ? spacepdhcg_cuda_recovery_profile{}
+        : workspace->host_report->recovery_profile;
+    profile->abi_version = SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 

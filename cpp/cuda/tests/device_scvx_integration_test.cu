@@ -3325,11 +3325,33 @@ IntegrationResult run_resident_sequence(
                 diagnostics.natural_residual_inf
             );
         }
+        const std::string ratio_json = std::isfinite(records[0].reduction_ratio)
+            ? g17(records[0].reduction_ratio) : "null";
+        const auto get_profile = reinterpret_cast<decltype(&spacepdhcg_cuda_workspace_recovery_profile)>(
+            dlsym(RTLD_DEFAULT, "spacepdhcg_cuda_workspace_recovery_profile"));
+        if (get_profile != nullptr) {
+            spacepdhcg_cuda_recovery_profile profile{};
+            test::status_require(get_profile(workspace, &profile), "cached recovery profile");
+            std::printf("{\"case\":\"recovery_profile\",\"model\":%d,"
+                        "\"initial_primal\":%.9g,\"initial_stationarity\":%.9g,"
+                        "\"projection_cycles\":%llu,\"feasibility_cycles\":%llu,"
+                        "\"dual_refinement_cycles\":%llu,\"certificate_cycles\":%llu,"
+                        "\"certificate_attempts\":%llu,\"last_certificate_residual\":%.9g,"
+                        "\"last_certificate_primal\":%.9g}\n",
+                static_cast<int>(dynamics_config.model), profile.initial_primal_residual,
+                profile.initial_stationarity,
+                static_cast<unsigned long long>(profile.projection_cycles),
+                static_cast<unsigned long long>(profile.feasibility_cycles),
+                static_cast<unsigned long long>(profile.dual_refinement_cycles),
+                static_cast<unsigned long long>(profile.certificate_cycles),
+                static_cast<unsigned long long>(profile.certificate_attempts),
+                profile.last_certificate_residual, profile.last_certificate_primal);
+        }
         std::printf(
             "{\"case\":\"production_outer\",\"model\":%d,"
             "\"outer_iterations\":%u,\"accepted\":%u,\"rejected\":%u,"
             "\"trust_radius\":%.9g,\"requested\":%.9g,\"achieved\":%.9g,"
-            "\"ratio\":%.9g,\"objective\":%.9g,\"virtual\":%.9g,"
+            "\"ratio\":%s,\"canonical\":%.9g,\"objective\":%.9g,\"virtual\":%.9g,"
             "\"dynamics\":%.9g,\"path\":%.9g,\"terminal\":%.9g,"
             "\"path_thrust\":%.9g,\"path_mass\":%.9g,"
             "\"path_altitude\":%.9g,"
@@ -3346,7 +3368,8 @@ IntegrationResult run_resident_sequence(
             outer.final_trust_radius,
             records[0].requested_tolerance,
             records[0].achieved_residual,
-            records[0].reduction_ratio,
+            ratio_json.c_str(),
+            outer.canonical_residual,
             outer.objective,
             outer.virtual_control,
             outer.dynamics_defect,
@@ -5186,6 +5209,30 @@ int run_invocation(const int argc, char** argv) {
         return 0;
     }
     if (production_driver_mode) {
+        if (mode == "--production-outer" && (argc == 3 || argc == 4)) {
+            // Focused local hill climbs use the same production fixtures and
+            // qualification path as the four-family suite.
+            const std::string_view family(argv[2]);
+            if (argc == 4) {
+                g4_intervals = std::stoull(argv[3]);
+                test::require(g4_intervals > 0U, "production intervals must be positive");
+            }
+            production_outer_iterations = 1U;
+            IntegrationResult selected{};
+            if (family == "pd3") selected = run_pd3();
+            else if (family == "pd6") selected = run_pd6();
+            else if (family == "low-thrust") selected = run_low_thrust();
+            else test::require(false, "production family must be pd3, pd6, or low-thrust");
+            const double nonlinear = std::max({selected.outer.dynamics_defect,
+                selected.outer.path_violation, selected.outer.terminal_residual,
+                selected.outer.virtual_control});
+            return std::isfinite(selected.outer.canonical_residual)
+                    && selected.outer.canonical_residual <= 1.0e-6
+                    && std::isfinite(nonlinear) && nonlinear <= 1.0e-6
+                    && selected.cpu_gpu_trajectory_max <= 1.0e-9
+                    && selected.coefficient_parity_max <= 1.0e-6
+                ? 0 : 11;
+        }
         if (g4_sample_mode) {
             if (g4_family == "P1-C-pd3") {
                 if (p1c_qoco_repeatability_mode) {

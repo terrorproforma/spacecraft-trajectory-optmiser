@@ -773,6 +773,7 @@ __global__ void cooperative_solve_kernel(
     int& cancelled = problem->grid_flags[1];
     if (grid_rank() == 0) {
         report->termination = SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT;
+        report->recovery_profile = {};
         report->iterations = 0;
         report->recovery_iterations = 0U;
         report->recovery_trigger_reason = SPACEPDHCG_CUDA_RECOVERY_NOT_TRIGGERED;

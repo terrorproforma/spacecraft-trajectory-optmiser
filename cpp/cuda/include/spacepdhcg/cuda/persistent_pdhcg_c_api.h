@@ -207,6 +207,27 @@ typedef struct spacepdhcg_cuda_diagnostics {
     double recovery_stationarity_value;
 } spacepdhcg_cuda_diagnostics;
 
+/* Device-clock phase counts for the last solve's recovery attempt. Counts are
+ * cycles, not nanoseconds; use recovery_seconds for elapsed time. Reading this
+ * cached profile does not enqueue a device-to-host transfer. */
+typedef struct spacepdhcg_cuda_recovery_profile {
+    uint32_t abi_version;
+    double initial_primal_residual;
+    double initial_stationarity;
+    uint64_t projection_cycles;
+    uint64_t feasibility_cycles;
+    uint64_t dual_refinement_cycles;
+    uint64_t certificate_cycles;
+    uint64_t certificate_attempts;
+    double last_certificate_residual;
+    double last_certificate_primal;
+} spacepdhcg_cuda_recovery_profile;
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_recovery_profile(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_recovery_profile* profile
+);
+
 typedef struct spacepdhcg_cuda_pointer_snapshot {
     uintptr_t quadratic_offsets;
     uintptr_t quadratic_indices;

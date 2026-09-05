@@ -139,6 +139,20 @@ void check_rejected_recovery_rollback() {
                   "recovery must retain actual PDHG work rather than the requested budget");
     test::require(recovery_diagnostics.recovery_iterations == 50'000U,
                   "recovery reports its completed projection iterations separately");
+    spacepdhcg_cuda_recovery_profile profile{};
+    test::status_require(spacepdhcg_cuda_workspace_recovery_profile(recovery, &profile),
+                         "cached recovery phase profile");
+    test::require(profile.initial_primal_residual > 0.0 && profile.projection_cycles > 0U
+                      && profile.feasibility_cycles > 0U && profile.dual_refinement_cycles > 0U,
+                  "completed recovery phases must be measured");
+    test::require(profile.certificate_attempts == 1U && profile.certificate_cycles > 0U,
+                  "failed bounded certificates must not accept an inconsistent problem");
+    spacepdhcg_cuda_diagnostics after_profile{};
+    test::status_require(spacepdhcg_cuda_workspace_diagnostics(recovery, &after_profile),
+                         "diagnostics after cached profile");
+    test::require(after_profile.d2h_copy_count == recovery_diagnostics.d2h_copy_count
+                      && after_profile.allocation_count == recovery_diagnostics.allocation_count,
+                  "reading a recovery profile must not copy or allocate");
     require_equal(
         baseline_primal,
         recovered_primal,

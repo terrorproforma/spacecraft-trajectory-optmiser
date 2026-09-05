@@ -252,6 +252,76 @@ canonical residual 9.56640559e-9, nonlinear residual 2.92768853e-8, zero CPU/GPU
 trajectory difference, and exact numeric fingerprints. Logs are in
 `build/performance/native-checks/*objective*` and `*recovery-count-regression*`.
 
+## Bounded early GPU recovery refinement
+
+Device-clock phase profiling found that over 99.8% of 3DOF recovery time was in
+the fixed 50,000-step projected-gradient loop. Feasibility-only probes, extra dual
+reconstruction, and a bounded momentum experiment did not improve qualification;
+those experiments were discarded.
+
+The retained candidate tries full KKT refinement after 100 projection steps. It
+allows four primal corrections, with each dual reconstruction capped at eight CGLS
+restarts of at most 256 iterations. Acceptance requires a finite objective and the
+complete natural residual below 90% of the original requested tolerance. Failure
+restores the saved primal, dual, and projection step before continuing the original
+recovery algorithm. Cancellation retains the original transactional rollback.
+Primal refinement is shared with the final recovery phase rather than duplicated.
+Two trial buffers are allocated once; all numerical work and decisions stay on CUDA.
+
+The separate cached profile API reports device-clock cycles, including failed
+certificate work, without additional device transfers or allocations when read.
+The original diagnostics ABI remains unchanged. Recovery iteration counts describe
+completed projected-gradient steps; refinement cost is included in recovery time
+and separately profiled, not disguised as free work.
+
+Matched local RTX 5090 measurements used the same native executable, the
+correctness-fixed pre-refinement library, alternating order, one warmup and three
+measured repetitions per variant:
+
+| 2-interval 3DOF production fixture | Before | Bounded refinement |
+|---|---:|---:|
+| SCvx wall time | 17.775993 s | 5.246444 s |
+| Recovery time | 13.041146 s | 0.043037 s |
+| Complete process | 18.148748 s | 5.628011 s |
+| Completed PDHG steps | 300,000 | 300,000 |
+| Completed recovery projection steps | 50,000 | 100 |
+
+This is 3.39x for SCvx and 3.22x for the full process on this fixture, with a 303x
+reduction in the recovery phase. Every sample met the 1e-8 inner request (maximum
+reported residual 1.42323e-10), retained objective 0.494783333, and had zero returned
+trajectory residuals and CPU/GPU trajectory difference. This fixture accepts no
+outer steps: the inner CQP qualification was checked explicitly, separately from
+the returned reference trajectory. The measurements do not establish equivalent
+gains on larger problems or complete missions. Raw samples and binary/source hashes:
+`artifacts/performance/recovery-bounded-refinement-pd3.json`; reproducible runner:
+`scripts/gpu/benchmark_recovery.py`.
+
+Validation passed the recovery, cooperative solver, CW/SOC, allocation, pointer,
+and stream suites. The early-success production path passed CUDA memcheck,
+synccheck, and racecheck with zero reported errors or hazards. The four-family
+production check, including a displaced HCW trajectory with accepted steps and
+independent CPU coefficient fingerprints, retained maximum canonical residual
+9.56640559e-9, nonlinear residual 2.9276885e-8, zero CPU/GPU trajectory difference,
+and maximum coefficient difference 2.75994505e-13. Logs:
+`build/performance/native-checks/*bounded-recovery*`.
+
+The equivalent 6DOF comparison was effectively flat: median SCvx time 48.472280 s
+before versus 48.483291 s after; recovery 32.682183 s versus 32.648313 s. All measured
+samples performed 600,000 PDHG and 100,000 recovery projection steps and still
+missed the requested inner tolerance. Returned trajectory qualification and
+objective were unchanged. One optimized warmup qualified the inner problem after
+one recovery instead of two, showing why its shorter time must not be mixed into
+the measured comparison or described as a speedup. The bounded failed probe used
+about 0.4% of the last recovery projection phase's clock cycles. Six-DOF inner
+convergence remains unresolved. Samples:
+`artifacts/performance/recovery-bounded-refinement-pd6.json`.
+
+A separate optimized 20-interval 3DOF production probe did not return metrics before
+its 120-second process limit. No qualification or speedup is claimed for that
+larger case, and a paired baseline has not been measured. Its empty output log is
+`build/performance/native-checks/bounded-recovery-pd3-20.log`. Instrumenting progress
+inside that solve is required before further scaling claims.
+
 ## Work still required by the active goal
 
 1. Scale the large-trajectory measurements and tune operator ownership, especially

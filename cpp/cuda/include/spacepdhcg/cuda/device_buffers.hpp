@@ -46,6 +46,8 @@ struct DeviceState {
     double* recovery_scalars{nullptr};
     double* recovery_backup_primal{nullptr};
     double* recovery_backup_dual{nullptr};
+    double* recovery_trial_primal{nullptr};
+    double* recovery_trial_dual{nullptr};
     double* scaling{nullptr};
     void* control{nullptr};
     void* diagnostics{nullptr};
