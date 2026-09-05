@@ -216,7 +216,8 @@ if(BUILD_TESTING)
         if(test_name STREQUAL "qoco_gpu_operators_test"
            OR test_name STREQUAL "qoco_gpu_numeric_update_test"
            OR test_name STREQUAL "qoco_gpu_scalar_test"
-           OR test_name STREQUAL "qoco_gpu_stopping_test")
+           OR test_name STREQUAL "qoco_gpu_stopping_test"
+           OR test_name STREQUAL "qoco_gpu_step_control_test")
             continue()
         endif()
         add_executable("${test_name}" "${source}")

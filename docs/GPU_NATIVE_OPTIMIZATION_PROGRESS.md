@@ -597,3 +597,20 @@ is flat; complete-process 6DOF improves 1.054x. A separate trace shows 120 fewer
 scalar waits and 90 fewer launches per landing solve. [Evidence and limits](GPU_QOCO_LOCAL_BACKEND.md#shared-objective-and-complementarity-calculation)
 retain superseded trials as well as the final results. Host control and the
 cuDSS race remain unfinished; the full goal stays active.
+
+## GPU step control checkpoint
+
+Cone step lengths now feed GPU centering calculations and one multi-block
+kernel updating all four iterate vectors. Independent arithmetic, feasibility
+bisection, existing scalar/metric comparisons and landing/6DOF physics gates
+pass. All four standalone sanitizers pass; full landing memory, initialization
+and synchronization checks pass with and without test oracles.
+
+Matched SCvx medians improve 173.834 → 156.348 ms for landing (1.112x) and
+1166.371 → 1032.315 ms for 6DOF (1.130x), with unchanged 28/179 iterations.
+Startup-inclusive landing is 1.3% slower; startup-inclusive 6DOF improves
+1.095x. One 1.300420 s landing sample is retained in the measurements.
+A qualified trace removes 112 synchronous copies, 56 stream waits and 308
+launches. [Evidence and limits](GPU_QOCO_LOCAL_BACKEND.md#gpu-centering-and-fused-iterate-updates)
+include frozen binary hashes and reproduced source. Two scalar metadata returns,
+host control and the known cuDSS factorization race remain; the full goal is active.

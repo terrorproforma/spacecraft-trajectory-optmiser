@@ -712,3 +712,65 @@ Stop/best-iterate policy, centering, line search, iterative-refinement control,
 initial structure/KKT assembly, outer control and GPU GTOC12 remain unfinished.
 The known cuDSS factorization race remains open and was not remeasured; this
 backend stays optional. The full GPU-native goal is active.
+
+## GPU centering and fused iterate updates
+
+The `--device-step-control` preparation option requires `--batched-stopping`
+and its prerequisites. Both cone line searches now write into retained device
+scratch, using the existing LP/SOC boundary kernels. CUDA computes the affine
+centering vectors, cuBLAS writes the two dot products to device memory, and a
+small kernel computes the clipped centering factor. Final x/y/s/z updates share
+one multi-block kernel that reads the device step length. This also avoids the
+reference minimum macro's repeated line-search evaluation.
+
+FP64 arithmetic and boundary rules are unchanged, including the near-zero step
+cutoff, clipping order and empty-centering NaN behavior. The early exit for a
+NaN search direction remains in place. One sigma and one alpha scalar still
+return to the host: combined-RHS construction and stop/best-iterate policy have
+not yet moved fully onto the device.
+
+The standalone `qoco_gpu_step_control_test.cu` compares centering and all four
+updates against independent long-double arithmetic. Feasibility bisection
+covers LP, SOC, mixed and empty cones, boundary and nearly linear directions,
+tiny steps, 262145 LP entries and 1027 SOCs. Offset pointers and canaries check
+vector bounds; nested and unscoped calls check scratch lifetime. The optional
+`SPACEPDHCG_TEST_QOCO_DEVICE_STEPS_COMPARE=1` also checks each sigma/alpha against
+the prior calculation. Native Ruiz-4, seven landing solves and the actual 6DOF
+planner pass that comparison, the eight-metric comparison, and independent
+conversion/KKT/physics gates. All four standalone sanitizers pass. Full landing
+memory, initialization and synchronization checks pass both with and without
+test oracles; memory checks report zero leaks.
+
+Frozen v24 and v25 libraries were compared on the RTX 5090 using the unchanged
+038695b core, two warmups and seven alternating measured samples per variant:
+
+| Case | Previous SCvx | GPU step SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 173.834 ms | 156.348 ms | 581.578 → 588.903 ms |
+| 20-interval 6DOF planner, 1e-6 | 1166.371 ms | 1032.315 ms | 1522.864 → 1390.632 ms |
+
+SCvx medians improve 1.112x/1.130x; QOCO solve medians improve
+128.149 → 110.148 ms and 1050.970 → 934.503 ms. Startup-inclusive landing is
+1.3% slower, while startup-inclusive 6DOF improves 1.095x. The optimized landing
+repeat 2 took 1.300420 s and remains in the measured samples. Its cause is not
+established. No outliers were discarded. Iterations remain 28/179, with two
+accepted steps, unchanged objectives and the same physics gates.
+
+A qualified landing API trace shows synchronous copies 595 → 483, asynchronous
+copies 516 → 460, stream waits 131 → 75 and launches 6005 → 5697. Allocations
+and frees remain 379/299. Nsight Systems 2024.6 supplies API counts here, not an
+RTX 5090 GPU timeline or exclusive stage timings.
+
+[Checkpoint and validation](../artifacts/performance/qoco-device-steps-checkpoint.json),
+[landing samples](../artifacts/performance/qoco-device-steps-pd3.json) and
+[planner samples](../artifacts/performance/qoco-device-steps-planner-pd6.json)
+record hashes, reproduced source, sanitizer output and complete representative
+planner results. The retained binary is
+`/home/angus/build-qoco-gpu-step-control-v25/final/libqoco.so`, SHA256
+`a48278eaaab05add8b3098e9817fdad52bed2328dc88b2317783203e62fa443a`.
+It was frozen before validation and measurement.
+
+The existing cuDSS factorization race remains open and was not remeasured.
+This optional backend has not replaced the production default. Host control,
+initial structure/KKT assembly, iterative refinement, larger trajectory
+scaling, batching and GPU GTOC12 remain part of the active full goal.
