@@ -160,6 +160,8 @@ using CleanupFn = int (*)(SolverAbi*);
 using BeginReductionScopeFn = int (*)();
 using EndReductionScopeFn = void (*)();
 using DeviceSolutionFn = int (*)(SolverAbi*, int, int, int, const double**, const double**, const double**);
+using DeviceIoFn = int (*)(SolverAbi*, int);
+using DownloadSolutionFn = int (*)(SolverAbi*);
 using CreateNumericUpdateFn = int (*)(SolverAbi*, int, int, int, void**);
 using DeviceNumericUpdateFn = int (*)(void*, const double*, cudaStream_t);
 using DestroyNumericUpdateFn = void (*)(void*);
@@ -389,6 +391,9 @@ struct spacepdhcg_native_qoco {
     BeginReductionScopeFn begin_reduction_scope{};
     EndReductionScopeFn end_reduction_scope{};
     DeviceSolutionFn device_solution{};
+    DeviceIoFn set_device_io{};
+    DeviceIoFn primal_start{};
+    DownloadSolutionFn download_solution{};
     CreateNumericUpdateFn create_numeric_update{};
     DeviceNumericUpdateFn device_numeric_update{};
     DestroyNumericUpdateFn destroy_numeric_update{};
@@ -1194,6 +1199,12 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
     );
     if (workspace->set_trajectory)
         static_cast<void>(workspace->set_trajectory(0, 0, 0, nullptr, nullptr, nullptr, nullptr));
+    if (code == 0 && workspace->set_device_io
+        && workspace->set_device_io(workspace->solver, 1) != 0) {
+        workspace->cleanup(workspace->solver);
+        workspace->solver = nullptr;
+        code = -1;
+    }
     if (code == 0 && workspace->create_numeric_update) {
         int created = workspace->create_numeric_update(workspace->solver, p.nnz, a.nnz, g.nnz,
             &workspace->numeric_update_context);
@@ -1261,6 +1272,15 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_begin_reduction_scope", &result->begin_reduction_scope);
     symbol(result->library, "qoco_gpu_end_reduction_scope", &result->end_reduction_scope);
     symbol(result->library, "qoco_gpu_get_solution", &result->device_solution);
+    symbol(result->library, "qoco_gpu_set_device_io", &result->set_device_io);
+    symbol(result->library, "qoco_gpu_primal_start", &result->primal_start);
+    symbol(result->library, "qoco_gpu_download_solution", &result->download_solution);
+    if ((result->set_device_io || result->primal_start || result->download_solution)
+        && !(result->set_device_io && result->primal_start && result->download_solution
+             && result->device_solution)) return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if (const char* required = std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_IO_REQUIRED");
+        required && required[0] == '1' && !result->set_device_io)
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
     symbol(result->library, "qoco_gpu_create_numeric_update", &result->create_numeric_update);
     symbol(result->library, "qoco_gpu_update_numeric", &result->device_numeric_update);
     symbol(result->library, "qoco_gpu_destroy_numeric_update", &result->destroy_numeric_update);
@@ -1338,8 +1358,10 @@ spacepdhcg_cuda_status native_qoco_create_impl(
             problem->canonical_structure.scalar_rows
             + problem->canonical_structure.affine_rows
         );
-    result->primal.assign(variables, 0.0);
-    result->accepted_primal.assign(variables, 0.0);
+    if (!result->set_device_io) {
+        result->primal.assign(variables, 0.0);
+        result->accepted_primal.assign(variables, 0.0);
+    }
     result->dual.assign(duals, 0.0);
     result->solver = static_cast<SolverAbi*>(std::calloc(1U, sizeof(SolverAbi)));
     if (result->solver == nullptr) {
@@ -1622,10 +1644,12 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
     }
     const bool warm = workspace->has_accepted
         && requested_warm != SPACEPDHCG_CUDA_WARM_START_NONE;
-    workspace->set_x0(
-        workspace->solver,
-        warm ? workspace->accepted_primal.data() : nullptr
-    );
+    if (workspace->primal_start) {
+        if (workspace->primal_start(workspace->solver, warm ? 1 : 0) != 0)
+            return finish(SPACEPDHCG_CUDA_INVALID_STATE);
+    } else {
+        workspace->set_x0(workspace->solver, warm ? workspace->accepted_primal.data() : nullptr);
+    }
     workspace->report.warm_primal_accepted = warm ? 1 : 0;
     workspace->report.dual_discarded =
         warm
@@ -1658,7 +1682,12 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         // interior-point solve is deterministic, so this fallback is reproducible.
         // `dual_discarded` describes how the *request* was handled (the requested dual
         // was never usable by QOCO) and stays set; only the primal-warm flag flips.
-        workspace->set_x0(workspace->solver, nullptr);
+        if (workspace->primal_start) {
+            if (workspace->primal_start(workspace->solver, 0) != 0)
+                return finish(SPACEPDHCG_CUDA_INVALID_STATE);
+        } else {
+            workspace->set_x0(workspace->solver, nullptr);
+        }
         workspace->report.warm_primal_accepted = 0;
         ++workspace->report.warm_inaccurate_cold_retries;
         const auto retry_start = std::chrono::steady_clock::now();
@@ -1688,11 +1717,8 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             : SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL;
         return finish(SPACEPDHCG_CUDA_NUMERICAL_FAILURE);
     }
-    std::copy_n(
-        workspace->solver->sol->x,
-        workspace->primal.size(),
-        workspace->primal.begin()
-    );
+    if (!workspace->set_device_io)
+        std::copy_n(workspace->solver->sol->x, workspace->variables, workspace->primal.begin());
     const auto audit_start = std::chrono::steady_clock::now();
     const double *x{}, *y{}, *z{};
     auto cuda_status = cudaSuccess;
@@ -1709,11 +1735,11 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             stream, &x, &y, &z);
     }
     if (cuda_status == cudaSuccess) {
-        cuda_status = cudaMemcpyAsync(device_primal, x, workspace->primal.size() * sizeof(double),
+        cuda_status = cudaMemcpyAsync(device_primal, x, workspace->variables * sizeof(double),
                                       cudaMemcpyDeviceToDevice, stream);
         if (cuda_status == cudaSuccess) {
             ++workspace->report.d2d_copy_count;
-            workspace->report.d2d_bytes += workspace->primal.size() * sizeof(double);
+            workspace->report.d2d_bytes += workspace->variables * sizeof(double);
         }
     }
     QocoAuditResult audit{};
@@ -1735,6 +1761,12 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
     // Explicit test oracle only; production audit and dual mapping run on CUDA.
     if (const char* compare = std::getenv("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE");
         compare != nullptr && compare[0] == '1') {
+        if (workspace->download_solution) {
+            if (workspace->download_solution(workspace->solver) != 0)
+                return finish(SPACEPDHCG_CUDA_RUNTIME_ERROR);
+            workspace->primal.resize(workspace->variables);
+            std::copy_n(workspace->solver->sol->x, workspace->variables, workspace->primal.begin());
+        }
         residuals(workspace);
         map_dual(workspace, problem->canonical_structure);
         const double reference[]{workspace->report.primal_residual, workspace->report.dual_residual,
@@ -1817,19 +1849,34 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve(
     }
 }
 
-void spacepdhcg_native_qoco_accept(spacepdhcg_native_qoco* workspace) {
+spacepdhcg_cuda_status spacepdhcg_native_qoco_accept(
+    spacepdhcg_native_qoco* workspace, spacepdhcg_native_qoco_report* report) {
     if (workspace != nullptr) {
-        workspace->accepted_primal = workspace->primal;
+        if (workspace->primal_start) {
+            if (workspace->primal_start(workspace->solver, 2) != 0)
+                return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+            ++workspace->report.d2d_copy_count;
+            workspace->report.d2d_bytes += workspace->variables * sizeof(double);
+            // The final accepted step may have no subsequent solve to refresh
+            // the caller's report. Include this transfer immediately as well.
+            if (report) {
+                ++report->d2d_copy_count;
+                report->d2d_bytes += workspace->variables * sizeof(double);
+            }
+        } else {
+            workspace->accepted_primal = workspace->primal;
+        }
         workspace->has_accepted = true;
     }
+    return SPACEPDHCG_CUDA_SUCCESS;
 }
 
-void spacepdhcg_native_qoco_reset_warm_state(
+spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
     spacepdhcg_native_qoco* workspace,
     const bool retain_primal
 ) {
     if (workspace == nullptr) {
-        return;
+        return SPACEPDHCG_CUDA_SUCCESS;
     }
     if (!retain_primal) {
         std::fill(
@@ -1841,7 +1888,11 @@ void spacepdhcg_native_qoco_reset_warm_state(
     }
     workspace->report.warm_primal_accepted = 0;
     workspace->report.dual_discarded = 0;
-    if (workspace->solver != nullptr && workspace->set_x0 != nullptr) {
+    if (workspace->solver != nullptr && workspace->primal_start) {
+        if (workspace->primal_start(workspace->solver,
+                retain_primal && workspace->has_accepted ? 1 : 0) != 0)
+            return SPACEPDHCG_CUDA_INVALID_STATE;
+    } else if (workspace->solver != nullptr && workspace->set_x0 != nullptr) {
         workspace->set_x0(
             workspace->solver,
             retain_primal && workspace->has_accepted
@@ -1849,6 +1900,7 @@ void spacepdhcg_native_qoco_reset_warm_state(
                 : nullptr
         );
     }
+    return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace) {

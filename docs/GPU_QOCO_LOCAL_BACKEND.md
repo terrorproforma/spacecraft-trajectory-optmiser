@@ -1229,3 +1229,141 @@ The full objective remains active. CPU KKT assembly, host solver/SCvx control,
 remaining runtime variance and broader physics-family qualification still need
 work. Existing shared runtimes, pinned upstream checkouts and Lambda campaigns
 remain untouched.
+
+## Device solution ownership and host Ruiz consistency
+
+The next checkpoint retains two changes with different purposes. The new
+`--device-io` preparation option offers device solution output and a per-solver
+accepted-primal cache in QOCO's existing GPU `x0` storage. The native adapter
+enables it only when the complete extension is present. Separately, all patched
+preparations now synchronize the objective and right-hand-side vectors after
+legacy host Ruiz equilibration. Neither change selects a different production
+backend, changes precision, or relaxes qualification.
+
+### Completed solution and accepted-start contracts
+
+In device mode, `qoco_solve` completes unscaling on its CUDA stream without
+exporting `x/s/y/z` to host solution arrays. The GPU audit consumes borrowed
+device pointers. Accepting a candidate copies its unscaled primal to GPU `x0`;
+a cold or rejected solve retains that accepted cache. Enabling the next warm
+start uses the saved device vector with the new solve's scaling. Each workspace
+owns its mode and saved-state flag; no new GPU allocations or global cache are
+introduced. The native adapter skips its host primal allocations in this mode.
+
+Legacy output remains the default for direct QOCO callers. Explicit
+`qoco_gpu_download_solution` supports host consumers and the opt-in independent
+CPU audit. A host `qoco_set_x0` overwrite invalidates the saved GPU acceptance
+flag. Solver reconstruction negotiates device mode again and starts with an
+empty accepted cache. Copy failures propagate through the adapter; the driver
+includes the last accepted-start transfer in its report immediately.
+
+### Scaling regression discovered by the ownership test
+
+The first non-unit test fails before enabling device IO. With P=3, A=2, G=-4,
+c=1, b=2, h=4 and four Ruiz passes, v58 retains device c/b/h as 1/2/4 while the
+host scaled values are approximately 0.666667/1.915207/2. It reports solved at
+**x=1.0442737824**, although the equality requires x=1. After changing A to 4,
+the stale-vector path returns x=0.6484197773 instead of 0.5.
+
+The patch publishes c/b/h at the end of host equilibration, including the
+zero-pass path used when re-equilibrating previously scaled data. The regression
+now gives x=1.000000000000086 and x=0.500000000000010, with exact host/device
+coefficient parity. A transition from four to zero Ruiz passes also passes.
+The native device-update path performs its actual Ruiz calculation on CUDA;
+these host copies repair the legacy setup/update boundary.
+
+The first failed assertion exited before cleanup and produced leak reports.
+That output is retained as a failed test, not classified as a new allocator
+leak. The dedicated regression always cleans up, reproduces the bug on frozen
+v58, and passes on v62 under all four sanitizers.
+
+### Matched results and the failed objective comparison
+
+Both variants use the same isolated cuDSS 0.8.0.10 standard-kernel runtime on
+the local RTX 5090. The control is QOCO/core v58; the final candidate is QOCO
+v62/core v63. Each completed campaign uses two warmups and seven alternating
+measured samples per variant, with unchanged physics gates and an absolute
+1e-8 objective-comparison limit.
+
+| Final batch | Control SCvx median | Candidate SCvx median | SCvx ratio | Complete-process ratio |
+|---|---:|---:|---:|---:|
+| Landing, N20 | 188.758 ms | 186.763 ms | 1.011x | 0.974x |
+| 6DOF, N20 | 1.171099 s | 1.027652 s | 1.140x | 1.033x |
+| 6DOF, N500 | Campaign stopped | Campaign stopped | No claim | No claim |
+
+N20 6DOF still has substantial convergence variability: measured inner-iteration
+medians are 225 versus 203; candidate SCvx spans 0.476–1.896 s. Its earlier v61
+batch regresses the SCvx median from 0.796724 to 0.864510 s (0.922x), while
+landing is effectively flat (0.997x). The complete distributions and earlier
+batch remain in the evidence; the later favorable median does not establish
+a general improvement.
+
+The final N500 campaign stops at candidate repeat 5: objective
+0.512975718214113 differs from the initial control by **2.3926362e-8**. The
+earlier v61 campaign stops at **5.5537667e-8**. Both runs pass every independent
+physics certificate gate, but fail the stricter comparison required by this
+benchmark. Neither campaign supplies a complete timing comparison.
+
+A separate, predeclared ten-repeat comparison also finds an objective spread
+of **8.6953563e-8 on the unchanged v58 control**. The ten v61 repeats in that
+diagnostic span 9.7051622e-10, but that does not erase its earlier failure or
+establish reliability. The decision is to retain the GPU IO capability as an
+opt-in experiment and the scaling synchronization as a correctness fix, with
+no whole-pipeline speedup or backend-promotion claim.
+
+A separately qualified final landing Nsight Systems 2024.6 trace shows:
+
+| CUDA API | Control calls | Candidate calls |
+|---|---:|---:|
+| Synchronous copy | 564 | 558 |
+| Asynchronous copy | 422 | 424 |
+| Stream synchronization | 83 | 87 |
+| Kernel launch | 7046 | 7046 |
+| Allocation | 398 | 398 |
+
+Device IO removes eight solution exports and one warm-start upload; the Ruiz
+fix adds three setup vector uploads. Two accepted-primal D2D copies and four
+explicit completion waits preserve ownership/completion contracts. This is
+CUDA API evidence, not an RTX5090 occupancy profile. A discarded LD_PRELOAD
+probe could not intercept the statically linked CUDA runtime and is not used
+as transfer evidence.
+
+### Validation, frozen artifacts and scope
+
+QOCO v62 passes the non-unit device-output/accepted-start test and the host
+Ruiz regression at zero and four passes under memcheck with leak checking,
+initcheck, synccheck and racecheck: 16 standalone checks. QOCO v62/core v61
+also pass all four full landing and N20 checks, plus N500 memory,
+initialization and synchronization checks. **N500 racecheck was not run.**
+
+The final core v63 only adds immediate accepted-copy reporting and its direct
+test. It passes the native conversion/ownership test at four Ruiz passes under
+all four sanitizers, seven landing repetitions, N20/N500 qualification and all
+independent CPU/GPU comparisons. Legacy-library compatibility passes. The
+earlier full sanitizer results retain their exact core-v61 scope rather than
+being relabeled as final-core runs. Nine plain N20 repetitions and the full
+oracle results are also recorded.
+
+Frozen final libraries:
+
+- `/home/angus/build-qoco-gpu-device-io-v62/final/libqoco.so`:
+  `2445292ccef52ede26d7a5a370cb3f5f99f9b95e6dca644b24eb1cd2a2f4c58a`.
+- `/home/angus/build-spacepdhcg-device-io-v63/final/libspacepdhcg_cuda.so`:
+  `b4bfba99813663f26e10d244381a2a7491d724a0cc7287b129fce8d79c3393c6`.
+
+Add `--device-io` to the v58 preparation flags to reproduce the capability.
+State-history reset and host Ruiz vector synchronization apply automatically
+to patched preparation; `--unmodified` remains an unchanged control. Preparation
+now fingerprints the extended workspace header, device-IO header, API and
+equilibration sources, and hashes the actual final CUDA algebra source.
+Prepared-file reproduction matches the frozen v62 source.
+
+- [Complete checkpoint, raw failures, helper sources and test scopes](../artifacts/performance/qoco-device-io-v62-checkpoint.json).
+- [Prepared-source reproduction](../artifacts/performance/qoco-device-io-v62-reproduction.json).
+- [Final landing campaign](../artifacts/performance/qoco-device-io-v62-pd3.json).
+- [Final N20 campaign](../artifacts/performance/qoco-device-io-v62-pd6.json).
+- [Stopped N500 campaign](../artifacts/performance/qoco-device-io-v62-pd6-500.json).
+
+The full GPU-native goal remains active. CPU KKT setup, host solver/SCvx
+control, production independent replay and numerical variability remain.
+Shared runtimes, pinned upstream sources and remote campaigns are unchanged.

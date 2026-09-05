@@ -77,8 +77,9 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve(
     spacepdhcg_native_qoco_report* report
 );
 
-void spacepdhcg_native_qoco_accept(spacepdhcg_native_qoco* workspace);
-void spacepdhcg_native_qoco_reset_warm_state(
+spacepdhcg_cuda_status spacepdhcg_native_qoco_accept(
+    spacepdhcg_native_qoco* workspace, spacepdhcg_native_qoco_report* report);
+spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
     spacepdhcg_native_qoco* workspace,
     bool retain_primal
 );

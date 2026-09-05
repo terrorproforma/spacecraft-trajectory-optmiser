@@ -725,3 +725,33 @@ is changed. The full timing distributions, rejected refinement/regularization/
 cold-start hypotheses and explicit sanitizer scopes are in the
 [solve-state checkpoint](GPU_QOCO_LOCAL_BACKEND.md#per-solve-recovery-state-isolation).
 Host numerical work, runtime variability and the complete GPU-native goal remain open.
+
+## Device solution ownership and host Ruiz consistency
+
+An opt-in QOCO extension now keeps completed solutions and accepted primal warm
+starts on the GPU. The native adapter no longer downloads four solution vectors,
+copies the primal on the CPU, and uploads it for the next start. Explicit host
+export remains available for independent test oracles and legacy callers.
+Accepted-start copies are included in telemetry even when no further solve occurs.
+
+Non-unit scaling tests also expose a separate correctness bug: legacy host Ruiz
+equilibration uploads scaled matrices but leaves objective and right-hand-side
+vectors stale on the GPU. The old library reports solved at x=1.04427 for 2x=2.
+Patched preparation now publishes all scaled vectors, giving x=1 to roundoff.
+The production device-scaling path already bypasses this host calculation.
+
+The final matched batch observes landing SCvx 188.758 → 186.763 ms and N20 6DOF
+1.171 → 1.028 s. These do **not** establish a reliable general speedup: an earlier
+batch regresses N20, and both N500 campaigns stop at the unchanged 1e-8 objective
+comparison gate despite passing every physics certificate gate. Repeating the
+unchanged control also exposes objective spread above that limit. No tolerance
+or backend default is changed. Device IO remains an explicit preparation option;
+the host Ruiz synchronization fix applies to all patched builds.
+
+Standalone ownership/scaling regressions, independent numerical comparisons and
+the documented full/native sanitizer scopes pass. A final landing API trace
+shows 564 → 558 synchronous copies with unchanged kernel counts: nine solution/
+warm-start copies removed, three setup copies added by the correctness fix.
+[Frozen binaries, complete distributions, failures and exact test scopes](GPU_QOCO_LOCAL_BACKEND.md#device-solution-ownership-and-host-ruiz-consistency)
+are retained. Conditioning, convergence variability, CPU setup/control and the
+rest of the GPU-native goal remain active work.

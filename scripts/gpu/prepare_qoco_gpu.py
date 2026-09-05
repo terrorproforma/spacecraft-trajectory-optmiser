@@ -18,6 +18,68 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_ruiz_vector_sync(destination: Path) -> None:
+    """Legacy host equilibration must publish scaled c/b/h as well as matrices."""
+    path = destination / "src/equilibration.c"
+    text = path.read_text()
+    before = "  sync_vector_to_device(scaling->Finvruiz);"
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected host Ruiz synchronization site")
+    path.write_text(text.replace(before, before + """
+  // CPU equilibration changes these vectors too. Publish them before solving
+  // or refreshing the factorization, including zero-pass re-equilibration.
+  sync_vector_to_device(data->c);
+  sync_vector_to_device(data->b);
+  sync_vector_to_device(data->h);"""))
+
+
+def patch_device_io(destination: Path, extension: Path) -> None:
+    """Negotiate device output and retain accepted primal starts on CUDA."""
+    header = destination / "include/structs.h"
+    text = header.read_text()
+    before = "} QOCOWorkspace;"
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected workspace extension site")
+    header.write_text(text.replace(
+        before, "  int gpu_device_io;\n  int gpu_primal_saved;\n" + before))
+    path = destination / "src/qoco_api.c"
+    text = path.read_text()
+    before = "  QOCOWorkspace* work = solver->work;"
+    if before not in text[:text.index("QOCOInt qoco_solve")]:
+        raise RuntimeError("unexpected workspace initialization site")
+    text = text.replace(before, before + "\n  work->gpu_device_io = 0;\n"
+                        "  work->gpu_primal_saved = 0;", 1)
+    before = "  copy_arrayf(x0, get_data_vectorf(work->x0), work->data->n);"
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected host primal-start site")
+    text = text.replace(before, "  work->gpu_primal_saved = 0;\n" + before)
+    path.write_text(text)
+    path = destination / "src/qoco_utils.c"
+    text = path.read_text()
+    before = "void copy_solution(QOCOSolver* solver)"
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected solution export site")
+    text = text.replace(before, "void qoco_reference_copy_solution(QOCOSolver* solver)")
+    text += '''
+int qoco_gpu_finish_device_solution(QOCOSolver* solver);
+void copy_solution(QOCOSolver* solver) {
+  const int device = qoco_gpu_finish_device_solution(solver);
+  if (device < 0) { fprintf(stderr, "QOCO device solution completion failed\\n"); exit(1); }
+  if (!device) qoco_reference_copy_solution(solver);
+  else solver->sol->solve_time_sec = get_elapsed_time_sec(&(solver->work->solve_timer));
+}
+'''
+    path.write_text(text)
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_device_io.cuh")
+    path = destination / "algebra/cuda/cuda_linalg.cu"
+    text = path.read_text()
+    if text.count('#include "qoco_device_solution.cuh"') != 1:
+        raise RuntimeError("unexpected device extension include site")
+    path.write_text(text.replace('#include "qoco_device_solution.cuh"',
+                                '#include "qoco_device_solution.cuh"\n'
+                                '#include "qoco_device_io.cuh"'))
+
+
 def patch_solve_state(destination: Path) -> None:
     """Keep allocation reuse without retaining a previous problem's best iterate."""
     path = destination / "src/qoco_api.c"
@@ -456,6 +518,8 @@ def main() -> None:
                         help="experimental cuDSS superpanel optimization")
     parser.add_argument("--reset-solve-state", action="store_true",
                         help="reset per-solve history (already enabled for all patched builds)")
+    parser.add_argument("--device-io", action="store_true",
+                        help="offer opt-in device solution output and GPU primal warm starts")
     parser.add_argument(
         "--checked-cudss-abi", action="store_true", help="support and check cuDSS 0.7/0.8 APIs"
     )
@@ -512,6 +576,7 @@ def main() -> None:
         or args.multiblock_factorization
         or args.superpanels
         or args.reset_solve_state
+        or args.device_io
         or args.checked_cudss_abi
         or args.queued_operators
         or args.device_cone_reductions
@@ -873,6 +938,9 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
     # --unmodified returned above. Every patched build must isolate recovery
     # history, independent of which performance experiments are selected.
     patch_solve_state(destination)
+    patch_ruiz_vector_sync(destination)
+    if args.device_io:
+        patch_device_io(destination, extension.with_name("qoco_device_io.cuh"))
     if args.superpanels:
         backend_path = destination / "algebra/cuda/cudss_backend.cu"
         backend = backend_path.read_text()
@@ -908,7 +976,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "upstream_commit": commit,
         "source": str(source),
         "original_cuda_linalg_sha256": hashlib.sha256(original.encode()).hexdigest(),
-        "modified_cuda_linalg_sha256": hashlib.sha256(modified.encode()).hexdigest(),
+        "modified_cuda_linalg_sha256": hashlib.sha256(
+            (destination / "algebra/cuda/cuda_linalg.cu").read_bytes()).hexdigest(),
         "extension_sha256": hashlib.sha256(extension.read_bytes()).hexdigest(),
         "device_solution_sha256": hashlib.sha256(device_solution.read_bytes()).hexdigest(),
         "gather": args.gather,
@@ -933,6 +1002,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "multiblock_factorization": args.multiblock_factorization,
         "superpanels": args.superpanels,
         "reset_solve_state": True,
+        "device_io": args.device_io,
+        "host_ruiz_vector_sync": True,
         "checked_cudss_abi": args.checked_cudss_abi,
     }
     if args.gather:
@@ -947,14 +1018,14 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             "algebra/cuda/cudss_backend.h",
             "algebra/cuda/cudss_backend.cu",
             "src/qoco_utils.c",
+            "src/qoco_api.c",
+            "src/equilibration.c",
+            *(["include/structs.h", "algebra/cuda/qoco_device_io.cuh"]
+              if args.device_io else []),
             *(["algebra/cuda/qoco_gather.cuh"] if args.gather else []),
             *(["src/cone.cu", "src/qoco_device_cone_reductions.cuh"]
               if args.device_cone_reductions else []),
             *(["include/qoco_linalg.h"] if args.values_only_updates else []),
-            *(["src/qoco_api.c"]
-              if args.values_only_updates or args.device_numeric_updates
-              or args.batched_iteration_scalars or args.queued_centering_metadata
-              or args.profile_setup else []),
             *(["algebra/cuda/qoco_device_update.cuh"] if args.device_numeric_updates else []),
             *(["algebra/cuda/qoco_device_scalar.cuh"] if args.device_scalar_reductions else []),
             *(["algebra/cuda/qoco_batched_stopping.cuh"] if args.batched_stopping else []),

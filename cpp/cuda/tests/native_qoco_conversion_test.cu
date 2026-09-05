@@ -86,6 +86,18 @@ int main(int argc, char** argv) {
     const auto solve = [&] { return spacepdhcg_native_qoco_update_solve(workspace, &problem, stream,
         SPACEPDHCG_CUDA_WARM_START_NONE, primal, dual, &report); };
     require(solve() == SPACEPDHCG_CUDA_SUCCESS && report.solves == 1, "initial synthetic solve");
+    const auto before_accept_count = report.d2d_copy_count;
+    const auto before_accept_bytes = report.d2d_bytes;
+    require(spacepdhcg_native_qoco_accept(workspace, &report) == SPACEPDHCG_CUDA_SUCCESS,
+        "accept completed primal without a host round trip");
+    if (std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_IO_REQUIRED"))
+        require(report.d2d_copy_count == before_accept_count + 1
+                && report.d2d_bytes == before_accept_bytes + 8 * sizeof(double),
+            "accepted-primal transfer is reported before any subsequent solve");
+    require(spacepdhcg_native_qoco_reset_warm_state(workspace, true) == SPACEPDHCG_CUDA_SUCCESS,
+        "retain accepted start");
+    require(spacepdhcg_native_qoco_reset_warm_state(workspace, false) == SPACEPDHCG_CUDA_SUCCESS,
+        "discard accepted start");
     for (double& value : q.values) value *= 1.25; q.upload(stream);
     offset.values[6] += 0.25; offset.upload(stream);
     c.values[6] -= 0.01; c.upload(stream);

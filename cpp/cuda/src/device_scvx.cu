@@ -2867,7 +2867,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             ++result->accepted_steps;
             accepted_natural_residual = last_diagnostics.natural_residual_inf;
             if (pure_qoco) {
-                spacepdhcg_native_qoco_accept(driver->qoco);
+                const auto accepted = spacepdhcg_native_qoco_accept(driver->qoco, &driver->qoco_report);
+                if (accepted != SPACEPDHCG_CUDA_SUCCESS) return accepted;
             }
             if (ratio >= driver->options.strong_agreement_threshold
                 && candidate.step
@@ -3360,7 +3361,8 @@ spacepdhcg_cuda_scvx_driver_reset_attempt(
     }
     driver->cancelled.store(false, std::memory_order_release);
     if (mode == SPACEPDHCG_CUDA_WARM_START_NONE) {
-        spacepdhcg_native_qoco_reset_warm_state(driver->qoco, false);
+        const auto reset = spacepdhcg_native_qoco_reset_warm_state(driver->qoco, false);
+        if (reset != SPACEPDHCG_CUDA_SUCCESS) return reset;
         auto status = spacepdhcg_cuda_workspace_reset_async(
             driver->problem.workspace,
             SPACEPDHCG_CUDA_RESET_ITERATES,
@@ -3386,7 +3388,8 @@ spacepdhcg_cuda_scvx_driver_reset_attempt(
             return SPACEPDHCG_CUDA_RUNTIME_ERROR;
         }
     }
-    spacepdhcg_native_qoco_reset_warm_state(driver->qoco, true);
+    const auto reset = spacepdhcg_native_qoco_reset_warm_state(driver->qoco, true);
+    if (reset != SPACEPDHCG_CUDA_SUCCESS) return reset;
     if (driver->options.policy == SPACEPDHCG_CUDA_SCVX_PURE_QOCO) {
         // Pure IPM never runs the PDHCG kernel, so the persistent workspace
         // holds no retained solver state and a FULL_RETAINED warm start would
