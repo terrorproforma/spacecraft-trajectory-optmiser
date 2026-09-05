@@ -1437,6 +1437,64 @@ def rank_families(
     return ranked
 
 
+FAMILY_LABEL_STRIDE = 100_000  # label offset between partitions (family directories never collide)
+
+
+def family_partitions(
+    catalogue: AsteroidCatalogue,
+    ids: IntArray,
+    *,
+    bands: Sequence[tuple[str, ClusterBands]],
+    min_members: int = 12,
+    settings: SearchSettings | None = None,
+    excluded: set[int] | frozenset[int] | None = None,
+) -> list[tuple[int, IntArray, dict[str, Any]]]:
+    """Cheapest-first union of the co-moving families of several partitions.
+
+    Every ``(name, bands)`` partition (a radius x band-set choice) is clustered and ranked on its
+    own (``family_clusters`` + ``rank_families`` at the partition's visit epochs); the k-th
+    partition's labels are offset by ``k * FAMILY_LABEL_STRIDE`` so ``clusters/family_*``
+    directories and column identifiers never collide, and a family whose member set already
+    appeared in an earlier partition is dropped (the same pool would be priced twice).  Nested
+    families (a radius-1.6 family inside its radius-1.75 parent) are kept: their beams see
+    different pools and yield different chains, which is the point of pricing several radii.
+    Each stats dict records ``partition``, ``partition_index``, ``radius`` and
+    ``label_in_partition``.  Deterministic: partitions in the given order, then the global
+    cheapest-first order of ``rank_families`` (ties on the offset label).
+    """
+
+    seen: set[frozenset[int]] = set()
+    ranked: list[tuple[int, IntArray, dict[str, Any]]] = []
+    for index, (name, band) in enumerate(bands):
+        families = family_clusters(
+            catalogue, ids, bands=band, min_members=min_members, excluded=excluded
+        )
+        for label, members, stats in rank_families(
+            catalogue, families, settings, visit_epochs=band.phase_epochs
+        ):
+            key = frozenset(int(a) for a in members)
+            if key in seen:
+                continue
+            seen.add(key)
+            if int(label) >= FAMILY_LABEL_STRIDE:
+                raise ValueError(f"family label {label} exceeds the partition stride")
+            ranked.append(
+                (
+                    int(label) + index * FAMILY_LABEL_STRIDE,
+                    members,
+                    {
+                        **stats,
+                        "partition": name,
+                        "partition_index": index,
+                        "radius": float(band.radius),
+                        "label_in_partition": int(label),
+                    },
+                )
+            )
+    ranked.sort(key=lambda item: (item[2]["score"], item[0]))
+    return ranked
+
+
 _WORKER: dict[str, Any] = {}
 
 
