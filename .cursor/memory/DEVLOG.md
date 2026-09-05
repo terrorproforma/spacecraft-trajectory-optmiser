@@ -271,3 +271,56 @@ branch's merged from `main`). Carried forward: GTOC12 best verified fleet and th
 - Follow-ups: phase-alignment term in the chain score; Earth-leg arrival-time trade; joint
   itinerary over all 992 archived stand-alone ships before the next master; `Result.txt` ->
   column ingester for `results/lambda-h100/gtoc12`; localise the NaN pass-1 burn (family 10).
+
+## 2026-09-05 16:40 AEST - Third release merge into main: gtoc12 v9, H100 v2/v3 results, G2/G3 reseal, Windows memory + Lambda evidence
+
+- Task summary:
+  - Integrated every completed line since main 8cb3759 onto `release/single-gpu-v1-merge` (WSL
+    worktree `/home/angus/worktrees/spacepdhcg-release`, author/committer SpacePDHCG-Integration via
+    env; merge commits only, no rebase/squash/amend/force), folded the Windows checkout's memory and
+    Lambda H100 evidence, verified the head, fast-forwarded `main`, bundled to Windows and pushed from
+    there. Helper scripts and logs: `/home/angus/integ3/`.
+- Merge chain (first parent on top of 8cb3759; parents in brackets):
+  - `abd4e81` merge `integration/single-gpu-v1` bf4cf0f [8cb3759, bf4cf0f] - evidence scripts target
+    the local CUDA architecture (H100 9e75b47). No conflicts.
+  - `16d5e8e` merge `chore/g2g3-reseal-8cb3759` 06e70b6 [abd4e81, 06e70b6] - G2/G3 reseal evidence
+    (PASS/PASS, `results/gpu/current-head-8cb3759-rtx5090/`). No conflicts.
+  - `a93649d` merge `feat/gtoc12-asteroid-mining` 1f6ec50 [16d5e8e, 1f6ec50] - chain-level objective,
+    chain prior, LP duals, archive-seeded pricing. Conflicts: memory files (both sides appended) ->
+    both kept chronologically.
+  - `ace3b25` merge `feat/gtoc12-asteroid-mining` b55eb70 [a93649d, b55eb70] - `--dual-bound-share`,
+    NaN burn guard, joint-itinerary CLI import fix, `cluster_fleet_v9` / `joint_itinerary_v3` /
+    `fleet_master_v8`, memory rollover. Conflicts: `AGENT_SCRATCHPAD.md`, `DEVLOG.md` (branch rolled
+    over vs our appended reseal entries) -> branch's slim live files with the 13:50 reseal entry
+    inserted before the 16:10 ninth-iteration entry; snapshots from the branch; coverage 0/0 missing.
+  - `aaa9657` merge `refs/h100/gtoc12-asteroid-mining` 86a91d3 [ace3b25, 86a91d3] -
+    `family_partitions`, H100 v1/v2 results (`fleet_master_h100_v2` 22 ships). Conflicts:
+    `gtoc12/cli.py` imports (v9 names + `REPOSITORY_ROOT`-free import; `ClusterBands` now inside
+    `cluster_band_partitions()`), `cooperative.py` comment (code identical), `GTOC12_TRACK.md` §7
+    rows (both kept; H100 joint rows cite §6.11). 147 gtoc12 + cli-dispatch tests on the resolved tree.
+  - `1bd78ce` Windows memory fold (`win_mem_merge.py`: cp1252 repair, ASCII-folded novelty, preamble
+    blocks carried under "Windows-Checkout Notes", sections by boundary into live/snapshot, insert-only).
+  - `7a30c12` `.gitignore` (`.tmp_*`, raw lambda-h100 parts); `5784e64` `results/lambda-h100` compact
+    evidence 608 files / 5.95 MB (+ `INDEX.json`); 1171 files / 94.7 MB left out (bundles, run trees
+    already on main under `results/gtoc12/runs/*_h100_*`, viewer datasets, seal tarballs, CSV replays,
+    `stdout.jsonl`, sqlite, patch, files >= 200 KB).
+  - `5f23f73` merge `refs/h100/gtoc12-asteroid-mining` 48e5fb7 [5784e64, 48e5fb7] -
+    `fleet_master_h100_v3` (byte-identical fleet to v2), `joint_itinerary_h100_v8`; docs auto-merged,
+    §6.10 -> §6.11 in the new row fixed in this commit.
+  - status/memory commit (this entry): `docs/PROGRAM_STATUS_2026-08-31.md` third integration note +
+    GTOC12 headline.
+- Windows checkout: spec edits (README, BENCHMARK_PROTOCOL, matrices, OUTLINEs, test_benchmark_manifests,
+  literature_baselines, COMPARATIVE_SOLVER_CAMPAIGN) - every line added there is already on main
+  (only Ruff re-wraps differ) -> nothing committed; `.gitignore` edits already on main; scratch
+  `.tmp_*` (6 files) moved to `%LOCALAPPDATA%\Temp\spacepdhcg-tmp\`.
+- Validation (head 5784e64; `cpp/` byte-identical to 8cb3759; RTX 5090 with a foreign 3.5 GB
+  workload left alone; logs `/home/angus/integ3/logs/`): ruff check/format clean (302 files);
+  generated-artefact checks clean; host RelWithDebInfo -Werror fresh 0 warnings, ctest 50/50;
+  cpp/native 8/8; CUDA sm_120 Release -Werror clean rebuild 0 warnings, CUDA CTest 70/70 (248 s);
+  planner GPU pytest 9/9; full CPU pytest 677 passed / 35 skipped (595 s; +18 tests); manifest tests
+  14/14 (no blob refresh needed); viewer `npm run check` + `npm test` 36/2 skips with
+  `fleet_master_h100_v2` regenerated via `gtoc12 export-viewer` (22 ships, 187 asteroids,
+  13,189.60 kg, fleet SHA `cbedee96…fd48`); wheel (`c3cc5186…`) + sdist + consumer-venv smoke all rc 0.
+  Not repeated: `test_g4_pdhcg_deadline_gpu.py` (13/13 on the same CUDA sources at 06:30 and 13:50).
+- Off main: `feat/gtoc12-asteroid-mining` past b55eb70 (bc7ef8e+); H100 G4 claim core (running);
+  sm_90 confirmation of the v2 fixes; `perf/g4-batched-campaign`; raw Lambda artefacts per INDEX.json.

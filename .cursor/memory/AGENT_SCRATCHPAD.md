@@ -410,3 +410,67 @@ Verbatim blocks from the Windows checkout's live file (entries other workers wro
 - See "Regression-Prevention Guardrails" (timeout headroom, disjoint families vs duals, exact
   closure). Do not spend another campaign on per-pair or per-chain *propellant* scoring: the
   remaining gap is phase (|Δλ| at harvest 2.7 deg in the references) and Earth-leg arrival time.
+
+### 2026-09-05 16:40 AEST - Third release merge into main (v9 gtoc12, H100 v2/v3, reseal, Windows memory + evidence)
+
+#### Task Summary
+
+- Merged onto `release/single-gpu-v1-merge` from 8cb3759 (WSL release worktree, identity via
+  `GIT_*` env, merge commits only): `integration/single-gpu-v1` bf4cf0f (abd4e81),
+  `chore/g2g3-reseal-8cb3759` 06e70b6 (16d5e8e), `feat/gtoc12-asteroid-mining` 1f6ec50 (a93649d)
+  then b55eb70 (ace3b25, after the user's update), `refs/h100/gtoc12-asteroid-mining` 86a91d3
+  (aaa9657) then 48e5fb7 (5f23f73, after the second update); Windows memory fold 1bd78ce,
+  `.gitignore` 7a30c12, `results/lambda-h100` compact evidence 5784e64, status/memory (this commit).
+- Headline: `fleet_master_h100_v2` = `v3` 22 ships / 13,189.60 kg / 599.53 avg (LP gap 3.4, not
+  proven), best proven-optimal `fleet_master_v8` 21 / 12,356.30 / 588.40. Helper scripts + logs
+  `/home/angus/integ3/`.
+
+#### Mistakes And Fixes
+
+- `[self]` Started the H100 merge before the user's b55eb70 update arrived; aborted the uncommitted
+  merge (`git merge --abort`, no history touched), merged b55eb70 first, redid the same two code
+  resolutions. Rule: before starting merge N+1, re-read the source branch tips - a worker may have
+  moved them - and keep every resolution as a reproducible edit (StrReplace on the marker block).
+- `[tool]` `git merge-tree <base> HEAD <tip>` reported 0 conflict hunks for the memory rollover and
+  the docs table, yet `git merge` conflicted on both: the pre-scan is a hint, not a gate. Always run
+  the real merge with `--no-commit` and read `git diff --name-only --diff-filter=U`.
+- `[self]` First fold of the Windows memory entries re-sorted the snapshot's existing sections (the
+  old files were appended, not sorted) and produced a 1000-line reordering diff. Fixed by stable
+  insertion (new section after the last existing section with key <= its key; undated headings sort
+  as end of day); the snapshot diffs became insert-only. Rule: memory merges must be insert-only -
+  check `git diff -- <file> | grep -c '^-[^-]'` is 0.
+- `[tool]` The Windows `DEVLOG.md` held 42 cp1252 bytes (0x85 `…`, 0x96 `–`, 0x97 `—`, 0xD7 `×`)
+  inside UTF-8 text: `read_text(encoding="utf-8")` fails. Decode with `surrogateescape` and map the
+  stray bytes through cp1252; compare lines ASCII-folded so mojibake variants of known lines are not
+  "new content".
+- `[tool]` `git -C /mnt/c/... status` from WSL showed ~250 modified tracked files that Windows git
+  did not (autocrlf=true lives in the Windows system gitconfig). The Windows checkout is inspected
+  with Windows git; WSL only compares CR-stripped file contents.
+- `[tool]` The committed `fleet/viewer/` directories hold only `manifest.json`; the viewer import
+  needs `trajectories.json`, regenerated with `spacepdhcg gtoc12 export-viewer <Result.txt> --output
+  <dir> --run-id <run>` (10 MB, kept under `build-rel-verification/`, ignored). The stale
+  `data/gtoc12/fleet.json` from the previous pass made `npm run check` pass on the wrong fleet
+  first - check the validated run id in the output, not just the rc.
+- `[tool]` `npm ci` fails in `web/trajectory-viewer` (no lockfile / no dependencies); `check` and
+  `test` need no install.
+
+#### What Worked
+
+- One generic `merge_one.sh` (pre-scan, `--no-ff --no-commit`, commit only when no unmerged paths)
+  + `commit_merge.sh` asserting `git merge-base --is-ancestor <tip> HEAD` after each merge.
+- Line-coverage checks after every semantic resolution (docs table, memory rollover, Windows fold):
+  `sort -u` both parents and the result, `comm -23`, and explain every missing line.
+- Verification split into two parallel streams (host build + ctest + CPU pytest; CUDA build + CTest
+  + planner GPU) with the wheel and viewer in between: full matrix in ~12 min wall on 16 cores.
+- `results/lambda-h100/INDEX.json` (kept files with sha256, skipped files with sizes, the policy)
+  makes the "what was committed vs left out" question answerable from the tree.
+
+#### Guardrails For Next Session
+
+- The v9 rollover convention: live memory files stay slim; anything dated at or before the
+  snapshot's last timestamped entry goes into `*_2026-09-01_to_2026-09-05.md`. The live
+  scratchpad is 400+ lines again after the Windows fold - roll it over at the next quiet point.
+- sdist is 31.7 MB because `web/trajectory-viewer` (28 MB incl. the ignored `data/gtoc12` import)
+  and `tests/__pycache__` are packed; not touched here - fix the sdist include list separately.
+- `feat/gtoc12-asteroid-mining` moved past b55eb70 (bc7ef8e) while this merge ran; only b55eb70 is
+  on main.
