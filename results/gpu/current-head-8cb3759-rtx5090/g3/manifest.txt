@@ -1,0 +1,38 @@
+source_commit=8cb3759b29ea8c7d843322a940a7ebcabfd9ff21
+source_tree=6d27f2552d882b4418d16e4342e6854a436a952d
+branch=chore/g2g3-reseal-8cb3759
+cuda_architectures=120
+hardware_id=local-rtx-5090
+upstream_commit=167c8b72b4b96d2f94d405b8763e485514192b81
+upstream_tree=62b05e6c1bedd385f6c267af3645ae4aae0421b4
+9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024  benchmarks/g4_policy.json
+df23cc1c314604525884e720ec99e3c3c92b1b5da0347c6482ed04df0d88bfdf  benchmarks/g4_policy.sha256
+5c2359acc0793dbeb55165fdad9f60dbee3510dd82944ba2ceb9da501d28b890  benchmarks/paper1_matrix.json
+f5b5b1d2ea42eeacde9a88bc3fd1a020319237f9348e2f0aef70a8cb1e034ccc  results/gpu/current-head-8cb3759-rtx5090/g3/displaced/execution-context.json
+1427eadd2dece1b117ab291140178da1a130f17ea86731199c50148ea83d7102  build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test
+820020137b61d0b4d9e2555134a1821f6a708eb89131500fe6061732f256fecc  build-current-head-g3-debug/cuda-tests/device_scvx_integration_test
+7992497953fc27b4bffd2401c3fabe623beaf27e7165adb18fabc9f709c8b55e  build-single-gpu-cuda-release/cuda/libspacepdhcg_cuda.so
+2d0afad3ddf462210a4d436980fce649cd334e0c61b516b4d1e5a876292cc753  build-current-head-g3-debug/cuda/libspacepdhcg_cuda.so
+27a8e9791074aab201ae5ad1a21b60c8972b307a82ee972888a74e162902b342  /home/angus/worktrees/spacepdhcg-reseal-8cb3759/build-current-head-qoco/libqoco.so
+build_nice=10 parallel=8 runner_nice=5
+Sat Sep  5 13:42:18 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.58.02              Driver Version: 595.97         CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        On  |   00000000:02:00.0  On |                  N/A |
+| 30%   39C    P0             94W /  575W |    3685MiB /  32607MiB |      4%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+NVIDIA Nsight Systems version 2024.6.2.225-246235244400v0

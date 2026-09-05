@@ -1,0 +1,34 @@
+/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake -S cpp -B build-single-gpu-cuda-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_BUILD_DISTRIBUTED=OFF -DSPACEPDHCG_BUILD_C_API=ON -DSPACEPDHCG_BUILD_NATIVE_TESTS=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=120 
+nice -n 5 /home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake --build build-single-gpu-cuda-release --clean-first --parallel 8 
+/home/angus/spacecraft-trajectory-optmiser/.venv/bin/ctest --test-dir build-single-gpu-cuda-release --output-on-failure --no-tests=error 
+/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake -S cpp -B build-current-head-g3-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSPACEPDHCG_BUILD_CUDA=ON -DSPACEPDHCG_BUILD_DISTRIBUTED=OFF -DSPACEPDHCG_BUILD_C_API=ON -DSPACEPDHCG_BUILD_NATIVE_TESTS=ON -DSPACEPDHCG_NATIVE_WARNINGS_AS_ERRORS=ON -DCMAKE_CUDA_ARCHITECTURES=120 
+nice -n 5 /home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake --build build-current-head-g3-debug --clean-first --parallel 8 
+/home/angus/spacecraft-trajectory-optmiser/.venv/bin/ctest --test-dir build-current-head-g3-debug --output-on-failure --no-tests=error 
+build-current-head-g3-debug/cuda-tests/device_variational_test 
+build-current-head-g3-debug/cuda-tests/device_scvx_integration_test 
+build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --tight-all 
+build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --production-outer 
+build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --p1d-path-audit 
+build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --qoco-handback 
+build-single-gpu-cuda-release/cuda-tests/recovery_test 
+/home/angus/worktrees/spacepdhcg-reseal-8cb3759/.venv-current-head/bin/python results/gpu/current-head-8cb3759-rtx5090/g3/run_displaced_regressions.py --executable build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --output results/gpu/current-head-8cb3759-rtx5090/g3/displaced 
+env CUDA_VISIBLE_DEVICES= build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --production-outer 
+/home/angus/worktrees/spacepdhcg-reseal-8cb3759/.venv-current-head/bin/python scripts/gpu/run_g3_h1.py --repository . --executable build-single-gpu-cuda-release/cuda-tests/device_scvx_integration_test --output results/gpu/current-head-8cb3759-rtx5090/g3/h1 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --error-exitcode 91 build-current-head-g3-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --error-exitcode 92 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --error-exitcode 93 build-current-head-g3-debug/cuda-tests/recovery_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool memcheck --error-exitcode 94 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --production-outer-sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool racecheck --error-exitcode 91 build-current-head-g3-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool racecheck --error-exitcode 92 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool racecheck --error-exitcode 93 build-current-head-g3-debug/cuda-tests/recovery_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool racecheck --error-exitcode 94 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --production-outer-sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool synccheck --error-exitcode 91 build-current-head-g3-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool synccheck --error-exitcode 92 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool synccheck --error-exitcode 93 build-current-head-g3-debug/cuda-tests/recovery_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool synccheck --error-exitcode 94 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --production-outer-sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool initcheck --track-unused-memory --error-exitcode 95 build-current-head-g3-debug/cuda-tests/device_variational_test 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool initcheck --track-unused-memory --error-exitcode 96 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool initcheck --track-unused-memory --error-exitcode 97 build-current-head-g3-debug/cuda-tests/recovery_test --sanitizer 
+/usr/local/cuda-12.8/bin/compute-sanitizer --tool initcheck --track-unused-memory --error-exitcode 98 build-current-head-g3-debug/cuda-tests/device_scvx_integration_test --production-outer-sanitizer 
+nsys profile --trace=cuda\,osrt --sample=none --cpuctxsw=none --force-overwrite=true --output=results/gpu/current-head-8cb3759-rtx5090/g3/device-scvx build-current-head-g3-debug/cuda-tests/device_scvx_integration_test 
+nsys stats --force-export=true --report cuda_api_sum\,cuda_gpu_kern_sum\,cuda_gpu_mem_time_sum results/gpu/current-head-8cb3759-rtx5090/g3/device-scvx.nsys-rep 

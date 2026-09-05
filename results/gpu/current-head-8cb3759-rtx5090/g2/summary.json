@@ -1,0 +1,60 @@
+{
+  "branch": "chore/g2g3-reseal-8cb3759",
+  "cancellation": true,
+  "checkpoint_restore": true,
+  "ctest": {
+    "debug": 70,
+    "release": 70
+  },
+  "cuda_architecture": 120,
+  "decision": "PASS",
+  "default_and_nondefault_streams": true,
+  "destruction": true,
+  "dlpack_max_solution_error": 7.113320221741048e-08,
+  "error_paths": {
+    "alias": true,
+    "busy_update": true,
+    "dtype": true,
+    "stride": true,
+    "topology": true
+  },
+  "foreign_gpu_waits": {
+    "checks": 19,
+    "records": [],
+    "total_wait_seconds": 0,
+    "waits": 0
+  },
+  "hardware_id": "local-rtx-5090",
+  "hidden_cpu_fallback": false,
+  "immutable_uri": null,
+  "local_only": true,
+  "post_create_allocation_delta": 0,
+  "premature_release": true,
+  "qp_natural_residual": 3.09112063e-07,
+  "qp_updates": 10,
+  "qp_worst_cpu_error": 3.23909889e-07,
+  "qp_worst_pinned_oneshot_error": 3.90241894e-07,
+  "real_dlpack_producers": [
+    "cupy",
+    "torch",
+    "jax"
+  ],
+  "retained_failed_attempts": 0,
+  "retained_limitations": [
+    "racecheck runs on persistent_cw_test (the complete persistent kernel), the target chosen for the b6afb49 RTX 5090 seal after a stream_lifetime racecheck hung there; stream cancellation/destruction are covered natively by stream_lifetime_test."
+  ],
+  "sanitizer_clean": true,
+  "sanitizer_logs": 5,
+  "scaling_refresh_and_reuse": true,
+  "schema_version": "current-head-g2-1.0.0",
+  "soc_cone_distance": 6.45576925e-11,
+  "soc_natural_residual": 6.45576925e-11,
+  "source_commit": "8cb3759b29ea8c7d843322a940a7ebcabfd9ff21",
+  "source_tree": "6d27f2552d882b4418d16e4342e6854a436a952d",
+  "timing": {
+    "completed_utc": "2026-09-05T02:05:53Z",
+    "started_utc": null
+  },
+  "topology_pointers_stable": true,
+  "warm_modes": 4
+}

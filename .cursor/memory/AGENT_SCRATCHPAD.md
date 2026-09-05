@@ -2710,3 +2710,44 @@ Use this file as persistent, repo-local execution memory.
   owns that device.
 - `feat/gtoc12-asteroid-mining` local HEAD (7d2e301+) stays off main while the v8 worker commits.
 - WSL still has no GitHub credential helper; pushes go through a bundle and the Windows repo.
+
+### 2026-09-05 13:50 AEST - G2/G3 reseal of main 8cb3759 on the WSL RTX 5090
+
+#### Task Summary
+
+- G2 and G3 PASS on main 8cb3759 (sm_120), evidence `results/gpu/current-head-8cb3759-rtx5090/`
+  (root index sha256 `443a8caf...4e4a2`, g2 archive `095f33dc...da45d`, g3 archive
+  `609e0acb...39de6`), committed compactly on `chore/g2g3-reseal-8cb3759` (worktree
+  `/home/angus/worktrees/spacepdhcg-reseal-8cb3759`; helper scripts + step logs `/home/angus/reseal8cb/`).
+  Wall 6795 s; G3 racecheck of `recovery_test --sanitizer` alone 56.5 min.
+
+#### Mistakes And Fixes
+
+- `[self]` The first seals pass recorded per-step waits only; the orchestrator's 180 s gate-level
+  wait lived outside the tree. Re-ran summarize -> validate -> seal -> verify after copying the
+  orchestrator wait log into `preflight/` (raw gate evidence untouched, first-pass hashes retained).
+  Rule: every wait/guard log that the summary cites must live inside the evidence tree before sealing.
+- `[self]` The runner's final `status.txt` overwrites the `started_utc` line; summaries that want
+  start/end stamps must read the orchestrator log or keep both lines in `status.txt`.
+- `[tool]` `wsl -- bash -lc 'a && b | head && c'` from PowerShell returned nothing (rc 1) whenever a
+  middle `grep` matched nothing; probes are script files that write a log read back over
+  `\\wsl.localhost`.
+
+#### What Worked
+
+- Reusing the sealed per-gate `run.sh` templates verbatim (commit/tree/branch substituted) plus two
+  additive wrappers: `gpu_guard` (WSL `nvidia-smi --query-compute-apps` + Windows `nvidia-smi.exe`
+  filtered for python/torch/cuda names, 30 s poll, every check logged) and
+  `nice -n $((10-$(nice)))` for builds so `-j8` builds land at absolute nice 10 under a nice-5 runner.
+- Generating the docs section from the sealed summaries (`make_docs_section.py`) instead of typing
+  numbers; force-adding only compact files (`git add -f`) under the ignored `results/` tree, matching
+  the pattern of the earlier tracked `results/gpu/g2|g3` seals.
+- A fresh worktree on the chore branch at the same commit keeps `spacepdhcg-main` on `main` and lets
+  the evidence commit land without moving any shared worktree.
+
+#### Guardrails For Next Session
+
+- WSL `nvidia-smi --query-compute-apps` shows WSL CUDA contexts as `<pid>, [Not Found], [N/A]`;
+  identify them with `ps -o cmd -p <pid>` (a weldsim demo from another agent held the GPU for 3 min).
+- The recovery racecheck is ~55-60 min on every host regardless of the 9fafee8 `--sanitizer` cap;
+  budget G3 at ~95 min and do not treat a long racecheck as a hang while GPU util stays 100 %.

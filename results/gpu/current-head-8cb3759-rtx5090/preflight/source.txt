@@ -1,0 +1,27 @@
+## chore/g2g3-reseal-8cb3759
+8cb3759b29ea8c7d843322a940a7ebcabfd9ff21
+6d27f2552d882b4418d16e4342e6854a436a952d
+chore/g2g3-reseal-8cb3759
+commit 8cb3759b29ea8c7d843322a940a7ebcabfd9ff21
+Author:     SpacePDHCG-Integration <integration@spacepdhcg.local>
+AuthorDate: Sat Sep 5 06:32:23 2026 +1000
+Commit:     SpacePDHCG-Integration <integration@spacepdhcg.local>
+CommitDate: Sat Sep 5 06:32:23 2026 +1000
+
+    docs(status): 2026-09-05 integration note - what landed on main and what remains off it
+    
+    docs/PROGRAM_STATUS_2026-08-31.md gains a dated integration note for the
+    second release merge (v1 G4 deadline enforcement 1dbcae0, v2 candidate
+    H100-exposed fixes + 40-ship viewer 211267d, gtoc12 joint itinerary 8e15b92,
+    H100 recursion-limit fix c4e2c31, manifest blob refresh 0ff4f7c), the
+    conflict resolutions, the full verification matrix of the integrated head
+    (ruff, CPU pytest 659/35 skipped, host RelWithDebInfo -Werror 50/50 + native
+    8/8, CUDA sm_120 -Werror CTest 70/70, planner GPU 9/9, G4 deadline matrix
+    13/13, viewer check + 36 tests with fleet_master_v7, manifest tests 14/14,
+    wheel + installed-wheel smoke) and the work still off main (v8 harvest
+    substitution in flight on feat/gtoc12-asteroid-mining, the H100 G4 claim-core
+    campaign, the sm_90 confirmation of the v2 fixes).
+    
+    .cursor/memory: scratchpad and devlog entries for this session.
+main_ref=8cb3759b29ea8c7d843322a940a7ebcabfd9ff21
+branch_is_at_main=true

@@ -2328,3 +2328,62 @@
 - Off main after this merge: `feat/gtoc12-asteroid-mining` 7d2e301+ (v8 harvest substitution in
   flight); H100 G4 claim-core campaign (running); sm_90 confirmation of the v2 fixes (pending an H100
   GPU window); `perf/g4-batched-campaign` (provenance only).
+
+## 2026-09-05 13:50 AEST - G2/G3 reseal of main 8cb3759 on the WSL RTX 5090 (sm_120)
+
+- Task summary:
+  - Resealed Gate G2 (persistent device-resident PDHCG workspace) and Gate G3 (device-resident
+    deterministic SCvx) on `main` `8cb3759b29ea8c7d843322a940a7ebcabfd9ff21` (tree
+    `6d27f2552d882b4418d16e4342e6854a436a952d`) because the shared CUDA library changed after the
+    b6afb49 (RTX 5090) and 9e75b47 (H100) seals through 1dbcae0 and 2bca11d. Both gates **PASS**.
+  - Ran from a fresh worktree `/home/angus/worktrees/spacepdhcg-reseal-8cb3759` on branch
+    `chore/g2g3-reseal-8cb3759` cut at 8cb3759 (`spacepdhcg-main` verified clean at 8cb3759 and left on
+    `main`). No source change; the main evidence scripts already target `CMAKE_CUDA_ARCHITECTURES=120`
+    and `hardware_id local-rtx-5090`, so the 9e75b47 script commit was not needed.
+- Changes (this commit only; the sealed source is unchanged):
+  - `docs/CURRENT_HEAD_G0_G3_REPORT.md` new section, `docs/G3_GATE_REPORT.md` pointer.
+  - Compact evidence force-added under the ignored `results/gpu/current-head-8cb3759-rtx5090/`:
+    root `evidence-index.json` + `.sha256`, `current-head-summary.json`, per-gate `summary.json`,
+    `status.txt`, `commands.txt`, `manifest.txt`, `foreign-gpu-waits.log`, `evidence-index.json`, the
+    runner scripts (`preflight/*.sh`, `g2/run.sh`, `g3/run.sh`, `g3/run_displaced_regressions.py`,
+    `seals/*`), displaced/H1 decisions, `seals/archives.json` and the archive `.sha256` sidecars. The
+    `.tar.gz` archives, raw logs and the nsys report stay local-only.
+- Validation (all under the sealed template's tests/tolerances/timeouts; evidence at nice 5, builds at
+  nice 10 `-j8`; wall 6795 s from 01:49:05Z to 03:42:20Z, seals stage re-run 03:47Z to include the
+  orchestrator wait record):
+  - G2 (775 s): CUDA Debug + RelWithDebInfo CTest 70/70 each; ten-update QP worst CPU error
+    3.23909889e-7, pinned one-shot 3.90241894e-7, natural residual 3.09112063e-7; SOCP cone distance
+    and natural residual 6.45576925e-11; CuPy/PyTorch/JAX DLPack max solution error 7.1133e-8;
+    post-create allocation delta 0; 4 warm modes, checkpoint/restore, streams, cancellation,
+    destruction, 5/5 error paths; 5 sanitizer logs clean (memcheck x2 with 0 bytes leaked, racecheck,
+    initcheck, synccheck).
+  - G3 (5786 s): Release + Debug CTest 70/70 each; tight canonical residuals HCW 9.69295039e-7,
+    P1-C 1.42322019e-10, P1-E 4.58086731e-7, P1-D 2.82913893e-8 (max 9.69e-7 <= 1e-6); displaced HCW
+    3 accepted steps, retained change 0.118457409, terminal 2.92768846e-8; pure-QOCO displaced
+    warmups accepted 2/24/2 steps (P1-C/P1-D/P1-E) with canonical residuals 8.52e-12 / 7.73e-12 /
+    4.28e-12 and terminal residuals <= 5.03e-11; fixed-tight PDHCG representatives 3/3 honest
+    negatives (150 s timeouts, 0 accepted); production max canonical 9.56640559e-9, nonlinear
+    2.92768846e-8, CPU/GPU trajectory difference 0, coefficient difference 2.76e-13; device
+    variational max differences HCW 2.842e-14, pd3 8.327e-17, low thrust 4.139e-13, pd6 1.110e-16;
+    topology allocation/copy deltas 0, no hidden CPU fallback; no-device control failed as expected
+    (exit 2); H1 `supported` from 20 intervals (6 sizes x 7 repeats, omega bootstrap [0, 0]; SCvx
+    medians 0.055 s @20 ... 31.0 s @10000); 16/16 sanitizer logs clean (recovery racecheck 56m31s,
+    the dominant cost, as in both prior seals); Nsight under WSL again exposes no kernel/memory
+    records (retained limitation, no residency claim).
+  - Seals: `seals/g2-8cb3759b29ea.tar.gz` sha256
+    `095f33dc83328290ea1533d0bc9531b17a316f004f0c7f8b5cd0057471fda45d`;
+    `seals/g3-8cb3759b29ea.tar.gz` sha256
+    `609e0acbed65d7c4449148677cbd69b2703ba23ea277a53a7034da742c439de6`; root `evidence-index.json`
+    (178 artifacts) sha256 `443a8caf16e09699c67f499d59078261cfb94b5408c59e07c0e03dd83cd4e4a2`;
+    `verify_seals.py` PASS; schema/scope pytest PASS. First-pass hashes before the seals re-run
+    (a5a15c2b..., fe30ceb8..., 16370272...) are retained in `preflight/orchestrator-first-pass.log`.
+  - Foreign GPU: a WSL weldsim `demo_everything_on.py --device cuda:0` (another agent) held the GPU at
+    launch; the orchestrator waited 180 s (01:49:32Z-01:52:58Z) before G2 and recorded it. All 48
+    per-step guards inside G2/G3 found the GPU clear; Windows `nvidia-smi.exe` never showed a
+    `python.exe` compute workload.
+- Follow-up notes / risks:
+  - The `--sanitizer` 20k cancellation cap (9fafee8) did not shorten the recovery racecheck (56 min
+    here vs 54 min b6afb49 / 61 min H100); the racecheck cost sits elsewhere in `recovery_test`.
+  - `g3/summary.json` `timing.started_utc` is null because the runner's final `status.txt` carries only
+    the completion stamp; start/end stamps are in the orchestrator log copied to `preflight/`.
+  - G0/G1 were not re-run (out of scope); the H100 G4 claim core continues on 1dbcae0 untouched.

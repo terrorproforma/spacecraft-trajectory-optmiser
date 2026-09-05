@@ -1,0 +1,145 @@
+{
+  "branch": "chore/g2g3-reseal-8cb3759",
+  "ctest": {
+    "debug": 70,
+    "release": 70
+  },
+  "cuda_architecture": 120,
+  "decision": "PASS",
+  "foreign_gpu_waits": {
+    "checks": 29,
+    "records": [],
+    "total_wait_seconds": 0,
+    "waits": 0
+  },
+  "g4_campaign_launched": false,
+  "h1_coordinates": 6,
+  "h1_decision": "supported",
+  "h1_measured_repeats_each": 7,
+  "h1_omega_bootstrap_95": [
+    0.0,
+    0.0
+  ],
+  "h1_scale_boundary_intervals": 20,
+  "h1_scvx_median_seconds_by_intervals": {
+    "100": 0.269559696,
+    "10000": 31.0062138,
+    "20": 0.055373765,
+    "2000": 5.97230519,
+    "50": 0.133913665,
+    "500": 1.39112639
+  },
+  "hardware_id": "local-rtx-5090",
+  "hcw_displaced": {
+    "accepted_steps": 3,
+    "retained_change": 0.118457409,
+    "terminal_residual": 2.92768846e-08
+  },
+  "hidden_cpu_fallback": false,
+  "immutable_uri": null,
+  "local_only": true,
+  "maximum_cpu_gpu_coefficient_difference": 2.7599450502791e-13,
+  "maximum_tight_canonical_residual": 9.69295039e-07,
+  "no_device_negative_control": "PASS",
+  "nsight_gpu_kernel_records_available": false,
+  "nsight_gpu_memory_records_available": false,
+  "nsight_note": "WSL RTX 5090 host: Nsight Systems 2024.6.2 under WSL records CUDA API activity; GPU kernel and GPU-memory summaries are recorded only when the platform exposes them (see nsys-stats.log); no timeline-residency claim is made.",
+  "pdhcg_negatives": [
+    {
+      "accepted_steps": 0,
+      "campaign_record": false,
+      "classification": "honest-negative",
+      "coordinate_id": "0793cf9c7541b4f2f75ece87535baaa3dc342d83e9e27843684f548fa39400ab",
+      "disposition": "timeout",
+      "family": "P1-C-pd3",
+      "iteration_records": 0,
+      "ordinal": 792000,
+      "policy": "fixed-tight",
+      "qualified": false,
+      "repeat_kind": "warmup",
+      "retained_change": 0.0,
+      "returncode": null
+    },
+    {
+      "accepted_steps": 0,
+      "campaign_record": false,
+      "classification": "honest-negative",
+      "coordinate_id": "a1cf44b472e2345c8da0cb9a5eef2c61310c394e65edb2963b5e0f52d49eaf45",
+      "disposition": "timeout",
+      "family": "P1-D-pd6",
+      "iteration_records": 0,
+      "ordinal": 6235200,
+      "policy": "fixed-tight",
+      "qualified": false,
+      "repeat_kind": "warmup",
+      "retained_change": 0.0,
+      "returncode": null
+    },
+    {
+      "accepted_steps": 0,
+      "campaign_record": false,
+      "classification": "honest-negative",
+      "coordinate_id": "3487e65ce7b33562f4582f829bc9cac6d4c619ec3ab5f6b51ec1a56f9fb06c91",
+      "disposition": "timeout",
+      "family": "P1-E-low-thrust",
+      "iteration_records": 0,
+      "ordinal": 13233600,
+      "policy": "fixed-tight",
+      "qualified": false,
+      "repeat_kind": "warmup",
+      "retained_change": 0.0,
+      "returncode": null
+    }
+  ],
+  "production_maximum_canonical_residual": 9.56640559e-09,
+  "production_maximum_cpu_gpu_trajectory_difference": 0,
+  "production_maximum_nonlinear_residual": 2.92768846e-08,
+  "pure_qoco_displaced": {
+    "P1-C-pd3": {
+      "accepted_steps": 2,
+      "canonical_residual": 8.519618026145671e-12,
+      "dynamics_residual": 0,
+      "path_residual": 0,
+      "retained_change": 476.14824313073586,
+      "terminal_residual": 5.735515257176971e-12,
+      "virtual_control": 0
+    },
+    "P1-D-pd6": {
+      "accepted_steps": 24,
+      "canonical_residual": 7.727105922922198e-12,
+      "dynamics_residual": 0,
+      "path_residual": 0,
+      "retained_change": 1196.3207474825815,
+      "terminal_residual": 5.02714831568385e-11,
+      "virtual_control": 0
+    },
+    "P1-E-low-thrust": {
+      "accepted_steps": 2,
+      "canonical_residual": 4.278033259891289e-12,
+      "dynamics_residual": 0,
+      "path_residual": 0,
+      "retained_change": 0.15037353586917068,
+      "terminal_residual": 7.958078640513122e-13,
+      "virtual_control": 0
+    }
+  },
+  "retained_failed_attempts": 0,
+  "sanitizer_clean": true,
+  "sanitizer_logs": 16,
+  "schema_version": "current-head-g3-1.0.0",
+  "source_commit": "8cb3759b29ea8c7d843322a940a7ebcabfd9ff21",
+  "source_tree": "6d27f2552d882b4418d16e4342e6854a436a952d",
+  "tight_canonical_by_family": {
+    "case": "tight_all",
+    "hcw": 9.69295039e-07,
+    "low_thrust": 4.58086731e-07,
+    "pd3": 1.42322019e-10,
+    "pd6": 2.82913893e-08
+  },
+  "timing": {
+    "completed_utc": "2026-09-05T03:42:19Z",
+    "started_utc": null
+  },
+  "topology_allocation_delta": 0,
+  "topology_copy_delta": 0
+}
