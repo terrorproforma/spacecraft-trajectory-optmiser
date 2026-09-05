@@ -1,0 +1,480 @@
+{
+  "scope": "Qualification and diagnostic probes, not a paired speedup benchmark",
+  "sha256": {
+    "/home/angus/build-qoco-gpu-ordering-v29/final/libqoco.so": "73beb0537ca4900201752705fa727ac15072857001bb78522ac48bd17dbf1871",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan": "a2da0c76e90ffd42ee91532720cf67e33cd6b2de69f44a7ea45672cec4cffb09",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/libspacepdhcg_cuda.so": "f7c127c20becf2f9c4ec3d757e700c646adbf6dbb487339c76e35415ccac4df8"
+  },
+  "samples": [
+    {
+      "intervals": 20,
+      "returncode": 0,
+      "stderr": "{\"case\":\"qoco_setup_stage\",\"stage\":\"copy_input\",\"seconds\":0.002013067}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"transposes\",\"seconds\":0.001525202}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"ruiz\",\"seconds\":0.000864187}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"regularize_P\",\"seconds\":0.00016025}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"cone_indices\",\"seconds\":3.8494e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"pre_vendor\",\"seconds\":3.89e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_handles\",\"seconds\":0.048016914}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_buffers\",\"seconds\":4.0078e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"assemble_KKT\",\"seconds\":9.3263e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"convert_KKT\",\"seconds\":0.000259777}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"create_csr\",\"seconds\":0.000526527}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"symbolic_analysis\",\"seconds\":0.020188971}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_finish\",\"seconds\":0.000163568}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"linsys_return\",\"seconds\":7.16e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"workspace_vectors\",\"seconds\":0.000764233}\n",
+      "stdout": "",
+      "wall_seconds": 1.731171042949427,
+      "stages": [
+        {
+          "case": "qoco_setup_stage",
+          "stage": "copy_input",
+          "seconds": 0.002013067
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "transposes",
+          "seconds": 0.001525202
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "ruiz",
+          "seconds": 0.000864187
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "regularize_P",
+          "seconds": 0.00016025
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "cone_indices",
+          "seconds": 3.8494e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "pre_vendor",
+          "seconds": 3.89e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_handles",
+          "seconds": 0.048016914
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_buffers",
+          "seconds": 4.0078e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "assemble_KKT",
+          "seconds": 9.3263e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "convert_KKT",
+          "seconds": 0.000259777
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "create_csr",
+          "seconds": 0.000526527
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "symbolic_analysis",
+          "seconds": 0.020188971
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_finish",
+          "seconds": 0.000163568
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "linsys_return",
+          "seconds": 7.16e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "workspace_vectors",
+          "seconds": 0.000764233
+        }
+      ],
+      "summary": {
+        "objective": 0.5129756912894405,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 5,
+        "accepted_steps": 2,
+        "rejected_steps": 3,
+        "resolved_steps": 0,
+        "inner_iterations": 164,
+        "final_trust_radius": 0.125,
+        "trajectory_step": 0,
+        "propellant_used": 14.158129079588434,
+        "final_mass": 1985.8418709204116,
+        "terminal_position_error": 5.542233338928781e-13,
+        "terminal_velocity_error": 4.5441428397907657e-13
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.205168634,
+        "topology_seconds": 0.003030433,
+        "coefficient_seconds": 0.070478058,
+        "workspace_create_seconds": 0.02653119,
+        "update_seconds": 0.0015207150000000002,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 1.192395852,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.001106433,
+        "replay_seconds": 0.004679647982120514,
+        "acceptance_seconds": 0.000179049,
+        "d2h_seconds": 0.0003212800025939941,
+        "cqp_total_seconds": 1.27328815,
+        "scvx_total_seconds": 1.286569148,
+        "solve_wall_seconds": 1.286574578,
+        "qoco_conversion_seconds": 0.002578474,
+        "qoco_setup_seconds": 0.07568667600000001,
+        "qoco_update_seconds": 0.0015207150000000002,
+        "qoco_solve_seconds": 1.192395852,
+        "independent_replay_seconds": 3.2515e-05,
+        "plan_wall_seconds": 1.436435498
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 1.6770648723364926e-10,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 4.544142839790766e-15,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 4.544142839790766e-15,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "result_path": "artifacts/performance/qoco-degree-ordering-20-result.json",
+      "result_sha256": "f49d71e97b873c62c6258fc9cccfa63d7d66fe306d9f1f51f069b5d586ebfd10"
+    },
+    {
+      "intervals": 500,
+      "returncode": 0,
+      "stderr": "{\"case\":\"qoco_setup_stage\",\"stage\":\"copy_input\",\"seconds\":0.0034967}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"transposes\",\"seconds\":0.003469262}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"ruiz\",\"seconds\":0.00264523}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"regularize_P\",\"seconds\":0.000337912}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"cone_indices\",\"seconds\":4.3126e-05}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"pre_vendor\",\"seconds\":4.92e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_handles\",\"seconds\":0.046434066}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_buffers\",\"seconds\":0.000384822}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"assemble_KKT\",\"seconds\":0.002048448}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"convert_KKT\",\"seconds\":0.003659191}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"create_csr\",\"seconds\":0.001616685}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"symbolic_analysis\",\"seconds\":0.288693588}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"vendor_finish\",\"seconds\":0.001048052}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"linsys_return\",\"seconds\":5.35e-07}\n{\"case\":\"qoco_setup_stage\",\"stage\":\"workspace_vectors\",\"seconds\":0.005268115}\n",
+      "stdout": "",
+      "wall_seconds": 3.381539908994455,
+      "stages": [
+        {
+          "case": "qoco_setup_stage",
+          "stage": "copy_input",
+          "seconds": 0.0034967
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "transposes",
+          "seconds": 0.003469262
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "ruiz",
+          "seconds": 0.00264523
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "regularize_P",
+          "seconds": 0.000337912
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "cone_indices",
+          "seconds": 4.3126e-05
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "pre_vendor",
+          "seconds": 4.92e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_handles",
+          "seconds": 0.046434066
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_buffers",
+          "seconds": 0.000384822
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "assemble_KKT",
+          "seconds": 0.002048448
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "convert_KKT",
+          "seconds": 0.003659191
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "create_csr",
+          "seconds": 0.001616685
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "symbolic_analysis",
+          "seconds": 0.288693588
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "vendor_finish",
+          "seconds": 0.001048052
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "linsys_return",
+          "seconds": 5.35e-07
+        },
+        {
+          "case": "qoco_setup_stage",
+          "stage": "workspace_vectors",
+          "seconds": 0.005268115
+        }
+      ],
+      "summary": {
+        "objective": 0.5129756912951827,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 34,
+        "final_trust_radius": 1,
+        "trajectory_step": 0,
+        "propellant_used": 14.158129079746232,
+        "final_mass": 1985.8418709202538,
+        "terminal_position_error": 6.555040954481228e-10,
+        "terminal_velocity_error": 3.287239924709695e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.160125226,
+        "topology_seconds": 0.10010511,
+        "coefficient_seconds": 0.056282183,
+        "workspace_create_seconds": 0.024380852,
+        "update_seconds": 0.000572004,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 2.415995643,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.00057774,
+        "replay_seconds": 0.056365472793579105,
+        "acceptance_seconds": 7.897399999999999e-05,
+        "d2h_seconds": 0.0001971519961953163,
+        "cqp_total_seconds": 2.833202303,
+        "scvx_total_seconds": 2.89427241,
+        "solve_wall_seconds": 2.894278529,
+        "qoco_conversion_seconds": 0.050068189,
+        "qoco_setup_seconds": 0.365988727,
+        "qoco_update_seconds": 0.000572004,
+        "qoco_solve_seconds": 2.415995643,
+        "independent_replay_seconds": 0.001022666,
+        "plan_wall_seconds": 3.086087914
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 1.294893974017193e-09,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 3.287239924709695e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 3.287239924709695e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "result_path": "artifacts/performance/qoco-degree-ordering-500-result.json",
+      "result_sha256": "349e16a945a848cdc7f1a489076167274bebec783ff315d07b8dd7a064623f90"
+    }
+  ],
+  "backend_provenance": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "f045e5b0858f88be3262c0caf12906bf5ebca6977a6be50a9613f04dda2dc931",
+    "extension_sha256": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+    "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+    "gather": true,
+    "original_handles": false,
+    "queued_operators": true,
+    "device_cone_reductions": true,
+    "values_only_updates": true,
+    "device_numeric_updates": true,
+    "device_scalar_reductions": true,
+    "batched_stopping": true,
+    "batched_iteration_scalars": true,
+    "device_step_control": true,
+    "device_combined_rhs": false,
+    "queued_centering_metadata": false,
+    "profile_setup": true,
+    "gpu_degree_ordering": true,
+    "correct_stopping": true,
+    "deterministic": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "f045e5b0858f88be3262c0caf12906bf5ebca6977a6be50a9613f04dda2dc931",
+      "algebra/cuda/qoco_reduction_scope.cuh": "c1e1c857cbcf6cf93e0fa40668b4ef69da1d52db28fa1caec0539d96f546d5df",
+      "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "algebra/cuda/cuda_types.h": "5408488cff1f8ac885ecd3eb384dd1fd02e2d83fc30abda1cf63595e1e126fc2",
+      "algebra/cuda/cudss_backend.h": "793530d86a41a5f2d74b03c34f1565f6e2107032772d03b85c0460a4c4cae981",
+      "algebra/cuda/cudss_backend.cu": "34b73aa35172e7f3843e29c9d2095ac521f3fb21f75afdddd57f6f27e4fe6ac2",
+      "src/qoco_utils.c": "d837f94c3d91f2fcf6d9eb601b53a4fb1f333214f499c345f983e498d69fedc5",
+      "algebra/cuda/qoco_gather.cuh": "637ea34a5a178254ad6ea40f30d515e28ab32eff43423b600e503e1d6537429d",
+      "src/cone.cu": "40c0edbd6572eb6879d548f3b0b01f05afe08c4d2cce5cefe92ae448fc81b24a",
+      "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+      "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+      "src/qoco_api.c": "630ba7364ac68b1a8522ada168566732f1d5a567c7274c0189554d62f5184cfd",
+      "algebra/cuda/qoco_device_update.cuh": "cf7e524d347ba06129005fddd899d3655fbef02d3d14b84e910f36051baec9d1",
+      "algebra/cuda/qoco_device_scalar.cuh": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92",
+      "algebra/cuda/qoco_batched_stopping.cuh": "50d72b5f1a1257240bc95e409740ffb901a450b552963519ded646f8b11a344d",
+      "src/kkt.c": "2a7368c3e9f301f4132d160bbc93a7903a4c019c759dcf4e2c3879aa4e7eaaab",
+      "src/qoco_device_step_cones.cuh": "4b19c1e3d79ad26d19cc77c61a3d23969a1b6812c5680d6335ce7d41d506ca1e",
+      "algebra/cuda/qoco_device_step_control.cuh": "4a935bf41858ad9c85e4455179a0fd09401b7a2ce20a84b2f2d748c2d3566972",
+      "algebra/cuda/qoco_setup_profile.cuh": "47a4b82392a9506511c5cf13baabe4eaa7e608a4cbc6efa325c0f553348d1a31",
+      "algebra/cuda/qoco_gpu_ordering.cuh": "30cdfed1e6d9e53a5ac8e69ed4e9fb95994038f8219a66a68dab048a777a070e"
+    }
+  }
+}

@@ -852,3 +852,106 @@ Frozen candidates are `/home/angus/build-qoco-gpu-combined-rhs-v26/final/libqoco
 and `/home/angus/build-qoco-gpu-combined-rhs-v27/final/libqoco.so`
 (SHA256 `e99226f73b2f1c1d9f9fb988cc2a0fd24b6e7a4b1e245cb05d4b99c6ccb89e6c`).
 Both were frozen before validation and measurement. The full goal remains active.
+
+## Setup profiling, rejected GPU ordering, and ownership fixes
+
+The next RTX 5090 checkpoint splits setup instead of attributing all of it to
+GPU work. `--profile-setup` adds optional stage diagnostics, enabled only with
+`SPACEPDHCG_TEST_QOCO_SETUP_PROFILE=1`. These are completion-fenced wall
+intervals and perturb overlap; they are not kernel timings or speedup samples.
+Diagnostic mode separates vendor reordering and symbolic factorization; normal
+execution preserves the combined analysis call.
+
+Three fresh-process probes per size in frozen v30 pass the independent planner
+certificate. At 500 intervals, median reordering is **231.925 ms**, symbolic
+factorization 43.553 ms, vendor handle creation 47.201 ms, host KKT assembly
+2.087 ms and CSC-to-CSR conversion 3.640 ms. One probe has a 428.090 ms symbolic
+outlier and 781.974 ms workspace-vector stage; those samples remain recorded,
+with no established cause. Reordering is consistently 231.520–236.089 ms.
+The [NVIDIA documentation](https://docs.nvidia.com/cuda/cudss/doc_output/types.html)
+identifies reordering as CPU work even when numerical execution is on the GPU.
+The measured cost makes this a material obstacle to the fully GPU-native goal.
+
+[Split-stage evidence](../artifacts/performance/qoco-setup-split-profile.json)
+includes hashes, source provenance and full diagnostic output. The
+[earlier v28 profile](../artifacts/performance/qoco-setup-stage-profile.json)
+labels the combined vendor analysis `symbolic_analysis`; do not compare that
+field directly with v30's symbolic-only field.
+
+The opt-in `--gpu-degree-ordering` experiment computes undirected degrees and
+a stable permutation using CUDA/CUB, then supplies the device array through
+the installed cuDSS 0.7.1 user-permutation API. This is static degree ordering,
+not approximate minimum degree. The standalone test checks independent CPU
+ordering, stable ties, bijection, duplicate edges, disconnected graphs and
+output guards at sizes 0, 1, 13, 4099 and 65539. All four standalone sanitizers
+pass. Native conversion and landing/20/500-interval planner probes also pass.
+
+**Reject v29 as a performance option.** Its diagnostic 500-interval probe takes
+2.416 s solving and 2.894 s in SCvx, compared with roughly 0.25 s solving in
+the existing default-ordering measurements. This is not a paired speedup
+estimate. Landing iterations increase from 28 to 36. Numerical gates pass,
+but the experiment provides no reason to promote it. Factorization fill was
+not measured, so it is only a possible explanation for the regression.
+The v29 `create_csr` stage includes GPU permutation creation/submission, and
+its `symbolic_analysis` still covers combined analysis.
+
+[Ordering checks and historical prepared source](../artifacts/performance/qoco-gpu-ordering-checkpoint.json)
+and [qualification probes](../artifacts/performance/qoco-degree-ordering-probes.json)
+retain the rejected result. The standalone CUDA test needs the isolated QOCO
+headers/library, as with the existing step-control test; compile
+`cpp/cuda/tests/qoco_gpu_ordering_test.cu` with NVCC C++17, `-arch=sm_120`,
+the prepared `include` and `lib/qdldl/include` paths, and `-lqoco -ldl`.
+
+The retained opt-in `--setup-lifetimes` correction (v31, based on v25) fixes
+three setup ownership issues without changing numerical algorithms:
+
+- Free the temporary host KKT matrix and its three arrays after analysis.
+- Retain CSR row/column indices until the vendor matrix is destroyed.
+- Create RHS/solution dense wrappers before passing them to analysis.
+
+The Linux diagnostic interposer `cpp/cuda/tests/qoco_host_kkt_tracker.cpp`
+tracks only the four allocations returned by `construct_kkt`, not the entire
+host heap. Seven landing workspaces leaked 559,188 bytes in v25; one 500-interval
+workspace leaked 5,315,104 bytes. The same v31 runs free all tracked bytes.
+Build the tracker with `g++ -std=c++17 -O2 -fPIC -shared`, the isolated QOCO
+`include` and `lib/qdldl/include` paths, and `-ldl`. Set
+`LD_PRELOAD=<tracker.so>:<candidate-libqoco.so>` for this diagnostic only.
+[Host allocation evidence](../artifacts/performance/qoco-host-lifetime-comparison.json)
+records both libraries, commands and full outputs. Retaining CSR indices does
+increase live device storage during solving; existing native-owned peak
+telemetry excludes these QOCO allocations.
+
+Matched v25/v31 measurements use unchanged frozen core, two warmups and seven
+alternating measured samples per variant, with all test diagnostics disabled:
+
+| Case | v25 SCvx | v31 SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 148.338 ms | 150.244 ms | 557.965 → 574.286 ms |
+| 20-interval 6DOF, 1e-6 | 1064.851 ms | 1061.243 ms | 1438.595 → 1446.565 ms |
+| 500-interval 6DOF, 1e-6 | 731.741 ms | 730.562 ms | 1231.769 → 1228.340 ms |
+
+These establish no general speedup. Retain v31 for the ownership correction;
+v25 remains the historical performance comparison. All paired physics gates
+and objectives agree, with unchanged 28/179/34 inner iterations. The 4.005 s
+baseline 500-interval warmup is retained in the raw measurements.
+
+Native Ruiz-4, seven repeated landing solves, 20/500-interval conversion/KKT,
+step and eight-metric comparisons pass. All four standalone step sanitizers
+pass. Full landing memory, initialization and synchronization checks pass
+with and without test oracles. Full production racecheck was rerun because
+vendor input lifetimes changed: it still exits 99 with **30 cuDSS factorization
+race errors**. This remains unresolved; standalone racecheck does not qualify
+vendor factorization. No report was suppressed.
+
+[Lifetime checkpoint](../artifacts/performance/qoco-setup-lifetimes-checkpoint.json),
+[source reproduction](../artifacts/performance/qoco-setup-lifetimes-source-reproduction.json)
+and the [500-interval matched benchmark](../artifacts/performance/qoco-setup-lifetimes-planner-pd6-500.json)
+retain all evidence. Frozen v31 is
+`/home/angus/build-qoco-gpu-lifetimes-v31/final/libqoco.so`, SHA256
+`4a8a0d15e83bcdd68fc0910718a30602417f61ec4cf2e315a7f06a0cb2b358a7`.
+All prepared source hashes reproduce. The profiling/lifetime flag combination
+also prepares successfully; the measured v31 binary contains no profiling or
+degree-ordering option. The next ordering design should use explicit trajectory
+stage metadata and separators, with factorization cost measured as well as
+ordering time. CPU assembly, generic reordering, host solver and outer control,
+the vendor race and the full GPU-native goal remain open.

@@ -634,3 +634,24 @@ The 500-interval case passes independent conversion/KKT/RHS/metric comparisons
 with the same 34 inner iterations. Its baseline QOCO setup median is 344 ms,
 larger than the 253 ms solve. Split setup into measured stages next; the whole
 GPU-native goal and existing cuDSS race remain open.
+
+## Setup ordering and lifetime checkpoint
+
+Split setup profiling identifies about 232 ms of CPU vendor reordering at 500
+intervals. A GPU static-degree ordering prototype passes physics gates but
+regresses the large solve substantially, so it remains rejected. The next
+ordering design needs explicit trajectory structure and must measure total
+factorization/solve cost. Diagnostic fences and retained outliers prevent
+treating the profiles as matched speedup measurements.
+
+The v31 ownership correction frees temporary host KKT storage, retains CSR
+indices for the vendor matrix lifetime, and creates dense wrappers before
+analysis. A focused allocation tracker confirms elimination of 5,315,104 leaked
+host bytes per 500-interval setup. Matched timings are effectively flat, with
+unchanged physics gates and 28/179/34 iterations; this is a correctness fix,
+not a speedup claim. Independent numerical oracles and memory/initialization/
+synchronization checks pass. Full racecheck still reports 30 cuDSS factorization
+errors, which remain unresolved.
+
+[Measured results, rejected experiment and reproduction details](GPU_QOCO_LOCAL_BACKEND.md#setup-profiling-rejected-gpu-ordering-and-ownership-fixes)
+include frozen binaries and full sanitizer output. The complete goal stays active.

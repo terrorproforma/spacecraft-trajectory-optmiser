@@ -18,6 +18,120 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_setup_profile(destination: Path) -> None:
+    """Insert optional completion-fenced stage markers into setup only."""
+    sites = {
+        "src/qoco_api.c": (
+            ("  // Validate problem data.", "  qoco_gpu_setup_mark(NULL);\n", None),
+            ("  // Equilibrate data.", None, "copy_input"),
+            ("  // Compute scaling statistics before equilibration", None, "transposes"),
+            ("  // Regularize P.", None, "ruiz"),
+            ("  // Compute number of nonzeros in upper triangular NT", None, "regularize_P"),
+            ("  // Set up linear system data.", None, "cone_indices"),
+            ("  // Allocate primal and dual variables.", None, "linsys_return"),
+            ("  stop_timer(&setup_timer);", None, "workspace_vectors"),
+        ),
+        "algebra/cuda/cudss_backend.cu": (
+            ("  // Load CUDA libraries dynamically", None, "pre_vendor"),
+            ("  // Allocate vector buffers", None, "vendor_handles"),
+            ("  // Construct KKT matrix (no permutation", None, "vendor_buffers"),
+            ("  // Convert KKT matrix from CSC", None, "assemble_KKT"),
+            ("  // Build nt2kktcsr and ntdiag2kktcsr mappings", None, "convert_KKT"),
+            ("  // Run analysis phase.", None, "create_csr"),
+            ("  // Free CSR structure arrays", None, "symbolic_analysis"),
+            ("  return linsys_data;", None, "vendor_finish"),
+        ),
+    }
+    for relative, markers in sites.items():
+        path = destination / relative
+        text = path.read_text()
+        start = text.index("QOCOInt qoco_setup(" if relative.endswith(".c")
+                           else "static LinSysData* cudss_setup(")
+        end = text.index("\n}\n", start) + 3
+        body = text[start:end]
+        for anchor, code, stage in markers:
+            if anchor == "  // Free CSR structure arrays" and anchor not in body:
+                anchor = "  // CSR structure stays owned until vendor matrix destruction."
+            if body.count(anchor) != 1:
+                raise RuntimeError(f"unexpected setup profile site: {anchor}")
+            body = body.replace(anchor, (code or f'  qoco_gpu_setup_mark("{stage}");\n')
+                                + anchor)
+        declaration = 'extern "C" ' if relative.endswith(".cu") else ""
+        if relative.endswith(".cu"):
+            original = '''  CUDSS_CHECK(g_cuda_funcs.cudssExecute(
+      linsys_data->handle, CUDSS_PHASE_ANALYSIS, linsys_data->config,
+      linsys_data->data, linsys_data->K_csr, linsys_data->d_xyz_matrix,
+      linsys_data->d_rhs_matrix));'''
+            if body.count(original) != 1:
+                raise RuntimeError("unexpected analysis phase for split profiling")
+            body = body.replace(original, "  if (qoco_gpu_setup_profiling()) {\n"
+                                + original.replace("CUDSS_PHASE_ANALYSIS", "CUDSS_PHASE_REORDERING")
+                                + '\n    qoco_gpu_setup_mark("vendor_reordering");\n'
+                                + original.replace("CUDSS_PHASE_ANALYSIS",
+                                                   "CUDSS_PHASE_SYMBOLIC_FACTORIZATION")
+                                + "\n  } else {\n" + original + "\n  }\n")
+            declaration = 'extern "C" int qoco_gpu_setup_profiling();\n' + declaration
+        text = (text[:start] + declaration + "void qoco_gpu_setup_mark(const char*);\n\n"
+                + body + text[end:])
+        path.write_text(text)
+
+
+def patch_gpu_ordering(destination: Path) -> None:
+    """Supply an experimental GPU ordering instead of generic vendor reordering."""
+    path = destination / "algebra/cuda/cudss_backend.cu"
+    text = path.read_text()
+    before = "static LinSysData* cudss_setup("
+    text = text.replace(before, 'extern "C" void qoco_gpu_degree_ordering(int, '
+                        'const int*, const int*, int*);\n\n' + before)
+    before = "  // Run analysis phase."
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected vendor analysis site")
+    text = text.replace(before, '''  int* device_permutation = nullptr;
+  CUDA_CHECK(cudaMalloc(&device_permutation, linsys_data->Kn * sizeof(int)));
+  qoco_gpu_degree_ordering(linsys_data->Kn, csr_row_ptr, csr_col_ind, device_permutation);
+  auto set_permutation = reinterpret_cast<decltype(&::cudssDataSet)>(
+      dlsym(g_cudss_handle, "cudssDataSet"));
+  if (!set_permutation) { fprintf(stderr, "cuDSS user permutation API unavailable\\n"); exit(1); }
+  CUDSS_CHECK(set_permutation(linsys_data->handle, linsys_data->data,
+      CUDSS_DATA_USER_PERM, device_permutation, linsys_data->Kn * sizeof(int)));
+
+''' + before)
+    before = "  // Free CSR structure arrays"
+    text = text.replace(before, "  CUDA_CHECK(cudaFree(device_permutation));\n\n" + before)
+    path.write_text(text)
+
+
+def patch_setup_lifetimes(destination: Path) -> None:
+    """Own vendor matrix inputs for their full lifetime and release host scratch."""
+    path = destination / "algebra/cuda/cudss_backend.cu"
+    text = path.read_text()
+    before = "  QOCOFloat* d_csr_val;"
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected CSR ownership field")
+    text = text.replace(before, before + "\n  QOCOInt* d_csr_rows;\n  QOCOInt* d_csr_columns;")
+    before = "  linsys_data->d_csr_val = csr_val;"
+    text = text.replace(before, before + "\n  linsys_data->d_csr_rows = csr_row_ptr;\n"
+                        "  linsys_data->d_csr_columns = csr_col_ind;")
+    before = ("  // Free CSR structure arrays - cuDSS uses them during analysis\n"
+              "  cudaFree(csr_row_ptr);\n  cudaFree(csr_col_ind);")
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected CSR structure lifetime")
+    text = text.replace(before, "  // CSR structure stays owned until vendor matrix destruction.\n"
+                        "  free_qoco_csc_matrix(Kcsc);")
+    start = text.index("  // Create dense matrix wrappers for solution and RHS vectors")
+    end = text.index("\n  return linsys_data;", start)
+    wrappers = text[start:end]
+    text = text[:start] + text[end:]
+    before = "  // Run analysis phase."
+    if text.count(before) != 1:
+        raise RuntimeError("unexpected analysis wrapper placement")
+    text = text.replace(before, wrappers + "\n" + before)
+    before = "  cudaFree(linsys_data->d_csr_val);"
+    text = text.replace(before, before + "\n  cudaFree(linsys_data->d_csr_rows);\n"
+                        "  cudaFree(linsys_data->d_csr_columns);")
+    path.write_text(text)
+
+
 def patch_device_step_control(
     destination: Path, extension: Path, combined: bool = False
 ) -> None:
@@ -266,6 +380,12 @@ def main() -> None:
                         help="fuse combined cone correction using device centering scalars")
     parser.add_argument("--queued-centering-metadata", action="store_true",
                         help="pin the workspace and queue the sigma metadata download")
+    parser.add_argument("--profile-setup", action="store_true",
+                        help="expose optional completion-fenced setup stage diagnostics")
+    parser.add_argument("--gpu-degree-ordering", action="store_true",
+                        help="experimental GPU static-degree KKT ordering (not AMD)")
+    parser.add_argument("--setup-lifetimes", action="store_true",
+                        help="fix KKT scratch ownership and vendor matrix lifetimes")
     args = parser.parse_args()
     if args.unmodified and (
         args.gather
@@ -282,6 +402,9 @@ def main() -> None:
         or args.device_step_control
         or args.device_combined_rhs
         or args.queued_centering_metadata
+        or args.profile_setup
+        or args.gpu_degree_ordering
+        or args.setup_lifetimes
     ):
         parser.error("--unmodified cannot be combined with backend changes")
     if (args.queued_operators or args.device_cone_reductions) and args.original_handles:
@@ -306,6 +429,10 @@ def main() -> None:
         parser.error("--device-combined-rhs requires --device-step-control")
     if args.queued_centering_metadata and not args.device_combined_rhs:
         parser.error("--queued-centering-metadata requires --device-combined-rhs")
+    if args.gpu_degree_ordering and not args.checked_cudss_abi:
+        parser.error("--gpu-degree-ordering requires --checked-cudss-abi")
+    if args.profile_setup and not args.checked_cudss_abi:
+        parser.error("--profile-setup requires --checked-cudss-abi")
     source = args.source.resolve()
     destination = args.destination.resolve()
     if destination.is_relative_to(source) or source.is_relative_to(destination):
@@ -572,6 +699,14 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
                               "void qoco_gpu_free_workspace(void*);\n\n" + before)
             api_path.write_text(api)
         modified += '\n#include "qoco_device_combined_rhs.cuh"\n'
+    if args.profile_setup:
+        shutil.copyfile(extension.with_name("qoco_setup_profile.cuh"),
+                        destination / "algebra/cuda/qoco_setup_profile.cuh")
+        modified += '\n#include "qoco_setup_profile.cuh"\n'
+    if args.gpu_degree_ordering:
+        shutil.copyfile(extension.with_name("qoco_gpu_ordering.cuh"),
+                        destination / "algebra/cuda/qoco_gpu_ordering.cuh")
+        modified += '\n#include "qoco_gpu_ordering.cuh"\n'
     path.write_text(modified)
     if args.correct_stopping:
         utils_path = destination / "src/qoco_utils.c"
@@ -600,6 +735,12 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_cudss_abi(destination)
     if args.batched_stopping:
         patch_batched_stopping(destination, args.batched_iteration_scalars)
+    if args.gpu_degree_ordering:
+        patch_gpu_ordering(destination)
+    if args.setup_lifetimes:
+        patch_setup_lifetimes(destination)
+    if args.profile_setup:
+        patch_setup_profile(destination)
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -619,6 +760,9 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "device_step_control": args.device_step_control,
         "device_combined_rhs": args.device_combined_rhs,
         "queued_centering_metadata": args.queued_centering_metadata,
+        "profile_setup": args.profile_setup,
+        "gpu_degree_ordering": args.gpu_degree_ordering,
+        "setup_lifetimes": args.setup_lifetimes,
         "correct_stopping": args.correct_stopping,
         "deterministic": args.deterministic,
         "checked_cudss_abi": args.checked_cudss_abi,
@@ -641,7 +785,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["include/qoco_linalg.h"] if args.values_only_updates else []),
             *(["src/qoco_api.c"]
               if args.values_only_updates or args.device_numeric_updates
-              or args.batched_iteration_scalars or args.queued_centering_metadata else []),
+              or args.batched_iteration_scalars or args.queued_centering_metadata
+              or args.profile_setup else []),
             *(["algebra/cuda/qoco_device_update.cuh"] if args.device_numeric_updates else []),
             *(["algebra/cuda/qoco_device_scalar.cuh"] if args.device_scalar_reductions else []),
             *(["algebra/cuda/qoco_batched_stopping.cuh"] if args.batched_stopping else []),
@@ -649,6 +794,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
                "algebra/cuda/qoco_device_step_control.cuh"] if args.device_step_control else []),
             *(["src/qoco_device_combined_cones.cuh", "algebra/cuda/qoco_device_combined_rhs.cuh"]
               if args.device_combined_rhs else []),
+            *(["algebra/cuda/qoco_setup_profile.cuh"] if args.profile_setup else []),
+            *(["algebra/cuda/qoco_gpu_ordering.cuh"] if args.gpu_degree_ordering else []),
         )
     }
     (destination / "spacepdhcg-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
