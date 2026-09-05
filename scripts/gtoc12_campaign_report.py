@@ -40,6 +40,31 @@ ROLES = ("earth_out", "deploy_hop", "collect_hop", "earth_return")
 THRESHOLDS = (550.0, 587.8, 599.5, 600.0, 610.6, 650.0, 700.0)
 
 
+def plane_geometry(catalogue, source: int, target: int) -> tuple[float, float, float]:
+    """``(relative inclination deg, |ΔΩ| deg, |Δa| AU)`` of an asteroid pair's orbits."""
+
+    i1 = int(np.searchsorted(catalogue.ids, source))
+    i2 = int(np.searchsorted(catalogue.ids, target))
+    inc = catalogue.inclination_rad
+    node = catalogue.ascending_node_rad
+
+    def normal(k: int) -> np.ndarray:
+        return np.array(
+            [
+                math.sin(inc[k]) * math.sin(node[k]),
+                -math.sin(inc[k]) * math.cos(node[k]),
+                math.cos(inc[k]),
+            ]
+        )
+
+    cosine = float(np.clip(np.dot(normal(i1), normal(i2)), -1.0, 1.0))
+    delta_node = abs((node[i2] - node[i1] + math.pi) % (2.0 * math.pi) - math.pi)
+    delta_a = (
+        abs(catalogue.semi_major_axis_km[i2] - catalogue.semi_major_axis_km[i1]) / 1.495978707e8
+    )
+    return math.degrees(math.acos(cosine)), math.degrees(delta_node), float(delta_a)
+
+
 def _quantiles(values: list[float]) -> dict[str, float | int]:
     if not values:
         return {"n": 0}
@@ -70,6 +95,7 @@ def ship_record(catalogue, path: Path) -> dict[str, Any] | None:
     by_role: dict[str, float] = dict.fromkeys(ROLES, 0.0)
     collect_tof: list[float] = []
     collect_phase: list[float] = []
+    collect_plane: list[tuple[float, float, float]] = []
     collect_kg: list[float] = []
     deploy_tof: list[float] = []
     deploy_kg: list[float] = []
@@ -91,6 +117,9 @@ def ship_record(catalogue, path: Path) -> dict[str, Any] | None:
             collect_kg.append(propellant)
             collect_phase.append(
                 phase_deg_at(catalogue, int(planned["from"]), int(planned["to"]), t0)
+            )
+            collect_plane.append(
+                plane_geometry(catalogue, int(planned["from"]), int(planned["to"]))
             )
         elif role == "deploy_hop":
             deploy_tof.append(tf - t0)
@@ -120,6 +149,9 @@ def ship_record(catalogue, path: Path) -> dict[str, Any] | None:
         "collect_hop_tof_days": collect_tof,
         "collect_hop_kg": collect_kg,
         "collect_phase_deg": collect_phase,
+        "collect_relative_inclination_deg": [p[0] for p in collect_plane],
+        "collect_delta_node_deg": [p[1] for p in collect_plane],
+        "collect_delta_a_au": [p[2] for p in collect_plane],
         "deploy_hop_tof_days": deploy_tof,
         "deploy_hop_kg": deploy_kg,
     }
@@ -178,6 +210,13 @@ def run_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "deploy_hop_tof_days": _quantiles([t for r in ships for t in r["deploy_hop_tof_days"]]),
         "collect_phase_deg": _quantiles(phase),
         "collect_phase_share_le_p75_ref": None,  # filled by the caller with the reference p75
+        "collect_relative_inclination_deg": _quantiles(
+            [v for r in ships for v in r["collect_relative_inclination_deg"]]
+        ),
+        "collect_delta_node_deg": _quantiles(
+            [v for r in ships for v in r["collect_delta_node_deg"]]
+        ),
+        "collect_delta_a_au": _quantiles([v for r in ships for v in r["collect_delta_a_au"]]),
         "phase_values": phase,
     }
 
@@ -352,6 +391,10 @@ def main() -> int:
         references["collect_hop_tof_days"] = phase["distributions"]["tof_days"]
         references["collect_hop_kg"] = phase["distributions"]["propellant_kg"]
         references["targets"] = phase["targets"]
+        planes = [plane_geometry(catalogue, h["from"], h["to"]) for h in phase.get("hops", [])]
+        references["collect_relative_inclination_deg"] = _quantiles([p[0] for p in planes])
+        references["collect_delta_node_deg"] = _quantiles([p[1] for p in planes])
+        references["collect_delta_a_au"] = _quantiles([p[2] for p in planes])
     p75_ref = (references.get("targets") or {}).get("phase_deg_p75")
 
     report: dict[str, Any] = {

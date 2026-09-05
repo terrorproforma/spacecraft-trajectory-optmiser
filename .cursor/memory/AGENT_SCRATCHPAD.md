@@ -121,3 +121,39 @@ Use this file as persistent, repo-local execution memory. Detailed history: see
 - See "Regression-Prevention Guardrails" (timeout headroom, disjoint families vs duals, exact
   closure). Do not spend another campaign on per-pair or per-chain *propellant* scoring: the
   remaining gap is phase (|Δλ| at harvest 2.7 deg in the references) and Earth-leg arrival time.
+
+### 2026-09-05 (tenth iteration: Earth-out leg stage, harvest-phase prior, archive-wide joint, H100 paired arms) - in progress
+
+#### Captured during the work
+
+- [self] `setsid nohup ... &` at the end of a script run through `wsl -- bash run.sh` died with the
+  wsl session (empty log, empty output dir, no process) - the first `joint_itinerary_v4` launch
+  never ran. The recorded rule (`disown` + a `sleep` after the launch line) applies to *every*
+  detached launch, not only to `wsl -- bash -c`.
+- [self] `scp file host:~/dir/` with a missing remote directory fails with "Is a directory"
+  under OpenSSH's SFTP mode; the standing rule "mkdir -p the remote target before rput" was
+  skipped once more. Now `rput.sh` targets an explicit remote file name after `mkdir -p`.
+- [self] A rigid 60-day shift of a whole deploy chain breaks a hop's authority ratio (hop 6 of
+  the family-7 ship: Lambert 2.69 km/s at the shifted epochs, ratio 0.94 > 0.55): hops are
+  phase-sensitive, so Earth-leg seeds must shift a *prefix* of the chain and let one hop absorb
+  the shift (`earth_leg_seed(prefix=)`); the stage evaluates every prefix per candidate leg.
+- [self] The joint evaluator's "proportional ore scaling" cannot close a propellant deficit:
+  the closure rule `final >= dry + ore` cancels the ore, so scaling recovers only the ore's
+  own propellant (~3 %). An unmeasured shorter Earth leg at the pair-calibrated 1.03x Lambert
+  never closes on a propellant-bound ship; the seeds are ranked at the certified leg's
+  *measured* inflation (0.83-0.89) instead (`_screen_earth_out`) and SCvx decides.
+- Finding (measured, not assumed): our archived chains are already phase-aligned at harvest -
+  `cluster_fleet_v9` |Δλ| at collect departure median 2.5 deg / p75 4.0 deg, `fleet_master_v8`
+  2.4 / 4.1, references 2.7 / 4.8 - so the brief's "nothing scores phase" diagnosis is not
+  what separates the 210-day hops from the references' 181-day ones. The harvest-phase prio
+  is calibrated and wired but bites on ~15 % of hops; measure it, do not expect it to move the
+  fleet. The 210 vs 181 d and 85 vs 66 kg gap needs a different explanation (Δa / Δi of the
+  pairs, deploy-hop TOF 255 vs 183 d).
+- Finding: a certified Earth leg is rarely the cheapest of its launch window - the 555-day leg
+  of the 622.6 kg ship measured 405 kg against 430 kg at the certified 585 d. Earth legs are
+  worth sweeping with SCvx around the certified point even when no chain shift is wanted.
+- Finding: the Earth-leg exchange rate is tiny on a propellant-bound ship - 30 d earlier is
+  +0.7 kg of ore for 8 miners while the leg's propellant delta must come out of margin; the
+  stage yields ~+1 kg/ship where margin exists and nothing elsewhere.
+- [tool] `pgrep -c -f fleet-master` inside a remote `bash -c` returns 1 when nothing runs
+  (matches itself): read the ps listing, not the count, before deciding a host is idle.
