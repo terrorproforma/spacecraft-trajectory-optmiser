@@ -138,6 +138,29 @@ def test_h6_rejected_mixed_and_unresolved() -> None:
     assert result["censored_coordinates"] == 1
 
 
+def test_h6_missing_residuals_are_null_and_never_support() -> None:
+    # A failed, censored, or fully contaminated coordinate has no residuals. The evidence must
+    # stay JSON-serialisable under allow_nan=False (the decision file is written that way) and
+    # an unknown quality factor must not clear the support gate.
+    rows = [
+        _h6_row(
+            "P1-E-low-thrust",
+            scale,
+            0.15,
+            hybrid_residual=None,
+            ipm_residual=None,
+            unpolished_residual=None,
+        )
+        for scale in (100, 500, 2000)
+    ]
+    result = decide_h6(rows, _policy())
+    assert result["decision"] != "supported"
+    for item in result["coordinates"]:
+        assert item["ipm_quality_factor"] is None
+        assert item["residual_decades"] is None
+    json.dumps(result, allow_nan=False)
+
+
 def test_exact_nonwinner_dispositions_are_never_decision_eligible() -> None:
     for disposition in (
         "hybrid_handoff_ineligible",

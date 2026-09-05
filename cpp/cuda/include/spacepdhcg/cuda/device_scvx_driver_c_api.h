@@ -159,6 +159,17 @@ typedef struct spacepdhcg_cuda_scvx_options {
     double resolve_minimum_tolerance;
     double final_polish_tolerance;
     uint64_t final_polish_iteration_limit;
+    /* Ruiz equilibration iterations requested from the native QOCO IPM
+     * (pure-QOCO policy and the hybrid hand-off stage). 0 keeps QOCO's
+     * pinned-commit default (no equilibration); the PDHCG scaling_mode axis
+     * never reaches the IPM. */
+    int32_t qoco_ruiz_iterations;
+    /* Upper bound on every inner PDHCG iteration limit the driver derives at run time,
+     * including the identical-CQP re-solve escalation floor (amendment single-gpu-v1.2
+     * rule 2: every inner limit becomes min(limit, cap)). 0 leaves the derived limits
+     * uncapped. The phase limits above are capped by the caller; this field covers the
+     * limits the driver computes itself. */
+    uint64_t inner_iteration_cap;
 } spacepdhcg_cuda_scvx_options;
 
 typedef struct spacepdhcg_cuda_scvx_iteration {
@@ -275,6 +286,10 @@ typedef struct spacepdhcg_cuda_scvx_result {
     int32_t qoco_dual_discarded;
     spacepdhcg_cuda_qoco_failure qoco_failure;
     int32_t hybrid_handoff_eligible;
+    /* Ruiz iterations the QOCO workspace was configured with (0 = none). */
+    int32_t qoco_ruiz_iterations;
+    /* Raw QOCO status of the last IPM solve (-1 when QOCO never solved). */
+    int32_t qoco_status_code;
 } spacepdhcg_cuda_scvx_result;
 
 typedef struct spacepdhcg_cuda_scvx_path_inventory {

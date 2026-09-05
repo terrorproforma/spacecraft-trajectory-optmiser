@@ -40,6 +40,7 @@ FAILURE_CLASSES: Final = (
     "timeout",
     "numerical",
     "infeasible",
+    "executor_defect",
     "max_iterations",
     "unrun",
     "evidence",
@@ -52,10 +53,16 @@ DISPOSITIONS: Final = (
     "unsupported",
     "oom",
     "timeout",
+    "timeout_deterministic_replay",
     "numerical",
     "infeasible",
+    "executor_defect",
     "unrun",
 )
+# A launched attempt whose reset boundary, adapter ABI or driver call failed before any solver
+# outcome. It is invalid evidence: never a solver disposition, never a statistic, and a group
+# containing one is quarantined rather than completed.
+EXECUTOR_DEFECT_DISPOSITION: Final = "executor_defect"
 
 PATH_INVENTORY: Final = {
     "P1-C-pd3": ("thrust", "mass", "altitude", "glide_slope"),
@@ -557,7 +564,7 @@ def _coordinate_evidence(
             "reason": f"terminal disposition {disposition} is not winner-eligible",
             "family": row.get("family"),
             "scale": row.get("scale"),
-            "censored": disposition in {"timeout", "oom"},
+            "censored": disposition in {"timeout", "oom", "timeout_deterministic_replay"},
             "terminal_disposition": disposition,
         }
     baseline = row.get(baseline_key, ())
@@ -714,14 +721,17 @@ def decide_h6(rows: Sequence[Mapping[str, Any]], policy: Mapping[str, Any]) -> d
         hybrid = row.get("hybrid_residual")
         ipm = row.get("ipm_residual")
         unpolished = row.get("unpolished_residual")
+        # Missing residuals (failed, censored, or fully contaminated coordinate) are recorded
+        # as null rather than +/-inf: the decision file is written with allow_nan=False, and
+        # an unknown quality factor can never satisfy the support gate below.
         if hybrid is not None and ipm is not None and float(ipm) > 0.0:
             item["ipm_quality_factor"] = float(hybrid) / float(ipm)
         else:
-            item["ipm_quality_factor"] = math.inf
+            item["ipm_quality_factor"] = None
         if hybrid is not None and unpolished is not None and float(hybrid) > 0.0:
             item["residual_decades"] = math.log10(float(unpolished) / float(hybrid))
         else:
-            item["residual_decades"] = -math.inf
+            item["residual_decades"] = None
         item["matched_quality"] = bool(row.get("matched_quality", False))
         item["conversion_and_polish_included"] = bool(
             row.get("conversion_and_polish_included", False)
@@ -734,17 +744,20 @@ def decide_h6(rows: Sequence[Mapping[str, Any]], policy: Mapping[str, Any]) -> d
     eligible = [item for item in evidence if item["eligible"] and not item["censored"]]
 
     def supported(item: Mapping[str, Any]) -> bool:
+        factor = item["ipm_quality_factor"]
+        decades = item["residual_decades"]
+        enough_decades = (
+            decades is not None and decades >= threshold["minimum_unpolished_residual_decades"]
+        )
         return bool(
             item["matched_quality"]
             and item["conversion_and_polish_included"]
             and item["transfer_reliable"]
-            and item["ipm_quality_factor"] <= threshold["maximum_hybrid_to_ipm_residual_factor"]
+            and factor is not None
+            and factor <= threshold["maximum_hybrid_to_ipm_residual_factor"]
             and item["median"] >= threshold["supported_minimum_time_reduction"]
             and item["low"] > 0.0
-            and (
-                item["residual_decades"] >= threshold["minimum_unpolished_residual_decades"]
-                or item["unpolished_failed_tier"]
-            )
+            and (enough_decades or item["unpolished_failed_tier"])
         )
 
     def rejected(item: Mapping[str, Any]) -> bool:

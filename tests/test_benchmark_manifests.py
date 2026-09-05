@@ -29,6 +29,32 @@ def test_paper1_manifest_is_complete_and_gpu_explicit() -> None:
     assert manifest["decision_rules"] == "papers/paper1/CLAIMS_AND_DECISION_RULES.md"
     assert manifest["figure_schema"] == "papers/paper1/FIGURE_SCHEMA.md"
     assert manifest["notation"] == "papers/paper1/NOTATION.md"
+    assert manifest["comparative_campaign"] == "docs/COMPARATIVE_SOLVER_CAMPAIGN.md"
+    assert manifest["literature_baselines"] == "benchmarks/literature_baselines.json"
+    assert (ROOT / manifest["comparative_campaign"]).is_file()
+    assert (ROOT / manifest["literature_baselines"]).is_file()
+
+    layers = manifest["comparison_layers"]
+    assert isinstance(layers, list)
+    assert {layer["id"] for layer in layers} == {
+        "same-cqp",
+        "end-to-end-system",
+        "capability-scaling",
+    }
+    assert all(layer["requires_common_hardware_for_speed"] is True for layer in layers)
+    assert all(layer["published_timing_use"] == "context_only" for layer in layers)
+
+    systems = manifest["system_baselines"]
+    assert isinstance(systems, list)
+    assert {system["id"] for system in systems} == {
+        "openscvx",
+        "scptoolbox",
+        "scvxgen",
+        "casadi-ipopt",
+        "pykep-ipopt",
+    }
+    assert all(system["revision"] is None for system in systems)
+    assert all(system["required_before_run"] for system in systems)
 
     backends = manifest["solver_backends"]
     assert isinstance(backends, list)
@@ -75,19 +101,52 @@ def test_paper1_manifest_is_complete_and_gpu_explicit() -> None:
         assert len(fields) == len(set(fields))
 
 
+def test_literature_baselines_separate_quality_references_from_timing() -> None:
+    manifest = _load("literature_baselines.json")
+    assert manifest["schema_version"] == "1.0.0"
+    assert manifest["policy_document"] == "docs/COMPARATIVE_SOLVER_CAMPAIGN.md"
+    assert manifest["timing_policy"]["published_wall_clock_use"] == "context_only"
+    assert manifest["timing_policy"]["common_hardware_rerun_required_for_speedup"] is True
+
+    profiles = manifest["profiles"]
+    assert isinstance(profiles, list) and profiles
+    identifiers = [profile["id"] for profile in profiles]
+    assert len(identifiers) == len(set(identifiers))
+
+    gtopx = next(profile for profile in profiles if profile["id"] == "gtopx-2021")
+    assert gtopx["target_family"] is None
+    assert gtopx["target_programme"] == "secondary global mission-design track"
+    assert gtopx["timing_use"] == "common_budget_rerun_required"
+    assert len(gtopx["reference_data"]["instances"]) == 10
+
+    gtoc = next(profile for profile in profiles if profile["id"] == "gtoc-historical-challenges")
+    assert gtoc["target_family"] == "P2-F"
+    assert gtoc["timing_use"] == "common_hardware_rerun_required"
+    assert {edition["edition"] for edition in gtoc["reference_data"]["initial_editions"]} == {
+        5,
+        9,
+        12,
+    }
+
+
 def test_paper2_manifest_covers_exact_and_robust_routes() -> None:
     manifest = _load("paper2_matrix.json")
     _validate_repository_and_families(manifest)
     assert manifest["schema_version"] == 1
+    assert manifest["comparative_campaign"] == "docs/COMPARATIVE_SOLVER_CAMPAIGN.md"
+    assert manifest["literature_baselines"] == "benchmarks/literature_baselines.json"
+    assert manifest["gtoc_archive"] == "https://sophia.estec.esa.int/gtoc_portal/?page_id=94"
     metrics = manifest["required_metrics"]
     assert isinstance(metrics, list) and metrics
     assert len(metrics) == len(set(metrics))
     assert "exact_elementary_labels" in manifest["route_methods"]
     assert "robust_scvx" in manifest["arc_fidelities"]
+    assert "official_validator_passed" in metrics
     assert {family["id"] for family in manifest["families"]} == {
         "P2-A",
         "P2-B",
         "P2-C",
         "P2-D",
         "P2-E",
+        "P2-F",
     }

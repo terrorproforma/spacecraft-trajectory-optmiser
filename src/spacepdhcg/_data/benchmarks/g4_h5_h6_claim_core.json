@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0.0",
+  "campaign_id": "g4-h5-h6-claim-core-v1",
+  "campaign_kind": "h5_h6_claim_resolution_core",
+  "preregistered_before_results": true,
+  "claims_resolved": [
+    "H5",
+    "H6"
+  ],
+  "full_regime_matrix_substitute": false,
+  "paper1_regime_products_permitted": [],
+  "scope_statement": "This core may resolve H5 and H6 early. It cannot populate or freeze the full regime map, full-matrix figures, or full-matrix tables.",
+  "source_policy": "benchmarks/g4_policy.json",
+  "source_applicability": "benchmarks/g4_applicability.json",
+  "solver_order_seed": 20260901,
+  "evaluation_seeds": [
+    59,
+    71,
+    89,
+    101,
+    127,
+    149,
+    173,
+    197,
+    223,
+    251,
+    281,
+    313,
+    349,
+    389,
+    431,
+    479,
+    521,
+    569,
+    617,
+    659
+  ],
+  "repetitions": {
+    "instances": 20,
+    "warmups": 2,
+    "measurements": 7
+  },
+  "session_contract": {
+    "processes_per_group": 1,
+    "workspace_reused_within_group": true,
+    "attempt_order": "two warmups followed by seven measurements",
+    "warmups_recorded_separately": true,
+    "warmups_in_statistics": false,
+    "policy_reset_between_attempts": "restore the policy-declared reset boundary without destroying the persistent process or workspace"
+  },
+  "fixed_axes": {
+    "quality_tier": "tight",
+    "quality_tolerance": 1e-06,
+    "conditioning": 4.0,
+    "scaling_mode": "refresh_if_needed",
+    "warm_mode": "primal"
+  },
+  "families": [
+    {
+      "family": "P1-E-low-thrust",
+      "classes": {
+        "trust_class": 1.0,
+        "transfer_class": "combined"
+      },
+      "scales": [
+        100,
+        500,
+        2000
+      ],
+      "policies": [
+        "fixed-tight",
+        "adaptive",
+        "pure-gpu-ipm",
+        "hybrid-pdhcg-ipm"
+      ],
+      "claim_roles": {
+        "H5": [
+          "fixed-tight",
+          "adaptive"
+        ],
+        "H6": [
+          "pure-gpu-ipm",
+          "hybrid-pdhcg-ipm"
+        ]
+      }
+    },
+    {
+      "family": "P1-C-pd3",
+      "classes": {
+        "dispersion_class": 0.05
+      },
+      "scales": [
+        20,
+        50,
+        100
+      ],
+      "policies": [
+        "fixed-tight",
+        "adaptive"
+      ],
+      "claim_roles": {
+        "H5": [
+          "fixed-tight",
+          "adaptive"
+        ],
+        "H6": []
+      }
+    }
+  ],
+  "expected_counts": {
+    "families": 2,
+    "scales_per_family": 3,
+    "policy_scale_pairs": 18,
+    "physical_instances_per_policy_scale": 20,
+    "execution_groups": 360,
+    "warmup_invocations": 720,
+    "measured_invocations": 2520,
+    "total_invocations": 3240
+  }
+}

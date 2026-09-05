@@ -60,6 +60,23 @@
       "uniqueItems": true,
       "items": {"type": "integer", "minimum": 0}
     },
-    "requires_physical_g5": {"type": "boolean"}
+    "requires_physical_g5": {"type": "boolean"},
+    "amendments": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["amendment_id", "applies_to", "path", "lock", "document"],
+        "properties": {
+          "amendment_id": {"type": "string", "pattern": "^single-gpu-v1\\.[0-9]+$"},
+          "applies_to": {"type": "string", "minLength": 1},
+          "supersedes": {"type": "string", "pattern": "^single-gpu-v1\\.[0-9]+$"},
+          "path": {"type": "string", "pattern": "^benchmarks/.+\\.json$"},
+          "lock": {"type": "string", "pattern": "^benchmarks/.+\\.sha256$"},
+          "document": {"type": "string", "pattern": "^docs/.+\\.md$"}
+        }
+      }
+    }
   }
 }

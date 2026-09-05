@@ -17,10 +17,18 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from .constants import AU_KM
-from .data import REPOSITORY_ROOT, AsteroidCatalogue
+from spacepdhcg import resources
 
-DEFAULT_RULE_PATH = REPOSITORY_ROOT / "benchmarks" / "gtoc12" / "reduced_instance_v1.json"
+from .constants import AU_KM
+from .data import AsteroidCatalogue
+
+DEFAULT_RULE_ASSET = "benchmarks/gtoc12/reduced_instance_v1.json"
+
+
+def default_rule_path() -> Path:
+    """Location of the preregistered rule (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(DEFAULT_RULE_ASSET)
 
 
 def canonical_sha256(payload: Any) -> str:
@@ -57,7 +65,7 @@ class ReducedInstance:
 
 
 def load_rule(path: Path | None = None) -> tuple[dict[str, Any], str]:
-    rule_path = path or DEFAULT_RULE_PATH
+    rule_path = path or default_rule_path()
     payload = json.loads(rule_path.read_text(encoding="utf-8"))
     return payload, canonical_sha256(payload)
 

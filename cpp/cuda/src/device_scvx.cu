@@ -456,20 +456,17 @@ __global__ void variational_kernel(
     }
 }
 
-__global__ void hcw_exact_kernel(
-    const double* states,
-    const double* controls,
-    double* propagated,
-    double* transition,
-    double* sensitivity,
-    double* offset,
-    const size_t intervals,
-    const spacepdhcg_cuda_dynamics_config config
+/// Exact zero-order-hold HCW discretisation over `config.step_seconds`: the same closed-form
+/// state-transition and control matrices as the host `dynamics::discretise_hcw`.  Shared by the
+/// coefficient kernel and the trajectory replay so the device never mixes two HCW integrators
+/// (an RK4 replay of the continuous model drifted ~1e-6 from these exact rows per horizon,
+/// which the planner's 1e-9 host/device replay-parity certificate rejected and which made the
+/// SCvx merit ratio of an exactly-linear problem negative).
+__device__ void hcw_exact_matrices(
+    const spacepdhcg_cuda_dynamics_config& config,
+    double* state_matrix,
+    double* control_matrix
 ) {
-    const size_t interval = blockIdx.x;
-    if (threadIdx.x != 0 || interval >= intervals) {
-        return;
-    }
     const double n = config.mean_motion;
     const double t = config.step_seconds;
     const double angle = n * t;
@@ -477,8 +474,12 @@ __global__ void hcw_exact_kernel(
     const double s = sin(angle);
     const double inverse_n = 1.0 / n;
     const double inverse_n_squared = inverse_n * inverse_n;
-    double state_matrix[36]{};
-    double control_matrix[18]{};
+    for (int index = 0; index < 36; ++index) {
+        state_matrix[index] = 0.0;
+    }
+    for (int index = 0; index < 18; ++index) {
+        control_matrix[index] = 0.0;
+    }
     state_matrix[0 * 6 + 0] = 4.0 - 3.0 * c;
     state_matrix[0 * 6 + 3] = s * inverse_n;
     state_matrix[0 * 6 + 4] = 2.0 * (1.0 - c) * inverse_n;
@@ -507,6 +508,47 @@ __global__ void hcw_exact_kernel(
     control_matrix[4 * 3 + 0] = -2.0 * (1.0 - c) * inverse_n;
     control_matrix[4 * 3 + 1] = 4.0 * s * inverse_n - 3.0 * t;
     control_matrix[5 * 3 + 2] = s * inverse_n;
+}
+
+/// One exact HCW step x_{k+1} = Phi x_k + Gamma u_k (the replay counterpart of `hcw_exact_kernel`).
+__device__ void hcw_exact_step(
+    const double* state,
+    const double* control,
+    const spacepdhcg_cuda_dynamics_config& config,
+    double* output
+) {
+    double state_matrix[36];
+    double control_matrix[18];
+    hcw_exact_matrices(config, state_matrix, control_matrix);
+    for (int row = 0; row < 6; ++row) {
+        double value = 0.0;
+        for (int column = 0; column < 6; ++column) {
+            value += state_matrix[row * 6 + column] * state[column];
+        }
+        for (int column = 0; column < 3; ++column) {
+            value += control_matrix[row * 3 + column] * control[column];
+        }
+        output[row] = value;
+    }
+}
+
+__global__ void hcw_exact_kernel(
+    const double* states,
+    const double* controls,
+    double* propagated,
+    double* transition,
+    double* sensitivity,
+    double* offset,
+    const size_t intervals,
+    const spacepdhcg_cuda_dynamics_config config
+) {
+    const size_t interval = blockIdx.x;
+    if (threadIdx.x != 0 || interval >= intervals) {
+        return;
+    }
+    double state_matrix[36];
+    double control_matrix[18];
+    hcw_exact_matrices(config, state_matrix, control_matrix);
     const double* state = states + interval * 6U;
     const double* control = controls + interval * 3U;
     double* output = propagated + interval * 6U;
@@ -607,7 +649,377 @@ spacepdhcg_cuda_status launch_variational(
         : SPACEPDHCG_CUDA_RUNTIME_ERROR;
 }
 
+// ---------------------------------------------------------------------------------------------
+// Free-final-time (time-dilated) variational RK4: pd3_fft / pd6_fft coefficient kernels.
+// ---------------------------------------------------------------------------------------------
+
+template <int StateDimension, int ControlDimension>
+struct TimeDilatedAugmented {
+    double state[StateDimension];
+    double transition[StateDimension * StateDimension];
+    double sensitivity[StateDimension * ControlDimension];
+    double sigma[StateDimension];
+};
+
+/// x' = sigma f, Phi' = sigma f_x Phi, Gamma' = sigma (f_x Gamma + f_u), S' = f + sigma f_x S.
+template <int Model, int StateDimension, int ControlDimension>
+__device__ TimeDilatedAugmented<StateDimension, ControlDimension> time_dilated_derivative(
+    const TimeDilatedAugmented<StateDimension, ControlDimension>& input,
+    const double* control,
+    const double sigma,
+    const spacepdhcg_cuda_dynamics_config& config
+) {
+    TimeDilatedAugmented<StateDimension, ControlDimension> result{};
+    double f[StateDimension]{};
+    double state_jacobian[StateDimension * StateDimension]{};
+    double control_jacobian[StateDimension * ControlDimension]{};
+    evaluate<Model, StateDimension, ControlDimension>(
+        input.state, control, config, f, state_jacobian, control_jacobian
+    );
+    for (int row = 0; row < StateDimension; ++row) {
+        result.state[row] = sigma * f[row];
+        double sigma_value = f[row];
+        for (int inner = 0; inner < StateDimension; ++inner) {
+            sigma_value += sigma * state_jacobian[row * StateDimension + inner]
+                           * input.sigma[inner];
+        }
+        result.sigma[row] = sigma_value;
+        for (int column = 0; column < StateDimension; ++column) {
+            double value = 0.0;
+            for (int inner = 0; inner < StateDimension; ++inner) {
+                value += state_jacobian[row * StateDimension + inner]
+                         * input.transition[inner * StateDimension + column];
+            }
+            result.transition[row * StateDimension + column] = sigma * value;
+        }
+        for (int column = 0; column < ControlDimension; ++column) {
+            double value = control_jacobian[row * ControlDimension + column];
+            for (int inner = 0; inner < StateDimension; ++inner) {
+                value += state_jacobian[row * StateDimension + inner]
+                         * input.sensitivity[inner * ControlDimension + column];
+            }
+            result.sensitivity[row * ControlDimension + column] = sigma * value;
+        }
+    }
+    return result;
+}
+
+template <int StateDimension, int ControlDimension>
+__device__ TimeDilatedAugmented<StateDimension, ControlDimension> time_dilated_add_scaled(
+    const TimeDilatedAugmented<StateDimension, ControlDimension>& base,
+    const TimeDilatedAugmented<StateDimension, ControlDimension>& increment,
+    const double scale
+) {
+    TimeDilatedAugmented<StateDimension, ControlDimension> result = base;
+    for (int index = 0; index < StateDimension; ++index) {
+        result.state[index] += scale * increment.state[index];
+        result.sigma[index] += scale * increment.sigma[index];
+    }
+    for (int index = 0; index < StateDimension * StateDimension; ++index) {
+        result.transition[index] += scale * increment.transition[index];
+    }
+    for (int index = 0; index < StateDimension * ControlDimension; ++index) {
+        result.sensitivity[index] += scale * increment.sensitivity[index];
+    }
+    return result;
+}
+
+/// Quaternion normalisation of rows 6..9 with the exact Jacobian `(I - q q^T/|q|^2)/|q|`
+/// applied to the A, B and S blocks (tangent rule), mirroring the host `apply_projection`.
+template <int StateDimension, int ControlDimension>
+__device__ void time_dilated_project_quaternion(
+    TimeDilatedAugmented<StateDimension, ControlDimension>& value
+) {
+    static_assert(StateDimension == 14, "quaternion projection assumes the 6-DoF layout");
+    double raw[4]{};
+    double norm_squared = 0.0;
+    for (int component = 0; component < 4; ++component) {
+        raw[component] = value.state[6 + component];
+        norm_squared += raw[component] * raw[component];
+    }
+    const double norm = sqrt(norm_squared);
+    double projector[16]{};
+    for (int row = 0; row < 4; ++row) {
+        for (int inner = 0; inner < 4; ++inner) {
+            projector[row * 4 + inner] =
+                ((row == inner ? 1.0 : 0.0) - raw[row] * raw[inner] / norm_squared) / norm;
+        }
+    }
+    double projected_transition[4 * StateDimension]{};
+    double projected_sensitivity[4 * ControlDimension]{};
+    double projected_sigma[4]{};
+    for (int row = 0; row < 4; ++row) {
+        for (int inner = 0; inner < 4; ++inner) {
+            const double entry = projector[row * 4 + inner];
+            projected_sigma[row] += entry * value.sigma[6 + inner];
+            for (int column = 0; column < StateDimension; ++column) {
+                projected_transition[row * StateDimension + column] +=
+                    entry * value.transition[(6 + inner) * StateDimension + column];
+            }
+            for (int column = 0; column < ControlDimension; ++column) {
+                projected_sensitivity[row * ControlDimension + column] +=
+                    entry * value.sensitivity[(6 + inner) * ControlDimension + column];
+            }
+        }
+    }
+    for (int row = 0; row < 4; ++row) {
+        value.state[6 + row] = raw[row] / norm;
+        value.sigma[6 + row] = projected_sigma[row];
+        for (int column = 0; column < StateDimension; ++column) {
+            value.transition[(6 + row) * StateDimension + column] =
+                projected_transition[row * StateDimension + column];
+        }
+        for (int column = 0; column < ControlDimension; ++column) {
+            value.sensitivity[(6 + row) * ControlDimension + column] =
+                projected_sensitivity[row * ControlDimension + column];
+        }
+    }
+}
+
+template <int Model, int StateDimension, int ControlDimension>
+__global__ void time_dilated_variational_kernel(
+    const double* states,
+    const double* controls,
+    double* propagated,
+    double* transition,
+    double* sensitivity,
+    double* sigma_sensitivity,
+    double* offset,
+    const size_t intervals,
+    const size_t substeps,
+    const double sigma,
+    const double d_tau,
+    const spacepdhcg_cuda_dynamics_config config
+) {
+    const size_t interval = blockIdx.x;
+    if (threadIdx.x != 0 || interval >= intervals) {
+        return;
+    }
+    const double* state = states + interval * StateDimension;
+    const double* control = controls + interval * ControlDimension;
+    TimeDilatedAugmented<StateDimension, ControlDimension> current{};
+    for (int index = 0; index < StateDimension; ++index) {
+        current.state[index] = state[index];
+        current.transition[index * StateDimension + index] = 1.0;
+    }
+    const double h = d_tau / static_cast<double>(substeps);
+    for (size_t substep = 0; substep < substeps; ++substep) {
+        const auto k1 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            current, control, sigma, config
+        );
+        const auto k2 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            time_dilated_add_scaled(current, k1, 0.5 * h), control, sigma, config
+        );
+        const auto k3 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            time_dilated_add_scaled(current, k2, 0.5 * h), control, sigma, config
+        );
+        const auto k4 = time_dilated_derivative<Model, StateDimension, ControlDimension>(
+            time_dilated_add_scaled(current, k3, h), control, sigma, config
+        );
+        TimeDilatedAugmented<StateDimension, ControlDimension> integrated = current;
+        for (int index = 0; index < StateDimension; ++index) {
+            integrated.state[index] += h
+                * (k1.state[index] + 2.0 * k2.state[index] + 2.0 * k3.state[index]
+                   + k4.state[index])
+                / 6.0;
+            integrated.sigma[index] += h
+                * (k1.sigma[index] + 2.0 * k2.sigma[index] + 2.0 * k3.sigma[index]
+                   + k4.sigma[index])
+                / 6.0;
+        }
+        for (int index = 0; index < StateDimension * StateDimension; ++index) {
+            integrated.transition[index] += h
+                * (k1.transition[index] + 2.0 * k2.transition[index]
+                   + 2.0 * k3.transition[index] + k4.transition[index])
+                / 6.0;
+        }
+        for (int index = 0; index < StateDimension * ControlDimension; ++index) {
+            integrated.sensitivity[index] += h
+                * (k1.sensitivity[index] + 2.0 * k2.sensitivity[index]
+                   + 2.0 * k3.sensitivity[index] + k4.sensitivity[index])
+                / 6.0;
+        }
+        if constexpr (Model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF) {
+            time_dilated_project_quaternion(integrated);
+        }
+        current = integrated;
+    }
+    double* output_state = propagated + interval * StateDimension;
+    double* output_transition = transition + interval * StateDimension * StateDimension;
+    double* output_sensitivity =
+        sensitivity + interval * StateDimension * ControlDimension;
+    double* output_sigma = sigma_sensitivity + interval * StateDimension;
+    double* output_offset = offset + interval * StateDimension;
+    for (int row = 0; row < StateDimension; ++row) {
+        output_state[row] = current.state[row];
+        double affine = current.state[row];
+        for (int column = 0; column < StateDimension; ++column) {
+            const double value = current.transition[row * StateDimension + column];
+            output_transition[row * StateDimension + column] = value;
+            affine -= value * state[column];
+        }
+        for (int column = 0; column < ControlDimension; ++column) {
+            const double value = current.sensitivity[row * ControlDimension + column];
+            output_sensitivity[row * ControlDimension + column] = value;
+            affine -= value * control[column];
+        }
+        output_sigma[row] = current.sigma[row];
+        affine -= current.sigma[row] * sigma;
+        output_offset[row] = affine;
+    }
+}
+
+__global__ void fill_time_dilated_sigma_csc_kernel(
+    const double* sigma_sensitivity,
+    const int* sigma_positions,
+    double* scalar_values,
+    const size_t intervals,
+    const size_t state_dimension
+) {
+    const size_t interval = blockIdx.x;
+    if (interval >= intervals) {
+        return;
+    }
+    for (size_t row = threadIdx.x; row < state_dimension; row += blockDim.x) {
+        const size_t flat = interval * state_dimension + row;
+        scalar_values[sigma_positions[flat]] = -sigma_sensitivity[flat];
+    }
+}
+
+template <int Model, int StateDimension, int ControlDimension>
+spacepdhcg_cuda_status launch_time_dilated(
+    const spacepdhcg_cuda_dynamics_config& config,
+    const spacepdhcg_cuda_time_dilated_request& request,
+    const cudaStream_t stream
+) {
+    time_dilated_variational_kernel<Model, StateDimension, ControlDimension>
+        <<<request.intervals, 32, 0, stream>>>(
+            view_pointer<const double>(request.reference_states),
+            view_pointer<const double>(request.reference_controls),
+            view_pointer<double>(request.propagated_states),
+            view_pointer<double>(request.state_transition),
+            view_pointer<double>(request.control_sensitivity),
+            view_pointer<double>(request.sigma_sensitivity),
+            view_pointer<double>(request.affine_offset),
+            request.intervals,
+            request.substeps,
+            request.sigma,
+            request.d_tau,
+            config
+        );
+    return cudaGetLastError() == cudaSuccess
+        ? SPACEPDHCG_CUDA_SUCCESS
+        : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+}
+
 }  // namespace
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_time_dilated_variational_rk4_async(
+    const spacepdhcg_cuda_dynamics_config* config,
+    const spacepdhcg_cuda_time_dilated_request* request,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (config == nullptr || request == nullptr
+        || config->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || request->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || request->intervals == 0U || request->substeps == 0U
+        || !std::isfinite(request->sigma) || request->sigma <= 0.0
+        || !std::isfinite(request->d_tau) || request->d_tau <= 0.0
+        || stream.device.type != SPACEPDHCG_DEVICE_CUDA || stream.device.id < 0) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    size_t state_dimension = 0U;
+    size_t control_dimension = 0U;
+    switch (config->model) {
+        case SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF:
+            state_dimension = 7U;
+            control_dimension = 4U;
+            break;
+        case SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF:
+            state_dimension = 14U;
+            control_dimension = 7U;
+            break;
+        default:
+            return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    const size_t expected[] = {
+        request->intervals * state_dimension,
+        request->intervals * control_dimension,
+        request->intervals * state_dimension,
+        request->intervals * state_dimension * state_dimension,
+        request->intervals * state_dimension * control_dimension,
+        request->intervals * state_dimension,
+        request->intervals * state_dimension,
+    };
+    const spacepdhcg_accelerator_buffer_view views[] = {
+        request->reference_states,
+        request->reference_controls,
+        request->propagated_states,
+        request->state_transition,
+        request->control_sensitivity,
+        request->sigma_sensitivity,
+        request->affine_offset,
+    };
+    for (size_t index = 0; index < 7U; ++index) {
+        const auto status = validate_device_view(
+            views[index], expected[index], SPACEPDHCG_SCALAR_FLOAT64, stream.device.id
+        );
+        if (status != SPACEPDHCG_CUDA_SUCCESS) {
+            return status;
+        }
+    }
+    const auto native_stream = reinterpret_cast<cudaStream_t>(stream.native_handle);
+    if (config->model == SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF) {
+        return launch_time_dilated<SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_3DOF, 7, 4>(
+            *config, *request, native_stream
+        );
+    }
+    return launch_time_dilated<SPACEPDHCG_CUDA_DYNAMICS_POWERED_DESCENT_6DOF, 14, 7>(
+        *config, *request, native_stream
+    );
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_fill_time_dilated_csc_async(
+    const spacepdhcg_cuda_csc_time_dilated_fill* request,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (request == nullptr) {
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
+    const auto dynamics_status =
+        spacepdhcg_cuda_fill_dynamics_csc_async(&request->dynamics, stream);
+    if (dynamics_status != SPACEPDHCG_CUDA_SUCCESS) {
+        return dynamics_status;
+    }
+    const size_t state_rows = request->dynamics.intervals * request->dynamics.state_dimension;
+    auto status = validate_device_view(
+        request->sigma_sensitivity, state_rows, SPACEPDHCG_SCALAR_FLOAT64, stream.device.id
+    );
+    if (status != SPACEPDHCG_CUDA_SUCCESS) {
+        return status;
+    }
+    status = validate_device_view(
+        request->sigma_positions, state_rows, SPACEPDHCG_SCALAR_INT32, stream.device.id
+    );
+    if (status != SPACEPDHCG_CUDA_SUCCESS) {
+        return status;
+    }
+    fill_time_dilated_sigma_csc_kernel<<<
+        request->dynamics.intervals,
+        32,
+        0,
+        reinterpret_cast<cudaStream_t>(stream.native_handle)
+    >>>(
+        view_pointer<const double>(request->sigma_sensitivity),
+        view_pointer<const int>(request->sigma_positions),
+        view_pointer<double>(request->dynamics.scalar_values),
+        request->dynamics.intervals,
+        request->dynamics.state_dimension
+    );
+    return cudaGetLastError() == cudaSuccess
+        ? SPACEPDHCG_CUDA_SUCCESS
+        : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+}
 
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_variational_rk4_async(
     const spacepdhcg_cuda_dynamics_config* config,
@@ -975,7 +1387,17 @@ __global__ void update_scvx_numeric_kernel(
         const int variable =
             view_pointer<const int>(problem.control_variable_indices)[index];
         const int q_position = q_positions[state_elements + index];
-        c[variable] = -q[q_position] * controls[index];
+        // The powered-descent / low-thrust host transcriptions carry a proximal
+        // control-tracking term -w_u * u_ref (`fill_objective`), so the linear
+        // coefficient follows the reference.  `HcwRendezvousCqp::values` has no
+        // such term: its control cost is the plain 0.5 * w_u * |u|^2, and writing
+        // -w_u * u_ref here turned every re-linearised HCW QP into
+        // min 0.5 * w_u * |u - u_ref|^2, which walked the accepted trajectory away
+        // from the fixed QP optimum (objective 1.573e-4 -> 1.691e-4 on the
+        // short-horizon rendezvous) while the CPU reference stayed put.
+        c[variable] = problem.dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_HCW
+            ? 0.0
+            : -q[q_position] * controls[index];
     }
     if (problem.dynamics.model != SPACEPDHCG_CUDA_DYNAMICS_HCW) {
         const size_t sigma =
@@ -1123,12 +1545,24 @@ __global__ void replay_scvx_kernel(
         replay[state] = initial_state[state];
     }
     for (size_t interval = 0; interval < intervals; ++interval) {
-        state_rk4_step<Model, StateDimension, ControlDimension>(
-            replay + interval * StateDimension,
-            controls + interval * ControlDimension,
-            config,
-            replay + (interval + 1U) * StateDimension
-        );
+        if constexpr (Model == SPACEPDHCG_CUDA_DYNAMICS_HCW) {
+            // The HCW coefficients are the exact ZOH map (`hcw_exact_kernel`); the replay must
+            // be the same map, not an RK4 step of the continuous model, or the accepted
+            // reference disagrees with the host `hcw_step` replay by the RK4 truncation error.
+            hcw_exact_step(
+                replay + interval * StateDimension,
+                controls + interval * ControlDimension,
+                config,
+                replay + (interval + 1U) * StateDimension
+            );
+        } else {
+            state_rk4_step<Model, StateDimension, ControlDimension>(
+                replay + interval * StateDimension,
+                controls + interval * ControlDimension,
+                config,
+                replay + (interval + 1U) * StateDimension
+            );
+        }
     }
 }
 
@@ -2077,6 +2511,22 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
     if (result->options.final_polish_iteration_limit == 0U) {
         result->options.final_polish_iteration_limit = 1'000'000U;
     }
+    if (result->options.inner_iteration_cap > 0U) {
+        // Amendment single-gpu-v1.2 rule 2 enforced at the driver boundary as well as by
+        // the executor: no inner PDHCG limit, defaulted or supplied, exceeds the cap.
+        for (uint64_t* limit : {
+                 &result->options.fixed_inner_iteration_limit,
+                 &result->options.repair_iteration_limit,
+                 &result->options.progress_iteration_limit,
+                 &result->options.refinement_iteration_limit,
+                 &result->options.polish_iteration_limit,
+                 &result->options.final_polish_iteration_limit,
+             }) {
+            if (*limit > 0U) {
+                *limit = std::min(*limit, result->options.inner_iteration_cap);
+            }
+        }
+    }
     spacepdhcg_cuda_pointer_snapshot pointers{};
     auto api_status = spacepdhcg_cuda_workspace_pointer_snapshot(
         problem->workspace,
@@ -2189,6 +2639,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     result->status = SPACEPDHCG_CUDA_SCVX_MAXIMUM_ITERATIONS;
     result->final_trust_radius = driver->options.initial_trust_radius;
     result->used_declared_stream = 1;
+    result->qoco_ruiz_iterations = driver->options.qoco_ruiz_iterations;
+    result->qoco_status_code = -1;
     spacepdhcg_cuda_diagnostics transfer_before{};
     auto api_status = spacepdhcg_cuda_workspace_diagnostics(
         driver->problem.workspace,
@@ -2248,6 +2700,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     const double initial_outer_residual = maximum_outer_residual(current);
     double trust_radius = driver->options.initial_trust_radius;
     spacepdhcg_cuda_diagnostics last_diagnostics{};
+    // Natural residual of the inner solve whose candidate became the returned
+    // reference.  The certificate audits the trajectory we hand back, so it must
+    // not inherit the residual of a later *rejected* polish candidate (pd3 reported
+    // a 1.2e-4 stalled warm-start candidate against its 1.1e-9 accepted solve).
+    double accepted_natural_residual =
+        std::numeric_limits<double>::quiet_NaN();
 
     for (uint32_t outer = 0;
          outer < driver->options.maximum_outer_iterations;
@@ -2416,11 +2874,19 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         const bool hybrid_qoco =
             driver->options.policy == SPACEPDHCG_CUDA_SCVX_HYBRID_QOCO;
         bool qoco_used = pure_qoco;
+        // A deadline that fired between inner solves (while the workspace was
+        // not solving) cannot reach the device; honour it here instead of
+        // launching another full-budget solve.
+        if (driver->cancelled.load(std::memory_order_acquire)) {
+            result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+            break;
+        }
         if (pure_qoco) {
             if (driver->qoco == nullptr) {
                 api_status = spacepdhcg_native_qoco_create(
                     &driver->problem,
                     native,
+                    driver->options.qoco_ruiz_iterations,
                     &driver->qoco
                 );
             }
@@ -2465,6 +2931,39 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     driver->problem.workspace
                 );
             }
+            if (api_status == SPACEPDHCG_CUDA_SUCCESS
+                && driver->cancelled.load(std::memory_order_acquire)) {
+                // The attempt deadline cancelled this inner solve. Restore the
+                // pre-iteration checkpoint so the persistent workspace stays
+                // consistent and report the attempt as cancelled (a launched
+                // timeout) rather than as a numerical failure.
+                static_cast<void>(spacepdhcg_cuda_workspace_restore_async(
+                    driver->problem.workspace,
+                    driver->problem.topology_fingerprint,
+                    checkpoint_view,
+                    stream
+                ));
+                static_cast<void>(spacepdhcg_cuda_workspace_wait(
+                    driver->problem.workspace
+                ));
+                static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
+                    driver->problem.workspace,
+                    &last_diagnostics
+                ));
+                // Account for the work actually spent before cancellation; the
+                // residual timer was not run for this iteration and stays out.
+                result->update_seconds += last_diagnostics.update_seconds;
+                result->scaling_seconds += last_diagnostics.scaling_seconds;
+                result->solve_seconds += std::max(
+                    0.0,
+                    last_diagnostics.solve_seconds
+                        - last_diagnostics.recovery_seconds
+                );
+                result->recovery_seconds += last_diagnostics.recovery_seconds;
+                result->inner_iterations += last_diagnostics.iterations;
+                result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+                break;
+            }
             if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
                 api_status = spacepdhcg_cuda_workspace_residuals_async(
                     driver->problem.workspace,
@@ -2490,6 +2989,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                         api_status = spacepdhcg_native_qoco_create(
                             &driver->problem,
                             native,
+                            driver->options.qoco_ruiz_iterations,
                             &driver->qoco
                         );
                     }
@@ -2543,6 +3043,23 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                         ? SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY
                         : SPACEPDHCG_CUDA_QOCO_FAILURE_UNAVAILABLE)
                     : driver->qoco_report.failure;
+                // A failed solve still ran on a real QOCO workspace: report the
+                // creations/updates so a solver failure (workspace_creations >= 1)
+                // is distinguishable from a never-constructed adapter (0).
+                result->qoco_workspace_creations =
+                    driver->qoco_report.workspace_creations;
+                result->qoco_numeric_updates =
+                    driver->qoco_report.numeric_updates;
+                result->qoco_ruiz_iterations =
+                    driver->qoco_report.ruiz_iterations;
+                result->qoco_status_code = driver->qoco_report.status_code;
+                result->qoco_dual_discarded = driver->qoco_report.dual_discarded;
+                if (driver->qoco != nullptr && driver->qoco_report.iterations > 0) {
+                    // IPM iterations spent by the failed solve are real work.
+                    result->inner_iterations += static_cast<uint64_t>(
+                        driver->qoco_report.iterations
+                    );
+                }
                 result->qoco_conversion_seconds =
                     driver->qoco_report.conversion_seconds;
                 result->qoco_setup_seconds =
@@ -2566,6 +3083,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 driver->qoco_report.workspace_creations;
             result->qoco_numeric_updates =
                 driver->qoco_report.numeric_updates;
+            result->qoco_ruiz_iterations =
+                driver->qoco_report.ruiz_iterations;
+            result->qoco_status_code = driver->qoco_report.status_code;
             result->qoco_dual_discarded =
                 driver->qoco_report.dual_discarded;
             result->qoco_failure = driver->qoco_report.failure;
@@ -2589,6 +3109,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     driver->qoco_report.workspace_creations;
                 result->qoco_numeric_updates =
                     driver->qoco_report.numeric_updates;
+                result->qoco_ruiz_iterations =
+                    driver->qoco_report.ruiz_iterations;
+                result->qoco_status_code = driver->qoco_report.status_code;
                 result->qoco_dual_discarded =
                     driver->qoco_report.dual_discarded;
                 result->qoco_failure = driver->qoco_report.failure;
@@ -2659,6 +3182,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             for (uint32_t resolve = 0;
                  resolve < driver->options.maximum_resolves_per_iteration;
                  ++resolve) {
+                if (driver->cancelled.load(std::memory_order_acquire)) {
+                    // Deadline reached before the identical-CQP re-solve:
+                    // stop here rather than spending another inner budget.
+                    result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+                    break;
+                }
                 api_status = collect_numeric_fingerprint(
                     driver,
                     native,
@@ -2682,10 +3211,19 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 );
                 solve_options.feasibility_tolerance =
                     solve_options.optimality_tolerance;
+                // The re-solve escalates to the recovery-enabled floor, but never past
+                // the amendment's inner iteration cap (min(limit, cap) for every inner
+                // PDHCG limit, including this derived one).
                 solve_options.iteration_limit = std::max<uint64_t>(
                     solve_options.iteration_limit,
                     350'000U
                 );
+                if (driver->options.inner_iteration_cap > 0U) {
+                    solve_options.iteration_limit = std::min<uint64_t>(
+                        solve_options.iteration_limit,
+                        driver->options.inner_iteration_cap
+                    );
+                }
                 api_status = spacepdhcg_cuda_workspace_warm_start_async(
                     driver->problem.workspace,
                     SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,
@@ -2708,6 +3246,34 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     api_status = spacepdhcg_cuda_workspace_wait(
                         driver->problem.workspace
                     );
+                }
+                if (api_status == SPACEPDHCG_CUDA_SUCCESS
+                    && driver->cancelled.load(std::memory_order_acquire)) {
+                    // Deadline cancelled the re-solve: roll back and report
+                    // the launched timeout with the work actually spent.
+                    static_cast<void>(spacepdhcg_cuda_workspace_restore_async(
+                        driver->problem.workspace,
+                        driver->problem.topology_fingerprint,
+                        checkpoint_view,
+                        stream
+                    ));
+                    static_cast<void>(spacepdhcg_cuda_workspace_wait(
+                        driver->problem.workspace
+                    ));
+                    static_cast<void>(spacepdhcg_cuda_workspace_diagnostics(
+                        driver->problem.workspace,
+                        &last_diagnostics
+                    ));
+                    result->solve_seconds += std::max(
+                        0.0,
+                        last_diagnostics.solve_seconds
+                            - last_diagnostics.recovery_seconds
+                    );
+                    result->recovery_seconds +=
+                        last_diagnostics.recovery_seconds;
+                    result->inner_iterations += last_diagnostics.iterations;
+                    result->status = SPACEPDHCG_CUDA_SCVX_CANCELLED;
+                    break;
                 }
                 if (api_status == SPACEPDHCG_CUDA_SUCCESS) {
                     api_status = spacepdhcg_cuda_workspace_residuals_async(
@@ -2744,6 +3310,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     break;
                 }
             }
+        }
+        if (result->status == SPACEPDHCG_CUDA_SCVX_CANCELLED) {
+            break;
         }
         if (re_solved) {
             gather_scvx_candidate_kernel<<<1, 256, 0, native>>>(
@@ -2823,6 +3392,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                 (state_elements + control_elements) * sizeof(double);
             current = candidate;
             ++result->accepted_steps;
+            accepted_natural_residual = last_diagnostics.natural_residual_inf;
             if (pure_qoco) {
                 spacepdhcg_native_qoco_accept(driver->qoco);
             }
@@ -2979,12 +3549,15 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         result->status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
     }
     result->objective = current.objective;
-    result->canonical_residual =
-        result->accepted_steps == 0U
-            && initial_outer_residual
-                <= driver->options.convergence_tolerance
-        ? 0.0
-        : last_diagnostics.natural_residual_inf;
+    if (result->accepted_steps == 0U
+        && initial_outer_residual <= driver->options.convergence_tolerance) {
+        result->canonical_residual = 0.0;
+    } else if (result->accepted_steps > 0U
+               && std::isfinite(accepted_natural_residual)) {
+        result->canonical_residual = accepted_natural_residual;
+    } else {
+        result->canonical_residual = last_diagnostics.natural_residual_inf;
+    }
     result->dynamics_defect = current.dynamics;
     result->path_violation = current.path;
     driver->path_inventory = spacepdhcg_cuda_scvx_path_inventory{
@@ -3345,6 +3918,14 @@ spacepdhcg_cuda_scvx_driver_reset_attempt(
         }
     }
     spacepdhcg_native_qoco_reset_warm_state(driver->qoco, true);
+    if (driver->options.policy == SPACEPDHCG_CUDA_SCVX_PURE_QOCO) {
+        // Pure IPM never runs the PDHCG kernel, so the persistent workspace
+        // holds no retained solver state and a FULL_RETAINED warm start would
+        // be refused with INVALID_STATE (which the G4 executor used to record
+        // as a launched "numerical" attempt). The warm boundary for this
+        // policy is the retained QOCO primal reset above plus the dual clear.
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
     auto status = spacepdhcg_cuda_workspace_warm_start_async(
         driver->problem.workspace,
         SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,

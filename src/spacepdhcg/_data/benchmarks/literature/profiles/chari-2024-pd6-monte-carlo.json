@@ -1,0 +1,24 @@
+{
+  "id": "chari-2024-pd6-monte-carlo",
+  "family": "P1-D-pd6",
+  "profile_suffix": "independent-batch",
+  "title": "Chari et al. 2024 independent 6-DoF powered-descent Monte Carlo batch (initial position dispersion)",
+  "source": {
+    "doi": "10.2514/6.2024-1762",
+    "url": "https://arxiv.org/abs/2404.18034"
+  },
+  "published": {
+    "initial_position_distribution": ["uniform(6,9)", "uniform(3,6)", "uniform(1,2)"],
+    "published_demonstration_batch_size": 256,
+    "maximum_outer_iterations": 25,
+    "pipg_iterations_per_subproblem": 2500,
+    "evidence_label": "published-reference",
+    "verification_status": "requires-source-verification (values imported from benchmarks/literature_baselines.json; paper body not retrieved)"
+  },
+  "samples_file": "benchmarks/literature/chari_2024_initial_positions.json",
+  "batch_sizes": [1, 16, 64],
+  "optional_batch_sizes": [256, 1024, 2048],
+  "max_outer_iterations": 25,
+  "gpu_blocker": "the persistent GPU 6-DoF SCvx is only reachable through the frozen G4 fixture families (device_scvx_integration_test --g4-sample P1-D-pd6 <attitude_class> <rate_class>); it has no entry point for arbitrary initial positions and uses the repository's independent-torque 6-DoF model, not the Szmuk/Chari thrust-arm model",
+  "comparability_warning": "independent Monte Carlo solves are not coupled robust scenarios"
+}

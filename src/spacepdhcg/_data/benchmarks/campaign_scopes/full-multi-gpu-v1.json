@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "scope_id": "full-multi-gpu-v1",
+  "status": "historical",
+  "supersedes_completion_goal": null,
+  "active_requirements": [
+    "Historical full G0-G5 Paper 1 campaign including physical 2/4/8-GPU evidence",
+    "Historical distributed OrbitWeaver route-by-scenario scaling campaign"
+  ],
+  "deferred_requirements": [],
+  "active_hypotheses": ["H1", "H2", "H3", "H4", "H5", "H6"],
+  "deferred_hypotheses": [],
+  "included_products": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12",
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08"
+  ],
+  "deferred_products": [],
+  "allowed_gpu_counts": [0, 1, 2, 4, 8],
+  "requires_physical_g5": true
+}

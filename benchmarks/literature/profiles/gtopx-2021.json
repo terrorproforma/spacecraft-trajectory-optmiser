@@ -1,0 +1,21 @@
+{
+  "id": "gtopx-2021",
+  "family": null,
+  "target_programme": "secondary global mission-design track",
+  "title": "GTOPX 1.0 evaluator and official best-known vectors (Cassini1, Rosetta, Messenger reduced, GTOC1)",
+  "source": {
+    "doi": "10.1016/j.softx.2021.100666",
+    "url": "https://www.midaco-solver.com/index.php/about/benchmarks/gtopx",
+    "licence": "GPL"
+  },
+  "artifacts": ["gtopx.source", "gtopx.solution.cassini1", "gtopx.solution.rosetta", "gtopx.solution.messenger_reduced", "gtopx.solution.gtoc1"],
+  "benchmarks": ["cassini1", "rosetta", "messenger_reduced", "gtoc1"],
+  "published": {
+    "cassini1": "4.930708733982513",
+    "rosetta": "1.343367",
+    "messenger_reduced": "8.629944278158570",
+    "gtoc1": "-1581950.131840605288744",
+    "evidence_label": "published-reference",
+    "extraction": "data-file (official solutions/*.txt f[0] lines; digits as printed)"
+  }
+}

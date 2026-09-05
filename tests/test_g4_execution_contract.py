@@ -25,6 +25,7 @@ from spacepdhcg.experiments import (
     winner_eligible,
 )
 from spacepdhcg.experiments.g4 import POLICY_NAMES, coverage_count, load_policy
+from spacepdhcg.experiments.g4_execution_contract import TERMINAL_DISPOSITIONS
 from spacepdhcg.experiments.g4_scheduler import (
     CampaignStore,
     execution_group_at,
@@ -291,6 +292,33 @@ def test_predictive_timeout_and_oom_are_forbidden(disposition: str) -> None:
         validate_attempt_record(_attempt(disposition, launched=False))
 
 
+def test_executor_defect_is_explicit_launched_and_never_evidence() -> None:
+    """An API/boundary failure is recorded as ``executor_defect``, never as ``numerical``."""
+
+    record = _attempt("executor_defect")
+    validate_attempt_record(record)
+    assert winner_eligible(record) is False
+    with pytest.raises(G4ContractError, match="launched attempt"):
+        validate_attempt_record(_attempt("executor_defect", launched=False))
+    mismatched = dict(record, failure_class="numerical")
+    with pytest.raises(G4ContractError, match="failure class must match"):
+        validate_attempt_record(mismatched)
+    # The raw-attempt and Paper 1 schemas both know the disposition (so the record is retained
+    # and auditable) and the Python contracts agree with them.
+    raw_schema = json.loads(
+        (ROOT / "experiments/schema/g4_raw_attempt.schema.json").read_text(encoding="utf-8")
+    )
+    assert "executor_defect" in raw_schema["properties"]["disposition"]["enum"]
+    assert "executor_defect" in raw_schema["properties"]["failure_class"]["enum"]
+    paper1_schema = json.loads(
+        (ROOT / "experiments/schema/paper1_result.schema.json").read_text(encoding="utf-8")
+    )
+    identity = paper1_schema["properties"]["identity"]["properties"]
+    assert "executor_defect" in identity["status"]["enum"]
+    assert "executor_defect" in identity["failure_class"]["enum"]
+    assert set(TERMINAL_DISPOSITIONS) == set(raw_schema["properties"]["disposition"]["enum"])
+
+
 def test_larger_groups_remain_pending_until_claimed(tmp_path: Path) -> None:
     policy = _policy()
     with CampaignStore(
@@ -375,7 +403,9 @@ def test_claim_core_definition_matches_declarative_schema() -> None:
     Draft202012Validator(schema).validate(_core().values)
 
 
-def test_full_runner_requires_persistent_group_capability(tmp_path: Path) -> None:
+def test_full_runner_requires_persistent_group_capability(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     executable = tmp_path / "executor"
     executable.write_bytes(b"executor")
     capability_path = tmp_path / "capability.json"
@@ -438,8 +468,105 @@ def test_full_runner_requires_persistent_group_capability(tmp_path: Path) -> Non
         "zero_post_create_topology_allocations": True,
         "zero_post_create_topology_index_copies": True,
     }
+    # A capability that does not pin the claim-core amendment contract is refused outright.
     value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
     capability_path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(G4ContractError, match="contract hash mismatch"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    value.pop("capability_sha256")
+    value["contract_hashes"]["claim_core_amendment"] = RUNNER.sha256_path(
+        ROOT / RUNNER.AMENDMENT_IN_FORCE_PATH
+    )
+    # An executor configured (SPACEPDHCG_SOURCE_COMMIT baked at CMake configure time) at a
+    # different commit than the campaign's is refused: its records would carry the wrong
+    # identity.repository_commit and fail the decision step at the end of the campaign.
+    value["compiled_source_commit"] = "f" * 40
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(G4ContractError, match="configured at a different commit"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    value.pop("capability_sha256")
+    value["compiled_source_commit"] = "a" * 40
+    # A capability whose session probe never proved a real pure-gpu-ipm session (>= 1 QOCO
+    # workspace per attempt, solver dispositions only) is refused: the campaign would record
+    # fake IPM failures instead of measurements.
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(G4ContractError, match="pure-gpu-ipm probe"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    value.pop("capability_sha256")
+    value["session_probe"]["pure_gpu_ipm_probe"] = {
+        "policy": "pure-gpu-ipm",
+        "dispositions": ["unqualified"] * 9,
+        "qoco_workspace_creations": [1] * 9,
+        "qoco_numeric_updates": [0] * 9,
+    }
+    defective = dict(value["session_probe"]["pure_gpu_ipm_probe"])
+    defective["dispositions"] = ["unqualified", "executor_defect"] + ["unqualified"] * 7
+    value["session_probe"]["pure_gpu_ipm_probe"] = defective
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(G4ContractError, match="pure-gpu-ipm probe"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    value.pop("capability_sha256")
+    value["session_probe"]["pure_gpu_ipm_probe"]["dispositions"] = ["unqualified"] * 9
+    # The worker must dlopen the very library the probe used.
+    library = tmp_path / "libqoco.so"
+    library.write_bytes(b"qoco")
+    value["ipm_library"] = {"path": str(library), "sha256": RUNNER.sha256_path(library)}
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    monkeypatch.delenv("SPACEPDHCG_QOCO_LIBRARY", raising=False)
+    with pytest.raises(G4ContractError, match="SPACEPDHCG_QOCO_LIBRARY is unset"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    other = tmp_path / "other-libqoco.so"
+    other.write_bytes(b"different qoco build")
+    monkeypatch.setenv("SPACEPDHCG_QOCO_LIBRARY", str(other))
+    with pytest.raises(G4ContractError, match="differs from the library the capability probed"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+        )
+    monkeypatch.setenv("SPACEPDHCG_QOCO_LIBRARY", str(library))
     loaded = RUNNER.load_capabilities(
         capability_path,
         executable,
@@ -449,3 +576,31 @@ def test_full_runner_requires_persistent_group_capability(tmp_path: Path) -> Non
         require_persistent_group=True,
     )
     assert loaded["execution_contract"]["persistent_workspace"] is True
+    # Running under the amendment additionally requires the executor to declare support.
+    amendment = SimpleNamespace(
+        sha256=value["contract_hashes"]["claim_core_amendment"],
+        values={"amendment_id": "single-gpu-v1.1"},
+    )
+    with pytest.raises(G4ContractError, match="does not support the requested amendment"):
+        RUNNER.load_capabilities(
+            capability_path,
+            executable,
+            "b" * 64,
+            "c" * 64,
+            "a" * 40,
+            require_persistent_group=True,
+            amendment=amendment,
+        )
+    value.pop("capability_sha256")
+    value["policy_amendments_supported"] = ["single-gpu-v1.1"]
+    value["capability_sha256"] = hashlib.sha256(RUNNER.canonical_bytes(value)).hexdigest()
+    capability_path.write_text(json.dumps(value), encoding="utf-8")
+    RUNNER.load_capabilities(
+        capability_path,
+        executable,
+        "b" * 64,
+        "c" * 64,
+        "a" * 40,
+        require_persistent_group=True,
+        amendment=amendment,
+    )

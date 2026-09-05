@@ -1,9 +1,10 @@
 """Fixed-pattern convex subproblem for 3-DoF powered-descent SCvx.
 
 This module is the transparent CPU reference transcription. It intentionally uses a fixed grid
-and forward-Euler linearisation so every sparse index and cone block is known before the first
-solve. Higher-order continuous-time transcription will replace the discretisation without
-changing the persistent backend lifecycle.
+and forward-Euler linearisation by default so every sparse index and cone block is known before
+the first solve.  ``PoweredDescentSCvxConfig(discretisation="rk4")`` swaps the coefficient
+values for the exact linearisation of a variational RK4 zero-order-hold map while keeping the
+same fixed pattern and persistent backend lifecycle.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from spacepdhcg.cqp import (
 )
 from spacepdhcg.models.powered_descent_3dof import (
     CONTROL_DIMENSION,
+    DISCRETISATION_METHODS,
     STATE_DIMENSION,
     PoweredDescent3DOFModel,
 )
@@ -72,12 +74,23 @@ class PoweredDescentSCvxConfig:
         1.0 / 15_000.0,
         1.0 / 15_000.0,
     )
+    # ``forward_euler`` is the frozen reference transcription (benchmark fixtures depend on it).
+    # ``rk4`` linearises the variational RK4 zero-order-hold map instead; the CSC pattern is
+    # identical (dense state/control blocks), only the coefficient values change.
+    discretisation: str = "forward_euler"
+    integration_substeps: int = 1
 
     def __post_init__(self) -> None:
         if self.intervals < 2:
             raise ValueError("intervals must be at least two")
         if not np.isfinite(self.step_seconds) or self.step_seconds <= 0:
             raise ValueError("step_seconds must be finite and positive")
+        if self.discretisation not in DISCRETISATION_METHODS:
+            raise ValueError(f"discretisation must be one of {DISCRETISATION_METHODS}")
+        if int(self.integration_substeps) != self.integration_substeps or (
+            self.integration_substeps < 1
+        ):
+            raise ValueError("integration_substeps must be a positive integer")
         for name in (
             "trust_radius",
             "virtual_l1_weight",
@@ -487,10 +500,12 @@ class PoweredDescent3DOFSubproblem:
             upper[row] = initial[index]
 
         for interval in range(layout.intervals):
-            discrete_state, discrete_control, offset = self.model.linearised_euler_dynamics(
+            discrete_state, discrete_control, offset = self.model.linearised_discrete_dynamics(
                 states[interval],
                 controls[interval],
                 self.config.step_seconds,
+                method=self.config.discretisation,
+                substeps=self.config.integration_substeps,
             )
             row_start = layout.dynamics_rows.start + interval * STATE_DIMENSION
             state = layout.state_slice(interval)
@@ -717,10 +732,12 @@ class PoweredDescent3DOFSubproblem:
         states, controls, virtual, _ = self.decode(vector)
         nonlinear_defects = np.empty((self.layout.intervals, STATE_DIMENSION))
         for interval in range(self.layout.intervals):
-            nonlinear_defects[interval] = states[interval + 1] - self.model.euler_step(
+            nonlinear_defects[interval] = states[interval + 1] - self.model.discrete_step(
                 states[interval],
                 controls[interval],
                 self.config.step_seconds,
+                method=self.config.discretisation,
+                substeps=self.config.integration_substeps,
             )
         terminal_target = numerical.lower[self.layout.terminal_rows]
         terminal_actual = np.concatenate((states[-1, :3], states[-1, 3:6]))

@@ -61,9 +61,11 @@ def test_frozen_coordinate_ledger_is_complete_and_fail_closed() -> None:
         module.sha256_path(paper2_path),
     )
 
+    # 2,648 P2-A..P2-E coordinates plus 36 P2-F (historical GTOC replay) coordinates added by
+    # the comparative solver campaign specification.
     assert len(paper1) == 13_676
-    assert len(paper2) == 2_648
-    assert len({item["coordinate_id"] for item in (*paper1, *paper2)}) == 16_324
+    assert len(paper2) == 2_684
+    assert len({item["coordinate_id"] for item in (*paper1, *paper2)}) == 16_360
     assert {item["classification"] for item in paper1} == {"unrun"}
     assert {item["classification"] for item in paper2} == {"unrun", "unsupported"}
     assert all(item["reason"] for item in (*paper1, *paper2))
@@ -99,7 +101,7 @@ def test_supported_matrix_driver_expands_same_frozen_inventory(tmp_path: Path) -
     paper1 = json.loads((root / "benchmarks" / "paper1_matrix.json").read_text())
     paper2 = json.loads((root / "benchmarks" / "paper2_matrix.json").read_text())
     coordinates = module._coordinates(paper1, "paper1") + module._coordinates(paper2, "paper2")
-    assert len(coordinates) == 16_324
+    assert len(coordinates) == 16_360
     assert len({item["coordinate_id"] for item in coordinates}) == len(coordinates)
     tagged = module._coordinates(
         {"families": [paper2["families"][0]]},

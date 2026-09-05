@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "title": "GPU-deferred validation manifest for integration/single-gpu-v2-candidate",
+  "generated": "2026-09-03T06:10:00+10:00",
+  "candidate": {
+    "branch": "integration/single-gpu-v2-candidate",
+    "worktree": "/home/angus/worktrees/spacepdhcg-single-gpu-v2",
+    "base": "63271d58b78df343c1ae694525e460db31696f5d",
+    "base_branch": "integration/single-gpu-v1",
+    "integration_merges": {
+      "feat/planner-cli": "2e7548b",
+      "feat/literature-targets": "da0a96b",
+      "feat/gtoc12-asteroid-mining@fa91b43": "2f4be21"
+    },
+    "integrated_tips": {
+      "feat/planner-cli": "c74fdb7",
+      "feat/literature-targets": "f6e8140",
+      "feat/gtoc12-asteroid-mining": "fa91b4395f4c45bef118cfb333cb76d377203fdb"
+    },
+    "cpu_verification_evidence": "build-v2-verification/ (ignored path in the candidate worktree; summary.tsv, summary-py.tsv, summary-py2.tsv, summary-web.tsv, commands.txt, per-step logs)"
+  },
+  "gpu_ownership": {
+    "device": "NVIDIA GeForce RTX 5090 (WSL2, CUDA 12.8, sm_120)",
+    "owner": "G4 H5/H6 claim-core campaign",
+    "owner_worktree": "/home/angus/worktrees/spacepdhcg-single-gpu-integration",
+    "owner_source_commit": "9a4cbea1148242a48d339dbaaf1d71a1c492c525",
+    "owner_capability": "/home/angus/g4-executor-capability-9a4cbea.json",
+    "owner_capability_sha256": "e546583b9dfbd19bb1990cdfe65cceafc0261b55b52a95af641fb0a4af88f3de",
+    "owner_processes_at_manifest_time": [
+      "run_g4_campaign.py run --claim-core (pid 827371)",
+      "device_scvx_integration_test --g4-server 600 (pid 827383)",
+      "device_scvx_integration_test --g4-session ... (pid 828904)"
+    ],
+    "lock_file": "/home/angus/.spacepdhcg-gpu.lock",
+    "lock_rule": "The lock file did not exist during this integration and was never created by it. Treat the GPU as owned until the campaign's finish script has run. Before any item below: `pgrep -f 'run_g4_campaign.py|--g4-server|--g4-session'` must be empty AND `spacepdhcg literature gpu-preflight` must exit 0 (`device free`).",
+    "cpu_only_guarantee": "Every CPU verification step ran with CUDA_VISIBLE_DEVICES='' exported; the CUDA trees were configured and built only (no ctest) and the QOCO used by the Python suite was a builtin-algebra (CPU) build of the pinned QOCO revision."
+  },
+  "environment": {
+    "worktree": "/home/angus/worktrees/spacepdhcg-single-gpu-v2",
+    "python": "/home/angus/worktrees/spacepdhcg-single-gpu-v2/.venv-v2/bin/python (3.12.13; packages pinned from the campaign's .venv-current-head freeze)",
+    "cmake_ctest": "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/{cmake,ctest} (CMake 4.4.3, Ninja)",
+    "cuda": "CUDACXX=/usr/local/cuda-12.8/bin/nvcc; CMAKE_CUDA_ARCHITECTURES=120",
+    "pdhcg_source_root": "/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg (pinned 167c8b72b4b96d2f94d405b8763e485514192b81, tree 62b05e6c, clean)",
+    "cuda_release_tree": "/home/angus/worktrees/spacepdhcg-single-gpu-v2/build-v2-cuda-release (built, never executed)",
+    "cuda_debug_tree": "/home/angus/worktrees/spacepdhcg-single-gpu-v2/build-v2-cuda-debug (built, never executed)",
+    "gpu_qoco_library": "a QOCO built with -DQOCO_ALGEBRA_BACKEND=cuda from pinned 09f0495 + scripts/gpu/qoco_absolute_kkt_stopping.patch, e.g. /home/angus/spacecraft-trajectory-optmiser/build/qoco-g4/libqoco.so or a fresh `scripts/gpu/checkout_build_qoco_gpu.sh` build; needs LD_LIBRARY_PATH=<cudss shim>:<nvidia/cu12/lib>:/usr/local/cuda-12.8/lib64",
+    "common_exports": [
+      "export V2=/home/angus/worktrees/spacepdhcg-single-gpu-v2",
+      "export PATH=/home/angus/spacecraft-trajectory-optmiser/.venv/bin:/usr/local/cuda-12.8/bin:/home/angus/.local/node/bin:$PATH",
+      "export PYTHONPATH=$V2/src",
+      "export CUDA_VISIBLE_DEVICES=0",
+      "export SPACEPDHCG_NATIVE_LIBRARY=$V2/build-v2-relwithdebinfo/libspacepdhcg.so",
+      "export SPACEPDHCG_QOCO_LIBRARY=<gpu_qoco_library>",
+      "export LD_LIBRARY_PATH=<cudss shim>:/home/angus/spacecraft-trajectory-optmiser/.venv/lib/python3.12/site-packages/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64:$LD_LIBRARY_PATH",
+      "export PYTHONHASHSEED=0 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1"
+    ]
+  },
+  "items": [
+    {
+      "id": "planner-gpu-pytest",
+      "track": "planner",
+      "title": "Planner GPU pytest (real spacepdhcg_plan executable)",
+      "blocked_by": "G4 claim core owns the device",
+      "commands": [
+        "cd $V2 && SPACEPDHCG_PLANNER_GPU_TESTS=1 SPACEPDHCG_PLAN_EXECUTABLE=$V2/build-v2-cuda-release/cuda-tools/spacepdhcg_plan $V2/.venv-v2/bin/python -m pytest -q -p no:cacheprovider tests/test_planner_gpu.py"
+      ],
+      "expected": [
+        "9 passed (4 parametrised native plans that converge, certify and match the CPU reference; warm start reuse; pdhcg backend selection recorded; infeasible target reported honestly; time limit reported; cpu_reference documents rejected)",
+        "0 skipped once SPACEPDHCG_QOCO_LIBRARY names the GPU QOCO (the pure_qoco leg otherwise skips)"
+      ],
+      "evidence": ["pytest output"],
+      "cpu_status_now": "6 functions / 9 tests SKIPPED (gated) in full-pytest-cpu-qoco.log",
+      "history": {
+        "h100_3373988": "4/9 failed (hcw objective mismatch + maximum_iterations, pd3 canonical_residual, pd6 CPU reference canonical_residual 1.197e-6, pdhcg selection not converged); reproduced identically on the RTX 5090, so not sm_90-specific",
+        "fixes": [
+          "device_scvx.cu: HCW replay_scvx_kernel uses the exact ZOH map shared with hcw_exact_kernel instead of RK4 (replay parity 1.386e-6 -> 4e-14)",
+          "device_scvx.cu: the numeric update no longer writes a -w_u*u_ref control linear term for HCW (HcwRendezvousCqp has no control tracking; the term made every re-linearised QP min |u-u_ref|^2 and drifted the objective 1.573e-4 -> 1.691e-4)",
+          "native_qoco_adapter.cpp: pure_qoco reports the relative KKT audit used by the certificate gate, the CPU reference and PDHCG instead of absolute residuals (pd3 2.5e-3 absolute == 1.2e-4 relative)",
+          "native_qoco_adapter.cpp: a warm-started solve that ends QOCO_SOLVED_INACCURATE (one stalled IPM iteration from the boundary optimum) is re-solved cold once (report.warm_inaccurate_cold_retries)",
+          "device_scvx.cu + cpu_reference.py: the certificate's canonical residual is the residual of the solve whose candidate was accepted, not of a later rejected polish candidate"
+        ],
+        "rtx5090_after_fix": "9 passed; four GPU examples certified (hcw 3.699459e-4 vs CPU 3.699459e-4, pd3 0.552214 vs 0.552214, pd6 0.512976, low_thrust 0.149922); CUDA CTest 69/69 sm_120",
+        "h100_reverification": "pending a GPU window (device reserved for the G4 claim-core campaign)"
+      }
+    },
+    {
+      "id": "planner-memcheck",
+      "track": "planner",
+      "title": "compute-sanitizer memcheck (and initcheck/synccheck/racecheck) on spacepdhcg_plan",
+      "blocked_by": "G4 claim core owns the device",
+      "commands": [
+        "cd $V2 && mkdir -p build-v2-gpu-deferred && for f in hcw_rendezvous powered_descent_3dof; do $V2/.venv-v2/bin/spacepdhcg validate examples/planner/$f.json > build-v2-gpu-deferred/$f-canonical.json; echo $f canonical exit=$?; done  # the examples are user-unit documents (pd3 angles in degrees); the executable takes the CLI's canonical form",
+        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/memcheck-hcw.json --quiet > build-v2-gpu-deferred/memcheck-hcw.log 2>&1; echo exit=$?",
+        "cd $V2 && compute-sanitizer --tool memcheck --leak-check full build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/powered_descent_3dof-canonical.json --output build-v2-gpu-deferred/memcheck-pd3.json --quiet > build-v2-gpu-deferred/memcheck-pd3.log 2>&1; echo exit=$?",
+        "cd $V2 && for tool in initcheck synccheck racecheck; do compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tools/spacepdhcg_plan build-v2-gpu-deferred/hcw_rendezvous-canonical.json --output build-v2-gpu-deferred/$tool-hcw.json --quiet > build-v2-gpu-deferred/$tool-hcw.log 2>&1; echo $tool exit=$?; done",
+        "cd $V2 && $V2/.venv-v2/bin/python -c \"import json; [print(f, json.load(open(f))['status']['code'], json.load(open(f))['certificate']['certified']) for f in ('build-v2-gpu-deferred/memcheck-hcw.json','build-v2-gpu-deferred/memcheck-pd3.json')]\""
+      ],
+      "expected": [
+        "exit=0 for every sanitizer invocation",
+        "`========= ERROR SUMMARY: 0 errors` (memcheck/initcheck/synccheck) and `========= RACECHECK SUMMARY: 0 hazards` in each log",
+        "both result documents report status.code == 'certified' and certificate.certified == true (HCW N=20; 3-DoF pure_qoco hover objective ~0.5522: CPU reference 0.552214 on the H100, GPU 0.552214 on the RTX 5090; the ~0.4927 quoted before the first real-GPU run was a pre-campaign prediction, not a measurement)"
+      ],
+      "evidence": ["build-v2-gpu-deferred/*.log", "build-v2-gpu-deferred/*.json"],
+      "history": {
+        "h100_3373988": "hcw: sanitizers clean (ERROR SUMMARY: 0 errors, 0 bytes leaked) but exit 2 = the executable's converged_not_certified status (fixed under planner-gpu-pytest). pd3: exit 255, manifest defect - the raw example carries maximum_tilt 30.0 degrees and the executable expects the CLI's canonical radians ('maximum_tilt' must lie strictly inside (0, pi/2)); re-run on the CLI-normalised request was sanitizer-clean",
+        "fix": "commands canonicalise through `spacepdhcg validate` first; tests/test_gpu_deferred_manifest.py refuses any manifest command that hands an examples/planner document straight to spacepdhcg_plan",
+        "rtx5090": "the fixed commands run end to end on the RTX 5090 (sm_120, CUDA 12.8 compute-sanitizer): memcheck hcw/pd3, initcheck/synccheck/racecheck hcw all exit 0, ERROR SUMMARY: 0 errors, 0 bytes leaked, 0 hazards; every result document certified (hcw objective 3.6995e-4, pd3 0.552214)"
+      }
+    },
+    {
+      "id": "planner-cuda-ctest-subset",
+      "track": "planner",
+      "title": "CUDA CTest subset relevant to the planner executable and its persistent-workspace stack",
+      "blocked_by": "G4 claim core owns the device",
+      "commands": [
+        "cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure -R 'spacepdhcg_plan_capabilities|device_variational_test|persistent_cw_test|pointer_contract_test|allocation_lifecycle_test|stream_lifetime_test|cone_inventory_test|dlpack_contract_test|recovery_test|persistent_soc_test'",
+        "cd $V2 && ctest --test-dir build-v2-cuda-debug --output-on-failure -R 'spacepdhcg_plan_capabilities|device_variational_test|persistent_cw_test|pointer_contract_test|allocation_lifecycle_test|stream_lifetime_test|cone_inventory_test|dlpack_contract_test|recovery_test|persistent_soc_test'"
+      ],
+      "expected": [
+        "100% tests passed, 0 tests failed out of 10 in each tree",
+        "spacepdhcg_plan_capabilities prints the capability JSON with a real CUDA device (never run with CUDA_VISIBLE_DEVICES='')"
+      ],
+      "evidence": ["ctest output"]
+    },
+    {
+      "id": "planner-gpu-examples",
+      "track": "planner",
+      "title": "All four planner examples on the GPU with viewer export",
+      "blocked_by": "G4 claim core owns the device",
+      "commands": [
+        "cd $V2 && for f in hcw_rendezvous powered_descent_3dof powered_descent_6dof low_thrust; do $V2/.venv-v2/bin/spacepdhcg plan examples/planner/$f.json --executable build-v2-cuda-release/cuda-tools/spacepdhcg_plan --output build-v2-gpu-deferred/plan-$f --export-viewer build-v2-gpu-deferred/plan-$f/viewer; echo $f exit=$?; done",
+        "cd $V2 && for f in hcw_rendezvous powered_descent_3dof powered_descent_6dof low_thrust; do (cd build-v2-gpu-deferred/plan-$f/viewer && node scripts/check.mjs); echo $f viewer exit=$?; done  # each export bundle is a self-contained viewer copy, as tests/test_planner_viewer_export.py exercises"
+      ],
+      "expected": [
+        "exit=0 (certified) for each example; exit 2 would mean produced-but-not-certified and must be investigated",
+        "each export passes `node scripts/check.mjs` as a planner-export dataset (the archive assertions remain in force for the default archive data: verified again in this integration)"
+      ],
+      "evidence": ["build-v2-gpu-deferred/plan-*/plan-result.json", "plan-summary.md", "viewer/manifest.json"],
+      "history": {
+        "h100_3373988": "hcw exit 2 (independent replay parity/defect 1.386e-6), pd3 exit 2 (canonical residual 2.52e-3 after 14 QOCO numeric updates), pd6 and low_thrust certified; all four viewer checks failed on the export file list",
+        "rtx5090_after_fix": "all four exit=0 certified (see planner-gpu-pytest.history.fixes); pd3 now converges in 5 outer / 2 accepted with canonical residual 1.1e-10",
+        "h100_reverification": "pending a GPU window"
+      }
+    },
+    {
+      "id": "literature-device-time-dilated-ctest",
+      "track": "literature",
+      "title": "pd3_fft / pd6_fft device kernels versus the host time-dilated linearisation",
+      "blocked_by": "G4 claim core owns the device",
+      "commands": [
+        "cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure -R device_time_dilated_test",
+        "cd $V2 && ctest --test-dir build-v2-cuda-debug --output-on-failure -R device_time_dilated_test"
+      ],
+      "expected": [
+        "100% tests passed, 0 tests failed out of 1 in each tree",
+        "the test's own gates: pd3_fft device A/B/z and sigma-column parity < 5.0e-11, affine reconstruction < 1.0e-8; pd6_fft parity < 2.0e-9, reconstruction < 1.0e-8, and the host reference itself must satisfy the quaternion tangent rule (< 2.0e-10) so an unprojected reference is reported as a reference defect (cpp/cuda/tests/device_time_dilated_test.cu; per-block worst row/column is printed)",
+        "measured on the RTX 5090 (sm_120) on 2026-09-05 after the include-order fix: pd6_fft coefficients 2.2e-16, sigma 4.3e-19, reconstruction 1.4e-14; the pre-fix host reference was linearised without the quaternion projection and produced the 0.98 offset gap seen on the H100 (results/lambda-h100/v2-deferred-3373988/triage.md); H100 (sm_90) re-verification pending a GPU window"
+      ],
+      "evidence": ["ctest output"]
+    },
+    {
+      "id": "literature-device-time-dilated-sanitizers",
+      "track": "literature",
+      "title": "compute-sanitizer memcheck / racecheck / initcheck / synccheck on device_time_dilated_test",
+      "blocked_by": "G4 claim core owns the device",
+      "commands": [
+        "cd $V2 && mkdir -p build-v2-gpu-deferred && for tool in memcheck racecheck initcheck synccheck; do compute-sanitizer --tool $tool build-v2-cuda-release/cuda-tests/device_time_dilated_test > build-v2-gpu-deferred/time-dilated-$tool.log 2>&1; echo $tool exit=$?; done"
+      ],
+      "expected": [
+        "exit=0 for all four tools",
+        "`ERROR SUMMARY: 0 errors` for memcheck/initcheck/synccheck and `RACECHECK SUMMARY: 0 hazards` for racecheck"
+      ],
+      "evidence": ["build-v2-gpu-deferred/time-dilated-*.log"]
+    },
+    {
+      "id": "literature-gpu-run",
+      "track": "literature",
+      "title": "Deferred literature GPU legs (P1-C pure-QOCO SCvx, P1-D-MC pure-QOCO pd6_fft batch)",
+      "blocked_by": "G4 claim core owns the device (the preflight refuses with exit 3 while a --g4-session/--g4-server process exists)",
+      "commands": [
+        "cd $V2 && $V2/.venv-v2/bin/spacepdhcg literature gpu-preflight; echo exit=$?",
+        "cd $V2 && $V2/.venv-v2/bin/spacepdhcg literature gpu-run acikmese-ploen-2007-pd3 blackmore-2010-pd3-case1 chari-2024-pd6-monte-carlo; echo exit=$?",
+        "cd $V2 && git status --porcelain -- results/literature docs/REFERENCE_REPRODUCTION_REPORT.md benchmarks/literature/reference_reproduction.json"
+      ],
+      "expected": [
+        "gpu-preflight: exit=0 and `\"ok\": true`, `\"reason\": \"device free\"`; exit 3 means the campaign still owns the device - stop",
+        "gpu-run: exit=2 is the expected final code because chari-2024-pd6-monte-carlo stays `gap` by design; acikmese-ploen-2007-pd3 and blackmore-2010-pd3-case1 must remain `reproduced`",
+        "acikmese-ploen-2007-pd3: measured.scvx_qoco_gpu_status == 'converged' with scvx_qoco_gpu_fuel_used_kg within the 1.5 kg acceptance tolerance of the 399.5 kg published value (CPU SCvx measured 399.361 kg)",
+        "blackmore-2010-pd3-case1: measured.scvx_qoco_gpu_status == 'converged' with scvx_qoco_gpu_fuel_used_kg within 1.5 kg of 399.4 kg (CPU SCvx measured 398.84 kg)",
+        "chari-2024-pd6-monte-carlo: details.gpu_persistent_batch.pure_qoco_native_pd6_fft.status == 'measured' with per-batch summaries for sizes 1, 16, 64; persistent_device_scvx stays 'blocked' (frozen G4 fixture families only)",
+        "results/literature/*.json, benchmarks/literature/reference_reproduction.json and docs/REFERENCE_REPRODUCTION_REPORT.md are rewritten (results/ is ignored; the report and its JSON twin must be committed after review)"
+      ],
+      "evidence": ["results/literature/acikmese-ploen-2007-pd3.json", "results/literature/blackmore-2010-pd3-case1.json", "results/literature/chari-2024-pd6-monte-carlo.json", "docs/REFERENCE_REPRODUCTION_REPORT.md"]
+    },
+    {
+      "id": "gtoc12-gpu-lambert-parity",
+      "track": "gtoc12",
+      "title": "GTOC12 GPU Lambert screening parity",
+      "blocked_by": "G4 claim core owns the device; the track is CPU-first by design (src/spacepdhcg/gtoc12/lambert.py keeps the GPU batch out while the campaign runs)",
+      "commands": [
+        "cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure -R 'orbitweaver_gpu_test|orbitweaver_g3_adapter_test'",
+        "cd $V2 && SPACEPDHCG_GTOC12_DATA=$V2/benchmarks/gtoc12/data $V2/.venv-v2/bin/python -m pytest -q -p no:cacheprovider tests/test_gtoc12_pipeline.py -k lambert"
+      ],
+      "expected": [
+        "orbitweaver_gpu_test: 100% passed - the device Lambert family batch (spacepdhcg_orbitweaver_lambert_evaluate_async) matches the CPU enumerate_lambert_families() universal parameter and departure velocity on the shared requests",
+        "tests/test_gtoc12_pipeline.py -k lambert: passed (NumPy vectorised Lambert == native spacepdhcg_lambert_zero_revolution / _family_batch_cpu truth path on the 8192-sample parity set; this half is CPU and already passed in this integration)",
+        "FOLLOW-UP (not scriptable yet): a GTOC12 catalogue-sample harness that feeds the same 8192 (departure, arrival, TOF) triples to the device batch and asserts |dV_gpu - dV_cpu| <= 1e-9 km/s; until it exists the GPU parity rests on orbitweaver_gpu_test plus the CPU parity test"
+      ],
+      "evidence": ["ctest output", "pytest output"]
+    },
+    {
+      "id": "current-head-g2-g3-reseal",
+      "track": "integration",
+      "title": "Current-head G2/G3 (and G0/G1) reseal implications of the new CUDA kernels",
+      "blocked_by": "G4 claim core owns the device; a reseal also needs a clean candidate HEAD and ~105 min of exclusive GPU time",
+      "commands": [
+        "cd $V2 && test -z \"$(git status --porcelain=v1)\" && git rev-parse HEAD",
+        "cd $V2 && bash scripts/gpu/run_g2_evidence.sh   # after adapting out=/py=/tool= to the candidate worktree as the b6afb49 scripts did (results/gpu/current-head-<sha>/g2)",
+        "cd $V2 && bash scripts/gpu/run_g3_evidence.sh   # same; pass --force-export=true to nsys stats (see scratchpad)",
+        "cd $V2 && ctest --test-dir build-v2-cuda-release --output-on-failure && ctest --test-dir build-v2-cuda-debug --output-on-failure"
+      ],
+      "expected": [
+        "full CUDA CTest: 100% tests passed out of 69 in Release and Debug (62 sealed tests at b6afb49 + planner_c_api_smoke, planner_problem_smoke, powered_descent_free_time_transcription_smoke, time_dilated_flow_smoke, time_dilated_flow_include_order_smoke, device_time_dilated_test, spacepdhcg_plan_capabilities)",
+        "G2/G3 status=PASS with the sealed b6afb49 topology fingerprints for HCW, P1-C pd3, P1-D pd6 and low-thrust unchanged: their transcription headers are blob-identical to 63271d5 (see frozen_hashes) and device_scvx.cu only gained the pd3_fft/pd6_fft branches (+370/-0 lines)",
+        "the G4 capability e546583b... stays bound to source_commit 9a4cbea and libspacepdhcg_cuda.so 84d98bcd...; the candidate's Release library is af835ad8... (new kernels), so NO G4 claim-core evidence may be produced from the candidate until a new capability is generated after its own G0-G3 reseal"
+      ],
+      "evidence": ["results/gpu/current-head-<candidate sha>/g2", "results/gpu/current-head-<candidate sha>/g3"]
+    }
+  ],
+  "frozen_hashes": {
+    "statement": "New pd3_fft/pd6_fft topologies do not alter the sealed fixed-time topologies or the G4 contracts. Evidence: git blob ids are identical between the base 63271d5 and the candidate for every file below; the .sha256 lock files are unchanged; tests/test_g4_execution_contract.py asserts the claim-core digest 40dc2174... and passed (67 G4 contract tests, 490-test full suite). Release merge (release/single-gpu-v1-merge, 2026-09-05): two of these files legitimately moved after 63271d5 and the blobs recorded here are those of the merged tree: cpp/cuda/tests/device_scvx_integration_test.cu carries the integration/single-gpu-v1 claim-core amendment commits 26def2b, 8930817, 2ef27e1, 857f99a and aca6500 (GPU-validated on that line, see docs/G4_GATE_REPORT.md), and cpp/cuda/tests/recovery_test.cu carries proposal/g3-sanitizer-recovery-cap 9fafee8 (sanitizer-only cancellation budget; host build only, not yet executed on the GPU). Every other blob is unchanged from base 63271d5. Second release merge (release/single-gpu-v1-merge onto main 689851b, 2026-09-05): cpp/cuda/src/persistent_pdhcg.cu and cpp/cuda/tests/device_scvx_integration_test.cu moved with integration/single-gpu-v1 1dbcae0 (G4 attempt-deadline enforcement inside the recovery kernel and solve preamble; verified on that line: cancellation_deadline_test 84/84, tests/test_g4_pdhcg_deadline_gpu.py 13/13, CUDA CTest 63/63 + 22/22, memcheck/racecheck clean); the blobs recorded here are those of the merged tree. Every other blob is unchanged from the first release merge.",
+    "identical_blobs_base_vs_candidate": {
+      "cpp/include/spacepdhcg/transcription/hcw_rendezvous.hpp": "1a0617974f882df7d3de3a4619e97cc29d594b78",
+      "cpp/include/spacepdhcg/transcription/powered_descent_3dof.hpp": "c1771cc617741634cf03269684b53428703f5aaf",
+      "cpp/include/spacepdhcg/transcription/powered_descent_6dof.hpp": "19817a9ac145bbc5cb4381fdca58f1d075747ee9",
+      "cpp/include/spacepdhcg/transcription/low_thrust.hpp": "c77fb96870cc2561d973ab04fcdf5d954ddb7a2d",
+      "cpp/cuda/src/persistent_pdhcg.cu": "e0099df7469745eeaf27c1ffece46c43c1b5cb3d",
+      "cpp/cuda/tests/device_scvx_integration_test.cu": "642eeee216d4c70c6be4f230a77e88724802c654",
+      "cpp/cuda/tests/recovery_test.cu": "124afd35df935041d62d13b17697ef763555b6bd",
+      "benchmarks/g4_policy.json": "07755ed79d77700ab2641259b414ddffcadc6cef",
+      "benchmarks/g4_applicability.json": "a5b4b0d751e11cd76c348800b39c4fffb2f83a73",
+      "benchmarks/g4_h5_h6_claim_core.json": "b16685b57f6aa2cd63d81e9ce2604daece6b394e",
+      "benchmarks/paper2_instances.json": "5825c94a1fe3f393f67d05d4938eeda2b238ecd3"
+    },
+    "sha256_locks": {
+      "benchmarks/g4_policy.json": "9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024",
+      "benchmarks/g4_applicability.json": "1c4e0d51fe1f759012719032bbd8286a425db2b8d59d969bbc79c0a79baca209",
+      "benchmarks/g4_h5_h6_claim_core.json": "40dc217467ffe32e919d4f901943e0200f69e302cf57cd15ccdfa88bfa0c8d0b"
+    },
+    "changed_cuda_sources_base_vs_candidate": {
+      "cpp/cuda/src/device_scvx.cu": "+370 / -0 lines (pd3_fft, pd6_fft topology branches; the 9a4cbea workspace-wait fix is retained)",
+      "cpp/cuda/include/spacepdhcg/cuda/device_scvx_c_api.h": "+49 lines with CRLF->LF normalisation only (git diff --ignore-cr-at-eol shows no deletions)",
+      "cpp/cuda/CMakeLists.txt": "adds spacepdhcg_plan tool, device_time_dilated_test, spacepdhcg_plan_capabilities test and the install rule for spacepdhcg_plan",
+      "cpp/cuda/tests/device_time_dilated_test.cu": "new",
+      "cpp/cuda/tools/spacepdhcg_plan.cu": "new"
+    },
+    "candidate_build_digests": {
+      "build-v2-cuda-release/cuda/libspacepdhcg_cuda.so": "af835ad897c69cf5db53b0593af83670c56f510b857d3c639f7d328d988f22a7",
+      "build-v2-cuda-release/cuda-tests/device_scvx_integration_test": "4388f6ffa2f5cf7856760a8ec0baa41c7a8992ff58fbd176f700e8f774042f06",
+      "build-v2-cuda-release/cuda-tools/spacepdhcg_plan": "0380b0b7c8c021d400043a4c0b5a32f19e036ef4ef4336a889fef24d9c08860e",
+      "build-v2-cuda-release/cuda-tests/device_time_dilated_test": "15bf4b4e8f48167cc51eb15f003f6b578fde756ba1ada23536f9a5cdff754f5a",
+      "g4_campaign_pinned_libspacepdhcg_cuda.so": "84d98bcd4595556d62b122621920ff0c2dd89d889f0c69deba0a2c28a2983d03",
+      "g4_campaign_pinned_executable": "baab5602cf7ec1d6ee3ce92aa38afee281d2d24e50e94a3ec690108a72b3b9d8"
+    }
+  },
+  "promotion": {
+    "precondition": "the G4 claim-core finish script has sealed results/gpu/g4/claim-core-9a4cbea and no worker/executor process remains; integration/single-gpu-v1 is still at 63271d5 (otherwise rebase/merge the candidate first)",
+    "fast_forward_command": "cd /home/angus/worktrees/spacepdhcg-single-gpu-integration && test -z \"$(git status --porcelain=v1)\" && test \"$(git rev-parse HEAD)\" = 63271d58b78df343c1ae694525e460db31696f5d && git merge --ff-only integration/single-gpu-v2-candidate",
+    "note": "The candidate is a strict descendant of integration/single-gpu-v1 (63271d5), so promotion is a pure fast-forward; no merge commit is created."
+  }
+}

@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spacepdhcg.dev/schema/planner/problem-1.0.0.json",
+  "title": "SpacePDHCG planner problem",
+  "description": "One trajectory planning problem for the SpacePDHCG persistent SCvx planner. Schema version 1.0.0 supports fixed final time only; free final time is reserved and must be false.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "family", "horizon", "initial_state", "terminal"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "name": {"type": "string", "maxLength": 200},
+    "description": {"type": "string"},
+    "family": {
+      "enum": ["hcw", "powered_descent_3dof", "powered_descent_6dof", "low_thrust"],
+      "description": "Dynamics model / transcription family."
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Units used by this document. Omitted quantities are in the family's canonical units.",
+      "properties": {
+        "position": {"enum": ["m", "km"]},
+        "velocity": {"enum": ["m/s", "km/s"]},
+        "acceleration": {"enum": ["m/s^2", "mm/s^2", "km/s^2"]},
+        "mass": {"enum": ["kg", "t"]},
+        "thrust": {"enum": ["N", "kN"]},
+        "torque": {"enum": ["N*m", "kN*m"]},
+        "angle": {"enum": ["rad", "deg"]},
+        "angular_rate": {"enum": ["rad/s", "deg/s"]},
+        "time": {"enum": ["s", "min", "h"]}
+      }
+    },
+    "horizon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intervals", "final_time"],
+      "properties": {
+        "intervals": {"type": "integer", "minimum": 2, "maximum": 200000},
+        "final_time": {"type": "number", "exclusiveMinimum": 0},
+        "free_final_time": {
+          "const": false,
+          "description": "Reserved. Free final time is not supported by schema 1.0.0."
+        }
+      }
+    },
+    "initial_state": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 6,
+      "maxItems": 14,
+      "description": "Full state in the family's state order (see the family documentation)."
+    },
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"type": "array", "items": {"type": "number"}, "minItems": 6, "maxItems": 14},
+        "fixed": {
+          "type": "array",
+          "items": {"type": "boolean"},
+          "minItems": 6,
+          "maxItems": 14,
+          "description": "Per-component fixed/free flags. The frozen transcriptions pin exactly position, velocity (and attitude/rate for 6-DoF); terminal mass is free."
+        }
+      }
+    },
+    "vehicle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dry_mass": {"type": "number", "exclusiveMinimum": 0},
+        "mass_flow_coefficient": {"type": "number", "exclusiveMinimum": 0, "description": "kg/s per unit thrust (= 1 / exhaust velocity)."},
+        "exhaust_velocity": {"type": "number", "exclusiveMinimum": 0},
+        "specific_impulse": {"type": "number", "exclusiveMinimum": 0, "description": "Seconds (g0 = 9.80665 m/s^2)."},
+        "thrust": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minimum": {"type": "number", "minimum": 0},
+            "maximum": {"type": "number", "exclusiveMinimum": 0}
+          }
+        },
+        "principal_inertia": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}, "minItems": 3, "maxItems": 3, "description": "6-DoF only, kg*m^2 (not unit-converted)."},
+        "maximum_torque": {"type": "number", "exclusiveMinimum": 0, "description": "6-DoF only."},
+        "thrust_to_acceleration": {"type": "number", "exclusiveMinimum": 0, "description": "Low thrust only; canonical km/s^2 per N/kg (default 1e-3)."}
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gravity": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3, "description": "Powered descent: uniform gravity vector."},
+        "mean_motion": {"type": "number", "exclusiveMinimum": 0, "description": "HCW reference-orbit mean motion."},
+        "gravitational_parameter": {"type": "number", "exclusiveMinimum": 0, "description": "Low thrust: central-body mu (position^3/time^2)."}
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maximum_tilt": {"type": "number", "exclusiveMinimum": 0, "description": "Powered descent thrust pointing half-angle."},
+        "glide_slope": {"type": "number", "exclusiveMinimum": 0, "description": "Powered descent glide-slope half-angle measured from vertical."},
+        "minimum_altitude": {"type": "number", "minimum": 0, "description": "Powered descent; must be 0 (frozen transcription bound z >= 0)."},
+        "maximum_angular_rate": {"type": "number", "exclusiveMinimum": 0, "description": "6-DoF only."},
+        "minimum_radius": {"type": "number", "exclusiveMinimum": 0, "description": "Low thrust only."},
+        "maximum_acceleration": {"type": "number", "exclusiveMinimum": 0, "description": "HCW only."},
+        "acceleration_bound": {"enum": ["norm", "box"], "description": "HCW only: second-order-cone norm bound (default) or per-axis box."}
+      }
+    },
+    "solver": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "backend": {"enum": ["pure_qoco", "pdhcg", "pdhcg_recovery", "cpu_reference"]},
+        "preset": {"enum": ["frozen_adaptive_pure_qoco", "frozen_adaptive_pdhcg", "fixed_tight_pdhcg"]},
+        "tolerance": {"type": "number", "exclusiveMinimum": 0, "maximum": 0.1},
+        "step_tolerance": {"type": "number", "exclusiveMinimum": 0},
+        "maximum_outer_iterations": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "minimum_outer_iterations": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "time_limit_seconds": {"type": "number", "minimum": 0, "description": "0 = unlimited. The CLI default is 600 s."},
+        "certificate_tolerance": {"type": "number", "exclusiveMinimum": 0},
+        "replay_parity_tolerance": {"type": "number", "exclusiveMinimum": 0},
+        "warm_start_mode": {"enum": ["none", "primal", "primal_dual", "full_retained"]},
+        "trust_region": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "initial_radius": {"type": "number", "exclusiveMinimum": 0},
+            "minimum_radius": {"type": "number", "exclusiveMinimum": 0},
+            "maximum_radius": {"type": "number", "exclusiveMinimum": 0},
+            "shrink_factor": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+            "expansion_factor": {"type": "number", "exclusiveMinimum": 1},
+            "acceptance_threshold": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+            "strong_agreement_threshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+            "near_boundary_fraction": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+            "restoration_reduction": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1}
+          }
+        },
+        "penalty": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "feasibility_penalty": {"type": "number", "exclusiveMinimum": 0},
+            "virtual_penalty": {"type": "number", "minimum": 0}
+          }
+        },
+        "forcing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "epsilon_max": {"type": "number", "exclusiveMinimum": 0},
+            "epsilon_floor": {"type": "number", "exclusiveMinimum": 0},
+            "epsilon_0": {"type": "number", "exclusiveMinimum": 0},
+            "coefficient": {"type": "number", "exclusiveMinimum": 0},
+            "alpha": {"type": "number", "exclusiveMinimum": 0},
+            "gamma": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+            "repair_ceiling": {"type": "number", "exclusiveMinimum": 0},
+            "progress_ceiling": {"type": "number", "exclusiveMinimum": 0},
+            "refinement_ceiling": {"type": "number", "exclusiveMinimum": 0},
+            "polish_ceiling": {"type": "number", "exclusiveMinimum": 0},
+            "repair_iterations": {"type": "integer", "minimum": 1},
+            "progress_iterations": {"type": "integer", "minimum": 1},
+            "refinement_iterations": {"type": "integer", "minimum": 1},
+            "polish_iterations": {"type": "integer", "minimum": 1},
+            "resolve_trigger_multiple": {"type": "number", "exclusiveMinimum": 0},
+            "resolve_refinement_factor": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+            "resolve_minimum_tolerance": {"type": "number", "exclusiveMinimum": 0},
+            "maximum_resolves": {"type": "integer", "minimum": 0, "maximum": 8},
+            "fixed_inner_tolerance": {"type": "number", "minimum": 0},
+            "fixed_inner_iteration_limit": {"type": "integer", "minimum": 0},
+            "final_polish_tolerance": {"type": "number", "exclusiveMinimum": 0},
+            "final_polish_iteration_limit": {"type": "integer", "minimum": 1}
+          }
+        },
+        "transcription": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Fixed CQP coefficients in canonical units (advanced).",
+          "properties": {
+            "virtual_l1_weight": {"type": "number", "minimum": 0},
+            "virtual_quadratic_weight": {"type": "number", "minimum": 0},
+            "virtual_epigraph_regularisation": {"type": "number", "minimum": 0},
+            "fuel_weight": {"type": "number", "minimum": 0},
+            "state_tracking_weights": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}},
+            "control_tracking_weights": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}},
+            "state_trust_scales": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}},
+            "control_trust_scales": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}},
+            "state_weights": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}},
+            "control_weights": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}}
+          }
+        }
+      }
+    },
+    "warm_start": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["states", "controls"],
+          "description": "Previous PlanResult node histories in canonical units; states are re-propagated from the initial state.",
+          "properties": {
+            "source": {"type": "string"},
+            "states": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}},
+            "controls": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}}
+          }
+        }
+      ]
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dense_replay_substeps": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "include_iterations": {"type": "boolean"},
+        "write_csv": {"type": "boolean"},
+        "write_summary": {"type": "boolean"}
+      }
+    }
+  }
+}

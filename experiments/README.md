@@ -1,6 +1,11 @@
 # Experiment evidence records
 
-SpacePDHCG and OrbitWeaver benchmark design is frozen in `benchmarks/paper1_matrix.json` and `benchmarks/paper2_matrix.json`. The scientific rules governing those runs are in `docs/BENCHMARK_PROTOCOL.md`.
+SpacePDHCG and OrbitWeaver benchmark design is frozen in `benchmarks/paper1_matrix.json` and
+`benchmarks/paper2_matrix.json`. The scientific rules governing those runs are in
+`docs/BENCHMARK_PROTOCOL.md`. Complete-system comparisons, literature-result admissibility, and the
+secondary GTOPX and historical GTOC tracks are defined in
+`docs/COMPARATIVE_SOLVER_CAMPAIGN.md`; machine-readable external references are registered in
+`benchmarks/literature_baselines.json`.
 
 Every measured run should emit one machine-readable record conforming to `experiments/schema/run_manifest.schema.json`. The standard-library implementation is `spacepdhcg.experiments.RunManifest`; it records repository identity, upstream revisions, host/GPU metadata, problem and solver identity, requested/achieved quality, timing, status, notes, and artifact references.
 

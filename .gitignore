@@ -42,3 +42,10 @@ visualization-output/
 
 # GTOC12 pinned external data (fetched by scripts/gtoc12/fetch_gtoc12_data.py)
 benchmarks/gtoc12/data/
+
+# Generated multi-MB GTOC12 viewer dataset (web/trajectory-viewer/README.md: npm run import-gtoc12)
+web/trajectory-viewer/data/gtoc12/
+
+# SSH private keys (never commit)
+*.pem
+traj-key*

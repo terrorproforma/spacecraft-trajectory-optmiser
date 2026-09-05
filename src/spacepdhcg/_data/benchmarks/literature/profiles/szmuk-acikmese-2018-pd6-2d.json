@@ -1,0 +1,54 @@
+{
+  "id": "szmuk-acikmese-2018-pd6-2d",
+  "family": "P1-D-pd6",
+  "title": "Szmuk & Acikmese 2018 free-final-time 6-DoF landing, 2-D in-plane example (Section 4.1), K = 50",
+  "source": {
+    "doi": "10.2514/6.2018-0617",
+    "url": "https://arxiv.org/abs/1802.03827",
+    "version": "arXiv:1802.03827v1 / AIAA 2018-0617"
+  },
+  "objective_convention": "time-of-flight (minimum t_f)",
+  "parameters": {
+    "gravity": [-1.0, 0.0, 0.0],
+    "wet_mass": 2.0,
+    "dry_mass": 1.0,
+    "thrust_min": 0.3,
+    "thrust_max": 5.0,
+    "gimbal_max_deg": 20.0,
+    "tilt_max_deg": 90.0,
+    "glide_slope_deg": 20.0,
+    "omega_max_deg": 60.0,
+    "inertia": [0.01, 0.01, 0.01],
+    "thrust_arm": [-0.01, 0.0, 0.0],
+    "alpha_mdot": 0.01,
+    "initial_position": [4.0, 4.0, 0.0],
+    "initial_velocity": [0.0, -4.0, 0.0],
+    "final_velocity": [-0.1, 0.0, 0.0],
+    "final_quaternion": [1.0, 0.0, 0.0, 0.0],
+    "initial_omega": [0.0, 0.0, 0.0],
+    "virtual_weight": 100000.0,
+    "trust_weight": 0.001,
+    "sigma_trust_weight": 0.1,
+    "virtual_tolerance": 1e-10,
+    "trust_tolerance": 0.001,
+    "max_iterations": 15,
+    "nodes": 50
+  },
+  "unrecoverable": {
+    "alpha_mdot": "Table 1 does not print alpha_mdot (only its definition 1/(Isp g0)); 0.01 UT/UL is an assumption",
+    "initial_velocity_vertical": "Section 4.1 states only a horizontal velocity of 4 UL/UT to the west; the vertical component is assumed zero",
+    "converged_time_of_flight": "shown only in Figure 2 (no digits printed)"
+  },
+  "published": {
+    "tf_guess_sweep_spread_ut": 0.01,
+    "tf_guess_sweep_spread_text": "within 0.01 [UT] of each other",
+    "tf_guesses_ut": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+    "iterations_to_converge": 6,
+    "iterations_to_converge_text": "convergence was obtained by the sixth iteration",
+    "evidence_label": "published-reference",
+    "objective_value": "descriptive-only (Figure 2 only)"
+  },
+  "tf_guess_sweep": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+  "extended_iterations": 30,
+  "acceptance_spread_ut": 0.01
+}

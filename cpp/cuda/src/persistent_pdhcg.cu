@@ -364,6 +364,21 @@ __device__ void zero_vector(double* vector, const int count) {
     }
 }
 
+// Block-uniform poll of the mapped host cancellation flag. One thread samples the flag and
+// publishes it through shared memory, so every warp observes the same value and leaves the
+// enclosing loop on the same iteration. Reading the mapped flag independently in every thread
+// (as the recovery kernel once did) let a flag that flipped between two warps' reads split the
+// block around the __syncthreads() that follow, which is undefined behaviour. The leading
+// barrier orders this poll after every thread's read of the previous one.
+__device__ bool poll_cancellation(volatile int* cancellation, int* shared_flag) {
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        *shared_flag = *cancellation != 0 ? 1 : 0;
+    }
+    __syncthreads();
+    return *shared_flag != 0;
+}
+
 __device__ void csc_multiply(
     const int columns,
     const int* offsets,
@@ -457,7 +472,18 @@ __global__ void coefficient_change_kernel(
     control->coefficient_change_norm = sqrt(norm_squared);
 }
 
-__global__ void initialise_control_kernel(DeviceControl* control, DeviceProblem* problem) {
+// Single-thread solve preamble: decides whether the scaling is refreshed and, if so, runs the
+// serial Ruiz equilibration and power iteration. At N=2000 that refresh takes several seconds
+// of uninterruptible single-thread work, so it polls the cancellation flag between passes; a
+// cancel leaves the steps untouched, marks the scaling stale (the next solve recomputes it
+// from scratch, so no partially scaled state is ever solved on) and lets the solve kernel
+// observe the same flag on its first iteration. `cancellation` may be null for the explicit
+// refresh entry point, which is never subject to an attempt deadline.
+__global__ void initialise_control_kernel(
+    DeviceControl* control,
+    DeviceProblem* problem,
+    volatile int* cancellation
+) {
     if (blockIdx.x != 0 || threadIdx.x != 0) {
         return;
     }
@@ -471,8 +497,11 @@ __global__ void initialise_control_kernel(DeviceControl* control, DeviceProblem*
         || (control->scaling_mode == SPACEPDHCG_CUDA_SCALING_REFRESH_IF_NEEDED
             && (threshold_refresh || budget_refresh));
     if (refresh || !(control->primal_step > 0.0) || !(control->dual_step > 0.0)) {
-        double* const variable_scale = problem->scaling;
-        double* const row_scale = problem->scaling + problem->variables;
+        // The equilibration factors accumulate in recovery scratch (idle before a solve) and
+        // problem->scaling is written only once the refresh completes, so a cancel between
+        // passes leaves the previous scaling and steps mutually consistent.
+        double* const variable_scale = problem->recovery_backup_primal;
+        double* const row_scale = problem->recovery_backup_dual;
         for (int variable = 0; variable < problem->variables; ++variable) {
             variable_scale[variable] = 1.0;
         }
@@ -482,6 +511,11 @@ __global__ void initialise_control_kernel(DeviceControl* control, DeviceProblem*
         // Ten cone-preserving Ruiz passes match the fixed-pattern upstream policy.
         // The existing product buffers are safe create-time scratch before solve.
         for (int pass = 0; pass < 10; ++pass) {
+            if (cancellation != nullptr && *cancellation != 0) {
+                control->force_scaling_refresh = 1;
+                control->scaling_refreshed = 0;
+                return;
+            }
             for (int variable = 0; variable < problem->variables; ++variable) {
                 problem->previous_primal[variable] = 0.0;
             }
@@ -658,6 +692,11 @@ __global__ void initialise_control_kernel(DeviceControl* control, DeviceProblem*
         }
         double operator_norm = sqrt(operator_norm_squared);
         for (int pass = 0; pass < 20; ++pass) {
+            if (cancellation != nullptr && *cancellation != 0) {
+                control->force_scaling_refresh = 1;
+                control->scaling_refreshed = 0;
+                return;
+            }
             for (int row = 0; row < problem->scalar_rows; ++row) {
                 problem->scalar_product[row] = 0.0;
             }
@@ -1786,7 +1825,16 @@ __device__ void recovery_dual_adjoint(
     __syncthreads();
 }
 
-__device__ bool recovery_reconstruct_dual(DeviceProblem* problem) {
+// Reconstructs the dual from the active set through restarted CGLS. Polls the cancellation
+// flag every few CGLS iterations: for large transcriptions this loop runs up to
+// 16 x (rows + variables) iterations with serial reductions, which is minutes to hours of
+// otherwise uninterruptible work. On cancellation it returns false with *shared_flag set; the
+// caller rolls the iterate back, so the partially reconstructed dual is never observed.
+__device__ bool recovery_reconstruct_dual(
+    DeviceProblem* problem,
+    volatile int* cancellation,
+    int* shared_flag
+) {
     zero_vector(problem->scalar_product, problem->scalar_rows);
     zero_vector(problem->affine_product, problem->affine_rows);
     zero_vector(problem->gradient, problem->variables);
@@ -1873,6 +1921,9 @@ __device__ bool recovery_reconstruct_dual(DeviceProblem* problem) {
     // trajectory CQPs can be strongly rank-deficient, so finite-precision
     // conjugacy may be exhausted well before the nominal dimension bound.
     for (int restart = 0; restart < 8; ++restart) {
+        if (poll_cancellation(cancellation, shared_flag)) {
+            return false;
+        }
         recovery_dual_adjoint(
             problem,
             problem->average_primal,
@@ -1891,6 +1942,10 @@ __device__ bool recovery_reconstruct_dual(DeviceProblem* problem) {
         }
         __syncthreads();
         for (int iteration = 0; iteration < 2 * coefficients; ++iteration) {
+            if ((iteration & 3) == 3
+                && poll_cancellation(cancellation, shared_flag)) {
+                return false;
+            }
             recovery_dual_map_to_stationarity(
                 problem,
                 problem->recovery_direction_dual,
@@ -2039,13 +2094,21 @@ __global__ void recovery_kernel(
     DeviceReport* report,
     volatile int* cancellation
 ) {
+    // Every cancellation test in this kernel goes through poll_cancellation so the whole
+    // block agrees on the outcome before any barrier; see the helper for why.
+    __shared__ int cancel_flag;
     if (report->termination != SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT
         || control->iteration_limit < 350'000U
         || fmin(control->feasibility_tolerance, control->optimality_tolerance)
-            > 1.0e-6
-        || *cancellation != 0) {
+            > 1.0e-6) {
         return;
     }
+    if (poll_cancellation(cancellation, &cancel_flag)) {
+        return;
+    }
+    // The PDHG iterations actually spent before recovery began; a cancelled recovery reports
+    // this honest count rather than the full iteration budget.
+    const std::uint64_t pdhg_iterations = report->iterations;
     if (threadIdx.x == 0) {
         ++control->recovery_attempt_count;
         report->recovery_attempt_count = control->recovery_attempt_count;
@@ -2107,8 +2170,14 @@ __global__ void recovery_kernel(
         problem->recovery_backup_dual[row] = problem->dual[row];
     }
     __syncthreads();
+    // `cancelled` and `completed_recovery_iterations` are per-thread copies of block-uniform
+    // values: every poll result is published through shared memory, so all threads take the
+    // same branches and count the same iterations.
+    bool cancelled = false;
+    std::uint64_t completed_recovery_iterations = 0U;
     for (int outer = 0; outer < 50'000; ++outer) {
-        if (*cancellation != 0) {
+        if (poll_cancellation(cancellation, &cancel_flag)) {
+            cancelled = true;
             break;
         }
         zero_vector(problem->gradient, problem->variables);
@@ -2155,36 +2224,32 @@ __global__ void recovery_kernel(
         __syncthreads();
         recovery_scalar_projection(problem);
         recovery_affine_projection(problem);
+        ++completed_recovery_iterations;
     }
-    if (*cancellation != 0) {
-        for (int variable = threadIdx.x;
-             variable < problem->variables;
-             variable += blockDim.x) {
-            problem->primal[variable] = problem->recovery_backup_primal[variable];
+    // Feasibility polish, KKT reconstruction and refinement follow the projected-gradient
+    // loop. Each phase polls the flag at its own loop granularity (and inside CGLS), so a
+    // deadline that lands after the projected-gradient loop is still honoured promptly
+    // instead of waiting for the whole reconstruction to finish.
+    for (int iteration = 0; !cancelled && iteration < 100; ++iteration) {
+        if (poll_cancellation(cancellation, &cancel_flag)) {
+            cancelled = true;
+            break;
         }
-        for (int row = threadIdx.x; row < duals; row += blockDim.x) {
-            problem->dual[row] = problem->recovery_backup_dual[row];
-        }
-        __syncthreads();
-        evaluate_report(problem, control, report, control->iteration_limit);
-        if (threadIdx.x == 0) {
-            report->recovery_count = control->recovery_count;
-            report->recovery_rejected_count = control->recovery_rejected_count;
-            report->recovery_iterations = 0U;
-            report->recovery_outcome_reason =
-                SPACEPDHCG_CUDA_RECOVERY_CANCELLED;
-            report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
-        }
-        return;
-    }
-    for (int iteration = 0; iteration < 100; ++iteration) {
         recovery_scalar_projection(problem);
         recovery_active_cone_projection(problem);
     }
     bool accepted = false;
     __shared__ int kkt_converged;
-    for (int refinement = 0; refinement < 32; ++refinement) {
-        accepted = recovery_reconstruct_dual(problem);
+    for (int refinement = 0; !cancelled && refinement < 32; ++refinement) {
+        if (poll_cancellation(cancellation, &cancel_flag)) {
+            cancelled = true;
+            break;
+        }
+        accepted = recovery_reconstruct_dual(problem, cancellation, &cancel_flag);
+        if (cancel_flag != 0) {
+            cancelled = true;
+            break;
+        }
         evaluate_report(problem, control, report, control->iteration_limit);
         if (threadIdx.x == 0) {
             kkt_converged = accepted
@@ -2237,11 +2302,41 @@ __global__ void recovery_kernel(
         }
         __syncthreads();
         for (int projection = 0; projection < 100; ++projection) {
+            if (poll_cancellation(cancellation, &cancel_flag)) {
+                cancelled = true;
+                break;
+            }
             recovery_scalar_projection(problem);
             recovery_active_cone_projection(problem);
         }
     }
-    accepted = recovery_reconstruct_dual(problem);
+    if (!cancelled) {
+        accepted = recovery_reconstruct_dual(problem, cancellation, &cancel_flag);
+        cancelled = cancel_flag != 0;
+    }
+    if (cancelled) {
+        // Transactional rollback: the pre-recovery PDHG iterate is the attempt's honest
+        // state. Report the PDHG iterations spent and the recovery iterations completed.
+        for (int variable = threadIdx.x;
+             variable < problem->variables;
+             variable += blockDim.x) {
+            problem->primal[variable] = problem->recovery_backup_primal[variable];
+        }
+        for (int row = threadIdx.x; row < duals; row += blockDim.x) {
+            problem->dual[row] = problem->recovery_backup_dual[row];
+        }
+        __syncthreads();
+        evaluate_report(problem, control, report, pdhg_iterations);
+        if (threadIdx.x == 0) {
+            report->recovery_count = control->recovery_count;
+            report->recovery_rejected_count = control->recovery_rejected_count;
+            report->recovery_iterations = completed_recovery_iterations;
+            report->recovery_outcome_reason =
+                SPACEPDHCG_CUDA_RECOVERY_CANCELLED;
+            report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+        }
+        return;
+    }
     evaluate_report(problem, control, report, control->iteration_limit);
     __shared__ int qualified;
     if (threadIdx.x == 0) {
@@ -2356,6 +2451,36 @@ __global__ void restore_steps_kernel(DeviceControl* control, const double* sourc
         control->dual_step = source[1];
         control->force_scaling_refresh = 0;
     }
+}
+
+// Forces the module holding every solve-path kernel to be loaded now. Under CUDA's default
+// lazy module loading the first launch of a kernel loads its module synchronously inside the
+// launch call; in spacepdhcg_cuda_workspace_solve_async that happened while the workspace
+// mutex was held and before the state became SOLVING, so a deadline watchdog's cancel could
+// neither raise the device flag nor be observed by the already-queued equilibration kernel
+// for the whole load (about 7 s on WSL2 for an N=2000 first attempt). Loading at create time
+// keeps that cost out of every attempt window. cudaFuncGetAttributes triggers the load without
+// enqueueing work and without touching the workspace's allocation accounting.
+cudaError_t preload_solve_kernels() {
+    cudaFuncAttributes attributes{};
+    for (const void* kernel : std::initializer_list<const void*>{
+             reinterpret_cast<const void*>(coefficient_change_kernel),
+             reinterpret_cast<const void*>(initialise_control_kernel),
+             reinterpret_cast<const void*>(set_solve_options_kernel),
+             reinterpret_cast<const void*>(solve_kernel),
+             reinterpret_cast<const void*>(recovery_kernel),
+             reinterpret_cast<const void*>(residual_kernel),
+             reinterpret_cast<const void*>(set_constant_kernel),
+             reinterpret_cast<const void*>(prepare_warm_start_kernel),
+             reinterpret_cast<const void*>(checkpoint_steps_kernel),
+             reinterpret_cast<const void*>(restore_steps_kernel),
+         }) {
+        const auto status = cudaFuncGetAttributes(&attributes, kernel);
+        if (status != cudaSuccess) {
+            return status;
+        }
+    }
+    return cudaSuccess;
 }
 
 struct ViewExpectation {
@@ -3109,6 +3234,13 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
         auto cuda_status = cudaSetDevice(exchange->consumer_stream.device.id);
         if (cuda_status != cudaSuccess) {
             status = cuda_failure(result, cuda_status, "cudaSetDevice");
+            cleanup_workspace(result);
+            delete result;
+            return status;
+        }
+        cuda_status = preload_solve_kernels();
+        if (cuda_status != cudaSuccess) {
+            status = cuda_failure(result, cuda_status, "solve kernel module load");
             cleanup_workspace(result);
             delete result;
             return status;
@@ -3904,7 +4036,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
     }
     initialise_control_kernel<<<1, 1, 0, cuda_stream>>>(
         workspace->control,
-        workspace->device_problem
+        workspace->device_problem,
+        workspace->solver.cancellation
     );
     solve_kernel<<<1, kThreads, 0, cuda_stream>>>(
         workspace->device_problem,
@@ -3998,8 +4131,19 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_wait(
     if (workspace == nullptr) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
-    std::lock_guard lock(workspace->mutex);
+    // Block on the completion event without holding the workspace mutex. Holding it across
+    // cudaEventSynchronize made spacepdhcg_cuda_workspace_cancel from another thread (the G4
+    // per-attempt deadline watchdog) wait for the running solve kernel to exhaust its whole
+    // iteration budget, so a frozen deadline could never reach the device. The owner thread
+    // must still not destroy the workspace while another thread waits on it; every state
+    // mutation below happens under the mutex once the event has completed.
+    std::unique_lock lock(workspace->mutex);
+    if (workspace->state == SPACEPDHCG_CUDA_DESTROYED) {
+        return SPACEPDHCG_CUDA_INVALID_STATE;
+    }
+    lock.unlock();
     const auto status = workspace->completion.wait();
+    lock.lock();
     if (status != cudaSuccess) {
         return cuda_failure(workspace, status, "cudaEventSynchronize");
     }
@@ -4295,7 +4439,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_refresh_scaling_asyn
     }
     initialise_control_kernel<<<1, 1, 0, cuda_stream>>>(
         workspace->control,
-        workspace->device_problem
+        workspace->device_problem,
+        nullptr
     );
     cuda_status = cudaGetLastError();
     if (cuda_status != cudaSuccess) {

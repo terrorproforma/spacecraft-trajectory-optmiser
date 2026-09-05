@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from spacepdhcg import resources
+
 from .contracts import validate_named
 from .g7 import (
     Checkpoint,
@@ -14,6 +16,8 @@ from .g7 import (
     RunManifest,
     load_frozen_paper2_matrix,
 )
+
+PAPER2_MATRIX_ASSET = "benchmarks/paper2_matrix.json"
 
 
 def _object(path: str) -> dict[str, Any]:
@@ -42,7 +46,10 @@ def validate_config(args: argparse.Namespace) -> int:
 
 
 def validate_matrix(args: argparse.Namespace) -> int:
-    value = load_frozen_paper2_matrix(args.matrix)
+    # Without an explicit path the frozen matrix comes from the resolver (override, checkout,
+    # or the copy packaged in the wheel) instead of a working-directory-relative guess.
+    matrix = args.matrix or resources.asset_path(PAPER2_MATRIX_ASSET)
+    value = load_frozen_paper2_matrix(matrix)
     print(
         json.dumps(
             {"valid": True, "families": [item["id"] for item in value["families"]]},
@@ -99,7 +106,12 @@ def main() -> int:
     config.add_argument("config")
     config.set_defaults(function=validate_config)
     matrix = commands.add_parser("validate-matrix")
-    matrix.add_argument("matrix", nargs="?", default="benchmarks/paper2_matrix.json")
+    matrix.add_argument(
+        "matrix",
+        nargs="?",
+        default=None,
+        help=f"frozen Paper 2 matrix (default: resolved {PAPER2_MATRIX_ASSET})",
+    )
     matrix.set_defaults(function=validate_matrix)
     create = commands.add_parser("create-manifest")
     create.add_argument("--run-id", required=True)

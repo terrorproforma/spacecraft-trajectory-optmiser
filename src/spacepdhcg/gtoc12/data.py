@@ -1,8 +1,12 @@
 """Pinned GTOC12 data access: catalogue, bonus coefficients, verifier binaries.
 
-Multi-megabyte official files are never committed.  ``benchmarks/gtoc12/pins.json`` records
-URLs, byte sizes and SHA-256 digests; ``scripts/gtoc12/fetch_gtoc12_data.py`` downloads them into
-the ignored data directory and this module refuses to load anything whose digest disagrees.
+Multi-megabyte official files are never committed or packaged.  ``benchmarks/gtoc12/pins.json``
+records URLs, byte sizes and SHA-256 digests; ``spacepdhcg gtoc12 fetch`` (or
+``scripts/gtoc12/fetch_gtoc12_data.py``) downloads them into the data directory and this module
+refuses to load anything whose digest disagrees.  The data directory is, in order,
+``$SPACEPDHCG_GTOC12_DATA``, the pinned ``benchmarks/gtoc12/data`` of an override or a source
+checkout, or ``<cache>/gtoc12`` below :func:`spacepdhcg.resources.cache_root` for an installed
+wheel.  The small pin and rule files themselves are resolved by :mod:`spacepdhcg.resources`.
 """
 
 from __future__ import annotations
@@ -19,13 +23,14 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
+from spacepdhcg import resources
+
 from .constants import ASTEROID_COUNT, ASTEROID_ELEMENT_EPOCH_MJD, AU_KM
 
 FloatArray = NDArray[np.float64]
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-PINS_PATH = REPOSITORY_ROOT / "benchmarks" / "gtoc12" / "pins.json"
-RULES_PATH = REPOSITORY_ROOT / "benchmarks" / "gtoc12" / "gtoc12_rules.json"
+PINS_ASSET = "benchmarks/gtoc12/pins.json"
+RULES_ASSET = "benchmarks/gtoc12/gtoc12_rules.json"
 DATA_ENVIRONMENT_VARIABLE = "SPACEPDHCG_GTOC12_DATA"
 
 
@@ -41,11 +46,33 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def pins_path() -> Path:
+    """Location of ``benchmarks/gtoc12/pins.json`` (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(PINS_ASSET)
+
+
+def rules_path() -> Path:
+    """Location of ``benchmarks/gtoc12/gtoc12_rules.json`` (override, checkout, or wheel copy)."""
+
+    return resources.asset_path(RULES_ASSET)
+
+
 @lru_cache(maxsize=1)
 def load_pins() -> dict[str, Any]:
-    payload = json.loads(PINS_PATH.read_text(encoding="utf-8"))
+    payload = json.loads(pins_path().read_text(encoding="utf-8"))
     if payload.get("schema_version") != "1.0.0" or "files" not in payload:
         raise Gtoc12DataError("benchmarks/gtoc12/pins.json has an unexpected schema")
+    return payload
+
+
+@lru_cache(maxsize=1)
+def load_rules() -> dict[str, Any]:
+    """Machine-readable GTOC12 rules (mirrored by :func:`~.constants.rules_payload`)."""
+
+    payload = json.loads(rules_path().read_text(encoding="utf-8"))
+    if payload.get("schema_version") != "1.0.0" or "constants" not in payload:
+        raise Gtoc12DataError("benchmarks/gtoc12/gtoc12_rules.json has an unexpected schema")
     return payload
 
 
@@ -57,10 +84,15 @@ def pinned_file(name: str) -> dict[str, Any]:
 
 
 def data_directory() -> Path:
+    """Where the pinned official files live (see the module docstring for the order)."""
+
     override = os.environ.get(DATA_ENVIRONMENT_VARIABLE)
     if override:
         return Path(override).expanduser().resolve()
-    return REPOSITORY_ROOT / load_pins()["data_directory"]
+    located = resources.locate_directory(load_pins()["data_directory"])
+    if located is not None:
+        return located
+    return resources.cache_root() / "gtoc12"
 
 
 def verified_path(name: str, *, directory: Path | None = None) -> Path:
@@ -70,8 +102,8 @@ def verified_path(name: str, *, directory: Path | None = None) -> Path:
     path = (directory or data_directory()) / name
     if not path.is_file():
         raise Gtoc12DataError(
-            f"{name} is not present in {path.parent}; run "
-            "`python scripts/gtoc12/fetch_gtoc12_data.py` first"
+            f"{name} is not present in {path.parent}; run `spacepdhcg gtoc12 fetch` "
+            f"(or set {DATA_ENVIRONMENT_VARIABLE}) first"
         )
     size = path.stat().st_size
     if size != int(entry["bytes"]):

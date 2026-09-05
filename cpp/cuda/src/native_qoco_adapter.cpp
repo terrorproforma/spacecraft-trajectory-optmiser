@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -352,6 +354,19 @@ struct spacepdhcg_native_qoco {
     SolveFn solve{};
     CleanupFn cleanup{};
     Formulation formulation{};
+    // The settings handed to qoco_setup. QOCO's stall handler mutates
+    // solver->settings->kkt_dynamic_reg in place (x10 per stalled step) and never
+    // restores it, so after a "numerical error" exit every later solve on the
+    // persistent workspace would start above the 1e-6 ceiling and abort at
+    // iteration 1. Every re-solve restores these first.
+    SettingsAbi configured_settings{};
+    int variables{};
+    // The last solve ended in "numerical error" / "maximum iterations". QOCO
+    // keeps its best-iterate tracker (best_valid/best_metric) and the escalated
+    // regularisation across solves, so the next solve on this workspace would
+    // not be an independent attempt. The next update_solve tears the solver
+    // down and sets it up again (counted in report.workspace_creations).
+    bool needs_fresh_solver{};
     std::vector<double> primal{};
     std::vector<double> accepted_primal{};
     std::vector<double> dual{};
@@ -685,14 +700,83 @@ void residuals(spacepdhcg_native_qoco* workspace) {
             }
         }
     }
-    transpose_accumulate(formulation.a, workspace->solver->sol->y, &stationarity);
-    transpose_accumulate(formulation.g, workspace->solver->sol->z, &stationarity);
+    // Stationarity c + P x + A^T y + G^T z, with the constraint-transposed term kept separately
+    // so the dual scale sees the same |A^T y + G^T z| magnitude the CPU-reference audit uses.
+    std::vector<double> constraint_dual(formulation.c.size(), 0.0);
+    transpose_accumulate(formulation.a, workspace->solver->sol->y, &constraint_dual);
+    transpose_accumulate(formulation.g, workspace->solver->sol->z, &constraint_dual);
     double dual = 0.0;
-    for (double value : stationarity) {
-        dual = std::max(dual, std::abs(value));
+    double max_px = 0.0;
+    double max_c = 0.0;
+    double max_constraint_dual = 0.0;
+    double primal_objective = 0.0;
+    for (std::size_t index = 0U; index < stationarity.size(); ++index) {
+        const double px = stationarity[index] - formulation.c[index];
+        max_px = std::max(max_px, std::abs(px));
+        max_c = std::max(max_c, std::abs(formulation.c[index]));
+        max_constraint_dual = std::max(max_constraint_dual, std::abs(constraint_dual[index]));
+        primal_objective +=
+            (0.5 * px + formulation.c[index]) * workspace->primal[index];
+        dual = std::max(dual, std::abs(stationarity[index] + constraint_dual[index]));
     }
-    workspace->report.primal_residual = primal;
-    workspace->report.dual_residual = dual;
+
+    // Dual cone feasibility (z in K*) and per-cone complementarity |s . z|, which QOCO
+    // drives to its own tolerances but which the planner certificate also audits.
+    const double* z = workspace->solver->sol->z;
+    double dual_cone = 0.0;
+    double complementarity = 0.0;
+    for (int index = 0; index < formulation.nonnegative; ++index) {
+        dual_cone = std::max(dual_cone, std::max(0.0, -z[index]));
+        complementarity = std::max(complementarity, std::abs(slack[index] * z[index]));
+    }
+    cursor = formulation.nonnegative;
+    for (int size : formulation.soc) {
+        dual_cone = std::max(dual_cone, soc_violation(z + cursor, size));
+        double inner = 0.0;
+        for (int offset = 0; offset < size; ++offset) {
+            inner += slack[cursor + offset] * z[cursor + offset];
+        }
+        complementarity = std::max(complementarity, std::abs(inner));
+        cursor += size;
+    }
+
+    // Relative KKT normalisation matching `spacepdhcg.cqp.quality.canonical_residual_audit`
+    // (the definition the planner's `canonical_residual` certificate gate and the CPU
+    // reference report).  An absolute residual is not comparable across families: the
+    // pd3 canonical rows carry O(1e3) thrust/mass magnitudes, so QOCO's converged solution
+    // showed an absolute 2.5e-3 against the 1e-6 gate while the relative residual was 1e-8.
+    double max_rhs = 0.0;
+    for (double value : formulation.b) {
+        max_rhs = std::max(max_rhs, std::abs(value));
+    }
+    for (double value : formulation.h) {
+        max_rhs = std::max(max_rhs, std::abs(value));
+    }
+    double max_ax = 0.0;
+    for (double value : ax) {
+        max_ax = std::max(max_ax, std::abs(value));
+    }
+    for (double value : gx) {
+        max_ax = std::max(max_ax, std::abs(value));
+    }
+    double dual_objective = 0.0;
+    for (std::size_t index = 0U; index < formulation.b.size(); ++index) {
+        dual_objective += formulation.b[index] * workspace->solver->sol->y[index];
+    }
+    for (std::size_t index = 0U; index < formulation.h.size(); ++index) {
+        dual_objective += formulation.h[index] * z[index];
+    }
+    const double primal_scale = 1.0 + max_rhs + max_ax;
+    const double dual_scale = 1.0 + max_c + max_px + max_constraint_dual;
+    const double gap_scale = 1.0 + std::abs(primal_objective) + std::abs(dual_objective);
+
+    auto& report = workspace->report;
+    report.absolute_primal_residual = primal;
+    report.absolute_dual_residual = dual;
+    report.dual_cone_residual = dual_cone / primal_scale;
+    report.complementarity_residual = complementarity / gap_scale;
+    report.primal_residual = std::max(primal, dual_cone) / primal_scale;
+    report.dual_residual = std::max(dual / dual_scale, report.complementarity_residual);
 }
 
 void map_dual(
@@ -738,11 +822,47 @@ void map_dual(
     }
 }
 
+// qoco_setup on the workspace's current formulation with its configured
+// settings. Returns QOCO's setup code (0 on success) and accumulates the setup
+// time; on failure the solver struct is released and nulled.
+int setup_solver(spacepdhcg_native_qoco* workspace) {
+    auto p = workspace->formulation.p.abi();
+    auto a = workspace->formulation.a.abi();
+    auto g = workspace->formulation.g.abi();
+    SettingsAbi settings = workspace->configured_settings;
+    const auto setup_start = std::chrono::steady_clock::now();
+    const int code = workspace->setup(
+        workspace->solver,
+        workspace->variables,
+        static_cast<int>(workspace->formulation.h.size()),
+        static_cast<int>(workspace->formulation.b.size()),
+        &p,
+        workspace->formulation.c.data(),
+        workspace->formulation.b.empty() ? nullptr : &a,
+        workspace->formulation.b.empty() ? nullptr : workspace->formulation.b.data(),
+        workspace->formulation.h.empty() ? nullptr : &g,
+        workspace->formulation.h.empty() ? nullptr : workspace->formulation.h.data(),
+        workspace->formulation.nonnegative,
+        static_cast<int>(workspace->formulation.soc.size()),
+        workspace->formulation.soc.empty() ? nullptr : workspace->formulation.soc.data(),
+        &settings
+    );
+    workspace->report.setup_seconds += std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - setup_start
+    ).count();
+    if (code != 0) {
+        std::free(workspace->solver);
+        workspace->solver = nullptr;
+    }
+    return code;
+}
+
 }  // namespace
 
 spacepdhcg_cuda_status native_qoco_create_impl(
     const spacepdhcg_cuda_scvx_problem* problem,
     cudaStream_t stream,
+    int ruiz_iterations,
     spacepdhcg_native_qoco** workspace
 ) {
     if (problem == nullptr || workspace == nullptr) {
@@ -798,42 +918,32 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     if (result->solver == nullptr) {
         return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
     }
-    auto p = result->formulation.p.abi();
-    auto a = result->formulation.a.abi();
-    auto g = result->formulation.g.abi();
     const bool low_thrust =
         problem->dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST;
     // Low-thrust mass-flow equalities are much smaller than the virtual
     // penalty scale, so they require less KKT bias and tighter refinement.
+    // ruiz_iters is the caller's choice (amendment single-gpu-v1.2 selects
+    // QOCO's own Ruiz equilibration for IPM attempts; 0 keeps the pinned
+    // QOCO commit's default of no equilibration).
     SettingsAbi settings{
-        200, 0, low_thrust ? 20 : 5, low_thrust ? 1.0e-12 : 1.0e-6,
+        200, std::max(0, ruiz_iterations), low_thrust ? 20 : 5,
+        low_thrust ? 1.0e-12 : 1.0e-6,
         1.0e-13, low_thrust ? 1.0e-13 : 1.0e-8, 1.0e-13,
         low_thrust ? 1.0e-13 : 1.0e-11,
         1.0e-8, 1.0e-8, 1.0e-5, 1.0e-5, 0,
     };
-    const auto setup_start = std::chrono::steady_clock::now();
-    const int code = result->setup(
-        result->solver,
-        problem->canonical_structure.variables,
-        static_cast<int>(result->formulation.h.size()),
-        static_cast<int>(result->formulation.b.size()),
-        &p,
-        result->formulation.c.data(),
-        result->formulation.b.empty() ? nullptr : &a,
-        result->formulation.b.empty() ? nullptr : result->formulation.b.data(),
-        result->formulation.h.empty() ? nullptr : &g,
-        result->formulation.h.empty() ? nullptr : result->formulation.h.data(),
-        result->formulation.nonnegative,
-        static_cast<int>(result->formulation.soc.size()),
-        result->formulation.soc.empty() ? nullptr : result->formulation.soc.data(),
-        &settings
-    );
-    result->report.setup_seconds = std::chrono::duration<double>(
-        std::chrono::steady_clock::now() - setup_start
-    ).count();
+    // Diagnostic only: QOCO's own iteration log on stderr. Never set by the
+    // campaign scheduler; timing records are not affected in its absence.
+    if (const char* verbose = std::getenv("SPACEPDHCG_QOCO_VERBOSE");
+        verbose != nullptr && verbose[0] == '1') {
+        settings.verbose = 1;
+    }
+    result->report.ruiz_iterations = settings.ruiz_iters;
+    result->report.status_code = -1;
+    result->configured_settings = settings;
+    result->variables = problem->canonical_structure.variables;
+    const int code = setup_solver(result.get());
     if (code != 0) {
-        std::free(result->solver);
-        result->solver = nullptr;
         return code == 5 ? SPACEPDHCG_CUDA_OUT_OF_MEMORY
                          : SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
     }
@@ -859,6 +969,11 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         *report = workspace->report;
         return status;
     };
+    if (workspace->solver == nullptr) {
+        // A previous solver rebuild failed; this workspace is unusable.
+        workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+        return finish(SPACEPDHCG_CUDA_INVALID_STATE);
+    }
     if (workspace->report.solves != 0U) {
         Formulation updated{};
         const auto update_start = std::chrono::steady_clock::now();
@@ -885,26 +1000,151 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             return finish(SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH);
         }
         workspace->formulation = std::move(updated);
-        workspace->update_matrix(
-            workspace->solver,
-            workspace->formulation.p.values.data(),
-            workspace->formulation.a.values.empty()
-                ? nullptr : workspace->formulation.a.values.data(),
-            workspace->formulation.g.values.empty()
-                ? nullptr : workspace->formulation.g.values.data()
-        );
-        workspace->update_vector(
-            workspace->solver,
-            workspace->formulation.c.data(),
-            workspace->formulation.b.empty()
-                ? nullptr : workspace->formulation.b.data(),
-            workspace->formulation.h.empty()
-                ? nullptr : workspace->formulation.h.data()
-        );
+        if (workspace->needs_fresh_solver) {
+            // The previous solve failed. QOCO carries its best-iterate tracker and
+            // the stall-escalated kkt_dynamic_reg across solves, so a numeric update
+            // would not give an independent attempt (observed: 101, 62, then 1
+            // iteration per solve on the same data). Rebuild the solver instead and
+            // report the extra workspace creation.
+            workspace->cleanup(workspace->solver);
+            workspace->solver =
+                static_cast<SolverAbi*>(std::calloc(1U, sizeof(SolverAbi)));
+            if (workspace->solver == nullptr) {
+                workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY;
+                return finish(SPACEPDHCG_CUDA_OUT_OF_MEMORY);
+            }
+            const int code = setup_solver(workspace);
+            if (code != 0) {
+                workspace->report.failure =
+                    code == 5 ? SPACEPDHCG_CUDA_QOCO_FAILURE_OUT_OF_MEMORY
+                              : SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+                return finish(
+                    code == 5 ? SPACEPDHCG_CUDA_OUT_OF_MEMORY
+                              : SPACEPDHCG_CUDA_INTERNAL_ERROR
+                );
+            }
+            ++workspace->report.workspace_creations;
+            workspace->needs_fresh_solver = false;
+            workspace->has_accepted = false;
+        } else {
+            workspace->update_matrix(
+                workspace->solver,
+                workspace->formulation.p.values.data(),
+                workspace->formulation.a.values.empty()
+                    ? nullptr : workspace->formulation.a.values.data(),
+                workspace->formulation.g.values.empty()
+                    ? nullptr : workspace->formulation.g.values.data()
+            );
+            workspace->update_vector(
+                workspace->solver,
+                workspace->formulation.c.data(),
+                workspace->formulation.b.empty()
+                    ? nullptr : workspace->formulation.b.data(),
+                workspace->formulation.h.empty()
+                    ? nullptr : workspace->formulation.h.data()
+            );
+            // Restore the configured settings: QOCO's stall handler mutates
+            // solver->settings->kkt_dynamic_reg in place. A settings validation
+            // failure here is an adapter/ABI fault, never a solver outcome.
+            if (workspace->update_settings(
+                    workspace->solver, &workspace->configured_settings
+                ) != 0) {
+                workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+                return finish(SPACEPDHCG_CUDA_INTERNAL_ERROR);
+            }
+        }
         workspace->report.update_seconds += std::chrono::duration<double>(
             std::chrono::steady_clock::now() - update_start
         ).count();
         ++workspace->report.numeric_updates;
+    }
+    if (workspace->configured_settings.verbose != 0) {
+        // Diagnostic only (SPACEPDHCG_QOCO_VERBOSE=1): content hash of the data
+        // handed to QOCO, so identical-data re-solves can be told from drift.
+        std::uint64_t hash = 1469598103934665603ULL;
+        const auto mix = [&hash](const std::vector<double>& values) {
+            for (const double value : values) {
+                std::uint64_t bits{};
+                std::memcpy(&bits, &value, sizeof(bits));
+                for (int shift = 0; shift < 64; shift += 8) {
+                    hash ^= (bits >> shift) & 0xffULL;
+                    hash *= 1099511628211ULL;
+                }
+            }
+        };
+        mix(workspace->formulation.c);
+        mix(workspace->formulation.b);
+        mix(workspace->formulation.h);
+        mix(workspace->formulation.p.values);
+        mix(workspace->formulation.a.values);
+        mix(workspace->formulation.g.values);
+        // Structural emptiness that QOCO's Ruiz equilibration cannot handle
+        // (safe_div(1, 0) = DBL_MAX): all-zero rows of A/G and variables that
+        // appear in no row of [P; A; G] with a zero cost.
+        const auto zero_rows = [](const Csc& matrix) {
+            std::vector<char> touched(static_cast<std::size_t>(matrix.rows), 0);
+            for (std::size_t k = 0; k < matrix.values.size(); ++k) {
+                if (matrix.values[k] != 0.0) {
+                    touched[static_cast<std::size_t>(matrix.indices[k])] = 1;
+                }
+            }
+            return std::count(touched.begin(), touched.end(), 0);
+        };
+        const auto touched_columns = [](const Csc& matrix, std::vector<char>* out) {
+            for (int column = 0; column < matrix.columns; ++column) {
+                for (int k = matrix.offsets[column]; k < matrix.offsets[column + 1]; ++k) {
+                    if (matrix.values[k] != 0.0) {
+                        (*out)[static_cast<std::size_t>(column)] = 1;
+                    }
+                }
+            }
+        };
+        std::vector<char> column_touched(workspace->formulation.c.size(), 0);
+        touched_columns(workspace->formulation.p, &column_touched);
+        touched_columns(workspace->formulation.a, &column_touched);
+        touched_columns(workspace->formulation.g, &column_touched);
+        for (std::size_t j = 0; j < workspace->formulation.c.size(); ++j) {
+            if (workspace->formulation.c[j] != 0.0) {
+                column_touched[j] = 1;
+            }
+        }
+        // Where the zero G rows come from and what their offsets are.
+        std::vector<char> g_touched(static_cast<std::size_t>(workspace->formulation.g.rows), 0);
+        for (std::size_t k = 0; k < workspace->formulation.g.values.size(); ++k) {
+            if (workspace->formulation.g.values[k] != 0.0) {
+                g_touched[static_cast<std::size_t>(workspace->formulation.g.indices[k])] = 1;
+            }
+        }
+        long zero_scalar = 0, zero_variable = 0, zero_affine = 0, zero_cone = 0;
+        double h_min = std::numeric_limits<double>::infinity();
+        double h_max = -std::numeric_limits<double>::infinity();
+        for (std::size_t row = 0; row < g_touched.size(); ++row) {
+            if (g_touched[row] != 0) {
+                continue;
+            }
+            const auto& map = workspace->formulation.conic_map[row];
+            (map.source == Source::scalar ? zero_scalar
+             : map.source == Source::variable ? zero_variable
+             : map.source == Source::affine ? zero_affine : zero_cone) += 1;
+            h_min = std::min(h_min, workspace->formulation.h[row]);
+            h_max = std::max(h_max, workspace->formulation.h[row]);
+        }
+        std::fprintf(
+            stderr,
+            "{\"case\":\"qoco_formulation\",\"solve_ordinal\":%llu,"
+            "\"data_fnv1a64\":\"%016llx\",\"fresh_solver\":%d,"
+            "\"zero_rows_a\":%ld,\"zero_rows_g\":%ld,\"zero_columns\":%ld,"
+            "\"zero_g_by_source\":{\"scalar\":%ld,\"variable\":%ld,\"affine_cone\":%ld,"
+            "\"variable_cone\":%ld},\"zero_g_h_range\":[%.6g,%.6g],\"ruiz_iters\":%d}\n",
+            static_cast<unsigned long long>(workspace->report.solves),
+            static_cast<unsigned long long>(hash),
+            workspace->report.numeric_updates == 0U ? 1 : 0,
+            static_cast<long>(zero_rows(workspace->formulation.a)),
+            static_cast<long>(zero_rows(workspace->formulation.g)),
+            static_cast<long>(std::count(column_touched.begin(), column_touched.end(), 0)),
+            zero_scalar, zero_variable, zero_affine, zero_cone, h_min, h_max,
+            workspace->configured_settings.ruiz_iters
+        );
     }
     const bool warm = workspace->has_accepted
         && requested_warm != SPACEPDHCG_CUDA_WARM_START_NONE;
@@ -919,18 +1159,47 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             || requested_warm == SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED)
         ? 1 : 0;
     const auto solve_start = std::chrono::steady_clock::now();
-    const int status_code = workspace->solve(workspace->solver);
+    int status_code = workspace->solve(workspace->solver);
     workspace->report.solve_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - solve_start
     ).count();
     ++workspace->report.solves;
+    workspace->report.status_code = status_code;
     if (workspace->solver->sol == nullptr
         || workspace->solver->sol->status != status_code) {
         workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
         return finish(SPACEPDHCG_CUDA_INTERNAL_ERROR);
     }
     workspace->report.iterations = workspace->solver->sol->iters;
+    if (warm && status_code == 2) {
+        // QOCO_SOLVED_INACCURATE off a warm start: an interior-point method started at the
+        // previous (boundary) optimum stalls after a single iteration and hands back a point
+        // that only meets the loose 1e-5 tolerances (pd3 polish: dual residual 2.5e-3 from
+        // a 1e-10 cold solve).  Re-solve cold once and keep the cold result; a cold
+        // interior-point solve is deterministic, so this fallback is reproducible.
+        // `dual_discarded` describes how the *request* was handled (the requested dual
+        // was never usable by QOCO) and stays set; only the primal-warm flag flips.
+        workspace->set_x0(workspace->solver, nullptr);
+        workspace->report.warm_primal_accepted = 0;
+        ++workspace->report.warm_inaccurate_cold_retries;
+        const auto retry_start = std::chrono::steady_clock::now();
+        status_code = workspace->solve(workspace->solver);
+        workspace->report.solve_seconds += std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - retry_start
+        ).count();
+        ++workspace->report.solves;
+        if (workspace->solver->sol->status != status_code) {
+            workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
+            return finish(SPACEPDHCG_CUDA_INTERNAL_ERROR);
+        }
+        workspace->report.iterations += workspace->solver->sol->iters;
+        // `status_code` is the raw status of the *last* solve: the cold retry, not the
+        // stalled warm attempt it replaced.
+        workspace->report.status_code = status_code;
+    }
+    workspace->report.last_status_inaccurate = status_code == 2 ? 1 : 0;
     if (status_code != 1 && status_code != 2) {
+        workspace->needs_fresh_solver = true;
         workspace->report.failure = status_code == 4
             ? SPACEPDHCG_CUDA_QOCO_FAILURE_MAX_ITERATIONS
             : SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL;
@@ -977,10 +1246,11 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
 spacepdhcg_cuda_status spacepdhcg_native_qoco_create(
     const spacepdhcg_cuda_scvx_problem* problem,
     cudaStream_t stream,
+    int ruiz_iterations,
     spacepdhcg_native_qoco** workspace
 ) {
     try {
-        return native_qoco_create_impl(problem, stream, workspace);
+        return native_qoco_create_impl(problem, stream, ruiz_iterations, workspace);
     } catch (const std::bad_alloc&) {
         return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
     } catch (...) {

@@ -29,6 +29,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from . import constants as C
+from .chainprior import ChainPrior
 from .clusters import ClusterBands, ComovingClusters
 from .collectdp import CollectDPSettings, CollectPairTable, CollectTour, plan_collect_tour
 from .data import AsteroidCatalogue
@@ -205,6 +206,36 @@ class SearchSettings:
     # calibrated hop inflation for the DP table: path of a ``hopcalib`` fit JSON (``""`` = the
     # flat ``hop_inflation``); fitted on the certified archive, evaluated per pair and epoch
     collect_dp_inflation_fit: str = ""
+    # chain-level objective in the beam (ninth iteration): from ``chain_tour_min_deploys``
+    # deploys on, the ``chain_tour_candidates`` best partials of a level by the heuristic score
+    # are re-scored by *deploy propellant + the DP's actual collect tour* - the Held-Karp tour
+    # over the chain so far (calibrated pair table, sweep-cell returns, one mass pass with the
+    # parent chain's burn schedule) - so the beam trades a dearer deploy hop for a cheaper
+    # collect loop at the exchange rate the DP measures instead of a per-pair proxy.  The
+    # score is ``weighted collected (at the tour's epochs) - propellant_weight x (deploy +
+    # collect + return propellant) - asteroid prices - chain_prior_weight x prior penalty``; a
+    # chain whose tour does not close on the mass budget ranks below every chain that does.
+    chain_tour_scoring: bool = False
+    chain_tour_candidates: int = 48
+    chain_tour_min_deploys: int = 3
+    # margin (kg) the DP tour must leave above the dry mass for the chain to count as closing
+    chain_tour_margin_kg: float = 0.0
+    # nominal burn per collect hop (fraction of the ship mass) for the first scored level, when
+    # no parent tour has measured one yet (a 1.5 km/s hop at 1.2x costs ~4.5 % of the mass)
+    chain_tour_burn_fraction: float = 0.05
+    # reference-chain prior (``chainprior.ChainPrior``): kg of score per kg the chain lies off
+    # the reference manifold (collect hops above the reference p75 per hop; deploy hops below
+    # the reference p25 while the harvest is dear); 0 = off.  The targets are data
+    # (benchmarks/gtoc12/chain_prior_v1.json, extracted by ``gtoc12 chain-prior``).
+    chain_prior_weight: float = 0.0
+    # harvest-phase prior (``harvestphase.HarvestPhasePrior``, tenth iteration): path of the
+    # extracted document ("" = off) and the kg of score per kg of its penalty.  Applied in two
+    # places: the collect DP charges every hop departing beyond the references' p75 of |Δλ|
+    # (so an aligned 180-day hop beats a misaligned 210-day one at comparable propellant), and
+    # ``_chain_score`` subtracts the scored tour's total penalty, so the beam prefers chains
+    # whose consecutive miners are phase-aligned at the projected harvest epochs.
+    harvest_phase_path: str = ""
+    harvest_phase_weight: float = 0.0
     # cluster-first prior (clusters.py): Earth targets need at least ``cluster_min_density``
     # co-moving neighbours, and partials earn ``cluster_bonus_kg`` x (unvisited co-moving
     # neighbours of the current asteroid, capped at the remaining deploy slots) / max_deploys
@@ -383,6 +414,15 @@ class _Partial:
     hop_propellant: float = 0.0
     score: float = 0.0
     lookahead_kg: float = 0.0  # estimated collect-time cost of re-flying the deploy pairs
+    # chain-tour scoring: mean collect-hop burn (kg) of the chain's last scored tour, inherited
+    # by the children as the mass schedule of their single DP pass (-1 = none measured yet)
+    chain_burn: float = -1.0
+    # the scored tour's components (kg): collect hops, return, collected at the tour's epochs
+    chain_collect_kg: float = math.nan
+    chain_return_kg: float = math.nan
+    chain_collected_kg: float = math.nan
+    # harvest-phase penalty (kg) the scored tour paid for misaligned collect departures
+    chain_phase_kg: float = math.nan
 
 
 @dataclass(slots=True)
@@ -478,8 +518,19 @@ class RouteSearch:
         weights: dict[int, float] | None = None,
         seeds: dict[int, float] | None = None,
         first_level: Sequence[EarthLeg] | None = None,
+        asteroid_prices: dict[int, float] | None = None,
+        chain_prior: ChainPrior | None = None,
     ) -> None:
         self.catalogue = catalogue
+        # master LP duals (kg per asteroid): the price the fleet master already pays for an
+        # asteroid a richer selected ship uses.  Subtracted from every chain's score and from
+        # ``plan_score`` (column-generation reduced cost), never from the reported mass, so a
+        # family prices the ships the master would actually take (conflict-free columns).
+        self.asteroid_prices: dict[int, float] = {
+            int(a): float(p) for a, p in (asteroid_prices or {}).items() if p > 0.0
+        }
+        # reference-chain prior (chainprior.py); priced at ``settings.chain_prior_weight``
+        self.chain_prior: ChainPrior | None = chain_prior
         # cooperative pricing: uncollected miners of earlier ships (asteroid -> deploy epoch);
         # Earth targets co-moving with them earn ``seed_bonus_kg`` in the first level
         self.seeds: dict[int, float] = dict(seeds or {})
@@ -532,6 +583,20 @@ class RouteSearch:
         }
         # why re-toured substitute chains were rejected (tour failure reason -> count)
         self.substitution_failures: dict[str, int] = {}
+        # chain-tour scoring telemetry: partials scored by their DP tour, tours that did not
+        # close (fallback score), cache hits, DP seconds, and how many of the selected beam
+        # entries the tour ranking changed against the heuristic order (per level, summed)
+        self.chain_tour_stats: dict[str, float] = {
+            "scored": 0,
+            "no_tour": 0,
+            "not_closing": 0,
+            "cache_hits": 0,
+            "seconds": 0.0,
+            "reranked": 0,
+            "levels": 0,
+            "phase_kg": 0.0,  # harvest-phase penalty summed over the scored closing tours
+        }
+        self._chain_tour_cache: dict[tuple, CollectTour | None] = {}
 
     def release_caches(self) -> dict[str, int]:
         """Drop the beam's memo tables once the slot is priced (Lambert hop/return/collect
@@ -545,6 +610,7 @@ class RouteSearch:
             "collects": len(self._collect_cache),
             "lookahead": len(self._lookahead_cache),
             "harvest": len(self._harvest_cache),
+            "chain_tours": len(self._chain_tour_cache),
             "pairs": self._collect_table.release_caches() if self._collect_table else 0,
         }
         self._hop_cache.clear()
@@ -552,6 +618,7 @@ class RouteSearch:
         self._collect_cache.clear()
         self._lookahead_cache.clear()
         self._harvest_cache.clear()
+        self._chain_tour_cache.clear()
         return released
 
     @property
@@ -580,6 +647,11 @@ class RouteSearch:
                 raise FileNotFoundError(
                     f"collect DP inflation fit not readable: {s.collect_dp_inflation_fit}"
                 )
+            phase = None
+            if s.harvest_phase_path and s.harvest_phase_weight > 0.0:
+                from .harvestphase import load_harvest_phase
+
+                phase = load_harvest_phase(s.harvest_phase_path)
             self._collect_table = CollectPairTable(
                 self.catalogue,
                 CollectDPSettings(
@@ -587,6 +659,8 @@ class RouteSearch:
                     tofs=tofs,
                     return_tofs=return_tofs,
                     inflation_fit=fit,
+                    harvest_phase=phase,
+                    phase_weight=s.harvest_phase_weight,
                     max_asteroids=s.collect_dp_max_deploys,
                     end_margin_days=s.end_margin_days,
                     propellant_weight=s.collect_dp_propellant_weight,
@@ -1096,6 +1170,7 @@ class RouteSearch:
                             [*partial.deployed, (target, arrival)],
                             partial.hop_propellant + propellant,
                             lookahead_kg=partial.lookahead_kg + pair_lookahead,
+                            chain_burn=partial.chain_burn,
                         )
                     )
         return children
@@ -1554,16 +1629,146 @@ class RouteSearch:
                 - self.settings.time_weight * elapsed
                 - self.settings.collect_lookahead_weight * partial.lookahead_kg
                 + self._cluster_potential_kg(partial)
+                - self._price_of(partial.deployed)
             )
-        ordered = sorted(
+        ordered = self._ordered(partials)
+        s = self.settings
+        depth = len(partials[0].deployed) if partials else 0
+        if not (s.chain_tour_scoring and s.collect_dp and depth >= s.chain_tour_min_deploys):
+            return self._filter(ordered, s.beam_width)
+        # chain-level objective: the shortlist (heuristic order, same pruning and diversity
+        # caps) is re-scored by its actual collect tour and the beam is the best of it
+        shortlist = self._filter(ordered, max(s.chain_tour_candidates, s.beam_width))
+        heuristic_order = [id(p) for p in shortlist[: s.beam_width]]
+        started = time.perf_counter()
+        for partial in shortlist:
+            partial.score = self._chain_score(partial)
+        self.chain_tour_stats["seconds"] += time.perf_counter() - started
+        self.chain_tour_stats["levels"] += 1
+        selected = self._ordered(shortlist)[: s.beam_width]
+        self.chain_tour_stats["reranked"] += sum(
+            1 for p in selected if id(p) not in heuristic_order
+        )
+        return selected
+
+    def _price_of(self, deployed: list[tuple[int, float]]) -> float:
+        """Master-LP price (kg) of the asteroids a chain claims (0 without duals)."""
+
+        if not self.asteroid_prices:
+            return 0.0
+        return sum(self.asteroid_prices.get(asteroid, 0.0) for asteroid, _ in deployed)
+
+    @staticmethod
+    def _ordered(partials: list[_Partial]) -> list[_Partial]:
+        return sorted(
             partials,
             key=lambda item: (-item.score, item.epoch, tuple(a for a, _ in item.deployed)),
         )
+
+    # a chain whose DP tour does not close (or has none) keeps its heuristic score minus this,
+    # so it ranks below every closing chain but can still fill an otherwise empty beam
+    CHAIN_FALLBACK_KG = 10_000.0
+
+    def _chain_tour(self, partial: _Partial) -> CollectTour | None:
+        """The chain's collect tour for scoring: one Held-Karp pass at the DP's propellant
+        weight with the parent chain's burn schedule (or the nominal one); cached per
+        (deployed set with epochs, camp, camp epoch, mass, burn)."""
+
+        s = self.settings
+        burn = (
+            partial.chain_burn
+            if partial.chain_burn >= 0.0
+            else s.chain_tour_burn_fraction * partial.mass
+        )
+        key = (
+            tuple(sorted((int(a), round(e, 6)) for a, e in partial.deployed)),
+            partial.location,
+            round(partial.epoch, 6),
+            round(partial.mass, 3),
+            round(burn, 3),
+        )
+        if key in self._chain_tour_cache:
+            self.chain_tour_stats["cache_hits"] += 1
+            return self._chain_tour_cache[key]
+        tour = plan_collect_tour(
+            self.collect_table,
+            partial.deployed,
+            partial.location,
+            partial.epoch,
+            partial.mass,
+            weights=self.weights,
+            banned_pairs=self.banned_pairs,
+            propellant_weight=s.collect_dp_propellant_weight,
+            burn_per_hop=burn,
+        )
+        self._chain_tour_cache[key] = tour
+        self.chain_tour_stats["scored"] += 1
+        return tour
+
+    def _chain_score(self, partial: _Partial) -> float:
+        """Deploy propellant + the DP's actual collect tour, at the beam's exchange rate.
+
+        The chain's DP tour is turned into a plan by the same exact forward mass pass every
+        completed plan goes through (:meth:`_plan_from_tour` -> :meth:`_finish`), so the chain is
+        ranked by exactly the :meth:`plan_score` its completion would get - ``weighted collected
+        at the tour's epochs - propellant_weight x everything spent from launch to Earth arrival
+        - asteroid prices`` - minus ``chain_prior_weight x`` the prior penalty.  A chain whose
+        tour has none or whose plan does not close on the true mass profile keeps its heuristic
+        score minus :attr:`CHAIN_FALLBACK_KG`.  (The DP's own mass model is deliberately
+        pessimistic - collected mass mined to the window end on every move - and rejected most
+        9-asteroid chains that the exact pass closes; judging closure on the plan is what
+        `_complete` does.)  Also records the tour's components and burn on the partial for
+        its children.
+        """
+
+        s = self.settings
+        tour = self._chain_tour(partial)
+        if tour is None:
+            self.chain_tour_stats["no_tour"] += 1
+            return partial.score - self.CHAIN_FALLBACK_KG
+        plan = self._plan_from_tour(partial, tour)
+        if plan is None or (
+            plan.final_mass_proxy_kg - C.DRY_MASS_KG - sum(plan.collected_mass.values())
+            < s.chain_tour_margin_kg
+        ):
+            self.chain_tour_stats["not_closing"] += 1
+            return partial.score - self.CHAIN_FALLBACK_KG
+        collect_kg = float(sum(tour.hop_propellant_kg))
+        partial.chain_collect_kg = collect_kg
+        partial.chain_return_kg = float(tour.propellant_proxy_kg) - collect_kg
+        partial.chain_collected_kg = float(sum(plan.collected_mass.values()))
+        if tour.hop_propellant_kg:
+            partial.chain_burn = collect_kg / len(tour.hop_propellant_kg)
+        partial.chain_phase_kg = float(tour.phase_penalty_kg)
+        self.chain_tour_stats["phase_kg"] = self.chain_tour_stats.get("phase_kg", 0.0) + float(
+            tour.phase_penalty_kg
+        )
+        score = (
+            self.plan_score(plan)
+            - s.time_weight * (partial.epoch - partial.legs[0].departure_epoch)
+            + self._cluster_potential_kg(partial)
+            # harvest-phase prior: the DP already charged the tour's misaligned departures
+            # (``phase_weight`` inside the table), so the chain pays the same kg here
+            - tour.phase_penalty_kg
+        )
+        if self.chain_prior is not None and s.chain_prior_weight > 0.0:
+            score -= s.chain_prior_weight * self.chain_prior.penalty(
+                deploy_hops_kg=partial.hop_propellant,
+                deploy_hops=max(len(partial.deployed) - 1, 0),
+                collect_hops_kg=collect_kg,
+                collect_hops=len(tour.hop_propellant_kg),
+            )
+        return score
+
+    def _filter(self, ordered: list[_Partial], limit: int) -> list[_Partial]:
+        """Top-``limit`` of ``ordered`` after the reserve, diversity and return prunes."""
+
         selected: list[_Partial] = []
         per_set: dict[tuple[int, ...], int] = {}
         per_first: dict[int, int] = {}
+        end = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
         for partial in ordered:
-            if len(selected) >= self.settings.beam_width:
+            if len(selected) >= limit:
                 break
             if partial.mass < C.DRY_MASS_KG + self._reserve(partial):
                 continue
@@ -1737,10 +1942,14 @@ class RouteSearch:
 
     def plan_score(self, plan: RoutePlan) -> float:
         """Ranking of alternative tours of one chain: weighted mass minus the beam's propellant
-        weight x propellant.  A tour that collects a little less but leaves hundreds of kg of
-        propellant is the better seed: the re-timer turns the margin into later collects."""
+        weight x propellant, minus the master's price of the asteroids claimed (reduced cost).
+        A tour that collects a little less but leaves hundreds of kg of propellant is the better
+        seed: the re-timer turns the margin into later collects."""
 
-        return self.weighted(plan) - self.settings.propellant_weight * plan.propellant_proxy_kg
+        score = self.weighted(plan) - self.settings.propellant_weight * plan.propellant_proxy_kg
+        if self.asteroid_prices:
+            score -= sum(self.asteroid_prices.get(a, 0.0) for a in plan.deploy_epochs)
+        return score
 
     def _schedule_dp(self, partial: _Partial) -> list[RoutePlan]:
         """Collect tours from the exact order + timing DP (``collectdp.plan_collect_tour``).
@@ -1775,7 +1984,9 @@ class RouteSearch:
                 reasons.append(f"w{weight:g}:no_tour")
                 continue
             if burn_per_hop is None and tour.hop_propellant_kg:
-                burn_per_hop = float(np.mean(tour.hop_propellant_kg))
+                mean_burn = float(np.mean(tour.hop_propellant_kg))
+                if np.isfinite(mean_burn):
+                    burn_per_hop = mean_burn
             plan = self._plan_from_tour(partial, tour)
             if plan is None:
                 reasons.append(f"w{weight:g}:{self.last_failure}")

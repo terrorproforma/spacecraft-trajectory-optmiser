@@ -7,7 +7,16 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-PAPER2_MATRIX_SHA256 = "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2"
+# Frozen Paper 2 matrix digests. The first entry is the matrix the sealed G7 evidence was
+# produced against (families P2-A..P2-E). The second entry adds the comparative-campaign P2-F
+# historical GTOC replay family (docs/COMPARATIVE_SOLVER_CAMPAIGN.md) plus its metrics and
+# archive pointers; it does not alter any P2-A..P2-E coordinate. Records may carry either digest so
+# sealed historical evidence stays valid while new records reference the extended matrix.
+PAPER2_MATRIX_SHA256_HISTORY: tuple[str, ...] = (
+    "78c4e33e4aabcd85d63ba3f1e03aa2214b3ab207e680bcaaf347516802b2f6a2",
+    "108f16e07e3cbef647b3b7080746c1fae3670a6a9fa61282776690aac73d17fc",
+)
+PAPER2_MATRIX_SHA256 = PAPER2_MATRIX_SHA256_HISTORY[-1]
 CAMPAIGN_SCOPE_IDS = ["single-gpu-v1", "full-multi-gpu-v1"]
 EVIDENCE_LEVELS = [
     "implemented_compiled",
@@ -165,7 +174,7 @@ _G7_MANIFEST_PROPERTIES = {
         "items": {"type": "integer", "minimum": 0},
     },
     "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "paper2_matrix_sha256": {"const": PAPER2_MATRIX_SHA256},
+    "paper2_matrix_sha256": {"enum": list(PAPER2_MATRIX_SHA256_HISTORY)},
     "toolchain": {
         "type": "object",
         "additionalProperties": False,
@@ -255,7 +264,7 @@ G7_CHECKPOINT_SCHEMA = {
         "schema_version": {"const": 1},
         "run_id": {"type": "string", "minLength": 1},
         "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "paper2_matrix_sha256": {"const": PAPER2_MATRIX_SHA256},
+        "paper2_matrix_sha256": {"enum": list(PAPER2_MATRIX_SHA256_HISTORY)},
         "seed": {"type": "integer", "minimum": 0},
         "repeat_index": {"type": "integer", "minimum": 0},
         "completed_batches": {"type": "integer", "minimum": 0},
@@ -299,7 +308,7 @@ G7_RESULT_SCHEMA = {
         "schema_version": {"const": 1},
         "run_id": {"type": "string", "minLength": 1},
         "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "paper2_matrix_sha256": {"const": PAPER2_MATRIX_SHA256},
+        "paper2_matrix_sha256": {"enum": list(PAPER2_MATRIX_SHA256_HISTORY)},
         "seed": {"type": "integer", "minimum": 0},
         "repeat_index": {"type": "integer", "minimum": 0},
         "status": {"enum": RESULT_STATUSES},

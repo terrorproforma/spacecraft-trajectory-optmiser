@@ -131,6 +131,8 @@ Computational effort should increase only as a branch becomes competitive.
 Refer to:
 
 - `benchmarks/paper2_matrix.json`;
+- `benchmarks/literature_baselines.json`;
+- `docs/COMPARATIVE_SOLVER_CAMPAIGN.md`;
 - `docs/BENCHMARK_PROTOCOL.md`.
 
 ## 8.1 Arc calibration
@@ -154,6 +156,12 @@ Assignment, depots, service times, and resource coupling.
 
 Candidate routes × scenarios × GPU count, final risk, and mission feasibility.
 
+## 8.6 Historical GTOC challenge replay
+
+Use reduced and full GTOC5, GTOC9, and GTOC12 instances with official evaluators. Compare score
+against published solutions and score-versus-compute against common-hardware implementations where
+available. Report offline database generation and human intervention separately.
+
 # 9. Results structure
 
 1. Arc estimator error and rejection safety.
@@ -164,16 +172,17 @@ Candidate routes × scenarios × GPU count, final risk, and mission feasibility.
 6. Multi-spacecraft scaling.
 7. Robust route × scenario scaling. **Deferred physical multi-GPU result.**
 8. Final mission examples and certified trajectories.
+9. GTOC reduced/full scores, validation status, compute budget, and published-quality gap.
 
 # 10. Mission demonstrations
 
 Primary demonstration:
 
-- multi-spacecraft servicing or debris removal among moving Earth-orbit targets.
+- GTOC9-style multi-spacecraft servicing or debris removal among moving Earth-orbit targets.
 
 Extensions:
 
-- asteroid tours;
+- GTOC5 and GTOC12-style asteroid tours and mining campaigns;
 - cislunar logistics;
 - propellant depots;
 - distributed observation;

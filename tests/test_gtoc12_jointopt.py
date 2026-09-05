@@ -433,3 +433,230 @@ def test_select_tasks_puts_fleet_ships_first_and_dedups_by_asteroid_set(tmp_path
     top = select_tasks([g1, g2], JointCampaignSettings(top=1), fleet_asteroid_sets(report))
     assert [t.asteroids for t in top] == [(1, 2, 9), (8,), (4, 5)]
     assert all(math.isfinite(t.collected_kg) for t in tasks)
+
+
+# -- Earth-out leg: an earlier chain start (tenth iteration) -----------------------------------
+
+
+def _with_margin(archived: dict, extra_kg: float) -> dict:
+    """The archived route with its certified Earth leg ``extra_kg`` cheaper (every later mass
+    raised accordingly): a consistent warm start that carries spare propellant margin."""
+
+    import copy
+
+    from spacepdhcg.gtoc12.screening import exhaust_velocity_km_s
+
+    summary = copy.deepcopy(archived)
+    legs = summary["legs"]
+    legs[0]["mass_after"] += extra_kg
+    legs[0]["propellant_kg"] = legs[0]["mass_before"] - legs[0]["mass_after"]
+    legs[0]["delta_v_km_s"] = exhaust_velocity_km_s() * math.log(
+        legs[0]["mass_before"] / legs[0]["mass_after"]
+    )
+    for leg in legs[1:]:
+        leg["mass_before"] += extra_kg
+        leg["mass_after"] += extra_kg
+    summary["final_mass_kg"] += extra_kg
+    return summary
+
+
+@requires_data
+def test_earth_leg_seed_bookkeeping_is_exact_against_a_replay(catalogue, archived) -> None:
+    """A seed reaches the first asteroid ``shift`` days earlier and moves the deploy phase
+    with it: every deploy epoch before the first collect shifts by exactly ``shift``, the
+    collect epochs stay, each shifted miner mines ``10 kg/yr x shift`` more, and the forward
+    mass replay of the evaluated plan closes to the evaluator's own masses."""
+
+    from spacepdhcg.gtoc12.jointopt import JointItinerary, MeasuredLeg, route_from_summary
+    from spacepdhcg.gtoc12.retiming import visits_of
+    from spacepdhcg.gtoc12.screening import exhaust_velocity_km_s
+
+    # the archived ship is propellant-bound (its joint margin was spent); give it 120 kg of
+    # spare margin so a shifted seed can close on the surrogate's 3 % hop margins
+    route = route_from_summary(_with_margin(archived, 120.0))
+    retimer = _retimer(catalogue)
+    joint = JointItinerary(catalogue, retimer)
+    joint.learn(route)
+    retimer.protect_earth_leg(route.plan)
+    visits, arr0, dep0 = visits_of(route.plan)
+    arr0, dep0 = np.asarray(arr0), np.asarray(dep0)
+    base = joint.evaluate(visits, arr0, dep0)
+    assert base.feasible and base.measured_legs == len(route.legs)
+    assert base.spare_kg >= 120.0 - 1e-6
+    end = joint.first_collect(visits)
+    assert 1 < end < len(visits) - 1 and visits[end].deploy and visits[end].collect
+    shift = 60.0
+    # the certified TOF is a floor: without the stage a shorter Earth leg is out of limits
+    a, d = joint.earth_leg_seed(visits, arr0, dep0, float(arr0[0]), shift)
+    assert not joint.evaluate(visits, a, d).feasible
+    joint.free_earth_leg = True
+    # still refused while SCvx has not measured the shorter leg ...
+    ev = joint.evaluate(visits, a, d)
+    assert not ev.feasible and ev.failure == "earth_out_unmeasured_below_floor"
+    # ... admissible once it is: pretend it costs what the certified leg cost
+    first = route.legs[0]
+    dv = exhaust_velocity_km_s() * math.log(first.mass_before / first.mass_after_leg)
+    joint.measured[joint.key(EARTH_ID, visits[1].body, a[0], a[1])] = MeasuredLeg(
+        dv, C.MAX_INITIAL_MASS_KG, joint.lambert(EARTH_ID, visits[1].body, a[0], a[1])
+    )
+    # a rigid shift of the whole deploy chain changes every hop's geometry (here a hop's
+    # authority breaks); the longest prefix that closes is the seed the stage would use
+    ev = None
+    for prefix in range(end, 0, -1):
+        a, d = joint.earth_leg_seed(visits, arr0, dep0, float(arr0[0]), shift, prefix)
+        ev = joint.evaluate(visits, a, d)
+        if ev.feasible:
+            break
+    assert ev is not None and ev.feasible, ev.failure
+    assert 1 <= ev.measured_legs < len(route.legs)  # the shifted hops are re-priced
+    plan, before = ev.plan, base.plan
+    shifted = {visits[j].body for j in range(1, prefix + 1) if visits[j].deploy}
+    assert shifted
+    for asteroid, epoch in plan.deploy_epochs.items():
+        expected = before.deploy_epochs[asteroid] - (shift if asteroid in shifted else 0.0)
+        assert epoch == pytest.approx(expected, abs=1e-9)
+    assert plan.collect_epochs == before.collect_epochs
+    assert plan.legs[0].tof_days == pytest.approx(before.legs[0].tof_days - shift)
+    flown_before = [leg for leg in before.legs if leg.role != "camp"]
+    flown_after = [leg for leg in plan.legs if leg.role != "camp"]
+    if prefix < end:  # the hop leaving the last shifted visit absorbed the shift
+        assert flown_after[prefix].tof_days == pytest.approx(flown_before[prefix].tof_days + shift)
+    for k in range(1, prefix):  # the shifted hops keep their TOF
+        assert flown_after[k].tof_days == pytest.approx(flown_before[k].tof_days)
+    rate = C.MINING_RATE_KG_PER_YEAR / C.YEAR_DAYS
+    if ev.spare_kg >= 0.0 and base.spare_kg >= 0.0:  # neither schedule had to scale its ore
+        for asteroid, mass in plan.collected_mass.items():
+            stay = plan.collect_epochs[asteroid] - plan.deploy_epochs[asteroid]
+            assert mass == pytest.approx(C.maximum_collected_mass(stay), abs=1e-12)
+            extra = shift * rate if asteroid in shifted else 0.0
+            assert mass - before.collected_mass[asteroid] == pytest.approx(extra, abs=1e-9)
+    # forward replay of the evaluated plan reproduces the evaluator's departure masses
+    flown = [leg for leg in plan.legs if leg.role != "camp"]
+    mass = C.MAX_INITIAL_MASS_KG
+    for k, leg in enumerate(flown):
+        if leg.from_id in plan.collect_epochs and (
+            abs(plan.collect_epochs[leg.from_id] - leg.departure_epoch) < 1e-6
+        ):
+            mass += plan.collected_mass[leg.from_id]
+        assert mass == pytest.approx(ev.masses[k], abs=1e-9)
+        mass -= float(propellant_for_delta_v(mass, leg.delta_v_proxy_km_s * leg.inflation))
+        if leg.to_id in plan.deploy_epochs and (
+            abs(plan.deploy_epochs[leg.to_id] - leg.arrival_epoch) < 1e-6
+        ):
+            mass -= C.MINER_MASS_KG
+    assert mass == pytest.approx(plan.final_mass_proxy_kg, abs=1e-6)
+    # the ranked Earth legs are deterministic, inside the rules, best surrogate first, and
+    # each carries only feasible seeds (best first)
+    legs = joint.earth_leg_candidates(visits, arr0, dep0, (30.0, 60.0, 90.0))
+    assert legs and all(c["seeds"] for c in legs)
+    objectives = [c["surrogate_objective"] for c in legs]
+    assert objectives == sorted(objectives, reverse=True)
+    assert all(c["launch"] >= C.MISSION_START_MJD for c in legs)
+    assert all(c["tof_days"] >= retimer.settings.earth_tof_days[0] for c in legs)
+    assert len({(c["launch"], c["arrival"]) for c in legs}) == len(legs)
+    for c in legs:
+        seed_objectives = [s["surrogate_objective"] for s in c["seeds"]]
+        assert seed_objectives == sorted(seed_objectives, reverse=True)
+        assert c["surrogate_objective"] == seed_objectives[0]
+        assert all(1 <= s["prefix"] <= end for s in c["seeds"])
+    again = joint.earth_leg_candidates(visits, arr0, dep0, (30.0, 60.0, 90.0))
+    assert [(c["launch"], c["arrival"]) for c in again] == [
+        (c["launch"], c["arrival"]) for c in legs
+    ]
+    assert not joint._screen_earth_out  # the screening mode never leaks out of the ranking
+
+
+@requires_data
+def test_earth_leg_stage_accepts_only_certified_gains_monotonically(catalogue, archived) -> None:
+    from spacepdhcg.gtoc12.jointopt import JointSettings, optimise_ship, route_from_summary
+    from spacepdhcg.gtoc12.screening import propellant_for_delta_v as prop
+
+    # a warm start with spare margin: the stage converts it into an earlier chain start
+    route = route_from_summary(_with_margin(archived, 120.0))
+    first = route.legs[0].planned
+    infl = route.legs[0].solution.delta_v_km_s / first.delta_v_proxy_km_s
+    flown: list[tuple[int, float, float]] = []
+
+    def trusting_leg(target, launch, tof, lambert):
+        # SCvx stand-in: the shorter leg costs its Lambert ΔV at the certified leg's inflation
+        flown.append((target, launch, tof))
+        return float(prop(C.MAX_INITIAL_MASS_KG, lambert * infl))
+
+    settings = JointSettings(mesh_days=(20.0,), max_certifications=6, insert=False, earth_leg=True)
+    result = optimise_ship(
+        route,
+        catalogue,
+        _retimer(catalogue),
+        settings=settings,
+        refine=_proxy_refine,
+        certify_leg=trusting_leg,
+    )
+    stage = result.earth_leg
+    assert stage is not None and stage["seeds"] > 0 and stage["flown"] == len(flown) > 0
+    assert stage["flown"] <= settings.earth_leg_certifications
+    # every flown leg obeys the launch window and the Earth-leg TOF band
+    lo = _retimer(catalogue).settings.earth_tof_days[0]
+    assert all(
+        t == first.to_id and launch >= C.MISSION_START_MJD and tof >= lo for t, launch, tof in flown
+    )
+    earth = [a for a in result.attempts if a["stage"].startswith("earth leg")]
+    accepted = [a for a in result.attempts if a.get("result") == "accepted"]
+    assert earth and stage["accepted_shift_days"] is not None
+    assert result.route is not None and result.gain_kg > 0.0
+    # the accepted route starts its chain earlier on a shorter Earth leg
+    new_first = result.route.plan.legs[0]
+    assert new_first.arrival_epoch == pytest.approx(
+        first.arrival_epoch - stage["accepted_shift_days"]
+    )
+    assert new_first.tof_days == pytest.approx(stage["accepted_tof_days"])
+    assert new_first.tof_days < first.tof_days + 1e-9
+    # monotone: only certified gains, strictly increasing
+    kgs = [a["certified_kg"] for a in accepted]
+    assert all(a["certified"] for a in accepted)
+    assert kgs == sorted(kgs) and len(set(kgs)) == len(kgs)
+    assert kgs[0] > route.total_collected_kg and result.after_kg == pytest.approx(kgs[-1])
+    # determinism
+    again = optimise_ship(
+        route,
+        catalogue,
+        _retimer(catalogue),
+        settings=settings,
+        refine=_proxy_refine,
+        certify_leg=trusting_leg,
+    )
+    assert again.after_kg == result.after_kg and again.route.plan.legs == result.route.plan.legs
+
+    # an Earth leg SCvx refuses is never priced: no whole-route certification is spent on it
+    refused = optimise_ship(
+        route,
+        catalogue,
+        _retimer(catalogue),
+        settings=settings,
+        refine=_proxy_refine,
+        certify_leg=lambda *_args: None,
+    )
+    assert refused.earth_leg["measured"] == 0 and refused.earth_leg["accepted_shift_days"] is None
+    assert not [a for a in refused.attempts if a["stage"].startswith("earth leg")]
+    plain = optimise_ship(
+        route,
+        catalogue,
+        _retimer(catalogue),
+        settings=JointSettings(mesh_days=(20.0,), max_certifications=6, insert=False),
+        refine=_proxy_refine,
+    )
+    assert refused.after_kg == pytest.approx(plain.after_kg)  # the stage changed nothing
+    # a leg that SCvx measures far dearer than the surrogate buys no ore: nothing shorter is
+    # accepted unless it certifies with more collected mass than the incumbent
+    dearer = optimise_ship(
+        route,
+        catalogue,
+        _retimer(catalogue),
+        settings=settings,
+        refine=_proxy_refine,
+        certify_leg=lambda t, launch, tof, lambert: 3.0 * prop(C.MAX_INITIAL_MASS_KG, lambert),
+    )
+    for attempt in dearer.attempts:
+        if attempt.get("result") == "accepted":
+            assert attempt["certified_kg"] > route.total_collected_kg
+    if dearer.earth_leg["accepted_shift_days"] is None:
+        assert dearer.after_kg == pytest.approx(plain.after_kg)
