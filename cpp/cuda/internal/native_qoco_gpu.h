@@ -37,6 +37,7 @@ struct QocoGpuAudit;
 cudaError_t qoco_gpu_audit_create(const QocoAuditInput&, bool host_solution,
                                 cudaStream_t, QocoGpuAudit**);
 cudaError_t qoco_gpu_audit_update(QocoGpuAudit*, const QocoAuditInput&, cudaStream_t);
+cudaError_t qoco_gpu_audit_update_device(QocoGpuAudit*, const double* packed_values, cudaStream_t);
 cudaError_t qoco_gpu_audit_upload_solution(QocoGpuAudit*, const double*, const double*,
                                          const double*, cudaStream_t,
                                          const double**, const double**, const double**);
@@ -61,3 +62,29 @@ cudaError_t qoco_gpu_topology_validate(QocoGpuTopology*, const QocoTopologyInput
 QocoAuditTransfers qoco_gpu_topology_transfers(const QocoGpuTopology*);
 QocoAuditMemory qoco_gpu_topology_memory(const QocoGpuTopology*);
 void qoco_gpu_topology_destroy(QocoGpuTopology*);
+
+// Canonical arrays: Q, A, F, c, scalar lower/upper, affine offset, variable lower/upper.
+// A term is scale * (input[index] + other_scale * input[other]); other=-1 omits
+// the second operand, input=-1 denotes the constant scale. Output rows sum terms
+// in their compiled order, preserving duplicate sparse entries and SOC transforms.
+struct QocoConversionTerm { int input, index, other; double scale, other_scale; };
+struct QocoConversionPair { int first, second; };
+struct QocoConversionPlan {
+    int input_counts[9]{};
+    int outputs{}, terms{}, symmetry_pairs{};
+    const int* offsets{};
+    const QocoConversionTerm* entries{};
+    const int* bound_types{}; // scalar then variable; 0=free, 1=upper, 2=lower, 3=both, 4=equality
+    const QocoConversionPair* symmetry{};
+};
+struct QocoConversionInputs { const double* arrays[9]{}; };
+struct QocoGpuConversion;
+cudaError_t qoco_gpu_conversion_create(const QocoConversionPlan&, cudaStream_t, QocoGpuConversion**);
+// invalid: bit 1=changed bound classification, bit 2=nonfinite arithmetic,
+// bit 4=asymmetric quadratic. Retained output is also available for device consumers.
+cudaError_t qoco_gpu_conversion_run(QocoGpuConversion*, const QocoConversionInputs&,
+    double* host_output, int* invalid, cudaStream_t);
+const double* qoco_gpu_conversion_values(const QocoGpuConversion*);
+QocoAuditTransfers qoco_gpu_conversion_transfers(const QocoGpuConversion*);
+QocoAuditMemory qoco_gpu_conversion_memory(const QocoGpuConversion*);
+void qoco_gpu_conversion_destroy(QocoGpuConversion*);

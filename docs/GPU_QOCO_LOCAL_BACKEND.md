@@ -363,3 +363,62 @@ The planner benchmark now accepts `--baseline-core` and `--optimized-core` to
 compare native adapter changes with separately hashed libraries. The next
 architectural work is compiled numerical conversion on CUDA, then device
 equilibration and KKT updates; topology caching alone does not remove these CPU paths.
+
+## Compiled CUDA numerical conversion
+
+The native adapter now compiles the numerical conversion once. Each output
+coefficient has an ordered list of canonical input entries and constant factors.
+Parallel CUDA gathers evaluate quadratic, equality and conic matrix values,
+objectives and right-hand sides. The maps preserve duplicate-entry accumulation
+and ordinary/rotated SOC transforms. Separate multiplication/addition rounding
+preserves the CPU expression order rather than introducing fused operations.
+
+CUDA also validates every numerical input, bound classification and quadratic
+symmetry before the converted values can be used. Changed sparse arrays, cone
+descriptors, or finite/equality bound patterns reject the update. Rejected
+conversion leaves the accepted formulation intact. The output stays in retained
+device storage and updates the independent GPU KKT audit with device-to-device
+copies. No CPU row construction, sorting, symmetry scan or numerical conversion
+remains in repeated updates.
+
+Initial structure discovery still uses the CPU converter. It compiles and uploads
+the maps, then runs the GPU conversion before setup. The current QOCO host API
+still needs converted numerical values on the CPU, so each update downloads a
+packed output buffer and one validation integer. CPU equilibration, KKT updates,
+solver scalar decisions and warm/outer state remain. This is a migration of
+repeated conversion arithmetic, not the completed end-to-end GPU pipeline.
+
+`SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE=1` enables the old CPU conversion as
+an independent oracle; production runs omit it. A synthetic CQP covers mixed
+scalar/box constraints, ordinary and rotated affine/variable cones, duplicate
+entries, nonzero buffer offsets, changed coefficients and mutation rejection.
+It also checks a successful solve after rejected conversions. Independent CUDA
+tests cover zero outputs, grid-stride tails, fixed summation order, symmetry,
+all bound classes, nonfinite inputs/results and allocation reuse. All four
+sanitizers pass for the new kernels. The synthetic adapter test and full landing
+pass memcheck (zero leaks), initcheck and synccheck. Seven repeated landing solves
+and the actual 6DOF planner pass both CPU conversion and KKT audit oracles.
+The existing cuDSS race finding remains open and was not remeasured.
+
+Matched local measurements use the same v16 QOCO backend and frozen d35fe7e core
+as the control, two warmups and seven alternating measured samples per variant:
+
+| Case | Previous SCvx | CUDA conversion SCvx | Complete process |
+| --- | ---: | ---: | ---: |
+| 20-interval landing, 1e-8 | 258.174 ms | 249.038 ms | 657.813 → 637.775 ms |
+| 20-interval 6DOF planner, 1e-6 | 1657.412 ms | 1635.301 ms | 2024.929 → 2002.448 ms |
+
+The median SCvx changes are 3.7% and 1.4%, with unchanged 28/179 inner iterations,
+two accepted steps, objectives and independent physics gates. These modest
+measurements are not a universal speedup. In the landing, initial conversion
+including compilation rises 0.771 → 1.644 ms; the complete numeric-update phase
+falls 1.479 → 1.097 ms. Retained maps cost memory: native peak rises
+526220 → 758744 bytes. Initial uploads also increase the small case's total
+native H2D from 135888 to 286728 bytes and D2H from 118172 to 150840 bytes.
+These counters exclude opaque QOCO/cuDSS allocations and transfers. Direct device
+updates into QOCO are still needed to remove the remaining output round trip.
+
+[Checkpoint and validation](../artifacts/performance/qoco-device-conversion-checkpoint.json),
+[landing samples](../artifacts/performance/qoco-device-conversion-pd3.json), and
+[full planner comparison](../artifacts/performance/qoco-device-conversion-planner-pd6.json)
+retain the measured binaries' hashes and representative complete planner results.

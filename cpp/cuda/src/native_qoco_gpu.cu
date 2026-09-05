@@ -341,6 +341,20 @@ cudaError_t qoco_gpu_audit_upload_solution(QocoGpuAudit* w, const double* x, con
     } catch (const Failure& e) { return e.status; }
 }
 
+cudaError_t qoco_gpu_audit_update_device(QocoGpuAudit* w, const double* values, cudaStream_t stream) {
+    if (!w || !values) return cudaErrorInvalidValue;
+    const int counts[]{w->p.nonzeros, w->a.nonzeros, w->g.nonzeros, w->p.columns, w->a.rows, w->g.rows};
+    double* destinations[]{w->p.values.data, w->a.values.data, w->g.values.data, w->c.data, w->b.data, w->h.data};
+    for (int i = 0; i < 6; ++i) {
+        if (counts[i]) {
+            const auto status = cudaMemcpyAsync(destinations[i], values, counts[i] * sizeof(double), cudaMemcpyDeviceToDevice, stream);
+            if (status != cudaSuccess) return status;
+        }
+        values += counts[i];
+    }
+    return cudaSuccess;
+}
+
 cudaError_t qoco_gpu_audit_run(QocoGpuAudit* w, const double* x, const double* y, const double* z,
                              double* mapped, cudaStream_t stream, QocoAuditResult* output) {
     if (!w || !x || !output || (w->a.rows && !y) || (w->g.rows && !z)
@@ -437,3 +451,135 @@ QocoAuditMemory qoco_gpu_topology_memory(const QocoGpuTopology* cache) {
     return cache ? cache->memory : QocoAuditMemory{};
 }
 void qoco_gpu_topology_destroy(QocoGpuTopology* cache) { delete cache; }
+
+struct QocoGpuConversion {
+    QocoAuditMemory memory{};
+    QocoAuditTransfers transfers{};
+    QocoConversionPlan plan{};
+    Buffer<int> offsets, bound_types, invalid;
+    Buffer<QocoConversionTerm> entries;
+    Buffer<QocoConversionPair> symmetry;
+    Buffer<double> values;
+    int maximum_input{};
+};
+
+namespace {
+__global__ void conversion_validate(QocoConversionPlan plan, QocoConversionInputs in, int* invalid) {
+    const int array = blockIdx.y;
+    for (std::int64_t i = blockIdx.x * blockDim.x + threadIdx.x; i < plan.input_counts[array];
+         i += gridDim.x * blockDim.x) {
+        const double value = in.arrays[array][i];
+        const bool bound = array == 4 || array == 5 || array == 7 || array == 8;
+        if (isnan(value) || (!bound && !isfinite(value))) atomicOr(invalid, 2);
+        if (array == 4 || array == 7) {
+            const double upper = in.arrays[array + 1][i];
+            const int kind = isfinite(value) && isfinite(upper) && value == upper ? 4
+                : (isfinite(value) ? 2 : 0) + (isfinite(upper) ? 1 : 0);
+            const int expected = plan.bound_types[(array == 7 ? plan.input_counts[4] : 0) + i];
+            if (kind != expected) atomicOr(invalid, 1);
+        }
+    }
+}
+__global__ void conversion_symmetry(QocoConversionPlan plan, const double* values, int* invalid) {
+    for (std::int64_t i = blockIdx.x * blockDim.x + threadIdx.x; i < plan.symmetry_pairs;
+         i += gridDim.x * blockDim.x) {
+        const auto pair = plan.symmetry[i];
+        const double a = values[pair.first], b = values[pair.second];
+        if (fabs(a - b) > 1e-12 * fmax(1.0, fmax(fabs(a), fabs(b)))) atomicOr(invalid, 4);
+    }
+}
+__global__ void conversion_gather(QocoConversionPlan plan, QocoConversionInputs in,
+                                  double* output, int* invalid) {
+    for (std::int64_t i = blockIdx.x * blockDim.x + threadIdx.x; i < plan.outputs;
+         i += gridDim.x * blockDim.x) {
+        double sum = 0;
+        for (int k = plan.offsets[i]; k < plan.offsets[i + 1]; ++k) {
+            const auto term = plan.entries[k];
+            double value = term.scale;
+            if (term.input >= 0) {
+                value = in.arrays[term.input][term.index];
+                if (term.other >= 0)
+                    value = __dadd_rn(value, __dmul_rn(term.other_scale, in.arrays[term.input][term.other]));
+                value = __dmul_rn(term.scale, value);
+            }
+            sum = __dadd_rn(sum, value);
+        }
+        if (!isfinite(sum)) atomicOr(invalid, 2);
+        output[i] = sum;
+    }
+}
+}
+
+cudaError_t qoco_gpu_conversion_create(const QocoConversionPlan& in, cudaStream_t stream,
+                                        QocoGpuConversion** output) {
+    if (!output) return cudaErrorInvalidValue;
+    *output = nullptr;
+    if (in.outputs < 0 || in.outputs == INT_MAX || in.terms < 0 || in.symmetry_pairs < 0
+        || !in.offsets || in.offsets[0] != 0 || in.offsets[in.outputs] != in.terms
+        || (in.terms && !in.entries) || (in.symmetry_pairs && !in.symmetry)) return cudaErrorInvalidValue;
+    for (int count : in.input_counts) if (count < 0) return cudaErrorInvalidValue;
+    if (in.input_counts[4] != in.input_counts[5] || in.input_counts[7] != in.input_counts[8]
+        || static_cast<std::int64_t>(in.input_counts[4]) + in.input_counts[7] > INT_MAX
+        || ((in.input_counts[4] || in.input_counts[7]) && !in.bound_types)) return cudaErrorInvalidValue;
+    for (int i = 0; i < in.outputs; ++i)
+        if (in.offsets[i] < 0 || in.offsets[i] > in.offsets[i + 1]) return cudaErrorInvalidValue;
+    for (int i = 0; i < in.terms; ++i) {
+        const auto& t = in.entries[i];
+        if (t.input < -1 || t.input >= 9 || !std::isfinite(t.scale) || !std::isfinite(t.other_scale)
+            || (t.input >= 0 && (t.index < 0 || t.index >= in.input_counts[t.input]
+                || t.other < -1 || t.other >= in.input_counts[t.input]))) return cudaErrorInvalidValue;
+    }
+    for (int i = 0; i < in.symmetry_pairs; ++i)
+        if (in.symmetry[i].first < 0 || in.symmetry[i].first >= in.input_counts[0]
+            || in.symmetry[i].second < 0 || in.symmetry[i].second >= in.input_counts[0]) return cudaErrorInvalidValue;
+    const int bounds = in.input_counts[4] + in.input_counts[7];
+    for (int i = 0; i < bounds; ++i)
+        if (in.bound_types[i] < 0 || in.bound_types[i] > 4) return cudaErrorInvalidValue;
+    try {
+        auto w = std::make_unique<QocoGpuConversion>();
+        w->plan = in;
+        w->offsets.allocate(static_cast<std::size_t>(in.outputs) + 1, w->memory);
+        w->entries.allocate(in.terms, w->memory); w->symmetry.allocate(in.symmetry_pairs, w->memory);
+        w->bound_types.allocate(bounds, w->memory); w->invalid.allocate(1, w->memory);
+        w->values.allocate(in.outputs, w->memory);
+        upload(w->offsets.data, in.offsets, static_cast<std::size_t>(in.outputs) + 1, stream, w->transfers);
+        upload(w->entries.data, in.entries, in.terms, stream, w->transfers);
+        upload(w->symmetry.data, in.symmetry, in.symmetry_pairs, stream, w->transfers);
+        upload(w->bound_types.data, in.bound_types, bounds, stream, w->transfers);
+        w->plan.offsets = w->offsets.data; w->plan.entries = w->entries.data;
+        w->plan.symmetry = w->symmetry.data; w->plan.bound_types = w->bound_types.data;
+        for (int count : in.input_counts) w->maximum_input = std::max(w->maximum_input, count);
+        check(cudaStreamSynchronize(stream));
+        *output = w.release();
+        return cudaSuccess;
+    } catch (const Failure& e) { return e.status; }
+      catch (const std::bad_alloc&) { return cudaErrorMemoryAllocation; }
+}
+
+cudaError_t qoco_gpu_conversion_run(QocoGpuConversion* w, const QocoConversionInputs& in,
+                                    double* host_output, int* invalid, cudaStream_t stream) {
+    if (!w || !invalid || (w->plan.outputs && !host_output)) return cudaErrorInvalidValue;
+    for (int i = 0; i < 9; ++i) if (w->plan.input_counts[i] && !in.arrays[i]) return cudaErrorInvalidValue;
+    try {
+        check(cudaMemsetAsync(w->invalid.data, 0, sizeof(int), stream));
+        if (w->maximum_input)
+            conversion_validate<<<dim3(std::min(256, (w->maximum_input - 1) / 256 + 1), 9), 256, 0, stream>>>(w->plan, in, w->invalid.data);
+        if (w->plan.symmetry_pairs)
+            conversion_symmetry<<<std::min(256, (w->plan.symmetry_pairs - 1) / 256 + 1), 256, 0, stream>>>(w->plan, in.arrays[0], w->invalid.data);
+        if (w->plan.outputs)
+            conversion_gather<<<std::min(256, (w->plan.outputs - 1) / 256 + 1), 256, 0, stream>>>(w->plan, in, w->values.data, w->invalid.data);
+        check(cudaGetLastError());
+        check(cudaMemcpyAsync(invalid, w->invalid.data, sizeof(int), cudaMemcpyDeviceToHost, stream));
+        ++w->transfers.d2h_count; w->transfers.d2h_bytes += sizeof(int);
+        if (w->plan.outputs) {
+            check(cudaMemcpyAsync(host_output, w->values.data, w->plan.outputs * sizeof(double), cudaMemcpyDeviceToHost, stream));
+            ++w->transfers.d2h_count; w->transfers.d2h_bytes += w->plan.outputs * sizeof(double);
+        }
+        check(cudaStreamSynchronize(stream));
+        return cudaSuccess;
+    } catch (const Failure& e) { cudaStreamSynchronize(stream); return e.status; }
+}
+const double* qoco_gpu_conversion_values(const QocoGpuConversion* w) { return w ? w->values.data : nullptr; }
+QocoAuditTransfers qoco_gpu_conversion_transfers(const QocoGpuConversion* w) { return w ? w->transfers : QocoAuditTransfers{}; }
+QocoAuditMemory qoco_gpu_conversion_memory(const QocoGpuConversion* w) { return w ? w->memory : QocoAuditMemory{}; }
+void qoco_gpu_conversion_destroy(QocoGpuConversion* w) { delete w; }

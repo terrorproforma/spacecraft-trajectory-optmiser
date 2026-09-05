@@ -1,0 +1,153 @@
+{
+  "full_goal_complete": false,
+  "production_backend_changed": false,
+  "changes": [
+    "Compile numerical conversion maps once",
+    "CUDA ordered gathers and SOC/RSOC/bound transforms",
+    "CUDA bound classification, quadratic symmetry and nonfinite checks",
+    "Retained device values feed the KKT audit without H2D upload"
+  ],
+  "measurements": {
+    "qoco-device-conversion-pd3.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 0.6578132280264981,
+          "scvx_seconds": 0.258173814,
+          "qoco_solve_seconds": 0.21823310499999998,
+          "inner_iterations": 28
+        },
+        "optimized": {
+          "process_seconds": 0.6377753299893811,
+          "scvx_seconds": 0.249037551,
+          "qoco_solve_seconds": 0.20253980900000002,
+          "inner_iterations": 28
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.03141842761063,
+        "scvx_seconds": 1.036686286719869,
+        "qoco_solve_seconds": 1.0774825259166703
+      }
+    },
+    "qoco-device-conversion-planner-pd6.json": {
+      "medians": {
+        "baseline": {
+          "process_seconds": 2.0249291749787517,
+          "scvx_total_seconds": 1.657411652,
+          "qoco_solve_seconds": 1.544853303,
+          "plan_wall_seconds": 1.769854896,
+          "inner_iterations": 179
+        },
+        "optimized": {
+          "process_seconds": 2.0024476679973304,
+          "scvx_total_seconds": 1.635300755,
+          "qoco_solve_seconds": 1.5346003810000002,
+          "plan_wall_seconds": 1.750890988,
+          "inner_iterations": 179
+        }
+      },
+      "median_speedup": {
+        "process_seconds": 1.0112270134898982,
+        "scvx_total_seconds": 1.0135209972431034,
+        "qoco_solve_seconds": 1.0066811673755214,
+        "plan_wall_seconds": 1.0108310044028852
+      }
+    }
+  },
+  "landing_phase_medians": {
+    "baseline": {
+      "qoco_conversion_seconds": 0.000771344,
+      "qoco_update_seconds": 0.001479357,
+      "qoco_setup_seconds": 0.032359572999999996
+    },
+    "optimized": {
+      "qoco_conversion_seconds": 0.001644193,
+      "qoco_update_seconds": 0.001097336,
+      "qoco_setup_seconds": 0.031550559
+    }
+  },
+  "native_landing_transfer_counters": {
+    "baseline": {
+      "h2d_bytes": 135888,
+      "d2h_bytes": 118172,
+      "peak_device_bytes": 526220,
+      "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss"
+    },
+    "optimized": {
+      "h2d_bytes": 286728,
+      "d2h_bytes": 150840,
+      "peak_device_bytes": 758744,
+      "device_memory_scope": "native_owned_peak_upper_bound_excludes_qoco_cudss"
+    }
+  },
+  "representative_planner_results": [
+    "qoco-device-conversion-planner-pd6-baseline-sample.json",
+    "qoco-device-conversion-planner-pd6-optimized-sample.json"
+  ],
+  "sanitizers": {
+    "qoco-conversion-memcheck.log": {
+      "passed": true,
+      "sha256": "c1adf22687897918af44c1099888ba35f1758a7f33a0466be1b4fd64c3fdcfed"
+    },
+    "qoco-conversion-initcheck.log": {
+      "passed": true,
+      "sha256": "7988bb475bf4ccbab94497eea229f88116d1b495919075d08b8d87c1fe2cf308"
+    },
+    "qoco-conversion-synccheck.log": {
+      "passed": true,
+      "sha256": "7988bb475bf4ccbab94497eea229f88116d1b495919075d08b8d87c1fe2cf308"
+    },
+    "qoco-conversion-racecheck.log": {
+      "passed": true,
+      "sha256": "3be97369ec7dcd4a7effda52f2fd390f6b92f15d30d12190930dd1d932843d94"
+    },
+    "qoco-conversion-landing-memcheck.log": {
+      "passed": true,
+      "sha256": "1282914cc86a4c6adc67b6247747ddd4befe4a02511985d3d5a7292f2b9005fd"
+    },
+    "qoco-conversion-landing-initcheck.log": {
+      "passed": true,
+      "sha256": "728830c3737fe08ff4efa04617b6ec7f7f162190fef64bc0fe9d988a6b357b1f"
+    },
+    "qoco-conversion-landing-synccheck.log": {
+      "passed": true,
+      "sha256": "75b7e1d6bb3cc0f41dd97243068ac1fdcfa2e42377cf620a3b7eea76e0881a3f"
+    },
+    "qoco-conversion-contract-memcheck.log": {
+      "passed": true,
+      "sha256": "013d53d5ccc662238de92d4f00e10af3c7f9a467efb1f0df1fc8cb34ea10a0a8"
+    },
+    "qoco-conversion-contract-initcheck.log": {
+      "passed": true,
+      "sha256": "f577be14d73249c4d5eda63610ac44a2a4dbb75c7897cd0f260cb311171c14c3"
+    },
+    "qoco-conversion-contract-synccheck.log": {
+      "passed": true,
+      "sha256": "f577be14d73249c4d5eda63610ac44a2a4dbb75c7897cd0f260cb311171c14c3"
+    }
+  },
+  "cpu_conversion_and_audit_oracle_repeated_qualified_landing_solves": 7,
+  "cpu_conversion_and_audit_oracle_pd6_certified": true,
+  "full_backend_racecheck_clear": false,
+  "vendor_issue": "Existing cuDSS deterministic factorization race finding remains open; not remeasured",
+  "interpretation": "Small paired median gains; not a universal speedup. Initialization compiles/uploads extra maps and increases native retained memory and total small-fixture transfers.",
+  "sha256": {
+    "/home/angus/build-spacepdhcg-gpu-native/cuda/libspacepdhcg_cuda.so": "130f0f174729ddbb581b0b7f70df52f85bac8ee8b998e27586b8c6bbe4fe695c",
+    "/home/angus/build-spacepdhcg-gpu-native/d35fe7e/libspacepdhcg_cuda.so": "890c36659bbfd4f05c46416b17fa10b1fa17ebce11c2023727b7644ee4c7c1e8",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/qoco_gpu_conversion_test": "23351b60188997443d7c0131faceeda1679874251010c1feadf674f80e68deab",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/native_qoco_conversion_test": "7996b4974fb31b942d387a8ee8af00cbe71a46b68d821f58e36752e5978b3b53",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tests/device_scvx_integration_test": "1df2bc4a2f72edc8939f0cd972422ab96a57a20147d675bf05818b406094006d",
+    "/home/angus/build-spacepdhcg-gpu-native/cuda-tools/spacepdhcg_plan": "32690d522385cccf65541b0ad5a07c40e08d50645d819ec9cb43accfd7d169bc",
+    "/home/angus/build-qoco-gpu-values-v16/build/libqoco.so": "5ed6531d1988c0104ff72f548ce2aa1bfe83b2b05b571f08be77f825a1762533",
+    "/home/angus/spacecraft-trajectory-optmiser/build/qoco-cudss-lib/libcudss.so": "5f76a3698d6b7114e6cf6ebe38a38096ccb8af090aa5b8af92d72c9b369b2e86"
+  },
+  "remaining_work": [
+    "Initial CPU structure discovery/conversion",
+    "QOCO host update API and numerical output download",
+    "GPU equilibration/KKT updates",
+    "CPU outer/scalar decisions and warm state",
+    "cuDSS vendor issue",
+    "large trajectories and batching",
+    "GPU GTOC12"
+  ]
+}

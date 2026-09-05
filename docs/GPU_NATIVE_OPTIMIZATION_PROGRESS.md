@@ -513,3 +513,21 @@ at the unchanged physics gate and was rejected.
 separate these results from the earlier measured gains. CPU numerical conversion,
 equilibration, KKT updates and outer control still need migration; the full
 GPU-native goal remains active.
+
+## CUDA numerical conversion checkpoint
+
+Repeated QOCO numerical conversion now runs on CUDA using compiled, retained
+maps. Ordered gathers handle duplicates, bound signs, SOC/rotated-SOC transforms
+and right-hand sides; GPU checks reject invalid numerical inputs or changed bound
+patterns. The GPU KKT audit consumes the resident converted values. Initial
+structure discovery and the QOCO host update interface still use CPU storage;
+equilibration, KKT assembly and outer/scalar decisions remain to be migrated.
+
+Independent arithmetic, mixed-cone/duplicate-entry mutation tests, CPU conversion
+and KKT oracles pass. New kernels pass all four sanitizers; full landing and
+synthetic adapter memory/initialization/synchronization checks pass. The known
+cuDSS race remains unresolved. Paired landing SCvx is 258.174 → 249.038 ms and
+6DOF planner 1657.412 → 1635.301 ms, with identical iterations and physics results.
+These are modest measured changes; initial map setup, transfers and memory grow.
+[Full evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#compiled-cuda-numerical-conversion)
+are recorded. The complete GPU-native goal remains active.

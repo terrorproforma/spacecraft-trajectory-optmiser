@@ -38,7 +38,7 @@ struct spacepdhcg_native_qoco_report {
     std::uint64_t h2d_bytes;
     std::uint64_t d2d_copy_count;
     std::uint64_t d2d_bytes;
-    // Audit/topology-cache memory, including temporary setup scratch in the peak.
+    // Audit/conversion/topology memory, including temporary setup scratch in the peak.
     std::uint64_t audit_allocations;
     std::uint64_t audit_peak_bytes;
     int iterations;

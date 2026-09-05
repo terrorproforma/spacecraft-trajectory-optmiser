@@ -130,6 +130,14 @@ struct TopologyCache {
     ~TopologyCache() { qoco_gpu_topology_destroy(device); }
 };
 
+struct ConversionCache {
+    QocoGpuConversion* device{};
+    int input_counts[9]{};
+    std::vector<double> values;
+    std::vector<spacepdhcg_cuda_cone_descriptor> affine_cones, variable_cones;
+    ~ConversionCache() { qoco_gpu_conversion_destroy(device); }
+};
+
 // Complete queued downloads before their destination vectors can be destroyed,
 // including allocation/validation failures while assembling a batch.
 struct DownloadBatch {
@@ -379,6 +387,7 @@ struct spacepdhcg_native_qoco {
     DeviceSolutionFn device_solution{};
     QocoGpuAudit* gpu_audit{};
     TopologyCache topology{};
+    ConversionCache conversion{};
     Csc dual_transfer{};
     Formulation formulation{};
     // The settings handed to qoco_setup. QOCO's stall handler mutates
@@ -459,6 +468,34 @@ bool solve_with_reduction_scope(spacepdhcg_native_qoco* workspace, int* status) 
     return true;
 }
 
+spacepdhcg_cuda_status validate_cached_topology(const spacepdhcg_cuda_scvx_problem& problem,
+    cudaStream_t stream, const TopologyCache& topology) {
+    const auto& s = problem.canonical_structure;
+    if (s.abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || s.topology_fingerprint != problem.topology_fingerprint || s.variables <= 0
+        || topology.fingerprint != problem.topology_fingerprint)
+        return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+    const auto& t = problem.canonical_topology;
+    const spacepdhcg_accelerator_buffer_view views[]{t.quadratic_offsets,
+        t.quadratic_indices, t.scalar_offsets, t.scalar_indices, t.affine_offsets, t.affine_indices};
+    const std::size_t counts[]{static_cast<std::size_t>(s.variables) + 1, s.quadratic_nonzeros,
+        static_cast<std::size_t>(s.variables) + 1, s.scalar_nonzeros,
+        s.affine_rows == 0 ? 0 : static_cast<std::size_t>(s.variables) + 1, s.affine_nonzeros};
+    QocoTopologyInput input{};
+    for (int i = 0; i < 6; ++i) {
+        if (counts[i] != topology.arrays[i].size()) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+        if (counts[i] && (!views[i].data || views[i].elements != counts[i] || views[i].element_stride != 1))
+            return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+        input.counts[i] = static_cast<int>(counts[i]);
+        input.arrays[i] = counts[i] ? reinterpret_cast<const int*>(
+            static_cast<const unsigned char*>(views[i].data) + views[i].byte_offset) : nullptr;
+    }
+    bool matches{};
+    const auto status = qoco_gpu_topology_validate(topology.device, input, stream, &matches);
+    if (status != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    return matches ? SPACEPDHCG_CUDA_SUCCESS : SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+}
+
 spacepdhcg_cuda_status convert(
     const spacepdhcg_cuda_scvx_problem& problem,
     cudaStream_t stream,
@@ -490,27 +527,8 @@ spacepdhcg_cuda_status convert(
     std::vector<double> variable_upper{};
 
     if (topology->device) {
-        if (topology->fingerprint != problem.topology_fingerprint)
-            return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
-        const auto& t = problem.canonical_topology;
-        const spacepdhcg_accelerator_buffer_view views[]{t.quadratic_offsets,
-            t.quadratic_indices, t.scalar_offsets, t.scalar_indices, t.affine_offsets, t.affine_indices};
-        const std::size_t counts[]{static_cast<std::size_t>(n) + 1, structure.quadratic_nonzeros,
-            static_cast<std::size_t>(n) + 1, structure.scalar_nonzeros,
-            structure.affine_rows == 0 ? 0 : static_cast<std::size_t>(n) + 1, structure.affine_nonzeros};
-        QocoTopologyInput input{};
-        for (int i = 0; i < 6; ++i) {
-            if (counts[i] != topology->arrays[i].size()) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
-            if (counts[i] && (!views[i].data || views[i].elements != counts[i] || views[i].element_stride != 1))
-                return SPACEPDHCG_CUDA_POINTER_CONTRACT;
-            input.counts[i] = static_cast<int>(counts[i]);
-            input.arrays[i] = counts[i] ? reinterpret_cast<const int*>(
-                static_cast<const unsigned char*>(views[i].data) + views[i].byte_offset) : nullptr;
-        }
-        bool matches{};
-        const auto status = qoco_gpu_topology_validate(topology->device, input, stream, &matches);
-        if (status != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
-        if (!matches) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+        const auto status = validate_cached_topology(problem, stream, *topology);
+        if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
     }
 
     DownloadBatch downloads{stream};
@@ -782,6 +800,184 @@ spacepdhcg_cuda_status convert(
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
+spacepdhcg_cuda_status compile_conversion(spacepdhcg_native_qoco* w,
+    const spacepdhcg_cuda_scvx_problem& problem, cudaStream_t stream) {
+    const auto& s = problem.canonical_structure;
+    const auto& f = w->formulation;
+    auto& cache = w->conversion;
+    const std::size_t counts[]{s.quadratic_nonzeros, s.scalar_nonzeros, s.affine_nonzeros,
+        static_cast<std::size_t>(s.variables), static_cast<std::size_t>(s.scalar_rows),
+        static_cast<std::size_t>(s.scalar_rows), static_cast<std::size_t>(s.affine_rows),
+        static_cast<std::size_t>(s.variables), static_cast<std::size_t>(s.variables)};
+    QocoConversionPlan plan{};
+    for (int i = 0; i < 9; ++i) {
+        if (counts[i] > static_cast<std::size_t>(std::numeric_limits<int>::max())) return SPACEPDHCG_CUDA_UNSUPPORTED;
+        cache.input_counts[i] = plan.input_counts[i] = static_cast<int>(counts[i]);
+    }
+    const auto save_cones = [](auto& saved, const auto* cones, std::size_t count) {
+        if (count) saved.assign(cones, cones + count);
+    };
+    save_cones(cache.affine_cones, s.affine_cones, s.affine_cone_count);
+    save_cones(cache.variable_cones, s.variable_cones, s.variable_cone_count);
+    using References = std::vector<std::vector<std::pair<int, int>>>;
+    const auto rows = [&](int array, int count) {
+        References result(count);
+        const auto& offsets = w->topology.arrays[array * 2];
+        const auto& indices = w->topology.arrays[array * 2 + 1];
+        if (!offsets.empty()) for (int col = 0; col < s.variables; ++col)
+            for (int k = offsets[col]; k < offsets[col + 1]; ++k) result[indices[k]].emplace_back(col, k);
+        return result;
+    };
+    const auto scalar = rows(1, s.scalar_rows), affine = rows(2, s.affine_rows);
+    struct Entry { int row, column; QocoConversionTerm term; };
+    std::vector<QocoConversionTerm> terms;
+    std::vector<int> offsets{0}, bound_types(static_cast<std::size_t>(s.scalar_rows) + s.variables, 0);
+    const auto term = [](int array, int index, double scale = 1.0, int other = -1, double other_scale = 0.0) {
+        return QocoConversionTerm{array, index, other, scale, other_scale};
+    };
+    const auto finish_matrix = [&](const Csc& matrix, std::vector<Entry> entries) {
+        std::sort(entries.begin(), entries.end(), [](const Entry& a, const Entry& b) {
+            return std::tie(a.column, a.row) < std::tie(b.column, b.row);
+        });
+        std::size_t cursor = 0;
+        for (int col = 0; col < matrix.columns; ++col)
+            for (int k = matrix.offsets[col]; k < matrix.offsets[col + 1]; ++k) {
+                const auto before = cursor;
+                while (cursor < entries.size() && entries[cursor].column == col && entries[cursor].row == matrix.indices[k])
+                    terms.push_back(entries[cursor++].term);
+                if (cursor == before || terms.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) return false;
+                offsets.push_back(static_cast<int>(terms.size()));
+            }
+        return cursor == entries.size();
+    };
+    std::vector<Entry> p;
+    std::unordered_map<std::uint64_t, int> q_entries;
+    for (int col = 0; col < s.variables; ++col)
+        for (int k = w->topology.arrays[0][col]; k < w->topology.arrays[0][col + 1]; ++k) {
+            const int row = w->topology.arrays[1][k];
+            q_entries[(static_cast<std::uint64_t>(row) << 32U) | static_cast<std::uint32_t>(col)] = k;
+            if (row <= col) p.push_back({row, col, term(0, k)});
+        }
+    std::vector<QocoConversionPair> symmetry;
+    for (const auto& [key, index] : q_entries) {
+        const auto reverse = q_entries.find((key << 32U) | (key >> 32U));
+        if (reverse == q_entries.end()) return SPACEPDHCG_CUDA_UNSUPPORTED;
+        symmetry.push_back({index, reverse->second});
+    }
+    if (!finish_matrix(f.p, std::move(p))) return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+    const auto append_rows = [&](const std::vector<RowMap>& maps, const Csc& matrix) {
+        std::vector<Entry> entries;
+        for (int row = 0; row < static_cast<int>(maps.size()); ++row) {
+            const auto& map = maps[row];
+            const auto append = [&](int source, double scale) {
+                if (map.source == Source::scalar || map.source == Source::affine) {
+                    const auto& references = map.source == Source::scalar ? scalar : affine;
+                    for (const auto& [col, k] : references[source])
+                        entries.push_back({row, col, term(map.source == Source::scalar ? 1 : 2, k, scale)});
+                } else entries.push_back({row, source, term(-1, 0, scale)});
+            };
+            if (map.source == Source::scalar || map.source == Source::variable) {
+                append(map.index, map.side < 0 ? -1.0 : 1.0);
+                auto& kind = bound_types[(map.source == Source::variable ? s.scalar_rows : 0) + map.index];
+                kind = map.side == 0 ? 4 : kind | (map.side < 0 ? 2 : 1);
+            } else if (!map.rotated) {
+                append(map.cone_start + (map.transformed_row == 0 ? map.cone_size - 1 : map.transformed_row - 1), -1.0);
+            } else if (map.transformed_row == 0 || map.transformed_row == map.cone_size - 1) {
+                const double scale = 1.0 / std::sqrt(2.0);
+                append(map.cone_start + map.cone_size - 2, -scale);
+                append(map.cone_start + map.cone_size - 1, map.transformed_row == 0 ? -scale : scale);
+            } else append(map.cone_start + map.transformed_row - 1, -1.0);
+        }
+        return finish_matrix(matrix, std::move(entries));
+    };
+    if (!append_rows(f.equality_map, f.a) || !append_rows(f.conic_map, f.g)) return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+    const auto append_value = [&](QocoConversionTerm entry) { terms.push_back(entry); offsets.push_back(static_cast<int>(terms.size())); };
+    for (int i = 0; i < s.variables; ++i) append_value(term(3, i));
+    const auto append_rhs = [&](const std::vector<RowMap>& maps) {
+        for (const auto& map : maps) {
+            if (map.source == Source::scalar || map.source == Source::variable) {
+                const int lo = map.source == Source::scalar ? 4 : 7;
+                append_value(term(map.side > 0 ? lo + 1 : lo, map.index, map.side < 0 ? -1.0 : 1.0));
+            } else if (map.source == Source::variable_cone) append_value(term(-1, 0, 0.0));
+            else if (!map.rotated) append_value(term(6,
+                map.cone_start + (map.transformed_row == 0 ? map.cone_size - 1 : map.transformed_row - 1)));
+            else if (map.transformed_row == 0 || map.transformed_row == map.cone_size - 1)
+                append_value(term(6, map.cone_start + map.cone_size - 2, 1.0 / std::sqrt(2.0),
+                    map.cone_start + map.cone_size - 1, map.transformed_row == 0 ? 1.0 : -1.0));
+            else append_value(term(6, map.cone_start + map.transformed_row - 1));
+        }
+    };
+    append_rhs(f.equality_map); append_rhs(f.conic_map);
+    if (offsets.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())
+        || terms.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) return SPACEPDHCG_CUDA_UNSUPPORTED;
+    plan.outputs = static_cast<int>(offsets.size()) - 1; plan.terms = static_cast<int>(terms.size());
+    plan.offsets = offsets.data(); plan.entries = terms.data(); plan.bound_types = bound_types.data();
+    plan.symmetry_pairs = static_cast<int>(symmetry.size()); plan.symmetry = symmetry.data();
+    cache.values.resize(plan.outputs);
+    const auto status = qoco_gpu_conversion_create(plan, stream, &cache.device);
+    return status == cudaSuccess ? SPACEPDHCG_CUDA_SUCCESS : status == cudaErrorMemoryAllocation
+        ? SPACEPDHCG_CUDA_OUT_OF_MEMORY : SPACEPDHCG_CUDA_INTERNAL_ERROR;
+}
+
+spacepdhcg_cuda_status refresh_conversion(spacepdhcg_native_qoco* w,
+    const spacepdhcg_cuda_scvx_problem& problem, cudaStream_t stream) {
+    auto& cache = w->conversion;
+    const auto& s = problem.canonical_structure;
+    const auto& n = problem.numeric;
+    const auto topology = validate_cached_topology(problem, stream, w->topology);
+    if (topology != SPACEPDHCG_CUDA_SUCCESS) return topology;
+    const auto same_cones = [](const auto& saved, const auto* cones, std::size_t count) {
+        if (saved.size() != count || (count && !cones)) return false;
+        for (std::size_t i = 0; i < count; ++i)
+            if (saved[i].kind != cones[i].kind || saved[i].start != cones[i].start
+                || saved[i].vector_dimension != cones[i].vector_dimension) return false;
+        return true;
+    };
+    if (!same_cones(cache.affine_cones, s.affine_cones, s.affine_cone_count)
+        || !same_cones(cache.variable_cones, s.variable_cones, s.variable_cone_count)
+        || s.scalar_rows != cache.input_counts[4] || s.affine_rows != cache.input_counts[6])
+        return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+    const spacepdhcg_accelerator_buffer_view views[]{n.quadratic, n.scalar_constraint, n.affine_cone,
+        n.linear_objective, n.scalar_lower, n.scalar_upper, n.affine_offset, n.variable_lower, n.variable_upper};
+    QocoConversionInputs inputs{};
+    for (int i = 0; i < 9; ++i) if (cache.input_counts[i]) {
+        if (!views[i].data || views[i].elements != static_cast<std::size_t>(cache.input_counts[i]) || views[i].element_stride != 1)
+            return SPACEPDHCG_CUDA_POINTER_CONTRACT;
+        inputs.arrays[i] = reinterpret_cast<const double*>(static_cast<const unsigned char*>(views[i].data) + views[i].byte_offset);
+    }
+    int invalid{};
+    const auto status = qoco_gpu_conversion_run(cache.device, inputs, cache.values.data(), &invalid, stream);
+    if (status != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    if (invalid & 1) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+    if (invalid & 2) return SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
+    if (invalid & 4) return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if (const char* compare = std::getenv("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE"); compare && compare[0] == '1') {
+        Formulation reference;
+        auto checked = convert(problem, stream, &reference, &w->report.d2h_copy_count, &w->report.d2h_bytes, &w->topology);
+        if (checked != SPACEPDHCG_CUDA_SUCCESS) return checked;
+        if (!same_pattern(w->formulation.p, reference.p) || !same_pattern(w->formulation.a, reference.a)
+            || !same_pattern(w->formulation.g, reference.g) || w->formulation.equality_map != reference.equality_map
+            || w->formulation.conic_map != reference.conic_map) return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+        std::size_t cursor = 0;
+        for (const auto* values : {&reference.p.values, &reference.a.values, &reference.g.values,
+                                  &reference.c, &reference.b, &reference.h})
+            for (double value : *values) {
+                const double actual = cache.values[cursor++];
+                if (std::abs(value - actual) > 8 * std::numeric_limits<double>::epsilon() * std::max(1.0, std::abs(value))) {
+                    std::fprintf(stderr, "QOCO GPU conversion mismatch at %zu: %.17g vs %.17g\n", cursor - 1, actual, value);
+                    return SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
+                }
+            }
+    }
+    std::size_t cursor = 0;
+    for (auto* values : {&w->formulation.p.values, &w->formulation.a.values, &w->formulation.g.values,
+                         &w->formulation.c, &w->formulation.b, &w->formulation.h}) {
+        std::copy_n(cache.values.data() + cursor, values->size(), values->data());
+        cursor += values->size();
+    }
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
 void residuals(spacepdhcg_native_qoco* workspace) {
     const auto& formulation = workspace->formulation;
     std::vector<double> ax{};
@@ -1024,12 +1220,12 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         &result->report.d2h_bytes,
         &result->topology
     );
+    if (status == SPACEPDHCG_CUDA_SUCCESS) status = compile_conversion(result.get(), *problem, stream);
+    if (status == SPACEPDHCG_CUDA_SUCCESS) status = refresh_conversion(result.get(), *problem, stream);
     result->report.conversion_seconds = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - conversion_start
     ).count();
-    if (status != SPACEPDHCG_CUDA_SUCCESS) {
-        return status;
-    }
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
     const std::size_t variables =
         static_cast<std::size_t>(problem->canonical_structure.variables);
     const std::size_t duals =
@@ -1117,6 +1313,14 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         const auto topology_memory = qoco_gpu_topology_memory(workspace->topology.device);
         report->audit_allocations += topology_memory.allocations;
         report->audit_peak_bytes += topology_memory.peak_bytes;
+        const auto conversion_transfers = qoco_gpu_conversion_transfers(workspace->conversion.device);
+        report->h2d_copy_count += conversion_transfers.h2d_count;
+        report->h2d_bytes += conversion_transfers.h2d_bytes;
+        report->d2h_copy_count += conversion_transfers.d2h_count;
+        report->d2h_bytes += conversion_transfers.d2h_bytes;
+        const auto conversion_memory = qoco_gpu_conversion_memory(workspace->conversion.device);
+        report->audit_allocations += conversion_memory.allocations;
+        report->audit_peak_bytes += conversion_memory.peak_bytes;
         return status;
     };
     if (workspace->solver == nullptr) {
@@ -1125,36 +1329,26 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         return finish(SPACEPDHCG_CUDA_INVALID_STATE);
     }
     if (workspace->report.solves != 0U) {
-        Formulation updated{};
         const auto update_start = std::chrono::steady_clock::now();
-        auto status = convert(
-            *problem,
-            stream,
-            &updated,
-            &workspace->report.d2h_copy_count,
-            &workspace->report.d2h_bytes,
-            &workspace->topology
-        );
+        auto status = refresh_conversion(workspace, *problem, stream);
         if (status != SPACEPDHCG_CUDA_SUCCESS) {
             workspace->report.failure =
                 status == SPACEPDHCG_CUDA_UNSUPPORTED
                 ? SPACEPDHCG_CUDA_QOCO_FAILURE_UNSUPPORTED
+                : status == SPACEPDHCG_CUDA_NUMERICAL_FAILURE
+                ? SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL
                 : SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
             return finish(status);
         }
-        if (!same_pattern(workspace->formulation.p, updated.p)
-            || !same_pattern(workspace->formulation.a, updated.a)
-            || !same_pattern(workspace->formulation.g, updated.g)
-            || workspace->formulation.soc != updated.soc
-            || workspace->formulation.equality_map != updated.equality_map
-            || workspace->formulation.conic_map != updated.conic_map
-            || workspace->formulation.nonnegative != updated.nonnegative) {
-            workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_UNSUPPORTED;
-            return finish(SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH);
-        }
-        workspace->formulation = std::move(updated);
-        const auto audit_status = qoco_gpu_audit_update(workspace->gpu_audit, audit_input(workspace), stream);
+        const auto audit_status = qoco_gpu_audit_update_device(workspace->gpu_audit,
+            qoco_gpu_conversion_values(workspace->conversion.device), stream);
         if (audit_status != cudaSuccess) return finish(SPACEPDHCG_CUDA_RUNTIME_ERROR);
+        for (const auto* values : {&workspace->formulation.p.values, &workspace->formulation.a.values,
+                                  &workspace->formulation.g.values, &workspace->formulation.c,
+                                  &workspace->formulation.b, &workspace->formulation.h}) if (!values->empty()) {
+            ++workspace->report.d2d_copy_count;
+            workspace->report.d2d_bytes += values->size() * sizeof(double);
+        }
         if (workspace->needs_fresh_solver) {
             // The previous solve failed. QOCO carries its best-iterate tracker and
             // the stall-escalated kkt_dynamic_reg across solves, so a numeric update
