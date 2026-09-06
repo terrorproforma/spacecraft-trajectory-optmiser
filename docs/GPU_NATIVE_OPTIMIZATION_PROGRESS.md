@@ -799,3 +799,21 @@ and setup timing remains mixed, including slower landing and N500 setup; N20's
 faster solve has a different iteration count. The change remains within the
 optional GPU updater and does not establish a general speedup or default
 promotion. [Evidence, timings and ownership scope](GPU_QOCO_LOCAL_BACKEND.md#device-numerical-update-setup-maps).
+
+## Scratch-vector arena experiment: promotion rejected
+
+An optional GPU arena now allows 26 post-analysis QOCO scratch vectors to share
+one allocation and one device zero-fill. The landing API trace confirms 26
+fewer uploads and 25 fewer allocations/frees. Exact initialization, alignment,
+aliasing and multi-solver lifetime tests pass, as do the documented numerical
+oracles and sanitizer scopes.
+
+The candidate nevertheless fails matched-quality qualification: an N20 objective
+differs from the reference by 3.68e-7, above the unchanged 1e-8 gate. A separate
+20-run-per-build diagnostic qualifies the unpooled control 20/20 and the arena
+19/20. Every physics certificate passes, but the repeated objective failure
+prevents promotion. Landing's observed 1.051x SCvx ratio does not establish an
+acceptable overall improvement. The arena remains an explicitly selected
+experiment; default allocation behavior is unchanged. Numerical sensitivity
+and conditioning need investigation before this path can be qualified.
+[Full failed-run evidence](GPU_QOCO_LOCAL_BACKEND.md#experimental-gpu-scratch-vector-arena).

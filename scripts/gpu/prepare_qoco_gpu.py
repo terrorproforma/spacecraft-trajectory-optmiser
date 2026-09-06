@@ -18,6 +18,57 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_vector_arena(destination: Path, extension: Path) -> None:
+    """Own post-analysis scratch vectors in one zeroed device allocation."""
+    path = destination / "include/structs.h"
+    text = path.read_text()
+    marker = "} QOCOWorkspace;"
+    if text.count(marker) != 1:
+        raise RuntimeError("unexpected QOCO workspace declaration")
+    path.write_text(text.replace(marker, "  void* gpu_vector_arena;\n" + marker))
+    path = destination / "algebra/cuda/cuda_types.h"
+    text = path.read_text()
+    start = text.index("struct QOCOVectorf_ {")
+    end = text.index("\n};", start)
+    path.write_text(text[:end] + "\n  int arena_owned;" + text[end:])
+    path = destination / "algebra/cuda/cuda_linalg.cu"
+    text = path.read_text()
+    start = text.index("QOCOVectorf* new_qoco_vectorf(")
+    end = text.index("\n}\n", start)
+    body = text[start:end].replace("  v->len = n;", "  v->arena_owned = 0;\n  v->len = n;")
+    text = text[:start] + body + text[end:]
+    start = text.index("void free_qoco_vectorf(")
+    end = text.index("\n}\n", start)
+    body = text[start:end].replace("if (x->d_data)", "if (x->d_data && !x->arena_owned)")
+    path.write_text(text[:start] + body + text[end:] + '\n#include "qoco_vector_arena.cuh"\n')
+    path = destination / "src/qoco_api.c"
+    text = path.read_text()
+    text = text.replace('#include "backend.h"', '''#include "backend.h"
+extern void* qoco_gpu_vector_arena_create(int n, int m, int p, int wn, int nt);
+extern QOCOVectorf* qoco_gpu_vector_arena_vector(void* arena, int length);
+extern void qoco_gpu_vector_arena_finish(void* arena);
+extern void qoco_gpu_vector_arena_destroy(void* arena);''')
+    text = text.replace("  QOCOWorkspace* work = solver->work;",
+                        "  QOCOWorkspace* work = solver->work;\n"
+                        "  work->gpu_vector_arena = NULL;", 1)
+    start = text.index("  // Allocate primal and dual variables.")
+    end = text.index("  // Allocate solution struct.", start)
+    body = text[start:end]
+    body, count = re.subn(r"new_qoco_vectorf\(NULL, ([^)]+)\)",
+                         r"qoco_gpu_vector_arena_vector(work->gpu_vector_arena, \1)", body)
+    if count != 26:
+        raise RuntimeError(f"unexpected arena vector count: {count}")
+    body = ("  work->gpu_vector_arena = qoco_gpu_vector_arena_create(n, m, p, Wnnz, m + nsoc);\n"
+            + body)
+    body += "  qoco_gpu_vector_arena_finish(work->gpu_vector_arena);\n\n"
+    text = text[:start] + body + text[end:]
+    text = text.replace("  qoco_free(solver->work);",
+                        "  qoco_gpu_vector_arena_destroy(solver->work->gpu_vector_arena);\n"
+                        "  qoco_free(solver->work);")
+    path.write_text(text)
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_vector_arena.cuh")
+
+
 def patch_gpu_kkt(destination: Path, extension: Path) -> None:
     """Replace host KKT/CSR assembly and update-map construction with CUDA."""
     path = destination / "algebra/cuda/cudss_backend.cu"
@@ -554,6 +605,8 @@ def main() -> None:
                         help="offer opt-in device solution output and GPU primal warm starts")
     parser.add_argument("--gpu-kkt", action="store_true",
                         help="assemble KKT CSR and numerical-update maps on CUDA")
+    parser.add_argument("--vector-arena", action="store_true",
+                        help="experimental GPU scratch-vector arena (not qualified for promotion)")
     parser.add_argument(
         "--checked-cudss-abi", action="store_true", help="support and check cuDSS 0.7/0.8 APIs"
     )
@@ -612,6 +665,7 @@ def main() -> None:
         or args.reset_solve_state
         or args.device_io
         or args.gpu_kkt
+        or args.vector_arena
         or args.checked_cudss_abi
         or args.queued_operators
         or args.device_cone_reductions
@@ -1012,6 +1066,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             raise RuntimeError(
                 "GPU KKT requires setup lifetimes and excludes legacy setup profiling")
         patch_gpu_kkt(destination, extension.with_name("qoco_gpu_kkt.cuh"))
+    if args.vector_arena:
+        patch_vector_arena(destination, extension.with_name("qoco_vector_arena.cuh"))
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1044,6 +1100,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "reset_solve_state": True,
         "device_io": args.device_io,
         "gpu_kkt": args.gpu_kkt,
+        "vector_arena": args.vector_arena,
         "host_ruiz_vector_sync": True,
         "checked_cudss_abi": args.checked_cudss_abi,
     }
@@ -1064,6 +1121,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["include/structs.h", "algebra/cuda/qoco_device_io.cuh"]
               if args.device_io else []),
             *(["algebra/cuda/qoco_gpu_kkt.cuh"] if args.gpu_kkt else []),
+            *(["include/structs.h", "algebra/cuda/qoco_vector_arena.cuh"]
+              if args.vector_arena else []),
             *(["algebra/cuda/qoco_gather.cuh"] if args.gather else []),
             *(["src/cone.cu", "src/qoco_device_cone_reductions.cuh"]
               if args.device_cone_reductions else []),

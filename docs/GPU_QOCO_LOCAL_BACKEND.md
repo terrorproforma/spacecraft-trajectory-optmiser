@@ -1576,3 +1576,78 @@ pass on landing, N20 and N500.
 - [Landing timings](../artifacts/performance/qoco-gpu-kkt-v68-pd3.json).
 - [N20 timings](../artifacts/performance/qoco-gpu-kkt-v68-pd6.json).
 - [N500 timings](../artifacts/performance/qoco-gpu-kkt-v68-pd6-500.json).
+
+## Experimental GPU scratch-vector arena
+
+`--vector-arena` replaces the 26 post-analysis scratch-vector device allocations
+with one solver-owned allocation. Every view has 256-byte alignment; one GPU
+memset initializes all views and padding. Host mirrors use `calloc` for existing
+inspection interfaces. Input/scaling vectors and matrix allocations are outside
+this arena. A setup completion synchronization preserves the caller's existing
+initialization boundary.
+
+Each float-vector metadata record identifies arena ownership so ordinary vector
+destruction frees its host mirror without freeing a GPU slice. The solver frees
+the complete arena after its vectors and vendor linear-system resources are
+destroyed. There is no global arena or cross-solver cache. Preparation verifies
+the exact 26-call replacement, and runtime checks verify both the view count and
+final arena capacity. Builds without `--vector-arena` retain separate allocations.
+
+This candidate is **experimental and not qualified for promotion**. In the
+matched N20 campaign, optimized measured sample 2 returns a physics-certified
+objective of 0.51297605935915824 versus reference 0.51297569119164033. Its
+3.681675179e-7 difference exceeds the unchanged absolute 1e-8 objective gate.
+The campaign stops at that failure, preserving its result. No matched N500
+campaign follows it. Passing memory tests or later repeats cannot erase this
+failed qualification.
+
+An additional alternating diagnostic runs each frozen library 20 times against
+the original reference, recording every result without relaxing the gate. The
+unpooled v68 control qualifies 20/20, with objective spread 1.0121e-9. Arena v69
+qualifies 19/20, with spread 3.6750e-7; its failing run misses the objective gate
+by the same scale as the initial failure. All 40 runs pass the physics gates.
+This reproduces the candidate's qualification failure; the clean ownership
+checks do not establish its numerical cause or justify promotion.
+
+The complete landing batch (two warmups and seven measured samples per variant)
+has 36 inner iterations throughout. Its SCvx median is 169.559 → 161.358 ms
+(1.051x), and complete-process ratio is 1.026x. Setup medians are 32.268 →
+32.441 ms, effectively flat. This landing result is not a general speedup claim
+for the failed candidate.
+
+Qualified landing Nsight API traces confirm the intended resource changes:
+
+| CUDA API calls | Separate vectors v68 | Arena v69 |
+|---|---:|---:|
+| Synchronous copy | 545 | 519 |
+| Allocation | 398 | 373 |
+| Free | 307 | 282 |
+| Asynchronous memset | 565 | 566 |
+| Stream synchronization | 89 | 90 |
+| Kernel launch | 7071 | 7071 |
+
+The independent ownership test checks four solver shapes, up to 1031 variables
+and a 257-dimensional SOC. Three solvers coexist. Every nonempty view is aligned,
+in bounds and disjoint, starts at exact device/host zero and retains its unique
+tag after every vector is written. Destroying the middle solver and allocating
+another preserves the surviving solvers' data. An explicit arena capability
+symbol prevents the test from silently passing against the separate-vector build.
+
+The ownership test, nine numerical-update cases and full landing each pass all
+four sanitizer tools. Full N500 passes memory, initialization and synchronization
+checking; N500 racecheck and full N20 sanitizer coverage are not included.
+Forced reconstruction passes normally and under all four tools. Initial
+landing/N20/N500 numerical-oracle runs also pass, but have the narrower scope
+described above and do not override the matched objective failure.
+
+Frozen QOCO v69 is
+`/home/angus/build-qoco-gpu-gpu-kkt-v69/final/libqoco.so`, SHA256
+`353b4cc498f5e385dfc4364e98284e53d13fa614d5720c8f2cd7ec9d5254cb81`.
+Control v68, core v63, isolated cuDSS 0.8.0.10 standard kernels and RTX 5090
+remain unchanged. Prepared-source reproduction is exact.
+
+- [Checkpoint, ownership scopes and helper sources](../artifacts/performance/qoco-vector-arena-v69-checkpoint.json).
+- [Landing timing distribution](../artifacts/performance/qoco-gpu-kkt-v69-pd3.json).
+- [Failed N20 objective comparison](../artifacts/performance/qoco-gpu-kkt-v69-pd6.json).
+- [Paired repeatability diagnostic retaining every failure](../artifacts/performance/qoco-vector-arena-v69-repeatability.json).
+- [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v69-reproduction.json).
