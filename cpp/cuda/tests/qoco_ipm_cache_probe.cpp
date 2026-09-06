@@ -94,4 +94,5 @@ int main() {
         }
     }
     qoco_gpu_end_reduction_scope();
+    return 0;
 }
