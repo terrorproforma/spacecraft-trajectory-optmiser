@@ -1,14 +1,78 @@
 # SpacePDHCG
 
-**Factorisation-Free Multi-GPU Successive Convexification for Robust Spacecraft Trajectory Optimisation**
+**GPU-native C++/CUDA spacecraft trajectory optimisation, with independently verified physics.**
 
-SpacePDHCG is a research programme for building a persistent, device-resident trajectory-optimisation engine around PDHCG-CQP. The first paper combines:
+SpacePDHCG develops fast trajectory solvers for rendezvous, powered descent and
+low-thrust interplanetary transfers, alongside a GTOC12 asteroid-mining fleet
+planner. The objective is to keep the numerical pipeline on the GPU: generate a
+starting trajectory, propagate dynamics, assemble and solve optimisation
+subproblems, and decide which updates to accept without repeatedly moving the
+trajectory through CPU memory.
 
-- **B — persistent device-resident CT-SCvx**;
-- **D — adaptive inexact solving with optional interior-point polishing**; and
-- **C — scenario-aware multi-GPU optimisation**.
+The project includes a factorisation-free PDHCG-inspired backend and a GPU QOCO
+interior-point backend. We compare complete solve time at the same verified
+accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
+optimisation remain work in progress.
 
-The resulting continuous trajectory oracle will then support **E — integrated multi-destination spacecraft routing and trajectory optimisation**.
+## What is PDHCG, and why use it for trajectories?
+
+**PDHCG means Primal-Dual Hybrid Conjugate Gradient.** It is an optimisation method:
+the primal variables describe a candidate solution, while dual variables enforce
+its constraints. The original quadratic-programming method combines primal-dual
+updates with approximate conjugate-gradient solves. Its conic extension,
+**PDHCG-CQP**, uses projected-gradient inner iterations to handle constraints such
+as thrust-vector norm limits. These are related methods; the conic implementation
+does not simply use conjugate gradient for every inner solve.
+[Original QP paper](https://doi.org/10.1287/ijoc.2024.0983),
+[conic extension](https://arxiv.org/abs/2608.09159).
+
+Trajectory optimisation repeatedly asks for a better thrust history while
+satisfying dynamics, endpoint, mass and thrust constraints. Successive
+convexification (SCvx) turns the nonlinear problem into a sequence of convex
+subproblems around the current trajectory. PDHCG-CQP can solve those subproblems;
+the dynamics model and independent trajectory replay still determine physical
+accuracy.
+
+The speed opportunity comes from how that repeated work is organised:
+
+- **Parallel arithmetic:** matrix-vector products, vector updates and cone
+  projections expose GPU parallelism without requiring a direct sparse matrix
+  factorisation in the first-order backend.
+- **Reuse between solves:** retain sparse structure, buffers and previous
+  iterates as SCvx updates numerical coefficients. This avoids rebuilding and
+  uploading essentially the same problem at every iteration.
+- **Exploit the trajectory structure:** each time interval contributes a small
+  dynamics residual, `x[k+1] - A[k] x[k] - B[k] u[k] - c[k]`. Independent interval
+  work and neighbouring-state gathers provide a route to less generic sparse
+  indexing and fewer atomic updates.
+- **Spend iterations where they help:** solve early subproblems inexactly, then
+  tighten accuracy or use interior-point polishing when required. Final physics
+  and objective acceptance gates stay fixed.
+
+The research contribution pursued here is the persistent GPU trajectory pipeline
+around these methods. PDHCG itself comes from the authors credited below.
+First-order iterations can be cheap but numerous on poorly conditioned problems;
+an interior-point solver can still finish sooner. A faster kernel alone does not
+establish a faster, equally accurate trajectory solve.
+
+## Original sources and attribution
+
+Our upstream integration source is **[Lhongpei/PDHCG](https://github.com/Lhongpei/PDHCG)**,
+originally pinned to commit
+[`167c8b72b4b96d2f94d405b8763e485514192b81`](https://github.com/Lhongpei/PDHCG/tree/167c8b72b4b96d2f94d405b8763e485514192b81).
+The [integration contract](docs/PDHCG_INTEGRATION.md) records the mapping and pin.
+Upstream PDHCG is Apache-2.0 licensed and credits
+[Haihao Lu's cuPDLPx infrastructure](https://github.com/MIT-Lu-Lab/cuPDLPx).
+
+- **Huang, Zhang, Li, Ge, Liu and Ye (2025):**
+  [*A Restarted Primal-Dual Hybrid Conjugate Gradient Method for Large-Scale Quadratic Programming*](https://doi.org/10.1287/ijoc.2024.0983),
+  INFORMS Journal on Computing. The original PDHCG method.
+- **Li, Huang, Liu, Ge and Ye (2026):**
+  [*GPU-Accelerated Conic Quadratic Programming with Local Linear Convergence under Strict Complementarity*](https://arxiv.org/abs/2608.09159).
+  The PDHCG-CQP extension underlying this project's conic integration.
+
+Upstream solver benchmark results belong to those publications. They are not
+measurements of SpacePDHCG's complete spacecraft pipeline.
 
 ## Research question
 
@@ -16,23 +80,64 @@ Can a persistent, scenario-structured, multi-GPU PDHCG-CQP backend reduce the to
 
 A conditional result is useful: the project will produce a reproducible crossover map showing when first-order multi-GPU conic quadratic optimisation wins, when factorisation-based GPU solvers win, and when a hybrid is best.
 
-## Current status
+## Current status — 6 September 2026
 
-- **M0 — repository and numerical contract:** complete at the CPU reference level.
-- **M1 — native conic bridge:** active; CPU QP/SOCP references are green and the upstream one-shot adapter is implemented for CUDA integration.
+Native C++/CUDA execution is implemented and tested on the local RTX 5090. The
+persistent solver has parallel scaling and reductions, with cooperative
+multiple-block execution for larger problems. The experimental GTOC12 native
+path also runs Lambert/Kepler seed generation, interval propagation, numerical
+assembly, SCvx merit and acceptance decisions, and trust updates on the GPU.
+Its v107 regression passed **324 tests**, including independent physics checks.
 
-The executable correctness spine contains:
+**The complete optimiser is not yet fully GPU-controlled.** Initial sparse
+topology/conversion, parts of QOCO setup and control, and native solver dispatch
+still involve the host. The QOCO conditional-graph refinement path also has
+unresolved sanitizer failures. Python remains available for orchestration,
+reference solvers and independent verification. The new GPU outer-loop and seed
+path has not yet demonstrated a consistent complete-run speedup.
 
-1. immutable CSC structure and mutable CQP values;
-2. exact-discrete Clohessy–Wiltshire dynamics;
-3. a fixed-workspace OSQP rendezvous QP baseline;
-4. native PDHCG-compatible affine cone metadata;
-5. a persistent Clarabel SOCP reference with explicit PDHCG cone-coordinate conversion;
-6. an optional `PDHCGOneShot` adapter mapping the same canonical problem into upstream `pdhcg.Model`;
-7. independent endpoint, dynamics and thrust checks;
-8. Python 3.11/3.12 CI and repeat-solve smoke benchmarks.
+See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
+[GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md), and
+[QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
+boundaries, test evidence and limitations. Reported performance improvements
+apply to their named fixtures; they are not universal speedup claims.
 
-The public upstream PDHCG API is currently one-shot at the device-workspace level. The main B contribution is therefore a lower-level `PersistentCQP` extension, not a wrapper around `Model.optimize()`.
+## GTOC12 score versus the published leaderboard
+
+Our verified `fleet_master_v11` snapshot collects **14,047.8 kg**, using **23 ships**
+and collecting from **194 asteroids**. Both the locally run official checker and
+the independent verifier accept the final fleet. The unrounded internal total
+is 14,047.802874743327 kg.
+
+Compared with the [official leaderboard](https://gtoc12.tsinghua.edu.cn/competition/leaderBoard),
+checked on **6 September 2026**, that score would slot into **8th place**:
+
+| Published position | Team / local result | Score (kg) |
+|---|---|---:|
+| 1 | Jet Propulsion Laboratory | 22,532.672 |
+| 2 | BIT-CAS-DFH | 17,727.638 |
+| 3 | OptimiCS | 17,081.861 |
+| 4 | ESA's Advanced Concepts Team & Friends | 15,727.902 |
+| 5 | TheAntipodes | 15,488.896 |
+| 6 | NUDT-LIPSAM | 15,160.946 |
+| 7 | ∑ TEAM | 14,714.133 |
+| **8th if inserted** | **SpacePDHCG — local verified snapshot** | **14,047.800** |
+| 8 | ATQ | 13,105.762 |
+
+Using the rounded official-checker score, we are **666.333 kg below seventh**,
+**942.038 kg above ATQ**, and at **62.3% of JPL's winning score**. Matching JPL
+would require another **8,484.872 kg**, approximately **60.4%** above our result.
+
+This is a retrospective comparison with the 2023 competition, not an official
+ranked submission or proof of optimality. It measures fleet solution quality;
+the recent single-transfer GPU speed tests do not establish a new fleet score
+or show that this fleet was produced by the latest GPU-native optimiser.
+
+Evidence: [fleet run report](results/lambda/2026-09-06/fleet_master_v11/run_report.json),
+[official checker report](results/lambda/2026-09-06/fleet_master_v11/official_verification.json)
+(the final `fleet/Result.txt` row),
+[independent verification](results/lambda/2026-09-06/fleet_master_v11/independent_verify.txt),
+and [web visualiser and loading instructions](results/lambda/2026-09-06/README.md).
 
 ## Programme ladder
 

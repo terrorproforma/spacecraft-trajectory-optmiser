@@ -92,6 +92,8 @@ class ScvxSettings:
     assembly_backend: str = "numpy"  # CUDA assembly also requires CUDA dynamics
     convex_solver_backend: str = "clarabel"  # explicit "qoco" requires both CUDA paths
     qoco_ruiz_iterations: int = 0
+    outer_loop_backend: str = "python"  # "cuda" retains trajectories and decisions on device
+    seed_backend: str = "auto"  # auto follows outer_loop_backend; numpy is an explicit ablation
 
 
 @dataclass(slots=True)
@@ -118,6 +120,9 @@ class LegSolution:
     assembly_backend: str = "numpy"
     convex_solver_backend: str = "clarabel"
     solver_reports: list[dict] = field(default_factory=list)
+    outer_loop_backend: str = "python"
+    outer_transfer_bytes: dict[str, int] = field(default_factory=dict)
+    seed_backend: str = "numpy"
 
     @property
     def converged(self) -> bool:
@@ -647,6 +652,17 @@ def solve_leg(boundary: LegBoundary, settings: ScvxSettings | None = None) -> Le
 def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitStack) -> LegSolution:
 
     settings = settings or ScvxSettings()
+    if settings.outer_loop_backend not in {"python", "cuda"}:
+        raise ValueError("outer_loop_backend must be 'python' or 'cuda'")
+    if settings.seed_backend not in {"auto", "numpy", "cuda"}:
+        raise ValueError("seed_backend must be 'auto', 'numpy' or 'cuda'")
+    if settings.seed_backend == "cuda" and settings.outer_loop_backend != "cuda":
+        raise ValueError("CUDA seed requires CUDA outer loop")
+    if settings.outer_loop_backend == "cuda" and (
+        settings.discretisation_backend != "cuda" or settings.assembly_backend != "cuda"
+        or settings.convex_solver_backend != "qoco"
+    ):
+        raise ValueError("CUDA outer loop requires CUDA dynamics, CUDA assembly and QOCO")
     if settings.assembly_backend not in {"numpy", "cuda"}:
         raise ValueError("assembly_backend must be 'numpy' or 'cuda'")
     if settings.assembly_backend == "cuda" and settings.discretisation_backend != "cuda":
@@ -670,13 +686,13 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
     model = _Model(boundary.initial_mass)
     if settings.discretisation_backend == "numpy":
         disc = _Discretisation(model, node_times, settings.substeps, settings.hold)
-    elif settings.discretisation_backend == "cuda":
+    elif settings.discretisation_backend == "cuda" and settings.outer_loop_backend != "cuda":
         from .gpu_discretisation import GpuDiscretisation
 
         disc = resources.enter_context(
             closing(GpuDiscretisation(model, node_times, settings.substeps, settings.hold))
         )
-    else:
+    elif settings.discretisation_backend != "cuda":
         raise ValueError("discretisation_backend must be 'numpy' or 'cuda'")
     zoh = settings.hold == "zoh"
     problem = _ConvexProblem(nodes, boundary.free_departure_vinf, boundary.free_arrival_vinf)
@@ -690,7 +706,10 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
     vinf_max = C.MAX_VINF_EARTH_KM_S / VU_KM_S
     radius_floor = C.MIN_SUN_DISTANCE_AU
 
-    states, controls = _ballistic_reference(boundary, node_times, boundary.initial_mass)
+    if settings.outer_loop_backend == "cuda" and settings.seed_backend != "numpy":
+        states, controls = None, None
+    else:
+        states, controls = _ballistic_reference(boundary, node_times, boundary.initial_mass)
     trust_state = settings.initial_trust_state
     trust_control = settings.initial_trust_control
     history: list[dict[str, float]] = []
@@ -704,6 +723,11 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         fuel_weights[:-1] += 0.5 * interval_lengths
         fuel_weights[1:] += 0.5 * interval_lengths
     fuel_weights *= model.lam
+    if settings.outer_loop_backend == "cuda":
+        from .gpu_scvx import solve_native
+
+        return solve_native(boundary, settings, model, node_times, node_days, bnd, fuel_weights,
+                            states, controls, started)
     if settings.convex_solver_backend == "qoco":
         from .gpu_qoco import GpuQocoProblem
 

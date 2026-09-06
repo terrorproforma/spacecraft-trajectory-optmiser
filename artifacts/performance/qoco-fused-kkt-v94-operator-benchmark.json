@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/usr/local/cuda-12.8/bin/nvcc",
+    "-O3",
+    "-arch=sm_120",
+    "-I/home/angus/build-qoco-gpu-fused-kkt-v94/source/include",
+    "-I/home/angus/build-qoco-gpu-fused-kkt-v94/source/lib/qdldl/include",
+    "build/performance/qoco_fused_kkt_v94_benchmark.cu",
+    "-L/home/angus/build-qoco-gpu-fused-kkt-v94/final",
+    "-lqoco",
+    "-Xlinker",
+    "-rpath",
+    "-Xlinker",
+    "/home/angus/build-qoco-gpu-fused-kkt-v94/final",
+    "-o",
+    "/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_benchmark"
+  ],
+  "returncode": 0,
+  "stdout": "n=3 mode=composed event_us_per_product=74.245407\nn=3 mode=fused event_us_per_product=10.290880\nn=257 mode=composed event_us_per_product=75.492256\nn=257 mode=fused event_us_per_product=9.576384\nn=4097 mode=composed event_us_per_product=71.784386\nn=4097 mode=fused event_us_per_product=42.255936\nFused KKT: 72 bitwise and independent dense cases PASS\n",
+  "stderr": ""
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "20-racecheck",
+    "returncode": 11,
+    "stdout": "========= COMPUTE-SANITIZER\n========= Error: process didn't terminate successfully\n========= Target application returned an error\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+    "stderr": "CONDITIONAL_PROBE begin call=1 Kn=3026\nCONDITIONAL_PROBE initial true_kkt_inf=1.9995061620647903e-05\nCONDITIONAL_PROBE parity bitwise=1 abs_error=0 scale=10555.555802316845 scaled_error=0\nCONDITIONAL_PROBE direct repeat=0 parity=1 true_kkt_inf=1.9995061620647903e-05\nCONDITIONAL_PROBE parity bitwise=1 abs_error=0 scale=10555.555802316845 scaled_error=0\nCONDITIONAL_PROBE direct repeat=1 parity=1 true_kkt_inf=1.9995061620647903e-05\nCONDITIONAL_PROBE capture cudss=0 cuda=0\nCONDITIONAL_PROBE copy kind=3 bytes=24208 src_status=0 src_type=2 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=1 bytes=8 src_status=0 src_type=0 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=1 bytes=8 src_status=0 src_type=0 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=3 bytes=24208 src_status=0 src_type=2 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=3 bytes=24208 src_status=0 src_type=2 dst_status=0 dst_type=2\nCONDITIONAL_PROBE nodes depth=0 total=18 allowed=1 types=0:8,1:5,2:5,\nCONDITIONAL_PROBE snapshot bytes=8 bits=00000bd100000000\nCONDITIONAL_PROBE snapshot bytes=8 bits=00000bd100000000\nCONDITIONAL_PROBE parity bitwise=1 abs_error=0 scale=10555.555802316845 scaled_error=0\nCONDITIONAL_PROBE ordinary parity=1\nCONDITIONAL_PROBE ordinary true_kkt_inf=1.9995061620647903e-05\nCONDITIONAL_PROBE instantiate cuda=0 log=\nCONDITIONAL_PROBE result call=1 limit=0 replay=0 count=0 parity=1\nCONDITIONAL_PROBE result call=1 limit=0 replay=1 count=0 parity=1\nCONDITIONAL_PROBE instantiate cuda=0 log=\n",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "artifacts/performance/qoco-gpu-tree-input-20.json",
+      "--quiet",
+      "--output",
+      "build/performance/qoco-conditional-probe-v99-20-racecheck.json"
+    ]
+  }
+]

@@ -1,0 +1,60 @@
+[
+  {
+    "name": "memcheck",
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nFused KKT: 72 bitwise and independent dense cases PASS\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--leak-check",
+      "full",
+      "/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_test"
+    ]
+  },
+  {
+    "name": "racecheck",
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nFused KKT: 72 bitwise and independent dense cases PASS\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+    "stderr": "",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_test"
+    ]
+  },
+  {
+    "name": "initcheck",
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nFused KKT: 72 bitwise and independent dense cases PASS\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_test"
+    ]
+  },
+  {
+    "name": "synccheck",
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nFused KKT: 72 bitwise and independent dense cases PASS\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_test"
+    ]
+  }
+]

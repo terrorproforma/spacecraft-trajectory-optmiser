@@ -26,11 +26,14 @@ def test_refinement_commands_expose_cuda_backend(command):
             "qoco",
             "--qoco-ruiz-iterations",
             "2",
+            "--outer-loop-backend",
+            "cuda",
         ]
     )
     assert parsed.discretisation_backend == "cuda"
     assert parsed.assembly_backend == "cuda"
     assert parsed.convex_solver_backend == "qoco" and parsed.qoco_ruiz_iterations == 2
+    assert parsed.outer_loop_backend == "cuda"
 
 
 def test_qoco_preflight_and_requested_report(tmp_path, monkeypatch):

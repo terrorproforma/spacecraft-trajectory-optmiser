@@ -18,6 +18,25 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_fused_kkt_product(destination: Path, extension: Path) -> None:
+    """Fuse sparse KKT products without changing NT/refinement operations."""
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_fused_kkt_product.cuh")
+    path = destination / "algebra/cuda/cuda_linalg.cu"
+    path.write_text(path.read_text() + '\n#include "qoco_fused_kkt_product.cuh"\n')
+    path = destination / "src/kkt.c"
+    text = path.read_text()
+    start = text.index("void kkt_multiply(")
+    body = text.index("{", start) + 1
+    end = text.index("  if (nt_scaling)", body)
+    text = text[:body] + "\n  qoco_gpu_kkt_sparse(x, y, data);\n\n" + text[end:]
+    marker = '#include "qoco_utils.h"'
+    assert text.count(marker) == 1
+    text = text.replace(
+        marker, marker + '\nvoid qoco_gpu_kkt_sparse(QOCOFloat*, QOCOFloat*, QOCOProblemData*);'
+    )
+    path.write_text(text)
+
+
 def patch_metric_graphs(destination: Path, extension: Path) -> None:
     """Replay existing stopping operators; scope owns graph and captured scratch."""
     shutil.copyfile(extension, destination / "algebra/cuda/qoco_metric_graph.cuh")
@@ -829,6 +848,8 @@ def main() -> None:
                         help="defer transpose host copies and skip unchanged mirror uploads")
     parser.add_argument("--deferred-transposes", action="store_true",
                         help="materialize compatibility transposes only on explicit access")
+    parser.add_argument("--fused-kkt-product", action="store_true",
+                        help="fuse sparse KKT products into a multi-block GPU operator")
     parser.add_argument("--metric-graphs", action="store_true",
                         help="capture and replay repeated GPU stopping calculations")
     parser.add_argument("--vector-arena", action="store_true",
@@ -896,6 +917,7 @@ def main() -> None:
         or args.gpu_transposes
         or args.lazy_transpose_mirrors
         or args.deferred_transposes
+        or args.fused_kkt_product
         or args.metric_graphs
         or args.vector_arena
         or args.restore_inaccurate_best
@@ -929,6 +951,12 @@ def main() -> None:
         parser.error("--lazy-transpose-mirrors requires --gpu-transposes")
     if args.deferred_transposes and not (args.lazy_transpose_mirrors and args.gpu_kkt):
         parser.error("--deferred-transposes requires --lazy-transpose-mirrors and --gpu-kkt")
+    if args.fused_kkt_product and not (
+        args.gather and args.queued_operators and args.deferred_transposes
+    ):
+        parser.error(
+            "--fused-kkt-product requires --gather, --queued-operators and --deferred-transposes"
+        )
     if args.metric_graphs and not (args.batched_iteration_scalars and args.gather):
         parser.error("--metric-graphs requires --batched-iteration-scalars and --gather")
     if args.device_scalar_reductions and not args.device_cone_reductions:
@@ -1317,6 +1345,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_lazy_transpose_mirrors(destination, extension.with_name("qoco_lazy_host_mirror.cuh"))
     if args.deferred_transposes:
         patch_deferred_transposes(destination, extension.with_name("qoco_deferred_transpose.cuh"))
+    if args.fused_kkt_product:
+        patch_fused_kkt_product(destination, extension.with_name("qoco_fused_kkt_product.cuh"))
     if args.metric_graphs:
         patch_metric_graphs(destination, extension.with_name("qoco_metric_graph.cuh"))
     provenance = {
@@ -1355,6 +1385,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "lazy_transpose_mirrors": args.lazy_transpose_mirrors,
         "deferred_transposes": args.deferred_transposes,
         "metric_graphs": args.metric_graphs,
+        "fused_kkt_product": args.fused_kkt_product,
         "vector_arena": args.vector_arena,
         "restore_inaccurate_best": args.restore_inaccurate_best,
         "host_ruiz_vector_sync": True,
@@ -1380,6 +1411,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["algebra/cuda/qoco_gpu_transpose.cuh"] if args.gpu_transposes else []),
             *(["algebra/cuda/qoco_lazy_host_mirror.cuh"] if args.lazy_transpose_mirrors else []),
             *(["algebra/cuda/qoco_deferred_transpose.cuh"] if args.deferred_transposes else []),
+            *(["algebra/cuda/qoco_fused_kkt_product.cuh"] if args.fused_kkt_product else []),
             *(["algebra/cuda/qoco_metric_graph.cuh"] if args.metric_graphs else []),
             *(["include/structs.h", "algebra/cuda/qoco_vector_arena.cuh"]
               if args.vector_arena else []),

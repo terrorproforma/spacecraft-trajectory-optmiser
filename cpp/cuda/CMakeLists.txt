@@ -101,13 +101,14 @@ add_library(
         src/gtoc12_discretisation.cu
         src/gtoc12_conic.cu
         src/gtoc12_qoco.cu
+        src/gtoc12_scvx.cu
         src/native_qoco_adapter.cpp
         src/native_qoco_gpu.cu
         src/orbitweaver_gpu.cu
         src/persistent_pdhcg.cu
 )
 add_library(SpacePDHCG::cuda ALIAS spacepdhcg_cuda)
-set_source_files_properties(src/gtoc12_discretisation.cu src/gtoc12_conic.cu src/gtoc12_qoco.cu PROPERTIES
+set_source_files_properties(src/gtoc12_discretisation.cu src/gtoc12_conic.cu src/gtoc12_qoco.cu src/gtoc12_scvx.cu PROPERTIES
     COMPILE_OPTIONS "--fmad=false"
 )
 target_include_directories(
@@ -220,6 +221,7 @@ if(BUILD_TESTING)
         # This standalone test needs the isolated QOCO source headers/library;
         # see docs/GPU_QOCO_LOCAL_BACKEND.md for its separate build command.
         if(test_name STREQUAL "qoco_gpu_operators_test"
+           OR test_name STREQUAL "qoco_fused_kkt_product_test"
            OR test_name STREQUAL "qoco_gpu_numeric_update_test"
            OR test_name STREQUAL "qoco_gpu_scalar_test"
            OR test_name STREQUAL "qoco_gpu_stopping_test"

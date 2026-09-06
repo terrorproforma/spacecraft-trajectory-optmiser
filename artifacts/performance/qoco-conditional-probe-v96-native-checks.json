@@ -1,0 +1,12 @@
+[
+  {
+    "name": "gtoc12",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "build/performance/conditional_probe_v96_fixture.py"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "CONDITIONAL_PROBE begin call=1 Kn=5752\nCONDITIONAL_PROBE capture cudss=0 cuda=0\nCONDITIONAL_PROBE nodes depth=0 total=18 allowed=1 types=0:8,1:5,2:5,\nCUDA error at /home/angus/build-qoco-gpu-conditional-probe-v96/source/algebra/cuda/qoco_cudss_conditional_probe.cuh:112: invalid argument\n"
+  }
+]

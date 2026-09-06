@@ -1,0 +1,29 @@
+{
+  "command": [
+    "/usr/local/bin/nsys",
+    "profile",
+    "--trace=cuda,nvtx",
+    "--sample=none",
+    "--cpuctxsw=none",
+    "--output=/home/angus/gtoc12-qoco-v94-baseline-profile",
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "build/performance/profile_gtoc12_v94_fixture.py"
+  ],
+  "stdout": "converged True 1.651763558969833\nCollecting data...\nGenerating '/tmp/nsys-report-7bcc.qdstrm'\n\n[1/1] [0%                          ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [0%                          ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [====26%                     ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [=17%                        ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [======35%                   ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [====26%                     ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [===23%                      ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [======35%                   ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [==========47%               ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [===========53%              ] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [========================100%] gtoc12-qoco-v94-baseline-profile.nsys-rep\n[1/1] [========================100%] gtoc12-qoco-v94-baseline-profile.nsys-rep\nGenerated:\n    /home/angus/gtoc12-qoco-v94-baseline-profile.nsys-rep\n",
+  "stderr": "",
+  "cuda_api_sum": {
+    "returncode": 0,
+    "stdout": "Generating SQLite file /home/angus/gtoc12-qoco-v94-baseline-profile.sqlite from /home/angus/gtoc12-qoco-v94-baseline-profile.nsys-rep\nProcessing [/home/angus/gtoc12-qoco-v94-baseline-profile.sqlite] with [/opt/nvidia/nsight-systems/2024.6.2/host-linux-x64/reports/cuda_api_sum.py]... \nTime (%),Total Time (ns),Num Calls,Avg (ns),Med (ns),Min (ns),Max (ns),StdDev (ns),Name\n46.6,570242596,4175,136585.1,60062.0,2580,33216789,871618.7,cudaMemcpy\n20.5,251191333,48423,5187.4,3353.0,230,22119532,111800.3,cudaLaunchKernel\n20.1,246404636,15,16426975.7,5758.0,1181,246317619,63597331.0,cudaStreamCreateWithFlags\n2.9,35629321,9319,3823.3,3156.0,176,337381,6563.3,cudaMemsetAsync\n2.5,30655258,3071,9982.2,2656.0,1383,2120355,58631.2,cudaMemcpyAsync\n2.2,27020404,279,96847.3,23158.0,269,17115211,1024350.4,cudaDeviceSynchronize\n1.1,12969094,2720,4768.0,3848.0,2576,67955,4972.1,cudaMemcpy2DAsync\n1.0,12393076,307,40368.3,1577.0,140,1597706,155644.8,cudaFree\n0.7,8181731,88,92974.2,385.5,240,8059257,858974.2,cudaMallocAsync_v11020\n0.5,6567356,1643,3997.2,106.0,37,449844,31741.3,cudaMalloc\n0.5,6492753,1360,4774.1,3743.0,2209,74291,4936.8,cudaMemset\n0.4,5173196,191,27084.8,19461.0,11974,377357,29225.0,cudaGraphLaunch_v10000\n0.2,2805358,11,255032.5,57453.0,51283,2021544,589446.0,cudaGraphExecDestroy_v10000\n0.2,2118487,480,4413.5,2567.0,1244,307596,14526.4,cudaEventRecord\n0.1,1787856,11,162532.4,152622.0,104855,338019,66574.0,cudaGraphInstantiate_v12000\n0.1,1723340,19,90702.1,52421.0,13457,547574,121235.9,cuLibraryUnload\n0.1,1338322,176,7604.1,484.0,209,168287,24102.6,cudaStreamSynchronize\n0.0,372450,11,33859.1,20945.0,18580,166549,44017.7,cudaGraphDestroy_v10000\n0.0,290356,88,3299.5,330.0,223,213278,22814.6,cudaFreeAsync_v11020\n0.0,264852,11,24077.5,25621.0,9402,26999,4967.9,cudaStreamBeginCapture_v10000\n0.0,250261,2095,119.5,69.0,36,9454,289.9,cuGetProcAddress_v2\n0.0,211739,217,975.8,195.0,115,126473,8575.7,cudaEventCreateWithFlags\n0.0,207250,2526,82.0,41.0,28,29421,807.0,cuStreamGetCaptureInfo_v2\n0.0,74398,217,342.8,298.0,109,1299,208.3,cudaEventDestroy\n0.0,48431,15,3228.7,2869.0,666,7899,1901.1,cudaStreamDestroy\n0.0,35569,10,3556.9,1817.0,1487,18786,5358.4,cudaStreamWaitEvent\n0.0,20520,11,1865.5,1601.0,1348,4423,864.1,cudaStreamEndCapture_v10000\n0.0,15803,11,1436.6,1416.0,993,1983,335.2,cudaEventQuery\n0.0,14113,7,2016.1,1216.0,262,6999,2353.7,cuInit\n0.0,2111,6,351.8,88.0,43,975,438.2,cuModuleGetLoadingMode\n0.0,2076,2,1038.0,1038.0,943,1133,134.4,cudaGetDeviceProperties_v2_v12000\n0.0,1023,2,511.5,511.5,160,863,497.1,cudaGetDriverEntryPoint_v11030\n\n",
+    "stderr": ""
+  },
+  "cuda_gpu_kern_sum": {
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "\nWARNING: Existing SQLite export found: /home/angus/gtoc12-qoco-v94-baseline-profile.sqlite\n         File is older than input file: /home/angus/gtoc12-qoco-v94-baseline-profile.nsys-rep\n         Use --force-export=true to update export file.\n\nusage: nsys stats [<args>] <input-file>\nTry 'nsys stats --help' for more information.\n"
+  },
+  "cuda_gpu_mem_time_sum": {
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "\nWARNING: Existing SQLite export found: /home/angus/gtoc12-qoco-v94-baseline-profile.sqlite\n         File is older than input file: /home/angus/gtoc12-qoco-v94-baseline-profile.nsys-rep\n         Use --force-export=true to update export file.\n\nusage: nsys stats [<args>] <input-file>\nTry 'nsys stats --help' for more information.\n"
+  }
+}

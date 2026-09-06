@@ -1,0 +1,254 @@
+{
+  "created_utc": "2026-09-06T06:22:51.762604+00:00",
+  "parent_commit": "dce23ed85a6bbd0dc37042d42b026d5b4dfcc208",
+  "goal_complete": false,
+  "default_changed": false,
+  "promoted": false,
+  "scope": "Experimental fused sparse GPU KKT product, bitwise original GPU composition parity. Mixed overall timing and one strict coast constraint failure prevent general solver promotion. No Lambda access.",
+  "sources": {
+    "cpp/cuda/patches/qoco_fused_kkt_product.cuh": {
+      "working_bytes_sha256": "4b227ae4ef31b9bbcff82fc60d8dcf16d00771e1c4ff4418aa17ec5886e0f86c",
+      "normalized_lf_sha256": "4b227ae4ef31b9bbcff82fc60d8dcf16d00771e1c4ff4418aa17ec5886e0f86c"
+    },
+    "cpp/cuda/tests/qoco_fused_kkt_product_test.cu": {
+      "working_bytes_sha256": "62cb91aa41dbc22538c00e24f77658cc470416cfdfe859b8b638b9df5f2a1fc5",
+      "normalized_lf_sha256": "62cb91aa41dbc22538c00e24f77658cc470416cfdfe859b8b638b9df5f2a1fc5"
+    },
+    "scripts/gpu/prepare_qoco_gpu.py": {
+      "working_bytes_sha256": "8bd2590590fdb12d98af0816b08e2534b722cb56cd7ca1be0fdffad9f4628a01",
+      "normalized_lf_sha256": "8bd2590590fdb12d98af0816b08e2534b722cb56cd7ca1be0fdffad9f4628a01"
+    },
+    "cpp/cuda/CMakeLists.txt": {
+      "working_bytes_sha256": "762dceaf345a5570e81ef103bcf48f4b4844403f9197d768590049453d73dde9",
+      "normalized_lf_sha256": "d64edbbce92a6945b7e65b4ea474f433009a70980fd09fcb9b4dd65d7abc5a14"
+    },
+    "scripts/gpu/bootstrap_ubuntu.sh": {
+      "working_bytes_sha256": "ea88a81385f5c0ac051c936ea6dc54da98282de347693a5048107127d3e605f4",
+      "normalized_lf_sha256": "ea88a81385f5c0ac051c936ea6dc54da98282de347693a5048107127d3e605f4"
+    },
+    "scripts/gpu/run_first_gate.sh": {
+      "working_bytes_sha256": "c8c8979a60f775ee03086bb392fa879bb945eef32b3bcb339ac6eef32bf9ebf1",
+      "normalized_lf_sha256": "c8c8979a60f775ee03086bb392fa879bb945eef32b3bcb339ac6eef32bf9ebf1"
+    }
+  },
+  "runtimes": {
+    "/home/angus/build-qoco-gpu-fused-kkt-v94/final/libqoco.so": "ab19af76fcc7ba9b9bf5d563ea8f56450e5b7db516bf97d7426d0ba269a98349",
+    "/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_test": "daddb16bdba689d976bdbc46f5e3209ef7fb6b62ffb8a460970e1ca82268b6a3",
+    "/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_benchmark": "73970df89dc42176a21cf94148d06c8896f3de87f4f2d9c4bc698d79e5505979",
+    "/home/angus/build-spacepdhcg-gtoc12-v93/final/libspacepdhcg_cuda.so": "950f12cbdd950de526aa83a3e581f49ccc6b7d6a28fcc0f624c338bb78de937f",
+    "/home/angus/build-qoco-gpu-gpu-kkt-v78/final/libqoco.so": "bddec9453b32242e901919443a8df11cbfb3878218035a836930d0858ee0cb30",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan": "a2da0c76e90ffd42ee91532720cf67e33cd6b2de69f44a7ea45672cec4cffb09",
+    "/home/angus/build-spacepdhcg-gpu-native/038695b/device_scvx_integration_test": "f2e9c286f26b7aa96579efea0a196e646aa40de802552dd0cd71ce643eb079e8"
+  },
+  "evidence": {
+    "artifacts/performance/gtoc12-qoco-v94-baseline-profile-gpu-stats.json": {
+      "working_bytes_sha256": "19104fe31f320404d8e4076909963883da2902c10cd964114842e0b1be440b87",
+      "normalized_lf_sha256": "19104fe31f320404d8e4076909963883da2902c10cd964114842e0b1be440b87"
+    },
+    "artifacts/performance/gtoc12-qoco-v94-baseline-profile-leg.json": {
+      "working_bytes_sha256": "db9b8d3b139c6c5a9608b55c76ffd28873b9d1d7a607d615b24527277d729dc8",
+      "normalized_lf_sha256": "db9b8d3b139c6c5a9608b55c76ffd28873b9d1d7a607d615b24527277d729dc8"
+    },
+    "artifacts/performance/gtoc12-qoco-v94-baseline-profile.json": {
+      "working_bytes_sha256": "37a039ff990868903ca57c95e14d1516de84304316c72177c774025c2de71659",
+      "normalized_lf_sha256": "37a039ff990868903ca57c95e14d1516de84304316c72177c774025c2de71659"
+    },
+    "artifacts/performance/gtoc12-qoco-v94-benchmark-runner.json": {
+      "working_bytes_sha256": "25e46ed9000ffef53c0a27c0dee27a3453bf07bb15aaf3905f2018c4bf53334a",
+      "normalized_lf_sha256": "25e46ed9000ffef53c0a27c0dee27a3453bf07bb15aaf3905f2018c4bf53334a"
+    },
+    "artifacts/performance/gtoc12-qoco-v94-benchmark.json": {
+      "working_bytes_sha256": "f9c1ee435ad3c628bbcd069fcdd141c09c0e1826fc822327c2401bae5f953344",
+      "normalized_lf_sha256": "f9c1ee435ad3c628bbcd069fcdd141c09c0e1826fc822327c2401bae5f953344"
+    },
+    "artifacts/performance/gtoc12-qoco-v94-tests.json": {
+      "working_bytes_sha256": "b55bd77e89294be1a16058c7df9bfa118db6a0083d9ae9883ebe470ac92b60f5",
+      "normalized_lf_sha256": "b55bd77e89294be1a16058c7df9bfa118db6a0083d9ae9883ebe470ac92b60f5"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-20.json": {
+      "working_bytes_sha256": "6bc2510a6e63d9c6d05ede83406a62f94503a6c14187db3d514a19a403479beb",
+      "normalized_lf_sha256": "6bc2510a6e63d9c6d05ede83406a62f94503a6c14187db3d514a19a403479beb"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-500.json": {
+      "working_bytes_sha256": "2bccffdc2cebe63541c2a193d93700e69ffed9061157ffc0a97d7ea481a7c823",
+      "normalized_lf_sha256": "2bccffdc2cebe63541c2a193d93700e69ffed9061157ffc0a97d7ea481a7c823"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-cmake.json": {
+      "working_bytes_sha256": "e3c9e7936dd7924aaf3dc98316064d0c7b9bdc7523004e3baa0473df7fea6060",
+      "normalized_lf_sha256": "e3c9e7936dd7924aaf3dc98316064d0c7b9bdc7523004e3baa0473df7fea6060"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-native-checks.json": {
+      "working_bytes_sha256": "94b9157774baaf28603f28d01e66445df8b57f59b30a2fd8a094d1fd53182599",
+      "normalized_lf_sha256": "94b9157774baaf28603f28d01e66445df8b57f59b30a2fd8a094d1fd53182599"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-operator-benchmark.json": {
+      "working_bytes_sha256": "8f702f0c8cf407679ddd5f3f01d405624a100b092a015c20ccf198c61ca4539a",
+      "normalized_lf_sha256": "8f702f0c8cf407679ddd5f3f01d405624a100b092a015c20ccf198c61ca4539a"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-operator.json": {
+      "working_bytes_sha256": "02f16315451d0ca0f1529681cb85943c29fda3e76b2946adc991b0d7fd03ab37",
+      "normalized_lf_sha256": "02f16315451d0ca0f1529681cb85943c29fda3e76b2946adc991b0d7fd03ab37"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-paired.json": {
+      "working_bytes_sha256": "32e87ce52fcb220ae03cd8398720449cb196666e11c05c9e597d11a00b1c1a9d",
+      "normalized_lf_sha256": "32e87ce52fcb220ae03cd8398720449cb196666e11c05c9e597d11a00b1c1a9d"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-python-final.json": {
+      "working_bytes_sha256": "036d76daf54632a4050610c71e4a1cff90cc15d69dff8e8349222aeafcb72729",
+      "normalized_lf_sha256": "036d76daf54632a4050610c71e4a1cff90cc15d69dff8e8349222aeafcb72729"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-python.json": {
+      "working_bytes_sha256": "dd791d61f884023b262c3d3bd3a27bfc54a1f7422cef59ad540e49b34049945c",
+      "normalized_lf_sha256": "dd791d61f884023b262c3d3bd3a27bfc54a1f7422cef59ad540e49b34049945c"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-reproduction.json": {
+      "working_bytes_sha256": "9e837003fb4a8f29d06b325f2e926d5f8072537807691fb2756235ecc81f2adc",
+      "normalized_lf_sha256": "9e837003fb4a8f29d06b325f2e926d5f8072537807691fb2756235ecc81f2adc"
+    },
+    "artifacts/performance/qoco-fused-kkt-v94-sanitizers.json": {
+      "working_bytes_sha256": "6e926f64c6270bd9afbd7718decff1982681ba49202932e0b6fd26fd9d417f72",
+      "normalized_lf_sha256": "6e926f64c6270bd9afbd7718decff1982681ba49202932e0b6fd26fd9d417f72"
+    }
+  },
+  "helper_sources": {
+    "build/performance/benchmark_fused_kkt_v94.py": "from pathlib import Path\nimport os, json, fcntl, runpy, time, statistics\nfrom dataclasses import asdict\nfrom spacepdhcg.gtoc12.low_thrust import ScvxSettings, solve_leg, certify_leg\n\nfixture = runpy.run_path('tests/test_gtoc12_gpu_discretisation.py')\nreference_mass = 2445.3111007852112\nrows = []\nvariants = [('numpy', 'numpy', 'clarabel'), ('cuda', 'cuda', 'clarabel'), ('cuda', 'cuda', 'qoco')]\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)\n    for repeat in range(6):\n        # Rotate order to reduce systematic order bias; record every attempt.\n        for i in range(3):\n            dynamics, assembly, solver = variants[(i + repeat) % 3]\n            settings = ScvxSettings(discretisation_backend=dynamics, assembly_backend=assembly,\n                convex_solver_backend=solver, qoco_ruiz_iterations=0, hold='zoh',\n                max_iterations=30, time_limit_s=30)\n            start = time.perf_counter()\n            solution = solve_leg(fixture['synthetic_boundary'](), settings)\n            seconds = time.perf_counter() - start\n            certificate = certify_leg(solution)\n            qualified = bool(solution.converged and certificate.within_tolerance\n                and abs(solution.final_mass_kg - reference_mass) <= 1e-5)\n            row = dict(repeat=repeat, warmup=repeat == 0, settings=asdict(settings),\n                seconds=seconds, status=solution.status, mass=solution.final_mass_kg,\n                fixed_reference_mass=reference_mass, mass_error=solution.final_mass_kg-reference_mass,\n                qualified=qualified, certificate=asdict(certificate),\n                iterations=solution.iterations, accepted=solution.accepted_iterations,\n                history=solution.history, reports=solution.solver_reports)\n            rows.append(row)\n            Path('artifacts/performance/gtoc12-qoco-v94-benchmark.json').write_text(json.dumps(rows, indent=2)+'\\n')\n            print(repeat, dynamics, assembly, solver, qualified, seconds, row['mass_error'], flush=True)\n    for dynamics, assembly, solver in variants:\n        selected=[r for r in rows if not r['warmup'] and r['settings']['discretisation_backend']==dynamics\n            and r['settings']['assembly_backend']==assembly and r['settings']['convex_solver_backend']==solver]\n        print('SUMMARY', dynamics, assembly, solver, sum(r['qualified'] for r in selected), '/', len(selected),\n            'median_attempt_seconds', statistics.median(r['seconds'] for r in selected), flush=True)\n",
+    "build/performance/benchmark_operator_fused_kkt_v94.py": "from pathlib import Path\nimport os,subprocess,json,fcntl,time\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nvenv='/home/angus/worktrees/spacepdhcg-literature-venv/bin/'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-fused-kkt-v94/final/libqoco.so',LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',SPACEPDHCG_GTOC12_GPU_TESTS='1')\n\nroot='/home/angus/build-qoco-gpu-fused-kkt-v94'\ncommand=['/usr/local/cuda-12.8/bin/nvcc','-O3','-arch=sm_120','-I'+root+'/source/include','-I'+root+'/source/lib/qdldl/include','build/performance/qoco_fused_kkt_v94_benchmark.cu','-L'+root+'/final','-lqoco','-Xlinker','-rpath','-Xlinker',root+'/final','-o',root+'/final/qoco_fused_kkt_product_benchmark']\nr=subprocess.run(command,capture_output=True,text=True)\nprint(r.returncode,r.stdout,r.stderr,flush=True)\nassert r.returncode==0\nPath(root+'/final/qoco_fused_kkt_product_benchmark').chmod(0o555)\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n    r=subprocess.run([root+'/final/qoco_fused_kkt_product_benchmark'],env=env,capture_output=True,text=True,timeout=60)\n    Path('artifacts/performance/qoco-fused-kkt-v94-operator-benchmark.json').write_text(json.dumps(dict(command=command,returncode=r.returncode,stdout=r.stdout,stderr=r.stderr),indent=2)+'\\n')\n    print(r.returncode,r.stdout,r.stderr,flush=True)\n",
+    "build/performance/build_fused_kkt_v94.py": "from pathlib import Path\nimport subprocess\n\nbase = Path('/home/angus/build-qoco-gpu-fused-kkt-v94')\nassert not base.exists(), 'Never overwrite a frozen runtime'\nruntime = Path('/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12')\nlink = runtime / 'lib/libcudss.so'\nif not link.exists():\n    link.symlink_to('libcudss.so.0')\nflags = ['--gather', '--correct-stopping', '--checked-cudss-abi',\n         '--queued-operators', '--device-cone-reductions', '--values-only-updates',\n         '--device-numeric-updates', '--device-scalar-reductions', '--batched-stopping',\n         '--batched-iteration-scalars', '--device-step-control', '--setup-lifetimes',\n         '--trajectory-ordering', '--trajectory-tree', '--reset-solve-state','--device-io','--gpu-kkt','--gpu-transposes','--lazy-transpose-mirrors','--deferred-transposes','--metric-graphs','--fused-kkt-product']\ncmake = '/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake'\nwith Path('build/performance/native-checks/qoco-v94-build.log').open('w') as log:\n    if not (base / 'source').exists():\n        subprocess.run(['python3', 'scripts/gpu/prepare_qoco_gpu.py', '--source',\n            '/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4',\n            '--destination', str(base / 'source'), *flags], stdout=log, stderr=subprocess.STDOUT, check=True)\n    subprocess.run([cmake, '-S', str(base / 'source'), '-B', str(base / 'build'), '-G', 'Ninja',\n        '-DQOCO_ALGEBRA_BACKEND=cuda', '-DQOCO_BUILD_TYPE=Release', '-DCMAKE_BUILD_TYPE=Release',\n        '-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc', '-DCMAKE_CUDA_ARCHITECTURES=120',\n        '-DCMAKE_CUDA_FLAGS=-I' + str(runtime / 'include'), '-DCUDSS_LIB=' + str(link),\n        '-DCMAKE_C_FLAGS=-Werror=implicit-function-declaration', '-DBUILD_QOCO_DEMO=OFF'],\n        stdout=log, stderr=subprocess.STDOUT, check=True)\n    subprocess.run([cmake, '--build', str(base / 'build'), '--target', 'qoco', '-j', '3'],\n        stdout=log, stderr=subprocess.STDOUT, check=True)\nprint('Built v51 against isolated cuDSS 0.8.0.10', flush=True)\n\nimport shutil\n(base/'final').mkdir()\nfor path in (base/'build').rglob('libqoco.so'):\n    shutil.copy2(path,base/'final/libqoco.so')\n(base/'final/libqoco.so').chmod(0o555)\nprint('Frozen QOCO94',flush=True)\n",
+    "build/performance/check_fused_kkt_v94.py": "from pathlib import Path\nimport os,subprocess,json,fcntl,time\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nvenv='/home/angus/worktrees/spacepdhcg-literature-venv/bin/'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-fused-kkt-v94/final/libqoco.so',LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',SPACEPDHCG_GTOC12_GPU_TESTS='1')\n\nroot='/home/angus/build-qoco-gpu-fused-kkt-v94'\ncommand=['/usr/local/cuda-12.8/bin/nvcc','-O3','-arch=sm_120','-I'+root+'/source/include','-I'+root+'/source/lib/qdldl/include','cpp/cuda/tests/qoco_fused_kkt_product_test.cu','-L'+root+'/final','-lqoco','-Xlinker','-rpath','-Xlinker',root+'/final','-o',root+'/final/qoco_fused_kkt_product_test']\nr=subprocess.run(command,capture_output=True,text=True)\nprint(r.returncode,r.stdout,r.stderr,flush=True)\nassert r.returncode==0\nPath(root+'/final/qoco_fused_kkt_product_test').chmod(0o555)\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n    r=subprocess.run([root+'/final/qoco_fused_kkt_product_test'],env=env,capture_output=True,text=True,timeout=60)\n    Path('artifacts/performance/qoco-fused-kkt-v94-operator.json').write_text(json.dumps(dict(command=command,returncode=r.returncode,stdout=r.stdout,stderr=r.stderr),indent=2)+'\\n')\n    print(r.returncode,r.stdout,r.stderr,flush=True)\n",
+    "build/performance/native_check_fused_kkt_v94.py": "from pathlib import Path\nimport os,subprocess,json,fcntl,time\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nvenv='/home/angus/worktrees/spacepdhcg-literature-venv/bin/'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-fused-kkt-v94/final/libqoco.so',LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',SPACEPDHCG_GTOC12_GPU_TESTS='1')\n\nexe='/home/angus/build-spacepdhcg-gpu-native/038695b/'\ncommands=[('legacy_conversion',['/home/angus/build-spacepdhcg-gtoc12-v93/cuda-tests/native_qoco_conversion_test']),('landing',[exe+'device_scvx_integration_test','--p1c-qoco-repeatability','7'])]\ncommands += [(f'pd6-{n}',[exe+'spacepdhcg_plan',p,'--quiet','--output',f'build/performance/qoco-fused-kkt-v94-{n}.json']) for n,p in [(20,'artifacts/performance/qoco-gpu-tree-input-20.json'),(500,'artifacts/performance/qoco-rhs-scaling-input-500.json')]]\nchecks=[]\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n    for name,command in commands:\n        r=subprocess.run(command,env=env,capture_output=True,text=True,timeout=120)\n        checks.append(dict(name=name,command=command,returncode=r.returncode,stdout=r.stdout,stderr=r.stderr))\n        Path('artifacts/performance/qoco-fused-kkt-v94-native-checks.json').write_text(json.dumps(checks,indent=2)+'\\n')\n        print(name,r.returncode,(r.stdout+r.stderr)[-1200:],flush=True)\n        if r.returncode:break\n",
+    "build/performance/paired_fused_kkt_v94.py": "import os,json,fcntl,subprocess,time,statistics\nfrom pathlib import Path\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',\n    LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',\n    OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')\nrows=[]\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n    for pair in range(10):\n        for variant in (['baseline','fused'] if pair%2==0 else ['fused','baseline']):\n            env['SPACEPDHCG_QOCO_LIBRARY']='/home/angus/build-qoco-gpu-'+('gpu-kkt-v78' if variant=='baseline' else 'fused-kkt-v94')+'/final/libqoco.so'\n            output=f'build/performance/fused-kkt-v94-pair-{pair}-{variant}.json'\n            assert not Path(output).exists()\n            command=['/home/angus/worktrees/spacepdhcg-literature-venv/bin/python','build/performance/paired_fused_kkt_v94_leg.py',output]\n            result=subprocess.run(command,env=env,capture_output=True,text=True,timeout=90)\n            rows.append(dict(pair=pair,variant=variant,command=command,returncode=result.returncode,\n                stdout=result.stdout,stderr=result.stderr,legs=json.loads(Path(output).read_text()) if Path(output).exists() else []))\n            Path('artifacts/performance/qoco-fused-kkt-v94-paired.json').write_text(json.dumps(rows,indent=2)+'\\n')\n            print(pair,variant,result.returncode,result.stdout.strip(),flush=True)\n    for variant in ['baseline','fused']:\n        selected=[x['legs'][-1] for x in rows if x['variant']==variant and x['returncode']==0]\n        print(variant,'qualified',sum(x['qualified'] for x in selected),'of',len(selected),\n              'attempt_median',statistics.median(x['seconds'] for x in selected),flush=True)\n",
+    "build/performance/paired_fused_kkt_v94_leg.py": "import json,runpy,time,sys\nfrom pathlib import Path\nfrom dataclasses import asdict\nfrom spacepdhcg.gtoc12.low_thrust import ScvxSettings,solve_leg,certify_leg\nfixture=runpy.run_path('tests/test_gtoc12_gpu_discretisation.py')\nrows=[]\nfor repeat in range(2):\n    start=time.perf_counter()\n    solution=solve_leg(fixture['synthetic_boundary'](),ScvxSettings(discretisation_backend='cuda',\n        assembly_backend='cuda',convex_solver_backend='qoco',max_iterations=30,time_limit_s=30))\n    seconds=time.perf_counter()-start\n    certificate=certify_leg(solution)\n    rows.append(dict(warmup=repeat==0,seconds=seconds,status=solution.status,mass=solution.final_mass_kg,\n        qualified=bool(solution.converged and certificate.within_tolerance and abs(solution.final_mass_kg-2445.3111007852112)<=1e-5),\n        certificate=asdict(certificate),reports=solution.solver_reports,history=solution.history))\nPath(sys.argv[1]).write_text(json.dumps(rows,indent=2)+'\\n')\nprint(rows[-1]['qualified'],rows[-1]['seconds'],flush=True)\n",
+    "build/performance/profile_gtoc12_v94.py": "from pathlib import Path\nimport os,subprocess,json,fcntl,time\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',\n    SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-gpu-kkt-v78/final/libqoco.so',\n    LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',\n    OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')\n\nfor key in list(env):\n    if key.startswith('SPACEPDHCG_TEST_'):del env[key]\nout='/home/angus/gtoc12-qoco-v94-baseline-profile'\ncommand=['/usr/local/bin/nsys','profile','--trace=cuda,nvtx','--sample=none','--cpuctxsw=none','--output='+out,'/home/angus/worktrees/spacepdhcg-literature-venv/bin/python','build/performance/profile_gtoc12_v94_fixture.py']\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n    r=subprocess.run(command,env=env,capture_output=True,text=True,timeout=120)\n    print(r.returncode,r.stdout,r.stderr,flush=True)\n    assert r.returncode==0\n    report=dict(command=command,stdout=r.stdout,stderr=r.stderr)\n    for name in ['cuda_api_sum','cuda_gpu_kern_sum','cuda_gpu_mem_time_sum']:\n        r=subprocess.run(['/usr/local/bin/nsys','stats','--report',name,'--format','csv',out+'.nsys-rep'],capture_output=True,text=True,timeout=120)\n        report[name]=dict(returncode=r.returncode,stdout=r.stdout,stderr=r.stderr)\n    Path('artifacts/performance/gtoc12-qoco-v94-baseline-profile.json').write_text(json.dumps(report,indent=2)+'\\n')\n    print(report['cuda_api_sum']['stdout'][:4500])\n",
+    "build/performance/profile_gtoc12_v94_fixture.py": "import runpy,json,time\nfrom pathlib import Path\nfrom dataclasses import asdict\nfrom spacepdhcg.gtoc12.low_thrust import ScvxSettings,solve_leg,certify_leg\nfixture=runpy.run_path('tests/test_gtoc12_gpu_discretisation.py')\nstart=time.perf_counter()\ns=solve_leg(fixture['synthetic_boundary'](),ScvxSettings(discretisation_backend='cuda',assembly_backend='cuda',convex_solver_backend='qoco',max_iterations=30,time_limit_s=30))\nc=certify_leg(s)\nr=dict(status=s.status,mass=s.final_mass_kg,seconds=time.perf_counter()-start,certificate=asdict(c),qualified=bool(s.converged and c.within_tolerance and abs(s.final_mass_kg-2445.3111007852112)<=1e-5),reports=s.solver_reports)\nPath('artifacts/performance/gtoc12-qoco-v94-baseline-profile-leg.json').write_text(json.dumps(r,indent=2)+'\\n')\nprint(r['status'],r['qualified'],r['seconds'])\n",
+    "build/performance/qoco_fused_kkt_v94_benchmark.cu": "// Compare fused sparse KKT products with the existing GPU composition and an\n// independently assembled dense product, including missing/empty blocks.\n#include <cuda_runtime.h>\n#include <algorithm>\n#include <cmath>\n#include <cstdio>\n#include <cstdlib>\n#include <cstring>\n#include <vector>\nextern \"C\" {\n#include \"qoco.h\"\n#include \"qoco_linalg.h\"\nvoid qoco_gpu_kkt_sparse(double*,double*,QOCOProblemData*);\nint qoco_gpu_begin_reduction_scope();\nvoid qoco_gpu_end_reduction_scope();\n}\nbool load_cuda_libraries();\nstatic void require(bool ok,const char* message) {\n    if (!ok) { std::fprintf(stderr,\"FAIL: %s\\n\",message); std::exit(1); }\n}\nstatic void check(cudaError_t s) { require(s==cudaSuccess,cudaGetErrorString(s)); }\nstruct HostMatrix {\n    int rows,cols; bool symmetric;\n    std::vector<int> offsets,indices;\n    std::vector<double> values;\n    QOCOMatrix* device{};\n    HostMatrix(int r,int c,bool sym,int seed,bool empty=false):rows(r),cols(c),symmetric(sym),offsets(c+1) {\n        for (int col=0;col<c;++col) {\n            offsets[col]=values.size();\n            if (!empty && r) for (int j=0;j<4;++j) {\n                int row=(col*7+j*13+seed)%r;\n                if (sym) row%=col+1;\n                indices.push_back(row);values.push_back(std::sin(col*.013+j+seed));\n            }\n        }\n        offsets[c]=values.size();\n        QOCOCscMatrix m{r,c,static_cast<int>(values.size()),indices.data(),offsets.data(),values.data()};\n        device=new_qoco_matrix(&m);\n    }\n    ~HostMatrix() { free_qoco_matrix(device); }\n    void accumulate(const std::vector<double>& x,std::vector<long double>& y,int shift,bool trans) {\n        for (int c=0;c<cols;++c) for (int e=offsets[c];e<offsets[c+1];++e) {\n            const int r=indices[e]; const long double v=values[e];\n            if (trans) y[c]+=v*x[shift+r];\n            else y[shift+r]+=v*x[c];\n            if (symmetric && c!=r) y[c]+=v*x[r];\n        }\n    }\n};\nint main() {\n    require(load_cuda_libraries(),\"CUDA libraries\");\n    int cases=0;\n    for (int n:{3,257,4097}) for (int variant=0;variant<8;++variant) {\n        const int p=variant&1 ? 0 : n/2+1,m=variant&2 ? 0 : n+3,N=n+p+m;\n        HostMatrix P(n,n,true,1),A(p,n,false,2,variant==4),G(m,n,false,3,variant==5);\n        QOCOProblemData d{};d.n=n;d.p=p;d.m=m;\n        d.P=variant&4 ? nullptr : P.device;d.A=A.device;d.G=G.device;\n        double *x{},*y{},*reference{},*scratch{};\n        for (double** ptr:{&x,&y,&reference,&scratch}) check(cudaMalloc(ptr,N*sizeof(double)));\n        std::vector<double> host(N),actual(N),expected(N);\n        for (int repeat=0;repeat<3;++repeat) {\n            for (int i=0;i<N;++i) host[i]=std::cos(i*.03+repeat);\n            check(cudaMemcpy(x,host.data(),N*sizeof(double),cudaMemcpyHostToDevice));\n            require(qoco_gpu_begin_reduction_scope()==0,\"scope\");\n            if (d.P) USpMv(d.P,x,reference); else check(cudaMemsetAsync(reference,0,n*sizeof(double)));\n            if (p) { SpMtv(d.A,x+n,scratch);qoco_axpy(reference,scratch,reference,1,n);SpMv(d.A,x,reference+n); }\n            if (m) { SpMtv(d.G,x+n+p,scratch);qoco_axpy(reference,scratch,reference,1,n);SpMv(d.G,x,reference+n+p); }\n            qoco_gpu_kkt_sparse(x,y,&d);\n            qoco_gpu_end_reduction_scope();\n            check(cudaMemcpy(actual.data(),y,N*sizeof(double),cudaMemcpyDeviceToHost));\n            check(cudaMemcpy(expected.data(),reference,N*sizeof(double),cudaMemcpyDeviceToHost));\n            require(std::memcmp(actual.data(),expected.data(),N*sizeof(double))==0,\"bitwise GPU composition parity\");\n            std::vector<long double> dense(N);\n            if (d.P) P.accumulate(host,dense,0,false);\n            if (p) { A.accumulate(host,dense,n,true);A.accumulate(host,dense,n,false); }\n            if (m) { G.accumulate(host,dense,n+p,true);G.accumulate(host,dense,n+p,false); }\n            for (int i=0;i<N;++i) require(std::isfinite(actual[i]) && std::abs(actual[i]-dense[i])<=2e-12L*(1+std::abs(dense[i])),\"independent dense product\");\n            ++cases;\n        }\n        if (variant==0) {\n            for (int mode=0;mode<2;++mode) {\n                cudaEvent_t begin{},end{};check(cudaEventCreate(&begin));check(cudaEventCreate(&end));\n                require(qoco_gpu_begin_reduction_scope()==0,\"timed scope\");\n                check(cudaEventRecord(begin));\n                for (int rep=0;rep<1000;++rep) {\n                    if (mode) qoco_gpu_kkt_sparse(x,y,&d);\n                    else {\n                        USpMv(d.P,x,reference);\n                        SpMtv(d.A,x+n,scratch);qoco_axpy(reference,scratch,reference,1,n);SpMv(d.A,x,reference+n);\n                        SpMtv(d.G,x+n+p,scratch);qoco_axpy(reference,scratch,reference,1,n);SpMv(d.G,x,reference+n+p);\n                    }\n                }\n                check(cudaEventRecord(end));qoco_gpu_end_reduction_scope();check(cudaEventSynchronize(end));\n                float ms{};check(cudaEventElapsedTime(&ms,begin,end));\n                std::printf(\"n=%d mode=%s event_us_per_product=%.6f\\n\",n,mode?\"fused\":\"composed\",ms);\n                check(cudaEventDestroy(begin));check(cudaEventDestroy(end));\n            }\n        }\n        for (auto* ptr:{x,y,reference,scratch}) check(cudaFree(ptr));\n    }\n    std::printf(\"Fused KKT: %d bitwise and independent dense cases PASS\\n\",cases);\n}\n",
+    "build/performance/run_benchmark_fused_kkt_v94.py": "from pathlib import Path\nimport os,subprocess,json,fcntl,time\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nvenv='/home/angus/worktrees/spacepdhcg-literature-venv/bin/'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-fused-kkt-v94/final/libqoco.so',LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',SPACEPDHCG_GTOC12_GPU_TESTS='1')\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    pass\n    command=[venv+'python','build/performance/benchmark_fused_kkt_v94.py']\n    start=time.monotonic();r=subprocess.run(command,env=env,capture_output=True,text=True,timeout=300)\n    Path('artifacts/performance/gtoc12-qoco-v94-benchmark-runner.json').write_text(json.dumps(dict(command=command,returncode=r.returncode,stdout=r.stdout,stderr=r.stderr,seconds=time.monotonic()-start),indent=2)+'\\n')\n    print(r.returncode,(r.stdout+r.stderr)[-4000:]);raise SystemExit(r.returncode)\n",
+    "build/performance/sanitize_fused_kkt_v94.py": "from pathlib import Path\nimport os,subprocess,json,fcntl,time\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nvenv='/home/angus/worktrees/spacepdhcg-literature-venv/bin/'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-fused-kkt-v94/final/libqoco.so',LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',SPACEPDHCG_GTOC12_GPU_TESTS='1')\n\nchecks=[]\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n    for tool in ['memcheck','racecheck','initcheck','synccheck']:\n        command=['/usr/local/cuda-12.8/bin/compute-sanitizer','--tool',tool,'--error-exitcode','99']\n        if tool=='memcheck':command+=['--leak-check','full']\n        command+=['/home/angus/build-qoco-gpu-fused-kkt-v94/final/qoco_fused_kkt_product_test']\n        r=subprocess.run(command,env=env,capture_output=True,text=True,timeout=180)\n        checks.append(dict(name=tool,returncode=r.returncode,stdout=r.stdout,stderr=r.stderr,command=command))\n        Path('artifacts/performance/qoco-fused-kkt-v94-sanitizers.json').write_text(json.dumps(checks,indent=2)+'\\n')\n        print(tool,r.returncode,(r.stdout+r.stderr)[-800:],flush=True)\n        if r.returncode:break\n",
+    "build/performance/tests_fused_kkt_v94.py": "from pathlib import Path\nimport os,subprocess,json,fcntl,time\nbase='/home/angus/build-spacepdhcg-gtoc12-v93/final'\nvenv='/home/angus/worktrees/spacepdhcg-literature-venv/bin/'\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(PYTHONPATH='src',SPACEPDHCG_GTOC12_CUDA_LIBRARY=base+'/libspacepdhcg_cuda.so',SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-fused-kkt-v94/final/libqoco.so',LD_LIBRARY_PATH=base+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',SPACEPDHCG_GTOC12_GPU_TESTS='1')\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n    command=[venv+'pytest','tests/test_gtoc12_gpu_qoco.py','tests/test_gtoc12_gpu_cli.py','-q']\n    start=time.monotonic();r=subprocess.run(command,env=env,capture_output=True,text=True,timeout=300)\n    Path('artifacts/performance/gtoc12-qoco-v94-tests.json').write_text(json.dumps(dict(command=command,returncode=r.returncode,stdout=r.stdout,stderr=r.stderr,seconds=time.monotonic()-start),indent=2)+'\\n')\n    print(r.returncode,(r.stdout+r.stderr)[-4000:]);raise SystemExit(r.returncode)\n"
+  },
+  "prepared_provenance": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "8d7f6d0242770d6295a432bf77b8dde25ff1ab974ae19e37e388670e9b997558",
+    "extension_sha256": "e268be87177f84f874193c0c316ae99d6ae3fe16d812e9d0d24ab49779c6efc0",
+    "device_solution_sha256": "361f528374ffc66fcc33a23a3c0b92f4c92bae16c5e99884c17a6ca94705bc32",
+    "gather": true,
+    "original_handles": false,
+    "queued_operators": true,
+    "device_cone_reductions": true,
+    "values_only_updates": true,
+    "device_numeric_updates": true,
+    "device_scalar_reductions": true,
+    "batched_stopping": true,
+    "batched_iteration_scalars": true,
+    "device_step_control": true,
+    "device_combined_rhs": false,
+    "queued_centering_metadata": false,
+    "profile_setup": false,
+    "gpu_degree_ordering": false,
+    "setup_lifetimes": true,
+    "trajectory_ordering": true,
+    "trajectory_tree": true,
+    "correct_stopping": true,
+    "deterministic": false,
+    "multiblock_factorization": false,
+    "superpanels": false,
+    "reset_solve_state": true,
+    "device_io": true,
+    "gpu_kkt": true,
+    "gpu_transposes": true,
+    "lazy_transpose_mirrors": true,
+    "deferred_transposes": true,
+    "metric_graphs": true,
+    "fused_kkt_product": true,
+    "vector_arena": false,
+    "restore_inaccurate_best": false,
+    "host_ruiz_vector_sync": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "ae0ba8bd7dd85fdd10e623c8b715c99d11a5bd5537ff01d74add02c6a7a2dff4",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "8d7f6d0242770d6295a432bf77b8dde25ff1ab974ae19e37e388670e9b997558",
+      "algebra/cuda/qoco_reduction_scope.cuh": "e268be87177f84f874193c0c316ae99d6ae3fe16d812e9d0d24ab49779c6efc0",
+      "algebra/cuda/qoco_device_solution.cuh": "361f528374ffc66fcc33a23a3c0b92f4c92bae16c5e99884c17a6ca94705bc32",
+      "algebra/cuda/cuda_types.h": "98249e08bd636f42335de38a40e71c5829fa690166e00c26c52c5b8cf23debbf",
+      "algebra/cuda/cudss_backend.h": "ad52b77cc64805921685c35c49ce0f0bac3f8fc064524b9ee8a0ca38e25ae049",
+      "algebra/cuda/cudss_backend.cu": "e2368faf39dc0770bcd7785fecd8c638e6a800e12d98769528469a348882eb02",
+      "src/qoco_utils.c": "527bba3303b43f8ed69f4846730cc15ab879b792ef93fb550ce1b084a398c9bc",
+      "src/qoco_api.c": "c19a43bf000a699f7de328daaf063d54e3d2637954f6ab4978ff90f5cf9c922c",
+      "src/equilibration.c": "fec66003ab5781c7ec943236d3d93548ef88ec94daa43b0f30dae67f469bce4a",
+      "include/structs.h": "2c8bb0cb3a97f285cdb7c59dd92ca0632e5f7a2a99d124aa94d1b7870b3875c8",
+      "algebra/cuda/qoco_device_io.cuh": "baece22391ee4e868ff3bb636bf4ef072d809ba19215051aacd17041c22a146a",
+      "algebra/cuda/qoco_gpu_kkt.cuh": "67e1d51438d557ae3d2231a42734e9a79d7c65f829a3434489e71bce005ffaca",
+      "algebra/cuda/qoco_gpu_transpose.cuh": "a1772a8b2db8ff8ccf6896a688df8bb5c0517ca26918c509ca72041429ba06e3",
+      "algebra/cuda/qoco_lazy_host_mirror.cuh": "bc0dbd912df8fe7c469b018681adf4128fca29947719a0ae39a2371290bee948",
+      "algebra/cuda/qoco_deferred_transpose.cuh": "d7cd00b349dab3eef9513c2053a6896854ca1b76258f5129b27f6114945a9120",
+      "algebra/cuda/qoco_fused_kkt_product.cuh": "4b227ae4ef31b9bbcff82fc60d8dcf16d00771e1c4ff4418aa17ec5886e0f86c",
+      "algebra/cuda/qoco_metric_graph.cuh": "7bf9983372f113cce511967f6eb9b99891089b3ddf09dff2eb343851a5283d50",
+      "algebra/cuda/qoco_gather.cuh": "58435040f3beb35dfdd83a2f3e3e556893699b276c0589f03b6a8012c8d1355b",
+      "src/cone.cu": "40c0edbd6572eb6879d548f3b0b01f05afe08c4d2cce5cefe92ae448fc81b24a",
+      "src/qoco_device_cone_reductions.cuh": "b406d43cbc0f54ce15d5bcbeb587e7031e82a7c0effdea7b06df843feeb5e8fd",
+      "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+      "algebra/cuda/qoco_device_update.cuh": "9661343512025ad0b52593259fffae944ec02e49d1a9c1470b48a568c30a9470",
+      "algebra/cuda/qoco_device_scalar.cuh": "089f2a795a5a197b929464eebef69d13ef12ea32a4a49a283fff51d970191eb8",
+      "algebra/cuda/qoco_batched_stopping.cuh": "f56e806c15f57992f424139f0b09718b3067d3ef30e436304fc55843f65c0a0c",
+      "src/kkt.c": "71ad36696cd31ce9269ac42b41cfbaa73bc05d5c963c90770a27e77cde7ad708",
+      "src/qoco_device_step_cones.cuh": "aa96347485c95348b37d57b77c8d8f56c1f684bd20660e08d8e7f65d9d1e5ad0",
+      "algebra/cuda/qoco_device_step_control.cuh": "717e5516feb9e9ff5a91f2b75eafc3598515910b03019359a92e0ab954ef3e5f",
+      "algebra/cuda/qoco_trajectory_ordering.cuh": "cd3e0e3473565ea2913277e1254b62ae216d22654d234d6343501c3793376b5f"
+    }
+  },
+  "prepared_source_comparison": "After normalizing CRLF, differs from QOCO78 only in src/kkt.c, algebra/cuda/cuda_linalg.cu, the new fused header and provenance. Fresh preparation matches frozen94 normalized source exactly.",
+  "measurements": {
+    "paired_medians_seconds": {
+      "baseline": 0.9595545674674213,
+      "fused": 0.8056797189929057
+    },
+    "paired_time_reduction": 0.1603607066147803,
+    "paired": "All40 legs qualify, including20warmups and20 measured. Alternating fresh processes, ten paired measurements at fixed GTOC12 mass2445.3111007852112kg +/-1e-5kg and unchanged independent physics.",
+    "initial": "First18leg comparison allqualify but fusedmedian870.21ms versus priorbaseline818.92ms. Preserve both sequences; no general speed claim.",
+    "operator": "1000product CUDAevent samples: n3 74.245/10.291us, n257 75.492/9.576us, n4097 71.784/42.256us composed/fused. Single samples include host enqueue pacing.",
+    "native_objective_checks": {
+      "20": {
+        "reference": 0.5129756912894008,
+        "actual": 0.5129756912894055,
+        "difference": 4.6629367034256575e-15,
+        "tolerance": 1e-08,
+        "reference_file": "qoco-gpu-kkt-v76-pd6.json",
+        "reference_sample": 0
+      },
+      "500": {
+        "reference": 0.5129756922612151,
+        "actual": 0.5129756918124659,
+        "difference": 4.487491489513218e-10,
+        "tolerance": 1e-08,
+        "reference_file": "qoco-gpu-kkt-v76-pd6-500.json",
+        "reference_sample": 0
+      }
+    }
+  },
+  "checks": {
+    "operator": "72 bitwise and independent dense cases pass; all4sanitizers zeroerrors/leaks/hazards/warnings.",
+    "native": "Legacyconversion,7landingrepetitions andN20/N500sixDOF pass existingcertificates; fixedobjectivecomparisonsabove.",
+    "python": "24CPUtooling/backendtests pass after normalizing two preexisting CRLFshellfiles; initial2syntaxfailures retained. Shell content unchanged.",
+    "gpu": "23pass/1fail focused GTOC12+CLI: fixedendpointZOHcoast originaleqresidual1.1663e-9 vs1e-9 despite normalizedauditpass. Thresholdnotchanged, failurerecordretained, no retry-to-pass.",
+    "cmake": "Normal CUDA CMake configure passes and omits standalone QOCO-header test from generic native targets."
+  },
+  "profile": {
+    "scope": "CUDA API trace only. GPU kernel/memory reports unavailable in collected data; direct SQLite report says skipped. This is not a GPU-time profile.",
+    "trace_sha256": {
+      "/home/angus/gtoc12-qoco-v94-baseline-profile.nsys-rep": "87cf9a0df2ee8fbeb1e90fc781b8d643ae102c2d6c8893e1c49276144a81252d",
+      "/home/angus/gtoc12-qoco-v94-baseline-profile.sqlite": "6df72614c8b38a2554e14ca1be7574748ad3b16100774c9fa35744400ccc2cbd"
+    }
+  },
+  "next": [
+    "GPU control of iterative refinement while preserving residual/best-vector/limit behavior; investigate capture-compatible persistent cuDSS storage before conditional graph integration",
+    "Convergence/conditioning reliability including strict coast failure",
+    "CPU initial setup, outer dynamics/decisions and fulltrajectorybatching remain"
+  ],
+  "primary_references": [
+    "https://docs.nvidia.com/cuda/cudss/general.html",
+    "https://docs.nvidia.com/cuda/archive/12.8.1/cuda-c-programming-guide/index.html#conditional-graph-nodes"
+  ],
+  "next_runtime": "95 or later; do not overwrite frozen78/93/94",
+  "jobs": "All owned GPU jobs terminal; existing viewer service intentionally running. No Lambda read or mutation."
+}
