@@ -8,6 +8,13 @@
 #include <cstdint>
 
 struct spacepdhcg_native_qoco;
+struct QocoAuditResult;
+struct QocoReplayStatus;
+
+// Called on the host to enqueue consumers of borrowed device outputs on the
+// supplied stream. It must not throw or retain pointers past the next solve.
+using spacepdhcg_native_qoco_consumer = cudaError_t (*)(void*,
+    const QocoReplayStatus*, const QocoAuditResult*, cudaStream_t);
 
 struct spacepdhcg_native_qoco_report {
     double conversion_seconds;
@@ -88,6 +95,12 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve(
 
 spacepdhcg_cuda_status spacepdhcg_native_qoco_accept(
     spacepdhcg_native_qoco* workspace, spacepdhcg_native_qoco_report* report);
+// Cold solve: replay consumers run before report collection. Initial/stale graph
+// priming remains synchronous. No consumer is invoked on failed priming.
+spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve_with_consumer(
+    spacepdhcg_native_qoco*, const spacepdhcg_cuda_scvx_problem*, cudaStream_t,
+    double* device_primal, double* device_dual, spacepdhcg_native_qoco_report*,
+    spacepdhcg_native_qoco_consumer, void* context);
 spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
     spacepdhcg_native_qoco* workspace,
     bool retain_primal

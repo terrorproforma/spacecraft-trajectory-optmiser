@@ -21,13 +21,15 @@ Settings fixture() {
 void controller() {
     State* ds; Metrics* dm; double *dx,*states,*controls;
     Record* records; spacepdhcg_gtoc12_conic_parameters* parameters;
+    spacepdhcg_gtoc12_qoco_report* device_report;
+    CUDA(cudaMalloc(&device_report,sizeof(*device_report)));
     CUDA(cudaMalloc(&ds,sizeof(State))); CUDA(cudaMalloc(&dm,sizeof(Metrics)));
     CUDA(cudaMalloc(&dx,100*sizeof(double))); CUDA(cudaMalloc(&states,28*sizeof(double)));
     CUDA(cudaMalloc(&controls,16*sizeof(double))); CUDA(cudaMalloc(&records,44*sizeof(Record)));
     CUDA(cudaMalloc(&parameters,sizeof(*parameters)));
     std::vector<double> x(100,2.0), got(28), zeros(28,0.0);
     CUDA(cudaMemcpy(dx,x.data(),800,cudaMemcpyHostToDevice));
-    for (int test=0;test<14;++test) {
+    for (bool device:{false,true}) for (int test=0;test<14;++test) {
         auto p=fixture();
         State host{}; host.command.substeps=8; host.merit=10; host.trust_state=.2;
         host.trust_control=1; host.polish_left=4; host.result.virtual_inf=INFINITY;
@@ -52,7 +54,12 @@ void controller() {
         CUDA(cudaMemcpy(dm,&metrics,sizeof(metrics),cudaMemcpyHostToDevice));
         CUDA(cudaMemcpy(states,zeros.data(),28*sizeof(double),cudaMemcpyHostToDevice));
         CUDA(cudaMemset(controls,0,16*sizeof(double)));
-        decide<<<1,1>>>(ds,p,dm,dx,4,1,1,qualified,1,records,parameters);
+        spacepdhcg_gtoc12_qoco_report report{};
+        report.qualified=qualified; report.qoco_status=2;
+        CUDA(cudaMemcpy(device_report,&report,sizeof(report),cudaMemcpyHostToDevice));
+        // Opposite host qualification and status prove the device packet wins.
+        decide<<<1,1>>>(ds,p,dm,dx,4,1,1,device ? !qualified : qualified,1,records,parameters,
+            device ? device_report : nullptr);
         accept_candidate<<<2,256>>>(ds,4,dx,states,controls);
         CUDA(cudaGetLastError()); CUDA(cudaDeviceSynchronize());
         CUDA(cudaMemcpy(&host,ds,sizeof(host),cudaMemcpyDeviceToHost));
@@ -60,6 +67,7 @@ void controller() {
         CUDA(cudaMemcpy(got.data(),states,28*sizeof(double),cudaMemcpyDeviceToHost));
         const bool accepted=test==3 || test==4 || test==5 || test==6 || test==8 || test==10;
         REQUIRE(record.accepted==accepted); REQUIRE(host.result.iterations==prior+1);
+        REQUIRE(record.qoco_status==(device ? 2 : 1));
         for (double value:got) REQUIRE(value==(accepted ? 2.0 : 0.0));
         if (test==0 || test==7 || test==13) REQUIRE(record.conic_rejected && host.trust_state==.1);
         if (test==1) REQUIRE(host.command.done && host.result.status==2);
@@ -82,6 +90,7 @@ void controller() {
     }
     CUDA(cudaFree(ds)); CUDA(cudaFree(dm)); CUDA(cudaFree(dx)); CUDA(cudaFree(states));
     CUDA(cudaFree(controls)); CUDA(cudaFree(records)); CUDA(cudaFree(parameters));
+    CUDA(cudaFree(device_report));
 }
 
 void reductions(int nodes,bool poison) {

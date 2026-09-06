@@ -57,6 +57,11 @@ cudaError_t qoco_gpu_audit_download_async(QocoGpuAudit*, cudaStream_t, QocoAudit
 // transitional host dispatch. An unknown ABI produces status -1.
 cudaError_t qoco_gpu_audit_replay_status(QocoGpuAudit*, const int* completion_header,
                                       cudaStream_t, const QocoReplayStatus**);
+// Bootstrap bridge for a synchronous priming solve; subsequent replay status
+// comes directly from the device completion packet.
+cudaError_t qoco_gpu_audit_publish_status(QocoGpuAudit*, int status, int iterations,
+                                       cudaStream_t, const QocoReplayStatus**);
+const QocoAuditResult* qoco_gpu_audit_device_result(const QocoGpuAudit*);
 QocoAuditTransfers qoco_gpu_audit_transfers(const QocoGpuAudit*);
 QocoAuditMemory qoco_gpu_audit_memory(const QocoGpuAudit*);
 void qoco_gpu_audit_destroy(QocoGpuAudit*);

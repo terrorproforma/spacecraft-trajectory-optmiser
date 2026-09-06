@@ -388,6 +388,21 @@ namespace {
 __global__ void compact_replay_status(const int* header, QocoReplayStatus* output) {
     *output=header[0]==1 ? QocoReplayStatus{header[1],header[2]} : QocoReplayStatus{-1,0};
 }
+__global__ void publish_replay_status(int status,int iterations,QocoReplayStatus* output) {
+    *output={status,iterations};
+}
+}
+cudaError_t qoco_gpu_audit_publish_status(QocoGpuAudit* w,int status,int iterations,
+    cudaStream_t stream,const QocoReplayStatus** output) {
+    if (output) *output=nullptr;
+    if (!w || !output) return cudaErrorInvalidValue;
+    publish_replay_status<<<1,1,0,stream>>>(status,iterations,w->replay_status.data);
+    const auto code=cudaGetLastError();
+    if (code==cudaSuccess) *output=w->replay_status.data;
+    return code;
+}
+const QocoAuditResult* qoco_gpu_audit_device_result(const QocoGpuAudit* w) {
+    return w ? w->result.data : nullptr;
 }
 cudaError_t qoco_gpu_audit_replay_status(QocoGpuAudit* w, const int* header,
     cudaStream_t stream, const QocoReplayStatus** output) {

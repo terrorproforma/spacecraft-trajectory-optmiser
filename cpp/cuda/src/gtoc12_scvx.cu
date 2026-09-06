@@ -5,6 +5,8 @@
 #include <chrono>
 #include <climits>
 #include <cmath>
+#include <cstdlib>
+#include <cstdio>
 #include "../internal/gtoc12_seed.cuh"
 
 namespace {
@@ -96,7 +98,12 @@ __device__ void shrink(State* s, Settings p) {
 
 __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
     int nodes, int free_dep, int free_arr, int qualified, int qoco_status,
-    Record* records, spacepdhcg_gtoc12_conic_parameters* conic) {
+    Record* records, spacepdhcg_gtoc12_conic_parameters* conic,
+    const spacepdhcg_gtoc12_qoco_report* device_report=nullptr) {
+    if (device_report) {
+        qualified=device_report->qualified;
+        qoco_status=device_report->qoco_status;
+    }
     const int iteration=++s->result.iterations;
     auto& record=records[iteration-1];
     record={}; record.iteration=iteration; record.qoco_status=qoco_status;
@@ -252,6 +259,29 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics);
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };
+    struct ConsumerContext {
+        const decltype(measure)* measure;
+        Workspace* workspace;
+        Settings settings;
+        int nodes,free_dep,free_arr,substeps;
+    } consumer_context{&measure,&w,p,nodes,free_dep,free_arr,p.substeps};
+    const auto consume=+[](void* opaque,const spacepdhcg_gtoc12_qoco_report* report,
+        const double* x,void* stream) -> int {
+        auto& c=*static_cast<ConsumerContext*>(opaque);
+        auto& w=*c.workspace;
+        if (stream!=w.stream) return 2;
+        // Speculative measurement handles invalid numbers on device; acceptance
+        // is always gated by the independent conic qualification in decide.
+        const int status=(*c.measure)(x,x+7*c.nodes,c.substeps,true);
+        if (status) return status;
+        decide<<<1,1,0,w.stream>>>(w.state,c.settings,w.metrics,x,c.nodes,c.free_dep,c.free_arr,
+            0,-1,w.records,w.parameters,report);
+        accept_candidate<<<std::min(256,(7*c.nodes+255)/256),256,0,w.stream>>>(
+            w.state,c.nodes,x,w.states,w.controls);
+        return cudaGetLastError()==cudaSuccess ? 0 : 2;
+    };
+    const char* device_qualification=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION");
+    const bool consume_on_device=device_qualification && device_qualification[0]=='1';
     initialize<<<1,1,0,w.stream>>>(w.state,p,w.parameters);
     if ((code=measure(w.states,w.controls,p.substeps,false))) return code;
     set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);
@@ -270,15 +300,23 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         if (std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()>p.time_limit_s) {
             timeout=1; break;
         }
-        code=spacepdhcg_gtoc12_qoco_solve_device(w.qoco,w.states,w.controls,w.parameters,
-            command.substeps,w.stream,&reports[attempts]);
+        int consumed=0;
+        consumer_context.substeps=command.substeps;
+        code=spacepdhcg_gtoc12_qoco_solve_device_with_consumer(w.qoco,w.states,w.controls,w.parameters,
+            command.substeps,w.stream,&reports[attempts],consume_on_device ? consume : nullptr,
+            &consumer_context,&consumed);
         if (code!=0 && code!=4) return code;
+        if (!consumed) {
         const double* x{};
         if (spacepdhcg_gtoc12_qoco_primal(w.qoco,&x)) return 2;
         if (code==0 && (code=measure(x,x+7*nodes,command.substeps,true))) return code;
         decide<<<1,1,0,w.stream>>>(w.state,p,w.metrics,x,nodes,free_dep,free_arr,
             reports[attempts].qualified,reports[attempts].qoco_status,w.records,w.parameters);
         accept_candidate<<<std::min(256,(7*nodes+255)/256),256,0,w.stream>>>(w.state,nodes,x,w.states,w.controls);
+        }
+        if (consumed && std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION_TRACE"))
+            std::fprintf(stderr,"DEVICE_QUALIFICATION iteration=%d qualified=%d status=%d\n",
+                attempts+1,reports[attempts].qualified,reports[attempts].qoco_status);
         if (!read_command()) return 2;
         if (command.refresh) {
             if ((code=measure(w.states,w.controls,command.substeps,false))) return code;

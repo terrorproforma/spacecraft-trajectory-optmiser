@@ -508,7 +508,8 @@ bool solve_with_reduction_scope(spacepdhcg_native_qoco* workspace, int* status) 
 }
 
 bool solve_with_device_audit(spacepdhcg_native_qoco* w, cudaStream_t stream,
-    double* primal, double* dual, int* status, QocoAuditResult* audit, bool* replayed) {
+    double* primal, double* dual, int* status, QocoAuditResult* audit, bool* replayed,
+    spacepdhcg_native_qoco_consumer consumer, void* context) {
     *replayed=false;
     const char* enabled=std::getenv("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY");
     if (!enabled || enabled[0]!='1') return solve_with_reduction_scope(w,status);
@@ -538,6 +539,7 @@ bool solve_with_device_audit(spacepdhcg_native_qoco* w, cudaStream_t stream,
         cudaMemcpyAsync(primal,output.x,w->variables*sizeof(double),cudaMemcpyDeviceToDevice,stream)!=cudaSuccess ||
         cudaEventRecord(w->replay_events[2],stream)!=cudaSuccess) return false;
     ++w->report.d2d_copy_count; w->report.d2d_bytes+=w->variables*sizeof(double);
+    if (consumer && consumer(context,device_status,device_audit,stream)!=cudaSuccess) return false;
     if (qoco_gpu_audit_download_async(w->gpu_audit,stream,audit)!=cudaSuccess ||
         cudaMemcpyAsync(&completion,device_status,sizeof(completion),cudaMemcpyDeviceToHost,stream)!=cudaSuccess)
         return false;
@@ -1500,7 +1502,8 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
     spacepdhcg_cuda_warm_start_mode requested_warm,
     double* device_primal,
     double* device_dual,
-    spacepdhcg_native_qoco_report* report
+    spacepdhcg_native_qoco_report* report,
+    spacepdhcg_native_qoco_consumer consumer=nullptr, void* context=nullptr
 ) {
     if (workspace == nullptr || problem == nullptr || device_primal == nullptr
         || device_dual == nullptr || report == nullptr) {
@@ -1745,7 +1748,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
     // settings. Retain that path until its retry policy is device-controlled.
     const bool invoked = warm ? solve_with_reduction_scope(workspace,&status_code)
         : solve_with_device_audit(workspace,stream,device_primal,device_dual,
-            &status_code,&replay_audit,&replay_audited);
+            &status_code,&replay_audit,&replay_audited,consumer,context);
     if (!replay_audited) workspace->report.solve_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - solve_start
     ).count();
@@ -1889,7 +1892,33 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         return finish(SPACEPDHCG_CUDA_NUMERICAL_FAILURE);
     }
     workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_NONE;
+    if (consumer && !replay_audited) {
+        const QocoReplayStatus* device_status{};
+        auto result=qoco_gpu_audit_publish_status(workspace->gpu_audit,status_code,
+            workspace->report.iterations,stream,&device_status);
+        if (result==cudaSuccess) result=consumer(context,device_status,
+            qoco_gpu_audit_device_result(workspace->gpu_audit),stream);
+        // Drain even after a failed launch: the consumer context is borrowed.
+        const auto waited=cudaStreamSynchronize(stream);
+        if (result!=cudaSuccess || waited!=cudaSuccess) return finish(SPACEPDHCG_CUDA_RUNTIME_ERROR);
+    }
     return finish(SPACEPDHCG_CUDA_SUCCESS);
+}
+
+spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve_with_consumer(
+    spacepdhcg_native_qoco* w, const spacepdhcg_cuda_scvx_problem* p, cudaStream_t stream,
+    double* primal, double* dual, spacepdhcg_native_qoco_report* report,
+    spacepdhcg_native_qoco_consumer consumer, void* context) {
+    try {
+        return native_qoco_update_solve_impl(w,p,stream,SPACEPDHCG_CUDA_WARM_START_NONE,
+            primal,dual,report,consumer,context);
+    } catch (const std::bad_alloc&) {
+        cudaStreamSynchronize(stream);
+        return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    } catch (...) {
+        cudaStreamSynchronize(stream);
+        return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+    }
 }
 
 spacepdhcg_cuda_status spacepdhcg_native_qoco_create(

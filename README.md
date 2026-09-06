@@ -116,6 +116,12 @@ GPU audit for cold subproblem solves, removing the CPU wait between them. It
 passes 324 regression tests and all 36 complete-transfer accuracy gates while
 retaining the 64-byte update-report limit. Final reporting and outer SCvx control
 still involve the host; no reliable additional overall speedup is established.
+Experimental native core v129 extends the same stream through objective
+qualification, nonlinear candidate measurement and the SCvx accept/reject
+decision before host report collection. All 36 measured transfers retain the
+same physics and mass accuracy; the 312 ms median does not establish a reliable
+additional gain given run-to-run variation. Full device dispatch and setup
+remain unfinished.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
@@ -124,7 +130,8 @@ See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATIO
 [GPU initialisation and v124 evidence](docs/QOCO_GPU_INITIALIZATION.md),
 [GPU terminal handling and v125 evidence](docs/QOCO_GPU_TERMINAL.md),
 [device completion and v126 replay evidence](docs/QOCO_GPU_REPLAY.md),
-[native replay and v128 audit integration](docs/QOCO_NATIVE_REPLAY.md), and
+[native replay and v128 audit integration](docs/QOCO_NATIVE_REPLAY.md),
+[GPU qualification and v129 SCvx consumers](docs/GTOC12_DEVICE_QUALIFICATION.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.

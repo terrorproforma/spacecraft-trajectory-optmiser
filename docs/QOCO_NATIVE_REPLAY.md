@@ -1,5 +1,9 @@
 # Native solver replay and independent device audit
 
+For the subsequent objective qualification and SCvx consumer integration, see
+[GPU qualification and SCvx consumers](GTOC12_DEVICE_QUALIFICATION.md). The
+measurements and limitations below describe the v128 checkpoint.
+
 Experimental native core v128 connects the v126 prepared solver replay API to
 the independent CUDA residual audit. After a synchronous priming solve, native
 cold solves can queue solver execution, independent residuals, dual mapping and
