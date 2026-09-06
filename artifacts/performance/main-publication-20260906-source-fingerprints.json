@@ -1,0 +1,37 @@
+{
+  "publication_commit": "85719affdb418752d256dfa83f34bac61f937029",
+  "explanation": "The checkpoint source_sha256 values describe exact working-file bytes at test time, before Git normalization. Git stores ordinary source as LF and this Windows checkout uses CRLF; a post-merge raw-file equality assertion therefore failed. These additional fingerprints identify the published LF source without replacing the original test-time hashes. No source code or solver arithmetic changed in this publication check.",
+  "sources": {
+    "cpp/cuda/src/device_scvx.cu": {
+      "test_time_working_sha256": "fcc72c22dcd19be0c134e71271dfca6a76e43eb0fa187395aa9963062795d397",
+      "published_git_blob_sha256": "8322ae0d5156ffa2087b1e3a03d52eb693ec48c4f5612e7179b367dc6e38735d",
+      "checked_out_working_sha256": "f803eb6d8cc7c14d0a59c1620bed0b76addd1a8868f9baea38ab972fe3b725e5",
+      "checkout_equal_after_crlf_normalization": true
+    },
+    "cpp/cuda/internal/scvx_gather.cuh": {
+      "test_time_working_sha256": "81969152c90eb2777e4b9b613c1c09271592c1edaf1bdb2be0b1d0a3b16f34dc",
+      "published_git_blob_sha256": "81969152c90eb2777e4b9b613c1c09271592c1edaf1bdb2be0b1d0a3b16f34dc",
+      "checked_out_working_sha256": "0c890333b2836b917d182ca84251f2727b70644887e2adb743d77dfdfdb17e9c",
+      "checkout_equal_after_crlf_normalization": true
+    },
+    "cpp/cuda/tests/scvx_gather_benchmark.cu": {
+      "test_time_working_sha256": "b36b32bdba1e73026dbf63dc3dc0c2ea4615cc905d38d7ae149ff413882c5bb4",
+      "published_git_blob_sha256": "b36b32bdba1e73026dbf63dc3dc0c2ea4615cc905d38d7ae149ff413882c5bb4",
+      "checked_out_working_sha256": "d0202106f72810490fa9f8dcaf6dec26206d7417dfd07c909e03a77fa24549d4",
+      "checkout_equal_after_crlf_normalization": true
+    },
+    "cpp/cuda/tests/scvx_gather_launch_probe.cpp": {
+      "test_time_working_sha256": "d6d084103afab6c5146d5626f2e66bdfeddef09a1e45106c486ed00d7f63ad72",
+      "published_git_blob_sha256": "d6d084103afab6c5146d5626f2e66bdfeddef09a1e45106c486ed00d7f63ad72",
+      "checked_out_working_sha256": "af2076606633a87f059515f71741acb00f7e91da2713014d348ac23328badf14",
+      "checkout_equal_after_crlf_normalization": true
+    },
+    "scripts/gpu/benchmark_planner.py": {
+      "test_time_working_sha256": "29bd0e92a4439aa734237ad68e8028684cb6fe326351250c5b91df0a322f5d0c",
+      "published_git_blob_sha256": "29bd0e92a4439aa734237ad68e8028684cb6fe326351250c5b91df0a322f5d0c",
+      "checked_out_working_sha256": "33c84a8032fa820b63dea87fdcc8505af20cd8a900a852f4c68ebc3678bc74da",
+      "checkout_equal_after_crlf_normalization": true
+    }
+  },
+  "raw_download_checksums_after_checkout": 1028
+}

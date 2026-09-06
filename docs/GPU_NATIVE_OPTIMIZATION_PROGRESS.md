@@ -1012,3 +1012,10 @@ seven viewer importer/server tests passed. Downloaded evidence and the generated
 viewer dataset were also rehashed directly from Git's staging area before
 publication. See `artifacts/performance/main-publication-20260906-checks.json`
 and `main-publication-20260906-evidence.json`.
+
+Source fingerprint portability: the gather checkpoint records exact test-time
+working-file bytes. Git normalizes ordinary source line endings, so those raw
+hashes need not match a later Windows checkout. Published Git-blob fingerprints
+and the post-checkout download recheck are retained in
+`artifacts/performance/main-publication-20260906-source-fingerprints.json`;
+the original test-time evidence is unchanged.
