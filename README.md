@@ -137,6 +137,11 @@ guard, removing its intermediate download/wait after setup. All 36 complete
 transfers pass the unchanged physics/mass gates; no additional speedup is
 established. Coast diagnostics reproduce an existing strict constraint-gate
 failure on both the new and published runtimes; that variability remains open.
+Experimental core v134 lets captured interval integration consume GPU step-count
+and enable flags, and refreshes the SCvx reference after switching to polishing
+without a host branch or an extra command wait. All 36 complete transfers retain
+the same physics/mass gates. The 364 ms median does not establish another
+speedup; per-attempt host dispatch and initial setup remain unfinished.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
@@ -149,7 +154,8 @@ See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATIO
 [GPU qualification and v129 SCvx consumers](docs/GTOC12_DEVICE_QUALIFICATION.md),
 [queued numerical updates and v131 evidence](docs/QOCO_NUMERIC_REPLAY.md),
 [device validation and v132 evidence](docs/QOCO_DEVICE_VALIDATION.md),
-[assembly guard and v133 evidence](docs/GTOC12_DEVICE_ASSEMBLY_GUARD.md), and
+[assembly guard and v133 evidence](docs/GTOC12_DEVICE_ASSEMBLY_GUARD.md),
+[device integration control and v134 evidence](docs/GTOC12_DEVICE_REFRESH.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.

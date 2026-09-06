@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 namespace {
@@ -73,6 +74,57 @@ void run(int hold) {
     }
     require(spacepdhcg_gtoc12_discretisation_launch_device(w, device_states, device_controls, 0, 1, stream) == 1, "reject zero substeps");
     check(cudaGraphExecDestroy(executable)); check(cudaGraphDestroy(graph));
+    int *device_substeps, *device_enabled;
+    check(cudaMalloc(&device_substeps,sizeof(int))); check(cudaMalloc(&device_enabled,sizeof(int)));
+    require(spacepdhcg_gtoc12_discretisation_launch_controlled_device(w,device_states,device_controls,
+        nullptr,device_enabled,1,stream)==1,"reject missing device substeps");
+    const auto snapshot=[&]() {
+        std::vector<double> values(aa.size()+bb.size()+cc.size()+result.size());
+        size_t offset=0;
+        for (auto entry : std::initializer_list<std::pair<const double*,size_t>>{{a,aa.size()}, {b,bb.size()},
+                           {c,cc.size()}, {propagated,result.size()}}) {
+            check(cudaMemcpyAsync(values.data()+offset,entry.first,entry.second*sizeof(double),cudaMemcpyDeviceToHost,stream));
+            offset+=entry.second;
+        }
+        check(cudaStreamSynchronize(stream));
+        return values;
+    };
+    for (int linearise : {0,1}) {
+        check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeThreadLocal));
+        require(spacepdhcg_gtoc12_discretisation_launch_controlled_device(w,device_states,device_controls,
+            device_substeps,device_enabled,linearise,stream)==0,"controlled capture");
+        check(cudaStreamEndCapture(stream,&graph));
+        check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+        // Same graph: dynamic accuracy, disabled work, bad controls, recovery.
+        for (auto config : std::initializer_list<std::pair<int,int>>{{1,1},{8,1},{16,-1},{0,1},{-3,1},{8,0},{16,1}}) {
+            const int substeps=config.first, enabled=config.second;
+            if (enabled && substeps>0)
+                require(spacepdhcg_gtoc12_discretisation_launch_device(w,device_states,device_controls,
+                    substeps,linearise,stream)==0,"fixed reference");
+            auto expected=snapshot();
+            int previous_bad=-1;
+            check(cudaMemcpyAsync(&previous_bad,invalid,sizeof(int),cudaMemcpyDeviceToHost,stream));
+            check(cudaMemcpyAsync(device_substeps,&substeps,sizeof(int),cudaMemcpyHostToDevice,stream));
+            check(cudaMemcpyAsync(device_enabled,&enabled,sizeof(int),cudaMemcpyHostToDevice,stream));
+            check(cudaGraphLaunch(executable,stream));
+            int bad=-1;
+            check(cudaMemcpyAsync(&bad,invalid,sizeof(int),cudaMemcpyDeviceToHost,stream));
+            auto actual=snapshot();
+            require(std::memcmp(expected.data(),actual.data(),actual.size()*sizeof(double))==0,
+                "controlled dynamics differs from fixed reference or modified disabled/invalid outputs");
+            require(bad==(enabled ? int(substeps<1) : previous_bad),"controlled validity and disabled preservation");
+        }
+        check(cudaGraphExecDestroy(executable)); check(cudaGraphDestroy(graph));
+    }
+    // Null enable means always run. An invalid preceding graph must recover.
+    int substeps=8;
+    check(cudaMemcpyAsync(device_substeps,&substeps,sizeof(int),cudaMemcpyHostToDevice,stream));
+    require(spacepdhcg_gtoc12_discretisation_launch_controlled_device(w,device_states,device_controls,
+        device_substeps,nullptr,1,stream)==0,"unconditional controlled launch");
+    int bad=-1;
+    check(cudaMemcpyAsync(&bad,invalid,sizeof(int),cudaMemcpyDeviceToHost,stream));
+    check(cudaStreamSynchronize(stream)); require(bad==0,"unconditional validity");
+    check(cudaFree(device_substeps)); check(cudaFree(device_enabled));
     check(cudaStreamDestroy(stream)); check(cudaFree(device_states)); check(cudaFree(device_controls));
     spacepdhcg_gtoc12_discretisation_destroy(w);
     times[1] = times[0];
@@ -82,5 +134,5 @@ void run(int hold) {
 }
 int main() {
     run(0); run(1);
-    std::puts("GTOC12 device API: both holds, 24 changing-input graph replays, analytic mass and affine closure pass");
+    std::puts("GTOC12 device API: both holds, 24 input replays, 28 controlled replays, analytic mass and affine closure pass");
 }

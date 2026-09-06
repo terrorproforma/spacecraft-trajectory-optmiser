@@ -32,6 +32,18 @@ void spacepdhcg_gtoc12_discretisation_destroy(spacepdhcg_gtoc12_discretisation* 
 int spacepdhcg_gtoc12_discretisation_launch_device(
     spacepdhcg_gtoc12_discretisation* workspace, const double* device_states,
     const double* device_controls, int substeps, int linearise, void* cuda_stream);
+/* Capture-compatible scheduling: substeps is read on the GPU at execution time.
+ * enabled may be null (always run); zero preserves every output, including the
+ * invalid flag. Any nonzero enables execution. Enabled substeps < 1 sets invalid
+ * without changing numerical outputs. The return code only describes enqueue
+ * success; consumers must check device_invalid before using numerical outputs.
+ * Both scalar inputs follow the same device, lifetime, ordering and non-aliasing
+ * contract as states/controls. No allocation, host download or synchronization.
+ */
+int spacepdhcg_gtoc12_discretisation_launch_controlled_device(
+    spacepdhcg_gtoc12_discretisation* workspace, const double* device_states,
+    const double* device_controls, const int* device_substeps,
+    const int* device_enabled, int linearise, void* cuda_stream);
 int spacepdhcg_gtoc12_discretisation_outputs(
     spacepdhcg_gtoc12_discretisation* workspace, const double** a, const double** b,
     const double** c, const double** propagated, const int** device_invalid);

@@ -25,7 +25,8 @@ struct Metrics { double fuel, penalty, virtual_sum, defect, virtual_inf, step, i
 __global__ void reduce_metrics(int nodes, int variables, const double* candidate,
     const double* controls, const double* virtuals, const double* reference,
     const double* reference_controls, const double* propagated, const int* invalid,
-    const double* fuel, double tolerance, Metrics* partial) {
+    const double* fuel, double tolerance, Metrics* partial, const int* enabled=nullptr) {
+    if (enabled && !*enabled) return;
     __shared__ double values[7][256];
     const int tid = threadIdx.x;
     double v[7] = {};
@@ -57,7 +58,8 @@ __global__ void reduce_metrics(int nodes, int variables, const double* candidate
         values[3][0], values[4][0], values[5][0], fmax(values[6][0], double(*invalid))};
 }
 
-__global__ void finish_metrics(int count, const Metrics* partial, Metrics* result) {
+__global__ void finish_metrics(int count, const Metrics* partial, Metrics* result, const int* enabled=nullptr) {
+    if (enabled && !*enabled) return;
     __shared__ double values[7][256];
     const int tid = threadIdx.x;
     Metrics m = tid < count ? partial[tid] : Metrics{};
@@ -84,7 +86,8 @@ __global__ void initialize(State* s, Settings p, spacepdhcg_gtoc12_conic_paramet
         p.radius_floor,p.vinf_max,p.smoothness_weight};
 }
 
-__global__ void set_reference(State* s, const Metrics* m, Settings p) {
+__global__ void set_reference(State* s, const Metrics* m, Settings p, bool only_refresh=false) {
+    if (only_refresh && !s->command.refresh) return;
     s->merit=m->fuel+p.virtual_weight*m->penalty;
     s->result.max_defect=m->defect;
     s->command.refresh=0;
@@ -282,6 +285,19 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     };
     const char* device_qualification=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION");
     const bool consume_on_device=device_qualification && device_qualification[0]=='1';
+    const char* refresh_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH");
+    const bool refresh_on_device=refresh_option && refresh_option[0]=='1';
+    const auto refresh_reference=[&]() {
+        const int* enabled=&w.state->command.refresh;
+        const int status=spacepdhcg_gtoc12_discretisation_launch_controlled_device(
+            w.dynamics,w.states,w.controls,&w.state->command.substeps,enabled,0,w.stream);
+        if (status) return status;
+        reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,7*nodes,w.states,w.controls,nullptr,
+            nullptr,nullptr,propagated,invalid,w.fuel,p.conic_tolerance,w.partial,enabled);
+        finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics,enabled);
+        set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p,true);
+        return cudaGetLastError()==cudaSuccess ? 0 : 2;
+    };
     initialize<<<1,1,0,w.stream>>>(w.state,p,w.parameters);
     if ((code=measure(w.states,w.controls,p.substeps,false))) return code;
     set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);
@@ -317,8 +333,9 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         if (consumed && std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION_TRACE"))
             std::fprintf(stderr,"DEVICE_QUALIFICATION iteration=%d qualified=%d status=%d\n",
                 attempts+1,reports[attempts].qualified,reports[attempts].qoco_status);
+        if (refresh_on_device && (code=refresh_reference())) return code;
         if (!read_command()) return 2;
-        if (command.refresh) {
+        if (!refresh_on_device && command.refresh) {
             if ((code=measure(w.states,w.controls,command.substeps,false))) return code;
             set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);
             if (!read_command()) return 2;
