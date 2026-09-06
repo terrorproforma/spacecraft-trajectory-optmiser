@@ -16,12 +16,19 @@ struct spacepdhcg_gtoc12_discretisation {
 namespace {
 constexpr int dimension = 7 + 49 + 4 * 28;
 
-template <bool Linearise>
+template <bool Linearise, bool Controlled = false>
 __global__ void interval_kernel(
     int intervals, int stencil, int substeps, double kappa, double mass_flow,
     const double* times, const double* states, const double* controls,
-    double* out_a, double* out_b, double* out_c, double* propagated, int* invalid
+    double* out_a, double* out_b, double* out_c, double* propagated, int* invalid,
+    const int* device_substeps = nullptr, const int* enabled = nullptr
 ) {
+    if constexpr (Controlled) {
+        // Uniform across the block, before any barrier or numerical read.
+        if (enabled && !*enabled) return;
+        substeps = *device_substeps;
+        if (substeps < 1) return;  // The preceding reset kernel marked invalid.
+    }
     const int interval = static_cast<int>(blockIdx.x);
     const int tid = static_cast<int>(threadIdx.x);
     const int width = Linearise ? 56 + stencil * 28 : 7;
@@ -131,6 +138,9 @@ bool correct_device(const spacepdhcg_gtoc12_discretisation* w) {
     int device = -1;
     return w && cudaGetDevice(&device) == cudaSuccess && device == w->device;
 }
+__global__ void reset_controlled_invalid(const int* substeps, const int* enabled, int* invalid) {
+    if (!enabled || *enabled) *invalid = *substeps < 1;
+}
 }
 
 extern "C" void spacepdhcg_gtoc12_discretisation_destroy(spacepdhcg_gtoc12_discretisation* w) {
@@ -193,6 +203,24 @@ extern "C" int spacepdhcg_gtoc12_discretisation_launch_device(
     else
         interval_kernel<false><<<w->intervals, 32, 0, stream>>>(w->intervals, w->stencil, substeps,
             w->kappa, w->mass_flow, w->times, states, controls, w->a, w->b, w->c, w->propagated, w->invalid);
+    return cudaGetLastError() == cudaSuccess ? 0 : 2;
+}
+
+extern "C" int spacepdhcg_gtoc12_discretisation_launch_controlled_device(
+    spacepdhcg_gtoc12_discretisation* w, const double* states, const double* controls,
+    const int* substeps, const int* enabled, int linearise, void* stream_pointer
+) {
+    if (!correct_device(w) || !states || !controls || !substeps || (linearise != 0 && linearise != 1)) return 1;
+    auto stream = static_cast<cudaStream_t>(stream_pointer);
+    reset_controlled_invalid<<<1, 1, 0, stream>>>(substeps, enabled, w->invalid);
+    if (linearise)
+        interval_kernel<true, true><<<w->intervals, 128, 0, stream>>>(w->intervals, w->stencil, 0,
+            w->kappa, w->mass_flow, w->times, states, controls, w->a, w->b, w->c, w->propagated,
+            w->invalid, substeps, enabled);
+    else
+        interval_kernel<false, true><<<w->intervals, 32, 0, stream>>>(w->intervals, w->stencil, 0,
+            w->kappa, w->mass_flow, w->times, states, controls, w->a, w->b, w->c, w->propagated,
+            w->invalid, substeps, enabled);
     return cudaGetLastError() == cudaSuccess ? 0 : 2;
 }
 
