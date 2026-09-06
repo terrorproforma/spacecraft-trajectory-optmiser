@@ -47,6 +47,24 @@ int spacepdhcg_gtoc12_qoco_solve_device(spacepdhcg_gtoc12_qoco*,
     const double* states, const double* controls,
     const spacepdhcg_gtoc12_conic_parameters*, int substeps, void* stream,
     spacepdhcg_gtoc12_qoco_report*);
+/* Host callback enqueues GPU work on the supplied stream; it must not throw.
+ * report and primal are DEVICE pointers, borrowed until next solve. Only
+ * qualification/status/iterations/tolerance/residuals/objectives are populated
+ * in the device report; timing/counter/failure fields are host reporting only.
+ * The callback must gate acceptance of primal on device report->qualified.
+ * Return 0 on successful submission, nonzero on error. The solve drains work
+ * before returning. consumed is set only after successful callback submission;
+ * failed synchronous priming does not invoke it. Ordinary replay invokes it
+ * before host status collection, including unqualified numerical outcomes.
+ */
+typedef int (*spacepdhcg_gtoc12_qoco_consumer)(void* context,
+    const spacepdhcg_gtoc12_qoco_report* device_report, const double* device_primal,
+    void* stream);
+int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc12_qoco*,
+    const double* states, const double* controls,
+    const spacepdhcg_gtoc12_conic_parameters*, int substeps, void* stream,
+    spacepdhcg_gtoc12_qoco_report*, spacepdhcg_gtoc12_qoco_consumer,
+    void* context, int* consumed);
 /* Upload states/controls/parameters and download ONLY qualified primal output.
  * Host primal[variables] is untouched on unqualified solves. Report counters
  * describe the existing native adapter, excluding this bridge and opaque

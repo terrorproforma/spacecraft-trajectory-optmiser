@@ -1,5 +1,6 @@
 #include "spacepdhcg/cuda/gtoc12_qoco_c_api.h"
 #include "native_qoco_adapter.h"
+#include "gtoc12_qoco_qualification.cuh"
 #include <cuda_runtime.h>
 #include <math_constants.h>
 #include <algorithm>
@@ -108,6 +109,7 @@ struct spacepdhcg_gtoc12_qoco {
     double *states{},*controls{};
     int* quadratic_columns{};
     double *objective_partial{},*objective_result{};
+    spacepdhcg_gtoc12_qoco_report* device_report{};
     int objective_blocks{};
     spacepdhcg_gtoc12_conic_parameters* parameters{};
     spacepdhcg_cuda_scvx_problem problem{};
@@ -120,6 +122,28 @@ struct spacepdhcg_gtoc12_qoco {
 };
 
 namespace {
+struct Consumer {
+    spacepdhcg_gtoc12_qoco* w;
+    spacepdhcg_gtoc12_qoco_consumer function;
+    void* context;
+    int* consumed;
+};
+cudaError_t consume_audit(void* opaque, const QocoReplayStatus* status,
+    const QocoAuditResult* audit, cudaStream_t stream) {
+    auto& c=*static_cast<Consumer*>(opaque);
+    auto* w=c.w;
+    objective_partial<<<w->objective_blocks,256,0,stream>>>(w->q.indices.size(),w->dimensions.variables,
+        w->scalar_rows,w->affine_rows,w->q.device_indices,w->quadratic_columns,w->q.values,
+        w->output.q,static_cast<const double*>(w->problem.numeric.scalar_upper.data),
+        static_cast<const double*>(w->problem.numeric.affine_offset.data),w->primal,w->dual,w->objective_partial);
+    objective_finish<<<1,256,0,stream>>>(w->objective_blocks,w->objective_partial,w->objective_result);
+    gtoc12_qoco::qualify<<<1,1,0,stream>>>(status,audit,w->objective_result,w->tolerance,w->device_report);
+    auto error=cudaGetLastError();
+    if (error!=cudaSuccess) return error;
+    if (c.function(c.context,w->device_report,w->primal,stream)) return cudaErrorUnknown;
+    *c.consumed=1;
+    return cudaSuccess;
+}
 bool correct_device(const spacepdhcg_gtoc12_qoco* w) {
     int device=-1; return w && cudaGetDevice(&device)==cudaSuccess && device==w->device;
 }
@@ -147,6 +171,7 @@ extern "C" void spacepdhcg_gtoc12_qoco_destroy(spacepdhcg_gtoc12_qoco* w) {
     cudaFree(w->variable_upper); cudaFree(w->primal); cudaFree(w->dual);
     cudaFree(w->states); cudaFree(w->controls); cudaFree(w->parameters);
     cudaFree(w->quadratic_columns); cudaFree(w->objective_partial); cudaFree(w->objective_result);
+    cudaFree(w->device_report);
     if (w->stream) cudaStreamDestroy(w->stream);
     if (previous>=0 && previous!=w->device) cudaSetDevice(previous);
     delete w;
@@ -232,7 +257,7 @@ extern "C" int spacepdhcg_gtoc12_qoco_create(int intervals,int hold,int free_dep
             || !allocate(&w->controls,(intervals+1)*4) || !allocate(&w->parameters,1)
             || !allocate(&w->quadratic_columns,qcolumns.size())
             || !allocate(&w->objective_partial,3*w->objective_blocks)
-            || !allocate(&w->objective_result,4)) return failed(2);
+            || !allocate(&w->objective_result,4) || !allocate(&w->device_report,1)) return failed(2);
         int offset=0;
         for (auto* m : {&w->q,&w->a,&w->f}) {
             m->values=w->values+offset; offset+=static_cast<int>(m->maps.size());
@@ -272,9 +297,12 @@ extern "C" int spacepdhcg_gtoc12_qoco_primal(spacepdhcg_gtoc12_qoco* w,const dou
     if (!w || !output) return 1;
     *output=w->primal; return 0;
 }
-extern "C" int spacepdhcg_gtoc12_qoco_solve_device(spacepdhcg_gtoc12_qoco* w,
+extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc12_qoco* w,
     const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
-    int substeps,void* stream_pointer,spacepdhcg_gtoc12_qoco_report* report) {
+    int substeps,void* stream_pointer,spacepdhcg_gtoc12_qoco_report* report,
+    spacepdhcg_gtoc12_qoco_consumer consumer, void* context, int* consumed) {
+    if (!consumed) return 1;
+    *consumed=0;
     if (!report) return 1;
     *report={}; report->qoco_status=-1;
     report->primal_residual=report->dual_residual=std::numeric_limits<double>::infinity();
@@ -306,8 +334,12 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_device(spacepdhcg_gtoc12_qoco* w,
         const auto created=spacepdhcg_native_qoco_create_configured(&w->problem,stream,w->ruiz,internal_tolerance,true,&w->solver);
         if (created!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(created); }
     }
-    const auto solved=spacepdhcg_native_qoco_update_solve(w->solver,&w->problem,stream,
-        SPACEPDHCG_CUDA_WARM_START_NONE,w->primal,w->dual,&w->native_report);
+    Consumer callback{w,consumer,context,consumed};
+    const auto solved=consumer
+        ? spacepdhcg_native_qoco_update_solve_with_consumer(w->solver,&w->problem,stream,
+            w->primal,w->dual,&w->native_report,consume_audit,&callback)
+        : spacepdhcg_native_qoco_update_solve(w->solver,&w->problem,stream,
+            SPACEPDHCG_CUDA_WARM_START_NONE,w->primal,w->dual,&w->native_report);
     report_result(w,report);
     if (solved!=SPACEPDHCG_CUDA_SUCCESS) {
         // Failed solves have no fresh audit; never export the prior solve's residuals.
@@ -315,12 +347,16 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_device(spacepdhcg_gtoc12_qoco* w,
         report->absolute_primal_residual=report->absolute_dual_residual=std::numeric_limits<double>::infinity();
         cudaStreamSynchronize(stream); return status_code(solved);
     }
+    if (!*consumed) {
     objective_partial<<<w->objective_blocks,256,0,stream>>>(w->q.indices.size(),d.variables,
         scalar_rows,w->affine_rows,w->q.device_indices,w->quadratic_columns,w->q.values,
         w->output.q,scalar_rhs,static_cast<const double*>(w->problem.numeric.affine_offset.data),
         w->primal,w->dual,w->objective_partial);
     objective_finish<<<1,256,0,stream>>>(w->objective_blocks,w->objective_partial,w->objective_result);
+    }
     double objective[4]{};
+    if (*consumed && cudaMemcpyAsync(&report->qualified,&w->device_report->qualified,sizeof(int),
+        cudaMemcpyDeviceToHost,stream)!=cudaSuccess) { cudaStreamSynchronize(stream); return 2; }
     if (cudaGetLastError()!=cudaSuccess
         || cudaMemcpyAsync(objective,w->objective_result,sizeof(objective),cudaMemcpyDeviceToHost,stream)!=cudaSuccess) {
         cudaStreamSynchronize(stream); return 2;
@@ -328,12 +364,19 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_device(spacepdhcg_gtoc12_qoco* w,
     if (cudaStreamSynchronize(stream)!=cudaSuccess) return 2;
     report->primal_objective=objective[0]; report->dual_objective=objective[1];
     report->absolute_gap=objective[2]; report->relative_gap=objective[3];
-    report->qualified=(report->qoco_status==1 || report->qoco_status==2)
+    if (!*consumed) report->qualified=(report->qoco_status==1 || report->qoco_status==2)
         && std::isfinite(report->primal_residual) && std::isfinite(report->dual_residual)
         && report->primal_residual<=w->tolerance && report->dual_residual<=w->tolerance
         && std::isfinite(objective[0]) && std::isfinite(objective[1])
         && std::isfinite(objective[3]) && objective[3]<=w->tolerance;
     return report->qualified ? 0 : 4;
+}
+extern "C" int spacepdhcg_gtoc12_qoco_solve_device(spacepdhcg_gtoc12_qoco* w,
+    const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
+    int substeps,void* stream,spacepdhcg_gtoc12_qoco_report* report) {
+    int consumed=0;
+    return spacepdhcg_gtoc12_qoco_solve_device_with_consumer(w,states,controls,parameters,
+        substeps,stream,report,nullptr,nullptr,&consumed);
 }
 extern "C" int spacepdhcg_gtoc12_qoco_solve_host(spacepdhcg_gtoc12_qoco* w,
     const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
