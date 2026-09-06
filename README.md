@@ -110,7 +110,10 @@ the independent verifier accept the final fleet. The unrounded internal total
 is 14,047.802874743327 kg.
 
 Compared with the [official leaderboard](https://gtoc12.tsinghua.edu.cn/competition/leaderBoard),
-checked on **6 September 2026**, that score would slot into **8th place**:
+checked on **6 September 2026**, our **bonus-weighted score of 12,805.194 kg**
+would slot into **9th place**. The leaderboard uses `sum_i B_i M_i`, not raw
+returned mass. The independent report already records this weighted value;
+the previous README's 8th-place claim incorrectly compared raw mass with weighted scores.
 
 | Published position | Team / local result | Score (kg) |
 |---|---|---:|
@@ -121,12 +124,21 @@ checked on **6 September 2026**, that score would slot into **8th place**:
 | 5 | TheAntipodes | 15,488.896 |
 | 6 | NUDT-LIPSAM | 15,160.946 |
 | 7 | ∑ TEAM | 14,714.133 |
-| **8th if inserted** | **SpacePDHCG — local verified snapshot** | **14,047.800** |
 | 8 | ATQ | 13,105.762 |
+| **9th if inserted** | **SpacePDHCG — local verified snapshot** | **12,805.194** |
+| 9 | ADL | 12,061.842 |
 
-Using the rounded official-checker score, we are **666.333 kg below seventh**,
-**942.038 kg above ATQ**, and at **62.3% of JPL's winning score**. Matching JPL
-would require another **8,484.872 kg**, approximately **60.4%** above our result.
+On this weighted comparison, we are **300.568 kg below ATQ**, **743.352 kg above
+ADL**, and at **56.8% of JPL's winning score**. Matching JPL would require another
+**9,727.478 weighted kg**. Our score uses the pinned frozen bonus table; historical
+competition scores used the coefficients in effect for their submissions.
+
+The physical haul averages **610.8 kg per ship**. The [ESA GTOC portal](https://sophia.estec.esa.int/gtoc_portal/?page_id=1261)
+reports **719.8 kg/ship** for JPL's 35-ship competition winner and **742.95 kg/ship**
+for Antipodes' 39-ship post-competition fleet (28,975.1 kg raw; 24,474.16 weighted kg).
+The latter is the strongest published post-competition result listed there.
+Counting each team once still places our result approximately ninth; treating
+all three listed post-competition solutions as extra entries places it twelfth.
 
 This is a retrospective comparison with the 2023 competition, not an official
 ranked submission or proof of optimality. It measures fleet solution quality;
@@ -137,6 +149,7 @@ Evidence: [fleet run report](results/lambda/2026-09-06/fleet_master_v11/run_repo
 [official checker report](results/lambda/2026-09-06/fleet_master_v11/official_verification.json)
 (the final `fleet/Result.txt` row),
 [independent verification](results/lambda/2026-09-06/fleet_master_v11/independent_verify.txt),
+[recomputed weighted score and per-asteroid contributions](artifacts/performance/gtoc12-v11-weighted-score-20260906.json),
 and [web visualiser and loading instructions](results/lambda/2026-09-06/README.md).
 
 ## Programme ladder

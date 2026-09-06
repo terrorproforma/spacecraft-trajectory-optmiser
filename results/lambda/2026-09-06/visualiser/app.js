@@ -654,6 +654,9 @@ async function loadComputeDetails() {
     }
     const minutes = (value) => Number.isFinite(value) ? `${(value / 60).toFixed(1)} min` : "—";
     const rows = [
+      ["Weighted score (fixed bonus)", Number.isFinite(meta.weighted_score_fixed_bonus_kg) ? `${meta.weighted_score_fixed_bonus_kg.toFixed(3)} kg` : "—"],
+      ["Raw returned mass / ship", Number.isFinite(meta.raw_kg_per_ship) ? `${meta.raw_kg_per_ship.toFixed(1)} kg` : "—"],
+      ["Historical comparison", meta.retrospective_competition_position ? `${meta.retrospective_competition_position}th if inserted · not an official rank` : "—"],
       ["GPU / hardware", meta.hardware?.gpu || meta.hardware?.fleet_assembly || "—"],
       ["Upstream search GPUs", meta.hardware?.upstream_search || "—"],
       ["Wall time", meta.timing?.wall_human || (meta.timing?.wall_seconds_total != null ? `${(meta.timing.wall_seconds_total / 3600).toFixed(2)} h` : "—")],

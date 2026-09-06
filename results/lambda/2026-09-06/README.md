@@ -32,7 +32,7 @@ Files:
 - download-verified.json: verified download summary.
 - lambda-results.tar.gz: original compressed snapshot.
 
-The fleet has 23 ships, 196 visited/deployed asteroid locations, 194 collected asteroids, and 14047.802874743327 kg collected (official rounded score 14047.8 kg). Both verifier reports pass. It is not proven optimal.
+The fleet has 23 ships, 196 visited/deployed asteroid locations, 194 collected asteroids, and 14047.802874743327 kg collected (official rounded returned mass 14047.8 kg). Its fixed-bonus weighted score is **12805.194102488575 kg**, as recorded in `fleet_master_v11/independent_verify.txt`. That is approximately ninth against the historical competition scores; comparing raw mass directly to those weighted scores incorrectly suggested eighth. Both verifier reports pass. It is not proven optimal.
 
 Viewer import checked the catalogue and solution hashes, manifest, fleet event masses, exact replay samples and Kepler context. It displays 11,677 exact replay samples. Kepler maximum differences: asteroid 3.59e-6 km, Earth 3.07e-7 km. Existing viewer check.mjs passed. Browser inspection confirmed the selected fleet, verifier pass and active WebGL2 on RTX 5090.
 
