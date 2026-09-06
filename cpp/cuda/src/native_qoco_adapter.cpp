@@ -519,6 +519,7 @@ bool solve_with_reduction_scope(spacepdhcg_native_qoco* workspace, int* status) 
 }
 
 spacepdhcg_cuda_status canonical_validation_status(int flags) {
+    if (flags & 16) return SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
     if (flags & 9) return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
     if (flags & 2) return SPACEPDHCG_CUDA_NUMERICAL_FAILURE;
     if (flags & 4) return SPACEPDHCG_CUDA_UNSUPPORTED;
@@ -1067,14 +1068,17 @@ spacepdhcg_cuda_status compile_conversion(spacepdhcg_native_qoco* w,
         ? SPACEPDHCG_CUDA_OUT_OF_MEMORY : SPACEPDHCG_CUDA_INTERNAL_ERROR;
 }
 
+bool conversion_needs_host(const spacepdhcg_native_qoco* w) {
+    const auto enabled=[](const char* name) { const auto* value=std::getenv(name); return value && value[0]=='1'; };
+    return !w->numeric_update_context || w->needs_fresh_solver || w->configured_settings.verbose
+        || enabled("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE") || enabled("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE");
+}
 spacepdhcg_cuda_status refresh_conversion(spacepdhcg_native_qoco* w,
-    const spacepdhcg_cuda_scvx_problem& problem, cudaStream_t stream) {
+    const spacepdhcg_cuda_scvx_problem& problem, cudaStream_t stream, const int* producer_invalid=nullptr) {
     auto& cache = w->conversion;
     const auto& s = problem.canonical_structure;
     const auto& n = problem.numeric;
-    const auto enabled = [](const char* name) { const auto* value = std::getenv(name); return value && value[0] == '1'; };
-    const bool host_values = !w->numeric_update_context || w->needs_fresh_solver || w->configured_settings.verbose
-        || enabled("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE") || enabled("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE");
+    const bool host_values = conversion_needs_host(w);
     const bool deferred=w->queue_validation_allowed && !host_values;
     const int* device_topology{};
     if (deferred) w->validation_pending=true;
@@ -1100,8 +1104,16 @@ spacepdhcg_cuda_status refresh_conversion(spacepdhcg_native_qoco* w,
         inputs.arrays[i] = reinterpret_cast<const double*>(static_cast<const unsigned char*>(views[i].data) + views[i].byte_offset);
     }
     int invalid{};
-    if (deferred) return qoco_gpu_conversion_run_device(cache.device,inputs,device_topology,stream,
-        &w->device_validation)==cudaSuccess ? SPACEPDHCG_CUDA_SUCCESS : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    if (deferred) {
+        if (qoco_gpu_conversion_run_device(cache.device,inputs,device_topology,stream,
+            &w->device_validation)!=cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        if (producer_invalid) {
+            if (qoco_gpu_conversion_include_producer(cache.device,producer_invalid,stream)!=cudaSuccess)
+                return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+            w->report.producer_validation_queued=1;
+        }
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
     const auto status = qoco_gpu_conversion_run(cache.device, inputs,
         host_values ? cache.values.data() : nullptr, &invalid, stream);
     if (status != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
@@ -1564,7 +1576,8 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
     double* device_primal,
     double* device_dual,
     spacepdhcg_native_qoco_report* report,
-    spacepdhcg_native_qoco_consumer consumer=nullptr, void* context=nullptr
+    spacepdhcg_native_qoco_consumer consumer=nullptr, void* context=nullptr,
+    const int* producer_invalid=nullptr
 ) {
     if (workspace == nullptr || problem == nullptr || device_primal == nullptr
         || device_dual == nullptr || report == nullptr) {
@@ -1572,6 +1585,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
     }
     workspace->numeric_update_invalid=false;
     workspace->validation_flags=0;
+    workspace->report.producer_invalid=workspace->report.producer_validation_queued=0;
     const auto enabled=[](const char* name) { const auto* value=std::getenv(name); return value && value[0]=='1'; };
     workspace->queue_validation_allowed=enabled("SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION")
         && enabled("SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY") && enabled("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY")
@@ -1592,6 +1606,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         }
     } pending_update{workspace,stream};
     const auto finish = [&](spacepdhcg_cuda_status status) {
+        workspace->report.producer_invalid=(workspace->validation_flags & 16)!=0;
         *report = workspace->report;
         const auto transfers = qoco_gpu_audit_transfers(workspace->gpu_audit);
         report->h2d_copy_count += transfers.h2d_count;
@@ -1626,9 +1641,25 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_ABI;
         return finish(SPACEPDHCG_CUDA_INVALID_STATE);
     }
+    if (producer_invalid && (!workspace->queue_validation_allowed
+        || workspace->report.solves==0 || conversion_needs_host(workspace))) {
+        workspace->validation_pending=true;
+        const auto copied=cudaMemcpyAsync(&workspace->validation_flags,producer_invalid,sizeof(int),cudaMemcpyDeviceToHost,stream);
+        if (copied==cudaSuccess) { ++workspace->report.d2h_copy_count; workspace->report.d2h_bytes+=sizeof(int); }
+        const auto waited=cudaStreamSynchronize(stream);
+        workspace->validation_pending=false;
+        if (copied!=cudaSuccess || waited!=cudaSuccess) return finish(SPACEPDHCG_CUDA_RUNTIME_ERROR);
+        workspace->validation_flags=workspace->validation_flags ? 16 : 0;
+        producer_invalid=nullptr;
+        if (workspace->validation_flags) {
+            workspace->report.failure=SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL;
+            workspace->report.status_code=3; workspace->report.iterations=0;
+            return finish(SPACEPDHCG_CUDA_NUMERICAL_FAILURE);
+        }
+    }
     if (workspace->report.solves != 0U) {
         const auto update_start = std::chrono::steady_clock::now();
-        auto status = refresh_conversion(workspace, *problem, stream);
+        auto status = refresh_conversion(workspace, *problem, stream,producer_invalid);
         if (status != SPACEPDHCG_CUDA_SUCCESS) {
             workspace->report.failure =
                 status == SPACEPDHCG_CUDA_UNSUPPORTED
@@ -2034,9 +2065,16 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve_with_consumer(
     spacepdhcg_native_qoco* w, const spacepdhcg_cuda_scvx_problem* p, cudaStream_t stream,
     double* primal, double* dual, spacepdhcg_native_qoco_report* report,
     spacepdhcg_native_qoco_consumer consumer, void* context) {
+    return spacepdhcg_native_qoco_update_solve_with_input_guard(w,p,stream,primal,dual,report,consumer,context,nullptr);
+}
+spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve_with_input_guard(
+    spacepdhcg_native_qoco* w, const spacepdhcg_cuda_scvx_problem* p, cudaStream_t stream,
+    double* primal, double* dual, spacepdhcg_native_qoco_report* report,
+    spacepdhcg_native_qoco_consumer consumer, void* context, const int* producer_invalid) {
+    if (report) report->producer_invalid=report->producer_validation_queued=0;
     try {
         return native_qoco_update_solve_impl(w,p,stream,SPACEPDHCG_CUDA_WARM_START_NONE,
-            primal,dual,report,consumer,context);
+            primal,dual,report,consumer,context,producer_invalid);
     } catch (const std::bad_alloc&) {
         cudaStreamSynchronize(stream);
         return SPACEPDHCG_CUDA_OUT_OF_MEMORY;

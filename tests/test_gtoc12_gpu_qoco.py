@@ -144,6 +144,76 @@ def test_missing_extensions_fail_without_fallback(tmp_path, monkeypatch):
             gpu.solve_linearised(states, controls, 8, 0.1, 0.3, 13.0, 0.3, 0.05, 0.02, 0.001)
 
 
+def test_assembly_validation_rejects_finite_bad_parameters_and_recovers(monkeypatch, capfd):
+    model, times, states, controls, boundary, weights = coast_fixture("zoh")
+    params = (0.1, 0.3, 13.0, 0.3, 0.05, 0.02, 0.001)
+    guarded = os.environ.get("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION") == "1"
+    queued = guarded and all(
+        os.environ.get(name) == "1"
+        for name in (
+            "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION",
+            "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY",
+            "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY",
+        )
+    )
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION_TRACE", "1")
+    cases = []
+    for i in range(len(params)):
+        for value in (-1.0, np.nan):
+            changed = list(params)
+            changed[i] = value
+            cases.append((states, controls, changed))
+    for slot, value in ((6, -1.0), (6, np.nan), (0, np.nan)):
+        changed = states.copy()
+        changed[0, slot] = value
+        cases.append((changed, controls, params))
+    changed = controls.copy()
+    changed[1, 0] = np.nan
+    cases.append((states, changed, params))
+
+    with closing(GpuQocoProblem(model, times, "zoh", True, True, boundary, weights, 1e-9)) as gpu:
+        # Invalid initial data must never reach host setup either.
+        with pytest.raises(RuntimeError, match="status 3"):
+            gpu.solve_linearised(states, controls, 8, -1.0, *params[1:])
+        assert gpu.last_report["workspace_creations"] == 0
+        for bad_states, bad_controls, bad_params in cases:
+            # Rebuild, prime zero-Ruiz scaling, then exercise an actual replay.
+            for _ in range(3):
+                ok, _, x = gpu.solve_linearised(states, controls, 8, *params)
+                assert ok, gpu.last_report
+                assert (
+                    max(
+                        gpu.last_report[k]
+                        for k in ("primal_residual", "dual_residual", "relative_gap")
+                    )
+                    <= 1e-9
+                )
+                assert abs(x[7 * 3 + 6] - 1.0) <= 1e-5
+            solved = gpu.last_report["solves"]
+            with pytest.raises(RuntimeError, match="status 3"):
+                gpu.solve_linearised(bad_states, bad_controls, 8, *bad_params)
+            report = gpu.last_report
+            assert not report["qualified"] and report["iterations"] == 0
+            assert all(
+                report[k] is None
+                for k in (
+                    "primal_residual",
+                    "dual_residual",
+                    "absolute_primal_residual",
+                    "absolute_dual_residual",
+                    "primal_objective",
+                    "dual_objective",
+                    "relative_gap",
+                )
+            )
+            if guarded:
+                assert report["qoco_status"] == 3 and report["solves"] == solved
+        assert gpu.solve_linearised(states, controls, 8, *params)[0]
+    trace = capfd.readouterr().err
+    if queued:
+        assert trace.count("GTOC12_ASSEMBLY_VALIDATION queued=1 invalid=1") == len(cases)
+
+
 def test_outer_loop_routes_directly_to_native_and_closes(monkeypatch):
     from spacepdhcg.gtoc12 import low_thrust
 

@@ -5,6 +5,8 @@
 #include <math_constants.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <new>
 #include <type_traits>
@@ -314,12 +316,18 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc
     auto stream=static_cast<cudaStream_t>(stream_pointer);
     const int assembled=spacepdhcg_gtoc12_conic_launch_device(w->conic,states,controls,parameters,substeps,stream);
     if (assembled) { cudaStreamSynchronize(stream); return assembled; }
-    int invalid=0;
-    if (cudaMemcpyAsync(&invalid,w->output.invalid,sizeof(int),cudaMemcpyDeviceToHost,stream)!=cudaSuccess) {
-        cudaStreamSynchronize(stream); return 2;
+    const auto* flag=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION");
+    const bool guarded=w->solver && flag && flag[0]=='1';
+    if (!guarded) {
+        // First setup still consumes host matrices. Later guarded calls combine
+        // this producer flag with canonical validation before numerical replay.
+        int invalid=0;
+        if (cudaMemcpyAsync(&invalid,w->output.invalid,sizeof(int),cudaMemcpyDeviceToHost,stream)!=cudaSuccess) {
+            cudaStreamSynchronize(stream); return 2;
+        }
+        if (cudaStreamSynchronize(stream)!=cudaSuccess) return 2;
+        if (invalid) return 3;
     }
-    if (cudaStreamSynchronize(stream)!=cudaSuccess) return 2;
-    if (invalid) return 3;
     convert_values<<<std::min(1024,(w->count+255)/256),256,0,stream>>>(w->count,w->maps,w->output.a,w->values);
     const auto& d=w->dimensions;
     const int scalar_rows=w->scalar_rows;
@@ -335,17 +343,28 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc
         if (created!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(created); }
     }
     Consumer callback{w,consumer,context,consumed};
-    const auto solved=consumer
+    const auto solved=guarded
+        ? spacepdhcg_native_qoco_update_solve_with_input_guard(w->solver,&w->problem,stream,
+            w->primal,w->dual,&w->native_report,consumer ? consume_audit : nullptr,&callback,w->output.invalid)
+        : consumer
         ? spacepdhcg_native_qoco_update_solve_with_consumer(w->solver,&w->problem,stream,
             w->primal,w->dual,&w->native_report,consume_audit,&callback)
         : spacepdhcg_native_qoco_update_solve(w->solver,&w->problem,stream,
             SPACEPDHCG_CUDA_WARM_START_NONE,w->primal,w->dual,&w->native_report);
     report_result(w,report);
+    if (guarded && std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION_TRACE"))
+        std::fprintf(stderr,"GTOC12_ASSEMBLY_VALIDATION queued=%d invalid=%d\n",
+            w->native_report.producer_validation_queued,w->native_report.producer_invalid);
     if (solved!=SPACEPDHCG_CUDA_SUCCESS) {
         // Failed solves have no fresh audit; never export the prior solve's residuals.
         report->primal_residual=report->dual_residual=std::numeric_limits<double>::infinity();
         report->absolute_primal_residual=report->absolute_dual_residual=std::numeric_limits<double>::infinity();
-        cudaStreamSynchronize(stream); return status_code(solved);
+        cudaStreamSynchronize(stream);
+        if (guarded && w->native_report.producer_invalid) {
+            report->qoco_status=3; report->iterations=0;
+            return 3;
+        }
+        return status_code(solved);
     }
     if (!*consumed) {
     objective_partial<<<w->objective_blocks,256,0,stream>>>(w->q.indices.size(),d.variables,

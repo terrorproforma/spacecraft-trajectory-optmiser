@@ -62,6 +62,8 @@ struct spacepdhcg_native_qoco_report {
     /// Warm-started solves that stalled inaccurate and were re-solved cold (cumulative).
     std::uint64_t warm_inaccurate_cold_retries;
     spacepdhcg_cuda_qoco_failure failure;
+    // Internal producer guard telemetry; not part of the public GTOC12 C ABI.
+    int producer_invalid, producer_validation_queued;
 };
 
 // ``ruiz_iterations`` selects QOCO's own Ruiz equilibration (0 = off, the
@@ -101,6 +103,13 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve_with_consumer(
     spacepdhcg_native_qoco*, const spacepdhcg_cuda_scvx_problem*, cudaStream_t,
     double* device_primal, double* device_dual, spacepdhcg_native_qoco_report*,
     spacepdhcg_native_qoco_consumer, void* context);
+// Producer flag is a borrowed device int on the supplied stream. Any nonzero
+// value must reject the solve, including when all canonical values are finite.
+// Fallback/priming paths collect it before invoking a synchronous solver.
+spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve_with_input_guard(
+    spacepdhcg_native_qoco*, const spacepdhcg_cuda_scvx_problem*, cudaStream_t,
+    double* device_primal, double* device_dual, spacepdhcg_native_qoco_report*,
+    spacepdhcg_native_qoco_consumer, void* context, const int* producer_invalid);
 spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
     spacepdhcg_native_qoco* workspace,
     bool retain_primal
