@@ -113,3 +113,7 @@ records its exact source, runtime, test and measurement evidence. Native PD6
 reports use an older planner executable with dynamically selected QOCO; runtime
 hashes identify the measured combination rather than the planner's embedded
 source-commit label alone.
+
+The subsequent [retained factorisation graph](QOCO_FACTOR_GRAPH.md) removes
+repeated host cuDSS factorisation entrypoint calls. Host IPM/graph dispatch,
+per-solve refinement accounting and initial setup still remain.
