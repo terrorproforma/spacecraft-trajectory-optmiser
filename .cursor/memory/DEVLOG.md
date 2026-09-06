@@ -1076,3 +1076,7 @@ NativeN20memcheckfailsCUDA999(239outstandingallocsafterabort),racecheckexit11,sy
 UserrequestedLambdaaftercomputerreset: temporary/tmp/traj-key.pemmissing;restoredowner-onlycopyfromoriginalwithoutprintingsecret. FreshreadonlySSH08:56UTC H100100%,1607MiB,44C;worker53138/server53183/session2619902live.159groupscompleted+1running(ordinal159),latestgroupall9timeouts. Source1dbcae0unchanged;GTOC12v11stillpassesbothverifiers23ships194collected14047.802874743327kg. NoLambdaGPUoffloadwhilebusy,nojob/sourcechanges. Freshstatus+summaryartifactsafter-reset retained.
 
 Viewer after reset: restarted node serve.mjs --port4178 in results/lambda/2026-09-06/visualiser; execsession7869 intentionallyleftlive. HTTP200+scripts/check.mjs pass, fleetSHA0ebd0dfa unchanged. Browseropen queued, nofreshvisual-renderclaim. CheckactualGitref for diagnosticcheckpointcommit; no productionpromotion.
+
+## 2026-09-06 — README and live leaderboard
+
+Refreshed README with current CUDA implementation boundaries, an explanation of PDHCG and the distinct conic inner method, credited Lhongpei/PDHCG and its QP/conic papers, and compared the verified 14047.8 kg fleet with the official published leaderboard: hypothetical eighth, 666.333 kg below seventh, 62.3% of JPL. All 23 local README links resolve and decimal score arithmetic is checked. No new fleet score or full-GPU completion claimed. See scratchpad for terminal v109 benchmark/sanitizer state; ongoing solver edits are separate and uncommitted.
