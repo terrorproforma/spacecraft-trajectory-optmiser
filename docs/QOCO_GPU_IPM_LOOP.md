@@ -66,6 +66,10 @@ terminal metadata/restoration and native SCvx dispatch still involve the host.
 Retaining the whole graph will require extending the lifetimes of its scalar
 scratch and cuBLAS workspace and handling changing solver settings explicitly.
 
+The later optional [v123 retained-IPM extension](QOCO_RETAINED_IPM.md) implements
+those lifetimes and changing device parameters. It passes the stated accuracy
+gates but has not demonstrated an additional complete-transfer gain over v121.
+
 ## Accuracy and limitations
 
 - Both enabled and disabled v121 pass all 51 trajectory integration tests and
