@@ -18,6 +18,30 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_gpu_transposes(destination: Path, extension: Path) -> None:
+    """Construct owned transpose matrices from existing GPU gather ordering."""
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_gpu_transpose.cuh")
+    path = destination / "algebra/cuda/cuda_linalg.cu"
+    text = path.read_text()
+    marker = '#include "qoco_gather.cuh"'
+    if text.count(marker) != 1:
+        raise RuntimeError("unexpected GPU transpose include site")
+    path.write_text(text.replace(marker, marker + '\n#include "qoco_gpu_transpose.cuh"'))
+    path = destination / "src/qoco_api.c"
+    text = path.read_text()
+    start = text.index("  // When creating transposed matrices,")
+    end = text.index("  // Compute scaling statistics", start)
+    profile = '  qoco_gpu_setup_mark("transposes");\n'
+    profile = profile if profile in text[start:end] else ""
+    text = text[:start] + """  data->At = qoco_gpu_transpose(data->A, data->AtoAt);
+  data->Gt = qoco_gpu_transpose(data->G, data->GtoGt);
+
+""" + profile + text[end:]
+    text = text.replace('#include "backend.h"', '#include "backend.h"\n'
+                        'extern QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix*, QOCOInt*);')
+    path.write_text(text)
+
+
 def patch_restore_inaccurate_best(destination: Path) -> None:
     """Return the best qualified iterate when a solve exits inaccurately."""
     path = destination / "src/qoco_api.c"
@@ -627,6 +651,8 @@ def main() -> None:
                         help="offer opt-in device solution output and GPU primal warm starts")
     parser.add_argument("--gpu-kkt", action="store_true",
                         help="assemble KKT CSR and numerical-update maps on CUDA")
+    parser.add_argument("--gpu-transposes", action="store_true",
+                        help="construct constraint transposes and their update maps on CUDA")
     parser.add_argument("--vector-arena", action="store_true",
                         help="experimental GPU scratch-vector arena (not qualified for promotion)")
     parser.add_argument("--restore-inaccurate-best", action="store_true",
@@ -689,6 +715,7 @@ def main() -> None:
         or args.reset_solve_state
         or args.device_io
         or args.gpu_kkt
+        or args.gpu_transposes
         or args.vector_arena
         or args.restore_inaccurate_best
         or args.checked_cudss_abi
@@ -715,6 +742,8 @@ def main() -> None:
         parser.error("--queued-operators requires --gather")
     if args.device_numeric_updates and not args.gather:
         parser.error("--device-numeric-updates requires --gather")
+    if args.gpu_transposes and not args.gather:
+        parser.error("--gpu-transposes requires --gather")
     if args.device_scalar_reductions and not args.device_cone_reductions:
         parser.error("--device-scalar-reductions requires --device-cone-reductions")
     if args.batched_stopping and not (args.device_scalar_reductions and args.queued_operators):
@@ -1095,6 +1124,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_vector_arena(destination, extension.with_name("qoco_vector_arena.cuh"))
     if args.restore_inaccurate_best:
         patch_restore_inaccurate_best(destination)
+    if args.gpu_transposes:
+        patch_gpu_transposes(destination, extension.with_name("qoco_gpu_transpose.cuh"))
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1127,6 +1158,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "reset_solve_state": True,
         "device_io": args.device_io,
         "gpu_kkt": args.gpu_kkt,
+        "gpu_transposes": args.gpu_transposes,
         "vector_arena": args.vector_arena,
         "restore_inaccurate_best": args.restore_inaccurate_best,
         "host_ruiz_vector_sync": True,

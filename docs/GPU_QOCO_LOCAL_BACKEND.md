@@ -1772,3 +1772,78 @@ No backend default or frozen runtime is replaced.
 - [Cancellation reproduction](../artifacts/performance/scvx-boundary-v72-cancellation.json).
 - [Repeatability including baseline failures](../artifacts/performance/scvx-boundary-v72-repeatability.json).
 - [Landing](../artifacts/performance/scvx-boundary-v72-pd3.json), [N20](../artifacts/performance/scvx-boundary-v72-pd6.json), [N500](../artifacts/performance/scvx-boundary-v72-pd6-500.json) timing distributions.
+
+## Constraint transpose construction on CUDA
+
+`--gpu-transposes` replaces both CPU constraint-transpose constructors and their
+serial inverse-map loops. The source matrix's existing stable GPU gather order
+is already the CSC order of its transpose. A kernel copies each entry into its
+new row/value position and writes the inverse update map; device copies provide
+the column offsets. Every result owns its storage and its own gather topology.
+
+This remains an opt-in architectural path. It still downloads host mirrors and
+inverse maps for legacy Ruiz, inspection and numerical-update compatibility.
+It therefore moves the transpose computation onto CUDA without eliminating all
+setup transfers. It introduces no arithmetic on matrix values and retains exact
+stable ordering, including duplicate entries and signed zeros.
+
+The eight-fixture regression poisons the source host offsets, rows and values
+before construction. It creates two results, destroys their source and one
+sibling, then verifies and re-transposes the survivor. Device data, host mirrors
+and inverse maps match an independent stable reference bit for bit. Cases
+include absent/empty matrices, empty rows/columns, unsorted input, duplicates,
+and a 1031-row/1537-column matrix with 11853 entries.
+
+An isolated benchmark compares the old CPU transpose plus normal constructor
+against the GPU constructor within the same frozen library, using one common
+source matrix and its existing GPU ordering. Each shape has two warmups and
+21 measured samples per strategy. Timings include construction completion and
+compatibility mirrors, and exclude result destruction:
+
+| Synthetic entries | CPU construction median | GPU construction median | Ratio |
+|---|---:|---:|---:|
+| 9,000 | 0.2135 ms | 0.3253 ms | 0.656x |
+| 225,000 | 2.9212 ms | 2.0198 ms | 1.446x |
+| 900,000 | 15.3034 ms | 7.6979 ms | 1.988x |
+
+These are construction timings, not complete solver speedups. The matched
+trajectory batch uses guarded core v72 on both sides and unchanged tolerances;
+all 54 samples qualify, but overall results do not support promotion as a
+faster backend:
+
+| Workload | Old SCvx median | GPU-transpose SCvx median | Inner medians |
+|---|---:|---:|---:|
+| Landing | 157.373 ms | 171.571 ms | 36 → 36 |
+| N20 6DOF | 599.820 ms | 1059.803 ms | 104 → 193 |
+| N500 6DOF | 479.141 ms | 486.956 ms | 34 → 34 |
+
+Complete setup medians decrease in this batch: landing 34.099 → 32.967 ms,
+N20 79.721 → 78.261 ms and N500 133.406 → 116.303 ms. The full solver still has
+iteration variability and significant other costs; these results do not prove
+the transpose change causes a complete-setup improvement of those sizes.
+
+The qualified landing API trace confirms two new entry kernels and two device
+offset copies. Six old matrix-array uploads are replaced by eight mirror/map
+downloads, increasing synchronous copies 545 → 547 and asynchronous copies
+425 → 427. Temporary inverse maps increase allocations 398 → 400 and frees
+307 → 309. Kernel launches increase 7071 → 7073; stream synchronization remains
+89. Avoiding eager compatibility downloads and their temporary allocations is
+the next opportunity for this constructor.
+
+All eight transpose fixtures pass memory, initialization, synchronization and
+race checking. Full landing passes memory/leak checking; full N500 passes
+memory/init/sync checking. The existing numerical-update cases and full
+native/landing/N20/N500 numerical oracles pass. Forced reconstruction after
+caller index-array and stream destruction passes normally and under all four
+tools. No new full N20 sanitizer or N500 racecheck is claimed. Prepared-source
+reproduction is exact.
+
+Frozen QOCO v73 is
+`/home/angus/build-qoco-gpu-gpu-kkt-v73/final/libqoco.so`, SHA256
+`620d3f8c7387c7a344a087c12293d82cbf9588ab14c242a1d8a153322fcf3a51`.
+Core v72, QOCO v68 control and cuDSS 0.8 standard kernels remain unchanged.
+
+- [Checkpoint, test scopes, helper sources and API traces](../artifacts/performance/qoco-gpu-transpose-v73-checkpoint.json).
+- [Isolated construction distribution](../artifacts/performance/qoco-gpu-transpose-v73-microbenchmark.json).
+- [Landing](../artifacts/performance/qoco-gpu-kkt-v73-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v73-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v73-pd6-500.json) complete distributions.
+- [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v73-reproduction.json).

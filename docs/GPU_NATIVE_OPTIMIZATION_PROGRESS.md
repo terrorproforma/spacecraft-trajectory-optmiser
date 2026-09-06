@@ -852,3 +852,19 @@ timing: landing 176.179 → 171.186 ms, N20 570.046 → 648.000 ms, N500 458.284
 465.257 ms. This is a correctness improvement, not a general speedup. The full
 GPU-native goal and inner numerical sensitivity remain open.
 [Complete evidence](GPU_QOCO_LOCAL_BACKEND.md#scvx-convergence-at-a-small-trust-radius).
+
+## Constraint transposes now have a CUDA construction path
+
+The optional `--gpu-transposes` path reuses resident GPU ordering to construct
+both constraint transposes and their update maps. Exact tests cover unsorted
+rows, duplicates, empty matrices, signed zeros and independent ownership after
+the source is destroyed. Poisoned source host arrays cannot affect the result.
+Numerical oracles, scoped sanitizers and reconstruction checks pass.
+
+Large synthetic construction medians improve by 1.446x at 225,000 entries and
+1.988x at 900,000, but 9,000-entry construction regresses. All 54 full benchmark
+samples qualify at unchanged accuracy, while end-to-end timings regress or stay
+nearly flat. The path remains opt-in; no overall speedup or default promotion
+is claimed. Eager compatibility downloads and temporary inverse-map allocations
+are visible in the API trace and remain to be removed.
+[Detailed evidence](GPU_QOCO_LOCAL_BACKEND.md#constraint-transpose-construction-on-cuda).
