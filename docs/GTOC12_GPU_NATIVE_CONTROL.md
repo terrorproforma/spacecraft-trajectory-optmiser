@@ -13,6 +13,12 @@ wall time between subproblems. There is no mid-conic-solve cancellation. These
 remaining operations must be removed or explicitly bounded before claiming the
 whole numerical pipeline is GPU-native.
 
+The optional [v108–v110 QOCO device-control extension](QOCO_DEVICE_CONTROL.md)
+subsequently moves stopping/best-iterate decisions, regularization arithmetic,
+combined-RHS scalars and NaN-direction recovery onto the GPU. Native IPM dispatch
+and setup remain on the host, and the conditional-IR sanitizer issue remains
+unresolved. This extension does not establish an end-to-end speedup.
+
 ## Selection
 
 Use the core and QOCO libraries recorded in the checkpoint. The explicit CLI
