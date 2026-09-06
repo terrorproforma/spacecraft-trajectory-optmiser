@@ -18,6 +18,75 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_metric_graphs(destination: Path, extension: Path) -> None:
+    """Replay existing stopping operators; scope owns graph and captured scratch."""
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_metric_graph.cuh")
+    path = destination / "algebra/cuda/cudss_backend.h"
+    text = path.read_text()
+    marker = "  decltype(&::cublasSetPointerMode) cublasSetPointerMode;"
+    assert text.count(marker) == 1
+    path.write_text(text.replace(marker,
+        "  decltype(&::cublasSetStream) cublasSetStream;\n"
+        "  decltype(&::cublasGetStream) cublasGetStream;\n" + marker))
+    path = destination / "algebra/cuda/cudss_backend.cu"
+    text = path.read_text()
+    marker = "  g_cuda_funcs.cublasSetPointerMode ="
+    assert text.count(marker) == 1
+    extra = ""
+    for name in ["cublasSetStream", "cublasGetStream"]:
+        extra += (f"  g_cuda_funcs.{name} = reinterpret_cast<decltype(&::{name})>(\n"
+                  f'      dlsym(g_cublas_handle, "{name}_v2"));\n')
+    extra += ("  if (!g_cuda_funcs.cublasSetStream || !g_cuda_funcs.cublasGetStream) {\n"
+              "    dlclose(g_cublas_handle); dlclose(g_cusparse_handle);\n"
+              "    dlclose(g_cudss_handle); return 0;\n  }\n")
+    path.write_text(text.replace(marker, extra + marker))
+    path = destination / "algebra/cuda/cuda_linalg.cu"
+    text = path.read_text()
+    text = text.replace('#include "qoco_reduction_scope.cuh"',
+        '#define SPACEPDHCG_QOCO_METRIC_GRAPHS 1\n#include "qoco_reduction_scope.cuh"')
+    replacements = {
+        "ew_product_kernel<<<blocks, threads>>>":
+            "ew_product_kernel<<<blocks, threads, 0, qoco_metric_stream>>>",
+        "scale_arrayf_kernel<<<numBlocks, blockSize>>>":
+            "scale_arrayf_kernel<<<numBlocks, blockSize, 0, qoco_metric_stream>>>",
+        "axpy_kernel<<<numBlocks, blockSize>>>":
+            "axpy_kernel<<<numBlocks, blockSize, 0, qoco_metric_stream>>>",
+        "SpMtv_kernel<<<(M->d_csc_host->n + 255) / 256, 256>>>":
+            "SpMtv_kernel<<<(M->d_csc_host->n + 255) / 256, 256, 0, qoco_metric_stream>>>",
+        "cudaMemset(r, 0, M->d_csc_host->n * sizeof(QOCOFloat))":
+            "cudaMemsetAsync(r, 0, M->d_csc_host->n * sizeof(QOCOFloat), qoco_metric_stream)",
+    }
+    for before, after in replacements.items():
+        if text.count(before) != 1:
+            raise RuntimeError(f"unexpected graph operator site: {before}")
+        text = text.replace(before, after)
+    path.write_text(text)
+    path = destination / "algebra/cuda/qoco_gather.cuh"
+    text = path.read_text()
+    marker = "<<<(matrix->d_csc_host->m + 255) / 256, 256>>>"
+    assert text.count(marker) == 1
+    path.write_text(text.replace(marker,
+        "<<<(matrix->d_csc_host->m + 255) / 256, 256, 0, qoco_metric_stream>>>"))
+    path = destination / "algebra/cuda/qoco_batched_stopping.cuh"
+    text = path.read_text()
+    text = text.replace("} // namespace qoco_batched_stopping",
+        '} // namespace qoco_batched_stopping\n#include "qoco_metric_graph.cuh"')
+    text = text.replace("<<<blocks, 256>>>", "<<<blocks, 256, 0, qoco_metric_stream>>>")
+    text = text.replace("<<<1, 256>>>", "<<<1, 256, 0, qoco_metric_stream>>>")
+    text = text.replace("<<<1, 1>>>", "<<<1, 1, 0, qoco_metric_stream>>>")
+    text = text.replace("cudaMemsetAsync(output, 0, sizeof(double))",
+                        "cudaMemsetAsync(output, 0, sizeof(double), qoco_metric_stream)")
+    text = text.replace("cudaMemsetAsync(scratch + slot, 0, sizeof(double))",
+                        "cudaMemsetAsync(scratch + slot, 0, sizeof(double), qoco_metric_stream)")
+    start = "    product_norm(ei, b, yb, d->p, B);"
+    finish = "    blas(funcs->cublasSetPointerMode(handle, mode));"
+    assert text.count(start) == 1 and text.count(finish) == 1
+    text = text.replace(start, "    const auto enqueue = [&]() {\n" + start)
+    text = text.replace(finish, "    };\n"
+        "    qoco_metric_graph::run<Iteration>(solver, scratch, handle, enqueue);\n" + finish)
+    path.write_text(text)
+
+
 def patch_deferred_transposes(destination: Path, extension: Path) -> None:
     """Retain source matrices and materialize legacy transposes on demand."""
     path = destination / "algebra/cuda/cuda_types.h"
@@ -760,6 +829,8 @@ def main() -> None:
                         help="defer transpose host copies and skip unchanged mirror uploads")
     parser.add_argument("--deferred-transposes", action="store_true",
                         help="materialize compatibility transposes only on explicit access")
+    parser.add_argument("--metric-graphs", action="store_true",
+                        help="capture and replay repeated GPU stopping calculations")
     parser.add_argument("--vector-arena", action="store_true",
                         help="experimental GPU scratch-vector arena (not qualified for promotion)")
     parser.add_argument("--restore-inaccurate-best", action="store_true",
@@ -825,6 +896,7 @@ def main() -> None:
         or args.gpu_transposes
         or args.lazy_transpose_mirrors
         or args.deferred_transposes
+        or args.metric_graphs
         or args.vector_arena
         or args.restore_inaccurate_best
         or args.checked_cudss_abi
@@ -857,6 +929,8 @@ def main() -> None:
         parser.error("--lazy-transpose-mirrors requires --gpu-transposes")
     if args.deferred_transposes and not (args.lazy_transpose_mirrors and args.gpu_kkt):
         parser.error("--deferred-transposes requires --lazy-transpose-mirrors and --gpu-kkt")
+    if args.metric_graphs and not (args.batched_iteration_scalars and args.gather):
+        parser.error("--metric-graphs requires --batched-iteration-scalars and --gather")
     if args.device_scalar_reductions and not args.device_cone_reductions:
         parser.error("--device-scalar-reductions requires --device-cone-reductions")
     if args.batched_stopping and not (args.device_scalar_reductions and args.queued_operators):
@@ -1243,6 +1317,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_lazy_transpose_mirrors(destination, extension.with_name("qoco_lazy_host_mirror.cuh"))
     if args.deferred_transposes:
         patch_deferred_transposes(destination, extension.with_name("qoco_deferred_transpose.cuh"))
+    if args.metric_graphs:
+        patch_metric_graphs(destination, extension.with_name("qoco_metric_graph.cuh"))
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1278,6 +1354,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "gpu_transposes": args.gpu_transposes,
         "lazy_transpose_mirrors": args.lazy_transpose_mirrors,
         "deferred_transposes": args.deferred_transposes,
+        "metric_graphs": args.metric_graphs,
         "vector_arena": args.vector_arena,
         "restore_inaccurate_best": args.restore_inaccurate_best,
         "host_ruiz_vector_sync": True,
@@ -1303,6 +1380,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["algebra/cuda/qoco_gpu_transpose.cuh"] if args.gpu_transposes else []),
             *(["algebra/cuda/qoco_lazy_host_mirror.cuh"] if args.lazy_transpose_mirrors else []),
             *(["algebra/cuda/qoco_deferred_transpose.cuh"] if args.deferred_transposes else []),
+            *(["algebra/cuda/qoco_metric_graph.cuh"] if args.metric_graphs else []),
             *(["include/structs.h", "algebra/cuda/qoco_vector_arena.cuh"]
               if args.vector_arena else []),
             *(["algebra/cuda/qoco_gather.cuh"] if args.gather else []),

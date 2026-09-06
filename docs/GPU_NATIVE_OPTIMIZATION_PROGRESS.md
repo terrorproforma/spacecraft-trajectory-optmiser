@@ -914,3 +914,25 @@ materialized compatibility access and the production deferred path. An old
 test's direct access to an absent empty descriptor was corrected, with its
 failure evidence retained. The full GPU-native goal remains open.
 [Detailed evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#remove-physical-transposes-from-the-normal-gpu-solve-path).
+
+## CUDA Graphs reduce repeated stopping-calculation launch overhead
+
+The optional metric-graph path replays the existing GPU calculations for
+stopping, objective and complementarity. Scope-owned graphs invalidate when
+parameters or buffers change and are released before captured storage. The
+host scalar download and stopping decisions remain. A landing trace replaces
+1700 host kernel-launch calls with graph replay.
+
+Isolated stopping calculations improve 3.771x at 17 variables, 1.996x at 4103
+and 1.077x at 100000. All 90 changing-input comparisons match bit for bit.
+Lifecycle fixtures and full landing pass all four sanitizer tools; scoped
+N500 and recovery checks also pass. All 54 matched trajectory samples qualify
+at unchanged accuracy, but complete timing is mixed: landing 162.590 →
+152.054 ms, N20 725.136 → 1159.010 ms, N500 577.496 → 434.837 ms. Inner counts
+change significantly on N20/N500, and a 656.422 ms landing outlier is retained.
+No general speedup or default promotion is claimed.
+
+Capture still introduces cuBLAS asynchronous allocations, and convergence
+variability remains unresolved. Reducing those allocations, moving remaining
+host decisions and improving conditioning are further work toward the full
+GPU-native goal. [Evidence and exact scopes](GPU_QOCO_LOCAL_BACKEND.md#replay-stopping-calculations-with-cuda-graphs).

@@ -7,6 +7,11 @@ static thread_local cublasHandle_t qoco_scoped_reduction_handle = nullptr;
 static thread_local unsigned int qoco_reduction_scope_depth = 0;
 static thread_local int qoco_reduction_scope_device = -1;
 
+#ifdef SPACEPDHCG_QOCO_METRIC_GRAPHS
+static thread_local cudaStream_t qoco_metric_stream = nullptr;
+static void qoco_release_metric_graphs();
+#endif
+
 #ifdef SPACEPDHCG_QOCO_DEVICE_CONE_REDUCTIONS
 static thread_local double* qoco_scalar_workspace = nullptr;
 static thread_local size_t qoco_scalar_workspace_capacity = 0;
@@ -16,6 +21,9 @@ extern "C" cudaError_t qoco_gpu_acquire_scalar_workspace(size_t count, double** 
     *temporary = qoco_reduction_scope_depth == 0;
     if (*temporary) return cudaMalloc(storage, count * sizeof(double));
     if (count > qoco_scalar_workspace_capacity) {
+#ifdef SPACEPDHCG_QOCO_METRIC_GRAPHS
+        qoco_release_metric_graphs();
+#endif
         auto status = cudaFree(qoco_scalar_workspace);
         qoco_scalar_workspace = nullptr; qoco_scalar_workspace_capacity = 0;
         if (status != cudaSuccess) return status;
@@ -67,6 +75,9 @@ extern "C" void qoco_gpu_end_reduction_scope()
     }
 #endif
 #ifdef SPACEPDHCG_QOCO_DEVICE_CONE_REDUCTIONS
+#ifdef SPACEPDHCG_QOCO_METRIC_GRAPHS
+    qoco_release_metric_graphs();
+#endif
     const auto released = cudaFree(qoco_scalar_workspace);
     qoco_scalar_workspace = nullptr;
     qoco_scalar_workspace_capacity = 0;

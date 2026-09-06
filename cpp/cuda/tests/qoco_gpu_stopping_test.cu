@@ -71,6 +71,10 @@ void run(int n, bool absent, bool zero_p, bool iteration_required) {
     auto end = reinterpret_cast<void (*)()>(dlsym(RTLD_DEFAULT, "qoco_gpu_end_reduction_scope"));
     require(gpu && reference && begin && end, "complete stopping interface");
     require(!iteration_required || iteration_metrics, "iteration metrics required");
+    using Stats = void (*)(unsigned long long*);
+    auto graph_stats = reinterpret_cast<Stats>(dlsym(RTLD_DEFAULT, "qoco_gpu_metric_graph_stats"));
+    unsigned long long before[6]{};
+    if (graph_stats) { graph_stats(before); require(begin() == 0, "graph lifetime scope"); }
     for (int iteration = 0; iteration < 3; ++iteration) {
         std::vector<double> x(n), y(p), z(m), s(m), di(n), ei(p), fi(m), f(m), residual(n + p + m);
         for (int i = 0; i < n; ++i) { x[i] = .4 * std::sin(i * .13 + iteration); di[i] = .7 + .1 * (i % 9); }
@@ -93,9 +97,43 @@ void run(int n, bool absent, bool zero_p, bool iteration_required) {
             std::max({1.0L, std::abs(.5L * xpx + dot(c, x)), std::abs(-.5L * xpx - dot(b, y) - dot(h, z))})};
         if (iteration == 1) { require(begin() == 0 && begin() == 0, "nested metrics scope"); }
         double got[6], old[6]; gpu(solver, got); reference(solver, old);
+        if (graph_stats) {
+            // The first call primes library internals; subsequent calls must
+            // capture and replay the same arithmetic against changing values.
+            gpu(solver, got); gpu(solver, got);
+            auto changed = x;
+            for (auto& value : changed) value *= -1.03;
+            upload(w->x->d_data, changed);
+            double changed_got[6], changed_reference[6];
+            gpu(solver, changed_got); reference(solver, changed_reference);
+            for (int i = 0; i < 6; ++i)
+                compare(changed_got[i], changed_reference[i], "graph reads updated device values");
+            upload(w->x->d_data, x); gpu(solver, got);
+            if (iteration == 1) {
+                using Acquire = cudaError_t (*)(size_t, double**, int*);
+                auto acquire = reinterpret_cast<Acquire>(dlsym(RTLD_DEFAULT, "qoco_gpu_acquire_scalar_workspace"));
+                require(acquire, "scope scratch interface");
+                double* scratch{}; int temporary{};
+                check(acquire(65536, &scratch, &temporary));
+                require(!temporary, "graph scratch remains scope owned");
+                gpu(solver, got); gpu(solver, got); gpu(solver, got);
+            }
+            if (iteration == 2) {
+                // Keep contents fixed while replacing a captured input buffer.
+                double* replacement{}; check(cudaMalloc(&replacement, n * sizeof(double)));
+                upload(replacement, x);
+                auto* original = w->x->d_data; w->x->d_data = replacement;
+                gpu(solver, got); gpu(solver, got); gpu(solver, got);
+                for (int i = 0; i < 6; ++i) compare(got[i], old[i], "graph input pointer replacement");
+                w->x->d_data = original;
+                gpu(solver, got); // Invalidate the graph before freeing its input.
+                check(cudaFree(replacement));
+            }
+        }
         for (int i = 0; i < 6; ++i) { compare(got[i], old[i], "legacy metric parity"); compare(got[i], expected[i], "independent long-double metrics"); }
         if (iteration_metrics) {
             double all[8]; iteration_metrics(solver, all);
+            if (graph_stats) { iteration_metrics(solver, all); iteration_metrics(solver, all); }
             for (int i = 0; i < 6; ++i) compare(all[i], got[i], "combined stopping parity");
             compare(all[6], compute_objective(w->data, w->x, w->xbuff, settings.kkt_static_reg_P, k), "legacy objective parity");
             compare(all[7], compute_mu(w->s, w->z, m), "legacy mu parity");
@@ -105,11 +143,26 @@ void run(int n, bool absent, bool zero_p, bool iteration_required) {
             compare(all[7], m ? dot(s, z) / m : 0, "independent mu");
             w->scaling->k = 0;
             iteration_metrics(solver, all);
+            if (graph_stats) { iteration_metrics(solver, all); iteration_metrics(solver, all); }
             require(all[6] == QOCOFloat_MAX, "objective safe division contract");
             w->scaling->k = k;
         }
         compare(qoco_dot(w->x->d_data, w->x->d_data, n), dot(x, x), "host dot after pointer mode restoration");
         if (iteration == 1) { end(); end(); }
+    }
+    if (graph_stats) {
+        end();
+        unsigned long long after[6]{}; graph_stats(after);
+        require(after[0] > before[0], "graphs captured");
+        require(after[1] - before[1] > after[0] - before[0], "graphs replayed repeatedly");
+        require(after[3] > before[3], "graphs invalidated on parameter/storage changes");
+        require(after[4] == 0 && after[5] == 0, "scope released graphs and capture streams");
+        double got[6], old[6]; gpu(solver, got); reference(solver, old);
+        for (int i = 0; i < 6; ++i) compare(got[i], old[i], "unscoped metrics after graph teardown");
+        unsigned long long unscoped[6]{}; graph_stats(unscoped);
+        require(unscoped[0] == after[0] && !unscoped[4] && !unscoped[5], "unscoped call retains no graph");
+        std::printf("Graph lifecycle captures=%llu launches=%llu invalidations=%llu PASS\n",
+            after[0]-before[0], after[1]-before[1], after[3]-before[3]);
     }
     qoco_cleanup(solver);
     std::printf("GPU stopping metrics n=%d absent=%d zero_P=%d iteration=%d PASS\n", n, absent, zero_p, iteration_metrics != nullptr);

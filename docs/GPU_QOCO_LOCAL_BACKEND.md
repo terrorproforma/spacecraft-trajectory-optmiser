@@ -1995,3 +1995,92 @@ Frozen QOCO v75 is
 - [Checkpoint, commands, scopes, failure evidence and traces](../artifacts/performance/qoco-deferred-transposes-v75-checkpoint.json).
 - [Landing](../artifacts/performance/qoco-gpu-kkt-v75-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v75-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v75-pd6-500.json) complete timing distributions.
 - [Complete prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v75-complete-reproduction.json).
+
+## Replay stopping calculations with CUDA Graphs
+
+`--metric-graphs` requires `--batched-iteration-scalars` and `--gather`. It
+captures the existing sparse products, reductions and cuBLAS dot products used
+for stopping metrics, objective and complementarity. The eight-scalar download
+and the host stopping decision remain outside the graph. This changes launch
+submission rather than the mathematical operators or accuracy tolerances.
+
+Capture uses a dedicated nonblocking stream; replay uses the existing default
+stream, preserving ordering with residual calculations and result downloads.
+cuBLAS uses device pointer mode during capture and its previous stream/mode are
+restored afterward. NVIDIA documents both the restriction on capturing the
+legacy default stream and cuBLAS graph support with device result pointers.
+[CUDA stream API](https://docs.nvidia.com/cuda/archive/12.8.1/cuda-runtime-api/group__CUDART__STREAM.html),
+[cuBLAS graph support](https://docs.nvidia.com/cuda/archive/12.8.1/cublas/index.html#cuda-graphs-support).
+
+The enclosing reduction/solve scope owns the graphs. Each matching sequence
+runs once normally to initialize library internals, then captures and replays.
+The cache includes solver, matrix, gather, vector and scratch pointers,
+dimensions, scaling scalars and quadratic regularization. Buffer or parameter
+changes invalidate it. Scratch growth destroys graphs before freeing captured
+storage; scope teardown releases graphs before scratch and cuBLAS handles.
+Unscoped calls retain no graph. There is no process-lifetime GPU cache.
+
+An isolated benchmark compares captured and uncaptured calculations within the
+same frozen library, retaining the scalar download in both. Each sample uses
+three separately timed priming calls followed by 50 timed calls. Each size and
+strategy has two warmup samples and seven measured samples. Matrix/vector setup,
+scope creation and teardown are excluded; full trajectory timings include the
+real construction and solve lifetimes.
+
+| Synthetic variables | Uncaptured median/call | Graph median/call | Ratio |
+|---|---:|---:|---:|
+| 17 | 448.926 µs | 119.059 µs | 3.771x |
+| 4,103 | 537.663 µs | 269.414 µs | 1.996x |
+| 100,000 | 3551.140 µs | 3298.539 µs | 1.077x |
+
+The three-call priming medians are respectively 1.452/1.215 ms,
+1.912/1.555 ms and 11.049/10.795 ms for uncaptured/graph strategies. These are
+phase measurements, not complete solver speedups. A separate comparison uses
+30 changing inputs per size; all 90 outputs match bit for bit between captured
+and uncaptured calculations. That is evidence for these cases, not a proof for
+all possible inputs.
+
+The qualified landing trace records 36 graph replays from two captures. Host
+kernel-launch calls decrease 7057 → 5357, while the GPU still executes the
+captured arithmetic. Synchronous copies remain 531, asynchronous copies 425,
+allocations/frees 376/285 and stream synchronizations 89. Capture adds two
+streams and 16 cuBLAS asynchronous allocation/free calls each. User-owned
+cuBLAS workspace is a remaining opportunity; device-launched graphs are not
+implemented. Trace durations are not used as speedup evidence.
+
+Matched full trajectories use core v72 and cuDSS 0.8 standard kernels. All
+54 samples pass unchanged physics and objective gates, but performance remains
+mixed and does not support a general speedup or default promotion:
+
+| Workload | v75 SCvx median | v76 SCvx median | Inner medians |
+|---|---:|---:|---:|
+| Landing | 162.590 ms | 152.054 ms | 36 → 36 |
+| N20 6DOF | 725.136 ms | 1159.010 ms | 134 → 254 |
+| N500 6DOF | 577.496 ms | 434.837 ms | 59 → 35 |
+
+One graph landing sample takes 656.422 ms despite its improved median. All slow
+samples remain in the evidence. N20's regression and N500's improvement coincide
+with substantially different inner counts; their cause is not established by
+these measurements. Setup medians are 29.257 → 30.748 ms, 72.310 → 71.291 ms
+and 102.348 → 100.142 ms respectively.
+
+The graph-metric fixtures cover 17 and 4103 variables, absent constraints and
+zero quadratic input. They verify replay on changed values, input pointer
+replacement, scratch growth, scalar changes including zero-k safe division,
+nested scopes, release of graph/stream handles, subsequent unscoped calls and
+restored cuBLAS state. All four CUDA sanitizer tools pass these fixtures and
+the full landing solve. N500 passes memory/init/sync checking. Full trajectories
+run without materializing test oracles. Recovery after caller index-array and
+stream destruction passes normally and under all four tools, with and without
+the KKT oracle. Nine numerical-update cases and the native/landing/N20/N500
+numerical oracles pass. No new full N20 sanitizer or N500 racecheck is claimed.
+Complete prepared-source reproduction and Ruff pass.
+
+Frozen QOCO v76 is
+`/home/angus/build-qoco-gpu-gpu-kkt-v76/final/libqoco.so`, SHA256
+`e77a1ea2cee34b693eff031b05967c6ece56c2d3c531d686eb26925cec4bd1ff`.
+
+- [Checkpoint, helper sources, scopes and traces](../artifacts/performance/qoco-metric-graphs-v76-checkpoint.json).
+- [Isolated metric timings](../artifacts/performance/qoco-metric-graphs-v76-microbenchmark.json) and [90-input parity](../artifacts/performance/qoco-metric-graphs-v76-parity.json).
+- [Landing](../artifacts/performance/qoco-gpu-kkt-v76-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v76-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v76-pd6-500.json) full distributions.
+- [Complete prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v76-reproduction.json).

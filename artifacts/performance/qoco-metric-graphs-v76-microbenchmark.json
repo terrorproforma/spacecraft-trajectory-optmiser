@@ -1,0 +1,588 @@
+{
+  "purpose": "Isolated same-library iteration metrics; scalar download retained. Three priming calls separately timed; each sample times50calls. Two warmup samples plus7measured per strategy/size. Matrix/vector setup and scope teardown excluded; full trajectory benchmarks separately include real graph construction and solve lifetimes.",
+  "command": [
+    "/home/angus/build-qoco-gpu-gpu-kkt-v76/final/qoco_metric_graph_benchmark"
+  ],
+  "returncode": 0,
+  "samples": [
+    {
+      "n": 17,
+      "repeat": 0,
+      "warmup": true,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001280988,
+      "seconds_per_call": 0.00040207,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 0,
+      "warmup": true,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.008035051,
+      "seconds_per_call": 0.0001255034,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 1,
+      "warmup": true,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.000970548,
+      "seconds_per_call": 0.00012974615999999998,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 1,
+      "warmup": true,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001489981,
+      "seconds_per_call": 0.00036910208,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 2,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001271931,
+      "seconds_per_call": 0.00072102352,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 2,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001214608,
+      "seconds_per_call": 0.000118478,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 3,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.000960691,
+      "seconds_per_call": 0.00012545954,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 3,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001340857,
+      "seconds_per_call": 0.00040349766,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 4,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.00133491,
+      "seconds_per_call": 0.00072404994,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 4,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001732984,
+      "seconds_per_call": 0.00015960762,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 5,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001729575,
+      "seconds_per_call": 0.00015347528,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 5,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001452469,
+      "seconds_per_call": 0.00040027416,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 6,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.002724685,
+      "seconds_per_call": 0.00038693867999999997,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 6,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001151018,
+      "seconds_per_call": 0.00011895928,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 7,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.017634562,
+      "seconds_per_call": 0.00011870574000000001,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 7,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001583937,
+      "seconds_per_call": 0.00044892642000000005,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 8,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.002523255,
+      "seconds_per_call": 0.00074060766,
+      "passed": true
+    },
+    {
+      "n": 17,
+      "repeat": 8,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001205184,
+      "seconds_per_call": 0.00011905865999999999,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 0,
+      "warmup": true,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001616479,
+      "seconds_per_call": 0.0008673407199999999,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 0,
+      "warmup": true,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001625627,
+      "seconds_per_call": 0.00027653818,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 1,
+      "warmup": true,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001540294,
+      "seconds_per_call": 0.00027471932,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 1,
+      "warmup": true,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001845153,
+      "seconds_per_call": 0.00052345552,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 2,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001832308,
+      "seconds_per_call": 0.0005315526,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 2,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001554662,
+      "seconds_per_call": 0.00060781456,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 3,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.00162942,
+      "seconds_per_call": 0.0002691408,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 3,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001911597,
+      "seconds_per_call": 0.00056073006,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 4,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.002119387,
+      "seconds_per_call": 0.00052001868,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 4,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001576701,
+      "seconds_per_call": 0.0002694135,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 5,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001509113,
+      "seconds_per_call": 0.00027068062,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 5,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001889776,
+      "seconds_per_call": 0.0008460118399999999,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 6,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.00182251,
+      "seconds_per_call": 0.0005096514399999999,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 6,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001494254,
+      "seconds_per_call": 0.00025765444,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 7,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001542368,
+      "seconds_per_call": 0.00026591403999999996,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 7,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.00199423,
+      "seconds_per_call": 0.0005376633,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 8,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.001915809,
+      "seconds_per_call": 0.00088640996,
+      "passed": true
+    },
+    {
+      "n": 4103,
+      "repeat": 8,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.001571998,
+      "seconds_per_call": 0.00036212934000000004,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 0,
+      "warmup": true,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.011686406,
+      "seconds_per_call": 0.003573879,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 0,
+      "warmup": true,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010609047,
+      "seconds_per_call": 0.0032898303,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 1,
+      "warmup": true,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010791968,
+      "seconds_per_call": 0.0033123518600000003,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 1,
+      "warmup": true,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.011137382,
+      "seconds_per_call": 0.003936041,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 2,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.011049094,
+      "seconds_per_call": 0.0035933318800000003,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 2,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010905372,
+      "seconds_per_call": 0.0033138097199999998,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 3,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010738028,
+      "seconds_per_call": 0.0032980712800000003,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 3,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.011264623,
+      "seconds_per_call": 0.0038977352599999997,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 4,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.010919996,
+      "seconds_per_call": 0.00355114048,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 4,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010795296,
+      "seconds_per_call": 0.00329853878,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 5,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010853296,
+      "seconds_per_call": 0.00332505102,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 5,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.011133357,
+      "seconds_per_call": 0.00355040242,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 6,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.027698304,
+      "seconds_per_call": 0.00349399742,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 6,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010532995,
+      "seconds_per_call": 0.0033077365199999996,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 7,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.010642358,
+      "seconds_per_call": 0.00326169598,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 7,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.010821946,
+      "seconds_per_call": 0.00352916336,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 8,
+      "warmup": false,
+      "graph": false,
+      "calls": 50,
+      "priming_seconds": 0.010926112,
+      "seconds_per_call": 0.00384696002,
+      "passed": true
+    },
+    {
+      "n": 100000,
+      "repeat": 8,
+      "warmup": false,
+      "graph": true,
+      "calls": 50,
+      "priming_seconds": 0.01088242,
+      "seconds_per_call": 0.00328718636,
+      "passed": true
+    }
+  ],
+  "medians": {
+    "17": {
+      "uncaptured": {
+        "seconds_per_call": 0.00044892642000000005,
+        "priming_seconds": 0.001452469
+      },
+      "graph": {
+        "seconds_per_call": 0.00011905865999999999,
+        "priming_seconds": 0.001214608
+      },
+      "ratio": 3.7706322244849733
+    },
+    "4103": {
+      "uncaptured": {
+        "seconds_per_call": 0.0005376633,
+        "priming_seconds": 0.001911597
+      },
+      "graph": {
+        "seconds_per_call": 0.0002694135,
+        "priming_seconds": 0.001554662
+      },
+      "ratio": 1.9956806173410018
+    },
+    "100000": {
+      "uncaptured": {
+        "seconds_per_call": 0.00355114048,
+        "priming_seconds": 0.011049094
+      },
+      "graph": {
+        "seconds_per_call": 0.00329853878,
+        "priming_seconds": 0.010795296
+      },
+      "ratio": 1.0765798788031833
+    }
+  },
+  "sha256": {
+    "/home/angus/build-qoco-gpu-gpu-kkt-v76/final/qoco_metric_graph_benchmark": "a63020af70ba0952ca5b504bfe23cf3c49445c83a7b169739ad1722b9b9b6bab",
+    "/home/angus/build-qoco-gpu-gpu-kkt-v76/final/libqoco.so": "e77a1ea2cee34b693eff031b05967c6ece56c2d3c531d686eb26925cec4bd1ff"
+  }
+}
