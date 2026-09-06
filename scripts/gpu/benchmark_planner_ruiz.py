@@ -26,6 +26,7 @@ def main() -> None:
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--reference-objective", type=float, required=True)
     parser.add_argument("--passes", type=int, nargs="+", default=[0, 1, 2, 4, 8, 12])
+    parser.add_argument("--warm-starts", nargs="+", choices=["none", "primal"])
     parser.add_argument("--warmups", type=int, default=1)
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--timeout", type=float, default=120.0)
@@ -41,6 +42,10 @@ def main() -> None:
     problem = json.loads(args.problem.read_text())
     if "units" in problem or problem["solver"]["backend"] != "pure_qoco":
         parser.error("requires a canonical pure_qoco problem")
+    warm_starts = args.warm_starts or [problem["solver"].get("warm_start_mode", "primal")]
+    if len(set(warm_starts)) != len(warm_starts):
+        parser.error("warm-start modes must be distinct")
+    variants = [(p, w) for p in args.passes for w in warm_starts]
     lock = (Path.home() / ".spacepdhcg-gpu.lock").open("a")
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     raw = args.output.with_suffix(".samples")
@@ -51,6 +56,7 @@ def main() -> None:
         "objective_absolute_tolerance": 1e-8,
         "problem": problem,
         "passes": args.passes,
+        "warm_starts": warm_starts,
         "warmups": args.warmups,
         "repeats": args.repeats,
         "timeout_seconds": args.timeout,
@@ -71,18 +77,19 @@ def main() -> None:
         "/usr/local/cuda-12.8/lib64",
     ])
     inputs = {}
-    for passes in args.passes:
+    for passes, warm in variants:
         document = copy.deepcopy(problem)
         document["solver"]["qoco_ruiz_iterations"] = passes
-        inputs[passes] = raw / f"input-{passes}.json"
-        inputs[passes].write_text(json.dumps(document, indent=2) + "\n")
+        document["solver"]["warm_start_mode"] = warm
+        inputs[passes, warm] = raw / f"input-{passes}-{warm}.json"
+        inputs[passes, warm].write_text(json.dumps(document, indent=2) + "\n")
     for repeat in range(args.warmups + args.repeats):
-        offset = repeat % len(args.passes)
-        order = args.passes[offset:] + args.passes[:offset]
-        for passes in order:
-            output = raw / f"ruiz-{passes}-{repeat}.json"
+        offset = repeat % len(variants)
+        order = variants[offset:] + variants[:offset]
+        for passes, warm in order:
+            output = raw / f"ruiz-{passes}-{warm}-{repeat}.json"
             command = [
-                str(args.executable), str(inputs[passes]), "--quiet", "--output", str(output)
+                str(args.executable), str(inputs[passes, warm]), "--quiet", "--output", str(output)
             ]
             started = time.perf_counter()
             try:
@@ -112,11 +119,13 @@ def main() -> None:
                 "gpu_backend": backend.get("hidden_cpu_fallback") is False,
                 "requested_passes": backend.get("requested_qoco_ruiz_iterations") == passes,
                 "applied_passes": backend.get("qoco_ruiz_iterations") == passes,
+                "warm_start_mode": backend.get("warm_start_mode") == warm,
                 "fixed_objective": math.isfinite(objective)
                 and abs(objective - args.reference_objective) <= 1e-8,
             }
             record = {
-                "passes": passes, "repeat": repeat, "warmup": repeat < args.warmups,
+                "passes": passes, "warm_start_mode": warm,
+                "repeat": repeat, "warmup": repeat < args.warmups,
                 "passed": all(gates.values()), "qualification": gates,
                 "returncode": rc, "process_seconds": elapsed,
                 "command": command, "stdout": stdout, "stderr": stderr,
@@ -130,14 +139,17 @@ def main() -> None:
             report["samples"].append(record)
             args.output.write_text(json.dumps(report, indent=2) + "\n")
             print(json.dumps({k: record[k] for k in (
-                "passes", "repeat", "passed", "qualification", "summary", "timings"
+                "passes", "warm_start_mode", "repeat", "passed", "qualification",
+                "summary", "timings"
             )}), flush=True)
     report["settings"] = {}
-    for passes in args.passes:
-        all_samples = [s for s in report["samples"] if s["passes"] == passes]
+    for passes, warm in variants:
+        all_samples = [s for s in report["samples"]
+                       if s["passes"] == passes and s["warm_start_mode"] == warm]
         measured = [s for s in all_samples if not s["warmup"]]
         qualified = all(s["passed"] for s in all_samples)
-        report["settings"][str(passes)] = {
+        key = str(passes) if len(warm_starts) == 1 else f"{passes}:{warm}"
+        report["settings"][key] = {
             "all_qualified": qualified,
             "failures_including_warmups": sum(not s["passed"] for s in all_samples),
             # No success-only latency summary for disqualified settings.

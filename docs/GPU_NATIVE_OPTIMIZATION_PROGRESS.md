@@ -955,3 +955,20 @@ zero passes takes 564.648 ms median versus 634.966–653.452 ms for 1/2/4 passes
 The default remains zero; no speedup is claimed for this tranche. The full
 GPU-native goal remains open, especially conditioning and solver reliability.
 [Evidence and reproducible sweep](GPU_QOCO_LOCAL_BACKEND.md#gpu-ruiz-equilibration-and-zero-norm-constraints).
+
+## Account for failed GPU solves; reject a warm-start shortcut
+
+Core v79 now finalizes elapsed SCvx/CQP timing on early exits and retains the
+pure-QOCO component times of failed inner attempts. No GPU synchronization or
+numerical operation was added. A fault-injection test completes real GPU work
+before forcing first/later failures: both timing cases fail against core72 and
+pass against core79. Seven tests pass including convergence and cancellation.
+
+A 72-attempt comparison of primal/cold starts and zero/one GPU Ruiz pass keeps
+the default unchanged. On N20, the one-pass variants fail six times, including
+two cold-start failures. With scaling off, all samples qualify and primal/cold
+medians are 776.836/819.654 ms. All N500 samples qualify; unscaled primal/cold
+medians are 426.645/430.309 ms, while scaled variants are slower. Cold starts
+are not a general fix for the observed convergence variability. Failed attempts
+now report their actual 0.47–0.70 second SCvx cost instead of zero.
+[Evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#failed-solve-timing-and-warm-start-comparison).

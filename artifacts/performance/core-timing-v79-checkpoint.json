@@ -1,0 +1,171 @@
+{
+  "parent_commit": "9130d685254f41878f2455bfa5b96e672c94c474",
+  "full_goal_complete": false,
+  "default_changed": false,
+  "speedup_claim": false,
+  "decision": "Repair SCvx total and pure-QOCO component timing on failure exits without new GPU synchronization. Reject cold starts and one-pass equilibration as a general optimization: unscaled cold/primal medians are similar; one pass still fails N20, and both scaled N500 settings are slower than unscaled.",
+  "scope": "Wall and aggregate CQP times finalize on every exit after the timed solve scope begins. Failed pure-QOCO attempts assign the adapter cumulative update/solve/residual times. Status, tolerance, arithmetic and GPU synchronization unchanged. Broader failure allocation/transfer telemetry, hybrid accounting and QOCO setup-failure component timing are not repaired here.",
+  "source_sha256": {
+    "cpp/cuda/src/device_scvx.cu": "918a9ca9b20f7716add415a79f6e2b87319e2a2275681d5935247da967176ee6",
+    "cpp/cuda/tests/scvx_qoco_failure_timing_probe.cpp": "8286ce4a5914c3f35e1eff454bfbd238f507ed358ac1443bb49de967b72b9a1f",
+    "tests/test_scvx_failure_timing_gpu.py": "249349f9b3d218a2a86cab9bb1243ac4b051695ca95a499b3100de161c5d4ef1",
+    "scripts/gpu/benchmark_planner_ruiz.py": "072bfd8dd46457893f38a8315ed6429f7c0558ea232fec08f36a23b1130f3a47"
+  },
+  "runtime_sha256": {
+    "/home/angus/build-spacepdhcg-timing-v79/final/libspacepdhcg_cuda.so": "8155b5f837a22874fc1bfd00d02af0b7048d64ac0da7f3451db34827c7037fa6",
+    "/home/angus/build-spacepdhcg-boundary-v72/final/libspacepdhcg_cuda.so": "993fd2c0b0765b3696507aea086952177d0c686367d0b0c02f1f9707c9e2e241",
+    "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan": "aa1e8a1e6e21c0c0e43c47a6f06d33f2979af327f674297fb5b2d5875497a390",
+    "/home/angus/build-qoco-gpu-gpu-kkt-v78/final/libqoco.so": "bddec9453b32242e901919443a8df11cbfb3878218035a836930d0858ee0cb30",
+    "/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib/libcudss.so": "0740250950abbbbc7690c4edb1506f8432558658764d6c1f7cba29615acb3dfc"
+  },
+  "checks": {
+    "core-timing-v79-checks": [
+      {
+        "version": "72",
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+          "tests/test_scvx_failure_timing_gpu.py",
+          "-q"
+        ],
+        "returncode": 1,
+        "stdout": ".FF                                                                      [100%]\n=================================== FAILURES ===================================\n___________ test_completed_inner_work_is_accounted_on_every_exit[1] ____________\n\ntmp_path = PosixPath('/tmp/pytest-of-angus/pytest-248/test_completed_inner_work_is_a1')\nfault_probe = PosixPath('/tmp/pytest-of-angus/pytest-248/failure-probe0/fault.so')\nfail_at = 1\n\n    @pytest.mark.parametrize(\"fail_at\", [0, 1, 2])\n    def test_completed_inner_work_is_accounted_on_every_exit(\n        tmp_path: Path, fault_probe: Path, fail_at: int\n    ) -> None:\n        output = tmp_path / \"result.json\"\n        env = dict(os.environ, LD_PRELOAD=str(fault_probe),\n                   SPACEPDHCG_TEST_FAIL_QOCO_ORDINAL=str(fail_at))\n        run = subprocess.run(\n            [os.environ[\"SPACEPDHCG_PLAN_EXECUTABLE\"],\n             str(ROOT / \"artifacts/performance/qoco-gpu-tree-input-20.json\"),\n             \"--quiet\", \"--output\", str(output)],\n            env=env, capture_output=True, text=True, timeout=180, check=False,\n        )\n        records = [json.loads(line) for line in run.stderr.splitlines()\n                   if line.startswith('{\"case\":\"qoco_after_solve_fault\"')]\n        assert records and all(r[\"actual_status\"] == 0 for r in records), run.stderr\n        result = json.loads(output.read_text())\n        if fail_at:\n            assert run.returncode == 3 and records[-1][\"injected\"]\n            assert len(records) == fail_at\n            assert result[\"status\"][\"solver_status\"] == \"inner_failure\"\n            assert not result[\"certificate\"][\"certified\"]\n            assert result[\"summary\"][\"accepted_steps\"] == fail_at - 1\n        else:\n            assert run.returncode == 0 and result[\"certificate\"][\"certified\"]\n            assert result[\"summary\"][\"objective\"] == pytest.approx(\n                0.51297569119164033, rel=0, abs=1e-8\n            )\n        assert result[\"summary\"][\"inner_iterations\"] == sum(r[\"iterations\"] for r in records)\n        timings = result[\"timings\"]\n>       assert timings[\"solve_seconds\"] == timings[\"qoco_solve_seconds\"] > 0\nE       assert 0 == 0.543588181\n\ntests/test_scvx_failure_timing_gpu.py:64: AssertionError\n___________ test_completed_inner_work_is_accounted_on_every_exit[2] ____________\n\ntmp_path = PosixPath('/tmp/pytest-of-angus/pytest-248/test_completed_inner_work_is_a2')\nfault_probe = PosixPath('/tmp/pytest-of-angus/pytest-248/failure-probe0/fault.so')\nfail_at = 2\n\n    @pytest.mark.parametrize(\"fail_at\", [0, 1, 2])\n    def test_completed_inner_work_is_accounted_on_every_exit(\n        tmp_path: Path, fault_probe: Path, fail_at: int\n    ) -> None:\n        output = tmp_path / \"result.json\"\n        env = dict(os.environ, LD_PRELOAD=str(fault_probe),\n                   SPACEPDHCG_TEST_FAIL_QOCO_ORDINAL=str(fail_at))\n        run = subprocess.run(\n            [os.environ[\"SPACEPDHCG_PLAN_EXECUTABLE\"],\n             str(ROOT / \"artifacts/performance/qoco-gpu-tree-input-20.json\"),\n             \"--quiet\", \"--output\", str(output)],\n            env=env, capture_output=True, text=True, timeout=180, check=False,\n        )\n        records = [json.loads(line) for line in run.stderr.splitlines()\n                   if line.startswith('{\"case\":\"qoco_after_solve_fault\"')]\n        assert records and all(r[\"actual_status\"] == 0 for r in records), run.stderr\n        result = json.loads(output.read_text())\n        if fail_at:\n            assert run.returncode == 3 and records[-1][\"injected\"]\n            assert len(records) == fail_at\n            assert result[\"status\"][\"solver_status\"] == \"inner_failure\"\n            assert not result[\"certificate\"][\"certified\"]\n>           assert result[\"summary\"][\"accepted_steps\"] == fail_at - 1\nE           assert 0 == (2 - 1)\n\ntests/test_scvx_failure_timing_gpu.py:56: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_scvx_failure_timing_gpu.py::test_completed_inner_work_is_accounted_on_every_exit[1]\nFAILED tests/test_scvx_failure_timing_gpu.py::test_completed_inner_work_is_accounted_on_every_exit[2]\n2 failed, 1 passed in 3.77s\n",
+        "stderr": ""
+      },
+      {
+        "version": "79",
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+          "tests/test_scvx_failure_timing_gpu.py",
+          "tests/test_scvx_convergence_gpu.py",
+          "-q"
+        ],
+        "returncode": 1,
+        "stdout": "..F....                                                                  [100%]\n=================================== FAILURES ===================================\n___________ test_completed_inner_work_is_accounted_on_every_exit[2] ____________\n\ntmp_path = PosixPath('/tmp/pytest-of-angus/pytest-249/test_completed_inner_work_is_a2')\nfault_probe = PosixPath('/tmp/pytest-of-angus/pytest-249/failure-probe0/fault.so')\nfail_at = 2\n\n    @pytest.mark.parametrize(\"fail_at\", [0, 1, 2])\n    def test_completed_inner_work_is_accounted_on_every_exit(\n        tmp_path: Path, fault_probe: Path, fail_at: int\n    ) -> None:\n        output = tmp_path / \"result.json\"\n        env = dict(os.environ, LD_PRELOAD=str(fault_probe),\n                   SPACEPDHCG_TEST_FAIL_QOCO_ORDINAL=str(fail_at))\n        run = subprocess.run(\n            [os.environ[\"SPACEPDHCG_PLAN_EXECUTABLE\"],\n             str(ROOT / \"artifacts/performance/qoco-gpu-tree-input-20.json\"),\n             \"--quiet\", \"--output\", str(output)],\n            env=env, capture_output=True, text=True, timeout=180, check=False,\n        )\n        records = [json.loads(line) for line in run.stderr.splitlines()\n                   if line.startswith('{\"case\":\"qoco_after_solve_fault\"')]\n        assert records and all(r[\"actual_status\"] == 0 for r in records), run.stderr\n        result = json.loads(output.read_text())\n        if fail_at:\n            assert run.returncode == 3 and records[-1][\"injected\"]\n            assert len(records) == fail_at\n            assert result[\"status\"][\"solver_status\"] == \"inner_failure\"\n            assert not result[\"certificate\"][\"certified\"]\n>           assert result[\"summary\"][\"accepted_steps\"] == fail_at - 1\nE           assert 0 == (2 - 1)\n\ntests/test_scvx_failure_timing_gpu.py:56: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_scvx_failure_timing_gpu.py::test_completed_inner_work_is_accounted_on_every_exit[2]\n1 failed, 6 passed in 6.83s\n",
+        "stderr": ""
+      }
+    ],
+    "core-timing-v79-validated-checks": [
+      {
+        "version": "72",
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+          "tests/test_scvx_failure_timing_gpu.py",
+          "-q"
+        ],
+        "returncode": 1,
+        "stdout": ".FF                                                                      [100%]\n=================================== FAILURES ===================================\n___________ test_completed_inner_work_is_accounted_on_every_exit[1] ____________\n\ntmp_path = PosixPath('/tmp/pytest-of-angus/pytest-250/test_completed_inner_work_is_a1')\nfault_probe = PosixPath('/tmp/pytest-of-angus/pytest-250/failure-probe0/fault.so')\nfail_at = 1\n\n    @pytest.mark.parametrize(\"fail_at\", [0, 1, 2])\n    def test_completed_inner_work_is_accounted_on_every_exit(\n        tmp_path: Path, fault_probe: Path, fail_at: int\n    ) -> None:\n        output = tmp_path / \"result.json\"\n        env = dict(os.environ, LD_PRELOAD=str(fault_probe),\n                   SPACEPDHCG_TEST_FAIL_QOCO_ORDINAL=str(fail_at))\n        run = subprocess.run(\n            [os.environ[\"SPACEPDHCG_PLAN_EXECUTABLE\"],\n             str(ROOT / \"artifacts/performance/qoco-gpu-tree-input-20.json\"),\n             \"--quiet\", \"--output\", str(output)],\n            env=env, capture_output=True, text=True, timeout=180, check=False,\n        )\n        records = [json.loads(line) for line in run.stderr.splitlines()\n                   if line.startswith('{\"case\":\"qoco_after_solve_fault\"')]\n        assert records and all(r[\"actual_status\"] == 0 for r in records), run.stderr\n        result = json.loads(output.read_text())\n        if fail_at:\n            assert run.returncode == 3 and records[-1][\"injected\"]\n            assert len(records) == fail_at\n            assert result[\"status\"][\"solver_status\"] == \"inner_failure\"\n            assert not result[\"certificate\"][\"certified\"]\n            # The first valid inner candidate may be rejected by nonlinear SCvx;\n            # it still consumed real work and must not be counted twice on failure.\n            assert result[\"summary\"][\"accepted_steps\"] <= fail_at - 1\n            assert result[\"summary\"][\"accepted_steps\"] == sum(\n                bool(row[\"accepted\"]) for row in result[\"iterations\"]\n            )\n        else:\n            assert run.returncode == 0 and result[\"certificate\"][\"certified\"]\n            assert result[\"summary\"][\"objective\"] == pytest.approx(\n                0.51297569119164033, rel=0, abs=1e-8\n            )\n        assert result[\"summary\"][\"inner_iterations\"] == sum(r[\"iterations\"] for r in records)\n        timings = result[\"timings\"]\n>       assert timings[\"solve_seconds\"] == timings[\"qoco_solve_seconds\"] > 0\nE       assert 0 == 0.15566483\n\ntests/test_scvx_failure_timing_gpu.py:69: AssertionError\n___________ test_completed_inner_work_is_accounted_on_every_exit[2] ____________\n\ntmp_path = PosixPath('/tmp/pytest-of-angus/pytest-250/test_completed_inner_work_is_a2')\nfault_probe = PosixPath('/tmp/pytest-of-angus/pytest-250/failure-probe0/fault.so')\nfail_at = 2\n\n    @pytest.mark.parametrize(\"fail_at\", [0, 1, 2])\n    def test_completed_inner_work_is_accounted_on_every_exit(\n        tmp_path: Path, fault_probe: Path, fail_at: int\n    ) -> None:\n        output = tmp_path / \"result.json\"\n        env = dict(os.environ, LD_PRELOAD=str(fault_probe),\n                   SPACEPDHCG_TEST_FAIL_QOCO_ORDINAL=str(fail_at))\n        run = subprocess.run(\n            [os.environ[\"SPACEPDHCG_PLAN_EXECUTABLE\"],\n             str(ROOT / \"artifacts/performance/qoco-gpu-tree-input-20.json\"),\n             \"--quiet\", \"--output\", str(output)],\n            env=env, capture_output=True, text=True, timeout=180, check=False,\n        )\n        records = [json.loads(line) for line in run.stderr.splitlines()\n                   if line.startswith('{\"case\":\"qoco_after_solve_fault\"')]\n        assert records and all(r[\"actual_status\"] == 0 for r in records), run.stderr\n        result = json.loads(output.read_text())\n        if fail_at:\n            assert run.returncode == 3 and records[-1][\"injected\"]\n            assert len(records) == fail_at\n            assert result[\"status\"][\"solver_status\"] == \"inner_failure\"\n            assert not result[\"certificate\"][\"certified\"]\n            # The first valid inner candidate may be rejected by nonlinear SCvx;\n            # it still consumed real work and must not be counted twice on failure.\n            assert result[\"summary\"][\"accepted_steps\"] <= fail_at - 1\n            assert result[\"summary\"][\"accepted_steps\"] == sum(\n                bool(row[\"accepted\"]) for row in result[\"iterations\"]\n            )\n        else:\n            assert run.returncode == 0 and result[\"certificate\"][\"certified\"]\n            assert result[\"summary\"][\"objective\"] == pytest.approx(\n                0.51297569119164033, rel=0, abs=1e-8\n            )\n        assert result[\"summary\"][\"inner_iterations\"] == sum(r[\"iterations\"] for r in records)\n        timings = result[\"timings\"]\n>       assert timings[\"solve_seconds\"] == timings[\"qoco_solve_seconds\"] > 0\nE       assert 0.213850217 == 0.335086806\n\ntests/test_scvx_failure_timing_gpu.py:69: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_scvx_failure_timing_gpu.py::test_completed_inner_work_is_accounted_on_every_exit[1]\nFAILED tests/test_scvx_failure_timing_gpu.py::test_completed_inner_work_is_accounted_on_every_exit[2]\n2 failed, 1 passed in 7.36s\n",
+        "stderr": ""
+      },
+      {
+        "version": "79",
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+          "tests/test_scvx_failure_timing_gpu.py",
+          "tests/test_scvx_convergence_gpu.py",
+          "-q"
+        ],
+        "returncode": 0,
+        "stdout": ".......                                                                  [100%]\n7 passed in 7.11s\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "benchmarks": {
+    "20": {
+      "path": "artifacts/performance/planner-warm-start-v79-20.json",
+      "sha256": "2aff9bdf5017b93140d76c80bdbb1bdd6d7d75e30048eb8852f89c2aa2929877",
+      "settings": {
+        "0:primal": {
+          "all_qualified": true,
+          "failures_including_warmups": 0,
+          "median_scvx_seconds": 0.776835936,
+          "median_inner_iterations": 156,
+          "p95_scvx_seconds_nearest_rank": 1.378715646
+        },
+        "0:none": {
+          "all_qualified": true,
+          "failures_including_warmups": 0,
+          "median_scvx_seconds": 0.819653727,
+          "median_inner_iterations": 176,
+          "p95_scvx_seconds_nearest_rank": 1.261493811
+        },
+        "1:primal": {
+          "all_qualified": false,
+          "failures_including_warmups": 4,
+          "median_scvx_seconds": null,
+          "median_inner_iterations": null,
+          "p95_scvx_seconds_nearest_rank": null
+        },
+        "1:none": {
+          "all_qualified": false,
+          "failures_including_warmups": 2,
+          "median_scvx_seconds": null,
+          "median_inner_iterations": null,
+          "p95_scvx_seconds_nearest_rank": null
+        }
+      },
+      "attempts": 36,
+      "failures": 6,
+      "failures_with_positive_timings": 6,
+      "failed_attempt_seconds": [
+        0.497161118,
+        0.545803134,
+        0.468114424,
+        0.701189135,
+        0.660297695,
+        0.480694064
+      ]
+    },
+    "500": {
+      "path": "artifacts/performance/planner-warm-start-v79-500.json",
+      "sha256": "76c15fb0b3274930621bb98e030ade539630ce4e956e15912b23f37a6d1f9928",
+      "settings": {
+        "0:primal": {
+          "all_qualified": true,
+          "failures_including_warmups": 0,
+          "median_scvx_seconds": 0.426644517,
+          "median_inner_iterations": 34,
+          "p95_scvx_seconds_nearest_rank": 0.591032829
+        },
+        "0:none": {
+          "all_qualified": true,
+          "failures_including_warmups": 0,
+          "median_scvx_seconds": 0.430309402,
+          "median_inner_iterations": 38,
+          "p95_scvx_seconds_nearest_rank": 0.458025215
+        },
+        "1:primal": {
+          "all_qualified": true,
+          "failures_including_warmups": 0,
+          "median_scvx_seconds": 0.637818767,
+          "median_inner_iterations": 71,
+          "p95_scvx_seconds_nearest_rank": 0.669013737
+        },
+        "1:none": {
+          "all_qualified": true,
+          "failures_including_warmups": 0,
+          "median_scvx_seconds": 0.54229084,
+          "median_inner_iterations": 54,
+          "p95_scvx_seconds_nearest_rank": 0.555302906
+        }
+      },
+      "attempts": 36,
+      "failures": 0,
+      "failures_with_positive_timings": 0,
+      "failed_attempt_seconds": []
+    }
+  },
+  "helper_sources": {
+    "build_core_trajectory.py": "from pathlib import Path\nimport subprocess\ncmake='/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake'\nbase='/home/angus/build-spacepdhcg-trajectory-v32'\nwith Path('build/performance/native-checks/core-trajectory-v32-build.log').open('w') as log:\n    subprocess.run([cmake,'-S','cpp','-B',base,'-G','Ninja','-DCMAKE_BUILD_TYPE=Release',\n        '-DSPACEPDHCG_BUILD_CUDA=ON','-DSPACEPDHCG_BUILD_C_API=ON','-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF',\n        '-DBUILD_TESTING=ON','-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc','-DCMAKE_CUDA_ARCHITECTURES=120',\n        '-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg'],\n        stdout=log,stderr=subprocess.STDOUT,check=True)\n    subprocess.run([cmake,'--build',base,'--target','spacepdhcg_cuda','-j','3'],stdout=log,stderr=subprocess.STDOUT,check=True)\nprint('Built isolated trajectory metadata core')\n",
+    "build_core_trajectory_v41.py": "from pathlib import Path\nsource=Path('build/performance/build_core_trajectory.py').read_text().replace('trajectory-v32','trajectory-v41')\nsource=source.replace(\"'spacepdhcg_cuda','-j'\", \"'spacepdhcg_cuda','native_qoco_conversion_test','-j'\")\nexec(compile(source,'build_core_trajectory_v41.py','exec'))\n",
+    "build_core_boundary_v72.py": "from pathlib import Path\nsource=Path('build/performance/build_core_trajectory_v41.py').read_text().replace(\"'trajectory-v41'\", \"'boundary-v72'\")\nexec(compile(source,'build_core_boundary_v72.py','exec'))\n",
+    "build_core_timing_v79.py": "from pathlib import Path\nsource=Path('build/performance/build_core_boundary_v72.py').read_text().replace('boundary-v72','timing-v79')\nexec(compile(source,'build_core_timing_v79.py','exec'))\n",
+    "check_core_timing_v79.py": "from pathlib import Path\nimport json, os, subprocess, fcntl, shutil, hashlib\nbase=Path('/home/angus/build-spacepdhcg-timing-v79');final=base/'final';final.mkdir(exist_ok=False)\nlib=final/'libspacepdhcg_cuda.so';shutil.copyfile(base/'cuda/libspacepdhcg_cuda.so',lib);lib.chmod(0o555)\nprint(hashlib.sha256(lib.read_bytes()).hexdigest(),flush=True)\nenv={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}\nenv.update(SPACEPDHCG_PLANNER_GPU_TESTS='1',SPACEPDHCG_PLAN_EXECUTABLE='/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan',SPACEPDHCG_QOCO_LIBRARY='/home/angus/build-qoco-gpu-gpu-kkt-v78/final/libqoco.so',PYTHONPATH='src')\nchecks=[]\nwith Path('/home/angus/.spacepdhcg-gpu.lock').open('a') as lock:\n fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\n for version,path,tests in [('72','/home/angus/build-spacepdhcg-boundary-v72/final',['tests/test_scvx_failure_timing_gpu.py']),('79',str(final),['tests/test_scvx_failure_timing_gpu.py','tests/test_scvx_convergence_gpu.py'])]:\n  env['LD_LIBRARY_PATH']=path+':/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64'\n  cmd=['/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest',*tests,'-q']\n  run=subprocess.run(cmd,env=env,capture_output=True,text=True,timeout=240)\n  checks.append(dict(version=version,command=cmd,returncode=run.returncode,stdout=run.stdout,stderr=run.stderr))\n  Path('build/performance/core-timing-v79-checks.json').write_text(json.dumps(checks,indent=2)+'\\n')\n  print(version,run.returncode,run.stdout,run.stderr,flush=True)\n  assert run.returncode==(1 if version=='72' else 0)\n",
+    "validate_core_timing_v79.py": "from pathlib import Path\nsource=Path('build/performance/check_core_timing_v79.py').read_text()\nsource=source.replace(\"final.mkdir(exist_ok=False)\", \"assert final.is_dir()\")\nsource=source.replace(\"shutil.copyfile(base/'cuda/libspacepdhcg_cuda.so',lib);lib.chmod(0o555)\", \"assert lib.read_bytes()==(base/'cuda/libspacepdhcg_cuda.so').read_bytes()\")\nsource=source.replace('core-timing-v79-checks.json','core-timing-v79-validated-checks.json')\nexec(compile(source,'validate_core_timing_v79.py','exec'))\n",
+    "record_core_timing_v79.py": "from pathlib import Path\nimport hashlib, json, subprocess\n\ndef read(p):return json.loads(Path(p).read_text())\ndef digest(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()\nreport={\n 'parent_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),\n 'full_goal_complete':False,'default_changed':False,'speedup_claim':False,\n 'decision':'Repair SCvx total and pure-QOCO component timing on failure exits without new GPU synchronization. Reject cold starts and one-pass equilibration as a general optimization: unscaled cold/primal medians are similar; one pass still fails N20, and both scaled N500 settings are slower than unscaled.',\n 'scope':'Wall and aggregate CQP times finalize on every exit after the timed solve scope begins. Failed pure-QOCO attempts assign the adapter cumulative update/solve/residual times. Status, tolerance, arithmetic and GPU synchronization unchanged. Broader failure allocation/transfer telemetry, hybrid accounting and QOCO setup-failure component timing are not repaired here.',\n 'source_sha256':{},'runtime_sha256':{},'checks':{},'benchmarks':{},'helper_sources':{},\n 'test_limitation':'Fault injection is a Linux C++ interposer following actual successful GPU work. It exercises first/later pure-QOCO failure returns deterministically. It is not evidence for every failure mechanism. No new CUDA sanitizer campaign: production change only performs host result/timer assignments, adds no GPU kernel, allocation or synchronization. Existing convergence and cancellation regression included.',\n 'fixture_correction':'Initial assertion assumed the first valid inner candidate must be accepted. SCvx may reject it; corrected to count completed inner work independently of acceptance. Initial failed test output retained. Production runtime was not rebuilt or changed for this correction.',\n}\nfor p in ['cpp/cuda/src/device_scvx.cu','cpp/cuda/tests/scvx_qoco_failure_timing_probe.cpp','tests/test_scvx_failure_timing_gpu.py','scripts/gpu/benchmark_planner_ruiz.py']:\n report['source_sha256'][p]=digest(p)\nfor p in ['/home/angus/build-spacepdhcg-timing-v79/final/libspacepdhcg_cuda.so','/home/angus/build-spacepdhcg-boundary-v72/final/libspacepdhcg_cuda.so','/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan','/home/angus/build-qoco-gpu-gpu-kkt-v78/final/libqoco.so','/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib/libcudss.so']:\n report['runtime_sha256'][p]=digest(p)\nfor name in ['core-timing-v79-checks','core-timing-v79-validated-checks']:\n report['checks'][name]=read('build/performance/'+name+'.json')\nchecks=report['checks']['core-timing-v79-validated-checks']\nassert checks[0]['version']=='72' and checks[0]['returncode']==1 and '2 failed, 1 passed' in checks[0]['stdout']\nassert checks[1]['version']=='79' and checks[1]['returncode']==0 and '7 passed' in checks[1]['stdout']\nfor n in [20,500]:\n p=Path(f'artifacts/performance/planner-warm-start-v79-{n}.json');data=read(p)\n assert len(data['samples'])==36\n failed=[r for r in data['samples'] if not r['passed']]\n for row in data['samples']:\n  t=row['timings']\n  assert t['scvx_total_seconds']>0 and t['solve_seconds']==t['qoco_solve_seconds']>0\n  assert t['cqp_total_seconds']>0 and t['scvx_total_seconds']>=t['cqp_total_seconds']\n report['benchmarks'][str(n)]={'path':str(p),'sha256':digest(p),'settings':data['settings'],\n  'attempts':len(data['samples']),'failures':len(failed),'failures_with_positive_timings':len(failed),\n  'failed_attempt_seconds':[r['timings']['scvx_total_seconds'] for r in failed]}\nassert report['benchmarks']['20']['failures']==6 and report['benchmarks']['500']['failures']==0\nnames=['build_core_trajectory.py','build_core_trajectory_v41.py','build_core_boundary_v72.py','build_core_timing_v79.py','check_core_timing_v79.py','validate_core_timing_v79.py','record_core_timing_v79.py']\nfor name in names:report['helper_sources'][name]=Path('build/performance',name).read_text()\nreport['build_log']=Path('build/performance/native-checks/core-timing-v79-build.log').read_text()\nreport['ruff_passed']=True\nPath('artifacts/performance/core-timing-v79-checkpoint.json').write_text(json.dumps(report,indent=2)+'\\n')\nprint('Checkpoint saved: expected baseline failures, seven passing corrected tests, 72 tuning samples.')\n"
+  },
+  "test_limitation": "Fault injection is a Linux C++ interposer following actual successful GPU work. It exercises first/later pure-QOCO failure returns deterministically. It is not evidence for every failure mechanism. No new CUDA sanitizer campaign: production change only performs host result/timer assignments, adds no GPU kernel, allocation or synchronization. Existing convergence and cancellation regression included.",
+  "fixture_correction": "Initial assertion assumed the first valid inner candidate must be accepted. SCvx may reject it; corrected to count completed inner work independently of acceptance. Initial failed test output retained. Production runtime was not rebuilt or changed for this correction.",
+  "build_log": "-- The CXX compiler identification is GNU 11.4.0\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- The C compiler identification is GNU 11.4.0\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- The CUDA compiler identification is NVIDIA 12.8.93 with host compiler GNU 11.4.0\n-- Detecting CUDA compiler ABI info\n-- Detecting CUDA compiler ABI info - done\n-- Check for working CUDA compiler: /usr/local/cuda-12.8/bin/nvcc - skipped\n-- Detecting CUDA compile features\n-- Detecting CUDA compile features - done\n-- Found CUDAToolkit: /usr/local/cuda-12.8/targets/x86_64-linux/include (found version \"12.8.93\")\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Found Git: /usr/bin/git (found version \"2.34.1\")\n-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version \"1.2.11\")\n-- SpacePDHCG persistent adapter strategy: linked_internal_adapter\n-- Pinned PDHCG commit: 167c8b72b4b96d2f94d405b8763e485514192b81\n-- Pinned PDHCG tree: 62b05e6c1bedd385f6c267af3645ae4aae0421b4\n(Stripping trailing CRs from patch; use --binary to disable.)\nchecking file src/solver_state.cu\nHunk #1 succeeded at 752 (offset 1 line).\n(Stripping trailing CRs from patch; use --binary to disable.)\nchecking file src/pdhg_core_op.cu\nHunk #1 succeeded at 1690 (offset 1 line).\n(Stripping trailing CRs from patch; use --binary to disable.)\nchecking file src/spmv_backend.cu\n(Stripping trailing CRs from patch; use --binary to disable.)\npatching file src/solver_state.cu\nHunk #1 succeeded at 752 (offset 1 line).\n(Stripping trailing CRs from patch; use --binary to disable.)\npatching file src/pdhg_core_op.cu\nHunk #1 succeeded at 1690 (offset 1 line).\n(Stripping trailing CRs from patch; use --binary to disable.)\npatching file src/spmv_backend.cu\n-- Pinned PDHCG patch: 0001-free-quadratic-state.patch sha256=dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6\n-- Configuring done (14.3s)\n-- Generating done (0.1s)\n-- Build files have been written to: /home/angus/build-spacepdhcg-timing-v79\n[0/2] Re-checking globbed directories...\n[1/37] Building CXX object cuda/CMakeFiles/spacepdhcg_cuda.dir/src/native_qoco_adapter.cpp.o\n[2/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_cuda.dir/src/orbitweaver_gpu.cu.o\n[3/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_cuda.dir/src/native_qoco_gpu.cu.o\n[4/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/cbf_parser.c.o\n[5/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/cone_utils.c.o\n[6/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/mps_parser.c.o\n[7/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/partition_utils.c.o\n[8/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/pdhcg.c.o\n[9/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/preconditioner.c.o\n[10/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/presolve_wrapper.c.o\n[11/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/qcqp_transform.c.o\n[12/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/cone_dispatch.cu.o\n[13/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_cuda.dir/src/device_scvx.cu.o\n[14/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_affine_cone_kernels.cu.o\n[15/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_cone_common_kernels.cu.o\n[16/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_kernels.cu.o\n[17/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_exp_cone_kernels.cu.o\n[18/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_psd_cone_kernels.cu.o\n[19/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_power_cone_kernels.cu.o\n[20/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_rsoc_cone_kernels.cu.o\n[21/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/kernels/pdhcg_soc_cone_kernels.cu.o\n[22/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/pdhg_core_op.cu.o\n[23/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/permute.cu.o\n[24/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/solver.cu.o\n[25/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/spmv_backend.cu.o\n[26/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/solver_state.cu.o\n[27/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/distributed/distributed_ops_stub.c.o\n[28/37] Building C object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/distributed/distributed_conic_stub.c.o\n[29/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/utils.cu.o\n[30/37] Building CUDA object cuda/CMakeFiles/native_qoco_conversion_test.dir/tests/native_qoco_conversion_test.cu.o\n[31/37] Linking CUDA static library cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/cmake_device_link.o\n[32/37] Linking CUDA static library cuda/libspacepdhcg_pinned_reference.a\n[33/37] Building CUDA object cuda/CMakeFiles/spacepdhcg_cuda.dir/src/persistent_pdhcg.cu.o\n[34/37] Linking CXX shared library cuda/CMakeFiles/spacepdhcg_cuda.dir/cmake_device_link.o\n[35/37] Linking CXX shared library cuda/libspacepdhcg_cuda.so\n[36/37] Linking CUDA executable cuda/CMakeFiles/native_qoco_conversion_test.dir/cmake_device_link.o\n[37/37] Linking CUDA executable cuda-tests/native_qoco_conversion_test\n",
+  "ruff_passed": true
+}

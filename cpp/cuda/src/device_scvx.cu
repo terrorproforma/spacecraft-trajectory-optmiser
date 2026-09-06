@@ -2127,6 +2127,23 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         driver->problem.intervals * driver->problem.control_dimension;
     const auto started = std::chrono::steady_clock::now();
 
+    // Report elapsed work on every exit, including failed inner solves. This
+    // guard performs host accounting only; it must not add a CUDA wait or
+    // turn a failed/cancelled attempt into a successful result.
+    struct ResultTiming {
+        spacepdhcg_cuda_scvx_result* result;
+        std::chrono::steady_clock::time_point started;
+        ~ResultTiming() {
+            result->cqp_total_seconds =
+                result->update_seconds + result->scaling_seconds
+                + result->solve_seconds + result->residual_seconds
+                + result->qoco_conversion_seconds + result->qoco_setup_seconds;
+            result->scvx_total_seconds = std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - started
+            ).count();
+        }
+    } result_timing{result, started};
+
     auto cuda_status = cudaMemcpyAsync(
         driver->candidate_states,
         view_pointer<const double>(driver->problem.reference_states),
@@ -2539,6 +2556,14 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     driver->qoco_report.update_seconds;
                 result->qoco_solve_seconds =
                     driver->qoco_report.solve_seconds;
+                if (pure_qoco) {
+                    // Adapter times are cumulative, including the failed
+                    // attempt. Assign them as on the successful path; adding
+                    // them would count previous outer iterations twice.
+                    result->update_seconds = driver->qoco_report.update_seconds;
+                    result->solve_seconds = driver->qoco_report.solve_seconds;
+                    result->residual_seconds = driver->qoco_report.residual_seconds;
+                }
             }
             return api_status;
         }
@@ -3052,13 +3077,6 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     result->virtual_control = current.virtual_control;
     result->trajectory_step = retained_trajectory_step;
     result->final_trust_radius = trust_radius;
-    result->cqp_total_seconds =
-        result->update_seconds + result->scaling_seconds
-        + result->solve_seconds + result->residual_seconds
-        + result->qoco_conversion_seconds + result->qoco_setup_seconds;
-    result->scvx_total_seconds = std::chrono::duration<double>(
-        std::chrono::steady_clock::now() - started
-    ).count();
     result->allocation_count = driver->allocation_count + driver->qoco_report.audit_allocations;
     result->allocation_bytes = driver->allocation_bytes + driver->qoco_report.audit_peak_bytes;
     const bool pure_qoco =

@@ -2162,3 +2162,60 @@ SHA256 `aa1e8a1e6e21c0c0e43c47a6f06d33f2979af327f674297fb5b2d5875497a390`.
 - [Corrected N20 pilot](../artifacts/performance/planner-ruiz-v78-pilot-20.json), [longer comparison](../artifacts/performance/planner-ruiz-v78-repeatability-20.json) and [N500 pilot](../artifacts/performance/planner-ruiz-v78-pilot-500.json).
 - [Checkpoint, checks, hashes and helper sources](../artifacts/performance/planner-ruiz-v78-checkpoint.json).
 - [Complete prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v78-reproduction.json).
+
+## Failed-solve timing and warm-start comparison
+
+Core v79 repairs the failure timing observed in the preceding Ruiz experiment.
+The adapter already records time spent by failed QOCO solves, but the outer
+driver returned before copying that time to its generic components or filling
+SCvx/CQP totals. A host-only scope guard now finalizes the totals on every exit
+after the timed solve scope begins. The failed pure-QOCO path assigns cumulative
+adapter update/solve/residual times, avoiding both omission of the last attempt
+and double counting of previous outer iterations. No GPU synchronization,
+allocation, numerical kernel or tolerance changes were introduced.
+
+A Linux interposer calls the real native GPU inner solve and then injects a
+numerical failure on the first or second call. Both timing regressions fail on
+frozen core72 and pass on v79; the successful control also passes. Tests check
+failed status, rejection by the certificate, exact completed inner-iteration
+counts, cumulative component times and elapsed totals. Four existing
+convergence/cancellation tests also pass, making seven passing tests. An initial
+test incorrectly assumed that a valid inner candidate must be accepted by
+SCvx; this was corrected, with the original failure output preserved. No new
+CUDA sanitizer campaign is claimed for this host-accounting change. Allocation
+and transfer counters on early failure, hybrid accounting and detailed timing
+inside failed QOCO setup remain outside this repair.
+
+The sweep runner also accepts `--warm-starts primal none`. Each pair of Ruiz
+count and requested warm-start mode gets a separate canonical input and result.
+The following experiments use planner77, core79, QOCO78 and the same fixed
+objectives, RTX 5090, cuDSS 0.8.0.10 and unchanged tolerances as the previous
+section. Each setting has two warmups and seven measured fresh processes;
+execution order rotates and all failed samples are retained.
+
+| Intervals | Ruiz passes | Requested start | Qualified / attempts | Median SCvx ms | Median inner iterations |
+|---:|---:|---|---:|---:|---:|
+| 20 | 0 | primal | 9/9 | 776.836 | 156 |
+| 20 | 0 | cold (`none`) | 9/9 | 819.654 | 176 |
+| 20 | 1 | primal | 5/9 | disqualified | — |
+| 20 | 1 | cold (`none`) | 7/9 | disqualified | — |
+| 500 | 0 | primal | 9/9 | 426.645 | 34 |
+| 500 | 0 | cold (`none`) | 9/9 | 430.309 | 38 |
+| 500 | 1 | primal | 9/9 | 637.819 | 71 |
+| 500 | 1 | cold (`none`) | 9/9 | 542.291 | 54 |
+
+All six natural numerical failures now have positive SCvx/component timings;
+their SCvx elapsed costs range from approximately 0.47 to 0.70 seconds. Across
+all 72 attempts, generic solve time matches the adapter's cumulative solve time
+and the aggregate CQP time does not exceed SCvx elapsed time. These measurements
+rule out cold starts as a general cure for the one-pass failures. They do not
+justify changing the default, relaxing accuracy, or claiming a general speedup.
+More evidence is needed on conditioning and linear-solve convergence.
+
+Frozen core v79 is
+`/home/angus/build-spacepdhcg-timing-v79/final/libspacepdhcg_cuda.so`, SHA256
+`8155b5f837a22874fc1bfd00d02af0b7048d64ac0da7f3451db34827c7037fa6`.
+
+- [Checkpoint, build log, fault tests, scopes and source/runtime hashes](../artifacts/performance/core-timing-v79-checkpoint.json).
+- [N20 distributions and failures](../artifacts/performance/planner-warm-start-v79-20.json).
+- [N500 distributions](../artifacts/performance/planner-warm-start-v79-500.json).
