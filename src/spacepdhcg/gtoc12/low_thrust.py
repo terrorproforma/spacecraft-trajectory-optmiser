@@ -90,6 +90,8 @@ class ScvxSettings:
     time_limit_s: float = 900.0
     discretisation_backend: str = "numpy"  # explicit "cuda" uses native interval dynamics
     assembly_backend: str = "numpy"  # CUDA assembly also requires CUDA dynamics
+    convex_solver_backend: str = "clarabel"  # explicit "qoco" requires both CUDA paths
+    qoco_ruiz_iterations: int = 0
 
 
 @dataclass(slots=True)
@@ -114,6 +116,8 @@ class LegSolution:
     diagnostic: str = ""
     discretisation_backend: str = "numpy"
     assembly_backend: str = "numpy"
+    convex_solver_backend: str = "clarabel"
+    solver_reports: list[dict] = field(default_factory=list)
 
     @property
     def converged(self) -> bool:
@@ -647,6 +651,10 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         raise ValueError("assembly_backend must be 'numpy' or 'cuda'")
     if settings.assembly_backend == "cuda" and settings.discretisation_backend != "cuda":
         raise ValueError("CUDA assembly requires CUDA discretisation")
+    if settings.convex_solver_backend not in {"clarabel", "qoco"}:
+        raise ValueError("convex_solver_backend must be 'clarabel' or 'qoco'")
+    if settings.convex_solver_backend == "qoco" and settings.assembly_backend != "cuda":
+        raise ValueError("GPU QOCO requires CUDA assembly and discretisation")
     started = time.perf_counter()
     duration_days = boundary.duration_days
     if duration_days <= 0.0:
@@ -696,7 +704,15 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         fuel_weights[:-1] += 0.5 * interval_lengths
         fuel_weights[1:] += 0.5 * interval_lengths
     fuel_weights *= model.lam
-    if settings.assembly_backend == "cuda":
+    if settings.convex_solver_backend == "qoco":
+        from .gpu_qoco import GpuQocoProblem
+
+        problem = resources.enter_context(closing(GpuQocoProblem(
+            model, node_times, settings.hold, boundary.free_departure_vinf,
+            boundary.free_arrival_vinf, bnd, fuel_weights, settings.clarabel_tolerance,
+            settings.qoco_ruiz_iterations,
+        )))
+    elif settings.assembly_backend == "cuda":
         from .gpu_conic import GpuConvexProblem
 
         problem = resources.enter_context(closing(GpuConvexProblem(
@@ -716,6 +732,7 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         return fuel(ct) + settings.virtual_weight * penalty, float(np.max(np.abs(defect)))
 
     current_merit, current_defect = merit(states, controls)
+    solver_reports: list[dict] = []
     status = "iteration_limit"
     accepted = 0
     iterations = 0
@@ -733,7 +750,14 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         if polishing and polish_left <= 0:
             break
         iterations = iteration + 1
-        if settings.assembly_backend == "cuda":
+        if settings.convex_solver_backend == "qoco":
+            ok, solver_status, x = problem.solve_linearised(
+                states, controls, disc.substeps, trust_state, trust_control,
+                settings.virtual_weight, minimum_mass, radius_floor, vinf_max,
+                settings.smoothness_weight,
+            )
+            solver_reports.append({"outer_iteration": iterations, **problem.last_report})
+        elif settings.assembly_backend == "cuda":
             a_matrix, b, q, cones, p_matrix = problem.build_linearised(
                 states, controls, disc.substeps, trust_state, trust_control,
                 settings.virtual_weight, minimum_mass, radius_floor, vinf_max,
@@ -759,9 +783,10 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
                 settings.smoothness_weight,
                 zero_last_control=zoh,
             )
-        ok, solver_status, x = _clarabel_solve(
-            a_matrix, b, q, cones, settings.clarabel_tolerance, p_matrix
-        )
+        if settings.convex_solver_backend == "clarabel":
+            ok, solver_status, x = _clarabel_solve(
+                a_matrix, b, q, cones, settings.clarabel_tolerance, p_matrix
+            )
         if not ok or not np.all(np.isfinite(x)):
             trust_state *= settings.shrink_factor
             trust_control *= settings.shrink_factor
@@ -901,6 +926,8 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         diagnostic=diagnostic,
         discretisation_backend=settings.discretisation_backend,
         assembly_backend=settings.assembly_backend,
+        convex_solver_backend=settings.convex_solver_backend,
+        solver_reports=solver_reports,
     )
 
 

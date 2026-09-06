@@ -151,18 +151,12 @@ The additional cases are single runs, not timing distributions.
 [combined regression](../artifacts/performance/gtoc12-conic-v87-regression.json),
 [rejected v86](../artifacts/performance/gtoc12-conic-v86-rejected.json).
 
-## Next native connection
+## Native solver connection
 
-The retained device outputs are in Clarabel's combined CSC convention. The existing
-native QOCO adapter consumes canonical Q/A/F arrays. A fixed conversion can split
-scalar equalities/inequalities from SOC rows once, mirror upper-P topology once,
-and update numerical values on the GPU. Scalar bounds are b/b for equality rows
-and -infinity/b for inequality rows. SOC data are F=-A_soc and offset=b_soc.
-Variables are free because all bounds already appear as rows.
-
-The QOCO adapter currently configures its own tolerance to 1e-8, whereas this
-GTOC12 reference uses 1e-9. The new connection must expose the correct requested
-tolerance and independently qualify objective, residuals and nonlinear physics;
-the adapter currently rejects nonfinite audited residuals, but its success return
-alone does not enforce a caller-selected audit threshold. That connection, CPU outer
-decisions and true GPU trajectory batching remain to be implemented and measured.
+The experimental [GPU QOCO connection](GTOC12_GPU_QOCO.md) now splits retained
+conic matrices into canonical Q/A/F arrays and updates their values on the GPU.
+SOC data require both F=-A_soc and the permutation from Clarabel's [t,vector]
+to canonical [vector,t]. It independently gates residuals and the global objective
+gap at the requested tolerance. Transfer convergence is still unreliable, and
+Clarabel remains the default. CPU outer decisions and GPU trajectory batching
+remain unfinished.

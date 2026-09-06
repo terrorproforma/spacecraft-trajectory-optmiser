@@ -1,0 +1,74 @@
+[
+  {
+    "name": "legacy_conversion",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v92/cuda-tests/native_qoco_conversion_test"
+    ],
+    "returncode": 0,
+    "stdout": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+    "stderr": "",
+    "seconds": 0.5211089929798618
+  },
+  {
+    "name": "memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--leak-check",
+      "full",
+      "/home/angus/build-spacepdhcg-gtoc12-v92/final/gtoc12_qoco_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nhold=0 repeat=0 api=0 qoco=1 iters=11 residuals=7.39389394062e-17,2.43577426296e-14 updates=0\nhold=0 repeat=1 api=0 qoco=1 iters=11 residuals=7.17522966398e-18,1.15072961038e-14 updates=1\nhold=0 repeat=2 api=0 qoco=1 iters=11 residuals=1.17199849134e-17,7.07719262162e-15 updates=2\nhold=1 repeat=0 api=0 qoco=1 iters=11 residuals=1.7080354225e-17,2.40944166241e-14 updates=0\nhold=1 repeat=1 api=0 qoco=1 iters=11 residuals=7.11507819744e-18,1.13981760503e-14 updates=1\nhold=1 repeat=2 api=0 qoco=1 iters=11 residuals=1.72573527144e-17,7.00743982363e-15 updates=2\nGTOC12 QOCO device/host solve, repeated numerical updates, qualification and lifecycle PASS\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 5.90581868001027
+  },
+  {
+    "name": "racecheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v92/final/gtoc12_qoco_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nhold=0 repeat=0 api=0 qoco=1 iters=11 residuals=7.39389394062e-17,2.43577494237e-14 updates=0\nhold=0 repeat=1 api=0 qoco=1 iters=11 residuals=1.72127600717e-17,1.15072865521e-14 updates=1\nhold=0 repeat=2 api=0 qoco=1 iters=11 residuals=1.17199801871e-17,7.07719863971e-15 updates=2\nhold=1 repeat=0 api=0 qoco=1 iters=11 residuals=8.47871314676e-18,2.40944065484e-14 updates=0\nhold=1 repeat=1 api=0 qoco=1 iters=11 residuals=7.11507660712e-18,1.13981732073e-14 updates=1\nhold=1 repeat=2 api=0 qoco=1 iters=11 residuals=1.72573527144e-17,7.00743148994e-15 updates=2\nGTOC12 QOCO device/host solve, repeated numerical updates, qualification and lifecycle PASS\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+    "stderr": "",
+    "seconds": 59.64149378897855
+  },
+  {
+    "name": "initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v92/final/gtoc12_qoco_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nhold=0 repeat=0 api=0 qoco=1 iters=11 residuals=7.39389394062e-17,2.43577674005e-14 updates=0\nhold=0 repeat=1 api=0 qoco=1 iters=11 residuals=7.17522986966e-18,1.15072965363e-14 updates=1\nhold=0 repeat=2 api=0 qoco=1 iters=11 residuals=1.17199751019e-17,7.07720507582e-15 updates=2\nhold=1 repeat=0 api=0 qoco=1 iters=11 residuals=1.7080354225e-17,2.40944105622e-14 updates=0\nhold=1 repeat=1 api=0 qoco=1 iters=11 residuals=6.65788908212e-17,1.13981813603e-14 updates=1\nhold=1 repeat=2 api=0 qoco=1 iters=11 residuals=1.17268944879e-17,7.00743404645e-15 updates=2\nGTOC12 QOCO device/host solve, repeated numerical updates, qualification and lifecycle PASS\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 5.663317643979099
+  },
+  {
+    "name": "synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v92/final/gtoc12_qoco_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nhold=0 repeat=0 api=0 qoco=1 iters=11 residuals=7.39389394062e-17,2.43577579243e-14 updates=0\nhold=0 repeat=1 api=0 qoco=1 iters=11 residuals=7.17522776869e-18,1.15072929996e-14 updates=1\nhold=0 repeat=2 api=0 qoco=1 iters=11 residuals=1.17199817863e-17,7.07719660347e-15 updates=2\nhold=1 repeat=0 api=0 qoco=1 iters=11 residuals=1.7080354225e-17,2.40944111845e-14 updates=0\nhold=1 repeat=1 api=0 qoco=1 iters=11 residuals=7.11508706673e-18,1.13981903323e-14 updates=1\nhold=1 repeat=2 api=0 qoco=1 iters=11 residuals=1.17268946369e-17,7.00743391225e-15 updates=2\nGTOC12 QOCO device/host solve, repeated numerical updates, qualification and lifecycle PASS\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 12.127958340977784
+  }
+]

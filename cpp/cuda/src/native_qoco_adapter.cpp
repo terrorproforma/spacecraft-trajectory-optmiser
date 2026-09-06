@@ -1240,12 +1240,16 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     const spacepdhcg_cuda_scvx_problem* problem,
     cudaStream_t stream,
     int ruiz_iterations,
-    spacepdhcg_native_qoco** workspace
+    spacepdhcg_native_qoco** workspace,
+    double tolerance,
+    bool require_device_extensions
 ) {
     if (problem == nullptr || workspace == nullptr) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     *workspace = nullptr;
+    if (!std::isfinite(tolerance) || tolerance <= 0.0)
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     const char* path = std::getenv("SPACEPDHCG_QOCO_LIBRARY");
     if (path == nullptr || path[0] == '\0') {
         return SPACEPDHCG_CUDA_UNSUPPORTED;
@@ -1333,6 +1337,9 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     const int update_symbols = (result->create_numeric_update != nullptr)
         + (result->device_numeric_update != nullptr) + (result->destroy_numeric_update != nullptr);
     if (update_symbols != 0 && update_symbols != 3) return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if (require_device_extensions && (!result->set_device_io || !result->device_solution
+        || !result->primal_start || update_symbols != 3 || !result->begin_reduction_scope
+        || !result->end_reduction_scope)) return SPACEPDHCG_CUDA_UNSUPPORTED;
     if ((result->begin_reduction_scope == nullptr) != (result->end_reduction_scope == nullptr)) {
         return SPACEPDHCG_CUDA_UNSUPPORTED;
     }
@@ -1379,7 +1386,7 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         low_thrust ? 1.0e-12 : 1.0e-6,
         1.0e-13, low_thrust ? 1.0e-13 : 1.0e-8, 1.0e-13,
         low_thrust ? 1.0e-13 : 1.0e-11,
-        1.0e-8, 1.0e-8, 1.0e-5, 1.0e-5, 0,
+        tolerance, tolerance, 1.0e-5, 1.0e-5, 0,
     };
     // Diagnostic only: QOCO's own iteration log on stderr. Never set by the
     // campaign scheduler; timing records are not affected in its absence.
@@ -1809,7 +1816,22 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_create(
     spacepdhcg_native_qoco** workspace
 ) {
     try {
-        return native_qoco_create_impl(problem, stream, ruiz_iterations, workspace);
+        return native_qoco_create_impl(problem, stream, ruiz_iterations, workspace, 1.0e-8, false);
+    } catch (const std::bad_alloc&) {
+        return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    } catch (...) {
+        return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+    }
+}
+
+spacepdhcg_cuda_status spacepdhcg_native_qoco_create_configured(
+    const spacepdhcg_cuda_scvx_problem* problem, cudaStream_t stream,
+    int ruiz_iterations, double tolerance, bool require_device_extensions,
+    spacepdhcg_native_qoco** workspace
+) {
+    try {
+        return native_qoco_create_impl(problem, stream, ruiz_iterations, workspace,
+            tolerance, require_device_extensions);
     } catch (const std::bad_alloc&) {
         return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
     } catch (...) {
