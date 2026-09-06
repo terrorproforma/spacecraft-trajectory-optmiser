@@ -1,0 +1,2667 @@
+[
+  {
+    "variant": "baseline",
+    "case": "boundary-full",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "build/performance/boundary-v72-checks/boundary-full-input.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/baseline-boundary-full.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n",
+    "core_sha256": "b4bfba99813663f26e10d244381a2a7491d724a0cc7287b129fce8d79c3393c6",
+    "input": {
+      "constraints": {
+        "glide_slope": 1.0471975511965976,
+        "maximum_angular_rate": 1.0,
+        "maximum_tilt": 0.5235987755982988,
+        "minimum_altitude": 0.0
+      },
+      "environment": {
+        "gravity": [
+          0.0,
+          0.0,
+          -3.711
+        ]
+      },
+      "family": "powered_descent_6dof",
+      "horizon": {
+        "final_time": 4.0,
+        "free_final_time": false,
+        "intervals": 20
+      },
+      "initial_state": [
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        0.0,
+        -1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2000.0
+      ],
+      "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+      "output": {
+        "dense_replay_substeps": 10
+      },
+      "schema_version": "1.0.0",
+      "solver": {
+        "backend": "pure_qoco",
+        "maximum_outer_iterations": 30,
+        "time_limit_seconds": 600.0,
+        "tolerance": 1e-06,
+        "trust_region": {
+          "initial_radius": 0.015625
+        },
+        "step_tolerance": 0.02
+      },
+      "terminal": {
+        "fixed": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          false
+        ],
+        "state": [
+          0.0,
+          0.0,
+          97.0,
+          0.0,
+          0.0,
+          -0.4,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "vehicle": {
+        "dry_mass": 1000.0,
+        "exhaust_velocity": 2173.913043478261,
+        "maximum_torque": 2000.0,
+        "principal_inertia": [
+          2500.0,
+          2200.0,
+          1800.0
+        ],
+        "thrust": {
+          "maximum": 15000.0,
+          "minimum": 0.0
+        }
+      }
+    },
+    "result_sha256": "4a36794a676b189476634ec8280d0c4dae4534dbd3296d4d41126e8ec1477e64",
+    "result": {
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.512975691966729,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 5,
+        "accepted_steps": 4,
+        "rejected_steps": 1,
+        "resolved_steps": 0,
+        "inner_iterations": 271,
+        "final_trust_radius": 0.0140625,
+        "trajectory_step": 0,
+        "propellant_used": 14.158129098281734,
+        "final_mass": 1985.8418709017183,
+        "terminal_position_error": 7.2466690426153946e-09,
+        "terminal_velocity_error": 4.651409202249823e-09
+      },
+      "iterations": [
+        {
+          "outer_iteration": 0,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 1.0810987447969555e-11,
+          "inner_iterations": 25,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.015625,
+          "trust_action": "retain",
+          "predicted_reduction": 0.6313255479499201,
+          "actual_reduction": 0.3846015146356694,
+          "reduction_ratio": 0.6091968175287243,
+          "step_fraction": 0.9999999999816171,
+          "objective": 0.5057829757752078,
+          "virtual_control": 0.0014831950488889468,
+          "dynamics_defect": 0.0021967954654536215,
+          "path_violation": 0,
+          "terminal_residual": 0.0021967954654536215,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 6.555424750654078e-18,
+          "native_dual_residual": 1.0810987447969555e-11,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 1.0810987447969555e-11,
+          "natural_residual": 1.0810987447969555e-11,
+          "current_merit": 1.137108523725128,
+          "candidate_merit": 0.7525070090894586,
+          "candidate_model_merit": 0.5057829757752078,
+          "current_dynamics_defect": 0,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0054908891495928395,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 150,
+          "cone_projections": 50,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "bb67f6325293ce70"
+        },
+        {
+          "outer_iteration": 1,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 2.256314133851271e-07,
+          "inner_iterations": 159,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.0078125,
+          "trust_action": "shrink",
+          "predicted_reduction": 0.23953093954380977,
+          "actual_reduction": 0.2395188551018087,
+          "reduction_ratio": 0.9999495495570464,
+          "step_fraction": 0.9999999342282515,
+          "objective": 0.5129760695456488,
+          "virtual_control": 2.3551320645979187e-13,
+          "dynamics_defect": 1.1099925458557537e-07,
+          "path_violation": 0,
+          "terminal_residual": 1.1099925439406189e-07,
+          "accepted": false,
+          "restoration_accepted": false,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": false,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 8.02214648177588e-18,
+          "native_dual_residual": 2.256314133851271e-07,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 2.256314133851271e-07,
+          "natural_residual": 2.256314133851271e-07,
+          "current_merit": 0.7525070090894586,
+          "candidate_merit": 0.5129881539876499,
+          "candidate_model_merit": 0.5129760695456488,
+          "current_dynamics_defect": 0.0021967954654536215,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0021967954654536215,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 954,
+          "cone_projections": 318,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "a04354477693c73c"
+        },
+        {
+          "outer_iteration": 2,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 1.5309306374929582e-10,
+          "inner_iterations": 32,
+          "trust_radius_before": 0.0078125,
+          "trust_radius_after": 0.0078125,
+          "trust_action": "retain",
+          "predicted_reduction": 0.2418023032679527,
+          "actual_reduction": 0.1724637311553322,
+          "reduction_ratio": 0.7132427145006013,
+          "step_fraction": 0.9999999998756907,
+          "objective": 0.5107047058215058,
+          "virtual_control": 0.0006936791396880132,
+          "dynamics_defect": 0.000693627174262213,
+          "path_violation": 4.326163131433229e-13,
+          "terminal_residual": 0.0006936271742622291,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "primal",
+          "native_primal_residual": 2.862313740365104e-13,
+          "native_dual_residual": 1.5309306374929582e-10,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 1.5309306374929582e-10,
+          "natural_residual": 1.5309306374929582e-10,
+          "current_merit": 0.7525070090894586,
+          "candidate_merit": 0.5800432779341264,
+          "candidate_model_merit": 0.5107047058215058,
+          "current_dynamics_defect": 0.0021967954654536215,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0021967954654536215,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 192,
+          "cone_projections": 64,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "8d75eca8bd03311f"
+        },
+        {
+          "outer_iteration": 3,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 3.2973993838158224e-10,
+          "inner_iterations": 14,
+          "trust_radius_before": 0.0078125,
+          "trust_radius_after": 0.0140625,
+          "trust_action": "expand",
+          "predicted_reduction": 0.06708237545382545,
+          "actual_reduction": 0.06663070658434977,
+          "reduction_ratio": 0.9932669517675836,
+          "step_fraction": 0.9999999998290692,
+          "objective": 0.5129609024803009,
+          "virtual_control": 4.528202462593635e-06,
+          "dynamics_defect": 4.5172818995886655e-06,
+          "path_violation": 4.764600210667898e-12,
+          "terminal_residual": 4.517281903146931e-06,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "primal",
+          "native_primal_residual": 3.141050202497146e-12,
+          "native_dual_residual": 3.2973993838158224e-10,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 3.2973993838158224e-10,
+          "natural_residual": 3.2973993838158224e-10,
+          "current_merit": 0.5800432779341264,
+          "candidate_merit": 0.5134125713497766,
+          "candidate_model_merit": 0.5129609024803009,
+          "current_dynamics_defect": 0.000693627174262213,
+          "current_path_violation": 4.326163131433229e-13,
+          "current_terminal_residual": 0.0006936271742622291,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 84,
+          "cone_projections": 28,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "2ac5aff9d048c3ad"
+        },
+        {
+          "outer_iteration": 4,
+          "phase": "polish",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 7.716311175700089e-10,
+          "inner_iterations": 41,
+          "trust_radius_before": 0.0140625,
+          "trust_radius_after": 0.0140625,
+          "trust_action": "retain",
+          "predicted_reduction": 0.00043687938112257907,
+          "actual_reduction": 0.00043687400697145495,
+          "reduction_ratio": 0.9999876987760092,
+          "step_fraction": 0.006128676981573384,
+          "objective": 0.512975691968654,
+          "virtual_control": 4.957629827884879e-12,
+          "dynamics_defect": 4.651266261035403e-11,
+          "path_violation": 0,
+          "terminal_residual": 4.651409202249823e-11,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 8.756060278663533e-18,
+          "native_dual_residual": 7.716311175700089e-10,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 7.716311175700089e-10,
+          "natural_residual": 7.716311175700089e-10,
+          "current_merit": 0.5134125713497766,
+          "candidate_merit": 0.5129756973428051,
+          "candidate_model_merit": 0.512975691968654,
+          "current_dynamics_defect": 4.5172818995886655e-06,
+          "current_path_violation": 4.764600210667898e-12,
+          "current_terminal_residual": 4.517281903146931e-06,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 246,
+          "cone_projections": 82,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "3b3d2255fe5fa0a8"
+        }
+      ],
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 7.716311175700089e-10,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 4.651409202249823e-11,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 4.651409202249823e-11,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 4,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 1304636,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 707612,
+        "d2h_copy_count": 102,
+        "d2h_bytes": 1347916,
+        "device_copy_count": 46,
+        "device_copy_bytes": 501160,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "d587b485e7d64303",
+        "variables": 994,
+        "scalar_rows": 908,
+        "affine_rows": 762,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.197313697,
+        "topology_seconds": 0.00305369,
+        "coefficient_seconds": 0.055784939,
+        "workspace_create_seconds": 0.025954892,
+        "update_seconds": 0.006002158,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 2.1257970320000004,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.0013810280000000003,
+        "replay_seconds": 0.0045729920268058775,
+        "acceptance_seconds": 0.000255507,
+        "d2h_seconds": 0.0003104639984667301,
+        "cqp_total_seconds": 2.222497191,
+        "scvx_total_seconds": 2.237403259,
+        "solve_wall_seconds": 2.237407341,
+        "qoco_conversion_seconds": 0.00392345,
+        "qoco_setup_seconds": 0.085393523,
+        "qoco_update_seconds": 0.006002158,
+        "qoco_solve_seconds": 2.1257970320000004,
+        "independent_replay_seconds": 3.4395e-05,
+        "plan_wall_seconds": 2.354165065
+      }
+    }
+  },
+  {
+    "variant": "baseline",
+    "case": "boundary-limit",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "build/performance/boundary-v72-checks/boundary-limit-input.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/baseline-boundary-limit.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n",
+    "core_sha256": "b4bfba99813663f26e10d244381a2a7491d724a0cc7287b129fce8d79c3393c6",
+    "input": {
+      "constraints": {
+        "glide_slope": 1.0471975511965976,
+        "maximum_angular_rate": 1.0,
+        "maximum_tilt": 0.5235987755982988,
+        "minimum_altitude": 0.0
+      },
+      "environment": {
+        "gravity": [
+          0.0,
+          0.0,
+          -3.711
+        ]
+      },
+      "family": "powered_descent_6dof",
+      "horizon": {
+        "final_time": 4.0,
+        "free_final_time": false,
+        "intervals": 20
+      },
+      "initial_state": [
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        0.0,
+        -1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2000.0
+      ],
+      "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+      "output": {
+        "dense_replay_substeps": 10
+      },
+      "schema_version": "1.0.0",
+      "solver": {
+        "backend": "pure_qoco",
+        "maximum_outer_iterations": 2,
+        "time_limit_seconds": 600.0,
+        "tolerance": 1e-06,
+        "trust_region": {
+          "initial_radius": 0.015625
+        },
+        "step_tolerance": 0.02
+      },
+      "terminal": {
+        "fixed": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          false
+        ],
+        "state": [
+          0.0,
+          0.0,
+          97.0,
+          0.0,
+          0.0,
+          -0.4,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "vehicle": {
+        "dry_mass": 1000.0,
+        "exhaust_velocity": 2173.913043478261,
+        "maximum_torque": 2000.0,
+        "principal_inertia": [
+          2500.0,
+          2200.0,
+          1800.0
+        ],
+        "thrust": {
+          "maximum": 15000.0,
+          "minimum": 0.0
+        }
+      }
+    },
+    "result_sha256": "79a97a3fcd8214f3a13e263c5bd1d902c8c470ba5bd93c1b646c993647f01103",
+    "result": {
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129760589425891,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 103,
+        "final_trust_radius": 0.028125,
+        "trajectory_step": 0,
+        "propellant_used": 14.158139226815592,
+        "final_mass": 1985.8418607731844,
+        "terminal_position_error": 9.84226896605378e-06,
+        "terminal_velocity_error": 1.1098231803730041e-05
+      },
+      "iterations": [
+        {
+          "outer_iteration": 0,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 1.5842703186267173e-11,
+          "inner_iterations": 25,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.015625,
+          "trust_action": "retain",
+          "predicted_reduction": 0.6313255471204172,
+          "actual_reduction": 0.3846015137954568,
+          "reduction_ratio": 0.6091968169982817,
+          "step_fraction": 0.9999999999819899,
+          "objective": 0.5057829766047107,
+          "virtual_control": 0.0014831950489758276,
+          "dynamics_defect": 0.0021967954655544597,
+          "path_violation": 2.617404485742251e-12,
+          "terminal_residual": 0.0021967954655544597,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 1.7380822427107892e-12,
+          "native_dual_residual": 1.5842703186267173e-11,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 1.5842703186267173e-11,
+          "natural_residual": 1.5842703186267173e-11,
+          "current_merit": 1.137108523725128,
+          "candidate_merit": 0.7525070099296711,
+          "candidate_model_merit": 0.5057829766047107,
+          "current_dynamics_defect": 0,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0054908891495928395,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 150,
+          "cone_projections": 50,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "bb67f6325293ce70"
+        },
+        {
+          "outer_iteration": 1,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 6.259755816476273e-10,
+          "inner_iterations": 78,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.028125,
+          "trust_action": "expand",
+          "predicted_reduction": 0.23953095098289012,
+          "actual_reduction": 0.23951886852838167,
+          "reduction_ratio": 0.9999495578568912,
+          "step_fraction": 0.9999997583965738,
+          "objective": 0.512976058946781,
+          "virtual_control": 1.458386899412046e-12,
+          "dynamics_defect": 1.1098228476780214e-07,
+          "path_violation": 0,
+          "terminal_residual": 1.1098231803730042e-07,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 1.4622025827191592e-16,
+          "native_dual_residual": 6.259755816476273e-10,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 6.259755816476273e-10,
+          "natural_residual": 6.259755816476273e-10,
+          "current_merit": 0.7525070099296711,
+          "candidate_merit": 0.5129881414012895,
+          "candidate_model_merit": 0.512976058946781,
+          "current_dynamics_defect": 0.0021967954655544597,
+          "current_path_violation": 2.617404485742251e-12,
+          "current_terminal_residual": 0.0021967954655544597,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 468,
+          "cone_projections": 156,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "0f3bb7124932a085"
+        }
+      ],
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 6.259755816476273e-10,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 1.1098231803730042e-07,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 1.1098231803730042e-07,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 1304636,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 707612,
+        "d2h_copy_count": 51,
+        "d2h_bytes": 640936,
+        "device_copy_count": 19,
+        "device_copy_bytes": 147424,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "d587b485e7d64303",
+        "variables": 994,
+        "scalar_rows": 908,
+        "affine_rows": 762,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.147961705,
+        "topology_seconds": 0.003041856,
+        "coefficient_seconds": 0.057332447,
+        "workspace_create_seconds": 0.025422167,
+        "update_seconds": 0.001633373,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.816252809,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000549281,
+        "replay_seconds": 0.0026493760347366334,
+        "acceptance_seconds": 7.253199999999999e-05,
+        "d2h_seconds": 0.0001871039979159832,
+        "cqp_total_seconds": 0.9291645889999999,
+        "scvx_total_seconds": 0.936361514,
+        "solve_wall_seconds": 0.936365587,
+        "qoco_conversion_seconds": 0.003537893,
+        "qoco_setup_seconds": 0.107191233,
+        "qoco_update_seconds": 0.001633373,
+        "qoco_solve_seconds": 0.816252809,
+        "independent_replay_seconds": 3.0743e-05,
+        "plan_wall_seconds": 1.055489616
+      }
+    }
+  },
+  {
+    "variant": "baseline",
+    "case": "step-limit",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "build/performance/boundary-v72-checks/step-limit-input.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/baseline-step-limit.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n",
+    "core_sha256": "b4bfba99813663f26e10d244381a2a7491d724a0cc7287b129fce8d79c3393c6",
+    "input": {
+      "constraints": {
+        "glide_slope": 1.0471975511965976,
+        "maximum_angular_rate": 1.0,
+        "maximum_tilt": 0.5235987755982988,
+        "minimum_altitude": 0.0
+      },
+      "environment": {
+        "gravity": [
+          0.0,
+          0.0,
+          -3.711
+        ]
+      },
+      "family": "powered_descent_6dof",
+      "horizon": {
+        "final_time": 4.0,
+        "free_final_time": false,
+        "intervals": 20
+      },
+      "initial_state": [
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        0.0,
+        -1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2000.0
+      ],
+      "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+      "output": {
+        "dense_replay_substeps": 10
+      },
+      "schema_version": "1.0.0",
+      "solver": {
+        "backend": "pure_qoco",
+        "maximum_outer_iterations": 2,
+        "time_limit_seconds": 600.0,
+        "tolerance": 1e-06,
+        "trust_region": {
+          "initial_radius": 0.015625
+        },
+        "step_tolerance": 1e-12
+      },
+      "terminal": {
+        "fixed": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          false
+        ],
+        "state": [
+          0.0,
+          0.0,
+          97.0,
+          0.0,
+          0.0,
+          -0.4,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "vehicle": {
+        "dry_mass": 1000.0,
+        "exhaust_velocity": 2173.913043478261,
+        "maximum_torque": 2000.0,
+        "principal_inertia": [
+          2500.0,
+          2200.0,
+          1800.0
+        ],
+        "thrust": {
+          "maximum": 15000.0,
+          "minimum": 0.0
+        }
+      }
+    },
+    "result_sha256": "b3e8fbb6c4feedccd9518f76168d41d1c07ecccfedf53eefbb955f6955d16015",
+    "result": {
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129760587630952,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 320,
+        "final_trust_radius": 0.028125,
+        "trajectory_step": 0,
+        "propellant_used": 14.158139221861347,
+        "final_mass": 1985.8418607781387,
+        "terminal_position_error": 9.843943374221453e-06,
+        "terminal_velocity_error": 1.1099281174986597e-05
+      },
+      "iterations": [
+        {
+          "outer_iteration": 0,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 9.839244559054408e-12,
+          "inner_iterations": 25,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.015625,
+          "trust_action": "retain",
+          "predicted_reduction": 0.6313255478098138,
+          "actual_reduction": 0.3846015144971646,
+          "reduction_ratio": 0.6091968174445326,
+          "step_fraction": 0.9999999999816209,
+          "objective": 0.5057829759153142,
+          "virtual_control": 0.0014831950488877652,
+          "dynamics_defect": 0.0021967954654416822,
+          "path_violation": 1.4014707024519642e-12,
+          "terminal_residual": 0.0021967954654416822,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 9.30643832422563e-13,
+          "native_dual_residual": 9.839244559054408e-12,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 9.839244559054408e-12,
+          "natural_residual": 9.839244559054408e-12,
+          "current_merit": 1.137108523725128,
+          "candidate_merit": 0.7525070092279633,
+          "candidate_model_merit": 0.5057829759153142,
+          "current_dynamics_defect": 0,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0054908891495928395,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 150,
+          "cone_projections": 50,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "bb67f6325293ce70"
+        },
+        {
+          "outer_iteration": 1,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 7.65884517835246e-11,
+          "inner_iterations": 295,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.028125,
+          "trust_action": "expand",
+          "predicted_reduction": 0.23953095046054618,
+          "actual_reduction": 0.23951886678935574,
+          "reduction_ratio": 0.9999495527773459,
+          "step_fraction": 0.999999848230476,
+          "objective": 0.5129760587674171,
+          "virtual_control": 5.861692638055071e-13,
+          "dynamics_defect": 1.1099277355486326e-07,
+          "path_violation": 0,
+          "terminal_residual": 1.1099281174986597e-07,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 1.6786794015145947e-16,
+          "native_dual_residual": 7.65884517835246e-11,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 7.65884517835246e-11,
+          "natural_residual": 7.65884517835246e-11,
+          "current_merit": 0.7525070092279633,
+          "candidate_merit": 0.5129881424386076,
+          "candidate_model_merit": 0.5129760587674171,
+          "current_dynamics_defect": 0.0021967954654416822,
+          "current_path_violation": 1.4014707024519642e-12,
+          "current_terminal_residual": 0.0021967954654416822,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 1770,
+          "cone_projections": 590,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "a839a59b281a464c"
+        }
+      ],
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 7.65884517835246e-11,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 1.1099281174986597e-07,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 1.1099281174986597e-07,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 1304636,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 707612,
+        "d2h_copy_count": 51,
+        "d2h_bytes": 640936,
+        "device_copy_count": 19,
+        "device_copy_bytes": 147424,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "d587b485e7d64303",
+        "variables": 994,
+        "scalar_rows": 908,
+        "affine_rows": 762,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.175144204,
+        "topology_seconds": 0.003098045,
+        "coefficient_seconds": 0.067625297,
+        "workspace_create_seconds": 0.024799651,
+        "update_seconds": 0.001834639,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 2.554595268,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.00054605,
+        "replay_seconds": 0.002647999942302704,
+        "acceptance_seconds": 6.9289e-05,
+        "d2h_seconds": 0.00018611199781298638,
+        "cqp_total_seconds": 2.6523767890000003,
+        "scvx_total_seconds": 2.659494274,
+        "solve_wall_seconds": 2.659498319,
+        "qoco_conversion_seconds": 0.00331525,
+        "qoco_setup_seconds": 0.092085582,
+        "qoco_update_seconds": 0.001834639,
+        "qoco_solve_seconds": 2.554595268,
+        "independent_replay_seconds": 3.294e-05,
+        "plan_wall_seconds": 2.787142293
+      }
+    }
+  },
+  {
+    "variant": "candidate",
+    "case": "boundary-full",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "build/performance/boundary-v72-checks/boundary-full-input.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/candidate-boundary-full.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n",
+    "core_sha256": "993fd2c0b0765b3696507aea086952177d0c686367d0b0c02f1f9707c9e2e241",
+    "input": {
+      "constraints": {
+        "glide_slope": 1.0471975511965976,
+        "maximum_angular_rate": 1.0,
+        "maximum_tilt": 0.5235987755982988,
+        "minimum_altitude": 0.0
+      },
+      "environment": {
+        "gravity": [
+          0.0,
+          0.0,
+          -3.711
+        ]
+      },
+      "family": "powered_descent_6dof",
+      "horizon": {
+        "final_time": 4.0,
+        "free_final_time": false,
+        "intervals": 20
+      },
+      "initial_state": [
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        0.0,
+        -1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2000.0
+      ],
+      "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+      "output": {
+        "dense_replay_substeps": 10
+      },
+      "schema_version": "1.0.0",
+      "solver": {
+        "backend": "pure_qoco",
+        "maximum_outer_iterations": 30,
+        "time_limit_seconds": 600.0,
+        "tolerance": 1e-06,
+        "trust_region": {
+          "initial_radius": 0.015625
+        },
+        "step_tolerance": 0.02
+      },
+      "terminal": {
+        "fixed": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          false
+        ],
+        "state": [
+          0.0,
+          0.0,
+          97.0,
+          0.0,
+          0.0,
+          -0.4,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "vehicle": {
+        "dry_mass": 1000.0,
+        "exhaust_velocity": 2173.913043478261,
+        "maximum_torque": 2000.0,
+        "principal_inertia": [
+          2500.0,
+          2200.0,
+          1800.0
+        ],
+        "thrust": {
+          "maximum": 15000.0,
+          "minimum": 0.0
+        }
+      }
+    },
+    "result_sha256": "2cfd356c06f8743f2bb5197a3098246c3ca97d4c08d7ec9a06108dc37ce9a56d",
+    "result": {
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756917908797,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 3,
+        "accepted_steps": 3,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 121,
+        "final_trust_radius": 0.028125,
+        "trajectory_step": 2.1026044202828755e-06,
+        "propellant_used": 14.158129093428215,
+        "final_mass": 1985.8418709065718,
+        "terminal_position_error": 1.1438974922839407e-07,
+        "terminal_velocity_error": 6.133330271440585e-08
+      },
+      "iterations": [
+        {
+          "outer_iteration": 0,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 1.9927591239612195e-11,
+          "inner_iterations": 25,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.015625,
+          "trust_action": "retain",
+          "predicted_reduction": 0.6313255413616435,
+          "actual_reduction": 0.3846015080839331,
+          "reduction_ratio": 0.6091968135083276,
+          "step_fraction": 0.9999999999819624,
+          "objective": 0.5057829823634844,
+          "virtual_control": 0.0014831950486375485,
+          "dynamics_defect": 0.0021967954651187526,
+          "path_violation": 3.0009262748838714e-11,
+          "terminal_residual": 0.0021967954651187526,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 1.9927591239612195e-11,
+          "native_dual_residual": 9.613656550700936e-12,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 9.613656550700936e-12,
+          "natural_residual": 1.9927591239612195e-11,
+          "current_merit": 1.137108523725128,
+          "candidate_merit": 0.7525070156411948,
+          "candidate_model_merit": 0.5057829823634844,
+          "current_dynamics_defect": 0,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0054908891495928395,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 150,
+          "cone_projections": 50,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "bb67f6325293ce70"
+        },
+        {
+          "outer_iteration": 1,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 2.8477487632554247e-12,
+          "inner_iterations": 57,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.028125,
+          "trust_action": "expand",
+          "predicted_reduction": 0.23953095695930515,
+          "actual_reduction": 0.23951887202490996,
+          "reduction_ratio": 0.9999495475050548,
+          "step_fraction": 0.9999999996571662,
+          "objective": 0.5129760586818897,
+          "virtual_control": 1.132095365906257e-15,
+          "dynamics_defect": 1.110033951479128e-07,
+          "path_violation": 0,
+          "terminal_residual": 1.1100339523562042e-07,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "primal",
+          "native_primal_residual": 7.387609678606108e-18,
+          "native_dual_residual": 2.8477487632554247e-12,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 2.8477487632554247e-12,
+          "natural_residual": 2.8477487632554247e-12,
+          "current_merit": 0.7525070156411948,
+          "candidate_merit": 0.5129881436162849,
+          "candidate_model_merit": 0.5129760586818897,
+          "current_dynamics_defect": 0.0021967954651187526,
+          "current_path_violation": 3.0009262748838714e-11,
+          "current_terminal_residual": 0.0021967954651187526,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 342,
+          "cone_projections": 114,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "963aa4a3aeda77b4"
+        },
+        {
+          "outer_iteration": 2,
+          "phase": "polish",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 1.6035072785703207e-09,
+          "inner_iterations": 39,
+          "trust_radius_before": 0.028125,
+          "trust_radius_after": 0.028125,
+          "trust_action": "retain",
+          "predicted_reduction": 1.2451802163138126e-05,
+          "actual_reduction": 1.237905312756471e-05,
+          "reduction_ratio": 0.9941575496767223,
+          "step_fraction": 7.475926827672446e-05,
+          "objective": 0.5129756918141217,
+          "virtual_control": 4.6991169189500855e-11,
+          "dynamics_defect": 6.13330123910849e-10,
+          "path_violation": 0,
+          "terminal_residual": 6.133330271440585e-10,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 3.68740571552037e-17,
+          "native_dual_residual": 1.6035072785703207e-09,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 1.6035072785703207e-09,
+          "natural_residual": 1.6035072785703207e-09,
+          "current_merit": 0.5129881436162849,
+          "candidate_merit": 0.5129757645631573,
+          "candidate_model_merit": 0.5129756918141217,
+          "current_dynamics_defect": 1.110033951479128e-07,
+          "current_path_violation": 0,
+          "current_terminal_residual": 1.1100339523562042e-07,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 234,
+          "cone_projections": 78,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "4b706437d7fa2a1b"
+        }
+      ],
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 1.6035072785703207e-09,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 6.133330271440585e-10,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 6.133330271440585e-10,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 2,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 1304636,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 707612,
+        "d2h_copy_count": 68,
+        "d2h_bytes": 876596,
+        "device_copy_count": 29,
+        "device_copy_bytes": 269144,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "d587b485e7d64303",
+        "variables": 994,
+        "scalar_rows": 908,
+        "affine_rows": 762,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.180019287,
+        "topology_seconds": 0.003603019,
+        "coefficient_seconds": 0.056760444,
+        "workspace_create_seconds": 0.025351053,
+        "update_seconds": 0.0029264169999999997,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.956961695,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000636551,
+        "replay_seconds": 0.0032477759718894965,
+        "acceptance_seconds": 9.482800000000001e-05,
+        "d2h_seconds": 0.00021932799741625789,
+        "cqp_total_seconds": 1.0556027319999999,
+        "scvx_total_seconds": 1.064971399,
+        "solve_wall_seconds": 1.064974906,
+        "qoco_conversion_seconds": 0.003725363,
+        "qoco_setup_seconds": 0.09135270599999999,
+        "qoco_update_seconds": 0.0029264169999999997,
+        "qoco_solve_seconds": 0.956961695,
+        "independent_replay_seconds": 3.9139e-05,
+        "plan_wall_seconds": 1.182995239
+      }
+    }
+  },
+  {
+    "variant": "candidate",
+    "case": "boundary-limit",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "build/performance/boundary-v72-checks/boundary-limit-input.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/candidate-boundary-limit.json"
+    ],
+    "returncode": 2,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n",
+    "core_sha256": "993fd2c0b0765b3696507aea086952177d0c686367d0b0c02f1f9707c9e2e241",
+    "input": {
+      "constraints": {
+        "glide_slope": 1.0471975511965976,
+        "maximum_angular_rate": 1.0,
+        "maximum_tilt": 0.5235987755982988,
+        "minimum_altitude": 0.0
+      },
+      "environment": {
+        "gravity": [
+          0.0,
+          0.0,
+          -3.711
+        ]
+      },
+      "family": "powered_descent_6dof",
+      "horizon": {
+        "final_time": 4.0,
+        "free_final_time": false,
+        "intervals": 20
+      },
+      "initial_state": [
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        0.0,
+        -1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2000.0
+      ],
+      "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+      "output": {
+        "dense_replay_substeps": 10
+      },
+      "schema_version": "1.0.0",
+      "solver": {
+        "backend": "pure_qoco",
+        "maximum_outer_iterations": 2,
+        "time_limit_seconds": 600.0,
+        "tolerance": 1e-06,
+        "trust_region": {
+          "initial_radius": 0.015625
+        },
+        "step_tolerance": 0.02
+      },
+      "terminal": {
+        "fixed": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          false
+        ],
+        "state": [
+          0.0,
+          0.0,
+          97.0,
+          0.0,
+          0.0,
+          -0.4,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "vehicle": {
+        "dry_mass": 1000.0,
+        "exhaust_velocity": 2173.913043478261,
+        "maximum_torque": 2000.0,
+        "principal_inertia": [
+          2500.0,
+          2200.0,
+          1800.0
+        ],
+        "thrust": {
+          "maximum": 15000.0,
+          "minimum": 0.0
+        }
+      }
+    },
+    "result_sha256": "d78c50fe246e30217e2f6b04b141eeb94cc1239fb2d49ce7aa590cf44039e2bd",
+    "result": {
+      "status": {
+        "code": "maximum_iterations",
+        "message": "the outer iteration budget was exhausted before convergence",
+        "exit_code": 2,
+        "solver_status": "maximum_iterations",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5057045098813715,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 1,
+        "rejected_steps": 1,
+        "resolved_steps": 0,
+        "inner_iterations": 324,
+        "final_trust_radius": 0.0078125,
+        "trajectory_step": 0.01562499999971289,
+        "propellant_used": 13.95744447272591,
+        "final_mass": 1986.042555527274,
+        "terminal_position_error": 0.2712295266266693,
+        "terminal_velocity_error": 0.21967954654499022
+      },
+      "iterations": [
+        {
+          "outer_iteration": 0,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 5.872634259464513e-12,
+          "inner_iterations": 25,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.015625,
+          "trust_action": "retain",
+          "predicted_reduction": 0.6313255479053976,
+          "actual_reduction": 0.38460151459156433,
+          "reduction_ratio": 0.6091968175018252,
+          "step_fraction": 0.9999999999816249,
+          "objective": 0.5057829758197303,
+          "virtual_control": 0.0014831950488869083,
+          "dynamics_defect": 0.0021967954654499022,
+          "path_violation": 4.4534923896814384e-13,
+          "terminal_residual": 0.0021967954654499022,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 2.957332763322543e-13,
+          "native_dual_residual": 5.872634259464513e-12,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 5.872634259464513e-12,
+          "natural_residual": 5.872634259464513e-12,
+          "current_merit": 1.137108523725128,
+          "candidate_merit": 0.7525070091335636,
+          "candidate_model_merit": 0.5057829758197303,
+          "current_dynamics_defect": 0,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0054908891495928395,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 150,
+          "cone_projections": 50,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "bb67f6325293ce70"
+        },
+        {
+          "outer_iteration": 1,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 1.450289026115109e-07,
+          "inner_iterations": 299,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.0078125,
+          "trust_action": "shrink",
+          "predicted_reduction": 0.2395309391917273,
+          "actual_reduction": 0.23951885460847155,
+          "reduction_ratio": 0.9999495489672586,
+          "step_fraction": 0.9999999551588529,
+          "objective": 0.5129760699418363,
+          "virtual_control": 1.6101689863180687e-13,
+          "dynamics_defect": 1.1100044025325051e-07,
+          "path_violation": 6.244002482465778e-11,
+          "terminal_residual": 1.1100044050971202e-07,
+          "accepted": false,
+          "restoration_accepted": false,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": false,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 4.1163807473649025e-11,
+          "native_dual_residual": 1.450289026115109e-07,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 1.450289026115109e-07,
+          "natural_residual": 1.450289026115109e-07,
+          "current_merit": 0.7525070091335636,
+          "candidate_merit": 0.512988154525092,
+          "candidate_model_merit": 0.5129760699418363,
+          "current_dynamics_defect": 0.0021967954654499022,
+          "current_path_violation": 4.4534923896814384e-13,
+          "current_terminal_residual": 0.0021967954654499022,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 1794,
+          "cone_projections": 598,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "4fa1570f404a5dbc"
+        }
+      ],
+      "certificate": {
+        "certified": false,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": false,
+            "value": 1,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 5.872634259464513e-12,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 4.4534923896814384e-13,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": false,
+            "value": 0.0021967954654499022,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 4.4534923896814384e-13,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": false,
+            "value": 0.0021967954654499022,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [
+          "converged",
+          "device_terminal_residual",
+          "independent_terminal_residual"
+        ],
+        "continuous_time_violation": 4.4534923896814384e-13,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 1304636,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 707612,
+        "d2h_copy_count": 51,
+        "d2h_bytes": 640936,
+        "device_copy_count": 16,
+        "device_copy_bytes": 136000,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "d587b485e7d64303",
+        "variables": 994,
+        "scalar_rows": 908,
+        "affine_rows": 762,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.203319602,
+        "topology_seconds": 0.003032963,
+        "coefficient_seconds": 0.05736574,
+        "workspace_create_seconds": 0.027447339,
+        "update_seconds": 0.002031866,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 2.600895133,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.00065663,
+        "replay_seconds": 0.0026859199404716495,
+        "acceptance_seconds": 9.879999999999999e-05,
+        "d2h_seconds": 0.0001881279982626438,
+        "cqp_total_seconds": 2.7003772269999997,
+        "scvx_total_seconds": 2.70769676,
+        "solve_wall_seconds": 2.707700807,
+        "qoco_conversion_seconds": 0.00351263,
+        "qoco_setup_seconds": 0.09328096799999999,
+        "qoco_update_seconds": 0.002031866,
+        "qoco_solve_seconds": 2.600895133,
+        "independent_replay_seconds": 3.1073e-05,
+        "plan_wall_seconds": 2.843172659
+      }
+    }
+  },
+  {
+    "variant": "candidate",
+    "case": "step-limit",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "build/performance/boundary-v72-checks/step-limit-input.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/candidate-step-limit.json"
+    ],
+    "returncode": 2,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n",
+    "core_sha256": "993fd2c0b0765b3696507aea086952177d0c686367d0b0c02f1f9707c9e2e241",
+    "input": {
+      "constraints": {
+        "glide_slope": 1.0471975511965976,
+        "maximum_angular_rate": 1.0,
+        "maximum_tilt": 0.5235987755982988,
+        "minimum_altitude": 0.0
+      },
+      "environment": {
+        "gravity": [
+          0.0,
+          0.0,
+          -3.711
+        ]
+      },
+      "family": "powered_descent_6dof",
+      "horizon": {
+        "final_time": 4.0,
+        "free_final_time": false,
+        "intervals": 20
+      },
+      "initial_state": [
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        0.0,
+        -1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2000.0
+      ],
+      "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+      "output": {
+        "dense_replay_substeps": 10
+      },
+      "schema_version": "1.0.0",
+      "solver": {
+        "backend": "pure_qoco",
+        "maximum_outer_iterations": 2,
+        "time_limit_seconds": 600.0,
+        "tolerance": 1e-06,
+        "trust_region": {
+          "initial_radius": 0.015625
+        },
+        "step_tolerance": 1e-12
+      },
+      "terminal": {
+        "fixed": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          false
+        ],
+        "state": [
+          0.0,
+          0.0,
+          97.0,
+          0.0,
+          0.0,
+          -0.4,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "vehicle": {
+        "dry_mass": 1000.0,
+        "exhaust_velocity": 2173.913043478261,
+        "maximum_torque": 2000.0,
+        "principal_inertia": [
+          2500.0,
+          2200.0,
+          1800.0
+        ],
+        "thrust": {
+          "maximum": 15000.0,
+          "minimum": 0.0
+        }
+      }
+    },
+    "result_sha256": "ea7828e7a9d7fbb994750bfe97a544caed0425d2bcf33dc17600d716c61413e2",
+    "result": {
+      "status": {
+        "code": "maximum_iterations",
+        "message": "the outer iteration budget was exhausted before convergence",
+        "exit_code": 2,
+        "solver_status": "maximum_iterations",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129760616998726,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 237,
+        "final_trust_radius": 0.028125,
+        "trajectory_step": 0.015624993299364946,
+        "propellant_used": 14.158139302916197,
+        "final_mass": 1985.8418606970838,
+        "terminal_position_error": 9.84050505792311e-06,
+        "terminal_velocity_error": 1.1097450023977995e-05
+      },
+      "iterations": [
+        {
+          "outer_iteration": 0,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 5.657751457012603e-12,
+          "inner_iterations": 25,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.015625,
+          "trust_action": "retain",
+          "predicted_reduction": 0.6313255478814969,
+          "actual_reduction": 0.3846015145645949,
+          "reduction_ratio": 0.6091968174821695,
+          "step_fraction": 0.999999999981616,
+          "objective": 0.5057829758436311,
+          "virtual_control": 0.0014831950488979951,
+          "dynamics_defect": 0.0021967954654788227,
+          "path_violation": 6.592017598450184e-13,
+          "terminal_residual": 0.0021967954654788227,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 4.377416174655243e-13,
+          "native_dual_residual": 5.657751457012603e-12,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 5.657751457012603e-12,
+          "natural_residual": 5.657751457012603e-12,
+          "current_merit": 1.137108523725128,
+          "candidate_merit": 0.752507009160533,
+          "candidate_model_merit": 0.5057829758436311,
+          "current_dynamics_defect": 0,
+          "current_path_violation": 0,
+          "current_terminal_residual": 0.0054908891495928395,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 150,
+          "cone_projections": 50,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "bb67f6325293ce70"
+        },
+        {
+          "outer_iteration": 1,
+          "phase": "refinement",
+          "requested_tolerance": 1e-08,
+          "achieved_residual": 4.9076945644059784e-09,
+          "inner_iterations": 212,
+          "trust_radius_before": 0.015625,
+          "trust_radius_after": 0.028125,
+          "trust_action": "expand",
+          "predicted_reduction": 0.2395309474511863,
+          "actual_reduction": 0.2395188659601306,
+          "reduction_ratio": 0.999949561878395,
+          "step_fraction": 0.9999995711593566,
+          "objective": 0.5129760617093467,
+          "virtual_control": 1.5637051367758842e-12,
+          "dynamics_defect": 1.1097441849072797e-07,
+          "path_violation": 0,
+          "terminal_residual": 1.1097450023977995e-07,
+          "accepted": true,
+          "restoration_accepted": true,
+          "re_solved": false,
+          "scaling_refreshed": false,
+          "recovery_used": false,
+          "forcing_satisfied": true,
+          "final_polish_handoff": false,
+          "warm_start_mode": "none",
+          "native_primal_residual": 3.5928955158828944e-16,
+          "native_dual_residual": 4.9076945644059784e-09,
+          "complementarity_residual": 0,
+          "scalar_primal_residual": 0,
+          "box_primal_residual": 0,
+          "cone_primal_residual": 0,
+          "stationarity_residual": 4.9076945644059784e-09,
+          "natural_residual": 4.9076945644059784e-09,
+          "current_merit": 0.752507009160533,
+          "candidate_merit": 0.5129881432004024,
+          "candidate_model_merit": 0.5129760617093467,
+          "current_dynamics_defect": 0.0021967954654788227,
+          "current_path_violation": 6.592017598450184e-13,
+          "current_terminal_residual": 0.0021967954654788227,
+          "maximum_stage_trust_distance": 0,
+          "terminal_trust_distance": 0,
+          "matvecs": 1272,
+          "cone_projections": 424,
+          "recovery_reason": "not_triggered",
+          "recovery_attempt_count": 0,
+          "recovery_accepted_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_seconds": 0,
+          "recovery_iterations": 0,
+          "cqp_numeric_fingerprint": "f8f0c29c069add02"
+        }
+      ],
+      "certificate": {
+        "certified": false,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": false,
+            "value": 1,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 4.9076945644059784e-09,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 1.1097450023977995e-07,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 1.1097450023977995e-07,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 5.2909066017292616e-17,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [
+          "converged"
+        ],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 1304636,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 707612,
+        "d2h_copy_count": 51,
+        "d2h_bytes": 640936,
+        "device_copy_count": 19,
+        "device_copy_bytes": 147424,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "d587b485e7d64303",
+        "variables": 994,
+        "scalar_rows": 908,
+        "affine_rows": 762,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.146302007,
+        "topology_seconds": 0.003104267,
+        "coefficient_seconds": 0.05606253,
+        "workspace_create_seconds": 0.023378469,
+        "update_seconds": 0.001613064,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 1.884866795,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000516089,
+        "replay_seconds": 0.0026479359865188602,
+        "acceptance_seconds": 5.6686000000000006e-05,
+        "d2h_seconds": 0.0001788799986243248,
+        "cqp_total_seconds": 1.979820475,
+        "scvx_total_seconds": 1.986966864,
+        "solve_wall_seconds": 1.986970802,
+        "qoco_conversion_seconds": 0.003351282,
+        "qoco_setup_seconds": 0.08947324499999999,
+        "qoco_update_seconds": 0.001613064,
+        "qoco_solve_seconds": 1.884866795,
+        "independent_replay_seconds": 3.1724e-05,
+        "plan_wall_seconds": 2.116564253
+      }
+    }
+  },
+  {
+    "variant": "candidate",
+    "case": "native",
+    "command": [
+      "/home/angus/build-spacepdhcg-boundary-v72/cuda-tests/native_qoco_conversion_test",
+      "4"
+    ],
+    "returncode": 0,
+    "stdout": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+    "stderr": ""
+  },
+  {
+    "variant": "candidate",
+    "case": "landing",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/device_scvx_integration_test",
+      "--p1c-qoco-repeatability",
+      "7"
+    ],
+    "returncode": 0,
+    "stdout": "{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":9.07207136e-13,\"ratio\":0.9999317286226449,\"canonical\":1.34383185e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.46041839e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148243,\"t_cqp\":0.283088665,\"t_scvx\":0.286244719,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":9.0720713572566264e-13,\"native_primal\":6.4577780772870798e-18,\"native_dual\":9.0720713572566264e-13,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499795503227122,\"actual\":0.16498669039462038,\"ratio\":0.9999317286226449,\"step_fraction\":0.044910532516896168,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830720732684e-07,\"candidate_path\":0,\"candidate_terminal\":5.4844713332613537e-08,\"candidate_virtual\":3.8444863786347493e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449664293871293,\"candidate_model_merit\":0.4944853783010621,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":9.0720713572566264e-13,\"natural\":9.0720713572566264e-13,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-08,\"achieved\":1.3438318472067031e-11,\"native_primal\":6.9237103796616585e-18,\"native_dual\":1.3438318472067031e-11,\"complementarity\":0,\"inner_iterations\":19,\"matvecs\":114,\"cone_projections\":38,\"re_solved\":0,\"cqp_fingerprint\":\"716f1eea4b987b7e\",\"resolve_fingerprint\":\"716f1eea4b987b7e\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1269396227586714e-05,\"actual\":1.1269300628446999e-05,\"ratio\":0.99999151692443988,\"step_fraction\":0.00011485048522158402,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.4604003530431837e-13,\"candidate_path\":0,\"candidate_terminal\":7.4604183941673345e-13,\"candidate_virtual\":3.7304015381936757e-14,\"current_merit\":0.49449664293871293,\"candidate_merit\":0.49448537363808448,\"candidate_model_merit\":0.49448537354248534,\"current_dynamics\":2.0267830720732684e-07,\"current_path\":0,\"current_terminal\":5.4844713332613537e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.3438318472067031e-11,\"natural\":1.3438318472067031e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":1.3438318472067031e-11,\"objective\":0.49448537354239958,\"dynamics\":0,\"path\":0,\"terminal\":7.4604183941673345e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14824338156723,\"cqp_seconds\":0.28308866500000002,\"scvx_seconds\":0.28624471899999998,\"topology_seconds\":0.033405723999999998,\"coefficient_seconds\":0.00034172798693180083,\"workspace_create_seconds\":0.023138411000000001,\"update_seconds\":0.0011935380000000001,\"scaling_seconds\":0,\"solve_seconds\":0.233784673,\"residual_seconds\":0.00058346299999999999,\"replay_seconds\":0.00085369598865509032,\"acceptance_seconds\":5.8629999999999999e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00017788799852132796,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":760212,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.002123032,\"qoco_setup_seconds\":0.045403959000000001,\"qoco_update_seconds\":0.0011935380000000001,\"qoco_solve_seconds\":0.233784673,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":9.07154493e-13,\"ratio\":0.9999317286226338,\"canonical\":1.34383291e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.46056827e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148243,\"t_cqp\":0.236176715,\"t_scvx\":0.238574107,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":9.0715449331098116e-13,\"native_primal\":6.4819568570244406e-18,\"native_dual\":9.0715449331098116e-13,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499795503227033,\"actual\":0.16498669039461766,\"ratio\":0.9999317286226338,\"step_fraction\":0.044910532516920398,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830722564551e-07,\"candidate_path\":0,\"candidate_terminal\":5.4844713332613537e-08,\"candidate_virtual\":3.8442634069769102e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449664293871565,\"candidate_model_merit\":0.49448537830106298,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":9.0715449331098116e-13,\"natural\":9.0715449331098116e-13,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-08,\"achieved\":1.3438329061322378e-11,\"native_primal\":6.6364613264976563e-18,\"native_dual\":1.3438329061322378e-11,\"complementarity\":0,\"inner_iterations\":19,\"matvecs\":114,\"cone_projections\":38,\"re_solved\":0,\"cqp_fingerprint\":\"a8f694ba1eab0e63\",\"resolve_fingerprint\":\"a8f694ba1eab0e63\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1269396229529605e-05,\"actual\":1.1269300631666646e-05,\"ratio\":0.99999151703773548,\"step_fraction\":0.00011485047088515522,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.4605502331515084e-13,\"candidate_path\":0,\"candidate_terminal\":7.4605682742756582e-13,\"candidate_virtual\":3.7304395271717466e-14,\"current_merit\":0.49449664293871565,\"candidate_merit\":0.49448537363808398,\"candidate_model_merit\":0.49448537354248612,\"current_dynamics\":2.0267830722564551e-07,\"current_path\":0,\"current_terminal\":5.4844713332613537e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.3438329061322378e-11,\"natural\":1.3438329061322378e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":1.3438329061322378e-11,\"objective\":0.49448537354240041,\"dynamics\":0,\"path\":0,\"terminal\":7.4605682742756582e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14824338160724,\"cqp_seconds\":0.23617671500000001,\"scvx_seconds\":0.23857410700000001,\"topology_seconds\":0.00074784000000000005,\"coefficient_seconds\":0.00035584001243114472,\"workspace_create_seconds\":0.001336025,\"update_seconds\":0.00095870099999999995,\"scaling_seconds\":0,\"solve_seconds\":0.219977956,\"residual_seconds\":0.00030605399999999999,\"replay_seconds\":0.00062521600723266602,\"acceptance_seconds\":6.6260000000000006e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00017017600312829018,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":760212,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.0019630759999999998,\"qoco_setup_seconds\":0.012970928,\"qoco_update_seconds\":0.00095870099999999995,\"qoco_solve_seconds\":0.219977956,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":9.07144816e-13,\"ratio\":0.99993172862263446,\"canonical\":1.3438465e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.46062101e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148243,\"t_cqp\":0.287271449,\"t_scvx\":0.290788227,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":9.0714481635423409e-13,\"native_primal\":7.4818575617780165e-18,\"native_dual\":9.0714481635423409e-13,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499795503226961,\"actual\":0.16498669039461705,\"ratio\":0.99993172862263446,\"step_fraction\":0.044910532516919517,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830722786596e-07,\"candidate_path\":0,\"candidate_terminal\":5.4844713332613537e-08,\"candidate_virtual\":3.8442224229587663e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449664293871626,\"candidate_model_merit\":0.4944853783010637,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":9.0714481635423409e-13,\"natural\":9.0714481635423409e-13,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-08,\"achieved\":1.343846502021569e-11,\"native_primal\":8.9818214652920466e-18,\"native_dual\":1.343846502021569e-11,\"complementarity\":0,\"inner_iterations\":19,\"matvecs\":114,\"cone_projections\":38,\"re_solved\":0,\"cqp_fingerprint\":\"367a1bd92394edaf\",\"resolve_fingerprint\":\"367a1bd92394edaf\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1269396229918183e-05,\"actual\":1.1269300632998913e-05,\"ratio\":0.99999151712147494,\"step_fraction\":0.00011485046782699973,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.4606029687451777e-13,\"candidate_path\":0,\"candidate_terminal\":7.4606210098693285e-13,\"candidate_virtual\":3.7304541370288822e-14,\"current_merit\":0.49449664293871626,\"candidate_merit\":0.49448537363808326,\"candidate_model_merit\":0.49448537354248634,\"current_dynamics\":2.0267830722786596e-07,\"current_path\":0,\"current_terminal\":5.4844713332613537e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.343846502021569e-11,\"natural\":1.343846502021569e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":1.343846502021569e-11,\"objective\":0.49448537354240057,\"dynamics\":0,\"path\":0,\"terminal\":7.4606210098693285e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14824338158996,\"cqp_seconds\":0.28727144899999996,\"scvx_seconds\":0.29078822700000001,\"topology_seconds\":0.00078876,\"coefficient_seconds\":0.00035884800553321835,\"workspace_create_seconds\":0.001489193,\"update_seconds\":0.001039674,\"scaling_seconds\":0,\"solve_seconds\":0.25242369599999998,\"residual_seconds\":0.00027136,\"replay_seconds\":0.00061900800466537474,\"acceptance_seconds\":5.4813000000000005e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.0001805119998753071,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":760212,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.01837041,\"qoco_setup_seconds\":0.015166309000000001,\"qoco_update_seconds\":0.001039674,\"qoco_solve_seconds\":0.25242369599999998,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":9.07208589e-13,\"ratio\":0.99993172862264257,\"canonical\":1.34382924e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.46036011e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148243,\"t_cqp\":0.245757367,\"t_scvx\":0.248145383,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":9.0720858923717412e-13,\"native_primal\":6.5401000476063493e-18,\"native_dual\":9.0720858923717412e-13,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499795503226922,\"actual\":0.164986690394618,\"ratio\":0.99993172862264257,\"step_fraction\":0.044910532516881589,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830721010238e-07,\"candidate_path\":0,\"candidate_terminal\":5.4844713332613537e-08,\"candidate_virtual\":3.8444925383566527e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449664293871531,\"candidate_model_merit\":0.49448537830106409,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":9.0720858923717412e-13,\"natural\":9.0720858923717412e-13,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-08,\"achieved\":1.3438292449266267e-11,\"native_primal\":7.2755647683818349e-18,\"native_dual\":1.3438292449266267e-11,\"complementarity\":0,\"inner_iterations\":19,\"matvecs\":114,\"cone_projections\":38,\"re_solved\":0,\"cqp_fingerprint\":\"0591bfbfce7cb22a\",\"resolve_fingerprint\":\"0591bfbfce7cb22a\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1269396230861872e-05,\"actual\":1.1269300639382696e-05,\"ratio\":0.99999151760420713,\"step_fraction\":0.00011485048442315826,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.4603420663343912e-13,\"candidate_path\":0,\"candidate_terminal\":7.460360107458541e-13,\"candidate_virtual\":3.7303633636454277e-14,\"current_merit\":0.49449664293871531,\"candidate_merit\":0.49448537363807593,\"candidate_model_merit\":0.49448537354248445,\"current_dynamics\":2.0267830721010238e-07,\"current_path\":0,\"current_terminal\":5.4844713332613537e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.3438292449266267e-11,\"natural\":1.3438292449266267e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":1.3438292449266267e-11,\"objective\":0.49448537354239869,\"dynamics\":0,\"path\":0,\"terminal\":7.460360107458541e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14824338155995,\"cqp_seconds\":0.245757367,\"scvx_seconds\":0.248145383,\"topology_seconds\":0.000746205,\"coefficient_seconds\":0.00034768000245094305,\"workspace_create_seconds\":0.0013370529999999999,\"update_seconds\":0.00098864900000000008,\"scaling_seconds\":0,\"solve_seconds\":0.22763655399999999,\"residual_seconds\":0.00029684399999999999,\"replay_seconds\":0.00059878398478031163,\"acceptance_seconds\":6.8837999999999994e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00017964800074696542,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":760212,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.001858717,\"qoco_setup_seconds\":0.014976603,\"qoco_update_seconds\":0.00098864900000000008,\"qoco_solve_seconds\":0.22763655399999999,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":9.07146642e-13,\"ratio\":0.9999317286226197,\"canonical\":1.34382939e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.46058493e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148243,\"t_cqp\":0.254850267,\"t_scvx\":0.257261203,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":9.0714664240801861e-13,\"native_primal\":6.1532054382204215e-18,\"native_dual\":9.0714664240801861e-13,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499795503227088,\"actual\":0.16498669039461589,\"ratio\":0.9999317286226197,\"step_fraction\":0.04491053251692332,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830722731083e-07,\"candidate_path\":0,\"candidate_terminal\":5.4844713346824394e-08,\"candidate_virtual\":3.8442301707438533e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449664293871742,\"candidate_model_merit\":0.49448537830106243,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":9.0714664240801861e-13,\"natural\":9.0714664240801861e-13,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-08,\"achieved\":1.3438293908624828e-11,\"native_primal\":9.1417498012693163e-18,\"native_dual\":1.3438293908624828e-11,\"complementarity\":0,\"inner_iterations\":19,\"matvecs\":114,\"cone_projections\":38,\"re_solved\":0,\"cqp_fingerprint\":\"e901794dbacd80fe\",\"resolve_fingerprint\":\"e901794dbacd80fe\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1269396231972095e-05,\"actual\":1.1269300626948198e-05,\"ratio\":0.99999151640230499,\"step_fraction\":0.00011485046615576592,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.4605668864968781e-13,\"candidate_path\":0,\"candidate_terminal\":7.4605849276210279e-13,\"candidate_virtual\":3.7304277700356905e-14,\"current_merit\":0.49449664293871742,\"candidate_merit\":0.49448537363809048,\"candidate_model_merit\":0.49448537354248545,\"current_dynamics\":2.0267830722731083e-07,\"current_path\":0,\"current_terminal\":5.4844713346824394e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.3438293908624828e-11,\"natural\":1.3438293908624828e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":1.3438293908624828e-11,\"objective\":0.49448537354239963,\"dynamics\":0,\"path\":0,\"terminal\":7.4605849276210279e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14824338166181,\"cqp_seconds\":0.25485026700000002,\"scvx_seconds\":0.25726120299999999,\"topology_seconds\":0.00063170700000000002,\"coefficient_seconds\":0.00034560000896453858,\"workspace_create_seconds\":0.0012240160000000001,\"update_seconds\":0.00095620199999999996,\"scaling_seconds\":0,\"solve_seconds\":0.238609285,\"residual_seconds\":0.00028993200000000002,\"replay_seconds\":0.00059846401214599606,\"acceptance_seconds\":6.5851000000000004e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00018735999986529349,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":760212,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.001778672,\"qoco_setup_seconds\":0.013216176000000001,\"qoco_update_seconds\":0.00095620199999999996,\"qoco_solve_seconds\":0.238609285,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":9.07174132e-13,\"ratio\":0.999931728622657,\"canonical\":1.34382762e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.46054885e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148243,\"t_cqp\":0.244211394,\"t_scvx\":0.246774841,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":9.0717413172022504e-13,\"native_primal\":6.4041826572499407e-18,\"native_dual\":9.0717413172022504e-13,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499795503227066,\"actual\":0.16498669039462183,\"ratio\":0.999931728622657,\"step_fraction\":0.044910532516896667,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830721953928e-07,\"candidate_path\":0,\"candidate_terminal\":5.4844713304191829e-08,\"candidate_virtual\":3.8443465773627868e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449664293871148,\"candidate_model_merit\":0.49448537830106265,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":9.0717413172022504e-13,\"natural\":9.0717413172022504e-13,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-08,\"achieved\":1.3438276174122604e-11,\"native_primal\":8.6025605778818498e-18,\"native_dual\":1.3438276174122604e-11,\"complementarity\":0,\"inner_iterations\":19,\"matvecs\":114,\"cone_projections\":38,\"re_solved\":0,\"cqp_fingerprint\":\"58dfb04abb702133\",\"resolve_fingerprint\":\"58dfb04abb702133\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1269396225588313e-05,\"actual\":1.1269300632166246e-05,\"ratio\":0.99999151743179904,\"step_fraction\":0.00011485047419509749,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.4605308042485775e-13,\"candidate_path\":0,\"candidate_terminal\":7.4605488453727273e-13,\"candidate_virtual\":3.7304101686930512e-14,\"current_merit\":0.49449664293871148,\"candidate_merit\":0.49448537363807932,\"candidate_model_merit\":0.4944853735424859,\"current_dynamics\":2.0267830721953928e-07,\"current_path\":0,\"current_terminal\":5.4844713304191829e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.3438276174122604e-11,\"natural\":1.3438276174122604e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":1.3438276174122604e-11,\"objective\":0.49448537354240019,\"dynamics\":0,\"path\":0,\"terminal\":7.4605488453727273e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14824338161725,\"cqp_seconds\":0.244211394,\"scvx_seconds\":0.24677484099999999,\"topology_seconds\":0.00068986399999999999,\"coefficient_seconds\":0.00034755200147628784,\"workspace_create_seconds\":0.017113194000000002,\"update_seconds\":0.0010692900000000001,\"scaling_seconds\":0,\"solve_seconds\":0.22663478300000001,\"residual_seconds\":0.00026846800000000001,\"replay_seconds\":0.00059942397475242621,\"acceptance_seconds\":6.4906999999999994e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00017923200130462647,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":760212,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.0021014839999999998,\"qoco_setup_seconds\":0.014137368999999999,\"qoco_update_seconds\":0.0010692900000000001,\"qoco_solve_seconds\":0.22663478300000001,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"recovery_profile\",\"model\":1,\"initial_primal\":0,\"initial_stationarity\":0,\"projection_cycles\":0,\"feasibility_cycles\":0,\"dual_refinement_cycles\":0,\"certificate_cycles\":0,\"certificate_attempts\":0,\"last_certificate_residual\":0,\"last_certificate_primal\":0}\n{\"case\":\"production_outer\",\"model\":1,\"outer_iterations\":2,\"accepted\":2,\"rejected\":0,\"trust_radius\":1,\"requested\":1e-08,\"achieved\":9.07117941e-13,\"ratio\":0.99993172862262669,\"canonical\":1.34382472e-11,\"objective\":0.494485374,\"virtual\":0,\"dynamics\":0,\"path\":0,\"terminal\":7.46073203e-13,\"path_thrust\":0,\"path_mass\":0,\"path_altitude\":0,\"cpu_gpu_trajectory\":0,\"cpu_gpu_replay\":0,\"retained_change\":476.148243,\"t_cqp\":0.252308723,\"t_scvx\":0.254680746,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"d2h_bytes\":262400,\"topology_allocations\":0,\"topology_copies\":0}\n{\"case\":\"g4_coordinate\",\"family\":\"P1-C-pd3\",\"primary_dispersion\":0.01,\"secondary_dispersion\":0,\"attitude_dispersion_radians\":0,\"angular_rate_dispersion\":0}\n{\"case\":\"g4_runtime\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"requested\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\"},\"actual\":{\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"resolve_trigger_multiple\":5,\"resolve_refinement_factor\":0.10000000000000001,\"resolve_minimum_tolerance\":1e-08,\"maximum_resolves\":1,\"polish_tolerance_ceiling\":1e-08}}\n{\"case\":\"g4_axis_application\",\"coordinate_id\":\"\",\"policy_sha256\":\"9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024\",\"matrix_sha256\":\"\",\"capability_sha256\":\"\",\"family\":\"P1-C-pd3\",\"intervals\":20,\"policy\":\"pure-gpu-ipm\",\"quality_tier\":\"ipm\",\"quality_tolerance\":1e-08,\"conditioning_log10_span\":0,\"scaling_mode\":\"refresh_if_needed\",\"warm_start_mode\":\"primal_dual\",\"dispersion_class\":0.01,\"attitude_class\":0,\"rate_class\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"evaluation_seed\":0,\"instance\":\"P1-C-pd3-seed-0\",\"repeat_kind\":\"not_applicable\",\"repeat\":0,\"solver_order\":0,\"instance_hash\":\"e312ae9747786a7b\",\"problem_hash\":\"6d11894b34cf4f4c\",\"coefficient_hash\":\"e47d3bf15aaea4e1\",\"condition_factor_min\":1,\"condition_factor_max\":1,\"conditioned_coefficient_ratio\":449704333.44384277,\"coefficient_parity_maximum\":1.6631661325927638e-16,\"coefficient_parity_relative\":1.6631661325927638e-16}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":0,\"phase\":2,\"requested\":1e-08,\"achieved\":9.0711794053684417e-13,\"native_primal\":9.0056169920817873e-18,\"native_dual\":9.0711794053684417e-13,\"complementarity\":0,\"inner_iterations\":17,\"matvecs\":102,\"cone_projections\":34,\"re_solved\":0,\"cqp_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint\":\"132aa1634a2889b1\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":0.16499795503227183,\"actual\":0.164986690394618,\"ratio\":0.99993172862262669,\"step_fraction\":0.044910532516939862,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":2.0267830723452729e-07,\"candidate_path\":0,\"candidate_terminal\":5.4844713318402686e-08,\"candidate_virtual\":3.8441085998148296e-14,\"current_merit\":0.65948333333333331,\"candidate_merit\":0.49449664293871531,\"candidate_model_merit\":0.49448537830106148,\"current_dynamics\":0,\"current_path\":0,\"current_terminal\":0.001,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":9.0711794053684417e-13,\"natural\":9.0711794053684417e-13,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":0,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_iteration\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"outer\":1,\"phase\":3,\"requested\":1e-08,\"achieved\":1.3438247166853933e-11,\"native_primal\":9.1691668641133824e-18,\"native_dual\":1.3438247166853933e-11,\"complementarity\":0,\"inner_iterations\":19,\"matvecs\":114,\"cone_projections\":38,\"re_solved\":0,\"cqp_fingerprint\":\"a802dddb07b8c618\",\"resolve_fingerprint\":\"a802dddb07b8c618\",\"resolve_fingerprint_match\":1,\"trust_action\":0,\"trust_before\":1,\"trust_after\":1,\"predicted\":1.1269396230584316e-05,\"actual\":1.1269300632610335e-05,\"ratio\":0.99999151702788458,\"step_fraction\":0.00011485046000391307,\"maximum_stage_trust_distance\":0,\"terminal_trust_distance\":0,\"candidate_dynamics\":7.4607139910476406e-13,\"candidate_path\":0,\"candidate_terminal\":7.4607320321717904e-13,\"candidate_virtual\":3.7304598196762756e-14,\"current_merit\":0.49449664293871531,\"candidate_merit\":0.4944853736380827,\"candidate_model_merit\":0.49448537354248473,\"current_dynamics\":2.0267830723452729e-07,\"current_path\":0,\"current_terminal\":5.4844713318402686e-08,\"scalar_primal\":0,\"box_primal\":0,\"cone_primal\":0,\"stationarity\":1.3438247166853933e-11,\"natural\":1.3438247166853933e-11,\"recovery_attempts\":0,\"recovery_accepted\":0,\"recovery_rejected\":0,\"recovery_seconds\":0,\"recovery_iterations\":0,\"recovery_initial\":0,\"recovery_final\":0,\"recovery_primal\":0,\"recovery_stationarity\":0,\"recovery_complementarity\":0,\"scaling_refreshed\":0,\"scaling_min\":0,\"scaling_max\":0,\"warm_start\":1,\"recovery_mode\":0,\"forcing_satisfied\":1,\"final_polish_handoff\":0,\"accepted\":1}\n{\"case\":\"g4_sample\",\"family\":\"P1-C-pd3\",\"policy\":\"pure-gpu-ipm\",\"intervals\":20,\"status\":0,\"trust_class\":0,\"transfer_class\":\"not_applicable\",\"qualified\":true,\"quality_tolerance\":1e-08,\"canonical_residual\":1.3438247166853933e-11,\"objective\":0.49448537354239896,\"dynamics\":0,\"path\":0,\"terminal\":7.4607320321717904e-13,\"path_inventory\":{\"thrust\":0,\"mass\":0,\"altitude\":0},\"virtual\":0,\"trajectory_difference\":476.14824338162089,\"cqp_seconds\":0.25230872300000001,\"scvx_seconds\":0.25468074600000001,\"topology_seconds\":0.00071950900000000001,\"coefficient_seconds\":0.00034851199388504026,\"workspace_create_seconds\":0.0012348229999999999,\"update_seconds\":0.00097376299999999999,\"scaling_seconds\":0,\"solve_seconds\":0.23534563999999999,\"residual_seconds\":0.000261131,\"replay_seconds\":0.00059760001301765444,\"acceptance_seconds\":6.8598999999999998e-05,\"h2d_seconds\":0,\"d2h_seconds\":0.00018169600144028665,\"recovery_seconds\":0,\"recovery_iterations\":0,\"inner_iterations\":36,\"h2d_bytes\":286728,\"d2h_bytes\":262400,\"peak_device_bytes\":760212,\"device_memory_scope\":\"native_owned_peak_upper_bound_excludes_qoco_cudss\",\"topology_allocations_after_create\":0,\"hidden_cpu_fallback\":0,\"qoco_conversion_seconds\":0.001736168,\"qoco_setup_seconds\":0.013992021,\"qoco_update_seconds\":0.00097376299999999999,\"qoco_solve_seconds\":0.23534563999999999,\"qoco_workspace_creations\":1,\"qoco_numeric_updates\":1,\"qoco_dual_discarded\":1,\"hybrid_handoff_eligible\":0,\"qoco_failure\":0}\n{\"case\":\"p1c_qoco_repeatability\",\"repeats\":7,\"qualified\":7,\"outer_attempt_budget\":2}\n",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":1573,\"intervals\":20,\"root_promotions\":0}\nP1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.4604183941673345e-13 canonical=1.3438318472067031e-11 qoco_failure=0 ratios=0.9999317286226449/0.99999151692443988\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":1573,\"intervals\":20,\"root_promotions\":0}\nP1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.4605682742756582e-13 canonical=1.3438329061322378e-11 qoco_failure=0 ratios=0.9999317286226338/0.99999151703773548\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":1573,\"intervals\":20,\"root_promotions\":0}\nP1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.4606210098693285e-13 canonical=1.343846502021569e-11 qoco_failure=0 ratios=0.99993172862263446/0.99999151712147494\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":1573,\"intervals\":20,\"root_promotions\":0}\nP1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.460360107458541e-13 canonical=1.3438292449266267e-11 qoco_failure=0 ratios=0.99993172862264257/0.99999151760420713\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":1573,\"intervals\":20,\"root_promotions\":0}\nP1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.4605849276210279e-13 canonical=1.3438293908624828e-11 qoco_failure=0 ratios=0.9999317286226197/0.99999151640230499\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":1573,\"intervals\":20,\"root_promotions\":0}\nP1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.4605488453727273e-13 canonical=1.3438276174122604e-11 qoco_failure=0 ratios=0.999931728622657/0.99999151743179904\n{\"case\":\"qoco_trajectory_ordering\",\"vertices\":1573,\"intervals\":20,\"root_promotions\":0}\nP1-C native QOCO diagnostic: status=0 outer=2 accepted=2 rejected=0 terminal=7.4607320321717904e-13 canonical=1.3438247166853933e-11 qoco_failure=0 ratios=0.99993172862262669/0.99999151702788458\n"
+  },
+  {
+    "variant": "candidate",
+    "case": "pd6-20",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "artifacts/performance/qoco-gpu-tree-input-20.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/qualified-20.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":3026,\"intervals\":20,\"root_promotions\":0}\n"
+  },
+  {
+    "variant": "candidate",
+    "case": "pd6-500",
+    "command": [
+      "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+      "artifacts/performance/qoco-rhs-scaling-input-500.json",
+      "--quiet",
+      "--output",
+      "build/performance/boundary-v72-checks/qualified-500.json"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "{\"case\":\"qoco_trajectory_ordering\",\"vertices\":74066,\"intervals\":500,\"root_promotions\":0}\n"
+  }
+]

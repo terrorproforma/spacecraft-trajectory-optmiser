@@ -1,0 +1,1807 @@
+{
+  "checks": [
+    {
+      "variant": "baseline",
+      "command": [
+        "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+        "/home/angus/scvx-boundary-v72-cancel/zero-hcw.json",
+        "--quiet",
+        "--output",
+        "/home/angus/scvx-boundary-v72-cancel/baseline.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "{\"case\":\"cancel_before_solve\",\"api\":0,\"solver_status\":0,\"outer_iterations\":0}\n",
+      "result": {
+        "schema_version": "1.0.0",
+        "result_kind": "spacepdhcg_plan_result",
+        "source_commit": "45569417b789a49f63bd5c1e68d93f8393d45a8e",
+        "status": {
+          "code": "certified",
+          "message": "converged and independently certified",
+          "exit_code": 0,
+          "solver_status": "converged",
+          "api_status": "success",
+          "time_limit_triggered": false
+        },
+        "problem": {
+          "schema_version": "1.0.0",
+          "name": "HCW rendezvous: 100 m radial / 50 m along-track approach to the origin in 800 s",
+          "family": "hcw",
+          "units": {
+            "position": "m",
+            "velocity": "m/s",
+            "acceleration": "m/s^2",
+            "angular_rate": "rad/s",
+            "time": "s"
+          },
+          "state_order": [
+            "x",
+            "y",
+            "z",
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "control_order": [
+            "ax",
+            "ay",
+            "az"
+          ],
+          "horizon": {
+            "intervals": 4,
+            "final_time": 800,
+            "step_seconds": 200,
+            "free_final_time": false
+          },
+          "initial_state": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal": {
+            "state": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fixed": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ]
+          },
+          "vehicle": {
+            "mean_motion": 0.00113,
+            "maximum_acceleration": 0.05,
+            "acceleration_bound": "norm"
+          },
+          "transcription": {
+            "state_weights": [
+              0.0001,
+              0.0001,
+              0.0001,
+              0.01,
+              0.01,
+              0.01
+            ],
+            "control_weights": [
+              1,
+              1,
+              1
+            ]
+          },
+          "solver": {
+            "backend": "pure_qoco",
+            "preset": "frozen_adaptive_pure_qoco",
+            "tolerance": 1e-06,
+            "step_tolerance": 0.02,
+            "maximum_outer_iterations": 10,
+            "minimum_outer_iterations": 1,
+            "time_limit_seconds": 300,
+            "certificate_tolerance": 1e-06,
+            "replay_parity_tolerance": 1e-09,
+            "warm_start_mode": "primal",
+            "trust_region": {
+              "initial_radius": 1,
+              "minimum_radius": 0.0001,
+              "maximum_radius": 8,
+              "shrink_factor": 0.5,
+              "expansion_factor": 1.8,
+              "acceptance_threshold": 0.05,
+              "strong_agreement_threshold": 0.75,
+              "near_boundary_fraction": 0.8,
+              "restoration_reduction": 0.9
+            },
+            "penalty": {
+              "feasibility_penalty": 100,
+              "virtual_penalty": 0
+            },
+            "forcing": {
+              "epsilon_max": 0.001,
+              "epsilon_floor": 1e-08,
+              "epsilon_0": 0.001,
+              "coefficient": 0.2,
+              "alpha": 0.5,
+              "gamma": 0.6,
+              "repair_ceiling": 0.01,
+              "progress_ceiling": 0.002,
+              "refinement_ceiling": 1e-05,
+              "polish_ceiling": 1e-08,
+              "repair_iterations": 5000,
+              "progress_iterations": 25000,
+              "refinement_iterations": 100000,
+              "polish_iterations": 1000000,
+              "resolve_trigger_multiple": 5,
+              "resolve_refinement_factor": 0.1,
+              "resolve_minimum_tolerance": 1e-08,
+              "maximum_resolves": 1,
+              "fixed_inner_tolerance": 1e-08,
+              "fixed_inner_iteration_limit": 200,
+              "final_polish_tolerance": 1e-08,
+              "final_polish_iteration_limit": 1000000
+            }
+          },
+          "output": {
+            "dense_replay_substeps": 10,
+            "include_iterations": true
+          },
+          "warm_start_supplied": false
+        },
+        "summary": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "outer_iterations": 0,
+          "accepted_steps": 0,
+          "rejected_steps": 0,
+          "resolved_steps": 0,
+          "inner_iterations": 0,
+          "final_trust_radius": 1,
+          "trajectory_step": 0,
+          "propellant_used": 0,
+          "final_mass": 0,
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0
+        },
+        "solver_residuals": {
+          "canonical_residual": 0,
+          "dynamics_defect": 0,
+          "path_violation": 0,
+          "terminal_residual": 0,
+          "virtual_control": 0,
+          "device_path_inventory": {
+            "thrust": 0,
+            "mass": 0,
+            "altitude": 0
+          },
+          "coefficient_parity_relative": 1.4710478673012006e-16
+        },
+        "independent_replay": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "path_violation": 0,
+          "path_components": {
+            "acceleration_norm": 0
+          },
+          "path_components_physical": {
+            "acceleration_norm": 0
+          },
+          "terminal_residual": 0,
+          "terminal_errors": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0,
+          "propellant_used": 0,
+          "final_mass": 0,
+          "replay_error": null,
+          "replay_parity": 0,
+          "dynamics_defect": 0,
+          "continuous_time_violation": 0,
+          "continuous_time_components": {
+            "acceleration_norm": 0
+          },
+          "continuous_time_components_physical": {
+            "acceleration_norm": 0
+          },
+          "dense_replay_substeps": 10
+        },
+        "model_evaluation": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "path_violation": 0,
+          "path_components": {
+            "acceleration_norm": 0
+          },
+          "path_components_physical": {
+            "acceleration_norm": 0
+          },
+          "terminal_residual": 0,
+          "terminal_errors": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0,
+          "propellant_used": 0,
+          "final_mass": 0
+        },
+        "initial_reference_evaluation": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "path_violation": 0,
+          "path_components": {
+            "acceleration_norm": 0
+          },
+          "path_components_physical": {
+            "acceleration_norm": 0
+          },
+          "terminal_residual": 0,
+          "terminal_errors": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0,
+          "propellant_used": 0,
+          "final_mass": 0
+        },
+        "trajectory": {
+          "times": [
+            0,
+            200,
+            400,
+            600,
+            800
+          ],
+          "states": [
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "controls": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        "dense_replay": {
+          "integrator": "exact zero-order-hold HCW transition per substep",
+          "substeps": 10,
+          "times": [
+            0,
+            20,
+            40,
+            60,
+            80,
+            100,
+            120,
+            140,
+            160,
+            180,
+            200,
+            220,
+            240,
+            260,
+            280,
+            300,
+            320,
+            340,
+            360,
+            380,
+            400,
+            420,
+            440,
+            460,
+            480,
+            500,
+            520,
+            540,
+            560,
+            580,
+            600,
+            620,
+            640,
+            660,
+            680,
+            700,
+            720,
+            740,
+            760,
+            780,
+            800
+          ],
+          "states": [
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        "iterations": [],
+        "timings": {
+          "cuda_startup_seconds": 0.176480244,
+          "topology_seconds": 0.000125932,
+          "coefficient_seconds": 0.000239287,
+          "workspace_create_seconds": 0.027475085,
+          "update_seconds": 0,
+          "scaling_seconds": 0,
+          "h2d_seconds": 0,
+          "solve_seconds": 0,
+          "recovery_seconds": 0,
+          "residual_seconds": 0,
+          "replay_seconds": 0.00046428801119327546,
+          "acceptance_seconds": 0,
+          "d2h_seconds": 8.294399827718735e-05,
+          "cqp_total_seconds": 0,
+          "scvx_total_seconds": 0.000794369,
+          "solve_wall_seconds": 0.000811994,
+          "qoco_conversion_seconds": 0,
+          "qoco_setup_seconds": 0,
+          "qoco_update_seconds": 0,
+          "qoco_solve_seconds": 0,
+          "independent_replay_seconds": 6.59e-06,
+          "plan_wall_seconds": 0.116937657
+        },
+        "backend": {
+          "execution": "native_cuda",
+          "requested_backend": "pure_qoco",
+          "preset": "frozen_adaptive_pure_qoco",
+          "device_policy": "pure_qoco",
+          "device_policy_code": 4,
+          "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+          "warm_start_mode": "primal",
+          "hidden_cpu_fallback": false,
+          "used_declared_stream": true,
+          "qoco_failure": "none",
+          "qoco_workspace_creations": 0,
+          "qoco_numeric_updates": 0,
+          "qoco_dual_discarded": false,
+          "hybrid_handoff_eligible": false,
+          "recovery_iterations": 0,
+          "recovery_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_attempt_count": 0,
+          "allocation_count": 9,
+          "allocation_bytes": 3288,
+          "h2d_copy_count": 0,
+          "h2d_bytes": 0,
+          "d2h_copy_count": 2,
+          "d2h_bytes": 336,
+          "device_copy_count": 2,
+          "device_copy_bytes": 336,
+          "topology_allocation_count_after_create": 0,
+          "topology_index_copy_count_after_create": 0,
+          "topology_fingerprint": "629e8f9e15fcfcaf",
+          "variables": 42,
+          "scalar_rows": 36,
+          "affine_rows": 16,
+          "device": {
+            "cuda_available": true,
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 5090",
+            "compute_capability": "12.0",
+            "total_memory_bytes": 34190458880,
+            "cuda_runtime_version": 12080,
+            "cuda_driver_version": 13020
+          }
+        },
+        "certificate": {
+          "certified": true,
+          "tolerance": 1e-06,
+          "replay_parity_tolerance": 1e-09,
+          "gates": {
+            "solver_api_success": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            },
+            "converged": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            },
+            "canonical_residual": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "device_dynamics_defect": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "device_path_violation": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "device_terminal_residual": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "virtual_control": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "independent_replay_parity": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-09
+            },
+            "independent_dynamics_defect": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "independent_path_violation": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "independent_terminal_residual": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "no_hidden_cpu_fallback": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            },
+            "steady_state_residency": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            },
+            "coefficient_parity": {
+              "passed": true,
+              "value": 1.4710478673012006e-16,
+              "limit": 5e-12
+            },
+            "independent_replay_evaluated": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            }
+          },
+          "failed_gates": [],
+          "continuous_time_violation": 0,
+          "continuous_time_within_tolerance": true,
+          "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+        }
+      }
+    },
+    {
+      "variant": "candidate",
+      "command": [
+        "/home/angus/build-spacepdhcg-gpu-native/038695b/spacepdhcg_plan",
+        "/home/angus/scvx-boundary-v72-cancel/zero-hcw.json",
+        "--quiet",
+        "--output",
+        "/home/angus/scvx-boundary-v72-cancel/candidate.json"
+      ],
+      "returncode": 2,
+      "stdout": "",
+      "stderr": "{\"case\":\"cancel_before_solve\",\"api\":0,\"solver_status\":4,\"outer_iterations\":0}\n",
+      "result": {
+        "schema_version": "1.0.0",
+        "result_kind": "spacepdhcg_plan_result",
+        "source_commit": "45569417b789a49f63bd5c1e68d93f8393d45a8e",
+        "status": {
+          "code": "not_certified",
+          "message": "the plan was produced but is not certified (outer status cancelled)",
+          "exit_code": 2,
+          "solver_status": "cancelled",
+          "api_status": "success",
+          "time_limit_triggered": false
+        },
+        "problem": {
+          "schema_version": "1.0.0",
+          "name": "HCW rendezvous: 100 m radial / 50 m along-track approach to the origin in 800 s",
+          "family": "hcw",
+          "units": {
+            "position": "m",
+            "velocity": "m/s",
+            "acceleration": "m/s^2",
+            "angular_rate": "rad/s",
+            "time": "s"
+          },
+          "state_order": [
+            "x",
+            "y",
+            "z",
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "control_order": [
+            "ax",
+            "ay",
+            "az"
+          ],
+          "horizon": {
+            "intervals": 4,
+            "final_time": 800,
+            "step_seconds": 200,
+            "free_final_time": false
+          },
+          "initial_state": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal": {
+            "state": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fixed": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ]
+          },
+          "vehicle": {
+            "mean_motion": 0.00113,
+            "maximum_acceleration": 0.05,
+            "acceleration_bound": "norm"
+          },
+          "transcription": {
+            "state_weights": [
+              0.0001,
+              0.0001,
+              0.0001,
+              0.01,
+              0.01,
+              0.01
+            ],
+            "control_weights": [
+              1,
+              1,
+              1
+            ]
+          },
+          "solver": {
+            "backend": "pure_qoco",
+            "preset": "frozen_adaptive_pure_qoco",
+            "tolerance": 1e-06,
+            "step_tolerance": 0.02,
+            "maximum_outer_iterations": 10,
+            "minimum_outer_iterations": 1,
+            "time_limit_seconds": 300,
+            "certificate_tolerance": 1e-06,
+            "replay_parity_tolerance": 1e-09,
+            "warm_start_mode": "primal",
+            "trust_region": {
+              "initial_radius": 1,
+              "minimum_radius": 0.0001,
+              "maximum_radius": 8,
+              "shrink_factor": 0.5,
+              "expansion_factor": 1.8,
+              "acceptance_threshold": 0.05,
+              "strong_agreement_threshold": 0.75,
+              "near_boundary_fraction": 0.8,
+              "restoration_reduction": 0.9
+            },
+            "penalty": {
+              "feasibility_penalty": 100,
+              "virtual_penalty": 0
+            },
+            "forcing": {
+              "epsilon_max": 0.001,
+              "epsilon_floor": 1e-08,
+              "epsilon_0": 0.001,
+              "coefficient": 0.2,
+              "alpha": 0.5,
+              "gamma": 0.6,
+              "repair_ceiling": 0.01,
+              "progress_ceiling": 0.002,
+              "refinement_ceiling": 1e-05,
+              "polish_ceiling": 1e-08,
+              "repair_iterations": 5000,
+              "progress_iterations": 25000,
+              "refinement_iterations": 100000,
+              "polish_iterations": 1000000,
+              "resolve_trigger_multiple": 5,
+              "resolve_refinement_factor": 0.1,
+              "resolve_minimum_tolerance": 1e-08,
+              "maximum_resolves": 1,
+              "fixed_inner_tolerance": 1e-08,
+              "fixed_inner_iteration_limit": 200,
+              "final_polish_tolerance": 1e-08,
+              "final_polish_iteration_limit": 1000000
+            }
+          },
+          "output": {
+            "dense_replay_substeps": 10,
+            "include_iterations": true
+          },
+          "warm_start_supplied": false
+        },
+        "summary": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "outer_iterations": 0,
+          "accepted_steps": 0,
+          "rejected_steps": 0,
+          "resolved_steps": 0,
+          "inner_iterations": 0,
+          "final_trust_radius": 1,
+          "trajectory_step": 0,
+          "propellant_used": 0,
+          "final_mass": 0,
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0
+        },
+        "solver_residuals": {
+          "canonical_residual": 0,
+          "dynamics_defect": 0,
+          "path_violation": 0,
+          "terminal_residual": 0,
+          "virtual_control": 0,
+          "device_path_inventory": {
+            "thrust": 0,
+            "mass": 0,
+            "altitude": 0
+          },
+          "coefficient_parity_relative": 1.4710478673012006e-16
+        },
+        "independent_replay": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "path_violation": 0,
+          "path_components": {
+            "acceleration_norm": 0
+          },
+          "path_components_physical": {
+            "acceleration_norm": 0
+          },
+          "terminal_residual": 0,
+          "terminal_errors": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0,
+          "propellant_used": 0,
+          "final_mass": 0,
+          "replay_error": null,
+          "replay_parity": 0,
+          "dynamics_defect": 0,
+          "continuous_time_violation": 0,
+          "continuous_time_components": {
+            "acceleration_norm": 0
+          },
+          "continuous_time_components_physical": {
+            "acceleration_norm": 0
+          },
+          "dense_replay_substeps": 10
+        },
+        "model_evaluation": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "path_violation": 0,
+          "path_components": {
+            "acceleration_norm": 0
+          },
+          "path_components_physical": {
+            "acceleration_norm": 0
+          },
+          "terminal_residual": 0,
+          "terminal_errors": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0,
+          "propellant_used": 0,
+          "final_mass": 0
+        },
+        "initial_reference_evaluation": {
+          "objective": 0,
+          "objective_definition": "0.5 * sum_k |a_k|^2 (m^2/s^4)",
+          "path_violation": 0,
+          "path_components": {
+            "acceleration_norm": 0
+          },
+          "path_components_physical": {
+            "acceleration_norm": 0
+          },
+          "terminal_residual": 0,
+          "terminal_errors": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "terminal_position_error": 0,
+          "terminal_velocity_error": 0,
+          "propellant_used": 0,
+          "final_mass": 0
+        },
+        "trajectory": {
+          "times": [
+            0,
+            200,
+            400,
+            600,
+            800
+          ],
+          "states": [
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "controls": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        "dense_replay": {
+          "integrator": "exact zero-order-hold HCW transition per substep",
+          "substeps": 10,
+          "times": [
+            0,
+            20,
+            40,
+            60,
+            80,
+            100,
+            120,
+            140,
+            160,
+            180,
+            200,
+            220,
+            240,
+            260,
+            280,
+            300,
+            320,
+            340,
+            360,
+            380,
+            400,
+            420,
+            440,
+            460,
+            480,
+            500,
+            520,
+            540,
+            560,
+            580,
+            600,
+            620,
+            640,
+            660,
+            680,
+            700,
+            720,
+            740,
+            760,
+            780,
+            800
+          ],
+          "states": [
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        "iterations": [],
+        "timings": {
+          "cuda_startup_seconds": 0.202309882,
+          "topology_seconds": 0.000136868,
+          "coefficient_seconds": 0.00028474,
+          "workspace_create_seconds": 0.026614797,
+          "update_seconds": 0,
+          "scaling_seconds": 0,
+          "h2d_seconds": 0,
+          "solve_seconds": 0,
+          "recovery_seconds": 0,
+          "residual_seconds": 0,
+          "replay_seconds": 0.0003256959915161133,
+          "acceptance_seconds": 0,
+          "d2h_seconds": 9.28959995508194e-05,
+          "cqp_total_seconds": 0,
+          "scvx_total_seconds": 0.000665796,
+          "solve_wall_seconds": 0.000683148,
+          "qoco_conversion_seconds": 0,
+          "qoco_setup_seconds": 0,
+          "qoco_update_seconds": 0,
+          "qoco_solve_seconds": 0,
+          "independent_replay_seconds": 6.989e-06,
+          "plan_wall_seconds": 0.06322493
+        },
+        "backend": {
+          "execution": "native_cuda",
+          "requested_backend": "pure_qoco",
+          "preset": "frozen_adaptive_pure_qoco",
+          "device_policy": "pure_qoco",
+          "device_policy_code": 4,
+          "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+          "warm_start_mode": "primal",
+          "hidden_cpu_fallback": false,
+          "used_declared_stream": true,
+          "qoco_failure": "none",
+          "qoco_workspace_creations": 0,
+          "qoco_numeric_updates": 0,
+          "qoco_dual_discarded": false,
+          "hybrid_handoff_eligible": false,
+          "recovery_iterations": 0,
+          "recovery_count": 0,
+          "recovery_rejected_count": 0,
+          "recovery_attempt_count": 0,
+          "allocation_count": 9,
+          "allocation_bytes": 3288,
+          "h2d_copy_count": 0,
+          "h2d_bytes": 0,
+          "d2h_copy_count": 2,
+          "d2h_bytes": 336,
+          "device_copy_count": 2,
+          "device_copy_bytes": 336,
+          "topology_allocation_count_after_create": 0,
+          "topology_index_copy_count_after_create": 0,
+          "topology_fingerprint": "629e8f9e15fcfcaf",
+          "variables": 42,
+          "scalar_rows": 36,
+          "affine_rows": 16,
+          "device": {
+            "cuda_available": true,
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 5090",
+            "compute_capability": "12.0",
+            "total_memory_bytes": 34190458880,
+            "cuda_runtime_version": 12080,
+            "cuda_driver_version": 13020
+          }
+        },
+        "certificate": {
+          "certified": false,
+          "tolerance": 1e-06,
+          "replay_parity_tolerance": 1e-09,
+          "gates": {
+            "solver_api_success": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            },
+            "converged": {
+              "passed": false,
+              "value": 1,
+              "limit": 0
+            },
+            "canonical_residual": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "device_dynamics_defect": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "device_path_violation": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "device_terminal_residual": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "virtual_control": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "independent_replay_parity": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-09
+            },
+            "independent_dynamics_defect": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "independent_path_violation": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "independent_terminal_residual": {
+              "passed": true,
+              "value": 0,
+              "limit": 1e-06
+            },
+            "no_hidden_cpu_fallback": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            },
+            "steady_state_residency": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            },
+            "coefficient_parity": {
+              "passed": true,
+              "value": 1.4710478673012006e-16,
+              "limit": 5e-12
+            },
+            "independent_replay_evaluated": {
+              "passed": true,
+              "value": 0,
+              "limit": 0
+            }
+          },
+          "failed_gates": [
+            "converged"
+          ],
+          "continuous_time_violation": 0,
+          "continuous_time_within_tolerance": true,
+          "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+        }
+      }
+    }
+  ],
+  "input": {
+    "schema_version": "1.0.0",
+    "name": "HCW rendezvous: 100 m radial / 50 m along-track approach to the origin in 800 s",
+    "family": "hcw",
+    "horizon": {
+      "intervals": 4,
+      "final_time": 800.0,
+      "free_final_time": false
+    },
+    "initial_state": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "terminal": {
+      "state": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "fixed": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    "environment": {
+      "mean_motion": 0.00113
+    },
+    "constraints": {
+      "maximum_acceleration": 0.05,
+      "acceleration_bound": "norm"
+    },
+    "solver": {
+      "backend": "pure_qoco",
+      "tolerance": 1e-06,
+      "maximum_outer_iterations": 10,
+      "time_limit_seconds": 300
+    },
+    "output": {
+      "dense_replay_substeps": 10
+    }
+  },
+  "proxy_sha256": "dfa65ad75f1e267238eb7b36c89153387484c5734575616542e9ba882648b7ce"
+}

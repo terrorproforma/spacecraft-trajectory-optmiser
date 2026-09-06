@@ -832,3 +832,23 @@ shrink the trust radius below the step tolerance, so a step at the trust-region
 boundary is mistaken for convergence. Final reporting also loses the accepted
 step by measuring the returned trajectory against itself. The next correction
 targets that stopping logic. [Evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#inaccurate-exit-best-iterate-experiment).
+
+## Prevent false convergence after trust-region shrinkage
+
+The outer driver now requires a small accepted step to be inside the trust
+region's near-boundary threshold before declaring convergence. Final replay
+preserves that step and cannot overwrite cancellation or an iteration limit
+with a false convergence result. A forced cancellation of a feasible HCW
+trajectory reproduces the old bug and verifies the correction.
+
+On a targeted small-radius N20 input, the old core passes the unchanged objective
+gate in 8/20 runs; the guarded core passes 20/20. Another 20 original-input runs
+using the previously failing best-return QOCO policy also pass with the guard.
+All physics certificates pass. Four regression tests, the documented numerical
+oracles and full small-radius memory/leak checking pass.
+
+The original-input matched benchmarks qualify all 54 samples but show mixed
+timing: landing 176.179 → 171.186 ms, N20 570.046 → 648.000 ms, N500 458.284 →
+465.257 ms. This is a correctness improvement, not a general speedup. The full
+GPU-native goal and inner numerical sensitivity remain open.
+[Complete evidence](GPU_QOCO_LOCAL_BACKEND.md#scvx-convergence-at-a-small-trust-radius).

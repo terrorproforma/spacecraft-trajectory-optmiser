@@ -1703,3 +1703,72 @@ are in the checkpoint; these checks do not override the objective failure.
 - [Input/solve fingerprint traces](../artifacts/performance/qoco-arena-v69-solve-trace.json).
 - [Exploratory policy sweep](../artifacts/performance/qoco-accuracy-v69-probe.json).
 - [Direct implementation repeatability](../artifacts/performance/qoco-best-return-v71-repeatability.json).
+
+## SCvx convergence at a small trust radius
+
+The outer loop now requires an accepted step to satisfy the existing absolute
+step tolerance **and** lie inside the existing near-boundary threshold of the
+radius used for that solve. Shrinking the trust region below the step tolerance
+can no longer make a boundary-limited step establish convergence. The guard is
+evaluated before radius expansion and retained with the accepted trajectory.
+No physics, objective, inner forcing or configured tolerance is relaxed.
+
+Final replay now preserves the step used by the outer convergence decision.
+It does not promote an iteration-limit or cancellation result to converged by
+comparing the retained point with itself. This also repairs a separately
+reproduced cancellation bug: cancelling a feasible zero HCW trajectory before
+the first outer iteration previously returned certified/converged with zero
+iterations. The new core returns cancelled and uncertified.
+
+The native regression deliberately sets the N20 initial radius to 0.015625,
+below the unchanged 0.02 step tolerance. The old core certifies a two-iteration
+boundary result with an objective about 3.68e-7 from the reference and reports
+zero step. A separate two-iteration case with step tolerance 1e-12 also exposes
+the final-replay promotion. Both limited-budget cases correctly remain
+unconverged in the new core. With sufficient budget it takes an interior step,
+meets the original objective gate and reports the accepted displacement.
+
+The 60-run diagnostic retains every sample, including baseline failures:
+
+| Configuration | Objective-qualified | Physics-qualified | Maximum objective difference |
+|---|---:|---:|---:|
+| Small-radius input, core v63 / QOCO v68 | 8/20 | 20/20 | 3.7012e-7 |
+| Same input, guarded core v72 / QOCO v68 | 20/20 | 20/20 | 7.7509e-10 |
+| Original input, guarded core v72 / QOCO v70 | 20/20 | 20/20 | 8.5263e-10 |
+
+All comparisons retain the 0.51297569119164033 reference and absolute 1e-8
+objective gate. These samples support the stopping correction, not a claim that
+all numerical variability is eliminated. v70's earlier failure remains part of
+its separate record; its policy is not promoted independently.
+
+The complete original-input benchmark uses QOCO v68 and the same cuDSS runtime
+on both sides, with two warmups and seven measured samples per workload/variant.
+All 54 samples pass their unchanged quality gates:
+
+| Workload | Old SCvx median | Guarded SCvx median | Inner-iteration medians |
+|---|---:|---:|---:|
+| Landing | 176.179 ms | 171.186 ms | 36 → 36 |
+| N20 6DOF | 570.046 ms | 648.000 ms | 102 → 112 |
+| N500 6DOF | 458.284 ms | 465.257 ms | 34 → 36 |
+
+This is retained as a correctness fix, with no general speedup claim. The
+small-radius diagnostic likewise takes longer with the guard (730.661 →
+874.078 ms median), while the old core fails matched-quality qualification.
+Inner iteration sensitivity, conditioning and CPU setup/control remain open.
+
+Four native regression tests pass. The normal native conversion test, seven
+landing repetitions, N20 and N500 pass the existing independent numerical
+oracles. One complete small-radius trajectory passes memory/leak checking with
+zero errors and leaks. No new GPU kernel code is introduced. These are the exact
+new-core test scopes; the earlier best-return N20 racecheck timeout is not a pass.
+
+Frozen core v72 is
+`/home/angus/build-spacepdhcg-boundary-v72/final/libspacepdhcg_cuda.so`, SHA256
+`993fd2c0b0765b3696507aea086952177d0c686367d0b0c02f1f9707c9e2e241`.
+No backend default or frozen runtime is replaced.
+
+- [Checkpoint, commands, fingerprints and test output](../artifacts/performance/scvx-boundary-v72-checkpoint.json).
+- [Boundary and iteration-limit regressions](../artifacts/performance/scvx-boundary-v72-checks.json).
+- [Cancellation reproduction](../artifacts/performance/scvx-boundary-v72-cancellation.json).
+- [Repeatability including baseline failures](../artifacts/performance/scvx-boundary-v72-repeatability.json).
+- [Landing](../artifacts/performance/scvx-boundary-v72-pd3.json), [N20](../artifacts/performance/scvx-boundary-v72-pd6.json), [N500](../artifacts/performance/scvx-boundary-v72-pd6-500.json) timing distributions.

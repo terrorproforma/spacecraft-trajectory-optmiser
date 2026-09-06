@@ -2164,6 +2164,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     }
     ScvxMetrics current = *driver->host_metrics;
     const double initial_outer_residual = maximum_outer_residual(current);
+    // A small accepted step is evidence of convergence only when the trust
+    // region did not constrain it. Repeated inner failures can otherwise shrink
+    // the radius below step_tolerance and make a boundary step look converged.
+    bool current_step_converged = current.step <= driver->options.step_tolerance;
     double trust_radius = driver->options.initial_trust_radius;
     spacepdhcg_cuda_diagnostics last_diagnostics{};
     // Natural residual of the inner solve whose candidate became the returned
@@ -2832,7 +2836,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         const bool retained_converged =
             maximum_outer_residual(current)
                 <= driver->options.convergence_tolerance
-            && current.step <= driver->options.step_tolerance;
+            && current_step_converged;
         if (retained_converged) {
             accepted = false;
             restoration = false;
@@ -2864,6 +2868,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             driver->device_copy_bytes +=
                 (state_elements + control_elements) * sizeof(double);
             current = candidate;
+            current_step_converged =
+                candidate.step <= driver->options.step_tolerance
+                && candidate.step < driver->options.near_boundary_fraction
+                    * std::max(1.0e-12, radius_before);
             ++result->accepted_steps;
             accepted_natural_residual = last_diagnostics.natural_residual_inf;
             if (pure_qoco) {
@@ -2990,7 +2998,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         if (outer + 1U >= driver->options.minimum_outer_iterations
             && maximum_outer_residual(current)
                 <= driver->options.convergence_tolerance
-            && current.step <= driver->options.step_tolerance
+            && current_step_converged
             && (result->accepted_steps > 0U
                 || initial_outer_residual
                     <= driver->options.convergence_tolerance)) {
@@ -3004,6 +3012,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             break;
         }
     }
+    const double retained_trajectory_step = current.step;
     api_status = collect_metrics(
         driver,
         view_pointer<const double>(driver->problem.reference_states),
@@ -3018,10 +3027,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         return api_status;
     }
     current = *driver->host_metrics;
-    if (maximum_outer_residual(current) <= driver->options.convergence_tolerance
-        && current.step <= driver->options.step_tolerance) {
-        result->status = SPACEPDHCG_CUDA_SCVX_CONVERGED;
-    }
+    // Replaying the retained point against itself measures a zero step. It
+    // cannot establish convergence or replace cancellation/iteration-limit
+    // status; that decision belongs to the loop with the actual accepted step.
     result->objective = current.objective;
     if (result->accepted_steps == 0U
         && initial_outer_residual <= driver->options.convergence_tolerance) {
@@ -3042,7 +3050,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
     };
     result->terminal_residual = current.terminal;
     result->virtual_control = current.virtual_control;
-    result->trajectory_step = current.step;
+    result->trajectory_step = retained_trajectory_step;
     result->final_trust_radius = trust_radius;
     result->cqp_total_seconds =
         result->update_seconds + result->scaling_seconds
