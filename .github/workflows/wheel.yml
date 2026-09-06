@@ -9,13 +9,12 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: wheel-${{ github.ref }}-${{ matrix.os }}
-  cancel-in-progress: true
-
 jobs:
   build-wheel:
     name: Native wheel (${{ matrix.os }})
+    concurrency:
+      group: wheel-${{ github.ref }}-${{ matrix.os }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
