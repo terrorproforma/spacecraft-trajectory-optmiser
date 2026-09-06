@@ -17,7 +17,7 @@ const requiredIds = [
   "play-label", "reset-button", "timeline", "timeline-output", "sample-output",
   "trajectory-canvas", "family-label", "trajectory-title", "qualification-badge",
   "qualification-notice", "frame-overlay", "scene-overlay", "current-state",
-  "frame-details", "validation-details", "gpu-details", "compute-details", "provenance-content",
+  "frame-details", "validation-details", "gpu-details", "compute-details", "solver-progress", "provenance-content",
   "dataset-select", "dataset-help", "ship-list", "fleet-count", "mission-timeline",
   "mission-timeline-output", "mission-play-button", "mission-play-icon", "mission-play-label",
   "focus-ship-button", "fleet-reset-button", "fleet-summary", "ship-detail", "ship-detail-title",
@@ -454,6 +454,7 @@ async function setDataset(dataset, options = {}) {
       updateFleetSelection(); updateSceneOverlay(); draw();
       $("dataset-help").textContent = `${state.fleet.title}: ${state.fleet.score.ships} ships, ${state.fleet.score.unique_asteroids} asteroids, ${fleetMassLabel(state.fleet)} kg (official verifier ${state.fleet.score.official_total_mass_kg} kg).`;
       void loadComputeDetails();
+      void loadSolverProgress();
     } else {
       state.preset = null;
       Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
@@ -641,6 +642,34 @@ window.viewerDebug = Object.freeze({
   },
 });
 
+
+async function loadSolverProgress() {
+  const el = $("solver-progress");
+  try {
+    const response = await fetch("./data/gtoc12/solver-progress.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const benchmark = await response.json();
+    if (benchmark.schema_version !== 1 || benchmark.kind !== "gtoc12-synthetic-transfer-benchmark") {
+      throw new Error("unrecognised benchmark metadata");
+    }
+    const milliseconds = Number.isFinite(benchmark.median_seconds)
+      ? `${(benchmark.median_seconds * 1000).toFixed(1)} ms` : "Unavailable";
+    el.innerHTML = metricRows([
+      ["Runtime", benchmark.runtime],
+      ["Hardware", benchmark.hardware],
+      ["Physics-qualified transfers", `${benchmark.qualified_transfers} / ${benchmark.total_transfers}`],
+      ["Median complete transfer", `${milliseconds} · warmup excluded`],
+      ["Speedup finding", benchmark.speedup_finding],
+      ["Outer command download", benchmark.control_download],
+      ["Regression tests", `${benchmark.regression_passed} passed`],
+      ["Remaining CPU work", benchmark.remaining_cpu_work],
+      ["Accuracy follow-up", benchmark.accuracy_followup],
+      ["Checkpoint", benchmark.checkpoint_sha256.slice(0, 16)],
+    ]);
+  } catch (error) {
+    el.innerHTML = metricRows([["Status", `Solver progress unavailable (${String(error.message || error)})`]]);
+  }
+}
 
 async function loadComputeDetails() {
   const el = $("compute-details");

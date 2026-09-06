@@ -142,6 +142,12 @@ and enable flags, and refreshes the SCvx reference after switching to polishing
 without a host branch or an extra command wait. All 36 complete transfers retain
 the same physics/mass gates. The 364 ms median does not establish another
 speedup; per-attempt host dispatch and initial setup remain unfinished.
+Experimental core v135 extends device step counts through conic assembly and
+candidate propagation. Outer command downloads shrink to eight bytes per
+attempt plus eight initial bytes, with all 36 complete transfers retaining the
+same physics/mass gates. The 357 ms median establishes no additional speedup.
+The existing visualiser now displays these synthetic solver benchmarks in a
+separate GPU solver progress panel; the fleet score remains unchanged.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
@@ -155,7 +161,8 @@ See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATIO
 [queued numerical updates and v131 evidence](docs/QOCO_NUMERIC_REPLAY.md),
 [device validation and v132 evidence](docs/QOCO_DEVICE_VALIDATION.md),
 [assembly guard and v133 evidence](docs/GTOC12_DEVICE_ASSEMBLY_GUARD.md),
-[device integration control and v134 evidence](docs/GTOC12_DEVICE_REFRESH.md), and
+[device integration control and v134 evidence](docs/GTOC12_DEVICE_REFRESH.md),
+[device scheduling and v135 evidence](docs/GTOC12_DEVICE_SCHEDULING.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.

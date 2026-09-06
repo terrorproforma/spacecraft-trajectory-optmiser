@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 namespace {
@@ -45,7 +46,22 @@ int main() {
             for (int i = ao[col]+1; i < ao[col+1]; ++i) require(ai[i] > ai[i-1], "strict sorted unique CSC");
         Device<double> ds(states.size()), du(controls.size());
         Device<spacepdhcg_gtoc12_conic_parameters> dp(1);
+        Device<int> steps(1), enabled(1);
         cudaStream_t stream{}; check(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+        // First-ever invalid scheduling must not read uninitialised dynamics,
+        // states, controls or parameters, or replace retained output values.
+        int step_count=0,run=1;
+        check(cudaMemsetAsync(const_cast<double*>(out.a),0,count*sizeof(double),stream));
+        check(cudaMemcpyAsync(steps.data,&step_count,sizeof(int),cudaMemcpyHostToDevice,stream));
+        check(cudaMemcpyAsync(enabled.data,&run,sizeof(int),cudaMemcpyHostToDevice,stream));
+        require(spacepdhcg_gtoc12_conic_launch_controlled_device(w,ds.data,du.data,dp.data,
+            steps.data,enabled.data,stream)==0,"first invalid scheduling enqueued");
+        int first_invalid=0;
+        check(cudaMemcpyAsync(&first_invalid,out.invalid,sizeof(int),cudaMemcpyDeviceToHost,stream));
+        check(cudaMemcpyAsync(actual.data(),out.a,count*sizeof(double),cudaMemcpyDeviceToHost,stream));
+        check(cudaStreamSynchronize(stream));
+        require(first_invalid==1 && std::all_of(actual.begin(),actual.end(),[](double v){return v==0;}),
+            "first invalid scheduling preserves output without stale reads");
         cudaGraph_t graph{}; cudaGraphExec_t executable{};
         check(cudaStreamBeginCapture(stream, cudaStreamCaptureModeThreadLocal));
         require(spacepdhcg_gtoc12_conic_launch_device(w, ds.data, du.data, dp.data, 8, stream) == 0,
@@ -88,10 +104,37 @@ int main() {
         require(spacepdhcg_gtoc12_conic_evaluate_host(w, states.data(), controls.data(), &bad, 8, expected.data()) == 0, "invalid flag reset");
         require(spacepdhcg_gtoc12_conic_launch_device(w, ds.data, du.data, dp.data, 0, stream) == 1, "bad substeps");
         check(cudaGraphExecDestroy(executable)); check(cudaGraphDestroy(graph));
+        check(cudaMemcpyAsync(dp.data,&bad,sizeof(bad),cudaMemcpyHostToDevice,stream));
+        check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeThreadLocal));
+        require(spacepdhcg_gtoc12_conic_launch_controlled_device(w,ds.data,du.data,dp.data,
+            steps.data,enabled.data,stream)==0,"controlled conic capture");
+        check(cudaStreamEndCapture(stream,&graph));
+        check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+        for (auto config : std::initializer_list<std::pair<int,int>>{{1,1},{8,1},{16,-1},{0,1},{-3,1},{0,0},{8,1}}) {
+            step_count=config.first;run=config.second;
+            if (run && step_count>0) {
+                check(cudaStreamSynchronize(stream));
+                require(spacepdhcg_gtoc12_conic_evaluate_host(w,states.data(),controls.data(),&bad,
+                    step_count,expected.data())==0,"fixed conic reference");
+            } else {
+                check(cudaMemcpyAsync(expected.data(),out.a,count*sizeof(double),cudaMemcpyDeviceToHost,stream));
+            }
+            int previous_invalid=0;
+            check(cudaMemcpyAsync(&previous_invalid,out.invalid,sizeof(int),cudaMemcpyDeviceToHost,stream));
+            check(cudaMemcpyAsync(steps.data,&step_count,sizeof(int),cudaMemcpyHostToDevice,stream));
+            check(cudaMemcpyAsync(enabled.data,&run,sizeof(int),cudaMemcpyHostToDevice,stream));
+            check(cudaGraphLaunch(executable,stream));
+            check(cudaMemcpyAsync(actual.data(),out.a,count*sizeof(double),cudaMemcpyDeviceToHost,stream));
+            check(cudaMemcpyAsync(&invalid,out.invalid,sizeof(int),cudaMemcpyDeviceToHost,stream));
+            check(cudaStreamSynchronize(stream));
+            require(std::memcmp(actual.data(),expected.data(),count*sizeof(double))==0,"controlled conic parity/preservation");
+            require(invalid==(run ? int(step_count<1) : previous_invalid),"controlled conic invalid flag");
+        }
+        check(cudaGraphExecDestroy(executable)); check(cudaGraphDestroy(graph));
         check(cudaStreamDestroy(stream)); spacepdhcg_gtoc12_conic_destroy(w);
         spacepdhcg_gtoc12_conic* rejected{};
         require(spacepdhcg_gtoc12_conic_create(k, hold, 2, 0, 0.15, 0.03,
             times.data(), boundary, fuel.data(), &rejected) == 1 && !rejected, "invalid topology rejected");
     }
-    std::puts("GTOC12 conic: 48 changing-input graph replays, retained topology, objective/Hessian and lifecycle PASS");
+    std::puts("GTOC12 conic: 48 input replays, 28 controlled replays, 4 first-invalid cases, topology/objective/Hessian PASS");
 }

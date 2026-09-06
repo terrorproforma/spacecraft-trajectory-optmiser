@@ -65,6 +65,17 @@ int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc12_qoco*,
     const spacepdhcg_gtoc12_conic_parameters*, int substeps, void* stream,
     spacepdhcg_gtoc12_qoco_report*, spacepdhcg_gtoc12_qoco_consumer,
     void* context, int* consumed);
+/* Same synchronous orchestration/consumer contract, with the integration step
+ * count borrowed from device memory. The value is consumed on the stream, never
+ * downloaded to choose a host launch. A device value<1 follows invalid-input
+ * rejection (status3, unqualified); a null pointer is invalid arguments (1).
+ * This bridge is still NOT graph-capturable; only its assembly stage is.
+ */
+int spacepdhcg_gtoc12_qoco_solve_controlled_device_with_consumer(spacepdhcg_gtoc12_qoco*,
+    const double* states, const double* controls,
+    const spacepdhcg_gtoc12_conic_parameters*, const int* device_substeps, void* stream,
+    spacepdhcg_gtoc12_qoco_report*, spacepdhcg_gtoc12_qoco_consumer,
+    void* context, int* consumed);
 /* Upload states/controls/parameters and download ONLY qualified primal output.
  * Host primal[variables] is untouched on unqualified solves. Report counters
  * describe the existing native adapter, excluding this bridge and opaque

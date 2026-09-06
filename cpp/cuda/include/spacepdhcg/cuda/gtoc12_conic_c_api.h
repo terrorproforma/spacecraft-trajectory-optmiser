@@ -50,6 +50,16 @@ int spacepdhcg_gtoc12_conic_outputs(spacepdhcg_gtoc12_conic*,
 int spacepdhcg_gtoc12_conic_launch_device(spacepdhcg_gtoc12_conic*,
     const double* states, const double* controls,
     const spacepdhcg_gtoc12_conic_parameters* parameters, int substeps, void* stream);
+/* Capture-compatible device scheduling. Scalar inputs obey the same ordering,
+ * lifetime, device and non-aliasing contract as numerical inputs. A null enable
+ * means always run; zero preserves all outputs, including invalid. Enabled
+ * substeps<1 or invalid dynamics marks invalid without consuming stale dynamics
+ * coefficients. Return0 means enqueued, not valid: always check device invalid.
+ */
+int spacepdhcg_gtoc12_conic_launch_controlled_device(spacepdhcg_gtoc12_conic*,
+    const double* states, const double* controls,
+    const spacepdhcg_gtoc12_conic_parameters* parameters, const int* device_substeps,
+    const int* device_enabled, void* stream);
 /* Transitional bridge: upload state/control/parameters, linearise and assemble
  * on GPU, download packed [A values, b, q, P values] and sync once. Caller owns
  * packed output with a_nonzeros+rows+variables+p_nonzeros doubles.
