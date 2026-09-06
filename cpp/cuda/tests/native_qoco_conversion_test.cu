@@ -30,8 +30,18 @@ int main(int argc, char** argv) {
     const int ruiz_iterations = argc > 1 ? std::atoi(argv[1]) : 0;
     require(ruiz_iterations >= 0 && ruiz_iterations <= 100, "Ruiz iteration argument");
     if (!std::getenv("SPACEPDHCG_QOCO_LIBRARY")) { std::puts("SKIP: isolated QOCO library required"); return 0; }
-    setenv("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE", "1", 1);
-    setenv("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE", "1", 1);
+    const bool device_validation = argc > 2 && std::strcmp(argv[2], "device-validation") == 0;
+    if (device_validation) {
+        unsetenv("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE");
+        unsetenv("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE");
+        setenv("SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION", "1", 1);
+        setenv("SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY", "1", 1);
+        setenv("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY", "1", 1);
+        setenv("SPACEPDHCG_TEST_QOCO_IPM_GRAPH", "1", 1);
+    } else {
+        setenv("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE", "1", 1);
+        setenv("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE", "1", 1);
+    }
     cudaStream_t stream{}; check(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
     const double inf = std::numeric_limits<double>::infinity();
     std::vector<int> qo{0}, qi, ao{0}, ai, fo{0}, fi;
@@ -105,21 +115,33 @@ int main(int argc, char** argv) {
     if (std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_UPDATE_REQUIRED"))
         require(report.device_numeric_updates == (ruiz_iterations > 0 ? 2U : 1U),
             "device extension must perform requested initial equilibration and numeric update");
+    const auto reprime = [&] {
+        if (!device_validation) return;
+        require(solve()==SPACEPDHCG_CUDA_SUCCESS,"recover after guarded invalid input");
+        require(solve()==SPACEPDHCG_CUDA_SUCCESS,"prime numerical scale and replay after recovery");
+        require(report.primal_residual<=1e-8 && report.dual_residual<=1e-8,"recovered independent KKT accuracy");
+    };
+    reprime();
     lo.values[1] = -1; lo.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH, "new finite scalar bound rejected");
     lo.values[1] = -inf; lo.upload(stream);
+    reprime();
     vhi.values[4] = 1; vhi.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH, "box equality classification mutation rejected");
     vhi.values[4] = 0; vhi.upload(stream);
+    reprime();
     cones[1].kind = SPACEPDHCG_CUDA_CONE_SECOND_ORDER;
     require(solve() == SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH, "cone descriptor mutation rejected");
     cones[1].kind = SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER;
+    reprime();
     a_indices.values[0] = 1; a_indices.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH, "in-place sparse topology mutation rejected");
     a_indices.values[0] = 0; a_indices.upload(stream);
+    reprime();
     q.values[2] += 0.1; q.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_UNSUPPORTED, "asymmetric quadratic update rejected");
     q.values[2] -= 0.1; q.upload(stream);
+    reprime();
     f.values.back() = std::numeric_limits<double>::quiet_NaN(); f.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_NUMERICAL_FAILURE && report.failure == SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL,
         "nonfinite coefficients rejected and correctly reported");
