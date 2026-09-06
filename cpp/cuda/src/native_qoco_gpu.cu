@@ -266,6 +266,7 @@ struct QocoGpuAudit {
     Buffer<int> cone_starts;
     Buffer<Metric> metrics, partial;
     Buffer<QocoAuditResult> result;
+    Buffer<QocoReplayStatus> replay_status;
     int nonnegative{}, cone_count{}, tasks{}, blocks{};
     QocoAuditTransfers transfers{};
 };
@@ -309,6 +310,7 @@ cudaError_t qoco_gpu_audit_create(const QocoAuditInput& in, bool host_solution,
         w->tasks = static_cast<int>(tasks);
         w->blocks = std::min(256, (w->tasks - 1) / 128 + 1);
         w->metrics.allocate(w->tasks, w->memory); w->partial.allocate(w->blocks, w->memory); w->result.allocate(1, w->memory);
+        w->replay_status.allocate(1,w->memory);
         if (host_solution) { w->host_x.allocate(n, w->memory); w->host_y.allocate(in.equality.rows, w->memory); w->host_z.allocate(in.conic.rows, w->memory); }
         check(cudaStreamSynchronize(stream));
         *output = w.release();
@@ -355,8 +357,9 @@ cudaError_t qoco_gpu_audit_update_device(QocoGpuAudit* w, const double* values, 
     return cudaSuccess;
 }
 
-cudaError_t qoco_gpu_audit_run(QocoGpuAudit* w, const double* x, const double* y, const double* z,
-                             double* mapped, cudaStream_t stream, QocoAuditResult* output) {
+cudaError_t qoco_gpu_audit_run_device(QocoGpuAudit* w, const double* x, const double* y, const double* z,
+                             double* mapped, cudaStream_t stream, const QocoAuditResult** output) {
+    if (output) *output = nullptr;
     if (!w || !x || !output || (w->a.rows && !y) || (w->g.rows && !z)
         || (w->dual_map.rows && !mapped)) return cudaErrorInvalidValue;
     int rows = w->a.rows + w->g.rows;
@@ -369,11 +372,40 @@ cudaError_t qoco_gpu_audit_run(QocoGpuAudit* w, const double* x, const double* y
     if (w->dual_map.rows) map_dual<<<(w->dual_map.rows + 255) / 256, 256, 0, stream>>>(w->dual_map.view(), w->a.rows, y, z, mapped);
     reduce_metrics<<<w->blocks, 128, 0, stream>>>(w->metrics.data, w->tasks, w->partial.data, nullptr);
     reduce_metrics<<<1, 128, 0, stream>>>(w->partial.data, w->blocks, nullptr, w->result.data);
-    auto status = cudaGetLastError();
+    const auto status = cudaGetLastError();
     if (status != cudaSuccess) return status;
-    status = cudaMemcpyAsync(output, w->result.data, sizeof(*output), cudaMemcpyDeviceToHost, stream);
+    *output = w->result.data;
+    return cudaSuccess;
+}
+cudaError_t qoco_gpu_audit_download_async(QocoGpuAudit* w, cudaStream_t stream, QocoAuditResult* output) {
+    if (!w || !output) return cudaErrorInvalidValue;
+    const auto status = cudaMemcpyAsync(output, w->result.data, sizeof(*output), cudaMemcpyDeviceToHost, stream);
     if (status != cudaSuccess) return status;
     ++w->transfers.d2h_count; w->transfers.d2h_bytes += sizeof(*output);
+    return cudaSuccess;
+}
+namespace {
+__global__ void compact_replay_status(const int* header, QocoReplayStatus* output) {
+    *output=header[0]==1 ? QocoReplayStatus{header[1],header[2]} : QocoReplayStatus{-1,0};
+}
+}
+cudaError_t qoco_gpu_audit_replay_status(QocoGpuAudit* w, const int* header,
+    cudaStream_t stream, const QocoReplayStatus** output) {
+    if (output) *output=nullptr;
+    if (!w || !header || !output) return cudaErrorInvalidValue;
+    compact_replay_status<<<1,1,0,stream>>>(header,w->replay_status.data);
+    const auto status=cudaGetLastError();
+    if (status==cudaSuccess) *output=w->replay_status.data;
+    return status;
+}
+cudaError_t qoco_gpu_audit_run(QocoGpuAudit* w, const double* x, const double* y, const double* z,
+                             double* mapped, cudaStream_t stream, QocoAuditResult* output) {
+    if (!output) return cudaErrorInvalidValue;
+    const QocoAuditResult* device = nullptr;
+    auto status = qoco_gpu_audit_run_device(w,x,y,z,mapped,stream,&device);
+    if (status != cudaSuccess) return status;
+    status = qoco_gpu_audit_download_async(w,stream,output);
+    if (status != cudaSuccess) return status;
     return cudaStreamSynchronize(stream);
 }
 QocoAuditTransfers qoco_gpu_audit_transfers(const QocoGpuAudit* w) { return w ? w->transfers : QocoAuditTransfers{}; }

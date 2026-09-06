@@ -1,5 +1,9 @@
 # Device completion and queued solver replay
 
+Subsequent [native core v128](QOCO_NATIVE_REPLAY.md) adopts this API for cold
+subproblem solves and queues the independent audit before collecting reports.
+The account below records the v126 implementation and its validation boundary.
+
 Experimental v126 adds a nonblocking API for an already prepared QOCO GPU graph.
 It queues initialisation, warm-start selection, IPM, terminal recovery/unscaling
 and a 64-byte completion packet on the caller's CUDA stream. Subsequent kernels

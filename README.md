@@ -110,7 +110,12 @@ transfers pass, with no additional end-to-end speedup established. Initial vendo
 warm-up, setup, host reporting and full SCvx orchestration remain unfinished.
 Experimental v126 exposes a nonblocking prepared-solve API with device completion
 and unscaled outputs. Cold and warm probes each pass 128 queued solves with GPU
-consumers; the native SCvx driver still needs to adopt this API.
+consumers.
+Experimental native core v128 now connects that replay API to the independent
+GPU audit for cold subproblem solves, removing the CPU wait between them. It
+passes 324 regression tests and all 36 complete-transfer accuracy gates while
+retaining the 64-byte update-report limit. Final reporting and outer SCvx control
+still involve the host; no reliable additional overall speedup is established.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
@@ -118,7 +123,8 @@ See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATIO
 [retained IPM graphs and v123 evidence](docs/QOCO_RETAINED_IPM.md),
 [GPU initialisation and v124 evidence](docs/QOCO_GPU_INITIALIZATION.md),
 [GPU terminal handling and v125 evidence](docs/QOCO_GPU_TERMINAL.md),
-[device completion and v126 replay evidence](docs/QOCO_GPU_REPLAY.md), and
+[device completion and v126 replay evidence](docs/QOCO_GPU_REPLAY.md),
+[native replay and v128 audit integration](docs/QOCO_NATIVE_REPLAY.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.
