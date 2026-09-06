@@ -249,10 +249,10 @@ void write_path_components(
         evaluation.path_violation =
             std::max(evaluation.path_violation, components[index].normalised);
         std::memset(evaluation.path_names[index], 0, sizeof(evaluation.path_names[index]));
-        std::strncpy(
+        std::memcpy(
             evaluation.path_names[index],
-            components[index].name.c_str(),
-            sizeof(evaluation.path_names[index]) - 1U
+            components[index].name.data(),
+            std::min(components[index].name.size(), sizeof(evaluation.path_names[index]) - 1U)
         );
     }
 }
