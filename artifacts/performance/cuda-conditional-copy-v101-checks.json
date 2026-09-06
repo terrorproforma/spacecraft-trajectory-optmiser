@@ -1,0 +1,184 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "/usr/local/cuda-12.8/bin/nvcc",
+      "-std=c++17",
+      "-O3",
+      "-lineinfo",
+      "-arch=sm_120",
+      "cpp/cuda/tests/cuda_conditional_copy_probe.cu",
+      "-o",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "copies-normal",
+    "command": [
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--copies",
+      "--direct"
+    ],
+    "returncode": 0,
+    "stdout": "copies=1 direct=1 limit=0 replay=0 pass\ncopies=1 direct=1 limit=0 replay=1 pass\ncopies=1 direct=1 limit=1 replay=0 pass\ncopies=1 direct=1 limit=1 replay=1 pass\ncopies=1 direct=1 limit=3 replay=0 pass\ncopies=1 direct=1 limit=3 replay=1 pass\n",
+    "stderr": ""
+  },
+  {
+    "name": "copies-memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--copies",
+      "--direct"
+    ],
+    "returncode": 99,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=1 direct=1 limit=0 replay=0 pass\ncopies=1 direct=1 limit=0 replay=1 pass\n========= Program hit cudaErrorUnknown (error 999) due to \"unknown error\" on CUDA API call to cudaStreamSynchronize.\n=========     Saved host backtrace up to driver entry point at error\n=========         Host Frame: main [0x9024] in cuda_conditional_copy_probe\n========= \n========= Target application returned an error\n========= ERROR SUMMARY: 1 error\n",
+    "stderr": "line=82 CUDA=999 unknown error\n"
+  },
+  {
+    "name": "copies-racecheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--copies",
+      "--direct"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=1 direct=1 limit=0 replay=0 pass\ncopies=1 direct=1 limit=0 replay=1 pass\ncopies=1 direct=1 limit=1 replay=0 pass\ncopies=1 direct=1 limit=1 replay=1 pass\ncopies=1 direct=1 limit=3 replay=0 pass\ncopies=1 direct=1 limit=3 replay=1 pass\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+    "stderr": ""
+  },
+  {
+    "name": "copies-initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--copies",
+      "--direct"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=1 direct=1 limit=0 replay=0 pass\ncopies=1 direct=1 limit=0 replay=1 pass\ncopies=1 direct=1 limit=1 replay=0 pass\ncopies=1 direct=1 limit=1 replay=1 pass\ncopies=1 direct=1 limit=3 replay=0 pass\ncopies=1 direct=1 limit=3 replay=1 pass\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": ""
+  },
+  {
+    "name": "copies-synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--copies",
+      "--direct"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=1 direct=1 limit=0 replay=0 pass\ncopies=1 direct=1 limit=0 replay=1 pass\ncopies=1 direct=1 limit=1 replay=0 pass\ncopies=1 direct=1 limit=1 replay=1 pass\ncopies=1 direct=1 limit=3 replay=0 pass\ncopies=1 direct=1 limit=3 replay=1 pass\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": ""
+  },
+  {
+    "name": "kernels-normal",
+    "command": [
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--kernels",
+      "--direct"
+    ],
+    "returncode": 0,
+    "stdout": "copies=0 direct=1 limit=0 replay=0 pass\ncopies=0 direct=1 limit=0 replay=1 pass\ncopies=0 direct=1 limit=1 replay=0 pass\ncopies=0 direct=1 limit=1 replay=1 pass\ncopies=0 direct=1 limit=3 replay=0 pass\ncopies=0 direct=1 limit=3 replay=1 pass\n",
+    "stderr": ""
+  },
+  {
+    "name": "kernels-memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--kernels",
+      "--direct"
+    ],
+    "returncode": 99,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=0 direct=1 limit=0 replay=0 pass\ncopies=0 direct=1 limit=0 replay=1 pass\n========= Program hit cudaErrorUnknown (error 999) due to \"unknown error\" on CUDA API call to cudaStreamSynchronize.\n=========     Saved host backtrace up to driver entry point at error\n=========         Host Frame: main [0x9024] in cuda_conditional_copy_probe\n========= \n========= Target application returned an error\n========= ERROR SUMMARY: 1 error\n",
+    "stderr": "line=82 CUDA=999 unknown error\n"
+  },
+  {
+    "name": "kernels-racecheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--kernels",
+      "--direct"
+    ],
+    "returncode": 1,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=0 direct=1 limit=0 replay=0 pass\ncopies=0 direct=1 limit=0 replay=1 pass\n========= Target application returned an error\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+    "stderr": "line=82 CUDA=999 unknown error\n"
+  },
+  {
+    "name": "kernels-initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--kernels",
+      "--direct"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=0 direct=1 limit=0 replay=0 pass\ncopies=0 direct=1 limit=0 replay=1 pass\ncopies=0 direct=1 limit=1 replay=0 pass\ncopies=0 direct=1 limit=1 replay=1 pass\ncopies=0 direct=1 limit=3 replay=0 pass\ncopies=0 direct=1 limit=3 replay=1 pass\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": ""
+  },
+  {
+    "name": "kernels-synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "--print-limit",
+      "2",
+      "/home/angus/build-cuda-conditional-probe-v101/cuda_conditional_copy_probe",
+      "--kernels",
+      "--direct"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\ncopies=0 direct=1 limit=0 replay=0 pass\ncopies=0 direct=1 limit=0 replay=1 pass\ncopies=0 direct=1 limit=1 replay=0 pass\ncopies=0 direct=1 limit=1 replay=1 pass\ncopies=0 direct=1 limit=3 replay=0 pass\ncopies=0 direct=1 limit=3 replay=1 pass\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": ""
+  }
+]

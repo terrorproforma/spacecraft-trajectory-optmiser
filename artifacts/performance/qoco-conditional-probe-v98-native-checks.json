@@ -1,0 +1,12 @@
+[
+  {
+    "name": "gtoc12",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "build/performance/conditional_probe_v98_fixture.py"
+    ],
+    "returncode": 99,
+    "stdout": "",
+    "stderr": "CONDITIONAL_PROBE begin call=1 Kn=5752\nCONDITIONAL_PROBE capture cudss=0 cuda=0\nCONDITIONAL_PROBE copy kind=3 bytes=46016 src_status=0 src_type=2 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=1 bytes=8 src_status=0 src_type=0 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=1 bytes=8 src_status=0 src_type=0 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=3 bytes=46016 src_status=0 src_type=2 dst_status=0 dst_type=2\nCONDITIONAL_PROBE copy kind=3 bytes=46016 src_status=0 src_type=2 dst_status=0 dst_type=2\nCONDITIONAL_PROBE nodes depth=0 total=18 allowed=1 types=0:8,1:5,2:5,\nCONDITIONAL_PROBE parity bitwise=0 abs_error=0.006893157958984375 scale=5000.548615671998 scaled_error=1.3784803406131947e-06\nCONDITIONAL_PROBE ordinary parity=0\n"
+  }
+]
