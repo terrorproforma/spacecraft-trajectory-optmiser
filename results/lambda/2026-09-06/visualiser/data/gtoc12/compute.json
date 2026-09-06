@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "fleet_master_v11",
+  "commit": "811ebe4267c1f51d2494925916510f8f8f7374ea",
+  "headline_score_kg": 14047.8,
+  "hardware": {
+    "fleet_assembly": "CPU-only, 22 workers (run_report.gpu_used=false)",
+    "gpu": "None on fleet_master_v11 assembly",
+    "upstream_search": "Mixed CPU + NVIDIA H100 search runs (cluster_fleet_h100_*, joint_itinerary_h100_*); separate G4 SCvx campaign also on H100"
+  },
+  "timing": {
+    "wall_seconds_total": 5794.590094471001,
+    "wall_human": "1 h 37 min (5795 s wall)",
+    "master_wall_seconds": 1773.5998519580025,
+    "recertification_wall_seconds": 3978.587509295001,
+    "peak_rss_mb": 1885.53515625
+  },
+  "model": {
+    "problem": "GTOC12 asteroid-mining fleet (official ESA/ACT problem)",
+    "dynamics": "GTOC12 low-thrust continuous dynamics; trajectories certified with the official and independent verifiers",
+    "local_refine": "SCvx (sequential convex) with 40 iterations per settings.scvx_iterations"
+  },
+  "optimisation": {
+    "strategy": "Multi-stage cluster-fleet + joint-itinerary search over 39 source runs (1,628 chains), then CPU master fleet selection with LP relaxation / branch-and-bound (node_cap 2,000,000), bonus-weighted objective, and route recertification",
+    "proven_optimal": false,
+    "gap_kg": 29.20384483320413,
+    "ships": 23,
+    "workers": 22,
+    "columns": 3869,
+    "nodes_searched": 2000011,
+    "source_runs": 39
+  },
+  "notes": [
+    "Not proven optimal (run_report.master.proven_optimal=false).",
+    "G4 partial snapshot on disk is a separate low-thrust SCvx GPU campaign, not the fleet_master_v11 assembly clock."
+  ]
+}

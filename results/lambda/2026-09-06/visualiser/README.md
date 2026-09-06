@@ -2,12 +2,12 @@
 
 A dependency-free, standalone WebGL2 viewer for verified SpacePDHCG trajectory evidence. It ships two dataset kinds behind one **Evidence source** selector:
 
-- **Archived P1/P2 evidence** (default, checked in): each record in its own physical frame and scale; unrelated coordinates are never compared in one scene.
-- **GTOC12 fleet** (optional, generated locally): the verified multi-ship asteroid-mining fleet in a Sun-centred J2000 ecliptic frame in AU, with Earth and asteroid orbits, per-ship low-thrust arcs, deploy/collect markers and a 2035–2050 mission timeline.
+- **Archived P1/P2 evidence** (checked in; open with `?dataset=archive`): each record in its own physical frame and scale; unrelated coordinates are never compared in one scene.
+- **GTOC12 fleet** (default when installed): the verified multi-ship asteroid-mining fleet in a Sun-centred J2000 ecliptic frame in AU, with Earth and asteroid orbits, per-ship low-thrust arcs, deploy/collect markers and a 2035–2050 mission timeline. This results snapshot includes the verified `fleet_master_v11` dataset and its compute metadata.
 
 ## Launch
 
-Node.js 18 or newer is required for the validation and safe development server. From `web/trajectory-viewer`:
+Node.js 18 or newer is required for the validation and safe development server. From `results/lambda/2026-09-06/visualiser`:
 
 ```text
 npm run import-data
@@ -32,7 +32,9 @@ Then open `http://127.0.0.1:4173/`. The Node server is preferred because it adds
 
 ## GTOC12 fleet dataset
 
-The GTOC12 data is multi-megabyte and regenerable, so it is **not committed**; `data/gtoc12/` is ignored by git. Without it the selector shows "GTOC12 fleet — not installed" (disabled), the help text names the import command, `npm run check` prints a notice, and the archive view is unaffected.
+This results snapshot commits `data/gtoc12/fleet.json`, `manifest.json`, and `compute.json`. The compute panel reports the archived run's CPU fleet assembly and upstream search separately; its time is not a timing measurement of the latest GPU solver. Metadata must match the displayed fleet's run and commit. If you regenerate a different fleet, update its compute metadata too; mismatched or missing metadata displays an unavailable status.
+
+The general-purpose viewer at `web/trajectory-viewer` keeps generated GTOC12 data ignored. Without fleet data, the selector shows "GTOC12 fleet — not installed" (disabled), the help text names the import command, `npm run check` prints a notice, and the archive view is unaffected. To regenerate a dataset:
 
 1. Export the verified fleet from the GTOC12 worktree with the documented CLI (propagates the official `Result.txt` through the independent verifier model; ~16 s, CPU only). The output directory must be under the ignored `results/` tree:
 

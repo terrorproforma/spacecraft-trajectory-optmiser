@@ -59,6 +59,23 @@ strong { font-weight: 600; }
   padding: 6px 0 14px; border-bottom: 1px solid var(--hairline);
 }
 .topbar h1 { padding-top: 6px; white-space: nowrap; }
+
+.repo-link {
+  align-self: start;
+  margin-top: 8px;
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--bone) 22%, transparent);
+  border-radius: 999px;
+  color: var(--bone);
+  text-decoration: none;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.repo-link:hover { opacity: 1; border-color: color-mix(in srgb, var(--bone) 45%, transparent); }
+
 .dataset-field { display: grid; grid-template-columns: max-content minmax(200px, 340px); gap: 3px 10px; align-items: center; }
 .field-label { color: var(--slate); font-size: 12px; }
 .dataset-help { grid-column: 2; max-width: 60ch; }
