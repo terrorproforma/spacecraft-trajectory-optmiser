@@ -15,12 +15,16 @@ def test_refinement_commands_expose_cuda_backend(command):
     args = ["gtoc12", command, "--run-id", "test", "--output", "unused"]
     if command in {"fleet-master", "retime-returns", "joint-itinerary"}:
         args += ["--source", "unused"]
-    parsed = build_parser().parse_args([*args, "--discretisation-backend", "cuda"])
+    parsed = build_parser().parse_args([
+        *args, "--discretisation-backend", "cuda", "--assembly-backend", "cuda",
+    ])
     assert parsed.discretisation_backend == "cuda"
+    assert parsed.assembly_backend == "cuda"
 
 
 def test_backend_selection_is_not_claimed_as_executed_gpu_work(tmp_path, monkeypatch):
     args = Namespace(scvx_iterations=3, node_days=2.0, workers=1, discretisation_backend="cuda")
+    args.assembly_backend = "cuda"
     monkeypatch.delenv("SPACEPDHCG_GTOC12_CUDA_LIBRARY", raising=False)
     with pytest.raises(ValueError, match="SPACEPDHCG_GTOC12_CUDA_LIBRARY"):
         _scvx_settings(args)
@@ -29,6 +33,7 @@ def test_backend_selection_is_not_claimed_as_executed_gpu_work(tmp_path, monkeyp
     monkeypatch.setenv("SPACEPDHCG_GTOC12_CUDA_LIBRARY", str(library))
     settings = _scvx_settings(args)
     assert settings.discretisation_backend == "cuda"
+    assert settings.assembly_backend == "cuda"
     report = _refinement_backend_report(args)
     assert report["gpu_used"] is None and report["cpu_only"] is None
     assert report["convex_solver_backend"] == "cpu_clarabel"
@@ -36,6 +41,9 @@ def test_backend_selection_is_not_claimed_as_executed_gpu_work(tmp_path, monkeyp
     with pytest.raises(ValueError, match="workers 1"):
         _scvx_settings(args)
     args.discretisation_backend = "numpy"
+    with pytest.raises(ValueError, match="requires --discretisation-backend cuda"):
+        _scvx_settings(args)
+    args.assembly_backend = "numpy"
     assert _scvx_settings(args).discretisation_backend == "numpy"
     assert _refinement_backend_report(args)["gpu_used"] is False
 

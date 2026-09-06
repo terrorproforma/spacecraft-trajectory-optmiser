@@ -21,6 +21,9 @@ def _scvx_settings(args: argparse.Namespace):
     from .low_thrust import ScvxSettings
 
     backend = getattr(args, "discretisation_backend", "numpy")
+    assembly = getattr(args, "assembly_backend", "numpy")
+    if assembly == "cuda" and backend != "cuda":
+        raise ValueError("CUDA assembly requires --discretisation-backend cuda")
     if backend == "cuda" and getattr(args, "workers", 1) != 1:
         raise ValueError(
             "CUDA interval refinement currently requires --workers 1; GPU batching is pending"
@@ -32,6 +35,7 @@ def _scvx_settings(args: argparse.Namespace):
     return ScvxSettings(
         max_iterations=args.scvx_iterations, node_days=args.node_days,
         discretisation_backend=backend,
+        assembly_backend=assembly,
     )
 
 
@@ -39,6 +43,7 @@ def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
     backend = getattr(args, "discretisation_backend", "numpy")
     return {
         "discretisation_backend_requested": backend,
+        "assembly_backend_requested": getattr(args, "assembly_backend", "numpy"),
         "convex_solver_backend": "cpu_clarabel",
         # A selected backend is not evidence that a search actually reached
         # refinement. Completed leg summaries record their actual backend.
@@ -2104,6 +2109,10 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     legs.add_argument("--output", default="", help="optional JSON output path")
     legs.set_defaults(function=cmd_leg_stats)
     for refinement in (run, cluster, master, returns, joint):
+        refinement.add_argument(
+            "--assembly-backend", choices=("numpy", "cuda"), default="numpy",
+            help="conic assembly backend; CUDA requires CUDA discretisation; Clarabel remains CPU",
+        )
         refinement.add_argument(
             "--discretisation-backend", choices=("numpy", "cuda"), default="numpy",
             help="interval dynamics backend; CUDA requires its native library and workers=1; "

@@ -89,6 +89,7 @@ class ScvxSettings:
     clarabel_tolerance: float = 1.0e-9
     time_limit_s: float = 900.0
     discretisation_backend: str = "numpy"  # explicit "cuda" uses native interval dynamics
+    assembly_backend: str = "numpy"  # CUDA assembly also requires CUDA dynamics
 
 
 @dataclass(slots=True)
@@ -112,6 +113,7 @@ class LegSolution:
     history: list[dict[str, float]] = field(default_factory=list)
     diagnostic: str = ""
     discretisation_backend: str = "numpy"
+    assembly_backend: str = "numpy"
 
     @property
     def converged(self) -> bool:
@@ -641,6 +643,10 @@ def solve_leg(boundary: LegBoundary, settings: ScvxSettings | None = None) -> Le
 def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitStack) -> LegSolution:
 
     settings = settings or ScvxSettings()
+    if settings.assembly_backend not in {"numpy", "cuda"}:
+        raise ValueError("assembly_backend must be 'numpy' or 'cuda'")
+    if settings.assembly_backend == "cuda" and settings.discretisation_backend != "cuda":
+        raise ValueError("CUDA assembly requires CUDA discretisation")
     started = time.perf_counter()
     duration_days = boundary.duration_days
     if duration_days <= 0.0:
@@ -690,6 +696,13 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         fuel_weights[:-1] += 0.5 * interval_lengths
         fuel_weights[1:] += 0.5 * interval_lengths
     fuel_weights *= model.lam
+    if settings.assembly_backend == "cuda":
+        from .gpu_conic import GpuConvexProblem
+
+        problem = resources.enter_context(closing(GpuConvexProblem(
+            model, node_times, settings.hold, boundary.free_departure_vinf,
+            boundary.free_arrival_vinf, bnd, fuel_weights,
+        )))
 
     def fuel(ct: FloatArray) -> float:
         return float(np.dot(fuel_weights, ct[:, 3]))
@@ -720,25 +733,32 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         if polishing and polish_left <= 0:
             break
         iterations = iteration + 1
-        phi, psi, c, _ = disc.linearise(states, controls)
-        a_matrix, b, q, cones, p_matrix = problem.build(
-            phi,
-            psi,
-            c,
-            disc.stencils,
-            states,
-            controls,
-            bnd,
-            trust_state,
-            trust_control,
-            settings.virtual_weight,
-            minimum_mass,
-            radius_floor,
-            vinf_max,
-            fuel_weights,
-            settings.smoothness_weight,
-            zero_last_control=zoh,
-        )
+        if settings.assembly_backend == "cuda":
+            a_matrix, b, q, cones, p_matrix = problem.build_linearised(
+                states, controls, disc.substeps, trust_state, trust_control,
+                settings.virtual_weight, minimum_mass, radius_floor, vinf_max,
+                settings.smoothness_weight,
+            )
+        else:
+            phi, psi, c, _ = disc.linearise(states, controls)
+            a_matrix, b, q, cones, p_matrix = problem.build(
+                phi,
+                psi,
+                c,
+                disc.stencils,
+                states,
+                controls,
+                bnd,
+                trust_state,
+                trust_control,
+                settings.virtual_weight,
+                minimum_mass,
+                radius_floor,
+                vinf_max,
+                fuel_weights,
+                settings.smoothness_weight,
+                zero_last_control=zoh,
+            )
         ok, solver_status, x = _clarabel_solve(
             a_matrix, b, q, cones, settings.clarabel_tolerance, p_matrix
         )
@@ -880,6 +900,7 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         history=history,
         diagnostic=diagnostic,
         discretisation_backend=settings.discretisation_backend,
+        assembly_backend=settings.assembly_backend,
     )
 
 

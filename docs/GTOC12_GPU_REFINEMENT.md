@@ -7,8 +7,9 @@ available on the `run`, `cluster-fleet`, `fleet-master`, `retime-returns` and
 remains the existing NumPy reference. Missing CUDA configuration fails explicitly.
 
 This is a migration step, not a complete GPU-native refiner. The initial Lambert
-seed, sparse assembly, Clarabel solve, merit/trust decisions and independent
-verification still run on the CPU. The CLI currently requires `--workers 1` for
+seed, Clarabel solve, merit/trust decisions and independent verification still run
+on the CPU. Sparse assembly also uses the CPU unless the explicit
+[`--assembly-backend cuda` path](GTOC12_GPU_ASSEMBLY.md) is selected. The CLI currently requires `--workers 1` for
 CUDA: the existing forked CPU worker arrangement is not a tested GPU batch driver.
 Aggregate reports distinguish requested backend from measured GPU use; completed
 leg summaries record their actual discretisation backend. A selected CUDA option
@@ -130,9 +131,8 @@ A sampled profile places most remaining time in CPU Clarabel and sparse assembly
 [CUDA checks](../artifacts/performance/gtoc12-discretisation-v85-checks.json),
 [final combined regression](../artifacts/performance/gtoc12-discretisation-v85-regression.json).
 
-The next substantial migration is a fixed native conic layout and GPU coefficient
-assembly feeding the GPU solver directly from these device outputs. The current
-Python assembler skips zero Psi entries, so its CSC structure changes with values;
-the native layout must use the union of structurally possible entries. Replacing
-Clarabel also requires equivalent objective, cone and residual qualification at the
-existing 1e-9 conic tolerance. Host decisions and true GPU batching remain open.
+Runtime v87 adds a fixed native conic layout and GPU coefficient assembly using
+these device outputs. It retains all structurally possible entries, but the
+transitional bridge still downloads matrices for Clarabel. Replacing Clarabel
+requires equivalent objective, cone and residual qualification at the existing
+1e-9 conic tolerance. Host decisions and true GPU batching remain open.

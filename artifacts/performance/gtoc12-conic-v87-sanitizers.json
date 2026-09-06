@@ -1,0 +1,129 @@
+[
+  {
+    "name": "native_memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--leak-check",
+      "full",
+      "/home/angus/build-spacepdhcg-gtoc12-v87/final/gtoc12_conic_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 conic: 48 changing-input graph replays, retained topology, objective/Hessian and lifecycle PASS\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 0.9362701139762066
+  },
+  {
+    "name": "native_initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v87/final/gtoc12_conic_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 conic: 48 changing-input graph replays, retained topology, objective/Hessian and lifecycle PASS\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 0.6288062770036049
+  },
+  {
+    "name": "native_racecheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v87/final/gtoc12_conic_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 conic: 48 changing-input graph replays, retained topology, objective/Hessian and lifecycle PASS\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+    "stderr": "",
+    "seconds": 61.683413605962414
+  },
+  {
+    "name": "native_synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v87/final/gtoc12_conic_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 conic: 48 changing-input graph replays, retained topology, objective/Hessian and lifecycle PASS\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 0.8346348240156658
+  },
+  {
+    "name": "host_memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--leak-check",
+      "full",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_conic.py",
+      "-q",
+      "-k",
+      "complete_leg or invalid_and_recovers or solver_exception"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n.....                                                                    [100%]\n5 passed, 32 deselected in 2.08s\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 2.383742343983613
+  },
+  {
+    "name": "host_initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_conic.py",
+      "-q",
+      "-k",
+      "complete_leg or invalid_and_recovers or solver_exception"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n.....                                                                    [100%]\n5 passed, 32 deselected in 1.88s\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 2.187388969992753
+  },
+  {
+    "name": "host_synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_conic.py",
+      "-q",
+      "-k",
+      "complete_leg or invalid_and_recovers or solver_exception"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n.....                                                                    [100%]\n5 passed, 32 deselected in 2.05s\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 2.36282153299544
+  }
+]

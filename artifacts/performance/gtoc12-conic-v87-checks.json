@@ -1,0 +1,26 @@
+[
+  {
+    "name": "native",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v87/final/gtoc12_conic_test"
+    ],
+    "returncode": 0,
+    "stdout": "GTOC12 conic: 48 changing-input graph replays, retained topology, objective/Hessian and lifecycle PASS\n",
+    "stderr": "",
+    "seconds": 0.3996922270162031
+  },
+  {
+    "name": "python",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+      "tests/test_gtoc12_gpu_conic.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "-q"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 92%]\n......                                                                   [100%]\n78 passed in 10.89s\n",
+    "stderr": "",
+    "seconds": 11.207623604044784
+  }
+]

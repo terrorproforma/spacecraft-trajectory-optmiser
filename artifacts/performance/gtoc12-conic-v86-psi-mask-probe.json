@@ -1,0 +1,96 @@
+[
+  {
+    "hold": "zoh",
+    "seconds": 0.5200773869873956,
+    "status": "converged",
+    "iterations": 9,
+    "certificate": {
+      "position_error_km": 2.7074129370738208e-05,
+      "velocity_error_km_s": 3.284720288122043e-12,
+      "final_mass_kg": 2445.311100785599,
+      "minimum_sun_distance_au": 2.7,
+      "maximum_thrust_n": 0.6000000001988859,
+      "rk4_vs_dop853_km": 2.7016118781268035e-05
+    },
+    "passed": true,
+    "calls": [
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      },
+      {
+        "status": "Solved",
+        "nnz": 11149
+      }
+    ]
+  },
+  {
+    "hold": "lagrange",
+    "seconds": 0.189929407031741,
+    "status": "converged",
+    "iterations": 6,
+    "certificate": {
+      "position_error_km": 0.013138283261731068,
+      "velocity_error_km_s": 3.448251784429384e-10,
+      "final_mass_kg": 2444.2699426552317,
+      "minimum_sun_distance_au": 2.7,
+      "maximum_thrust_n": 0.6000000000817154,
+      "rk4_vs_dop853_km": 0.01313828342728979
+    },
+    "passed": true,
+    "calls": [
+      {
+        "status": "Solved",
+        "nnz": 16770
+      },
+      {
+        "status": "Solved",
+        "nnz": 16770
+      },
+      {
+        "status": "Solved",
+        "nnz": 16770
+      },
+      {
+        "status": "Solved",
+        "nnz": 16770
+      },
+      {
+        "status": "Solved",
+        "nnz": 16770
+      },
+      {
+        "status": "Solved",
+        "nnz": 16770
+      }
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "native",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v86/final/gtoc12_conic_test"
+    ],
+    "returncode": 0,
+    "stdout": "GTOC12 conic: 48 changing-input graph replays, retained topology, objective/Hessian and lifecycle PASS\n",
+    "stderr": "",
+    "seconds": 0.5262630360084586
+  },
+  {
+    "name": "python",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+      "tests/test_gtoc12_gpu_conic.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "-q"
+    ],
+    "returncode": 1,
+    "stdout": ".................................F...................................... [ 92%]\n......                                                                   [100%]\n=================================== FAILURES ===================================\n_________ test_complete_leg_assembly_same_qualified_accuracy[zoh-2.0] __________\n\nhold = 'zoh', node_days = 2.0\n\n    @pytest.mark.parametrize(\"hold,node_days\", [(\"zoh\", 2.0), (\"lagrange\", 2.0), (\"zoh\", 8.0)])\n    def test_complete_leg_assembly_same_qualified_accuracy(hold, node_days):\n        boundary = synthetic_boundary()\n        settings = ScvxSettings(\n            max_iterations=30,\n            time_limit_s=300.0,\n            hold=hold,\n            node_days=node_days,\n            discretisation_backend=\"cuda\",\n        )\n        baseline = solve_leg(boundary, settings)\n        candidate = solve_leg(boundary, replace(settings, assembly_backend=\"cuda\"))\n        assert baseline.status == candidate.status == \"converged\"\n        assert candidate.assembly_backend == \"cuda\"\n        for solution in [baseline, candidate]:\n>           assert certify_leg(solution).within_tolerance\nE           AssertionError: assert False\nE            +  where False = LegCertificate(position_error_km=0.06656587308440513, velocity_error_km_s=1.1789675863683306e-08, final_mass_kg=2445.311100657007, minimum_sun_distance_au=2.7, maximum_thrust_n=0.6000002424951428, rk4_vs_dop853_km=0.06661457545548947).within_tolerance\nE            +    where LegCertificate(position_error_km=0.06656587308440513, velocity_error_km_s=1.1789675863683306e-08, final_mass_kg=2445.311100657007, minimum_sun_distance_au=2.7, maximum_thrust_n=0.6000002424951428, rk4_vs_dop853_km=0.06661457545548947) = certify_leg(LegSolution(status='converged', boundary=LegBoundary(departure_epoch=65000.0, departure_position=array([4.03914251e+08...0}], diagnostic='polish budget reached with converged defects', discretisation_backend='cuda', assembly_backend='cuda'))\n\ntests/test_gtoc12_gpu_conic.py:145: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_gtoc12_gpu_conic.py::test_complete_leg_assembly_same_qualified_accuracy[zoh-2.0]\n1 failed, 77 passed in 11.97s\n",
+    "stderr": "",
+    "seconds": 12.338624409982003
+  }
+]

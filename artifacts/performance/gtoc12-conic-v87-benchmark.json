@@ -1,0 +1,2327 @@
+{
+  "scope": "One process, one BLAS thread, 2 warmups + measured repeats. Three backends rotate order. Coefficient path includes linearisation, assembly and host outputs/transfers; excludes workspace construction. Full-leg time includes construction/destruction, CPU solver and outer loop, excludes independent certification. Clarabel/seed/outer decisions remain CPU.",
+  "runtime_sha256": "e0ef981d1aa2ac8214223f707a7a69e9ff977f8754dcb0dfeb3f4c0146c8dabc",
+  "sources": {
+    "src/spacepdhcg/gtoc12/gpu_conic.py": "18f270bd702c652965253fa83d6099e21d345989ab0da0e3e69a1fc7584283ee",
+    "src/spacepdhcg/gtoc12/low_thrust.py": "d7398c104e1ced9715f4b68e5b5cd64817b5caa3e51bcf28a32272052b23bb2c",
+    "src/spacepdhcg/gtoc12/gpu_discretisation.py": "9c56cd6e6b14adcfd43e11842387a07aef39a18de53cc726ad9db951212853f2",
+    "tests/test_gtoc12_gpu_discretisation.py": "f959d4a2da3a9f22674d2bde1c69a71e83da1954b0ca3b5404daba6fdee7563f",
+    "scripts/gpu/benchmark_gtoc12_conic.py": "0faabc0fd8bb46fad301e067384d91e9b1568a4b08302284bf981c01365cdfd8"
+  },
+  "phases": [
+    {
+      "intervals": 3,
+      "hold": "zoh",
+      "setup_seconds": 0.002963492996059358,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0016491289716213942
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0007863370119594038
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.00033718300983309746
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0007446350064128637
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0003019230207428336
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0014474710333161056
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.00034464203054085374
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.001368616009131074
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0007650249754078686
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0013408049708232284
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0006996240117587149
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.00032508402364328504
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0009375240188091993
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.00045512698125094175
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0015601859777234495
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.00041567598236724734
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.0018824589787982404
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.0007949600112624466
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0013501759967766702
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0008070259937085211
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.00029435299802571535
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0006833979859948158
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0003257589996792376
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0014075699727982283
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0003237850032746792
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.001363133022096008
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0008022260153666139
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0013726300094276667
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0008011810132302344
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0003308570012450218
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0006956449942663312
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.00030876300297677517
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0018832599744200706
+        }
+      ],
+      "medians": {
+        "numpy": 0.0013726300094276667,
+        "cuda_dynamics": 0.0007949600112624466,
+        "cuda_assembly": 0.0003257589996792376
+      }
+    },
+    {
+      "intervals": 3,
+      "hold": "lagrange",
+      "setup_seconds": 0.0003159689949825406,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.00221355096437037
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0009210379794239998
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0004798099980689585
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0009031559457071126
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0005140129942446947
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0029932809993624687
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0006222609663382173
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0022482220083475113
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0009118990274146199
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.002051341987680644
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0009398150141350925
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0004565720446407795
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0008782839868217707
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0004520499496720731
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.002185759018175304
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.00046194903552532196
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.002031229028943926
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.00095229601720348
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0021192150306887925
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0009852619841694832
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0004633369971998036
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0008905410068109632
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.00045880803372710943
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0020487370202317834
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0004605419817380607
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.001976292987819761
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0008723980281502008
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0020517900120466948
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0008499450050294399
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.00044523499673232436
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0008385279797948897
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0004428640240803361
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.002013805031310767
+        }
+      ],
+      "medians": {
+        "numpy": 0.002051341987680644,
+        "cuda_dynamics": 0.0008905410068109632,
+        "cuda_assembly": 0.00045880803372710943
+      }
+    },
+    {
+      "intervals": 75,
+      "hold": "zoh",
+      "setup_seconds": 0.0011909599998034537,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.006316296989098191
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.003089464968070388
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0003418520209379494
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.003003513964358717
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.00032915198244154453
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.00641301303403452
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0004311639931984246
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.006298486026935279
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.003365008975379169
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.006882948975544423
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0031047069933265448
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.000435271009337157
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0032775620347820222
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0003520819591358304
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.006192578002810478
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.0003697180072776973
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.00667353201424703
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.003058926959056407
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.005928032973315567
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0030634570284746587
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.00035620504058897495
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.003587044950108975
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0004532060120254755
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.006197459006216377
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.00038341403705999255
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.006023567984811962
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0031613470055162907
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.006614421959966421
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0034116439637728035
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0005175929982215166
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0034362089936621487
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0004944349639117718
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.006228875950910151
+        }
+      ],
+      "medians": {
+        "numpy": 0.006228875950910151,
+        "cuda_dynamics": 0.0032775620347820222,
+        "cuda_assembly": 0.0004311639931984246
+      }
+    },
+    {
+      "intervals": 75,
+      "hold": "lagrange",
+      "setup_seconds": 0.0013692460488528013,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.01106828503543511
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0050417439779266715
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0005573180387727916
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.004462759010493755
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0005104690208099782
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.011683985008858144
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0006550700054503977
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.011945099977310747
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0048544309684075415
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.011618643009569496
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0046459309523925185
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.000604498025495559
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.004384887986816466
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0005633580149151385
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.011784998991061002
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.000702539982739836
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.01238804601598531
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.0046142900246195495
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.012484954029787332
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.004864315036684275
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0006256779888644814
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.004859057022258639
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0007462839712388813
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.011404961987864226
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0006937339785508811
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.012745674001052976
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0046866320190019906
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.011475493956822902
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0045817329664714634
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0005339580238796771
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.004529593978077173
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0006075309938751161
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.01147211599163711
+        }
+      ],
+      "medians": {
+        "numpy": 0.011784998991061002,
+        "cuda_dynamics": 0.0046459309523925185,
+        "cuda_assembly": 0.0006256779888644814
+      }
+    },
+    {
+      "intervals": 257,
+      "hold": "zoh",
+      "setup_seconds": 0.0035802930360659957,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.01782579894643277
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.00939524604473263
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0005588020430877805
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0090377579908818
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0013138519716449082
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.019490820006467402
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0005705230287276208
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.018294153967872262
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.009332148998510092
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.019832459976896644
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.010335302969906479
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0004988849977962673
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.009435532032512128
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0005261089536361396
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.018949068034999073
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.0005537070101127028
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.019063065003138036
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.00960669998312369
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.018172921030782163
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.009306952997576445
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0005552649963647127
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.010486098995897919
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0005825710250064731
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.019583301967941225
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0005419579683803022
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.019237661035731435
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.009555690048728138
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.019496938039083034
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.00953212397871539
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0005393020110204816
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.009268802998121828
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.00048356002662330866
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.020963263988960534
+        }
+      ],
+      "medians": {
+        "numpy": 0.019237661035731435,
+        "cuda_dynamics": 0.00953212397871539,
+        "cuda_assembly": 0.0005419579683803022
+      }
+    },
+    {
+      "intervals": 257,
+      "hold": "lagrange",
+      "setup_seconds": 0.004727217019535601,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.03600760002154857
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.014660218032076955
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.000747386016882956
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.015783743001520634
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0008168029598891735
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0366008750279434
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0008791940053924918
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.036387339991051704
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.01608437002869323
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.037435528996866196
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.015715631016064435
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0008701079641468823
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.015570282994303852
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0007743259775452316
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.036300322972238064
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.0007964610122144222
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.03772281500278041
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.015062026970554143
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.03787817800184712
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.016791637986898422
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0007919670315459371
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.015123072022106498
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0007951569859869778
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.03617871698224917
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0008605300099588931
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.03790428099455312
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.01689932297449559
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0366650529904291
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.015372793015558273
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0007857080199755728
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.03426521003711969
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0008248579688370228
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.03838546003680676
+        }
+      ],
+      "medians": {
+        "numpy": 0.037435528996866196,
+        "cuda_dynamics": 0.015715631016064435,
+        "cuda_assembly": 0.0007964610122144222
+      }
+    },
+    {
+      "intervals": 2001,
+      "hold": "zoh",
+      "setup_seconds": 0.030297738034278154,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.16178506601136178
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.09523624496068805
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.001591312000527978
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.09990188601659611
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0015043080202303827
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.16137940698536113
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0015196210006251931
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.16436147899366915
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.10158029297599569
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.17916151200188324
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.10664544004248455
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0016010560211725533
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.10853616299573332
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.0017043599509634078
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.17714769998565316
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.001583946985192597
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.1801312580355443
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.1093332179589197
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.17702694202307612
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.10962160397320986
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0016335180262103677
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.1101157660013996
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0015671160072088242
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.17075494397431612
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.0016148549620993435
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.1780096279690042
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.10713418101659045
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.1720781369949691
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.1070681830169633
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.0017284820205532014
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.10806230996968225
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.0016750029753893614
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.1753475249861367
+        }
+      ],
+      "medians": {
+        "numpy": 0.17702694202307612,
+        "cuda_dynamics": 0.10806230996968225,
+        "cuda_assembly": 0.0016148549620993435
+      }
+    },
+    {
+      "intervals": 2001,
+      "hold": "lagrange",
+      "setup_seconds": 0.034875101991929114,
+      "samples": [
+        {
+          "backend": "numpy",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.31547436700202525
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.15623508399585262
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 0,
+          "warmup": true,
+          "seconds": 0.0022888690000399947
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.15978187299333513
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.0027658379985950887
+        },
+        {
+          "backend": "numpy",
+          "repeat": 1,
+          "warmup": true,
+          "seconds": 0.33126294799149036
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.0023746800143271685
+        },
+        {
+          "backend": "numpy",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.31808360997820273
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 2,
+          "warmup": false,
+          "seconds": 0.16382258996600285
+        },
+        {
+          "backend": "numpy",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.3202286920277402
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.16729810001561418
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 3,
+          "warmup": false,
+          "seconds": 0.0023392150178551674
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.16640376701252535
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.002256859967019409
+        },
+        {
+          "backend": "numpy",
+          "repeat": 4,
+          "warmup": false,
+          "seconds": 0.319863541983068
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.0023265130002982914
+        },
+        {
+          "backend": "numpy",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.3237483290140517
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 5,
+          "warmup": false,
+          "seconds": 0.1768374959938228
+        },
+        {
+          "backend": "numpy",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.3234265110222623
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.1646809300291352
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 6,
+          "warmup": false,
+          "seconds": 0.0028649099986068904
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.16404676501406357
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.0026059409719891846
+        },
+        {
+          "backend": "numpy",
+          "repeat": 7,
+          "warmup": false,
+          "seconds": 0.3202991089783609
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.002571880992036313
+        },
+        {
+          "backend": "numpy",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.3261555810458958
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 8,
+          "warmup": false,
+          "seconds": 0.1661079990444705
+        },
+        {
+          "backend": "numpy",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.3159387079649605
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.16455071297241375
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 9,
+          "warmup": false,
+          "seconds": 0.009014989016577601
+        },
+        {
+          "backend": "cuda_dynamics",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.16492022201418877
+        },
+        {
+          "backend": "cuda_assembly",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.003519345016684383
+        },
+        {
+          "backend": "numpy",
+          "repeat": 10,
+          "warmup": false,
+          "seconds": 0.31721050798660144
+        }
+      ],
+      "medians": {
+        "numpy": 0.3202286920277402,
+        "cuda_dynamics": 0.16492022201418877,
+        "cuda_assembly": 0.002571880992036313
+      }
+    }
+  ],
+  "legs": [
+    {
+      "backend": "numpy",
+      "repeat": 0,
+      "warmup": true,
+      "seconds": 0.14459079498192295,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 0,
+      "warmup": true,
+      "seconds": 0.12109139398671687,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 0,
+      "warmup": true,
+      "seconds": 0.1438396309968084,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 1,
+      "warmup": true,
+      "seconds": 0.12063873698934913,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 1,
+      "warmup": true,
+      "seconds": 0.14499893999891356,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 1,
+      "warmup": true,
+      "seconds": 0.13832868001190946,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 2,
+      "warmup": false,
+      "seconds": 0.14517580199753866,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 2,
+      "warmup": false,
+      "seconds": 0.13809096498880535,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 2,
+      "warmup": false,
+      "seconds": 0.12026747997151688,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 3,
+      "warmup": false,
+      "seconds": 0.1396916070370935,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 3,
+      "warmup": false,
+      "seconds": 0.12372138199862093,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 3,
+      "warmup": false,
+      "seconds": 0.15247092995559797,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 4,
+      "warmup": false,
+      "seconds": 0.12270438700215891,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 4,
+      "warmup": false,
+      "seconds": 0.14396855502855033,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 4,
+      "warmup": false,
+      "seconds": 0.13869509298820049,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 5,
+      "warmup": false,
+      "seconds": 0.15334099699975923,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 5,
+      "warmup": false,
+      "seconds": 0.14166111400118098,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 5,
+      "warmup": false,
+      "seconds": 0.1238083919743076,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 6,
+      "warmup": false,
+      "seconds": 0.14070341299520805,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 6,
+      "warmup": false,
+      "seconds": 0.12321440305095166,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 6,
+      "warmup": false,
+      "seconds": 0.1776780430227518,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 7,
+      "warmup": false,
+      "seconds": 0.14209283696254715,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 7,
+      "warmup": false,
+      "seconds": 0.17413887096336111,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 7,
+      "warmup": false,
+      "seconds": 0.14981399301905185,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 8,
+      "warmup": false,
+      "seconds": 0.1515946720028296,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 8,
+      "warmup": false,
+      "seconds": 0.14004539500456303,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 8,
+      "warmup": false,
+      "seconds": 0.12203584698727354,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 9,
+      "warmup": false,
+      "seconds": 0.1405973460059613,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 9,
+      "warmup": false,
+      "seconds": 0.12106660299468786,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 9,
+      "warmup": false,
+      "seconds": 0.1460227959905751,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_dynamics",
+      "repeat": 10,
+      "warmup": false,
+      "seconds": 0.12466223596129566,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "cuda_assembly",
+      "repeat": 10,
+      "warmup": false,
+      "seconds": 0.14358568901661783,
+      "status": "converged",
+      "iterations": 7,
+      "accepted": 5,
+      "mass": 2445.3111007852053,
+      "certificate": {
+        "position_error_km": 3.2510963428103306e-05,
+        "velocity_error_km_s": 2.812788025095282e-12,
+        "final_mass_kg": 2445.3111007852613,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000316449,
+        "rk4_vs_dop853_km": 3.244187747310727e-05
+      },
+      "passed": true
+    },
+    {
+      "backend": "numpy",
+      "repeat": 10,
+      "warmup": false,
+      "seconds": 0.1383946010028012,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "mass": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      },
+      "passed": true
+    }
+  ],
+  "leg_medians": {
+    "numpy": 0.14004539500456303,
+    "cuda_dynamics": 0.12321440305095166,
+    "cuda_assembly": 0.1515946720028296
+  }
+}

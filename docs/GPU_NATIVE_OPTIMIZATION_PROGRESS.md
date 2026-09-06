@@ -1040,3 +1040,24 @@ seed generation, outer decisions and verification remain. The profile now points
 to assembly and Clarabel as the next major targets. The CUDA CLI currently uses
 one worker; genuine GPU batching is pending. [Implementation, use, physics gates
 and evidence](GTOC12_GPU_REFINEMENT.md).
+
+## GTOC12 conic numerical assembly moves to CUDA
+
+A fixed C++ topology and multi-block FP64 kernel now assemble the full GTOC12
+convex subproblem directly from retained GPU interval outputs. Both holds,
+endpoint choices, bounds, trust regions, SOCs and fuel/smoothness objectives are
+covered. The explicit `--assembly-backend cuda` path uses CPU Clarabel through a
+transitional matrix download; the device API is ready for direct solver consumers.
+
+At N2001 the complete coefficient path is 66.92x/64.12x faster than GPU dynamics
+plus CPU assembly (ZOH/Lagrange), including host transfers. The representative full
+solve regresses from 123.214 to 151.595 ms because the fixed pattern changes
+Clarabel's iteration path. All 33 timed legs retain fixed mass accuracy and
+independent qualification. The default is unchanged; no general full-solve gain
+is claimed. Initial v86 failed one thrust gate; proven structural mass-row zeros
+were removed in v87 without changing tolerances, restoring qualification.
+
+Five additional grid/hold pairs qualify; the existing free-v-infinity failure
+remains on both backends. Native all-four sanitizer checks and host memory/init/
+sync checks pass. [Implementation, scopes, rejected experiment and next GPU solver
+connection](GTOC12_GPU_ASSEMBLY.md). The full GPU-native goal remains active.
