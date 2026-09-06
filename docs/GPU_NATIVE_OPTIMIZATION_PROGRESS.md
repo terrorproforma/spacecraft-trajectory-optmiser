@@ -868,3 +868,30 @@ nearly flat. The path remains opt-in; no overall speedup or default promotion
 is claimed. Eager compatibility downloads and temporary inverse-map allocations
 are visible in the API trace and remain to be removed.
 [Detailed evidence](GPU_QOCO_LOCAL_BACKEND.md#constraint-transpose-construction-on-cuda).
+
+## Transpose host mirrors materialize only when accessed
+
+The optional GPU transpose path can now defer unused CPU mirrors and skip
+uploads of unchanged device-owned values. Legacy CPU access materializes the
+cache, and subsequent GPU updates invalidate cached values. Exact ownership
+and cache-refresh tests, numerical oracles, scoped sanitizers and recovery
+reconstruction checks pass.
+
+At 900,000 synthetic entries, lazy construction takes 3.086 ms versus 7.111 ms
+for eager GPU construction and 13.872 ms for the CPU constructor. A qualified
+landing API trace confirms 12 fewer synchronous copies and six fewer kernels.
+These improvements remain local to construction: all 54 matched trajectory
+samples pass unchanged accuracy, but full solve times are flat or slower.
+The path remains opt-in, with no overall speedup claim or backend promotion.
+Physical transpose storage and inverse-map downloads still remain, along with
+CPU setup statistics, host control and production replay work.
+[Evidence and exact test scopes](GPU_QOCO_LOCAL_BACKEND.md#defer-unused-transpose-host-mirrors).
+
+The read-only Lambda follow-up at 2026-09-06 02:09 UTC observes H100 utilization
+at 100%, 44°C and 1607 MiB used. G4 has 140 completed groups and ordinal 140
+running, with 594 numerical dispositions, 666 timeouts and no contaminated
+attempts. The three groups since the previous check all timed out; utilization
+alone is not useful-solve throughput. GTOC12 v11 remains complete, with 23 ships,
+194 asteroids and 14047.8 kg, passing official and independent verification.
+It is not proven optimal. Remote campaigns were left untouched.
+[Recorded observation](../artifacts/performance/lambda-status-2026-09-06-followup.json).

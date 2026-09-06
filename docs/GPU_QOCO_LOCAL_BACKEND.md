@@ -1847,3 +1847,70 @@ Core v72, QOCO v68 control and cuDSS 0.8 standard kernels remain unchanged.
 - [Isolated construction distribution](../artifacts/performance/qoco-gpu-transpose-v73-microbenchmark.json).
 - [Landing](../artifacts/performance/qoco-gpu-kkt-v73-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v73-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v73-pd6-500.json) complete distributions.
 - [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v73-reproduction.json).
+
+## Defer unused transpose host mirrors
+
+`--lazy-transpose-mirrors` requires `--gpu-transposes` and defers the host
+offset, row and value arrays for the two constraint transposes. The existing
+CPU-mode accessor materializes them when legacy code actually needs them.
+Device numerical updates invalidate cached values; subsequent CPU access
+refreshes values while retaining the fixed topology and allocations. Setup
+skips redundant uploads when the GPU already owns the current values.
+
+Both eager and lazy constructors retain independent ownership: freeing a
+source or sibling cannot invalidate a result. The transpose arithmetic and
+ordering are unchanged. Inverse maps are still eagerly downloaded, and GPU
+transpose storage, gather construction and temporary inverse allocations
+remain. This is an optional intermediate step toward eliminating unused
+physical transposes from the GPU-only solver path.
+
+The same-library synthetic benchmark uses two warmups and 21 measured samples
+per strategy and shape. Construction completion is included; destruction is
+excluded. CPU and eager GPU strategies include compatibility mirrors, while
+the lazy strategy defers their cost:
+
+| Synthetic entries | CPU median | Eager GPU median | Lazy GPU median |
+|---|---:|---:|---:|
+| 9,000 | 0.2670 ms | 0.3836 ms | 0.2645 ms |
+| 225,000 | 2.7605 ms | 1.9522 ms | 1.5024 ms |
+| 900,000 | 13.8716 ms | 7.1106 ms | 3.0860 ms |
+
+The largest constructor is 2.304x faster than eager GPU construction in this
+batch. This phase improvement does not establish a complete solver speedup.
+Matched full solves use core v72, QOCO v73 versus v74 and cuDSS 0.8 standard
+kernels. All 54 warmup/measured samples pass unchanged physics and objective
+gates, but full SCvx timing is flat or slower:
+
+| Workload | Eager SCvx median | Lazy SCvx median | Inner medians |
+|---|---:|---:|---:|
+| Landing | 155.585 ms | 156.167 ms | 36 → 36 |
+| N20 6DOF | 720.336 ms | 726.110 ms | 129 → 126 |
+| N500 6DOF | 465.788 ms | 478.443 ms | 34 → 36 |
+
+Complete setup medians are also mixed: landing 33.135 → 30.333 ms, N20
+73.047 → 74.528 ms and N500 112.146 → 123.268 ms. No default is promoted.
+Inner-iteration sensitivity and the other setup/control costs remain open.
+
+A separate qualified landing API trace confirms synchronous copies decrease
+547 → 535: six eager mirror downloads and six redundant uploads disappear.
+Kernel launches decrease 7073 → 7067 and device synchronizations 65 → 63.
+Asynchronous copies remain 427, allocations/frees 400/309 and stream
+synchronizations 89. Trace durations are not used as performance evidence.
+
+Sixteen exact transpose fixtures and nine numerical-update cases pass all
+four sanitizer tools. Tests cover absent host arrays, deferred uploads,
+materialization, topology reuse, invalidation of deliberately poisoned cached
+values, source destruction and exact stable ordering. Native, landing, N20
+and N500 numerical oracles pass. Full landing passes memory/leak checking;
+N500 passes memory/init/sync. Forced reconstruction after caller index-array
+and stream destruction passes normally and under all four tools. No new full
+N20 sanitizer or N500 racecheck is claimed. Prepared-source reproduction is exact.
+
+Frozen QOCO v74 is
+`/home/angus/build-qoco-gpu-gpu-kkt-v74/final/libqoco.so`, SHA256
+`6205b2d2b0ff4e2710634e4a96dbfc0b690b3de55ab726fd1d0134d7747e2df2`.
+
+- [Checkpoint, helper sources, checks and traces](../artifacts/performance/qoco-lazy-mirrors-v74-checkpoint.json).
+- [Construction distribution](../artifacts/performance/qoco-gpu-transpose-v74-microbenchmark.json).
+- [Landing](../artifacts/performance/qoco-gpu-kkt-v74-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v74-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v74-pd6-500.json) complete distributions.
+- [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v74-reproduction.json).

@@ -1,0 +1,2102 @@
+{
+  "purpose": "Synthetic isolated transpose construction, includes completion; CPU/eager paths materialize compatibility mirrors, lazy path defers unused mirrors, excludes result destruction. Two warmups plus21measured repetitions per strategy/shape. Same source and frozen library; not an end-to-end solver speedup.",
+  "sha256": {
+    "/home/angus/build-qoco-gpu-gpu-kkt-v74/final/qoco_transpose_benchmark": "329e0ad2c4777c536ee8e47e75f4d24c1ce861c6828d74e38e3c1e9dd2caa2e5",
+    "/home/angus/build-qoco-gpu-gpu-kkt-v74/final/libqoco.so": "6205b2d2b0ff4e2710634e4a96dbfc0b690b3de55ab726fd1d0134d7747e2df2"
+  },
+  "samples": [
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000319757
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000373824
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000261173
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000371314
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000272838
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000268706
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000267572
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000213595
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.00038018
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000243705
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000378354
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000333162
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000415438
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000272576
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000244452
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000239931
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000383415
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000383628
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000249345
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000414141
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000296206
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000363522
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.0002623
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000255924
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000275837
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000244368
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.00039786
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000282081
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000340364
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000237346
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000364374
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000269003
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000522434
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000268956
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000366085
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000394849
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000292638
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000451301
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000248594
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000332169
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000249692
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000290237
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000248031
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000272406
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000389331
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000267023
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000364063
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000246386
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000362096
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000282272
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000266447
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000239883
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000308466
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000374654
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000284679
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.00050551
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000394048
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000455247
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000232158
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.00023536
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000264537
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000286778
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000347137
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000260162
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000559973
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000310761
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.000552951
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.000240156
+    },
+    {
+      "columns": 1000,
+      "rows": 600,
+      "nnz": 9000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.000263729
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.004725719
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002454503
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002044775
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.020080003
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003250455
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.003470674
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002029291
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.003562581
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002141905
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002968581
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002402969
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001996272
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002223171
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001598772
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002912209
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001615798
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002896889
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.039654126
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002773056
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002000723
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001502419
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001952241
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001456552
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.0027454
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001496781
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.00272255
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001844368
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002746776
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001958098
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001423377
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002056789
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001503298
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002758836
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001535776
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002547661
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001670156
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002617258
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001790718
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001517399
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002141281
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001516109
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002904481
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.00143854
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002760474
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001724059
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002685774
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001814848
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001481893
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001835988
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.00143459
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002915502
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001337768
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.003285744
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001916897
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.003160494
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001875157
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001625127
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.002129313
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.00167573
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.003002328
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001413493
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.00254256
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001715704
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002626784
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001999661
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001291012
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.001761495
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.001277837
+    },
+    {
+      "columns": 25000,
+      "rows": 15000,
+      "nnz": 225000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.002735926
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.015468609
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.005527903
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 0,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003195744
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.004370333
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.00318752
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 1,
+      "warmup": true,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.013428086
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003598623
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.015328458
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 2,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007034206
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.012692292
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007267705
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 3,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002774405
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.003896577
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002870943
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 4,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.012940555
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.00317484
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.015404496
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 5,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007544658
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.01387156
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007410779
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 6,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003235781
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.004823426
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003303861
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 7,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.013001173
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003221645
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.015991321
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 8,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007953702
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.013875762
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007622315
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 9,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003341213
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.004633425
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003330206
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 10,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.013012285
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003215087
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.015180251
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 11,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007110569
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.014916565
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.008507403
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 12,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003086033
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.005169382
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003306985
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 13,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.014321193
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.003379045
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.01565239
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 14,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.008270924
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.01315548
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.022648975
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 15,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002912273
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.004142358
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002529477
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 16,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.013096046
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002799505
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.014712054
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 17,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007211065
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.012452327
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007097251
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 18,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002640027
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.003792429
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002673524
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 19,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.012286052
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002666995
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.014705372
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 20,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007543285
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.012974259
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.007092157
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 21,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002835467
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_eager",
+      "construction_seconds": 0.004006304
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": true,
+      "strategy": "gpu_lazy",
+      "construction_seconds": 0.002666775
+    },
+    {
+      "columns": 100000,
+      "rows": 60000,
+      "nnz": 900000,
+      "repeat": 22,
+      "warmup": false,
+      "gpu": false,
+      "strategy": "cpu",
+      "construction_seconds": 0.01264471
+    }
+  ],
+  "medians": {
+    "1000": {
+      "cpu": 0.000267023,
+      "gpu_eager": 0.000383628,
+      "gpu_lazy": 0.000264537,
+      "eager_to_lazy": 1.450186552353735,
+      "cpu_to_lazy": 1.009397551193217
+    },
+    "25000": {
+      "cpu": 0.002760474,
+      "gpu_eager": 0.001952241,
+      "gpu_lazy": 0.001502419,
+      "eager_to_lazy": 1.2993985033469357,
+      "cpu_to_lazy": 1.8373529621230829
+    },
+    "100000": {
+      "cpu": 0.01387156,
+      "gpu_eager": 0.007110569,
+      "gpu_lazy": 0.003086033,
+      "eager_to_lazy": 2.3041130798018035,
+      "cpu_to_lazy": 4.494948693030826
+    }
+  }
+}

@@ -9,7 +9,15 @@
 #include <cstdlib>
 #include <vector>
 extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix*, QOCOInt*);
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+extern "C" QOCOMatrix* qoco_gpu_transpose_lazy(const QOCOMatrix*, QOCOInt*);
+#endif
 int main() {
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+    const int strategies = 3;
+#else
+    const int strategies = 2;
+#endif
     for (int columns : {1000, 25000, 100000}) {
         const int rows = columns*3/5;
         std::vector<int> offsets{0}, indices;
@@ -26,12 +34,19 @@ int main() {
         auto* source = new_qoco_matrix(&input);
         std::vector<int> mapping(values.size());
         for (int repeat=0; repeat<23; ++repeat) {
-            for (int order=0; order<2; ++order) {
-                const bool gpu = (order + repeat)%2;
+            for (int order=0; order<strategies; ++order) {
+                const int variant = (order + repeat)%strategies;
+                const bool gpu = variant != 0;
                 if (cudaDeviceSynchronize()!=cudaSuccess) return 1;
                 const auto start = std::chrono::steady_clock::now();
                 QOCOMatrix* result;
-                if (gpu) {
+                if (variant == 2) {
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+                    result = qoco_gpu_transpose_lazy(source,mapping.data());
+#else
+                    return 1;
+#endif
+                } else if (gpu) {
                     result = qoco_gpu_transpose(source,mapping.data());
                 } else {
                     set_cpu_mode(1);
@@ -44,9 +59,9 @@ int main() {
                 const double seconds = std::chrono::duration<double>(
                     std::chrono::steady_clock::now()-start).count();
                 std::printf("{\"columns\":%d,\"rows\":%d,\"nnz\":%zu,\"repeat\":%d,"
-                             "\"warmup\":%s,\"gpu\":%s,\"construction_seconds\":%.17g}\n",
+                             "\"warmup\":%s,\"gpu\":%s,\"strategy\":\"%s\",\"construction_seconds\":%.17g}\n",
                              columns,rows,values.size(),repeat,repeat<2?"true":"false",
-                             gpu?"true":"false",seconds);
+                             gpu?"true":"false",variant==0?"cpu":variant==1?"gpu_eager":"gpu_lazy",seconds);
                 free_qoco_matrix(result);
             }
         }

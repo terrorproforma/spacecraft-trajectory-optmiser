@@ -97,6 +97,24 @@ void run_case(int n, int iterations, bool missing_diagonal, bool unconstrained, 
                 compare(download(pair.first->d_data, pair.first->len), download(pair.second->d_data, pair.second->len), "vector against CPU updater");
             compare({scales->k, scales->kinv}, {cpu->work->scaling->k, cpu->work->scaling->kinv}, "cost scale");
         }
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+        for (auto* matrix : {data->At, data->Gt}) {
+            require(matrix->lazy_host_mirror && matrix->host_values_pending,
+                    "GPU update invalidates transpose host cache");
+            auto* topology_before = matrix->csc->p;
+            set_cpu_mode(1);
+            auto* host = get_csc_matrix(matrix);
+            set_cpu_mode(0);
+            require(!matrix->host_values_pending, "explicit inspection refreshes values");
+            require(!topology_before || host->p == topology_before, "fixed topology cache reused");
+            if (host->nnz) {
+                compare(download(matrix->d_csc_host->x, host->nnz),
+                        std::vector<double>(host->x, host->x + host->nnz), "fresh transpose cache");
+                // The next real GPU update must replace this stale host cache.
+                std::fill_n(host->x, host->nnz, -987654.0);
+            }
+        }
+#endif
         const auto D = download(scales->Druiz->d_data, n), E = download(scales->Eruiz->d_data, p), F = download(scales->Fruiz->d_data, m);
         for (const auto item : std::initializer_list<std::pair<Sparse*, QOCOMatrix*>>{{&P, data->P}, {&A, data->A}, {&G, data->G}}) {
             const bool quadratic = item.first == &P;

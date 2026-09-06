@@ -18,6 +18,57 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_lazy_transpose_mirrors(destination: Path, extension: Path) -> None:
+    """Materialize transpose host arrays only through an explicit CPU access."""
+    path = destination / "algebra/cuda/cuda_types.h"
+    text = path.read_text()
+    marker = "struct QOCOMatrix_ {"
+    if text.count(marker) != 1:
+        raise RuntimeError("unexpected lazy matrix metadata site")
+    path.write_text(text.replace(marker, "#define SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS 1\n"
+                                 + marker + "\n  int lazy_host_mirror;\n"
+                                 "  mutable int host_values_pending;"))
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_lazy_host_mirror.cuh")
+    path = destination / "algebra/cuda/cuda_linalg.cu"
+    text = path.read_text()
+    replacements = {
+        '#include "qoco_gpu_transpose.cuh"':
+            '#include "qoco_lazy_host_mirror.cuh"\n#include "qoco_gpu_transpose.cuh"',
+        "  M->gather = nullptr;":
+            "  M->gather = nullptr;\n  M->lazy_host_mirror = 0;\n  M->host_values_pending = 0;",
+        "    return M->csc;": "    qoco_materialize_host_mirror(M);\n    return M->csc;",
+        "void sync_matrix_to_device(QOCOMatrix* M)\n{":
+            "void sync_matrix_to_device(QOCOMatrix* M)\n{\n"
+            "  if (qoco_device_mirror_current(M)) return;",
+        "void sync_matrix_values_to_device(QOCOMatrix* M)\n{":
+            "void sync_matrix_values_to_device(QOCOMatrix* M)\n{\n"
+            "  if (qoco_device_mirror_current(M)) return;",
+    }
+    for before, after in replacements.items():
+        if before.startswith("void sync_matrix_values_to_device") and before not in text:
+            continue  # Present only with --values-only-updates.
+        if text.count(before) != 1:
+            raise RuntimeError(f"unexpected lazy mirror site: {before}")
+        text = text.replace(before, after)
+    path.write_text(text)
+    path = destination / "src/qoco_api.c"
+    text = path.read_text()
+    if text.count("qoco_gpu_transpose(") != 3:
+        raise RuntimeError("unexpected lazy transpose setup sites")
+    path.write_text(text.replace("qoco_gpu_transpose(", "qoco_gpu_transpose_lazy("))
+    path = destination / "algebra/cuda/qoco_device_update.cuh"
+    if path.exists():
+        text = path.read_text()
+        marker = "    double result[9]{};"
+        if text.count(marker) != 1:
+            raise RuntimeError("unexpected device-update mirror invalidation site")
+        path.write_text(text.replace(marker, marker + """
+    // Device updates own these values. A later explicit CPU inspection must
+    // refresh a previously materialized cache, including after a failed update.
+    for (auto* matrix : {data->At, data->Gt})
+        if (matrix && matrix->lazy_host_mirror) matrix->host_values_pending = 1;"""))
+
+
 def patch_gpu_transposes(destination: Path, extension: Path) -> None:
     """Construct owned transpose matrices from existing GPU gather ordering."""
     shutil.copyfile(extension, destination / "algebra/cuda/qoco_gpu_transpose.cuh")
@@ -653,6 +704,8 @@ def main() -> None:
                         help="assemble KKT CSR and numerical-update maps on CUDA")
     parser.add_argument("--gpu-transposes", action="store_true",
                         help="construct constraint transposes and their update maps on CUDA")
+    parser.add_argument("--lazy-transpose-mirrors", action="store_true",
+                        help="defer transpose host copies and skip unchanged mirror uploads")
     parser.add_argument("--vector-arena", action="store_true",
                         help="experimental GPU scratch-vector arena (not qualified for promotion)")
     parser.add_argument("--restore-inaccurate-best", action="store_true",
@@ -716,6 +769,7 @@ def main() -> None:
         or args.device_io
         or args.gpu_kkt
         or args.gpu_transposes
+        or args.lazy_transpose_mirrors
         or args.vector_arena
         or args.restore_inaccurate_best
         or args.checked_cudss_abi
@@ -744,6 +798,8 @@ def main() -> None:
         parser.error("--device-numeric-updates requires --gather")
     if args.gpu_transposes and not args.gather:
         parser.error("--gpu-transposes requires --gather")
+    if args.lazy_transpose_mirrors and not args.gpu_transposes:
+        parser.error("--lazy-transpose-mirrors requires --gpu-transposes")
     if args.device_scalar_reductions and not args.device_cone_reductions:
         parser.error("--device-scalar-reductions requires --device-cone-reductions")
     if args.batched_stopping and not (args.device_scalar_reductions and args.queued_operators):
@@ -1126,6 +1182,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_restore_inaccurate_best(destination)
     if args.gpu_transposes:
         patch_gpu_transposes(destination, extension.with_name("qoco_gpu_transpose.cuh"))
+    if args.lazy_transpose_mirrors:
+        patch_lazy_transpose_mirrors(destination, extension.with_name("qoco_lazy_host_mirror.cuh"))
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1159,6 +1217,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "device_io": args.device_io,
         "gpu_kkt": args.gpu_kkt,
         "gpu_transposes": args.gpu_transposes,
+        "lazy_transpose_mirrors": args.lazy_transpose_mirrors,
         "vector_arena": args.vector_arena,
         "restore_inaccurate_best": args.restore_inaccurate_best,
         "host_ruiz_vector_sync": True,

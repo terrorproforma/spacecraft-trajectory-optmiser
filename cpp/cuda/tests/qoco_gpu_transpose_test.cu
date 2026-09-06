@@ -11,6 +11,9 @@
 #include <vector>
 
 extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix*, QOCOInt*);
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+extern "C" QOCOMatrix* qoco_gpu_transpose_lazy(const QOCOMatrix*, QOCOInt*);
+#endif
 namespace {
 void require(bool ok, const char* message) {
     if (!ok) { std::fprintf(stderr, "FAIL: %s\n", message); std::exit(1); }
@@ -23,7 +26,7 @@ template<class T> void compare_device(const T* device, const std::vector<T>& exp
     require(std::memcmp(actual.data(), expected.data(), actual.size()*sizeof(T)) == 0,
             "device transpose differs bitwise from independent reference");
 }
-void run(int rows, int columns, bool empty, bool missing = false) {
+void run(int rows, int columns, bool empty, bool missing = false, bool lazy = false) {
     std::vector<int> offsets{0}, indices, original_columns;
     std::vector<double> values;
     for (int col = 0; col < columns; ++col) {
@@ -61,8 +64,12 @@ void run(int rows, int columns, bool empty, bool missing = false) {
         }
     }
     std::vector<int> inverse(order.size(), -1);
-    auto* result = qoco_gpu_transpose(source, inverse.data());
-    auto* sibling = qoco_gpu_transpose(source, nullptr);
+    auto construct = qoco_gpu_transpose;
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+    if (lazy) construct = qoco_gpu_transpose_lazy;
+#endif
+    auto* result = construct(source, inverse.data());
+    auto* sibling = construct(source, nullptr);
     // The result must outlive its input and another independently built result.
     free_qoco_matrix(source);
     free_qoco_matrix(sibling);
@@ -71,6 +78,21 @@ void run(int rows, int columns, bool empty, bool missing = false) {
     compare_device(result->d_csc_host->p, expected_offsets);
     compare_device(result->d_csc_host->i, expected_rows);
     compare_device(result->d_csc_host->x, expected_values);
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+    if (lazy) {
+        require(result->lazy_host_mirror && result->host_values_pending, "device owns lazy values");
+        require(!result->csc->p && !result->csc->i && !result->csc->x, "no eager host arrays");
+        sync_matrix_to_device(result);
+        require(!result->csc->p && result->host_values_pending, "unchanged upload must remain deferred");
+        set_cpu_mode(1);
+        require(get_csc_matrix(result) == result->csc, "legacy accessor");
+        require(!result->host_values_pending, "host cache materialized");
+        auto* offsets_before = result->csc->p;
+        get_csc_matrix(result);
+        require(result->csc->p == offsets_before, "repeated access reuses cache");
+        set_cpu_mode(0);
+    }
+#endif
     require(std::memcmp(result->csc->p, expected_offsets.data(), expected_offsets.size()*sizeof(int)) == 0,
             "legacy host offsets");
     if (!values.empty()) {
@@ -95,12 +117,17 @@ void run(int rows, int columns, bool empty, bool missing = false) {
     compare_device(twice->d_csc_host->i, sorted_rows);
     compare_device(twice->d_csc_host->x, sorted_values);
     free_qoco_matrix(twice);
-    std::printf("{\"case\":\"gpu_transpose\",\"rows\":%d,\"columns\":%d,\"nnz\":%zu,\"passed\":true}\n",
-                 rows, columns, values.size());
+    std::printf("{\"case\":\"gpu_transpose\",\"rows\":%d,\"columns\":%d,\"nnz\":%zu,\"lazy\":%s,\"passed\":true}\n",
+                 rows, columns, values.size(), lazy ? "true" : "false");
 }
 }
 int main() {
     run(0,0,true,true); run(0,0,true); run(0,37,true); run(29,0,true);
     run(41,53,true); run(1,19,false); run(17,29,false); run(1031,1537,false);
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+    run(0,0,true,true,true); run(0,0,true,false,true); run(0,37,true,false,true);
+    run(29,0,true,false,true); run(41,53,true,false,true); run(1,19,false,false,true);
+    run(17,29,false,false,true); run(1031,1537,false,false,true);
+#endif
     require(cudaDeviceSynchronize() == cudaSuccess, "completion");
 }

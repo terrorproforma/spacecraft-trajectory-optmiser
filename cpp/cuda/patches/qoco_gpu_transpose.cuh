@@ -15,13 +15,17 @@ __global__ void qoco_transpose_entries(const QOCOCscMatrix source,
     if (inverse) inverse[original] = k;
 }
 
-extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix* source,
-                                          QOCOInt* source_to_transpose)
+static QOCOMatrix* qoco_make_gpu_transpose(const QOCOMatrix* source,
+                                           QOCOInt* source_to_transpose, bool lazy)
 {
     const auto* input = source->d_csc_host;
     const size_t count = static_cast<size_t>(input->nnz);
     auto* result = static_cast<QOCOMatrix*>(qoco_malloc(sizeof(QOCOMatrix)));
     result->gather = nullptr;
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+    result->lazy_host_mirror = lazy;
+    result->host_values_pending = lazy;
+#endif
     auto* host = static_cast<QOCOCscMatrix*>(qoco_malloc(sizeof(QOCOCscMatrix)));
     auto* device = static_cast<QOCOCscMatrix*>(qoco_malloc(sizeof(QOCOCscMatrix)));
     *host = {}; *device = {};
@@ -29,10 +33,12 @@ extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix* source,
     host->n = device->n = input->m;
     host->nnz = device->nnz = input->nnz;
     const size_t offset_bytes = (static_cast<size_t>(input->m) + 1) * sizeof(int);
-    host->p = static_cast<int*>(qoco_malloc(offset_bytes));
+    if (!lazy) host->p = static_cast<int*>(qoco_malloc(offset_bytes));
     if (count) {
-        host->i = static_cast<int*>(qoco_malloc(count * sizeof(int)));
-        host->x = static_cast<double*>(qoco_malloc(count * sizeof(double)));
+        if (!lazy) {
+            host->i = static_cast<int*>(qoco_malloc(count * sizeof(int)));
+            host->x = static_cast<double*>(qoco_malloc(count * sizeof(double)));
+        }
         CUDA_CHECK(cudaMalloc(&device->i, count * sizeof(int)));
         CUDA_CHECK(cudaMalloc(&device->x, count * sizeof(double)));
     }
@@ -53,10 +59,12 @@ extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix* source,
     CUDA_CHECK(cudaMemcpy(result->d_csc, device, sizeof(QOCOCscMatrix), cudaMemcpyHostToDevice));
     // Compatibility mirrors for host Ruiz, inspection and legacy numeric
     // updates. No host transpose, sort, counting or inverse-map loop remains.
-    CUDA_CHECK(cudaMemcpy(host->p, device->p, offset_bytes, cudaMemcpyDeviceToHost));
+    if (!lazy) CUDA_CHECK(cudaMemcpy(host->p, device->p, offset_bytes, cudaMemcpyDeviceToHost));
     if (count) {
-        CUDA_CHECK(cudaMemcpy(host->i, device->i, count * sizeof(int), cudaMemcpyDeviceToHost));
-        CUDA_CHECK(cudaMemcpy(host->x, device->x, count * sizeof(double), cudaMemcpyDeviceToHost));
+        if (!lazy) {
+            CUDA_CHECK(cudaMemcpy(host->i, device->i, count * sizeof(int), cudaMemcpyDeviceToHost));
+            CUDA_CHECK(cudaMemcpy(host->x, device->x, count * sizeof(double), cudaMemcpyDeviceToHost));
+        }
         if (source_to_transpose) {
             CUDA_CHECK(cudaMemcpy(source_to_transpose, inverse, count * sizeof(int),
                                    cudaMemcpyDeviceToHost));
@@ -66,3 +74,14 @@ extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix* source,
     qoco_gpu_create_gather(result);
     return result;
 }
+
+extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix* source, QOCOInt* map)
+{
+    return qoco_make_gpu_transpose(source, map, false);
+}
+#ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
+extern "C" QOCOMatrix* qoco_gpu_transpose_lazy(const QOCOMatrix* source, QOCOInt* map)
+{
+    return qoco_make_gpu_transpose(source, map, true);
+}
+#endif

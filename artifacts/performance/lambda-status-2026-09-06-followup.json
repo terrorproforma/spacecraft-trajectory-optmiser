@@ -1,0 +1,112 @@
+{
+  "action": "Read-only status check; no remote jobs, source, runtime, or campaign changes.",
+  "gpu_observation_utc": "2026-09-06T02:09:25.096495+00:00",
+  "gpu": {
+    "returncode": 0,
+    "stdout": "name, utilization.gpu [%], memory.used [MiB], memory.total [MiB], temperature.gpu, power.draw [W]\nNVIDIA H100 80GB HBM3, 100 %, 1607 MiB, 81559 MiB, 44, 126.86 W\n",
+    "stderr": ""
+  },
+  "gpu_processes": {
+    "returncode": 0,
+    "stdout": "pid, process_name, used_gpu_memory [MiB]\n53183, /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test, 518 MiB\n2156645, /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test, 1074 MiB\n",
+    "stderr": ""
+  },
+  "processes": {
+    "returncode": 0,
+    "stdout": "  53138       1  1-07:14:09  0.6  0.0 /home/ubuntu/spacepdhcg/v1/.venv/bin/python scripts/gpu/run_g4_campaign.py run --claim-core --amendment /home/ubuntu/spacepdhcg/v1/benchmarks/g4_claim_core_amendment_v1_2.json --repository /home/ubuntu/spacepdhcg/v1 --campaign /home/ubuntu/spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100 --executable /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test --capabilities /home/ubuntu/g4/g4-executor-capability-1dbcae0-h100.json --host-nvidia-smi /home/ubuntu/s/host-pmon-linux.sh\n  53183   53138  1-07:14:08  0.0  0.1 /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600\n2156645   53138       13:28  100  0.1 /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/ubuntu/spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100/runs/g4-group-v1-ddc4ced884cc41e40948a07b90d7686efb87c193d7ec02d7040ddbbdbae21906/3d8baf1e767a4128b51ad64d0e0bfa66/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e 0b4c8c38a6ba34b45cdf1ee5ae72869da272df5d866801009930f2b235a6f7f5",
+    "stderr": ""
+  },
+  "campaign_observation_utc": "2026-09-06T02:09:32.882419+00:00",
+  "source_commit": "1dbcae098fd8871d4e0ac087e2306534704eff59",
+  "coordinate_states": [
+    [
+      "completed",
+      140
+    ],
+    [
+      "running",
+      1
+    ]
+  ],
+  "running_coordinate": [
+    [
+      140,
+      "2026-09-06T01:55:56.803181+00:00"
+    ]
+  ],
+  "started_coordinate_count": 141,
+  "completed_group_count": 140,
+  "attempt_dispositions": {
+    "numerical": 594,
+    "timeout": 666
+  },
+  "contaminated_attempts": 0,
+  "latest_finished": {
+    "at": "2026-09-06T01:55:56Z",
+    "attempt_dispositions": [
+      [
+        "timeout",
+        9
+      ]
+    ],
+    "censoring": {
+      "attempt_deadline_seconds": 120,
+      "group_deadline_seconds": 1140,
+      "inner_iteration_cap": 200000,
+      "stratum": "claim_core"
+    },
+    "contaminated_attempts": 0,
+    "deterministic_replay_applied": false,
+    "disposition": "completed_group",
+    "elapsed_seconds": 1080.5683056389971,
+    "event": "group_finished",
+    "group_id": "g4-group-v1-ed3fd3095a7bb003097e7242fc8df1ff8384ff59f1027d23eed781ef89933aa0",
+    "ordinal": 139
+  },
+  "gtoc12_status": {
+    "mtime": 1788643194.626867,
+    "tail": "status=PASS stage=done verify_exit=0 armP=0 armC=0 joint=0 master=0 finished_utc=2026-09-05T21:19:54Z\n"
+  },
+  "fleet_master_v11": {
+    "ok": true,
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 194,
+      "ok": true,
+      "return_code": 0,
+      "ships": 23,
+      "total_mass_kg": 14047.8,
+      "wall_seconds": 0.35622994900040794
+    },
+    "independent": {
+      "max_mass_error_kg": 9.185896487906575e-11,
+      "max_position_error_km": 66.8554018025909,
+      "max_velocity_error_km_s": 4.949671007934027e-06,
+      "mined_asteroids": 194,
+      "ok": true,
+      "ship_limit": 23.017236140617964,
+      "ships": 23,
+      "total_mass_kg": 14047.802874743698,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 12805.194102488575
+    },
+    "fleet": {
+      "ships": 23,
+      "average_collected_kg": 610.7740380323186,
+      "total_collected_kg": 14047.802874743327,
+      "rule_satisfied": true
+    },
+    "master": {
+      "proven_optimal": false,
+      "gap_kg": 29.20384483320413,
+      "objective_kg": 12805.194102488209,
+      "upper_bound_kg": 12834.397947321413
+    }
+  },
+  "scope_notes": [
+    "SQLite coordinate count counts started coordinates, not the planned campaign size.",
+    "Numerical dispositions and timeout dispositions are not successful accuracy qualifications.",
+    "GTOC12 v11 final fleet passed both verifiers, but is not proven optimal. Its bound gap describes weighted objective."
+  ]
+}
