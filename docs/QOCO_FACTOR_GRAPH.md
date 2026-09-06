@@ -9,6 +9,9 @@ still dispatches graph launches and the IPM loop, and iterative refinement still
 creates per-solve graphs and downloads its accounting. This is not a complete
 GPU-controlled optimiser.
 
+The subsequent optional [v116/v117 refinement extension](QOCO_RETAINED_REFINEMENT.md)
+retains refinement graphs and moves their iteration accounting onto the GPU.
+
 NVIDIA documents graph capture for asynchronous factorisation/solve and requires
 compatible allocation handling. Analysis remains synchronous. See
 [cuDSS graph support](https://docs.nvidia.com/cuda/cudss/general.html#cuda-graphs-support)
