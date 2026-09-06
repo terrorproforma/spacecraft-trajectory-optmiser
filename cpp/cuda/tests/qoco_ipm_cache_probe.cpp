@@ -6,6 +6,7 @@
 #include "qoco.h"
 extern "C" int qoco_gpu_begin_reduction_scope();
 extern "C" void qoco_gpu_end_reduction_scope();
+extern "C" int qoco_gpu_primal_start(QOCOSolver*, int);
 #define REQUIRE(x) do { if (!(x)) { std::fprintf(stderr, "line %d: %s\n", __LINE__, #x); std::exit(1); } } while (0)
 
 struct Fixture {
@@ -40,6 +41,10 @@ struct Fixture {
         settings.max_ir_iters = repeat % 4 == 0 ? 0 : 10;
         settings.max_iters = repeat == 14 ? 1 : 200;
         settings.kkt_static_reg_G = repeat < 8 ? 1e-4 : 2e-4;
+        if (std::getenv("QOCO_IPM_PROBE_WARM")) {
+            REQUIRE(qoco_gpu_primal_start(solver, repeat % 2) == 0);
+            settings.kkt_dynamic_reg = repeat % 2 ? 1e-10 : 1e-9;
+        }
         REQUIRE(qoco_update_settings(solver, &settings) == QOCO_NO_ERROR);
         qoco_update_matrix_data(solver, px, nullptr, nullptr);
         qoco_update_vector_data(solver, c, b, nullptr);
@@ -54,9 +59,12 @@ struct Fixture {
         }
         REQUIRE(solver->sol->ir_iters >= 0);
         REQUIRE(solver->sol->ir_iters <= 2 * solver->sol->iters * settings.max_ir_iters);
-        std::printf("IPM_REUSE {\"workspace\":%d,\"repeat\":%d,\"k\":%.17g,\"status\":%d,\"ipm\":%d,\"ir\":%d,\"step_ir\":%d,\"objective\":%.17g,\"expected\":%.17g}\n",
+        std::printf("IPM_REUSE {\"workspace\":%d,\"repeat\":%d,\"k\":%.17g,\"status\":%d,\"ipm\":%d,\"ir\":%d,\"step_ir\":%d,\"objective\":%.17g,\"expected\":%.17g,\"warm\":%d,\"dynamic_reg\":%.17g}\n",
             id, repeat, solver->work->scaling->k, status, solver->sol->iters,
-            solver->sol->ir_iters, solver->work->ir_iters, solver->sol->obj, expected);
+            solver->sol->ir_iters, solver->work->ir_iters, solver->sol->obj, expected,
+            int(solver->work->use_x0), solver->settings->kkt_dynamic_reg);
+        if (std::getenv("QOCO_IPM_PROBE_WARM") && repeat != 14)
+            REQUIRE(qoco_gpu_primal_start(solver, 2) == 0);
         qoco_gpu_end_reduction_scope();
     }
 };

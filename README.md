@@ -101,12 +101,17 @@ unresolved sanitizer failures. Python remains available for orchestration,
 reference solvers and independent verification. Experimental v123 now retains
 whole-IPM graphs and their workspace across solves, with changing settings passed
 through device memory; it has not demonstrated an additional speedup over v121.
-Initial setup and full SCvx orchestration remain unfinished.
+Experimental v124 also captures repeated initialisation and warm-start selection,
+and parallelises the initial cone shift. All 36 measured transfers pass the same
+physics and mass gates; its 332 ms median is essentially unchanged from the
+334 ms v123 comparison. Initial vendor warm-up, setup and full SCvx orchestration
+remain unfinished.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
 [GPU IPM loop and v121 measurements](docs/QOCO_GPU_IPM_LOOP.md),
-[retained IPM graphs and v123 evidence](docs/QOCO_RETAINED_IPM.md), and
+[retained IPM graphs and v123 evidence](docs/QOCO_RETAINED_IPM.md),
+[GPU initialisation and v124 evidence](docs/QOCO_GPU_INITIALIZATION.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.
