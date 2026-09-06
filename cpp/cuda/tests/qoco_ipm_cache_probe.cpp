@@ -48,6 +48,10 @@ struct Fixture {
         REQUIRE(qoco_update_settings(solver, &settings) == QOCO_NO_ERROR);
         qoco_update_matrix_data(solver, px, nullptr, nullptr);
         qoco_update_vector_data(solver, c, b, nullptr);
+        if (std::getenv("QOCO_IPM_PROBE_TERMINAL_TOGGLE")) {
+            if (repeat % 2) setenv("SPACEPDHCG_TEST_QOCO_IPM_TERMINAL_DISABLE", "1", 1);
+            else unsetenv("SPACEPDHCG_TEST_QOCO_IPM_TERMINAL_DISABLE");
+        }
         const int status = qoco_solve(solver);
         const double x1 = (px[0] * b[0] + c[0] - c[1]) / (px[0] + px[1]);
         const double x0 = b[0] - x1;
@@ -59,6 +63,17 @@ struct Fixture {
         }
         REQUIRE(solver->sol->ir_iters >= 0);
         REQUIRE(solver->sol->ir_iters <= 2 * solver->sol->iters * settings.max_ir_iters);
+        if (std::getenv("QOCO_IPM_PROBE_VECTORS")) {
+            const auto* sol = solver->sol;
+            if (repeat != 14) {
+                REQUIRE(std::abs(sol->x[0] - x0) < 1e-7 && std::abs(sol->x[1] - x1) < 1e-7);
+                REQUIRE(std::abs(sol->s[0] - x0) < 1e-7 && std::abs(sol->s[1] - x1) < 1e-7);
+                REQUIRE(std::abs(sol->y[0] + px[0] * x0 + c[0]) < 1e-7);
+                REQUIRE(std::abs(sol->z[0]) < 1e-7 && std::abs(sol->z[1]) < 1e-7);
+            }
+            std::printf("IPM_VECTORS [%d,%d,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g]\n",
+                id, repeat, sol->x[0], sol->x[1], sol->y[0], sol->s[0], sol->s[1], sol->z[0], sol->z[1]);
+        }
         std::printf("IPM_REUSE {\"workspace\":%d,\"repeat\":%d,\"k\":%.17g,\"status\":%d,\"ipm\":%d,\"ir\":%d,\"step_ir\":%d,\"objective\":%.17g,\"expected\":%.17g,\"warm\":%d,\"dynamic_reg\":%.17g}\n",
             id, repeat, solver->work->scaling->k, status, solver->sol->iters,
             solver->sol->ir_iters, solver->work->ir_iters, solver->sol->obj, expected,
