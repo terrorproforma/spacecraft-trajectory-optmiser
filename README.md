@@ -122,6 +122,11 @@ decision before host report collection. All 36 measured transfers retain the
 same physics and mass accuracy; the 312 ms median does not establish a reliable
 additional gain given run-to-run variation. Full device dispatch and setup
 remain unfinished.
+Experimental core v131 with QOCO v128 also queues numerical scaling and KKT
+updates before replay, keeping their scaling report on the GPU and rejecting
+invalid updates through a device guard. It passes 324 regression tests and all
+36 complete-transfer accuracy gates. Its 309 ms median remains a variable local
+measurement; host validation/dispatch and the memcheck failure are unresolved.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
@@ -131,7 +136,8 @@ See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATIO
 [GPU terminal handling and v125 evidence](docs/QOCO_GPU_TERMINAL.md),
 [device completion and v126 replay evidence](docs/QOCO_GPU_REPLAY.md),
 [native replay and v128 audit integration](docs/QOCO_NATIVE_REPLAY.md),
-[GPU qualification and v129 SCvx consumers](docs/GTOC12_DEVICE_QUALIFICATION.md), and
+[GPU qualification and v129 SCvx consumers](docs/GTOC12_DEVICE_QUALIFICATION.md),
+[queued numerical updates and v131 evidence](docs/QOCO_NUMERIC_REPLAY.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.
