@@ -80,7 +80,7 @@ Can a persistent, scenario-structured, multi-GPU PDHCG-CQP backend reduce the to
 
 A conditional result is useful: the project will produce a reproducible crossover map showing when first-order multi-GPU conic quadratic optimisation wins, when factorisation-based GPU solvers win, and when a hybrid is best.
 
-## Current status — 6 September 2026
+## Current status — 7 September 2026
 
 Native C++/CUDA execution is implemented and tested on the local RTX 5090. The
 persistent solver has parallel scaling and reductions, with cooperative
@@ -88,16 +88,22 @@ multiple-block execution for larger problems. The experimental GTOC12 native
 path also runs Lambert/Kepler seed generation, interval propagation, numerical
 assembly, SCvx merit and acceptance decisions, and trust updates on the GPU.
 Its v107 regression passed **324 tests**, including independent physics checks.
+The experimental v121 QOCO path also runs the complete IPM iteration loop under
+GPU control. In six balanced local comparisons, median complete-transfer time
+fell from **551 ms to 326 ms (1.69×)** against v117, with all 36 transfers passing
+the same independent physics and final-mass gates. This is a named-fixture
+measurement, not a fleet-score improvement or universal speedup.
 
 **The complete optimiser is not yet fully GPU-controlled.** Initial sparse
 topology/conversion, parts of QOCO setup and control, and native solver dispatch
 still involve the host. The QOCO conditional-graph refinement path also has
 unresolved sanitizer failures. Python remains available for orchestration,
-reference solvers and independent verification. The new GPU outer-loop and seed
-path has not yet demonstrated a consistent complete-run speedup.
+reference solvers and independent verification. Whole-IPM graphs are currently
+built per solve; retained setup and full SCvx orchestration remain unfinished.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
-[GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md), and
+[GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
+[GPU IPM loop and v121 measurements](docs/QOCO_GPU_IPM_LOOP.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.
