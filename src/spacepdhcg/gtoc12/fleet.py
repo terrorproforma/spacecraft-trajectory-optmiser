@@ -4,8 +4,9 @@ Ships are independent except for asteroid exclusivity (each asteroid may be depl
 the fleet-size rule ``N <= min(100, 2 exp(rho * M_bar))``.  The fleet is built sequentially:
 ship ``k`` searches the pool with the asteroids of ships ``1..k-1`` excluded, its best certified
 route is kept, and the routes are assembled into one official-format file (ship IDs 1..N).
-The fixed post-competition score is simply the sum of collected masses (all bonus coefficients
-are 1.0 for the final leaderboard state; see ``constants.bonus_coefficient``).
+This module reports raw collected mass. The fixed post-competition score weights each
+asteroid's returned mass by its frozen bonus coefficient; the verifier computes that score
+when given a BonusTable. Raw mass and leaderboard score must be kept distinct.
 """
 
 from __future__ import annotations

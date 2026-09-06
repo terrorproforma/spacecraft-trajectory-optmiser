@@ -2,7 +2,6 @@
   "schema_version": "1.0.0",
   "run_id": "fleet_master_v11",
   "commit": "811ebe4267c1f51d2494925916510f8f8f7374ea",
-  "headline_score_kg": 14047.8,
   "hardware": {
     "fleet_assembly": "CPU-only, 22 workers (run_report.gpu_used=false)",
     "gpu": "None on fleet_master_v11 assembly",
@@ -32,6 +31,12 @@
   },
   "notes": [
     "Not proven optimal (run_report.master.proven_optimal=false).",
-    "G4 partial snapshot on disk is a separate low-thrust SCvx GPU campaign, not the fleet_master_v11 assembly clock."
-  ]
+    "G4 partial snapshot on disk is a separate low-thrust SCvx GPU campaign, not the fleet_master_v11 assembly clock.",
+    "The leaderboard score is bonus-weighted kg. Raw returned mass must not be compared directly to published weighted scores."
+  ],
+  "raw_returned_mass_kg": 14047.802874743698,
+  "raw_kg_per_ship": 610.7740380323347,
+  "weighted_score_fixed_bonus_kg": 12805.194102488575,
+  "bonus_sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21",
+  "retrospective_competition_position": 9
 }
