@@ -108,13 +108,17 @@ physics and mass gates; its 332 ms median is essentially unchanged from the
 and unscaling into the graph too; 240 direct terminal cases and all 36 complete
 transfers pass, with no additional end-to-end speedup established. Initial vendor
 warm-up, setup, host reporting and full SCvx orchestration remain unfinished.
+Experimental v126 exposes a nonblocking prepared-solve API with device completion
+and unscaled outputs. Cold and warm probes each pass 128 queued solves with GPU
+consumers; the native SCvx driver still needs to adopt this API.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
 [GPU IPM loop and v121 measurements](docs/QOCO_GPU_IPM_LOOP.md),
 [retained IPM graphs and v123 evidence](docs/QOCO_RETAINED_IPM.md),
 [GPU initialisation and v124 evidence](docs/QOCO_GPU_INITIALIZATION.md),
-[GPU terminal handling and v125 evidence](docs/QOCO_GPU_TERMINAL.md), and
+[GPU terminal handling and v125 evidence](docs/QOCO_GPU_TERMINAL.md),
+[device completion and v126 replay evidence](docs/QOCO_GPU_REPLAY.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.
