@@ -127,6 +127,11 @@ updates before replay, keeping their scaling report on the GPU and rejecting
 invalid updates through a device guard. It passes 324 regression tests and all
 36 complete-transfer accuracy gates. Its 309 ms median remains a variable local
 measurement; host validation/dispatch and the memcheck failure are unresolved.
+Experimental core v132 then keeps topology and coefficient validation on the
+GPU through guarded replay, removing two intermediate CPU waits. All 36 complete
+transfers retain the same accuracy gates; adapter update reports shrink from 64
+to 60 bytes. The 312 ms median does not establish another speedup. GTOC12 assembly
+validation, setup and outer dispatch remain unfinished.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
@@ -137,7 +142,8 @@ See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATIO
 [device completion and v126 replay evidence](docs/QOCO_GPU_REPLAY.md),
 [native replay and v128 audit integration](docs/QOCO_NATIVE_REPLAY.md),
 [GPU qualification and v129 SCvx consumers](docs/GTOC12_DEVICE_QUALIFICATION.md),
-[queued numerical updates and v131 evidence](docs/QOCO_NUMERIC_REPLAY.md), and
+[queued numerical updates and v131 evidence](docs/QOCO_NUMERIC_REPLAY.md),
+[device validation and v132 evidence](docs/QOCO_DEVICE_VALIDATION.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.

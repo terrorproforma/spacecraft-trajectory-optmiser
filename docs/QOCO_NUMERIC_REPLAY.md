@@ -131,7 +131,9 @@ timers use GPU events. Internal stage timers are not interchangeable across mode
 
 ## Remaining work
 
-Canonical topology and numerical-conversion validation still download flags.
+At v131, canonical topology and numerical-conversion validation still downloaded
+flags before replay. [Core v132](QOCO_DEVICE_VALIDATION.md) subsequently moves
+these checks into the device chain and combines their final report.
 GTOC12 assembly validation and the outer SCvx command loop still involve the
 host. Initial setup/analysis, vendor warm-up, full device dispatch, native warm
 retry policy, per-leg workspace reuse, batching and fleet search remain

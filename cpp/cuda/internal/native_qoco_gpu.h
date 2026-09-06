@@ -76,6 +76,9 @@ struct QocoGpuTopology;
 cudaError_t qoco_gpu_topology_create(const QocoTopologyInput&, cudaStream_t, QocoGpuTopology**);
 cudaError_t qoco_gpu_topology_validate(QocoGpuTopology*, const QocoTopologyInput&,
                                      cudaStream_t, bool* match);
+// Borrowed device mismatch flag; capture-compatible, no download or wait.
+cudaError_t qoco_gpu_topology_validate_device(QocoGpuTopology*, const QocoTopologyInput&,
+    cudaStream_t, const int** mismatch);
 QocoAuditTransfers qoco_gpu_topology_transfers(const QocoGpuTopology*);
 QocoAuditMemory qoco_gpu_topology_memory(const QocoGpuTopology*);
 void qoco_gpu_topology_destroy(QocoGpuTopology*);
@@ -101,6 +104,15 @@ cudaError_t qoco_gpu_conversion_create(const QocoConversionPlan&, cudaStream_t, 
 // bit 4=asymmetric quadratic. A null host_output retains values only on the device.
 cudaError_t qoco_gpu_conversion_run(QocoGpuConversion*, const QocoConversionInputs&,
     double* host_output, int* invalid, cudaStream_t);
+// Device flags retain bits 1/2/4 above; bit 8 denotes a topology mismatch.
+// topology_mismatch may be null. All operands/results belong to the same stream.
+cudaError_t qoco_gpu_conversion_run_device(QocoGpuConversion*, const QocoConversionInputs&,
+    const int* topology_mismatch, cudaStream_t, const int** invalid);
+cudaError_t qoco_gpu_conversion_download_flags_async(QocoGpuConversion*, cudaStream_t, int*);
+// Copy QOCO's borrowed nine-double scale report into retained conversion storage,
+// combining its invalid flag with canonical validation before guarded replay.
+cudaError_t qoco_gpu_conversion_guard_numeric(QocoGpuConversion*, const double* numeric_result,
+    cudaStream_t, const double** guarded_result);
 const double* qoco_gpu_conversion_values(const QocoGpuConversion*);
 QocoAuditTransfers qoco_gpu_conversion_transfers(const QocoGpuConversion*);
 QocoAuditMemory qoco_gpu_conversion_memory(const QocoGpuConversion*);
