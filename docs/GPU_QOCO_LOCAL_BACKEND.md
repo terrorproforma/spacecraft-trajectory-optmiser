@@ -2084,3 +2084,81 @@ Frozen QOCO v76 is
 - [Isolated metric timings](../artifacts/performance/qoco-metric-graphs-v76-microbenchmark.json) and [90-input parity](../artifacts/performance/qoco-metric-graphs-v76-parity.json).
 - [Landing](../artifacts/performance/qoco-gpu-kkt-v76-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v76-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v76-pd6-500.json) full distributions.
 - [Complete prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v76-reproduction.json).
+
+## GPU Ruiz equilibration and zero-norm constraints
+
+Planner v77 adds the optional canonical setting `solver.qoco_ruiz_iterations`
+(integer 0–100, default 0), passes it to the existing native adapter and exports
+both requested and applied values. Applied is null if no QOCO workspace was
+created. Host option parsing, schema validation and normalization agree. The
+numerical work uses the existing multi-block GPU update: initial QOCO setup
+uses zero CPU Ruiz passes, then requested scaling runs on the GPU before the
+first solve and on later updates. This does not remove the remaining host
+setup, stopping or outer-loop decisions.
+
+The first six-setting N20 pilot used frozen QOCO v76. All 20 nonzero-pass
+attempts failed before creating a workspace; four zero-pass controls qualified.
+The device scaler returned `DBL_MAX` for an empty row/column norm or zero cost
+norm. Repeated scaling can overflow, and explicitly stored zeros can become
+NaN. QOCO v78 uses a scale of one when the equilibration denominator is at most
+1e-15. The threshold is the pre-existing reciprocal threshold; finite values
+above it retain their previous arithmetic. Inverse-scale calculations retain
+their existing implementation. SOC members still receive a common positive
+scale. This changes scaling, not the constraints or qualification tolerances.
+
+`qoco_ruiz_zero_test` models an empty equality, constant inequality, SOC with a
+constant scalar component and explicitly stored matrix zeros. It checks the
+known optimum (0.5, -0.2), unscaled cone feasibility, and finite positive scales;
+a second fixture has zero objective. Counts 0/1/4/12/100 each perform three
+updates. The frozen v76 library fails this exact test; v78 passes all ten cases
+and thirty updates. Existing nondegenerate GPU/CPU update parity still passes.
+
+All trajectory sweeps use the same planner v77, frozen core v72, cuDSS 0.8.0.10,
+RTX 5090, pure-QOCO backend and unchanged input tolerances. Each sample starts a
+fresh native process and includes independent trajectory replay. A fixed
+previously qualified objective is required within 1e-8, alongside the complete
+physics certificate and backend checks. The runner rotates setting order,
+serializes GPU work, retains failed outputs and suppresses latency summaries
+for settings with any qualification failure.
+
+Initial GPU Ruiz work is included in QOCO setup time and later passes in QOCO
+update time; the legacy `scaling_seconds` field does not isolate this work.
+Some failure exits leave SCvx timing fields at zero. The runner also retains
+external `process_seconds`, so those exits are not interpreted as zero-cost
+solves. Repairing failure-path timing remains further telemetry work.
+
+| Experiment | Result | Decision |
+|---|---|---|
+| N20 pilot, 1 warmup + 3 measured per setting | 0/1/2/4 passes all qualify; 8 fails 3/4, 12 fails 2/4 | Exclude 8/12; repeat the initially fastest candidate |
+| N20, 2 warmups + 20 measured per setting | Zero passes qualifies 22/22, median 728.445 ms; one pass qualifies 20/22, with two measured failures | Reject one pass as a production speed setting |
+| N500 pilot, 1 warmup + 3 measured per setting | All 16 qualify; medians 564.648/653.452/634.966/651.418 ms for 0/1/2/4 passes | Scaling does not improve this pilot |
+
+The corrected-library trajectories total 84 attempts: 77 qualify and seven
+fail. Failures are inner numerical failures, retained in the reports. These
+results do not justify a new default or general speedup claim. Conditioning,
+regularization interactions and convergence variability need further work.
+
+Re-run the sweep with `scripts/gpu/benchmark_planner_ruiz.py`; its required
+arguments identify the executable, core, QOCO and cuDSS libraries, canonical
+input, fixed reference objective and output path. `--passes`, `--warmups` and
+`--repeats` define the experiment; equations and tolerances are not rewritten.
+The N20 reference is 0.51297569119164033 and the N500 reference is
+0.5129756922612151 from the previously qualified v76 record.
+
+All 15 CUDA sanitizer checks pass: all four tools on the zero-norm fixtures,
+nondegenerate numerical-update fixtures and full N20 one-pass trajectory;
+memory/init/sync on full N500 with one pass. These instrumented trajectories
+also meet the fixed objective gate. No N500 racecheck is claimed. The native
+option smoke test, 43 Python schema tests, existing native/landing/N20/N500
+numerical oracles, complete prepared-source reproduction and Ruff pass.
+
+Frozen QOCO v78 is
+`/home/angus/build-qoco-gpu-gpu-kkt-v78/final/libqoco.so`, SHA256
+`bddec9453b32242e901919443a8df11cbfb3878218035a836930d0858ee0cb30`.
+Planner v77 is `/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan`,
+SHA256 `aa1e8a1e6e21c0c0e43c47a6f06d33f2979af327f674297fb5b2d5875497a390`.
+
+- [Original setup failures](../artifacts/performance/planner-ruiz-v77-pilot-20.json).
+- [Corrected N20 pilot](../artifacts/performance/planner-ruiz-v78-pilot-20.json), [longer comparison](../artifacts/performance/planner-ruiz-v78-repeatability-20.json) and [N500 pilot](../artifacts/performance/planner-ruiz-v78-pilot-500.json).
+- [Checkpoint, checks, hashes and helper sources](../artifacts/performance/planner-ruiz-v78-checkpoint.json).
+- [Complete prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v78-reproduction.json).

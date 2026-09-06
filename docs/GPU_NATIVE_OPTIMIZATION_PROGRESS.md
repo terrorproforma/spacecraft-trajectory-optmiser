@@ -936,3 +936,22 @@ Capture still introduces cuBLAS asynchronous allocations, and convergence
 variability remains unresolved. Reducing those allocations, moving remaining
 host decisions and improving conditioning are further work toward the full
 GPU-native goal. [Evidence and exact scopes](GPU_QOCO_LOCAL_BACKEND.md#replay-stopping-calculations-with-cuda-graphs).
+
+## GPU equilibration: repair zero norms, reject an unreliable tuning candidate
+
+The native planner now accepts and reports `solver.qoco_ruiz_iterations` (0–100,
+default still 0). This selects the existing GPU numerical-update scaler. A
+reproducible sweep found that every nonzero setting failed initial setup on the
+N20 trajectory: the scaler used `DBL_MAX` for empty row norms. Identity scaling
+for these rows and zero objectives prevents overflow without changing their
+equations or relaxing tolerances. A regression fixture fails with the old
+library and passes with the fix, including an independently known optimum.
+
+After this fix, a small pilot suggested one pass was faster on N20. The longer
+alternating comparison rejected it: 2 of 20 measured one-pass solves fail,
+while all 22 zero-pass runs (including warmups) qualify. Eight and twelve passes
+also fail in the pilot. All 16 N500 pilot solves qualify, but scaling is slower:
+zero passes takes 564.648 ms median versus 634.966–653.452 ms for 1/2/4 passes.
+The default remains zero; no speedup is claimed for this tranche. The full
+GPU-native goal remains open, especially conditioning and solver reliability.
+[Evidence and reproducible sweep](GPU_QOCO_LOCAL_BACKEND.md#gpu-ruiz-equilibration-and-zero-norm-constraints).

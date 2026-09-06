@@ -1,0 +1,4595 @@
+{
+  "reference_objective": 0.5129756922612151,
+  "objective_absolute_tolerance": 1e-08,
+  "problem": {
+    "constraints": {
+      "glide_slope": 1.0471975511965976,
+      "maximum_angular_rate": 1.0,
+      "maximum_tilt": 0.5235987755982988,
+      "minimum_altitude": 0.0
+    },
+    "environment": {
+      "gravity": [
+        0.0,
+        0.0,
+        -3.711
+      ]
+    },
+    "family": "powered_descent_6dof",
+    "horizon": {
+      "final_time": 4.0,
+      "free_final_time": false,
+      "intervals": 500
+    },
+    "initial_state": [
+      0.0,
+      0.0,
+      100.0,
+      0.0,
+      0.0,
+      -1.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      2000.0
+    ],
+    "name": "6-DoF powered descent: braking from -1 m/s at 100 m to a 97 m hover point in 4 s",
+    "output": {
+      "dense_replay_substeps": 10
+    },
+    "schema_version": "1.0.0",
+    "solver": {
+      "backend": "pure_qoco",
+      "maximum_outer_iterations": 30,
+      "time_limit_seconds": 600.0,
+      "tolerance": 1e-06
+    },
+    "terminal": {
+      "fixed": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "state": [
+        0.0,
+        0.0,
+        97.0,
+        0.0,
+        0.0,
+        -0.4,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "vehicle": {
+      "dry_mass": 1000.0,
+      "exhaust_velocity": 2173.913043478261,
+      "maximum_torque": 2000.0,
+      "principal_inertia": [
+        2500.0,
+        2200.0,
+        1800.0
+      ],
+      "thrust": {
+        "maximum": 15000.0,
+        "minimum": 0.0
+      }
+    }
+  },
+  "passes": [
+    0,
+    1,
+    2,
+    4
+  ],
+  "warmups": 1,
+  "repeats": 3,
+  "timeout_seconds": 120.0,
+  "timing_boundary": "fresh native process including independent replay",
+  "sha256": {
+    "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan": "aa1e8a1e6e21c0c0e43c47a6f06d33f2979af327f674297fb5b2d5875497a390",
+    "/home/angus/build-spacepdhcg-boundary-v72/final/libspacepdhcg_cuda.so": "993fd2c0b0765b3696507aea086952177d0c686367d0b0c02f1f9707c9e2e241",
+    "/home/angus/build-qoco-gpu-gpu-kkt-v78/final/libqoco.so": "bddec9453b32242e901919443a8df11cbfb3878218035a836930d0858ee0cb30",
+    "/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib/libcudss.so": "0740250950abbbbc7690c4edb1506f8432558658764d6c1f7cba29615acb3dfc",
+    "artifacts/performance/qoco-rhs-scaling-input-500.json": "b108e132c36a82b39c95bf2ebb81d89554b4c95f0ef3ba163476cac98a41b653"
+  },
+  "commit": "bf525e15c988be2d3cc6dbe54653e4e043103783",
+  "gpu": "NVIDIA GeForce RTX 5090, 595.97",
+  "samples": [
+    {
+      "passes": 0,
+      "repeat": 0,
+      "warmup": true,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.013593363983091,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-0.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-0.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-0.json",
+      "result_sha256": "e1bb796aa7f239e15adc817a905d7ecf5a0d3acdaeffe15cbbbe764473e28e0b",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756913086941,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 37,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.624072784506685e-06,
+        "propellant_used": 14.15812908011867,
+        "final_mass": 1985.8418709198813,
+        "terminal_position_error": 6.818368092353921e-10,
+        "terminal_velocity_error": 3.408680560035293e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.209543073,
+        "topology_seconds": 0.097581151,
+        "coefficient_seconds": 0.059052995,
+        "workspace_create_seconds": 0.022887698,
+        "update_seconds": 0.000494458,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.22910472799999998,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.00056766,
+        "replay_seconds": 0.05623187160491944,
+        "acceptance_seconds": 0.00026260300000000003,
+        "d2h_seconds": 0.00018739200383424757,
+        "cqp_total_seconds": 0.405329922,
+        "scvx_total_seconds": 0.466562859,
+        "solve_wall_seconds": 0.466569544,
+        "qoco_conversion_seconds": 0.052136524,
+        "qoco_setup_seconds": 0.123026552,
+        "qoco_update_seconds": 0.000494458,
+        "qoco_solve_seconds": 0.22910472799999998,
+        "independent_replay_seconds": 0.001058587,
+        "plan_wall_seconds": 0.657685267
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 2.3330058884534996e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 3.4086805600352933e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 3.4086805600352933e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 0,
+        "qoco_ruiz_iterations": 0,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.512975691308694,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 3.4086805600352933e-12,
+        "terminal_errors": [
+          0,
+          0,
+          6.818368092353921e-10,
+          0,
+          0,
+          3.408680560035293e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 6.818368092353921e-10,
+        "terminal_velocity_error": 3.408680560035293e-10,
+        "propellant_used": 14.15812908011867,
+        "final_mass": 1985.8418709198813,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 1,
+      "repeat": 0,
+      "warmup": true,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.1386769879609346,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-1.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-0.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-0.json",
+      "result_sha256": "842ee373f1d71457667cc7c71b373d1759b100f7774347a871a6bc932e49ea38",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756922666937,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 71,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625279769360903e-06,
+        "propellant_used": 14.158129106559045,
+        "final_mass": 1985.841870893441,
+        "terminal_position_error": 8.434568599113845e-10,
+        "terminal_velocity_error": 5.482570508696938e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.16193457,
+        "topology_seconds": 0.099843078,
+        "coefficient_seconds": 0.055617496,
+        "workspace_create_seconds": 0.02343999,
+        "update_seconds": 0.000470958,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.403006158,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000629615,
+        "replay_seconds": 0.05684191989898682,
+        "acceptance_seconds": 0.000138517,
+        "d2h_seconds": 0.00019865600019693374,
+        "cqp_total_seconds": 0.581170803,
+        "scvx_total_seconds": 0.643189792,
+        "solve_wall_seconds": 0.643195299,
+        "qoco_conversion_seconds": 0.051764976,
+        "qoco_setup_seconds": 0.125299096,
+        "qoco_update_seconds": 0.000470958,
+        "qoco_solve_seconds": 0.403006158,
+        "independent_replay_seconds": 0.001176771,
+        "plan_wall_seconds": 0.835245862
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 4.501420618585236e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 5.482570508696938e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 5.482570508696938e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 1,
+        "qoco_ruiz_iterations": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.512975692266694,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 5.482570508696938e-12,
+        "terminal_errors": [
+          0,
+          0,
+          8.434568599113845e-10,
+          0,
+          0,
+          5.482570508696938e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 8.434568599113845e-10,
+        "terminal_velocity_error": 5.482570508696938e-10,
+        "propellant_used": 14.158129106559045,
+        "final_mass": 1985.841870893441,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 2,
+      "repeat": 0,
+      "warmup": true,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.1107174159842543,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-2.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-0.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-0.json",
+      "result_sha256": "e272c01555e8c0516c32b1464de907c8bdd412e2b7710d01a69383dd899c234a",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756921879653,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625372266928802e-06,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "terminal_position_error": 1.0548575346547295e-09,
+        "terminal_velocity_error": 6.471353453108009e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.167769083,
+        "topology_seconds": 0.098752454,
+        "coefficient_seconds": 0.054991649,
+        "workspace_create_seconds": 0.02198782,
+        "update_seconds": 0.000517076,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.410201208,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000541733,
+        "replay_seconds": 0.05682310390472412,
+        "acceptance_seconds": 0.000104978,
+        "d2h_seconds": 0.00020339199900627138,
+        "cqp_total_seconds": 0.567721785,
+        "scvx_total_seconds": 0.629812847,
+        "solve_wall_seconds": 0.629818459,
+        "qoco_conversion_seconds": 0.051632402,
+        "qoco_setup_seconds": 0.104829366,
+        "qoco_update_seconds": 0.000517076,
+        "qoco_solve_seconds": 0.410201208,
+        "independent_replay_seconds": 0.001006252,
+        "plan_wall_seconds": 0.817195002
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.8994699396585673e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 6.471353453108009e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 6.471353453108009e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 2,
+        "qoco_ruiz_iterations": 2,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756921879655,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 6.471353453108009e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.0548575346547295e-09,
+          0,
+          0,
+          6.471353453108009e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.0548575346547295e-09,
+        "terminal_velocity_error": 6.471353453108009e-10,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 4,
+      "repeat": 0,
+      "warmup": true,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.2518956640269607,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-4.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-0.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-0.json",
+      "result_sha256": "d43347505a4dad2c239a91d7a13a72d4b24eb7df2a619759ddfed8320aebec12",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756920706829,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625470339594164e-06,
+        "propellant_used": 14.158129101151872,
+        "final_mass": 1985.8418708988481,
+        "terminal_position_error": 1.3532286402551108e-09,
+        "terminal_velocity_error": 7.792809175732884e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.236958063,
+        "topology_seconds": 0.100809554,
+        "coefficient_seconds": 0.056447644,
+        "workspace_create_seconds": 0.023574384,
+        "update_seconds": 0.000776819,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.398080155,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000586304,
+        "replay_seconds": 0.057210080146789556,
+        "acceptance_seconds": 0.000124032,
+        "d2h_seconds": 0.0002093120031058788,
+        "cqp_total_seconds": 0.557521155,
+        "scvx_total_seconds": 0.633520339,
+        "solve_wall_seconds": 0.633525541,
+        "qoco_conversion_seconds": 0.051602105,
+        "qoco_setup_seconds": 0.106475772,
+        "qoco_update_seconds": 0.000776819,
+        "qoco_solve_seconds": 0.398080155,
+        "independent_replay_seconds": 0.001018749,
+        "plan_wall_seconds": 0.843730696
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.3230007585492984e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 7.792809175732884e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 7.792809175732884e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 4,
+        "qoco_ruiz_iterations": 4,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756920706828,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 7.792809175732884e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.3532286402551108e-09,
+          0,
+          0,
+          7.792809175732884e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.3532286402551108e-09,
+        "terminal_velocity_error": 7.792809175732884e-10,
+        "propellant_used": 14.158129101151872,
+        "final_mass": 1985.8418708988481,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 1,
+      "repeat": 1,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.0909710029955022,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-1.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-1.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-1.json",
+      "result_sha256": "926c0d2b510f6ceebd932e4adf25152819b49de27d692632c52c296c29d4ed2d",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756922666945,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 71,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.62527974637314e-06,
+        "propellant_used": 14.158129106559045,
+        "final_mass": 1985.841870893441,
+        "terminal_position_error": 8.435847576038213e-10,
+        "terminal_velocity_error": 5.482548304236445e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.169540014,
+        "topology_seconds": 0.101020212,
+        "coefficient_seconds": 0.055076214,
+        "workspace_create_seconds": 0.024298879,
+        "update_seconds": 0.00043353,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.394420341,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000583147,
+        "replay_seconds": 0.05640835189819336,
+        "acceptance_seconds": 9.4118e-05,
+        "d2h_seconds": 0.00018483199551701547,
+        "cqp_total_seconds": 0.556839688,
+        "scvx_total_seconds": 0.618176314,
+        "solve_wall_seconds": 0.618181277,
+        "qoco_conversion_seconds": 0.051744887,
+        "qoco_setup_seconds": 0.10965778300000001,
+        "qoco_update_seconds": 0.00043353,
+        "qoco_solve_seconds": 0.394420341,
+        "independent_replay_seconds": 0.000999278,
+        "plan_wall_seconds": 0.809574991
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 4.5014230436615574e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 5.482548304236445e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 5.482548304236445e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 1,
+        "qoco_ruiz_iterations": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.512975692266695,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 5.482548304236445e-12,
+        "terminal_errors": [
+          0,
+          0,
+          8.435847576038213e-10,
+          0,
+          0,
+          5.482548304236445e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 8.435847576038213e-10,
+        "terminal_velocity_error": 5.482548304236445e-10,
+        "propellant_used": 14.158129106559045,
+        "final_mass": 1985.841870893441,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 2,
+      "repeat": 1,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 5.792174013040494,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-2.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-1.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-1.json",
+      "result_sha256": "34b65ccfbc995ca974952cfd3850228e859a7d94b20c94cf5c9e132a37e552d1",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756921879653,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625372259921747e-06,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "terminal_position_error": 1.054814902090584e-09,
+        "terminal_velocity_error": 6.471368996230353e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.162770254,
+        "topology_seconds": 0.096732906,
+        "coefficient_seconds": 0.055147892,
+        "workspace_create_seconds": 0.023641926,
+        "update_seconds": 0.000461395,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.7832828730000001,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000512258,
+        "replay_seconds": 0.05633103942871094,
+        "acceptance_seconds": 0.000254348,
+        "d2h_seconds": 0.00019807999581098558,
+        "cqp_total_seconds": 0.963385762,
+        "scvx_total_seconds": 1.024548072,
+        "solve_wall_seconds": 1.024553395,
+        "qoco_conversion_seconds": 0.053209477,
+        "qoco_setup_seconds": 0.125919759,
+        "qoco_update_seconds": 0.000461395,
+        "qoco_solve_seconds": 0.7832828730000001,
+        "independent_replay_seconds": 0.001012135,
+        "plan_wall_seconds": 1.211313544
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.899469981400889e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 6.471368996230354e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 6.471368996230354e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 2,
+        "qoco_ruiz_iterations": 2,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756921879655,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 6.471368996230354e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.054814902090584e-09,
+          0,
+          0,
+          6.471368996230353e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.054814902090584e-09,
+        "terminal_velocity_error": 6.471368996230353e-10,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 4,
+      "repeat": 1,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.2657280460116453,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-4.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-1.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-1.json",
+      "result_sha256": "ccc87bbab77e7a376e457eaaf94443519a595bc37cc08da65e392a13089d82b6",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756920706827,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625470338824224e-06,
+        "propellant_used": 14.158129101151872,
+        "final_mass": 1985.8418708988481,
+        "terminal_position_error": 1.3533281162381172e-09,
+        "terminal_velocity_error": 7.792846923315722e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.30821852,
+        "topology_seconds": 0.097472898,
+        "coefficient_seconds": 0.059230025,
+        "workspace_create_seconds": 0.022093789,
+        "update_seconds": 0.017341506,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.415913216,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000582543,
+        "replay_seconds": 0.05719094276428223,
+        "acceptance_seconds": 0.000204904,
+        "d2h_seconds": 0.00022310400381684307,
+        "cqp_total_seconds": 0.589082805,
+        "scvx_total_seconds": 0.651418476,
+        "solve_wall_seconds": 0.651424595,
+        "qoco_conversion_seconds": 0.05128249,
+        "qoco_setup_seconds": 0.10396305,
+        "qoco_update_seconds": 0.017341506,
+        "qoco_solve_seconds": 0.415913216,
+        "independent_replay_seconds": 0.001158092,
+        "plan_wall_seconds": 0.84231583
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.322999974534172e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 7.792846923315722e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 7.792846923315722e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 4,
+        "qoco_ruiz_iterations": 4,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756920706823,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 7.792846923315722e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.3533281162381172e-09,
+          0,
+          0,
+          7.792846923315722e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.3533281162381172e-09,
+        "terminal_velocity_error": 7.792846923315722e-10,
+        "propellant_used": 14.158129101151872,
+        "final_mass": 1985.8418708988481,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 0,
+      "repeat": 1,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.0372398289619014,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-0.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-1.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-1.json",
+      "result_sha256": "111576cd07ffe014ae7012d923cb4970e68de770b8dd77aeaaf21dbeb8567079",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.512975692261215,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 59,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.62350782588692e-06,
+        "propellant_used": 14.158129106409433,
+        "final_mass": 1985.8418708935906,
+        "terminal_position_error": 2.9659190659003798e-09,
+        "terminal_velocity_error": 1.6929548318778131e-09
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.167329441,
+        "topology_seconds": 0.099991565,
+        "coefficient_seconds": 0.056107917,
+        "workspace_create_seconds": 0.022046454,
+        "update_seconds": 0.000503187,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.347785654,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000469982,
+        "replay_seconds": 0.05661612892150879,
+        "acceptance_seconds": 0.000113488,
+        "d2h_seconds": 0.00020979199931025507,
+        "cqp_total_seconds": 0.503193832,
+        "scvx_total_seconds": 0.564648421,
+        "solve_wall_seconds": 0.564654363,
+        "qoco_conversion_seconds": 0.050869026,
+        "qoco_setup_seconds": 0.103565983,
+        "qoco_update_seconds": 0.000503187,
+        "qoco_solve_seconds": 0.347785654,
+        "independent_replay_seconds": 0.000954117,
+        "plan_wall_seconds": 0.754891003
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 2.674495143846191e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 1.6929548318778132e-11,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 1.6929548318778132e-11,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 0,
+        "qoco_ruiz_iterations": 0,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756922612154,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 1.6929548318778132e-11,
+        "terminal_errors": [
+          0,
+          0,
+          2.9659190659003798e-09,
+          0,
+          0,
+          1.6929548318778131e-09,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 2.9659190659003798e-09,
+        "terminal_velocity_error": 1.6929548318778131e-09,
+        "propellant_used": 14.158129106409433,
+        "final_mass": 1985.8418708935906,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 2,
+      "repeat": 2,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.1156823280034587,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-2.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-2.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-2.json",
+      "result_sha256": "c08ea2b82cb3bb343a4f0fc4c83aab84d32e89ac5e1a08bf04eba7c2dbd52b89",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756921879652,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625372254625657e-06,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "terminal_position_error": 1.0548006912358687e-09,
+        "terminal_velocity_error": 6.471371216676403e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.159716772,
+        "topology_seconds": 0.096871104,
+        "coefficient_seconds": 0.054722109,
+        "workspace_create_seconds": 0.022174657,
+        "update_seconds": 0.000521631,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.411093375,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000481675,
+        "replay_seconds": 0.056537184715271,
+        "acceptance_seconds": 0.00013669399999999998,
+        "d2h_seconds": 0.0002083199992775917,
+        "cqp_total_seconds": 0.566238548,
+        "scvx_total_seconds": 0.62747322,
+        "solve_wall_seconds": 0.627478112,
+        "qoco_conversion_seconds": 0.050466961,
+        "qoco_setup_seconds": 0.103674906,
+        "qoco_update_seconds": 0.000521631,
+        "qoco_solve_seconds": 0.411093375,
+        "independent_replay_seconds": 0.00097868,
+        "plan_wall_seconds": 0.813265367
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.89947013979881e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 6.471371216676403e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 6.471371216676403e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 2,
+        "qoco_ruiz_iterations": 2,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756921879655,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 6.471371216676403e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.0548006912358687e-09,
+          0,
+          0,
+          6.471371216676403e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.0548006912358687e-09,
+        "terminal_velocity_error": 6.471371216676403e-10,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 4,
+      "repeat": 2,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.120934650010895,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-4.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-2.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-2.json",
+      "result_sha256": "28ef2c2c19990154a7f3b42ce39f3a6d02da2ed5adaffe5182668b1fd991c56e",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756920706829,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625470326047081e-06,
+        "propellant_used": 14.158129101151644,
+        "final_mass": 1985.8418708988484,
+        "terminal_position_error": 1.3533707488022628e-09,
+        "terminal_velocity_error": 7.792869127776214e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.154167857,
+        "topology_seconds": 0.1045038,
+        "coefficient_seconds": 0.05428546,
+        "workspace_create_seconds": 0.022293843,
+        "update_seconds": 0.000865277,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.406327018,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000626248,
+        "replay_seconds": 0.05688476753234863,
+        "acceptance_seconds": 0.000133406,
+        "d2h_seconds": 0.00020364799723029134,
+        "cqp_total_seconds": 0.578549326,
+        "scvx_total_seconds": 0.640294016,
+        "solve_wall_seconds": 0.640299771,
+        "qoco_conversion_seconds": 0.051106779,
+        "qoco_setup_seconds": 0.119624004,
+        "qoco_update_seconds": 0.000865277,
+        "qoco_solve_seconds": 0.406327018,
+        "independent_replay_seconds": 0.000975675,
+        "plan_wall_seconds": 0.833930291
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.3230007231602297e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 7.792869127776214e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 7.792869127776214e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 4,
+        "qoco_ruiz_iterations": 4,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756920706835,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 7.792869127776214e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.3533707488022628e-09,
+          0,
+          0,
+          7.792869127776214e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.3533707488022628e-09,
+        "terminal_velocity_error": 7.792869127776214e-10,
+        "propellant_used": 14.158129101151644,
+        "final_mass": 1985.8418708988484,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 0,
+      "repeat": 2,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 0.9995038390043192,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-0.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-2.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-2.json",
+      "result_sha256": "c5a301b3ffda10ffd6309c3fac8a2075af95d4bd3b73c2ea1e6defd819dfae60",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756944784286,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 38,
+        "final_trust_radius": 1,
+        "trajectory_step": 9.544118868722015e-06,
+        "propellant_used": 14.158129167603647,
+        "final_mass": 1985.8418708323964,
+        "terminal_position_error": 5.619597231998341e-09,
+        "terminal_velocity_error": 2.8146058261846463e-09
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.189357918,
+        "topology_seconds": 0.096765263,
+        "coefficient_seconds": 0.056319749,
+        "workspace_create_seconds": 0.024670076,
+        "update_seconds": 0.000519122,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.253133238,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000647957,
+        "replay_seconds": 0.056523104667663575,
+        "acceptance_seconds": 9.4718e-05,
+        "d2h_seconds": 0.00019311999529600144,
+        "cqp_total_seconds": 0.41168578399999994,
+        "scvx_total_seconds": 0.47310596,
+        "solve_wall_seconds": 0.473111267,
+        "qoco_conversion_seconds": 0.053126025,
+        "qoco_setup_seconds": 0.104259442,
+        "qoco_update_seconds": 0.000519122,
+        "qoco_solve_seconds": 0.253133238,
+        "independent_replay_seconds": 0.001104339,
+        "plan_wall_seconds": 0.663024482
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 1.231406531941629e-09,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 7.086908226483501e-10,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 2.8146058261846463e-11,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 7.086908226483501e-10,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 2.8146058261846463e-11,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 7.086908226483501e-10,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 0,
+        "qoco_ruiz_iterations": 0,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756944784287,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 7.086908226483501e-10,
+        "path_components": {
+          "thrust": 7.086908226483501e-10,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 1.0630362339725252e-05,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 2.8146058261846463e-11,
+        "terminal_errors": [
+          0,
+          0,
+          5.619597231998341e-09,
+          0,
+          0,
+          2.8146058261846463e-09,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 5.619597231998341e-09,
+        "terminal_velocity_error": 2.8146058261846463e-09,
+        "propellant_used": 14.158129167603647,
+        "final_mass": 1985.8418708323964,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 7.086908226483501e-10,
+        "continuous_time_components": {
+          "thrust": 7.086908226483501e-10,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 1.0630362339725252e-05,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 1,
+      "repeat": 2,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.1837999660056084,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-1.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-2.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-2.json",
+      "result_sha256": "eb65ce03476949f8de7969292986c08de6c9e96c44a5dbb64163684c4d57eb02",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756922666943,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 71,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625279756330484e-06,
+        "propellant_used": 14.158129106558818,
+        "final_mass": 1985.8418708934412,
+        "terminal_position_error": 8.433289622189477e-10,
+        "terminal_velocity_error": 5.482548304236445e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.155188578,
+        "topology_seconds": 0.099384816,
+        "coefficient_seconds": 0.071515026,
+        "workspace_create_seconds": 0.02308309,
+        "update_seconds": 0.000421527,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.442243877,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.00069246,
+        "replay_seconds": 0.056243871688842775,
+        "acceptance_seconds": 9.3512e-05,
+        "d2h_seconds": 0.00019769600033760074,
+        "cqp_total_seconds": 0.599675122,
+        "scvx_total_seconds": 0.660575634,
+        "solve_wall_seconds": 0.660580295,
+        "qoco_conversion_seconds": 0.05349781,
+        "qoco_setup_seconds": 0.102819448,
+        "qoco_update_seconds": 0.000421527,
+        "qoco_solve_seconds": 0.442243877,
+        "independent_replay_seconds": 0.00105189,
+        "plan_wall_seconds": 0.865971966
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 4.5014222825476124e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 5.482548304236445e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 5.482548304236445e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 1,
+        "qoco_ruiz_iterations": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756922666944,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 5.482548304236445e-12,
+        "terminal_errors": [
+          0,
+          0,
+          8.433289622189477e-10,
+          0,
+          0,
+          5.482548304236445e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 8.433289622189477e-10,
+        "terminal_velocity_error": 5.482548304236445e-10,
+        "propellant_used": 14.158129106558818,
+        "final_mass": 1985.8418708934412,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 4,
+      "repeat": 3,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.183256646967493,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-4.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-3.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-4-3.json",
+      "result_sha256": "a56ece23d35c7925f810a390f74655f23010a64a5e57292cc1a248cc274ef812",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756920706827,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625470326006151e-06,
+        "propellant_used": 14.158129101151872,
+        "final_mass": 1985.8418708988481,
+        "terminal_position_error": 1.3532996945286868e-09,
+        "terminal_velocity_error": 7.792848033538746e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.183691184,
+        "topology_seconds": 0.096701366,
+        "coefficient_seconds": 0.054709107,
+        "workspace_create_seconds": 0.023428835,
+        "update_seconds": 0.00084141,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.417506952,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000600471,
+        "replay_seconds": 0.056269599914550786,
+        "acceptance_seconds": 0.000114442,
+        "d2h_seconds": 0.00023286399990320205,
+        "cqp_total_seconds": 0.59141042,
+        "scvx_total_seconds": 0.652516388,
+        "solve_wall_seconds": 0.65252136,
+        "qoco_conversion_seconds": 0.052695514,
+        "qoco_setup_seconds": 0.119766073,
+        "qoco_update_seconds": 0.00084141,
+        "qoco_solve_seconds": 0.417506952,
+        "independent_replay_seconds": 0.000989833,
+        "plan_wall_seconds": 0.838590341
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.3230003094394113e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 7.792848033538746e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 7.792848033538746e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 4,
+        "qoco_ruiz_iterations": 4,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756920706828,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 7.792848033538746e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.3532996945286868e-09,
+          0,
+          0,
+          7.792848033538746e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.3532996945286868e-09,
+        "terminal_velocity_error": 7.792848033538746e-10,
+        "propellant_used": 14.158129101151872,
+        "final_mass": 1985.8418708988481,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 0,
+      "repeat": 3,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.0232527499902062,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-0.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-3.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-0-3.json",
+      "result_sha256": "87694599e015e7d415969cddfa94e54abd22597866874b52ed7cd7c95aaea96d",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.512975692261215,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 60,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.62350782494724e-06,
+        "propellant_used": 14.15812910640966,
+        "final_mass": 1985.8418708935903,
+        "terminal_position_error": 2.9659190659003798e-09,
+        "terminal_velocity_error": 1.6929541102328471e-09
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.154085213,
+        "topology_seconds": 0.099816808,
+        "coefficient_seconds": 0.055959961,
+        "workspace_create_seconds": 0.024984569,
+        "update_seconds": 0.000491179,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.347342785,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000494471,
+        "replay_seconds": 0.05646563148498535,
+        "acceptance_seconds": 0.000106485,
+        "d2h_seconds": 0.00020339200273156166,
+        "cqp_total_seconds": 0.503863961,
+        "scvx_total_seconds": 0.565518139,
+        "solve_wall_seconds": 0.56552286,
+        "qoco_conversion_seconds": 0.051191866,
+        "qoco_setup_seconds": 0.10434366,
+        "qoco_update_seconds": 0.000491179,
+        "qoco_solve_seconds": 0.347342785,
+        "independent_replay_seconds": 0.000968523,
+        "plan_wall_seconds": 0.75792702
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 2.6744952615480423e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 1.692954110232847e-11,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 1.692954110232847e-11,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 0,
+        "qoco_ruiz_iterations": 0,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756922612151,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 1.692954110232847e-11,
+        "terminal_errors": [
+          0,
+          0,
+          2.9659190659003798e-09,
+          0,
+          0,
+          1.6929541102328471e-09,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 2.9659190659003798e-09,
+        "terminal_velocity_error": 1.6929541102328471e-09,
+        "propellant_used": 14.15812910640966,
+        "final_mass": 1985.8418708935903,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 1,
+      "repeat": 3,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.1892909599700943,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-1.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-3.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-1-3.json",
+      "result_sha256": "9ce250b6a8787d154e4a94e3e1ccbb29d229e128b86f2fd821b5c07b5d3301e8",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756922666935,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 71,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625279771712825e-06,
+        "propellant_used": 14.158129106559045,
+        "final_mass": 1985.841870893441,
+        "terminal_position_error": 8.434568599113845e-10,
+        "terminal_velocity_error": 5.482587162042307e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.168217369,
+        "topology_seconds": 0.102146359,
+        "coefficient_seconds": 0.05535422,
+        "workspace_create_seconds": 0.023554106,
+        "update_seconds": 0.000451248,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.416520118,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.000627855,
+        "replay_seconds": 0.05605862426757813,
+        "acceptance_seconds": 0.000104875,
+        "d2h_seconds": 0.00019011200219392778,
+        "cqp_total_seconds": 0.5927458440000001,
+        "scvx_total_seconds": 0.653451666,
+        "solve_wall_seconds": 0.653456676,
+        "qoco_conversion_seconds": 0.051436658,
+        "qoco_setup_seconds": 0.123709965,
+        "qoco_update_seconds": 0.000451248,
+        "qoco_solve_seconds": 0.416520118,
+        "independent_replay_seconds": 0.000985218,
+        "plan_wall_seconds": 0.845610968
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 4.5014206974884964e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 5.482587162042308e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 5.482587162042308e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 1,
+        "qoco_ruiz_iterations": 1,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756922666937,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 5.482587162042308e-12,
+        "terminal_errors": [
+          0,
+          0,
+          8.434568599113845e-10,
+          0,
+          0,
+          5.482587162042307e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 8.434568599113845e-10,
+        "terminal_velocity_error": 5.482587162042307e-10,
+        "propellant_used": 14.158129106559045,
+        "final_mass": 1985.841870893441,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    },
+    {
+      "passes": 2,
+      "repeat": 3,
+      "warmup": false,
+      "passed": true,
+      "qualification": {
+        "process_success": true,
+        "certified": true,
+        "unchanged_tolerance": true,
+        "continuous_time": true,
+        "physics_gates": true,
+        "gpu_backend": true,
+        "requested_passes": true,
+        "applied_passes": true,
+        "fixed_objective": true
+      },
+      "returncode": 0,
+      "process_seconds": 1.1105377150233835,
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/input-2.json",
+        "--quiet",
+        "--output",
+        "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-3.json"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "result_path": "artifacts/performance/planner-ruiz-v78-pilot-500.samples/ruiz-2-3.json",
+      "result_sha256": "833bddc2f1bafed7e556038c39885aa8d64fe20db99c10c9cbb37717414b1dc1",
+      "status": {
+        "code": "certified",
+        "message": "converged and independently certified",
+        "exit_code": 0,
+        "solver_status": "converged",
+        "api_status": "success",
+        "time_limit_triggered": false
+      },
+      "summary": {
+        "objective": 0.5129756921879651,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 70,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.625372255990003e-06,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "terminal_position_error": 1.0549285889283055e-09,
+        "terminal_velocity_error": 6.471346791769861e-10
+      },
+      "timings": {
+        "cuda_startup_seconds": 0.154115588,
+        "topology_seconds": 0.099332493,
+        "coefficient_seconds": 0.053102096,
+        "workspace_create_seconds": 0.022730404,
+        "update_seconds": 0.000759605,
+        "scaling_seconds": 0,
+        "h2d_seconds": 0,
+        "solve_seconds": 0.39203890799999996,
+        "recovery_seconds": 0,
+        "residual_seconds": 0.0006006480000000001,
+        "replay_seconds": 0.056739777565002446,
+        "acceptance_seconds": 0.000112525,
+        "d2h_seconds": 0.00019532800093293188,
+        "cqp_total_seconds": 0.57357622,
+        "scvx_total_seconds": 0.634965858,
+        "solve_wall_seconds": 0.634970873,
+        "qoco_conversion_seconds": 0.054695906,
+        "qoco_setup_seconds": 0.125481153,
+        "qoco_update_seconds": 0.000759605,
+        "qoco_solve_seconds": 0.39203890799999996,
+        "independent_replay_seconds": 0.000976482,
+        "plan_wall_seconds": 0.821298344
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 3.8994700228588944e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 6.471346791769861e-12,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 6.471346791769861e-12,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      },
+      "backend": {
+        "execution": "native_cuda",
+        "requested_backend": "pure_qoco",
+        "preset": "frozen_adaptive_pure_qoco",
+        "device_policy": "pure_qoco",
+        "device_policy_code": 4,
+        "description": "native pure-QOCO GPU interior-point inner solves with production nonlinear handback (qualified P1-C/P1-D/P1-E); one persistent QOCO workspace",
+        "warm_start_mode": "primal",
+        "hidden_cpu_fallback": false,
+        "used_declared_stream": true,
+        "qoco_failure": "none",
+        "qoco_workspace_creations": 1,
+        "qoco_numeric_updates": 1,
+        "requested_qoco_ruiz_iterations": 2,
+        "qoco_ruiz_iterations": 2,
+        "qoco_dual_discarded": false,
+        "hybrid_handoff_eligible": false,
+        "recovery_iterations": 0,
+        "recovery_count": 0,
+        "recovery_rejected_count": 0,
+        "recovery_attempt_count": 0,
+        "allocation_count": 71,
+        "allocation_bytes": 32118380,
+        "h2d_copy_count": 26,
+        "h2d_bytes": 17501852,
+        "d2h_copy_count": 28,
+        "d2h_bytes": 6719784,
+        "device_copy_count": 19,
+        "device_copy_bytes": 3639904,
+        "topology_allocation_count_after_create": 0,
+        "topology_index_copy_count_after_create": 0,
+        "topology_fingerprint": "87f7a824ace12422",
+        "variables": 24514,
+        "scalar_rows": 22028,
+        "affine_rows": 18522,
+        "device": {
+          "cuda_available": true,
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": "12.0",
+          "total_memory_bytes": 34190458880,
+          "cuda_runtime_version": 12080,
+          "cuda_driver_version": 13020
+        }
+      },
+      "independent_replay": {
+        "objective": 0.5129756921879653,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "path_violation": 0,
+        "path_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "path_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "terminal_residual": 6.471346791769861e-12,
+        "terminal_errors": [
+          0,
+          0,
+          1.0549285889283055e-09,
+          0,
+          0,
+          6.471346791769861e-10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminal_position_error": 1.0549285889283055e-09,
+        "terminal_velocity_error": 6.471346791769861e-10,
+        "propellant_used": 14.158129104386944,
+        "final_mass": 1985.841870895613,
+        "replay_error": null,
+        "replay_parity": 0,
+        "dynamics_defect": 0,
+        "continuous_time_violation": 0,
+        "continuous_time_components": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "continuous_time_components_physical": {
+          "thrust": 0,
+          "torque": 0,
+          "pointing": 0,
+          "minimum_mass": 0,
+          "altitude": 0,
+          "glide_slope": 0,
+          "angular_rate": 0,
+          "quaternion_norm": 0
+        },
+        "dense_replay_substeps": 10
+      }
+    }
+  ],
+  "settings": {
+    "0": {
+      "all_qualified": true,
+      "failures_including_warmups": 0,
+      "median_scvx_seconds": 0.564648421,
+      "median_inner_iterations": 59
+    },
+    "1": {
+      "all_qualified": true,
+      "failures_including_warmups": 0,
+      "median_scvx_seconds": 0.653451666,
+      "median_inner_iterations": 71
+    },
+    "2": {
+      "all_qualified": true,
+      "failures_including_warmups": 0,
+      "median_scvx_seconds": 0.634965858,
+      "median_inner_iterations": 70
+    },
+    "4": {
+      "all_qualified": true,
+      "failures_including_warmups": 0,
+      "median_scvx_seconds": 0.651418476,
+      "median_inner_iterations": 70
+    }
+  }
+}

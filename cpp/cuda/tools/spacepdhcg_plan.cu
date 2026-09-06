@@ -444,6 +444,7 @@ spacepdhcg_cuda_scvx_options make_outer_options(
     options.abi_version = SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
     options.maximum_outer_iterations = solver.maximum_outer_iterations;
     options.minimum_outer_iterations = solver.minimum_outer_iterations;
+    options.qoco_ruiz_iterations = solver.qoco_ruiz_iterations;
     options.maximum_resolves_per_iteration = forcing.maximum_resolves;
     options.convergence_tolerance = solver.tolerance;
     options.step_tolerance = solver.step_tolerance;
@@ -1386,6 +1387,10 @@ PlanOutcome run_plan(
         disposition.set("qoco_failure", qoco_failure_name(outer.qoco_failure));
         disposition.set("qoco_workspace_creations", static_cast<double>(outer.qoco_workspace_creations));
         disposition.set("qoco_numeric_updates", static_cast<double>(outer.qoco_numeric_updates));
+        disposition.set("requested_qoco_ruiz_iterations",
+                        static_cast<double>(outer_options.qoco_ruiz_iterations));
+        disposition.set("qoco_ruiz_iterations", outer.qoco_workspace_creations > 0
+            ? json::Value(static_cast<double>(outer.qoco_ruiz_iterations)) : json::Value());
         disposition.set("qoco_dual_discarded", outer.qoco_dual_discarded != 0);
         disposition.set("hybrid_handoff_eligible", outer.hybrid_handoff_eligible != 0);
         disposition.set("recovery_iterations", static_cast<double>(outer.recovery_iterations));

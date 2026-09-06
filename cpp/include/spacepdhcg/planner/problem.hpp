@@ -278,6 +278,7 @@ struct SolverOptions {
     double step_tolerance{2.0e-2};
     std::uint32_t maximum_outer_iterations{30U};
     std::uint32_t minimum_outer_iterations{1U};
+    std::int32_t qoco_ruiz_iterations{0};
     double time_limit_seconds{0.0};  // 0 = unlimited
     double certificate_tolerance{1.0e-6};
     double replay_parity_tolerance{1.0e-9};
@@ -774,6 +775,12 @@ inline SolverOptions parse_solver(const json::Value& document, const Transcripti
         "'minimum_outer_iterations' must be an integer in [1, maximum_outer_iterations]"
     );
     options.minimum_outer_iterations = static_cast<std::uint32_t>(minimum_outer);
+    const double ruiz = json::number_or(solver, "qoco_ruiz_iterations", 0.0);
+    require(
+        std::isfinite(ruiz) && ruiz >= 0.0 && ruiz <= 100.0 && ruiz == std::floor(ruiz),
+        "'qoco_ruiz_iterations' must be an integer in [0, 100]"
+    );
+    options.qoco_ruiz_iterations = static_cast<std::int32_t>(ruiz);
     options.time_limit_seconds = non_negative(solver, "time_limit_seconds", 0.0);
     options.certificate_tolerance =
         positive(solver, "certificate_tolerance", options.tolerance);

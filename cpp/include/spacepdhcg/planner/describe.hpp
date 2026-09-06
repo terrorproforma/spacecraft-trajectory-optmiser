@@ -122,6 +122,7 @@ namespace spacepdhcg::planner {
     result.set("step_tolerance", solver.step_tolerance);
     result.set("maximum_outer_iterations", static_cast<double>(solver.maximum_outer_iterations));
     result.set("minimum_outer_iterations", static_cast<double>(solver.minimum_outer_iterations));
+    result.set("qoco_ruiz_iterations", static_cast<double>(solver.qoco_ruiz_iterations));
     result.set("time_limit_seconds", solver.time_limit_seconds);
     result.set("certificate_tolerance", solver.certificate_tolerance);
     result.set("replay_parity_tolerance", solver.replay_parity_tolerance);

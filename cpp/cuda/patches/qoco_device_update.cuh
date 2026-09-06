@@ -53,6 +53,10 @@ struct Context {
     ~Context() { if (ready) cudaEventDestroy(ready); }
 };
 __device__ double reciprocal(double x) { return fabs(x) > 1e-15 ? 1.0 / x : DBL_MAX; }
+// An empty row/column or zero objective has nothing to equilibrate. Its
+// identity scale preserves the problem; DBL_MAX can overflow on the next
+// pass or turn an explicitly stored zero into NaN during matrix scaling.
+__device__ double equilibration_reciprocal(double x) { return x > 1e-15 ? 1.0 / x : 1.0; }
 __device__ double column_norm(Matrix a, int col) {
     double result = 0;
     if (a.nonzeros) for (int k = a.offsets[col]; k < a.offsets[col + 1]; ++k) result = fmax(result, fabs(a.values[k]));
@@ -88,7 +92,7 @@ __global__ void norms(Matrix a, Matrix p, Matrix g, Scales scales, double* p_nor
             norm = fmax(p_norm[i], fmax(column_norm(a, i), column_norm(g, i)));
         } else if (i < n + eq) norm = row_norm(a, i - n);
         else norm = row_norm(g, i - n - eq);
-        scales.delta[i] = reciprocal(sqrt(norm));
+        scales.delta[i] = equilibration_reciprocal(sqrt(norm));
     }
 }
 __global__ void cost_partial(const double* p_norm, const double* c, int n, Pair* out) {
@@ -114,7 +118,7 @@ __global__ void cost_finish(const Pair* partial, int count, int n, double* facto
             shared[threadIdx.x].maximum = fmax(shared[threadIdx.x].maximum, shared[threadIdx.x + stride].maximum); }
         __syncthreads();
     }
-    if (!threadIdx.x) { factors[0] = reciprocal(fmax(shared[0].sum / n, shared[0].maximum));
+    if (!threadIdx.x) { factors[0] = equilibration_reciprocal(fmax(shared[0].sum / n, shared[0].maximum));
         factors[1] = __dmul_rn(factors[1], factors[0]); }
 }
 __global__ void cone_scales(double* f, const int* starts, int count) {

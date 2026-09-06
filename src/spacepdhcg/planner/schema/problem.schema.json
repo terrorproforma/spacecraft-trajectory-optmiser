@@ -118,6 +118,7 @@
         "step_tolerance": {"type": "number", "exclusiveMinimum": 0},
         "maximum_outer_iterations": {"type": "integer", "minimum": 1, "maximum": 10000},
         "minimum_outer_iterations": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "qoco_ruiz_iterations": {"type": "integer", "minimum": 0, "maximum": 100, "default": 0, "description": "QOCO equilibration passes. Applies when QOCO is used; 0 preserves the default of no equilibration."},
         "time_limit_seconds": {"type": "number", "minimum": 0, "description": "0 = unlimited. The CLI default is 600 s."},
         "certificate_tolerance": {"type": "number", "exclusiveMinimum": 0},
         "replay_parity_tolerance": {"type": "number", "exclusiveMinimum": 0},

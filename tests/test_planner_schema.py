@@ -32,6 +32,21 @@ def example(family: str) -> dict:
     return load_problem(EXAMPLES / EXAMPLE_FILES[family])
 
 
+@pytest.mark.parametrize("passes", [0, 1, 4, 100])
+def test_gpu_ruiz_option_survives_normalisation(passes: int) -> None:
+    document = example("powered_descent_6dof")
+    document["solver"]["qoco_ruiz_iterations"] = passes
+    assert normalise_problem(document)["solver"]["qoco_ruiz_iterations"] == passes
+
+
+@pytest.mark.parametrize("passes", [-1, 0.5, 101, True, "4"])
+def test_gpu_ruiz_option_rejects_invalid_counts(passes: object) -> None:
+    document = example("powered_descent_6dof")
+    document["solver"]["qoco_ruiz_iterations"] = passes
+    with pytest.raises(ProblemValidationError, match="qoco_ruiz_iterations"):
+        normalise_problem(document)
+
+
 @pytest.mark.parametrize("family", FAMILIES)
 def test_examples_validate_and_normalise(family: str) -> None:
     document = example(family)

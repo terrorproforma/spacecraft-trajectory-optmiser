@@ -180,6 +180,26 @@ void check_rejections() {
     );
 }
 
+void check_ruiz_options() {
+    auto document = json::parse(pd3_document);
+    require(planner::parse_problem(document).solver.qoco_ruiz_iterations == 0,
+            "default QOCO equilibration unchanged");
+    for (double value : {0.0, 1.0, 4.0, 100.0}) {
+        auto options = document.at("solver");
+        options.set("qoco_ruiz_iterations", value); document.set("solver", options);
+        const auto problem = planner::parse_problem(document);
+        require(problem.solver.qoco_ruiz_iterations == static_cast<int>(value), "Ruiz value parsed");
+        require(planner::describe_problem(problem).at("solver").at("qoco_ruiz_iterations").as_number()
+                    == value, "Ruiz value described");
+    }
+    for (double value : {-1.0, 0.5, 101.0}) {
+        auto options = document.at("solver");
+        options.set("qoco_ruiz_iterations", value); document.set("solver", options);
+        require_throws([&] { static_cast<void>(planner::parse_problem(document)); },
+                       "invalid Ruiz count rejected");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -189,6 +209,7 @@ int main() {
     check_family(pd6_document, planner::Family::powered_descent_6dof);
     check_family(low_thrust_document, planner::Family::low_thrust);
     check_rejections();
+    check_ruiz_options();
     std::printf("{\"case\":\"planner_problem_smoke\",\"families\":4,\"status\":\"ok\"}\n");
     return 0;
 }

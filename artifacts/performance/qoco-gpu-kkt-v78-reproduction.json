@@ -1,0 +1,212 @@
+{
+  "command": [
+    "python3",
+    "scripts/gpu/prepare_qoco_gpu.py",
+    "--source",
+    "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "--destination",
+    "/home/angus/build-qoco-gpu-kkt-v78-complete-reproduction/source",
+    "--gather",
+    "--correct-stopping",
+    "--checked-cudss-abi",
+    "--queued-operators",
+    "--device-cone-reductions",
+    "--values-only-updates",
+    "--device-numeric-updates",
+    "--device-scalar-reductions",
+    "--batched-stopping",
+    "--batched-iteration-scalars",
+    "--device-step-control",
+    "--setup-lifetimes",
+    "--trajectory-ordering",
+    "--trajectory-tree",
+    "--device-io",
+    "--gpu-kkt",
+    "--gpu-transposes",
+    "--lazy-transpose-mirrors",
+    "--deferred-transposes",
+    "--metric-graphs"
+  ],
+  "returncode": 0,
+  "identical_prepared_files": true,
+  "checks": {
+    "algebra/cuda/cuda_linalg.cu": {
+      "frozen_sha256": "70961b5e179a863292da3753fcf7acb534ea6ab169017e8d779b12ba7be031bf",
+      "reproduced_sha256": "70961b5e179a863292da3753fcf7acb534ea6ab169017e8d779b12ba7be031bf"
+    },
+    "algebra/cuda/qoco_reduction_scope.cuh": {
+      "frozen_sha256": "e67866763d16461742c4850897b4af51d9297f66d8551fc8b569eb9294332a23",
+      "reproduced_sha256": "e67866763d16461742c4850897b4af51d9297f66d8551fc8b569eb9294332a23"
+    },
+    "algebra/cuda/qoco_device_solution.cuh": {
+      "frozen_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "reproduced_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69"
+    },
+    "algebra/cuda/cuda_types.h": {
+      "frozen_sha256": "98249e08bd636f42335de38a40e71c5829fa690166e00c26c52c5b8cf23debbf",
+      "reproduced_sha256": "98249e08bd636f42335de38a40e71c5829fa690166e00c26c52c5b8cf23debbf"
+    },
+    "algebra/cuda/cudss_backend.h": {
+      "frozen_sha256": "ad52b77cc64805921685c35c49ce0f0bac3f8fc064524b9ee8a0ca38e25ae049",
+      "reproduced_sha256": "ad52b77cc64805921685c35c49ce0f0bac3f8fc064524b9ee8a0ca38e25ae049"
+    },
+    "algebra/cuda/cudss_backend.cu": {
+      "frozen_sha256": "e2368faf39dc0770bcd7785fecd8c638e6a800e12d98769528469a348882eb02",
+      "reproduced_sha256": "e2368faf39dc0770bcd7785fecd8c638e6a800e12d98769528469a348882eb02"
+    },
+    "src/qoco_utils.c": {
+      "frozen_sha256": "527bba3303b43f8ed69f4846730cc15ab879b792ef93fb550ce1b084a398c9bc",
+      "reproduced_sha256": "527bba3303b43f8ed69f4846730cc15ab879b792ef93fb550ce1b084a398c9bc"
+    },
+    "src/qoco_api.c": {
+      "frozen_sha256": "c19a43bf000a699f7de328daaf063d54e3d2637954f6ab4978ff90f5cf9c922c",
+      "reproduced_sha256": "c19a43bf000a699f7de328daaf063d54e3d2637954f6ab4978ff90f5cf9c922c"
+    },
+    "src/equilibration.c": {
+      "frozen_sha256": "fec66003ab5781c7ec943236d3d93548ef88ec94daa43b0f30dae67f469bce4a",
+      "reproduced_sha256": "fec66003ab5781c7ec943236d3d93548ef88ec94daa43b0f30dae67f469bce4a"
+    },
+    "include/structs.h": {
+      "frozen_sha256": "2c8bb0cb3a97f285cdb7c59dd92ca0632e5f7a2a99d124aa94d1b7870b3875c8",
+      "reproduced_sha256": "2c8bb0cb3a97f285cdb7c59dd92ca0632e5f7a2a99d124aa94d1b7870b3875c8"
+    },
+    "algebra/cuda/qoco_device_io.cuh": {
+      "frozen_sha256": "456b9d7089997b359c5fa6dbb5fdc5e8c6143d3f77afaac6786ee5a1662facdb",
+      "reproduced_sha256": "456b9d7089997b359c5fa6dbb5fdc5e8c6143d3f77afaac6786ee5a1662facdb"
+    },
+    "algebra/cuda/qoco_gpu_kkt.cuh": {
+      "frozen_sha256": "d05ddae5a54c519cd7542715e0d1894a5a9fe679211352cee2f914146a2cdfa3",
+      "reproduced_sha256": "d05ddae5a54c519cd7542715e0d1894a5a9fe679211352cee2f914146a2cdfa3"
+    },
+    "algebra/cuda/qoco_gpu_transpose.cuh": {
+      "frozen_sha256": "881c31dc05eaf305770f859a090f426aa85c7829614783f3eda208589fe631fb",
+      "reproduced_sha256": "881c31dc05eaf305770f859a090f426aa85c7829614783f3eda208589fe631fb"
+    },
+    "algebra/cuda/qoco_lazy_host_mirror.cuh": {
+      "frozen_sha256": "bdf83167f6175e39f47bbcac9100ba77500d6c9420b54cd8e033f9889baa3f30",
+      "reproduced_sha256": "bdf83167f6175e39f47bbcac9100ba77500d6c9420b54cd8e033f9889baa3f30"
+    },
+    "algebra/cuda/qoco_deferred_transpose.cuh": {
+      "frozen_sha256": "2626113f95099e0a2474d8b36e71a695181eca6f535e4bc561a1f78d2212c3c9",
+      "reproduced_sha256": "2626113f95099e0a2474d8b36e71a695181eca6f535e4bc561a1f78d2212c3c9"
+    },
+    "algebra/cuda/qoco_metric_graph.cuh": {
+      "frozen_sha256": "b4edec26de0ca34b089a031b63efe110fcf704ce4fd10c2798cde067b8f52356",
+      "reproduced_sha256": "b4edec26de0ca34b089a031b63efe110fcf704ce4fd10c2798cde067b8f52356"
+    },
+    "algebra/cuda/qoco_gather.cuh": {
+      "frozen_sha256": "58435040f3beb35dfdd83a2f3e3e556893699b276c0589f03b6a8012c8d1355b",
+      "reproduced_sha256": "58435040f3beb35dfdd83a2f3e3e556893699b276c0589f03b6a8012c8d1355b"
+    },
+    "src/cone.cu": {
+      "frozen_sha256": "40c0edbd6572eb6879d548f3b0b01f05afe08c4d2cce5cefe92ae448fc81b24a",
+      "reproduced_sha256": "40c0edbd6572eb6879d548f3b0b01f05afe08c4d2cce5cefe92ae448fc81b24a"
+    },
+    "src/qoco_device_cone_reductions.cuh": {
+      "frozen_sha256": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+      "reproduced_sha256": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59"
+    },
+    "include/qoco_linalg.h": {
+      "frozen_sha256": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+      "reproduced_sha256": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f"
+    },
+    "algebra/cuda/qoco_device_update.cuh": {
+      "frozen_sha256": "9661343512025ad0b52593259fffae944ec02e49d1a9c1470b48a568c30a9470",
+      "reproduced_sha256": "9661343512025ad0b52593259fffae944ec02e49d1a9c1470b48a568c30a9470"
+    },
+    "algebra/cuda/qoco_device_scalar.cuh": {
+      "frozen_sha256": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92",
+      "reproduced_sha256": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92"
+    },
+    "algebra/cuda/qoco_batched_stopping.cuh": {
+      "frozen_sha256": "f56e806c15f57992f424139f0b09718b3067d3ef30e436304fc55843f65c0a0c",
+      "reproduced_sha256": "f56e806c15f57992f424139f0b09718b3067d3ef30e436304fc55843f65c0a0c"
+    },
+    "src/kkt.c": {
+      "frozen_sha256": "2a7368c3e9f301f4132d160bbc93a7903a4c019c759dcf4e2c3879aa4e7eaaab",
+      "reproduced_sha256": "2a7368c3e9f301f4132d160bbc93a7903a4c019c759dcf4e2c3879aa4e7eaaab"
+    },
+    "src/qoco_device_step_cones.cuh": {
+      "frozen_sha256": "4b19c1e3d79ad26d19cc77c61a3d23969a1b6812c5680d6335ce7d41d506ca1e",
+      "reproduced_sha256": "4b19c1e3d79ad26d19cc77c61a3d23969a1b6812c5680d6335ce7d41d506ca1e"
+    },
+    "algebra/cuda/qoco_device_step_control.cuh": {
+      "frozen_sha256": "4a935bf41858ad9c85e4455179a0fd09401b7a2ce20a84b2f2d748c2d3566972",
+      "reproduced_sha256": "4a935bf41858ad9c85e4455179a0fd09401b7a2ce20a84b2f2d748c2d3566972"
+    },
+    "algebra/cuda/qoco_trajectory_ordering.cuh": {
+      "frozen_sha256": "63e87e187d65fbfe2f0d171a404e1ce817fe48d089c75393b3d6c89307e02045",
+      "reproduced_sha256": "63e87e187d65fbfe2f0d171a404e1ce817fe48d089c75393b3d6c89307e02045"
+    }
+  },
+  "provenance": {
+    "upstream_commit": "09f049597deef2a7ead15b3da19a9456ff7d4e53",
+    "source": "/home/angus/spacecraft-trajectory-optmiser/_upstream/qoco-g4",
+    "original_cuda_linalg_sha256": "b9ea5231da4ba482a27f39ecd12d223a31b3dab7bbe4fe7cba74e0307c082e79",
+    "modified_cuda_linalg_sha256": "70961b5e179a863292da3753fcf7acb534ea6ab169017e8d779b12ba7be031bf",
+    "extension_sha256": "e67866763d16461742c4850897b4af51d9297f66d8551fc8b569eb9294332a23",
+    "device_solution_sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+    "gather": true,
+    "original_handles": false,
+    "queued_operators": true,
+    "device_cone_reductions": true,
+    "values_only_updates": true,
+    "device_numeric_updates": true,
+    "device_scalar_reductions": true,
+    "batched_stopping": true,
+    "batched_iteration_scalars": true,
+    "device_step_control": true,
+    "device_combined_rhs": false,
+    "queued_centering_metadata": false,
+    "profile_setup": false,
+    "gpu_degree_ordering": false,
+    "setup_lifetimes": true,
+    "trajectory_ordering": true,
+    "trajectory_tree": true,
+    "correct_stopping": true,
+    "deterministic": false,
+    "multiblock_factorization": false,
+    "superpanels": false,
+    "reset_solve_state": true,
+    "device_io": true,
+    "gpu_kkt": true,
+    "gpu_transposes": true,
+    "lazy_transpose_mirrors": true,
+    "deferred_transposes": true,
+    "metric_graphs": true,
+    "vector_arena": false,
+    "restore_inaccurate_best": false,
+    "host_ruiz_vector_sync": true,
+    "checked_cudss_abi": true,
+    "gather_sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+    "prepared_files_sha256": {
+      "algebra/cuda/cuda_linalg.cu": "70961b5e179a863292da3753fcf7acb534ea6ab169017e8d779b12ba7be031bf",
+      "algebra/cuda/qoco_reduction_scope.cuh": "e67866763d16461742c4850897b4af51d9297f66d8551fc8b569eb9294332a23",
+      "algebra/cuda/qoco_device_solution.cuh": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "algebra/cuda/cuda_types.h": "98249e08bd636f42335de38a40e71c5829fa690166e00c26c52c5b8cf23debbf",
+      "algebra/cuda/cudss_backend.h": "ad52b77cc64805921685c35c49ce0f0bac3f8fc064524b9ee8a0ca38e25ae049",
+      "algebra/cuda/cudss_backend.cu": "e2368faf39dc0770bcd7785fecd8c638e6a800e12d98769528469a348882eb02",
+      "src/qoco_utils.c": "527bba3303b43f8ed69f4846730cc15ab879b792ef93fb550ce1b084a398c9bc",
+      "src/qoco_api.c": "c19a43bf000a699f7de328daaf063d54e3d2637954f6ab4978ff90f5cf9c922c",
+      "src/equilibration.c": "fec66003ab5781c7ec943236d3d93548ef88ec94daa43b0f30dae67f469bce4a",
+      "include/structs.h": "2c8bb0cb3a97f285cdb7c59dd92ca0632e5f7a2a99d124aa94d1b7870b3875c8",
+      "algebra/cuda/qoco_device_io.cuh": "456b9d7089997b359c5fa6dbb5fdc5e8c6143d3f77afaac6786ee5a1662facdb",
+      "algebra/cuda/qoco_gpu_kkt.cuh": "d05ddae5a54c519cd7542715e0d1894a5a9fe679211352cee2f914146a2cdfa3",
+      "algebra/cuda/qoco_gpu_transpose.cuh": "881c31dc05eaf305770f859a090f426aa85c7829614783f3eda208589fe631fb",
+      "algebra/cuda/qoco_lazy_host_mirror.cuh": "bdf83167f6175e39f47bbcac9100ba77500d6c9420b54cd8e033f9889baa3f30",
+      "algebra/cuda/qoco_deferred_transpose.cuh": "2626113f95099e0a2474d8b36e71a695181eca6f535e4bc561a1f78d2212c3c9",
+      "algebra/cuda/qoco_metric_graph.cuh": "b4edec26de0ca34b089a031b63efe110fcf704ce4fd10c2798cde067b8f52356",
+      "algebra/cuda/qoco_gather.cuh": "58435040f3beb35dfdd83a2f3e3e556893699b276c0589f03b6a8012c8d1355b",
+      "src/cone.cu": "40c0edbd6572eb6879d548f3b0b01f05afe08c4d2cce5cefe92ae448fc81b24a",
+      "src/qoco_device_cone_reductions.cuh": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+      "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+      "algebra/cuda/qoco_device_update.cuh": "9661343512025ad0b52593259fffae944ec02e49d1a9c1470b48a568c30a9470",
+      "algebra/cuda/qoco_device_scalar.cuh": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92",
+      "algebra/cuda/qoco_batched_stopping.cuh": "f56e806c15f57992f424139f0b09718b3067d3ef30e436304fc55843f65c0a0c",
+      "src/kkt.c": "2a7368c3e9f301f4132d160bbc93a7903a4c019c759dcf4e2c3879aa4e7eaaab",
+      "src/qoco_device_step_cones.cuh": "4b19c1e3d79ad26d19cc77c61a3d23969a1b6812c5680d6335ce7d41d506ca1e",
+      "algebra/cuda/qoco_device_step_control.cuh": "4a935bf41858ad9c85e4455179a0fd09401b7a2ce20a84b2f2d748c2d3566972",
+      "algebra/cuda/qoco_trajectory_ordering.cuh": "63e87e187d65fbfe2f0d171a404e1ce817fe48d089c75393b3d6c89307e02045"
+    }
+  }
+}
