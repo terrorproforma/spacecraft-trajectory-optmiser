@@ -15,11 +15,50 @@ def test_refinement_commands_expose_cuda_backend(command):
     args = ["gtoc12", command, "--run-id", "test", "--output", "unused"]
     if command in {"fleet-master", "retime-returns", "joint-itinerary"}:
         args += ["--source", "unused"]
-    parsed = build_parser().parse_args([
-        *args, "--discretisation-backend", "cuda", "--assembly-backend", "cuda",
-    ])
+    parsed = build_parser().parse_args(
+        [
+            *args,
+            "--discretisation-backend",
+            "cuda",
+            "--assembly-backend",
+            "cuda",
+            "--convex-solver",
+            "qoco",
+            "--qoco-ruiz-iterations",
+            "2",
+        ]
+    )
     assert parsed.discretisation_backend == "cuda"
     assert parsed.assembly_backend == "cuda"
+    assert parsed.convex_solver_backend == "qoco" and parsed.qoco_ruiz_iterations == 2
+
+
+def test_qoco_preflight_and_requested_report(tmp_path, monkeypatch):
+    args = Namespace(
+        discretisation_backend="numpy",
+        assembly_backend="numpy",
+        convex_solver_backend="qoco",
+        scvx_iterations=3,
+        node_days=2.0,
+        workers=1,
+    )
+    with pytest.raises(ValueError, match="requires --assembly-backend"):
+        _scvx_settings(args)
+    args.discretisation_backend = args.assembly_backend = "cuda"
+    monkeypatch.delenv("SPACEPDHCG_QOCO_LIBRARY", raising=False)
+    with pytest.raises(ValueError, match="SPACEPDHCG_QOCO_LIBRARY"):
+        _scvx_settings(args)
+    library = tmp_path / "library.so"
+    library.write_bytes(b"configuration only")
+    monkeypatch.setenv("SPACEPDHCG_QOCO_LIBRARY", str(library))
+    monkeypatch.setenv("SPACEPDHCG_GTOC12_CUDA_LIBRARY", str(library))
+    args.qoco_ruiz_iterations = 2
+    assert _scvx_settings(args).convex_solver_backend == "qoco"
+    report = _refinement_backend_report(args)
+    assert report["convex_solver_backend"] == "gpu_qoco" and report["gpu_used"] is None
+    args.qoco_ruiz_iterations = 101
+    with pytest.raises(ValueError, match="in \\[0,100\\]"):
+        _scvx_settings(args)
 
 
 def test_backend_selection_is_not_claimed_as_executed_gpu_work(tmp_path, monkeypatch):

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+    "tests/test_gtoc12_gpu_qoco.py",
+    "tests/test_gtoc12_gpu_cli.py",
+    "-q"
+  ],
+  "returncode": 1,
+  "stdout": "F.......................                                                 [100%]\n=================================== FAILURES ===================================\n_________ test_known_coast_optimum_and_device_updates[False-False-zoh] _________\n\nhold = 'zoh', free_dep = False, free_arr = False\n\n    @pytest.mark.parametrize(\"hold\", [\"zoh\", \"lagrange\"])\n    @pytest.mark.parametrize(\n        \"free_dep,free_arr\", [(False, False), (True, False), (False, True), (True, True)]\n    )\n    def test_known_coast_optimum_and_device_updates(hold, free_dep, free_arr):\n        model, times, states, controls, boundary, weights = coast_fixture(hold)\n        with closing(\n            GpuQocoProblem(model, times, hold, free_dep, free_arr, boundary, weights, 1e-9)\n        ) as gpu:\n            previous = None\n            for repeat in range(3):\n                penalty = 13.0 + repeat\n                ok, _, x = gpu.solve_linearised(\n                    states, controls, 8, 0.1 / (repeat + 1), 0.3, penalty, 0.3, 0.05, 0.02, 0.001\n                )\n                r = gpu.last_report\n>               assert ok and r[\"qualified\"] == 1\nE               assert (False)\n\ntests/test_gtoc12_gpu_qoco.py:66: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_gtoc12_gpu_qoco.py::test_known_coast_optimum_and_device_updates[False-False-zoh]\n1 failed, 23 passed in 2.94s\n",
+  "stderr": "",
+  "seconds": 3.271766459045466
+}

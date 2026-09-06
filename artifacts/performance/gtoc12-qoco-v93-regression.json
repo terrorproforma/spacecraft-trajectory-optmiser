@@ -1,0 +1,58 @@
+[
+  {
+    "name": "full_regression",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+      "tests/test_gtoc12_archive.py",
+      "tests/test_gtoc12_bundles.py",
+      "tests/test_gtoc12_chain.py",
+      "tests/test_gtoc12_collectdp.py",
+      "tests/test_gtoc12_cooperative.py",
+      "tests/test_gtoc12_ephemeris_format.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "tests/test_gtoc12_gpu_conic.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "tests/test_gtoc12_harvestphase.py",
+      "tests/test_gtoc12_jointopt.py",
+      "tests/test_gtoc12_lambert_performance.py",
+      "tests/test_gtoc12_pipeline.py",
+      "tests/test_gtoc12_returns.py",
+      "tests/test_gtoc12_rules_and_data.py",
+      "tests/test_gtoc12_search2.py",
+      "tests/test_gtoc12_verifier.py",
+      "tests/test_g3_h1.py",
+      "tests/test_planner_schema.py",
+      "tests/test_scvx_failure_timing_gpu.py",
+      "tests/test_scvx_convergence_gpu.py",
+      "-q"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 24%]\n........................................................................ [ 48%]\n........................................................................ [ 72%]\n........................................................................ [ 96%]\n.........                                                                [100%]\n297 passed in 377.89s (0:06:17)\n",
+    "stderr": "",
+    "seconds": 378.26914966700133
+  },
+  {
+    "name": "lifecycle_memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--leak-check",
+      "full",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "-q",
+      "-k",
+      "unqualified_output or missing_extensions or outer_loop or exception"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n....                                                                     [100%]\n4 passed, 8 deselected in 5.51s\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 5.858333667973056
+  }
+]

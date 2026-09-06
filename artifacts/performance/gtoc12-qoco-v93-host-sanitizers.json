@@ -1,0 +1,44 @@
+[
+  {
+    "name": "initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "-q",
+      "-k",
+      "unqualified_output or missing_extensions or outer_loop or exception"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n....                                                                     [100%]\n4 passed, 8 deselected in 5.07s\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 5.415286507981364
+  },
+  {
+    "name": "synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "-q",
+      "-k",
+      "unqualified_output or missing_extensions or outer_loop or exception"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n....                                                                     [100%]\n4 passed, 8 deselected in 4.69s\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 5.051283735025208
+  }
+]

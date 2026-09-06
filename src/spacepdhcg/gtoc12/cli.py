@@ -22,6 +22,16 @@ def _scvx_settings(args: argparse.Namespace):
 
     backend = getattr(args, "discretisation_backend", "numpy")
     assembly = getattr(args, "assembly_backend", "numpy")
+    solver = getattr(args, "convex_solver_backend", "clarabel")
+    ruiz = getattr(args, "qoco_ruiz_iterations", 0)
+    if solver == "qoco" and (assembly != "cuda" or backend != "cuda"):
+        raise ValueError("GPU QOCO requires --assembly-backend cuda --discretisation-backend cuda")
+    if not 0 <= ruiz <= 100:
+        raise ValueError("--qoco-ruiz-iterations must be in [0,100]")
+    if solver == "qoco":
+        qoco_library = os.environ.get("SPACEPDHCG_QOCO_LIBRARY")
+        if not qoco_library or not Path(qoco_library).is_file():
+            raise ValueError("GPU QOCO requires SPACEPDHCG_QOCO_LIBRARY")
     if assembly == "cuda" and backend != "cuda":
         raise ValueError("CUDA assembly requires --discretisation-backend cuda")
     if backend == "cuda" and getattr(args, "workers", 1) != 1:
@@ -36,6 +46,8 @@ def _scvx_settings(args: argparse.Namespace):
         max_iterations=args.scvx_iterations, node_days=args.node_days,
         discretisation_backend=backend,
         assembly_backend=assembly,
+        convex_solver_backend=solver,
+        qoco_ruiz_iterations=ruiz,
     )
 
 
@@ -44,7 +56,9 @@ def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "discretisation_backend_requested": backend,
         "assembly_backend_requested": getattr(args, "assembly_backend", "numpy"),
-        "convex_solver_backend": "cpu_clarabel",
+        "convex_solver_backend": "gpu_qoco"
+        if getattr(args, "convex_solver_backend", "clarabel") == "qoco" else "cpu_clarabel",
+        "qoco_ruiz_iterations_requested": getattr(args, "qoco_ruiz_iterations", 0),
         # A selected backend is not evidence that a search actually reached
         # refinement. Completed leg summaries record their actual backend.
         "cpu_only": True if backend == "numpy" else None,
@@ -2110,8 +2124,14 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     legs.set_defaults(function=cmd_leg_stats)
     for refinement in (run, cluster, master, returns, joint):
         refinement.add_argument(
+            "--convex-solver", dest="convex_solver_backend", choices=("clarabel", "qoco"),
+            default="clarabel",
+            help="conic solver; experimental GPU QOCO requires both CUDA backends",
+        )
+        refinement.add_argument("--qoco-ruiz-iterations", type=int, default=0)
+        refinement.add_argument(
             "--assembly-backend", choices=("numpy", "cuda"), default="numpy",
-            help="conic assembly backend; CUDA requires CUDA discretisation; Clarabel remains CPU",
+            help="conic assembly backend; CUDA requires CUDA discretisation",
         )
         refinement.add_argument(
             "--discretisation-backend", choices=("numpy", "cuda"), default="numpy",

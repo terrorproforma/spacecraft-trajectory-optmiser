@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "build/performance/benchmark_gtoc12_v93.py"
+  ],
+  "returncode": 0,
+  "stdout": "0 numpy numpy clarabel True 0.1499179049860686 2.6830093702301383e-10\n0 cuda cuda clarabel True 0.4801595130120404 -5.9117155615240335e-12\n0 cuda cuda qoco True 1.1348923050099984 1.3644330465467647e-07\n1 cuda cuda clarabel True 0.15410779998637736 -5.9117155615240335e-12\n1 cuda cuda qoco True 0.7536604480119422 5.2295945351943374e-11\n1 numpy numpy clarabel True 0.15183533501112834 2.6830093702301383e-10\n2 cuda cuda qoco True 0.8189221399952658 3.9835867937654257e-10\n2 numpy numpy clarabel True 0.1434763859724626 2.6830093702301383e-10\n2 cuda cuda clarabel True 0.14517611701739952 -5.9117155615240335e-12\n3 numpy numpy clarabel True 0.14746057300362736 2.6830093702301383e-10\n3 cuda cuda clarabel True 0.1478099800297059 -5.9117155615240335e-12\n3 cuda cuda qoco True 0.8270834280410782 1.268745108973235e-10\n4 cuda cuda clarabel True 0.14565604698145762 -5.9117155615240335e-12\n4 cuda cuda qoco True 1.0637400189880282 -2.510205376893282e-10\n4 numpy numpy clarabel True 0.1479566330090165 2.6830093702301383e-10\n5 cuda cuda qoco True 0.5833676980109885 2.119122655130923e-09\n5 numpy numpy clarabel True 0.13942868198500946 2.6830093702301383e-10\n5 cuda cuda clarabel True 0.14532646600855514 -5.9117155615240335e-12\nSUMMARY numpy numpy clarabel 5 / 5 median_attempt_seconds 0.14746057300362736\nSUMMARY cuda cuda clarabel 5 / 5 median_attempt_seconds 0.14565604698145762\nSUMMARY cuda cuda qoco 5 / 5 median_attempt_seconds 0.8189221399952658\n",
+  "stderr": "",
+  "seconds": 8.33204722602386
+}

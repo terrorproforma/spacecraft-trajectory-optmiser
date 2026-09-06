@@ -67,6 +67,15 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_create(
     spacepdhcg_native_qoco** workspace
 );
 
+// Explicit solver accuracy and required device extensions for new consumers.
+// The legacy create retains its 1e-8 settings and optional extension behavior.
+// Success still requires caller-side qualification against reported KKT residuals.
+spacepdhcg_cuda_status spacepdhcg_native_qoco_create_configured(
+    const spacepdhcg_cuda_scvx_problem* problem, cudaStream_t stream,
+    int ruiz_iterations, double tolerance, bool require_device_extensions,
+    spacepdhcg_native_qoco** workspace
+);
+
 spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve(
     spacepdhcg_native_qoco* workspace,
     const spacepdhcg_cuda_scvx_problem* problem,
