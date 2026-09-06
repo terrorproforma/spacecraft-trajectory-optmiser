@@ -98,12 +98,15 @@ measurement, not a fleet-score improvement or universal speedup.
 topology/conversion, parts of QOCO setup and control, and native solver dispatch
 still involve the host. The QOCO conditional-graph refinement path also has
 unresolved sanitizer failures. Python remains available for orchestration,
-reference solvers and independent verification. Whole-IPM graphs are currently
-built per solve; retained setup and full SCvx orchestration remain unfinished.
+reference solvers and independent verification. Experimental v123 now retains
+whole-IPM graphs and their workspace across solves, with changing settings passed
+through device memory; it has not demonstrated an additional speedup over v121.
+Initial setup and full SCvx orchestration remain unfinished.
 
 See [GPU-native implementation and measured results](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md),
 [GPU seed and SCvx control](docs/GTOC12_GPU_NATIVE_CONTROL.md),
-[GPU IPM loop and v121 measurements](docs/QOCO_GPU_IPM_LOOP.md), and
+[GPU IPM loop and v121 measurements](docs/QOCO_GPU_IPM_LOOP.md),
+[retained IPM graphs and v123 evidence](docs/QOCO_RETAINED_IPM.md), and
 [QOCO device refinement](docs/QOCO_DEVICE_REFINEMENT.md) for implementation
 boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.
