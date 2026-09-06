@@ -3,6 +3,7 @@
 // owns numerical updates for its solver; do not mix it with host update calls.
 #include "qoco.h"
 #include <algorithm>
+#include <cstdlib>
 #include <memory>
 #include <vector>
 
@@ -35,7 +36,10 @@ struct Context {
     QOCOSolver* solver{};
     Matrix p, a, g, at, gt;
     Scales scales{};
-    Buffer<int> p_source, diagonal, at_source, gt_source, cone_starts, invalid;
+    Buffer<int> p_source, diagonal, cone_starts, invalid;
+    // Borrow the matrix-owned stable row ordering. Destroy this context before
+    // its solver; numerical updates preserve the solver's matrix topology.
+    const int *at_source{}, *gt_source{};
     Buffer<double> p_norm, factors, result;
     Buffer<Pair> partial;
     Buffer<Ranges> ranges;
@@ -180,6 +184,69 @@ __global__ void range_finish(const Ranges* input, int count, const double* facto
     }
 }
 inline int blocks(int count) { return std::min(256, (count - 1) / 256 + 1); }
+__global__ void source_map(int count, int input_count, const int* added, int added_count, int* sources) {
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < count; i += gridDim.x * blockDim.x) {
+        int lo = 0, hi = added_count;
+        while (lo < hi) {
+            const int mid = lo + (hi - lo) / 2;
+            if (added[mid] < i) lo = mid + 1; else hi = mid;
+        }
+        sources[i] = !input_count || (lo < added_count && added[lo] == i) ? -1 : i - lo;
+    }
+}
+__global__ void diagonal_map(Matrix p, int* diagonal, int* invalid) {
+    for (int col = blockIdx.x * blockDim.x + threadIdx.x; col < p.columns; col += gridDim.x * blockDim.x) {
+        int found = -1;
+        for (int k = p.offsets[col]; k < p.offsets[col + 1]; ++k)
+            if (p.indices[k] == col) { found = k; break; }
+        diagonal[col] = found;
+        if (found < 0) atomicOr(invalid, 1);
+    }
+}
+__global__ void copy_cone_starts(const int* input, int count, int m, int* output) {
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i <= count; i += gridDim.x * blockDim.x)
+        output[i] = i < count ? input[i] : m;
+}
+inline void compare_setup_maps(Context* w, QOCOProblemData* data) {
+    const char* flag = std::getenv("SPACEPDHCG_TEST_QOCO_UPDATE_MAPS_COMPARE");
+    if (!flag || flag[0] != '1') return;
+    const auto download = [](const int* ptr, int count) {
+        std::vector<int> values(count);
+        if (count) check(cudaMemcpy(values.data(), ptr, count * sizeof(int), cudaMemcpyDeviceToHost));
+        return values;
+    };
+    auto source = download(w->p_source.data, w->p.nonzeros);
+    int next = 0, added = 0;
+    for (int i = 0; i < w->p.nonzeros; ++i) {
+        int expected = -1;
+        if (!w->input_p || (added < data->Pnum_nzadded && data->Pnzadded_idx[added] == i)) ++added;
+        else expected = next++;
+        if (source[i] != expected) throw Failure{cudaErrorInvalidValue};
+    }
+    if (next != w->input_p || added != data->Pnum_nzadded) throw Failure{cudaErrorInvalidValue};
+    const auto diagonal = download(w->diagonal.data, data->n);
+    const auto* p = data->P->csc;
+    for (int col = 0; col < data->n; ++col) {
+        int expected = -1;
+        for (int k = p->p[col]; k < p->p[col + 1]; ++k) if (p->i[k] == col) { expected = k; break; }
+        if (diagonal[col] != expected) throw Failure{cudaErrorInvalidValue};
+    }
+    const auto check_transpose = [&](const int* original, const int* gpu, int count) {
+        const auto actual = download(gpu, count);
+        for (int i = 0; i < count; ++i)
+            if (original[i] < 0 || original[i] >= count || actual[original[i]] != i)
+                throw Failure{cudaErrorInvalidValue};
+    };
+    check_transpose(data->AtoAt, w->at_source, w->a.nonzeros);
+    check_transpose(data->GtoGt, w->gt_source, w->g.nonzeros);
+    const auto starts = download(w->cone_starts.data, data->nsoc + 1);
+    int expected = data->l;
+    for (int i = 0; i < data->nsoc; ++i) {
+        if (starts[i] != expected) throw Failure{cudaErrorInvalidValue};
+        expected += data->q->data[i];
+    }
+    if (starts.back() != expected || expected != data->m) throw Failure{cudaErrorInvalidValue};
+}
 } // namespace qoco_device_update
 
 extern "C" int qoco_gpu_create_numeric_update(QOCOSolver* solver, int pnnz, int annz, int gnnz, void** output) {
@@ -197,35 +264,25 @@ extern "C" int qoco_gpu_create_numeric_update(QOCOSolver* solver, int pnnz, int 
         w->scales = {s->Druiz->d_data, s->Eruiz->d_data, s->Fruiz->d_data, s->Dinvruiz->d_data,
                      s->Einvruiz->d_data, s->Finvruiz->d_data, s->delta->d_data};
         w->tasks = data->n + data->p + data->m; w->blocks = std::min(256, (data->n - 1) / 128 + 1); w->input_p = pnnz;
-        std::vector<int> sources(w->p.nonzeros, -1), diagonal(data->n, -1);
-        int next = 0, added = 0;
-        for (int i = 0; i < w->p.nonzeros; ++i) {
-            if (pnnz == 0 || (added < data->Pnum_nzadded && data->Pnzadded_idx[added] == i)) ++added;
-            else sources[i] = next++;
-        }
-        if (next != pnnz || added != data->Pnum_nzadded) return 1;
-        const auto* p = data->P->csc;
-        for (int col = 0; col < data->n; ++col) {
-            for (int k = p->p[col]; k < p->p[col + 1]; ++k) if (p->i[k] == col) { diagonal[col] = k; break; }
-            if (diagonal[col] < 0) return 1;
-        }
-        w->p_source.upload(sources.data(), sources.size()); w->diagonal.upload(diagonal.data(), diagonal.size());
-        const auto transpose_sources = [](const int* forward, int count) {
-            std::vector<int> inverse(count, -1);
-            for (int i = 0; i < count; ++i) {
-                if (forward[i] < 0 || forward[i] >= count || inverse[forward[i]] != -1) throw Failure{cudaErrorInvalidValue};
-                inverse[forward[i]] = i;
-            }
-            return inverse;
-        };
-        const auto at = transpose_sources(data->AtoAt, annz), gt = transpose_sources(data->GtoGt, gnnz);
-        w->at_source.upload(at.data(), annz); w->gt_source.upload(gt.data(), gnnz);
-        std::vector<int> starts{data->l};
-        for (int i = 0; i < data->nsoc; ++i) starts.push_back(starts.back() + data->q->data[i]);
-        if (starts.back() != data->m) return 1;
-        w->cone_starts.upload(starts.data(), starts.size()); w->cone_count = data->nsoc;
+        w->p_source.allocate(w->p.nonzeros); w->diagonal.allocate(data->n);
+        w->at_source = w->a.entries; w->gt_source = w->g.entries;
+        w->cone_starts.allocate(static_cast<size_t>(data->nsoc) + 1); w->cone_count = data->nsoc;
         w->p_norm.allocate(data->n); w->partial.allocate(w->blocks); w->ranges.allocate(256);
         w->factors.allocate(2); w->result.allocate(9); w->invalid.allocate(1);
+        Buffer<int> added;
+        const int added_count = pnnz ? data->Pnum_nzadded : 0;
+        added.upload(data->Pnzadded_idx, added_count);
+        check(cudaMemsetAsync(w->invalid.data, 0, sizeof(int)));
+        source_map<<<blocks(w->p.nonzeros), 256>>>(w->p.nonzeros, pnnz, added.data, added_count, w->p_source.data);
+        diagonal_map<<<blocks(data->n), 256>>>(w->p, w->diagonal.data, w->invalid.data);
+        copy_cone_starts<<<blocks(data->nsoc + 1), 256>>>(solver->work->soc_idx->d_data,
+            data->nsoc, data->m, w->cone_starts.data);
+        check(cudaGetLastError());
+        int invalid = 0;
+        check(cudaMemcpyAsync(&invalid, w->invalid.data, sizeof(int), cudaMemcpyDeviceToHost));
+        check(cudaStreamSynchronize(nullptr));
+        if (invalid) return 1;
+        compare_setup_maps(w.get(), data);
         check(cudaEventCreateWithFlags(&w->ready, cudaEventDisableTiming));
         // The pinned CPU Ruiz setup uploads matrices/scales but omits c/b/h.
         // Repair those initial device vectors before any solve or unscaling.
@@ -265,8 +322,8 @@ extern "C" int qoco_gpu_update_numeric(void* opaque, const double* packed, cudaS
             accumulate_scales<<<launch, 256>>>(scales, data->c->d_data, n, p, m, w->factors.data);
         }
         regularize<<<blocks(n), 256>>>(w->p, w->diagonal.data, solver->settings->kkt_static_reg_P);
-        if (w->at.nonzeros) transpose_values<<<blocks(w->at.nonzeros), 256>>>(w->a, w->at, w->at_source.data);
-        if (w->gt.nonzeros) transpose_values<<<blocks(w->gt.nonzeros), 256>>>(w->g, w->gt, w->gt_source.data);
+        if (w->at.nonzeros) transpose_values<<<blocks(w->at.nonzeros), 256>>>(w->a, w->at, w->at_source);
+        if (w->gt.nonzeros) transpose_values<<<blocks(w->gt.nonzeros), 256>>>(w->g, w->gt, w->gt_source);
         finish_vectors<<<launch, 256>>>(scales, n, p, m, vectors, data->c->d_data, data->b->d_data, data->h->d_data,
             w->factors.data, w->invalid.data);
         range_partial<<<256, 128>>>(w->p, w->a, w->g, vectors, n, p, m, w->ranges.data, w->invalid.data);

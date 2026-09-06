@@ -1498,3 +1498,81 @@ The complete goal remains active. Initial matrix setup/transposes/
 regularization, CPU solver and SCvx control, independent production replay,
 conditioning and broader physics-family qualification still require work.
 Shared runtimes, pinned upstreams and remote campaigns remain untouched.
+
+## Device numerical-update setup maps
+
+The device numerical updater now reuses the original matrix's GPU gather entry
+order for A/G transpose updates. Stable row sorting produces the same inverse
+mapping as the CPU transpose constructor, including duplicate-entry order.
+Two duplicate GPU arrays, their host inverse-permutation loops and their uploads
+are removed. These are borrowed solver-owned pointers: the native adapter
+destroys the update context before solver teardown or reconstruction, and
+numerical updates preserve matrix topology.
+
+CUDA kernels also construct the original-P source map, locate regularized P's
+diagonal entries, and copy cone boundaries from the existing device workspace.
+The source map binary-searches the sorted inserted-diagonal positions. Their
+initial list still comes from host regularization and is uploaded when needed;
+initial matrix setup, host transposes and regularization remain separate work.
+A four-byte validation result and a setup stream synchronization are retained.
+This replaces duplicate numerical-update setup work, not the entire setup path.
+
+`SPACEPDHCG_TEST_QOCO_UPDATE_MAPS_COMPARE=1` independently compares every source,
+diagonal, transpose and cone-boundary map with its legacy host construction.
+The flag is omitted from timing runs. The extended numeric-update test includes
+1031-variable cases with inserted diagonal entries and with off-diagonal P,
+as well as Ruiz 0/1/4, unconstrained and zero-quadratic cases. It checks three
+updates against both the CPU updater and independent scaling equations.
+
+The frozen candidate is QOCO v68, SHA256
+`828f6b9249909134c10475dba3111b110bf03872b398c3ab98efc8db5a0c3ece`.
+The control is frozen QOCO v67; both use unchanged core v63 and isolated cuDSS
+0.8.0.10 standard kernels on RTX 5090. Two warmups and seven measured samples
+per variant pass all unchanged physics and absolute 1e-8 objective comparisons.
+
+| Case | Control SCvx median | Candidate SCvx median | SCvx ratio | Process ratio |
+|---|---:|---:|---:|---:|
+| Landing N20 | 186.214 ms | 189.909 ms | 0.981x | 1.024x |
+| 6DOF N20 | 1078.986 ms | 665.487 ms | 1.621x | 1.292x |
+| 6DOF N500 | 478.516 ms | 478.223 ms | 1.001x | 0.999x |
+
+N20's inner-iteration median changes from 204 to 112; its improvement cannot
+be attributed to faster map setup. Landing has 36 inner iterations throughout,
+and N500's median changes from 34 to 35. The architectural change is retained
+within the optional device updater, with no general speedup or backend-default
+claim. Numerical variability remains unresolved.
+
+Complete setup medians are also mixed: landing 37.426 → 41.241 ms,
+N20 80.001 → 78.492 ms, and N500 114.961 → 132.524 ms. Removing these CPU
+map loops is not evidence of faster complete setup in this batch.
+
+Qualified landing Nsight traces show the expected operation changes:
+
+| CUDA API calls | v67 | v68 |
+|---|---:|---:|
+| Synchronous copy | 550 | 545 |
+| Asynchronous copy | 424 | 425 |
+| Allocation | 400 | 398 |
+| Free | 308 | 307 |
+| Kernel launch | 7068 | 7071 |
+| Stream synchronization | 88 | 89 |
+
+This input needs no inserted-P upload. Five map uploads disappear, with one
+small asynchronous validation readback added. The new temporary buffer's
+destructor still calls `cudaFree(nullptr)` when empty, so the API free count
+falls by one despite removing two real allocations. The traces measure API
+activity; they do not establish occupancy or a map-phase speedup.
+
+Full landing, the original eight update cases and the extended nine-case test
+pass all four sanitizer tools. Full N500 passes memory, initialization and synchronization checks;
+N500 racecheck and full N20 sanitizer coverage are not included in this
+checkpoint. Forced reconstruction passes normally and under all four tools
+after the caller's original index arrays and stream are released. Independent
+KKT, conversion, audit, device-update, device-I/O and stopping/step oracles also
+pass on landing, N20 and N500.
+
+- [Frozen binaries, helper sources, checks and API traces](../artifacts/performance/qoco-update-maps-v68-checkpoint.json).
+- [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v68-reproduction.json).
+- [Landing timings](../artifacts/performance/qoco-gpu-kkt-v68-pd3.json).
+- [N20 timings](../artifacts/performance/qoco-gpu-kkt-v68-pd6.json).
+- [N500 timings](../artifacts/performance/qoco-gpu-kkt-v68-pd6-500.json).

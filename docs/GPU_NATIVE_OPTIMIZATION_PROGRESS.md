@@ -784,3 +784,18 @@ implementation. No backend default or accuracy tolerance changes.
 include all distributions, construction parity checks and reconstruction tests.
 Initial matrix setup/transposes/regularization, host solver control, production
 independent replay and convergence variability remain under the active goal.
+
+## GPU numerical-update setup maps
+
+The QOCO device updater now borrows the matrix-owned GPU transpose ordering
+instead of constructing and uploading duplicate CPU inverse maps. CUDA also
+builds its P source/diagonal maps and copies existing device cone boundaries.
+The qualified landing API trace removes five synchronous uploads and two
+allocations, while adding three kernels and a small validation readback.
+
+Exact map and numerical oracles, nine extended update fixtures, full trajectory
+qualification and scoped sanitizer/reconstruction tests pass. Full end-to-end
+and setup timing remains mixed, including slower landing and N500 setup; N20's
+faster solve has a different iteration count. The change remains within the
+optional GPU updater and does not establish a general speedup or default
+promotion. [Evidence, timings and ownership scope](GPU_QOCO_LOCAL_BACKEND.md#device-numerical-update-setup-maps).

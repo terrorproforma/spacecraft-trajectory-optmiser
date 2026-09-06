@@ -29,10 +29,12 @@ struct Sparse {
     int rows, columns;
     QOCOCscMatrix view() { return {rows, columns, static_cast<int>(values.size()), indices.data(), offsets.data(), values.data()}; }
 };
-void run_case(int n, int iterations, bool missing_diagonal, bool unconstrained, bool zero_quadratic = false) {
+void run_case(int n, int iterations, bool missing_diagonal, bool unconstrained, bool zero_quadratic = false,
+              bool off_diagonal = false) {
     const int p = unconstrained ? 0 : 5, m = unconstrained ? 0 : 9, l = unconstrained ? 0 : 2;
     Sparse P{{0}, {}, {}, n, n}, A{{0}, {}, {}, p, n}, G{{0}, {}, {}, m, n};
     for (int j = 0; j < n; ++j) {
+        if (off_diagonal && j > 0) { P.indices.push_back(j - 1); P.values.push_back(1e-5); }
         if (!zero_quadratic && (!missing_diagonal || j % 2 == 0)) { P.indices.push_back(j); P.values.push_back(std::pow(10.0, j % 7 - 3)); }
         P.offsets.push_back(P.values.size());
         for (int row = 0; row < p; ++row) if ((row + j) % 3 != 1) { A.indices.push_back(row); A.values.push_back(0.1 + std::cos(row + j * 0.2)); }
@@ -113,15 +115,18 @@ void run_case(int n, int iterations, bool missing_diagonal, bool unconstrained, 
         }
     }
     destroy(workspace); check(cudaFree(device)); check(cudaStreamDestroy(stream)); qoco_cleanup(cpu); qoco_cleanup(gpu);
-    std::printf("GPU numeric updates n=%d Ruiz=%d missing_diagonal=%d unconstrained=%d zero_quadratic=%d PASS\n",
-        n, iterations, missing_diagonal, unconstrained, zero_quadratic);
+    std::printf("GPU numeric updates n=%d Ruiz=%d missing_diagonal=%d unconstrained=%d zero_quadratic=%d off_diagonal=%d PASS\n",
+        n, iterations, missing_diagonal, unconstrained, zero_quadratic, off_diagonal);
 }
 }
 int main() {
+    require(setenv("SPACEPDHCG_TEST_QOCO_UPDATE_MAPS_COMPARE", "1", 1) == 0, "enable exact setup map oracle");
     double host_values[]{2, -4, 0};
     scale_arrayf(host_values, host_values, 0.25, 3);
     compare({host_values[0], host_values[1], host_values[2]}, {0.5, -1.0, 0.0}, "host setup scaling regression");
     run_case(17, 0, false, false); run_case(17, 1, false, false); run_case(17, 4, false, false);
     run_case(1031, 4, false, false); run_case(17, 4, true, false); run_case(17, 0, false, true);
     run_case(17, 4, true, false, true);
+    run_case(1031, 4, true, false);
+    run_case(1031, 4, true, false, false, true);
 }
