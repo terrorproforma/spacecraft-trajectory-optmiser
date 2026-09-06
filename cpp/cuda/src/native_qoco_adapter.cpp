@@ -72,6 +72,20 @@ struct SolverAbi {
     SolutionAbi* sol;
 };
 
+// Optional prepared-QOCO replay ABI v1; kept independent of vendor headers.
+struct CompletionAbi {
+    int abi_version, status, iterations, ir_iterations, step_ir_iterations, restored;
+    double primal_residual, dual_residual, gap, objective, dynamic_reg;
+};
+struct ReplayOutputAbi {
+    const CompletionAbi* completion;
+    const double *x, *y, *s, *z;
+    int n, p, m;
+};
+static_assert(sizeof(CompletionAbi)==64 && sizeof(ReplayOutputAbi)==56);
+using ReplayFn = int (*)(SolverAbi*, void*, ReplayOutputAbi*);
+using FinishReplayFn = int (*)(SolverAbi*);
+
 struct Csc {
     int rows{};
     int columns{};
@@ -390,6 +404,9 @@ struct spacepdhcg_native_qoco {
     CleanupFn cleanup{};
     BeginReductionScopeFn begin_reduction_scope{};
     EndReductionScopeFn end_reduction_scope{};
+    ReplayFn replay{};
+    FinishReplayFn finish_replay{};
+    cudaEvent_t replay_events[3]{};
     DeviceSolutionFn device_solution{};
     DeviceIoFn set_device_io{};
     DeviceIoFn primal_start{};
@@ -429,6 +446,7 @@ struct spacepdhcg_native_qoco {
     spacepdhcg_native_qoco_report report{};
 
     ~spacepdhcg_native_qoco() {
+        for (auto event : replay_events) if (event) cudaEventDestroy(event);
         qoco_gpu_audit_destroy(gpu_audit);
         if (numeric_update_context) destroy_numeric_update(numeric_update_context);
         if (solver != nullptr && cleanup != nullptr) {
@@ -486,6 +504,60 @@ bool solve_with_reduction_scope(spacepdhcg_native_qoco* workspace, int* status) 
         ~Scope() { if (end != nullptr) end(); }
     } scope{workspace->end_reduction_scope};
     *status = workspace->solve(workspace->solver);
+    return true;
+}
+
+bool solve_with_device_audit(spacepdhcg_native_qoco* w, cudaStream_t stream,
+    double* primal, double* dual, int* status, QocoAuditResult* audit, bool* replayed) {
+    *replayed=false;
+    const char* enabled=std::getenv("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY");
+    if (!enabled || enabled[0]!='1') return solve_with_reduction_scope(w,status);
+    if (!w->replay || !w->finish_replay || !w->set_device_io) return false;
+    // The first solve, or a newly rebuilt workspace, must prime the vendor graph.
+    if (!w->report.solves) return solve_with_reduction_scope(w,status);
+    for (auto& event : w->replay_events)
+        if (!event && cudaEventCreate(&event)!=cudaSuccess) return false;
+    if (cudaEventRecord(w->replay_events[0],stream)!=cudaSuccess) return false;
+    ReplayOutputAbi output{};
+    const int submitted=w->replay(w->solver,stream,&output);
+    if (submitted==2) return solve_with_reduction_scope(w,status);
+    QocoReplayStatus completion{};
+    struct Pending {
+        spacepdhcg_native_qoco* w;
+        bool finished=false;
+        ~Pending() { if (!finished) w->finish_replay(w->solver); }
+    } pending{w};
+    if (submitted || !output.completion || output.n!=w->variables ||
+        output.p!=static_cast<int>(w->formulation.b.size()) ||
+        output.m!=static_cast<int>(w->formulation.h.size())) return false;
+    if (cudaEventRecord(w->replay_events[1],stream)!=cudaSuccess) return false;
+    const QocoAuditResult* device_audit{};
+    const QocoReplayStatus* device_status{};
+    if (qoco_gpu_audit_run_device(w->gpu_audit,output.x,output.y,output.z,dual,stream,&device_audit)!=cudaSuccess ||
+        qoco_gpu_audit_replay_status(w->gpu_audit,reinterpret_cast<const int*>(output.completion),stream,&device_status)!=cudaSuccess ||
+        cudaMemcpyAsync(primal,output.x,w->variables*sizeof(double),cudaMemcpyDeviceToDevice,stream)!=cudaSuccess ||
+        cudaEventRecord(w->replay_events[2],stream)!=cudaSuccess) return false;
+    ++w->report.d2d_copy_count; w->report.d2d_bytes+=w->variables*sizeof(double);
+    if (qoco_gpu_audit_download_async(w->gpu_audit,stream,audit)!=cudaSuccess ||
+        cudaMemcpyAsync(&completion,device_status,sizeof(completion),cudaMemcpyDeviceToHost,stream)!=cudaSuccess)
+        return false;
+    ++w->report.d2h_copy_count; w->report.d2h_bytes+=sizeof(completion);
+    if (w->finish_replay(w->solver)!=0) return false;
+    pending.finished=true;
+    if (completion.status<0) return false;
+    float solve_ms{},audit_ms{};
+    if (cudaEventElapsedTime(&solve_ms,w->replay_events[0],w->replay_events[1])!=cudaSuccess ||
+        cudaEventElapsedTime(&audit_ms,w->replay_events[1],w->replay_events[2])!=cudaSuccess) return false;
+    w->report.solve_seconds+=solve_ms*.001;
+    w->report.residual_seconds+=audit_ms*.001;
+    // Materialise only legacy fields consumed by the adapter's status handling
+    // and explicit accepted-primal API. Vectors themselves remain on the GPU.
+    auto* sol=w->solver->sol;
+    sol->status=completion.status; sol->iters=completion.iterations;
+    *status=completion.status; *replayed=true;
+    if (std::getenv("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY_TRACE"))
+        std::fprintf(stderr,"NATIVE_REPLAY status=%d ipm=%d audit_primal=%.17g audit_dual=%.17g\n",
+            *status,sol->iters,audit->primal,audit->dual);
     return true;
 }
 
@@ -1275,6 +1347,8 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     // execution. A scope is destroyed before returning, including failed solves.
     symbol(result->library, "qoco_gpu_begin_reduction_scope", &result->begin_reduction_scope);
     symbol(result->library, "qoco_gpu_end_reduction_scope", &result->end_reduction_scope);
+    symbol(result->library, "qoco_gpu_ipm_replay_device", &result->replay);
+    symbol(result->library, "qoco_gpu_ipm_finish_device", &result->finish_replay);
     symbol(result->library, "qoco_gpu_get_solution", &result->device_solution);
     symbol(result->library, "qoco_gpu_set_device_io", &result->set_device_io);
     symbol(result->library, "qoco_gpu_primal_start", &result->primal_start);
@@ -1665,8 +1739,14 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         ? 1 : 0;
     const auto solve_start = std::chrono::steady_clock::now();
     int status_code = 0;
-    const bool invoked = solve_with_reduction_scope(workspace, &status_code);
-    workspace->report.solve_seconds += std::chrono::duration<double>(
+    QocoAuditResult replay_audit{};
+    bool replay_audited=false;
+    // The existing warm-inaccurate cold retry consumes mutated host solver
+    // settings. Retain that path until its retry policy is device-controlled.
+    const bool invoked = warm ? solve_with_reduction_scope(workspace,&status_code)
+        : solve_with_device_audit(workspace,stream,device_primal,device_dual,
+            &status_code,&replay_audit,&replay_audited);
+    if (!replay_audited) workspace->report.solve_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - solve_start
     ).count();
     if (!invoked) {
@@ -1698,6 +1778,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         workspace->report.warm_primal_accepted = 0;
         ++workspace->report.warm_inaccurate_cold_retries;
         const auto retry_start = std::chrono::steady_clock::now();
+        replay_audited=false;
         const bool retried = solve_with_reduction_scope(workspace, &status_code);
         workspace->report.solve_seconds += std::chrono::duration<double>(
             std::chrono::steady_clock::now() - retry_start
@@ -1729,6 +1810,8 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
     const auto audit_start = std::chrono::steady_clock::now();
     const double *x{}, *y{}, *z{};
     auto cuda_status = cudaSuccess;
+    QocoAuditResult audit=replay_audit;
+    if (!replay_audited) {
     if (workspace->device_solution) {
         if (workspace->device_solution(workspace->solver, workspace->variables,
                 static_cast<int>(workspace->formulation.b.size()),
@@ -1749,9 +1832,9 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             workspace->report.d2d_bytes += workspace->variables * sizeof(double);
         }
     }
-    QocoAuditResult audit{};
     if (cuda_status == cudaSuccess) cuda_status = qoco_gpu_audit_run(workspace->gpu_audit,
         x, y, z, device_dual, stream, &audit);
+    }
     workspace->report.residual_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - audit_start).count();
     if (cuda_status != cudaSuccess) {

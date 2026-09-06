@@ -22,6 +22,7 @@ struct QocoAuditInput {
 struct QocoAuditResult {
     double primal, dual, absolute_primal, absolute_dual, dual_cone, complementarity;
 };
+struct QocoReplayStatus { int status, iterations; };
 
 struct QocoAuditTransfers {
     std::uint64_t h2d_count{}, h2d_bytes{}, d2h_count{}, d2h_bytes{};
@@ -45,6 +46,17 @@ cudaError_t qoco_gpu_audit_upload_solution(QocoGpuAudit*, const double*, const d
 // stream. Only the six audit scalars are downloaded; no CPU numerical work.
 cudaError_t qoco_gpu_audit_run(QocoGpuAudit*, const double*, const double*, const double*,
                              double* mapped_dual, cudaStream_t, QocoAuditResult*);
+// Queue the same independent audit and return retained device scalars. No host
+// download or wait. Consume on the same stream before updating/reusing the audit.
+cudaError_t qoco_gpu_audit_run_device(QocoGpuAudit*, const double*, const double*, const double*,
+                                    double* mapped_dual, cudaStream_t, const QocoAuditResult**);
+// Queue an explicitly requested host report; caller owns destination lifetime
+// and completes the stream. Transfer accounting remains owned by the audit.
+cudaError_t qoco_gpu_audit_download_async(QocoGpuAudit*, cudaStream_t, QocoAuditResult*);
+// Validate completion ABI v1 on device and retain only the two fields needed by
+// transitional host dispatch. An unknown ABI produces status -1.
+cudaError_t qoco_gpu_audit_replay_status(QocoGpuAudit*, const int* completion_header,
+                                      cudaStream_t, const QocoReplayStatus**);
 QocoAuditTransfers qoco_gpu_audit_transfers(const QocoGpuAudit*);
 QocoAuditMemory qoco_gpu_audit_memory(const QocoGpuAudit*);
 void qoco_gpu_audit_destroy(QocoGpuAudit*);

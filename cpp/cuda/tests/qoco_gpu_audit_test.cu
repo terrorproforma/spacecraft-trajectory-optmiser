@@ -133,6 +133,21 @@ void run_case(int n, int equalities, int nonnegative, const std::vector<int>& co
         QocoAuditResult result{}; check(qoco_gpu_audit_run(audit, dx, dy, dz, mapped, stream, &result));
         equal(result, reference(p, a, g, c, b, h, nonnegative, cones, x, y, z));
         const auto first = result;
+        const auto transfers=qoco_gpu_audit_transfers(audit);
+        const QocoAuditResult* device_result{};
+        cudaGraph_t graph{}; cudaGraphExec_t executable{};
+        check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeThreadLocal));
+        check(qoco_gpu_audit_run_device(audit,dx,dy,dz,mapped,stream,&device_result));
+        check(cudaStreamEndCapture(stream,&graph));
+        check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+        check(cudaGraphLaunch(executable,stream));
+        check(cudaMemcpyAsync(&result,device_result,sizeof(result),cudaMemcpyDeviceToHost,stream));
+        check(cudaStreamSynchronize(stream));
+        equal(result,first);
+        const auto after_device=qoco_gpu_audit_transfers(audit);
+        require(after_device.d2h_count==transfers.d2h_count && after_device.d2h_bytes==transfers.d2h_bytes,
+            "device audit queues no internal download");
+        check(cudaGraphExecDestroy(executable)); check(cudaGraphDestroy(graph));
         for (int repeat = 0; repeat < 4; ++repeat) {
             check(qoco_gpu_audit_run(audit, dx, dy, dz, mapped, stream, &result));
             require(result.primal == first.primal && result.dual == first.dual, "GPU audit reproducibility");
