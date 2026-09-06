@@ -11,6 +11,7 @@
 #include "../internal/numeric_fingerprint.cuh"
 #include "../internal/scvx_metrics.cuh"
 #include "../internal/hcw_replay.cuh"
+#include "../internal/scvx_gather.cuh"
 
 #include <algorithm>
 #include <atomic>
@@ -18,6 +19,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <new>
@@ -30,6 +32,8 @@ using spacepdhcg::cuda::detail::hcw_exact_step;
 using spacepdhcg::cuda::detail::hcw_replay_kernel;
 using spacepdhcg::cuda::detail::scvx_metrics_kernel;
 using spacepdhcg::cuda::detail::finish_scvx_metrics_kernel;
+using spacepdhcg::cuda::detail::gather_scvx_candidate_kernel;
+using spacepdhcg::cuda::detail::scvx_gather_blocks;
 
 template <int StateDimension, int ControlDimension>
 struct Augmented {
@@ -1217,27 +1221,6 @@ __device__ void state_rk4_step(
     }
 }
 
-__global__ void gather_scvx_candidate_kernel(
-    const double* primal,
-    const int* state_indices,
-    const int* control_indices,
-    double* states,
-    double* controls,
-    const size_t state_elements,
-    const size_t control_elements
-) {
-    for (size_t index = threadIdx.x;
-         index < state_elements;
-         index += blockDim.x) {
-        states[index] = primal[state_indices[index]];
-    }
-    for (size_t index = threadIdx.x;
-         index < control_elements;
-         index += blockDim.x) {
-        controls[index] = primal[control_indices[index]];
-    }
-}
-
 __global__ void update_scvx_numeric_kernel(
     const spacepdhcg_cuda_scvx_problem problem,
     const double trust_radius,
@@ -1584,6 +1567,7 @@ struct spacepdhcg_cuda_scvx_driver {
     ScvxMetrics* device_metrics{nullptr};
     ScvxMetrics* partial_metrics{nullptr};
     unsigned int metrics_blocks{1U};
+    bool single_block_gather{false};
     ScvxMetrics* host_metrics{nullptr};
     unsigned long long* device_numeric_fingerprint{nullptr};
     unsigned long long* host_numeric_fingerprint{nullptr};
@@ -1906,6 +1890,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_create(
     }
     result->problem = *problem;
     result->options = *options;
+    // Diagnostic ablation only; read once, outside the iteration loop.
+    if (const char* single = std::getenv("SPACEPDHCG_TEST_SCVX_GATHER_SINGLE_BLOCK"))
+        result->single_block_gather = single[0] == '1';
     if (!(result->options.adaptive_epsilon_max > 0.0)) {
         result->options.adaptive_epsilon_max = 1.0e-3;
     }
@@ -2624,7 +2611,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         if (cuda_status != cudaSuccess) {
             return SPACEPDHCG_CUDA_RUNTIME_ERROR;
         }
-        gather_scvx_candidate_kernel<<<1, 256, 0, native>>>(
+        gather_scvx_candidate_kernel<<<scvx_gather_blocks(state_elements, control_elements, driver->single_block_gather), 256, 0, native>>>(
             driver->primal,
             view_pointer<const int>(driver->problem.state_variable_indices),
             view_pointer<const int>(driver->problem.control_variable_indices),
@@ -2817,7 +2804,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
             break;
         }
         if (re_solved) {
-            gather_scvx_candidate_kernel<<<1, 256, 0, native>>>(
+            gather_scvx_candidate_kernel<<<scvx_gather_blocks(state_elements, control_elements, driver->single_block_gather), 256, 0, native>>>(
                 driver->primal,
                 view_pointer<const int>(driver->problem.state_variable_indices),
                 view_pointer<const int>(driver->problem.control_variable_indices),
@@ -3245,7 +3232,7 @@ spacepdhcg_cuda_scvx_driver_handback_qoco(
         (driver->problem.intervals + 1U) * driver->problem.state_dimension;
     const size_t control_elements =
         driver->problem.intervals * driver->problem.control_dimension;
-    gather_scvx_candidate_kernel<<<1, 256, 0, native>>>(
+    gather_scvx_candidate_kernel<<<scvx_gather_blocks(state_elements, control_elements, driver->single_block_gather), 256, 0, native>>>(
         driver->primal,
         view_pointer<const int>(driver->problem.state_variable_indices),
         view_pointer<const int>(driver->problem.control_variable_indices),

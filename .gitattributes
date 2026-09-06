@@ -1,2 +1,12 @@
 scripts/gpu/*.sh text eol=lf
 benchmarks/*.sha256 text eol=lf
+# Preserve downloaded evidence bytes and their published SHA-256 digests.
+results/lambda/2026-09-06/** -text
+artifacts/performance/scvx-gather-*.json -text
+artifacts/performance/lambda-gather-v82-staged.json -text
+# Downloaded raw evidence may contain intentional whitespace; do not rewrite it.
+results/lambda/2026-09-06/** -whitespace
+# Viewer source is ordinary text; its generated datasets retain exact bytes.
+results/lambda/2026-09-06/visualiser/** text eol=lf !whitespace
+results/lambda/2026-09-06/visualiser/data/** -text -whitespace
+results/lambda/2026-09-06/README.md text eol=lf !whitespace

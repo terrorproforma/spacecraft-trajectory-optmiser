@@ -120,3 +120,13 @@ pinned downloads are never packaged: GTOC12 data goes to `SPACEPDHCG_GTOC12_DATA
 Research software under active construction. Numerical results are not claimed until they are reproduced by committed benchmark configurations, independent feasibility checks and CI artifacts.
 
 - [`docs/GTOC12_TRACK.md`](docs/GTOC12_TRACK.md) — GTOC12 asteroid-mining replay (pins, exact verifier, reduced instance, scored routes)
+
+## Published Lambda fleet snapshot (6 September 2026)
+
+The verified 23-ship GTOC12 fleet and partial G4 evidence are in
+[`results/lambda/2026-09-06`](results/lambda/2026-09-06/README.md), including a
+standalone copy of the existing web viewer and launch instructions. The fleet
+collects 14,047.80 kg and passes both verifier reports. The G4 snapshot is partial
+(145 completed groups); it is not a completed GPU performance qualification.
+Current optimization evidence and remaining GPU-native work are tracked in
+[GPU-native optimization progress](docs/GPU_NATIVE_OPTIMIZATION_PROGRESS.md).

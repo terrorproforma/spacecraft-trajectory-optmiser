@@ -972,3 +972,43 @@ medians are 426.645/430.309 ms, while scaled variants are slower. Cold starts
 are not a general fix for the observed convergence variability. Failed attempts
 now report their actual 0.47–0.70 second SCvx cost instead of zero.
 [Evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#failed-solve-timing-and-warm-start-comparison).
+
+## Distribute candidate gathers across GPU blocks
+
+Core v82 replaces all three single-block SCvx candidate gathers with independent
+multi-block gathers (256 threads, at most 1,024 blocks). This copies indexed values
+without floating-point arithmetic. Sixteen fixtures cover 48 bitwise comparisons,
+including repeated indices, offset buffers, guard words and IEEE special values.
+All four CUDA sanitizer tools pass the standalone fixture. Full N500 passes
+memory, initialization and synchronization checks; seven timing/convergence/
+cancellation regressions pass. The host launch observer confirms 28 blocks on
+N500 versus one in the same-binary ablation; it does not measure SM occupancy.
+
+Hot-cache GPU-event microbenchmarks show 6.05–9.77x faster gathers for 7,014 state
+entries and 103–258x for 1,000,003 entries. These are kernel-only measurements.
+The final 88-attempt trajectory comparison qualifies every sample at unchanged
+physics gates and fixed objective error <= 1e-8, but complete solve timings remain
+mixed: N20 median 696.961 -> 870.593 ms, N500 462.076 -> 450.942 ms. Both tails
+regress. An earlier different-binary N20 run had one numerical failure and stopped;
+its cause remains unresolved. This tranche does not establish a general solver
+speedup or a convergence reliability fix. The full GPU-native goal remains open.
+
+[Detailed scopes and evidence](GPU_QOCO_LOCAL_BACKEND.md#multi-block-scvx-candidate-gathers).
+
+## Downloaded Lambda fleet and partial benchmark evidence
+
+The completed GTOC12 v11 fleet is available in the existing web viewer, copied
+under `results/lambda/2026-09-06/visualiser`. Its 23 ships collect 14,047.803 kg;
+196 asteroids are visited and 194 collected from. Both verifier reports pass.
+The 03:26 UTC read-only download also contains 145 completed G4 groups and a
+consistent checkpoint snapshot; G4 remains active and this is not its final report.
+Every one of the 1,028 downloaded files passed its recorded SHA-256 check.
+[Local launch instructions, source paths and scope](../results/lambda/2026-09-06/README.md).
+An isolated sm_90 gather test compiled on Lambda, but its readiness guard refused
+GPU execution while G4 was active. No H100 speedup measurement is claimed.
+
+Publication checks: 199 GTOC12, H1 telemetry and planner-schema tests passed;
+seven viewer importer/server tests passed. Downloaded evidence and the generated
+viewer dataset were also rehashed directly from Git's staging area before
+publication. See `artifacts/performance/main-publication-20260906-checks.json`
+and `main-publication-20260906-evidence.json`.

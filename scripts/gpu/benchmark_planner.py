@@ -30,9 +30,12 @@ def main() -> None:
     parser.add_argument("--optimized-core", type=Path)
     parser.add_argument("--baseline-cudss", type=Path)
     parser.add_argument("--optimized-cudss", type=Path)
+    parser.add_argument("--reference-objective", type=float)
     args = parser.parse_args()
     if args.warmups < 0 or args.repeats < 1:
         parser.error("warmups must be nonnegative and repeats positive")
+    if args.reference_objective is not None and not math.isfinite(args.reference_objective):
+        parser.error("reference objective must be finite")
     problem = json.loads(args.problem.read_text())
     if "units" in problem:
         parser.error("normalize the problem with spacepdhcg validate first")
@@ -41,10 +44,10 @@ def main() -> None:
     raw_dir = args.output.with_suffix(".samples")
     raw_dir.mkdir(parents=True, exist_ok=False)
     paths = [args.executable, args.problem, args.baseline, args.optimized]
-    paths.append(args.executable.parent.parent / "cuda/libspacepdhcg_cuda.so")
+    default_core = args.executable.parent.parent / "cuda/libspacepdhcg_cuda.so"
     cores = {
-        "baseline": args.baseline_core or paths[-1],
-        "optimized": args.optimized_core or paths[-1],
+        "baseline": args.baseline_core or default_core,
+        "optimized": args.optimized_core or default_core,
     }
     paths.extend(cores.values())
     runtimes = {"baseline": args.baseline_cudss, "optimized": args.optimized_cudss}
@@ -57,6 +60,7 @@ def main() -> None:
         "problem": problem,
         "timing_boundary": "fresh native process including replay; unit parsing excluded",
         "objective_comparison_absolute_tolerance": 1e-8,
+        "reference_objective": args.reference_objective,
         "warmups": args.warmups,
         "repeats": args.repeats,
         "core_libraries": {k: str(v.resolve()) for k, v in cores.items()},
@@ -68,7 +72,7 @@ def main() -> None:
         ).strip(),
         "samples": [],
     }
-    objective = None
+    objective = args.reference_objective
     for repeat in range(args.warmups + args.repeats):
         variants = [("baseline", args.baseline), ("optimized", args.optimized)]
         if repeat % 2:

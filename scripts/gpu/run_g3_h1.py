@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import random
+import re
 import statistics
 import subprocess
 import time
@@ -50,12 +51,39 @@ def _parse_record(stdout: str) -> dict[str, Any]:
     records = [
         json.loads(line)
         for line in stdout.splitlines()
-        if line.startswith("{") and '"case":"h1_hcw"' in line
+        if line.startswith("{") and re.search(r'"case"\s*:\s*"h1_hcw"', line)
     ]
     matches = [record for record in records if record.get("case") == "h1_hcw"]
     if len(matches) != 1:
         raise RuntimeError("benchmark did not emit exactly one h1_hcw record")
-    return matches[0]
+    record = matches[0]
+    # Older emitters put actual work counts only in the adjacent production record.
+    # Its diagnostic ratio can be C printf's -inf (not JSON); replace only bare
+    # nonfinite numeric values, without accepting unrelated diagnostic records.
+    production = []
+    for line in stdout.splitlines():
+        if not re.search(r'"case"\s*:\s*"production_outer"', line):
+            continue
+        line = re.sub(r"([:\[,]\s*)-?(?:inf|nan)(?=\s*[,}\]])", r"\1null", line)
+        item = json.loads(line)
+        if item.get("model") == 0:
+            production.append(item)
+    if len(production) > 1:
+        raise RuntimeError("ambiguous HCW production work counters")
+    if production:
+        for target, source in (
+            ("outer_iterations", "outer_iterations"),
+            ("inner_iterations", "inner_iterations"),
+            ("accepted_steps", "accepted"),
+            ("rejected_steps", "rejected"),
+        ):
+            if source not in production[0]:
+                continue
+            value = production[0][source]
+            if target in record and record[target] != value:
+                raise RuntimeError(f"conflicting HCW counter: {target}")
+            record[target] = value
+    return record
 
 
 def _run_sample(
@@ -162,9 +190,12 @@ def _compact_result(
     raw_sha: str,
     repeat: int,
 ) -> dict[str, Any]:
-    record = sample.get("record", {})
+    record = dict(sample.get("record", {}))
     status = sample["status"]
     qualified = status == "qualified"
+    if qualified and sample.get("stdout"):
+        # Also repair archived samples whose saved `record` predates the counters.
+        record = _parse_record(sample["stdout"])
     timing_names = {
         "topology_seconds": "topology_seconds",
         "coefficient_seconds": "coefficient_seconds",
@@ -233,19 +264,19 @@ def _compact_result(
         },
         "timing": timing,
         "work": {
-            "outer_iterations": record.get("repeats"),
-            "inner_iterations": record.get("recovery_iterations", 0),
+            "outer_iterations": record.get("outer_iterations"),
+            "inner_iterations": record.get("inner_iterations"),
             "matvecs": None,
             "cone_projections": None,
-            "factorisations": 0,
-            "accepted_steps": record.get("repeats"),
-            "rejected_steps": 0,
-            "resolved_steps": 0,
-            "polish_used": True,
+            "factorisations": record.get("factorisations"),
+            "accepted_steps": record.get("accepted_steps"),
+            "rejected_steps": record.get("rejected_steps"),
+            "resolved_steps": record.get("resolved_steps"),
+            "polish_used": record.get("polish_used"),
         },
         "resources": {
-            "peak_device_bytes": record.get("allocation_bytes"),
-            "reserved_device_bytes": record.get("allocation_bytes"),
+            "peak_device_bytes": record.get("peak_device_bytes"),
+            "reserved_device_bytes": record.get("reserved_device_bytes"),
             "h2d_bytes": record.get("h2d_bytes"),
             "d2h_bytes": record.get("d2h_bytes"),
             "collective_bytes": 0,
@@ -256,8 +287,8 @@ def _compact_result(
             ),
         },
         "aggregation": {
-            "warmup_repeats": 2,
-            "measured_repeats": 7,
+            "warmup_repeats": 0,
+            "measured_repeats": 1,
             "statistic": "median_iqr",
             "median": record.get("scvx_total_seconds"),
             "q1": record.get("scvx_total_seconds"),
@@ -280,6 +311,11 @@ def _compact_result(
         "notes": [
             "CUDA startup is reported separately.",
             "Only compact acceptance diagnostics cross to host in steady state.",
+            "Work counts come from executed production iterations, not requested repeats.",
+            "Unknown work and total-memory measurements are null; allocation_bytes is partial.",
+            "This compact record is one sample; coordinate statistics are in h1_decision.json.",
+            "Legacy solve_seconds includes scaling preamble work; zero scaling_seconds "
+            "does not establish zero scaling cost.",
         ],
     }
 

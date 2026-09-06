@@ -1,0 +1,126 @@
+{
+  "aggregation": {
+    "censored_count": 0,
+    "coefficient_of_variation": 0.0,
+    "maximum": 0.066038088,
+    "measured_repeats": 1,
+    "median": 0.066038088,
+    "minimum": 0.066038088,
+    "q1": 0.066038088,
+    "q3": 0.066038088,
+    "statistic": "median_iqr",
+    "warmup_repeats": 0
+  },
+  "artifacts": {
+    "compute_sanitizer": null,
+    "energy_trace": null,
+    "manifest": {
+      "location": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/lambda-h100/v1-reseal-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "6ab00fb3aade36a754c038a3641a9408226826187b163d57f8ae9b8b9bf6eae3"
+    },
+    "ncu": null,
+    "nsys": null,
+    "raw": {
+      "location": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/lambda-h100/v1-reseal-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "6ab00fb3aade36a754c038a3641a9408226826187b163d57f8ae9b8b9bf6eae3"
+    },
+    "stderr": {
+      "location": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/lambda-h100/v1-reseal-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "6ab00fb3aade36a754c038a3641a9408226826187b163d57f8ae9b8b9bf6eae3"
+    },
+    "stdout": {
+      "location": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/lambda-h100/v1-reseal-9e75b47-h100/g3/h1/h1_raw.jsonl",
+      "sha256": "6ab00fb3aade36a754c038a3641a9408226826187b163d57f8ae9b8b9bf6eae3"
+    }
+  },
+  "dimensions": {
+    "a_nonzeros": 3012,
+    "affine_rows": 200,
+    "cone_inventory": {},
+    "control_dimension": 3,
+    "f_nonzeros": 150,
+    "gpus": 1,
+    "intervals": 50,
+    "q_nonzeros": 456,
+    "scalar_rows": 312,
+    "scenarios": 1,
+    "state_dimension": 6,
+    "variables": 456
+  },
+  "identity": {
+    "cold_start": false,
+    "family": "P1-B-hcw",
+    "hardware_id": "lambda-h100-80gb-hbm3",
+    "instance_id": "hcw-N50-repeat-11",
+    "policy": "deterministic-fixed-tight",
+    "precision": "float64",
+    "repository_commit": "9e75b470fd5378d9b20f6f13892ac909c43757cd",
+    "run_id": "h1",
+    "solver": "spacepdhcg-persistent",
+    "status": "qualified",
+    "warm_start": true
+  },
+  "notes": [
+    "CUDA startup is reported separately.",
+    "Only compact acceptance diagnostics cross to host in steady state.",
+    "Work counts come from executed production iterations, not requested repeats.",
+    "Unknown work and total-memory measurements are null; allocation_bytes is partial.",
+    "This compact record is one sample; coordinate statistics are in h1_decision.json.",
+    "Legacy solve_seconds includes scaling preamble work; zero scaling_seconds does not establish zero scaling cost.",
+    "Corrected derivative of /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/lambda-h100/v1-reseal-9e75b47-h100/g3/h1/compact/result-011.json; original SHA256 b5da21f613a4f264bdd44092e26cc515ee2b1020512c3c37a709489b59d36fa9. Original evidence is unchanged."
+  ],
+  "quality": {
+    "achieved_residual": 0,
+    "canonical_cone_residual": 0.0,
+    "canonical_dual_residual": 0,
+    "canonical_gap": 0,
+    "canonical_primal_residual": 0,
+    "dynamics_residual": 0,
+    "nonanticipativity_residual": 0.0,
+    "objective": 0.0,
+    "path_residual": 0,
+    "qualified": true,
+    "requested_tolerance": 1e-06,
+    "risk_epigraph_residual": 0.0,
+    "terminal_residual": 0,
+    "virtual_control_residual": 0.0
+  },
+  "resources": {
+    "collective_bytes": 0,
+    "collective_count": 0,
+    "d2h_bytes": 2256,
+    "energy_joules": null,
+    "h2d_bytes": 0,
+    "peak_device_bytes": null,
+    "reserved_device_bytes": null,
+    "topology_allocation_count_after_create": 0
+  },
+  "schema_version": "1.0.0",
+  "timing": {
+    "acceptance_seconds": 4.65e-07,
+    "coefficient_seconds": 0.000423744008,
+    "collective_seconds": 0.0,
+    "cqp_total_seconds": 0.062915263,
+    "d2h_seconds": 2.15360001e-05,
+    "h2d_seconds": 0.0,
+    "replay_seconds": 0.000910400003,
+    "residual_seconds": 0.0,
+    "scaling_seconds": 0.0,
+    "scvx_total_seconds": 0.066038088,
+    "solve_seconds": 0.057798623,
+    "topology_seconds": 0.000354055,
+    "update_seconds": 0.00511663997,
+    "workspace_create_seconds": 0.009881141
+  },
+  "work": {
+    "accepted_steps": 0,
+    "cone_projections": null,
+    "factorisations": null,
+    "inner_iterations": 3,
+    "matvecs": null,
+    "outer_iterations": 3,
+    "polish_used": null,
+    "rejected_steps": 0,
+    "resolved_steps": null
+  }
+}

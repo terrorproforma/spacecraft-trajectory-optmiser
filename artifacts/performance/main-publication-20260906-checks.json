@@ -1,0 +1,47 @@
+[
+  {
+    "name": "ruff",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/ruff",
+      "check",
+      "scripts/gpu/benchmark_planner.py",
+      "scripts/gpu/run_g3_h1.py",
+      "scripts/gpu/reexport_g3_h1.py",
+      "scripts/benchmark_gtoc12_hotpaths.py",
+      "src/spacepdhcg/gtoc12/lambert.py",
+      "tests/test_g3_h1.py",
+      "tests/test_gtoc12_lambert_performance.py"
+    ],
+    "returncode": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": "",
+    "seconds": 0.057457970979157835
+  },
+  {
+    "name": "regression",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+      "tests/test_gtoc12_archive.py",
+      "tests/test_gtoc12_bundles.py",
+      "tests/test_gtoc12_chain.py",
+      "tests/test_gtoc12_collectdp.py",
+      "tests/test_gtoc12_cooperative.py",
+      "tests/test_gtoc12_ephemeris_format.py",
+      "tests/test_gtoc12_harvestphase.py",
+      "tests/test_gtoc12_jointopt.py",
+      "tests/test_gtoc12_lambert_performance.py",
+      "tests/test_gtoc12_pipeline.py",
+      "tests/test_gtoc12_returns.py",
+      "tests/test_gtoc12_rules_and_data.py",
+      "tests/test_gtoc12_search2.py",
+      "tests/test_gtoc12_verifier.py",
+      "tests/test_g3_h1.py",
+      "tests/test_planner_schema.py",
+      "-q"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 36%]\n........................................................................ [ 72%]\n.......................................................                  [100%]\n199 passed in 352.83s (0:05:52)\n",
+    "stderr": "",
+    "seconds": 353.1830206559971
+  }
+]

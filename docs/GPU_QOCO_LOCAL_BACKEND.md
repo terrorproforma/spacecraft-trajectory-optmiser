@@ -2219,3 +2219,70 @@ Frozen core v79 is
 - [Checkpoint, build log, fault tests, scopes and source/runtime hashes](../artifacts/performance/core-timing-v79-checkpoint.json).
 - [N20 distributions and failures](../artifacts/performance/planner-warm-start-v79-20.json).
 - [N500 distributions](../artifacts/performance/planner-warm-start-v79-500.json).
+
+## Multi-block SCvx candidate gathers
+
+Core v82 moves ordinary candidate, line-search candidate and external handback
+gathers into `internal/scvx_gather.cuh`, using a grid-stride copy with one writer
+per output. Production selects ceil(max(states, controls)/256), capped at 1,024
+blocks. The test-only `SPACEPDHCG_TEST_SCVX_GATHER_SINGLE_BLOCK=1` override is read
+once when creating the opaque driver and permits a same-binary comparison.
+No solver/backend selection or accuracy tolerance changed.
+
+The standalone fixture compares the old kernel and caps of 256/1,024 on sixteen
+adjacent/shuffled mapping cases, including empty/uneven sizes, repeated source
+indices, offset buffers, guard words, signed zero, subnormal, infinity and NaN
+payloads. All 48 comparisons match bit for bit. Timings use 64-kernel CUDA Graph
+replays bracketed by GPU events, graph priming, two warmups and seven measured
+samples. This is repeated cache-resident synthetic work, excluding allocation,
+capture and host launch; it does not measure cold DRAM or total solve cost.
+
+| State entries | Map | One block us | Default multi-block us | Kernel speedup |
+|---:|---|---:|---:|---:|
+| 294 | adjacent | 1.362 | 1.149 | 1.18x |
+| 7,014 | adjacent | 11.965 | 1.225 | 9.77x |
+| 7,014 | shuffled | 9.298 | 1.536 | 6.05x |
+| 140,014 | adjacent | 220.528 | 1.752 | 125.84x |
+| 140,014 | shuffled | 245.690 | 3.162 | 77.69x |
+| 1,000,003 | adjacent | 1567.833 | 6.080 | 257.85x |
+| 1,000,003 | shuffled | 1749.846 | 16.921 | 103.41x |
+
+The cap-256 candidate is slightly faster on the largest shuffled case (16.776 us)
+but loses on the large adjacent case. Frozen core82 SHA256 is
+`d2d18679007dfe86ae051f96b1c20784bc57dae964bac82b0de8f2678c4dafe7`.
+Planner77, QOCO78 and cuDSS 0.8.0.10 remain the tested dependencies.
+
+Same-binary alternating comparison, two warmups and twenty measured fresh
+processes per mode/case: all 88 attempts qualify with unchanged certificates and
+fixed objective absolute error <= 1e-8.
+
+| Intervals | Gather | Median SCvx ms | p95 ms (nearest rank) | Median inner iterations |
+|---:|---|---:|---:|---:|
+| 20 | single | 696.961 | 1894.811 | 141 |
+| 20 | multi | 870.593 | 2169.097 | 191.5 |
+| 500 | single | 462.076 | 582.866 | 34.5 |
+| 500 | multi | 450.942 | 646.099 | 35 |
+
+No general complete-solver speedup is established. Convergence variation dominates
+the tiny gather cost. Earlier core81/core79 landing comparison qualifies 18/18
+but median time changes 152.962 -> 163.596 ms. The earlier N20 comparison aborted
+after 15 samples (14 qualified, one core81 QOCO numerical failure). Its cause is
+unresolved; the later successful ablation does not establish a numerical fix.
+
+Final checks: seven timing/convergence/cancellation tests; standalone all four
+CUDA sanitizer tools; full N500 memcheck with leak check, initcheck and synccheck,
+including certificate/objective checks. Full N500 racecheck was not run here.
+Core81 native conversion, seven-repeat landing and external handback pass. The
+initial native command requested trajectory mode without its required recovery
+proxy and failed before the corrected invocation; its evidence is retained.
+
+Installed Nsight 2024.6.2/CUPTI12.8 reports an unsupported driver and its export has
+no GPU kernel table. The scoped host launch observer instead confirms actual
+N500 gather launches with grid1 versus grid28, both block256 and CUDA success.
+This verifies launch shape, not SM occupancy or a GPU timeline.
+
+- [Checkpoint, hashes, build logs, helper sources and exact check scopes](../artifacts/performance/scvx-gather-v82-checkpoint.json).
+- [Final kernel measurements](../artifacts/performance/scvx-gather-v82-microbenchmark.json).
+- [All 88 trajectory attempts](../artifacts/performance/scvx-gather-v82-ablation.json).
+- [Earlier numerical failure retained](../artifacts/performance/scvx-gather-v81-20.json).
+- [Launch observation and profiler limitation](../artifacts/performance/scvx-gather-v82-launch-check.json).

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
+
+import jsonschema
+import pytest
 
 
 def _module():
@@ -71,3 +75,57 @@ def test_h1_parser_ignores_non_json_numeric_sentinels_in_other_records() -> None
     record = module._parse_record(stdout)
     assert record["case"] == "h1_hcw"
     assert record["intervals"] == 20
+
+
+def _archived_sample():
+    # Verbatim last record of the archived 9e75b47 H100 H1 sweep. Keep the
+    # regression self-contained when tests are included in a source distribution.
+    path = Path(__file__).parent / "fixtures/g3_h1_h100_10000.json"
+    return json.loads(path.read_text())
+
+
+def test_h1_compact_matches_actual_h100_work_and_schema() -> None:
+    module = _module()
+    sample = _archived_sample()
+    result = module._compact_result(sample, "a" * 40, "test", Path("raw.jsonl"), "b" * 64, 41)
+    assert result["work"]["inner_iterations"] == 3
+    assert result["work"]["outer_iterations"] == 3
+    assert result["work"]["accepted_steps"] == 0
+    assert result["work"]["rejected_steps"] == 0
+    assert result["work"]["polish_used"] is None
+    assert result["resources"]["peak_device_bytes"] is None
+    assert result["resources"]["reserved_device_bytes"] is None
+    assert result["aggregation"]["measured_repeats"] == 1
+    assert result["aggregation"]["warmup_repeats"] == 0
+    assert result["timing"]["scvx_total_seconds"] == 15.2584705
+    schema = json.loads(
+        (Path(__file__).parents[1] / "experiments/schema/paper1_result.schema.json").read_text()
+    )
+    jsonschema.validate(result, schema)
+
+
+def test_h1_missing_work_is_unknown_even_when_requested_repeats_are_known() -> None:
+    sample = _archived_sample()
+    sample.pop("stdout")
+    result = _module()._compact_result(sample, "a" * 40, "test", Path("raw"), "b" * 64, 0)
+    assert result["work"]["inner_iterations"] is None
+    assert result["work"]["outer_iterations"] is None
+    assert result["work"]["accepted_steps"] is None
+
+
+def test_h1_rejects_conflicting_counters() -> None:
+    sample = _archived_sample()
+    h1 = dict(sample["record"], inner_iterations=0)
+    stdout = sample["stdout"].splitlines()[0] + "\n" + json.dumps(h1)
+    with pytest.raises(RuntimeError, match="conflicting HCW counter"):
+        _module()._parse_record(stdout)
+
+
+@pytest.mark.parametrize("status", ["timeout", "failed"])
+def test_h1_censored_work_is_not_reported_as_zero(status) -> None:
+    result = _module()._compact_result(
+        {"intervals": 10000, "status": status}, "a" * 40, "test", Path("raw"), "b" * 64, 0
+    )
+    assert all(value is None for value in result["work"].values())
+    assert result["resources"]["peak_device_bytes"] is None
+    assert result["aggregation"]["censored_count"] == 1

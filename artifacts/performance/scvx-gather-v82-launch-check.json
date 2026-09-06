@@ -1,0 +1,648 @@
+{
+  "compile_command": [
+    "g++",
+    "-std=c++17",
+    "-shared",
+    "-fPIC",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-I/usr/local/cuda-12.8/include",
+    "cpp/cuda/tests/scvx_gather_launch_probe.cpp",
+    "-ldl",
+    "-o",
+    "/home/angus/build-spacepdhcg-gather-v82/gather_launch_probe.so"
+  ],
+  "proxy_sha256": "e01ff74ee6b8a63778903bd66accee364359cc3783ca9cbdc5c590dea1419e3b",
+  "nsight": {
+    "failure": "Kernel table absent in export. Installed Nsight reports unsupported driver; no GPU timeline or SM-occupancy claim. Original profile and SQLite retained locally.",
+    "diagnostics": [
+      [
+        0,
+        1,
+        3,
+        1,
+        "Profiling has started.",
+        -144115188075855872
+      ],
+      [
+        1178136,
+        1,
+        2,
+        1,
+        "Process was launched by the profiler, see /tmp/nvidia/nsight_systems/quadd_session_102272479/streams/pid_2272494_stdout.log and stderr.log for program output",
+        319601099407360
+      ],
+      [
+        12493870,
+        2,
+        3,
+        1,
+        "Number of NVTX events collected: \t16.",
+        319601099407360
+      ],
+      [
+        12498062,
+        2,
+        3,
+        1,
+        "Number of CUDA events collected: \t17253.",
+        319601099407360
+      ],
+      [
+        20172182,
+        1,
+        1,
+        1,
+        "Common injection library initialized successfully.",
+        319601099407360
+      ],
+      [
+        24939976,
+        1,
+        1,
+        1,
+        "Buffers holding CUDA trace data will be flushed on CudaProfilerStop() call. See --flush-on-cudaprofilerstop to control this behavior.",
+        319601099407360
+      ],
+      [
+        29640495,
+        1,
+        1,
+        1,
+        "Loaded CUPTI library: /opt/nvidia/nsight-systems/2024.6.2/target-linux-x64/libcupti.so.12.8",
+        319601099407360
+      ],
+      [
+        29644023,
+        1,
+        1,
+        2,
+        "Installed CUDA driver version (13.2) is not supported by this build of Nsight Systems. CUDA trace will be collected using libraries for driver version 12.8",
+        319601099407360
+      ],
+      [
+        255322277,
+        1,
+        1,
+        1,
+        "Enabling trace for device graph launch",
+        319601099407360
+      ],
+      [
+        259535913,
+        1,
+        1,
+        1,
+        "CUDA injection initialized successfully.",
+        319601099407360
+      ],
+      [
+        308331136,
+        1,
+        1,
+        3,
+        "CUDA device 0: Unified Memory cannot be traced on devices that don't support peer-to-peer transfers.Please verify that SLI/NVLink is functioning properly.",
+        319601099407360
+      ],
+      [
+        811711876,
+        1,
+        1,
+        1,
+        "NVTX injection initialized successfully.",
+        319601099407360
+      ],
+      [
+        1518646353,
+        1,
+        1,
+        1,
+        "Number of CUPTI events produced: \t30638, CUPTI buffers: 50.",
+        319601099407360
+      ],
+      [
+        1805706044,
+        1,
+        3,
+        1,
+        "Profiling has stopped.",
+        -144115188075855872
+      ]
+    ],
+    "tables": [
+      [
+        "StringIds"
+      ],
+      [
+        "ANALYSIS_FILE"
+      ],
+      [
+        "ProcessStreams"
+      ],
+      [
+        "TARGET_INFO_SYSTEM_ENV"
+      ],
+      [
+        "TARGET_INFO_SESSION_START_TIME"
+      ],
+      [
+        "ANALYSIS_DETAILS"
+      ],
+      [
+        "CUPTI_ACTIVITY_KIND_CUDA_EVENT"
+      ],
+      [
+        "DIAGNOSTIC_EVENT"
+      ],
+      [
+        "PROFILER_OVERHEAD"
+      ],
+      [
+        "CUPTI_ACTIVITY_KIND_RUNTIME"
+      ],
+      [
+        "CUPTI_ACTIVITY_KIND_SYNCHRONIZATION"
+      ],
+      [
+        "NVTX_EVENTS"
+      ],
+      [
+        "CUDA_GRAPH_EVENTS"
+      ],
+      [
+        "PROCESSES"
+      ],
+      [
+        "ThreadNames"
+      ],
+      [
+        "TARGET_INFO_GPU"
+      ],
+      [
+        "TARGET_INFO_CUDA_CONTEXT_INFO"
+      ],
+      [
+        "TARGET_INFO_CUDA_STREAM"
+      ],
+      [
+        "ENUM_NSYS_EVENT_TYPE"
+      ],
+      [
+        "ENUM_NSYS_EVENT_CLASS"
+      ],
+      [
+        "ENUM_NSYS_GENERIC_EVENT_SOURCE"
+      ],
+      [
+        "ENUM_NSYS_GENERIC_EVENT_GROUP"
+      ],
+      [
+        "ENUM_NSYS_GENERIC_EVENT_FIELD_TYPE"
+      ],
+      [
+        "ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_PROPERTY"
+      ],
+      [
+        "ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_TYPE"
+      ],
+      [
+        "ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_FLAGS"
+      ],
+      [
+        "ENUM_GPU_CTX_SWITCH"
+      ],
+      [
+        "ENUM_CUDA_MEMCPY_OPER"
+      ],
+      [
+        "ENUM_CUDA_MEM_KIND"
+      ],
+      [
+        "ENUM_CUDA_MEMPOOL_TYPE"
+      ],
+      [
+        "ENUM_CUDA_MEMPOOL_OPER"
+      ],
+      [
+        "ENUM_CUDA_DEV_MEM_EVENT_OPER"
+      ],
+      [
+        "ENUM_CUDA_KERNEL_LAUNCH_TYPE"
+      ],
+      [
+        "ENUM_CUDA_SHARED_MEM_LIMIT_CONFIG"
+      ],
+      [
+        "ENUM_CUDA_UNIF_MEM_MIGRATION"
+      ],
+      [
+        "ENUM_CUDA_UNIF_MEM_ACCESS_TYPE"
+      ],
+      [
+        "ENUM_CUDA_FUNC_CACHE_CONFIG"
+      ],
+      [
+        "ENUM_CUPTI_STREAM_TYPE"
+      ],
+      [
+        "ENUM_CUPTI_SYNC_TYPE"
+      ],
+      [
+        "ENUM_STACK_UNWIND_METHOD"
+      ],
+      [
+        "ENUM_SAMPLING_THREAD_STATE"
+      ],
+      [
+        "ENUM_SCHEDULING_THREAD_BLOCK"
+      ],
+      [
+        "ENUM_OPENGL_DEBUG_SOURCE"
+      ],
+      [
+        "ENUM_OPENGL_DEBUG_TYPE"
+      ],
+      [
+        "ENUM_OPENGL_DEBUG_SEVERITY"
+      ],
+      [
+        "ENUM_VULKAN_PIPELINE_CREATION_FLAGS"
+      ],
+      [
+        "ENUM_D3D12_HEAP_TYPE"
+      ],
+      [
+        "ENUM_D3D12_PAGE_PROPERTY"
+      ],
+      [
+        "ENUM_D3D12_HEAP_FLAGS"
+      ],
+      [
+        "ENUM_D3D12_CMD_LIST_TYPE"
+      ],
+      [
+        "ENUM_OPENACC_DEVICE"
+      ],
+      [
+        "ENUM_OPENACC_EVENT_KIND"
+      ],
+      [
+        "ENUM_OPENMP_EVENT_KIND"
+      ],
+      [
+        "ENUM_OPENMP_THREAD"
+      ],
+      [
+        "ENUM_OPENMP_DISPATCH"
+      ],
+      [
+        "ENUM_OPENMP_SYNC_REGION"
+      ],
+      [
+        "ENUM_OPENMP_WORK"
+      ],
+      [
+        "ENUM_OPENMP_MUTEX"
+      ],
+      [
+        "ENUM_OPENMP_TASK_FLAG"
+      ],
+      [
+        "ENUM_OPENMP_TASK_STATUS"
+      ],
+      [
+        "ENUM_SLI_TRANSER"
+      ],
+      [
+        "ENUM_DXGI_FORMAT"
+      ],
+      [
+        "ENUM_NVDRIVER_EVENT_ID"
+      ],
+      [
+        "ENUM_WDDM_PAGING_QUEUE_TYPE"
+      ],
+      [
+        "ENUM_WDDM_PACKET_TYPE"
+      ],
+      [
+        "ENUM_WDDM_ENGINE_TYPE"
+      ],
+      [
+        "ENUM_WDDM_INTERRUPT_TYPE"
+      ],
+      [
+        "ENUM_WDDM_VIDMM_OP_TYPE"
+      ],
+      [
+        "ENUM_NET_LINK_TYPE"
+      ],
+      [
+        "ENUM_NET_DEVICE_ID"
+      ],
+      [
+        "ENUM_NET_VENDOR_ID"
+      ],
+      [
+        "ENUM_ETW_MEMORY_TRANSFER_TYPE"
+      ],
+      [
+        "ENUM_PMU_EVENT_SOURCE"
+      ],
+      [
+        "ENUM_PMU_UNIT_TYPE"
+      ],
+      [
+        "ENUM_VIDEO_ENGINE_TYPE"
+      ],
+      [
+        "ENUM_VIDEO_ENGINE_CODEC"
+      ],
+      [
+        "ENUM_DIAGNOSTIC_SEVERITY_LEVEL"
+      ],
+      [
+        "ENUM_DIAGNOSTIC_SOURCE_TYPE"
+      ],
+      [
+        "ENUM_DIAGNOSTIC_TIMESTAMP_SOURCE"
+      ],
+      [
+        "ENUM_NET_IB_DEVICE_TYPE"
+      ],
+      [
+        "META_DATA_CAPTURE"
+      ],
+      [
+        "META_DATA_EXPORT"
+      ]
+    ]
+  },
+  "checks": [
+    {
+      "mode": "single",
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/qoco-rhs-scaling-input-500.json",
+        "--quiet",
+        "--output",
+        "build/performance/scvx-gather-v82-launch-single.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "{\"case\":\"scvx_gather_launch\",\"grid_x\":1,\"grid_y\":1,\"grid_z\":1,\"block_x\":256,\"status\":0}\n{\"case\":\"scvx_gather_launch\",\"grid_x\":1,\"grid_y\":1,\"grid_z\":1,\"block_x\":256,\"status\":0}\n",
+      "launches": [
+        {
+          "case": "scvx_gather_launch",
+          "grid_x": 1,
+          "grid_y": 1,
+          "grid_z": 1,
+          "block_x": 256,
+          "status": 0
+        },
+        {
+          "case": "scvx_gather_launch",
+          "grid_x": 1,
+          "grid_y": 1,
+          "grid_z": 1,
+          "block_x": 256,
+          "status": 0
+        }
+      ],
+      "summary": {
+        "objective": 0.512975691290699,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 34,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.624065651838565e-06,
+        "propellant_used": 14.15812907962345,
+        "final_mass": 1985.8418709203766,
+        "terminal_position_error": 1.489155465606018e-10,
+        "terminal_velocity_error": 7.41098848955346e-11
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 6.601812447479528e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 7.410988489553461e-13,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 7.410988489553461e-13,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      }
+    },
+    {
+      "mode": "multi",
+      "command": [
+        "/home/angus/build-spacepdhcg-ruiz-v77/final/spacepdhcg_plan",
+        "artifacts/performance/qoco-rhs-scaling-input-500.json",
+        "--quiet",
+        "--output",
+        "build/performance/scvx-gather-v82-launch-multi.json"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "{\"case\":\"scvx_gather_launch\",\"grid_x\":28,\"grid_y\":1,\"grid_z\":1,\"block_x\":256,\"status\":0}\n{\"case\":\"scvx_gather_launch\",\"grid_x\":28,\"grid_y\":1,\"grid_z\":1,\"block_x\":256,\"status\":0}\n",
+      "launches": [
+        {
+          "case": "scvx_gather_launch",
+          "grid_x": 28,
+          "grid_y": 1,
+          "grid_z": 1,
+          "block_x": 256,
+          "status": 0
+        },
+        {
+          "case": "scvx_gather_launch",
+          "grid_x": 28,
+          "grid_y": 1,
+          "grid_z": 1,
+          "block_x": 256,
+          "status": 0
+        }
+      ],
+      "summary": {
+        "objective": 0.512975691290699,
+        "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+        "outer_iterations": 2,
+        "accepted_steps": 2,
+        "rejected_steps": 0,
+        "resolved_steps": 0,
+        "inner_iterations": 34,
+        "final_trust_radius": 1,
+        "trajectory_step": 8.624065652831705e-06,
+        "propellant_used": 14.15812907962345,
+        "final_mass": 1985.8418709203766,
+        "terminal_position_error": 1.489155465606018e-10,
+        "terminal_velocity_error": 7.410816404984644e-11
+      },
+      "certificate": {
+        "certified": true,
+        "tolerance": 1e-06,
+        "replay_parity_tolerance": 1e-09,
+        "gates": {
+          "solver_api_success": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "converged": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "canonical_residual": {
+            "passed": true,
+            "value": 6.601812373481332e-13,
+            "limit": 1e-06
+          },
+          "device_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "device_terminal_residual": {
+            "passed": true,
+            "value": 7.410816404984643e-13,
+            "limit": 1e-06
+          },
+          "virtual_control": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_replay_parity": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-09
+          },
+          "independent_dynamics_defect": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_path_violation": {
+            "passed": true,
+            "value": 0,
+            "limit": 1e-06
+          },
+          "independent_terminal_residual": {
+            "passed": true,
+            "value": 7.410816404984643e-13,
+            "limit": 1e-06
+          },
+          "no_hidden_cpu_fallback": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "steady_state_residency": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          },
+          "coefficient_parity": {
+            "passed": true,
+            "value": 1.734723475976807e-18,
+            "limit": 5e-12
+          },
+          "independent_replay_evaluated": {
+            "passed": true,
+            "value": 0,
+            "limit": 0
+          }
+        },
+        "failed_gates": [],
+        "continuous_time_violation": 0,
+        "continuous_time_within_tolerance": true,
+        "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated"
+      }
+    }
+  ]
+}

@@ -22,6 +22,7 @@ import os
 import shutil
 import subprocess
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -54,19 +55,32 @@ def _stumpff(z: FloatArray) -> tuple[FloatArray, FloatArray]:
     return c, s
 
 
-def _residual(z, r1, r2, a_geom, tof, mu):
+@lru_cache(maxsize=8)
+def _scan_grid(scan_samples: int) -> tuple[FloatArray, FloatArray, FloatArray]:
+    """Read-only universal grid shared across batches; no trajectory data is cached."""
+    lower = -4.0 * _PI * _PI
+    upper = 4.0 * _PI * _PI - 1e-8
+    grid = lower + (upper - lower) * np.arange(scan_samples + 1) / scan_samples
+    c, s = _stumpff(grid[None, :])
+    for array in (grid, c, s):
+        array.setflags(write=False)
+    return grid, c, s
+
+
+def _residual(z, r1, r2, a_geom, tof, mu, *, stumpff=None):
     """Universal-variable time residual; NaN where the evaluation is invalid (C<=0 or y<0)."""
 
     z, r1, r2, a_geom, tof = (
-        np.ascontiguousarray(item, dtype=np.float64)
-        for item in np.broadcast_arrays(z, r1, r2, a_geom, tof)
+        np.asarray(item, dtype=np.float64) for item in (z, r1, r2, a_geom, tof)
     )
-    c, s = _stumpff(z)
+    # Keep singleton dimensions: materializing broadcast inputs repeats the same
+    # transcendental evaluations and creates five transfer-by-grid-size copies.
+    c, s = _stumpff(z) if stumpff is None else stumpff
     with np.errstate(invalid="ignore", divide="ignore"):
         valid = np.isfinite(c) & np.isfinite(s) & (c > 0.0)
         root_c = np.sqrt(np.where(valid, c, 1.0))
         y = r1 + r2 + a_geom * (z * s - 1.0) / root_c
-        valid &= np.isfinite(y) & (y >= 0.0)
+        valid = valid & np.isfinite(y) & (y >= 0.0)
         x = np.sqrt(np.where(valid, y, 0.0) / np.where(valid, c, 1.0))
         time = (x**3 * s + a_geom * np.sqrt(np.where(valid, y, 0.0))) / np.sqrt(mu)
         residual = np.where(valid, time - tof, np.nan)
@@ -115,9 +129,7 @@ def lambert_batch(
     a_geom = sine * np.sqrt(r1 * r2 / np.where(denominator > 1e-14, denominator, 1.0))
     feasible &= np.abs(a_geom) > 1e-14
 
-    lower_scan = -4.0 * _PI * _PI
-    upper_scan = 4.0 * _PI * _PI - 1e-8
-    grid = lower_scan + (upper_scan - lower_scan) * np.arange(scan_samples + 1) / scan_samples
+    grid, grid_c, grid_s = _scan_grid(scan_samples)
     lower = np.zeros(n)
     upper = np.zeros(n)
     bracketed = np.zeros(n, dtype=bool)
@@ -133,6 +145,7 @@ def lambert_batch(
             a_geom[idx, None],
             tof[idx, None],
             mu,
+            stumpff=(grid_c, grid_s),
         )
         # first grid point with |residual| <= tol counts as an exact root (C++ semantics)
         exact_mask = np.abs(residual) <= time_tolerance
