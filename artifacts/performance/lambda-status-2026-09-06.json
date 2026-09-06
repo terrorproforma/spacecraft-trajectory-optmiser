@@ -1,0 +1,118 @@
+{
+  "action": "Read-only check requested by user; no remote jobs or source/runtime changes.",
+  "gpu_observation_utc": "2026-09-06T01:01:33.750696+00:00",
+  "gpu": {
+    "returncode": 0,
+    "stdout": "name, utilization.gpu [%], memory.used [MiB], memory.total [MiB], temperature.gpu, power.draw [W]\nNVIDIA H100 80GB HBM3, 100 %, 1607 MiB, 81559 MiB, 43, 126.81 W\n",
+    "stderr": ""
+  },
+  "gpu_processes": {
+    "returncode": 0,
+    "stdout": "pid, process_name, used_gpu_memory [MiB]\n53183, /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test, 518 MiB\n1995306, /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test, 1074 MiB\n",
+    "stderr": ""
+  },
+  "processes": {
+    "returncode": 0,
+    "stdout": "  53138       1  1-06:06:17  0.6  0.0 /home/ubuntu/spacepdhcg/v1/.venv/bin/python scripts/gpu/run_g4_campaign.py run --claim-core --amendment /home/ubuntu/spacepdhcg/v1/benchmarks/g4_claim_core_amendment_v1_2.json --repository /home/ubuntu/spacepdhcg/v1 --campaign /home/ubuntu/spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100 --executable /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test --capabilities /home/ubuntu/g4/g4-executor-capability-1dbcae0-h100.json --host-nvidia-smi /home/ubuntu/s/host-pmon-linux.sh\n  53183   53138  1-06:06:16  0.0  0.1 /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test --g4-server 600\n1995306   53138    01:29:41  100  0.1 /home/ubuntu/spacepdhcg/v1/build-g4-cuda-release/cuda-tests/device_scvx_integration_test --g4-session /home/ubuntu/spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100/runs/g4-group-v1-b386bc307bff3e12390b82546c3b02a01623f2babdd1d96298969a1cf05a4dcb/d5afc848564345eabccdae9508d118e1/execution-group.json 9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024 50afe8ff3d96447b8fa92621ec9947b98b6e456239c345ed08af28012e83a70e 0b4c8c38a6ba34b45cdf1ee5ae72869da272df5d866801009930f2b235a6f7f5",
+    "stderr": ""
+  },
+  "campaign_observation_utc": "2026-09-06T01:02:21.983320+00:00",
+  "source_commit": "1dbcae098fd8871d4e0ac087e2306534704eff59",
+  "coordinate_states": [
+    [
+      "completed",
+      137
+    ],
+    [
+      "running",
+      1
+    ]
+  ],
+  "running_coordinate": [
+    [
+      137,
+      "2026-09-06T01:01:53.046987+00:00"
+    ]
+  ],
+  "started_coordinate_count": 138,
+  "completed_group_count": 137,
+  "attempt_dispositions": {
+    "numerical": 594,
+    "timeout": 639
+  },
+  "contaminated_attempts": 0,
+  "latest_finished": {
+    "at": "2026-09-06T01:01:53Z",
+    "attempt_dispositions": [
+      [
+        "timeout",
+        9
+      ]
+    ],
+    "censoring": {
+      "attempt_deadline_seconds": 600,
+      "group_deadline_seconds": 5460,
+      "inner_iteration_cap": 1000000,
+      "stratum": "censoring_sensitivity"
+    },
+    "contaminated_attempts": 0,
+    "deterministic_replay_applied": false,
+    "disposition": "completed_group",
+    "elapsed_seconds": 5400.415165292012,
+    "event": "group_finished",
+    "group_id": "g4-group-v1-b386bc307bff3e12390b82546c3b02a01623f2babdd1d96298969a1cf05a4dcb",
+    "ordinal": 136
+  },
+  "gtoc12_status": {
+    "mtime": 1788643194.626867,
+    "tail": "status=PASS stage=done verify_exit=0 armP=0 armC=0 joint=0 master=0 finished_utc=2026-09-05T21:19:54Z\n"
+  },
+  "fleet_master_v11": {
+    "ok": true,
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 194,
+      "ok": true,
+      "return_code": 0,
+      "ships": 23,
+      "total_mass_kg": 14047.8,
+      "wall_seconds": 0.35622994900040794
+    },
+    "independent": {
+      "max_mass_error_kg": 9.185896487906575e-11,
+      "max_position_error_km": 66.8554018025909,
+      "max_velocity_error_km_s": 4.949671007934027e-06,
+      "mined_asteroids": 194,
+      "ok": true,
+      "ship_limit": 23.017236140617964,
+      "ships": 23,
+      "total_mass_kg": 14047.802874743698,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 12805.194102488575
+    },
+    "fleet": {
+      "ships": 23,
+      "average_collected_kg": 610.7740380323186,
+      "total_collected_kg": 14047.802874743327,
+      "rule_satisfied": true
+    },
+    "master": {
+      "proven_optimal": false,
+      "gap_kg": 29.20384483320413,
+      "objective_kg": 12805.194102488209,
+      "upper_bound_kg": 12834.397947321413
+    }
+  },
+  "scope_notes": [
+    "SQLite coordinate count is started coordinates, not total preregistered campaign size.",
+    "No successful attempt disposition in the completed G4 groups. Latest observed group completed within its 5460-second deadline.",
+    "GTOC12 final fleet passes official and independent checks; some archived candidate columns fail official checks. The final fleet result is distinct.",
+    "v11 search is not proven optimal; 29.204 kg remaining bound gap refers to its weighted objective, not total collected mass."
+  ],
+  "helpers": {
+    "check_lambda_detail_20260906.py": "from pathlib import Path\nimport subprocess,json\nremote=r'''\nfrom pathlib import Path\nimport sqlite3,json,collections,datetime\nroot=Path.home();base=root/'spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100'\nout={'utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}\ndb=sqlite3.connect('file:'+str(base/'checkpoint.sqlite3')+'?mode=ro',uri=True,timeout=5)\ndb.execute('PRAGMA query_only=ON')\nout['schema']=db.execute(\"SELECT name,sql FROM sqlite_master WHERE type='table'\").fetchall()\nevents=[]\nfor line in (root/'logs/g4-h100/worker.err').read_text().splitlines():\n try: e=json.loads(line)\n except ValueError: continue\n if e.get('event')=='group_finished':events.append(e)\nout['completed_events']=len(events);out['last_finished']=events[-3:]\nout['attempt_dispositions']=dict(sum((collections.Counter(dict(e.get('attempt_dispositions',[]))) for e in events),collections.Counter()))\nout['contaminated_attempts']=sum(e.get('contaminated_attempts',0) for e in events)\nmaster=root/'spacepdhcg/gtoc12/results/gtoc12/runs/fleet_master_v11'\nfor name in ['run_report.json','official_verification.json','independent_verify.txt']:\n p=master/name\n if p.exists():out[name]=p.read_text()[:20000]\nprint(json.dumps(out,indent=2))\n'''\nrun=subprocess.run(['ssh','-i','/tmp/traj-key.pem','-o','BatchMode=yes','-o','ConnectTimeout=15',\n    'ubuntu@192.222.55.229','nice -n 10 python3 -'],input=remote,capture_output=True,text=True,timeout=60)\nPath('build/performance/lambda-detail-20260906.json').write_text(json.dumps({'returncode':run.returncode,'stdout':run.stdout,'stderr':run.stderr},indent=2)+'\\n')\nprint(run.stdout,run.stderr,flush=True)\nraise SystemExit(run.returncode)\n",
+    "check_lambda_status_20260906.py": "from pathlib import Path\nimport subprocess,json,datetime\nremote=r'''\nimport subprocess,json,datetime\nfrom pathlib import Path\nout={'utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}\nfor name,cmd in [\n ('gpu',['nvidia-smi','--query-gpu=name,utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw','--format=csv']),\n ('gpu_processes',['nvidia-smi','--query-compute-apps=pid,process_name,used_memory','--format=csv']),\n ('processes',['ps','-eo','pid,ppid,etime,pcpu,pmem,args'])]:\n r=subprocess.run(cmd,capture_output=True,text=True,timeout=15)\n text=r.stdout\n if name=='processes':text='\\n'.join(x for x in text.splitlines() if any(k in x for k in ['run_g4_campaign','--g4-server','--g4-session','gtoc12','g4-worker']))\n out[name]={'returncode':r.returncode,'stdout':text,'stderr':r.stderr}\nfor name in ['logs/gtoc12-v11-RESULT','logs/gtoc12_v11_campaign.sh.log','logs/g4-h100/worker.err','g4/STATUS.txt']:\n p=Path.home()/name\n if p.exists():\n  with p.open('rb') as f:\n   f.seek(max(0,p.stat().st_size-12000));data=f.read().decode(errors='replace')\n  out[name]={'mtime':p.stat().st_mtime,'tail':data}\nfolder=Path.home()/'spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100'\nout['campaign_files']=[{'name':p.name,'size':p.stat().st_size,'mtime':p.stat().st_mtime} for p in folder.iterdir()] if folder.exists() else []\nfor arm in ['cluster_fleet_v11_plane','cluster_fleet_v11_complement','joint_itinerary_v11','fleet_master_v11']:\n p=Path.home()/'spacepdhcg/gtoc12/results/gtoc12/runs'/arm\n out[arm]={'exists':p.exists(),'cluster_count':len(list((p/'clusters').glob('*'))) if (p/'clusters').exists() else None,\n           'files':[x.name for x in p.iterdir()] if p.exists() else []}\nprint(json.dumps(out,indent=2))\n'''\nrun=subprocess.run(['ssh','-i','/tmp/traj-key.pem','-o','BatchMode=yes','-o','ConnectTimeout=15',\n    'ubuntu@192.222.55.229','nice -n 10 python3 -'],input=remote,capture_output=True,text=True,timeout=60)\nreport={'command':'read-only Lambda GPU/process/campaign status','returncode':run.returncode,'stdout':run.stdout,'stderr':run.stderr}\nout=Path('build/performance/lambda-status-20260906.json');out.write_text(json.dumps(report,indent=2)+'\\n')\nprint(run.stdout,run.stderr,flush=True)\nraise SystemExit(run.returncode)\n",
+    "check_lambda_summary_20260906.py": "from pathlib import Path\nimport subprocess,json\nremote=r'''\nfrom pathlib import Path\nimport sqlite3,json,datetime,subprocess\nroot=Path.home();base=root/'spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100'\ndb=sqlite3.connect('file:'+str(base/'checkpoint.sqlite3')+'?mode=ro',uri=True,timeout=5)\ndb.execute('PRAGMA query_only=ON')\nout={'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),\n     'states':db.execute('SELECT state,COUNT(*) FROM coordinates GROUP BY state').fetchall(),\n     'running':db.execute(\"SELECT ordinal,updated_at FROM coordinates WHERE state='running'\").fetchall(),\n     'total':db.execute('SELECT COUNT(*) FROM coordinates').fetchone()[0]}\nreport=json.loads((root/'spacepdhcg/gtoc12/results/gtoc12/runs/fleet_master_v11/run_report.json').read_text())\nbest=report['best']\nout['fleet_master_v11']={'ok':best['ok'],'official':best['official'],'independent':best['independent'],\n 'fleet':{k:best['fleet'][k] for k in ['ships','average_collected_kg','total_collected_kg','rule_satisfied']},\n 'master':{k:best['master'][k] for k in ['proven_optimal','gap_kg','objective_kg','upper_bound_kg']}}\nout['git_head']=subprocess.check_output(['git','-C',str(root/'spacepdhcg/v1'),'rev-parse','HEAD'],text=True).strip()\nprint(json.dumps(out,indent=2))\n'''\nrun=subprocess.run(['ssh','-i','/tmp/traj-key.pem','-o','BatchMode=yes','-o','ConnectTimeout=15',\n    'ubuntu@192.222.55.229','nice -n 10 python3 -'],input=remote,capture_output=True,text=True,timeout=60)\nPath('build/performance/lambda-summary-20260906.json').write_text(json.dumps({'returncode':run.returncode,'stdout':run.stdout,'stderr':run.stderr},indent=2)+'\\n')\nprint(run.stdout,run.stderr,flush=True)\nraise SystemExit(run.returncode)\n"
+  }
+}
