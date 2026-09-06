@@ -1,0 +1,54 @@
+[
+  {
+    "command": [
+      "c++",
+      "-std=c++20",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-Werror",
+      "-Icpp/include",
+      "cpp/tests/planner_c_api_smoke.cpp",
+      "cpp/src/c_api.cpp",
+      "-o",
+      "/home/angus/build-spacepdhcg-ci-portability-20260906/planner_c_api_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/home/angus/build-spacepdhcg-ci-portability-20260906/planner_c_api_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "{\"case\":\"planner_c_api_smoke\",\"status\":\"ok\"}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "c++",
+      "-std=c++20",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-Werror",
+      "-Icpp/include",
+      "cpp/tests/orbitweaver_g7_c_api_smoke.cpp",
+      "cpp/src/c_api.cpp",
+      "-o",
+      "/home/angus/build-spacepdhcg-ci-portability-20260906/orbitweaver_g7_c_api_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/home/angus/build-spacepdhcg-ci-portability-20260906/orbitweaver_g7_c_api_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]
