@@ -105,7 +105,8 @@ void run_case(int outputs) {
     // Exercise every combination of canonical errors and an upstream scale error.
     // A mutation at the topology grid-stride tail must reach the consumer too.
     std::vector<int> topology_values(131073, 7);
-    int* topology_device{}; check(cudaMalloc(&topology_device, topology_values.size()*sizeof(int)));
+    int *topology_device{}, *producer_device{}; check(cudaMalloc(&topology_device, topology_values.size()*sizeof(int)));
+    check(cudaMalloc(&producer_device,sizeof(int)));
     check(cudaMemcpyAsync(topology_device,topology_values.data(),topology_values.size()*sizeof(int),cudaMemcpyHostToDevice,stream));
     QocoTopologyInput topology_host{}, topology_input{};
     topology_host.counts[5]=topology_input.counts[5]=static_cast<int>(topology_values.size());
@@ -122,17 +123,21 @@ void run_case(int outputs) {
     check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeThreadLocal));
     check(qoco_gpu_topology_validate_device(topology,topology_input,stream,&topology_flag));
     check(qoco_gpu_conversion_run_device(conversion,input,topology_flag,stream,&flags));
+    check(qoco_gpu_conversion_include_producer(conversion,producer_device,stream));
     check(qoco_gpu_conversion_guard_numeric(conversion,numeric_device,stream,&guarded));
     consume_guard<<<1,1,0,stream>>>(flags,guarded,consumer_device); check(cudaGetLastError());
     check(cudaStreamEndCapture(stream,&graph));
     check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
-    for (int numeric_invalid=0;numeric_invalid<2;++numeric_invalid) for (int mask=0;mask<16;++mask) {
+    for (int numeric_invalid=0;numeric_invalid<2;++numeric_invalid) for (int mask=0;mask<32;++mask) {
         set(4,1,(mask&1) ? 0 : -inf);
         set(2,3,(mask&2) ? std::numeric_limits<double>::quiet_NaN() : 4);
         set(0,2,(mask&4) ? 3.001 : 3);
         topology_values.back()=(mask&8) ? -1 : 7;
         check(cudaMemcpyAsync(topology_device+topology_values.size()-1,&topology_values.back(),sizeof(int),cudaMemcpyHostToDevice,stream));
         numeric_host[8]=numeric_invalid;
+        // Any nonzero producer flag rejects, including negative flag values.
+        const int producer=(mask&16) ? (numeric_invalid ? -7 : 3) : 0;
+        check(cudaMemcpyAsync(producer_device,&producer,sizeof(int),cudaMemcpyHostToDevice,stream));
         check(cudaMemcpyAsync(numeric_device,numeric_host,sizeof(numeric_host),cudaMemcpyHostToDevice,stream));
         check(cudaGraphLaunch(executable,stream));
         check(cudaMemcpyAsync(observed,consumer_device,sizeof(observed),cudaMemcpyDeviceToHost,stream));
@@ -153,7 +158,7 @@ void run_case(int outputs) {
     check(cudaStreamSynchronize(stream));
     check(cudaGraphExecDestroy(executable)); check(cudaGraphDestroy(graph));
     qoco_gpu_topology_destroy(topology);
-    check(cudaFree(topology_device)); check(cudaFree(numeric_device)); check(cudaFree(consumer_device));
+    check(cudaFree(topology_device)); check(cudaFree(producer_device)); check(cudaFree(numeric_device)); check(cudaFree(consumer_device));
     const auto after = qoco_gpu_conversion_memory(conversion);
     require(before.allocations == after.allocations && before.bytes == after.bytes && before.peak_bytes == after.peak_bytes,
         "numeric conversion must not allocate");
@@ -169,5 +174,5 @@ void run_case(int outputs) {
 int main() {
     run_case(0); run_case(7); run_case(131075);
     std::puts("GPU conversion: independent arithmetic, bounds, symmetry, nonfinite rejection, stream ordering and retained buffers PASS");
-    std::puts("Captured topology/conversion/guard/consumer: 96 combined-error cases, exact scale preservation, no internal downloads PASS");
+    std::puts("Captured topology/conversion/producer/guard/consumer: 192 combined-error cases, exact scale preservation, no internal downloads PASS");
 }

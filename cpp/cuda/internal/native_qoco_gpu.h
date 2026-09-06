@@ -109,6 +109,9 @@ cudaError_t qoco_gpu_conversion_run(QocoGpuConversion*, const QocoConversionInpu
 cudaError_t qoco_gpu_conversion_run_device(QocoGpuConversion*, const QocoConversionInputs&,
     const int* topology_mismatch, cudaStream_t, const int** invalid);
 cudaError_t qoco_gpu_conversion_download_flags_async(QocoGpuConversion*, cudaStream_t, int*);
+// Combine a same-stream producer's nonzero invalid flag as bit 16. Queue after
+// conversion validation, before numeric guarding; no download or wait.
+cudaError_t qoco_gpu_conversion_include_producer(QocoGpuConversion*, const int*, cudaStream_t);
 // Copy QOCO's borrowed nine-double scale report into retained conversion storage,
 // combining its invalid flag with canonical validation before guarded replay.
 cudaError_t qoco_gpu_conversion_guard_numeric(QocoGpuConversion*, const double* numeric_result,

@@ -522,8 +522,8 @@ struct QocoGpuConversion {
 };
 
 namespace {
-__global__ void combine_validation(const int* topology,int* flags) {
-    if (*topology) *flags |= 8;
+__global__ void combine_validation(const int* input,int* flags,int bit) {
+    if (*input) *flags |= bit;
 }
 __global__ void guard_numeric_result(const double* input,const int* flags,double* output) {
     for (int i=0;i<9;++i) output[i]=input[i];
@@ -635,7 +635,7 @@ cudaError_t qoco_gpu_conversion_run_device(QocoGpuConversion* w, const QocoConve
             conversion_symmetry<<<std::min(256, (w->plan.symmetry_pairs - 1) / 256 + 1), 256, 0, stream>>>(w->plan, in.arrays[0], w->invalid.data);
         if (w->plan.outputs)
             conversion_gather<<<std::min(256, (w->plan.outputs - 1) / 256 + 1), 256, 0, stream>>>(w->plan, in, w->values.data, w->invalid.data);
-        if (topology) combine_validation<<<1,1,0,stream>>>(topology,w->invalid.data);
+        if (topology) combine_validation<<<1,1,0,stream>>>(topology,w->invalid.data,8);
         check(cudaGetLastError());
         *invalid=w->invalid.data;
         return cudaSuccess;
@@ -646,6 +646,11 @@ cudaError_t qoco_gpu_conversion_download_flags_async(QocoGpuConversion* w,cudaSt
     auto status=cudaMemcpyAsync(output,w->invalid.data,sizeof(int),cudaMemcpyDeviceToHost,stream);
     if (status==cudaSuccess) { ++w->transfers.d2h_count; w->transfers.d2h_bytes+=sizeof(int); }
     return status;
+}
+cudaError_t qoco_gpu_conversion_include_producer(QocoGpuConversion* w,const int* input,cudaStream_t stream) {
+    if (!w || !input) return cudaErrorInvalidValue;
+    combine_validation<<<1,1,0,stream>>>(input,w->invalid.data,16);
+    return cudaGetLastError();
 }
 cudaError_t qoco_gpu_conversion_guard_numeric(QocoGpuConversion* w,const double* input,
     cudaStream_t stream,const double** output) {
