@@ -24,6 +24,12 @@ def _scvx_settings(args: argparse.Namespace):
     assembly = getattr(args, "assembly_backend", "numpy")
     solver = getattr(args, "convex_solver_backend", "clarabel")
     ruiz = getattr(args, "qoco_ruiz_iterations", 0)
+    outer = getattr(args, "outer_loop_backend", "python")
+    seed = getattr(args, "seed_backend", "auto")
+    if seed == "cuda" and outer != "cuda":
+        raise ValueError("CUDA seed requires --outer-loop-backend cuda")
+    if outer == "cuda" and (solver != "qoco" or assembly != "cuda" or backend != "cuda"):
+        raise ValueError("CUDA outer loop requires CUDA dynamics, CUDA assembly and QOCO")
     if solver == "qoco" and (assembly != "cuda" or backend != "cuda"):
         raise ValueError("GPU QOCO requires --assembly-backend cuda --discretisation-backend cuda")
     if not 0 <= ruiz <= 100:
@@ -48,6 +54,8 @@ def _scvx_settings(args: argparse.Namespace):
         assembly_backend=assembly,
         convex_solver_backend=solver,
         qoco_ruiz_iterations=ruiz,
+        outer_loop_backend=outer,
+        seed_backend=seed,
     )
 
 
@@ -59,6 +67,8 @@ def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
         "convex_solver_backend": "gpu_qoco"
         if getattr(args, "convex_solver_backend", "clarabel") == "qoco" else "cpu_clarabel",
         "qoco_ruiz_iterations_requested": getattr(args, "qoco_ruiz_iterations", 0),
+        "outer_loop_backend_requested": getattr(args, "outer_loop_backend", "python"),
+        "seed_backend_requested": getattr(args, "seed_backend", "auto"),
         # A selected backend is not evidence that a search actually reached
         # refinement. Completed leg summaries record their actual backend.
         "cpu_only": True if backend == "numpy" else None,
@@ -2129,6 +2139,11 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
             help="conic solver; experimental GPU QOCO requires both CUDA backends",
         )
         refinement.add_argument("--qoco-ruiz-iterations", type=int, default=0)
+        refinement.add_argument(
+            "--outer-loop-backend", choices=("python", "cuda"), default="python",
+            help="CUDA retains SCvx trajectories and numerical decisions on GPU",
+        )
+        refinement.add_argument("--seed-backend", choices=("auto", "numpy", "cuda"), default="auto")
         refinement.add_argument(
             "--assembly-backend", choices=("numpy", "cuda"), default="numpy",
             help="conic assembly backend; CUDA requires CUDA discretisation",

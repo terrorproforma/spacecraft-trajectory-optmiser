@@ -272,6 +272,11 @@ class RefinedRoute:
                     if leg.solution is None or leg.solution.iterations == 0
                     else leg.solution.convex_solver_backend,
                     "conic_reports": [] if leg.solution is None else leg.solution.solver_reports,
+                    "outer_loop_backend": None
+                    if leg.solution is None else leg.solution.outer_loop_backend,
+                    "seed_backend": None if leg.solution is None else leg.solution.seed_backend,
+                    "outer_transfer_bytes": {}
+                    if leg.solution is None else leg.solution.outer_transfer_bytes,
                     "position_error_km": None
                     if leg.certificate is None
                     else leg.certificate.position_error_km,
