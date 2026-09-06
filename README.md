@@ -146,6 +146,11 @@ Experimental core v135 extends device step counts through conic assembly and
 candidate propagation. Outer command downloads shrink to eight bytes per
 attempt plus eight initial bytes, with all 36 complete transfers retaining the
 same physics/mass gates. The 357 ms median establishes no additional speedup.
+The unmerged v136 candidate separates GPU submission from report collection,
+letting SCvx queue reference refresh before waiting. Its 36 complete transfers
+qualified (323 ms median), but the broad suite recorded 327 passes and one
+coast qualification failure. A regression is not ruled out, so this candidate
+is not promoted to main. See [deferred reports and v136 evidence](docs/GTOC12_DEFERRED_REPORTS.md).
 The existing visualiser now displays these synthetic solver benchmarks in a
 separate GPU solver progress panel; the fleet score remains unchanged.
 

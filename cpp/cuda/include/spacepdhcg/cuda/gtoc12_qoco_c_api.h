@@ -76,6 +76,25 @@ int spacepdhcg_gtoc12_qoco_solve_controlled_device_with_consumer(spacepdhcg_gtoc
     const spacepdhcg_gtoc12_conic_parameters*, const int* device_substeps, void* stream,
     spacepdhcg_gtoc12_qoco_report*, spacepdhcg_gtoc12_qoco_consumer,
     void* context, int* consumed);
+/* Deferred cold replay after synchronous workspace/graph/numeric priming.
+ * can_enqueue returns a host readiness hint (0/1). Successful enqueue (0)
+ * queues assembly, numeric update, IPM, audit, qualification and the required
+ * consumer without report downloads or a wait. It does NOT mean qualified.
+ * Device validation/numeric replay/IPM graph options must be enabled; verbose
+ * and CPU comparison modes are ineligible. Unsupported readiness returns 5.
+ * Inputs must live through finish; consumer outputs are borrowed until reuse.
+ * One pending solve per instance; solve/enqueue cannot overwrite pending work.
+ * Finish on the same host thread/device/stream applies the unchanged report
+ * gates and returns the ordinary solve status. Destruction drains pending work.
+ * Not graph-capturable; error exits may drain partially submitted work.
+ */
+int spacepdhcg_gtoc12_qoco_can_enqueue(spacepdhcg_gtoc12_qoco*);
+int spacepdhcg_gtoc12_qoco_enqueue_controlled(spacepdhcg_gtoc12_qoco*,
+    const double* states, const double* controls,
+    const spacepdhcg_gtoc12_conic_parameters*, const int* device_substeps, void* stream,
+    spacepdhcg_gtoc12_qoco_consumer, void* context);
+int spacepdhcg_gtoc12_qoco_finish(spacepdhcg_gtoc12_qoco*, void* stream,
+    spacepdhcg_gtoc12_qoco_report*);
 /* Upload states/controls/parameters and download ONLY qualified primal output.
  * Host primal[variables] is untouched on unqualified solves. Report counters
  * describe the existing native adapter, excluding this bridge and opaque

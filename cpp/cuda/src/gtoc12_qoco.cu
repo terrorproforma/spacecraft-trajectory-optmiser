@@ -10,6 +10,7 @@
 #include <limits>
 #include <new>
 #include <type_traits>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -120,7 +121,9 @@ struct spacepdhcg_gtoc12_qoco {
     int intervals{},device{},ruiz{},count{};
     int scalar_rows{},affine_rows{};
     double tolerance{};
-    cudaStream_t stream{};
+    cudaStream_t stream{},pending_stream{};
+    bool pending{};
+    std::thread::id pending_owner{};
 };
 
 namespace {
@@ -302,7 +305,7 @@ extern "C" int spacepdhcg_gtoc12_qoco_primal(spacepdhcg_gtoc12_qoco* w,const dou
 static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
     const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
     int substeps,void* stream_pointer,spacepdhcg_gtoc12_qoco_report* report,
-    spacepdhcg_gtoc12_qoco_consumer consumer, void* context, int* consumed,const int* device_substeps) {
+    spacepdhcg_gtoc12_qoco_consumer consumer, void* context, int* consumed,const int* device_substeps,bool defer=false) {
     if (!consumed) return 1;
     *consumed=0;
     if (!report) return 1;
@@ -312,15 +315,21 @@ static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
     report->primal_objective=report->dual_objective=std::numeric_limits<double>::quiet_NaN();
     report->absolute_gap=report->relative_gap=std::numeric_limits<double>::infinity();
     if (!correct_device(w) || !states || !controls || !parameters || (!device_substeps && substeps<1)) return 1;
+    if (w->pending) return 1;
+    if (defer && (!consumer || !device_substeps || !spacepdhcg_native_qoco_can_enqueue(w->solver))) return 5;
     report->requested_tolerance=w->tolerance;
     auto stream=static_cast<cudaStream_t>(stream_pointer);
+    if (defer) {
+        cudaStreamCaptureStatus capture{};
+        if (cudaStreamIsCapturing(stream,&capture)!=cudaSuccess || capture!=cudaStreamCaptureStatusNone) return 1;
+    }
     const int assembled=device_substeps
         ? spacepdhcg_gtoc12_conic_launch_controlled_device(w->conic,states,controls,parameters,device_substeps,nullptr,stream)
         : spacepdhcg_gtoc12_conic_launch_device(w->conic,states,controls,parameters,substeps,stream);
     if (assembled) { cudaStreamSynchronize(stream); return assembled; }
     const auto* flag=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION");
     const bool guarded=w->solver && flag && flag[0]=='1';
-    if (!guarded) {
+    if (!guarded && !defer) {
         // First setup still consumes host matrices. Later guarded calls combine
         // this producer flag with canonical validation before numerical replay.
         int invalid=0;
@@ -345,7 +354,10 @@ static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
         if (created!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(created); }
     }
     Consumer callback{w,consumer,context,consumed};
-    const auto solved=guarded
+    const auto solved=defer
+        ? spacepdhcg_native_qoco_enqueue(w->solver,&w->problem,stream,w->primal,w->dual,
+            consume_audit,&callback,w->output.invalid)
+        : guarded
         ? spacepdhcg_native_qoco_update_solve_with_input_guard(w->solver,&w->problem,stream,
             w->primal,w->dual,&w->native_report,consumer ? consume_audit : nullptr,&callback,w->output.invalid)
         : consumer
@@ -353,6 +365,12 @@ static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
             w->primal,w->dual,&w->native_report,consume_audit,&callback)
         : spacepdhcg_native_qoco_update_solve(w->solver,&w->problem,stream,
             SPACEPDHCG_CUDA_WARM_START_NONE,w->primal,w->dual,&w->native_report);
+    if (defer) {
+        if (solved!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(solved); }
+        w->pending=true; w->pending_stream=stream;
+        w->pending_owner=std::this_thread::get_id();
+        return 0;
+    }
     report_result(w,report);
     if (guarded && std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION_TRACE"))
         std::fprintf(stderr,"GTOC12_ASSEMBLY_VALIDATION queued=%d invalid=%d\n",
@@ -392,6 +410,51 @@ static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
         && std::isfinite(objective[3]) && objective[3]<=w->tolerance;
     return report->qualified ? 0 : 4;
 }
+extern "C" int spacepdhcg_gtoc12_qoco_can_enqueue(spacepdhcg_gtoc12_qoco* w) {
+    return correct_device(w) && !w->pending && spacepdhcg_native_qoco_can_enqueue(w->solver);
+}
+extern "C" int spacepdhcg_gtoc12_qoco_enqueue_controlled(spacepdhcg_gtoc12_qoco* w,
+    const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
+    const int* substeps,void* stream,spacepdhcg_gtoc12_qoco_consumer consumer,void* context) {
+    spacepdhcg_gtoc12_qoco_report unused{}; int consumed=0;
+    return solve_device_with_consumer_impl(w,states,controls,parameters,0,stream,&unused,
+        consumer,context,&consumed,substeps,true);
+}
+extern "C" int spacepdhcg_gtoc12_qoco_finish(spacepdhcg_gtoc12_qoco* w,
+    void* stream_pointer,spacepdhcg_gtoc12_qoco_report* report) {
+    if (!report) return 1;
+    *report={}; report->qoco_status=-1;
+    report->primal_residual=report->dual_residual=std::numeric_limits<double>::infinity();
+    report->absolute_primal_residual=report->absolute_dual_residual=std::numeric_limits<double>::infinity();
+    report->primal_objective=report->dual_objective=std::numeric_limits<double>::quiet_NaN();
+    report->absolute_gap=report->relative_gap=std::numeric_limits<double>::infinity();
+    auto stream=static_cast<cudaStream_t>(stream_pointer);
+    if (!correct_device(w) || !w->pending || stream!=w->pending_stream
+        || w->pending_owner!=std::this_thread::get_id()) return 1;
+    report->requested_tolerance=w->tolerance;
+    double objective[4]{}; int qualified=0;
+    const auto copied=cudaMemcpyAsync(objective,w->objective_result,sizeof(objective),cudaMemcpyDeviceToHost,stream);
+    const auto copied_gate=cudaMemcpyAsync(&qualified,&w->device_report->qualified,sizeof(int),cudaMemcpyDeviceToHost,stream);
+    const auto solved=spacepdhcg_native_qoco_finish(w->solver,stream,&w->native_report);
+    // Finish drains even on solver failure; a rejected ownership call must not
+    // let these stack destinations expire while a transfer is outstanding.
+    if (solved==SPACEPDHCG_CUDA_INVALID_STATE || copied!=cudaSuccess || copied_gate!=cudaSuccess) {
+        cudaStreamSynchronize(stream);
+        if (solved!=SPACEPDHCG_CUDA_INVALID_STATE) w->pending=false;
+        return 2;
+    }
+    w->pending=false;
+    report_result(w,report);
+    if (solved!=SPACEPDHCG_CUDA_SUCCESS) {
+        report->primal_residual=report->dual_residual=std::numeric_limits<double>::infinity();
+        report->absolute_primal_residual=report->absolute_dual_residual=std::numeric_limits<double>::infinity();
+        return w->native_report.producer_invalid ? 3 : status_code(solved);
+    }
+    report->qualified=qualified;
+    report->primal_objective=objective[0]; report->dual_objective=objective[1];
+    report->absolute_gap=objective[2]; report->relative_gap=objective[3];
+    return report->qualified ? 0 : 4;
+}
 extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc12_qoco* w,
     const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
     int substeps,void* stream,spacepdhcg_gtoc12_qoco_report* report,
@@ -420,7 +483,7 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_host(spacepdhcg_gtoc12_qoco* w,
     report->absolute_primal_residual=report->absolute_dual_residual=std::numeric_limits<double>::infinity();
     report->primal_objective=report->dual_objective=std::numeric_limits<double>::quiet_NaN();
     report->absolute_gap=report->relative_gap=std::numeric_limits<double>::infinity();
-    if (!correct_device(w) || !states || !controls || !parameters || !primal || substeps<1) return 1;
+    if (!correct_device(w) || w->pending || !states || !controls || !parameters || !primal || substeps<1) return 1;
     const auto failed=[&](int code) { cudaStreamSynchronize(w->stream); return code; };
     const size_t n=w->intervals+1;
     if (!upload(w->states,states,n*7,w->stream) || !upload(w->controls,controls,n*4,w->stream)

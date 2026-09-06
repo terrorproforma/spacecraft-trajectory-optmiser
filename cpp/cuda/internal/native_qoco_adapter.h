@@ -115,3 +115,20 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
     bool retain_primal
 );
 void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace);
+
+// Split cold replay. Requires a successfully primed device numeric/replay
+// workspace and device validation, with comparison/verbose modes disabled.
+// can_enqueue is a host readiness check; a stale vendor graph may still reject
+// submission. Enqueue success means submission only, never qualification.
+// No successful enqueue downloads or waits. Error exits may drain partial work.
+// One pending solve per instance: no solve/accept/reset until finish. Borrowed
+// inputs/outputs must remain alive; consumers run on the submission stream.
+// Finish on the same host thread/device/stream collects the original audit and
+// applies unchanged status gates. Destruction drains pending work. Not capturable.
+bool spacepdhcg_native_qoco_can_enqueue(const spacepdhcg_native_qoco*);
+spacepdhcg_cuda_status spacepdhcg_native_qoco_enqueue(
+    spacepdhcg_native_qoco*, const spacepdhcg_cuda_scvx_problem*, cudaStream_t,
+    double* device_primal, double* device_dual, spacepdhcg_native_qoco_consumer,
+    void* context, const int* producer_invalid);
+spacepdhcg_cuda_status spacepdhcg_native_qoco_finish(
+    spacepdhcg_native_qoco*, cudaStream_t, spacepdhcg_native_qoco_report*);
