@@ -24,6 +24,11 @@ struct Matrix {
     double* values{};
 };
 inline Matrix matrix(QOCOMatrix* m) {
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    // Compatibility transposes are refreshed only on explicit access. Do not
+    // capture their optional payload in the numerical-update context.
+    if (m && m->transpose_source) return {};
+#endif
     if (!m || !m->d_csc_host) return {};
     const auto* c = m->d_csc_host;
     const auto* g = m->gather;
@@ -210,6 +215,10 @@ __global__ void copy_cone_starts(const int* input, int count, int m, int* output
 inline void compare_setup_maps(Context* w, QOCOProblemData* data) {
     const char* flag = std::getenv("SPACEPDHCG_TEST_QOCO_UPDATE_MAPS_COMPARE");
     if (!flag || flag[0] != '1') return;
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    qoco_materialize_host_mirror(data->At);
+    qoco_materialize_host_mirror(data->Gt);
+#endif
     const auto download = [](const int* ptr, int count) {
         std::vector<int> values(count);
         if (count) check(cudaMemcpy(values.data(), ptr, count * sizeof(int), cudaMemcpyDeviceToHost));
@@ -305,6 +314,10 @@ extern "C" int qoco_gpu_update_numeric(void* opaque, const double* packed, cudaS
     const double* vectors = gv + w->g.nonzeros;
     const auto scales = w->scales;
     double result[9]{};
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    for (auto* matrix : {data->At, data->Gt})
+        if (matrix && matrix->transpose_source) matrix->transpose_values_pending = 1;
+#endif
     try {
         check(cudaEventRecord(w->ready, producer)); check(cudaStreamWaitEvent(nullptr, w->ready, 0));
         load_p<<<blocks(w->p.nonzeros), 256>>>(w->p, w->p_source.data, packed);

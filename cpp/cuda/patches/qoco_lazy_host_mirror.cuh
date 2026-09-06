@@ -3,6 +3,9 @@
 // existing CPU-mode accessor before reading/writing the host representation.
 static void qoco_materialize_host_mirror(const QOCOMatrix* matrix)
 {
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    qoco_materialize_device_transpose(matrix);
+#endif
     if (!matrix->lazy_host_mirror || !matrix->host_values_pending) return;
     auto* host = matrix->csc;
     const auto* device = matrix->d_csc_host;

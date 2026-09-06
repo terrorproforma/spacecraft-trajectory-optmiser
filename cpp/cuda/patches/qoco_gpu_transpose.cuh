@@ -18,6 +18,9 @@ __global__ void qoco_transpose_entries(const QOCOCscMatrix source,
 static QOCOMatrix* qoco_make_gpu_transpose(const QOCOMatrix* source,
                                            QOCOInt* source_to_transpose, bool lazy)
 {
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    qoco_materialize_device_transpose(source);
+#endif
     const auto* input = source->d_csc_host;
     const size_t count = static_cast<size_t>(input->nnz);
     auto* result = static_cast<QOCOMatrix*>(qoco_malloc(sizeof(QOCOMatrix)));
@@ -25,6 +28,12 @@ static QOCOMatrix* qoco_make_gpu_transpose(const QOCOMatrix* source,
 #ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
     result->lazy_host_mirror = lazy;
     result->host_values_pending = lazy;
+#endif
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    result->reference_count = 1;
+    result->transpose_source = nullptr;
+    result->transpose_map = nullptr;
+    result->transpose_values_pending = 0;
 #endif
     auto* host = static_cast<QOCOCscMatrix*>(qoco_malloc(sizeof(QOCOCscMatrix)));
     auto* device = static_cast<QOCOCscMatrix*>(qoco_malloc(sizeof(QOCOCscMatrix)));

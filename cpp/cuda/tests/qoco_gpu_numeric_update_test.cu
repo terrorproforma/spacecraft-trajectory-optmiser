@@ -83,11 +83,30 @@ void run_case(int n, int iterations, bool missing_diagonal, bool unconstrained, 
         check(cudaMemcpyAsync(device + 1, packed.data(), packed.size() * sizeof(double), cudaMemcpyHostToDevice, stream));
         require(update(workspace, device + 1, stream) == 0, "device numerical update");
         auto* data = gpu->work->data; auto* scales = gpu->work->scaling;
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+        for (auto* matrix : {data->At, data->Gt}) {
+            require(matrix->transpose_source && matrix->transpose_values_pending,
+                    "GPU update invalidates deferred physical transpose");
+            auto* topology_before = matrix->d_csc_host ? matrix->d_csc_host->p : nullptr;
+            set_cpu_mode(0);
+            get_csc_matrix(matrix);
+            require(!matrix->transpose_values_pending, "device access refreshes transpose");
+            require(!topology_before || topology_before == matrix->d_csc_host->p,
+                    "materialized device topology reused across updates");
+        }
+#endif
         {
             int matrix_index = 0;
             for (const auto pair : std::initializer_list<std::pair<QOCOMatrix*, QOCOMatrix*>>{{data->P, cpu->work->data->P}, {data->A, cpu->work->data->A},
                                     {data->G, cpu->work->data->G}, {data->At, cpu->work->data->At}, {data->Gt, cpu->work->data->Gt}}) {
                 const char* labels[]{"P", "A", "G", "At", "Gt"};
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+                // Unconstrained CPU references never use their empty At/Gt.
+                // Request their physical representation before inspecting the
+                // private device descriptor, just as for the updated solver.
+                set_cpu_mode(0);
+                get_csc_matrix(pair.second);
+#endif
                 compare(download(pair.first->d_csc_host->x, pair.first->csc->nnz),
                         download(pair.second->d_csc_host->x, pair.second->csc->nnz), labels[matrix_index++]);
             }

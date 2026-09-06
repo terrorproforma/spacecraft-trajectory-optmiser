@@ -895,3 +895,22 @@ alone is not useful-solve throughput. GTOC12 v11 remains complete, with 23 ships
 194 asteroids and 14047.8 kg, passing official and independent verification.
 It is not proven optimal. Remote campaigns were left untouched.
 [Recorded observation](../artifacts/performance/lambda-status-2026-09-06-followup.json).
+
+## GPU solves no longer need physical constraint transposes
+
+The optional deferred-transpose path retains A/G and constructs physical At/Gt
+only for explicit compatibility access. GPU numerical updates invalidate these
+views instead of maintaining unused copies. Reference counts preserve sources
+through deferred chains and reconstruction. The normal landing trace now has
+24 fewer GPU allocations/frees, six fewer copies and ten fewer kernels than the
+host-lazy version.
+
+All 54 matched trajectory samples pass unchanged accuracy. SCvx medians are
+173.335 → 169.569 ms for landing, 1102.284 → 923.818 ms for N20, and 464.399 →
+473.573 ms for N500. N20's inner count changes from 206 to 166, while N500 stays
+at 34. Timing is still mixed; no general speedup or default promotion is claimed.
+Exact cache/lifetime tests, scoped sanitizers and recovery tests cover both
+materialized compatibility access and the production deferred path. An old
+test's direct access to an absent empty descriptor was corrected, with its
+failure evidence retained. The full GPU-native goal remains open.
+[Detailed evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#remove-physical-transposes-from-the-normal-gpu-solve-path).

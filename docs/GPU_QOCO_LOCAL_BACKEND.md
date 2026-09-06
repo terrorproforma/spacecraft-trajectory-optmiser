@@ -1914,3 +1914,84 @@ Frozen QOCO v74 is
 - [Construction distribution](../artifacts/performance/qoco-gpu-transpose-v74-microbenchmark.json).
 - [Landing](../artifacts/performance/qoco-gpu-kkt-v74-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v74-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v74-pd6-500.json) complete distributions.
 - [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v74-reproduction.json).
+
+## Remove physical transposes from the normal GPU solve path
+
+`--deferred-transposes` requires `--lazy-transpose-mirrors` and `--gpu-kkt`.
+The two constraint-transpose compatibility objects now retain their source
+matrices and scalar dimensions, with no GPU arrays, gather structure or host
+arrays until explicitly accessed. Production GPU matvecs, Ruiz updates and
+KKT assembly already use A/G directly. Their unused physical transposes no
+longer need construction, sorting, inverse-map downloads or value-update kernels.
+
+CPU/device CSC access and matrix products materialize a requested transpose.
+The device updater invalidates its compatibility views when source values
+change; a later access refreshes values and reuses fixed topology. Reference
+counts retain sources through source/sibling destruction and deferred chains.
+The internal view borrows its inverse-map destination from `QOCOProblemData`,
+which frees that map after its views. This is an internal solver lifecycle,
+not a general arbitrary live-view API. Existing eager constructors preserve
+their independent storage semantics. Host compatibility objects and map
+capacity still exist even when their physical transposes are unused.
+
+A qualified landing API trace, with materializing test oracles disabled,
+confirms the expected removal:
+
+| API calls | Host-lazy v74 | Device-deferred v75 |
+|---|---:|---:|
+| GPU allocations | 400 | 376 |
+| GPU frees | 309 | 285 |
+| Synchronous copies | 535 | 531 |
+| Asynchronous copies | 427 | 425 |
+| Kernel launches | 7067 | 7057 |
+| Device synchronizations | 63 | 61 |
+| Stream synchronizations | 89 | 89 |
+
+Matched full benchmarks use guarded core v72 and cuDSS 0.8 standard kernels.
+All 54 warmup/measured samples pass the unchanged physics and objective gates:
+
+| Workload | v74 SCvx median | v75 SCvx median | Inner medians |
+|---|---:|---:|---:|
+| Landing | 173.335 ms | 169.569 ms | 36 → 36 |
+| N20 6DOF | 1102.284 ms | 923.818 ms | 206 → 166 |
+| N500 6DOF | 464.399 ms | 473.573 ms | 34 → 34 |
+
+Setup medians are 32.447 → 33.914 ms for landing, 83.625 → 91.056 ms for N20
+and 127.149 → 110.651 ms for N500. The N20 solve improvement coincides with
+different inner iterations; N500's SCvx median is slower despite its lower
+setup median. These mixed results do not justify a general speedup claim or
+default promotion. The opt-in change removes demonstrably unused work; CPU
+setup statistics/regularization, host control and production replay remain.
+
+Validation covers eight eager, eight host-lazy and eight device-deferred
+transpose fixtures plus one deferred chain. Exact ordering, inverse maps,
+signed zeros, empty matrices, duplicates, absent initial payloads and source
+lifetimes are checked. Nine numerical-update cases verify invalidation,
+refresh and topology reuse against CPU updates and independent scaling
+equations. Full native, landing, N20 and N500 numerical oracles pass.
+
+The initial sanitizer attempt exposed an outdated test assumption: the test
+directly dereferenced an unused empty CPU-reference transpose's absent device
+descriptor. The KKT oracle had previously materialized it, hiding the issue.
+UBSan localized the null access to the test comparison. The test now explicitly
+requests the representation through the accessor and passes with and without
+the KKT oracle. The original failing executable and evidence are retained;
+the corrected executable has a new name. A separate host ASan attempt failed
+during CUDA allocation and is not counted as a validation pass.
+
+The 25 transpose/lifetime cases and nine corrected update cases pass all four
+CUDA sanitizer tools. Full landing passes memory/leak checking and N500 passes
+memory/init/sync, with materializing oracles disabled. Forced reconstruction
+after caller index-array and stream destruction passes normally and under all
+four tools, both with and without the KKT oracle. No new full N20 sanitizer or
+N500 racecheck is claimed. Prepared-source reproduction is exact. The manifest
+now includes all three transpose helper headers, which were missing from its
+earlier file list; each matches the untouched frozen source.
+
+Frozen QOCO v75 is
+`/home/angus/build-qoco-gpu-gpu-kkt-v75/final/libqoco.so`, SHA256
+`1f4208e21bf0441607a79d0cc5c919cb466cc18083eb393749cfb29b4aaa0dc4`.
+
+- [Checkpoint, commands, scopes, failure evidence and traces](../artifacts/performance/qoco-deferred-transposes-v75-checkpoint.json).
+- [Landing](../artifacts/performance/qoco-gpu-kkt-v75-pd3.json), [N20](../artifacts/performance/qoco-gpu-kkt-v75-pd6.json), [N500](../artifacts/performance/qoco-gpu-kkt-v75-pd6-500.json) complete timing distributions.
+- [Complete prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v75-complete-reproduction.json).

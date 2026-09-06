@@ -18,6 +18,58 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_deferred_transposes(destination: Path, extension: Path) -> None:
+    """Retain source matrices and materialize legacy transposes on demand."""
+    path = destination / "algebra/cuda/cuda_types.h"
+    text = path.read_text()
+    marker = "struct QOCOMatrix_ {"
+    if text.count(marker) != 1:
+        raise RuntimeError("unexpected deferred matrix metadata site")
+    path.write_text(text.replace(marker, "#define SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES 1\n"
+        + marker + "\n  int reference_count;\n  QOCOMatrix* transpose_source;\n"
+        "  QOCOInt* transpose_map;\n  int transpose_values_pending;"))
+    shutil.copyfile(extension, destination / "algebra/cuda/qoco_deferred_transpose.cuh")
+    path = destination / "algebra/cuda/cuda_linalg.cu"
+    text = path.read_text()
+    replacements = {
+        '#include "qoco_lazy_host_mirror.cuh"':
+            'static void qoco_materialize_device_transpose(const QOCOMatrix*);\n'
+            '#include "qoco_lazy_host_mirror.cuh"',
+        '#include "qoco_gpu_transpose.cuh"':
+            '#include "qoco_gpu_transpose.cuh"\n#include "qoco_deferred_transpose.cuh"',
+        "  M->host_values_pending = 0;":
+            "  M->host_values_pending = 0;\n  M->reference_count = 1;\n"
+            "  M->transpose_source = nullptr;\n  M->transpose_map = nullptr;\n"
+            "  M->transpose_values_pending = 0;",
+        "  qoco_gpu_free_gather(A);":
+            "  if (--A->reference_count) return;\n"
+            "  auto* retained_source = A->transpose_source;\n  qoco_gpu_free_gather(A);",
+        "  qoco_free(A);\n  CUDA_CHECK(cudaGetLastError());":
+            "  qoco_free(A);\n  free_qoco_matrix(retained_source);\n"
+            "  CUDA_CHECK(cudaGetLastError());",
+        "QOCOCscMatrix* get_csc_matrix(const QOCOMatrix* M)\n{":
+            "QOCOCscMatrix* get_csc_matrix(const QOCOMatrix* M)\n{\n"
+            "  qoco_materialize_device_transpose(M);",
+    }
+    for function in ["USpMv", "SpMv", "SpMtv"]:
+        before = f"void {function}(const QOCOMatrix* M, const QOCOFloat* v, QOCOFloat* r)\n{{"
+        replacements[before] = before + "\n  qoco_materialize_device_transpose(M);"
+    for before, after in replacements.items():
+        if text.count(before) != 1:
+            raise RuntimeError(f"unexpected deferred transpose site: {before}")
+        text = text.replace(before, after)
+    path.write_text(text)
+    path = destination / "src/qoco_api.c"
+    text = path.read_text()
+    if text.count("qoco_gpu_transpose_lazy(") != 3:
+        raise RuntimeError("unexpected deferred transpose setup sites")
+    text = text.replace("qoco_gpu_transpose_lazy(", "qoco_gpu_transpose_deferred(")
+    # The internal constructor retains its mutable source metadata.
+    text = text.replace("qoco_gpu_transpose_deferred(const QOCOMatrix*",
+                        "qoco_gpu_transpose_deferred(QOCOMatrix*")
+    path.write_text(text)
+
+
 def patch_lazy_transpose_mirrors(destination: Path, extension: Path) -> None:
     """Materialize transpose host arrays only through an explicit CPU access."""
     path = destination / "algebra/cuda/cuda_types.h"
@@ -706,6 +758,8 @@ def main() -> None:
                         help="construct constraint transposes and their update maps on CUDA")
     parser.add_argument("--lazy-transpose-mirrors", action="store_true",
                         help="defer transpose host copies and skip unchanged mirror uploads")
+    parser.add_argument("--deferred-transposes", action="store_true",
+                        help="materialize compatibility transposes only on explicit access")
     parser.add_argument("--vector-arena", action="store_true",
                         help="experimental GPU scratch-vector arena (not qualified for promotion)")
     parser.add_argument("--restore-inaccurate-best", action="store_true",
@@ -770,6 +824,7 @@ def main() -> None:
         or args.gpu_kkt
         or args.gpu_transposes
         or args.lazy_transpose_mirrors
+        or args.deferred_transposes
         or args.vector_arena
         or args.restore_inaccurate_best
         or args.checked_cudss_abi
@@ -800,6 +855,8 @@ def main() -> None:
         parser.error("--gpu-transposes requires --gather")
     if args.lazy_transpose_mirrors and not args.gpu_transposes:
         parser.error("--lazy-transpose-mirrors requires --gpu-transposes")
+    if args.deferred_transposes and not (args.lazy_transpose_mirrors and args.gpu_kkt):
+        parser.error("--deferred-transposes requires --lazy-transpose-mirrors and --gpu-kkt")
     if args.device_scalar_reductions and not args.device_cone_reductions:
         parser.error("--device-scalar-reductions requires --device-cone-reductions")
     if args.batched_stopping and not (args.device_scalar_reductions and args.queued_operators):
@@ -1184,6 +1241,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_gpu_transposes(destination, extension.with_name("qoco_gpu_transpose.cuh"))
     if args.lazy_transpose_mirrors:
         patch_lazy_transpose_mirrors(destination, extension.with_name("qoco_lazy_host_mirror.cuh"))
+    if args.deferred_transposes:
+        patch_deferred_transposes(destination, extension.with_name("qoco_deferred_transpose.cuh"))
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1218,6 +1277,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "gpu_kkt": args.gpu_kkt,
         "gpu_transposes": args.gpu_transposes,
         "lazy_transpose_mirrors": args.lazy_transpose_mirrors,
+        "deferred_transposes": args.deferred_transposes,
         "vector_arena": args.vector_arena,
         "restore_inaccurate_best": args.restore_inaccurate_best,
         "host_ruiz_vector_sync": True,
@@ -1240,6 +1300,9 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
             *(["include/structs.h", "algebra/cuda/qoco_device_io.cuh"]
               if args.device_io else []),
             *(["algebra/cuda/qoco_gpu_kkt.cuh"] if args.gpu_kkt else []),
+            *(["algebra/cuda/qoco_gpu_transpose.cuh"] if args.gpu_transposes else []),
+            *(["algebra/cuda/qoco_lazy_host_mirror.cuh"] if args.lazy_transpose_mirrors else []),
+            *(["algebra/cuda/qoco_deferred_transpose.cuh"] if args.deferred_transposes else []),
             *(["include/structs.h", "algebra/cuda/qoco_vector_arena.cuh"]
               if args.vector_arena else []),
             *(["algebra/cuda/qoco_gather.cuh"] if args.gather else []),

@@ -14,6 +14,9 @@ extern "C" QOCOMatrix* qoco_gpu_transpose(const QOCOMatrix*, QOCOInt*);
 #ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
 extern "C" QOCOMatrix* qoco_gpu_transpose_lazy(const QOCOMatrix*, QOCOInt*);
 #endif
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+extern "C" QOCOMatrix* qoco_gpu_transpose_deferred(QOCOMatrix*, QOCOInt*);
+#endif
 namespace {
 void require(bool ok, const char* message) {
     if (!ok) { std::fprintf(stderr, "FAIL: %s\n", message); std::exit(1); }
@@ -26,7 +29,7 @@ template<class T> void compare_device(const T* device, const std::vector<T>& exp
     require(std::memcmp(actual.data(), expected.data(), actual.size()*sizeof(T)) == 0,
             "device transpose differs bitwise from independent reference");
 }
-void run(int rows, int columns, bool empty, bool missing = false, bool lazy = false) {
+void run(int rows, int columns, bool empty, bool missing = false, bool lazy = false, bool deferred = false) {
     std::vector<int> offsets{0}, indices, original_columns;
     std::vector<double> values;
     for (int col = 0; col < columns; ++col) {
@@ -68,11 +71,29 @@ void run(int rows, int columns, bool empty, bool missing = false, bool lazy = fa
 #ifdef SPACEPDHCG_QOCO_LAZY_HOST_MIRRORS
     if (lazy) construct = qoco_gpu_transpose_lazy;
 #endif
-    auto* result = construct(source, inverse.data());
-    auto* sibling = construct(source, nullptr);
+    auto construct_result = [&](QOCOInt* map) {
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+        if (deferred) return qoco_gpu_transpose_deferred(source, map);
+#endif
+        return construct(source, map);
+    };
+    auto* result = construct_result(inverse.data());
+    auto* sibling = construct_result(nullptr);
     // The result must outlive its input and another independently built result.
     free_qoco_matrix(source);
     free_qoco_matrix(sibling);
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    if (deferred) {
+        require(!result->d_csc && !result->d_csc_host && !result->gather, "no eager GPU payload");
+        require(result->transpose_source->reference_count == 1, "retained source lifetime");
+        require(!result->csc->p && result->transpose_values_pending, "unmaterialized view");
+        sync_matrix_to_device(result);
+        require(!result->d_csc, "unchanged sync leaves physical transpose absent");
+        set_cpu_mode(0);
+        get_csc_matrix(result);
+        require(result->d_csc && !result->transpose_values_pending, "explicit device materialization");
+    }
+#endif
     require(result->csc->m == columns && result->csc->n == rows, "transpose dimensions");
     require(inverse == expected_inverse, "inverse update map");
     compare_device(result->d_csc_host->p, expected_offsets);
@@ -117,9 +138,25 @@ void run(int rows, int columns, bool empty, bool missing = false, bool lazy = fa
     compare_device(twice->d_csc_host->i, sorted_rows);
     compare_device(twice->d_csc_host->x, sorted_values);
     free_qoco_matrix(twice);
-    std::printf("{\"case\":\"gpu_transpose\",\"rows\":%d,\"columns\":%d,\"nnz\":%zu,\"lazy\":%s,\"passed\":true}\n",
-                 rows, columns, values.size(), lazy ? "true" : "false");
+    std::printf("{\"case\":\"gpu_transpose\",\"rows\":%d,\"columns\":%d,\"nnz\":%zu,\"lazy\":%s,\"deferred\":%s,\"passed\":true}\n",
+                 rows, columns, values.size(), lazy ? "true" : "false", deferred ? "true" : "false");
 }
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+void deferred_chain() {
+    int offsets[]{0,1,2}, rows[]{0,1}; double values[]{-0.0, 17.0};
+    QOCOCscMatrix input{2,2,2,rows,offsets,values};
+    auto* source = new_qoco_matrix(&input);
+    auto* parent = qoco_gpu_transpose_deferred(source, nullptr);
+    auto* child = qoco_gpu_transpose_deferred(parent, nullptr);
+    free_qoco_matrix(source); free_qoco_matrix(parent);
+    set_cpu_mode(0); get_csc_matrix(child);
+    compare_device(child->d_csc_host->p, std::vector<int>{0,1,2});
+    compare_device(child->d_csc_host->i, std::vector<int>{0,1});
+    compare_device(child->d_csc_host->x, std::vector<double>{-0.0,17.0});
+    free_qoco_matrix(child);
+    std::puts("{\"case\":\"deferred_chain_lifetime\",\"passed\":true}");
+}
+#endif
 }
 int main() {
     run(0,0,true,true); run(0,0,true); run(0,37,true); run(29,0,true);
@@ -128,6 +165,12 @@ int main() {
     run(0,0,true,true,true); run(0,0,true,false,true); run(0,37,true,false,true);
     run(29,0,true,false,true); run(41,53,true,false,true); run(1,19,false,false,true);
     run(17,29,false,false,true); run(1031,1537,false,false,true);
+#endif
+#ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
+    run(0,0,true,true,true,true); run(0,0,true,false,true,true); run(0,37,true,false,true,true);
+    run(29,0,true,false,true,true); run(41,53,true,false,true,true); run(1,19,false,false,true,true);
+    run(17,29,false,false,true,true); run(1031,1537,false,false,true,true);
+    deferred_chain();
 #endif
     require(cudaDeviceSynchronize() == cudaSuccess, "completion");
 }
