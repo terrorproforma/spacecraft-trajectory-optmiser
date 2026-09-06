@@ -1019,3 +1019,24 @@ hashes need not match a later Windows checkout. Published Git-blob fingerprints
 and the post-checkout download recheck are retained in
 `artifacts/performance/main-publication-20260906-source-fingerprints.json`;
 the original test-time evidence is unchanged.
+
+## GTOC12 interval dynamics now have a native CUDA path
+
+The GTOC12 refiner now supports explicit CUDA interval propagation and RK4
+linearisation, including its norm-of-interpolated-thrust mass flow and Gamma
+sensitivity surrogate. One GPU block handles each interval, retained buffers
+survive SCvx iterations/polishing, and a device-input API can feed a future native
+assembler without coefficient downloads. The existing Python/CLI workflow can
+select this path without silently falling back to CPU dynamics.
+
+A representative full 150-day leg improves from 137.914 to 118.281 ms median
+(1.166x), with all 22 matched runs independently qualified at fixed mass accuracy.
+At 2,001 intervals, linearisation including bridge transfers improves 48.46x
+(ZOH) and 76.90x (four-node Lagrange). Five additional pairs qualify at the same
+accuracy; one free-v-infinity case fails on both backends and is retained.
+
+This is not yet a fully GPU-native GTOC12 refiner: CPU sparse assembly, Clarabel,
+seed generation, outer decisions and verification remain. The profile now points
+to assembly and Clarabel as the next major targets. The CUDA CLI currently uses
+one worker; genuine GPU batching is pending. [Implementation, use, physics gates
+and evidence](GTOC12_GPU_REFINEMENT.md).

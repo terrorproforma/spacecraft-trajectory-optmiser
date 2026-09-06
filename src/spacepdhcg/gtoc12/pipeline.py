@@ -264,6 +264,8 @@ class RefinedRoute:
                     "delta_v_km_s": None if leg.solution is None else leg.solution.delta_v_km_s,
                     "scvx_iterations": None if leg.solution is None else leg.solution.iterations,
                     "solve_seconds": None if leg.solution is None else leg.solution.solve_seconds,
+                    "discretisation_backend": None
+                    if leg.solution is None else leg.solution.discretisation_backend,
                     "position_error_km": None
                     if leg.certificate is None
                     else leg.certificate.position_error_km,

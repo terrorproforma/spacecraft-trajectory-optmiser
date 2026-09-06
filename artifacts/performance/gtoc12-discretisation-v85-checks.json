@@ -1,0 +1,152 @@
+[
+  {
+    "name": "native_device_api",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v85/final/gtoc12_discretisation_test"
+    ],
+    "returncode": 0,
+    "stdout": "GTOC12 device API: both holds, 24 changing-input graph replays, analytic mass and affine closure pass\n",
+    "stderr": "",
+    "seconds": 0.4462764739873819
+  },
+  {
+    "name": "python_physics",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_pipeline.py::test_scvx_leg_between_synthetic_circular_orbits_is_certified",
+      "-q"
+    ],
+    "returncode": 0,
+    "stdout": "............................                                             [100%]\n28 passed in 2.59s\n",
+    "stderr": "",
+    "seconds": 2.924713510030415
+  },
+  {
+    "name": "native_memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--leak-check",
+      "full",
+      "/home/angus/build-spacepdhcg-gtoc12-v85/final/gtoc12_discretisation_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 device API: both holds, 24 changing-input graph replays, analytic mass and affine closure pass\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 0.49075422098394483
+  },
+  {
+    "name": "native_initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v85/final/gtoc12_discretisation_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 device API: both holds, 24 changing-input graph replays, analytic mass and affine closure pass\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 0.45108699798583984
+  },
+  {
+    "name": "native_racecheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v85/final/gtoc12_discretisation_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 device API: both holds, 24 changing-input graph replays, analytic mass and affine closure pass\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+    "stderr": "",
+    "seconds": 9.404006898985244
+  },
+  {
+    "name": "native_synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/build-spacepdhcg-gtoc12-v85/final/gtoc12_discretisation_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGTOC12 device API: both holds, 24 changing-input graph replays, analytic mass and affine closure pass\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 0.42646211001556367
+  },
+  {
+    "name": "host_memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "--leak-check",
+      "full",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "-q",
+      "-k",
+      "workspace_reuse or full_leg"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n..                                                                       [100%]\n2 passed, 25 deselected in 1.30s\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 1.6742427450371906
+  },
+  {
+    "name": "host_initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "-q",
+      "-k",
+      "workspace_reuse or full_leg"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n..                                                                       [100%]\n2 passed, 25 deselected in 1.25s\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 1.5594026659964584
+  },
+  {
+    "name": "host_synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "-q",
+      "-k",
+      "workspace_reuse or full_leg"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n..                                                                       [100%]\n2 passed, 25 deselected in 1.25s\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 1.5685720550245605
+  }
+]

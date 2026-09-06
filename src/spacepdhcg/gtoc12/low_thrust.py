@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import math
 import time
+from contextlib import ExitStack, closing
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -87,6 +88,7 @@ class ScvxSettings:
     objective_tolerance: float = 1.0e-6  # predicted merit reduction below this = converged
     clarabel_tolerance: float = 1.0e-9
     time_limit_s: float = 900.0
+    discretisation_backend: str = "numpy"  # explicit "cuda" uses native interval dynamics
 
 
 @dataclass(slots=True)
@@ -109,6 +111,7 @@ class LegSolution:
     hold: str = "zoh"
     history: list[dict[str, float]] = field(default_factory=list)
     diagnostic: str = ""
+    discretisation_backend: str = "numpy"
 
     @property
     def converged(self) -> bool:
@@ -631,6 +634,12 @@ def _ballistic_reference(
 def solve_leg(boundary: LegBoundary, settings: ScvxSettings | None = None) -> LegSolution:
     """Run SCvx on one leg and return the nodal thrust samples plus diagnostics."""
 
+    with ExitStack() as resources:
+        return _solve_leg(boundary, settings or ScvxSettings(), resources)
+
+
+def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitStack) -> LegSolution:
+
     settings = settings or ScvxSettings()
     started = time.perf_counter()
     duration_days = boundary.duration_days
@@ -645,7 +654,16 @@ def solve_leg(boundary: LegBoundary, settings: ScvxSettings | None = None) -> Le
     node_times = node_days * C.DAY_S / TU_S
     nodes = node_times.shape[0]
     model = _Model(boundary.initial_mass)
-    disc = _Discretisation(model, node_times, settings.substeps, settings.hold)
+    if settings.discretisation_backend == "numpy":
+        disc = _Discretisation(model, node_times, settings.substeps, settings.hold)
+    elif settings.discretisation_backend == "cuda":
+        from .gpu_discretisation import GpuDiscretisation
+
+        disc = resources.enter_context(
+            closing(GpuDiscretisation(model, node_times, settings.substeps, settings.hold))
+        )
+    else:
+        raise ValueError("discretisation_backend must be 'numpy' or 'cuda'")
     zoh = settings.hold == "zoh"
     problem = _ConvexProblem(nodes, boundary.free_departure_vinf, boundary.free_arrival_vinf)
     bnd = {
@@ -801,7 +819,7 @@ def solve_leg(boundary: LegBoundary, settings: ScvxSettings | None = None) -> Le
             # Polish: re-linearise with a finer integrator so the discrete model matches the
             # verifier's adaptive RKF78 through the kinks of |T(t)| at thrust switches.
             polishing = True
-            disc = _Discretisation(model, node_times, settings.polish_substeps, settings.hold)
+            disc.substeps = settings.polish_substeps
             current_merit, current_defect = merit(states, controls)
             trust_state = max(trust_state, 1e-3)
             trust_control = max(trust_control, 1e-2)
@@ -861,6 +879,7 @@ def solve_leg(boundary: LegBoundary, settings: ScvxSettings | None = None) -> Le
         solve_seconds=time.perf_counter() - started,
         history=history,
         diagnostic=diagnostic,
+        discretisation_backend=settings.discretisation_backend,
     )
 
 

@@ -1,0 +1,56 @@
+[
+  {
+    "name": "full_regression",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+      "tests/test_gtoc12_archive.py",
+      "tests/test_gtoc12_bundles.py",
+      "tests/test_gtoc12_chain.py",
+      "tests/test_gtoc12_collectdp.py",
+      "tests/test_gtoc12_cooperative.py",
+      "tests/test_gtoc12_ephemeris_format.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_harvestphase.py",
+      "tests/test_gtoc12_jointopt.py",
+      "tests/test_gtoc12_lambert_performance.py",
+      "tests/test_gtoc12_pipeline.py",
+      "tests/test_gtoc12_returns.py",
+      "tests/test_gtoc12_rules_and_data.py",
+      "tests/test_gtoc12_search2.py",
+      "tests/test_gtoc12_verifier.py",
+      "tests/test_g3_h1.py",
+      "tests/test_planner_schema.py",
+      "tests/test_scvx_failure_timing_gpu.py",
+      "tests/test_scvx_convergence_gpu.py",
+      "-q"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 29%]\n........................................................................ [ 58%]\n........................................................................ [ 87%]\n...............................                                          [100%]\n247 passed in 368.57s (0:06:08)\n",
+    "stderr": "",
+    "seconds": 368.98159527097596
+  },
+  {
+    "name": "lifecycle_memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--leak-check",
+      "full",
+      "--error-exitcode",
+      "99",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "-q",
+      "-k",
+      "topology_is_owned or initial_reference_fails or outer_time_limit"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\n...                                                                      [100%]\n3 passed, 27 deselected in 0.78s\n========= LEAK SUMMARY: 0 bytes leaked in 0 allocations\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 1.0980715609621257
+  }
+]

@@ -1,0 +1,3336 @@
+{
+  "scope": "Alternating calls in one process, 2 warmups + measured repeats. Interval timings include host outputs/transfers, exclude workspace construction. Full-leg wall time includes native workspace lifetime, excludes independent certificate. CPU sparse assembly/Clarabel/seed and independent verifier remain.",
+  "repeats": 9,
+  "library_sha256": "007a7eca4a25fc55b735aab94937ed52b79e32bfc0009c40d9875681cbd8e04f",
+  "source_sha256": {
+    "src/spacepdhcg/gtoc12/low_thrust.py": "629427399ab3496b5299ea4170d277d234531dd7942a75c54a15f07299baf988",
+    "src/spacepdhcg/gtoc12/gpu_discretisation.py": "9c56cd6e6b14adcfd43e11842387a07aef39a18de53cc726ad9db951212853f2",
+    "tests/test_gtoc12_gpu_discretisation.py": "8c8a1cba301fbced009cc465a37344513a6fc5d13db429dc41d093f40b2dee5c"
+  },
+  "phases": [
+    {
+      "intervals": 3,
+      "hold": "zoh",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.2924103969708085,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0013394490233622491
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.000437996000982821
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00035895296605303884
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0010809309897013009
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0010009179823100567
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0003494580159895122
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0003538929740898311
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0010625299764797091
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0011262909974902868
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0004308740026317537
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00047512201126664877
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0011260999599471688
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.001028853002935648
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0004505380056798458
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0003555759903974831
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0010057160397991538
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.001045598997734487
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0003759909886866808
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0003500989987514913
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.001021714007947594
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0009712240425869823
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00036571198143064976
+        }
+      ],
+      "medians": {
+        "numpy": 0.001028853002935648,
+        "cuda": 0.00036571198143064976
+      },
+      "speedup": 2.8132876557962874
+    },
+    {
+      "intervals": 3,
+      "hold": "zoh",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.2924103969708085,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0003342410200275481
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.00021787802688777447
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00020167999900877476
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00036842399276793003
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0003155989688821137
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.00025078700855374336
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00021113600814715028
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00032870599534362555
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.00032837199978530407
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0002230280078947544
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0002061700215563178
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0003718690131790936
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.00033800199162214994
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0002954959636554122
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00021529500372707844
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00032992998603731394
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0003388680052012205
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0002268149983137846
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00018512195674702525
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0003488230286166072
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00031294801738113165
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00030180596513673663
+        }
+      ],
+      "medians": {
+        "numpy": 0.00032992998603731394,
+        "cuda": 0.0002230280078947544
+      },
+      "speedup": 1.4793208671486944
+    },
+    {
+      "intervals": 3,
+      "hold": "lagrange",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0007868069806136191,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.001642285962589085
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0005360089708119631
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0005071049672551453
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0016742909792810678
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0018434390076436102
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.01386492297751829
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0005442649708129466
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0018072850070893764
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0019043300417251885
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0006690320442430675
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0005135349929332733
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.001680737012065947
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0016120750224217772
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0005281469784677029
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.000505556003190577
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0016490249545313418
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0015690349973738194
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0005387610290199518
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0005058339447714388
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0016817150171846151
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0016338349669240415
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0005321969510987401
+        }
+      ],
+      "medians": {
+        "numpy": 0.001680737012065947,
+        "cuda": 0.0005321969510987401
+      },
+      "speedup": 3.1581109373062057
+    },
+    {
+      "intervals": 3,
+      "hold": "lagrange",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0007868069806136191,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0007508859853260219
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0003731919568963349
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0003457160200923681
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0006821489660069346
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0006531670223921537
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0003571250126697123
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0003583179786801338
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.000679788994602859
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0006717329961247742
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.00038601300911977887
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00034810800570994616
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0006988029927015305
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0006439780117943883
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0003522729966789484
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0003397660329937935
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0007338550058193505
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0006489729858003557
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.00040390697540715337
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00046519399620592594
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0006845499738119543
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0006518490263260901
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00038462498923763633
+        }
+      ],
+      "medians": {
+        "numpy": 0.0006717329961247742,
+        "cuda": 0.0003583179786801338
+      },
+      "speedup": 1.87468404069231
+    },
+    {
+      "intervals": 17,
+      "hold": "zoh",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0008682709885761142,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.001608356018550694
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0005227919900789857
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0004689350025728345
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0020695559796877205
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0014924919814802706
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0004311940283514559
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0003241300000809133
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0015327680157497525
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0017992369830608368
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0006796559900976717
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00045445497380569577
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0016047299723140895
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0014964999863877892
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0004968260182067752
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0003859879798255861
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0014951350167393684
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0014573319931514561
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.000446368008852005
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0005136940162628889
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.001757779042236507
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0014944369904696941
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00041883101221174
+        }
+      ],
+      "medians": {
+        "numpy": 0.0014964999863877892,
+        "cuda": 0.000446368008852005
+      },
+      "speedup": 3.352614785805493
+    },
+    {
+      "intervals": 17,
+      "hold": "zoh",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0008682709885761142,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0003607200342230499
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.00020477100042626262
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00019775104010477662
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00046370504423975945
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.00034707499435171485
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0003139629843644798
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00024208996910601854
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0003518239827826619
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0003667330020107329
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0002189149963669479
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00020142801804468036
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0003814559895545244
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.00034313200740143657
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.00020273402333259583
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00021094700787216425
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00038200104609131813
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.00034118397161364555
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.00019793701358139515
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00022924598306417465
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0003469039802439511
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0003393620136193931
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00022468296810984612
+        }
+      ],
+      "medians": {
+        "numpy": 0.00034707499435171485,
+        "cuda": 0.0002189149963669479
+      },
+      "speedup": 1.5854327027004749
+    },
+    {
+      "intervals": 17,
+      "hold": "lagrange",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0007494100136682391,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0029126059962436557
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0006388520123437047
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0005135040264576674
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0026632509543560445
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.002572637051343918
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0005213389522396028
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0005171810043975711
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.002580335014499724
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.002903544984292239
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0006602520006708801
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0007846010266803205
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0027092699892818928
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0026819669874385
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0005877549992874265
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0005409420118667185
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0026713930419646204
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0025810410152189434
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0005788180278614163
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0005259360186755657
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0027912870282307267
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0027221390046179295
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0006143830250948668
+        }
+      ],
+      "medians": {
+        "numpy": 0.0026819669874385,
+        "cuda": 0.0005788180278614163
+      },
+      "speedup": 4.633523591771455
+    },
+    {
+      "intervals": 17,
+      "hold": "lagrange",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0007494100136682391,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0008331949939019978
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.00037934700958430767
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00032828201074153185
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0007348179933615029
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0007238570251502097
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0003752870252355933
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00034432701067999005
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0007658780086785555
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0007706070318818092
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.00038266199408099055
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0003543649800121784
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0008299089968204498
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0007858469616621733
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.00038916495395824313
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0003616230096668005
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0007220919942483306
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.000713797053322196
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.00042564101750031114
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00034545199014246464
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0007182629778981209
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0007321749581024051
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0003733420162461698
+        }
+      ],
+      "medians": {
+        "numpy": 0.0007321749581024051,
+        "cuda": 0.0003733420162461698
+      },
+      "speedup": 1.9611373117448219
+    },
+    {
+      "intervals": 75,
+      "hold": "zoh",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0008172609959729016,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0034274299978278577
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0004610010073520243
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00038632500218227506
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00326067500282079
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0032554229837842286
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0003878349671140313
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0003673550090752542
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0032519540400244296
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0034428599756211042
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.00041899498319253325
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.000397267984226346
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.003425609029363841
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.003405687981285155
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0005741390050388873
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.000368534994777292
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0033404440036974847
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0032168040052056313
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0003971999976783991
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00036276201717555523
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0035995779908262193
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0031792530207894742
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0005011960165575147
+        }
+      ],
+      "medians": {
+        "numpy": 0.0033404440036974847,
+        "cuda": 0.0003971999976783991
+      },
+      "speedup": 8.409979917477598
+    },
+    {
+      "intervals": 75,
+      "hold": "zoh",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0008172609959729016,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0005190509837120771
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.00023503799457103014
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0002222050097770989
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0005180300213396549
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0004974749754182994
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.00022239499958232045
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00021124602062627673
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0005236999713815749
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0005295010050758719
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0002176880370825529
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00019973097369074821
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0005259030149318278
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0005118830013088882
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0002839489607140422
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0002254539867863059
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0006335199577733874
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0005029619787819684
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.00031818600837141275
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00020511896582320333
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0005362440133467317
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0004915429744869471
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00021543301409110427
+        }
+      ],
+      "medians": {
+        "numpy": 0.0005236999713815749,
+        "cuda": 0.0002176880370825529
+      },
+      "speedup": 2.4057361093433642
+    },
+    {
+      "intervals": 75,
+      "hold": "lagrange",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0007512629963457584,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0068667089799419045
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0006316829822026193
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0005169989890418947
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.006685582047794014
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.00672580098034814
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0006500189774669707
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0005180999869480729
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.006655828969087452
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.006586592004168779
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0006267009885050356
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0004942630184814334
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.006621389009524137
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.006930218019988388
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0006310989847406745
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0005499970284290612
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.006715836003422737
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.006936099962331355
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0006491660024039447
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0005139820277690887
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.006952575989998877
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.006710910995025188
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0006570589612238109
+        }
+      ],
+      "medians": {
+        "numpy": 0.006715836003422737,
+        "cuda": 0.0006267009885050356
+      },
+      "speedup": 10.716172667037009
+    },
+    {
+      "intervals": 75,
+      "hold": "lagrange",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0007512629963457584,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0010701260180212557
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0003801729762926698
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0003491039969958365
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.000939705001655966
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0009333230555057526
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0003539780154824257
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00034298101672902703
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0009316049981862307
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0009272260358557105
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0003541249898262322
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00032192800426855683
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0009410759666934609
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0009193550213240087
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0003384050214663148
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00034346996108070016
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0009736770298331976
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0009113530395552516
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.00036072195507586
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00034334498923271894
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0009298969525843859
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0009492660174146295
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0003593150177039206
+        }
+      ],
+      "medians": {
+        "numpy": 0.0009316049981862307,
+        "cuda": 0.00034346996108070016
+      },
+      "speedup": 2.712333256902617
+    },
+    {
+      "intervals": 257,
+      "hold": "zoh",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0008258320158347487,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.009201746026519686
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0005370419821701944
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0003929510130546987
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.008681628969497979
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.009018992015626281
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0005452950135804713
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0003805749583989382
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.008541840012185276
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.008700161997694522
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0005516420351341367
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0003869739593937993
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.008636926009785384
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.00852817198028788
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0005150340148247778
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00038731604581698775
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00887557998066768
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.008751456975005567
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0006675240001641214
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00038639799458906054
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.009164893010165542
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.008476232993416488
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.000628753041382879
+        }
+      ],
+      "medians": {
+        "numpy": 0.008700161997694522,
+        "cuda": 0.0005150340148247778
+      },
+      "speedup": 16.892402729273027
+    },
+    {
+      "intervals": 257,
+      "hold": "zoh",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0008258320158347487,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0009301279787905514
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.00024384900461882353
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00022870796965435147
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.001026793965138495
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0009291570167988539
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.00025785801699385047
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00021175900474190712
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0009074070258066058
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0008639059960842133
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0002161419834010303
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00023451296146959066
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0010211169719696045
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0009387810132466257
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.00023246201453730464
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0002050349721685052
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0008783909725025296
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0008858499932102859
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.00021698803175240755
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00020330899860709906
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0010808130027726293
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0008912039920687675
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.00032070197630673647
+        }
+      ],
+      "medians": {
+        "numpy": 0.0009074070258066058,
+        "cuda": 0.00021698803175240755
+      },
+      "speedup": 4.181829838624442
+    },
+    {
+      "intervals": 257,
+      "hold": "lagrange",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0008235860150307417,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.019973871996626258
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0007674660300835967
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0007234529475681484
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.019865030015353113
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.019702746998518705
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.000813963997643441
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0006009829812683165
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.019981031015049666
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.01969425898278132
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.000816843006759882
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0005497229867614806
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.019611736992374063
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.019480357004795223
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.000838886946439743
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0006571609992533922
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.020122667017858475
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.01932588597992435
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0007855339790694416
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0005782740190625191
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.01909843902103603
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.02005932596512139
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0007742029847577214
+        }
+      ],
+      "medians": {
+        "numpy": 0.01969425898278132,
+        "cuda": 0.0007742029847577214
+      },
+      "speedup": 25.438107796683877
+    },
+    {
+      "intervals": 257,
+      "hold": "lagrange",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0008235860150307417,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0015868210466578603
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0003766249865293503
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00037658901419490576
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0016023170319385827
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0018238559714518487
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0004562030080705881
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0004086139961145818
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0017469809972681105
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0015476029948331416
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0004616540390998125
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00034547800896689296
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0015498959692195058
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0015126329963095486
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0003602550132200122
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0003464609617367387
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0015412759967148304
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0015275260084308684
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0003666050033643842
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00036348600406199694
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0015204250230453908
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0016649989993311465
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0003965729847550392
+        }
+      ],
+      "medians": {
+        "numpy": 0.0015476029948331416,
+        "cuda": 0.0003666050033643842
+      },
+      "speedup": 4.221445372077788
+    },
+    {
+      "intervals": 2001,
+      "hold": "zoh",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0008452709880657494,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.06448352499864995
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0013658469542860985
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00111140200169757
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.062808673013933
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.06201977503951639
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0012857039691880345
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0010660559637472034
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.06258432305185124
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.06864230497740209
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0014429319999180734
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0011521540000103414
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.06280867604073137
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.06186629104195163
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0013438549940474331
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0010595819912850857
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.062300885969307274
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.06214812700636685
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0012929639779031277
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0011028400040231645
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.06470537802670151
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.061349680996499956
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0014153669471852481
+        }
+      ],
+      "medians": {
+        "numpy": 0.062300885969307274,
+        "cuda": 0.0012857039691880345
+      },
+      "speedup": 48.45663345711874
+    },
+    {
+      "intervals": 2001,
+      "hold": "zoh",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0008452709880657494,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.004562497022561729
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.00044883997179567814
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0003973880084231496
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.00471477402606979
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.004587554023601115
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.00054651201935485
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.00040031701792031527
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.004585352027788758
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.004703076032456011
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0005221819737926126
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0006289199809543788
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.004610539006534964
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.004523941955994815
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.00044967897702008486
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.00039504101732745767
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.004719185992144048
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0049934700364246964
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.0005637030117213726
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.00040227401768788695
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.004562373040243983
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.004494474036619067
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0005280580371618271
+        }
+      ],
+      "medians": {
+        "numpy": 0.004587554023601115,
+        "cuda": 0.0005221819737926126
+      },
+      "speedup": 8.785355017680267
+    },
+    {
+      "intervals": 2001,
+      "hold": "lagrange",
+      "phase": "linearise",
+      "gpu_setup_seconds": 0.0010894709848798811,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.15154089697171003
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0020366020034998655
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0018153139972127974
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.15708072698907927
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.1584837469854392
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0020857499912381172
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0018691029981710017
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.15457591001177207
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.1574650319525972
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.0020607750047929585
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0018207349930889904
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.15884643601020798
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.16834113496588543
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0022253820206969976
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0021316349739208817
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.1568897510296665
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.15906687401002273
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.002045707020442933
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0018146610236726701
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.15529330598656088
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.16212674300186336
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.002100926998537034
+        }
+      ],
+      "medians": {
+        "numpy": 0.1584837469854392,
+        "cuda": 0.0020607750047929585
+      },
+      "speedup": 76.90492490293074
+    },
+    {
+      "intervals": 2001,
+      "hold": "lagrange",
+      "phase": "propagate",
+      "gpu_setup_seconds": 0.0010894709848798811,
+      "samples": [
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0072439839714206755
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 0,
+          "seconds": 0.0009893410024233162
+        },
+        {
+          "backend": "cuda",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.0008707980159670115
+        },
+        {
+          "backend": "numpy",
+          "warmup": true,
+          "repeat": 1,
+          "seconds": 0.007772643002681434
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.007750440970994532
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 2,
+          "seconds": 0.0011085690348409116
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.0009069489897228777
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 3,
+          "seconds": 0.007772213022690266
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.007311987050343305
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 4,
+          "seconds": 0.001112035010010004
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.0008865850395523012
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 5,
+          "seconds": 0.00758622499415651
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.007250349968671799
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 6,
+          "seconds": 0.0010991240269504488
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.0009772630291990936
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 7,
+          "seconds": 0.008184658014215529
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.007275407027918845
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 8,
+          "seconds": 0.001103772025089711
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0008683380438014865
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 9,
+          "seconds": 0.0073086649645119905
+        },
+        {
+          "backend": "numpy",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.007228618022054434
+        },
+        {
+          "backend": "cuda",
+          "warmup": false,
+          "repeat": 10,
+          "seconds": 0.0010570500162430108
+        }
+      ],
+      "medians": {
+        "numpy": 0.007311987050343305,
+        "cuda": 0.0010570500162430108
+      },
+      "speedup": 6.917352006040095
+    }
+  ],
+  "legs": [
+    {
+      "backend": "numpy",
+      "repeat": 0,
+      "warmup": true,
+      "seconds": 0.14410875004250556,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 0,
+      "warmup": true,
+      "seconds": 0.11892569303745404,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 1,
+      "warmup": true,
+      "seconds": 0.11844969895901158,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 1,
+      "warmup": true,
+      "seconds": 0.1381147300126031,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 2,
+      "warmup": false,
+      "seconds": 0.13918754004407674,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 2,
+      "warmup": false,
+      "seconds": 0.1180758670088835,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 3,
+      "warmup": false,
+      "seconds": 0.11844037799164653,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 3,
+      "warmup": false,
+      "seconds": 0.13832692196592689,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 4,
+      "warmup": false,
+      "seconds": 0.1379135429742746,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 4,
+      "warmup": false,
+      "seconds": 0.1184568980243057,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 5,
+      "warmup": false,
+      "seconds": 0.11808006896171719,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 5,
+      "warmup": false,
+      "seconds": 0.13702488801209256,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 6,
+      "warmup": false,
+      "seconds": 0.13696272199740633,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 6,
+      "warmup": false,
+      "seconds": 0.11810365796554834,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 7,
+      "warmup": false,
+      "seconds": 0.11994316999334842,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 7,
+      "warmup": false,
+      "seconds": 0.14013893803348765,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 8,
+      "warmup": false,
+      "seconds": 0.13770071900216863,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 8,
+      "warmup": false,
+      "seconds": 0.1182573379483074,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 9,
+      "warmup": false,
+      "seconds": 0.1182806949946098,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 9,
+      "warmup": false,
+      "seconds": 0.13771526794880629,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "numpy",
+      "repeat": 10,
+      "warmup": false,
+      "seconds": 0.14148730697343126,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007854795,
+      "certificate": {
+        "position_error_km": 8.048926916529084e-07,
+        "velocity_error_km_s": 5.714226115718303e-14,
+        "final_mass_kg": 2445.3111007852112,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000000691476,
+        "rk4_vs_dop853_km": 7.710974456906889e-07
+      }
+    },
+    {
+      "backend": "cuda",
+      "repeat": 10,
+      "warmup": false,
+      "seconds": 0.12128266500076279,
+      "passed": true,
+      "status": "converged",
+      "iterations": 5,
+      "accepted": 5,
+      "final_mass_kg": 2445.3111007851894,
+      "certificate": {
+        "position_error_km": 2.0977110820065228e-05,
+        "velocity_error_km_s": 1.3163815039687172e-12,
+        "final_mass_kg": 2445.3111007848815,
+        "minimum_sun_distance_au": 2.7,
+        "maximum_thrust_n": 0.6000000003526871,
+        "rk4_vs_dop853_km": 2.0911779097571695e-05
+      }
+    }
+  ],
+  "leg_medians": {
+    "numpy": 0.1379135429742746,
+    "cuda": 0.1182806949946098
+  }
+}

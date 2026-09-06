@@ -17,6 +17,36 @@ def _json(value: Any) -> str:
     return json.dumps(value, indent=2, sort_keys=True, default=float)
 
 
+def _scvx_settings(args: argparse.Namespace):
+    from .low_thrust import ScvxSettings
+
+    backend = getattr(args, "discretisation_backend", "numpy")
+    if backend == "cuda" and getattr(args, "workers", 1) != 1:
+        raise ValueError(
+            "CUDA interval refinement currently requires --workers 1; GPU batching is pending"
+        )
+    if backend == "cuda":
+        library = os.environ.get("SPACEPDHCG_GTOC12_CUDA_LIBRARY")
+        if not library or not Path(library).is_file():
+            raise ValueError("CUDA refinement requires SPACEPDHCG_GTOC12_CUDA_LIBRARY")
+    return ScvxSettings(
+        max_iterations=args.scvx_iterations, node_days=args.node_days,
+        discretisation_backend=backend,
+    )
+
+
+def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
+    backend = getattr(args, "discretisation_backend", "numpy")
+    return {
+        "discretisation_backend_requested": backend,
+        "convex_solver_backend": "cpu_clarabel",
+        # A selected backend is not evidence that a search actually reached
+        # refinement. Completed leg summaries record their actual backend.
+        "cpu_only": True if backend == "numpy" else None,
+        "gpu_used": False if backend == "numpy" else None,
+    }
+
+
 def _commit(repository: Path | None) -> str:
     """HEAD of the source checkout, or ``"unknown"`` for an installed wheel."""
 
@@ -193,10 +223,11 @@ def cmd_run(args: argparse.Namespace) -> int:
     verified as a whole.
     """
 
+    scvx = _scvx_settings(args)
+
     from .cooperative import FleetColumn, MinerPool, solve_fleet_master
     from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
-    from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
     from .pipeline import refine_route, write_route_artifacts
     from .reduced_instance import build_reduced_instance
@@ -259,12 +290,10 @@ def cmd_run(args: argparse.Namespace) -> int:
             "bonus_weights": weights is not None,
             "cooperative": not args.no_cooperative,
         },
-        "cpu_only": True,
-        "gpu_used": False,
+        **_refinement_backend_report(args),
         "ships": [],
         "timeline": [],  # (elapsed seconds, ships, fleet collected kg) after each ship
     }
-    scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     fleet = FleetPlan()  # greedy incumbent (one certified route per ship slot)
     pool = MinerPool()  # shared miners: later ships may collect earlier ships' orphans
     columns: list[FleetColumn] = []  # every certified itinerary, for the master
@@ -634,6 +663,8 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     fleets the budget report refers to).  The final fleet is written to ``fleet/Result.txt``.
     """
 
+    scvx = _scvx_settings(args)
+
     from .archive import pricing_columns
     from .bundles import (
         ClusterPricingSettings,
@@ -647,7 +678,6 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     from .cooperative import FleetColumn, lp_asteroid_prices, solve_fleet_master
     from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
-    from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
     from .pipeline import write_route_artifacts
     from .solution import Solution
@@ -722,7 +752,6 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         from .harvestphase import load_harvest_phase
 
         load_harvest_phase(settings.harvest_phase_path)  # fail early on a bad path
-    scvx = ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days)
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
     verifier = Gtoc12Verifier(catalogue, bonus=bonus_table)
@@ -771,8 +800,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
             "node_days": args.node_days,
             "bonus_weights": weights is not None,
         },
-        "cpu_only": True,
-        "gpu_used": False,
+        **_refinement_backend_report(args),
         "bundles": [],
         "timeline": [],
         "fleets": [],  # every verified incumbent (elapsed, ships, score, path)
@@ -1072,12 +1100,13 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     verified independently and officially before it is reported.
     """
 
+    scvx = _scvx_settings(args)
+
     from .archive import discover_archives, recertify_archives
     from .bundles import bundle_columns
     from .cooperative import FleetColumn, solve_fleet_master
     from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
-    from .low_thrust import ScvxSettings
     from .official import official_verifier_available, run_official_verifier
     from .pipeline import write_route_artifacts
     from .solution import Solution
@@ -1116,8 +1145,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
             "node_days": args.node_days,
             "bonus_weights": weights is not None,
         },
-        "cpu_only": True,
-        "gpu_used": False,
+        **_refinement_backend_report(args),
         "recertification": [],
         "bundles": [],
     }
@@ -1139,7 +1167,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     bundles = recertify_archives(
         catalogue,
         groups,
-        scvx=ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days),
+        scvx=scvx,
         workers=args.workers,
         on_progress=on_progress,
     )
@@ -1231,8 +1259,9 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
 def cmd_retime_returns(args: argparse.Namespace) -> int:
     """Archive-wide Earth-return sweep + re-timing; improved ships are archived for the master."""
 
+    scvx = _scvx_settings(args)
+
     from .data import load_bonus_table, load_catalogue
-    from .low_thrust import ScvxSettings
     from .returncampaign import ReturnCampaignSettings, run_return_campaign
 
     started = time.perf_counter()
@@ -1290,7 +1319,7 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
         [Path(s) for s in args.source],
         output_dir / "ships",
         settings=settings,
-        scvx=ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days),
+        scvx=scvx,
         weights=weights,
         on_result=on_result,
     )
@@ -1298,8 +1327,7 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
     report["run_id"] = args.run_id
     report["commit"] = _commit(resources.repository_root())
     report["sources"] = [str(s) for s in args.source]
-    report["cpu_only"] = True
-    report["gpu_used"] = False
+    report.update(_refinement_backend_report(args))
     report["wall_seconds_total"] = time.perf_counter() - started
     report["peak_rss_mb"] = _peak_rss_mb()
     (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
@@ -1326,9 +1354,10 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
 def cmd_joint_itinerary(args: argparse.Namespace) -> int:
     """Archive-wide whole-itinerary joint re-optimisation; improved ships are archived."""
 
+    scvx = _scvx_settings(args)
+
     from .data import load_bonus_table, load_catalogue
     from .jointcampaign import JointCampaignSettings, run_joint_campaign
-    from .low_thrust import ScvxSettings
 
     started = time.perf_counter()
     catalogue = load_catalogue()
@@ -1410,7 +1439,7 @@ def cmd_joint_itinerary(args: argparse.Namespace) -> int:
         [Path(s) for s in args.source],
         output_dir / "ships",
         settings=settings,
-        scvx=ScvxSettings(max_iterations=args.scvx_iterations, node_days=args.node_days),
+        scvx=scvx,
         weights=weights,
         on_result=on_result,
     )
@@ -1418,8 +1447,7 @@ def cmd_joint_itinerary(args: argparse.Namespace) -> int:
     report["run_id"] = args.run_id
     report["commit"] = _commit(resources.repository_root())
     report["sources"] = [str(s) for s in args.source]
-    report["cpu_only"] = True
-    report["gpu_used"] = False
+    report.update(_refinement_backend_report(args))
     report["wall_seconds_total"] = time.perf_counter() - started
     report["peak_rss_mb"] = _peak_rss_mb()
     (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
@@ -2075,3 +2103,9 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     legs.add_argument("--cheap-hop-kg", type=float, default=75.0)
     legs.add_argument("--output", default="", help="optional JSON output path")
     legs.set_defaults(function=cmd_leg_stats)
+    for refinement in (run, cluster, master, returns, joint):
+        refinement.add_argument(
+            "--discretisation-backend", choices=("numpy", "cuda"), default="numpy",
+            help="interval dynamics backend; CUDA requires its native library and workers=1; "
+            "assembly, Clarabel and verification remain on CPU",
+        )
