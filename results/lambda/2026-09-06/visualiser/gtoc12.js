@@ -602,7 +602,7 @@ export function renderFleetSummary(container, fleetView) {
     ["Epoch", `${epochLabel(view.epoch)} · T+${missionYears(view.epoch).toFixed(2)} yr`], ["Ships in flight", `${active} of ${fleet.ships.length}`],
     ["Miners deployed so far", String(deployed)], ["Asteroids collected so far", `${minedAsteroids} of ${fleet.asteroids.length}`],
     ["Mass collected so far", `${collected.toFixed(1)} of ${fleetMassLabel(fleet)} kg`],
-    ["Delivered to Earth so far", `${delivered.toFixed(1)} kg`], ["Final official score", `${fleet.score.official_total_mass_kg} kg`],
+    ["Delivered to Earth so far", `${delivered.toFixed(1)} kg`], ["Verifier returned mass", `${fleet.score.official_total_mass_kg} kg`],
   ]);
 }
 

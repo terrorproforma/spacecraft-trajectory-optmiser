@@ -33,10 +33,13 @@ def test_invalid_outer_backend_fails_before_seed():
 
 
 @GPU
-def test_native_transfer_has_no_host_trajectory_iterations(monkeypatch):
+@pytest.mark.parametrize("device_scheduling", [False, True])
+def test_native_transfer_has_no_host_trajectory_iterations(monkeypatch, device_scheduling):
     from spacepdhcg.gtoc12 import low_thrust
     from spacepdhcg.gtoc12.gpu_discretisation import GpuDiscretisation
     from spacepdhcg.gtoc12.gpu_qoco import GpuQocoProblem
+
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING", str(int(device_scheduling)))
 
     def forbidden(*args, **kwargs):
         raise AssertionError("host numerical iteration must not run")
@@ -54,6 +57,8 @@ def test_native_transfer_has_no_host_trajectory_iterations(monkeypatch):
     assert sol.seed_backend == "cuda"
     assert sol.outer_transfer_bytes["trajectory_download_bytes"] == len(sol.states_scaled) * 11 * 8
     assert sol.outer_transfer_bytes["control_download_bytes"] <= (sol.iterations + 2) * 16
+    if device_scheduling:
+        assert sol.outer_transfer_bytes["control_download_bytes"] == (sol.iterations + 1) * 8
 
 
 @GPU

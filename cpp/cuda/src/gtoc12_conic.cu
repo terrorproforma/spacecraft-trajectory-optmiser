@@ -40,10 +40,18 @@ struct spacepdhcg_gtoc12_conic {
 };
 
 namespace {
+template<bool Controlled=false>
 __global__ void assemble(int count, const Term* terms, const double* phi,
     const double* psi, const double* affine, const double* states, const double* controls,
     const double* boundary, const double* fuel, const spacepdhcg_gtoc12_conic_parameters* params,
-    const int* dynamics_invalid, double* output, int* invalid) {
+    const int* dynamics_invalid, double* output, int* invalid, const int* enabled=nullptr) {
+    if constexpr (Controlled) {
+        if (enabled && !*enabled) return;
+        if (*dynamics_invalid) {
+            if (blockIdx.x==0 && threadIdx.x==0) *invalid=1;
+            return; // Includes invalid step counts on the first-ever launch.
+        }
+    }
     const auto p = *params;
     const bool valid = isfinite(p.trust_state) && p.trust_state >= 0.0
         && isfinite(p.trust_control) && p.trust_control >= 0.0
@@ -85,6 +93,9 @@ __global__ void assemble(int count, const Term* terms, const double* phi,
 bool correct_device(const spacepdhcg_gtoc12_conic* w) {
     int current = -1;
     return w && cudaGetDevice(&current) == cudaSuccess && current == w->device;
+}
+__global__ void reset_controlled_invalid(const int* enabled,int* invalid) {
+    if (!enabled || *enabled) *invalid=0;
 }
 template<class T> bool allocate(T** p, size_t count) {
     return cudaMalloc(p, count * sizeof(T)) == cudaSuccess;
@@ -267,9 +278,24 @@ extern "C" int spacepdhcg_gtoc12_conic_launch_device(spacepdhcg_gtoc12_conic* w,
     const double *phi{}, *psi{}, *affine{}, *propagated{}; const int* dynamics_invalid{};
     spacepdhcg_gtoc12_discretisation_outputs(w->dynamics, &phi, &psi, &affine, &propagated, &dynamics_invalid);
     if (cudaMemsetAsync(w->invalid, 0, sizeof(int), stream) != cudaSuccess) return 2;
-    assemble<<<std::min(1024, (w->count+255)/256), 256, 0, stream>>>(w->count, w->terms,
+    assemble<false><<<std::min(1024, (w->count+255)/256), 256, 0, stream>>>(w->count, w->terms,
         phi, psi, affine, states, controls, w->boundary, w->fuel, params, dynamics_invalid, w->packed, w->invalid);
     return cudaGetLastError() == cudaSuccess ? 0 : 2;
+}
+extern "C" int spacepdhcg_gtoc12_conic_launch_controlled_device(spacepdhcg_gtoc12_conic* w,
+    const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* params,
+    const int* substeps,const int* enabled,void* stream_pointer) {
+    if (!correct_device(w) || !states || !controls || !params || !substeps) return 1;
+    auto stream=static_cast<cudaStream_t>(stream_pointer);
+    const int status=spacepdhcg_gtoc12_discretisation_launch_controlled_device(
+        w->dynamics,states,controls,substeps,enabled,1,stream);
+    if (status) return status;
+    const double *phi{},*psi{},*affine{},*propagated{}; const int* dynamics_invalid{};
+    spacepdhcg_gtoc12_discretisation_outputs(w->dynamics,&phi,&psi,&affine,&propagated,&dynamics_invalid);
+    reset_controlled_invalid<<<1,1,0,stream>>>(enabled,w->invalid);
+    assemble<true><<<std::min(1024,(w->count+255)/256),256,0,stream>>>(w->count,w->terms,
+        phi,psi,affine,states,controls,w->boundary,w->fuel,params,dynamics_invalid,w->packed,w->invalid,enabled);
+    return cudaGetLastError()==cudaSuccess ? 0 : 2;
 }
 extern "C" int spacepdhcg_gtoc12_conic_evaluate_host(spacepdhcg_gtoc12_conic* w,
     const double* states, const double* controls, const spacepdhcg_gtoc12_conic_parameters* params,

@@ -4,11 +4,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <initializer_list>
 
 #define REQUIRE(x) do { if (!(x)) { std::fprintf(stderr,"line %d: %s\n",__LINE__,#x); std::exit(1); } } while (0)
 #define CUDA(x) REQUIRE((x)==cudaSuccess)
 
 struct Observed { int calls, qualified, status, iterations; };
+__global__ void set_steps(int* output,int value) { *output=value; }
 __global__ void consume(const spacepdhcg_gtoc12_qoco_report* report, Observed* result) {
     ++result->calls;
     result->qualified=report->qualified; result->status=report->qoco_status;
@@ -34,11 +36,13 @@ int main() {
     setenv("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY","1",1);
     setenv("SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION","1",1);
     setenv("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION","1",1);
-    for (int mode=0;mode<3;++mode) {
+    for (bool controlled:{false,true}) for (int mode=0;mode<3;++mode) {
         setenv("SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY",mode==1 ? "0" : "1",1);
         setenv("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE",mode==2 ? "1" : "0",1);
         cudaStream_t stream{}; CUDA(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
         double *ds{},*du{}; spacepdhcg_gtoc12_conic_parameters* dp{}; Observed* observed{};
+        int* device_steps{}; int substeps=8;
+        CUDA(cudaMalloc(&device_steps,sizeof(int)));
         CUDA(cudaMalloc(&ds,sizeof(states))); CUDA(cudaMalloc(&du,sizeof(controls)));
         CUDA(cudaMalloc(&dp,sizeof(*dp))); CUDA(cudaMalloc(&observed,sizeof(*observed)));
         spacepdhcg_gtoc12_qoco* w{};
@@ -47,22 +51,29 @@ int main() {
         const spacepdhcg_gtoc12_conic_parameters valid{.1,.3,13,.3,.05,.02,.001};
         auto params=valid;
         spacepdhcg_gtoc12_qoco_report report{}; Observed result{}; int consumed{};
+        if (controlled) REQUIRE(spacepdhcg_gtoc12_qoco_solve_controlled_device_with_consumer(
+            w,ds,du,dp,nullptr,stream,&report,consumer,observed,&consumed)==1 && !consumed && !report.qualified);
         const auto solve=[&] {
             CUDA(cudaMemcpyAsync(ds,states,sizeof(states),cudaMemcpyHostToDevice,stream));
             CUDA(cudaMemcpyAsync(du,controls,sizeof(controls),cudaMemcpyHostToDevice,stream));
             CUDA(cudaMemcpyAsync(dp,&params,sizeof(params),cudaMemcpyHostToDevice,stream));
             CUDA(cudaMemsetAsync(observed,0,sizeof(*observed),stream));
-            const int code=spacepdhcg_gtoc12_qoco_solve_device_with_consumer(w,ds,du,dp,8,stream,
+            set_steps<<<1,1,0,stream>>>(device_steps,substeps);
+            const int code=controlled
+                ? spacepdhcg_gtoc12_qoco_solve_controlled_device_with_consumer(w,ds,du,dp,device_steps,stream,
+                &report,consumer,observed,&consumed)
+                : spacepdhcg_gtoc12_qoco_solve_device_with_consumer(w,ds,du,dp,8,stream,
                 &report,consumer,observed,&consumed);
             CUDA(cudaMemcpyAsync(&result,observed,sizeof(result),cudaMemcpyDeviceToHost,stream));
             CUDA(cudaStreamSynchronize(stream));
             return code;
         };
-        params.trust_state=-.1;
+        if (controlled) substeps=0; else params.trust_state=-.1;
         REQUIRE(solve()==3 && !consumed && result.calls==0 && !report.qualified);
-        params=valid;
-        for (int bad=0;bad<4;++bad) {
+        params=valid;substeps=8;
+        for (int bad=0;bad<(controlled ? 6 : 4);++bad) {
             for (int prime=0;prime<3;++prime) {
+                substeps=controlled && prime==1 ? 16 : 8;
                 REQUIRE(solve()==0 && consumed==1 && result.calls==1 && result.qualified==1);
                 REQUIRE(report.primal_residual<=1e-9 && report.dual_residual<=1e-9 && report.relative_gap<=1e-9);
             }
@@ -71,17 +82,20 @@ int main() {
             if (bad==1) params.minimum_mass=0;
             if (bad==2) states[6]=-1;
             if (bad==3) controls[4]=std::numeric_limits<double>::quiet_NaN();
+            if (bad==4) substeps=0;
+            if (bad==5) substeps=-7;
             REQUIRE(solve()==3 && !report.qualified && report.iterations==0 && report.solves==completed);
             REQUIRE(std::isinf(report.primal_residual) && std::isinf(report.dual_residual));
             if (mode==0) REQUIRE(consumed==1 && result.calls==1 && result.qualified==0
                 && result.status==3 && result.iterations==0);
             else REQUIRE(consumed==0 && result.calls==0);
-            params=valid; states[6]=1; controls[4]=0;
+            params=valid; states[6]=1; controls[4]=0;substeps=8;
         }
         REQUIRE(solve()==0 && result.qualified==1);
         spacepdhcg_gtoc12_qoco_destroy(w);
         CUDA(cudaFree(ds)); CUDA(cudaFree(du)); CUDA(cudaFree(dp)); CUDA(cudaFree(observed));
+        CUDA(cudaFree(device_steps));
         CUDA(cudaStreamDestroy(stream));
     }
-    std::puts("GTOC12 assembly guard: 4 queued GPU-consumer rejections, 8 fallback rejections, initial rejection and qualified recovery PASS");
+    std::puts("GTOC12 assembly guard: 10 queued GPU-consumer rejections, 20 fallback rejections, device step changes, first-invalid and qualified recovery PASS");
 }

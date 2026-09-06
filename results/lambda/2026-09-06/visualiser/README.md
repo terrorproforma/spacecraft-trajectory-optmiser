@@ -152,3 +152,7 @@ The palette/layout step runs at 1440×900 and again at 1920×1080: it reads the 
 - `test-artifacts/` — browser-verification screenshots and report.
 
 WebGL2 context loss pauses playback and reports status; restoration recreates shaders and buffers. Page shutdown deletes all allocated buffers and programs.
+
+## GPU solver progress
+
+The GTOC12 view includes a separate synthetic-transfer benchmark panel below Compute & optimisation. Refresh the page to load data/gtoc12/solver-progress.json. It reports the measured runtime, physics qualification, remaining CPU work and checkpoint checksum. These development benchmarks do not update the displayed fleet or its weighted score.

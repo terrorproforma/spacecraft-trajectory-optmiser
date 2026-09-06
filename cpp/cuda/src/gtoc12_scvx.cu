@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <chrono>
 #include <climits>
+#include <cstddef>
 #include <cmath>
 #include <cstdlib>
 #include <cstdio>
@@ -13,7 +14,8 @@ namespace {
 using Settings = spacepdhcg_gtoc12_scvx_settings;
 using Record = spacepdhcg_gtoc12_scvx_record;
 using Result = spacepdhcg_gtoc12_scvx_result;
-struct Command { int done, substeps, refresh, error; };
+struct Command { int done, error, substeps, refresh; };
+static_assert(offsetof(Command,substeps)==2*sizeof(int));
 struct State {
     Command command;
     Result result;
@@ -229,6 +231,8 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     *result={};
     const auto started=std::chrono::steady_clock::now();
     const auto p=*settings;
+    const char* scheduling_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING");
+    const bool scheduling_on_device=scheduling_option && scheduling_option[0]=='1';
     Workspace w;
     int code=spacepdhcg_gtoc12_qoco_create(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,
         fuel,p.conic_tolerance,ruiz,&w.qoco);
@@ -254,7 +258,9 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     const double *a{},*b{},*c{},*propagated{}; const int* invalid{};
     if (spacepdhcg_gtoc12_discretisation_outputs(w.dynamics,&a,&b,&c,&propagated,&invalid)) return 2;
     const auto measure=[&](const double* x,const double* u,int substeps,bool candidate) {
-        int status=spacepdhcg_gtoc12_discretisation_launch_device(w.dynamics,x,u,substeps,0,w.stream);
+        int status=scheduling_on_device
+            ? spacepdhcg_gtoc12_discretisation_launch_controlled_device(w.dynamics,x,u,&w.state->command.substeps,nullptr,0,w.stream)
+            : spacepdhcg_gtoc12_discretisation_launch_device(w.dynamics,x,u,substeps,0,w.stream);
         if (status) return status;
         reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,candidate ? dimensions.variables : 7*nodes,
             x,u,candidate ? x+11*nodes : nullptr,candidate ? w.states : nullptr,
@@ -286,7 +292,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     const char* device_qualification=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION");
     const bool consume_on_device=device_qualification && device_qualification[0]=='1';
     const char* refresh_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH");
-    const bool refresh_on_device=refresh_option && refresh_option[0]=='1';
+    const bool refresh_on_device=scheduling_on_device || (refresh_option && refresh_option[0]=='1');
     const auto refresh_reference=[&]() {
         const int* enabled=&w.state->command.refresh;
         const int status=spacepdhcg_gtoc12_discretisation_launch_controlled_device(
@@ -304,9 +310,12 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     Command command{};
     uint64_t control_bytes=0;
     const auto read_command=[&]() {
-        control_bytes+=sizeof(Command);
+        // Integration scheduling stays on device; the transitional CPU loop
+        // consumes only done/error. Full device dispatch will remove this too.
+        const size_t bytes=scheduling_on_device ? 2*sizeof(int) : sizeof(Command);
+        control_bytes+=bytes;
         return cudaGetLastError()==cudaSuccess
-            && cudaMemcpyAsync(&command,&w.state->command,sizeof(command),cudaMemcpyDeviceToHost,w.stream)==cudaSuccess
+            && cudaMemcpyAsync(&command,&w.state->command,bytes,cudaMemcpyDeviceToHost,w.stream)==cudaSuccess
             && cudaStreamSynchronize(w.stream)==cudaSuccess;
     };
     if (!read_command()) return 2;
@@ -317,8 +326,12 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
             timeout=1; break;
         }
         int consumed=0;
-        consumer_context.substeps=command.substeps;
-        code=spacepdhcg_gtoc12_qoco_solve_device_with_consumer(w.qoco,w.states,w.controls,w.parameters,
+        if (!scheduling_on_device) consumer_context.substeps=command.substeps;
+        code=scheduling_on_device
+            ? spacepdhcg_gtoc12_qoco_solve_controlled_device_with_consumer(w.qoco,w.states,w.controls,w.parameters,
+            &w.state->command.substeps,w.stream,&reports[attempts],consume_on_device ? consume : nullptr,
+            &consumer_context,&consumed)
+            : spacepdhcg_gtoc12_qoco_solve_device_with_consumer(w.qoco,w.states,w.controls,w.parameters,
             command.substeps,w.stream,&reports[attempts],consume_on_device ? consume : nullptr,
             &consumer_context,&consumed);
         if (code!=0 && code!=4) return code;

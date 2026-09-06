@@ -299,10 +299,10 @@ extern "C" int spacepdhcg_gtoc12_qoco_primal(spacepdhcg_gtoc12_qoco* w,const dou
     if (!w || !output) return 1;
     *output=w->primal; return 0;
 }
-extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc12_qoco* w,
+static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
     const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
     int substeps,void* stream_pointer,spacepdhcg_gtoc12_qoco_report* report,
-    spacepdhcg_gtoc12_qoco_consumer consumer, void* context, int* consumed) {
+    spacepdhcg_gtoc12_qoco_consumer consumer, void* context, int* consumed,const int* device_substeps) {
     if (!consumed) return 1;
     *consumed=0;
     if (!report) return 1;
@@ -311,10 +311,12 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc
     report->absolute_primal_residual=report->absolute_dual_residual=std::numeric_limits<double>::infinity();
     report->primal_objective=report->dual_objective=std::numeric_limits<double>::quiet_NaN();
     report->absolute_gap=report->relative_gap=std::numeric_limits<double>::infinity();
-    if (!correct_device(w) || !states || !controls || !parameters || substeps<1) return 1;
+    if (!correct_device(w) || !states || !controls || !parameters || (!device_substeps && substeps<1)) return 1;
     report->requested_tolerance=w->tolerance;
     auto stream=static_cast<cudaStream_t>(stream_pointer);
-    const int assembled=spacepdhcg_gtoc12_conic_launch_device(w->conic,states,controls,parameters,substeps,stream);
+    const int assembled=device_substeps
+        ? spacepdhcg_gtoc12_conic_launch_controlled_device(w->conic,states,controls,parameters,device_substeps,nullptr,stream)
+        : spacepdhcg_gtoc12_conic_launch_device(w->conic,states,controls,parameters,substeps,stream);
     if (assembled) { cudaStreamSynchronize(stream); return assembled; }
     const auto* flag=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION");
     const bool guarded=w->solver && flag && flag[0]=='1';
@@ -389,6 +391,18 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc
         && std::isfinite(objective[0]) && std::isfinite(objective[1])
         && std::isfinite(objective[3]) && objective[3]<=w->tolerance;
     return report->qualified ? 0 : 4;
+}
+extern "C" int spacepdhcg_gtoc12_qoco_solve_device_with_consumer(spacepdhcg_gtoc12_qoco* w,
+    const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
+    int substeps,void* stream,spacepdhcg_gtoc12_qoco_report* report,
+    spacepdhcg_gtoc12_qoco_consumer consumer,void* context,int* consumed) {
+    return solve_device_with_consumer_impl(w,states,controls,parameters,substeps,stream,report,consumer,context,consumed,nullptr);
+}
+extern "C" int spacepdhcg_gtoc12_qoco_solve_controlled_device_with_consumer(spacepdhcg_gtoc12_qoco* w,
+    const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
+    const int* substeps,void* stream,spacepdhcg_gtoc12_qoco_report* report,
+    spacepdhcg_gtoc12_qoco_consumer consumer,void* context,int* consumed) {
+    return solve_device_with_consumer_impl(w,states,controls,parameters,0,stream,report,consumer,context,consumed,substeps);
 }
 extern "C" int spacepdhcg_gtoc12_qoco_solve_device(spacepdhcg_gtoc12_qoco* w,
     const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
