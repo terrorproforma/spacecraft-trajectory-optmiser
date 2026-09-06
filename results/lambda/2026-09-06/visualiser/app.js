@@ -17,7 +17,7 @@ const requiredIds = [
   "play-label", "reset-button", "timeline", "timeline-output", "sample-output",
   "trajectory-canvas", "family-label", "trajectory-title", "qualification-badge",
   "qualification-notice", "frame-overlay", "scene-overlay", "current-state",
-  "frame-details", "validation-details", "gpu-details", "provenance-content",
+  "frame-details", "validation-details", "gpu-details", "compute-details", "provenance-content",
   "dataset-select", "dataset-help", "ship-list", "fleet-count", "mission-timeline",
   "mission-timeline-output", "mission-play-button", "mission-play-icon", "mission-play-label",
   "focus-ship-button", "fleet-reset-button", "fleet-summary", "ship-detail", "ship-detail-title",
@@ -453,6 +453,7 @@ async function setDataset(dataset, options = {}) {
       }
       updateFleetSelection(); updateSceneOverlay(); draw();
       $("dataset-help").textContent = `${state.fleet.title}: ${state.fleet.score.ships} ships, ${state.fleet.score.unique_asteroids} asteroids, ${fleetMassLabel(state.fleet)} kg (official verifier ${state.fleet.score.official_total_mass_kg} kg).`;
+      void loadComputeDetails();
     } else {
       state.preset = null;
       Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
@@ -640,6 +641,35 @@ window.viewerDebug = Object.freeze({
   },
 });
 
+
+async function loadComputeDetails() {
+  const el = $("compute-details");
+  if (!el) return;
+  try {
+    const response = await fetch("./data/gtoc12/compute.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const meta = await response.json();
+    if (`${meta.run_id}_fleet` !== state.fleet.run_id || meta.commit !== state.fleet.generated_by_commit) {
+      throw new Error("metadata does not match the displayed fleet");
+    }
+    const minutes = (value) => Number.isFinite(value) ? `${(value / 60).toFixed(1)} min` : "—";
+    const rows = [
+      ["GPU / hardware", meta.hardware?.gpu || meta.hardware?.fleet_assembly || "—"],
+      ["Upstream search GPUs", meta.hardware?.upstream_search || "—"],
+      ["Wall time", meta.timing?.wall_human || (meta.timing?.wall_seconds_total != null ? `${(meta.timing.wall_seconds_total / 3600).toFixed(2)} h` : "—")],
+      ["Master / recert", `${minutes(meta.timing?.master_wall_seconds)} master · ${minutes(meta.timing?.recertification_wall_seconds)} recert`],
+      ["Dynamics model", meta.model?.dynamics || "—"],
+      ["Local refine", meta.model?.local_refine || "—"],
+      ["Optimisation", meta.optimisation?.strategy || "—"],
+      ["Proven optimal", meta.optimisation?.proven_optimal === false ? "No" : meta.optimisation?.proven_optimal ? "Yes (candidate pool)" : "—"],
+      ["Run", `${meta.run_id || "—"} · commit ${(meta.commit || "").slice(0, 12)}`],
+    ];
+    el.innerHTML = metricRows(rows);
+  } catch (error) {
+    el.innerHTML = metricRows([["Status", `Compute metadata unavailable (${String(error.message || error)})`]]);
+  }
+}
+
 /** Optional GTOC12 dataset: present only after `npm run import-gtoc12` (data/gtoc12 is ignored by git). */
 async function probeFleetDataset() {
   let manifest = null;
@@ -663,12 +693,15 @@ try {
   state.data = await response.json();
   await probeFleetDataset();
   const params = new URLSearchParams(location.search);
-  const wantsFleet = params.get("dataset") === "gtoc12" && state.fleetAvailable;
+  const datasetParam = params.get("dataset");
+  // Prefer GTOC12 fleet when installed; only stay on archive if explicitly requested.
+  const wantsFleet = state.fleetAvailable && datasetParam !== "archive";
   if (wantsFleet) {
     const ship = params.has("ship") ? Number(params.get("ship")) - 1 : null;
     await setDataset("gtoc12", {
       ship: Number.isInteger(ship) && ship >= 0 ? ship : null, epoch: params.has("epoch") ? Number(params.get("epoch")) : null,
-      focus: params.get("focus") === "1", follow: params.get("follow") === "1", preset: params.get("preset"),
+      focus: params.get("focus") === "1", follow: params.get("follow") === "1",
+      preset: params.get("preset") || "oblique",
       exaggeration: params.has("z") ? Number(params.get("z")) : null,
     });
   } else {

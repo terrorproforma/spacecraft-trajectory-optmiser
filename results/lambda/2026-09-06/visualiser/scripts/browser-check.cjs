@@ -33,7 +33,7 @@ async function run(browser, artifacts) {
   page.on("requestfailed", (request) => errors.push(`request: ${request.url()} ${request.failure()?.errorText}`));
   page.on("response", (response) => requests.push({ status: response.status(), url: response.url() }));
 
-  await page.goto("http://127.0.0.1:4173/", { waitUntil: "networkidle" });
+  await page.goto("http://127.0.0.1:4173/?dataset=archive", { waitUntil: "networkidle" });
   await page.locator("#renderer-status-text").waitFor({ state: "visible" });
   assert.equal(await page.locator("#renderer-status-text").textContent(), "WebGL2 GPU renderer");
   assert.match(await page.locator("#gpu-details").textContent(), /WebGL 2/i);

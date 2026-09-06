@@ -130,7 +130,10 @@ for (const name of ["BACKGROUND_VERTEX", "TUBE_VERTEX", "drawArraysInstanced", "
 for (const preset of ["top", "oblique", "edge", "follow"]) assert.match(html, new RegExp(`data-preset="${preset}"`), `camera preset ${preset}`);
 assert.match(app, /from "\.\/camera\.js"/);
 for (const name of ["BODY_VERTEX", "STAR_VERTEX", "uZScale", "starField", "concatRibbons"]) assert.match(`${gtocBytes}\n${webglBytes}`, new RegExp(name), `3D scene uses ${name}`);
-assert.doesNotMatch(`${html}\n${css}\n${modules}`, /https?:\/\/(?!localhost|127\.0\.0\.1)/i, "No external URLs");
+// A user-clicked source link is allowed; rendering still has no remote dependencies.
+const sourceLink = /<a class="repo-link" href="https:\/\/github\.com\/terrorproforma\/spacecraft-trajectory-optmiser" target="_blank" rel="noopener noreferrer" title="Source repository">GitHub<\/a>/;
+assert.match(html, sourceLink, "source link uses the repository URL and safe new-tab attributes");
+assert.doesNotMatch(`${html.replace(sourceLink, "")}\n${css}\n${modules}`, /https?:\/\/(?!localhost|127\.0\.0\.1)/i, "No external dependencies beyond the source navigation link");
 // Ship palette: SHIP_COLOURS in gtoc12.js is the committed output of scripts/palette.mjs and is
 // duplicated in styles.css (the CSP forbids inline styles) and in the matplotlib fallback. Its size
 // is read from gtoc12.js (never hard-coded here) and must cover both the largest fleet the GTOC12
