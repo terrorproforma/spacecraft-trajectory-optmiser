@@ -1651,3 +1651,55 @@ remain unchanged. Prepared-source reproduction is exact.
 - [Failed N20 objective comparison](../artifacts/performance/qoco-gpu-kkt-v69-pd6.json).
 - [Paired repeatability diagnostic retaining every failure](../artifacts/performance/qoco-vector-arena-v69-repeatability.json).
 - [Prepared-source reproduction](../artifacts/performance/qoco-gpu-kkt-v69-reproduction.json).
+
+## Inaccurate-exit best-iterate experiment
+
+`--restore-inaccurate-best` returns the saved best qualified QOCO iterate on an
+inaccurate exit, using the existing GPU buffers and restoration operation before
+unscaling. Accurate exits and all tolerances are unchanged. v70 adds this policy
+to unpooled v68; v71 adds it to pooled v69. The option remains experimental.
+
+A diagnostic proxy observes matching first-solve fingerprints for device matrix
+topology/values, objective/right-hand-side vectors, Ruiz scales and initialization
+settings across 24 v68/v69 runs, but differing iteration counts and results. These
+are fingerprints, not a byte-for-byte proof or an identified cause. The added
+downloads/synchronization make these traces unsuitable for performance claims.
+Source inspection finds that numerical-error exits already restore the saved
+best point, while inaccurate exits can return a worse latest point.
+
+An exploratory eight-run-per-variant proxy sweep compares unchanged behavior,
+best-point return and two tighter refinement policies. All 64 samples pass the
+physics and objective gates. Best-point return has the lowest median SCvx time
+in both tested builds, but the subsequent direct implementation test contradicts
+any claim that this alone fixes the outliers:
+
+| Direct implementation | Objective-qualified / 20 | Physics-qualified / 20 | Maximum absolute objective difference |
+|---|---:|---:|---:|
+| v68 control | 20 | 20 | 6.377e-10 |
+| v70 best return | 19 | 20 | 3.682e-7 |
+| v71 arena plus best return | 20 | 20 | 1.341e-9 |
+
+Every sample uses the original 0.51297569119164033 reference, absolute 1e-8
+objective gate, and 1e-6 physics gate. v70 sample 18 fails; it remains recorded.
+No matched timing campaign follows this failure. v71's passing batch cannot
+establish that its allocation layout resolves the numerical sensitivity.
+
+The failed run rejects six candidates on the inner forcing requirement, shrinking
+the trust radius from 1 to 0.015625. Two steps then pass. The last uses
+0.9999992144 of the available radius, yet satisfies the outer loop's absolute
+0.02 step tolerance and ends the solve. Its final reported step is zero because
+the final replay compares the retained trajectory with itself. This identifies
+an outer convergence/reporting weakness; the original inner-solve sensitivity
+remains a separate question.
+
+The direct audit verifies that each exercised inaccurate exit returns all four
+saved vectors with the proper physical scaling and the corresponding saved
+objective/residuals. Changed-RHS reuse, warm-start retention, numerical-update
+tests and landing/N20/N500 numerical oracles pass for both builds. Exact prepared
+source reproduction passes. Complete sanitizer scopes and frozen fingerprints
+are in the checkpoint; these checks do not override the objective failure.
+
+- [Checkpoint and failed outer-iteration trace](../artifacts/performance/qoco-best-return-v71-checkpoint.json).
+- [Input/solve fingerprint traces](../artifacts/performance/qoco-arena-v69-solve-trace.json).
+- [Exploratory policy sweep](../artifacts/performance/qoco-accuracy-v69-probe.json).
+- [Direct implementation repeatability](../artifacts/performance/qoco-best-return-v71-repeatability.json).

@@ -18,6 +18,28 @@ from pathlib import Path
 PIN = "09f049597deef2a7ead15b3da19a9456ff7d4e53"
 
 
+def patch_restore_inaccurate_best(destination: Path) -> None:
+    """Return the best qualified iterate when a solve exits inaccurately."""
+    path = destination / "src/qoco_api.c"
+    text = path.read_text()
+    start = text.index("QOCOInt qoco_solve(QOCOSolver* solver)")
+    end = text.index("\n}\n", start) + 3
+    body = text[start:end]
+    marker = "if (solver->sol->status == QOCO_NUMERICAL_ERROR) {"
+    if body.count(marker) != 1:
+        raise RuntimeError("unexpected inaccurate best-iterate restoration site")
+    body = body.replace(marker, """if (solver->sol->status == QOCO_NUMERICAL_ERROR ||
+          (solver->sol->status == QOCO_SOLVED_INACCURATE && work->best_valid &&
+           work->best_metric <= 1.0)) {""")
+    body = body.replace(
+        "// On numerical error, restore the best iterate seen so far. The helper",
+        "// On numerical error or a qualified inaccurate exit, restore the best iterate.\n"
+        "      // The helper",
+    )
+    path.write_text(text[:start] + body + text[end:]
+                    + "\nint qoco_restores_inaccurate_best(void) { return 1; }\n")
+
+
 def patch_vector_arena(destination: Path, extension: Path) -> None:
     """Own post-analysis scratch vectors in one zeroed device allocation."""
     path = destination / "include/structs.h"
@@ -607,6 +629,8 @@ def main() -> None:
                         help="assemble KKT CSR and numerical-update maps on CUDA")
     parser.add_argument("--vector-arena", action="store_true",
                         help="experimental GPU scratch-vector arena (not qualified for promotion)")
+    parser.add_argument("--restore-inaccurate-best", action="store_true",
+                        help="return the saved best qualified iterate on inaccurate exits")
     parser.add_argument(
         "--checked-cudss-abi", action="store_true", help="support and check cuDSS 0.7/0.8 APIs"
     )
@@ -666,6 +690,7 @@ def main() -> None:
         or args.device_io
         or args.gpu_kkt
         or args.vector_arena
+        or args.restore_inaccurate_best
         or args.checked_cudss_abi
         or args.queued_operators
         or args.device_cone_reductions
@@ -1068,6 +1093,8 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_gpu_kkt(destination, extension.with_name("qoco_gpu_kkt.cuh"))
     if args.vector_arena:
         patch_vector_arena(destination, extension.with_name("qoco_vector_arena.cuh"))
+    if args.restore_inaccurate_best:
+        patch_restore_inaccurate_best(destination)
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1101,6 +1128,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "device_io": args.device_io,
         "gpu_kkt": args.gpu_kkt,
         "vector_arena": args.vector_arena,
+        "restore_inaccurate_best": args.restore_inaccurate_best,
         "host_ruiz_vector_sync": True,
         "checked_cudss_abi": args.checked_cudss_abi,
     }

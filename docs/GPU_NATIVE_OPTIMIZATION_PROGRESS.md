@@ -817,3 +817,18 @@ acceptable overall improvement. The arena remains an explicitly selected
 experiment; default allocation behavior is unchanged. Numerical sensitivity
 and conditioning need investigation before this path can be qualified.
 [Full failed-run evidence](GPU_QOCO_LOCAL_BACKEND.md#experimental-gpu-scratch-vector-arena).
+
+## Best-iterate return does not eliminate the outlier
+
+An opt-in QOCO policy now restores the saved best point on qualified inaccurate
+exits. Its direct audit checks all four solution vectors in physical units.
+However, the longer N20 comparison qualifies the unpooled policy only 19/20,
+versus 20/20 for its control and pooled counterpart. Every physics certificate
+passes, but the unchanged 1e-8 objective gate rejects the outlier. This policy
+has not established a reliable speedup or fixed the numerical sensitivity.
+
+The failed trajectory shows a concrete outer-loop issue: rejected inner solves
+shrink the trust radius below the step tolerance, so a step at the trust-region
+boundary is mistaken for convergence. Final reporting also loses the accepted
+step by measuring the returned trajectory against itself. The next correction
+targets that stopping logic. [Evidence and limitations](GPU_QOCO_LOCAL_BACKEND.md#inaccurate-exit-best-iterate-experiment).
