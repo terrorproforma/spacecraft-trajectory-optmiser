@@ -79,23 +79,30 @@ def run(source: Path, output: Path, reference: str, mass_key: str) -> None:
                 archived = fixture["expected"]
                 if reference == "uncached":
                     use_native = gpu.collect_dp_cuda
-                    gpu.collect_dp_cuda = False
-                    table.settings = dataclasses.replace(table.settings, fraction_cache_entries=0)
-                    uncached = collectdp.plan_collect_tour(
-                        table,
-                        fixture["deployed"],
-                        fixture["camp"],
-                        fixture["camp_epoch"],
-                        fixture["mass_after_deploys"],
-                        **options,
-                    )
+                    native_table = collectdp.cuda_leg_table
+                    try:
+                        gpu.collect_dp_cuda = False
+                        collectdp.cuda_leg_table = lambda *args: None
+                        reference_table = collectdp.CollectPairTable(
+                            catalogue, dataclasses.replace(table.settings, fraction_cache_entries=0)
+                        )
+                        uncached = collectdp.plan_collect_tour(
+                            reference_table,
+                            fixture["deployed"],
+                            fixture["camp"],
+                            fixture["camp_epoch"],
+                            fixture["mass_after_deploys"],
+                            **options,
+                        )
+                    finally:
+                        gpu.collect_dp_cuda = use_native
+                        collectdp.cuda_leg_table = native_table
                     # Normalise keys/tuples just as the archived JSON does.
                     expected = (
                         None
                         if uncached is None
                         else json.loads(json.dumps(dataclasses.asdict(uncached)))
                     )
-                    gpu.collect_dp_cuda = use_native
                 else:
                     expected = archived
                 assert (result is None) == (expected is None), size

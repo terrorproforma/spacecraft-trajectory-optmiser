@@ -39,6 +39,7 @@ from .clusters import mean_longitude
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
 from .hopcalib import InflationFit
+from .lambert import cuda_leg_table
 from .screening import (
     lambert_hops,
     low_thrust_inflation,
@@ -252,12 +253,29 @@ class CollectPairTable:
 
     # -- costs ---------------------------------------------------------------------------
 
+    def _cuda_table(self, source: int, target: int, tofs: FloatArray, end: float):
+        result = cuda_leg_table(self.catalogue, source, target, self.epochs, tofs)
+        if result is None:
+            return None
+        dv, feasible = result
+        # The device evaluates the rectangular grid, including cells outside
+        # this collection window. Preserve the original arrival gate exactly.
+        valid = self.epochs[:, None] + tofs[None, :] <= end + 1e-9
+        self.lambert_evaluations += 2 * self.epochs.size * tofs.size
+        return np.where(valid & feasible, dv, np.inf).astype(np.float32)
+
     def hop(self, source: int, target: int) -> NDArray[np.float32]:
         key = (int(source), int(target))
         cached = self._hops.get(key)
         if cached is not None:
             self._hops.move_to_end(key)
             return cached
+        native = self._cuda_table(*key, self.tofs, self.epochs[-1])
+        if native is not None:
+            self._hops[key] = native
+            while len(self._hops) > self.settings.cache_pairs:
+                self._hops.popitem(last=False)
+            return native
         n_t, n_k = self.epochs.shape[0], self.tofs.shape[0]
         t_idx, k_idx = np.meshgrid(np.arange(n_t), np.arange(n_k), indexing="ij")
         t_idx, k_idx = t_idx.ravel(), k_idx.ravel()
@@ -284,6 +302,12 @@ class CollectPairTable:
         cached = self._returns.get(key)
         if cached is not None:
             return cached
+        native = self._cuda_table(
+            key, EARTH_ID, self.return_tofs, C.MISSION_END_MJD - self.settings.end_margin_days
+        )
+        if native is not None:
+            self._returns[key] = native
+            return native
         n_t, n_k = self.epochs.shape[0], self.return_tofs.shape[0]
         t_idx, k_idx = np.meshgrid(np.arange(n_t), np.arange(n_k), indexing="ij")
         t_idx, k_idx = t_idx.ravel(), k_idx.ravel()
