@@ -381,6 +381,26 @@ cudaError_t qoco_gpu_audit_run_device(QocoGpuAudit* w, const double* x, const do
 }
 
 namespace {
+__global__ void record_graph_execution(QocoGraphProgress* progress,
+    const QocoReplayStatus* status,const QocoAuditResult* audit,const int* invalid,
+    std::uint64_t copies,std::uint64_t bytes) {
+    ++progress->attempts;
+    progress->solver_runs+=status->iterations>0;
+    progress->iterations+=status->iterations>0 ? status->iterations : 0;
+    progress->d2d_count+=copies; progress->d2d_bytes+=bytes;
+    progress->last_status=*status; progress->last_audit=*audit;
+    progress->last_validation=invalid ? *invalid : 0;
+}
+}
+cudaError_t qoco_gpu_graph_record(QocoGraphProgress* progress,const QocoReplayStatus* status,
+    const QocoAuditResult* audit,const int* invalid,std::uint64_t copies,
+    std::uint64_t bytes,cudaStream_t stream) {
+    if (!progress || !status || !audit) return cudaErrorInvalidValue;
+    record_graph_execution<<<1,1,0,stream>>>(progress,status,audit,invalid,copies,bytes);
+    return cudaGetLastError();
+}
+
+namespace {
 __global__ void translate_objective(Matrix p,const double* c,const double* origin,double* out) {
     const int i=blockIdx.x*blockDim.x+threadIdx.x;
     if (i>=p.columns) return;

@@ -1,5 +1,6 @@
 #include "native_qoco_adapter.h"
 #include "native_qoco_gpu.h"
+#include "graph_append.h"
 
 #include <thread>
 #include <dlfcn.h>
@@ -87,6 +88,8 @@ static_assert(sizeof(CompletionAbi)==64 && sizeof(ReplayOutputAbi)==56);
 using ReplayFn = int (*)(SolverAbi*, void*, ReplayOutputAbi*);
 using ReplayUpdatedFn = int (*)(SolverAbi*, void*, const double*, ReplayOutputAbi*);
 using FinishReplayFn = int (*)(SolverAbi*);
+using EmitGraphFn = int (*)(SolverAbi*,cudaGraph_t,const cudaGraphNode_t*,size_t,
+    const double*,ReplayOutputAbi*,cudaGraphNode_t*);
 
 struct Csc {
     int rows{};
@@ -411,6 +414,7 @@ struct spacepdhcg_native_qoco {
     ReplayFn replay{};
     ReplayUpdatedFn replay_updated{};
     FinishReplayFn finish_replay{};
+    EmitGraphFn emit_graph{};
     cudaEvent_t replay_events[3]{};
     bool deferred_active{};
     bool deferred_ready{};
@@ -426,6 +430,7 @@ struct spacepdhcg_native_qoco {
     CreateNumericUpdateFn create_numeric_update{};
     DeviceNumericUpdateFn device_numeric_update{};
     QueuedNumericUpdateFn queued_numeric_update{};
+    QueuedNumericUpdateFn capture_numeric_update{};
     FinishNumericUpdateFn finish_numeric_update{};
     const double* queued_numeric_result{};
     bool numeric_update_invalid{};
@@ -462,6 +467,11 @@ struct spacepdhcg_native_qoco {
     std::vector<double> accepted_primal{};
     std::vector<double> dual{};
     bool has_accepted{};
+    bool graph_active{}, destroy_after_graph{};
+    cudaStream_t graph_stream{};
+    int creation_device=-1;
+    std::thread::id creation_owner=std::this_thread::get_id();
+    QocoGraphProgress* graph_progress{};
     spacepdhcg_native_qoco_report report{};
 
     ~spacepdhcg_native_qoco() {
@@ -473,6 +483,7 @@ struct spacepdhcg_native_qoco {
             finish_numeric_update(numeric_update_context,0);
         }
         for (auto event : replay_events) if (event) cudaEventDestroy(event);
+        if (graph_progress) cudaFree(graph_progress);
         qoco_gpu_audit_destroy(gpu_audit);
         if (numeric_update_context) destroy_numeric_update(numeric_update_context);
         if (solver != nullptr && cleanup != nullptr) {
@@ -1462,6 +1473,8 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_end_reduction_scope", &result->end_reduction_scope);
     symbol(result->library, "qoco_gpu_ipm_replay_device", &result->replay);
     symbol(result->library, "qoco_gpu_ipm_replay_updated_device", &result->replay_updated);
+    symbol(result->library, "qoco_gpu_ipm_emit_graph", &result->emit_graph);
+    if (cudaGetDevice(&result->creation_device)!=cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
     symbol(result->library, "qoco_gpu_ipm_finish_device", &result->finish_replay);
     symbol(result->library, "qoco_gpu_get_solution", &result->device_solution);
     symbol(result->library, "qoco_gpu_set_device_io", &result->set_device_io);
@@ -1476,6 +1489,7 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_create_numeric_update", &result->create_numeric_update);
     symbol(result->library, "qoco_gpu_update_numeric", &result->device_numeric_update);
     symbol(result->library, "qoco_gpu_update_numeric_device", &result->queued_numeric_update);
+    symbol(result->library, "qoco_gpu_capture_numeric_update", &result->capture_numeric_update);
     symbol(result->library, "qoco_gpu_finish_numeric_update", &result->finish_numeric_update);
     symbol(result->library, "qoco_gpu_destroy_numeric_update", &result->destroy_numeric_update);
     symbol(result->library, "qoco_gpu_set_trajectory", &result->set_trajectory);
@@ -1639,6 +1653,7 @@ spacepdhcg_cuda_status copy_native_report(spacepdhcg_native_qoco* workspace,
         report->audit_peak_bytes += conversion_memory.peak_bytes;
         report->audit_allocations += workspace->trajectory_indices != nullptr ? 1U : 0U;
         report->audit_peak_bytes += workspace->trajectory_bytes;
+        if(workspace->graph_progress) { ++report->audit_allocations;report->audit_peak_bytes+=sizeof(QocoGraphProgress); }
         return status;
 }
 
@@ -1867,7 +1882,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         || device_dual == nullptr || report == nullptr) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
-    if (workspace->deferred_active) return SPACEPDHCG_CUDA_INVALID_STATE;
+    if (workspace->deferred_active || workspace->graph_active) return SPACEPDHCG_CUDA_INVALID_STATE;
     if (workspace->origin_mode && requested_warm!=SPACEPDHCG_CUDA_WARM_START_NONE) return SPACEPDHCG_CUDA_INVALID_STATE;
     workspace->numeric_update_invalid=false;
     workspace->validation_flags=0;
@@ -2263,7 +2278,7 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_update_solve(
 
 spacepdhcg_cuda_status spacepdhcg_native_qoco_accept(
     spacepdhcg_native_qoco* workspace, spacepdhcg_native_qoco_report* report) {
-    if (workspace && workspace->deferred_active) return SPACEPDHCG_CUDA_INVALID_STATE;
+    if (workspace && (workspace->deferred_active || workspace->graph_active)) return SPACEPDHCG_CUDA_INVALID_STATE;
     if (workspace && workspace->origin_mode) return SPACEPDHCG_CUDA_INVALID_STATE;
     if (workspace != nullptr) {
         if (workspace->primal_start) {
@@ -2292,7 +2307,7 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
     if (workspace == nullptr) {
         return SPACEPDHCG_CUDA_SUCCESS;
     }
-    if (workspace->deferred_active) return SPACEPDHCG_CUDA_INVALID_STATE;
+    if (workspace->deferred_active || workspace->graph_active) return SPACEPDHCG_CUDA_INVALID_STATE;
     if (!retain_primal) {
         std::fill(
             workspace->accepted_primal.begin(),
@@ -2319,12 +2334,13 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
 }
 
 void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace) {
+    if (workspace && workspace->graph_active) { workspace->destroy_after_graph=true; return; }
     delete workspace;
 }
 
 bool spacepdhcg_native_qoco_can_enqueue(const spacepdhcg_native_qoco* w) {
     const auto enabled=[](const char* name) { const auto* v=std::getenv(name); return v && v[0]=='1'; };
-    return w && !w->deferred_active && w->deferred_ready && w->solver && w->report.solves
+    return w && !w->deferred_active && !w->graph_active && w->deferred_ready && w->solver && w->report.solves
         && !conversion_needs_host(w) && w->replay_updated && w->finish_replay && w->finish_numeric_update
         && w->queued_numeric_update && w->primal_start && w->set_device_io
         && enabled("SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION")
@@ -2376,7 +2392,7 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_finish(
 spacepdhcg_cuda_status spacepdhcg_native_qoco_set_origin(
     spacepdhcg_native_qoco* w,const double* origin,int count,cudaStream_t stream) {
     if (!w || !origin || count<1 || count>w->variables) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
-    if (w->deferred_active) return SPACEPDHCG_CUDA_INVALID_STATE;
+    if (w->deferred_active || w->graph_active) return SPACEPDHCG_CUDA_INVALID_STATE;
     if (!w->numeric_update_context || !w->device_numeric_update || !w->device_solution || !w->set_device_io)
         return SPACEPDHCG_CUDA_UNSUPPORTED;
     const auto allocated=qoco_gpu_audit_enable_origin(w->gpu_audit);
@@ -2387,4 +2403,141 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_set_origin(
     w->origin_mode=true; w->origin_applied=false;
     ++w->report.d2d_copy_count; w->report.d2d_bytes+=count*sizeof(double);
     return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+namespace {
+bool graph_owner(const spacepdhcg_native_qoco* w,cudaStream_t stream) {
+    int device=-1;
+    return w && w->graph_active && stream==w->graph_stream
+        && std::this_thread::get_id()==w->creation_owner
+        && cudaGetDevice(&device)==cudaSuccess && device==w->creation_device;
+}
+}
+spacepdhcg_cuda_status spacepdhcg_native_qoco_begin_graph(
+    spacepdhcg_native_qoco* w,cudaStream_t stream,const QocoGraphProgress** progress) {
+    if (progress) *progress=nullptr;
+    if (!w || !progress || !stream || stream==cudaStreamLegacy) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if (w->graph_active || w->deferred_active || std::this_thread::get_id()!=w->creation_owner)
+        return SPACEPDHCG_CUDA_INVALID_STATE;
+    int device=-1;cudaStreamCaptureStatus capture{};
+    if (cudaGetDevice(&device)!=cudaSuccess || device!=w->creation_device
+        || cudaStreamIsCapturing(stream,&capture)!=cudaSuccess || capture!=cudaStreamCaptureStatusNone)
+        return SPACEPDHCG_CUDA_INVALID_STATE;
+    if (!spacepdhcg_native_qoco_can_enqueue(w) || !w->emit_graph || !w->capture_numeric_update)
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if (!w->graph_progress && cudaMalloc(&w->graph_progress,sizeof(QocoGraphProgress))!=cudaSuccess)
+        return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    if (cudaMemsetAsync(w->graph_progress,0,sizeof(QocoGraphProgress),stream)!=cudaSuccess
+        || cudaStreamSynchronize(stream)!=cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    w->graph_active=true;w->graph_stream=stream;*progress=w->graph_progress;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+spacepdhcg_cuda_status spacepdhcg_native_qoco_emit_graph(
+    spacepdhcg_native_qoco* w,const spacepdhcg_cuda_scvx_problem* problem,cudaGraph_t graph,
+    const cudaGraphNode_t* dependencies,size_t count,cudaStream_t stream,double* primal,double* dual,
+    const double* origin,int origin_count,const int* producer_invalid,
+    spacepdhcg_native_qoco_consumer consumer,void* context,cudaGraphNode_t* completion) {
+    if (completion) *completion=nullptr;
+    if (!problem || !graph || !primal || !dual || !completion || (count && !dependencies))
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if (!graph_owner(w,stream) || w->destroy_after_graph) return SPACEPDHCG_CUDA_INVALID_STATE;
+    if (w->origin_mode ? (!origin || origin_count<1 || origin_count>w->variables) : (origin || origin_count))
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    // Recording must not count as execution or leave imperative pending flags.
+    struct Restore {
+        spacepdhcg_native_qoco* w;
+        spacepdhcg_native_qoco_report report;
+        ~Restore() { w->report=report;w->validation_pending=false;w->device_validation=nullptr; }
+    } restore{w,w->report};
+    try {
+        w->queue_validation_allowed=true;
+        const double* numeric{};const int* validation{};
+        std::uint64_t copies=0,bytes=0;
+        cudaGraphNode_t prefix{};
+        auto error=spacepdhcg_graph_append(stream,graph,dependencies,count,[&]() {
+            if (w->origin_mode) {
+                auto e=qoco_gpu_audit_set_origin(w->gpu_audit,origin,origin_count,stream);
+                if(e!=cudaSuccess) return e;
+                ++copies;bytes+=origin_count*sizeof(double);
+            }
+            if (refresh_conversion(w,*problem,stream,producer_invalid)!=SPACEPDHCG_CUDA_SUCCESS)
+                return cudaErrorInvalidValue;
+            validation=w->device_validation;
+            auto e=qoco_gpu_audit_update_device(w->gpu_audit,qoco_gpu_conversion_values(w->conversion.device),stream);
+            if(e!=cudaSuccess) return e;
+            for (const auto* values : {&w->formulation.p.values,&w->formulation.a.values,&w->formulation.g.values,
+                    &w->formulation.c,&w->formulation.b,&w->formulation.h}) if(!values->empty()) {
+                ++copies;bytes+=values->size()*sizeof(double);
+            }
+            const double* values{};
+            if(native_solver_values(w,stream,&values)!=SPACEPDHCG_CUDA_SUCCESS) return cudaErrorUnknown;
+            copies+=w->report.d2d_copy_count-restore.report.d2d_copy_count;
+            bytes+=w->report.d2d_bytes-restore.report.d2d_bytes;
+            const int updated=w->capture_numeric_update(w->numeric_update_context,values,stream,&numeric);
+            if(updated || !numeric) return cudaErrorInvalidValue;
+            return qoco_gpu_conversion_guard_numeric(w->conversion.device,numeric,stream,&numeric);
+        },&prefix);
+        if(error!=cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        ReplayOutputAbi output{};cudaGraphNode_t solved{};
+        const int emitted=w->emit_graph(w->solver,graph,&prefix,1,numeric,&output,&solved);
+        if(emitted) return emitted==2 ? SPACEPDHCG_CUDA_INVALID_STATE : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        if(!output.completion || output.n!=w->variables || output.p!=int(w->formulation.b.size())
+            || output.m!=int(w->formulation.h.size())) return SPACEPDHCG_CUDA_INTERNAL_ERROR;
+        error=spacepdhcg_graph_append(stream,graph,&solved,1,[&]() {
+            const QocoAuditResult* audit{};const QocoReplayStatus* status{};
+            if(w->origin_mode) {
+                auto e=qoco_gpu_audit_reconstruct(w->gpu_audit,output.x,primal,stream);
+                if(e!=cudaSuccess) return e;
+            }
+            auto e=qoco_gpu_audit_run_device(w->gpu_audit,w->origin_mode ? primal : output.x,
+                output.y,output.z,dual,stream,&audit);
+            if(e!=cudaSuccess) return e;
+            e=qoco_gpu_audit_replay_status(w->gpu_audit,reinterpret_cast<const int*>(output.completion),stream,&status);
+            if(e!=cudaSuccess) return e;
+            if(!w->origin_mode) {
+                e=cudaMemcpyAsync(primal,output.x,w->variables*sizeof(double),cudaMemcpyDeviceToDevice,stream);
+                if(e!=cudaSuccess) return e;
+                ++copies;bytes+=w->variables*sizeof(double);
+            }
+            e=qoco_gpu_graph_record(w->graph_progress,status,audit,validation,copies,bytes,stream);
+            if(e!=cudaSuccess) return e;
+            return consumer ? consumer(context,status,audit,stream) : cudaSuccess;
+        },completion);
+        return error==cudaSuccess ? SPACEPDHCG_CUDA_SUCCESS : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    } catch(const std::bad_alloc&) { return SPACEPDHCG_CUDA_OUT_OF_MEMORY; }
+    catch(...) { return SPACEPDHCG_CUDA_INTERNAL_ERROR; }
+}
+
+spacepdhcg_cuda_status spacepdhcg_native_qoco_end_graph(
+    spacepdhcg_native_qoco* w,cudaStream_t stream,spacepdhcg_native_qoco_report* report) {
+    if (!report) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if (!graph_owner(w,stream)) return SPACEPDHCG_CUDA_INVALID_STATE;
+    QocoGraphProgress progress{};
+    const auto copied=cudaMemcpyAsync(&progress,w->graph_progress,sizeof(progress),cudaMemcpyDeviceToHost,stream);
+    const auto waited=cudaStreamSynchronize(stream);
+    w->graph_active=false;w->deferred_ready=false;w->needs_fresh_solver=true;
+    w->has_accepted=false;w->origin_applied=false;
+    auto code=SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    if(copied==cudaSuccess && waited==cudaSuccess) {
+        ++w->report.d2h_copy_count;w->report.d2h_bytes+=sizeof(progress);
+        w->report.graph_attempts+=progress.attempts;w->report.graph_iterations+=progress.iterations;
+        w->report.numeric_updates+=progress.attempts;w->report.device_numeric_updates+=progress.attempts;
+        w->report.solves+=progress.solver_runs;
+        w->report.d2d_copy_count+=progress.d2d_count;w->report.d2d_bytes+=progress.d2d_bytes;
+        if(progress.attempts) {
+            w->report.status_code=progress.last_status.status;w->report.iterations=progress.last_status.iterations;
+            const auto& a=progress.last_audit;
+            w->report.primal_residual=a.primal;w->report.dual_residual=a.dual;
+            w->report.absolute_primal_residual=a.absolute_primal;w->report.absolute_dual_residual=a.absolute_dual;
+            w->report.dual_cone_residual=a.dual_cone;w->report.complementarity_residual=a.complementarity;
+            w->validation_flags=progress.last_validation;
+            w->report.failure=progress.last_validation || progress.last_status.status<1 || progress.last_status.status>2
+                ? SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL : SPACEPDHCG_CUDA_QOCO_FAILURE_NONE;
+        }
+        code=SPACEPDHCG_CUDA_SUCCESS; // Collected; caller must still qualify each result.
+    }
+    copy_native_report(w,report,code);
+    if(w->destroy_after_graph) delete w;
+    return code;
 }

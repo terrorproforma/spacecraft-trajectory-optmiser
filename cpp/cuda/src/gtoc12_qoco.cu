@@ -1,5 +1,7 @@
 #include "spacepdhcg/cuda/gtoc12_qoco_c_api.h"
 #include "native_qoco_adapter.h"
+#include "gtoc12_qoco_graph.h"
+#include "graph_append.h"
 #include "gtoc12_qoco_qualification.cuh"
 #include <cuda_runtime.h>
 #include <math_constants.h>
@@ -123,6 +125,9 @@ struct spacepdhcg_gtoc12_qoco {
     double tolerance{};
     cudaStream_t stream{},pending_stream{};
     bool pending{};
+    bool graph_active{},destroy_after_graph{};
+    cudaStream_t graph_stream{};
+    std::thread::id graph_owner{};
     bool state_origin{};
     std::thread::id pending_owner{};
 };
@@ -168,6 +173,7 @@ void report_result(spacepdhcg_gtoc12_qoco* w, spacepdhcg_gtoc12_qoco_report* out
 
 extern "C" void spacepdhcg_gtoc12_qoco_destroy(spacepdhcg_gtoc12_qoco* w) {
     if (!w) return;
+    if (w->graph_active) { w->destroy_after_graph=true;return; }
     int previous=-1; cudaGetDevice(&previous); cudaSetDevice(w->device);
     if (w->stream) cudaStreamSynchronize(w->stream);
     spacepdhcg_native_qoco_destroy(w->solver);
@@ -318,7 +324,7 @@ static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
     report->primal_objective=report->dual_objective=std::numeric_limits<double>::quiet_NaN();
     report->absolute_gap=report->relative_gap=std::numeric_limits<double>::infinity();
     if (!correct_device(w) || !states || !controls || !parameters || (!device_substeps && substeps<1)) return 1;
-    if (w->pending) return 1;
+    if (w->pending || w->graph_active) return 1;
     if (defer && (!consumer || !device_substeps || !spacepdhcg_native_qoco_can_enqueue(w->solver))) return 5;
     report->requested_tolerance=w->tolerance;
     auto stream=static_cast<cudaStream_t>(stream_pointer);
@@ -490,7 +496,7 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_host(spacepdhcg_gtoc12_qoco* w,
     report->absolute_primal_residual=report->absolute_dual_residual=std::numeric_limits<double>::infinity();
     report->primal_objective=report->dual_objective=std::numeric_limits<double>::quiet_NaN();
     report->absolute_gap=report->relative_gap=std::numeric_limits<double>::infinity();
-    if (!correct_device(w) || w->pending || !states || !controls || !parameters || !primal || substeps<1) return 1;
+    if (!correct_device(w) || w->pending || w->graph_active || !states || !controls || !parameters || !primal || substeps<1) return 1;
     const auto failed=[&](int code) { cudaStreamSynchronize(w->stream); return code; };
     const size_t n=w->intervals+1;
     if (!upload(w->states,states,n*7,w->stream) || !upload(w->controls,controls,n*4,w->stream)
@@ -499,4 +505,55 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_host(spacepdhcg_gtoc12_qoco* w,
     if (status) return failed(status);
     if (cudaMemcpyAsync(primal,w->primal,w->dimensions.variables*sizeof(double),cudaMemcpyDeviceToHost,w->stream)!=cudaSuccess) return failed(2);
     return cudaStreamSynchronize(w->stream)==cudaSuccess ? 0 : 2;
+}
+
+int spacepdhcg_gtoc12_qoco_begin_graph(spacepdhcg_gtoc12_qoco* w,cudaStream_t stream,
+    const QocoGraphProgress** progress) {
+    if(progress) *progress=nullptr;
+    if(!correct_device(w) || !progress || w->pending || w->graph_active) return 1;
+    const auto code=spacepdhcg_native_qoco_begin_graph(w->solver,stream,progress);
+    if(code!=SPACEPDHCG_CUDA_SUCCESS) return status_code(code);
+    w->graph_active=true;w->graph_stream=stream;w->graph_owner=std::this_thread::get_id();
+    return 0;
+}
+int spacepdhcg_gtoc12_qoco_emit_graph(spacepdhcg_gtoc12_qoco* w,cudaGraph_t graph,
+    const cudaGraphNode_t* dependencies,size_t count,cudaStream_t stream,
+    const double* states,const double* controls,const spacepdhcg_gtoc12_conic_parameters* parameters,
+    const int* substeps,spacepdhcg_gtoc12_qoco_consumer consumer,void* context,cudaGraphNode_t* completion) {
+    if(completion) *completion=nullptr;
+    if(!correct_device(w) || !graph || !states || !controls || !parameters || !substeps || !consumer
+        || !completion || (count && !dependencies)) return 1;
+    if(!w->graph_active || w->destroy_after_graph || stream!=w->graph_stream
+        || std::this_thread::get_id()!=w->graph_owner) return 1;
+    try {
+        cudaGraphNode_t assembled{};
+        const auto error=spacepdhcg_graph_append(stream,graph,dependencies,count,[&]() {
+            const int code=spacepdhcg_gtoc12_conic_launch_controlled_device(
+                w->conic,states,controls,parameters,substeps,nullptr,stream);
+            if(code) return cudaErrorInvalidValue;
+            convert_values<<<std::min(1024,(w->count+255)/256),256,0,stream>>>(w->count,w->maps,w->output.a,w->values);
+            const auto* rhs=static_cast<const double*>(w->problem.numeric.scalar_upper.data);
+            bounds<<<std::min(1024,(std::max(w->scalar_rows,w->dimensions.variables)+255)/256),256,0,stream>>>(
+                w->dimensions.equalities,w->scalar_rows,w->dimensions.variables,rhs,w->lower,w->variable_lower,w->variable_upper);
+            return cudaGetLastError();
+        },&assembled);
+        if(error!=cudaSuccess) return 2;
+        int consumed=0;Consumer callback{w,consumer,context,&consumed};
+        const auto code=spacepdhcg_native_qoco_emit_graph(w->solver,&w->problem,graph,&assembled,1,
+            stream,w->primal,w->dual,w->state_origin ? states : nullptr,
+            w->state_origin ? 7*(w->intervals+1) : 0,w->output.invalid,consume_audit,&callback,completion);
+        if(code!=SPACEPDHCG_CUDA_SUCCESS) return status_code(code);
+        return consumed ? 0 : 2;
+    } catch(...) { return 2; }
+}
+int spacepdhcg_gtoc12_qoco_end_graph(spacepdhcg_gtoc12_qoco* w,cudaStream_t stream,
+    spacepdhcg_gtoc12_qoco_report* totals) {
+    if(!correct_device(w) || !w->graph_active || stream!=w->graph_stream
+        || std::this_thread::get_id()!=w->graph_owner) return 1;
+    const auto code=spacepdhcg_native_qoco_end_graph(w->solver,stream,&w->native_report);
+    if(totals) { *totals={};report_result(w,totals); }
+    w->graph_active=false;
+    const int result=status_code(code);
+    if(w->destroy_after_graph) spacepdhcg_gtoc12_qoco_destroy(w);
+    return result;
 }

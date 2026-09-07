@@ -1,6 +1,8 @@
-"""GPU SCvx arithmetic and retained trajectories with native host dispatch.
+"""GPU SCvx arithmetic and retained trajectories with native orchestration.
 
-Seed generation is on GPU by default. Setup and existing QOCO dispatch remain host operations.
+Seed generation is on GPU by default. Experimental native outer graphs retain
+subproblem control on GPU after cold priming; setup and graph construction remain
+host operations. Unmeasured per-phase graph timings are exported as None.
 No Python numerical work or trajectory downloads occur between subproblems.
 """
 

@@ -10,6 +10,7 @@
 struct spacepdhcg_native_qoco;
 struct QocoAuditResult;
 struct QocoReplayStatus;
+struct QocoGraphProgress;
 
 // Called on the host to enqueue consumers of borrowed device outputs on the
 // supplied stream. It must not throw or retain pointers past the next solve.
@@ -64,6 +65,9 @@ struct spacepdhcg_native_qoco_report {
     spacepdhcg_cuda_qoco_failure failure;
     // Internal producer guard telemetry; not part of the public GTOC12 C ABI.
     int producer_invalid, producer_validation_queued;
+    // Graph executions have a device ledger. Legacy phase timings above cover
+    // imperative calls only; the graph owner measures complete graph duration.
+    std::uint64_t graph_attempts, graph_iterations;
 };
 
 // ``ruiz_iterations`` selects QOCO's own Ruiz equilibration (0 = off, the
@@ -137,3 +141,20 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_finish(
 // are preserved. Call before each cold solve, never while pending or warm.
 spacepdhcg_cuda_status spacepdhcg_native_qoco_set_origin(
     spacepdhcg_native_qoco*, const double* device_origin, int count, cudaStream_t);
+
+// Exclusive external-graph lease. Prime cold numeric replay first. All graphs
+// and executables emitted during a lease must be destroyed before end_graph;
+// execute only on this stream/thread/device, serialize launches and retain all
+// inputs/outputs. Other solve/accept/reset/origin APIs reject while leased.
+// destroy while leased defers deletion until end_graph. End drains the stream,
+// collects the device ledger once, and forces fresh setup before imperative use.
+// The borrowed progress is valid until end_graph and counts actual executions.
+spacepdhcg_cuda_status spacepdhcg_native_qoco_begin_graph(
+    spacepdhcg_native_qoco*,cudaStream_t,const QocoGraphProgress**);
+spacepdhcg_cuda_status spacepdhcg_native_qoco_emit_graph(
+    spacepdhcg_native_qoco*,const spacepdhcg_cuda_scvx_problem*,cudaGraph_t,
+    const cudaGraphNode_t*,std::size_t,cudaStream_t,double* primal,double* dual,
+    const double* origin,int origin_count,const int* producer_invalid,
+    spacepdhcg_native_qoco_consumer,void*,cudaGraphNode_t* completion);
+spacepdhcg_cuda_status spacepdhcg_native_qoco_end_graph(
+    spacepdhcg_native_qoco*,cudaStream_t,spacepdhcg_native_qoco_report*);

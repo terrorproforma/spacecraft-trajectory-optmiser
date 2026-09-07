@@ -76,6 +76,65 @@ def test_native_zero_time_preserves_seed_and_never_claims_convergence():
 
 
 @GPU
+@pytest.mark.parametrize("state_origin", [False, True])
+@pytest.mark.parametrize("ruiz", [0, 5])
+def test_gpu_outer_graph_retains_physics_and_objective(monkeypatch, state_origin, ruiz):
+    from spacepdhcg.gtoc12 import low_thrust
+    from spacepdhcg.gtoc12.gpu_discretisation import GpuDiscretisation
+    from spacepdhcg.gtoc12.gpu_qoco import GpuQocoProblem
+
+    for flag in (
+        "GTOC12_OUTER_GRAPH",
+        "QOCO_DEVICE_VALIDATION",
+        "QOCO_NATIVE_NUMERIC_REPLAY",
+        "QOCO_NATIVE_REPLAY",
+        "QOCO_IPM_GRAPH",
+    ):
+        monkeypatch.setenv("SPACEPDHCG_TEST_" + flag, "1")
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN", str(int(state_origin)))
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("host numerical iteration must not run")
+
+    monkeypatch.setattr(GpuQocoProblem, "solve_linearised", forbidden)
+    monkeypatch.setattr(GpuDiscretisation, "propagate", forbidden)
+    monkeypatch.setattr(low_thrust, "_ballistic_reference", forbidden)
+    sol = solve_leg(
+        synthetic_boundary(),
+        settings(max_iterations=30, time_limit_s=30, qoco_ruiz_iterations=ruiz),
+    )
+    certificate = certify_leg(sol)
+    assert sol.converged and certificate.within_tolerance, (sol.status, certificate)
+    assert abs(sol.final_mass_kg - 2445.3111007852112) <= 1e-5
+    assert sol.iterations == len(sol.history) == len(sol.solver_reports)
+    assert sol.accepted_iterations == sum(row["accepted"] for row in sol.history)
+    graph_rows = [row for row in sol.solver_reports if row["solve_seconds"] is None]
+    assert graph_rows and all(row["update_seconds"] is None for row in graph_rows)
+    assert sol.outer_transfer_bytes["control_download_bytes"] < (sol.iterations + 1) * 8
+    assert sol.outer_transfer_bytes["trajectory_upload_bytes"] == 0
+    assert graph_rows[-1]["workspace_creations"] == 1
+    assert graph_rows[-1]["solves"] == sum(row["iterations"] > 0 for row in sol.solver_reports)
+
+
+@GPU
+def test_gpu_outer_graph_zero_budget_and_missing_extension_are_explicit(monkeypatch):
+    for flag in (
+        "GTOC12_OUTER_GRAPH",
+        "QOCO_DEVICE_VALIDATION",
+        "QOCO_NATIVE_NUMERIC_REPLAY",
+        "QOCO_NATIVE_REPLAY",
+        "QOCO_IPM_GRAPH",
+    ):
+        monkeypatch.setenv("SPACEPDHCG_TEST_" + flag, "1")
+    sol = solve_leg(synthetic_boundary(), settings(time_limit_s=0))
+    assert sol.status == "timeout" and sol.iterations == sol.accepted_iterations == 0
+    assert not sol.history and not sol.solver_reports
+    monkeypatch.setenv("SPACEPDHCG_TEST_QOCO_IPM_GRAPH", "0")
+    with pytest.raises(RuntimeError, match="status 5"):
+        solve_leg(synthetic_boundary(), settings())
+
+
+@GPU
 @pytest.mark.parametrize(
     "field,value",
     [("substeps", 0), ("minimum_trust", 0), ("shrink_factor", 1), ("virtual_weight", float("nan"))],

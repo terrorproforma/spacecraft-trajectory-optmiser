@@ -35,8 +35,13 @@ struct Fixture {
         c[0] = scale * (-1.0 + .01 * repeat);
         c[1] = -scale;
         b[0] = 1.5 + .02 * repeat + .1 * id;
-        settings.abstol = settings.reltol = repeat % 2 ? 1e-10 : 1e-9;
-        settings.abstol_inacc = settings.reltol_inacc = settings.abstol;
+        settings.abstol = repeat % 2 ? 1e-10 : 1e-9;
+        // This fixture checks absolute residuals below 1e-8 even as costs grow.
+        // A correctly unscaled relative criterion needs a tighter relative
+        // setting to guarantee that fixed absolute accuracy requirement.
+        settings.reltol = settings.abstol * .01;
+        settings.abstol_inacc = settings.abstol;
+        settings.reltol_inacc = settings.reltol;
         settings.ir_tol = repeat % 2 ? 1e-14 : 1e-12;
         settings.max_ir_iters = repeat % 4 == 0 ? 0 : 10;
         settings.max_iters = repeat == 14 ? 1 : 200;

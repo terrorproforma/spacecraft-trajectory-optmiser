@@ -1,6 +1,7 @@
 #include "spacepdhcg/cuda/gtoc12_scvx_c_api.h"
 #include "spacepdhcg/cuda/gtoc12_discretisation_c_api.h"
 #include <cuda_runtime.h>
+#include <math_constants.h>
 #include <algorithm>
 #include <chrono>
 #include <climits>
@@ -9,6 +10,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include "../internal/gtoc12_seed.cuh"
+#include "../internal/gtoc12_qoco_graph.h"
+#include "../internal/graph_append.h"
 
 namespace {
 using Settings = spacepdhcg_gtoc12_scvx_settings;
@@ -21,7 +24,10 @@ struct State {
     Result result;
     double merit, trust_state, trust_control;
     int polishing, polish_left, copy_candidate;
+    unsigned long long graph_start,graph_allowance;
+    int graph_timeout;
 };
+struct GraphExit { int done,error,iterations,timeout; };
 struct Metrics { double fuel, penalty, virtual_sum, defect, virtual_inf, step, invalid; };
 
 __global__ void reduce_metrics(int nodes, int variables, const double* candidate,
@@ -189,6 +195,40 @@ __global__ void finalize(State* s, Settings p, int timeout) {
     if ((r.status==0 || r.status==2) && r.virtual_inf>1e-4) { r.status=3; r.diagnostic=6; }
 }
 
+__device__ unsigned long long graph_nanoseconds() {
+    // PTX global nanosecond timer; experimental graph mode is restricted to the
+    // directly compiled H100/RTX5090 targets validated by this project.
+    unsigned long long value;asm volatile("mov.u64 %0, %%globaltimer;" : "=l"(value));return value;
+}
+__global__ void start_graph_clock(State* s,unsigned long long allowance) {
+    s->graph_start=graph_nanoseconds();s->graph_allowance=allowance;s->graph_timeout=0;
+}
+__global__ void graph_gate(State* s,int budget,const QocoGraphProgress* progress,cudaGraphConditionalHandle loop) {
+    if(progress->last_validation) { s->command.error=3;s->command.done=1; }
+    if(!s->command.done && graph_nanoseconds()-s->graph_start>=s->graph_allowance) {
+        s->graph_timeout=1;s->command.done=1;
+    }
+    cudaGraphSetConditional(loop,!s->command.done && s->result.iterations<budget);
+}
+__global__ void graph_exit(const State* s,GraphExit* out) {
+    *out={s->command.done,s->command.error,s->result.iterations,s->graph_timeout};
+}
+__global__ void retain_graph_report(const State* s,const spacepdhcg_gtoc12_qoco_report* report,
+    spacepdhcg_gtoc12_qoco_report base,const QocoGraphProgress* progress,
+    spacepdhcg_gtoc12_qoco_report* records) {
+    auto row=*report;
+    row.setup_seconds=base.setup_seconds;
+    // Per-phase GPU timestamps are not recorded by this path. Preserve that
+    // distinction; the complete call still has its ordinary wall measurement.
+    row.update_seconds=row.solve_seconds=row.residual_seconds=CUDART_NAN;
+    row.workspace_creations=base.workspace_creations;
+    row.numeric_updates=base.numeric_updates+progress->attempts;
+    row.device_numeric_updates=base.device_numeric_updates+progress->attempts;
+    row.solves=base.solves+progress->solver_runs;
+    row.adapter_d2h_count=base.adapter_d2h_count;row.adapter_d2h_bytes=base.adapter_d2h_bytes;
+    records[s->result.iterations]=row;
+}
+
 template<class T> bool allocate(T** p,size_t n) { return cudaMalloc(p,n*sizeof(T))==cudaSuccess; }
 struct Workspace {
     gtoc12_seed::Scratch seed;
@@ -201,11 +241,26 @@ struct Workspace {
     Command* host_command{};
     Record* records{};
     spacepdhcg_gtoc12_conic_parameters* parameters{};
+    cudaGraph_t graph{};
+    cudaGraphExec_t executable{};
+    bool graph_lease{};
+    const QocoGraphProgress* graph_progress{};
+    GraphExit* graph_exit_result{};
+    spacepdhcg_gtoc12_qoco_report *graph_reports{},graph_base{};
+    int close_graph(spacepdhcg_gtoc12_qoco_report* totals=nullptr) {
+        if(stream) cudaStreamSynchronize(stream);
+        if(executable) { cudaGraphExecDestroy(executable);executable=nullptr; }
+        if(graph) { cudaGraphDestroy(graph);graph=nullptr; }
+        if(!graph_lease) return 0;
+        graph_lease=false;return spacepdhcg_gtoc12_qoco_end_graph(qoco,stream,totals);
+    }
     ~Workspace() {
         if (stream) cudaStreamSynchronize(stream);
+        close_graph();
         spacepdhcg_gtoc12_qoco_destroy(qoco); spacepdhcg_gtoc12_discretisation_destroy(dynamics);
         cudaFree(states); cudaFree(controls); cudaFree(fuel); cudaFree(partial); cudaFree(metrics);
         cudaFree(state); cudaFree(records); cudaFree(parameters);
+        cudaFree(graph_exit_result);cudaFree(graph_reports);
         cudaFreeHost(host_command);
         if (stream) cudaStreamDestroy(stream);
     }
@@ -245,8 +300,20 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     const auto p=*settings;
     const char* scheduling_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING");
     const char* deferred_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS");
+    const char* graph_option=std::getenv("SPACEPDHCG_TEST_GTOC12_OUTER_GRAPH");
+    const bool outer_graph=graph_option && graph_option[0]=='1';
     const bool deferred_reports=deferred_option && deferred_option[0]=='1';
-    const bool scheduling_on_device=deferred_reports || (scheduling_option && scheduling_option[0]=='1');
+    const bool scheduling_on_device=outer_graph || deferred_reports || (scheduling_option && scheduling_option[0]=='1');
+    if(outer_graph) {
+        for(const char* name:{"SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION","SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY",
+                "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY","SPACEPDHCG_TEST_QOCO_IPM_GRAPH"}) {
+            const auto* value=std::getenv(name);if(!value || value[0]!='1') return 5;
+        }
+        int device=-1;cudaDeviceProp properties{};
+        if(cudaGetDevice(&device)!=cudaSuccess || cudaGetDeviceProperties(&properties,device)!=cudaSuccess) return 2;
+        const int arch=10*properties.major+properties.minor;
+        if(arch!=90 && arch!=120) return 5;
+    }
     Workspace w;
     int code=spacepdhcg_gtoc12_qoco_create(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,
         fuel,p.conic_tolerance,ruiz,&w.qoco);
@@ -296,6 +363,8 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         auto& c=*static_cast<ConsumerContext*>(opaque);
         auto& w=*c.workspace;
         if (stream!=w.stream) return 2;
+        if(w.graph_reports) retain_graph_report<<<1,1,0,w.stream>>>(
+            w.state,report,w.graph_base,w.graph_progress,w.graph_reports);
         // Speculative measurement handles invalid numbers on device; acceptance
         // is always gated by the independent conic qualification in decide.
         const int status=(*c.measure)(x,x+7*c.nodes,c.substeps,true);
@@ -307,7 +376,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };
     const char* device_qualification=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION");
-    const bool consume_on_device=deferred_reports || (device_qualification && device_qualification[0]=='1');
+    const bool consume_on_device=outer_graph || deferred_reports || (device_qualification && device_qualification[0]=='1');
     const char* refresh_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH");
     const bool refresh_on_device=scheduling_on_device || (refresh_option && refresh_option[0]=='1');
     const auto refresh_reference=[&]() {
@@ -342,6 +411,69 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     for (;attempts<budget && !command.done;++attempts) {
         if (std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()>p.time_limit_s) {
             timeout=1; break;
+        }
+        if(outer_graph && spacepdhcg_gtoc12_qoco_can_enqueue(w.qoco)) {
+            try {
+            if(!attempts) return 2;
+            code=spacepdhcg_gtoc12_qoco_begin_graph(w.qoco,w.stream,&w.graph_progress);
+            if(code) return code;
+            w.graph_lease=true;w.graph_base=reports[attempts-1];
+            if(!allocate(&w.graph_reports,budget) || !allocate(&w.graph_exit_result,1)
+                || cudaGraphCreate(&w.graph,0)!=cudaSuccess) return 2;
+            cudaGraphConditionalHandle loop{};
+            if(cudaGraphConditionalHandleCreate(&loop,w.graph,0,cudaGraphCondAssignDefault)!=cudaSuccess) return 2;
+            cudaGraphNode_t gate{};
+            if(spacepdhcg_graph_append(w.stream,w.graph,nullptr,0,[&] {
+                graph_gate<<<1,1,0,w.stream>>>(w.state,budget,w.graph_progress,loop);return cudaGetLastError();
+            },&gate)!=cudaSuccess) return 2;
+            cudaGraphNodeParams parameters{};parameters.type=cudaGraphNodeTypeConditional;
+            parameters.conditional.handle=loop;parameters.conditional.type=cudaGraphCondTypeWhile;
+            parameters.conditional.size=1;cudaGraphNode_t outer{};
+            if(cudaGraphAddNode(&outer,w.graph,&gate,1,&parameters)!=cudaSuccess) return 2;
+            auto body=parameters.conditional.phGraph_out[0];cudaGraphNode_t consumed{};
+            code=spacepdhcg_gtoc12_qoco_emit_graph(w.qoco,body,nullptr,0,w.stream,w.states,w.controls,
+                w.parameters,&w.state->command.substeps,consume,&consumer_context,&consumed);
+            if(code) return code;
+            cudaGraphNode_t tail{};
+            if(spacepdhcg_graph_append(w.stream,body,&consumed,1,[&] {
+                const int refreshed=refresh_reference();if(refreshed) return cudaErrorUnknown;
+                graph_gate<<<1,1,0,w.stream>>>(w.state,budget,w.graph_progress,loop);return cudaGetLastError();
+            },&tail)!=cudaSuccess) return 2;
+            if(spacepdhcg_graph_append(w.stream,w.graph,&outer,1,[&] {
+                graph_exit<<<1,1,0,w.stream>>>(w.state,w.graph_exit_result);return cudaGetLastError();
+            },&tail)!=cudaSuccess) return 2;
+            if(const auto* prefix=std::getenv("SPACEPDHCG_TEST_GTOC12_OUTER_GRAPH_DOT")) {
+                char path[4096];
+                const auto stamp=std::chrono::steady_clock::now().time_since_epoch().count();
+                const int length=std::snprintf(path,sizeof(path),"%s-%lld.dot",prefix,static_cast<long long>(stamp));
+                if(length<0 || length>=int(sizeof(path)) || cudaGraphDebugDotPrint(w.graph,path,cudaGraphDebugDotFlagsVerbose)!=cudaSuccess) return 2;
+            }
+            if(cudaGraphInstantiate(&w.executable,w.graph,0)!=cudaSuccess) return 2;
+            const double remaining=p.time_limit_s-std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count();
+            const auto allowance=remaining<=0 ? 0ULL : remaining>=1e10 ? ULLONG_MAX
+                : static_cast<unsigned long long>(remaining*1e9);
+            start_graph_clock<<<1,1,0,w.stream>>>(w.state,allowance);
+            GraphExit exit{};
+            if(cudaGetLastError()!=cudaSuccess || cudaGraphLaunch(w.executable,w.stream)!=cudaSuccess
+                || cudaMemcpyAsync(&exit,w.graph_exit_result,sizeof(exit),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
+                || cudaStreamSynchronize(w.stream)!=cudaSuccess) return 2;
+            control_bytes+=sizeof(exit);
+            if(exit.iterations<attempts || exit.iterations>budget) return 2;
+            if(exit.iterations>attempts && cudaMemcpyAsync(reports+attempts,w.graph_reports+attempts,
+                (exit.iterations-attempts)*sizeof(*reports),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess) return 2;
+            spacepdhcg_gtoc12_qoco_report totals{};
+            code=w.close_graph(&totals);if(code) return code;
+            if(exit.iterations>attempts) {
+                reports[exit.iterations-1].adapter_d2h_count=totals.adapter_d2h_count;
+                reports[exit.iterations-1].adapter_d2h_bytes=totals.adapter_d2h_bytes;
+            }
+            if(std::getenv("SPACEPDHCG_TEST_GTOC12_OUTER_GRAPH_TRACE"))
+                std::fprintf(stderr,"GPU_OUTER_GRAPH priming=%d graph_attempts=%d control_bytes=%llu timeout=%d\n",
+                    attempts,exit.iterations-attempts,static_cast<unsigned long long>(control_bytes),exit.timeout);
+            attempts=exit.iterations;timeout=exit.timeout;
+            if(exit.error) return exit.error;
+            break;
+            } catch(...) { return 2; }
         }
         int consumed=0;
         const bool pending=deferred_reports && spacepdhcg_gtoc12_qoco_can_enqueue(w.qoco);

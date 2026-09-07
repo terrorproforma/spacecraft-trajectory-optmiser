@@ -82,13 +82,21 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 7 September 2026
 
-**Latest GPU correctness checkpoint:** native v157 rejects SCvx candidates
+**Experimental native outer-loop checkpoint:** the full SCvx iteration now has
+an opt-in CUDA graph path, and new corrections keep Ruiz stopping metrics in
+original problem units. **337 local tests and 94 H100 integration tests pass**,
+but a separate H100 repetition check qualifies only **4/8** trajectories against
+both physics and the known objective. The shifted-state path remains unreliable;
+this candidate is not ready for promotion. No fleet score or overall speedup
+has changed. See [diagnosis and retained failures](docs/GPU_OUTER_DIAGNOSIS.md).
+
+**Previous GPU correctness checkpoint:** native v157 rejects SCvx candidates
 above the existing physical thrust ceiling on the GPU before acceptance.
 The corrected path passes **332 local regression tests and 89 H100 GTOC12
 integration tests**, with unchanged independent physics tolerances. Prepared
 QOCO133 can also run changing QPs inside a GPU-controlled outer graph, with
-exact synchronous parity in local and H100 probes. The complete GTOC12 SCvx
-loop still needs connecting to that interface. H100 memory checking passes
+exact synchronous parity in local and H100 probes. At that checkpoint the complete
+GTOC12 SCvx loop was not yet connected. H100 memory checking passes
 the nested solver probes and full GTOC12 guard test; the earlier WSL sanitizer
 failure remains unresolved. See [implementation and validation](docs/GPU_OUTER_GRAPH.md).
 

@@ -24,6 +24,16 @@ struct QocoAuditResult {
 };
 struct QocoReplayStatus { int status, iterations; };
 
+// A device ledger for executions, not host calls made while recording a graph.
+struct QocoGraphProgress {
+    std::uint64_t attempts{}, solver_runs{}, iterations{}, d2d_count{}, d2d_bytes{};
+    QocoReplayStatus last_status{};
+    QocoAuditResult last_audit{};
+    int last_validation{};
+};
+cudaError_t qoco_gpu_graph_record(QocoGraphProgress*,const QocoReplayStatus*,
+    const QocoAuditResult*,const int*,std::uint64_t,std::uint64_t,cudaStream_t);
+
 struct QocoAuditTransfers {
     std::uint64_t h2d_count{}, h2d_bytes{}, d2h_count{}, d2h_bytes{};
 };

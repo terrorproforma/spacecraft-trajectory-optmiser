@@ -43,6 +43,16 @@ typedef struct spacepdhcg_gtoc12_scvx_result {
  * 3 invalid dynamics, 5 missing QOCO extension. On nonzero return, outputs are
  * unspecified and MUST NOT be treated as a solution. Independent nonlinear
  * physics certification remains required even for status=converged.
+ * Experimental SPACEPDHCG_TEST_GTOC12_OUTER_GRAPH=1 switches from cold priming
+ * to one GPU WHILE over assembly, solve, audit, candidate propagation, acceptance
+ * and reference refresh. Requires prepared QOCO133 and enabled device validation,
+ * numeric replay, native replay and IPM graph. Graph iterations download nothing;
+ * reports are retained and collected at completion. Their unmeasured update,
+ * solve and residual phase times are NaN, not zero-time measurements. Complete
+ * call wall time remains measured by the caller. The GPU nanosecond deadline is
+ * checked between attempts; setup/priming/capture consume the same wall budget.
+ * Directly compiled sm90 and sm120 are currently supported. Setup and priming
+ * remain host operations; this does not make fleet search GPU-native.
  */
 int spacepdhcg_gtoc12_scvx_solve_host(
     int intervals, int hold, int free_departure, int free_arrival,

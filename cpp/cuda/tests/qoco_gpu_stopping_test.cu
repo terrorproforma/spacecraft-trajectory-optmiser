@@ -88,13 +88,15 @@ void run(int n, bool absent, bool zero_p, bool iteration_required) {
         const double k = w->scaling->k = 1.0 / kinv;
         auto px = P.product(x, false, true), aty = A.product(y, true), gtz = G.product(z, true), ax = A.product(x), gx = G.product(x);
         long double xpx = 0, gap = 0;
-        for (int i = 0; i < n; ++i) xpx += x[i] * px[i] * di[i];
-        for (int i = 0; i < m; ++i) gap += static_cast<long double>(s[i]) * f[i] * z[i] * f[i];
+        for (int i = 0; i < n; ++i) xpx += x[i] * px[i];
+        for (int i = 0; i < m; ++i) gap += static_cast<long double>(s[i]) * z[i];
+        const long double primal=(.5L*xpx+dot(c,x))*kinv;
+        const long double dual_objective=(-.5L*xpx-dot(b,y)-dot(h,z))*kinv;
         const std::vector<double> eq(residual.begin() + n, residual.begin() + n + p), conic(residual.begin() + n + p, residual.end()), dual(residual.begin(), residual.begin() + n);
-        const long double expected[]{std::max(norm(eq, ei), norm(conic, fi)), norm(dual, di) * kinv, gap * kinv,
-            std::max({norm(ax, ei), norm(b, ei), norm(gx, fi), norm(h, fi), norm(s, f)}),
+        const long double expected[]{std::max(norm(eq, ei), norm(conic, fi)), norm(dual, di) * kinv, std::max(std::abs(gap*kinv),std::abs(primal-dual_objective)),
+            std::max({norm(ax, ei), norm(b, ei), norm(gx, fi), norm(h, fi), norm(s, fi)}),
             std::max({norm(px, di), norm(aty, di), norm(gtz, di), norm(c, di)}) * kinv,
-            std::max({1.0L, std::abs(.5L * xpx + dot(c, x)), std::abs(-.5L * xpx - dot(b, y) - dot(h, z))})};
+            std::max({1.0L, std::abs(primal), std::abs(dual_objective)})};
         if (iteration == 1) { require(begin() == 0 && begin() == 0, "nested metrics scope"); }
         double got[6], old[6]; gpu(solver, got); reference(solver, old);
         if (graph_stats) {
