@@ -28,6 +28,7 @@ template<class T> struct Array {
 }
 int main(int argc, char** argv) {
     const int ruiz_iterations = argc > 1 ? std::atoi(argv[1]) : 0;
+    const bool origin_test = argc > 3 && std::strcmp(argv[3], "origin") == 0;
     require(ruiz_iterations >= 0 && ruiz_iterations <= 100, "Ruiz iteration argument");
     if (!std::getenv("SPACEPDHCG_QOCO_LIBRARY")) { std::puts("SKIP: isolated QOCO library required"); return 0; }
     const bool device_validation = argc > 2 && std::strcmp(argv[2], "device-validation") == 0;
@@ -95,6 +96,40 @@ int main(int argc, char** argv) {
     spacepdhcg_native_qoco_report report{};
     const auto solve = [&] { return spacepdhcg_native_qoco_update_solve(workspace, &problem, stream,
         SPACEPDHCG_CUDA_WARM_START_NONE, primal, dual, &report); };
+    if (origin_test) {
+        Array<double> origin({std::numeric_limits<double>::quiet_NaN(),-.5,.25,1,.125,-.25,.5,-.125},stream);
+        require(spacepdhcg_native_qoco_set_origin(workspace,origin.device+1,0,stream)==SPACEPDHCG_CUDA_INVALID_ARGUMENT,"zero origin count rejected");
+        require(spacepdhcg_native_qoco_set_origin(workspace,origin.device+1,9,stream)==SPACEPDHCG_CUDA_INVALID_ARGUMENT,"oversized origin rejected");
+        require(spacepdhcg_native_qoco_set_origin(workspace,origin.device+1,8,stream)==SPACEPDHCG_CUDA_SUCCESS,"owned origin setup");
+        require(solve()==SPACEPDHCG_CUDA_NUMERICAL_FAILURE && report.status_code==3
+            && report.iterations==0 && report.failure==SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL,"first nonfinite origin rejected with accurate failure report");
+        origin.values[0]=.25; origin.upload(stream);
+        std::vector<double> reference(8);
+        for (int repeat=0;repeat<4;++repeat) {
+            for (double& value:origin.values) value*=-.5;
+            origin.upload(stream);
+            require(spacepdhcg_native_qoco_set_origin(workspace,origin.device+1,repeat%2 ? 4 : 8,stream)==SPACEPDHCG_CUDA_SUCCESS,"changing full/prefix origin");
+            require(solve()==SPACEPDHCG_CUDA_SUCCESS && report.primal_residual<=1e-8
+                && report.dual_residual<=1e-8,"translated solve passes original-coordinate KKT audit");
+            std::vector<double> physical(8);check(cudaMemcpy(physical.data(),primal,8*sizeof(double),cudaMemcpyDeviceToHost));
+            if (!repeat) reference=physical;
+            else for (int i=0;i<8;++i) require(std::abs(physical[i]-reference[i])<1e-7,"translation preserves unique physical solution");
+        }
+        require(report.workspace_creations==2,"first invalid origin forces a fresh workspace on recovery");
+        require(spacepdhcg_native_qoco_accept(workspace,&report)==SPACEPDHCG_CUDA_INVALID_STATE,"translated accepted-primal cache rejected");
+        require(spacepdhcg_native_qoco_update_solve(workspace,&problem,stream,SPACEPDHCG_CUDA_WARM_START_PRIMAL,
+            primal,dual,&report)==SPACEPDHCG_CUDA_INVALID_STATE,"translated warm start rejected");
+        if (device_validation) {
+            require(spacepdhcg_native_qoco_can_enqueue(workspace),"translated cold replay ready");
+            require(spacepdhcg_native_qoco_enqueue(workspace,&problem,stream,primal,dual,nullptr,nullptr,nullptr)==SPACEPDHCG_CUDA_SUCCESS,"translated asynchronous submission");
+            require(spacepdhcg_native_qoco_set_origin(workspace,origin.device+1,8,stream)==SPACEPDHCG_CUDA_INVALID_STATE,"pending origin cannot be overwritten");
+            require(spacepdhcg_native_qoco_finish(workspace,stream,&report)==SPACEPDHCG_CUDA_SUCCESS
+                && report.primal_residual<=1e-8 && report.dual_residual<=1e-8,"deferred original-coordinate audit");
+        }
+        spacepdhcg_native_qoco_destroy(workspace);check(cudaFree(primal));check(cudaFree(dual));check(cudaStreamDestroy(stream));
+        std::puts("Native translated QP: original KKT/unique solution, changing origins, first-invalid recovery, cold-only and pending ownership PASS");
+        return 0;
+    }
     require(solve() == SPACEPDHCG_CUDA_SUCCESS && report.solves == 1, "initial synthetic solve");
     const auto before_accept_count = report.d2d_copy_count;
     const auto before_accept_bytes = report.d2d_bytes;

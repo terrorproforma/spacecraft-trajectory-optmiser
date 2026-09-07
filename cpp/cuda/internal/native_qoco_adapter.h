@@ -132,3 +132,8 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_enqueue(
     void* context, const int* producer_invalid);
 spacepdhcg_cuda_status spacepdhcg_native_qoco_finish(
     spacepdhcg_native_qoco*, cudaStream_t, spacepdhcg_native_qoco_report*);
+// Opt-in cold-solve coordinates. Copies the device prefix into retained storage;
+// no borrowed origin survives this stream's work. Original audit/output units
+// are preserved. Call before each cold solve, never while pending or warm.
+spacepdhcg_cuda_status spacepdhcg_native_qoco_set_origin(
+    spacepdhcg_native_qoco*, const double* device_origin, int count, cudaStream_t);

@@ -263,6 +263,8 @@ struct QocoGpuAudit {
     QocoAuditMemory memory{};
     StoredMatrix p, a, g, dual_map;
     Buffer<double> c, b, h, slack, host_x, host_y, host_z;
+    Buffer<double> origin, translated;
+    int origin_count{};
     Buffer<int> cone_starts;
     Buffer<Metric> metrics, partial;
     Buffer<QocoAuditResult> result;
@@ -376,6 +378,75 @@ cudaError_t qoco_gpu_audit_run_device(QocoGpuAudit* w, const double* x, const do
     if (status != cudaSuccess) return status;
     *output = w->result.data;
     return cudaSuccess;
+}
+
+namespace {
+__global__ void translate_objective(Matrix p,const double* c,const double* origin,double* out) {
+    const int i=blockIdx.x*blockDim.x+threadIdx.x;
+    if (i>=p.columns) return;
+    double value=c[i];
+    for (int k=p.offsets[i];k<p.offsets[i+1];++k)
+        if (p.indices[k]!=i) value+=p.values[k]*origin[p.indices[k]];
+    for (int k=p.row_offsets[i];k<p.row_offsets[i+1];++k) {
+        const int entry=p.entries[k];
+        value+=p.values[entry]*origin[p.entry_columns[entry]];
+    }
+    out[i]=value;
+}
+__global__ void translate_rhs(Matrix a,const double* rhs,const double* origin,double* out) {
+    const int row=blockIdx.x*blockDim.x+threadIdx.x;
+    if (row>=a.rows) return;
+    // Stable gather; no floating-point atomic accumulation.
+    double value=rhs[row];
+    for (int k=a.row_offsets[row];k<a.row_offsets[row+1];++k) {
+        const int entry=a.entries[k];
+        value-=a.values[entry]*origin[a.entry_columns[entry]];
+    }
+    out[row]=value;
+}
+__global__ void reconstruct_origin(int n,int count,const double* origin,const double* delta,double* x) {
+    const int i=blockIdx.x*blockDim.x+threadIdx.x;
+    if (i<n) x[i]=i<count ? delta[i]+origin[i] : delta[i];
+}
+}
+cudaError_t qoco_gpu_audit_enable_origin(QocoGpuAudit* w) {
+    if (!w) return cudaErrorInvalidValue;
+    if (w->origin.data && w->translated.data) return cudaSuccess;
+    try {
+        if (!w->origin.data) w->origin.allocate(w->p.columns,w->memory);
+        if (!w->translated.data) w->translated.allocate(static_cast<size_t>(w->p.nonzeros)
+            +w->a.nonzeros+w->g.nonzeros+w->p.columns+w->a.rows+w->g.rows,w->memory);
+        return cudaSuccess;
+    } catch (const Failure& e) { return e.status; }
+}
+cudaError_t qoco_gpu_audit_set_origin(QocoGpuAudit* w,const double* origin,int count,cudaStream_t stream) {
+    if (!w || !w->origin.data || !origin || count<1 || count>w->p.columns) return cudaErrorInvalidValue;
+    auto code=cudaMemcpyAsync(w->origin.data,origin,count*sizeof(double),cudaMemcpyDeviceToDevice,stream);
+    if (code!=cudaSuccess) return code;
+    if (count<w->p.columns) code=cudaMemsetAsync(w->origin.data+count,0,(w->p.columns-count)*sizeof(double),stream);
+    if (code==cudaSuccess) w->origin_count=count;
+    return code;
+}
+cudaError_t qoco_gpu_audit_origin_values(QocoGpuAudit* w,const double* values,cudaStream_t stream,const double** output) {
+    if (output) *output=nullptr;
+    if (!w || !values || !output || !w->translated.data || !w->origin_count) return cudaErrorInvalidValue;
+    const size_t matrix_count=static_cast<size_t>(w->p.nonzeros)+w->a.nonzeros+w->g.nonzeros;
+    if (matrix_count) {
+        const auto code=cudaMemcpyAsync(w->translated.data,values,matrix_count*sizeof(double),cudaMemcpyDeviceToDevice,stream);
+        if (code!=cudaSuccess) return code;
+    }
+    double* c=w->translated.data+matrix_count;
+    translate_objective<<<(w->p.columns+255)/256,256,0,stream>>>(w->p.view(),w->c.data,w->origin.data,c);
+    if (w->a.rows) translate_rhs<<<(w->a.rows+255)/256,256,0,stream>>>(w->a.view(),w->b.data,w->origin.data,c+w->p.columns);
+    if (w->g.rows) translate_rhs<<<(w->g.rows+255)/256,256,0,stream>>>(w->g.view(),w->h.data,w->origin.data,c+w->p.columns+w->a.rows);
+    const auto code=cudaGetLastError();
+    if (code==cudaSuccess) *output=w->translated.data;
+    return code;
+}
+cudaError_t qoco_gpu_audit_reconstruct(QocoGpuAudit* w,const double* delta,double* x,cudaStream_t stream) {
+    if (!w || !w->origin_count || !delta || !x) return cudaErrorInvalidValue;
+    reconstruct_origin<<<(w->p.columns+255)/256,256,0,stream>>>(w->p.columns,w->origin_count,w->origin.data,delta,x);
+    return cudaGetLastError();
 }
 cudaError_t qoco_gpu_audit_download_async(QocoGpuAudit* w, cudaStream_t stream, QocoAuditResult* output) {
     if (!w || !output) return cudaErrorInvalidValue;

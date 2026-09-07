@@ -35,13 +35,17 @@ def test_invalid_outer_backend_fails_before_seed():
 @GPU
 @pytest.mark.parametrize("device_scheduling", [False, True])
 @pytest.mark.parametrize("deferred_reports", [False, True])
-def test_native_transfer_has_no_host_trajectory_iterations(monkeypatch, device_scheduling, deferred_reports):
+@pytest.mark.parametrize("state_origin", [False, True])
+def test_native_transfer_has_no_host_trajectory_iterations(
+    monkeypatch, device_scheduling, deferred_reports, state_origin
+):
     from spacepdhcg.gtoc12 import low_thrust
     from spacepdhcg.gtoc12.gpu_discretisation import GpuDiscretisation
     from spacepdhcg.gtoc12.gpu_qoco import GpuQocoProblem
 
     monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING", str(int(device_scheduling)))
     monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS", str(int(deferred_reports)))
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN", str(int(state_origin)))
 
     def forbidden(*args, **kwargs):
         raise AssertionError("host numerical iteration must not run")

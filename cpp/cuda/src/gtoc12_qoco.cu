@@ -123,6 +123,7 @@ struct spacepdhcg_gtoc12_qoco {
     double tolerance{};
     cudaStream_t stream{},pending_stream{};
     bool pending{};
+    bool state_origin{};
     std::thread::id pending_owner{};
 };
 
@@ -193,6 +194,8 @@ extern "C" int spacepdhcg_gtoc12_qoco_create(int intervals,int hold,int free_dep
     if (cudaGetDevice(&w->device)!=cudaSuccess) { delete w; return 2; }
     const auto failed=[&](int code) { spacepdhcg_gtoc12_qoco_destroy(w); return code; };
     w->intervals=intervals; w->tolerance=tolerance; w->ruiz=ruiz;
+    const char* origin_option=std::getenv("SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN");
+    w->state_origin=origin_option && origin_option[0]=='1';
     try {
         const int created=spacepdhcg_gtoc12_conic_create(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,fuel,&w->conic);
         if (created) return failed(created);
@@ -352,6 +355,10 @@ static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
         const double internal_tolerance=std::max(w->tolerance*0.01,std::numeric_limits<double>::min());
         const auto created=spacepdhcg_native_qoco_create_configured(&w->problem,stream,w->ruiz,internal_tolerance,true,&w->solver);
         if (created!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(created); }
+    }
+    if (w->state_origin) {
+        const auto shifted=spacepdhcg_native_qoco_set_origin(w->solver,states,7*(w->intervals+1),stream);
+        if (shifted!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(shifted); }
     }
     Consumer callback{w,consumer,context,consumed};
     const auto solved=defer

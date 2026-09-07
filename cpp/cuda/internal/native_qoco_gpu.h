@@ -66,6 +66,15 @@ QocoAuditTransfers qoco_gpu_audit_transfers(const QocoGpuAudit*);
 QocoAuditMemory qoco_gpu_audit_memory(const QocoGpuAudit*);
 void qoco_gpu_audit_destroy(QocoGpuAudit*);
 
+// Optional translated primal coordinates x = delta + origin. Allocate retained
+// storage once, then copy a device prefix (remaining coordinates are zero).
+// Transform ONLY solver data: P unchanged, c'=c+P*origin, b'=b-A*origin,
+// h'=h-G*origin. The audit always retains the original formulation.
+cudaError_t qoco_gpu_audit_enable_origin(QocoGpuAudit*);
+cudaError_t qoco_gpu_audit_set_origin(QocoGpuAudit*, const double*, int, cudaStream_t);
+cudaError_t qoco_gpu_audit_origin_values(QocoGpuAudit*, const double*, cudaStream_t, const double**);
+cudaError_t qoco_gpu_audit_reconstruct(QocoGpuAudit*, const double*, double*, cudaStream_t);
+
 struct QocoTopologyInput {
     int counts[6]{};
     const int* arrays[6]{};

@@ -151,6 +151,14 @@ letting SCvx queue reference refresh before waiting. Its 36 complete transfers
 qualified (323 ms median), but the broad suite recorded 327 passes and one
 coast qualification failure. A regression is not ruled out, so this candidate
 is not promoted to main. See [deferred reports and v136 evidence](docs/GTOC12_DEFERRED_REPORTS.md).
+The subsequent unmerged v138 candidate adds GPU reference-centred coordinates
+and safe recovery from an invalid first reference. It reconstructs and audits
+the original physical trajectory without changing any tolerance. All 24 full
+transfers in the v137/v138 comparison qualified (291 ms v138 median), but v138's
+broad suite still recorded 331 passes and one strict coast equality failure;
+the option-disabled integration also failed that gate. Centring has not
+eliminated the issue, and no additional reliable speedup is established. See
+[reference-centred coordinates and retained failures](docs/GTOC12_STATE_ORIGIN.md).
 The existing visualiser now displays these synthetic solver benchmarks in a
 separate GPU solver progress panel; the fleet score remains unchanged.
 

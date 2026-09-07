@@ -65,7 +65,13 @@ def test_known_coast_optimum_and_device_updates(hold, free_dep, free_arr):
             r = gpu.last_report
             assert ok and r["qualified"] == 1, r
             assert max(r["primal_residual"], r["dual_residual"], r["relative_gap"]) <= 1e-9
-            assert r["workspace_creations"] == 1 and r["device_numeric_updates"] == repeat
+            # Reference-centred solves perform one initial GPU numeric update
+            # after compiling the original symbolic structure and audit.
+            initial_update = int(os.environ.get("SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN") == "1")
+            assert (
+                r["workspace_creations"] == 1
+                and r["device_numeric_updates"] == repeat + initial_update
+            )
             if previous is not None:
                 # Matrix values stay on device during successful updates. Only
                 # topology/conversion flags and six audit scalars cross here.
