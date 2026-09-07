@@ -82,6 +82,15 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Development GPU graph comparison:** the public CLI now selects native SCvx/QOCO
+graph execution with `--gpu-execution graph` (or automatically for CUDA SCvx).
+Four matched H100 campaigns reduce median complete time from **60.83 to 58.85 s**
+while retaining **548.255 kg** and both mission checker passes. Both GPUs pass
+38 CLI/refinement checks. The new result is downloaded and displayed as
+**GPU graphs v332 (548 kg certified)**. Inner-solver qualification outliers remain
+under investigation; this development candidate has not been merged into main.
+[Evidence, residual-arithmetic diagnosis and viewer loading](results/lambda/2026-09-08/gpu-execution-v328/README.md).
+
 **Collection-table ephemerides now run on CUDA:** matched H100 campaigns take
 **60.41 s versus 62.93 s** with host table preparation (**4.0% less time**, two
 runs per mode). All four preserve the **548.255 kg** mission and pass both

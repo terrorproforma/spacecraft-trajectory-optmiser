@@ -34,6 +34,47 @@ def test_refinement_commands_expose_cuda_backend(command):
     assert parsed.assembly_backend == "cuda"
     assert parsed.convex_solver_backend == "qoco" and parsed.qoco_ruiz_iterations == 2
     assert parsed.outer_loop_backend == "cuda"
+    assert parsed.gpu_execution == "auto"
+    assert _refinement_backend_report(parsed)["gpu_execution_selected"] == "graph"
+
+
+@pytest.mark.parametrize("mode", ["graph", "dispatch"])
+def test_execution_command_scope_restores_flags_even_after_failure(monkeypatch, mode):
+    import os
+
+    from spacepdhcg.gtoc12.gpu_execution import _GRAPH_SWITCHES, using_gpu_execution
+
+    names = ["SPACEPDHCG_TEST_" + name for name in _GRAPH_SWITCHES]
+    for i, name in enumerate(names):
+        if i % 2:
+            monkeypatch.setenv(name, "caller-value")
+        else:
+            monkeypatch.delenv(name, raising=False)
+    previous = {name: os.environ.get(name) for name in names}
+    with pytest.raises(RuntimeError, match="command failed"):
+        with using_gpu_execution(Namespace(gpu_execution=mode, outer_loop_backend="cuda")):
+            assert all(os.environ[name] == str(int(mode == "graph")) for name in names)
+            raise RuntimeError("command failed")
+    assert {name: os.environ.get(name) for name in names} == previous
+
+
+def test_execution_selection_validates_graph_and_preserves_cpu_environment(monkeypatch):
+    import os
+
+    from spacepdhcg.gtoc12.gpu_execution import selected_execution, using_gpu_execution
+
+    name = "SPACEPDHCG_TEST_QOCO_IPM_GRAPH"
+    monkeypatch.setenv(name, "caller-value")
+    with using_gpu_execution(Namespace()) as selected:
+        assert selected == "dispatch" and os.environ[name] == "caller-value"
+    assert selected_execution(Namespace(outer_loop_backend="cuda")) == "graph"
+    dispatch = Namespace(outer_loop_backend="cuda", gpu_execution="dispatch")
+    assert selected_execution(dispatch) == "dispatch"
+    with pytest.raises(ValueError, match="requires --outer-loop-backend cuda"):
+        selected_execution(Namespace(gpu_execution="graph"))
+    with pytest.raises(ValueError, match="workers 1"):
+        with using_gpu_execution(Namespace(outer_loop_backend="cuda", workers=2)):
+            pytest.fail("unsupported graph command started")
 
 
 def test_qoco_preflight_and_requested_report(tmp_path, monkeypatch):
