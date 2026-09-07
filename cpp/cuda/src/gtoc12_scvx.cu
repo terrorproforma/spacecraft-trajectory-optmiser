@@ -152,8 +152,16 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
         record.merit=merit; record.final_mass_fraction=x[7*nodes-1]; record.max_defect=m->defect;
         record.virtual_inf=m->virtual_inf; record.ratio=ratio; record.step=m->step;
         record.trust_state=s->trust_state; record.trust_control=s->trust_control;
+        const bool feasible=m->defect<=p.defect_tolerance && m->virtual_inf<=10.0*p.defect_tolerance;
+        // A ratio of two negligible merit differences has no useful sign.
+        // Accept a feasible stationary candidate using BOTH existing absolute
+        // objective bounds, then retain the usual finer-propagation check.
+        // Large model increases, actual increases, and infeasible points still
+        // follow the rejection path regardless of their step length.
+        const bool stationary=feasible && fabs(predicted)<=p.objective_tolerance
+            && fabs(actual)<=p.objective_tolerance;
         if (s->polishing) --s->polish_left;
-        if (ratio<p.ratio_reject) {
+        if (ratio<p.ratio_reject && !stationary) {
             shrink(s,p);
             if (s->trust_state<=p.minimum_trust && s->trust_control<=p.minimum_trust) {
                 s->result.status=2; s->result.diagnostic=2; s->command.done=1;
@@ -171,7 +179,6 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
                 s->trust_state=fmin(s->trust_state*p.grow_factor,p.maximum_trust);
                 s->trust_control=fmin(s->trust_control*p.grow_factor,p.maximum_trust);
             }
-            const bool feasible=m->defect<=p.defect_tolerance && m->virtual_inf<=10.0*p.defect_tolerance;
             if (feasible && (m->step<=p.step_tolerance || fabs(predicted)<=p.objective_tolerance)) {
                 if (s->polishing || p.polish_iterations==0 || p.polish_substeps<=p.substeps) {
                     s->result.status=1; s->command.done=1;

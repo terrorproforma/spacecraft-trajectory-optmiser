@@ -3,6 +3,8 @@
 #include "graph_append.h"
 
 #include <thread>
+#include <atomic>
+#include <unistd.h>
 #include <dlfcn.h>
 
 #include <algorithm>
@@ -1594,15 +1596,18 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     }
     const bool low_thrust =
         problem->dynamics.model == SPACEPDHCG_CUDA_DYNAMICS_LOW_THRUST;
-    // Low-thrust mass-flow equalities are much smaller than the virtual
-    // penalty scale, so they require less KKT bias and tighter refinement.
+    // Low-thrust mass-flow equalities and virtual penalties span many orders
+    // of magnitude. Near-zero factor regularization makes identical QPs vary
+    // with cuDSS accumulation order. Stabilize the factors, then refine against
+    // the original, unregularized equations at the existing strict tolerance.
     // ruiz_iters is the caller's choice (amendment single-gpu-v1.2 selects
     // QOCO's own Ruiz equilibration for IPM attempts; 0 keeps the pinned
     // QOCO commit's default of no equilibration).
     SettingsAbi settings{
         200, std::max(0, ruiz_iterations), low_thrust ? 20 : 5,
         low_thrust ? 1.0e-12 : 1.0e-6,
-        1.0e-13, low_thrust ? 1.0e-13 : 1.0e-8, 1.0e-13,
+        low_thrust ? 1.0e-9 : 1.0e-13, low_thrust ? 1.0e-9 : 1.0e-8,
+        low_thrust ? 1.0e-9 : 1.0e-13,
         low_thrust ? 1.0e-13 : 1.0e-11,
         tolerance, tolerance, 1.0e-5, 1.0e-5, 0,
     };
@@ -1881,6 +1886,56 @@ spacepdhcg_cuda_status native_solver_values(spacepdhcg_native_qoco* w,cudaStream
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
+// Explicit diagnostic only. Decimal round-trip values and retained topology
+// permit standalone replays without reconstructing a trajectory or its seed.
+// The destination directory must already exist; existing files are never replaced.
+spacepdhcg_cuda_status snapshot_qoco_problem(spacepdhcg_native_qoco* w,cudaStream_t stream) {
+    const auto* directory=std::getenv("SPACEPDHCG_QOCO_SNAPSHOT_DIRECTORY");
+    if (!directory || !directory[0]) return SPACEPDHCG_CUDA_SUCCESS;
+    const auto& f=w->formulation;
+    const size_t count=f.p.values.size()+f.a.values.size()+f.g.values.size()
+        +f.c.size()+f.b.size()+f.h.size();
+    std::vector<double> original(count),shifted(w->origin_mode ? count : 0),origin(w->origin_mode ? w->variables : 0);
+    double offset=0;
+    const double* solver_values{};
+    if (native_solver_values(w,stream,&solver_values)!=SPACEPDHCG_CUDA_SUCCESS)
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    const auto download=[&](double* target,const double* source,size_t n) {
+        if (!n) return true;
+        if (cudaMemcpyAsync(target,source,n*sizeof(double),cudaMemcpyDeviceToHost,stream)!=cudaSuccess) return false;
+        ++w->report.d2h_copy_count; w->report.d2h_bytes+=n*sizeof(double);return true;
+    };
+    const bool copied=download(original.data(),qoco_gpu_conversion_values(w->conversion.device),count)
+        && (!w->origin_mode || (download(shifted.data(),solver_values,count)
+            && download(origin.data(),qoco_gpu_audit_origin(w->gpu_audit),origin.size())
+            && download(&offset,qoco_gpu_audit_origin_offset(w->gpu_audit),1)));
+    const auto waited=cudaStreamSynchronize(stream);
+    if (!copied || waited!=cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    static std::atomic<unsigned long long> sequence{0};
+    const auto id=sequence.fetch_add(1);
+    char path[4096];
+    const int length=std::snprintf(path,sizeof(path),"%s/qp-%d-%06llu.txt",directory,int(getpid()),id);
+    if (length<0 || length>=int(sizeof(path))) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    FILE* file=std::fopen(path,"wx");
+    if (!file) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    std::fprintf(file,"SPACEPDHCG_QOCO_QP_V1\n%d %zu %zu %zu %zu %zu %d %zu %d\n",w->variables,
+        f.b.size(),f.h.size(),f.p.values.size(),f.a.values.size(),f.g.values.size(),f.nonnegative,f.soc.size(),int(w->origin_mode));
+    const auto& p=w->configured_settings;
+    std::fprintf(file,"%d %d %d %u\n%.17g %.17g %.17g %.17g %.17g %.17g %.17g %.17g %.17g\n",
+        p.max_iters,p.ruiz_iters,p.max_ir_iters,unsigned(p.verbose),p.ir_tol,p.kkt_static_reg_p,
+        p.kkt_static_reg_a,p.kkt_static_reg_g,p.kkt_dynamic_reg,p.abstol,p.reltol,p.abstol_inaccurate,p.reltol_inaccurate);
+    const auto integers=[&](const std::vector<int>& a) { std::fprintf(file,"%zu",a.size());for(int v:a) std::fprintf(file," %d",v);std::fprintf(file,"\n"); };
+    for (const auto* matrix:{&f.p,&f.a,&f.g}) { integers(matrix->offsets);integers(matrix->indices); }
+    integers(f.soc);
+    const auto numbers=[&](const std::vector<double>& a) { std::fprintf(file,"%zu",a.size());for(double v:a) std::fprintf(file," %.17g",v);std::fprintf(file,"\n"); };
+    numbers(original);numbers(shifted);numbers(origin);std::fprintf(file,"%.17g\n",offset);
+    const bool failed=std::ferror(file)!=0;
+    if (std::fclose(file)!=0 || failed) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    std::fprintf(stderr,"QOCO_SNAPSHOT id=%llu prior_solves=%llu origin=%d path=%s\n",id,
+        static_cast<unsigned long long>(w->report.solves),int(w->origin_mode),path);
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
 spacepdhcg_cuda_status native_qoco_update_solve_impl(
     spacepdhcg_native_qoco* workspace,
     const spacepdhcg_cuda_scvx_problem* problem,
@@ -2086,6 +2141,8 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         }
         ++workspace->report.device_numeric_updates; workspace->origin_applied=true;
     }
+    if (const auto snapshot=snapshot_qoco_problem(workspace,stream); snapshot!=SPACEPDHCG_CUDA_SUCCESS)
+        return finish(snapshot);
     if (workspace->configured_settings.verbose != 0) {
         // Diagnostic only (SPACEPDHCG_QOCO_VERBOSE=1): content hash of the data
         // handed to QOCO, so identical-data re-solves can be told from drift.
@@ -2434,6 +2491,9 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_begin_graph(
     spacepdhcg_native_qoco* w,cudaStream_t stream,const QocoGraphProgress** progress) {
     if (progress) *progress=nullptr;
     if (!w || !progress || !stream || stream==cudaStreamLegacy) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    // Snapshotting synchronizes and writes host files; never silently omit graph iterations.
+    const char* snapshot_directory=std::getenv("SPACEPDHCG_QOCO_SNAPSHOT_DIRECTORY");
+    if (snapshot_directory && *snapshot_directory) return SPACEPDHCG_CUDA_UNSUPPORTED;
     if (w->graph_active || w->deferred_active || std::this_thread::get_id()!=w->creation_owner)
         return SPACEPDHCG_CUDA_INVALID_STATE;
     int device=-1;cudaStreamCaptureStatus capture{};

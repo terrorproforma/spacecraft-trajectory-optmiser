@@ -844,7 +844,15 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
             "trust_state": trust_state,
             "trust_control": trust_control,
         }
-        if ratio < settings.ratio_reject:
+        # Ratios lose their meaning when both merit differences are negligible.
+        # A feasible stationary point must still pass the finer propagation below.
+        stationary = (
+            new_defect <= settings.defect_tolerance
+            and record["virtual_inf"] <= 10.0 * settings.defect_tolerance
+            and abs(predicted) <= settings.objective_tolerance
+            and abs(actual) <= settings.objective_tolerance
+        )
+        if ratio < settings.ratio_reject and not stationary:
             trust_state = max(trust_state * settings.shrink_factor, settings.minimum_trust)
             trust_control = max(trust_control * settings.shrink_factor, settings.minimum_trust)
             record["accepted"] = 0.0

@@ -29,7 +29,7 @@ void controller() {
     CUDA(cudaMalloc(&parameters,sizeof(*parameters)));
     std::vector<double> x(100,2.0), got(28), zeros(28,0.0);
     CUDA(cudaMemcpy(dx,x.data(),800,cudaMemcpyHostToDevice));
-    for (bool device:{false,true}) for (int test=0;test<15;++test) {
+    for (bool device:{false,true}) for (int test=0;test<22;++test) {
         auto p=fixture();
         State host{}; host.command.substeps=8; host.merit=10; host.trust_state=.2;
         host.trust_control=1; host.polish_left=4; host.result.virtual_inf=INFINITY;
@@ -54,6 +54,19 @@ void controller() {
             // Feasible and improving nonlinear merit, but a negative model
             // prediction larger than the objective tolerance is not convergence.
         }
+        if (test>=15) {
+            // H100 capture v172: accurate QPs were rejected for a ~1e-13
+            // merit increase until the trust region collapsed.
+            host.merit=0.021875559685678503;
+            metrics={0.021875559685914866,0,0,1.965094753586527e-14,
+                8.534828883796292e-19,2.4184484914702153e-08,0};
+            if(test==16) metrics.fuel=host.merit+2*p.objective_tolerance;
+            if(test==17) metrics.virtual_sum=2*p.objective_tolerance/p.virtual_weight;
+            if(test==18) metrics.defect=2*p.defect_tolerance;
+            if(test==19) metrics.virtual_inf=20*p.defect_tolerance;
+            if(test==20) qualified=0;
+            if(test==21) metrics.invalid=1;
+        }
         const int prior=host.result.iterations;
         CUDA(cudaMemcpy(ds,&host,sizeof(host),cudaMemcpyHostToDevice));
         CUDA(cudaMemcpy(dm,&metrics,sizeof(metrics),cudaMemcpyHostToDevice));
@@ -70,7 +83,7 @@ void controller() {
         CUDA(cudaMemcpy(&host,ds,sizeof(host),cudaMemcpyDeviceToHost));
         Record record{}; CUDA(cudaMemcpy(&record,records+prior,sizeof(record),cudaMemcpyDeviceToHost));
         CUDA(cudaMemcpy(got.data(),states,28*sizeof(double),cudaMemcpyDeviceToHost));
-        const bool accepted=test==3 || test==4 || test==5 || test==6 || test==8 || test==10 || test==14;
+        const bool accepted=test==3 || test==4 || test==5 || test==6 || test==8 || test==10 || test==14 || test==15;
         REQUIRE(record.accepted==accepted); REQUIRE(host.result.iterations==prior+1);
         REQUIRE(record.qoco_status==(device ? 2 : 1));
         for (double value:got) REQUIRE(value==(accepted ? 2.0 : 0.0));
@@ -84,6 +97,9 @@ void controller() {
         if (test==10 || test==11) REQUIRE(host.command.done && host.result.status==0);
         if (test==12) REQUIRE(host.command.done && host.result.diagnostic==2);
         if (test==14) REQUIRE(!host.command.done && !host.polishing && host.result.status==0);
+        if (test==15) REQUIRE(record.ratio==-1 && host.command.refresh && host.polishing
+            && host.command.substeps==16 && !host.command.done);
+        if (test>=16) REQUIRE(!host.polishing && !host.command.done && host.trust_state==.1);
         if (accepted) for (int j=0;j<3;++j) REQUIRE(host.result.departure_vinf[j]==2 && host.result.arrival_vinf[j]==2);
     }
     for (int status=0;status<5;++status) for (int feasible=0;feasible<2;++feasible) {
@@ -168,5 +184,5 @@ void reductions(int nodes,bool poison) {
 int main() {
     controller();
     for (int n:{4,37,4097,10001}) for (bool poison:{false,true}) reductions(n,poison);
-    std::puts("PASS: 15 controller branches, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");
+    std::puts("PASS: 22 controller branches, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");
 }
