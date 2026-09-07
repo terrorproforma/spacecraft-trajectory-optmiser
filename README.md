@@ -82,6 +82,15 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Parallel flight-time selection:** one CUDA warp now evaluates each arrival's
+flight-time candidates, preserving exact tie order. Cached pricing is **2.19×
+faster on H100 and 2.86× locally**; complete retiming gains **1.040× / 1.023×**.
+At five-day grid spacing, cached pricing gains **4.57× H100 / 4.40× RTX 5090**.
+The H100 trace measures an **8.8× faster leg-selection kernel**. **99 tests pass
+on each GPU**, all three H100 sanitizers report zero errors, and the 526.489 kg
+mission passes both physics checkers again. Fleet score remains unchanged.
+[Measurements, scaling and remaining work](docs/GPU_WARP_RETIMING.md).
+
 **Single-download retiming output:** consolidating six result transfers into one
 reduces cached pricing time by **4.4% on H100 and 15.0% on RTX 5090** against the
 published graph runtime. Complete retiming changes by less than 1%. **93 tests
