@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/usr/local/bin/nsys",
+    "profile",
+    "--trace=cuda",
+    "--cuda-graph-trace=node",
+    "--sample=none",
+    "--cpuctxsw=none",
+    "--capture-range=cudaProfilerApi",
+    "--capture-range-end=stop",
+    "--output=/home/ubuntu/spacepdhcg-packed-cert-v244/cuda-trace",
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "/home/ubuntu/spacepdhcg-pageable-retime-v243/repo/profile_retime_trace_v242.py",
+    "/home/ubuntu/spacepdhcg-packed-cert-v244/trace-boundary.json",
+    "/home/ubuntu/spacepdhcg-native-campaign-v209/output/ship_01/refinements.json"
+  ],
+  "returncode": 0
+}

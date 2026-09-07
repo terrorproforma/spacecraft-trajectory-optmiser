@@ -1,0 +1,80 @@
+{
+  "code_commit": "41293ed5",
+  "base_commit": "17c5b77d",
+  "tests_per_gpu": 93,
+  "sanitizer_tests": 30,
+  "memcheck_errors": 0,
+  "initcheck_errors": 0,
+  "fleet_weighted_kg": 12805.194102488575,
+  "timing": {
+    "H100": {
+      "full": {
+        "old": 0.06371449399739504,
+        "candidate": 0.06344730698037893
+      },
+      "cached": {
+        "old": 0.0007584909908473492,
+        "candidate": 0.0007247590110637248
+      }
+    },
+    "RTX5090": {
+      "full": {
+        "old": 0.22515810499999134,
+        "candidate": 0.2238801120001881
+      },
+      "cached": {
+        "old": 0.0012493340000219177,
+        "candidate": 0.0010622680001688423
+      }
+    }
+  },
+  "mission": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 526.4887063655001,
+    "weighted_score_fixed_bonus_kg": 526.4887063655001,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 16.42988620576667,
+    "max_position_error_km": 0.44866789433124693,
+    "max_velocity_error_km_s": 7.661936280487466e-08,
+    "max_mass_error_kg": 7.23048287909478e-11,
+    "violations": []
+  },
+  "refinement_seconds": 7.713061177986674,
+  "h100_kernel_trace": [
+    {
+      "Time (%)": "83.7",
+      "Total Time (ns)": "47762514",
+      "Instances": "1300",
+      "Avg (ns)": "36740.4",
+      "Med (ns)": "38080.0",
+      "Min (ns)": "23296",
+      "Max (ns)": "40256",
+      "StdDev (ns)": "4135.2",
+      "Name": "<unnamed>::leg(const spacepdhcg_gtoc12_retime_stage *, int, int, const double *, const unsigned char *, const double *, const unsigned char *, const double *, const int *, const double *, const <unnamed>::Controls *, double *, int *)"
+    },
+    {
+      "Time (%)": "9.8",
+      "Total Time (ns)": "5563554",
+      "Instances": "1300",
+      "Avg (ns)": "4279.7",
+      "Med (ns)": "4480.0",
+      "Min (ns)": "1632",
+      "Max (ns)": "4608",
+      "StdDev (ns)": "756.1",
+      "Name": "<unnamed>::camp(const spacepdhcg_gtoc12_retime_stage *, int, const double *, int, const double *, double *, int *)"
+    },
+    {
+      "Time (%)": "6.5",
+      "Total Time (ns)": "3725903",
+      "Instances": "100",
+      "Avg (ns)": "37259.0",
+      "Med (ns)": "36896.0",
+      "Min (ns)": "35999",
+      "Max (ns)": "39520",
+      "StdDev (ns)": "1284.4",
+      "Name": "<unnamed>::finish(const double *, int, int, const int *, const int *, int *, int *, <unnamed>::Result *, const spacepdhcg_gtoc12_retime_stage *, const double *, const int *, double *, const double *, const unsigned char *, double *, unsigned char *)"
+    }
+  ]
+}

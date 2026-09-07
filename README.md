@@ -82,6 +82,14 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Single-download retiming output:** consolidating six result transfers into one
+reduces cached pricing time by **4.4% on H100 and 15.0% on RTX 5090** against the
+published graph runtime. Complete retiming changes by less than 1%. **93 tests
+pass on each GPU**, H100 sanitizers report zero errors, and the 526.489 kg mission
+passes both physics checkers again. A new H100 CUDA trace attributes **83.7% of
+retiming kernel time to leg selection**, making its serial flight-time loop the
+next parallelisation target. [Measurements and evidence](docs/GPU_PACKED_RETIMING_OUTPUT.md).
+
 **CUDA graph retiming:** a retained graph replaces 27 per-stage kernel submissions
 for a 13-leg price evaluation. Matched comparisons against the published runtime
 reduce cached pricing time by **3.3% on H100 and 4.0% on RTX 5090**; complete

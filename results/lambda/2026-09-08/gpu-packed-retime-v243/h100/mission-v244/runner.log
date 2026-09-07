@@ -1,0 +1,14 @@
+FACTOR_GRAPH allocator bytes=23185748 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=14168548 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=11293436 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=12708156 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=11293436 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=34349628 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=25447300 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=9853436 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=13386044 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=12708156 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=11915708 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=20469188 blocks=9 misses=0
+{"pid": 140155, "start": 1788807661.3304975, "complete": true, "rows": [], "source_sha256": {"src/spacepdhcg/gtoc12/retiming.py": "cf44940f3f9ed9d364423dc0c038d43a7c4bd36acedac65bb51848edd26f9514", "cpp/cuda/src/native_qoco_adapter.cpp": "69dfc75826b944ad3f007ab02fcb21b05f2e5d0ce8b858ea4d435cd1b34f6338"}, "retime_gpu": {"backend": "cuda", "completed_batches": 24, "completed_branch_requests": 412116, "gpu_used": true, "completed_element_hops": 206058, "completed_retime_dp_calls": 6, "retime_table_uploads": 0, "retime_resident_builds": 1, "retime_resident_cells": 206058, "retime_sweep_updates": 1, "retime_sweep_samples": 1}, "retiming": {"improved": true, "objective_before_kg": 475.9753593429158, "objective_after_kg": 526.488706365503, "collected_before_kg": 475.9753593429158, "collected_after_kg": 526.488706365503, "final_mass_before_kg": 1274.0309637293344, "final_mass_after_kg": 1030.5154025176992, "deploy_phase_days_before": 1470.0, "deploy_phase_days_after": 1080.0, "camp_days_before": 715.0, "camp_days_after": 1140.0, "end_gap_days_before": 304.0, "end_gap_days_after": 259.0, "propellant_price": 0.0234375, "mass_rounds": 1, "price_rounds": 6, "lambert_evaluations": 412116, "wall_seconds": 0.2978737759985961, "failure": ""}, "independent": {"ok": true, "ships": 1, "mined_asteroids": 6, "total_mass_kg": 526.4887063655001, "weighted_score_fixed_bonus_kg": 526.4887063655001, "weighted_score_dynamic_kg": null, "ship_limit": 16.42988620576667, "max_position_error_km": 0.44866789433124693, "max_velocity_error_km_s": 7.661936280487466e-08, "max_mass_error_kg": 7.23048287909478e-11, "violations": []}, "official": {"ok": true, "ships": 1, "mined_asteroids": 6, "total_mass_kg": 526.489, "return_code": 0, "wall_seconds": 0.09405866998713464, "message": "Check successfully!"}, "end": 1788807671.3059883}
