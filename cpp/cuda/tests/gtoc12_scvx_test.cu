@@ -29,7 +29,7 @@ void controller() {
     CUDA(cudaMalloc(&parameters,sizeof(*parameters)));
     std::vector<double> x(100,2.0), got(28), zeros(28,0.0);
     CUDA(cudaMemcpy(dx,x.data(),800,cudaMemcpyHostToDevice));
-    for (bool device:{false,true}) for (int test=0;test<14;++test) {
+    for (bool device:{false,true}) for (int test=0;test<15;++test) {
         auto p=fixture();
         State host{}; host.command.substeps=8; host.merit=10; host.trust_state=.2;
         host.trust_control=1; host.polish_left=4; host.result.virtual_inf=INFINITY;
@@ -49,6 +49,11 @@ void controller() {
         if (test==11) { host.polishing=1; host.polish_left=1; metrics.penalty=.002; }
         if (test==12) { host.trust_state=host.trust_control=1e-6; metrics.penalty=.002; }
         if (test==13) { metrics.virtual_sum=NAN; }
+        if (test==14) {
+            metrics.fuel=10; metrics.virtual_sum=1e-8; metrics.virtual_inf=1e-9;
+            // Feasible and improving nonlinear merit, but a negative model
+            // prediction larger than the objective tolerance is not convergence.
+        }
         const int prior=host.result.iterations;
         CUDA(cudaMemcpy(ds,&host,sizeof(host),cudaMemcpyHostToDevice));
         CUDA(cudaMemcpy(dm,&metrics,sizeof(metrics),cudaMemcpyHostToDevice));
@@ -65,7 +70,7 @@ void controller() {
         CUDA(cudaMemcpy(&host,ds,sizeof(host),cudaMemcpyDeviceToHost));
         Record record{}; CUDA(cudaMemcpy(&record,records+prior,sizeof(record),cudaMemcpyDeviceToHost));
         CUDA(cudaMemcpy(got.data(),states,28*sizeof(double),cudaMemcpyDeviceToHost));
-        const bool accepted=test==3 || test==4 || test==5 || test==6 || test==8 || test==10;
+        const bool accepted=test==3 || test==4 || test==5 || test==6 || test==8 || test==10 || test==14;
         REQUIRE(record.accepted==accepted); REQUIRE(host.result.iterations==prior+1);
         REQUIRE(record.qoco_status==(device ? 2 : 1));
         for (double value:got) REQUIRE(value==(accepted ? 2.0 : 0.0));
@@ -78,6 +83,7 @@ void controller() {
         if (test==9) REQUIRE(record.ratio==-1);
         if (test==10 || test==11) REQUIRE(host.command.done && host.result.status==0);
         if (test==12) REQUIRE(host.command.done && host.result.diagnostic==2);
+        if (test==14) REQUIRE(!host.command.done && !host.polishing && host.result.status==0);
         if (accepted) for (int j=0;j<3;++j) REQUIRE(host.result.departure_vinf[j]==2 && host.result.arrival_vinf[j]==2);
     }
     for (int status=0;status<5;++status) for (int feasible=0;feasible<2;++feasible) {
@@ -85,8 +91,22 @@ void controller() {
         CUDA(cudaMemcpy(ds,&host,sizeof(host),cudaMemcpyHostToDevice));
         finalize<<<1,1>>>(ds,fixture(),0);
         CUDA(cudaMemcpy(&host,ds,sizeof(host),cudaMemcpyDeviceToHost));
-        const int expected=status==0 || status==2 ? (feasible ? 1 : 3) : status;
+        const int expected=(status==0 || status==2) && !feasible ? 3 : status;
         REQUIRE(host.result.status==expected);
+    }
+    for (int test=0;test<5;++test) {
+        auto p=fixture();State host{};host.command.refresh=1;host.polishing=1;host.merit=1;
+        Metrics metrics{1,0,0,0,0,0,0};
+        if(test==1) metrics.defect=2*p.defect_tolerance;
+        if(test==2) metrics.fuel+=2*p.objective_tolerance;
+        if(test==3) host.polishing=0; // no preceding convergence witness
+        if(test==4) host.result.virtual_inf=20*p.defect_tolerance;
+        CUDA(cudaMemcpy(ds,&host,sizeof(host),cudaMemcpyHostToDevice));
+        CUDA(cudaMemcpy(dm,&metrics,sizeof(metrics),cudaMemcpyHostToDevice));
+        set_reference<<<1,1>>>(ds,dm,p,true);
+        CUDA(cudaMemcpy(&host,ds,sizeof(host),cudaMemcpyDeviceToHost));
+        REQUIRE(host.result.status==(test==0 ? 1 : 0));
+        REQUIRE(host.command.done==(test==0));
     }
     CUDA(cudaFree(ds)); CUDA(cudaFree(dm)); CUDA(cudaFree(dx)); CUDA(cudaFree(states));
     CUDA(cudaFree(controls)); CUDA(cudaFree(records)); CUDA(cudaFree(parameters));
@@ -148,5 +168,5 @@ void reductions(int nodes,bool poison) {
 int main() {
     controller();
     for (int n:{4,37,4097,10001}) for (bool poison:{false,true}) reductions(n,poison);
-    std::puts("PASS: 14 controller branches, 10 final states, 8 multi-block reductions, 24 physical thrust gates");
+    std::puts("PASS: 15 controller branches, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");
 }

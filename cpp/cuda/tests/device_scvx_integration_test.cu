@@ -3611,6 +3611,11 @@ IntegrationResult run_resident_sequence(
             }
             for (std::size_t index = 0U; index < outer.outer_iterations; ++index) {
                 const auto& record = records[index];
+                char iteration_ratio_json[48];
+                if (std::isfinite(record.reduction_ratio))
+                    std::snprintf(iteration_ratio_json, sizeof(iteration_ratio_json), "%.17g", record.reduction_ratio);
+                else
+                    std::snprintf(iteration_ratio_json, sizeof(iteration_ratio_json), "null");
                 std::printf(
                     "{\"case\":\"g4_iteration\",\"family\":\"%s\","
                     "\"policy\":\"%s\",\"intervals\":%zu,\"outer\":%u,"
@@ -3622,7 +3627,7 @@ IntegrationResult run_resident_sequence(
                     "\"resolve_fingerprint\":\"%016llx\","
                     "\"resolve_fingerprint_match\":%d,\"trust_action\":%d,"
                     "\"trust_before\":%.17g,\"trust_after\":%.17g,"
-                    "\"predicted\":%.17g,\"actual\":%.17g,\"ratio\":%.17g,"
+                    "\"predicted\":%.17g,\"actual\":%.17g,\"ratio\":%s,"
                     "\"step_fraction\":%.17g,"
                     "\"maximum_stage_trust_distance\":%.17g,"
                     "\"terminal_trust_distance\":%.17g,"
@@ -3672,7 +3677,7 @@ IntegrationResult run_resident_sequence(
                     record.trust_radius_after,
                     record.predicted_reduction,
                     record.actual_reduction,
-                    record.reduction_ratio,
+                    iteration_ratio_json,
                     record.step_fraction,
                     record.maximum_stage_trust_distance,
                     record.terminal_trust_distance,

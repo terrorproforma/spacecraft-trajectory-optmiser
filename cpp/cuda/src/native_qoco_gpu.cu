@@ -263,7 +263,7 @@ struct QocoGpuAudit {
     QocoAuditMemory memory{};
     StoredMatrix p, a, g, dual_map;
     Buffer<double> c, b, h, slack, host_x, host_y, host_z;
-    Buffer<double> origin, translated;
+    Buffer<double> origin, translated, origin_offset, origin_partial;
     int origin_count{};
     Buffer<int> cone_starts;
     Buffer<Metric> metrics, partial;
@@ -401,6 +401,28 @@ cudaError_t qoco_gpu_graph_record(QocoGraphProgress* progress,const QocoReplaySt
 }
 
 namespace {
+__global__ void origin_objective_offset(int n,const double* q,const double* c,
+    const double* shifted_c,double* partial) {
+    __shared__ double sums[256];
+    double value=0;
+    for (int i=blockIdx.x*blockDim.x+threadIdx.x;i<n;i+=blockDim.x*gridDim.x)
+        value+=0.5*q[i]*(c[i]+shifted_c[i]);
+    sums[threadIdx.x]=value; __syncthreads();
+    for (int step=128;step;step/=2) {
+        if (threadIdx.x<step) sums[threadIdx.x]+=sums[threadIdx.x+step];
+        __syncthreads();
+    }
+    if (!threadIdx.x) partial[blockIdx.x]=sums[0];
+}
+__global__ void finish_origin_offset(int n,const double* partial,double* offset) {
+    __shared__ double sums[256];
+    sums[threadIdx.x]=threadIdx.x<n ? partial[threadIdx.x] : 0; __syncthreads();
+    for (int step=128;step;step/=2) {
+        if (threadIdx.x<step) sums[threadIdx.x]+=sums[threadIdx.x+step];
+        __syncthreads();
+    }
+    if (!threadIdx.x) *offset=sums[0];
+}
 __global__ void translate_objective(Matrix p,const double* c,const double* origin,double* out) {
     const int i=blockIdx.x*blockDim.x+threadIdx.x;
     if (i>=p.columns) return;
@@ -431,9 +453,11 @@ __global__ void reconstruct_origin(int n,int count,const double* origin,const do
 }
 cudaError_t qoco_gpu_audit_enable_origin(QocoGpuAudit* w) {
     if (!w) return cudaErrorInvalidValue;
-    if (w->origin.data && w->translated.data) return cudaSuccess;
+    if (w->origin.data && w->translated.data && w->origin_offset.data && w->origin_partial.data) return cudaSuccess;
     try {
         if (!w->origin.data) w->origin.allocate(w->p.columns,w->memory);
+        if (!w->origin_offset.data) w->origin_offset.allocate(1,w->memory);
+        if (!w->origin_partial.data) w->origin_partial.allocate(256,w->memory);
         if (!w->translated.data) w->translated.allocate(static_cast<size_t>(w->p.nonzeros)
             +w->a.nonzeros+w->g.nonzeros+w->p.columns+w->a.rows+w->g.rows,w->memory);
         return cudaSuccess;
@@ -457,12 +481,17 @@ cudaError_t qoco_gpu_audit_origin_values(QocoGpuAudit* w,const double* values,cu
     }
     double* c=w->translated.data+matrix_count;
     translate_objective<<<(w->p.columns+255)/256,256,0,stream>>>(w->p.view(),w->c.data,w->origin.data,c);
+    const int blocks=std::min(256,(w->p.columns+255)/256);
+    origin_objective_offset<<<blocks,256,0,stream>>>(w->p.columns,w->origin.data,w->c.data,c,w->origin_partial.data);
+    finish_origin_offset<<<1,256,0,stream>>>(blocks,w->origin_partial.data,w->origin_offset.data);
     if (w->a.rows) translate_rhs<<<(w->a.rows+255)/256,256,0,stream>>>(w->a.view(),w->b.data,w->origin.data,c+w->p.columns);
     if (w->g.rows) translate_rhs<<<(w->g.rows+255)/256,256,0,stream>>>(w->g.view(),w->h.data,w->origin.data,c+w->p.columns+w->a.rows);
     const auto code=cudaGetLastError();
     if (code==cudaSuccess) *output=w->translated.data;
     return code;
 }
+const double* qoco_gpu_audit_origin(const QocoGpuAudit* w) { return w ? w->origin.data : nullptr; }
+const double* qoco_gpu_audit_origin_offset(const QocoGpuAudit* w) { return w ? w->origin_offset.data : nullptr; }
 cudaError_t qoco_gpu_audit_reconstruct(QocoGpuAudit* w,const double* delta,double* x,cudaStream_t stream) {
     if (!w || !w->origin_count || !delta || !x) return cudaErrorInvalidValue;
     reconstruct_origin<<<(w->p.columns+255)/256,256,0,stream>>>(w->p.columns,w->origin_count,w->origin.data,delta,x);

@@ -876,7 +876,7 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
             and last_virtual <= settings.defect_tolerance * 10.0
         )
         if feasible_now and (
-            step <= settings.step_tolerance or predicted <= settings.objective_tolerance
+            step <= settings.step_tolerance or abs(predicted) <= settings.objective_tolerance
         ):
             if (
                 polishing
@@ -889,34 +889,23 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
             # verifier's adaptive RKF78 through the kinks of |T(t)| at thrust switches.
             polishing = True
             disc.substeps = settings.polish_substeps
+            previous_merit = current_merit
             current_merit, current_defect = merit(states, controls)
+            if (
+                current_defect <= settings.defect_tolerance
+                and last_virtual <= settings.defect_tolerance * 10.0
+                and math.isfinite(current_merit)
+                and abs(current_merit - previous_merit) <= settings.objective_tolerance
+            ):
+                status = "converged"
+                break
             trust_state = max(trust_state, 1e-3)
             trust_control = max(trust_control, 1e-2)
             continue
         if iterations >= settings.max_iterations and not polishing:
             break
-    if (
-        polishing
-        and status == "iteration_limit"
-        and current_defect <= settings.defect_tolerance * 10.0
-        and last_virtual <= settings.defect_tolerance * 100.0
-    ):
-        status = "converged"
-        diagnostic = "polish budget reached with converged defects"
-    if (
-        status == "iteration_limit"
-        and current_defect <= settings.defect_tolerance * 10.0
-        and last_virtual <= settings.defect_tolerance * 100.0
-    ):
-        status = "converged"
-        diagnostic = "iteration budget reached with converged defects"
-    if (
-        status == "failed"
-        and current_defect <= settings.defect_tolerance * 10.0
-        and last_virtual <= settings.defect_tolerance * 100.0
-    ):
-        status = "converged"
-        diagnostic = "trust region exhausted at a feasible point"
+    # Preserve budget/trust exhaustion. Small local defects do not certify
+    # convergence or accumulated error over the complete trajectory.
     if status in {"iteration_limit", "failed"} and last_virtual > 1e-4:
         status = "infeasible"
         diagnostic = f"virtual control remains {last_virtual:.3e}"

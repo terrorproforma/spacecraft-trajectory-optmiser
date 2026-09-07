@@ -180,6 +180,7 @@ using BeginReductionScopeFn = int (*)();
 using EndReductionScopeFn = void (*)();
 using DeviceSolutionFn = int (*)(SolverAbi*, int, int, int, const double**, const double**, const double**);
 using DeviceIoFn = int (*)(SolverAbi*, int);
+using StoppingOriginFn = int (*)(SolverAbi*, const double*, const double*);
 using DownloadSolutionFn = int (*)(SolverAbi*);
 using CreateNumericUpdateFn = int (*)(SolverAbi*, int, int, int, void**);
 using DeviceNumericUpdateFn = int (*)(void*, const double*, cudaStream_t);
@@ -425,6 +426,7 @@ struct spacepdhcg_native_qoco {
     std::thread::id deferred_owner{};
     DeviceSolutionFn device_solution{};
     DeviceIoFn set_device_io{};
+    StoppingOriginFn set_stopping_origin{};
     DeviceIoFn primal_start{};
     DownloadSolutionFn download_solution{};
     CreateNumericUpdateFn create_numeric_update{};
@@ -484,12 +486,13 @@ struct spacepdhcg_native_qoco {
         }
         for (auto event : replay_events) if (event) cudaEventDestroy(event);
         if (graph_progress) cudaFree(graph_progress);
-        qoco_gpu_audit_destroy(gpu_audit);
         if (numeric_update_context) destroy_numeric_update(numeric_update_context);
         if (solver != nullptr && cleanup != nullptr) {
             static_cast<void>(cleanup(solver));
             solver = nullptr;
         }
+        // Vendor stopping graphs borrow the audit's origin and offset buffers.
+        qoco_gpu_audit_destroy(gpu_audit);
         if (trajectory_indices) cudaFree(trajectory_indices);
         if (library != nullptr) {
             dlclose(library);
@@ -1420,6 +1423,16 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
             code = -created;
         }
     }
+    if (code == 0 && workspace->origin_mode && workspace->set_stopping_origin
+        && workspace->set_stopping_origin(workspace->solver,
+            qoco_gpu_audit_origin(workspace->gpu_audit),
+            qoco_gpu_audit_origin_offset(workspace->gpu_audit)) != 0) {
+        if (workspace->numeric_update_context) {
+            workspace->destroy_numeric_update(workspace->numeric_update_context);
+            workspace->numeric_update_context=nullptr;
+        }
+        workspace->cleanup(workspace->solver); workspace->solver=nullptr; code=-1;
+    }
     workspace->report.setup_seconds += std::chrono::duration<double>(
         std::chrono::steady_clock::now() - setup_start
     ).count();
@@ -1478,6 +1491,7 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_ipm_finish_device", &result->finish_replay);
     symbol(result->library, "qoco_gpu_get_solution", &result->device_solution);
     symbol(result->library, "qoco_gpu_set_device_io", &result->set_device_io);
+    symbol(result->library, "qoco_gpu_set_stopping_origin", &result->set_stopping_origin);
     symbol(result->library, "qoco_gpu_primal_start", &result->primal_start);
     symbol(result->library, "qoco_gpu_download_solution", &result->download_solution);
     if ((result->set_device_io || result->primal_start || result->download_solution)
@@ -2398,6 +2412,9 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_set_origin(
     const auto allocated=qoco_gpu_audit_enable_origin(w->gpu_audit);
     if (allocated!=cudaSuccess) return allocated==cudaErrorMemoryAllocation
         ? SPACEPDHCG_CUDA_OUT_OF_MEMORY : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    if (w->set_stopping_origin && w->set_stopping_origin(w->solver,
+        qoco_gpu_audit_origin(w->gpu_audit),qoco_gpu_audit_origin_offset(w->gpu_audit)) != 0)
+        return SPACEPDHCG_CUDA_INVALID_STATE;
     const auto copied=qoco_gpu_audit_set_origin(w->gpu_audit,origin,count,stream);
     if (copied!=cudaSuccess) { cudaStreamSynchronize(stream); return SPACEPDHCG_CUDA_RUNTIME_ERROR; }
     w->origin_mode=true; w->origin_applied=false;

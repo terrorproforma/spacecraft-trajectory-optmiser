@@ -1,5 +1,9 @@
 # Native GPU SCvx diagnostic checkpoint, 2026-09-07
 
+Historical QOCO135 checkpoint. See the subsequent
+[origin and convergence diagnosis](GPU_ORIGIN_STOPPING.md) for the corrected
+translated gap, stricter termination, and newer successful and failed runs.
+
 **Experimental, not ready for promotion.** The native adapter now connects
 discretisation, conic assembly, IPM, independent conic auditing, SCvx decisions
 and reference refresh inside a CUDA conditional graph. Repeated trajectory

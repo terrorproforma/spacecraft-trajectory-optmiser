@@ -43,6 +43,15 @@ def test_repeated_penalty_updates_preserve_cpu_transcription() -> None:
 
 def test_recovery_returns_verified_trajectory_and_stops_on_convergence() -> None:
     output = run("--g4-recovery")
+
+    def reject_nonfinite(value: str) -> None:
+        raise ValueError(f"Non-JSON numeric token: {value}")
+
+    # Consumers must be able to read every diagnostic record, including a
+    # first feasibility step whose reduction ratio is undefined.
+    for line in output.splitlines():
+        if line.startswith("{"):
+            json.loads(line, parse_constant=reject_nonfinite)
     records = [
         json.loads(line)
         for line in output.splitlines()

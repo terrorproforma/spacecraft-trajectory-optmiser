@@ -106,9 +106,17 @@ __global__ void initialize(State* s, Settings p, spacepdhcg_gtoc12_conic_paramet
 
 __global__ void set_reference(State* s, const Metrics* m, Settings p, bool only_refresh=false) {
     if (only_refresh && !s->command.refresh) return;
-    s->merit=m->fuel+p.virtual_weight*m->penalty;
+    const double merit=m->fuel+p.virtual_weight*m->penalty;
+    // Polishing starts only after an accepted, feasible convergence step.
+    // Validate that same point with the finer propagator before asking the IPM
+    // for another near-identical solve. Budget/trust exhaustion is no substitute.
+    const bool confirmed=only_refresh && s->polishing && !m->invalid
+        && m->defect<=p.defect_tolerance && s->result.virtual_inf<=10.0*p.defect_tolerance
+        && isfinite(merit) && fabs(merit-s->merit)<=p.objective_tolerance;
+    s->merit=merit;
     s->result.max_defect=m->defect;
     s->command.refresh=0;
+    if (confirmed) { s->result.status=1; s->command.done=1; }
     if (m->invalid || !isfinite(s->merit)) { s->command.error=3; s->command.done=1; }
 }
 
@@ -164,7 +172,7 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
                 s->trust_control=fmin(s->trust_control*p.grow_factor,p.maximum_trust);
             }
             const bool feasible=m->defect<=p.defect_tolerance && m->virtual_inf<=10.0*p.defect_tolerance;
-            if (feasible && (m->step<=p.step_tolerance || predicted<=p.objective_tolerance)) {
+            if (feasible && (m->step<=p.step_tolerance || fabs(predicted)<=p.objective_tolerance)) {
                 if (s->polishing || p.polish_iterations==0 || p.polish_substeps<=p.substeps) {
                     s->result.status=1; s->command.done=1;
                 } else {
@@ -189,9 +197,9 @@ __global__ void accept_candidate(const State* s,int nodes,const double* x,double
 __global__ void finalize(State* s, Settings p, int timeout) {
     auto& r=s->result;
     if (timeout) r.status=4;
-    const bool feasible=r.max_defect<=10.0*p.defect_tolerance && r.virtual_inf<=100.0*p.defect_tolerance;
-    if (r.status==0 && feasible) { r.status=1; r.diagnostic=s->polishing ? 3 : 4; }
-    if (r.status==2 && feasible) { r.status=1; r.diagnostic=5; }
+    // Exhausting a budget or trust region is not a convergence certificate.
+    // Local defects alone neither establish optimality nor bound accumulated
+    // whole-trajectory integration error. Preserve the actual termination.
     if ((r.status==0 || r.status==2) && r.virtual_inf>1e-4) { r.status=3; r.diagnostic=6; }
 }
 
@@ -513,7 +521,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
                 attempts+1,reports[attempts].qualified,reports[attempts].qoco_status);
         if (!refresh_on_device && command.refresh) {
             if ((code=measure(w.states,w.controls,command.substeps,false))) return code;
-            set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);
+            set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p,true);
             if (!read_command()) return 2;
         }
         if (command.error) return command.error;

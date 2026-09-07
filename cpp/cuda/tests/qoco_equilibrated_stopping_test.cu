@@ -40,8 +40,14 @@ void compare(double actual,double expected,int metric,int ruiz,int trial) {
 }
 int main() {
     using Metrics=void(*)(QOCOSolver*,double*);
+    using BindOrigin=int(*)(QOCOSolver*,const double*,const double*);
+    using Begin=int(*)(); using End=void(*)();
     auto metrics=reinterpret_cast<Metrics>(dlsym(RTLD_DEFAULT,"qoco_gpu_iteration_metrics"));REQUIRE(metrics);
-    for(int ruiz:{0,1,5,10}) for(bool absent:{false,true}) for(bool zero_p:{false,true}) {
+    auto reference=reinterpret_cast<Metrics>(dlsym(RTLD_DEFAULT,"qoco_reference_stopping_metrics"));REQUIRE(reference);
+    auto bind=reinterpret_cast<BindOrigin>(dlsym(RTLD_DEFAULT,"qoco_gpu_set_stopping_origin"));REQUIRE(bind);
+    auto begin=reinterpret_cast<Begin>(dlsym(RTLD_DEFAULT,"qoco_gpu_begin_reduction_scope"));REQUIRE(begin);
+    auto end=reinterpret_cast<End>(dlsym(RTLD_DEFAULT,"qoco_gpu_end_reduction_scope"));REQUIRE(end);
+    for(int ruiz:{0,1,5,10}) for(bool absent:{false,true}) for(bool zero_p:{false,true}) for(bool translated:{false,true}) {
         const int n=3,p=absent?0:2,m=absent?0:5;
         Vec P{4,.2,0,.2,30,.4,0,.4,.08},A{.02,3,0,4,0,.2},G{2,0,0,0,.03,0,0,0,4,.1,0,0,0,.1,0};
         if(zero_p)std::fill(P.begin(),P.end(),0);
@@ -52,6 +58,13 @@ int main() {
         QOCOSettings settings{};set_default_settings(&settings);settings.ruiz_iters=ruiz;settings.verbose=0;
         int cone=3;
         REQUIRE(qoco_setup(solver,n,m,p,zero_p?nullptr:&sp.view,c.data(),p?&sa.view:nullptr,b.data(),m?&sg.view:nullptr,h.data(),absent?0:2,absent?0:1,&cone,&settings)==0);
+        double *origin=nullptr,*offset=nullptr;
+        if(translated) {
+            REQUIRE(cudaMalloc(&origin,n*8)==cudaSuccess); REQUIRE(cudaMalloc(&offset,8)==cudaSuccess);
+            REQUIRE(bind(solver,origin,nullptr)==1);
+            REQUIRE(bind(solver,origin,offset)==0);
+        }
+        REQUIRE(begin()==0);
         auto* w=solver->work;auto* scale=w->scaling;
         const auto D=download(scale->Druiz->d_data,n),E=download(scale->Eruiz->d_data,p),F=download(scale->Fruiz->d_data,m);
         const double k=scale->k;
@@ -70,12 +83,34 @@ int main() {
             for(int i=0;i<p;++i)eq[i]-=b[i];for(int i=0;i<m;++i)ineq[i]+=s[i]-h[i];
             for(int i=0;i<n;++i)dual[i]+=aty[i]+gtz[i]+c[i];
             const double primal=(double)(.5L*dot(x,px)+dot(c,x)),dobj=(double)(-.5L*dot(x,px)-dot(b,y)-dot(h,z));
-            const double expected[]{std::max(norm(eq),norm(ineq)),norm(dual),std::max((double)std::abs(dot(s,z)),std::abs(primal-dobj)),
+            double expected[]{std::max(norm(eq),norm(ineq)),norm(dual),std::max((double)std::abs(dot(s,z)),std::abs(primal-dobj)),
                 std::max({norm(ax),norm(b),norm(gx),norm(h),norm(s)}),std::max({norm(px),norm(aty),norm(gtz),norm(c)}),
                 std::max({1.,std::abs(primal),std::abs(dobj)}),primal,m?(double)(dot(s,z)*k/m):0};
+            if(translated) {
+                // Keep the shifted solver QP fixed while changing its origin on
+                // device, including after capture. Independently reconstruct the
+                // original QP and evaluate both objectives in those coordinates.
+                Vec q{2.7+.2*trial,-.4,.03*trial},original_x=x,original_c=c,original_b=b,original_h=h;
+                const auto pq=product(P,n,n,q),aq=product(A,p,n,q),gq=product(G,m,n,q);
+                for(int i=0;i<n;++i) { original_x[i]+=q[i]; original_c[i]-=pq[i]; }
+                for(int i=0;i<p;++i) original_b[i]+=aq[i];
+                for(int i=0;i<m;++i) original_h[i]+=gq[i];
+                const auto original_px=product(P,n,n,original_x);
+                const double original_primal=(double)(.5L*dot(original_x,original_px)+dot(original_c,original_x));
+                const double original_dual=(double)(-.5L*dot(original_x,original_px)-dot(original_b,y)-dot(original_h,z));
+                expected[2]=std::max((double)std::abs(dot(s,z)),std::abs(original_primal-original_dual));
+                expected[5]=std::max({1.,std::abs(original_primal),std::abs(original_dual)});
+                const double gamma=(double)(.5L*dot(q,pq)+dot(original_c,q));
+                upload(origin,q); upload(offset,Vec{gamma});
+            }
             double got[8];metrics(solver,got);for(int i=0;i<8;++i)compare(got[i],expected[i],i,ruiz,trial);
+            double oracle[6];reference(solver,oracle);for(int i=0;i<6;++i)compare(oracle[i],expected[i],i,ruiz,trial);
+            if(translated) { REQUIRE(bind(solver,origin,offset)==0); REQUIRE(bind(solver,nullptr,nullptr)==2); }
         }
+        end(); // Destroy cached metric graphs before their borrowed storage.
         qoco_cleanup(solver);
+        if(origin) REQUIRE(cudaFree(origin)==cudaSuccess);
+        if(offset) REQUIRE(cudaFree(offset)==cudaSuccess);
     }
-    std::puts("Original-equation stopping metrics: 64 scaled/unscaled QP iterates, 8 metrics PASS");
+    std::puts("Original-equation stopping metrics: 128 scaled/unscaled/translated QP iterates, 8 metrics PASS");
 }

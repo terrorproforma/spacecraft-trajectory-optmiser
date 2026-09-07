@@ -83,6 +83,9 @@ void qoco_gpu_audit_destroy(QocoGpuAudit*);
 cudaError_t qoco_gpu_audit_enable_origin(QocoGpuAudit*);
 cudaError_t qoco_gpu_audit_set_origin(QocoGpuAudit*, const double*, int, cudaStream_t);
 cudaError_t qoco_gpu_audit_origin_values(QocoGpuAudit*, const double*, cudaStream_t, const double**);
+// Borrow until audit destruction; contents refresh before the translated solve.
+const double* qoco_gpu_audit_origin(const QocoGpuAudit*);
+const double* qoco_gpu_audit_origin_offset(const QocoGpuAudit*);
 cudaError_t qoco_gpu_audit_reconstruct(QocoGpuAudit*, const double*, double*, cudaStream_t);
 
 struct QocoTopologyInput {

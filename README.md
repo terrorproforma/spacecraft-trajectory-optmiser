@@ -82,13 +82,15 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 7 September 2026
 
-**Experimental native outer-loop checkpoint:** the full SCvx iteration now has
-an opt-in CUDA graph path, and new corrections keep Ruiz stopping metrics in
-original problem units. **337 local tests and 94 H100 integration tests pass**,
-but a separate H100 repetition check qualifies only **4/8** trajectories against
-both physics and the known objective. The shifted-state path remains unreliable;
-this candidate is not ready for promotion. No fleet score or overall speedup
-has changed. See [diagnosis and retained failures](docs/GPU_OUTER_DIAGNOSIS.md).
+**Experimental GPU solver diagnosis:** translated objective gaps now include
+the origin/stationarity correction. SCvx no longer promotes trust or iteration
+exhaustion to convergence, and polishing verifies a preceding convergence step
+with the finer propagator. The latest repeated checks qualify **22/24 locally
+and 7/8 on H100**; H100 integration is **92 passed, 2 failed**. Numerical failures
+remain, so this is not a finished reliability claim. The full SCvx iteration has
+an opt-in CUDA graph path; setup and fleet search still need CPU work. No fleet
+score or overall speedup has changed. See
+[the diagnosis and retained failures](docs/GPU_ORIGIN_STOPPING.md).
 
 **Previous GPU correctness checkpoint:** native v157 rejects SCvx candidates
 above the existing physical thrust ceiling on the GPU before acceptance.
