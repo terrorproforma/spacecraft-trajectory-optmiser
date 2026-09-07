@@ -173,6 +173,7 @@ class GpuLambert:
         self.closed = False
         self.resident_retime_tables = True
         self.retime_cuda_graph = True
+        self.retime_cuda_forward = True
         self.requests = np.zeros(maximum_batch_size, dtype=REQUEST)
         self.results = np.zeros((maximum_batch_size, 2), dtype=RESULT)
         self.hops = np.zeros(maximum_batch_size, dtype=HOP_REQUEST)
@@ -271,14 +272,15 @@ class GpuLambert:
             self._check(self.create(ct.byref(config), self.stream, ct.byref(self.handle)))
             self.scan_samples = scan_samples
 
-    def retime_dp(self, *args):
+    def retime_dp(self, *args, **kwargs):
         from .gpu_retime import GpuRetime
 
         self._owned()
         if self.retime_workspace is None:
             self.retime_workspace = GpuRetime(self.library, self.device_id, self)
-        result = self.retime_workspace.solve(*args)
+        result = self.retime_workspace.solve(*args, **kwargs)
         self.telemetry["completed_retime_dp_calls"] = self.retime_workspace.calls
+        self.telemetry["completed_retime_forward_calls"] = self.retime_workspace.forward_calls
         self.telemetry["retime_table_uploads"] = self.retime_workspace.uploads
         self.telemetry["retime_resident_builds"] = self.retime_workspace.resident_builds
         self.telemetry["retime_resident_cells"] = self.retime_workspace.resident_cells

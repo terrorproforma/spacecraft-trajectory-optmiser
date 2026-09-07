@@ -18,6 +18,27 @@ typedef struct spacepdhcg_gtoc12_sweep_cell {
     int32_t certified, reserved;
 } spacepdhcg_gtoc12_sweep_cell;
 
+typedef struct spacepdhcg_gtoc12_forward_visit {
+    int32_t deploy, collect, donor, reserved; /* donor: earlier/self visit, -1 foreign, -2 missing */
+    double foreign_epoch;
+} spacepdhcg_gtoc12_forward_visit;
+typedef struct spacepdhcg_gtoc12_forward_policy {
+    double initial_mass, minimum_stay, mining_rate, year_days, miner_mass, dry_mass, step;
+} spacepdhcg_gtoc12_forward_policy;
+typedef struct spacepdhcg_gtoc12_forward_result {
+    int32_t failure, mass_count;
+    double propellant, final_mass;
+} spacepdhcg_gtoc12_forward_result;
+/* Schedule selection and forward bookkeeping share the retained graph/output.
+ * Forward failure: 0 success, 1 no deployer, 2 short stay, 3 TOF outside grid,
+ * 4 infeasible leg, 5 authority, 6 dry+payload, 7 invalid stay, 8 infeasible DP. */
+int spacepdhcg_gtoc12_retime_forward_host(void* workspace,
+    const spacepdhcg_gtoc12_retime_stage* stages,double price,double thrust,double exhaust,
+    int32_t* arrivals,int32_t* departures,double* objective,int32_t* feasible,
+    double* delta_v,double* swept_inflation,uint8_t* swept_ok,
+    const spacepdhcg_gtoc12_forward_visit* visits,const spacepdhcg_gtoc12_forward_policy* policy,
+    spacepdhcg_gtoc12_forward_result* result,double* masses,double* inflations,double* collected);
+
 /* Immutable table snapshot; all arrays are host buffers copied on creation.
  * Cells concatenate departure-major (epochs x stage TOFs) tables. Swept
  * inflation is NaN for unmeasured cells; swept_ok defaults to 1 when absent.

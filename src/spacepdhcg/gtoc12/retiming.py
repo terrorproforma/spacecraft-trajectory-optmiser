@@ -706,6 +706,12 @@ class Retimer:
     ) -> tuple[RoutePlan | None, list[float], str]:
         """Rebuild a RoutePlan with forward masses; returns (plan, per-leg masses, failure)."""
 
+        from .lambert import cuda_retime_forward_result
+
+        cached = cuda_retime_forward_result(self, visits, arrivals, departures)
+        if cached is not None:
+            return cached
+
         legs: list[PlannedLeg] = []
         deploy: dict[int, float] = {}
         collect: dict[int, float] = {}
@@ -895,7 +901,16 @@ class Retimer:
         s = self.settings
         failure = ""
         for mass_round in range(s.max_mass_rounds):
-            dp = self._dp(visits, profile, price)
+            from .lambert import cuda_retime_dp
+
+            dp = NotImplemented
+            if (
+                getattr(self._dp, "__func__", None) is Retimer._dp
+                and getattr(self._forward, "__func__", None) is Retimer._forward
+            ):
+                dp = cuda_retime_dp(self, visits, profile, price, True)
+            if dp is NotImplemented:
+                dp = self._dp(visits, profile, price)
             if dp is None:
                 return None, "dp_infeasible", mass_round + 1, profile
             a_idx, d_idx, _objective = dp

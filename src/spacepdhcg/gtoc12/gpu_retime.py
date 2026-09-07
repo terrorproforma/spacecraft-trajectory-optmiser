@@ -50,6 +50,16 @@ SWEEP_CELL = np.dtype(
     align=True,
 )
 
+FORWARD_VISIT = np.dtype(
+    [(n, "i4") for n in ["deploy", "collect", "donor", "reserved"]] + [("foreign_epoch", "f8")],
+    align=True,
+)
+FORWARD_RESULT = np.dtype(
+    [(n, "i4") for n in ["failure", "mass_count"]]
+    + [(n, "f8") for n in ["propellant", "final_mass"]],
+    align=True,
+)
+
 
 class GpuRetime:
     """One cached immutable set of tables; masses, prices and policies update per call."""
@@ -58,6 +68,7 @@ class GpuRetime:
         self.device = device
         self.lambert = lambert
         self.last_path = None
+        self.last_forward = None
         self.handle = ct.c_void_p()
         self.key = None
         self.refs = None
@@ -98,6 +109,10 @@ class GpuRetime:
             ct.c_void_p,
         ]
         self.evaluate.restype = ct.c_int
+        self.evaluate_forward = getattr(library, "spacepdhcg_gtoc12_retime_forward_host", None)
+        if self.evaluate_forward is not None:
+            self.evaluate_forward.argtypes = self.evaluate.argtypes + [ct.c_void_p] * 6
+            self.evaluate_forward.restype = ct.c_int
         self.set_graph = library.spacepdhcg_gtoc12_retime_set_graph
         self.set_graph.argtypes = [ct.c_void_p, ct.c_int32]
         self.set_graph.restype = ct.c_int
@@ -109,6 +124,7 @@ class GpuRetime:
         self.destroy.argtypes = [ct.POINTER(ct.c_void_p)]
         self.destroy.restype = ct.c_int
         self.calls = self.uploads = 0
+        self.forward_calls = 0
         self.resident_builds = self.resident_cells = 0
         self.sweep_updates = self.sweep_samples = 0
         self.sweep_keys = {}
@@ -123,6 +139,7 @@ class GpuRetime:
             self._check(self.destroy(ct.byref(self.handle)))
         self.key = self.refs = None
         self.last_path = None
+        self.last_forward = None
         self.sweep_keys.clear()
         self.graph_enabled = True
 
@@ -140,10 +157,98 @@ class GpuRetime:
             return None
         return values if include_sweep else values[0]
 
-    def solve(self, retimer, visits, masses, price):
+    @staticmethod
+    def forward_policy_key(retimer):
+        return (
+            retimer.settings,
+            retimer.search_settings,
+            dict(retimer.bans),
+            dict(retimer.inflations),
+            retimer.leg_inflation,
+            retimer._limits,
+            retimer.authority_ratio,
+            retimer._ratio_model,
+            retimer._return_model,
+            retimer._tofs,
+        )
+
+    def forward_result(self, retimer, visits, arrivals, departures):
+        from .search import PlannedLeg, RoutePlan
+
+        if (
+            self.last_forward is None
+            or self.path_values(retimer, visits, arrivals, departures, True) is None
+            or self.last_forward[0] != self.forward_policy_key(retimer)
+        ):
+            return None
+        _, result, masses, inflation, collected = self.last_forward
+        code = int(result["failure"])
+        count = int(result["mass_count"])
+        if code == 7:
+            raise ValueError("stay must be finite and non-negative")
+        if code:
+            failures = {
+                1: "collect_without_deploy",
+                2: "stay_too_short",
+                3: "tof_outside_grid",
+                4: "leg_infeasible",
+                5: "leg_authority",
+                6: "mass_below_dry_plus_collected",
+                8: "dp_infeasible",
+            }
+            return None, masses[:count].tolist(), failures[code]
+        deploy, collect, foreign, payload, legs = {}, {}, {}, {}, []
+        dv = self.last_path[-1][0]
+        for j, visit in enumerate(visits):
+            if visit.deploy:
+                deploy[visit.body] = arrivals[j]
+            if visit.collect:
+                collect[visit.body] = departures[j]
+                payload[visit.body] = float(collected[j])
+                if visit.body not in deploy:
+                    foreign[visit.body] = visit.foreign_deploy_epoch
+            if j == len(visits) - 1:
+                continue
+            if departures[j] > arrivals[j] + 1e-9:
+                legs.append(
+                    PlannedLeg(visit.body, visit.body, arrivals[j], departures[j], 0.0, 1.0, "camp")
+                )
+            legs.append(
+                PlannedLeg(
+                    visit.body,
+                    visits[j + 1].body,
+                    departures[j],
+                    arrivals[j + 1],
+                    float(dv[j]),
+                    float(inflation[j]),
+                    visit.role_out,
+                )
+            )
+        plan = RoutePlan(
+            tuple(legs),
+            deploy,
+            collect,
+            payload,
+            float(result["propellant"]),
+            float(result["final_mass"]),
+            foreign,
+        )
+        return plan, masses[:count].tolist(), ""
+
+    def solve(self, retimer, visits, masses, price, forward=False):
         from .retiming import Retimer
 
+        if forward and self.lambert.retime_cuda_forward and self.evaluate_forward is None:
+            raise RuntimeError("CUDA forward bookkeeping requires a rebuilt native library")
+        if forward and (
+            not self.lambert.retime_cuda_forward
+            or getattr(retimer.leg_inflation, "__func__", None) is not Retimer.leg_inflation
+            or getattr(retimer._limits, "__func__", None) is not Retimer._limits
+            or retimer.authority_ratio is not Retimer.authority_ratio
+        ):
+            return NotImplemented
         self.last_path = None
+        self.last_forward = None
         if len(visits) == 1:
             return [0], [0], 0.0
         s, lat = retimer.settings, retimer.lattice
@@ -307,8 +412,51 @@ class GpuRetime:
         path_swept = np.empty(len(params), dtype=np.float64)
         path_ok = np.empty(len(params), dtype=np.uint8)
         objective, feasible_result = ct.c_double(), ct.c_int32()
+        extra = []
+        evaluate = self.evaluate
+        if forward:
+            metadata = np.zeros(len(visits), FORWARD_VISIT)
+            deployed, seen_collect = {}, set()
+            for j, visit in enumerate(visits):
+                if visit.deploy:
+                    if visit.body in deployed:
+                        return NotImplemented
+                    deployed[visit.body] = j
+                if visit.collect:
+                    if visit.body in seen_collect:
+                        return NotImplemented
+                    seen_collect.add(visit.body)
+                metadata[j]["deploy"], metadata[j]["collect"] = visit.deploy, visit.collect
+                metadata[j]["donor"] = deployed.get(
+                    visit.body, -2 if visit.foreign_deploy_epoch is None else -1
+                )
+                metadata[j]["foreign_epoch"] = (
+                    0 if visit.foreign_deploy_epoch is None else visit.foreign_deploy_epoch
+                )
+            policy = np.array(
+                [
+                    retimer.search_settings.initial_mass,
+                    C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS,
+                    C.MINING_RATE_KG_PER_YEAR,
+                    C.YEAR_DAYS,
+                    C.MINER_MASS_KG,
+                    C.DRY_MASS_KG,
+                    s.step_days,
+                ]
+            )
+            result = np.zeros(1, FORWARD_RESULT)
+            forward_masses, inflations, collected_mass = (
+                np.empty(len(params)),
+                np.empty(len(params)),
+                np.empty(len(visits)),
+            )
+            extra = [
+                a.ctypes.data
+                for a in [metadata, policy, result, forward_masses, inflations, collected_mass]
+            ]
+            evaluate = self.evaluate_forward
         self._check(
-            self.evaluate(
+            evaluate(
                 self.handle,
                 params.ctypes.data,
                 price,
@@ -321,9 +469,11 @@ class GpuRetime:
                 path_dv.ctypes.data,
                 path_swept.ctypes.data,
                 path_ok.ctypes.data,
+                *extra,
             )
         )
         self.calls += 1
+        self.forward_calls += int(forward)
         if feasible_result.value:
             self.last_path = (
                 retimer,
@@ -333,6 +483,14 @@ class GpuRetime:
                 lat.epochs[departures].tolist(),
                 (path_dv, path_swept, path_ok),
             )
+            if forward:
+                self.last_forward = (
+                    self.forward_policy_key(retimer),
+                    result[0],
+                    forward_masses,
+                    inflations,
+                    collected_mass,
+                )
             return arrivals.tolist(), departures.tolist(), objective.value
         return None
 

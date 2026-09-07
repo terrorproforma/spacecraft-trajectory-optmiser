@@ -57,7 +57,12 @@ def test_resident_schedule_matches_cpu_reference_without_host_tables(monkeypatch
         reference = Retimer(cat, SearchSettings(), settings)
         cpu = reference.retime(plan)
         assert cpu.plan is not None
-        assert native.plan.summary() == cpu.plan.summary()
+        actual_summary, expected_summary = native.plan.summary(), cpu.plan.summary()
+        # Forward rocket-equation arithmetic now uses CUDA exp, so compare its
+        # accumulated masses tightly while retaining exact schedule/payload checks.
+        for key in ["propellant_proxy_kg", "final_mass_proxy_kg"]:
+            assert abs(actual_summary.pop(key) - expected_summary.pop(key)) < 1e-10
+        assert actual_summary == expected_summary
         result = reference._dp(visits, masses, 0.15)
         assert result[:2] == (a, d)
         assert abs(result[2] - value) < 1e-9

@@ -90,6 +90,14 @@ def cuda_retime_path_values(*args):
     return gpu.retime_workspace.path_values(*args)
 
 
+def cuda_retime_forward_result(*args):
+    gpu = _GPU_BACKEND.get()
+    if gpu is None or gpu.retime_workspace is None:
+        return None
+    gpu._owned()
+    return gpu.retime_workspace.forward_result(*args)
+
+
 @contextmanager
 def using_lambert_backend(backend: str, *, maximum_batch_size=16384):
     """Select screening arithmetic for this scope, preserving nested callers."""

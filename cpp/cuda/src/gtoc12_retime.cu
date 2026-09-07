@@ -9,18 +9,24 @@
 namespace {
 using Stage=spacepdhcg_gtoc12_retime_stage;
 using SweepCell=spacepdhcg_gtoc12_sweep_cell;
+using ForwardVisit=spacepdhcg_gtoc12_forward_visit;
+using ForwardPolicy=spacepdhcg_gtoc12_forward_policy;
+using ForwardResult=spacepdhcg_gtoc12_forward_result;
 static_assert(sizeof(Stage)==104);
 static_assert(sizeof(SweepCell)==24);
 struct Result { double objective; int32_t feasible; int32_t reserved; };
-struct Controls { double price,thrust,exhaust; };
+struct Controls { double price,thrust,exhaust; int32_t forward,reserved; };
 struct PathLayout {
-    size_t arrivals,departures,dv,swept,ok,bytes;
+    size_t arrivals,departures,dv,swept,ok,forward,masses,inflations,collected,bytes;
     explicit PathLayout(int stages) {
         arrivals=sizeof(Result);departures=arrivals+(size_t(stages)+1)*sizeof(int32_t);
         // The two int32 arrays together occupy a multiple of eight bytes.
         dv=departures+(size_t(stages)+1)*sizeof(int32_t);
         swept=dv+size_t(stages)*sizeof(double);ok=swept+size_t(stages)*sizeof(double);
-        bytes=ok+size_t(stages);
+        forward=(ok+size_t(stages)+7)&~size_t(7);masses=forward+sizeof(ForwardResult);
+        inflations=masses+size_t(stages)*sizeof(double);
+        collected=inflations+size_t(stages)*sizeof(double);
+        bytes=collected+(size_t(stages)+1)*sizeof(double);
     }
 };
 struct Workspace {
@@ -32,6 +38,7 @@ struct Workspace {
     int32_t *shifts{},*back_camp{},*back_leg{},*arrivals{},*departures{};
     Stage* params{};Result* result{};
     Controls* controls{};
+    ForwardVisit* visits{};ForwardPolicy* policy{};
     uint8_t *output{},*host_output{};
     cudaGraph_t graph{};cudaGraphExec_t graph_exec{};
     bool use_graph=true;
@@ -46,6 +53,7 @@ struct Workspace {
         cudaFree(shifts);cudaFree(back_camp);cudaFree(back_leg);cudaFree(params);
         cudaFree(output);delete[] host_output;cudaFree(samples);
         cudaFree(controls);
+        cudaFree(visits);cudaFree(policy);
         if(stream)cudaStreamDestroy(stream);
     }
 };
@@ -106,6 +114,57 @@ __device__ double return_base(double tof) {
         return base[i-1]+(base[i]-base[i-1])/(days[i]-days[i-1])*(tof-days[i-1]);
     return base[9];
 }
+__device__ void forward_mass(int stages,const Stage* params,const ForwardVisit* visits,
+    const ForwardPolicy* policy,const Controls* controls,const double* epochs,
+    const int32_t* arrivals,const int32_t* departures,const double* tofs,
+    const double* dv,const double* swept,const uint8_t* ok,ForwardResult* result,
+    double* masses,double* inflations,double* collected) {
+    const auto p=*policy;const auto c=*controls;
+    *result={0,0,0.0,p.initial_mass};
+    for(int j=0;j<=stages;++j)collected[j]=0;
+    for(int j=0;j<stages;++j){masses[j]=0;inflations[j]=0;}
+    // Match CPU failure ordering: missing deployers are checked before stays.
+    for(int j=0;j<=stages;++j)if(visits[j].collect&&visits[j].donor==-2){result->failure=1;return;}
+    for(int j=0;j<=stages;++j)if(visits[j].collect) {
+        const auto v=visits[j];
+        const double deployed=v.donor<0?v.foreign_epoch:epochs[arrivals[v.donor]];
+        const double stay=epochs[departures[j]]-deployed;
+        if(stay<p.minimum_stay-1e-6){result->failure=2;return;}
+    }
+    double payload=0;
+    for(int j=0;j<=stages;++j)if(visits[j].collect) {
+        const auto v=visits[j];
+        const double stay=epochs[departures[j]]-(v.donor<0?v.foreign_epoch:epochs[arrivals[v.donor]]);
+        if(!isfinite(stay)||stay<0){result->failure=7;return;}
+        collected[j]=p.mining_rate*stay/p.year_days;payload+=collected[j];
+    }
+    double mass=p.initial_mass,total=0;
+    for(int j=0;j<stages;++j) {
+        const auto s=params[j];
+        if(visits[j].collect)mass+=collected[j];
+        const double tof=epochs[arrivals[j+1]]-epochs[departures[j]];
+        const double k=nearbyint(tof/p.step)-nearbyint(tofs[s.tof_offset]/p.step);
+        if(k<0||k>=s.tofs){result->failure=3;result->mass_count=0;return;}
+        if(!isfinite(dv[j])||!ok[j]){result->failure=4;result->mass_count=0;return;}
+        const bool measured=!isnan(swept[j]);
+        const double authority=c.thrust/mass*1e-3*tof*86400.;
+        if(!measured&&dv[j]/authority>s.ratio_limit) {
+            masses[j]=mass;result->mass_count=j+1;result->failure=5;return;
+        }
+        masses[j]=mass;result->mass_count=j+1;
+        const double ratio=dv[j]/fmax(authority,1e-12);
+        double inflation=s.flat;
+        if(s.model==1)inflation=(s.floor+s.slope*ratio)*s.calibration;
+        if(s.model==2)inflation=fmax(return_base(tof)*fmin(fmax(1+.6*(ratio-.33),.85),1.2),.85)*s.calibration;
+        if(measured)inflation=swept[j];
+        inflations[j]=inflation;
+        const double propellant=mass*(1-exp(-(dv[j]*inflation)/c.exhaust));
+        total+=propellant;mass-=propellant;
+        if(visits[j+1].deploy)mass-=p.miner_mass;
+    }
+    result->propellant=total;result->final_mass=mass;
+    if(mass<p.dry_mass+payload-1e-9)result->failure=6;
+}
 __global__ void leg(const Stage* params,int stage,int n,const double* dv,
     const uint8_t* feasible,const double* swept,const uint8_t* swept_ok,
     const double* tofs,const int32_t* shifts,const double* departure,
@@ -155,7 +214,10 @@ __global__ void leg(const Stage* params,int stage,int n,const double* dv,
 __global__ void finish(const double* value,int n,int stages,const int32_t* camp_back,
     const int32_t* leg_back,int32_t* arrivals,int32_t* departures,Result* result,
     const Stage* params,const double* dv,const int32_t* shifts,double* path_dv,
-    const double* swept,const uint8_t* swept_ok,double* path_swept,uint8_t* path_swept_ok) {
+    const double* swept,const uint8_t* swept_ok,double* path_swept,uint8_t* path_swept_ok,
+    const Controls* controls,const ForwardVisit* visits,const ForwardPolicy* policy,
+    const double* epochs,const double* tofs,ForwardResult* forward,double* masses,
+    double* inflations,double* collected) {
     // Only the final scalar choice and O(stages) path reconstruction are serial.
     double best=-INFINITY;int winner=0;
     for(int i=0;i<n;++i)if(value[i]>best){best=value[i];winner=i;}
@@ -175,6 +237,12 @@ __global__ void finish(const double* value,int n,int stages,const int32_t* camp_
             }
         }
     }
+    forward->failure=-1;
+    if(controls->forward) {
+        if(!isfinite(best)){*forward={8,0,0,0};return;}
+        forward_mass(stages,params,visits,policy,controls,epochs,arrivals,departures,tofs,
+            path_dv,path_swept,path_swept_ok,forward,masses,inflations,collected);
+    }
 }
 }
 static int create_tables(int32_t device,int32_t n,int32_t stages,
@@ -193,7 +261,9 @@ static int create_tables(int32_t device,int32_t n,int32_t stages,
         &&allocate(w->shifts,nt)&&allocate(w->value,n)&&allocate(w->next,n)
         &&allocate(w->departure,n)&&allocate(w->back_camp,size_t(n)*stages)
         &&allocate(w->back_leg,size_t(n)*stages)&&allocate(w->params,stages)&&allocate_output(w)
-        &&allocate(w->controls,1);
+        &&allocate(w->controls,1)&&allocate(w->visits,size_t(stages)+1)&&allocate(w->policy,1);
+    // Initialize padding/unused optional output fields once before any download.
+    good=good&&cudaMemsetAsync(w->output,0,PathLayout(stages).bytes,w->stream)==cudaSuccess;
     good=good&&upload(w->epochs,epochs,n,w->stream)
         &&(!dv||upload(w->dv,dv,cells,w->stream))&&(!ok||upload(w->ok,ok,cells,w->stream))
         &&(swept?upload(w->swept,swept,cells,w->stream):cudaMemsetAsync(w->swept,255,cells*sizeof(double),w->stream)==cudaSuccess)
@@ -275,7 +345,13 @@ static bool enqueue_dp(Workspace* w) {
         good=cudaGetLastError()==cudaSuccess;std::swap(value,next);
     }
     if(good) {
-        finish<<<1,1,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result,w->params,w->dv,w->shifts,w->path_dv,w->swept,w->swept_ok,w->path_swept,w->path_swept_ok);
+        const PathLayout layout(w->stages);
+        finish<<<1,1,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result,w->params,w->dv,w->shifts,w->path_dv,w->swept,w->swept_ok,w->path_swept,w->path_swept_ok,
+            w->controls,w->visits,w->policy,w->epochs,w->tofs,
+            reinterpret_cast<ForwardResult*>(w->output+layout.forward),
+            reinterpret_cast<double*>(w->output+layout.masses),
+            reinterpret_cast<double*>(w->output+layout.inflations),
+            reinterpret_cast<double*>(w->output+layout.collected));
         good=cudaGetLastError()==cudaSuccess;
     }
     return good;
@@ -306,7 +382,9 @@ extern "C" int spacepdhcg_gtoc12_retime_graph_stats(void* workspace,uint64_t* bu
 }
 static int evaluate_path(void* workspace,const Stage* params,
     double price,double thrust,double exhaust,int32_t* arrivals,int32_t* departures,
-    double* objective,int32_t* feasible,double* path_dv,double* path_swept,uint8_t* path_swept_ok) {
+    double* objective,int32_t* feasible,double* path_dv,double* path_swept,uint8_t* path_swept_ok,
+    const ForwardVisit* visits=nullptr,const ForwardPolicy* policy=nullptr,
+    ForwardResult* forward=nullptr,double* masses=nullptr,double* inflations=nullptr,double* collected=nullptr) {
     auto* w=static_cast<Workspace*>(workspace);
     if(!w||!params||!arrivals||!departures||!objective||!feasible||!std::isfinite(price)
         ||price<0||!std::isfinite(thrust)||thrust<=0||!std::isfinite(exhaust)||exhaust<=0)return 1;
@@ -322,9 +400,19 @@ static int evaluate_path(void* workspace,const Stage* params,
             ||std::isnan(s.ratio_limit)||s.ratio_limit<0||!std::isfinite(s.flat)
             ||!std::isfinite(s.floor)||!std::isfinite(s.slope)||!std::isfinite(s.calibration))return 1;
     }
-    const Controls controls{price,thrust,exhaust};
+    if(visits) {
+        if(!policy||!forward||!masses||!inflations||!collected)return 1;
+        const double values[]={policy->initial_mass,policy->minimum_stay,policy->mining_rate,
+            policy->year_days,policy->miner_mass,policy->dry_mass,policy->step};
+        for(double v:values)if(!std::isfinite(v)||v<=0)return 1;
+        for(int j=0;j<=w->stages;++j)if((visits[j].deploy!=0&&visits[j].deploy!=1)
+            ||(visits[j].collect!=0&&visits[j].collect!=1)||visits[j].donor<-2||visits[j].donor>j)return 1;
+    }
+    const Controls controls{price,thrust,exhaust,visits?1:0,0};
     bool good=upload(w->params,params,w->stages,w->stream)
         &&upload(w->controls,&controls,1,w->stream);
+    good=good&&(!visits||(upload(w->visits,visits,size_t(w->stages)+1,w->stream)
+        &&upload(w->policy,policy,1,w->stream)));
     good=good&&(w->use_graph?enqueue_graph(w):enqueue_dp(w));
     Result result{};
     const PathLayout layout(w->stages);
@@ -339,6 +427,12 @@ static int evaluate_path(void* workspace,const Stage* params,
     if(path_dv)std::memcpy(path_dv,w->host_output+layout.dv,size_t(w->stages)*sizeof(double));
     if(path_swept)std::memcpy(path_swept,w->host_output+layout.swept,size_t(w->stages)*sizeof(double));
     if(path_swept_ok)std::memcpy(path_swept_ok,w->host_output+layout.ok,w->stages);
+    if(visits) {
+        std::memcpy(forward,w->host_output+layout.forward,sizeof(ForwardResult));
+        std::memcpy(masses,w->host_output+layout.masses,size_t(w->stages)*sizeof(double));
+        std::memcpy(inflations,w->host_output+layout.inflations,size_t(w->stages)*sizeof(double));
+        std::memcpy(collected,w->host_output+layout.collected,(size_t(w->stages)+1)*sizeof(double));
+    }
     *objective=result.objective;*feasible=result.feasible;return 0;
 }
 extern "C" int spacepdhcg_gtoc12_retime_host(void* w,const Stage* p,double price,double thrust,
@@ -354,6 +448,12 @@ extern "C" int spacepdhcg_gtoc12_retime_swept_path_host(void* w,const Stage* p,d
     double exhaust,int32_t* a,int32_t* d,double* objective,int32_t* feasible,double* dv,double* swept,uint8_t* ok) {
     if(!dv||!swept||!ok)return 1;
     return evaluate_path(w,p,price,thrust,exhaust,a,d,objective,feasible,dv,swept,ok);
+}
+extern "C" int spacepdhcg_gtoc12_retime_forward_host(void* w,const Stage* p,double price,double thrust,
+    double exhaust,int32_t* a,int32_t* d,double* objective,int32_t* feasible,double* dv,double* swept,uint8_t* ok,
+    const ForwardVisit* visits,const ForwardPolicy* policy,ForwardResult* result,double* masses,double* inflations,double* collected) {
+    if(!dv||!swept||!ok||!visits||!policy||!result||!masses||!inflations||!collected)return 1;
+    return evaluate_path(w,p,price,thrust,exhaust,a,d,objective,feasible,dv,swept,ok,visits,policy,result,masses,inflations,collected);
 }
 extern "C" int spacepdhcg_gtoc12_retime_destroy(void** workspace) {
     if(!workspace)return 1;auto* w=static_cast<Workspace*>(*workspace);if(!w)return 0;
