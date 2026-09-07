@@ -92,3 +92,11 @@ Collection scheduling, beam/fleet orchestration, seed/retiming filters and some
 packing/setup still run on CPU. This port covers RouteSearch.candidates, not every
 element-deviation helper in the application. The fleet score remains
 **12,805.194 weighted kg**; this benchmark has not produced a new certified fleet.
+
+A [follow-up H100 profile](../results/lambda/2026-09-08/gpu-neighbours-profile-v195)
+retains the same 545,658 branches and 27 candidates. Its 2.280-second instrumented
+run spends 1.510 seconds cumulatively in collection scheduling, including 0.437
+seconds across 145,400 scalar feasibility checks. The CUDA screening bridge
+accounts for 0.875 seconds including device waits. These cumulative times overlap;
+they identify collection feasibility/cost selection and host scheduling as the
+next port targets, not additive savings or a new throughput measurement.
