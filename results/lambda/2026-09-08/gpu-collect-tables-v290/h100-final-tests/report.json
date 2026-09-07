@@ -1,0 +1,12 @@
+{
+  "returncode": 0,
+  "command": [
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "-c",
+    "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+    "/home/ubuntu/spacepdhcg-collect-tables-final-v295/test_gtoc12_gpu_collect_tables.py",
+    "-q"
+  ],
+  "test_sha256": "5a8b1d278ac71ca308febb5b1413d8c377a4cf2537dd6f855d956c12218c66f4",
+  "runtime_sha256": "8d93606a40e0bdf7303d28be68d2deef288f673dacb89e43390651d1d969abae"
+}

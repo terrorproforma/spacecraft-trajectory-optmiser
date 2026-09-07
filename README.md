@@ -82,6 +82,14 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Collection-table ephemerides now run on CUDA:** matched H100 campaigns take
+**60.41 s versus 62.93 s** with host table preparation (**4.0% less time**, two
+runs per mode). All four preserve the **548.255 kg** mission and pass both
+checkers. Cold eight-asteroid table builds take **135 ms versus 295 ms** on H100.
+Both GPUs pass 71 tests, eight independent real-tour replays and clean table
+memchecks. Host table caching/packing and broader orchestration remain.
+[Implementation, scope and downloaded results](docs/GPU_COLLECTION_TABLES.md).
+
 **Collection-tour search now runs across CUDA blocks:** matched H100 campaigns
 take **62.53 s versus 90.59 s** with CPU collection DP: **1.45× throughput and
 31.0% less runtime**, using two runs per mode. All four runs retain the same

@@ -1,0 +1,552 @@
+{
+  "rows": [
+    {
+      "asteroids": 2,
+      "seconds": 0.23599014899991744,
+      "archived_objective_delta_kg": 0.0,
+      "result": {
+        "order": [
+          53410,
+          57530
+        ],
+        "collect_epochs": {
+          "57530": 68453.0,
+          "53410": 66263.0
+        },
+        "hops": [
+          [
+            53410,
+            57530,
+            66263.0,
+            600.0,
+            2.0711989402770996
+          ]
+        ],
+        "reposition": false,
+        "objective_kg": -282.3027542806422,
+        "collected_proxy_kg": 133.60711841204653,
+        "propellant_proxy_kg": 415.90987269268874,
+        "return_departure": 68453.0,
+        "return_tof": 570.0,
+        "return_dv": 4.662360191345215,
+        "dp_states": 4,
+        "diagnostics": {
+          "lattice_start": 65018.0,
+          "asteroids": 2,
+          "propellant_weight": 1.0,
+          "burn_per_hop_kg": 153.66937073941162,
+          "pass1_objective_kg": -302.2049656362812
+        },
+        "hop_propellant_kg": [
+          153.66937073941162
+        ],
+        "hop_phase_deg": [],
+        "phase_penalty_kg": 0.0
+      }
+    },
+    {
+      "asteroids": 3,
+      "seconds": 0.07367629799955466,
+      "archived_objective_delta_kg": 0.0,
+      "result": {
+        "order": [
+          15117,
+          44881,
+          37833
+        ],
+        "collect_epochs": {
+          "37833": 68258.0,
+          "44881": 67463.0,
+          "15117": 66353.0
+        },
+        "hops": [
+          [
+            15117,
+            44881,
+            66353.0,
+            600.0,
+            1.5088210105895996
+          ],
+          [
+            44881,
+            37833,
+            67463.0,
+            600.0,
+            2.9852612018585205
+          ]
+        ],
+        "reposition": false,
+        "objective_kg": -396.1684631918145,
+        "collected_proxy_kg": 174.9486652977413,
+        "propellant_proxy_kg": 571.1171284895559,
+        "return_departure": 68258.0,
+        "return_tof": 570.0,
+        "return_dv": 5.2438788414001465,
+        "dp_states": 12,
+        "diagnostics": {
+          "lattice_start": 65678.0,
+          "asteroids": 3,
+          "propellant_weight": 1.0,
+          "burn_per_hop_kg": 158.76453849908768,
+          "pass1_objective_kg": -456.88930966567096
+        },
+        "hop_propellant_kg": [
+          104.3452507932804,
+          199.3272266935042
+        ],
+        "hop_phase_deg": [],
+        "phase_penalty_kg": 0.0
+      }
+    },
+    {
+      "asteroids": 4,
+      "seconds": 0.12697764499898767,
+      "archived_objective_delta_kg": -1.1368683772161603e-13,
+      "result": {
+        "order": [
+          13656,
+          44881,
+          22012,
+          37833
+        ],
+        "collect_epochs": {
+          "37833": 68258.0,
+          "44881": 66758.0,
+          "13656": 66098.0,
+          "22012": 67733.0
+        },
+        "hops": [
+          [
+            22012,
+            13656,
+            65738.0,
+            360.0,
+            2.3387861251831055
+          ],
+          [
+            13656,
+            44881,
+            66098.0,
+            600.0,
+            1.93038010597229
+          ],
+          [
+            44881,
+            22012,
+            66758.0,
+            600.0,
+            2.053670644760132
+          ],
+          [
+            22012,
+            37833,
+            67733.0,
+            450.0,
+            2.836082696914673
+          ]
+        ],
+        "reposition": true,
+        "objective_kg": -593.0522412689894,
+        "collected_proxy_kg": 211.49897330595485,
+        "propellant_proxy_kg": 804.5512145749442,
+        "return_departure": 68258.0,
+        "return_tof": 570.0,
+        "return_dv": 5.2438788414001465,
+        "dp_states": 32,
+        "diagnostics": {
+          "lattice_start": 65738.0,
+          "asteroids": 4,
+          "propellant_weight": 1.0,
+          "burn_per_hop_kg": 149.5920969335594,
+          "pass1_objective_kg": -691.9890439613619
+        },
+        "hop_propellant_kg": [
+          139.45553523833456,
+          122.76393869576553,
+          129.12935902419483,
+          173.04752343472003
+        ],
+        "hop_phase_deg": [],
+        "phase_penalty_kg": 0.0
+      }
+    },
+    {
+      "asteroids": 5,
+      "seconds": 0.19257530799950473,
+      "archived_objective_delta_kg": 0.0,
+      "result": {
+        "order": [
+          25792,
+          53410,
+          16118,
+          57530,
+          45738
+        ],
+        "collect_epochs": {
+          "57530": 68318.0,
+          "53410": 67148.0,
+          "16118": 67748.0,
+          "45738": 68918.0,
+          "25792": 66008.0
+        },
+        "hops": [
+          [
+            25792,
+            53410,
+            66008.0,
+            360.0,
+            2.6612794399261475
+          ],
+          [
+            53410,
+            16118,
+            67148.0,
+            600.0,
+            2.217313289642334
+          ],
+          [
+            16118,
+            57530,
+            67748.0,
+            360.0,
+            2.6889708042144775
+          ],
+          [
+            57530,
+            45738,
+            68318.0,
+            600.0,
+            5.48484468460083
+          ]
+        ],
+        "reposition": false,
+        "objective_kg": -545.8534244905377,
+        "collected_proxy_kg": 329.08966461327856,
+        "propellant_proxy_kg": 874.9430891038162,
+        "return_departure": 68918.0,
+        "return_tof": 540.0,
+        "return_dv": 4.3537068367004395,
+        "dp_states": 80,
+        "diagnostics": {
+          "lattice_start": 65618.0,
+          "asteroids": 5,
+          "propellant_weight": 1.0,
+          "burn_per_hop_kg": 199.73173493872122,
+          "pass1_objective_kg": -769.5053865744652
+        },
+        "hop_propellant_kg": [
+          156.15185849157672,
+          126.54206236896904,
+          146.38098877038126,
+          276.5244509951469
+        ],
+        "hop_phase_deg": [],
+        "phase_penalty_kg": 0.0
+      }
+    },
+    {
+      "asteroids": 6,
+      "seconds": 0.2683709409993753,
+      "archived_objective_delta_kg": 0.0,
+      "result": {
+        "order": [
+          52064,
+          57530,
+          53410,
+          16118,
+          25792,
+          45738
+        ],
+        "collect_epochs": {
+          "57530": 66893.0,
+          "53410": 67343.0,
+          "16118": 67793.0,
+          "45738": 68918.0,
+          "25792": 68318.0,
+          "52064": 66443.0
+        },
+        "hops": [
+          [
+            52064,
+            57530,
+            66443.0,
+            450.0,
+            2.19885516166687
+          ],
+          [
+            57530,
+            53410,
+            66893.0,
+            450.0,
+            4.426113605499268
+          ],
+          [
+            53410,
+            16118,
+            67343.0,
+            450.0,
+            2.908949851989746
+          ],
+          [
+            16118,
+            25792,
+            67793.0,
+            450.0,
+            2.998680591583252
+          ],
+          [
+            25792,
+            45738,
+            68318.0,
+            600.0,
+            4.901567459106445
+          ]
+        ],
+        "reposition": false,
+        "objective_kg": -586.2395269864211,
+        "collected_proxy_kg": 374.53798767967146,
+        "propellant_proxy_kg": 960.7775146660925,
+        "return_departure": 68918.0,
+        "return_tof": 540.0,
+        "return_dv": 4.3537068367004395,
+        "dp_states": 192,
+        "diagnostics": {
+          "lattice_start": 65918.0,
+          "asteroids": 6,
+          "propellant_weight": 1.0,
+          "burn_per_hop_kg": 212.43194204208334,
+          "pass1_objective_kg": -948.5806062361008
+        },
+        "hop_propellant_kg": [
+          118.73532206337327,
+          221.47955166216312,
+          142.07486414548117,
+          138.49841467594376,
+          206.43319842278422
+        ],
+        "hop_phase_deg": [],
+        "phase_penalty_kg": 0.0
+      }
+    },
+    {
+      "asteroids": 7,
+      "seconds": 0.3632543280000391,
+      "archived_objective_delta_kg": 0.0,
+      "result": {
+        "order": [
+          15825,
+          53410,
+          25792,
+          16118,
+          52064,
+          57530,
+          45738
+        ],
+        "collect_epochs": {
+          "57530": 68318.0,
+          "53410": 67028.0,
+          "16118": 67838.0,
+          "45738": 68918.0,
+          "25792": 67628.0,
+          "52064": 68198.0,
+          "15825": 66728.0
+        },
+        "hops": [
+          [
+            15825,
+            53410,
+            66728.0,
+            300.0,
+            4.187245845794678
+          ],
+          [
+            53410,
+            25792,
+            67028.0,
+            600.0,
+            3.6647562980651855
+          ],
+          [
+            25792,
+            16118,
+            67628.0,
+            210.0,
+            3.348724126815796
+          ],
+          [
+            16118,
+            52064,
+            67838.0,
+            360.0,
+            5.13763427734375
+          ],
+          [
+            52064,
+            57530,
+            68198.0,
+            120.0,
+            2.430809497833252
+          ],
+          [
+            57530,
+            45738,
+            68318.0,
+            600.0,
+            5.48484468460083
+          ]
+        ],
+        "reposition": false,
+        "objective_kg": -619.7745411218921,
+        "collected_proxy_kg": 454.4832306639288,
+        "propellant_proxy_kg": 1074.2577717858208,
+        "return_departure": 68918.0,
+        "return_tof": 540.0,
+        "return_dv": 4.3537068367004395,
+        "dp_states": 448,
+        "diagnostics": {
+          "lattice_start": 66098.0,
+          "asteroids": 7,
+          "propellant_weight": 1.0,
+          "burn_per_hop_kg": 225.9020298643702,
+          "pass1_objective_kg": -1177.2617501051293
+        },
+        "hop_propellant_kg": [
+          200.78336025643281,
+          167.16309730033421,
+          142.66175073369416,
+          198.25400341612246,
+          89.25942591171695,
+          178.53812668601984
+        ],
+        "hop_phase_deg": [],
+        "phase_penalty_kg": 0.0
+      }
+    },
+    {
+      "asteroids": 8,
+      "seconds": 0.4653759520006133,
+      "archived_objective_delta_kg": -1.1368683772161603e-13,
+      "result": {
+        "order": [
+          56270,
+          15825,
+          53410,
+          52064,
+          57530,
+          16118,
+          25792,
+          45738
+        ],
+        "collect_epochs": {
+          "57530": 68288.0,
+          "53410": 67628.0,
+          "16118": 68588.0,
+          "45738": 69128.0,
+          "25792": 68828.0,
+          "52064": 68078.0,
+          "15825": 67088.0,
+          "56270": 66638.0
+        },
+        "hops": [
+          [
+            56270,
+            15825,
+            66638.0,
+            450.0,
+            5.796306610107422
+          ],
+          [
+            15825,
+            53410,
+            67088.0,
+            450.0,
+            3.4859426021575928
+          ],
+          [
+            53410,
+            52064,
+            67628.0,
+            450.0,
+            3.040005922317505
+          ],
+          [
+            52064,
+            57530,
+            68078.0,
+            210.0,
+            2.0322890281677246
+          ],
+          [
+            57530,
+            16118,
+            68288.0,
+            300.0,
+            3.0301477909088135
+          ],
+          [
+            16118,
+            25792,
+            68588.0,
+            240.0,
+            5.168828010559082
+          ],
+          [
+            25792,
+            45738,
+            68828.0,
+            300.0,
+            11.997834205627441
+          ]
+        ],
+        "reposition": false,
+        "objective_kg": -560.6911071451344,
+        "collected_proxy_kg": 545.927446954141,
+        "propellant_proxy_kg": 1106.6185540992756,
+        "return_departure": 69128.0,
+        "return_tof": 330.0,
+        "return_dv": 6.495083332061768,
+        "dp_states": 1024,
+        "diagnostics": {
+          "lattice_start": 66278.0,
+          "asteroids": 8,
+          "propellant_weight": 1.0,
+          "burn_per_hop_kg": 259.84095102844145,
+          "pass1_objective_kg": -1591.755488575351
+        },
+        "hop_propellant_kg": [
+          251.85703894642117,
+          140.79104765035072,
+          112.262856616247,
+          67.06434593887155,
+          87.55265951420616,
+          124.75593937133918,
+          217.51171318612444
+        ],
+        "hop_phase_deg": [],
+        "phase_penalty_kg": 0.0
+      }
+    },
+    {
+      "asteroids": 9,
+      "seconds": 0.5891167259997019,
+      "archived_objective_delta_kg": null,
+      "result": null
+    }
+  ],
+  "cache_audit": {
+    "fraction_calls": 29822,
+    "different_mass_hits": 0,
+    "max_mass_difference_kg": 0.0
+  },
+  "screening": {
+    "backend": "cuda",
+    "completed_batches": 568,
+    "completed_branch_requests": 4823840,
+    "gpu_used": true,
+    "completed_element_hops": 1240008,
+    "completed_collection_dp_passes": 16
+  },
+  "reference": "uncached",
+  "mass_key": "exact",
+  "scope": "Single replay per captured input; includes cold pair-table builds and cache instrumentation. Not a throughput benchmark."
+}

@@ -1,5 +1,9 @@
 # CUDA collection-tour dynamic programming
 
+Subsequent update: [collection-table ephemerides also run on CUDA](GPU_COLLECTION_TABLES.md).
+The measurements below retain the DP-port comparison; host table caching/packing
+and mass-pass orchestration remain follow-up work.
+
 Collection-tour Held–Karp search now distributes destination states and epochs
 across CUDA blocks. On the matched H100 campaign, this reduces total CLI time
 from **90.590 s to 62.526 s** (median of two runs per mode): **1.449× throughput,

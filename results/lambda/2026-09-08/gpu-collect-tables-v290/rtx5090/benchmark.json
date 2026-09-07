@@ -1,0 +1,235 @@
+{
+  "medians": {
+    "2": {
+      "cpu": 0.0407618219996948,
+      "cuda": 0.03429325300021446
+    },
+    "4": {
+      "cpu": 0.14852209799937555,
+      "cuda": 0.12451388400040742
+    },
+    "8": {
+      "cpu": 0.5393404440001177,
+      "cuda": 0.4539816329997848
+    }
+  },
+  "rows": [
+    {
+      "asteroids": 2,
+      "repeat": 0,
+      "mode": "cpu",
+      "seconds": 0.24095551800019166
+    },
+    {
+      "asteroids": 2,
+      "repeat": 0,
+      "mode": "cuda",
+      "seconds": 0.03492746700067073
+    },
+    {
+      "asteroids": 2,
+      "repeat": 1,
+      "mode": "cuda",
+      "seconds": 0.034358230001089396
+    },
+    {
+      "asteroids": 2,
+      "repeat": 1,
+      "mode": "cpu",
+      "seconds": 0.04074677999960841
+    },
+    {
+      "asteroids": 2,
+      "repeat": 2,
+      "mode": "cpu",
+      "seconds": 0.0407618219996948
+    },
+    {
+      "asteroids": 2,
+      "repeat": 2,
+      "mode": "cuda",
+      "seconds": 0.03429325300021446
+    },
+    {
+      "asteroids": 2,
+      "repeat": 3,
+      "mode": "cuda",
+      "seconds": 0.034347770999374916
+    },
+    {
+      "asteroids": 2,
+      "repeat": 3,
+      "mode": "cpu",
+      "seconds": 0.04135838999900443
+    },
+    {
+      "asteroids": 2,
+      "repeat": 4,
+      "mode": "cpu",
+      "seconds": 0.04021437099981995
+    },
+    {
+      "asteroids": 2,
+      "repeat": 4,
+      "mode": "cuda",
+      "seconds": 0.034232243000587914
+    },
+    {
+      "asteroids": 2,
+      "repeat": 5,
+      "mode": "cuda",
+      "seconds": 0.03416191100041033
+    },
+    {
+      "asteroids": 2,
+      "repeat": 5,
+      "mode": "cpu",
+      "seconds": 0.04095091999988654
+    },
+    {
+      "asteroids": 4,
+      "repeat": 0,
+      "mode": "cpu",
+      "seconds": 0.14916025300044566
+    },
+    {
+      "asteroids": 4,
+      "repeat": 0,
+      "mode": "cuda",
+      "seconds": 0.12423914800092462
+    },
+    {
+      "asteroids": 4,
+      "repeat": 1,
+      "mode": "cuda",
+      "seconds": 0.1251264060010726
+    },
+    {
+      "asteroids": 4,
+      "repeat": 1,
+      "mode": "cpu",
+      "seconds": 0.14741166599924327
+    },
+    {
+      "asteroids": 4,
+      "repeat": 2,
+      "mode": "cpu",
+      "seconds": 0.14852209799937555
+    },
+    {
+      "asteroids": 4,
+      "repeat": 2,
+      "mode": "cuda",
+      "seconds": 0.12475895100033085
+    },
+    {
+      "asteroids": 4,
+      "repeat": 3,
+      "mode": "cuda",
+      "seconds": 0.12451388400040742
+    },
+    {
+      "asteroids": 4,
+      "repeat": 3,
+      "mode": "cpu",
+      "seconds": 0.1499527690011746
+    },
+    {
+      "asteroids": 4,
+      "repeat": 4,
+      "mode": "cpu",
+      "seconds": 0.14855188000001363
+    },
+    {
+      "asteroids": 4,
+      "repeat": 4,
+      "mode": "cuda",
+      "seconds": 0.12426944900107628
+    },
+    {
+      "asteroids": 4,
+      "repeat": 5,
+      "mode": "cuda",
+      "seconds": 0.124100692999491
+    },
+    {
+      "asteroids": 4,
+      "repeat": 5,
+      "mode": "cpu",
+      "seconds": 0.14556392000122287
+    },
+    {
+      "asteroids": 8,
+      "repeat": 0,
+      "mode": "cpu",
+      "seconds": 0.5321004470006301
+    },
+    {
+      "asteroids": 8,
+      "repeat": 0,
+      "mode": "cuda",
+      "seconds": 0.44775329399999464
+    },
+    {
+      "asteroids": 8,
+      "repeat": 1,
+      "mode": "cuda",
+      "seconds": 0.449787011000808
+    },
+    {
+      "asteroids": 8,
+      "repeat": 1,
+      "mode": "cpu",
+      "seconds": 0.5374805540013767
+    },
+    {
+      "asteroids": 8,
+      "repeat": 2,
+      "mode": "cpu",
+      "seconds": 0.5420039769996947
+    },
+    {
+      "asteroids": 8,
+      "repeat": 2,
+      "mode": "cuda",
+      "seconds": 0.4519655240001157
+    },
+    {
+      "asteroids": 8,
+      "repeat": 3,
+      "mode": "cuda",
+      "seconds": 0.4539816329997848
+    },
+    {
+      "asteroids": 8,
+      "repeat": 3,
+      "mode": "cpu",
+      "seconds": 0.5353758260007453
+    },
+    {
+      "asteroids": 8,
+      "repeat": 4,
+      "mode": "cpu",
+      "seconds": 0.5396208739985013
+    },
+    {
+      "asteroids": 8,
+      "repeat": 4,
+      "mode": "cuda",
+      "seconds": 0.454124141999273
+    },
+    {
+      "asteroids": 8,
+      "repeat": 5,
+      "mode": "cuda",
+      "seconds": 0.4566758920009306
+    },
+    {
+      "asteroids": 8,
+      "repeat": 5,
+      "mode": "cpu",
+      "seconds": 0.5393404440001177
+    }
+  ],
+  "scope": "Cold tables, warm CUDA runtime. Six alternating pairs; discard first pair. Both modes use CUDA Lambert. Not certified mission throughput."
+}
