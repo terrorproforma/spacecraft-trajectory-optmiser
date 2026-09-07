@@ -710,6 +710,27 @@ def _solve_collect_dp(
         mass_after_deploys + mined_by_subset - burn_per_hop * np.maximum(popcount - 1, 0),
         floor_mass,
     )
+    from .gpu_collect_dp import cuda_collect_dp
+
+    native = cuda_collect_dp(
+        table,
+        ids,
+        camp_i,
+        t0,
+        epochs,
+        mined,
+        mass_by_subset,
+        weights,
+        banned,
+        w,
+        mass_after_deploys,
+        burn_per_hop,
+        fraction,
+        deploy_epoch,
+        phase_penalty,
+    )
+    if native is not NotImplemented:
+        return native
 
     # DP tables: value on *arrival* at location j with collected set S, per lattice epoch
     neg = -np.inf

@@ -182,6 +182,8 @@ class GpuLambert:
         self.neighbour_workspace = None
         self.neighbour_key = None
         self.collection_workspace = None
+        self.collect_dp_workspace = None
+        self.collect_dp_cuda = True
         self.retime_workspace = None
         self.telemetry = {
             "backend": "cuda",
@@ -205,6 +207,9 @@ class GpuLambert:
         if self.closed:
             return
         self._owned()
+        if self.collect_dp_workspace is not None:
+            self.collect_dp_workspace.close()
+            self.collect_dp_workspace = None
         if self.retime_workspace is not None:
             self.retime_workspace.close()
             self.retime_workspace = None

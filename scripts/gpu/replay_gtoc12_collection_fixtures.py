@@ -78,6 +78,8 @@ def run(source: Path, output: Path, reference: str, mass_key: str) -> None:
                 seconds = time.perf_counter() - start
                 archived = fixture["expected"]
                 if reference == "uncached":
+                    use_native = gpu.collect_dp_cuda
+                    gpu.collect_dp_cuda = False
                     table.settings = dataclasses.replace(table.settings, fraction_cache_entries=0)
                     uncached = collectdp.plan_collect_tour(
                         table,
@@ -93,6 +95,7 @@ def run(source: Path, output: Path, reference: str, mass_key: str) -> None:
                         if uncached is None
                         else json.loads(json.dumps(dataclasses.asdict(uncached)))
                     )
+                    gpu.collect_dp_cuda = use_native
                 else:
                     expected = archived
                 assert (result is None) == (expected is None), size
