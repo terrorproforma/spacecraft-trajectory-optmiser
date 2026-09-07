@@ -110,7 +110,12 @@ def test_gpu_outer_graph_retains_physics_and_objective(monkeypatch, state_origin
     assert sol.accepted_iterations == sum(row["accepted"] for row in sol.history)
     graph_rows = [row for row in sol.solver_reports if row["solve_seconds"] is None]
     assert graph_rows and all(row["update_seconds"] is None for row in graph_rows)
-    assert sol.outer_transfer_bytes["control_download_bytes"] < (sol.iterations + 1) * 8
+    # One initial command, one per host priming solve, then a single 16-byte
+    # graph exit. A four-attempt solve can equal the old per-attempt byte count;
+    # graph execution still performs no per-iteration command downloads.
+    priming_count = len(sol.solver_reports) - len(graph_rows)
+    assert priming_count in (2, 3)
+    assert sol.outer_transfer_bytes["control_download_bytes"] == 8 * (priming_count + 1) + 16
     assert sol.outer_transfer_bytes["trajectory_upload_bytes"] == 0
     assert graph_rows[-1]["workspace_creations"] == 1
     assert graph_rows[-1]["solves"] == sum(row["iterations"] > 0 for row in sol.solver_reports)

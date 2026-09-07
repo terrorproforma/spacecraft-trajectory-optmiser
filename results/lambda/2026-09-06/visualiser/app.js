@@ -686,8 +686,9 @@ async function loadGpuOuterValidation() {
     el.innerHTML = metricRows([
       ...(result.status ? [["Candidate status", result.status]] : []),
       ["Runtime", `${result.runtime} · ${result.source_commit.slice(0, 8)}`],
-      ["Local regression", `${result.tests.local_regression_passed} passed`],
-      ["H100 GTOC12 integration", `${result.tests.h100_integration_passed} passed`],
+      ["Local regression", `${result.tests.local_regression_passed} passed${result.tests.local_regression_failed ? ` · ${result.tests.local_regression_failed} failed` : ""}`],
+      ["H100 GTOC12 integration", `${result.tests.h100_integration_passed} passed${result.tests.h100_integration_failed ? ` · ${result.tests.h100_integration_failed} failed` : ""}`],
+      ...(result.test_followup ? [["Test follow-up", result.test_followup]] : []),
       ...(result.repeated_qualification ? [["Repeated trajectory checks", result.repeated_qualification]] : []),
       ["Physical thrust", result.thrust_acceptance],
       ["GPU graph probes", result.graph_validation],

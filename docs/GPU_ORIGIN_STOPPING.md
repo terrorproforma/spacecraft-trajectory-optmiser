@@ -83,6 +83,21 @@ comparison qualifies **22/24 locally and 7/8 on H100**. H100 integration reports
 in the evidence, including cases with correct final mass but unacceptable
 position error or a failure termination.
 
+The final full local suite reports **333 passed, 4 failed**. Two failures were
+numerical/trajectory failures; two were an old assertion that assumed graph
+control traffic must always be strictly smaller. With faster four-attempt
+convergence, the fixed graph exit makes the totals equal. That assertion now
+checks the exact initial/priming/exit byte contract. Its focused rerun reports
+**3 passed, 1 independent trajectory failure**; the numerical checks remain
+unchanged. These counts are kept separate rather than presented as a green suite.
+
+On the final H100 build, all six archived recovery problems converge and pass
+their independent physics checks, taking 0.216–5.158 seconds under the separate
+recovery profile. Native graph ownership, guards, deadlines and polishing tests
+pass. Nested SCvx and guarded-solver memcheck pass, as does kernel initcheck with
+API-memory checking disabled. The existing API-instrumentation blocking and
+local WSL sanitizer limitations remain; this does not claim those are resolved.
+
 A powered-descent fault-injection test also encountered a real numerical
 failure before its intended injection. A separate fresh-process retry passed;
 the failed run remains evidence of intermittent behavior. The IPM-session

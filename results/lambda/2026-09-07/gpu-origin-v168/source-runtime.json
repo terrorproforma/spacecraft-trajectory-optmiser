@@ -1,0 +1,47 @@
+{
+  "code_commit": "08d97fa54a4476c73409df81388eb32083f93fd0",
+  "core_sources_match_local_and_h100": true,
+  "source_lf_sha256": {
+    "cpp/cuda/src/gtoc12_scvx.cu": "9b5ada38cf4b92e7cd5fba5e4784238b0d03548f35579d4921702844f8d2860e",
+    "cpp/cuda/src/native_qoco_adapter.cpp": "b44c005453c1a0d365d101bda6f80eb1c99f84f060c208abad87ee58e1b18972",
+    "cpp/cuda/src/native_qoco_gpu.cu": "c16cb966a1632666b0240bf392a51261df0e289be4f9f940dca7008405c1b78c",
+    "cpp/cuda/internal/native_qoco_gpu.h": "cb833becdf6fe49a1200c7aef2c13be93086117748da39f5ca99cd635f2e5cc3",
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": "0aee425e68ee4ad592965716012a5a8630a716e55a733f03c0a8c80f4737d804",
+    "cpp/cuda/tests/device_scvx_integration_test.cu": "c31abd8b87e97d6638ef23f52ac3b9a2add176e701b68d4200b449b7c583f963",
+    "cpp/cuda/tests/qoco_equilibrated_stopping_test.cu": "dfb00c73febe692944a74b50ac9904f1ac991f575526f9c36d5346c0c5f54009",
+    "src/spacepdhcg/gtoc12/low_thrust.py": "61ef30856411692c23e280e71d50cd2c453a4cf4a6f46960538eaddd34b56161"
+  },
+  "prepared": {
+    "matches_frozen_qoco137": true,
+    "prepared_files": {
+      "include/structs.h": "701abfcaee9d2a45b668c79e9bced38b0c862cea44fb1b0071dba837f3ac5eee",
+      "src/qoco_api.c": "5daa3929d04f1e2c7b8681b04a1913427cce5dab8bdbf83923609bdadadf7668",
+      "algebra/cuda/qoco_batched_stopping.cuh": "72a952e8082c956f7c8b4988c535495a9c5b06fefc4a76def8a63992ebc66032",
+      "algebra/cuda/qoco_metric_graph.cuh": "97d0ac2e4554e9a83888a564f559d0e2458a0fb99b82873e158302b7cc9b34a9",
+      "src/qoco_utils.c": "cc16a92d256d86f5871f3a982c61cc820da5f14f37ee3b56b3e6a462f82815ac"
+    }
+  },
+  "local_runtime_sha256": {
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/device_scvx_integration_test": "57a3d0773b5b12dfc30c7fd3ef4bd243955d72b1fc1c7a21cdac1c129cb7761e",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/gtoc12_conic_test": "17a6e13f0f720c7916722da3c6c5bff6601e048bf93fbc1804844e84a25716f8",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/gtoc12_device_refresh_test": "33caa8fa0465d9555fc87a6d450f853015dbf74a371a0444b9a93b0f4f292434",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/gtoc12_discretisation_test": "36efa970608a8b17503fecfff2d4c4f5f1626f924926ee748117a7c1c5f3d388",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/gtoc12_graph_deadline_test": "906b7937717fdd561593d8cb50aee8b63f44c5124839e8a482b966bbee97d7fe",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/gtoc12_outer_graph_test": "56dbb3c890d3eb14cf70770d5a131f793f6bc6947af0d8248189707387e38336",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/gtoc12_qoco_guard_test": "b84cb60097ef83a37b5f8d5eaab38e3048175b2158c263c9d9fce4f61e279ed7",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/gtoc12_scvx_test": "b188eb312f0e9e30ec45b6e30242157e4108a41d6ec3fba79fe6e93338155f13",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/libspacepdhcg_cuda.so": "702679d386a78ca48153795b1267029ca2deac331a794de8116c96b71f2e3c83",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/native_qoco_conversion_test": "adfb39d434586b4ce09df452afcd0645428c1e28ea1a3bb63366844d511ef88e",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/qoco_gpu_audit_test": "65402c5a90cdeacd546a61e78a7c16c436ba1f905273b5f495f1cc239e7c0e5e",
+    "/home/angus/build-spacepdhcg-gtoc12-v167/final/qoco_gpu_conversion_test": "6e6601f459983f76bafcbdf355412beec0924419a4d309cf10f96cf113d1ee53"
+  },
+  "local_qoco_sha256": "996930ebc986fbe82aac03b7bc70a3fe3cab383d2a897b7decd875d858cb49ce",
+  "h100_runtime_sha256": {
+    "libspacepdhcg_cuda.so": "200926689e1b47fc6bdd77962091a25231a6fab27594a223896f179e9b63ab5f",
+    "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "test_source_sha256": {
+    "tests/test_gtoc12_gpu_scvx.py": "e3de21857a2ff4410ad00987c1efb54c3305399693d8d9c1803c14f290e7b9cf",
+    "tests/test_g4_recovery_gpu.py": "5b25ba4e8b4673a4098307f3519ab02f1cdefd46f529aa8510ccee8776ef1d78"
+  }
+}

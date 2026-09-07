@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "kind": "gpu-origin-convergence-diagnosis",
+  "recorded_utc": "2026-09-07T12:30:55.364268+00:00",
+  "status": "NOT READY \u2014 intermittent numerical and trajectory failures remain",
+  "source_commit": "08d97fa54a4476c73409df81388eb32083f93fd0",
+  "runtime": "Native v167 / prepared QOCO137; H100 experiment v168",
+  "local_regression": {
+    "passed": 333,
+    "failed": 4,
+    "stage": "Full suite before graph byte-count assertion correction"
+  },
+  "local_followup": {
+    "passed": 3,
+    "failed": 1,
+    "note": "Graph control-byte assertion now checks fixed priming/exit overhead exactly. Focused rerun still has one independent trajectory failure."
+  },
+  "h100_integration": {
+    "passed": 92,
+    "failed": 2
+  },
+  "local_comparisons": [
+    {
+      "name": "full-outer-v163-q136-comparison-1",
+      "total": 8,
+      "qualified": 8,
+      "shifted_qualified": 4,
+      "shifted_total": 4
+    },
+    {
+      "name": "full-outer-v163-q136-comparison-2",
+      "total": 24,
+      "qualified": 24,
+      "shifted_qualified": 12,
+      "shifted_total": 12
+    },
+    {
+      "name": "full-outer-v163-q137-comparison-2",
+      "total": 24,
+      "qualified": 23,
+      "shifted_qualified": 12,
+      "shifted_total": 12
+    },
+    {
+      "name": "full-outer-v165-q137-comparison-2",
+      "total": 24,
+      "qualified": 13,
+      "shifted_qualified": 8,
+      "shifted_total": 12
+    },
+    {
+      "name": "full-outer-v167-q137-comparison-2",
+      "total": 24,
+      "qualified": 22,
+      "shifted_qualified": 11,
+      "shifted_total": 12
+    }
+  ],
+  "h100_repeats": {
+    "total": 8,
+    "qualified": 7,
+    "shifted_qualified": 4,
+    "shifted_total": 4
+  },
+  "recovery": [
+    {
+      "intervals": 500,
+      "qualified": true,
+      "status": 0,
+      "objective": 0.14983153835776022,
+      "scvx_seconds": 3.045739959,
+      "canonical_residual": 9.613041230310187e-14,
+      "dynamics": 0,
+      "path": 0,
+      "terminal": 8.731149137020111e-14,
+      "hidden_cpu_fallback": 0
+    },
+    {
+      "intervals": 2000,
+      "qualified": true,
+      "status": 0,
+      "objective": 0.14453934203622054,
+      "scvx_seconds": 5.152238612,
+      "canonical_residual": 1.9378026794938483e-14,
+      "dynamics": 0,
+      "path": 0,
+      "terminal": 4.0378811405616943e-13,
+      "hidden_cpu_fallback": 0
+    },
+    {
+      "intervals": 2000,
+      "qualified": true,
+      "status": 0,
+      "objective": 0.14453934201621052,
+      "scvx_seconds": 5.157674329,
+      "canonical_residual": 1.9596596561139097e-14,
+      "dynamics": 0,
+      "path": 0,
+      "terminal": 1.6342482922482304e-13,
+      "hidden_cpu_fallback": 0
+    },
+    {
+      "intervals": 100,
+      "qualified": true,
+      "status": 0,
+      "objective": 0.14999376216211055,
+      "scvx_seconds": 0.216726117,
+      "canonical_residual": 1.5862516064100388e-14,
+      "dynamics": 0,
+      "path": 0,
+      "terminal": 3.819877747446299e-14,
+      "hidden_cpu_fallback": 0
+    },
+    {
+      "intervals": 2000,
+      "qualified": true,
+      "status": 0,
+      "objective": 0.14453934252225112,
+      "scvx_seconds": 5.10977163,
+      "canonical_residual": 1.9183641284291972e-14,
+      "dynamics": 0,
+      "path": 0,
+      "terminal": 4.296563105299356e-13,
+      "hidden_cpu_fallback": 0
+    },
+    {
+      "intervals": 100,
+      "qualified": true,
+      "status": 0,
+      "objective": 0.1499937621002959,
+      "scvx_seconds": 0.216152505,
+      "canonical_residual": 1.7066881947825882e-14,
+      "dynamics": 0,
+      "path": 0,
+      "terminal": 1.9539925233402755e-14,
+      "hidden_cpu_fallback": 0
+    }
+  ],
+  "sanitizers": [
+    {
+      "name": "gtoc12_outer_graph_test-memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v168/core-build/cuda-tests/gtoc12_outer_graph_test"
+      ],
+      "returncode": 0,
+      "seconds": 25.748573541641235
+    },
+    {
+      "name": "gtoc12_outer_graph_test-initcheck-kernel",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--check-api-memory-access",
+        "no",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v168/core-build/cuda-tests/gtoc12_outer_graph_test"
+      ],
+      "returncode": 0,
+      "seconds": 12.380549192428589
+    },
+    {
+      "name": "gtoc12_qoco_guard_test-memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v168/core-build/cuda-tests/gtoc12_qoco_guard_test"
+      ],
+      "returncode": 0,
+      "seconds": 43.322165966033936
+    },
+    {
+      "name": "gtoc12_qoco_guard_test-initcheck-kernel",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--check-api-memory-access",
+        "no",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v168/core-build/cuda-tests/gtoc12_qoco_guard_test"
+      ],
+      "returncode": 0,
+      "seconds": 20.54099130630493
+    }
+  ],
+  "fleet_changed": false,
+  "full_gpu_application": false,
+  "corrections": [
+    "Original-coordinate objective gap includes q dot stationarity residual and objective offset on device.",
+    "SCvx uses magnitude of predicted reduction and no longer promotes exhausted runs to convergence.",
+    "Finer propagation can confirm a preceding accepted convergence step with strict defect and merit bounds.",
+    "Undefined JSON iteration ratios are null."
+  ],
+  "limitations": [
+    "Repeated qualification is not reliable; retain both physics and known-objective gates.",
+    "Some failed trajectories have nearly correct mass but unacceptable position error.",
+    "Local IPM session test has a numerical disposition; powered-descent fault test failed intermittently before injection.",
+    "H100 initcheck disables API-memory checks because their held-stream blocking is separately reproduced; this does not claim that coverage.",
+    "Local WSL sanitizer limitation remains unresolved.",
+    "No new fleet score or overall speedup multiplier.",
+    "Full local regression retains four failures; two were graph-overhead assertions corrected afterward, while numerical failures remain."
+  ],
+  "archives": {
+    "h100-v163.tar.gz": {
+      "bytes": 219183,
+      "sha256": "5c00d7771e22aaa995a98fa1a8d9ecc6d5502a63c98c76b63ad9f3c889013f67"
+    },
+    "h100-v164.tar.gz": {
+      "bytes": 167258,
+      "sha256": "a6c2f95e28e6927977e354e715406a85b6397a3cf23b5cadc53aa09d7f40de26"
+    },
+    "h100-v166.tar.gz": {
+      "bytes": 258281,
+      "sha256": "80dba0f0ca6477ff74e631b6f5fadcdcad4371720ad5eac57b700be5269aff1e"
+    },
+    "h100-v168.tar.gz": {
+      "bytes": 241751,
+      "sha256": "e2fd0a134e498e8490e41c9ea7b38df0c1643b0776d78b46b6048eb90ae6ee56"
+    },
+    "local-evidence.tar.gz": {
+      "bytes": 7226843,
+      "sha256": "fc4339e69e560960b910e0bbb337eb8f88091901b7ccb094ee9ac2e5aa4c0aa1"
+    }
+  }
+}
