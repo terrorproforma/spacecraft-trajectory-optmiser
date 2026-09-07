@@ -18,7 +18,9 @@ def run(source, destination):
     catalogue = load_catalogue()
     native = collectdp.cuda_leg_table
     rows = []
-    with using_lambert_backend("cuda"):
+    with using_lambert_backend("cuda") as gpu:
+        # This benchmark isolates ephemeris preparation, not resident caching.
+        gpu.collect_tables_resident = False
         try:
             for size in [2, 4, 8]:
                 fixture = fixtures[str(size)]

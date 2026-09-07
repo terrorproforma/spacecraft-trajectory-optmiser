@@ -79,9 +79,11 @@ def run(source: Path, output: Path, reference: str, mass_key: str) -> None:
                 archived = fixture["expected"]
                 if reference == "uncached":
                     use_native = gpu.collect_dp_cuda
+                    use_resident = gpu.collect_tables_resident
                     native_table = collectdp.cuda_leg_table
                     try:
                         gpu.collect_dp_cuda = False
+                        gpu.collect_tables_resident = False
                         collectdp.cuda_leg_table = lambda *args: None
                         reference_table = collectdp.CollectPairTable(
                             catalogue, dataclasses.replace(table.settings, fraction_cache_entries=0)
@@ -96,6 +98,7 @@ def run(source: Path, output: Path, reference: str, mass_key: str) -> None:
                         )
                     finally:
                         gpu.collect_dp_cuda = use_native
+                        gpu.collect_tables_resident = use_resident
                         collectdp.cuda_leg_table = native_table
                     # Normalise keys/tuples just as the archived JSON does.
                     expected = (

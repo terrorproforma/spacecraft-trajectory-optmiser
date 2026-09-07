@@ -184,6 +184,12 @@ class GpuLambert:
         self.collection_workspace = None
         self.collect_dp_workspace = None
         self.collect_dp_cuda = True
+        from collections import OrderedDict
+        from weakref import WeakSet
+
+        self.collect_tables_resident = True
+        self.collect_table_cache = OrderedDict()
+        self.collect_table_objects = WeakSet()
         self.retime_workspace = None
         self.telemetry = {
             "backend": "cuda",
@@ -210,6 +216,9 @@ class GpuLambert:
         if self.collect_dp_workspace is not None:
             self.collect_dp_workspace.close()
             self.collect_dp_workspace = None
+        for table in list(self.collect_table_objects):
+            table.close()
+        self.collect_table_cache.clear()
         if self.retime_workspace is not None:
             self.retime_workspace.close()
             self.retime_workspace = None
@@ -360,6 +369,26 @@ class GpuLambert:
         dv = output["dep"] + output["arr"]
         feasible = output["feasible"].astype(bool) & np.isfinite(dv)
         return np.where(feasible, dv, np.inf).reshape(shape), feasible.reshape(shape)
+
+    def collect_table(self, table, source, target, tofs, end):
+        from .gpu_collect_tables import GpuCollectTable
+
+        self._owned()
+        key = (table, source, target)
+        value = self.collect_table_cache.get(key)
+        if value is None:
+            value = GpuCollectTable(self, table, source, target, tofs, end)
+            self.collect_table_cache[key] = value
+        self.collect_table_cache.move_to_end(key)
+        while len(self.collect_table_cache) > max(0, table.settings.cache_pairs):
+            self.collect_table_cache.popitem(last=False)
+        return value
+
+    def release_collect_tables(self, table):
+        self._owned()
+        for key in list(self.collect_table_cache):
+            if key[0] is table:
+                self.collect_table_cache.pop(key)
 
     def screen_hops(
         self,

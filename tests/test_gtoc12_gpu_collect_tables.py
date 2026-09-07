@@ -34,6 +34,7 @@ def test_collection_tables_match_host_ephemerides(monkeypatch, source, target, r
 
     with using_lambert_backend("cuda", maximum_batch_size=31) as gpu:
         with monkeypatch.context() as patch:
+            patch.setattr(gpu, "collect_tables_resident", False)
             patch.setattr(collectdp, "cuda_leg_table", lambda *args: None)
             expected = evaluate(reference)
         with monkeypatch.context() as patch:

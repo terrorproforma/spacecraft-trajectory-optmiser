@@ -13,11 +13,13 @@ from spacepdhcg.gtoc12.data import load_catalogue
 from spacepdhcg.gtoc12.lambert import using_lambert_backend
 
 
-def run(source, output):
+def run(source, output, *, resident=False):
     fixtures = json.loads(source.read_text())["fixtures"]
     cat = load_catalogue()
     rows = []
+    modes = ["host", "resident"] if resident else ["cpu", "cuda"]
     with using_lambert_backend("cuda") as gpu:
+        gpu.collect_tables_resident = False
         for size in ["3", "6", "9"]:
             f = fixtures[size]
             assert not f["settings"]["inflation_fit"] and not f["settings"]["harvest_phase"]
@@ -28,8 +30,11 @@ def run(source, output):
             options["banned_pairs"] = {tuple(pair) for pair in options.get("banned_pairs", [])}
             reference = None
             for repeat in range(6):
-                for mode in ["cpu", "cuda"] if repeat % 2 == 0 else ["cuda", "cpu"]:
-                    gpu.collect_dp_cuda = mode == "cuda"
+                for mode in modes if repeat % 2 == 0 else list(reversed(modes)):
+                    if resident:
+                        gpu.collect_tables_resident = mode == "resident"
+                    else:
+                        gpu.collect_dp_cuda = mode == "cuda"
                     start = time.perf_counter()
                     result = plan_collect_tour(
                         table,
@@ -81,7 +86,7 @@ def run(source, output):
                     ]
                 )
             )
-            for mode in ["cpu", "cuda"]
+            for mode in modes
         }
         for size in ["3", "6", "9"]
     }
@@ -91,9 +96,12 @@ def run(source, output):
             dict(
                 medians=medians,
                 rows=rows,
-                scope=("Six alternating pairs per size, first pair discarded; complete tours "
-                       "including both mass passes, retained pair tables. "
-                       "No CPU state-transition fallback in CUDA mode."),
+                resident_tables_comparison=resident,
+                scope=(
+                    "Six alternating pairs per size, first pair discarded; complete tours "
+                    "including both mass passes, retained pair tables. "
+                    "Resident comparison uses CUDA DP in both modes; otherwise CPU/CUDA DP."
+                ),
             ),
             indent=2,
         )
@@ -103,4 +111,4 @@ def run(source, output):
 
 
 if __name__ == "__main__":
-    run(Path(sys.argv[1]), Path(sys.argv[2]))
+    run(Path(sys.argv[1]), Path(sys.argv[2]), resident="--resident-tables" in sys.argv[3:])

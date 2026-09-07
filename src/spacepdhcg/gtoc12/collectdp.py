@@ -165,6 +165,11 @@ class CollectPairTable:
         self._returns.clear()
         self._geometry.clear()
         self._return_overrides.clear()  # rebuilt from the kept sweeps on demand
+        from .lambert import _GPU_BACKEND
+
+        gpu = _GPU_BACKEND.get()
+        if gpu is not None:
+            gpu.release_collect_tables(self)
         return released
 
     # -- certified return cells ------------------------------------------------------------
@@ -254,6 +259,9 @@ class CollectPairTable:
     # -- costs ---------------------------------------------------------------------------
 
     def _cuda_table(self, source: int, target: int, tofs: FloatArray, end: float):
+        resident = self._resident_table(source, target, tofs, end)
+        if resident is not None:
+            return resident.read()
         result = cuda_leg_table(self.catalogue, source, target, self.epochs, tofs)
         if result is None:
             return None
@@ -263,6 +271,14 @@ class CollectPairTable:
         valid = self.epochs[:, None] + tofs[None, :] <= end + 1e-9
         self.lambert_evaluations += 2 * self.epochs.size * tofs.size
         return np.where(valid & feasible, dv, np.inf).astype(np.float32)
+
+    def _resident_table(self, source, target, tofs, end):
+        from .lambert import _GPU_BACKEND
+
+        gpu = _GPU_BACKEND.get()
+        if gpu is None or not gpu.collect_tables_resident:
+            return None
+        return gpu.collect_table(self, source, target, tofs, end)
 
     def hop(self, source: int, target: int) -> NDArray[np.float32]:
         key = (int(source), int(target))

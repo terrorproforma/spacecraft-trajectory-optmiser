@@ -5,14 +5,18 @@
 #include <initializer_list>
 #include <mutex>
 #include <new>
+#include <vector>
+#include <algorithm>
+#include <cstring>
 
 namespace {
 using Policy=spacepdhcg_collect_policy;
 using Inputs=spacepdhcg_collect_inputs;
-using Result=spacepdhcg_collect_result;
+using Result=spacepdhcg_collect_result_v2;
 static_assert(sizeof(Policy)==144);
 static_assert(sizeof(Inputs)==88);
-static_assert(sizeof(Result)==496);
+static_assert(sizeof(Result)==632);
+static_assert(sizeof(spacepdhcg_collect_result)==496);
 struct View {
     Policy p; Inputs in;
     double *arrive{},*ready{},*mass{},*terminal{};
@@ -149,6 +153,7 @@ __global__ void finish(View v,double camp_mass) {
         if(best>r.objective+1e-9){r.objective=best;j_best=j;t_best=t_win;h_best=h_win;}}
     if(j_best<0)return;
     r.feasible=1;r.terminal_j=j_best;r.terminal_t=t_best;r.terminal_r=h_best;
+    r.return_dv=v.in.returns[(size_t(j_best)*v.p.n+t_best)*v.p.nr+h_best];
     r.collected_at[j_best]=t_best;
     int subset=((1<<v.p.k)-1)&~(1<<j_best),j=j_best;
     int arrival=v.prefix[state(v,subset,j)*v.p.n+t_best];
@@ -160,6 +165,7 @@ __global__ void finish(View v,double camp_mass) {
         const int pos=r.hops++;r.source[pos]=prev;r.target[pos]=j;r.departure[pos]=dep;r.tof[pos]=h;
         const double mass=skipped?camp_mass:v.mass[subset];
         r.hop_propellant[pos]=mass*fraction(v,prev,j,dep,h,mass);
+        r.hop_dv[pos]=v.in.dv[((size_t(prev)*v.p.k+j)*v.p.n+dep)*v.p.nt+h];
         r.penalty+=v.in.penalty[(size_t(prev)*v.p.k+j)*v.p.n+dep];
         if(skipped)r.reposition=1;
         else{r.collected_at[prev]=dep;subset&=~(1<<prev);}
@@ -172,7 +178,7 @@ template<class T> bool copy(const T*& p,const T* src,size_t n,cudaStream_t strea
     return cudaMemcpyAsync(target,src,n*sizeof(T),cudaMemcpyHostToDevice,stream)==cudaSuccess;
 }
 }
-extern "C" int spacepdhcg_collect_create(const Policy* p,const Inputs* in,void** out) {
+static int create_workspace(const Policy* p,const Inputs* in,void** out,bool resident) {
     if(!p||!in||!out||*out||p->k<1||p->k>16||p->n<1||p->nt<1||p->nr<1||p->camp<0||p->camp>=p->k
         ||p->hop_model<0||p->hop_model>2||p->return_model<0||p->return_model>1)return 1;
     const size_t states=size_t(1<<p->k)*p->k,cells=states*p->n,pairs=size_t(p->k)*p->k;
@@ -180,14 +186,20 @@ extern "C" int spacepdhcg_collect_create(const Policy* p,const Inputs* in,void**
     const double* numbers=&p->thrust;
     for(int i=0;i<14;++i)if(!std::isfinite(numbers[i]))return 1;
     if(p->thrust<=0||p->exhaust<=0||p->hop_ratio<0||p->return_ratio<0)return 1;
-    if(!in->dv||!in->returns||!in->tofs||!in->return_tofs||!in->mined||!in->geometry_a||!in->geometry_l
+    if((!resident&&(!in->dv||!in->returns))||!in->tofs||!in->return_tofs||!in->mined||!in->geometry_a||!in->geometry_l
         ||!in->penalty||!in->override_inflation||!in->steps||!in->banned)return 1;
     for(int h=0;h<p->nt;++h)if(in->steps[h]<1||!std::isfinite(in->tofs[h])||in->tofs[h]<=0)return 1;
     for(int h=0;h<p->nr;++h)if(!std::isfinite(in->return_tofs[h])||in->return_tofs[h]<=0)return 1;
     auto* w=new(std::nothrow) Workspace;if(!w)return 2;
     w->v.p=*p;auto& v=w->v;
     bool ok=cudaGetDevice(&w->device)==cudaSuccess&&cudaStreamCreateWithFlags(&w->stream,cudaStreamNonBlocking)==cudaSuccess;
-    ok=ok&&copy(v.in.dv,in->dv,pairs*p->n*p->nt,w->stream)&&copy(v.in.returns,in->returns,size_t(p->k)*p->n*p->nr,w->stream)
+    if(resident) {
+        double* dv=nullptr;double* returns=nullptr;
+        ok=ok&&allocate(dv,pairs*p->n*p->nt)&&allocate(returns,size_t(p->k)*p->n*p->nr);
+        v.in.dv=dv;v.in.returns=returns;
+    } else ok=ok&&copy(v.in.dv,in->dv,pairs*p->n*p->nt,w->stream)
+        &&copy(v.in.returns,in->returns,size_t(p->k)*p->n*p->nr,w->stream);
+    ok=ok
         &&copy(v.in.tofs,in->tofs,p->nt,w->stream)&&copy(v.in.return_tofs,in->return_tofs,p->nr,w->stream)
         &&copy(v.in.mined,in->mined,size_t(p->k)*p->n,w->stream)&&copy(v.in.geometry_a,in->geometry_a,pairs,w->stream)
         &&copy(v.in.geometry_l,in->geometry_l,pairs*p->n,w->stream)&&copy(v.in.penalty,in->penalty,pairs*p->n,w->stream)
@@ -199,7 +211,10 @@ extern "C" int spacepdhcg_collect_create(const Policy* p,const Inputs* in,void**
     ok=(cudaStreamSynchronize(w->stream)==cudaSuccess)&&ok;
     if(!ok){delete w;return 2;}*out=w;return 0;
 }
-extern "C" int spacepdhcg_collect_solve(void* opaque,const double* masses,double camp_mass,double price,Result* result){
+extern "C" int spacepdhcg_collect_create(const Policy* p,const Inputs* in,void** out) {
+    return create_workspace(p,in,out,false);
+}
+extern "C" int spacepdhcg_collect_solve_v2(void* opaque,const double* masses,double camp_mass,double price,Result* result){
     auto* w=static_cast<Workspace*>(opaque);
     if(!w||!masses||!result||!std::isfinite(camp_mass)||camp_mass<=0||!std::isfinite(price)||price<=0)return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
@@ -221,8 +236,103 @@ extern "C" int spacepdhcg_collect_solve(void* opaque,const double* masses,double
     const auto finished=cudaStreamSynchronize(w->stream);
     return status==cudaSuccess&&finished==cudaSuccess?0:2;
 }
+extern "C" int spacepdhcg_collect_solve(void* opaque,const double* masses,double camp_mass,double price,spacepdhcg_collect_result* result){
+    if(!result)return 1;Result extended{};
+    const int status=spacepdhcg_collect_solve_v2(opaque,masses,camp_mass,price,&extended);
+    if(!status)std::memcpy(result,&extended,sizeof(*result));return status;
+}
 extern "C" int spacepdhcg_collect_destroy(void* opaque){
     auto* w=static_cast<Workspace*>(opaque);if(!w)return 0;
     int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=w->device)return 1;
     if(!w->mutex.try_lock())return 3;w->mutex.unlock();delete w;return 0;
+}
+
+namespace {
+struct DeviceTable {
+    int device{},n{},nt{};float* values{};cudaStream_t stream{};std::mutex mutex;
+    ~DeviceTable(){if(stream)cudaStreamSynchronize(stream);cudaFree(values);if(stream)cudaStreamDestroy(stream);}
+};
+__global__ void round_table(const double* dv,const uint8_t* ok,const double* epochs,
+    const double* tofs,int nt,size_t count,double end,float* output) {
+    const size_t i=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
+    if(i<count)output[i]=ok[i]&&epochs[i/nt]+tofs[i%nt]<=end+1e-9
+        ?static_cast<float>(dv[i]):INFINITY;
+}
+__global__ void assemble_tables(const float* const* inputs,int k,int n,int nt,int nr,
+    int t0,size_t count,double* pairs,double* returns) {
+    const size_t i=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
+    if(i>=count)return;
+    const size_t pair_cells=size_t(k)*k*n*nt;
+    const bool ret=i>=pair_cells;const size_t index=ret?i-pair_cells:i;
+    const int tofs=ret?nr:nt;const size_t cells=size_t(n)*tofs;
+    const auto* input=inputs[(ret?k*k:0)+index/cells];
+    (ret?returns:pairs)[index]=input?static_cast<double>(input[size_t(t0)*tofs+index%cells]):INFINITY;
+}
+}
+extern "C" int spacepdhcg_collect_table_create(spacepdhcg_orbitweaver_lambert_workspace* lambert,
+    const spacepdhcg_orbitweaver_hop_elements* elements,const double* epochs,int32_t n,
+    const double* tofs,int32_t nt,double end,void** output) {
+    if(!lambert||!elements||!epochs||!tofs||!output||*output||n<=0||nt<=0
+        ||int64_t(n)*nt>INT_MAX||!std::isfinite(end))return 1;
+    auto* table=new(std::nothrow) DeviceTable;if(!table)return 2;
+    table->n=n;table->nt=nt;const size_t count=size_t(n)*nt;
+    const double *de=nullptr,*dt=nullptr;double* dv=nullptr;uint8_t* ok=nullptr;
+    bool good=cudaGetDevice(&table->device)==cudaSuccess
+        &&cudaStreamCreateWithFlags(&table->stream,cudaStreamNonBlocking)==cudaSuccess
+        &&copy(de,epochs,n,table->stream)&&copy(dt,tofs,nt,table->stream)
+        &&allocate(dv,count)&&allocate(ok,count)&&allocate(table->values,count);
+    good=(cudaStreamSynchronize(table->stream)==cudaSuccess)&&good;
+    if(good)good=spacepdhcg_orbitweaver_hop_grid_device(lambert,elements,de,n,dt,nt,dv,ok)==SPACEPDHCG_CUDA_SUCCESS;
+    if(good){
+        round_table<<<(count+127)/128,128,0,table->stream>>>(dv,ok,de,dt,nt,count,end,table->values);
+        good=cudaGetLastError()==cudaSuccess;
+    }
+    good=(cudaStreamSynchronize(table->stream)==cudaSuccess)&&good;
+    cudaFree(const_cast<double*>(de));cudaFree(const_cast<double*>(dt));cudaFree(dv);cudaFree(ok);
+    if(!good){delete table;return 2;}*output=table;return 0;
+}
+extern "C" int spacepdhcg_collect_table_read(void* opaque,float* output) {
+    auto* table=static_cast<DeviceTable*>(opaque);if(!table||!output)return 1;
+    std::unique_lock<std::mutex> lock(table->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
+    int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=table->device)return 1;
+    const auto status=cudaMemcpyAsync(output,table->values,size_t(table->n)*table->nt*sizeof(float),cudaMemcpyDeviceToHost,table->stream);
+    const auto done=cudaStreamSynchronize(table->stream);return status==cudaSuccess&&done==cudaSuccess?0:2;
+}
+extern "C" int spacepdhcg_collect_table_destroy(void* opaque) {
+    auto* table=static_cast<DeviceTable*>(opaque);if(!table)return 0;
+    int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=table->device)return 1;
+    if(!table->mutex.try_lock())return 3;table->mutex.unlock();delete table;return 0;
+}
+extern "C" int spacepdhcg_collect_create_tables(const Policy* p,const Inputs* in,
+    void* const* pairs,void* const* returns,int32_t t0,void** output) {
+    if(!p||!in||!pairs||!returns||!output||*output||p->k<1||p->k>16||t0<0||p->n<1||p->nt<1||p->nr<1)return 1;
+    int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;
+    std::vector<DeviceTable*> tables;
+    for(int i=0;i<p->k*p->k+p->k;++i){
+        const bool ret=i>=p->k*p->k;auto* table=static_cast<DeviceTable*>(ret?returns[i-p->k*p->k]:pairs[i]);
+        if(!table){if(ret||!in->banned||!in->banned[i])return 1;continue;}
+        if(table->device!=device||int64_t(t0)+p->n>table->n||table->nt!=(ret?p->nr:p->nt))return 1;
+        if(std::find(tables.begin(),tables.end(),table)==tables.end())tables.push_back(table);
+    }
+    std::vector<std::unique_lock<std::mutex>> locks;
+    for(auto* table:tables){locks.emplace_back(table->mutex,std::try_to_lock);if(!locks.back().owns_lock())return 3;}
+    const int status=create_workspace(p,in,output,true);if(status)return status;
+    auto* w=static_cast<Workspace*>(*output);
+    std::vector<const float*> pointers;
+    for(int i=0;i<p->k*p->k+p->k;++i){
+        const bool ret=i>=p->k*p->k;auto* table=static_cast<DeviceTable*>(ret?returns[i-p->k*p->k]:pairs[i]);
+        pointers.push_back(table?table->values:nullptr);
+    }
+    const float** device_pointers=nullptr;
+    bool good=allocate(device_pointers,pointers.size());
+    if(good)good=cudaMemcpyAsync(device_pointers,pointers.data(),pointers.size()*sizeof(float*),cudaMemcpyHostToDevice,w->stream)==cudaSuccess;
+    if(good){
+        const size_t count=size_t(p->k)*p->k*p->n*p->nt+size_t(p->k)*p->n*p->nr;
+        assemble_tables<<<(count+255)/256,256,0,w->stream>>>(device_pointers,p->k,p->n,p->nt,p->nr,t0,count,
+            const_cast<double*>(w->v.in.dv),const_cast<double*>(w->v.in.returns));
+        good=cudaGetLastError()==cudaSuccess;
+    }
+    good=(cudaStreamSynchronize(w->stream)==cudaSuccess)&&good;
+    cudaFree(device_pointers);
+    if(!good){delete w;*output=nullptr;return 2;}return 0;
 }

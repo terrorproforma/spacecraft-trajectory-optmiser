@@ -70,6 +70,7 @@ class Result(ct.Structure):
         + [("objective", ct.c_double), ("penalty", ct.c_double)]
         + [(n, ct.c_int32 * 16) for n in ["collected_at", "source", "target", "departure", "tof"]]
         + [("hop_propellant", ct.c_double * 16)]
+        + [("hop_dv", ct.c_double * 16), ("return_dv", ct.c_double)]
     )
 
 
@@ -80,7 +81,7 @@ class GpuCollectDP:
         self.handle = ct.c_void_p()
         try:
             self.create = gpu.library.spacepdhcg_collect_create
-            self.solve_native = gpu.library.spacepdhcg_collect_solve
+            self.solve_native = gpu.library.spacepdhcg_collect_solve_v2
             self.destroy = gpu.library.spacepdhcg_collect_destroy
         except AttributeError as error:
             raise RuntimeError("CUDA collection DP requires a rebuilt native library") from error
@@ -96,6 +97,9 @@ class GpuCollectDP:
         for f in [self.create, self.solve_native, self.destroy]:
             f.restype = ct.c_int
         s = table.settings
+        from .collectdp import CollectPairTable
+
+        resident = isinstance(table, CollectPairTable) and gpu.collect_tables_resident
         k, n, nt, nr = len(ids), len(epochs), len(table.tofs), len(table.return_tofs)
         if not 1 <= k <= 16:
             raise ValueError("CUDA collection DP supports 1-16 asteroids")
@@ -121,8 +125,8 @@ class GpuCollectDP:
             (ct.c_double * 5)(*(fit.coefficients if fit else [0] * 5)),
         )
         data = dict(
-            dv=np.full((k, k, n, nt), np.inf),
-            returns=np.empty((k, n, nr)),
+            dv=np.empty(0) if resident else np.full((k, k, n, nt), np.inf),
+            returns=np.empty(0) if resident else np.empty((k, n, nr)),
             tofs=np.ascontiguousarray(table.tofs, dtype=np.float64),
             return_tofs=np.ascontiguousarray(table.return_tofs, dtype=np.float64),
             mined=np.ascontiguousarray(mined),
@@ -133,8 +137,16 @@ class GpuCollectDP:
             steps=np.ascontiguousarray(table.tof_steps, dtype=np.int32),
             banned=np.zeros((k, k), dtype=np.int32),
         )
+        retained, pair_handles, return_handles = [], [None] * (k * k), []
         for j, source in enumerate(ids):
-            data["returns"][j] = table.earth_return(source)[t0:]
+            if resident:
+                native = table._resident_table(
+                    source, 0, table.return_tofs, C.MISSION_END_MJD - s.end_margin_days
+                )
+                retained.append(native)
+                return_handles.append(native.handle.value)
+            else:
+                data["returns"][j] = table.earth_return(source)[t0:]
             override = table.return_override(source)
             if override is not None:
                 inflation, ok = override
@@ -144,7 +156,12 @@ class GpuCollectDP:
                 data["banned"][j, target_index] = refused
                 if refused:
                     continue
-                data["dv"][j, target_index] = table.hop(source, target)[t0:]
+                if resident:
+                    native = table._resident_table(source, target, table.tofs, table.epochs[-1])
+                    retained.append(native)
+                    pair_handles[j * k + target_index] = native.handle.value
+                else:
+                    data["dv"][j, target_index] = table.hop(source, target)[t0:]
                 if fit:
                     a, longitude = table.pair_geometry(source, target, epochs)
                     data["geometry_a"][j, target_index] = a
@@ -153,7 +170,32 @@ class GpuCollectDP:
                     data["penalty"][j, target_index] = phase_penalty(j, target_index)
         self.data = data
         packed = Inputs(*(data[name].ctypes.data for name, _ in Inputs._fields_))
-        self.check(self.create(ct.byref(p), ct.byref(packed), ct.byref(self.handle)))
+        if resident:
+            create_tables = gpu.library.spacepdhcg_collect_create_tables
+            create_tables.argtypes = [
+                ct.POINTER(Policy),
+                ct.POINTER(Inputs),
+                ct.c_void_p,
+                ct.c_void_p,
+                ct.c_int32,
+                ct.POINTER(ct.c_void_p),
+            ]
+            create_tables.restype = ct.c_int
+            self.check(
+                create_tables(
+                    ct.byref(p),
+                    ct.byref(packed),
+                    (ct.c_void_p * (k * k))(*pair_handles),
+                    (ct.c_void_p * k)(*return_handles),
+                    t0,
+                    ct.byref(self.handle),
+                )
+            )
+            gpu.telemetry["collect_resident_dp_builds"] = (
+                gpu.telemetry.get("collect_resident_dp_builds", 0) + 1
+            )
+        else:
+            self.check(self.create(ct.byref(p), ct.byref(packed), ct.byref(self.handle)))
 
     @staticmethod
     def check(code):
@@ -198,7 +240,7 @@ class GpuCollectDP:
                     ids[target_index],
                     float(epochs[t]),
                     float(table.tofs[index]),
-                    float(self.data["dv"][j, target_index, t, index]),
+                    result.hop_dv[h],
                 )
             )
             costs.append(result.hop_propellant[h])
@@ -221,7 +263,7 @@ class GpuCollectDP:
             (weighted - result.objective) / price - result.penalty,
             float(epochs[t]),
             float(table.return_tofs[h]),
-            float(self.data["returns"][j, t, h]),
+            result.return_dv,
             result.states,
             dict(
                 lattice_start=float(epochs[0]),
