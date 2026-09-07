@@ -1,5 +1,10 @@
 # Collection-tour DP: measured bottleneck and CUDA port contract
 
+**Update:** the multi-block CUDA implementation and matched campaign measurements
+are now documented in [GPU_COLLECTION_DP_CUDA.md](GPU_COLLECTION_DP_CUDA.md).
+This document preserves the earlier profiling evidence and original port
+requirements. Between-pass mass control and input preparation remain host work.
+
 The complete H100 campaign spends **30.973 s in 378 collection-DP passes**, inside
 a **91.430 s** directly timed CLI call (33.9%). Those spans include lazy GPU
 Lambert table construction called by the host DP; they are not pure CPU samples.

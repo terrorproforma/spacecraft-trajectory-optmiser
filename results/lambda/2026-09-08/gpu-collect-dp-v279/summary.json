@@ -1,0 +1,272 @@
+{
+  "code_commit": "aff67ecd",
+  "archive_sha256": "1d7c6ab596294fc30b8a2cc5c0f20d6493aadc77036d0aceba69c9f265019250",
+  "cpu_median_seconds": 90.58959371503443,
+  "cuda_median_seconds": 62.52586580297793,
+  "speedup": 1.4488338954071691,
+  "time_reduction_percent": 30.978975355972903,
+  "campaigns": {
+    "280": {
+      "seconds": 62.23798081796849,
+      "search_seconds": 22.698159561958164,
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 5663,
+        "completed_branch_requests": 44733902,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 13119270,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "independent": {
+        "max_mass_error_kg": 7.23048287909478e-11,
+        "max_position_error_km": 0.6343182178642909,
+        "max_velocity_error_km_s": 1.1099888588604513e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944560019,
+          "9595": 71.4579055442,
+          "10664": 13.141683778300148,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.924449255089907,
+        "ships": 1,
+        "total_mass_kg": 548.2546201234002,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201234002
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944560019,
+          "9595": 71.4579055442,
+          "10664": 13.141683778300148,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09291769500123337
+      },
+      "routes": 106
+    },
+    "284": {
+      "seconds": 91.66280290402938,
+      "search_seconds": 50.30028200900415,
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 5662,
+        "completed_branch_requests": 44722546,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 13119270,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "independent": {
+        "max_mass_error_kg": 4.411049303598702e-11,
+        "max_position_error_km": 0.6329752005357399,
+        "max_velocity_error_km_s": 1.1071165389225665e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944560019,
+          "9595": 71.45790554410019,
+          "10664": 13.141683778199877,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217660015,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638610002
+        },
+        "ship_limit": 17.924449255075597,
+        "ships": 1,
+        "total_mass_kg": 548.2546201232005,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201232005
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944560019,
+          "9595": 71.45790554410019,
+          "10664": 13.141683778199877,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217660015,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638610002
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09265264600981027
+      },
+      "routes": 106
+    },
+    "285": {
+      "seconds": 62.813750787987374,
+      "search_seconds": 22.79118425701745,
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 5663,
+        "completed_branch_requests": 44733902,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 13119270,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "independent": {
+        "max_mass_error_kg": 7.867129170335829e-11,
+        "max_position_error_km": 0.6323678268700641,
+        "max_velocity_error_km_s": 1.1060241961722904e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.4579055442,
+          "10664": 13.141683778199877,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217660015,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.92444925507558,
+        "ships": 1,
+        "total_mass_kg": 548.2546201232003,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201232003
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.4579055442,
+          "10664": 13.141683778199877,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217660015,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.0930729639949277
+      },
+      "routes": 106
+    },
+    "286": {
+      "seconds": 89.51638452603947,
+      "search_seconds": 50.195150545972865,
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 5662,
+        "completed_branch_requests": 44722546,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 13119270,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "independent": {
+        "max_mass_error_kg": 8.594724931754172e-11,
+        "max_position_error_km": 0.630349567645212,
+        "max_velocity_error_km_s": 1.1025516048193529e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.4579055442,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599589984,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217659992,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638610002
+        },
+        "ship_limit": 17.92444925509705,
+        "ships": 1,
+        "total_mass_kg": 548.2546201234998,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201234998
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.4579055442,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599589984,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217659992,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638610002
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09277315402869135
+      },
+      "routes": 106
+    }
+  }
+}

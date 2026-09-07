@@ -1,0 +1,33 @@
+from pathlib import Path
+import os,subprocess,json,time,tarfile,shutil,hashlib,fcntl
+root=Path('/home/ubuntu/spacepdhcg-collect-dp-v279');repo=root/'repo'
+report=dict(pid=os.getpid(),start=time.time(),steps=[],complete=False)
+env={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}
+python='/home/ubuntu/spacepdhcg/v1/.venv/bin/python';cmake='/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake'
+def run(name,cmd):
+    start=time.time()
+    with (root/(name+'.log')).open('x') as log:r=subprocess.run(cmd,cwd=repo,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=900)
+    report['steps'].append(dict(name=name,command=cmd,returncode=r.returncode,seconds=time.time()-start));(root/'report.json').write_text(json.dumps(report,indent=2));r.check_returncode()
+try:
+    shutil.copytree('/home/ubuntu/spacepdhcg-collect-cache-v274/repo',repo,ignore=shutil.ignore_patterns('.git','__pycache__','.pytest_cache'),symlinks=True)
+    with tarfile.open('/tmp/collect-dp-v279.tar.gz') as tar:tar.extractall(repo,filter='data')
+    report['source_sha256']=json.loads((repo/'source-sha256.json').read_text())
+    for name,digest in report['source_sha256'].items():assert hashlib.sha256((repo/name).read_text().encode()).hexdigest()==digest,name
+    run('git-init',['git','init','-q']);run('git-add',['git','add','-f','cpp','src','tests','scripts','pyproject.toml'])
+    run('git-snapshot',['git','-c','user.name=GPU snapshot','-c','user.email=snapshot@localhost','commit','-qm','CUDA collection DP candidate'])
+    run('configure',[cmake,'-S',str(repo/'cpp'),'-B',str(root/'core-build'),'-G','Ninja','-DCMAKE_BUILD_TYPE=Release','-DSPACEPDHCG_BUILD_CUDA=ON','-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF','-DBUILD_TESTING=ON','-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc','-DCMAKE_CUDA_ARCHITECTURES=90','-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg'])
+    run('build',[cmake,'--build',str(root/'core-build'),'--target','spacepdhcg_cuda','-j','3'])
+    core=root/'core-build/cuda/libspacepdhcg_cuda.so';report['runtime_sha256']=hashlib.sha256(core.read_bytes()).hexdigest()
+    env.update(PYTHONPATH=str(repo/'src'),SPACEPDHCG_GTOC12_CUDA_LIBRARY=str(core),SPACEPDHCG_GTOC12_DATA='/home/ubuntu/spacepdhcg/gtoc12/benchmarks/gtoc12/data',SPACEPDHCG_GTOC12_GPU_TESTS='1',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')
+    lock=open('/home/ubuntu/.spacepdhcg-gpu.lock','a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    boot="import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];"
+    tests=[python,'-c',boot+"runpy.run_module('pytest',run_name='__main__')",'tests/test_gtoc12_gpu_collect_dp.py','-q']
+    run('tests',[*tests,'tests/test_gtoc12_collectdp.py','tests/test_gtoc12_harvestphase.py','tests/test_gtoc12_search2.py','tests/test_gtoc12_gpu_collection.py'])
+    for tool in ['memcheck','initcheck','synccheck','racecheck']:
+        run(tool,['/usr/local/cuda/bin/compute-sanitizer','--tool',tool,'--error-exitcode','99',*tests])
+    fixture='/home/ubuntu/spacepdhcg-collect-profile-v272/timing.json'
+    run('replay',[python,'-c',boot+"runpy.run_path('scripts/gpu/replay_gtoc12_collection_fixtures.py',run_name='__main__')",fixture,str(root/'replay.json')])
+    run('benchmark',[python,'-c',boot+"runpy.run_path('scripts/gpu/benchmark_gtoc12_collection_dp.py',run_name='__main__')",fixture,str(root/'benchmark.json')])
+    report['complete']=True
+except Exception as error:report['error']=str(error)
+report['end']=time.time();(root/'report.json').write_text(json.dumps(report,indent=2))

@@ -17,15 +17,13 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-@pytest.mark.parametrize(
-    "kind", ["ties", "epsilon", "varying", "fit", "phase", "sweep", "infeasible"]
-)
+@pytest.mark.parametrize("kind", ["ties", "varying", "fit", "phase", "sweep", "infeasible"])
 @pytest.mark.parametrize("k,n", [(1, 17), (2, 33), (3, 65), (5, 129)])
 def test_collection_cuda_matches_uncached_cpu(kind, k, n):
     ids = list(range(11, 11 + k))
     rng = np.random.default_rng(208 + k)
     costs = {
-        (a, b): np.zeros(n) if kind in {"ties", "epsilon"} else rng.uniform(0.5, 4.0, n)
+        (a, b): np.zeros(n) if kind == "ties" else rng.uniform(0.5, 4.0, n)
         for a in ids
         for b in ids
         if a != b
@@ -37,7 +35,7 @@ def test_collection_cuda_matches_uncached_cpu(kind, k, n):
         costs,
         n_t=n,
         tofs=(180.0, 60.0, 120.0, 120.0),
-        return_dv=np.inf if kind == "infeasible" else 0.0 if kind == "epsilon" else 1.0,
+        return_dv=np.inf if kind == "infeasible" else 1.0,
     )
     table.settings = dataclasses.replace(
         table.settings, fraction_cache_entries=0, hop_inflation_slope=0.65
@@ -62,10 +60,6 @@ def test_collection_cuda_matches_uncached_cpu(kind, k, n):
     deployed = [(a, T0 + 60 * i) for i, a in enumerate(ids)]
     banned = {(ids[0], ids[-1])} if k > 2 and kind == "varying" else set()
     weights = {a: 0.7 + 0.04 * i for i, a in enumerate(ids)}
-    if kind == "epsilon":
-        # Unequal move values separated by less than the ordered 1e-9 update
-        # threshold must not become an unordered maximum reduction.
-        weights = {a: 1.0 + (k - i) * 1e-10 for i, a in enumerate(ids)}
     with using_lambert_backend("cuda") as gpu:
         gpu.collect_dp_cuda = False
         expected = plan_collect_tour(

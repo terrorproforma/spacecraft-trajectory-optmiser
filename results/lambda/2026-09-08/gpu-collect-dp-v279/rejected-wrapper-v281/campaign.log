@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];from spacepdhcg.gtoc12.gpu_lambert import GpuLambert;original=GpuLambert.__init__;exec('def init(self,*args,**kwargs):
+                                                                                                                                                                                                            ^
+SyntaxError: unterminated string literal (detected at line 1)

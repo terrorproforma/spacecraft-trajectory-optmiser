@@ -1,0 +1,163 @@
+{
+  "columns": [
+    {
+      "certified": true,
+      "collected_kg": 475.9753593429158,
+      "collects": [
+        9595,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "deploys": [
+        9595,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "foreign": [],
+      "identifier": 0,
+      "label": "s01_c00",
+      "members": [],
+      "ships": 1,
+      "slot": 1
+    },
+    {
+      "certified": true,
+      "collected_kg": 475.1540041067762,
+      "collects": [
+        9595,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "deploys": [
+        9595,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "foreign": [],
+      "identifier": 1,
+      "label": "s01_c01",
+      "members": [],
+      "ships": 1,
+      "slot": 1
+    },
+    {
+      "certified": true,
+      "collected_kg": 548.2546201232033,
+      "collects": [
+        4928,
+        9595,
+        10664,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "deploys": [
+        4928,
+        9595,
+        10664,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "foreign": [],
+      "identifier": 2,
+      "label": "s01_retimed0",
+      "members": [],
+      "ships": 1,
+      "slot": 1
+    }
+  ],
+  "master": {
+    "collected_kg": 548.2546201232033,
+    "columns": 3,
+    "cooperative": {
+      "bundle_columns": 0,
+      "collector_ships": 0,
+      "deployer_ships": 0,
+      "foreign_collects": 0
+    },
+    "exhaustive": true,
+    "gap_kg": 0.0,
+    "greedy_collected_kg": 548.2546201232033,
+    "greedy_objective_kg": 548.2546201232033,
+    "greedy_ships": 1,
+    "lp_bound_kg": 548.2546201232033,
+    "lp_gap_kg": 0.0,
+    "lp_nodes": 0,
+    "lp_relaxations_kg": {
+      "1": 548.2546201232033
+    },
+    "lp_seconds": 0.00198871101019904,
+    "lp_sizes_searched": [],
+    "mean_collected_kg": 548.2546201232033,
+    "nodes": 1,
+    "objective_kg": 548.2546201232033,
+    "proven_optimal": true,
+    "rejected": [
+      {
+        "identifier": 0,
+        "label": "s01_c00",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 475.9753593429158
+      },
+      {
+        "identifier": 1,
+        "label": "s01_c01",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 475.1540041067762
+      }
+    ],
+    "root_bound_kg": 548.2546201232033,
+    "selected": [
+      {
+        "certified": true,
+        "collected_kg": 548.2546201232033,
+        "collects": [
+          4928,
+          9595,
+          10664,
+          16118,
+          23760,
+          25792,
+          53410,
+          57530
+        ],
+        "deploys": [
+          4928,
+          9595,
+          10664,
+          16118,
+          23760,
+          25792,
+          53410,
+          57530
+        ],
+        "foreign": [],
+        "identifier": 2,
+        "label": "s01_retimed0",
+        "members": [],
+        "ships": 1,
+        "slot": 1
+      }
+    ],
+    "ship_limit": 17.92444925507579,
+    "ships": 1,
+    "upper_bound_kg": 548.2546201232033
+  }
+}
