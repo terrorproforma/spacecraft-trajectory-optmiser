@@ -61,6 +61,9 @@ bool production_driver_mode = false;
 bool g4_sample_mode = false;
 bool g4_probe_mode = false;
 bool g4_diagnostic_mode = false;
+bool g4_recovery_mode = false;
+int g4_recovery_ruiz = 5;
+int g4_recovery_exit_status = 0;
 bool p1d_path_audit_mode = false;
 bool p1d_diagnostic_mode = false;
 bool production_cqp_mode = false;
@@ -2267,6 +2270,11 @@ IntegrationResult run_resident_sequence(
                 ),
                 "restore initial numeric coefficients"
             );
+            compare(problem.a.download(problem.stream), expected.scalar_constraint);
+            compare(problem.scalar_lower.download(problem.stream), expected.scalar_lower);
+            compare(problem.scalar_upper.download(problem.stream), expected.scalar_upper);
+            test::require(coefficient_parity_relative <= 5.0e-12,
+                "repeated trust/penalty updates compounded dynamics conditioning");
         }
         if (dump_mode) {
             run_upstream_diagnostic(problem);
@@ -2438,6 +2446,16 @@ IntegrationResult run_resident_sequence(
             // equilibration (pure baseline and hybrid hand-off stage); inert
             // (0, the pinned QOCO default) for every other policy or amendment.
             outer_options.qoco_ruiz_iterations = g4_qoco_ruiz_iterations();
+            if (g4_recovery_mode) {
+                // Separate production recovery profile; never relabel this as
+                // a sample of the frozen G4 policy/amendment.
+                outer_options.policy = SPACEPDHCG_CUDA_SCVX_PURE_QOCO;
+                outer_options.minimum_outer_iterations = 1U;
+                outer_options.fixed_inner_tolerance = 1.0e-8;
+                outer_options.fixed_inner_iteration_limit = 200U;
+                outer_options.qoco_ruiz_iterations = g4_recovery_ruiz;
+                outer_options.warm_start_mode = SPACEPDHCG_CUDA_WARM_START_NONE;
+            }
             if (g4_inner_iteration_cap > 0U) {
                 // Amendment single-gpu-v1.1 rule 2: every inner PDHCG iteration limit becomes
                 // min(limit, cap); limits already below the cap are unchanged. The driver
@@ -2892,6 +2910,25 @@ IntegrationResult run_resident_sequence(
             return {};
         }
         if (!g4_session_mode) {
+            if (g4_recovery_mode && outer_status != SPACEPDHCG_CUDA_SUCCESS) {
+                std::printf("{\"case\":\"gpu_recovery_failure\",\"api_status\":%d,"
+                    "\"qoco_status\":%d,\"qoco_failure\":%d,\"outer_iterations\":%u,"
+                    "\"accepted_steps\":%u,\"inner_iterations\":%llu,\"workspace_creations\":%llu}\n",
+                    int(outer_status),outer.qoco_status_code,int(outer.qoco_failure),
+                    outer.outer_iterations,outer.accepted_steps,
+                    static_cast<unsigned long long>(outer.inner_iterations),
+                    static_cast<unsigned long long>(outer.qoco_workspace_creations));
+                if (const char* diagnostic=std::getenv("SPACEPDHCG_RECOVERY_DUMP_FAILURE");
+                    diagnostic && diagnostic[0]=='1') {
+                    dump_mode=true;
+                    run_upstream_diagnostic(problem);
+                }
+                test::status_require(spacepdhcg_cuda_scvx_driver_destroy(&driver),
+                    "failed recovery driver destroy");
+                test::destroy_workspace(workspace);
+                g4_recovery_exit_status=3;
+                return {};
+            }
             test::status_require(outer_status, "production outer driver solve");
         }
         if (g4_policy == "pure-gpu-ipm"
@@ -3332,14 +3369,19 @@ IntegrationResult run_resident_sequence(
         if (g4_diagnostic_mode) {
             dump_mode = true;
             run_upstream_diagnostic(problem);
-            print_diagnostic_vector(
-                "persistent_primal",
-                problem.primal.download(problem.stream)
-            );
-            print_diagnostic_vector(
-                "persistent_dual",
-                problem.dual.download(problem.stream)
-            );
+            if (outer_options.policy != SPACEPDHCG_CUDA_SCVX_PURE_QOCO) {
+                print_diagnostic_vector(
+                    "persistent_primal",
+                    problem.primal.download(problem.stream)
+                );
+                print_diagnostic_vector(
+                    "persistent_dual",
+                    problem.dual.download(problem.stream)
+                );
+            }
+            // Pure IPM owns a different output buffer. Its optional
+            // SPACEPDHCG_QOCO_DUMP_PRIMAL export is labelled qoco_primal;
+            // never present the unused PDHCG buffer as an IPM solution.
             print_diagnostic_vector("retained_states", final_states);
             print_diagnostic_vector("retained_controls", final_controls);
             std::printf(
@@ -5611,6 +5653,32 @@ int run_invocation(const int argc, char** argv) {
 
 int main(const int argc, char** argv) {
     const auto mode = argc > 1 ? std::string_view(argv[1]) : std::string_view{};
+    if (mode == "--g4-dump" || mode == "--g4-recovery") {
+        test::require(argc == 6 || (mode == "--g4-recovery" && argc == 7),
+            "G4 diagnostic requires manifest and policy/matrix/capability hashes; recovery accepts a Ruiz count");
+        load_g4_session(argv[2], argv[3], argv[4], argv[5]);
+        // Diagnostic only: assemble the exact first CQP without running a
+        // campaign attempt or changing its immutable coordinate/quality axes.
+        dump_mode = mode == "--g4-dump";
+        g4_recovery_mode = mode == "--g4-recovery";
+        if (g4_recovery_mode) {
+            if (argc==7) g4_recovery_ruiz=std::stoi(argv[6]);
+            test::require(g4_recovery_ruiz==5 || g4_recovery_ruiz==10 || g4_recovery_ruiz==20,
+                "recovery Ruiz count must be 5, 10, or 20");
+            g4_policy = "gpu-ipm-recovery-v1";
+            g4_warm_mode = "cold";
+            g4_warm_start = SPACEPDHCG_CUDA_WARM_START_NONE;
+            std::printf("{\"case\":\"gpu_recovery_profile\",\"version\":1,"
+                "\"official_g4_sample\":false,\"ruiz_iterations\":%d,"
+                "\"minimum_outer_iterations\":1,\"warm_start\":\"cold\"}\n",g4_recovery_ruiz);
+        }
+        g4_sample_mode = true;
+        production_driver_mode = true;
+        if (g4_family == "P1-C-pd3") static_cast<void>(run_pd3());
+        else if (g4_family == "P1-D-pd6") static_cast<void>(run_pd6());
+        else static_cast<void>(run_low_thrust());
+        return g4_recovery_exit_status;
+    }
     if (mode == "--g4-session") {
         if (argc != 6) {
             std::fprintf(

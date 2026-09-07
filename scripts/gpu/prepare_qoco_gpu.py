@@ -1297,6 +1297,9 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
     # history, independent of which performance experiments are selected.
     patch_solve_state(destination)
     patch_ruiz_vector_sync(destination)
+    from prepare_qoco_safe_division import prepare as prepare_safe_division
+
+    prepare_safe_division(destination)
     if args.device_io:
         patch_device_io(destination, extension.with_name("qoco_device_io.cuh"))
     if args.superpanels:

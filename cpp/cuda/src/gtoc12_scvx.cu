@@ -188,6 +188,7 @@ struct Workspace {
     double *states{},*controls{},*fuel{};
     Metrics *partial{},*metrics{};
     State* state{};
+    Command* host_command{};
     Record* records{};
     spacepdhcg_gtoc12_conic_parameters* parameters{};
     ~Workspace() {
@@ -195,6 +196,7 @@ struct Workspace {
         spacepdhcg_gtoc12_qoco_destroy(qoco); spacepdhcg_gtoc12_discretisation_destroy(dynamics);
         cudaFree(states); cudaFree(controls); cudaFree(fuel); cudaFree(partial); cudaFree(metrics);
         cudaFree(state); cudaFree(records); cudaFree(parameters);
+        cudaFreeHost(host_command);
         if (stream) cudaStreamDestroy(stream);
     }
 };
@@ -232,7 +234,9 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     const auto started=std::chrono::steady_clock::now();
     const auto p=*settings;
     const char* scheduling_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING");
-    const bool scheduling_on_device=scheduling_option && scheduling_option[0]=='1';
+    const char* deferred_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS");
+    const bool deferred_reports=deferred_option && deferred_option[0]=='1';
+    const bool scheduling_on_device=deferred_reports || (scheduling_option && scheduling_option[0]=='1');
     Workspace w;
     int code=spacepdhcg_gtoc12_qoco_create(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,
         fuel,p.conic_tolerance,ruiz,&w.qoco);
@@ -247,6 +251,8 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         || !allocate(&w.states,7*nodes) || !allocate(&w.controls,4*nodes) || !allocate(&w.fuel,nodes)
         || !allocate(&w.partial,blocks) || !allocate(&w.metrics,1) || !allocate(&w.state,1)
         || !allocate(&w.records,budget) || !allocate(&w.parameters,1)) return 2;
+    if (cudaMallocHost(&w.host_command,sizeof(Command))!=cudaSuccess) return 2;
+    *w.host_command={};
     if (cudaMemcpyAsync(w.fuel,fuel,nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess) return 2;
     if (seed_states) {
         if (cudaMemcpyAsync(w.states,seed_states,7*nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess
@@ -290,7 +296,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };
     const char* device_qualification=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION");
-    const bool consume_on_device=device_qualification && device_qualification[0]=='1';
+    const bool consume_on_device=deferred_reports || (device_qualification && device_qualification[0]=='1');
     const char* refresh_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH");
     const bool refresh_on_device=scheduling_on_device || (refresh_option && refresh_option[0]=='1');
     const auto refresh_reference=[&]() {
@@ -307,16 +313,16 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     initialize<<<1,1,0,w.stream>>>(w.state,p,w.parameters);
     if ((code=measure(w.states,w.controls,p.substeps,false))) return code;
     set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);
-    Command command{};
+    auto& command=*w.host_command;
     uint64_t control_bytes=0;
-    const auto read_command=[&]() {
+    const auto read_command=[&](bool wait=true) {
         // Integration scheduling stays on device; the transitional CPU loop
         // consumes only done/error. Full device dispatch will remove this too.
         const size_t bytes=scheduling_on_device ? 2*sizeof(int) : sizeof(Command);
         control_bytes+=bytes;
         return cudaGetLastError()==cudaSuccess
             && cudaMemcpyAsync(&command,&w.state->command,bytes,cudaMemcpyDeviceToHost,w.stream)==cudaSuccess
-            && cudaStreamSynchronize(w.stream)==cudaSuccess;
+            && (!wait || cudaStreamSynchronize(w.stream)==cudaSuccess);
     };
     if (!read_command()) return 2;
     if (command.error) return command.error;
@@ -326,8 +332,12 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
             timeout=1; break;
         }
         int consumed=0;
+        const bool pending=deferred_reports && spacepdhcg_gtoc12_qoco_can_enqueue(w.qoco);
         if (!scheduling_on_device) consumer_context.substeps=command.substeps;
-        code=scheduling_on_device
+        code=pending
+            ? spacepdhcg_gtoc12_qoco_enqueue_controlled(w.qoco,w.states,w.controls,w.parameters,
+                &w.state->command.substeps,w.stream,consume,&consumer_context)
+            : scheduling_on_device
             ? spacepdhcg_gtoc12_qoco_solve_controlled_device_with_consumer(w.qoco,w.states,w.controls,w.parameters,
             &w.state->command.substeps,w.stream,&reports[attempts],consume_on_device ? consume : nullptr,
             &consumer_context,&consumed)
@@ -335,6 +345,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
             command.substeps,w.stream,&reports[attempts],consume_on_device ? consume : nullptr,
             &consumer_context,&consumed);
         if (code!=0 && code!=4) return code;
+        if (pending) consumed=1;
         if (!consumed) {
         const double* x{};
         if (spacepdhcg_gtoc12_qoco_primal(w.qoco,&x)) return 2;
@@ -343,11 +354,19 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
             reports[attempts].qualified,reports[attempts].qoco_status,w.records,w.parameters);
         accept_candidate<<<std::min(256,(7*nodes+255)/256),256,0,w.stream>>>(w.state,nodes,x,w.states,w.controls);
         }
+        if (refresh_on_device && (code=refresh_reference())) return code;
+        // Queue reference refresh and the pinned command read before the single
+        // deferred collection boundary. No CPU read of the command until finish.
+        if (!read_command(!pending)) return 2;
+        if (pending) {
+            code=spacepdhcg_gtoc12_qoco_finish(w.qoco,w.stream,&reports[attempts]);
+            if (code!=0 && code!=4) return code;
+            if (std::getenv("SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS_TRACE"))
+                std::fprintf(stderr,"DEFERRED_REPORT iteration=%d status=%d\n",attempts+1,reports[attempts].qoco_status);
+        }
         if (consumed && std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION_TRACE"))
             std::fprintf(stderr,"DEVICE_QUALIFICATION iteration=%d qualified=%d status=%d\n",
                 attempts+1,reports[attempts].qualified,reports[attempts].qoco_status);
-        if (refresh_on_device && (code=refresh_reference())) return code;
-        if (!read_command()) return 2;
         if (!refresh_on_device && command.refresh) {
             if ((code=measure(w.states,w.controls,command.substeps,false))) return code;
             set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);

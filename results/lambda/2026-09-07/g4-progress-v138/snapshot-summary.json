@@ -1,0 +1,27 @@
+{
+  "utc": "2026-09-07T06:14:56.116737+00:00",
+  "campaign": "/home/ubuntu/spacepdhcg/v1/build-integration-report/g4-claim-core-1dbcae0-h100",
+  "coordinate_states": {
+    "completed": 210,
+    "running": 1
+  },
+  "total_groups": 396,
+  "source_commit": "1dbcae098fd8871d4e0ac087e2306534704eff59",
+  "attempt_dispositions": {
+    "numerical": 594,
+    "timeout": 1296
+  },
+  "by_policy": {
+    "pure-gpu-ipm": {
+      "numerical": 594
+    },
+    "adaptive": {
+      "timeout": 1188
+    },
+    "hybrid-pdhcg-ipm": {
+      "timeout": 108
+    }
+  },
+  "completed_result_count": 210,
+  "scope": "Snapshot of completed G4 benchmark groups; failures/timeouts are retained, not successful trajectories. Running group excluded."
+}

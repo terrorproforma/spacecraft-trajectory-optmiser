@@ -114,10 +114,16 @@ void run_case(int n, int equalities, int nonnegative, const std::vector<int>& co
     QocoAuditInput input{cp.view(), ca.view(), cg.view(), map.view(), c.data(), b.data(), h.data(), nonnegative, static_cast<int>(cones.size()), cones.data()};
     cudaStream_t stream{}; check(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
     QocoGpuAudit* audit{}; check(qoco_gpu_audit_create(input, true, stream, &audit));
+    check(qoco_gpu_audit_enable_origin(audit));
     const auto memory = qoco_gpu_audit_memory(audit);
     require(memory.allocations > 0 && memory.bytes > 0 && memory.peak_bytes >= memory.bytes, "audit memory accounted");
     double* mapped{}; if (mapping.rows) check(cudaMalloc(&mapped, mapping.rows * sizeof(double)));
     const double *dx{}, *dy{}, *dz{};
+    const size_t matrix_count=cp.values.size()+ca.values.size()+cg.values.size();
+    const size_t packed_count=matrix_count+c.size()+b.size()+h.size();
+    double *original_values{},*reconstructed{};
+    check(cudaMalloc(&original_values,packed_count*sizeof(double)));
+    check(cudaMalloc(&reconstructed,n*sizeof(double)));
     for (int update = 0; update < 3; ++update) {
         if (update) {
             for (double& value : cp.values) value *= 0.7;
@@ -157,6 +163,37 @@ void run_case(int n, int equalities, int nonnegative, const std::vector<int>& co
         std::vector<double> actual(mapping.rows);
         if (mapping.rows) check(cudaMemcpy(actual.data(), mapped, actual.size() * sizeof(double), cudaMemcpyDeviceToHost));
         for (int i = 0; i < mapping.rows; ++i) require(std::abs(actual[i] - expected[i]) < 1e-12L, "dual mapping accuracy");
+
+        std::vector<double> values;
+        for (const auto* v:{&cp.values,&ca.values,&cg.values,&c,&b,&h}) values.insert(values.end(),v->begin(),v->end());
+        check(cudaMemcpyAsync(original_values,values.data(),values.size()*sizeof(double),cudaMemcpyHostToDevice,stream));
+        const int count=update==1 ? std::max(1,n/2) : n;
+        std::vector<double> origin(n),physical=x;
+        for (int i=0;i<count;++i) { origin[i]=x[i];physical[i]+=origin[i]; }
+        const auto po=p.product(origin),ao=a.product(origin),go=g.product(origin);
+        const double* shifted{};
+        check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeThreadLocal));
+        check(qoco_gpu_audit_set_origin(audit,dx,count,stream));
+        check(qoco_gpu_audit_origin_values(audit,original_values,stream,&shifted));
+        check(qoco_gpu_audit_reconstruct(audit,dx,reconstructed,stream));
+        check(qoco_gpu_audit_run_device(audit,reconstructed,dy,dz,mapped,stream,&device_result));
+        check(cudaStreamEndCapture(stream,&graph));
+        check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+        for (int replay=0;replay<2;++replay) {
+            check(cudaGraphLaunch(executable,stream));
+            std::vector<double> translated(packed_count),restored(n);
+            check(cudaMemcpyAsync(translated.data(),shifted,translated.size()*sizeof(double),cudaMemcpyDeviceToHost,stream));
+            check(cudaMemcpyAsync(restored.data(),reconstructed,n*sizeof(double),cudaMemcpyDeviceToHost,stream));
+            check(cudaMemcpyAsync(&result,device_result,sizeof(result),cudaMemcpyDeviceToHost,stream));
+            check(cudaStreamSynchronize(stream));
+            require(restored==physical,"origin reconstructed in physical coordinates");
+            require(std::equal(values.begin(),values.begin()+matrix_count,translated.begin()),"translation preserves all matrix values");
+            for (int i=0;i<n;++i) require(std::abs(translated[matrix_count+i]-(c[i]+po[i]))<1e-11L,"translated objective dense oracle");
+            for (int i=0;i<equalities;++i) require(std::abs(translated[matrix_count+n+i]-(b[i]-ao[i]))<1e-11L,"translated equality dense oracle");
+            for (int i=0;i<m;++i) require(std::abs(translated[matrix_count+n+equalities+i]-(h[i]-go[i]))<1e-11L,"translated cone dense oracle");
+            equal(result,reference(p,a,g,c,b,h,nonnegative,cones,physical,y,z));
+        }
+        check(cudaGraphExecDestroy(executable));check(cudaGraphDestroy(graph));
     }
     // A non-finite unused vector component or coefficient must never disappear
     // through fmax and produce an apparently qualified finite certificate.
@@ -172,7 +209,8 @@ void run_case(int n, int equalities, int nonnegative, const std::vector<int>& co
     const auto after = qoco_gpu_audit_memory(audit);
     require(after.allocations == memory.allocations && after.bytes == memory.bytes
         && after.peak_bytes == memory.peak_bytes, "updates and audit must reuse allocations");
-    qoco_gpu_audit_destroy(audit); if (mapped) check(cudaFree(mapped)); check(cudaStreamDestroy(stream));
+    qoco_gpu_audit_destroy(audit); if (mapped) check(cudaFree(mapped));
+    check(cudaFree(original_values));check(cudaFree(reconstructed));check(cudaStreamDestroy(stream));
 }
 void topology_case() {
     cudaStream_t stream{}; check(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
@@ -232,5 +270,5 @@ int main() {
     run_case(7, 0, 3, {4, 8});
     run_case(17, 9, 2, {3, 5});
     run_case(513, 201, 7, {4, 32, 257});
-    std::puts("GPU QOCO audit: independent dense reference, updates, mapping, stream, nonfinite rejection PASS");
+    std::puts("GPU QOCO audit: independent dense reference, updates, mapping, stream, nonfinite rejection and 24 translated-coordinate graph replays PASS");
 }

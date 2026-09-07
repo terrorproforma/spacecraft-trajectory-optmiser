@@ -1828,6 +1828,13 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_update_numeric_async(
     if (problem->numeric_update.conditioning_log10_span == 0.0) {
         return SPACEPDHCG_CUDA_SUCCESS;
     }
+    // A trust/penalty-only update may follow an already conditioned update.
+    // Reconstruct from the retained variational data before applying row
+    // scaling, so repeated updates cannot compound the conditioning factors.
+    const auto fill_status = spacepdhcg_cuda_fill_dynamics_csc_async(
+        &problem->dynamics_fill, stream
+    );
+    if (fill_status != SPACEPDHCG_CUDA_SUCCESS) return fill_status;
     const size_t row_count = problem->intervals * problem->state_dimension;
     const size_t work = std::max(
         problem->numeric.scalar_constraint.elements,
@@ -2358,10 +2365,16 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
         }
         if (pure_qoco) {
             if (driver->qoco == nullptr) {
-                api_status = spacepdhcg_native_qoco_create(
+                // QOCO's internal stopping test and our original-data audit use
+                // different normalizations. Leave margin for the outer gate;
+                // its requested tolerance and physics checks do not change.
+                api_status = spacepdhcg_native_qoco_create_configured(
                     &driver->problem,
                     native,
                     driver->options.qoco_ruiz_iterations,
+                    std::max(std::numeric_limits<double>::min(),
+                        0.01 * std::min(1.0e-8, solve_options.optimality_tolerance)),
+                    false,
                     &driver->qoco
                 );
             }
@@ -2461,10 +2474,13 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_scvx_driver_solve(
                     last_diagnostics.natural_residual_inf <= 1.0e-6 ? 1 : 0;
                 if (result->hybrid_handoff_eligible != 0) {
                     if (driver->qoco == nullptr) {
-                        api_status = spacepdhcg_native_qoco_create(
+                        api_status = spacepdhcg_native_qoco_create_configured(
                             &driver->problem,
                             native,
                             driver->options.qoco_ruiz_iterations,
+                            std::max(std::numeric_limits<double>::min(),
+                                0.01 * std::min(1.0e-8, solve_options.optimality_tolerance)),
+                            false,
                             &driver->qoco
                         );
                     }

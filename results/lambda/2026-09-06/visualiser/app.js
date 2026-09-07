@@ -455,6 +455,7 @@ async function setDataset(dataset, options = {}) {
       $("dataset-help").textContent = `${state.fleet.title}: ${state.fleet.score.ships} ships, ${state.fleet.score.unique_asteroids} asteroids, ${fleetMassLabel(state.fleet)} kg (official verifier ${state.fleet.score.official_total_mass_kg} kg).`;
       void loadComputeDetails();
       void loadSolverProgress();
+      void loadGpuRecovery();
     } else {
       state.preset = null;
       Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
@@ -643,6 +644,35 @@ window.viewerDebug = Object.freeze({
 });
 
 
+async function loadGpuRecovery() {
+  const el = $("gpu-recovery");
+  try {
+    const response = await fetch("./data/gtoc12/gpu-recovery.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (result.schema_version !== 1 || result.kind !== "gpu-ipm-recovery-validation") {
+      throw new Error("unrecognised recovery metadata");
+    }
+    el.innerHTML = metricRows([
+      ["Runtime", `${result.runtime} · ${result.source_commit.slice(0, 8)}`],
+      ["Hardware", result.hardware],
+      ["Physics checks", `${result.qualified} / ${result.total} passed · unchanged 1e-6 threshold`],
+      ["Outer result", `${result.converged} converged · ${result.trust_region_exhausted} trust-region limit`],
+      ["CPU solver fallback", result.hidden_cpu_fallback],
+      ...result.rows.map(row => [
+        `${row.intervals} intervals · seed ${row.seed}`,
+        `${row.scvx_seconds.toFixed(3)} s · ${row.status === 0 ? "converged" : "physics qualified; trust-region limit"}`,
+      ]),
+      ["Validation", result.tests],
+      ["Old Lambda campaign", result.legacy_campaign],
+      ["Scope", result.scope],
+      ["Remaining", result.remaining],
+    ]);
+  } catch (error) {
+    el.innerHTML = metricRows([["Status", `Recovery results unavailable (${String(error.message || error)})`]]);
+  }
+}
+
 async function loadSolverProgress() {
   const el = $("solver-progress");
   try {
@@ -661,9 +691,15 @@ async function loadSolverProgress() {
       ["Median complete transfer", `${milliseconds} · warmup excluded`],
       ["Speedup finding", benchmark.speedup_finding],
       ["Outer command download", benchmark.control_download],
-      ["Regression tests", `${benchmark.regression_passed} passed`],
+      ["Report collection", benchmark.report_collection || "Synchronous per solve"],
+      ["Regression tests", `${benchmark.regression_passed} passed${benchmark.regression_failed ? ` · ${benchmark.regression_failed} failed` : ""}`],
       ["Remaining CPU work", benchmark.remaining_cpu_work],
       ["Accuracy follow-up", benchmark.accuracy_followup],
+      ...(benchmark.lambda_snapshot ? [
+        ["Lambda campaign snapshot", `${benchmark.lambda_snapshot.completed_groups} / ${benchmark.lambda_snapshot.total_groups} groups complete · ${benchmark.lambda_snapshot.recorded_utc}`],
+        ["Lambda attempt outcomes", `${benchmark.lambda_snapshot.timeouts} timeouts · ${benchmark.lambda_snapshot.numerical_failures} numerical failures · ${benchmark.lambda_snapshot.successes} successes`],
+        ["Lambda scope", "Older G4 benchmark campaign; separate from this solver and the fleet score"],
+      ] : []),
       ["Checkpoint", benchmark.checkpoint_sha256.slice(0, 16)],
     ]);
   } catch (error) {
