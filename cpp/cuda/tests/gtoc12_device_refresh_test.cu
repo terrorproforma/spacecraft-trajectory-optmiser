@@ -30,7 +30,7 @@ int main() {
     REQUIRE(spacepdhcg_gtoc12_discretisation_launch_controlled_device(w.dynamics,w.states,w.controls,
         &w.state->command.substeps,enabled,0,w.stream)==0);
     reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,7*nodes,w.states,w.controls,nullptr,nullptr,nullptr,
-        propagated,invalid,w.fuel,p.conic_tolerance,w.partial,enabled);
+        propagated,invalid,w.fuel,p.conic_tolerance,nodes,w.partial,enabled);
     finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics,enabled);
     set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p,true);
     CUDA(cudaStreamEndCapture(w.stream,&graph));
@@ -64,7 +64,7 @@ int main() {
             CUDA(cudaMemcpyAsync(w.state,&initial,sizeof(initial),cudaMemcpyHostToDevice,w.stream));
             REQUIRE(spacepdhcg_gtoc12_discretisation_launch_device(w.dynamics,w.states,w.controls,substeps,0,w.stream)==0);
             reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,7*nodes,w.states,w.controls,nullptr,nullptr,nullptr,
-                propagated,invalid,w.fuel,p.conic_tolerance,w.partial);
+                propagated,invalid,w.fuel,p.conic_tolerance,nodes,w.partial);
             finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics);
             set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);
             State expected{};

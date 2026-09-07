@@ -117,7 +117,7 @@ void reductions(int nodes,bool poison) {
     CUDA(cudaMemcpy(du,u.data(),u.size()*8,cudaMemcpyHostToDevice));
     CUDA(cudaMemcpy(df,weights.data(),weights.size()*8,cudaMemcpyHostToDevice));
     CUDA(cudaMemcpy(dp,prop.data(),prop.size()*8,cudaMemcpyHostToDevice)); CUDA(cudaMemset(invalid,0,4));
-    reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,dx+11*nodes,dr,du,dp,invalid,df,1e-9,partial);
+    reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,dx+11*nodes,dr,du,dp,invalid,df,1e-9,nodes,partial);
     finish_metrics<<<1,256>>>(blocks,partial,out);
     Metrics got{}; CUDA(cudaMemcpy(&got,out,sizeof(got),cudaMemcpyDeviceToHost));
     REQUIRE(std::abs(got.fuel-expected.fuel)<1e-11*std::max(1.0,expected.fuel));
@@ -125,6 +125,22 @@ void reductions(int nodes,bool poison) {
     REQUIRE(std::abs(got.virtual_sum-expected.virtual_sum)<1e-11*std::max(1.0,expected.virtual_sum));
     REQUIRE(got.defect==expected.defect && got.virtual_inf==expected.virtual_inf && got.step==expected.step);
     REQUIRE(got.invalid==double(poison));
+    if (!poison) for (int test=0;test<6;++test) {
+        auto input=x;
+        const int node=test>=3 ? nodes-1 : 0;
+        const double thrust=test==0 ? .6 : test==1 ? .6000000005 : .6000000038;
+        input[7*nodes+4*node]=thrust/.6;
+        input[7*nodes+4*node+1]=input[7*nodes+4*node+2]=0;
+        CUDA(cudaMemcpy(dx,input.data(),input.size()*8,cudaMemcpyHostToDevice));
+        // Inactive ZOH endpoint and infeasible initial references are allowed;
+        // active violating candidate nodes are rejected even with a finite CQP.
+        const int active=test==3 ? nodes-1 : nodes;
+        reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,dx+11*nodes,dr,
+            test==5 ? nullptr : du,dp,invalid,df,1e-9,active,partial);
+        finish_metrics<<<1,256>>>(blocks,partial,out);
+        CUDA(cudaMemcpy(&got,out,sizeof(got),cudaMemcpyDeviceToHost));
+        REQUIRE(got.invalid==double(test==2 || test==4));
+    }
     CUDA(cudaFree(dx)); CUDA(cudaFree(dr)); CUDA(cudaFree(du)); CUDA(cudaFree(df)); CUDA(cudaFree(dp));
     CUDA(cudaFree(invalid)); CUDA(cudaFree(partial)); CUDA(cudaFree(out));
 }
@@ -132,5 +148,5 @@ void reductions(int nodes,bool poison) {
 int main() {
     controller();
     for (int n:{4,37,4097,10001}) for (bool poison:{false,true}) reductions(n,poison);
-    std::puts("PASS: 14 controller branches, 10 final states, 8 multi-block reduction cases");
+    std::puts("PASS: 14 controller branches, 10 final states, 8 multi-block reductions, 24 physical thrust gates");
 }
