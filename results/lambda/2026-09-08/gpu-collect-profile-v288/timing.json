@@ -1,0 +1,41 @@
+{
+  "total_seconds": 64.15682723198552,
+  "spans": {
+    "table_earth_return": {
+      "calls": 1288,
+      "inclusive_seconds": 0.36525394837372005,
+      "exclusive_seconds": 0.36525394837372005
+    },
+    "table_return_override": {
+      "calls": 1524,
+      "inclusive_seconds": 0.000977087242063135,
+      "exclusive_seconds": 0.000977087242063135
+    },
+    "table_hop": {
+      "calls": 7124,
+      "inclusive_seconds": 4.701257289911155,
+      "exclusive_seconds": 4.701257289911155
+    },
+    "workspace_create": {
+      "calls": 248,
+      "inclusive_seconds": 2.5866960153216496,
+      "exclusive_seconds": 0.1476783492253162
+    },
+    "workspace_solve_and_format": {
+      "calls": 378,
+      "inclusive_seconds": 0.17288808757439256,
+      "exclusive_seconds": 0.17288808757439256
+    },
+    "solve_collect_dp": {
+      "calls": 378,
+      "inclusive_seconds": 2.8287071908125654,
+      "exclusive_seconds": 0.06912308791652322
+    },
+    "plan_collect_tour": {
+      "calls": 248,
+      "inclusive_seconds": 2.880504720727913,
+      "exclusive_seconds": 0.051797529915347695
+    }
+  },
+  "scope": "Direct nested wall timers. Exclusive spans subtract only instrumented child calls; include native execution and synchronization. Instrumented run is not a speed benchmark."
+}

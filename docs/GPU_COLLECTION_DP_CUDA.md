@@ -30,6 +30,14 @@ passes use the new GPU operator, but their outer control has not yet moved to
 device. The final small terminal selection also has a serial device component.
 These are subsequent complete-pipeline targets; no accuracy gate was weakened.
 
+A subsequent [directly timed replay](../results/lambda/2026-09-08/gpu-collect-profile-v288/README.md)
+places all 378 native solves plus formatting at 0.173 s, while pair/return table
+calls across the campaign take 5.067 s. Table calls occur both inside and outside
+collection planning, so inclusive spans must not be added. The 63.938 s profiled
+campaign still passes both checkers at 548.255 kg and is excluded from the matched
+timing comparison below. This identifies table construction as the next measured
+collection target; it is not an attribution of the rest of the campaign.
+
 ## Matched full campaigns
 
 All runs use the same H100 binary and mission parameters. The CPU comparison
