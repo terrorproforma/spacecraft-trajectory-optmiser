@@ -82,6 +82,15 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**GPU forward mass accounting:** mining yield, forward masses, propellant and
+mass-budget checks now execute inside the CUDA retiming completion kernel.
+The complete retained-table pricing loop takes **23.9% less time on H100 and
+8.3% less locally**; fresh-table runtime is essentially unchanged. **111 tests
+pass on each GPU**, three H100 sanitizers each pass 48 cases with zero errors,
+and both physics checkers accept the new 526.489 kg mission replay. Fleet score
+remains unchanged. Price/mass iteration control and fleet orchestration still
+need GPU ports. [Measurements, accuracy and reproduction](docs/GPU_FORWARD_RETIMING.md).
+
 **Parallel flight-time selection:** one CUDA warp now evaluates each arrival's
 flight-time candidates, preserving exact tie order. Cached pricing is **2.19×
 faster on H100 and 2.86× locally**; complete retiming gains **1.040× / 1.023×**.
