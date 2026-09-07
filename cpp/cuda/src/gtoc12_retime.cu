@@ -1,6 +1,7 @@
 #include "spacepdhcg/cuda/gtoc12_retime_c_api.h"
 #include <cuda_runtime.h>
 #include <cmath>
+#include <cstring>
 #include <mutex>
 #include <new>
 #include <utility>
@@ -12,6 +13,16 @@ static_assert(sizeof(Stage)==104);
 static_assert(sizeof(SweepCell)==24);
 struct Result { double objective; int32_t feasible; int32_t reserved; };
 struct Controls { double price,thrust,exhaust; };
+struct PathLayout {
+    size_t arrivals,departures,dv,swept,ok,bytes;
+    explicit PathLayout(int stages) {
+        arrivals=sizeof(Result);departures=arrivals+(size_t(stages)+1)*sizeof(int32_t);
+        // The two int32 arrays together occupy a multiple of eight bytes.
+        dv=departures+(size_t(stages)+1)*sizeof(int32_t);
+        swept=dv+size_t(stages)*sizeof(double);ok=swept+size_t(stages)*sizeof(double);
+        bytes=ok+size_t(stages);
+    }
+};
 struct Workspace {
     int device,n,stages,cells,nt;
     cudaStream_t stream{};
@@ -21,6 +32,7 @@ struct Workspace {
     int32_t *shifts{},*back_camp{},*back_leg{},*arrivals{},*departures{};
     Stage* params{};Result* result{};
     Controls* controls{};
+    uint8_t *output{},*host_output{};
     cudaGraph_t graph{};cudaGraphExec_t graph_exec{};
     bool use_graph=true;
     uint64_t graph_builds{},graph_launches{};
@@ -31,14 +43,26 @@ struct Workspace {
         if(graph)cudaGraphDestroy(graph);
         cudaFree(epochs);cudaFree(dv);cudaFree(swept);cudaFree(tofs);
         cudaFree(value);cudaFree(next);cudaFree(departure);cudaFree(ok);cudaFree(swept_ok);
-        cudaFree(shifts);cudaFree(back_camp);cudaFree(back_leg);cudaFree(arrivals);
-        cudaFree(departures);cudaFree(params);cudaFree(result);cudaFree(path_dv);
-        cudaFree(path_swept);cudaFree(path_swept_ok);cudaFree(samples);
+        cudaFree(shifts);cudaFree(back_camp);cudaFree(back_leg);cudaFree(params);
+        cudaFree(output);delete[] host_output;cudaFree(samples);
         cudaFree(controls);
         if(stream)cudaStreamDestroy(stream);
     }
 };
 template<class T> bool allocate(T*& p,size_t n) {return cudaMalloc(&p,n*sizeof(T))==cudaSuccess;}
+bool allocate_output(Workspace* w) {
+    const PathLayout layout(w->stages);
+    if(!allocate(w->output,layout.bytes))return false;
+    w->host_output=new(std::nothrow) uint8_t[layout.bytes];
+    if(!w->host_output)return false;
+    w->result=reinterpret_cast<Result*>(w->output);
+    w->arrivals=reinterpret_cast<int32_t*>(w->output+layout.arrivals);
+    w->departures=reinterpret_cast<int32_t*>(w->output+layout.departures);
+    w->path_dv=reinterpret_cast<double*>(w->output+layout.dv);
+    w->path_swept=reinterpret_cast<double*>(w->output+layout.swept);
+    w->path_swept_ok=w->output+layout.ok;
+    return true;
+}
 template<class T> bool upload(T* dst,const T* src,size_t n,cudaStream_t stream) {
     return cudaMemcpyAsync(dst,src,n*sizeof(T),cudaMemcpyHostToDevice,stream)==cudaSuccess;
 }
@@ -151,9 +175,7 @@ static int create_tables(int32_t device,int32_t n,int32_t stages,
         &&allocate(w->swept,cells)&&allocate(w->swept_ok,cells)&&allocate(w->tofs,nt)
         &&allocate(w->shifts,nt)&&allocate(w->value,n)&&allocate(w->next,n)
         &&allocate(w->departure,n)&&allocate(w->back_camp,size_t(n)*stages)
-        &&allocate(w->back_leg,size_t(n)*stages)&&allocate(w->arrivals,stages+1)
-        &&allocate(w->departures,stages+1)&&allocate(w->params,stages)&&allocate(w->result,1)
-        &&allocate(w->path_dv,stages)&&allocate(w->path_swept,stages)&&allocate(w->path_swept_ok,stages)
+        &&allocate(w->back_leg,size_t(n)*stages)&&allocate(w->params,stages)&&allocate_output(w)
         &&allocate(w->controls,1);
     good=good&&upload(w->epochs,epochs,n,w->stream)
         &&(!dv||upload(w->dv,dv,cells,w->stream))&&(!ok||upload(w->ok,ok,cells,w->stream))
@@ -288,14 +310,18 @@ static int evaluate_path(void* workspace,const Stage* params,
         &&upload(w->controls,&controls,1,w->stream);
     good=good&&(w->use_graph?enqueue_graph(w):enqueue_dp(w));
     Result result{};
-    good=good&&cudaMemcpyAsync(&result,w->result,sizeof(result),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
-        &&cudaMemcpyAsync(arrivals,w->arrivals,(w->stages+1)*sizeof(int32_t),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
-        &&cudaMemcpyAsync(departures,w->departures,(w->stages+1)*sizeof(int32_t),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;
-    good=good&&(!path_dv||cudaMemcpyAsync(path_dv,w->path_dv,w->stages*sizeof(double),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess);
-    good=good&&(!path_swept||cudaMemcpyAsync(path_swept,w->path_swept,w->stages*sizeof(double),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess)
-        &&(!path_swept_ok||cudaMemcpyAsync(path_swept_ok,w->path_swept_ok,w->stages,cudaMemcpyDeviceToHost,w->stream)==cudaSuccess);
+    const PathLayout layout(w->stages);
+    good=good&&cudaMemcpyAsync(w->host_output,w->output,layout.bytes,cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;
     const auto done=cudaStreamSynchronize(w->stream);
     if(!good||done!=cudaSuccess)return 2;
+    // One contiguous transfer; caller buffers are touched only after it
+    // completes. The legacy APIs can omit path fields without changing layout.
+    std::memcpy(&result,w->host_output,sizeof(result));
+    std::memcpy(arrivals,w->host_output+layout.arrivals,(size_t(w->stages)+1)*sizeof(int32_t));
+    std::memcpy(departures,w->host_output+layout.departures,(size_t(w->stages)+1)*sizeof(int32_t));
+    if(path_dv)std::memcpy(path_dv,w->host_output+layout.dv,size_t(w->stages)*sizeof(double));
+    if(path_swept)std::memcpy(path_swept,w->host_output+layout.swept,size_t(w->stages)*sizeof(double));
+    if(path_swept_ok)std::memcpy(path_swept_ok,w->host_output+layout.ok,w->stages);
     *objective=result.objective;*feasible=result.feasible;return 0;
 }
 extern "C" int spacepdhcg_gtoc12_retime_host(void* w,const Stage* p,double price,double thrust,
