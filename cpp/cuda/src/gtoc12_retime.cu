@@ -111,12 +111,21 @@ __global__ void leg(const Stage* params,int stage,int n,const double* dv,
     const double* tofs,const int32_t* shifts,const double* departure,
     const Controls* controls,double* next,int32_t* back) {
     const size_t index=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
-    if(index>=size_t(n))return;const int a=int(index);
+    // A full warp owns one arrival. Candidates are independent; only the
+    // winning value/index is reduced, so no floating-point sum is reordered.
+    const int lane=threadIdx.x&31;
+    const size_t arrival=index/32;
+    if(arrival>=size_t(n))return;const int a=int(arrival);
     const auto s=params[stage];const auto control=*controls;
     const double price=control.price,thrust=control.thrust,exhaust=control.exhaust;
-    double best=-INFINITY;int winner=0;
-    if(s.pinned_next<0||a==s.pinned_next)for(int k=0;k<s.tofs;++k) {
-        const int shift=shifts[s.tof_offset+k];if(shift>=n)break;
+    // Preserve the old prefix break even for a caller's unsorted shift array.
+    int cutoff=s.tofs;
+    for(int64_t k=lane;k<s.tofs;k+=32)if(shifts[s.tof_offset+k]>=n)cutoff=min(cutoff,int(k));
+    for(int offset=16;offset;offset/=2)cutoff=min(cutoff,__shfl_down_sync(0xffffffff,cutoff,offset));
+    cutoff=__shfl_sync(0xffffffff,cutoff,0);
+    double best=-INFINITY;int winner=INT32_MAX;
+    if(s.pinned_next<0||a==s.pinned_next)for(int64_t k=lane;k<cutoff;k+=32) {
+        const int shift=shifts[s.tof_offset+k];
         const int d=a-shift;if(d<0)continue;
         const int cell=s.cell_offset+d*s.tofs+k;
         if(!feasible[cell]||!swept_ok[cell])continue;
@@ -131,9 +140,17 @@ __global__ void leg(const Stage* params,int stage,int n,const double* dv,
         if(measured)inflation=swept[cell];
         const double propellant=s.mass*(1-exp(-(delta*inflation)/exhaust));
         const double candidate=departure[d]-price*propellant;
-        if(candidate>best){best=candidate;winner=d;}
+        if(candidate>best){best=candidate;winner=int(k);}
     }
-    next[a]=best;back[stage*n+a]=winner;
+    for(int offset=16;offset;offset/=2) {
+        const double other=__shfl_down_sync(0xffffffff,best,offset);
+        const int key=__shfl_down_sync(0xffffffff,winner,offset);
+        if(other>best||(other==best&&key<winner)){best=other;winner=key;}
+    }
+    if(lane==0) {
+        next[a]=best;
+        back[stage*n+a]=winner==INT32_MAX?0:a-shifts[s.tof_offset+winner];
+    }
 }
 __global__ void finish(const double* value,int n,int stages,const int32_t* camp_back,
     const int32_t* leg_back,int32_t* arrivals,int32_t* departures,Result* result,
@@ -253,7 +270,7 @@ static bool enqueue_dp(Workspace* w) {
     for(int j=0;good&&j<w->stages;++j) {
         camp<<<(unsigned(w->n)+127)/128,128,0,w->stream>>>(w->params,j,w->epochs,w->n,value,w->departure,w->back_camp);
         good=cudaGetLastError()==cudaSuccess;if(!good)break;
-        leg<<<(unsigned(w->n)+127)/128,128,0,w->stream>>>(w->params,j,w->n,w->dv,w->ok,w->swept,w->swept_ok,
+        leg<<<(unsigned(w->n)+3)/4,128,0,w->stream>>>(w->params,j,w->n,w->dv,w->ok,w->swept,w->swept_ok,
             w->tofs,w->shifts,w->departure,w->controls,next,w->back_leg);
         good=cudaGetLastError()==cudaSuccess;std::swap(value,next);
     }
