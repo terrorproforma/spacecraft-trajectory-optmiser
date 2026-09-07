@@ -114,6 +114,31 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_telemetry(
     spacepdhcg_orbitweaver_batch_telemetry* telemetry
 );
 
+/* Complete the pending host-buffer transfer without polling from Python. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_finish(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace
+);
+
+/* Blocking screening batch with no asynchronous cancellation. Avoids managed
+ * telemetry/control pages on the hot path; completes all host-buffer accesses
+ * before returning. The existing cancellable asynchronous API is unchanged. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_screening_host(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace,
+    const spacepdhcg_orbitweaver_lambert_request* requests, size_t request_count,
+    spacepdhcg_orbitweaver_lambert_result* results, size_t result_capacity
+);
+
+/* Device-resident, graph-capturable operator. The caller owns all buffers and
+ * provides result_stride(supported_maximum_revolutions) outputs per request.
+ * No allocation, host transfer, cancellation flag or telemetry synchronization. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_launch_device(
+    const spacepdhcg_orbitweaver_lambert_request* requests,
+    size_t request_count, uint32_t supported_maximum_revolutions,
+    uint32_t scan_samples_per_band,
+    spacepdhcg_orbitweaver_lambert_result* results, size_t result_capacity,
+    spacepdhcg_accelerator_stream stream
+);
+
 spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_cancel(
     spacepdhcg_orbitweaver_lambert_workspace* workspace
 );

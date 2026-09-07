@@ -7,6 +7,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <new>
+#include <limits>
+#include <mutex>
 
 namespace {
 
@@ -64,13 +66,18 @@ __device__ Geometry geometry(
     }
     auto cosine = dot3(request.departure_position, request.arrival_position) / (r1 * r2);
     cosine = fmin(1.0, fmax(-1.0, cosine));
-    auto sine = sqrt(fmax(0.0, 1.0 - cosine * cosine));
+    // Cross-product geometry avoids cancellation in 1-cos(theta)^2 near pi.
+    const auto* p = request.departure_position;
+    const auto* q = request.arrival_position;
+    const double cross[3] = {p[1]*q[2]-p[2]*q[1], p[2]*q[0]-p[0]*q[2], p[0]*q[1]-p[1]*q[0]};
+    auto sine = fmin(1.0, sqrt(dot3(cross,cross))/(r1*r2));
     sine = long_way ? -sine : sine;
     const auto denominator = 1.0 - cosine;
     if (denominator <= 1.0e-14 || fabs(sine) <= 1.0e-14) {
         return {r1, r2, cosine, 0.0, 0.0, false};
     }
-    const auto a = sine * sqrt(r1 * r2 / denominator);
+    const double sum[3] = {p[0]/r1+q[0]/r2, p[1]/r1+q[1]/r2, p[2]/r1+q[2]/r2};
+    const auto a = (long_way ? -1.0 : 1.0) * sqrt(0.5*r1*r2) * sqrt(dot3(sum,sum));
     auto angle = acos(cosine);
     angle = long_way ? 2.0 * pi - angle : angle;
     return {r1, r2, cosine, a, angle, isfinite(a) && fabs(a) > 1.0e-14};
@@ -79,11 +86,13 @@ __device__ Geometry geometry(
 __device__ Evaluation evaluate(
     const double z,
     const Geometry value,
-    const spacepdhcg_orbitweaver_lambert_request& request
+    const spacepdhcg_orbitweaver_lambert_request& request,
+    const double* cached = nullptr
 ) {
     double c = 0.0;
     double s = 0.0;
-    stumpff(z, c, s);
+    if (cached) { c = cached[0]; s = cached[1]; }
+    else stumpff(z, c, s);
     if (!isfinite(c) || !isfinite(s) || c <= 0.0) {
         return {0.0, 0.0, false};
     }
@@ -109,6 +118,8 @@ __device__ bool valid(
         || (!request.include_short_way && !request.include_long_way)) {
         return false;
     }
+    if (!isfinite(request.time_of_flight) || !isfinite(request.gravitational_parameter)
+        || !isfinite(request.time_tolerance)) return false;
     for (int component = 0; component < 3; ++component) {
         if (!isfinite(request.departure_position[component])
             || !isfinite(request.arrival_position[component])) {
@@ -159,7 +170,9 @@ __device__ std::uint32_t scan(
     const std::uint32_t samples,
     const Geometry value,
     const spacepdhcg_orbitweaver_lambert_request& request,
-    Root roots[2]
+    Root roots[2],
+    const std::uint32_t root_limit = 2U,
+    const double* cached = nullptr
 ) {
     bool has_previous = false;
     double previous_parameter = 0.0;
@@ -169,7 +182,8 @@ __device__ std::uint32_t scan(
         const auto parameter =
             lower + static_cast<double>(sample) / static_cast<double>(samples)
                         * (upper - lower);
-        const auto current = evaluate(parameter, value, request);
+        const auto current = evaluate(parameter, value, request,
+                                      cached ? cached + 2U*static_cast<size_t>(sample) : nullptr);
         if (!current.valid) {
             has_previous = false;
             continue;
@@ -200,6 +214,7 @@ __device__ std::uint32_t scan(
                                  )
                              ))) {
             roots[count++] = root;
+            if (count == root_limit) return count;
         }
         previous_parameter = parameter;
         previous = current;
@@ -241,6 +256,14 @@ __device__ bool solution(
     return true;
 }
 
+__global__ void initialize_scan_grid(double* grid, const std::uint32_t samples) {
+    const auto sample = static_cast<size_t>(blockIdx.x)*blockDim.x + threadIdx.x;
+    if (sample > samples) return;
+    const double lower = -4.0*pi*pi, upper = 4.0*pi*pi-1e-8;
+    const double parameter = lower + static_cast<double>(sample)/samples*(upper-lower);
+    stumpff(parameter, grid[2*sample], grid[2*sample+1]);
+}
+
 __global__ void kernel(
     const spacepdhcg_orbitweaver_lambert_request* requests,
     const std::size_t count,
@@ -248,7 +271,8 @@ __global__ void kernel(
     const std::uint32_t samples,
     spacepdhcg_orbitweaver_lambert_result* results,
     unsigned long long* counters,
-    const int* cancelled
+    const int* cancelled,
+    const double* cached
 ) {
     const auto input =
         static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -267,14 +291,14 @@ __global__ void kernel(
         output[slot].status = SPACEPDHCG_ORBITWEAVER_ARC_UNSUPPORTED;
     }
     const auto invalid = !valid(request) || !geometry(request, false).valid;
-    if (*cancelled != 0 || invalid) {
-        const auto status = *cancelled != 0
+    if ((cancelled && *cancelled != 0) || invalid) {
+        const auto status = cancelled && *cancelled != 0
                                 ? SPACEPDHCG_ORBITWEAVER_ARC_CANCELLED
                                 : SPACEPDHCG_ORBITWEAVER_ARC_INVALID_INPUT;
         for (std::size_t slot = 0U; slot < stride; ++slot) {
             output[slot].status = status;
         }
-        atomicAdd(counters + 1U, static_cast<unsigned long long>(stride));
+        if (counters) atomicAdd(counters + 1U, static_cast<unsigned long long>(stride));
         return;
     }
     for (std::uint32_t direction = 0U; direction < 2U; ++direction) {
@@ -296,7 +320,9 @@ __global__ void kernel(
                 samples,
                 value,
                 request,
-                roots
+                roots,
+                1U,
+                cached
             )
             > 0U) {
             static_cast<void>(solution(request, value, roots[0], zero));
@@ -317,10 +343,10 @@ __global__ void kernel(
             }
             lower.status = higher.status = SPACEPDHCG_ORBITWEAVER_ARC_NO_SOLUTION;
             const auto lower_singularity =
-                4.0 * static_cast<double>(revolution * revolution) * pi * pi;
+                4.0 * static_cast<double>(revolution) * revolution * pi * pi;
             const auto next = revolution + 1U;
             const auto upper_singularity =
-                4.0 * static_cast<double>(next * next) * pi * pi;
+                4.0 * static_cast<double>(next) * next * pi * pi;
             const auto margin = 1.0e-9 * fmax(1.0, upper_singularity);
             const auto root_count = scan(
                 lower_singularity + margin,
@@ -345,8 +371,10 @@ __global__ void kernel(
                         ? 1U
                         : 0U;
     }
-    atomicAdd(counters, feasible);
-    atomicAdd(counters + 1U, static_cast<unsigned long long>(stride) - feasible);
+    if (counters) {
+        atomicAdd(counters, feasible);
+        atomicAdd(counters + 1U, static_cast<unsigned long long>(stride) - feasible);
+    }
 }
 
 spacepdhcg_cuda_status mapped(const cudaError_t status) {
@@ -360,11 +388,14 @@ spacepdhcg_cuda_status mapped(const cudaError_t status) {
 }  // namespace
 
 struct spacepdhcg_orbitweaver_lambert_workspace {
+    // Protect host API entry, including submission before its event is recorded.
+    mutable std::mutex api_mutex;
     spacepdhcg_orbitweaver_lambert_config config{};
     spacepdhcg_orbitweaver_lambert_request* requests{nullptr};
     spacepdhcg_orbitweaver_lambert_result* results{nullptr};
     unsigned long long* counters{nullptr};
     int* cancelled{nullptr};
+    double* scan_grid{nullptr};
     cudaStream_t stream{nullptr};
     cudaEvent_t completion{nullptr};
     bool owns_stream{false};
@@ -384,6 +415,32 @@ size_t spacepdhcg_orbitweaver_lambert_result_stride(
     return 2U * (1U + 2U * static_cast<size_t>(revolutions));
 }
 
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_launch_device(
+    const spacepdhcg_orbitweaver_lambert_request* requests,
+    const size_t count, const uint32_t revolutions, const uint32_t samples,
+    spacepdhcg_orbitweaver_lambert_result* results, const size_t capacity,
+    const spacepdhcg_accelerator_stream stream
+) {
+    if (revolutions > (UINT32_MAX - 2U) / 4U || samples < 16U || samples == UINT32_MAX
+        || count > UINT32_MAX || stream.device.type != SPACEPDHCG_DEVICE_CUDA)
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    const auto stride = spacepdhcg_orbitweaver_lambert_result_stride(revolutions);
+    if (count > capacity / stride || (count && (!requests || !results))
+        || count > std::numeric_limits<size_t>::max() / stride / sizeof(*results))
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    int device = -1;
+    auto status = cudaGetDevice(&device);
+    if (status != cudaSuccess) return mapped(status);
+    if (device != stream.device.id) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if (!count) return SPACEPDHCG_CUDA_SUCCESS;
+    const auto native = reinterpret_cast<cudaStream_t>(stream.native_handle);
+    status = cudaMemsetAsync(results, 0, count * stride * sizeof(*results), native);
+    if (status != cudaSuccess) return mapped(status);
+    kernel<<<static_cast<unsigned>((count + 127U) / 128U), 128, 0, native>>>(
+        requests, count, revolutions, samples, results, nullptr, nullptr, nullptr);
+    return mapped(cudaGetLastError());
+}
+
 spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_create(
     const spacepdhcg_orbitweaver_lambert_config* config,
     const spacepdhcg_accelerator_stream stream,
@@ -392,6 +449,12 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_create(
     if (config == nullptr || workspace == nullptr || *workspace != nullptr
         || config->abi_version != SPACEPDHCG_ORBITWEAVER_GPU_ABI_VERSION
         || config->maximum_batch_size == 0U || config->scan_samples_per_band < 16U
+        || config->scan_samples_per_band == UINT32_MAX
+        || config->supported_maximum_revolutions > (UINT32_MAX - 2U) / 4U
+        || config->maximum_batch_size > UINT32_MAX
+        || config->maximum_batch_size > std::numeric_limits<size_t>::max()
+            / spacepdhcg_orbitweaver_lambert_result_stride(config->supported_maximum_revolutions)
+            / sizeof(spacepdhcg_orbitweaver_lambert_result)
         || stream.device.type != SPACEPDHCG_DEVICE_CUDA
         || stream.device.id != static_cast<int32_t>(config->device_id)) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
@@ -428,6 +491,18 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_create(
         );
     }
     if (status == cudaSuccess) {
+        status = cudaMalloc(reinterpret_cast<void**>(&created->scan_grid),
+                            (static_cast<size_t>(config->scan_samples_per_band)+1U)*2U*sizeof(double));
+    }
+    if (status == cudaSuccess) {
+        initialize_scan_grid<<<static_cast<unsigned>((static_cast<size_t>(config->scan_samples_per_band)+128U)/128U),128,0,created->stream>>>(
+            created->scan_grid, config->scan_samples_per_band);
+        status = cudaGetLastError();
+        // On devices without concurrent managed access (including WSL), host
+        // initialization of the control page must not overlap this kernel.
+        if (status == cudaSuccess) status = cudaStreamSynchronize(created->stream);
+    }
+    if (status == cudaSuccess) {
         status = cudaMallocManaged(
             reinterpret_cast<void**>(&created->counters),
             2U * sizeof(*created->counters)
@@ -447,6 +522,7 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_create(
         cudaFree(created->results);
         cudaFree(created->counters);
         cudaFree(created->cancelled);
+        cudaFree(created->scan_grid);
         if (created->owns_stream) {
             cudaStreamDestroy(created->stream);
         }
@@ -472,6 +548,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_evaluate_async(
         || stream.device.id != static_cast<int32_t>(workspace->config.device_id)) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
+    std::unique_lock<std::mutex> api_lock(workspace->api_mutex, std::try_to_lock);
+    if (!api_lock.owns_lock()) return SPACEPDHCG_CUDA_BUSY;
     bool expected = false;
     if (!workspace->busy.compare_exchange_strong(expected, true)) {
         return SPACEPDHCG_CUDA_BUSY;
@@ -514,7 +592,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_evaluate_async(
             workspace->config.scan_samples_per_band,
             workspace->results,
             workspace->counters,
-            workspace->cancelled
+            workspace->cancelled,
+            workspace->scan_grid
         );
         status = cudaGetLastError();
     }
@@ -531,6 +610,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_evaluate_async(
         status = cudaEventRecord(workspace->completion, workspace->stream);
     }
     if (status != cudaSuccess) {
+        // Retire queued buffer accesses before making the workspace reusable.
+        cudaStreamSynchronize(workspace->stream);
         workspace->busy.store(false);
         return mapped(status);
     }
@@ -548,6 +629,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_telemetry(
         || telemetry->abi_version != SPACEPDHCG_ORBITWEAVER_GPU_ABI_VERSION) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
+    std::unique_lock<std::mutex> api_lock(workspace->api_mutex, std::try_to_lock);
+    if (!api_lock.owns_lock()) return SPACEPDHCG_CUDA_BUSY;
     auto* mutable_workspace =
         const_cast<spacepdhcg_orbitweaver_lambert_workspace*>(workspace);
     if (workspace->busy.load()) {
@@ -578,7 +661,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_telemetry(
         workspace->config.maximum_batch_size
             * (sizeof(spacepdhcg_orbitweaver_lambert_request)
                + stride * sizeof(spacepdhcg_orbitweaver_lambert_result))
-        + 2U * sizeof(unsigned long long) + sizeof(int);
+        + 2U * sizeof(unsigned long long) + sizeof(int)
+        + (static_cast<size_t>(workspace->config.scan_samples_per_band)+1U)*2U*sizeof(double);
     telemetry->maximum_batch_size = workspace->config.maximum_batch_size;
     telemetry->device_id = static_cast<int32_t>(workspace->config.device_id);
     return SPACEPDHCG_CUDA_SUCCESS;
@@ -590,7 +674,64 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_cancel(
     if (workspace == nullptr) {
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
+    std::unique_lock<std::mutex> api_lock(workspace->api_mutex, std::try_to_lock);
+    if (!api_lock.owns_lock()) return SPACEPDHCG_CUDA_BUSY;
     *workspace->cancelled = 1;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_screening_host(
+    spacepdhcg_orbitweaver_lambert_workspace* w,
+    const spacepdhcg_orbitweaver_lambert_request* requests, const size_t count,
+    spacepdhcg_orbitweaver_lambert_result* results, const size_t capacity
+) {
+    if (!w || !requests || !results || !count || count > w->config.maximum_batch_size)
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    const auto stride = spacepdhcg_orbitweaver_lambert_result_stride(w->config.supported_maximum_revolutions);
+    if (count > capacity/stride) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    int device = -1;
+    auto status = cudaGetDevice(&device);
+    if (status != cudaSuccess) return mapped(status);
+    if (device != static_cast<int>(w->config.device_id)) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::unique_lock<std::mutex> api_lock(w->api_mutex, std::try_to_lock);
+    if (!api_lock.owns_lock()) return SPACEPDHCG_CUDA_BUSY;
+    bool expected = false;
+    if (!w->busy.compare_exchange_strong(expected,true)) return SPACEPDHCG_CUDA_BUSY;
+    status = cudaMemcpyAsync(w->requests,requests,count*sizeof(*requests),cudaMemcpyHostToDevice,w->stream);
+    if (status == cudaSuccess) status = cudaMemsetAsync(w->results,0,count*stride*sizeof(*results),w->stream);
+    if (status == cudaSuccess) {
+        kernel<<<static_cast<unsigned>((count+127U)/128U),128,0,w->stream>>>(
+            w->requests,count,w->config.supported_maximum_revolutions,w->config.scan_samples_per_band,
+            w->results,nullptr,nullptr,w->scan_grid);
+        status = cudaGetLastError();
+    }
+    if (status == cudaSuccess) status = cudaMemcpyAsync(results,w->results,count*stride*sizeof(*results),cudaMemcpyDeviceToHost,w->stream);
+    const auto completed = cudaStreamSynchronize(w->stream);
+    if (status == cudaSuccess) status = completed;
+    if (status == cudaSuccess) {
+        ++w->batches; w->request_count += count; w->result_count += count*stride;
+        for (size_t i=0;i<count*stride;++i) {
+            if (results[i].status == SPACEPDHCG_ORBITWEAVER_ARC_FEASIBLE) ++w->feasible;
+            else ++w->failed;
+        }
+    }
+    w->busy.store(false);
+    return mapped(status);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_finish(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace
+) {
+    if (!workspace) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::unique_lock<std::mutex> api_lock(workspace->api_mutex, std::try_to_lock);
+    if (!api_lock.owns_lock()) return SPACEPDHCG_CUDA_BUSY;
+    if (workspace->busy.load()) {
+        const auto status = cudaEventSynchronize(workspace->completion);
+        if (status != cudaSuccess) return mapped(status);
+        workspace->feasible += workspace->counters[0];
+        workspace->failed += workspace->counters[1];
+        workspace->busy.store(false);
+    }
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
@@ -601,6 +742,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_destroy(
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     auto* owned = *workspace;
+    std::unique_lock<std::mutex> api_lock(owned->api_mutex, std::try_to_lock);
+    if (!api_lock.owns_lock()) return SPACEPDHCG_CUDA_BUSY;
     if (owned->busy.load()) {
         const auto status = cudaEventSynchronize(owned->completion);
         if (status != cudaSuccess) {
@@ -612,9 +755,11 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_destroy(
     cudaFree(owned->counters);
     cudaFree(owned->results);
     cudaFree(owned->requests);
+    cudaFree(owned->scan_grid);
     if (owned->owns_stream) {
         cudaStreamDestroy(owned->stream);
     }
+    api_lock.unlock();
     delete owned;
     *workspace = nullptr;
     return SPACEPDHCG_CUDA_SUCCESS;

@@ -458,6 +458,7 @@ async function setDataset(dataset, options = {}) {
       void loadGpuRecovery();
       void loadGpuOuterValidation();
       void loadGpuVerification();
+      void loadGpuScreening();
     } else {
       state.preset = null;
       Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
@@ -699,6 +700,32 @@ async function loadGpuOuterValidation() {
     ]);
   } catch (error) {
     el.innerHTML = metricRows([["Status", `Validation results unavailable (${String(error.message || error)})`]]);
+  }
+}
+
+async function loadGpuScreening() {
+  const el = $("gpu-screening");
+  try {
+    const response = await fetch("./data/gtoc12/gpu-screening.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (result.schema_version !== 1 || result.kind !== "gpu-candidate-screening") {
+      throw new Error("unrecognised screening metadata");
+    }
+    const { local, h100 } = result.measurements;
+    el.innerHTML = metricRows([
+      ["Batch workload", `${result.transfers.toLocaleString()} candidate transfers · ${result.branches_per_batch.toLocaleString()} branches`],
+      ["RTX 5090 screening", `${local.milliseconds.toFixed(2)} ms · ${Math.round(local.transfers_per_second).toLocaleString()} candidates/s`],
+      ["H100 screening", `${h100.milliseconds.toFixed(2)} ms · ${Math.round(h100.transfers_per_second).toLocaleString()} candidates/s`],
+      ["Screening versus NumPy", `${local.screening_speedup.toFixed(1)}× local · ${h100.screening_speedup.toFixed(1)}× H100`],
+      ["Small route search, warm", `${local.route_search_speedup.toFixed(2)}× local · ${h100.route_search_speedup.toFixed(2)}× H100; cold GPU startup can be slower`],
+      ["Timing scope", result.timing_scope],
+      ["Candidate agreement", "Same top 100 on CPU and both GPUs; fleet score unchanged"],
+      ["Accuracy checks", result.accuracy],
+      ["Remaining CPU work", result.remaining],
+    ]);
+  } catch (error) {
+    el.innerHTML = metricRows([["Status", `Screening results unavailable (${String(error.message || error)})`]]);
   }
 }
 

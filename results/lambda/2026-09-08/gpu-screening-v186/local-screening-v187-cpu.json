@@ -1,0 +1,78 @@
+[
+  {
+    "name": "lambert_smoke",
+    "command": [
+      "g++",
+      "-std=c++20",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Icpp/include",
+      "cpp/tests/lambert_smoke.cpp",
+      "-o",
+      "/home/angus/build-spacepdhcg-screening-v187/cpu/lambert_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 0.5284740924835205
+  },
+  {
+    "name": "lambert_oracle_smoke",
+    "command": [
+      "g++",
+      "-std=c++20",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Icpp/include",
+      "cpp/tests/lambert_oracle_smoke.cpp",
+      "-o",
+      "/home/angus/build-spacepdhcg-screening-v187/cpu/lambert_oracle_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 1.1726503372192383
+  },
+  {
+    "name": "lambert_family_smoke",
+    "command": [
+      "g++",
+      "-std=c++20",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Icpp/include",
+      "cpp/tests/lambert_family_smoke.cpp",
+      "-o",
+      "/home/angus/build-spacepdhcg-screening-v187/cpu/lambert_family_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 0.7738246917724609
+  },
+  {
+    "name": "lambert_family_oracle_smoke",
+    "command": [
+      "g++",
+      "-std=c++20",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Icpp/include",
+      "cpp/tests/lambert_family_oracle_smoke.cpp",
+      "-o",
+      "/home/angus/build-spacepdhcg-screening-v187/cpu/lambert_family_oracle_smoke"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 1.1434237957000732
+  }
+]

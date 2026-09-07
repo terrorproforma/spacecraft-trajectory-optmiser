@@ -1,0 +1,70 @@
+{
+  "count": 8192,
+  "branch_solves_per_batch": 16384,
+  "catalogue_sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675",
+  "input_sha256": "0cb34aee6deb0ae98edd419c25183e0ebb6481e2ef33614de2be126737a16006",
+  "runtime_sha256": "ef94ee5d11e27ea00cda7066e32fc3f0dfbb8ed4fe730580bd1777d8c48c703a",
+  "runs": {
+    "numpy": {
+      "cold_seconds": 0.21078577399975984,
+      "warm_seconds": [
+        0.17686096100032955,
+        0.1633931879996453,
+        0.14852531099995758,
+        0.14547945799995432,
+        0.14883628400002635
+      ],
+      "median_seconds": 0.14883628400002635,
+      "transfers_per_second": 55040.34217891754,
+      "feasible": 8192,
+      "submitted_branches": null
+    },
+    "cuda": {
+      "cold_seconds": 0.17100094900024487,
+      "warm_seconds": [
+        0.013342990000182908,
+        0.014154169999983424,
+        0.013394766000146774,
+        0.013582072999724915,
+        0.012907654000173352
+      ],
+      "median_seconds": 0.013394766000146774,
+      "transfers_per_second": 611582.1657437119,
+      "feasible": 8192,
+      "submitted_branches": 98304
+    }
+  },
+  "complete": true,
+  "top100_identical": true,
+  "kepler_position_error_km": 0.006425784349330189,
+  "kepler_velocity_error_km_s": 1.3722272910502256e-09,
+  "cpu_kepler_position_error_km": 0.0006142094193894648,
+  "worst_case": {
+    "index": 5050,
+    "asteroid_id": 36992,
+    "epoch": 64778.06714686852,
+    "tof_days": 654.0,
+    "r1": [
+      -148572450.39658174,
+      -14336662.794925882,
+      -2812.8358956682982
+    ],
+    "r2": [
+      -126211662.32107711,
+      10210970.418109275,
+      3449623.709441934
+    ],
+    "cpu_v1": [
+      -21.37776442682085,
+      -26.676026228006336,
+      -3.7951925887067617
+    ],
+    "gpu_v1": [
+      -21.3777644268101,
+      -26.67602622799577,
+      -3.7951925887052926
+    ]
+  },
+  "maximum_cost_difference_km_s": 1.567457275086781e-11,
+  "speedup": 11.11152550170682
+}

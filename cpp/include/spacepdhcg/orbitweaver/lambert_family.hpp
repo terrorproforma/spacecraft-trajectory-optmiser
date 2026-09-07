@@ -55,7 +55,7 @@ inline Geometry geometry(
         -1.0,
         1.0
     );
-    auto sine = std::sqrt(std::max(0.0, 1.0 - cosine * cosine));
+    auto sine = detail::angle_sine(departure_position, arrival_position, radius_one*radius_two);
     if (long_way) {
         sine = -sine;
     }
@@ -63,7 +63,8 @@ inline Geometry geometry(
     if (denominator <= 1.0e-14 || std::abs(sine) <= 1.0e-14) {
         throw std::invalid_argument("collinear Lambert endpoints require a specialised solver");
     }
-    const auto geometry_a = sine * std::sqrt(radius_one * radius_two / denominator);
+    const auto geometry_a = detail::lambert_geometry_a(
+        departure_position, arrival_position, radius_one, radius_two, long_way);
     if (std::abs(geometry_a) <= 1.0e-14) {
         throw std::invalid_argument("Lambert geometry is singular");
     }

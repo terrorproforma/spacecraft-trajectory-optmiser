@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import time
+from functools import wraps
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,20 @@ from spacepdhcg import resources
 
 def _json(value: Any) -> str:
     return json.dumps(value, indent=2, sort_keys=True, default=float)
+
+
+def _with_screening_backend(function):
+    @wraps(function)
+    def run(args):
+        from .lambert import using_lambert_backend
+
+        backend = getattr(args, "screening_backend", "numpy")
+        if backend == "cuda" and getattr(args, "workers", 1) != 1:
+            raise ValueError("CUDA candidate screening requires --workers 1")
+        with using_lambert_backend(backend):
+            return function(args)
+
+    return run
 
 
 def _scvx_settings(args: argparse.Namespace):
@@ -61,9 +76,14 @@ def _scvx_settings(args: argparse.Namespace):
 
 
 def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
+    from .lambert import screening_telemetry
+
     backend = getattr(args, "discretisation_backend", "numpy")
+    cpu_only = backend == "numpy" and getattr(args, "screening_backend", "numpy") == "numpy"
     return {
         "discretisation_backend_requested": backend,
+        "screening_backend_requested": getattr(args, "screening_backend", "numpy"),
+        "screening": screening_telemetry(),
         "assembly_backend_requested": getattr(args, "assembly_backend", "numpy"),
         "convex_solver_backend": "gpu_qoco"
         if getattr(args, "convex_solver_backend", "clarabel") == "qoco"
@@ -73,8 +93,8 @@ def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
         "seed_backend_requested": getattr(args, "seed_backend", "auto"),
         # A selected backend is not evidence that a search actually reached
         # refinement. Completed leg summaries record their actual backend.
-        "cpu_only": True if backend == "numpy" else None,
-        "gpu_used": False if backend == "numpy" else None,
+        "cpu_only": True if cpu_only else None,
+        "gpu_used": False if cpu_only else None,
     }
 
 
@@ -250,6 +270,7 @@ def catalogue_pool(catalogue, args: argparse.Namespace):
     return catalogue.ids[mask]
 
 
+@_with_screening_backend
 def cmd_run(args: argparse.Namespace) -> int:
     """Search -> refine -> emit -> verify (official + independent) -> viewer export.
 
@@ -688,6 +709,7 @@ def cluster_band_partitions(args: argparse.Namespace) -> list[tuple[str, Any]]:
     return partitions
 
 
+@_with_screening_backend
 def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     """Cooperative cluster pricing -> bundle master -> verified fleet, with checkpoints.
 
@@ -1126,6 +1148,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     return 0
 
 
+@_with_screening_backend
 def cmd_fleet_master(args: argparse.Namespace) -> int:
     """Master over archived certified routes (this and earlier runs) -> verified fleet.
 
@@ -1291,6 +1314,7 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     return 0 if entry["ok"] else 1
 
 
+@_with_screening_backend
 def cmd_retime_returns(args: argparse.Namespace) -> int:
     """Archive-wide Earth-return sweep + re-timing; improved ships are archived for the master."""
 
@@ -1386,6 +1410,7 @@ def cmd_retime_returns(args: argparse.Namespace) -> int:
     return 0
 
 
+@_with_screening_backend
 def cmd_joint_itinerary(args: argparse.Namespace) -> int:
     """Archive-wide whole-itinerary joint re-optimisation; improved ships are archived."""
 
@@ -2145,6 +2170,15 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     legs.add_argument("--output", default="", help="optional JSON output path")
     legs.set_defaults(function=cmd_leg_stats)
     for refinement in (run, cluster, master, returns, joint):
+        refinement.add_argument(
+            "--screening-backend",
+            choices=("numpy", "cuda"),
+            default="numpy",
+            help=(
+                "Lambert candidate screening arithmetic; CUDA retains workspaces "
+                "and requires workers=1"
+            ),
+        )
         refinement.add_argument(
             "--convex-solver",
             dest="convex_solver_backend",

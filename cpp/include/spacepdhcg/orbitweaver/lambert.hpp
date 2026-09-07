@@ -37,6 +37,21 @@ inline double dot(const Vector3& left, const Vector3& right) noexcept {
 
 inline double norm(const Vector3& vector) noexcept { return std::sqrt(dot(vector, vector)); }
 
+inline double angle_sine(const Vector3& left, const Vector3& right,
+                         double radius_product) noexcept {
+    const Vector3 cross{left[1]*right[2]-left[2]*right[1],
+                        left[2]*right[0]-left[0]*right[2],
+                        left[0]*right[1]-left[1]*right[0]};
+    return std::min(1.0, norm(cross)/radius_product);
+}
+
+inline double lambert_geometry_a(const Vector3& left, const Vector3& right,
+                                 double r1, double r2, bool long_way) noexcept {
+    const Vector3 sum{left[0]/r1+right[0]/r2, left[1]/r1+right[1]/r2,
+                      left[2]/r1+right[2]/r2};
+    return (long_way ? -1.0 : 1.0)*std::sqrt(0.5*r1*r2)*norm(sum);
+}
+
 inline Vector3 subtract(const Vector3& left, const Vector3& right) noexcept {
     return Vector3{
         left[0U] - right[0U],
@@ -151,7 +166,7 @@ inline LambertSolution solve_lambert_zero_revolution(
         -1.0,
         1.0
     );
-    auto sine = std::sqrt(std::max(0.0, 1.0 - cosine * cosine));
+    auto sine = detail::angle_sine(departure_position, arrival_position, radius_one*radius_two);
     if (long_way) {
         sine = -sine;
     }
@@ -159,7 +174,8 @@ inline LambertSolution solve_lambert_zero_revolution(
     if (denominator <= 1.0e-14 || std::abs(sine) <= 1.0e-14) {
         throw std::invalid_argument("collinear Lambert endpoints require a specialised solver");
     }
-    const auto geometry_a = sine * std::sqrt(radius_one * radius_two / denominator);
+    const auto geometry_a = detail::lambert_geometry_a(
+        departure_position, arrival_position, radius_one, radius_two, long_way);
     if (std::abs(geometry_a) <= 1.0e-14) {
         throw std::invalid_argument("Lambert geometry is singular");
     }

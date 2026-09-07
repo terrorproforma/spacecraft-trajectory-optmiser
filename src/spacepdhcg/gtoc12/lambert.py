@@ -11,8 +11,8 @@ bisection):
   the packaged ``libspacepdhcg``.  It is the CPU-parity truth path and the parity test asserts
   both agree.
 
-The GPU Lambert batch (``spacepdhcg_orbitweaver_lambert_evaluate_async``) is deliberately not
-used here: this track is CPU-first while the G4 campaign owns the device.
+An explicit ``using_lambert_backend('cuda')`` scope selects the retained native GPU
+batch for screening. The NumPy implementation remains the default and parity oracle.
 """
 
 from __future__ import annotations
@@ -21,6 +21,8 @@ import ctypes
 import os
 import shutil
 import subprocess
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -35,6 +37,35 @@ from .constants import MU_SUN_KM3_S2
 FloatArray = NDArray[np.float64]
 LIBRARY_ENVIRONMENT_VARIABLE = "SPACEPDHCG_GTOC12_C_API"
 _PI = np.pi
+_GPU_BACKEND: ContextVar[object | None] = ContextVar("gtoc12_gpu_lambert", default=None)
+
+
+def screening_telemetry():
+    """Live completed-batch counters for the active explicit screening scope."""
+    gpu = _GPU_BACKEND.get()
+    return gpu.telemetry if gpu is not None else {"backend": "numpy", "gpu_used": False}
+
+
+@contextmanager
+def using_lambert_backend(backend: str, *, maximum_batch_size=16384):
+    """Select screening arithmetic for this scope, preserving nested callers."""
+    if backend not in {"numpy", "cuda"}:
+        raise ValueError("Lambert backend must be 'numpy' or 'cuda'")
+    if backend == "numpy":
+        token = _GPU_BACKEND.set(None)
+        try:
+            yield None
+        finally:
+            _GPU_BACKEND.reset(token)
+    else:
+        from .gpu_lambert import GpuLambert
+
+        with GpuLambert(maximum_batch_size) as gpu:
+            token = _GPU_BACKEND.set(gpu)
+            try:
+                yield gpu
+            finally:
+                _GPU_BACKEND.reset(token)
 
 
 def _stumpff(z: FloatArray) -> tuple[FloatArray, FloatArray]:
@@ -108,7 +139,20 @@ def lambert_batch(
     scan_samples: int = 8192,
     maximum_iterations: int = 256,
 ) -> LambertBatchResult:
-    """Vectorised zero-revolution Lambert solve (same bracketing scan + bisection as the C++)."""
+    """Zero-revolution Lambert solve using the explicitly selected backend."""
+
+    gpu = _GPU_BACKEND.get()
+    if gpu is not None:
+        return gpu.solve(
+            departure_position,
+            arrival_position,
+            time_of_flight_s,
+            mu,
+            long_way=long_way,
+            time_tolerance=time_tolerance,
+            scan_samples=scan_samples,
+            maximum_iterations=maximum_iterations,
+        )
 
     r1v = np.atleast_2d(np.asarray(departure_position, dtype=np.float64))
     r2v = np.atleast_2d(np.asarray(arrival_position, dtype=np.float64))
@@ -120,13 +164,17 @@ def lambert_batch(
     r1 = np.linalg.norm(r1v, axis=1)
     r2 = np.linalg.norm(r2v, axis=1)
     cosine = np.clip(np.einsum("ij,ij->i", r1v, r2v) / (r1 * r2), -1.0, 1.0)
-    sine = np.sqrt(np.maximum(0.0, 1.0 - cosine * cosine))
+    # The squared-cosine identity loses precision for near-antipodal endpoints.
+    sine = np.minimum(1.0, np.linalg.norm(np.cross(r1v, r2v), axis=1) / (r1 * r2))
     sine = np.where(long, -sine, sine)
     denominator = 1.0 - cosine
     feasible = (
         (tof > 0.0) & (denominator > 1e-14) & (np.abs(sine) > 1e-14) & (r1 > 0.0) & (r2 > 0.0)
     )
-    a_geom = sine * np.sqrt(r1 * r2 / np.where(denominator > 1e-14, denominator, 1.0))
+    # A = signed sqrt(r1*r2*(1+cos(theta))); use the vector half-angle identity
+    # to avoid cancellation near both parallel and antiparallel endpoints.
+    half_angle = np.linalg.norm(r1v / r1[:, None] + r2v / r2[:, None], axis=1)
+    a_geom = np.where(long, -1.0, 1.0) * np.sqrt(0.5 * r1 * r2) * half_angle
     feasible &= np.abs(a_geom) > 1e-14
 
     grid, grid_c, grid_s = _scan_grid(scan_samples)

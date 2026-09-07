@@ -58,3 +58,30 @@ def test_scan_cache_does_not_cache_mutable_trajectory_data():
     assert lambert._scan_grid.cache_info().currsize == 8
     for old, rebuilt in zip(first, lambert._scan_grid(128), strict=True):
         np.testing.assert_array_equal(old, rebuilt)
+
+
+@pytest.mark.parametrize(
+    "r1,r2,days",
+    [
+        (
+            [139395916.52843043, 53066431.26626553, -397.6250211116388],
+            [-384725135.8219323, -149064873.93559355, -248707.57559431216],
+            472,
+        ),
+        (
+            [-142640460.0303927, 40899626.62993002, -6890.813929957899],
+            [-480412602.57008094, 135960926.37426177, -170023.3908161462],
+            827,
+        ),
+    ],
+)
+@pytest.mark.parametrize("long_way", [False, True])
+def test_nearly_aligned_catalogue_endpoints_keep_kepler_closure(r1, r2, days, long_way):
+    from spacepdhcg.gtoc12 import constants as C
+    from spacepdhcg.gtoc12.ephemeris import propagate_kepler
+
+    result = lambert.lambert_batch([r1], [r2], days * C.DAY_S, long_way=long_way, scan_samples=256)
+    assert result.feasible[0]
+    r, v = propagate_kepler(np.array([r1]), result.departure_velocity, days * C.DAY_S)
+    assert np.linalg.norm(r[0] - r2) < 0.001
+    assert np.linalg.norm(v - result.arrival_velocity) < 1e-9

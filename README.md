@@ -90,6 +90,16 @@ was below 0.19 m. Use `gtoc12 verify --propagation-backend cuda` with the native
 library and pinned data configured. Mission rules and fleet scores are unchanged.
 See [accuracy, timing scope and reproduction](docs/GPU_BATCHED_VERIFICATION.md).
 
+**GPU candidate screening connected:** GTOC12 search now accepts
+`--screening-backend cuda --workers 1`. The retained native Lambert batch screens
+8,192 candidate transfers in **13.4 ms on RTX 5090 and 6.36 ms on H100**—about
+**612,000 and 1.29 million candidates/s**, including transfers and cost selection.
+The same top 100 candidates are retained; a shared near-alignment geometry error
+was fixed without relaxing the endpoint check. Small warm route searches improved
+1.09× locally and 2.39× on H100; cold GPU startup can be slower. These are impulsive
+screening estimates, not certified low-thrust solutions or a new fleet score.
+See [accuracy, scope and reproduction](docs/GPU_CANDIDATE_SCREENING.md).
+
 **GPU solver fixes validated:** low-thrust factor stabilization removes the
 frozen-QP failures in the reported replay matrix, and SCvx now recognizes
 feasible stationary steps instead of collapsing the trust region over negligible

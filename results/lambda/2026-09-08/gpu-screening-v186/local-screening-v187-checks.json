@@ -1,0 +1,68 @@
+[
+  {
+    "name": "orbitweaver_screening_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-screening-v187/final/orbitweaver_screening_test"
+    ],
+    "returncode": 0,
+    "stdout": "screening: host, async, device graph and concurrent API guards passed\n",
+    "stderr": "",
+    "seconds": 0.26731412099979934
+  },
+  {
+    "name": "orbitweaver_gpu_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-screening-v187/final/orbitweaver_gpu_test"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 0.1992079990000093
+  },
+  {
+    "name": "orbitweaver_g3_adapter_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-screening-v187/final/orbitweaver_g3_adapter_test"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 0.0007807140000295476
+  },
+  {
+    "name": "regression",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_archive.py",
+      "tests/test_gtoc12_bundles.py",
+      "tests/test_gtoc12_chain.py",
+      "tests/test_gtoc12_collectdp.py",
+      "tests/test_gtoc12_cooperative.py",
+      "tests/test_gtoc12_ephemeris_format.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "tests/test_gtoc12_gpu_conic.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_lambert.py",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "tests/test_gtoc12_gpu_scvx.py",
+      "tests/test_gtoc12_gpu_seed.py",
+      "tests/test_gtoc12_gpu_verifier.py",
+      "tests/test_gtoc12_harvestphase.py",
+      "tests/test_gtoc12_jointopt.py",
+      "tests/test_gtoc12_lambert_performance.py",
+      "tests/test_gtoc12_pipeline.py",
+      "tests/test_gtoc12_returns.py",
+      "tests/test_gtoc12_rules_and_data.py",
+      "tests/test_gtoc12_search2.py",
+      "tests/test_gtoc12_verifier.py",
+      "-q",
+      "--tb=short"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 23%]\n........................................................................ [ 46%]\n........................................................................ [ 69%]\n........................................................................ [ 93%]\n.....................                                                    [100%]\n309 passed in 360.79s (0:06:00)\n",
+    "stderr": "",
+    "seconds": 361.39354165500026
+  }
+]
