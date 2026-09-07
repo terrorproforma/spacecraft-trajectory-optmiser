@@ -1,0 +1,99 @@
+{
+  "fleet": {
+    "asteroids": [
+      4928,
+      9595,
+      10664,
+      16118,
+      23760,
+      25792,
+      53410,
+      57530
+    ],
+    "average_collected_kg": 548.2546201232033,
+    "collected_kg_per_ship": [
+      548.2546201232033
+    ],
+    "greedy": {
+      "asteroids": [
+        4928,
+        9595,
+        10664,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "average_collected_kg": 548.2546201232033,
+      "collected_kg_per_ship": [
+        548.2546201232033
+      ],
+      "rule_satisfied": true,
+      "ship_limit": 17.92444925507579,
+      "ships": 1,
+      "total_collected_kg": 548.2546201232033
+    },
+    "rule_satisfied": true,
+    "ship_limit": 17.92444925507579,
+    "ships": 1,
+    "total_collected_kg": 548.2546201232033
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 8,
+    "ok": true,
+    "return_code": 0,
+    "score_data": {
+      "4928": 32.85420944559996,
+      "9595": 71.45790554410019,
+      "10664": 13.141683778199877,
+      "16118": 81.72484599590007,
+      "23760": 71.86858316220014,
+      "25792": 85.83162217659992,
+      "53410": 73.5112936344999,
+      "57530": 117.86447638599998
+    },
+    "ships": 1,
+    "total_mass_kg": 548.255,
+    "wall_seconds": 0.09268568799598143
+  },
+  "independent": {
+    "max_mass_error_kg": 6.184563972055912e-11,
+    "max_position_error_km": 0.633487634762095,
+    "max_velocity_error_km_s": 1.1082502624714827e-07,
+    "mined_asteroids": 8,
+    "ok": true,
+    "scored_masses": {
+      "4928": 32.85420944559996,
+      "9595": 71.45790554410019,
+      "10664": 13.141683778199877,
+      "16118": 81.72484599590007,
+      "23760": 71.86858316220014,
+      "25792": 85.83162217659992,
+      "53410": 73.5112936344999,
+      "57530": 117.86447638599998
+    },
+    "ship_limit": 17.924449255068385,
+    "ships": 1,
+    "total_mass_kg": 548.2546201231,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 548.2546201231
+  },
+  "viewer_manifest": {
+    "files": {
+      "trajectories.json": {
+        "bytes": 437814,
+        "sha256": "689cd6453698494d0258df7276b326ccf353cba9eb257f2ff0610b9ad5d1abef"
+      }
+    },
+    "schema_version": "1.0.0",
+    "source": {
+      "bytes": 427681,
+      "path_basename": "Result.txt",
+      "sha256": "acab908f1e9b9217bc4f9409d01536a6ca15e2e3a8cb514bbb1e8acb251cd04b"
+    },
+    "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+  }
+}

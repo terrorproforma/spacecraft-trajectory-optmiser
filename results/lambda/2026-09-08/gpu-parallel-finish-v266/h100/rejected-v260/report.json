@@ -1,0 +1,231 @@
+{
+  "pid": 145407,
+  "start": 1788812520.8325627,
+  "steps": [
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.003528594970703125
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "cpp",
+        "src",
+        "tests",
+        "scripts",
+        "pyproject.toml"
+      ],
+      "returncode": 0,
+      "seconds": 0.21388816833496094
+    },
+    {
+      "name": "git-snapshot",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU snapshot",
+        "-c",
+        "user.email=snapshot@localhost",
+        "commit",
+        "-qm",
+        "CUDA graph replay validation source"
+      ],
+      "returncode": 0,
+      "seconds": 0.015588045120239258
+    },
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-parallel-finish-v260/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-parallel-finish-v260/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.3168623447418213
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-parallel-finish-v260/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 49.134588956832886
+    },
+    {
+      "name": "comparison",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "benchmark_finish_v259.py",
+        "/home/ubuntu/spacepdhcg-parallel-finish-v260/comparison",
+        "/home/ubuntu/spacepdhcg-native-campaign-v209/output/ship_01/refinements.json",
+        "input-return.json",
+        "/home/ubuntu/spacepdhcg-driver-retime-v256/core-build/cuda/libspacepdhcg_cuda.so",
+        "/home/ubuntu/spacepdhcg-parallel-finish-v260/core-build/cuda/libspacepdhcg_cuda.so"
+      ],
+      "returncode": 0,
+      "seconds": 2.6674141883850098
+    },
+    {
+      "name": "tests",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_retime_finish.py",
+        "tests/test_gtoc12_retime_driver.py",
+        "tests/test_gtoc12_retime_forward.py",
+        "tests/test_gtoc12_retime_warp.py",
+        "tests/test_gtoc12_packed_retime.py",
+        "tests/test_gtoc12_retime_graph.py",
+        "tests/test_gtoc12_gpu_return_sweep.py",
+        "tests/test_gtoc12_gpu_retime.py",
+        "tests/test_gtoc12_resident_retime.py",
+        "tests/test_gtoc12_certified_objective.py",
+        "tests/test_gtoc12_gpu_elements.py",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_gpu_lambert.py",
+        "tests/test_gtoc12_gpu_neighbours.py",
+        "tests/test_gtoc12_gpu_collection.py",
+        "tests/test_gtoc12_jointopt.py",
+        "tests/test_gtoc12_returns.py",
+        "tests/test_gtoc12_cooperative.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 40.91926145553589
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_retime_finish.py",
+        "tests/test_gtoc12_retime_driver.py",
+        "tests/test_gtoc12_retime_forward.py",
+        "tests/test_gtoc12_retime_warp.py",
+        "tests/test_gtoc12_packed_retime.py",
+        "tests/test_gtoc12_retime_graph.py",
+        "tests/test_gtoc12_gpu_return_sweep.py",
+        "tests/test_gtoc12_gpu_retime.py",
+        "tests/test_gtoc12_resident_retime.py",
+        "tests/test_gtoc12_certified_objective.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 31.305776357650757
+    },
+    {
+      "name": "initcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_retime_finish.py",
+        "tests/test_gtoc12_retime_driver.py",
+        "tests/test_gtoc12_retime_forward.py",
+        "tests/test_gtoc12_retime_warp.py",
+        "tests/test_gtoc12_packed_retime.py",
+        "tests/test_gtoc12_retime_graph.py",
+        "tests/test_gtoc12_gpu_return_sweep.py",
+        "tests/test_gtoc12_gpu_retime.py",
+        "tests/test_gtoc12_resident_retime.py",
+        "tests/test_gtoc12_certified_objective.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 13.932817459106445
+    },
+    {
+      "name": "synccheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_retime_finish.py",
+        "tests/test_gtoc12_retime_driver.py",
+        "tests/test_gtoc12_retime_forward.py",
+        "tests/test_gtoc12_retime_warp.py",
+        "tests/test_gtoc12_packed_retime.py",
+        "tests/test_gtoc12_retime_graph.py",
+        "tests/test_gtoc12_gpu_return_sweep.py",
+        "tests/test_gtoc12_gpu_retime.py",
+        "tests/test_gtoc12_resident_retime.py",
+        "tests/test_gtoc12_certified_objective.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 3.4184582233428955
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_retime_finish.py",
+        "tests/test_gtoc12_retime_driver.py",
+        "tests/test_gtoc12_retime_forward.py",
+        "tests/test_gtoc12_retime_warp.py",
+        "tests/test_gtoc12_packed_retime.py",
+        "tests/test_gtoc12_retime_graph.py",
+        "tests/test_gtoc12_gpu_return_sweep.py",
+        "tests/test_gtoc12_gpu_retime.py",
+        "tests/test_gtoc12_resident_retime.py",
+        "tests/test_gtoc12_certified_objective.py",
+        "-q"
+      ],
+      "returncode": 99,
+      "seconds": 9.87651777267456
+    }
+  ],
+  "complete": false,
+  "error": "Command '['/usr/local/cuda/bin/compute-sanitizer', '--tool', 'racecheck', '--error-exitcode', '99', '/home/ubuntu/spacepdhcg/v1/.venv/bin/python', '-c', \"import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')\", 'tests/test_gtoc12_retime_finish.py', 'tests/test_gtoc12_retime_driver.py', 'tests/test_gtoc12_retime_forward.py', 'tests/test_gtoc12_retime_warp.py', 'tests/test_gtoc12_packed_retime.py', 'tests/test_gtoc12_retime_graph.py', 'tests/test_gtoc12_gpu_return_sweep.py', 'tests/test_gtoc12_gpu_retime.py', 'tests/test_gtoc12_resident_retime.py', 'tests/test_gtoc12_certified_objective.py', '-q']' returned non-zero exit status 99.",
+  "end": 1788812675.3196573
+}

@@ -1,0 +1,25 @@
+{
+  "run_id": "gpu_native_campaign_v269_fleet",
+  "fleet_run_id": "gpu_native_campaign_v269_fleet",
+  "commit": "c727c958be51e8f27b0c1a54cd6ad6ac99cbfaa2",
+  "source_code_commit": "58eefa56",
+  "source_revision_note": "Exporter revision is the temporary Lambda source snapshot; published implementation is 58eefa56, with source hashes in the campaign report.",
+  "weighted_score_fixed_bonus_kg": 548.2546201231,
+  "raw_kg_per_ship": 548.2546201231,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "44,722,546 CUDA transfer branches; 2,782,091 collection options; zero host retiming table uploads"
+  },
+  "timing": {
+    "wall_seconds_total": 89.55256616399856,
+    "wall_human": "89.55 s complete search, refinement and retiming"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; official and independent verification pass",
+    "local_refine": "16 CUDA-refined transfer arcs plus a camp interval; eight mining asteroids"
+  },
+  "optimisation": {
+    "strategy": "Device-controlled retiming and route extension; 21.766 kg above the previous development mission. The 23-ship incumbent fleet is unchanged.",
+    "proven_optimal": false
+  }
+}

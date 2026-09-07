@@ -82,6 +82,23 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**New certified GPU campaign:** the H100 search/refinement/retiming run completed
+in **89.55 s**, evaluated **44.72 million transfer branches** and selected a
+**548.255 kg, eight-asteroid mission**. Both checkers pass: **4.13% more returned
+mass** than the previous development mission. The separate 23-ship incumbent
+remains **12,805.194 weighted kg**. The new result is downloaded and available in
+the visualiser as **GPU campaign v269 (548 kg certified)**.
+[Statistics, evidence and copy-paste loading instructions](results/lambda/2026-09-08/gpu-native-campaign-v269/README.md).
+
+**Parallel retiming completion:** four warps select the final epoch, threads
+gather selected-leg values and share the best-candidate copy. Complete cached
+retiming takes **11.9% less time on H100 and 13.1% less locally** against the
+published device driver; fresh-table timing changes by less than 1%. **137 tests
+pass on each GPU**, and all four H100 sanitizers pass 74 cases with zero errors
+or hazards after adding explicit block-completion barriers. Both physics checkers
+accept the 526.489 kg replay; fleet score remains unchanged.
+[Measurements, rejected variant and reproduction](docs/GPU_PARALLEL_RETIMING_COMPLETION.md).
+
 **Device-controlled retiming:** a conditional CUDA graph now performs mass-profile
 correction, price bracketing/bisection and best weighted-candidate selection.
 Complete retained-table retiming takes **40.0% less time on H100 and 32.3% less

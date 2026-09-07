@@ -1,0 +1,44 @@
+{
+  "source_code_commit": "58eefa56",
+  "medians_seconds": {
+    "h100": {
+      "fresh": {
+        "old": 0.058634134009480476,
+        "candidate": 0.05824273999314755
+      },
+      "cached": {
+        "old": 0.0015823019784875214,
+        "candidate": 0.001393468992318958
+      }
+    },
+    "rtx5090": {
+      "fresh": {
+        "old": 0.21583559600003355,
+        "candidate": 0.2150422710001294
+      },
+      "cached": {
+        "old": 0.0019464759998299996,
+        "candidate": 0.0016911679999793705
+      }
+    }
+  },
+  "tests_per_gpu": 137,
+  "h100_sanitizers": {
+    "cases_each": 74,
+    "memcheck_errors": 0,
+    "initcheck_errors": 0,
+    "synccheck_errors": 0,
+    "racecheck_hazards": 0
+  },
+  "local_racecheck": {
+    "cases": 20,
+    "hazards": 0
+  },
+  "rejected_initial_variant": "h100/rejected-v260; racecheck reports retained, superseded by explicit completion barriers",
+  "scope": "Matched cached and fresh retiming only; no whole-campaign speedup claim.",
+  "h100_runtime_sha256": "5a18ec0436204aa9de7bf90da24d609de06d1dfd5f77c7324cad7559c6cdebd7",
+  "local_runtime": {
+    "path": "/home/angus/build-spacepdhcg-finish-barriers-v265/final/libspacepdhcg_cuda.so",
+    "sha256": "6900a9a938f41ffd4a8f949f321af0a81cb3383acfbbceae93558003ad8e6dba"
+  }
+}
