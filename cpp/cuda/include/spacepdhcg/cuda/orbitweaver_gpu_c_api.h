@@ -72,6 +72,42 @@ typedef struct spacepdhcg_orbitweaver_lambert_config {
     uint32_t scan_samples_per_band;
 } spacepdhcg_orbitweaver_lambert_config;
 
+/* Zero-revolution rendezvous screening. Both directions are always evaluated;
+ * the Lambert include flags and maximum_revolutions are ignored. Units must be
+ * consistent with the Lambert request. Equal total costs prefer short-way. */
+typedef struct spacepdhcg_orbitweaver_hop_request {
+    spacepdhcg_orbitweaver_lambert_request lambert;
+    double departure_body_velocity[3];
+    double arrival_body_velocity[3];
+    double departure_allowance;
+    double arrival_allowance;
+} spacepdhcg_orbitweaver_hop_request;
+
+typedef struct spacepdhcg_orbitweaver_hop_result {
+    double departure_velocity[3];
+    double arrival_velocity[3];
+    double departure_delta_v;
+    double arrival_delta_v;
+    int32_t feasible;
+    int32_t long_way;
+} spacepdhcg_orbitweaver_hop_result;
+
+/* Resident, graph-capturable combined Lambert/cost/selection operator. Failed
+ * requests return feasible=0, infinite costs and NaN velocities. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_launch_device(
+    const spacepdhcg_orbitweaver_hop_request* requests, size_t count,
+    uint32_t scan_samples, spacepdhcg_orbitweaver_hop_result* results,
+    size_t result_capacity, spacepdhcg_accelerator_stream stream
+);
+
+/* Retained blocking bridge; all numerical screening and direction selection
+ * run on CUDA. The host only packs/transfers requests and counts outputs. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_screening_host(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace,
+    const spacepdhcg_orbitweaver_hop_request* requests, size_t count,
+    spacepdhcg_orbitweaver_hop_result* results, size_t result_capacity
+);
+
 typedef struct spacepdhcg_orbitweaver_batch_telemetry {
     uint32_t abi_version;
     uint64_t batches_submitted;

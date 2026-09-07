@@ -1,0 +1,52 @@
+{
+  "start": 1788792669.3332791,
+  "pid": 124837,
+  "steps": [
+    {
+      "name": "tests",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_gpu_lambert.py",
+        "tests/test_gtoc12_lambert_performance.py",
+        "-q",
+        "--tb=short"
+      ],
+      "returncode": 0,
+      "seconds": 1.966400384902954
+    },
+    {
+      "name": "paired",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "scripts/gpu/benchmark_gtoc12_combined_hops.py",
+        "/home/ubuntu/spacepdhcg-hops-followup-v190/paired.json"
+      ],
+      "returncode": 0,
+      "seconds": 0.8147814273834229
+    },
+    {
+      "name": "routes",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "scripts/gpu/benchmark_gtoc12_route_search.py",
+        "/home/ubuntu/spacepdhcg-hops-followup-v190/routes.json",
+        "--profile",
+        "reduced",
+        "--repeats",
+        "2"
+      ],
+      "returncode": 0,
+      "seconds": 45.33234667778015
+    }
+  ],
+  "runtime_sha256": "be875d73f83084612e15acdf29fdf25968dab7c3700e35b5ab711962f5111a81",
+  "complete": true,
+  "end": 1788792717.4498608
+}

@@ -1,0 +1,209 @@
+{
+  "catalogue_sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675",
+  "asteroid_ids": [
+    23987,
+    50057,
+    26689,
+    55077,
+    57073,
+    13945,
+    10212,
+    14117,
+    41383,
+    9512,
+    11081,
+    37077,
+    59634,
+    36896,
+    40618,
+    57462,
+    2294,
+    1740,
+    14042,
+    11012,
+    9123,
+    22647,
+    28780,
+    38198,
+    45702,
+    55572,
+    43792,
+    1069,
+    29225,
+    9833,
+    15142,
+    27473,
+    30639,
+    21191,
+    56739,
+    36091,
+    30037,
+    29283,
+    21538,
+    39849,
+    40470,
+    13123,
+    45681,
+    1915,
+    43691,
+    55739,
+    11117,
+    2737,
+    45828,
+    33208,
+    19259,
+    58826,
+    31933,
+    34840,
+    32259,
+    51213,
+    41125,
+    23943,
+    39463,
+    16009
+  ],
+  "runs": {
+    "numpy": {
+      "seconds": 0.1685755400103517,
+      "cold_seconds": 0.1716747020254843,
+      "warm_seconds": [
+        0.16879817401058972,
+        0.16851307498291135,
+        0.1685755400103517,
+        0.16852586599998176,
+        0.16864418401382864
+      ],
+      "expansions": 1,
+      "reported_lambert_evaluations": 4106,
+      "actual_cuda_branches": null,
+      "gpu_batches": null,
+      "candidates": [
+        {
+          "asteroids": [
+            43792
+          ],
+          "orphaned": [],
+          "self_cleaning": true,
+          "launch_epoch": 64958.0,
+          "earth_return_epoch": 69625.0,
+          "deploy_epochs": {
+            "43792": 65858.0
+          },
+          "collect_epochs": {
+            "43792": 69025.0
+          },
+          "foreign_deploy_epochs": {},
+          "collected_mass_kg": {
+            "43792": 86.70773442847364
+          },
+          "total_collected_kg": 86.70773442847364,
+          "propellant_proxy_kg": 1085.9688300140283,
+          "final_mass_proxy_kg": 1960.7389044144452,
+          "feasible_proxy": true,
+          "legs": [
+            {
+              "from": 0,
+              "to": 43792,
+              "t0": 64958.0,
+              "tf": 65858.0,
+              "dv_proxy_km_s": 7.225582713226519,
+              "inflation": 1.6,
+              "role": "earth_out"
+            },
+            {
+              "from": 43792,
+              "to": 43792,
+              "t0": 65858.0,
+              "tf": 69025.0,
+              "dv_proxy_km_s": 0.0,
+              "inflation": 1.0,
+              "role": "camp"
+            },
+            {
+              "from": 43792,
+              "to": 0,
+              "t0": 69025.0,
+              "tf": 69625.0,
+              "dv_proxy_km_s": 6.113729846018122,
+              "inflation": 0.970501920496367,
+              "role": "earth_return"
+            }
+          ]
+        }
+      ]
+    },
+    "cuda": {
+      "seconds": 0.06775656796526164,
+      "cold_seconds": 0.27441621699836105,
+      "warm_seconds": [
+        0.06775656796526164,
+        0.06793688499601558,
+        0.06752797099761665,
+        0.06767109397333115,
+        0.06785602099262178
+      ],
+      "expansions": 1,
+      "reported_lambert_evaluations": 4106,
+      "actual_cuda_branches": 24636,
+      "gpu_batches": 48,
+      "candidates": [
+        {
+          "asteroids": [
+            43792
+          ],
+          "orphaned": [],
+          "self_cleaning": true,
+          "launch_epoch": 64958.0,
+          "earth_return_epoch": 69625.0,
+          "deploy_epochs": {
+            "43792": 65858.0
+          },
+          "collect_epochs": {
+            "43792": 69025.0
+          },
+          "foreign_deploy_epochs": {},
+          "collected_mass_kg": {
+            "43792": 86.70773442847364
+          },
+          "total_collected_kg": 86.70773442847364,
+          "propellant_proxy_kg": 1085.9688300140283,
+          "final_mass_proxy_kg": 1960.7389044144452,
+          "feasible_proxy": true,
+          "legs": [
+            {
+              "from": 0,
+              "to": 43792,
+              "t0": 64958.0,
+              "tf": 65858.0,
+              "dv_proxy_km_s": 7.22558271322652,
+              "inflation": 1.6,
+              "role": "earth_out"
+            },
+            {
+              "from": 43792,
+              "to": 43792,
+              "t0": 65858.0,
+              "tf": 69025.0,
+              "dv_proxy_km_s": 0.0,
+              "inflation": 1.0,
+              "role": "camp"
+            },
+            {
+              "from": 43792,
+              "to": 0,
+              "t0": 69025.0,
+              "tf": 69625.0,
+              "dv_proxy_km_s": 6.113729846018121,
+              "inflation": 0.970501920496367,
+              "role": "earth_return"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "complete": true,
+  "speedup": 2.4879586595469134,
+  "fleet_score_changed": false,
+  "scope": "Lambert proxy candidate search only; candidates still require low-thrust refinement and independent certification."
+}

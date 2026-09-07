@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+    "--build",
+    "/home/angus/build-spacepdhcg-gtoc12-v141",
+    "--target",
+    "spacepdhcg_cuda",
+    "orbitweaver_hop_test",
+    "orbitweaver_screening_test",
+    "orbitweaver_gpu_test",
+    "orbitweaver_g3_adapter_test",
+    "-j",
+    "3"
+  ],
+  "runtime_sha256": {
+    "orbitweaver_hop_test": "d06d291d07e85203fbc3b1189b68943ff887aaed612a3032f23d343c23fc7b5e",
+    "libspacepdhcg_cuda.so": "d3d5638b17f8683d240c60de25894529234d7635fd34d70bd2b4cee198a636da",
+    "orbitweaver_screening_test": "b7224e6d9f95ffd760b5590696106b8e1c3a09623fc6ff5a126543901bae8566",
+    "orbitweaver_g3_adapter_test": "aabdf9df6be57b3b66a9a80e6ea12adeff4e4bcbd8e95828db87bff4f1cc6161",
+    "orbitweaver_gpu_test": "10ecfbb9f0a865a1658657105c7ade396696001c653405aa58d830528c52dc2b"
+  }
+}

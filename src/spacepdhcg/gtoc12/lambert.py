@@ -38,12 +38,28 @@ FloatArray = NDArray[np.float64]
 LIBRARY_ENVIRONMENT_VARIABLE = "SPACEPDHCG_GTOC12_C_API"
 _PI = np.pi
 _GPU_BACKEND: ContextVar[object | None] = ContextVar("gtoc12_gpu_lambert", default=None)
+_COMPLETED_BRANCHES: ContextVar[int] = ContextVar("gtoc12_completed_branches", default=0)
+
+
+def completed_branch_requests() -> int:
+    """Actual completed Lambert rows in this execution context, across helpers."""
+    return _COMPLETED_BRANCHES.get()
+
+
+def record_completed_branches(count: int) -> None:
+    _COMPLETED_BRANCHES.set(_COMPLETED_BRANCHES.get() + count)
 
 
 def screening_telemetry():
     """Live completed-batch counters for the active explicit screening scope."""
     gpu = _GPU_BACKEND.get()
     return gpu.telemetry if gpu is not None else {"backend": "numpy", "gpu_used": False}
+
+
+def cuda_screen_hops(*args, **kwargs):
+    """Dispatch combined numerical screening when a CUDA scope is active."""
+    gpu = _GPU_BACKEND.get()
+    return gpu.screen_hops(*args, **kwargs) if gpu is not None else None
 
 
 @contextmanager
@@ -265,6 +281,7 @@ def lambert_batch(
     angle = np.where(long, 2.0 * _PI - angle, angle)
     v1 = np.where(feasible[:, None], v1, np.nan)
     v2 = np.where(feasible[:, None], v2, np.nan)
+    record_completed_branches(n)
     return LambertBatchResult(v1, v2, root, angle, np.where(feasible, residual, np.nan), feasible)
 
 

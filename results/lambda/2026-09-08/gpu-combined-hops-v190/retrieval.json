@@ -1,46 +1,6 @@
 {
-  "schema_version": 1,
-  "kind": "gpu-candidate-screening",
-  "source_parent": "d59db96c8e38b6e2da8a5f1bdf99dc7c158fd035",
-  "transfers": 8192,
-  "branches_per_batch": 16384,
-  "fleet_changed": false,
-  "full_gpu_application": false,
-  "measurements": {
-    "local": {
-      "milliseconds": 10.621661000186577,
-      "transfers_per_second": 771254.1381104237,
-      "screening_speedup": 18.31326211563767,
-      "route_search_speedup": 1.1457937861326695,
-      "previous_gpu_speedup": 1.2782383502335388,
-      "top100_identical": true,
-      "max_position_error_m": 6.425784349330189
-    },
-    "h100": {
-      "milliseconds": 3.3816579962149262,
-      "transfers_per_second": 2422480.336322971,
-      "screening_speedup": 81.71583564446166,
-      "route_search_speedup": 2.4879586595469134,
-      "previous_gpu_speedup": 1.8863902034835769,
-      "top100_identical": true,
-      "max_position_error_m": 6.425784349330189
-    }
-  },
-  "larger_search": {
-    "asteroids": 1000,
-    "candidates": 27,
-    "branches": 545658,
-    "gpu_batches": 373,
-    "cpu_seconds": 12.072507428994868,
-    "gpu_seconds": 2.710050877009053,
-    "speedup": 4.454716157328636
-  },
-  "accuracy": "314 integrated local GTOC12 tests; 21 targeted H100 tests. Native graph, ties, invalid-input and telemetry checks pass. Local/H100 memcheck: zero errors. H100 racecheck: zero hazards.",
-  "timing_scope": "Warm combined impulsive screening including transfers and GPU cost selection; excludes ephemeris generation and setup. Candidates require low-thrust certification.",
-  "remaining": "Neighbour filtering/ranking, phasing proxies, ephemeris generation, collection scheduling, fleet selection, packing and some solver setup.",
-  "evidence_sha256": {
+  "sha256": {
     "h100-evidence.tar.gz": "107e740b7da472b03acdc6438aa3577372bc4208eea0ad06feb6627b9957bc49",
-    "retrieval.json": "d4478892cf1452543d7108fb7387f0906c861dc54b3984c8e55715bafa1b2e7f",
     "h100-final/paired.json": "49208770f9c9094f6606a87028b08536420b877d249bd12c8141eb19c259e4ce",
     "h100-final/paired.log": "49208770f9c9094f6606a87028b08536420b877d249bd12c8141eb19c259e4ce",
     "h100-final/profile-v2.log": "e71070f109d385579681667b60a5bb3be61dcdee5773d010fb20b7653df45745",
@@ -96,9 +56,7 @@
     "local/hops-v188-tests.log": "f7f6a95eb1e8ab76e23a83c2f72d9c6743adebe93bb1d1460c35a3f2b2373d8e",
     "local/hops-v189-build.json": "89e6e53bed97934a4338048cdb2cd6f925897e56b0f634b6267c576ef4430971",
     "local/hops-v189-checks.json": "d3c0b29861e82d60f1bca3fec064890d09e4c5bf150e145fb8596d1c79255bbe",
-    "local/hops-v190-checks.json": "a3d13ae79a1c13fbc31503f9809f73874cc617f9616776b99dceffaa0ff0f59d",
     "local/route-search-v188.json": "f1211a19bf47644e920e81b291206abe870eb65a5b219987fc96aa4c9ded409c",
     "local/screening-v188.json": "196f24dc806597e1ff28d8d0b0c147b817c13f70c72df4e171645c84894d9ba9"
-  },
-  "local_integrated_gtoc12_tests_passed": 314
+  }
 }

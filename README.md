@@ -90,7 +90,18 @@ was below 0.19 m. Use `gtoc12 verify --propagation-backend cuda` with the native
 library and pinned data configured. Mission rules and fleet scores are unchanged.
 See [accuracy, timing scope and reproduction](docs/GPU_BATCHED_VERIFICATION.md).
 
-**GPU candidate screening connected:** GTOC12 search now accepts
+**Combined GPU screening:** velocity-matching costs, Earth allowances and
+short/long direction selection now run in the same CUDA operator as the Lambert
+solve. A direct comparison with the previous GPU path shows another **1.28× local
+and 1.89× H100 speedup**, reaching about **2.42 million candidate transfers/s**
+on H100 for the 8,192-transfer batch. A 1,000-asteroid route-search comparison
+returns the same 27 proxy candidates in **2.71 s versus 12.07 s** on CPU (**4.45×**).
+Actual operator counters now capture collection/return helper work: **545,658
+Lambert branches per search**, correcting a prior undercount. These candidates
+still require low-thrust certification; the fleet score is unchanged.
+See [measurements, accuracy and remaining CPU work](docs/GPU_COMBINED_SCREENING.md).
+
+**Previous GPU candidate screening checkpoint:** GTOC12 search now accepts
 `--screening-backend cuda --workers 1`. The retained native Lambert batch screens
 8,192 candidate transfers in **13.4 ms on RTX 5090 and 6.36 ms on H100**—about
 **612,000 and 1.29 million candidates/s**, including transfers and cost selection.

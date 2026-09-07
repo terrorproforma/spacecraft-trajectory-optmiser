@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ubuntu/spacepdhcg-hops-v188/route-scaling.py", line 107, in <module>
+    main()
+  File "/home/ubuntu/spacepdhcg-hops-v188/route-scaling.py", line 39, in main
+    settings.beam_width, settings.max_deploys, settings.neighbours = 8, 4, 24
+    ^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 4, in __setattr__
+dataclasses.FrozenInstanceError: cannot assign to field 'beam_width'

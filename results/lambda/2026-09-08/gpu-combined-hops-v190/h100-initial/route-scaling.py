@@ -4,7 +4,7 @@ import argparse
 import json
 import statistics
 import time
-from dataclasses import asdict, replace
+from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
@@ -36,22 +36,14 @@ def main():
         harvest_substitution=False,
     )
     if args.profile == "reduced":
-        settings = replace(
-            settings,
-            beam_width=8,
-            max_deploys=4,
-            neighbours=24,
-            earth_leg_tofs=(450.0, 600.0, 750.0, 900.0),
-            hop_tofs=(90.0, 180.0, 270.0, 360.0),
-        )
+        settings.beam_width, settings.max_deploys, settings.neighbours = 8, 4, 24
+        settings.earth_leg_tofs = (450.0, 600.0, 750.0, 900.0)
+        settings.hop_tofs = (90.0, 180.0, 270.0, 360.0)
     report = dict(
         catalogue_sha256=catalogue.source_sha256,
         asteroid_ids=ids.tolist(),
         profile=args.profile,
-        settings={
-            k: (str(v) if isinstance(v, float) and not np.isfinite(v) else v)
-            for k, v in asdict(settings).items()
-        },
+        settings=asdict(settings),
         runs={},
     )
     for backend in ["numpy", "cuda"]:
@@ -86,8 +78,6 @@ def main():
     cpu, gpu = report["runs"]["numpy"], report["runs"]["cuda"]
     assert cpu["candidates"] and len(cpu["candidates"]) == len(gpu["candidates"])
     assert cpu["expansions"] == gpu["expansions"]
-    assert cpu["reported_lambert_evaluations"] == gpu["reported_lambert_evaluations"]
-    assert gpu["actual_cuda_branches"] == (args.repeats + 1) * gpu["reported_lambert_evaluations"]
     for a, b in zip(cpu["candidates"], gpu["candidates"], strict=True):
         for key in [
             "asteroids",

@@ -22,7 +22,7 @@ from numpy.typing import NDArray
 from . import constants as C
 from .data import AsteroidCatalogue
 from .ephemeris import asteroid_state, earth_state
-from .lambert import lambert_batch
+from .lambert import cuda_screen_hops, lambert_batch
 
 FloatArray = NDArray[np.float64]
 
@@ -214,6 +214,20 @@ def lambert_hops(
     scan_samples: int = SCREENING_SCAN_SAMPLES,
 ) -> LambertHop:
     """Evaluate short- and long-way zero-revolution Lambert arcs, keeping the cheaper of the two."""
+
+    cuda = cuda_screen_hops(
+        r1,
+        v1_body,
+        r2,
+        v2_body,
+        departure_epoch,
+        tof_days,
+        departure_allowance_km_s=departure_allowance_km_s,
+        arrival_allowance_km_s=arrival_allowance_km_s,
+        scan_samples=scan_samples,
+    )
+    if cuda is not None:
+        return cuda
 
     tof_s = np.asarray(tof_days, dtype=np.float64) * C.DAY_S
     best_dep = np.full(r1.shape[0], np.inf)

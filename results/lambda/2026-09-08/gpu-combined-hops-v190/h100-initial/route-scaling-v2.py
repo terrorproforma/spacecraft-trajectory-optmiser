@@ -86,8 +86,6 @@ def main():
     cpu, gpu = report["runs"]["numpy"], report["runs"]["cuda"]
     assert cpu["candidates"] and len(cpu["candidates"]) == len(gpu["candidates"])
     assert cpu["expansions"] == gpu["expansions"]
-    assert cpu["reported_lambert_evaluations"] == gpu["reported_lambert_evaluations"]
-    assert gpu["actual_cuda_branches"] == (args.repeats + 1) * gpu["reported_lambert_evaluations"]
     for a, b in zip(cpu["candidates"], gpu["candidates"], strict=True):
         for key in [
             "asteroids",

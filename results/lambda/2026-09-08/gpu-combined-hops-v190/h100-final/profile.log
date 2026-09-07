@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/home/ubuntu/spacepdhcg-hops-followup-v190/profile.py", line 1, in <module>
+    import sys,os,json,cProfile,pstats,fcntl
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/cProfile.py", line 12, in <module>
+    import profile as _pyprofile
+  File "/home/ubuntu/spacepdhcg-hops-followup-v190/profile.py", line 17, in <module>
+    profile=cProfile.Profile();profile.enable();result=RouteSearch(catalogue,ids,settings).run();profile.disable()
+            ^^^^^^^^^^^^^^^^
+AttributeError: partially initialized module 'cProfile' has no attribute 'Profile' (most likely due to a circular import)

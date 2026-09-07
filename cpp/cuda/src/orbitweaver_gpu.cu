@@ -377,6 +377,60 @@ __global__ void kernel(
     }
 }
 
+__global__ void hop_kernel(
+    const spacepdhcg_orbitweaver_hop_request* requests, const size_t count,
+    const uint32_t samples, spacepdhcg_orbitweaver_hop_result* results,
+    const double* cached
+) {
+    const size_t i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    if (i >= count) return;
+    const auto& hop = requests[i];
+    auto& output = results[i];
+    output = {};
+    output.departure_delta_v = output.arrival_delta_v = INFINITY;
+    for (int k = 0; k < 3; ++k) {
+        output.departure_velocity[k] = output.arrival_velocity[k] = NAN;
+    }
+    auto request = hop.lambert;
+    request.include_short_way = request.include_long_way = 1;
+    request.maximum_revolutions = 0;
+    if (!valid(request) || !isfinite(hop.departure_allowance)
+        || !isfinite(hop.arrival_allowance) || hop.departure_allowance < 0
+        || hop.arrival_allowance < 0) return;
+    for (int k = 0; k < 3; ++k) {
+        if (!isfinite(hop.departure_body_velocity[k])
+            || !isfinite(hop.arrival_body_velocity[k])) return;
+    }
+    for (int direction = 0; direction < 2; ++direction) {
+        const auto value = geometry(request, direction != 0);
+        if (!value.valid) continue;
+        Root roots[2]{};
+        if (!scan(-4*pi*pi, 4*pi*pi-1e-8, samples, value, request, roots, 1, cached)) continue;
+        spacepdhcg_orbitweaver_lambert_result candidate{};
+        if (!solution(request, value, roots[0], candidate)) continue;
+        double dep2 = 0, arr2 = 0;
+        for (int k = 0; k < 3; ++k) {
+            const double dep = candidate.departure_velocity[k] - hop.departure_body_velocity[k];
+            const double arr = candidate.arrival_velocity[k] - hop.arrival_body_velocity[k];
+            dep2 += dep * dep;
+            arr2 += arr * arr;
+        }
+        const double dep = fmax(sqrt(dep2) - hop.departure_allowance, 0.0);
+        const double arr = fmax(sqrt(arr2) - hop.arrival_allowance, 0.0);
+        if (!isfinite(dep) || !isfinite(arr)) continue;
+        if (dep + arr < output.departure_delta_v + output.arrival_delta_v) {
+            output.feasible = 1;
+            output.long_way = direction;
+            output.departure_delta_v = dep;
+            output.arrival_delta_v = arr;
+            for (int k = 0; k < 3; ++k) {
+                output.departure_velocity[k] = candidate.departure_velocity[k];
+                output.arrival_velocity[k] = candidate.arrival_velocity[k];
+            }
+        }
+    }
+}
+
 spacepdhcg_cuda_status mapped(const cudaError_t status) {
     if (status == cudaSuccess) {
         return SPACEPDHCG_CUDA_SUCCESS;
@@ -393,6 +447,8 @@ struct spacepdhcg_orbitweaver_lambert_workspace {
     spacepdhcg_orbitweaver_lambert_config config{};
     spacepdhcg_orbitweaver_lambert_request* requests{nullptr};
     spacepdhcg_orbitweaver_lambert_result* results{nullptr};
+    spacepdhcg_orbitweaver_hop_request* hops{nullptr};
+    spacepdhcg_orbitweaver_hop_result* hop_results{nullptr};
     unsigned long long* counters{nullptr};
     int* cancelled{nullptr};
     double* scan_grid{nullptr};
@@ -405,6 +461,8 @@ struct spacepdhcg_orbitweaver_lambert_workspace {
     std::uint64_t result_count{0U};
     std::uint64_t feasible{0U};
     std::uint64_t failed{0U};
+    std::uint64_t input_bytes{0U};
+    std::uint64_t output_bytes{0U};
 };
 
 extern "C" {
@@ -491,6 +549,14 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_create(
         );
     }
     if (status == cudaSuccess) {
+        status = cudaMalloc(reinterpret_cast<void**>(&created->hops),
+                            config->maximum_batch_size * sizeof(*created->hops));
+    }
+    if (status == cudaSuccess) {
+        status = cudaMalloc(reinterpret_cast<void**>(&created->hop_results),
+                            config->maximum_batch_size * sizeof(*created->hop_results));
+    }
+    if (status == cudaSuccess) {
         status = cudaMalloc(reinterpret_cast<void**>(&created->scan_grid),
                             (static_cast<size_t>(config->scan_samples_per_band)+1U)*2U*sizeof(double));
     }
@@ -523,6 +589,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_create(
         cudaFree(created->counters);
         cudaFree(created->cancelled);
         cudaFree(created->scan_grid);
+        cudaFree(created->hops);
+        cudaFree(created->hop_results);
         if (created->owns_stream) {
             cudaStreamDestroy(created->stream);
         }
@@ -618,6 +686,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_evaluate_async(
     ++workspace->batches;
     workspace->request_count += request_count;
     workspace->result_count += output_count;
+    workspace->input_bytes += request_count * sizeof(*requests);
+    workspace->output_bytes += output_count * sizeof(*results);
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
@@ -653,16 +723,16 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_telemetry(
     telemetry->results_emitted = workspace->result_count;
     telemetry->feasible_results = workspace->feasible;
     telemetry->failed_results = workspace->failed;
-    telemetry->input_bytes =
-        workspace->request_count * sizeof(spacepdhcg_orbitweaver_lambert_request);
-    telemetry->output_bytes =
-        workspace->result_count * sizeof(spacepdhcg_orbitweaver_lambert_result);
+    telemetry->input_bytes = workspace->input_bytes;
+    telemetry->output_bytes = workspace->output_bytes;
     telemetry->workspace_bytes =
         workspace->config.maximum_batch_size
             * (sizeof(spacepdhcg_orbitweaver_lambert_request)
                + stride * sizeof(spacepdhcg_orbitweaver_lambert_result))
         + 2U * sizeof(unsigned long long) + sizeof(int)
         + (static_cast<size_t>(workspace->config.scan_samples_per_band)+1U)*2U*sizeof(double);
+    telemetry->workspace_bytes += workspace->config.maximum_batch_size
+        * (sizeof(*workspace->hops) + sizeof(*workspace->hop_results));
     telemetry->maximum_batch_size = workspace->config.maximum_batch_size;
     telemetry->device_id = static_cast<int32_t>(workspace->config.device_id);
     return SPACEPDHCG_CUDA_SUCCESS;
@@ -710,12 +780,65 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_screening_host(
     if (status == cudaSuccess) status = completed;
     if (status == cudaSuccess) {
         ++w->batches; w->request_count += count; w->result_count += count*stride;
+        w->input_bytes += count*sizeof(*requests);
+        w->output_bytes += count*stride*sizeof(*results);
         for (size_t i=0;i<count*stride;++i) {
             if (results[i].status == SPACEPDHCG_ORBITWEAVER_ARC_FEASIBLE) ++w->feasible;
             else ++w->failed;
         }
     }
     w->busy.store(false);
+    return mapped(status);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_launch_device(
+    const spacepdhcg_orbitweaver_hop_request* requests, const size_t count,
+    const uint32_t samples, spacepdhcg_orbitweaver_hop_result* results,
+    const size_t capacity, const spacepdhcg_accelerator_stream stream
+) {
+    if (count > UINT32_MAX || count > capacity || samples < 16 || samples == UINT32_MAX
+        || (count && (!requests || !results)) || stream.device.type != SPACEPDHCG_DEVICE_CUDA)
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    int device = -1;
+    const auto status = cudaGetDevice(&device);
+    if (status != cudaSuccess) return mapped(status);
+    if (device != stream.device.id) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if (!count) return SPACEPDHCG_CUDA_SUCCESS;
+    hop_kernel<<<static_cast<unsigned>((count+63)/64),64,0,
+        reinterpret_cast<cudaStream_t>(stream.native_handle)>>>(requests,count,samples,results,nullptr);
+    return mapped(cudaGetLastError());
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_screening_host(
+    spacepdhcg_orbitweaver_lambert_workspace* w,
+    const spacepdhcg_orbitweaver_hop_request* requests, const size_t count,
+    spacepdhcg_orbitweaver_hop_result* results, const size_t capacity
+) {
+    if (!w || !requests || !results || !count || count > capacity
+        || count > w->config.maximum_batch_size) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::unique_lock<std::mutex> api_lock(w->api_mutex,std::try_to_lock);
+    if (!api_lock.owns_lock() || w->busy.load()) return SPACEPDHCG_CUDA_BUSY;
+    int device = -1;
+    auto status = cudaGetDevice(&device);
+    if (status != cudaSuccess) return mapped(status);
+    if (device != static_cast<int>(w->config.device_id)) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    status = cudaMemcpyAsync(w->hops,requests,count*sizeof(*requests),cudaMemcpyHostToDevice,w->stream);
+    if (status == cudaSuccess) {
+        hop_kernel<<<static_cast<unsigned>((count+63)/64),64,0,w->stream>>>(
+            w->hops,count,w->config.scan_samples_per_band,w->hop_results,w->scan_grid);
+        status = cudaGetLastError();
+    }
+    if (status == cudaSuccess) status = cudaMemcpyAsync(results,w->hop_results,count*sizeof(*results),cudaMemcpyDeviceToHost,w->stream);
+    const auto completed = cudaStreamSynchronize(w->stream);
+    if (status == cudaSuccess) status = completed;
+    if (status == cudaSuccess) {
+        ++w->batches; w->request_count += count; w->result_count += count;
+        w->input_bytes += count*sizeof(*requests); w->output_bytes += count*sizeof(*results);
+        for (size_t i=0;i<count;++i) {
+            if (results[i].feasible) ++w->feasible;
+            else ++w->failed;
+        }
+    }
     return mapped(status);
 }
 
@@ -756,6 +879,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_destroy(
     cudaFree(owned->results);
     cudaFree(owned->requests);
     cudaFree(owned->scan_grid);
+    cudaFree(owned->hops);
+    cudaFree(owned->hop_results);
     if (owned->owns_stream) {
         cudaStreamDestroy(owned->stream);
     }

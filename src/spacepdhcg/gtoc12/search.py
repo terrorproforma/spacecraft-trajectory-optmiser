@@ -1176,10 +1176,14 @@ class RouteSearch:
         return children
 
     def run(self) -> SearchResult:
+        from .lambert import completed_branch_requests
+
+        initial_branches = completed_branch_requests()
         started = time.perf_counter()
         s = self.settings
         beam = self._first_level()
         if not beam:
+            self.lambert_evaluations = completed_branch_requests() - initial_branches
             return SearchResult(None, [], 0, self.lambert_evaluations, 0.0, [], 0, {}, 0)
         expansions = 0
         completed: list[RoutePlan] = []
@@ -1241,6 +1245,9 @@ class RouteSearch:
                     )
                 )
         best = next((item for item in completed if item.feasible), None)
+        # Count actual operator rows, including collection and return helpers
+        # omitted by the historical manual increments in expansion routines.
+        self.lambert_evaluations = completed_branch_requests() - initial_branches
         return SearchResult(
             best,
             completed,

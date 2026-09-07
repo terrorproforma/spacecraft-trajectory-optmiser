@@ -1,0 +1,807 @@
+{
+  "total_seconds": 3.204132204,
+  "branches": 545658,
+  "candidates": 27,
+  "rows": [
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1178,
+      "function": "run",
+      "calls": 1,
+      "self_seconds": 0.00037701200000000003,
+      "cumulative_seconds": 3.2041484430000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1902,
+      "function": "_complete",
+      "calls": 32,
+      "self_seconds": 0.001035303,
+      "cumulative_seconds": 1.9368188190000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 2077,
+      "function": "_schedule",
+      "calls": 232,
+      "self_seconds": 0.007802176,
+      "cumulative_seconds": 1.519765749
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1106,
+      "function": "_expand",
+      "calls": 24,
+      "self_seconds": 0.012260335,
+      "cumulative_seconds": 1.2042282290000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 828,
+      "function": "hops_from",
+      "calls": 96,
+      "self_seconds": 0.0006670970000000001,
+      "cumulative_seconds": 1.1621847550000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 802,
+      "function": "candidates",
+      "calls": 77,
+      "self_seconds": 0.0028018260000000003,
+      "cumulative_seconds": 0.922708512
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 204,
+      "function": "lambert_hops",
+      "calls": 371,
+      "self_seconds": 0.000514122,
+      "cumulative_seconds": 0.879187798
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/lambert.py",
+      "line": 59,
+      "function": "cuda_screen_hops",
+      "calls": 371,
+      "self_seconds": 0.001188847,
+      "cumulative_seconds": 0.878673676
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+      "line": 180,
+      "function": "screen_hops",
+      "calls": 371,
+      "self_seconds": 0.8536078610000001,
+      "cumulative_seconds": 0.8773738750000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1869,
+      "function": "_best_collect_hop",
+      "calls": 272,
+      "self_seconds": 0.071183891,
+      "cumulative_seconds": 0.7888093660000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1803,
+      "function": "_return_options",
+      "calls": 203,
+      "self_seconds": 0.063710494,
+      "cumulative_seconds": 0.6937087820000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 441,
+      "function": "element_deviations",
+      "calls": 89,
+      "self_seconds": 0.433523618,
+      "cumulative_seconds": 0.456912853
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 772,
+      "function": "_feasible",
+      "calls": 145400,
+      "self_seconds": 0.08573224,
+      "cumulative_seconds": 0.441966607
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 496,
+      "function": "proxy_candidates",
+      "calls": 77,
+      "self_seconds": 0.001093399,
+      "cumulative_seconds": 0.42921963900000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/proxies.py",
+      "line": 27,
+      "function": "phasing_edelbaum_proxy",
+      "calls": 77,
+      "self_seconds": 0.38034003200000005,
+      "cumulative_seconds": 0.42795028700000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 466,
+      "function": "positional_candidates",
+      "calls": 77,
+      "self_seconds": 0.0030597790000000003,
+      "cumulative_seconds": 0.42567058900000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1961,
+      "function": "_schedule_dp",
+      "calls": 24,
+      "self_seconds": 0.000828823,
+      "cumulative_seconds": 0.41419967700000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 526,
+      "function": "plan_collect_tour",
+      "calls": 48,
+      "self_seconds": 0.003051434,
+      "cumulative_seconds": 0.406950266
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 631,
+      "function": "solve",
+      "calls": 72,
+      "self_seconds": 0.000879016,
+      "cumulative_seconds": 0.40144744800000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 677,
+      "function": "_solve_collect_dp",
+      "calls": 72,
+      "self_seconds": 0.062364866000000005,
+      "cumulative_seconds": 0.40056843200000003
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 49,
+      "function": "thrust_authority_km_s",
+      "calls": 147411,
+      "self_seconds": 0.27721878,
+      "cumulative_seconds": 0.345072682
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+      "line": 43,
+      "function": "elements_to_state",
+      "calls": 1050,
+      "self_seconds": 0.12362516800000001,
+      "cumulative_seconds": 0.269623121
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+      "line": 129,
+      "function": "asteroid_state",
+      "calls": 837,
+      "self_seconds": 0.010426971,
+      "cumulative_seconds": 0.262899602
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 298,
+      "function": "screen_asteroid_hops",
+      "calls": 77,
+      "self_seconds": 0.0013051940000000002,
+      "cumulative_seconds": 0.23847345600000003
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 611,
+      "function": "fraction",
+      "calls": 1782,
+      "self_seconds": 0.008614328000000001,
+      "cumulative_seconds": 0.21354061700000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1836,
+      "function": "_collect_hop_options",
+      "calls": 272,
+      "self_seconds": 0.042637779,
+      "cumulative_seconds": 0.20104729300000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 255,
+      "function": "hop",
+      "calls": 470,
+      "self_seconds": 0.0027270610000000002,
+      "cumulative_seconds": 0.14853048300000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 41,
+      "function": "propellant_for_delta_v",
+      "calls": 41608,
+      "self_seconds": 0.10408070300000001,
+      "cumulative_seconds": 0.12875413400000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+      "line": 26,
+      "function": "solve_kepler",
+      "calls": 1050,
+      "self_seconds": 0.097853542,
+      "cumulative_seconds": 0.125847868
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 738,
+      "function": "_propellant",
+      "calls": 39969,
+      "self_seconds": 0.016149761000000002,
+      "cumulative_seconds": 0.12445194100000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method numpy.asarray>",
+      "calls": 407385,
+      "self_seconds": 0.09535597100000001,
+      "cumulative_seconds": 0.09535597100000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 195,
+      "function": "total_delta_v",
+      "calls": 110385,
+      "self_seconds": 0.07333834900000001,
+      "cumulative_seconds": 0.07333834900000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 776,
+      "function": "band_pool",
+      "calls": 77,
+      "self_seconds": 0.001001984,
+      "cumulative_seconds": 0.064070316
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+      "line": 125,
+      "function": "earth_state",
+      "calls": 213,
+      "self_seconds": 0.00019404400000000001,
+      "cumulative_seconds": 0.06303795200000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+      "line": 108,
+      "function": "planet_state",
+      "calls": 213,
+      "self_seconds": 0.0017357840000000002,
+      "cumulative_seconds": 0.062843908
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 282,
+      "function": "earth_return",
+      "calls": 288,
+      "self_seconds": 0.000823371,
+      "cumulative_seconds": 0.057055036
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 359,
+      "function": "hop_propellant",
+      "calls": 1422,
+      "self_seconds": 0.026304196000000002,
+      "cumulative_seconds": 0.054226057
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/shape_base.py",
+      "line": 378,
+      "function": "stack",
+      "calls": 2432,
+      "self_seconds": 0.042968755000000004,
+      "cumulative_seconds": 0.045703845
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 915,
+      "function": "_first_level",
+      "calls": 1,
+      "self_seconds": 0.0006796790000000001,
+      "cumulative_seconds": 0.034961684
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 264,
+      "function": "screen_earth_to_asteroids",
+      "calls": 1,
+      "self_seconds": 0.00017608900000000001,
+      "cumulative_seconds": 0.033818271000000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/data.py",
+      "line": 138,
+      "function": "index_of",
+      "calls": 1169,
+      "self_seconds": 0.011423994000000002,
+      "cumulative_seconds": 0.030138252
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1614,
+      "function": "_select",
+      "calls": 4,
+      "self_seconds": 0.000339472,
+      "cumulative_seconds": 0.027521275
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1770,
+      "function": "_filter",
+      "calls": 4,
+      "self_seconds": 0.000244454,
+      "cumulative_seconds": 0.024967463000000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1603,
+      "function": "_return_feasible",
+      "calls": 32,
+      "self_seconds": 7.8006e-05,
+      "cumulative_seconds": 0.024344111
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+      "line": 2474,
+      "function": "any",
+      "calls": 6327,
+      "self_seconds": 0.004865834,
+      "cumulative_seconds": 0.021805995
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 447,
+      "function": "return_propellant",
+      "calls": 216,
+      "self_seconds": 0.005195159,
+      "cumulative_seconds": 0.021199577
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 762,
+      "function": "limits",
+      "calls": 145401,
+      "self_seconds": 0.018865519,
+      "cumulative_seconds": 0.018865519
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/numeric.py",
+      "line": 323,
+      "function": "full",
+      "calls": 7727,
+      "self_seconds": 0.011914022000000002,
+      "cumulative_seconds": 0.018735628
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py",
+      "line": 5062,
+      "function": "meshgrid",
+      "calls": 371,
+      "self_seconds": 0.0035572330000000004,
+      "cumulative_seconds": 0.018598410000000003
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_stride_tricks_impl.py",
+      "line": 447,
+      "function": "_broadcast_to",
+      "calls": 1857,
+      "self_seconds": 0.012681718000000002,
+      "cumulative_seconds": 0.01792293
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/constants.py",
+      "line": 143,
+      "function": "maximum_collected_mass",
+      "calls": 41982,
+      "self_seconds": 0.012270983000000001,
+      "cumulative_seconds": 0.017006451000000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+      "line": 86,
+      "function": "_wrapreduction_any_all",
+      "calls": 6327,
+      "self_seconds": 0.008360453,
+      "cumulative_seconds": 0.016940161000000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_stride_tricks_impl.py",
+      "line": 588,
+      "function": "broadcast_arrays",
+      "calls": 1208,
+      "self_seconds": 0.0036587010000000003,
+      "cumulative_seconds": 0.016653585000000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+      "line": 48,
+      "function": "_wrapfunc",
+      "calls": 2346,
+      "self_seconds": 0.001973303,
+      "cumulative_seconds": 0.016093032
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+      "line": 3049,
+      "function": "max",
+      "calls": 4732,
+      "self_seconds": 0.004041039000000001,
+      "cumulative_seconds": 0.015236951
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+      "line": 1259,
+      "function": "argmax",
+      "calls": 1848,
+      "self_seconds": 0.0018419690000000002,
+      "cumulative_seconds": 0.014777968
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+      "line": 94,
+      "function": "propagate_elements",
+      "calls": 1050,
+      "self_seconds": 0.012771364,
+      "cumulative_seconds": 0.013956708000000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 434,
+      "function": "return_inflation",
+      "calls": 264,
+      "self_seconds": 0.003940969,
+      "cumulative_seconds": 0.013276773
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'sort' of 'list' objects>",
+      "calls": 232,
+      "self_seconds": 0.008535724,
+      "cumulative_seconds": 0.012646186
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'reduce' of 'numpy.ufunc' objects>",
+      "calls": 12620,
+      "self_seconds": 0.012537465000000001,
+      "cumulative_seconds": 0.012537465000000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 101,
+      "function": "return_inflation_model",
+      "calls": 372,
+      "self_seconds": 0.005237056,
+      "cumulative_seconds": 0.011288696
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+      "line": 66,
+      "function": "_wrapreduction",
+      "calls": 4732,
+      "self_seconds": 0.005317167,
+      "cumulative_seconds": 0.011195912
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'argmax' of 'numpy.ndarray' objects>",
+      "calls": 1848,
+      "self_seconds": 0.011093715,
+      "cumulative_seconds": 0.011093715
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 729,
+      "function": "ready_of",
+      "calls": 1374,
+      "self_seconds": 0.005413369,
+      "cumulative_seconds": 0.010289767
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_stride_tricks_impl.py",
+      "line": 474,
+      "function": "broadcast_to",
+      "calls": 1114,
+      "self_seconds": 0.000712928,
+      "cumulative_seconds": 0.009563937
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+      "line": 201,
+      "function": "<genexpr>",
+      "calls": 1113,
+      "self_seconds": 0.001182789,
+      "cumulative_seconds": 0.008491001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/numeric.py",
+      "line": 2471,
+      "function": "array_equal",
+      "calls": 1169,
+      "self_seconds": 0.0031849820000000003,
+      "cumulative_seconds": 0.006440212000000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/screening.py",
+      "line": 37,
+      "function": "exhaust_velocity_km_s",
+      "calls": 41608,
+      "self_seconds": 0.006111237,
+      "cumulative_seconds": 0.006111237
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 2018,
+      "function": "_plan_from_tour",
+      "calls": 48,
+      "self_seconds": 0.000635827,
+      "cumulative_seconds": 0.0058574460000000005
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 741,
+      "function": "hop_inflation_for",
+      "calls": 40200,
+      "self_seconds": 0.005732476,
+      "cumulative_seconds": 0.005732476
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/linalg/_linalg.py",
+      "line": 2598,
+      "function": "norm",
+      "calls": 332,
+      "self_seconds": 0.00298707,
+      "cumulative_seconds": 0.005666494
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.sum>",
+      "calls": 1594,
+      "self_seconds": 0.001560346,
+      "cumulative_seconds": 0.005431976000000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 2223,
+      "function": "_finish",
+      "calls": 132,
+      "self_seconds": 0.0016915550000000002,
+      "cumulative_seconds": 0.005183977
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method numpy.empty>",
+      "calls": 8170,
+      "self_seconds": 0.005145688000000001,
+      "cumulative_seconds": 0.005145688000000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method math.isfinite>",
+      "calls": 41982,
+      "self_seconds": 0.0047354680000000005,
+      "cumulative_seconds": 0.0047354680000000005
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'accumulate' of 'numpy.ufunc' objects>",
+      "calls": 2748,
+      "self_seconds": 0.004677639,
+      "cumulative_seconds": 0.004677639
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.abs>",
+      "calls": 36499,
+      "self_seconds": 0.004639966000000001,
+      "cumulative_seconds": 0.004639966000000001
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 753,
+      "function": "return_inflation_for",
+      "calls": 108,
+      "self_seconds": 0.000258473,
+      "cumulative_seconds": 0.0036940260000000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/numeric.py",
+      "line": 400,
+      "function": "full_like",
+      "calls": 1050,
+      "self_seconds": 0.0032834220000000003,
+      "cumulative_seconds": 0.0035850870000000003
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/shape_base.py",
+      "line": 368,
+      "function": "_stack_dispatcher",
+      "calls": 2432,
+      "self_seconds": 0.001359414,
+      "cumulative_seconds": 0.0035614300000000004
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/search.py",
+      "line": 1833,
+      "function": "<lambda>",
+      "calls": 33292,
+      "self_seconds": 0.0035261710000000003,
+      "cumulative_seconds": 0.0035261710000000003
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'astype' of 'numpy.ndarray' objects>",
+      "calls": 1999,
+      "self_seconds": 0.003392162,
+      "cumulative_seconds": 0.003392162
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_stride_tricks_impl.py",
+      "line": 520,
+      "function": "_broadcast_shape",
+      "calls": 1208,
+      "self_seconds": 0.002945276,
+      "cumulative_seconds": 0.003166449
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+      "line": 2245,
+      "function": "clip",
+      "calls": 372,
+      "self_seconds": 0.000633264,
+      "cumulative_seconds": 0.003120587
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.len>",
+      "calls": 9249,
+      "self_seconds": 0.002421342,
+      "cumulative_seconds": 0.003067939
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method numpy.arange>",
+      "calls": 1518,
+      "self_seconds": 0.002992892,
+      "cumulative_seconds": 0.002992892
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+      "line": 168,
+      "function": "_record",
+      "calls": 373,
+      "self_seconds": 0.0012483820000000001,
+      "cumulative_seconds": 0.0028542800000000003
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+      "line": 197,
+      "function": "<genexpr>",
+      "calls": 1113,
+      "self_seconds": 0.001225654,
+      "cumulative_seconds": 0.00280291
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.any>",
+      "calls": 1889,
+      "self_seconds": 0.001443202,
+      "cumulative_seconds": 0.0026019750000000003
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py",
+      "line": 1549,
+      "function": "interp",
+      "calls": 372,
+      "self_seconds": 0.0007859690000000001,
+      "cumulative_seconds": 0.002526561
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'all' of 'numpy.ndarray' objects>",
+      "calls": 1169,
+      "self_seconds": 0.0007936800000000001,
+      "cumulative_seconds": 0.002495189
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'get' of 'dict' objects>",
+      "calls": 10290,
+      "self_seconds": 0.0023793910000000002,
+      "cumulative_seconds": 0.0023793910000000002
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'items' of 'dict' objects>",
+      "calls": 11323,
+      "self_seconds": 0.0023771540000000002,
+      "cumulative_seconds": 0.0023771540000000002
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'any' of 'numpy.generic' objects>",
+      "calls": 948,
+      "self_seconds": 0.001139744,
+      "cumulative_seconds": 0.002202345
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/shape_base.py",
+      "line": 206,
+      "function": "_arrays_for_stack_dispatcher",
+      "calls": 2432,
+      "self_seconds": 0.001439195,
+      "cumulative_seconds": 0.002202016
+    },
+    {
+      "file": "<string>",
+      "line": 2,
+      "function": "__init__",
+      "calls": 1402,
+      "self_seconds": 0.002164207,
+      "cumulative_seconds": 0.002164207
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.sorted>",
+      "calls": 185,
+      "self_seconds": 0.000679276,
+      "cumulative_seconds": 0.0020716230000000003
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'fill' of 'numpy.ndarray' objects>",
+      "calls": 1632,
+      "self_seconds": 0.002051671,
+      "cumulative_seconds": 0.002051671
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg-hops-followup-v190/repo/src/spacepdhcg/gtoc12/collectdp.py",
+      "line": 483,
+      "function": "return_inflation_at",
+      "calls": 48,
+      "self_seconds": 0.00011301800000000001,
+      "cumulative_seconds": 0.0019401560000000002
+    },
+    {
+      "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py",
+      "line": 5208,
+      "function": "<genexpr>",
+      "calls": 1114,
+      "self_seconds": 0.00045371100000000003,
+      "cumulative_seconds": 0.001789715
+    }
+  ]
+}

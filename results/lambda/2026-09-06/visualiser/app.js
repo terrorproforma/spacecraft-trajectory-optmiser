@@ -718,7 +718,12 @@ async function loadGpuScreening() {
       ["RTX 5090 screening", `${local.milliseconds.toFixed(2)} ms · ${Math.round(local.transfers_per_second).toLocaleString()} candidates/s`],
       ["H100 screening", `${h100.milliseconds.toFixed(2)} ms · ${Math.round(h100.transfers_per_second).toLocaleString()} candidates/s`],
       ["Screening versus NumPy", `${local.screening_speedup.toFixed(1)}× local · ${h100.screening_speedup.toFixed(1)}× H100`],
+      ...(local.previous_gpu_speedup ? [["Additional gain over previous GPU path", `${local.previous_gpu_speedup.toFixed(2)}× local · ${h100.previous_gpu_speedup.toFixed(2)}× H100; paired comparison`]] : []),
       ["Small route search, warm", `${local.route_search_speedup.toFixed(2)}× local · ${h100.route_search_speedup.toFixed(2)}× H100; cold GPU startup can be slower`],
+      ...(result.larger_search ? [
+        ["1,000-asteroid search on H100", `${result.larger_search.cpu_seconds.toFixed(2)} s CPU → ${result.larger_search.gpu_seconds.toFixed(2)} s CUDA · ${result.larger_search.speedup.toFixed(2)}×`],
+        ["Work per larger search", `${result.larger_search.branches.toLocaleString()} Lambert branches · ${result.larger_search.gpu_batches} GPU batches · ${result.larger_search.candidates} matching proxy candidates`],
+      ] : []),
       ["Timing scope", result.timing_scope],
       ["Candidate agreement", "Same top 100 on CPU and both GPUs; fleet score unchanged"],
       ["Accuracy checks", result.accuracy],
