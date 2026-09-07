@@ -1,0 +1,40 @@
+{
+  "pid": 132646,
+  "start": 1788800451.6640878,
+  "complete": true,
+  "steps": [
+    {
+      "tool": "memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_elements.py",
+        "-q"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "initcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_elements.py",
+        "-q"
+      ],
+      "returncode": 0
+    }
+  ],
+  "end": 1788800455.5051854
+}

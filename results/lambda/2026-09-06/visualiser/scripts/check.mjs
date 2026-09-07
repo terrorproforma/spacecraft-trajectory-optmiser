@@ -197,7 +197,7 @@ console.log(`Validated ${data.trajectories.length} ${plannerExport ? "planner-ex
 console.log(`Data SHA-256 ${manifest.files["trajectories.json"].sha256}`);
 
 // Optional GTOC12 fleet dataset (data/gtoc12/ is ignored by git; see README "GTOC12 fleet dataset").
-for (const directory of ["data/gtoc12", "data/gtoc12-v200", "data/gtoc12-v209"]) {
+for (const directory of ["data/gtoc12", "data/gtoc12-v200", "data/gtoc12-v209", "data/gtoc12-v213"]) {
 let fleetBytes = null, fleetManifestBytes = null;
 try {
   [fleetBytes, fleetManifestBytes] = await Promise.all([read(`${directory}/fleet.json`), read(`${directory}/manifest.json`)]);
@@ -209,6 +209,15 @@ if (!fleetBytes) {
 } else {
   const fleet = JSON.parse(fleetBytes);
   const fleetManifest = JSON.parse(fleetManifestBytes);
+  const computeBytes = await read(`${directory}/compute.json`).catch((error) => {
+    if (error.code !== "ENOENT") throw error;
+    return null;
+  });
+  if (computeBytes) {
+    const compute = JSON.parse(computeBytes);
+    assert.equal(compute.fleet_run_id ?? `${compute.run_id}_fleet`, fleet.run_id, "compute metadata identifies the displayed fleet");
+    assert.equal(compute.commit, fleet.generated_by_commit, "compute metadata source revision");
+  }
   assert.equal(fleet.viewer_schema_version, "1.0.0");
   assert.equal(fleet.dataset_kind, "gtoc12-fleet");
   assert.equal(fleetManifest.dataset_kind, "gtoc12-fleet");

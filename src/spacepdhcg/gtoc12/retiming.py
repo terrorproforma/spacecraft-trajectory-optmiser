@@ -402,6 +402,13 @@ class Retimer:
             return self._tables[key]
         tofs = self._tofs(role)
         departures = self.lattice.epochs
+        from .lambert import cuda_leg_table
+
+        gpu_table = cuda_leg_table(self.catalogue, from_body, to_body, departures, tofs)
+        if gpu_table is not None:
+            self.lambert_evaluations += 2 * departures.size * tofs.size
+            self._tables[key] = gpu_table
+            return gpu_table
         d_idx, t_idx = np.meshgrid(
             np.arange(departures.shape[0]), np.arange(tofs.shape[0]), indexing="ij"
         )

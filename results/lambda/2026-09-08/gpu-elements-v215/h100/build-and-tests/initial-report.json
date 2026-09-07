@@ -1,0 +1,30 @@
+{
+  "pid": 131863,
+  "start": 1788800147.161665,
+  "steps": [
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-elements-v215/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-elements-v215/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 1,
+      "seconds": 2.2170138359069824
+    }
+  ],
+  "complete": false,
+  "error": "Command '['/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake', '-S', '/home/ubuntu/spacepdhcg-elements-v215/repo/cpp', '-B', '/home/ubuntu/spacepdhcg-elements-v215/core-build', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DSPACEPDHCG_BUILD_CUDA=ON', '-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF', '-DBUILD_TESTING=ON', '-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc', '-DCMAKE_CUDA_ARCHITECTURES=90', '-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg']' returned non-zero exit status 1.",
+  "end": 1788800150.0386906
+}

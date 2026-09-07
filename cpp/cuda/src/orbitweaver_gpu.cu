@@ -431,6 +431,53 @@ __global__ void hop_kernel(
     }
 }
 
+__device__ bool element_state(const spacepdhcg_orbitweaver_elements& b,
+    double epoch, double mu, double* r, double* v) {
+    double mean = fmod(b.mean + sqrt(mu / (b.a*b.a*b.a)) * ((epoch-b.epoch)*86400.0), 2*pi);
+    if (mean < 0) mean += 2*pi;
+    double eccentric = b.e > 0.8 ? pi : mean;
+    bool converged = false;
+    for (int k=0; k<64; ++k) {
+        const double step = (eccentric-b.e*sin(eccentric)-mean)/(1-b.e*cos(eccentric));
+        eccentric -= step;
+        if (fabs(step)<1e-14) { converged=true; break; }
+    }
+    const double f=2*atan2(sqrt(1+b.e)*sin(eccentric/2),sqrt(1-b.e)*cos(eccentric/2));
+    const double p=b.a*(1-b.e*b.e), radius=p/(1+b.e*cos(f)), scale=sqrt(mu/p);
+    const double cn=cos(b.node),sn=sin(b.node),cp=cos(b.perihelion),sp=sin(b.perihelion);
+    const double ci=cos(b.inclination),si=sin(b.inclination);
+    const double pv[3]={cp*cn-sp*sn*ci,cp*sn+sp*cn*ci,sp*si};
+    const double qv[3]={-sp*cn-cp*sn*ci,-sp*sn+cp*cn*ci,cp*si};
+    for (int k=0;k<3;++k) {
+        r[k]=radius*(pv[k]*cos(f)+qv[k]*sin(f));
+        v[k]=scale*(-pv[k]*sin(f)+qv[k]*(b.e+cos(f)));
+        if (!isfinite(r[k]) || !isfinite(v[k])) converged=false;
+    }
+    return converged;
+}
+
+__global__ void element_hops(spacepdhcg_orbitweaver_hop_elements elements,
+    const double* times, size_t count, spacepdhcg_orbitweaver_hop_request* hops) {
+    const size_t i=static_cast<size_t>(blockIdx.x)*blockDim.x+threadIdx.x;
+    if (i>=count) return;
+    auto& h=hops[i];h={};
+    auto& q=h.lambert;
+    q.deterministic_id=i;q.gravitational_parameter=elements.gravitational_parameter;
+    q.time_tolerance=1e-8;q.maximum_iterations=256;q.time_of_flight=times[2*i+1]*86400.0;
+    h.departure_allowance=elements.departure_allowance;h.arrival_allowance=elements.arrival_allowance;
+    const bool departure_ok=element_state(elements.departure,times[2*i],q.gravitational_parameter,
+        q.departure_position,h.departure_body_velocity);
+    const bool arrival_ok=element_state(elements.arrival,times[2*i]+times[2*i+1],q.gravitational_parameter,
+        q.arrival_position,h.arrival_body_velocity);
+    if (!departure_ok || !arrival_ok) q.time_of_flight=NAN;
+}
+
+bool valid_elements(const spacepdhcg_orbitweaver_elements& b) {
+    return std::isfinite(b.epoch) && std::isfinite(b.a) && b.a>0
+        && std::isfinite(b.e) && b.e>=0 && b.e<1 && std::isfinite(b.inclination)
+        && std::isfinite(b.node) && std::isfinite(b.perihelion) && std::isfinite(b.mean);
+}
+
 spacepdhcg_cuda_status mapped(const cudaError_t status) {
     if (status == cudaSuccess) {
         return SPACEPDHCG_CUDA_SUCCESS;
@@ -837,6 +884,51 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_screening_host(
         for (size_t i=0;i<count;++i) {
             if (results[i].feasible) ++w->feasible;
             else ++w->failed;
+        }
+    }
+    return mapped(status);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_elements_host(
+    spacepdhcg_orbitweaver_lambert_workspace* w,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* times, const size_t count,
+    spacepdhcg_orbitweaver_hop_result* results, const size_t capacity
+) {
+    if (!w || !elements || !times || !results || !count || count>capacity
+        || count>w->config.maximum_batch_size || !valid_elements(elements->departure)
+        || !valid_elements(elements->arrival) || !std::isfinite(elements->gravitational_parameter)
+        || elements->gravitational_parameter<=0 || !std::isfinite(elements->departure_allowance)
+        || elements->departure_allowance<0 || !std::isfinite(elements->arrival_allowance)
+        || elements->arrival_allowance<0) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::unique_lock<std::mutex> lock(w->api_mutex,std::try_to_lock);
+    if (!lock.owns_lock() || w->busy.load()) return SPACEPDHCG_CUDA_BUSY;
+    int device=-1;auto status=cudaGetDevice(&device);
+    if (status!=cudaSuccess) return mapped(status);
+    if (device!=static_cast<int>(w->config.device_id)) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    // The ordinary Lambert request buffer is idle while the hop path owns the
+    // workspace. Reuse its allocation for compact epoch/duration pairs.
+    static_assert(sizeof(spacepdhcg_orbitweaver_lambert_request)>=2*sizeof(double));
+    auto* device_times=reinterpret_cast<double*>(w->requests);
+    status=cudaMemcpyAsync(device_times,times,count*2*sizeof(double),cudaMemcpyHostToDevice,w->stream);
+    if (status==cudaSuccess) {
+        element_hops<<<static_cast<unsigned>((count+127)/128),128,0,w->stream>>>(
+            *elements,device_times,count,w->hops);
+        status=cudaGetLastError();
+    }
+    if (status==cudaSuccess) {
+        hop_kernel<<<static_cast<unsigned>((count+63)/64),64,0,w->stream>>>(
+            w->hops,count,w->config.scan_samples_per_band,w->hop_results,w->scan_grid);
+        status=cudaGetLastError();
+    }
+    if (status==cudaSuccess) status=cudaMemcpyAsync(results,w->hop_results,count*sizeof(*results),cudaMemcpyDeviceToHost,w->stream);
+    const auto completed=cudaStreamSynchronize(w->stream);
+    if (status==cudaSuccess) status=completed;
+    if (status==cudaSuccess) {
+        ++w->batches;w->request_count+=count;w->result_count+=count;
+        w->input_bytes+=count*2*sizeof(double)+sizeof(*elements);w->output_bytes+=count*sizeof(*results);
+        for (size_t i=0;i<count;++i) {
+            if (results[i].feasible) ++w->feasible; else ++w->failed;
         }
     }
     return mapped(status);

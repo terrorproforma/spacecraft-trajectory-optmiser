@@ -82,6 +82,23 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Certified retiming improvement:** the latest six-asteroid mission returns
+**524.025 kg**, up **10.1%** from 475.975 kg. All 13 legs pass the locally run
+official checker and the independent verifier on H100, including a repeat with
+the new GPU ephemeris path. This improves one mission; the incumbent 23-ship fleet
+remains **12,805.194 weighted kg**. The remaining failed 180-day hop also passes
+when given 185 days; CPU and GPU agree on the original residual plateau.
+[Downloaded mission, visualiser and copy/paste instructions](results/lambda/2026-09-08/gpu-retiming-v213/README.md).
+
+**GPU retiming tables:** endpoint Kepler propagation and Lambert request assembly
+now run in CUDA. The same 412,116-branch retiming fixture takes **0.257 s on RTX
+5090 versus 0.659 s previously (2.57×)** and **0.145 s on H100 versus 0.364 s
+(2.51×)**, with identical selected schedules and mining yield. These are repeated
+retiming measurements, not full mission speedups. **46 local and 30 H100 tests
+pass**; the seven new cases also pass H100 memcheck and initcheck with zero errors.
+The dynamic programme and fleet orchestration still run on CPU.
+[Implementation, measurement scope and evidence](docs/GPU_RETIMING_ELEMENTS.md).
+
 **Real-mission departure reliability:** a 500-day Earth leg exposed repeatability
 failures missed by the earlier coast tests. Identical first subproblems produced
 different QOCO outcomes. Increasing low-thrust factor regularization to **1e-8**
@@ -95,8 +112,9 @@ See [diagnosis, rejected configurations and evidence](docs/GPU_REAL_DEPARTURE_ST
 candidates**, three refinement attempts and **two certified routes in 77.28 s**.
 The selected 13-leg, six-asteroid mission returns **475.975 kg** and takes **6.35 s**
 to refine. The pre-fix run took 91.52 s and certified one route; these are single-run
-observations, not a universal speedup. A later leg in the third candidate still
-fails and remains under investigation. The incumbent fleet score stays
+observations, not a universal speedup. A later leg in the third candidate fails
+at its original timing; the retiming diagnosis above supplies a flyable alternative.
+The incumbent fleet score stays
 **12,805.194 weighted kg**. Both missions are selectable in the web visualiser:
 [downloaded result, full path and loading instructions](results/lambda/2026-09-08/gpu-native-campaign-v209/README.md).
 

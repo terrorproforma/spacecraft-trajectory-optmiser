@@ -1,0 +1,38 @@
+         83183 function calls in 0.869 seconds
+
+   Ordered by: cumulative time
+   List reduced from 143 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.869    0.869 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:887(retime)
+        1    0.000    0.000    0.869    0.869 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:763(retime_order)
+        6    0.000    0.000    0.869    0.145 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:859(_solve_at_price)
+        6    0.026    0.004    0.867    0.145 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:564(_dp)
+      156    0.002    0.000    0.824    0.005 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:397(leg_table)
+       63    0.000    0.000    0.752    0.012 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/screening.py:204(lambert_hops)
+       63    0.000    0.000    0.752    0.012 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/lambert.py:59(cuda_screen_hops)
+       63    0.545    0.009    0.752    0.012 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/gpu_lambert.py:228(screen_hops)
+       63    0.204    0.003    0.204    0.003 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/gpu_lambert.py:206(_prepare)
+      126    0.000    0.000    0.069    0.001 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:392(_state)
+      118    0.002    0.000    0.064    0.001 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/ephemeris.py:129(asteroid_state)
+      126    0.033    0.000    0.059    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/ephemeris.py:43(elements_to_state)
+      126    0.021    0.000    0.023    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/ephemeris.py:26(solve_kepler)
+     7245    0.004    0.000    0.006    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/numeric.py:323(full)
+        8    0.000    0.000    0.005    0.001 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/ephemeris.py:125(earth_state)
+        8    0.000    0.000    0.005    0.001 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/ephemeris.py:108(planet_state)
+      126    0.004    0.000    0.004    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/ephemeris.py:94(propagate_elements)
+      169    0.003    0.000    0.003    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/screening.py:41(propellant_for_delta_v)
+      169    0.001    0.000    0.003    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:475(leg_inflation)
+     7170    0.003    0.000    0.003    0.000 {built-in method numpy.arange}
+      118    0.001    0.000    0.002    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/data.py:138(index_of)
+      252    0.002    0.000    0.002    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/shape_base.py:378(stack)
+     3612    0.002    0.000    0.002    0.000 {built-in method builtins.round}
+      143    0.001    0.000    0.002    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/screening.py:69(low_thrust_inflation)
+        6    0.000    0.000    0.001    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:685(_forward)
+    10945    0.001    0.000    0.001    0.000 {built-in method numpy.asarray}
+     7308    0.001    0.000    0.001    0.000 {built-in method numpy.empty}
+      215    0.001    0.000    0.001    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/lib/_stride_tricks_impl.py:447(_broadcast_to)
+      494    0.000    0.000    0.001    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py:2474(any)
+      504    0.000    0.000    0.001    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py:3049(max)
+
+

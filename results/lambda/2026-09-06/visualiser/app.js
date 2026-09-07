@@ -58,6 +58,7 @@ const FLEET_DATASETS = {
   gtoc12: { directory: "./data/gtoc12", label: "Incumbent GTOC12 fleet" },
   "gtoc12-v200": { directory: "./data/gtoc12-v200", label: "GPU campaign v200 (before fix)" },
   "gtoc12-v209": { directory: "./data/gtoc12-v209", label: "GPU campaign v209 (corrected solver)" },
+  "gtoc12-v213": { directory: "./data/gtoc12-v213", label: "GPU retiming v213 (524 kg certified)" },
 };
 const fleetCache = new Map(), availableFleets = new Set();
 let datasetRequest = 0;
@@ -824,7 +825,7 @@ async function loadComputeDetails() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const meta = await response.json();
     if (!current()) return;
-    if (`${meta.run_id}_fleet` !== fleet.run_id || meta.commit !== fleet.generated_by_commit) {
+    if ((meta.fleet_run_id ?? `${meta.run_id}_fleet`) !== fleet.run_id || meta.commit !== fleet.generated_by_commit) {
       throw new Error("metadata does not match the displayed fleet");
     }
     const minutes = (value) => Number.isFinite(value) ? `${(value / 60).toFixed(1)} min` : "—";

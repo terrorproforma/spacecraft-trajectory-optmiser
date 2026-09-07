@@ -28,6 +28,58 @@ class Config(ct.Structure):
     ]
 
 
+class Elements(ct.Structure):
+    _fields_ = [
+        (key, ct.c_double)
+        for key in ["epoch", "a", "e", "inclination", "node", "perihelion", "mean"]
+    ]
+
+
+class HopElements(ct.Structure):
+    _fields_ = [
+        ("departure", Elements),
+        ("arrival", Elements),
+        ("mu", ct.c_double),
+        ("departure_allowance", ct.c_double),
+        ("arrival_allowance", ct.c_double),
+    ]
+
+
+def body_elements(catalogue, body):
+    from . import constants as C
+
+    if body == 0:
+        earth = C.EARTH
+        return Elements(
+            earth.epoch_mjd,
+            earth.semi_major_axis_km,
+            earth.eccentricity,
+            *np.deg2rad(
+                [
+                    earth.inclination_deg,
+                    earth.ascending_node_deg,
+                    earth.argument_of_perihelion_deg,
+                    earth.mean_anomaly_deg,
+                ]
+            ),
+        )
+    i = int(catalogue.index_of(body))
+    return Elements(
+        *(
+            float(getattr(catalogue, field)[i])
+            for field in [
+                "epoch_mjd",
+                "semi_major_axis_km",
+                "eccentricity",
+                "inclination_rad",
+                "ascending_node_rad",
+                "argument_of_perihelion_rad",
+                "mean_anomaly_rad",
+            ]
+        )
+    )
+
+
 REQUEST = np.dtype(
     [
         ("id", "u8"),
@@ -224,6 +276,58 @@ class GpuLambert:
             completed_branch_requests=self.evaluations,
             gpu_used=True,
         )
+
+    def leg_table(self, catalogue, from_body, to_body, departures, tofs):
+        """Build the ephemerides and screening requests on CUDA from orbital elements."""
+        from . import constants as C
+
+        self._owned()
+        departures, tofs = (np.asarray(x, dtype=np.float64) for x in (departures, tofs))
+        if departures.ndim != 1 or tofs.ndim != 1:
+            raise ValueError("Departure epochs and flight durations must be vectors")
+        shape = (len(departures), len(tofs))
+        n = shape[0] * shape[1]
+        output = np.empty(n, dtype=HOP_RESULT)
+        query = HopElements(
+            body_elements(catalogue, from_body),
+            body_elements(catalogue, to_body),
+            C.MU_SUN_KM3_S2,
+            C.MAX_VINF_EARTH_KM_S if from_body == 0 else 0.0,
+            C.MAX_VINF_EARTH_KM_S if to_body == 0 else 0.0,
+        )
+        evaluate = self.library.spacepdhcg_orbitweaver_hop_elements_host
+        evaluate.argtypes = [
+            ct.c_void_p,
+            ct.POINTER(HopElements),
+            ct.c_void_p,
+            ct.c_size_t,
+            ct.c_void_p,
+            ct.c_size_t,
+        ]
+        evaluate.restype = ct.c_int
+        if n:
+            self._prepare(256)
+        for start in range(0, n, self.capacity):
+            end = min(n, start + self.capacity)
+            indices = np.arange(start, end)
+            times = np.column_stack((departures[indices // shape[1]], tofs[indices % shape[1]]))
+            self._check(
+                evaluate(
+                    self.handle,
+                    ct.byref(query),
+                    times.ctypes.data,
+                    end - start,
+                    output[start:end].ctypes.data,
+                    end - start,
+                )
+            )
+            self._record(2 * (end - start))
+        self.telemetry["completed_element_hops"] = (
+            self.telemetry.get("completed_element_hops", 0) + n
+        )
+        dv = output["dep"] + output["arr"]
+        feasible = output["feasible"].astype(bool) & np.isfinite(dv)
+        return np.where(feasible, dv, np.inf).reshape(shape), feasible.reshape(shape)
 
     def screen_hops(
         self,

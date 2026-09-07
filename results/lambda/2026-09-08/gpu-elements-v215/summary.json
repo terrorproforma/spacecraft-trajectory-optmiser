@@ -1,0 +1,31 @@
+{
+  "scope": "Fixed-order retiming with GPU endpoint propagation, followed by full GPU trajectory refinement and official/independent checks; not a new fleet score.",
+  "source_sha256": {
+    "cpp/cuda/src/orbitweaver_gpu.cu": "be9af3ecf49700ec4093dbbcf5c04e6997701c5eeb2668a30e4b94df54695c40",
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": "3666bb63d54574432656dd036af68343ff009fed6e2907ff22d8e8046344f7e7",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "4e477f86f4b1de346d580f0639f8bd5ab28ae7ce995874dd71161c52161f07c0",
+    "src/spacepdhcg/gtoc12/lambert.py": "1eb25368dcbb18fa3bac48c33a9111d2687c0d573d26410ba5fdffa50d1ef498",
+    "src/spacepdhcg/gtoc12/retiming.py": "80c70e260b000fca4bf41d474a4e862182c2bcdeffe08943f5cb170a6b7d0432",
+    "tests/test_gtoc12_gpu_elements.py": "28555b952c77899d737c144b4eb46e9b55044ee22b100297ac9d0aa36dc7ad6a"
+  },
+  "timing": {
+    "RTX5090": {
+      "previous_seconds": 0.6588853579996794,
+      "gpu_elements_seconds": 0.2567456830001902,
+      "speedup": 2.56629576123853,
+      "runtime_sha256": "14605780a83de3dab61dbb868fb9aceca197619fb65dbcf5dca1734dd1d3a267"
+    },
+    "H100": {
+      "previous_seconds": 0.3644431529683061,
+      "gpu_elements_seconds": 0.14527254103450105,
+      "speedup": 2.5086857459301535,
+      "runtime_sha256": "373cfb11597e16105d1f0968b59603964de2b3587221baccc75e1fe7644d15bf"
+    }
+  },
+  "local_tests": 46,
+  "h100_tests": 30,
+  "memcheck_errors": 0,
+  "initcheck_errors": 0,
+  "certified_route_kg": 524.0246406570842,
+  "incumbent_weighted_kg": 12805.194102488575
+}

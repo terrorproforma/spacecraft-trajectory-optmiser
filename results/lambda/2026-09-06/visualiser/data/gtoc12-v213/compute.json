@@ -1,0 +1,23 @@
+{
+  "run_id": "gpu_retiming_v213",
+  "commit": "cb41e0076a140ee5119cdf1884c34a80cf804922",
+  "weighted_score_fixed_bonus_kg": 524.0246406571002,
+  "raw_kg_per_ship": 524.0246406571002,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "Retimed the certified v209 route; 412,116 additional Lambert branches"
+  },
+  "timing": {
+    "wall_seconds_total": 10.782846212387085,
+    "wall_human": "0.703 s retiming; 8.139 s GPU refinement"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; official and independent verification pass",
+    "local_refine": "13 certified CUDA-refined arcs; six mining asteroids"
+  },
+  "optimisation": {
+    "strategy": "Fixed-order retiming; 10.1% more material than v209. Incumbent fleet unchanged.",
+    "proven_optimal": false
+  },
+  "fleet_run_id": "gpu_retiming_v213"
+}

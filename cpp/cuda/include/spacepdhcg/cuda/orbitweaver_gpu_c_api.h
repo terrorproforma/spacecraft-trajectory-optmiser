@@ -122,6 +122,27 @@ typedef struct spacepdhcg_orbitweaver_batch_telemetry {
     int32_t device_id;
 } spacepdhcg_orbitweaver_batch_telemetry;
 
+/* Elliptic elements: km, radians, MJD. Mean anomaly is specified at epoch. */
+typedef struct spacepdhcg_orbitweaver_elements {
+    double epoch, a, e, inclination, node, perihelion, mean;
+} spacepdhcg_orbitweaver_elements;
+
+typedef struct spacepdhcg_orbitweaver_hop_elements {
+    spacepdhcg_orbitweaver_elements departure, arrival;
+    double gravitational_parameter, departure_allowance, arrival_allowance;
+} spacepdhcg_orbitweaver_hop_elements;
+
+/* Builds endpoint states and rendezvous requests on CUDA, then uses the same
+ * Lambert operator as hop_screening_host. times contains count interleaved
+ * (departure MJD, flight duration days) pairs. All host accesses finish before
+ * return; workspace buffers are retained. No CPU ephemeris or CPU fallback. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_elements_host(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* times, size_t count,
+    spacepdhcg_orbitweaver_hop_result* results, size_t result_capacity
+);
+
 /*
  * Fixed per-input stride: short/long directions each own one zero-revolution
  * slot and two slots per supported positive revolution.
