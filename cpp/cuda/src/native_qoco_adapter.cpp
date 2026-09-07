@@ -1809,6 +1809,21 @@ spacepdhcg_cuda_status finish_native_solve(spacepdhcg_native_qoco* workspace,
     workspace->report.absolute_dual_residual = audit.absolute_dual;
     workspace->report.dual_cone_residual = audit.dual_cone;
     workspace->report.complementarity_residual = audit.complementarity;
+    if (const char* dump = std::getenv("SPACEPDHCG_QOCO_DUMP_PRIMAL");
+        dump && dump[0] == '1') {
+        // Explicit diagnostic export of the IPM output, not the unused PDHCG
+        // workspace. Never enabled by a timed campaign or production caller.
+        std::vector<double> snapshot(workspace->variables);
+        if (cudaMemcpyAsync(snapshot.data(), device_primal,
+                snapshot.size()*sizeof(double), cudaMemcpyDeviceToHost, stream)!=cudaSuccess
+            || cudaStreamSynchronize(stream)!=cudaSuccess) return finish(SPACEPDHCG_CUDA_RUNTIME_ERROR);
+        ++workspace->report.d2h_copy_count;
+        workspace->report.d2h_bytes += snapshot.size()*sizeof(double);
+        std::printf("PD3DATA qoco_primal");
+        for (double value : snapshot) std::printf(" %.17g",value);
+        std::printf("\nQOCOAUDIT %.17g %.17g %.17g %.17g\n",
+            audit.absolute_primal,audit.absolute_dual,audit.dual_cone,audit.complementarity);
+    }
     if (!std::isfinite(audit.primal) || !std::isfinite(audit.dual)) {
         workspace->report.failure = SPACEPDHCG_CUDA_QOCO_FAILURE_NUMERICAL;
         return finish(SPACEPDHCG_CUDA_NUMERICAL_FAILURE);
