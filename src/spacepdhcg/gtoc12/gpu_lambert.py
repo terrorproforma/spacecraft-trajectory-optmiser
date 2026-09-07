@@ -281,6 +281,8 @@ class GpuLambert:
         self.telemetry["retime_table_uploads"] = self.retime_workspace.uploads
         self.telemetry["retime_resident_builds"] = self.retime_workspace.resident_builds
         self.telemetry["retime_resident_cells"] = self.retime_workspace.resident_cells
+        self.telemetry["retime_sweep_updates"] = self.retime_workspace.sweep_updates
+        self.telemetry["retime_sweep_samples"] = self.retime_workspace.sweep_samples
         if self.retime_workspace.calls:
             self.telemetry["gpu_used"] = True
         return result

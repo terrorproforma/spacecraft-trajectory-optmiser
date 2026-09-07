@@ -255,6 +255,7 @@ class Retimer:
         self.inflations: dict[tuple[int, int], float] = {}
         self._tables: dict[tuple[int, int, str], tuple[FloatArray, NDArray[np.bool_]]] = {}
         self._cache_revision = 0
+        self._sweep_revision = 0
         self.lattice = _Lattice(self.settings.step_days, self.settings.end_margin_days)
         # Earth-out TOF floor (days): set from a certified, continuously optimised Earth leg so
         # the DP may only keep or lengthen it.  Earth legs are nearly thrust-saturated and their
@@ -312,6 +313,7 @@ class Retimer:
 
         self.return_sweeps[int(sweep.asteroid)] = sweep
         self._return_tables.pop(int(sweep.asteroid), None)
+        self._sweep_revision += 1
 
     def _return_override(self, asteroid: int) -> tuple[FloatArray, FloatArray] | None:
         """``(inflation, ok)`` on the DP's return grid from the asteroid's SCvx sweep.
@@ -390,6 +392,7 @@ class Retimer:
             {"cell": [float(sweep.departures[i]), float(sweep.tofs[j])], "refused": "re-flight"}
         )
         self._return_tables.pop(int(asteroid), None)
+        self._sweep_revision += 1
         return True
 
     def _state(self, body: int, epochs: FloatArray) -> tuple[FloatArray, FloatArray]:
@@ -729,7 +732,8 @@ class Retimer:
         propellant_total = 0.0
         from .lambert import cuda_retime_path_values
 
-        path_dv = cuda_retime_path_values(self, visits, arrivals, departures)
+        path = cuda_retime_path_values(self, visits, arrivals, departures, True)
+        path_dv = None if path is None else path[0]
         for j, visit in enumerate(visits[:-1]):
             nxt = visits[j + 1]
             if departures[j] > arrivals[j] + 1e-9:
@@ -754,9 +758,14 @@ class Retimer:
                 return None, [], "leg_infeasible"
             _flat, ratio_limit = self._limits(role, visit.body, nxt.body)
             tof = arrivals[j + 1] - departures[j]
-            override = self._return_override(visit.body) if role == "earth_return" else None
-            swept = override is not None and not np.isnan(override[0][d_index, t_index])
-            if override is not None and not override[1][d_index, t_index]:
+            if path is None:
+                override = self._return_override(visit.body) if role == "earth_return" else None
+                inflation = np.nan if override is None else override[0][d_index, t_index]
+                sweep_ok = override is None or override[1][d_index, t_index]
+            else:
+                inflation, sweep_ok = path[1][j], path[2][j]
+            swept = not np.isnan(inflation)
+            if not sweep_ok:
                 return None, [], "leg_infeasible"  # SCvx refused this (or the nearest) return
             if not swept and self.authority_ratio(dv, mass, tof) > ratio_limit:
                 # include the refused leg's departure mass: it is the entry of the DP's profile
@@ -764,7 +773,7 @@ class Retimer:
                 return None, [*masses, mass], "leg_authority"
             masses.append(mass)
             if swept:
-                infl_p = float(override[0][d_index, t_index])  # type: ignore[index]
+                infl_p = float(inflation)
             else:
                 infl_p = float(self.leg_inflation(role, visit.body, nxt.body, dv, mass, tof))
             propellant = float(propellant_for_delta_v(mass, dv * infl_p))

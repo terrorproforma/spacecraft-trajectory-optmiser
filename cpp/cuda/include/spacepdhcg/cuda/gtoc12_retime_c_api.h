@@ -12,6 +12,12 @@ typedef struct spacepdhcg_gtoc12_retime_stage {
     double flat, floor, slope, calibration;
 } spacepdhcg_gtoc12_retime_stage;
 
+typedef struct spacepdhcg_gtoc12_sweep_cell {
+    int32_t departure, tof;
+    double delta_v;
+    int32_t certified, reserved;
+} spacepdhcg_gtoc12_sweep_cell;
+
 /* Immutable table snapshot; all arrays are host buffers copied on creation.
  * Cells concatenate departure-major (epochs x stage TOFs) tables. Swept
  * inflation is NaN for unmeasured cells; swept_ok defaults to 1 when absent.
@@ -38,6 +44,17 @@ int spacepdhcg_gtoc12_retime_create_elements(
 int spacepdhcg_gtoc12_retime_path_host(void* workspace,
     const spacepdhcg_gtoc12_retime_stage* stages,double price,double thrust,double exhaust,
     int32_t* arrivals,int32_t* departures,double* objective,int32_t* feasible,double* delta_v);
+/* Compact attempted sweep samples update an existing table region. Equal
+ * distances prefer the first input sample. Zero samples remove the override. */
+int spacepdhcg_gtoc12_retime_set_sweep(void* workspace,int32_t cell_offset,int32_t tofs,
+    int32_t count,const spacepdhcg_gtoc12_sweep_cell* samples,int32_t reach);
+int spacepdhcg_gtoc12_retime_swept_path_host(void* workspace,
+    const spacepdhcg_gtoc12_retime_stage* stages,double price,double thrust,double exhaust,
+    int32_t* arrivals,int32_t* departures,double* objective,int32_t* feasible,
+    double* delta_v,double* swept_inflation,uint8_t* swept_ok);
+/* Explicit diagnostic export; ordinary scheduling only downloads its path. */
+int spacepdhcg_gtoc12_retime_read_sweep(void* workspace,int32_t cell_offset,int32_t tofs,
+    double* inflation,uint8_t* feasible);
 int spacepdhcg_gtoc12_retime_destroy(void** workspace);
 
 #ifdef __cplusplus

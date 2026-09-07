@@ -39,6 +39,17 @@ STAGE = np.dtype(
     align=True,
 )
 
+SWEEP_CELL = np.dtype(
+    [
+        ("departure", "i4"),
+        ("tof", "i4"),
+        ("delta_v", "f8"),
+        ("certified", "i4"),
+        ("reserved", "i4"),
+    ],
+    align=True,
+)
+
 
 class GpuRetime:
     """One cached immutable set of tables; masses, prices and policies update per call."""
@@ -58,7 +69,20 @@ class GpuRetime:
             [ct.c_int32] * 5 + [ct.c_void_p] * 6 + [ct.POINTER(ct.c_void_p)]
         )
         self.create_elements.restype = ct.c_int
-        self.evaluate = library.spacepdhcg_gtoc12_retime_path_host
+        self.set_sweep = library.spacepdhcg_gtoc12_retime_set_sweep
+        self.set_sweep.argtypes = [
+            ct.c_void_p,
+            ct.c_int32,
+            ct.c_int32,
+            ct.c_int32,
+            ct.c_void_p,
+            ct.c_int32,
+        ]
+        self.set_sweep.restype = ct.c_int
+        self.read_sweep = library.spacepdhcg_gtoc12_retime_read_sweep
+        self.read_sweep.argtypes = [ct.c_void_p, ct.c_int32, ct.c_int32, ct.c_void_p, ct.c_void_p]
+        self.read_sweep.restype = ct.c_int
+        self.evaluate = library.spacepdhcg_gtoc12_retime_swept_path_host
         self.evaluate.argtypes = [
             ct.c_void_p,
             ct.c_void_p,
@@ -70,6 +94,8 @@ class GpuRetime:
             ct.POINTER(ct.c_double),
             ct.POINTER(ct.c_int32),
             ct.c_void_p,
+            ct.c_void_p,
+            ct.c_void_p,
         ]
         self.evaluate.restype = ct.c_int
         self.destroy = library.spacepdhcg_gtoc12_retime_destroy
@@ -77,6 +103,8 @@ class GpuRetime:
         self.destroy.restype = ct.c_int
         self.calls = self.uploads = 0
         self.resident_builds = self.resident_cells = 0
+        self.sweep_updates = self.sweep_samples = 0
+        self.sweep_keys = {}
 
     @staticmethod
     def _check(code):
@@ -88,20 +116,21 @@ class GpuRetime:
             self._check(self.destroy(ct.byref(self.handle)))
         self.key = self.refs = None
         self.last_path = None
+        self.sweep_keys.clear()
 
-    def path_values(self, retimer, visits, arrivals, departures):
+    def path_values(self, retimer, visits, arrivals, departures, include_sweep=False):
         if self.last_path is None:
             return None
         owner, revision, order, a, d, values = self.last_path
-        return (
-            values
-            if owner is retimer
-            and revision == retimer._cache_revision
-            and order == visits
-            and a == arrivals
-            and d == departures
-            else None
-        )
+        if (
+            owner is not retimer
+            or revision != (retimer._cache_revision, retimer._sweep_revision)
+            or order != visits
+            or a != arrivals
+            or d != departures
+        ):
+            return None
+        return values if include_sweep else values[0]
 
     def solve(self, retimer, visits, masses, price):
         from .retiming import Retimer
@@ -118,8 +147,8 @@ class GpuRetime:
         resident = (
             self.lambert.resident_retime_tables
             and not retimer._tables
-            and not retimer.return_sweeps
             and getattr(retimer.leg_table, "__func__", None) is Retimer.leg_table
+            and getattr(retimer._return_override, "__func__", None) is Retimer._return_override
         )
         for j, (visit, nxt) in enumerate(pairwise(visits)):
             p = params[j]
@@ -257,9 +286,15 @@ class GpuRetime:
                 )
             self.key, self.refs = key, refs
             self.uploads += int(not resident)
+        if resident:
+            for j, visit in enumerate(visits[:-1]):
+                if visit.role_out == "earth_return":
+                    self._update_sweep(retimer, visit.body, params[j], tofs_all[j])
         arrivals = np.empty(len(visits), dtype=np.int32)
         departures = np.empty(len(visits), dtype=np.int32)
         path_dv = np.empty(len(params), dtype=np.float64)
+        path_swept = np.empty(len(params), dtype=np.float64)
+        path_ok = np.empty(len(params), dtype=np.uint8)
         objective, feasible_result = ct.c_double(), ct.c_int32()
         self._check(
             self.evaluate(
@@ -273,20 +308,62 @@ class GpuRetime:
                 ct.byref(objective),
                 ct.byref(feasible_result),
                 path_dv.ctypes.data,
+                path_swept.ctypes.data,
+                path_ok.ctypes.data,
             )
         )
         self.calls += 1
         if feasible_result.value:
             self.last_path = (
                 retimer,
-                retimer._cache_revision,
+                (retimer._cache_revision, retimer._sweep_revision),
                 visits[:],
                 lat.epochs[arrivals].tolist(),
                 lat.epochs[departures].tolist(),
-                path_dv,
+                (path_dv, path_swept, path_ok),
             )
             return arrivals.tolist(), departures.tolist(), objective.value
         return None
+
+    def _update_sweep(self, retimer, body, stage, tofs):
+        from .retiming import RETURN_SWEEP_REACH
+
+        sweep = retimer.return_sweeps.get(body)
+        cells = []
+        if sweep is not None:
+            for i, departure in enumerate(sweep.departures):
+                k = retimer.lattice.exact_index(float(departure))
+                if k is None:
+                    continue
+                for j, tof in enumerate(sweep.tofs):
+                    t = round((float(tof) - tofs[0]) / retimer.settings.step_days)
+                    if (
+                        not (0 <= t < len(tofs))
+                        or abs(tofs[t] - tof) > 1e-6
+                        or not sweep.attempted[i, j]
+                    ):
+                        continue
+                    cells.append(
+                        (k, t, float(sweep.delta_v_km_s[i, j]), int(bool(sweep.certified[i, j])), 0)
+                    )
+        samples = np.asarray(cells, dtype=SWEEP_CELL)
+        key = samples.tobytes()
+        offset = int(stage["cell_offset"])
+        if self.sweep_keys.get(offset, b"") == key:
+            return
+        self._check(
+            self.set_sweep(
+                self.handle,
+                offset,
+                len(tofs),
+                len(samples),
+                samples.ctypes.data,
+                RETURN_SWEEP_REACH,
+            )
+        )
+        self.sweep_keys[offset] = key
+        self.sweep_updates += 1
+        self.sweep_samples += len(samples)
 
     def _create_host_tables(self, epochs, tables, tofs, shifts, stages, cells, nt):
         dv = np.concatenate([t[0].ravel() for t in tables]).astype(np.float64, copy=False)
