@@ -1,0 +1,23 @@
+{
+  "run_id": "gpu_sweep_v235",
+  "fleet_run_id": "gpu_sweep_v235",
+  "commit": "1197361f858a96706b41c90ad772107bb99dd57a",
+  "weighted_score_fixed_bonus_kg": 526.4887063656997,
+  "raw_kg_per_ship": 526.4887063656997,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "Resident CUDA return-sweep retiming; 412,116 Lambert branches; zero host table uploads"
+  },
+  "timing": {
+    "wall_seconds_total": 11.772322177886963,
+    "wall_human": "0.398 s retiming; 9.434 s GPU refinement"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; official and independent verification pass",
+    "local_refine": "13 certified CUDA-refined arcs; six mining asteroids"
+  },
+  "optimisation": {
+    "strategy": "Return-sweep retiming: 2.464 kg more than the prior 524 kg mission. Incumbent fleet unchanged.",
+    "proven_optimal": false
+  }
+}

@@ -82,6 +82,17 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Resident return-sweep pricing and 526 kg mission:** nearest measured-return
+selection, refusal masks and inflation pricing now run in CUDA, with compact
+sweep updates reusing the transfer tables. The measured sweep workload takes
+**63.69 ms on H100 versus 72.47 ms with host tables (1.138×)** and **224.42 ms on
+RTX 5090 versus 234.61 ms (1.045×)**. The resulting six-asteroid mission passes
+both checkers at **526.489 kg**, adding 2.464 kg to the previous 524 kg mission.
+**88 tests pass on each GPU**, H100 sanitizers report zero errors, and the new
+mission is loaded in the web visualiser. Fleet score remains **12,805.194 weighted
+kg**. [Implementation and limits](docs/GPU_RETURN_SWEEPS.md),
+[downloaded solution and viewer instructions](results/lambda/2026-09-08/gpu-sweeps-v234/README.md).
+
 **Resident GPU retiming tables:** the common fixed-order path now builds endpoint
 states, Lambert requests and transfer-cost tables directly in device memory,
 then downloads only the selected schedule and one cost per leg. The full retiming

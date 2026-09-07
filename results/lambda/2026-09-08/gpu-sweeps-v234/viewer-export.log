@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "files": {
+      "trajectories.json": {
+        "bytes": 347974,
+        "sha256": "d906eea085036ab43552e572b2e650afaa2f36a9509b3616605a0fc9fff47f30"
+      }
+    },
+    "schema_version": "1.0.0",
+    "source": {
+      "bytes": 453368,
+      "path_basename": "Result.txt",
+      "sha256": "148b2b63be0fce066393bebd416de694875cfb27a8e5fccbea62d9a82c7da4cd"
+    },
+    "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+  },
+  "verification": {
+    "max_mass_error_kg": 8.662937034387141e-11,
+    "max_position_error_km": 0.45115825764135464,
+    "max_velocity_error_km_s": 7.729447357386977e-08,
+    "mined_asteroids": 6,
+    "ok": true,
+    "ship_limit": 16.429886205779788,
+    "ships": 1,
+    "total_mass_kg": 526.4887063656997,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 526.4887063656997
+  }
+}

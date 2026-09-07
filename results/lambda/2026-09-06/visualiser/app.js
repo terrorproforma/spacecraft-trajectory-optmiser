@@ -59,6 +59,7 @@ const FLEET_DATASETS = {
   "gtoc12-v200": { directory: "./data/gtoc12-v200", label: "GPU campaign v200 (before fix)" },
   "gtoc12-v209": { directory: "./data/gtoc12-v209", label: "GPU campaign v209 (corrected solver)" },
   "gtoc12-v213": { directory: "./data/gtoc12-v213", label: "GPU retiming v213 (524 kg certified)" },
+  "gtoc12-v235": { directory: "./data/gtoc12-v235", label: "GPU return sweep v235 (526 kg certified)" },
 };
 const fleetCache = new Map(), availableFleets = new Set();
 let datasetRequest = 0;

@@ -1,5 +1,9 @@
 # Resident GPU retiming tables — 8 September 2026
 
+The [v234 follow-up](GPU_RETURN_SWEEPS.md) extends this path to measured return
+sweeps and certifies a 526.489 kg mission. This page retains the v231 checkpoint
+and its unswept workload measurements.
+
 Ordinary fixed-order retiming now constructs transfer tables inside the retained
 CUDA DP workspace. Previously CUDA ephemeris and Lambert screening downloaded
 every hop result, Python extracted costs and feasibility, and DP construction

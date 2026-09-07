@@ -1,0 +1,57 @@
+{
+  "fleet": {
+    "ships": 1,
+    "asteroids": [
+      9595,
+      16118,
+      23760,
+      25792,
+      53410,
+      57530
+    ],
+    "average_collected_kg": 526.4887063656997,
+    "collected_kg_per_ship": [
+      526.4887063656997
+    ],
+    "total_collected_kg": 526.4887063656997,
+    "rule_satisfied": true,
+    "ship_limit": 16.429886205779788
+  },
+  "official": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 526.489,
+    "return_code": 0,
+    "wall_seconds": 0.09354458801681176,
+    "message": "Check successfully!"
+  },
+  "independent": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 526.4887063656997,
+    "weighted_score_fixed_bonus_kg": 526.4887063656997,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 16.429886205779788,
+    "max_position_error_km": 0.45115935844740623,
+    "max_velocity_error_km_s": 7.729468304682019e-08,
+    "max_mass_error_kg": 8.549250196665525e-11,
+    "violations": []
+  },
+  "viewer_manifest": {
+    "files": {
+      "trajectories.json": {
+        "bytes": 347974,
+        "sha256": "d906eea085036ab43552e572b2e650afaa2f36a9509b3616605a0fc9fff47f30"
+      }
+    },
+    "schema_version": "1.0.0",
+    "source": {
+      "bytes": 453368,
+      "path_basename": "Result.txt",
+      "sha256": "148b2b63be0fce066393bebd416de694875cfb27a8e5fccbea62d9a82c7da4cd"
+    },
+    "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+  }
+}

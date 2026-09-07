@@ -1,0 +1,33 @@
+{
+  "scope": "Resident GPU return sweep pricing; CPU-grid parity and independently verified 526 kg mission.",
+  "timing": {
+    "RTX5090": {
+      "host_tables_seconds": 0.2346050930000274,
+      "resident_tables_seconds": 0.2244189790000064,
+      "speedup": 1.0453888260494257
+    },
+    "H100": {
+      "host_tables_seconds": 0.07246892096009105,
+      "resident_tables_seconds": 0.06369128095684573,
+      "speedup": 1.1378154100746167
+    }
+  },
+  "tests_per_gpu": 88,
+  "h100_sanitizer_tests": 25,
+  "h100_memcheck_errors": 0,
+  "h100_initcheck_errors": 0,
+  "incumbent_weighted_kg": 12805.194102488575,
+  "mission": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 526.4887063656997,
+    "weighted_score_fixed_bonus_kg": 526.4887063656997,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 16.429886205779788,
+    "max_position_error_km": 0.45115935844740623,
+    "max_velocity_error_km_s": 7.729468304682019e-08,
+    "max_mass_error_kg": 8.549250196665525e-11,
+    "violations": []
+  }
+}
