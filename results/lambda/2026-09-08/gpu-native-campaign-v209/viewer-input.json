@@ -1,0 +1,91 @@
+{
+  "fleet": {
+    "asteroids": [
+      9595,
+      16118,
+      23760,
+      25792,
+      53410,
+      57530
+    ],
+    "average_collected_kg": 475.9753593429158,
+    "collected_kg_per_ship": [
+      475.9753593429158
+    ],
+    "greedy": {
+      "asteroids": [
+        9595,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "average_collected_kg": 475.9753593429158,
+      "collected_kg_per_ship": [
+        475.9753593429158
+      ],
+      "rule_satisfied": true,
+      "ship_limit": 13.424059981341525,
+      "ships": 1,
+      "total_collected_kg": 475.9753593429158
+    },
+    "rule_satisfied": true,
+    "ship_limit": 13.424059981341525,
+    "ships": 1,
+    "total_collected_kg": 475.9753593429158
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 6,
+    "ok": true,
+    "return_code": 0,
+    "score_data": {
+      "9595": 60.64339493500006,
+      "16118": 80.3559206023001,
+      "23760": 68.03559206020009,
+      "25792": 80.35592060229988,
+      "53410": 67.62491444219995,
+      "57530": 118.95961670089991
+    },
+    "ships": 1,
+    "total_mass_kg": 475.975,
+    "wall_seconds": 0.09154585201758891
+  },
+  "independent": {
+    "max_mass_error_kg": 9.00399754755199e-11,
+    "max_position_error_km": 0.35433309942559993,
+    "max_velocity_error_km_s": 6.329545097309794e-08,
+    "mined_asteroids": 6,
+    "ok": true,
+    "scored_masses": {
+      "9595": 60.64339493500006,
+      "16118": 80.3559206023001,
+      "23760": 68.03559206020009,
+      "25792": 80.35592060229988,
+      "53410": 67.62491444219995,
+      "57530": 118.95961670089991
+    },
+    "ship_limit": 13.42405998134068,
+    "ships": 1,
+    "total_mass_kg": 475.9753593429,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 475.9753593429
+  },
+  "viewer_manifest": {
+    "files": {
+      "trajectories.json": {
+        "bytes": 347982,
+        "sha256": "c77f32aaf1a08198227145dd8b9136f50898ef74b8d03e10696676c671687717"
+      }
+    },
+    "schema_version": "1.0.0",
+    "source": {
+      "bytes": 379002,
+      "path_basename": "Result.txt",
+      "sha256": "275aeadb5929b9b856c7baca5481740fc4bbb18fd0fbf493b1b2bd1a1a072c7c"
+    },
+    "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+  }
+}

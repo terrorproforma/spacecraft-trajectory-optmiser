@@ -1,0 +1,43 @@
+[
+  {
+    "name": "regression",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_archive.py",
+      "tests/test_gtoc12_bundles.py",
+      "tests/test_gtoc12_chain.py",
+      "tests/test_gtoc12_collectdp.py",
+      "tests/test_gtoc12_cooperative.py",
+      "tests/test_gtoc12_ephemeris_format.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "tests/test_gtoc12_gpu_collection.py",
+      "tests/test_gtoc12_gpu_conic.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_earth_repeatability.py",
+      "tests/test_gtoc12_gpu_hops.py",
+      "tests/test_gtoc12_gpu_lambert.py",
+      "tests/test_gtoc12_gpu_neighbours.py",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "tests/test_gtoc12_gpu_scvx.py",
+      "tests/test_gtoc12_gpu_seed.py",
+      "tests/test_gtoc12_gpu_verifier.py",
+      "tests/test_gtoc12_harvestphase.py",
+      "tests/test_gtoc12_jointopt.py",
+      "tests/test_gtoc12_lambert_performance.py",
+      "tests/test_gtoc12_pipeline.py",
+      "tests/test_gtoc12_returns.py",
+      "tests/test_gtoc12_rules_and_data.py",
+      "tests/test_gtoc12_run_refinement.py",
+      "tests/test_gtoc12_search2.py",
+      "tests/test_gtoc12_verifier.py",
+      "-q",
+      "--tb=short"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 21%]\n........................................................................ [ 43%]\n........................................................................ [ 65%]\n........................................................................ [ 87%]\n........................................                                 [100%]\n328 passed in 371.42s (0:06:11)\n",
+    "stderr": "",
+    "seconds": 371.7819396580003
+  }
+]

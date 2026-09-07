@@ -1,0 +1,28 @@
+{
+  "pid": 130439,
+  "start": 1788797935.3624647,
+  "steps": [],
+  "complete": true,
+  "returncode": 2,
+  "command": [
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "-c",
+    "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+    "tests/test_gtoc12_gpu_cli.py",
+    "tests/test_gtoc12_gpu_collection.py",
+    "tests/test_gtoc12_gpu_conic.py",
+    "tests/test_gtoc12_gpu_discretisation.py",
+    "tests/test_gtoc12_gpu_earth_repeatability.py",
+    "tests/test_gtoc12_gpu_hops.py",
+    "tests/test_gtoc12_gpu_lambert.py",
+    "tests/test_gtoc12_gpu_neighbours.py",
+    "tests/test_gtoc12_gpu_qoco.py",
+    "tests/test_gtoc12_gpu_scvx.py",
+    "tests/test_gtoc12_gpu_seed.py",
+    "tests/test_gtoc12_gpu_verifier.py",
+    "tests/test_gtoc12_run_refinement.py",
+    "-q",
+    "--tb=short"
+  ],
+  "end": 1788797936.2782292
+}

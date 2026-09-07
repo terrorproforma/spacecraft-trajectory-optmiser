@@ -54,6 +54,13 @@ paintRange($("exaggeration"));
 const canvas = $("trajectory-canvas");
 const ARCHIVE_CAMERA = { yaw: -0.72, pitch: 0.48, distance: 3.25, target: [0, 0, 0] };
 const ARCHIVE_ZOOM = { minimum: 1.35, maximum: 12 };
+const FLEET_DATASETS = {
+  gtoc12: { directory: "./data/gtoc12", label: "Incumbent GTOC12 fleet" },
+  "gtoc12-v200": { directory: "./data/gtoc12-v200", label: "GPU campaign v200 (before fix)" },
+  "gtoc12-v209": { directory: "./data/gtoc12-v209", label: "GPU campaign v209 (corrected solver)" },
+};
+const fleetCache = new Map(), availableFleets = new Set();
+let datasetRequest = 0;
 const state = {
   dataset: "archive", data: null, fleet: null, fleetAvailable: false, fleetView: null,
   selected: 0, mode: "replay", progress: 100, playing: false, speedYearsPerSecond: 1,
@@ -168,7 +175,7 @@ class Renderer extends GlResources {
   }
 }
 
-const isFleet = () => state.dataset === "gtoc12";
+const isFleet = () => Object.hasOwn(FLEET_DATASETS, state.dataset);
 function trajectory() { return state.data.trajectories[state.selected]; }
 function visibleCount() {
   const count = trajectory()[state.mode].point_count;
@@ -415,28 +422,31 @@ function applyDatasetVisibility() {
   if (!fleet) { $("event-labels").replaceChildren(); $("event-labels").dataset.ship = ""; }
   hideTooltip();
 }
-async function loadFleet() {
-  if (state.fleet) return state.fleet;
-  const response = await fetch("./data/gtoc12/fleet.json", { cache: "no-store" });
+async function loadFleet(dataset) {
+  if (fleetCache.has(dataset)) return fleetCache.get(dataset);
+  const response = await fetch(`${FLEET_DATASETS[dataset].directory}/fleet.json`, { cache: "no-store" });
   if (!response.ok) throw new Error(`GTOC12 fleet dataset request failed: HTTP ${response.status}`);
   const fleet = await response.json();
   if (fleet.dataset_kind !== "gtoc12-fleet" || !Array.isArray(fleet.ships) || fleet.ships.length === 0) throw new Error("GTOC12 fleet dataset has an unexpected shape");
-  state.fleet = fleet;
+  fleetCache.set(dataset, fleet);
   return fleet;
 }
 async function setDataset(dataset, options = {}) {
+  const request = ++datasetRequest;
   stopPlayback(); stopCameraMotion();
-  if (dataset === "gtoc12" && !state.fleetAvailable) {
+  if (dataset !== "archive" && !availableFleets.has(dataset)) {
     $("dataset-select").value = state.dataset;
     $("dataset-help").textContent = "GTOC12 dataset not installed. Run `npm run import-gtoc12 -- --export <export dir> --catalogue <GTOC12_Asteroids_Data.txt>` (see README) and reload.";
     return;
   }
   try {
+    const fleet = dataset === "archive" ? null : await loadFleet(dataset);
+    if (request !== datasetRequest) return;
+    state.fleet = fleet;
     state.dataset = dataset;
     $("dataset-select").value = dataset;
     applyDatasetVisibility();
-    if (dataset === "gtoc12") {
-      await loadFleet();
+    if (isFleet()) {
       const preset = options.preset && CAMERA_PRESETS[options.preset] ? options.preset : "oblique";
       Object.assign(state.camera, presetCamera(preset, { ...FLEET_CAMERA, target: [0, 0, 0] }));
       state.preset = preset;
@@ -466,7 +476,7 @@ async function setDataset(dataset, options = {}) {
       createRenderer(); renderInventory(); draw();
       $("dataset-help").textContent = "Verified archived P1/P2 evidence records, each in its own physical frame.";
     }
-  } catch (error) { fatal(error); }
+  } catch (error) { if (request === datasetRequest) fatal(error); }
 }
 function select(index) {
   stopPlayback(); stopCameraMotion(); state.selected = Number(index); state.progress = 100; $("timeline").value = "100";
@@ -806,11 +816,15 @@ async function loadSolverProgress() {
 async function loadComputeDetails() {
   const el = $("compute-details");
   if (!el) return;
+  const dataset = state.dataset, fleet = state.fleet, request = datasetRequest;
+  const current = () => request === datasetRequest && dataset === state.dataset;
+  el.innerHTML = metricRows([["Status", "Loading compute metadata…"]]);
   try {
-    const response = await fetch("./data/gtoc12/compute.json", { cache: "no-store" });
+    const response = await fetch(`${FLEET_DATASETS[dataset].directory}/compute.json`, { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const meta = await response.json();
-    if (`${meta.run_id}_fleet` !== state.fleet.run_id || meta.commit !== state.fleet.generated_by_commit) {
+    if (!current()) return;
+    if (`${meta.run_id}_fleet` !== fleet.run_id || meta.commit !== fleet.generated_by_commit) {
       throw new Error("metadata does not match the displayed fleet");
     }
     const minutes = (value) => Number.isFinite(value) ? `${(value / 60).toFixed(1)} min` : "—";
@@ -830,25 +844,29 @@ async function loadComputeDetails() {
     ];
     el.innerHTML = metricRows(rows);
   } catch (error) {
+    if (!current()) return;
     el.innerHTML = metricRows([["Status", `Compute metadata unavailable (${String(error.message || error)})`]]);
   }
 }
 
 /** Optional GTOC12 dataset: present only after `npm run import-gtoc12` (data/gtoc12 is ignored by git). */
 async function probeFleetDataset() {
-  let manifest = null;
-  try {
-    const response = await fetch("./data/gtoc12/manifest.json", { cache: "no-store" });
-    if (response.ok) manifest = await response.json();
-    state.fleetAvailable = manifest?.dataset_kind === "gtoc12-fleet";
-  } catch { state.fleetAvailable = false; }
-  const option = $("dataset-select").querySelector('option[value="gtoc12"]');
-  option.disabled = !state.fleetAvailable;
-  const summary = manifest?.summary;
-  option.textContent = state.fleetAvailable
-    ? `GTOC12 fleet${summary ? ` (${summary.ships} ships, ${summary.unique_asteroids} asteroids, ${summary.official_total_mass_kg} kg)` : ""}`
-    : "GTOC12 fleet — not installed";
-  if (!state.fleetAvailable) $("dataset-help").textContent = "GTOC12 dataset not installed: run `npm run import-gtoc12` (see README) to add data/gtoc12/.";
+  await Promise.all(Object.entries(FLEET_DATASETS).map(async ([dataset, config]) => {
+    let manifest = null;
+    try {
+      const response = await fetch(`${config.directory}/manifest.json`, { cache: "no-store" });
+      if (response.ok) manifest = await response.json();
+    } catch { /* Optional dataset remains unavailable. */ }
+    const available = manifest?.dataset_kind === "gtoc12-fleet";
+    if (available) availableFleets.add(dataset);
+    const option = $("dataset-select").querySelector(`option[value="${dataset}"]`);
+    option.disabled = !available;
+    const summary = manifest?.summary;
+    option.textContent = available
+      ? `${config.label}${summary ? ` (${summary.ships} ships, ${summary.unique_asteroids} asteroids, ${summary.official_total_mass_kg} kg)` : ""}`
+      : `${config.label} — not installed`;
+  }));
+  state.fleetAvailable = availableFleets.has("gtoc12");
 }
 
 try {
@@ -859,10 +877,11 @@ try {
   const params = new URLSearchParams(location.search);
   const datasetParam = params.get("dataset");
   // Prefer GTOC12 fleet when installed; only stay on archive if explicitly requested.
-  const wantsFleet = state.fleetAvailable && datasetParam !== "archive";
+  const initialDataset = availableFleets.has(datasetParam) ? datasetParam : "gtoc12";
+  const wantsFleet = availableFleets.has(initialDataset) && datasetParam !== "archive";
   if (wantsFleet) {
     const ship = params.has("ship") ? Number(params.get("ship")) - 1 : null;
-    await setDataset("gtoc12", {
+    await setDataset(initialDataset, {
       ship: Number.isInteger(ship) && ship >= 0 ? ship : null, epoch: params.has("epoch") ? Number(params.get("epoch")) : null,
       focus: params.get("focus") === "1", follow: params.get("follow") === "1",
       preset: params.get("preset") || "oblique",

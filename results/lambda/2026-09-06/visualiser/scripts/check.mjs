@@ -118,7 +118,8 @@ assert.match(app, /from "\.\/gtoc12\.js"/);
 assert.match(modules, /getContext\("webgl2"/);
 assert.match(app, /webglcontextlost/);
 assert.match(app, /webglcontextrestored/);
-assert.match(app, /data\/gtoc12\/fleet\.json/, "GTOC12 dataset is fetched from data/gtoc12/");
+assert.match(app, /directory: "\.\/data\/gtoc12"/, "incumbent dataset directory remains available");
+assert.match(html, /<option value="gtoc12-v200"/, "dataset selector offers the GPU campaign");
 assert.match(html, /<option value="gtoc12"/, "dataset selector offers the GTOC12 fleet");
 assert.match(html, /segments connect exact archived samples — no interpolation/i, "straight-segment caveat in the fleet legend");
 assert.match(html, /Vertical exaggeration — <em>not physical<\/em>/, "exaggeration slider is labelled as not physical");
@@ -196,9 +197,10 @@ console.log(`Validated ${data.trajectories.length} ${plannerExport ? "planner-ex
 console.log(`Data SHA-256 ${manifest.files["trajectories.json"].sha256}`);
 
 // Optional GTOC12 fleet dataset (data/gtoc12/ is ignored by git; see README "GTOC12 fleet dataset").
+for (const directory of ["data/gtoc12", "data/gtoc12-v200", "data/gtoc12-v209"]) {
 let fleetBytes = null, fleetManifestBytes = null;
 try {
-  [fleetBytes, fleetManifestBytes] = await Promise.all([read("data/gtoc12/fleet.json"), read("data/gtoc12/manifest.json")]);
+  [fleetBytes, fleetManifestBytes] = await Promise.all([read(`${directory}/fleet.json`), read(`${directory}/manifest.json`)]);
 } catch (error) {
   if (error.code !== "ENOENT") throw error;
 }
@@ -263,4 +265,6 @@ if (!fleetBytes) {
   }
   console.log(`Validated GTOC12 fleet ${fleet.run_id}: ${fleet.ships.length} ships, ${fleet.asteroids.length} asteroids, ${fleet.ships.reduce((sum, ship) => sum + ship.replay.point_count, 0)} exact replay samples, ${collected.toFixed(2)} kg collected (official verifier ${fleet.score.official_total_mass_kg} kg)`);
   console.log(`Fleet SHA-256 ${fleetManifest.files["fleet.json"].sha256} · solution ${fleet.source.solution_sha256}`);
+}
+
 }

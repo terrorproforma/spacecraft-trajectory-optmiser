@@ -1,0 +1,156 @@
+
+==================================== ERRORS ====================================
+________________ ERROR collecting tests/test_gtoc12_gpu_cli.py _________________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_cli.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_cli.py:7: in <module>
+    from spacepdhcg.cli import build_parser
+E   ModuleNotFoundError: No module named 'spacepdhcg.cli'
+_____________ ERROR collecting tests/test_gtoc12_gpu_collection.py _____________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_collection.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_collection.py:10: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+_______________ ERROR collecting tests/test_gtoc12_gpu_conic.py ________________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_conic.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_conic.py:11: in <module>
+    from test_gtoc12_gpu_discretisation import fixture, synthetic_boundary
+tests/test_gtoc12_gpu_discretisation.py:12: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+___________ ERROR collecting tests/test_gtoc12_gpu_discretisation.py ___________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_discretisation.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_discretisation.py:12: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+________ ERROR collecting tests/test_gtoc12_gpu_earth_repeatability.py _________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_earth_repeatability.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_earth_repeatability.py:8: in <module>
+    from spacepdhcg.gtoc12.low_thrust import LegBoundary, ScvxSettings, certify_leg, solve_leg
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+________________ ERROR collecting tests/test_gtoc12_gpu_hops.py ________________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_hops.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_hops.py:8: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+______________ ERROR collecting tests/test_gtoc12_gpu_lambert.py _______________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_lambert.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_lambert.py:9: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+_____________ ERROR collecting tests/test_gtoc12_gpu_neighbours.py _____________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_neighbours.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_neighbours.py:10: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+________________ ERROR collecting tests/test_gtoc12_gpu_qoco.py ________________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_qoco.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_qoco.py:15: in <module>
+    from test_gtoc12_gpu_discretisation import synthetic_boundary
+tests/test_gtoc12_gpu_discretisation.py:12: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+________________ ERROR collecting tests/test_gtoc12_gpu_scvx.py ________________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_scvx.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_scvx.py:8: in <module>
+    from test_gtoc12_gpu_discretisation import synthetic_boundary
+tests/test_gtoc12_gpu_discretisation.py:12: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+________________ ERROR collecting tests/test_gtoc12_gpu_seed.py ________________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_seed.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_seed.py:11: in <module>
+    from test_gtoc12_gpu_discretisation import synthetic_boundary
+tests/test_gtoc12_gpu_discretisation.py:12: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+______________ ERROR collecting tests/test_gtoc12_gpu_verifier.py ______________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_gpu_verifier.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_gpu_verifier.py:10: in <module>
+    from spacepdhcg.gtoc12 import constants as C
+E   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'
+_____________ ERROR collecting tests/test_gtoc12_run_refinement.py _____________
+ImportError while importing test module '/home/ubuntu/spacepdhcg-regularization-v205/repo/tests/test_gtoc12_run_refinement.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_gtoc12_run_refinement.py:8: in <module>
+    from spacepdhcg.cli import build_parser
+E   ModuleNotFoundError: No module named 'spacepdhcg.cli'
+=========================== short test summary info ============================
+ERROR tests/test_gtoc12_gpu_cli.py
+ERROR tests/test_gtoc12_gpu_collection.py
+ERROR tests/test_gtoc12_gpu_conic.py
+ERROR tests/test_gtoc12_gpu_discretisation.py
+ERROR tests/test_gtoc12_gpu_earth_repeatability.py
+ERROR tests/test_gtoc12_gpu_hops.py
+ERROR tests/test_gtoc12_gpu_lambert.py
+ERROR tests/test_gtoc12_gpu_neighbours.py
+ERROR tests/test_gtoc12_gpu_qoco.py
+ERROR tests/test_gtoc12_gpu_scvx.py
+ERROR tests/test_gtoc12_gpu_seed.py
+ERROR tests/test_gtoc12_gpu_verifier.py
+ERROR tests/test_gtoc12_run_refinement.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 13 errors during collection !!!!!!!!!!!!!!!!!!!
+13 errors in 0.68s

@@ -1606,8 +1606,8 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     SettingsAbi settings{
         200, std::max(0, ruiz_iterations), low_thrust ? 20 : 5,
         low_thrust ? 1.0e-12 : 1.0e-6,
-        low_thrust ? 1.0e-9 : 1.0e-13, low_thrust ? 1.0e-9 : 1.0e-8,
-        low_thrust ? 1.0e-9 : 1.0e-13,
+        low_thrust ? 1.0e-8 : 1.0e-13, low_thrust ? 1.0e-8 : 1.0e-8,
+        low_thrust ? 1.0e-8 : 1.0e-13,
         low_thrust ? 1.0e-13 : 1.0e-11,
         tolerance, tolerance, 1.0e-5, 1.0e-5, 0,
     };

@@ -1,0 +1,22 @@
+{
+  "run_id": "gpu_native_campaign_v200",
+  "commit": "7578055101a113d7ba27ce6f2f447dd754b6145a",
+  "weighted_score_fixed_bonus_kg": 475.9753593429998,
+  "raw_kg_per_ship": 475.9753593429158,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB; CUDA numerical solver and screening",
+    "upstream_search": "This run; 18,484,006 Lambert branches and 2,782,091 collection-option checks"
+  },
+  "timing": {
+    "wall_seconds_total": 91.51917822402902,
+    "wall_human": "91.52 s search, refinement and verification"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; official and independent checks pass",
+    "local_refine": "13 certified arcs; CUDA seed, discretisation, assembly, QOCO and SCvx control"
+  },
+  "optimisation": {
+    "strategy": "One-ship search in the full-catalogue a/e/i box; 106 candidates, three refinement attempts. Experimental route; incumbent fleet unchanged.",
+    "proven_optimal": false
+  }
+}

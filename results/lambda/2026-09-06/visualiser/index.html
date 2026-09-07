@@ -23,7 +23,9 @@
           <label class="field-label" for="dataset-select">Dataset</label>
           <select class="dataset-select" id="dataset-select">
             <option value="archive">Archived P1/P2 evidence</option>
-            <option value="gtoc12" selected disabled>GTOC12 fleet — checking…</option>
+            <option value="gtoc12" selected disabled>Incumbent GTOC12 fleet — checking…</option>
+            <option value="gtoc12-v200" disabled>GPU campaign v200 — checking…</option>
+            <option value="gtoc12-v209" disabled>GPU campaign v209 — checking…</option>
           </select>
           <p class="help-text dataset-help" id="dataset-help">Verified archived P1/P2 evidence records, each in its own physical frame.</p>
         </div>
@@ -267,7 +269,7 @@
             </section>
 
             <section class="panel fleet-only" hidden>
-              <h2>GPU solver validation — latest</h2>
+              <h2>GPU solver validation — 7 September</h2>
               <p>Experimental GPU SCvx and accuracy diagnostics. Fleet score unchanged.</p>
               <dl class="metric-list" id="gpu-outer-validation">
                 <div><dt>Status</dt><dd>Loading local and H100 verification…</dd></div>
@@ -286,7 +288,7 @@
 
             <section class="panel fleet-only" hidden>
               <h2>Batched GPU verification — 7 September</h2>
-              <p>Independent propagation of the displayed fleet. Its score is unchanged.</p>
+              <p>Historical propagation benchmark for fleet_master_v11 (413 legs).</p>
               <dl class="metric-list" id="gpu-verification">
                 <div><dt>Status</dt><dd>Loading local and H100 propagation results…</dd></div>
               </dl>

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/ubuntu/spacepdhcg-collection-full-v198/repo/src/spacepdhcg/gtoc12/data.py", line 174, in load_catalogue
+    path = verified_path("GTOC12_Asteroids_Data.txt")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/spacepdhcg-collection-full-v198/repo/src/spacepdhcg/gtoc12/data.py", line 104, in verified_path
+    raise Gtoc12DataError(
+spacepdhcg.gtoc12.data.Gtoc12DataError: GTOC12_Asteroids_Data.txt is not present in /home/ubuntu/spacepdhcg/v1/benchmarks/gtoc12/data; run `spacepdhcg gtoc12 fetch` (or set SPACEPDHCG_GTOC12_DATA) first

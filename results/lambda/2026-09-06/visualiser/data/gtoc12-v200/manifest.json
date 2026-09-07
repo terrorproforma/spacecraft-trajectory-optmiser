@@ -1,0 +1,43 @@
+{
+  "dataset_kind": "gtoc12-fleet",
+  "files": {
+    "fleet.json": {
+      "bytes": 93713,
+      "sha256": "7b1b0d44e72b2f649f2f949137458d69a2930be1719ff652d851a2993a1e7d1c"
+    }
+  },
+  "kepler_check": {
+    "asteroid_max_error_km": 0.000003036148160292986,
+    "context_points_checked": 2288,
+    "earth_max_error_km": 3.0719530854108674e-7,
+    "tolerance_km": 0.01
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "catalogue": {
+      "bytes": 6840111,
+      "name": "gtoc12-catalogue-v200.txt",
+      "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675"
+    },
+    "export_manifest_sha256": "497c923088ac2a2400e95620b3d8b7e238b53abf8e5f64379ae12523d3242380",
+    "export_trajectories_bytes": 348619,
+    "export_trajectories_sha256": "d4fba0b0f51921939115bf94b5b5f904cd9d7587512f29ad48170c440a1716fe",
+    "fleet_json_sha256": "cb6ab2a049342d3cf932dac1aa9051bfa3971bf415b44492263be50758518b88",
+    "generator": "spacepdhcg.gtoc12.pipeline",
+    "independent_verifier_ok": true,
+    "official_verifier_ok": true,
+    "solution_basename": "Result.txt",
+    "solution_bytes": 399087,
+    "solution_sha256": "1ae27d706bfa650ee4b012642706168fd7a02f2730ebb9029c9e336f69261fab",
+    "solution_verified_locally": true,
+    "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+  },
+  "summary": {
+    "events": 14,
+    "official_total_mass_kg": 475.975,
+    "replay_points": 509,
+    "ships": 1,
+    "unique_asteroids": 6
+  },
+  "transform": "Verified export copied losslessly (exact samples, indices, hashes); events classified; pinned Keplerian elements attached; Kepler propagation cross-checked against exporter context orbits."
+}

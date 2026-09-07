@@ -82,6 +82,24 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Real-mission departure reliability:** a 500-day Earth leg exposed repeatability
+failures missed by the earlier coast tests. Identical first subproblems produced
+different QOCO outcomes. Increasing low-thrust factor regularization to **1e-8**
+passes **32/32 repeated real departures on each GPU**, keeping original-equation,
+objective and independent physics checks unchanged. **328 local tests and 173
+H100 tests pass**, including the new ordinary/CUDA-Graph regression. The CLI also
+stops treating a failed SCvx attempt as a proof that other candidates are infeasible.
+See [diagnosis, rejected configurations and evidence](docs/GPU_REAL_DEPARTURE_STABILITY.md).
+
+**Corrected complete H100 run:** **18,484,006 Lambert branches**, **106 route
+candidates**, three refinement attempts and **two certified routes in 77.28 s**.
+The selected 13-leg, six-asteroid mission returns **475.975 kg** and takes **6.35 s**
+to refine. The pre-fix run took 91.52 s and certified one route; these are single-run
+observations, not a universal speedup. A later leg in the third candidate still
+fails and remains under investigation. The incumbent fleet score stays
+**12,805.194 weighted kg**. Both missions are selectable in the web visualiser:
+[downloaded result, full path and loading instructions](results/lambda/2026-09-08/gpu-native-campaign-v209/README.md).
+
 **GPU collection pricing and selection:** thrust-authority checks, inflated
 rocket-equation propellant and lost mining yield now run on CUDA for collection
 options, with the original ordered near-tie decision rule. The 1,000-asteroid H100

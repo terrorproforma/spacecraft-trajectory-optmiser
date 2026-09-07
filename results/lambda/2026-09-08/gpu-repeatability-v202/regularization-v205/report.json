@@ -1,0 +1,90 @@
+{
+  "start": 1788797693.1333292,
+  "pid": 129267,
+  "steps": [
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.0036280155181884766
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "cpp",
+        "src",
+        "scripts",
+        "pyproject.toml"
+      ],
+      "returncode": 0,
+      "seconds": 0.16388344764709473
+    },
+    {
+      "name": "git-snapshot",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU snapshot",
+        "-c",
+        "user.email=snapshot@localhost",
+        "commit",
+        "-qm",
+        "Frozen CUDA collection integration source"
+      ],
+      "returncode": 0,
+      "seconds": 0.015632152557373047
+    },
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-regularization-v205/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-regularization-v205/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.366950511932373
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-regularization-v205/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "gtoc12_collection_test",
+        "gtoc12_neighbours_test",
+        "gtoc12_outer_graph_test",
+        "gtoc12_scvx_test",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 49.48519825935364
+    }
+  ],
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "249be4fe38f59ba588cdb51b7025a273946a88c60d1b0ddff4f66abbdf0119ad",
+    "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "complete": true,
+  "end": 1788797745.8860645
+}

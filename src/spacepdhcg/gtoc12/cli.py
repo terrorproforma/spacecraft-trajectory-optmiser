@@ -455,30 +455,15 @@ def cmd_run(args: argparse.Namespace) -> int:
             continue
         best_entry = None
         refinements = []
-        failed_legs: set[tuple[int, int, float]] = set()
         attempts = 0
         for rank, plan in enumerate(result.candidates):
             if attempts >= args.refine_top:
                 break
-            # retain failed chains: never re-refine a plan that reuses a leg SCvx already
-            # proved infeasible (same bodies and departure epoch)
-            if any(
-                (leg.from_id, leg.to_id, round(leg.departure_epoch, 3)) in failed_legs
-                for leg in plan.legs
-            ):
-                refinements.append({"rank": rank, "skipped": "contains a failed leg"})
-                continue
+            # SCvx nonconvergence is not an infeasibility certificate. Even an
+            # identical boundary can succeed on another attempt; bodies and
+            # departure alone also omit arrival time and propagated ship mass.
             attempts += 1
             refined = refine_route(plan, catalogue, scvx=scvx)
-            for leg in refined.legs:
-                if not leg.certified:
-                    failed_legs.add(
-                        (
-                            leg.planned.from_id,
-                            leg.planned.to_id,
-                            round(leg.planned.departure_epoch, 3),
-                        )
-                    )
             entry: dict[str, Any] = {
                 "rank": rank,
                 "plan": plan.summary(),

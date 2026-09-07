@@ -1,0 +1,92 @@
+{
+  "kind": "real-earth-departure-stability",
+  "recorded_utc": "2026-09-07T16:28:27.451199+00:00",
+  "source_base_commit": "712714f364b00c3c36eda8fb18d8afb79b86f253",
+  "source_sha256": {
+    "cpp/cuda/src/native_qoco_adapter.cpp": "69dfc75826b944ad3f007ab02fcb21b05f2e5d0ce8b858ea4d435cd1b34f6338",
+    "src/spacepdhcg/gtoc12/cli.py": "8de34f33809d007dec837e5ffb195ec3233bcc6816349f4e05cf42b5ba4acb70",
+    "tests/test_gtoc12_gpu_earth_repeatability.py": "53c465c1ed629d00658695c24034bfb7b8bab750a0c7e0668f43265968cfbc01",
+    "tests/test_gtoc12_run_refinement.py": "24b80b45c7366d67b3bee803688708dc536dee9eebfc488fa6d157815fd72f2f"
+  },
+  "regularization": {
+    "before": 1e-09,
+    "after": 1e-08
+  },
+  "unchanged_gates": {
+    "conic_relative_residual_and_gap": 1e-09,
+    "linear_system_refinement": 1e-12
+  },
+  "frozen_qp_sha256": "6f173b7499c52445573e5a28d450e608a5e02c0a76534aa831a2fb4edd3dc52f",
+  "h100_before": [
+    {
+      "origin": false,
+      "total": 4,
+      "converged": 1,
+      "physics_qualified": 1,
+      "median_seconds": 7.034008493996225,
+      "min_final_mass_kg": 2610.6003564045945,
+      "max_final_mass_kg": 2658.4057892269248
+    },
+    {
+      "origin": true,
+      "total": 4,
+      "converged": 3,
+      "physics_qualified": 3,
+      "median_seconds": 1.006008180003846,
+      "min_final_mass_kg": 2638.807867180961,
+      "max_final_mass_kg": 2657.363839456032
+    }
+  ],
+  "h100_after": [
+    {
+      "origin": false,
+      "total": 16,
+      "converged": 16,
+      "physics_qualified": 16,
+      "median_seconds": 0.5101109774841461,
+      "min_final_mass_kg": 2657.3638394545906,
+      "max_final_mass_kg": 2657.3638394855493
+    },
+    {
+      "origin": true,
+      "total": 16,
+      "converged": 16,
+      "physics_qualified": 16,
+      "median_seconds": 0.6489541485207155,
+      "min_final_mass_kg": 2657.363839450822,
+      "max_final_mass_kg": 2657.363839475236
+    }
+  ],
+  "local_after": [
+    {
+      "origin": false,
+      "total": 16,
+      "converged": 16,
+      "physics_qualified": 16,
+      "median_seconds": 0.5186348605000148,
+      "min_final_mass_kg": 2657.3638394552354,
+      "max_final_mass_kg": 2657.3638394759814
+    },
+    {
+      "origin": true,
+      "total": 16,
+      "converged": 16,
+      "physics_qualified": 16,
+      "median_seconds": 0.5147242945001835,
+      "min_final_mass_kg": 2657.363839384414,
+      "max_final_mass_kg": 2657.363839512302
+    }
+  ],
+  "tests": {
+    "local": 328,
+    "h100": 173,
+    "real_departure_parameter_cases": 4,
+    "repeats_per_parameter_case": 4,
+    "viewer": 38
+  },
+  "runtime_sha256": {
+    "local": "7b499db9a6695959498819520a9d85b0074dc152df1eb6fcadfb79f311b351ad",
+    "h100": "249be4fe38f59ba588cdb51b7025a273946a88c60d1b0ddff4f66abbdf0119ad"
+  },
+  "limits": "Specific failure fixed in the reported tests. Campaign v209 retains a failed later leg. Complete GPU-native planning and a higher fleet score remain open."
+}
