@@ -1,0 +1,118 @@
+{
+  "source_commit": "3706455f79c28fd0ff82a0323dfb0e51f183bd09",
+  "core_matches_frozen_v158": {
+    "cpp/cuda/src/gtoc12_scvx.cu": true,
+    "cpp/cuda/src/gtoc12_qoco.cu": true,
+    "cpp/cuda/src/native_qoco_adapter.cpp": true,
+    "cpp/cuda/src/native_qoco_gpu.cu": true,
+    "cpp/cuda/internal/native_qoco_adapter.h": true,
+    "cpp/cuda/internal/native_qoco_gpu.h": true,
+    "cpp/cuda/internal/graph_append.h": true,
+    "cpp/cuda/internal/gtoc12_qoco_graph.h": true
+  },
+  "local_qoco": {
+    "patches": {
+      "algebra/cuda/qoco_batched_stopping.cuh": "fa099b76fecb1daee5a74573ab3355d4c28ce4931318ece3c3649f32438cf807",
+      "src/qoco_utils.c": "1d2d0de329d2100fa41dd35a5091075c592ae69645b30b6f3beba97d57a4c139",
+      "src/equilibration.c": "ea3b1102e592ccc7824988b0538b283db63fdf4189f6323178e7310530963d5e",
+      "algebra/cuda/qoco_ipm_terminal.cuh": "4ca396b0132a3defa9bb7686066f49f55e3a6cda72f99e6bc1b4052a67b9ecf7"
+    },
+    "commands": [
+      [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/build-qoco-gpu-device-ir-v135/source",
+        "-B",
+        "/home/angus/build-qoco-gpu-device-ir-v135/build",
+        "-G",
+        "Ninja",
+        "-DQOCO_ALGEBRA_BACKEND=cuda",
+        "-DQOCO_BUILD_TYPE=Release",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DCMAKE_CUDA_FLAGS=--default-stream per-thread -I/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/include",
+        "-DCUDSS_LIB=/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib/libcudss.so",
+        "-DCMAKE_C_FLAGS=-Werror=implicit-function-declaration",
+        "-DBUILD_QOCO_DEMO=OFF"
+      ],
+      [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/build-qoco-gpu-device-ir-v135/build",
+        "--target",
+        "qoco",
+        "-j",
+        "3"
+      ]
+    ],
+    "stages": [
+      {
+        "returncode": 0,
+        "seconds": 11.718892570999742
+      },
+      {
+        "returncode": 0,
+        "seconds": 9.206365073001507
+      }
+    ],
+    "sha256": "6442a41e5207fe6c6e70663902e6ffe7c7bca5a43507679119baf0c6bfb9b3b4"
+  },
+  "local_core": {
+    "command": [
+      "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+      "--build",
+      "/home/angus/build-spacepdhcg-gtoc12-v141",
+      "--target",
+      "spacepdhcg_cuda",
+      "device_scvx_integration_test",
+      "gtoc12_scvx_test",
+      "gtoc12_discretisation_test",
+      "gtoc12_device_refresh_test",
+      "gtoc12_conic_test",
+      "gtoc12_qoco_guard_test",
+      "qoco_gpu_audit_test",
+      "qoco_gpu_conversion_test",
+      "native_qoco_conversion_test",
+      "gtoc12_outer_graph_test",
+      "gtoc12_graph_deadline_test",
+      "-j",
+      "3"
+    ],
+    "source_parent": "6a634925040539e375c9f75e8dc5e1123cf089b8",
+    "runtime_sha256": {
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/device_scvx_integration_test": "25f584ec02c89d6803ab6a76e75f0de3e343863520aa135a8b999dae20ed56a2",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/gtoc12_conic_test": "17a6e13f0f720c7916722da3c6c5bff6601e048bf93fbc1804844e84a25716f8",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/gtoc12_device_refresh_test": "08e1dff5047c655f5c3d9c806bca4efe43e007d4aa8ac7d3d7eda68e243dac24",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/gtoc12_discretisation_test": "36efa970608a8b17503fecfff2d4c4f5f1626f924926ee748117a7c1c5f3d388",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/gtoc12_graph_deadline_test": "c694567256db6c8d680df935cf556d9ed5e6599508a34537a0bb1e60fba90886",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/gtoc12_outer_graph_test": "20c6f344851b69c8804a5aafc546273ea3ffa87791fed9d7f7ef9c0b3d858ca0",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/gtoc12_qoco_guard_test": "b84cb60097ef83a37b5f8d5eaab38e3048175b2158c263c9d9fce4f61e279ed7",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/gtoc12_scvx_test": "665990374e1f77f862b67a9e76688f13bdafa48bb5d3348a1e163e0e8c53ea34",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/libspacepdhcg_cuda.so": "9108ac1f2a72d8ba5f807d9ab44b4a57e8a74d27e840574b2b667ebc267ff6aa",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/native_qoco_conversion_test": "adfb39d434586b4ce09df452afcd0645428c1e28ea1a3bb63366844d511ef88e",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/qoco_gpu_audit_test": "eefbcbbc6018c33a3bb99aa5f1970742125ee2b7d156976ba1dd0870e0fcebe8",
+      "/home/angus/build-spacepdhcg-gtoc12-v158/final/qoco_gpu_conversion_test": "8d97adf6147a3570f3a67ab7bd461ebd3ae81038580d74c4996d113a0b9e7372"
+    }
+  },
+  "h100_source": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": "83f6163951809f7ca0cdd82ccc75891de4656d2d397453e94154604fb05da708",
+    "cpp/cuda/internal/native_qoco_adapter.h": "5437418472cf4d26b29c7ed2ea9b270d67ebce6be9906f4a63b1784f8ebd876b",
+    "cpp/cuda/internal/native_qoco_gpu.h": "43dbb7731087ba21b714828e3b354528dda4f2861286ba424e98e184c5c27a84",
+    "cpp/cuda/src/gtoc12_qoco.cu": "b0fa8d108ca30b885cb56817c75fe6a606e4aa52255c90b15f72fa389e804355",
+    "cpp/cuda/src/gtoc12_scvx.cu": "9dbd1f1922217efe8a4480d3ed53b22e6e02f1d0aa33132e4ea4cb6bfbb0a155",
+    "cpp/cuda/src/native_qoco_adapter.cpp": "e47ecf1a0a907acff263e8532d64888d7c69409dfcbfe6cd4c1c9ed72d2a11d6",
+    "cpp/cuda/src/native_qoco_gpu.cu": "8944f97e42116f69a2eeaf59fd7fe848e35bfbd9f4d2f675e06a0951de82c37d",
+    "cpp/cuda/tests/qoco_gpu_stopping_test.cu": "a12b89124a28ff0072dafce5e5a99c2c6673b06786dc6cb98bd97cfc9c7da2df",
+    "cpp/cuda/tests/qoco_ipm_cache_probe.cpp": "0810e51a7659d26ea533be54badf8c8d651cd62dd1150d76cd64606d92c0fed8",
+    "src/spacepdhcg/gtoc12/gpu_scvx.py": "7f5967a9c69d6d950b28a92ccc6757454764f7f5c8a5eb8475504cc6d9ea4c7e",
+    "tests/test_gtoc12_gpu_scvx.py": "d6dcd3f8241f608f184cc6fa2a6bb87eb0392c6eb336233109cb08db3defa848",
+    "cpp/cuda/internal/graph_append.h": "e11e7cc0aeae3bdb4fc2dc4fad84ee6486ae88f7f5518aa2ac4ff3f42a17d8f0",
+    "cpp/cuda/internal/gtoc12_qoco_graph.h": "d0c2e5c66e5e85a71014962f17eed7e4f16d45f6a48eb631a6cfd5639a054ba5",
+    "cpp/cuda/tests/gtoc12_graph_deadline_test.cu": "56a5552e4742cf17f0fc5505cfd3569eff92ac2b1f79922f7d57b68005fc9a44",
+    "cpp/cuda/tests/gtoc12_outer_graph_test.cu": "38cdc33eba2537da09092d2f118b3c7dad00e1aa52ed785c8347585aa74768b5",
+    "cpp/cuda/tests/qoco_equilibrated_stopping_test.cu": "24f022d67ac912459ec3474fbc50c2c4ab89f0359c2bdb94fa33e90d9eb4ddda",
+    "scripts/gpu/prepare_qoco_stopping_accuracy.py": "109a7a372602389524356d82fd9e32b75dce4768230cb5219c3153261c5655f8",
+    "build/performance/diagnose_outer_leg_v158.py": "c3cbb0bad469db5ffae6a04d47f119b787130e4229c8a0598af1dfc07ab8aa50"
+  }
+}

@@ -1,0 +1,360 @@
+{
+  "start": 1788780659.4399488,
+  "patches": {
+    "algebra/cuda/qoco_batched_stopping.cuh": "fa099b76fecb1daee5a74573ab3355d4c28ce4931318ece3c3649f32438cf807",
+    "src/qoco_utils.c": "1d2d0de329d2100fa41dd35a5091075c592ae69645b30b6f3beba97d57a4c139",
+    "src/equilibration.c": "ea3b1102e592ccc7824988b0538b283db63fdf4189f6323178e7310530963d5e",
+    "algebra/cuda/qoco_ipm_terminal.cuh": "4ca396b0132a3defa9bb7686066f49f55e3a6cda72f99e6bc1b4052a67b9ecf7"
+  },
+  "stages": [
+    {
+      "name": "qoco-configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/qoco",
+        "-B",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/qoco-build",
+        "-G",
+        "Ninja",
+        "-DQOCO_ALGEBRA_BACKEND=cuda",
+        "-DQOCO_BUILD_TYPE=Release",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DCMAKE_CUDA_FLAGS=--default-stream per-thread -I/home/ubuntu/spacepdhcg-recovery-v152/cudss/include",
+        "-DCUDSS_LIB=/home/ubuntu/spacepdhcg-recovery-v152/cudss/lib/libcudss.so",
+        "-DCMAKE_C_FLAGS=-Werror=implicit-function-declaration",
+        "-DBUILD_QOCO_DEMO=OFF"
+      ],
+      "returncode": 0,
+      "seconds": 2.1936228275299072
+    },
+    {
+      "name": "qoco-build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/qoco-build",
+        "--target",
+        "qoco",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 14.952595233917236
+    },
+    {
+      "name": "core-configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 1,
+      "seconds": 2.1867077350616455
+    },
+    {
+      "name": "core-configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 0.2976663112640381
+    },
+    {
+      "name": "core-build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 43.15211749076843
+    },
+    {
+      "name": "qoco_gpu_stopping_test-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/amd",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/repo/cpp/cuda/tests/qoco_gpu_stopping_test.cu",
+        "-L/home/ubuntu/spacepdhcg-diagnose-v162/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_gpu_stopping_test"
+      ],
+      "returncode": 0,
+      "seconds": 1.3135313987731934
+    },
+    {
+      "name": "qoco_equilibrated_stopping_test-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/amd",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/repo/cpp/cuda/tests/qoco_equilibrated_stopping_test.cu",
+        "-L/home/ubuntu/spacepdhcg-diagnose-v162/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_equilibrated_stopping_test"
+      ],
+      "returncode": 0,
+      "seconds": 1.2897582054138184
+    },
+    {
+      "name": "qoco_ipm_replay_probe-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/amd",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/repo/cpp/cuda/tests/qoco_ipm_replay_probe.cu",
+        "-L/home/ubuntu/spacepdhcg-diagnose-v162/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_ipm_replay_probe"
+      ],
+      "returncode": 0,
+      "seconds": 1.1259300708770752
+    },
+    {
+      "name": "qoco_outer_graph_probe-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/amd",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/repo/cpp/cuda/tests/qoco_outer_graph_probe.cu",
+        "-L/home/ubuntu/spacepdhcg-diagnose-v162/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_outer_graph_probe"
+      ],
+      "returncode": 0,
+      "seconds": 1.1588456630706787
+    },
+    {
+      "name": "qoco_outer_numeric_probe-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v162/qoco/lib/amd",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/repo/cpp/cuda/tests/qoco_outer_numeric_probe.cu",
+        "-L/home/ubuntu/spacepdhcg-diagnose-v162/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_outer_numeric_probe"
+      ],
+      "returncode": 0,
+      "seconds": 1.1430623531341553
+    },
+    {
+      "name": "qoco_gpu_stopping_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_gpu_stopping_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.6620888710021973
+    },
+    {
+      "name": "qoco_equilibrated_stopping_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_equilibrated_stopping_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.6102054119110107
+    },
+    {
+      "name": "qoco_ipm_replay_probe",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_ipm_replay_probe"
+      ],
+      "returncode": 0,
+      "seconds": 0.9039649963378906
+    },
+    {
+      "name": "qoco_outer_graph_probe",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_outer_graph_probe"
+      ],
+      "returncode": 0,
+      "seconds": 0.6201362609863281
+    },
+    {
+      "name": "qoco_outer_numeric_probe",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v162/final/qoco_outer_numeric_probe"
+      ],
+      "returncode": 0,
+      "seconds": 0.5985598564147949
+    },
+    {
+      "name": "gtoc12-integration",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_discretisation.py",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_qoco.py",
+        "tests/test_gtoc12_gpu_seed.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 16.5061092376709
+    },
+    {
+      "name": "leg-0",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-0.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.8594346046447754
+    },
+    {
+      "name": "leg-1",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-1.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.816316843032837
+    },
+    {
+      "name": "leg-2",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-2.json"
+      ],
+      "returncode": 0,
+      "seconds": 2.2632358074188232
+    },
+    {
+      "name": "leg-3",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-3.json"
+      ],
+      "returncode": 0,
+      "seconds": 2.0838539600372314
+    },
+    {
+      "name": "leg-4",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-4.json"
+      ],
+      "returncode": 0,
+      "seconds": 3.341277599334717
+    },
+    {
+      "name": "leg-5",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-5.json"
+      ],
+      "returncode": 0,
+      "seconds": 3.8140244483947754
+    },
+    {
+      "name": "leg-6",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-6.json"
+      ],
+      "returncode": 0,
+      "seconds": 2.842580556869507
+    },
+    {
+      "name": "leg-7",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v162/leg-7.json"
+      ],
+      "returncode": 0,
+      "seconds": 3.886967420578003
+    }
+  ],
+  "completed": true,
+  "end": 1788780858.1410637,
+  "resumed": 1788780766.7436793,
+  "libraries": {
+    "libspacepdhcg_cuda.so": "da083479a9955e6a3901bedd51c6d020b3dbcf527b0a647b3730fa8b431c9402",
+    "libqoco.so": "b96789bf7d74c353d782f0a3fc65dd7b7dd86ea4ff05933f48986234fcad3d47"
+  }
+}

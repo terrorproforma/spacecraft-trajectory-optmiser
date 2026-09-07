@@ -1,106 +1,111 @@
 {
   "schema_version": 1,
   "kind": "gpu-outer-graph-validation",
-  "recorded_utc": "2026-09-07T10:39:31.136060+00:00",
-  "runtime": "Native v157 / prepared QOCO133",
-  "source_commit": "dcdb812fceda00041db52a2764377e0d1c165414",
-  "hardware": [
-    "Local RTX 5090",
-    "Lambda H100 80GB HBM3"
-  ],
+  "recorded_utc": "2026-09-07T11:40:40.685124+00:00",
+  "runtime": "Experimental native outer graph / QOCO135",
+  "source_commit": "3706455f79c28fd0ff82a0323dfb0e51f183bd09",
+  "source_note": "Experimental development checkpoint; repeated qualification unresolved.",
+  "status": "NOT READY \u2014 repeated trajectory qualification still fails",
   "fleet_changed": false,
   "full_gpu_scvx": false,
   "tests": {
-    "local_regression_passed": 332,
-    "local_integration_passed": 89,
-    "h100_integration_passed": 89,
-    "local_integration_overlaps_regression": true,
-    "physical_thrust_cases_per_gpu": 24,
-    "queued_parity_per_gpu": 128,
-    "nested_parity_per_gpu": 72,
-    "guarded_invalid_updates_per_gpu": 24,
-    "changing_qps_per_gpu": 32
+    "local_regression_passed": 337,
+    "h100_integration_passed": 94
   },
+  "repeated_qualification": "H100: 4/8 qualified. Unshifted: 4/4; shifted: 0/4. Local repetitions also fail.",
   "thrust_acceptance": "GPU rejects candidates above the unchanged 0.6 N + 1e-9 N certificate ceiling; no clipping.",
-  "graph_validation": "128 queued + 72 nested exact-parity results; 24 invalid updates; 32 changing QPs with independent analytic checks on both GPUs.",
-  "sanitizer_summary": "H100 memcheck: full guard and solver probes pass. Guard kernel initcheck passes with API-memory checks disabled; default initcheck blocks async copies.",
-  "scope": "Correctness validation and GPU outer-loop building blocks. No new fleet score or complete-trajectory speedup measurement.",
-  "remaining": "Connect native conversion, auditing and SCvx dispatch to the outer graph; reusable leg workspaces and GPU fleet search. Local WSL sanitizer failure unresolved.",
-  "sanitizer": {
-    "h100_memcheck_full_guard": {
-      "returncode": 0,
-      "seconds": 43.62775945663452
-    },
-    "h100_initcheck_full_guard": {
-      "returncode": 1,
-      "reason": "Held-stream watchdog expires; API-memory instrumentation blocks async D2D copy in standalone reproduction."
-    },
-    "h100_initcheck_kernel_guard": {
-      "returncode": 0,
-      "api_memory_checks": false,
-      "seconds": 20.846263885498047
-    },
-    "local_wsl_failure_resolved": false
-  },
-  "failures_retained": [
-    "Initial local GTOC12 integration: 88 pass / 1 physical thrust failure.",
-    "Balanced isolated comparison: QOCO131 baseline 3 pass / 1 thrust failure; QOCO133 4 pass.",
-    "Initial vendor/probe/native build errors retained with corrected builds.",
-    "Full H100 memcheck first timed out at 30 seconds; completed in 43.6 seconds with longer allowance.",
-    "Full default H100 initcheck trips 3-second and diagnostic 30-second watchdogs; standalone D2D reproduces instrumentation blocking."
-  ],
-  "source_and_runtime": {
-    "reproduced_prepared_source_sha256": {
-      "qoco_ipm_graph.cuh": "9e34e06495e8675e5d9c14808e9070e71913ef96872c3904e33d90e18d9bc28a",
-      "qoco_gpu_replay.h": "d827706dccfec91254e34077fa38dabcdefaea7fc5efa465e240adba1374c2a4",
-      "qoco_device_update.cuh": "5c81fdf4652431c29a78697cd0feb163d16e42f98b925fb1be13b4d4d56ba987",
-      "qoco_ipm_outer_graph.cuh": "ae138bc91f1a8a43689e8bab5bad412a78dcb18fc1a35e538ef429b2ece87719"
-    },
-    "unit": {
-      "command": [
-        "/home/angus/build-spacepdhcg-gtoc12-v157/final/gtoc12_scvx_test"
-      ],
-      "returncode": 0,
-      "stdout": "PASS: 14 controller branches, 10 final states, 8 multi-block reductions, 24 physical thrust gates\n",
-      "stderr": "",
-      "seconds": 0.436082124710083
-    },
-    "source_commit": "dcdb812fceda00041db52a2764377e0d1c165414",
-    "source_lf_sha256": {
-      "cpp/cuda/patches/qoco_ipm_outer_graph.cuh": "ae138bc91f1a8a43689e8bab5bad412a78dcb18fc1a35e538ef429b2ece87719",
-      "cpp/cuda/src/gtoc12_scvx.cu": "90703f877b13a9e1c860b8623c05156c29416d3659fc93d7ec9eae08bcbb7e69",
-      "cpp/cuda/tests/gtoc12_device_refresh_test.cu": "8a795ab5a7885565afc7dbbe2fa0c3bc9357dfd2096e7f9581e62c03f689a943",
-      "cpp/cuda/tests/gtoc12_scvx_test.cu": "6925e8b876229992e07ad544f34ba5f4acbfd3ce78941ea675bc255d7b611ab8",
-      "cpp/cuda/tests/qoco_outer_graph_probe.cu": "fd70f675ff81707683901444e24de1ab5bdc7ca2f3d5d00b51caa51a4aa04faa",
-      "cpp/cuda/tests/qoco_outer_numeric_probe.cu": "855cef2e920e2a5efbd91a42da2100fbee2dd0203c6630011a541f12764ebf81",
-      "docs/GPU_OUTER_GRAPH.md": "4e8973c61095927256f4d41e372c37f0c41384eacd89d831fb80b2dbde7064c8",
-      "scripts/gpu/prepare_qoco_outer_graph.py": "0bb5fd6c2a5d2387ea6ef996de570fa3c656d2715356968c6fd1bdf160db9920"
-    },
-    "runtime_sha256": {
-      "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so": "e9cbffd8ad4123fafabf8cadc8e234abd29fd61ce435ac5255242b87b6c4c420",
-      "/home/angus/build-spacepdhcg-gtoc12-v157/final/gtoc12_scvx_test": "cf0135efbc22a1dc6d98ea2212a3f7ce66f0b5b362dd5600a78ec3941dca881d",
-      "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so": "82cf9a32630a386e23137d5df8759d518c34b8fc67b09f6f42bebd932e4d605c"
-    },
-    "local_build_metadata_note": "Native local build reused its CMake directory, so its embedded source commit is stale; source LF hashes and frozen runtime hashes identify this build."
-  },
-  "h100_runtime_sha256": {
-    "gtoc12_device_refresh_test": "d7bb7700c8fa9229662a6d8208b06e68498ec0cbdb43f66376537c34036ef82a",
-    "libspacepdhcg_cuda.so": "9da01a196676f2dd7b5169a20e8f209c6faa7db1758c36b487e120ac15779c97",
-    "qoco_gpu_audit_test": "f9cf3f8d9654480c5892b26869da469709f92c7ac4fb73545ec164388d7f5440",
-    "gtoc12_scvx_test": "2f5f6e34945e5c6289e93183eac116712070702a1b850874f0875680073cae55",
-    "native_qoco_conversion_test": "44b06b577e8c7ad17f8f8d3a164d22d9ca6cbca7338db04bba6d6ec2c6d1ef52",
-    "libqoco.so": "fbfd61ca17db32694635f473cae5c808ca1d081c5a8052170faa42663798a996",
-    "qoco_gpu_conversion_test": "d13ff902c15fab240e23b6d49e081510b809f1dc2a30971f61aea341c9dce208",
-    "device_scvx_integration_test": "450ceb547cfcc887e4c7d4c9d1a573d03888ac874121f056e13c9e5ce439fb0c"
-  },
+  "graph_validation": "Both GPUs: 64 original-equation metric cases; 128 queued + 72 nested parity results, 24 invalid updates, 32 changing QPs.",
+  "sanitizer_summary": "Not rerun for this combined candidate. Previous published sanitizer results remain historical.",
+  "scope": "Experimental SCvx iteration graph and corrected scaling metrics; no new fleet score or overall speedup claim.",
+  "remaining": "Resolve repeated shifted-coordinate failures; then recovery benchmarks and sanitizer verification. Setup and fleet search still require CPU work.",
   "evidence": {
-    "local-evidence.tar.gz": {
-      "bytes": 811402,
-      "sha256": "6b3cde77e03377696fe86298513eb2bdc300b33a16ccd6b0e38c87c8fc54e0dd"
+    "recorded_utc": "2026-09-07T11:44:19.255463+00:00",
+    "status": "experimental; repeated trajectory qualification still fails",
+    "source_parent": "6a634925040539e375c9f75e8dc5e1123cf089b8",
+    "source_branch": "codex/gpu-native-outer-v158",
+    "fleet_changed": false,
+    "local_regression": {
+      "passed": 337,
+      "failed": 0
     },
-    "h100-evidence.tar.gz": {
-      "bytes": 18899,
-      "sha256": "d1295fc191f4ad2412ca523f23e0f8c86deffb83747580dd9b33cc712a861f7d"
-    }
+    "h100_integration": {
+      "passed": 94,
+      "failed": 0
+    },
+    "h100_repeats": {
+      "qualified": 4,
+      "total": 8,
+      "unshifted_qualified": 4,
+      "shifted_qualified": 0
+    },
+    "local_comparisons": [
+      {
+        "name": "full-outer-v158-comparison-1",
+        "qualified": 3,
+        "total": 8,
+        "ordinary_qualified": 1,
+        "graph_qualified": 2,
+        "timing_comparable": true
+      },
+      {
+        "name": "full-outer-v158-q134-comparison-1",
+        "qualified": 3,
+        "total": 8,
+        "ordinary_qualified": 1,
+        "graph_qualified": 2,
+        "timing_comparable": true
+      },
+      {
+        "name": "full-outer-v158-q135-comparison-1",
+        "qualified": 5,
+        "total": 8,
+        "ordinary_qualified": 2,
+        "graph_qualified": 3,
+        "timing_comparable": true
+      },
+      {
+        "name": "full-outer-v159-q134-comparison-1",
+        "qualified": 1,
+        "total": 8,
+        "ordinary_qualified": 1,
+        "graph_qualified": 0,
+        "timing_comparable": true
+      },
+      {
+        "name": "full-outer-v160-q134-comparison-1",
+        "qualified": 4,
+        "total": 8,
+        "ordinary_qualified": 3,
+        "graph_qualified": 1,
+        "timing_comparable": false
+      },
+      {
+        "name": "full-outer-v161-q135-comparison-1",
+        "qualified": 7,
+        "total": 8,
+        "ordinary_qualified": 3,
+        "graph_qualified": 4,
+        "timing_comparable": true
+      }
+    ],
+    "scope": "Native SCvx graph and stopping-metric corrections. Full repeated trajectory reliability is unresolved; no overall speedup or new fleet-score claim.",
+    "known_limitations": [
+      "One-pass regression success does not establish repeated solve reliability.",
+      "v159 tighter refinement, v160 smaller regularization, and v161 zero relative tolerance were diagnostic experiments and reverted.",
+      "v160 comparison began within a second of build completion; do not use it for timing claims.",
+      "The v158 frozen source manifest over-enumerates LF-normalized files because WSL Git saw line-ending changes; use the Windows Git overlay manifest for change scope.",
+      "No new sanitizer result for this combined candidate."
+    ],
+    "archives": {
+      "local-evidence.tar.gz": {
+        "bytes": 1514280,
+        "sha256": "9daaf1f6fd7c97fad5b6e709a2c4e7ea57fb53cd7e988a9bee52e034a839e052"
+      },
+      "h100-evidence.tar.gz": {
+        "bytes": 198144,
+        "sha256": "5c0135ffdef77ff2e3fef3a68b99527067f64b7af1978874c685220d51e3b146"
+      }
+    },
+    "source_commit": "3706455f79c28fd0ff82a0323dfb0e51f183bd09"
   }
 }

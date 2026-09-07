@@ -684,9 +684,11 @@ async function loadGpuOuterValidation() {
       throw new Error("unrecognised validation metadata");
     }
     el.innerHTML = metricRows([
+      ...(result.status ? [["Candidate status", result.status]] : []),
       ["Runtime", `${result.runtime} · ${result.source_commit.slice(0, 8)}`],
       ["Local regression", `${result.tests.local_regression_passed} passed`],
       ["H100 GTOC12 integration", `${result.tests.h100_integration_passed} passed`],
+      ...(result.repeated_qualification ? [["Repeated trajectory checks", result.repeated_qualification]] : []),
       ["Physical thrust", result.thrust_acceptance],
       ["GPU graph probes", result.graph_validation],
       ["H100 sanitizer", result.sanitizer_summary],

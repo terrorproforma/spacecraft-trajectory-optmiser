@@ -1,0 +1,90 @@
+{
+  "recorded_utc": "2026-09-07T11:44:19.255463+00:00",
+  "status": "experimental; repeated trajectory qualification still fails",
+  "source_parent": "6a634925040539e375c9f75e8dc5e1123cf089b8",
+  "source_branch": "codex/gpu-native-outer-v158",
+  "fleet_changed": false,
+  "local_regression": {
+    "passed": 337,
+    "failed": 0
+  },
+  "h100_integration": {
+    "passed": 94,
+    "failed": 0
+  },
+  "h100_repeats": {
+    "qualified": 4,
+    "total": 8,
+    "unshifted_qualified": 4,
+    "shifted_qualified": 0
+  },
+  "local_comparisons": [
+    {
+      "name": "full-outer-v158-comparison-1",
+      "qualified": 3,
+      "total": 8,
+      "ordinary_qualified": 1,
+      "graph_qualified": 2,
+      "timing_comparable": true
+    },
+    {
+      "name": "full-outer-v158-q134-comparison-1",
+      "qualified": 3,
+      "total": 8,
+      "ordinary_qualified": 1,
+      "graph_qualified": 2,
+      "timing_comparable": true
+    },
+    {
+      "name": "full-outer-v158-q135-comparison-1",
+      "qualified": 5,
+      "total": 8,
+      "ordinary_qualified": 2,
+      "graph_qualified": 3,
+      "timing_comparable": true
+    },
+    {
+      "name": "full-outer-v159-q134-comparison-1",
+      "qualified": 1,
+      "total": 8,
+      "ordinary_qualified": 1,
+      "graph_qualified": 0,
+      "timing_comparable": true
+    },
+    {
+      "name": "full-outer-v160-q134-comparison-1",
+      "qualified": 4,
+      "total": 8,
+      "ordinary_qualified": 3,
+      "graph_qualified": 1,
+      "timing_comparable": false
+    },
+    {
+      "name": "full-outer-v161-q135-comparison-1",
+      "qualified": 7,
+      "total": 8,
+      "ordinary_qualified": 3,
+      "graph_qualified": 4,
+      "timing_comparable": true
+    }
+  ],
+  "scope": "Native SCvx graph and stopping-metric corrections. Full repeated trajectory reliability is unresolved; no overall speedup or new fleet-score claim.",
+  "known_limitations": [
+    "One-pass regression success does not establish repeated solve reliability.",
+    "v159 tighter refinement, v160 smaller regularization, and v161 zero relative tolerance were diagnostic experiments and reverted.",
+    "v160 comparison began within a second of build completion; do not use it for timing claims.",
+    "The v158 frozen source manifest over-enumerates LF-normalized files because WSL Git saw line-ending changes; use the Windows Git overlay manifest for change scope.",
+    "No new sanitizer result for this combined candidate."
+  ],
+  "archives": {
+    "local-evidence.tar.gz": {
+      "bytes": 1514280,
+      "sha256": "9daaf1f6fd7c97fad5b6e709a2c4e7ea57fb53cd7e988a9bee52e034a839e052"
+    },
+    "h100-evidence.tar.gz": {
+      "bytes": 198144,
+      "sha256": "5c0135ffdef77ff2e3fef3a68b99527067f64b7af1978874c685220d51e3b146"
+    }
+  },
+  "source_commit": "3706455f79c28fd0ff82a0323dfb0e51f183bd09"
+}
