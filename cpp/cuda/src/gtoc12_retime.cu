@@ -12,6 +12,14 @@ using SweepCell=spacepdhcg_gtoc12_sweep_cell;
 using ForwardVisit=spacepdhcg_gtoc12_forward_visit;
 using ForwardPolicy=spacepdhcg_gtoc12_forward_policy;
 using ForwardResult=spacepdhcg_gtoc12_forward_result;
+using DriverPolicy=spacepdhcg_gtoc12_driver_policy;
+using DriverWeight=spacepdhcg_gtoc12_driver_weight;
+using DriverResult=spacepdhcg_gtoc12_driver_result;
+struct DriverState {
+    DriverResult result;
+    double lo,hi,best_price;
+    int32_t round,bisections;
+};
 static_assert(sizeof(Stage)==104);
 static_assert(sizeof(SweepCell)==24);
 struct Result { double objective; int32_t feasible; int32_t reserved; };
@@ -39,6 +47,9 @@ struct Workspace {
     Stage* params{};Result* result{};
     Controls* controls{};
     ForwardVisit* visits{};ForwardPolicy* policy{};
+    DriverPolicy* driver_policy{};DriverWeight* weights{};DriverState* driver_state{};
+    uint8_t *best_output{},*host_best{};
+    cudaGraph_t driver_graph{};cudaGraphExec_t driver_exec{};
     uint8_t *output{},*host_output{};
     cudaGraph_t graph{};cudaGraphExec_t graph_exec{};
     bool use_graph=true;
@@ -48,6 +59,10 @@ struct Workspace {
         cudaStreamSynchronize(stream);
         if(graph_exec)cudaGraphExecDestroy(graph_exec);
         if(graph)cudaGraphDestroy(graph);
+        if(driver_exec)cudaGraphExecDestroy(driver_exec);
+        if(driver_graph)cudaGraphDestroy(driver_graph);
+        cudaFree(driver_policy);cudaFree(weights);cudaFree(driver_state);
+        cudaFree(best_output);delete[] host_best;
         cudaFree(epochs);cudaFree(dv);cudaFree(swept);cudaFree(tofs);
         cudaFree(value);cudaFree(next);cudaFree(departure);cudaFree(ok);cudaFree(swept_ok);
         cudaFree(shifts);cudaFree(back_camp);cudaFree(back_leg);cudaFree(params);
@@ -244,6 +259,76 @@ __global__ void finish(const double* value,int n,int stages,const int32_t* camp_
             path_dv,path_swept,path_swept_ok,forward,masses,inflations,collected);
     }
 }
+
+__global__ void init_driver(DriverState* state,const Controls* controls) {
+    *state={};state->result.objective=-INFINITY;state->best_price=controls->price;
+    state->lo=state->hi=NAN;state->result.price_rounds=1;
+}
+__device__ bool valid_next_driver(int stages,const Stage* params,const Controls* controls) {
+    if(!isfinite(controls->price)||controls->price<0)return false;
+    for(int j=0;j<stages;++j)if(!isfinite(params[j].mass)||params[j].mass<=0)return false;
+    return true;
+}
+__global__ void advance_driver(int stages,Stage* params,Controls* controls,
+    const ForwardVisit* visits,const ForwardPolicy* forward_policy,const DriverPolicy* policy,
+    const DriverWeight* weights,DriverState* state,const double* epochs,
+    const int32_t* arrivals,const ForwardResult* forward,const double* masses,
+    const double* collected,const uint8_t* output,uint8_t* best,size_t bytes,
+    cudaGraphConditionalHandle condition) {
+    auto& r=state->result;const auto p=*policy;
+    ++r.evaluations;++state->round;r.mass_rounds=max(r.mass_rounds,state->round);
+    const int failure=forward->failure;r.failure=failure;
+    if(failure==5&&forward->mass_count>0) {
+        const int count=forward->mass_count;
+        const double scale=masses[count-1]/fmax(params[count-1].mass,1e-9);
+        for(int j=0;j<stages;++j)
+            params[j].mass=j<count?masses[j]:fmax(params[j].mass,params[j].mass*scale);
+        if(state->round<p.max_masses) {
+            if(!valid_next_driver(stages,params,controls)){r.failure=9;cudaGraphSetConditional(condition,0);}
+            return;
+        }
+    }
+    bool stop=false,geometric=false;
+    if(!failure) {
+        double weighted=0,orphan=0;
+        // Preserve collection insertion order and the separately accumulated
+        // deploy-order orphan credit used by plan_value on the CPU.
+        for(int j=0;j<=stages;++j)if(visits[j].collect)weighted+=weights[j].weight*collected[j];
+        if(p.orphan_credit>0)for(int j=0;j<=stages;++j)if(weights[j].orphan) {
+            const double stay=p.mission_end-p.orphan_margin-epochs[arrivals[j]];
+            if(stay>=forward_policy->minimum_stay)
+                orphan+=weights[j].weight*(forward_policy->mining_rate*stay/forward_policy->year_days);
+        }
+        const double objective=weighted+p.orphan_credit*orphan;
+        if(objective>r.objective) {
+            r.feasible=1;r.objective=objective;state->best_price=controls->price;
+            for(size_t j=0;j<bytes;++j)best[j]=output[j];
+        }
+        state->hi=isnan(state->hi)?controls->price:fmin(state->hi,controls->price);
+        if(isnan(state->lo)){controls->price/=p.price_growth;geometric=true;}
+    } else if(failure==5||failure==6) {
+        state->lo=controls->price;
+        if(isnan(state->hi)){controls->price*=p.price_growth;geometric=true;}
+    } else stop=true;
+    if(!stop&&!geometric) {
+        if(state->bisections>=2)stop=true;
+        else {++state->bisections;controls->price=.5*(state->lo+state->hi);}
+    }
+    if(r.price_rounds>=p.max_prices)stop=true;
+    if(!stop&&!valid_next_driver(stages,params,controls)){r.failure=9;stop=true;}
+    if(stop)cudaGraphSetConditional(condition,0);
+    else {++r.price_rounds;state->round=0;}
+}
+__global__ void finish_driver(int stages,const Stage* params,const Controls* controls,
+    const DriverState* state,uint8_t* best,size_t bytes) {
+    auto* summary=reinterpret_cast<DriverResult*>(best+bytes);
+    *summary=state->result;
+    summary->price=summary->feasible?state->best_price:controls->price;
+    if(summary->feasible&&summary->failure!=7&&summary->failure!=9)summary->failure=0;
+    else {*reinterpret_cast<Result*>(best)={-INFINITY,0,0};}
+    auto* profile=reinterpret_cast<double*>(best+bytes+sizeof(DriverResult));
+    for(int j=0;j<stages;++j)profile[j]=params[j].mass;
+}
 }
 static int create_tables(int32_t device,int32_t n,int32_t stages,
     int32_t cells,int32_t nt,const double* epochs,const double* dv,const uint8_t* ok,
@@ -370,6 +455,57 @@ static bool enqueue_graph(Workspace* w) {
     if(cudaGraphLaunch(w->graph_exec,w->stream)!=cudaSuccess)return false;
     ++w->graph_launches;return true;
 }
+static bool prepare_driver(Workspace* w) {
+    const PathLayout layout(w->stages);
+    const size_t bytes=layout.bytes+sizeof(DriverResult)+size_t(w->stages)*sizeof(double);
+    if(!w->driver_exec) {
+        if(!w->driver_policy&&!allocate(w->driver_policy,1))return false;
+        if(!w->weights&&!allocate(w->weights,size_t(w->stages)+1))return false;
+        if(!w->driver_state&&!allocate(w->driver_state,1))return false;
+        if(!w->best_output) {
+            if(!allocate(w->best_output,bytes))return false;
+            if(cudaMemsetAsync(w->best_output,0,bytes,w->stream)!=cudaSuccess)return false;
+        }
+        if(!w->host_best)w->host_best=new(std::nothrow) uint8_t[bytes];
+        if(!w->host_best)return false;
+        cudaGraph_t graph=nullptr;
+        if(cudaGraphCreate(&graph,0)!=cudaSuccess)return false;
+        cudaGraphConditionalHandle handle;
+        if(cudaGraphConditionalHandleCreate(&handle,graph,1,cudaGraphCondAssignDefault)!=cudaSuccess){cudaGraphDestroy(graph);return false;}
+        if(cudaStreamBeginCaptureToGraph(w->stream,graph,nullptr,nullptr,0,cudaStreamCaptureModeThreadLocal)!=cudaSuccess){cudaGraphDestroy(graph);return false;}
+        init_driver<<<1,1,0,w->stream>>>(w->driver_state,w->controls);
+        bool good=cudaGetLastError()==cudaSuccess;
+        good=(cudaStreamEndCapture(w->stream,nullptr)==cudaSuccess)&&good;
+        cudaGraphNode_t init=nullptr;size_t count=1;
+        good=good&&cudaGraphGetNodes(graph,&init,&count)==cudaSuccess&&count==1;
+        cudaGraphNodeParams node{};node.type=cudaGraphNodeTypeConditional;
+        node.conditional.handle=handle;node.conditional.type=cudaGraphCondTypeWhile;node.conditional.size=1;
+        cudaGraphNode_t loop=nullptr;
+        good=good&&cudaGraphAddNode(&loop,graph,&init,1,&node)==cudaSuccess;
+        if(!good){cudaGraphDestroy(graph);return false;}
+        if(cudaStreamBeginCaptureToGraph(w->stream,node.conditional.phGraph_out[0],nullptr,nullptr,0,cudaStreamCaptureModeThreadLocal)!=cudaSuccess){cudaGraphDestroy(graph);return false;}
+        good=enqueue_dp(w);
+        if(good) {
+            advance_driver<<<1,1,0,w->stream>>>(w->stages,w->params,w->controls,w->visits,w->policy,
+                w->driver_policy,w->weights,w->driver_state,w->epochs,w->arrivals,
+                reinterpret_cast<ForwardResult*>(w->output+layout.forward),
+                reinterpret_cast<double*>(w->output+layout.masses),
+                reinterpret_cast<double*>(w->output+layout.collected),w->output,w->best_output,layout.bytes,handle);
+            good=cudaGetLastError()==cudaSuccess;
+        }
+        good=(cudaStreamEndCapture(w->stream,nullptr)==cudaSuccess)&&good;
+        if(!good){cudaGraphDestroy(graph);return false;}
+        if(cudaStreamBeginCaptureToGraph(w->stream,graph,&loop,nullptr,1,cudaStreamCaptureModeThreadLocal)!=cudaSuccess){cudaGraphDestroy(graph);return false;}
+        finish_driver<<<1,1,0,w->stream>>>(w->stages,w->params,w->controls,w->driver_state,w->best_output,layout.bytes);
+        good=cudaGetLastError()==cudaSuccess;
+        good=(cudaStreamEndCapture(w->stream,nullptr)==cudaSuccess)&&good;
+        cudaGraphExec_t exec=nullptr;
+        good=good&&cudaGraphInstantiate(&exec,graph,0)==cudaSuccess;
+        if(!good){cudaGraphDestroy(graph);return false;}
+        w->driver_graph=graph;w->driver_exec=exec;
+    }
+    return true;
+}
 extern "C" int spacepdhcg_gtoc12_retime_set_graph(void* workspace,int32_t enabled) {
     auto* w=static_cast<Workspace*>(workspace);if(!w||(enabled!=0&&enabled!=1))return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
@@ -384,7 +520,9 @@ static int evaluate_path(void* workspace,const Stage* params,
     double price,double thrust,double exhaust,int32_t* arrivals,int32_t* departures,
     double* objective,int32_t* feasible,double* path_dv,double* path_swept,uint8_t* path_swept_ok,
     const ForwardVisit* visits=nullptr,const ForwardPolicy* policy=nullptr,
-    ForwardResult* forward=nullptr,double* masses=nullptr,double* inflations=nullptr,double* collected=nullptr) {
+    ForwardResult* forward=nullptr,double* masses=nullptr,double* inflations=nullptr,double* collected=nullptr,
+    const DriverPolicy* driver=nullptr,const DriverWeight* weights=nullptr,
+    DriverResult* summary=nullptr,double* final_profile=nullptr) {
     auto* w=static_cast<Workspace*>(workspace);
     if(!w||!params||!arrivals||!departures||!objective||!feasible||!std::isfinite(price)
         ||price<0||!std::isfinite(thrust)||thrust<=0||!std::isfinite(exhaust)||exhaust<=0)return 1;
@@ -408,30 +546,51 @@ static int evaluate_path(void* workspace,const Stage* params,
         for(int j=0;j<=w->stages;++j)if((visits[j].deploy!=0&&visits[j].deploy!=1)
             ||(visits[j].collect!=0&&visits[j].collect!=1)||visits[j].donor<-2||visits[j].donor>j)return 1;
     }
+    if(driver) {
+        if(!visits||!weights||!summary||!final_profile||driver->max_prices<=0||driver->max_masses<=0
+            ||int64_t(driver->max_prices)*driver->max_masses>INT32_MAX
+            ||!std::isfinite(driver->price_growth)||driver->price_growth<=0
+            ||!std::isfinite(driver->orphan_credit)||!std::isfinite(driver->orphan_margin)
+            ||!std::isfinite(driver->mission_end))return 1;
+        for(int j=0;j<=w->stages;++j)if(!std::isfinite(weights[j].weight)
+            ||(weights[j].orphan!=0&&weights[j].orphan!=1))return 1;
+        if(!prepare_driver(w))return 2;
+    }
     const Controls controls{price,thrust,exhaust,visits?1:0,0};
     bool good=upload(w->params,params,w->stages,w->stream)
         &&upload(w->controls,&controls,1,w->stream);
     good=good&&(!visits||(upload(w->visits,visits,size_t(w->stages)+1,w->stream)
         &&upload(w->policy,policy,1,w->stream)));
-    good=good&&(w->use_graph?enqueue_graph(w):enqueue_dp(w));
+    if(driver) {
+        good=good&&upload(w->driver_policy,driver,1,w->stream)
+            &&upload(w->weights,weights,size_t(w->stages)+1,w->stream)
+            &&cudaGraphLaunch(w->driver_exec,w->stream)==cudaSuccess;
+    } else good=good&&(w->use_graph?enqueue_graph(w):enqueue_dp(w));
     Result result{};
     const PathLayout layout(w->stages);
-    good=good&&cudaMemcpyAsync(w->host_output,w->output,layout.bytes,cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;
+    auto* host=driver?w->host_best:w->host_output;
+    const size_t bytes=layout.bytes+(driver?sizeof(DriverResult)+size_t(w->stages)*sizeof(double):0);
+    good=good&&cudaMemcpyAsync(host,driver?w->best_output:w->output,bytes,cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;
     const auto done=cudaStreamSynchronize(w->stream);
     if(!good||done!=cudaSuccess)return 2;
     // One contiguous transfer; caller buffers are touched only after it
     // completes. The legacy APIs can omit path fields without changing layout.
-    std::memcpy(&result,w->host_output,sizeof(result));
-    std::memcpy(arrivals,w->host_output+layout.arrivals,(size_t(w->stages)+1)*sizeof(int32_t));
-    std::memcpy(departures,w->host_output+layout.departures,(size_t(w->stages)+1)*sizeof(int32_t));
-    if(path_dv)std::memcpy(path_dv,w->host_output+layout.dv,size_t(w->stages)*sizeof(double));
-    if(path_swept)std::memcpy(path_swept,w->host_output+layout.swept,size_t(w->stages)*sizeof(double));
-    if(path_swept_ok)std::memcpy(path_swept_ok,w->host_output+layout.ok,w->stages);
+    std::memcpy(&result,host,sizeof(result));
+    std::memcpy(arrivals,host+layout.arrivals,(size_t(w->stages)+1)*sizeof(int32_t));
+    std::memcpy(departures,host+layout.departures,(size_t(w->stages)+1)*sizeof(int32_t));
+    if(path_dv)std::memcpy(path_dv,host+layout.dv,size_t(w->stages)*sizeof(double));
+    if(path_swept)std::memcpy(path_swept,host+layout.swept,size_t(w->stages)*sizeof(double));
+    if(path_swept_ok)std::memcpy(path_swept_ok,host+layout.ok,w->stages);
     if(visits) {
-        std::memcpy(forward,w->host_output+layout.forward,sizeof(ForwardResult));
-        std::memcpy(masses,w->host_output+layout.masses,size_t(w->stages)*sizeof(double));
-        std::memcpy(inflations,w->host_output+layout.inflations,size_t(w->stages)*sizeof(double));
-        std::memcpy(collected,w->host_output+layout.collected,(size_t(w->stages)+1)*sizeof(double));
+        std::memcpy(forward,host+layout.forward,sizeof(ForwardResult));
+        std::memcpy(masses,host+layout.masses,size_t(w->stages)*sizeof(double));
+        std::memcpy(inflations,host+layout.inflations,size_t(w->stages)*sizeof(double));
+        std::memcpy(collected,host+layout.collected,(size_t(w->stages)+1)*sizeof(double));
+    }
+    if(driver) {
+        std::memcpy(summary,host+layout.bytes,sizeof(DriverResult));
+        std::memcpy(final_profile,host+layout.bytes+sizeof(DriverResult),size_t(w->stages)*sizeof(double));
+        if(summary->failure==9)return 1;
     }
     *objective=result.objective;*feasible=result.feasible;return 0;
 }
@@ -454,6 +613,13 @@ extern "C" int spacepdhcg_gtoc12_retime_forward_host(void* w,const Stage* p,doub
     const ForwardVisit* visits,const ForwardPolicy* policy,ForwardResult* result,double* masses,double* inflations,double* collected) {
     if(!dv||!swept||!ok||!visits||!policy||!result||!masses||!inflations||!collected)return 1;
     return evaluate_path(w,p,price,thrust,exhaust,a,d,objective,feasible,dv,swept,ok,visits,policy,result,masses,inflations,collected);
+}
+extern "C" int spacepdhcg_gtoc12_retime_order_host(void* w,const Stage* p,double price,double thrust,
+    double exhaust,int32_t* a,int32_t* d,double* objective,int32_t* feasible,double* dv,double* swept,uint8_t* ok,
+    const ForwardVisit* visits,const ForwardPolicy* policy,ForwardResult* result,double* masses,double* inflations,double* collected,
+    const DriverPolicy* driver,const DriverWeight* weights,DriverResult* summary,double* final_profile) {
+    if(!dv||!swept||!ok||!visits||!policy||!result||!masses||!inflations||!collected||!driver||!weights||!summary||!final_profile)return 1;
+    return evaluate_path(w,p,price,thrust,exhaust,a,d,objective,feasible,dv,swept,ok,visits,policy,result,masses,inflations,collected,driver,weights,summary,final_profile);
 }
 extern "C" int spacepdhcg_gtoc12_retime_destroy(void** workspace) {
     if(!workspace)return 1;auto* w=static_cast<Workspace*>(*workspace);if(!w)return 0;

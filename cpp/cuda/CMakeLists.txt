@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.24)
 
 enable_language(C)
 enable_language(CUDA)
-find_package(CUDAToolkit REQUIRED)
+# Conditional graph loops keep GTOC12 price/mass decisions on the device.
+find_package(CUDAToolkit 12.4 REQUIRED)
 find_package(Git REQUIRED)
 find_package(ZLIB REQUIRED)
 find_program(SPACEPDHCG_PATCH_EXECUTABLE patch REQUIRED)

@@ -174,6 +174,7 @@ class GpuLambert:
         self.resident_retime_tables = True
         self.retime_cuda_graph = True
         self.retime_cuda_forward = True
+        self.retime_cuda_driver = True
         self.requests = np.zeros(maximum_batch_size, dtype=REQUEST)
         self.results = np.zeros((maximum_batch_size, 2), dtype=RESULT)
         self.hops = np.zeros(maximum_batch_size, dtype=HOP_REQUEST)
@@ -281,6 +282,7 @@ class GpuLambert:
         result = self.retime_workspace.solve(*args, **kwargs)
         self.telemetry["completed_retime_dp_calls"] = self.retime_workspace.calls
         self.telemetry["completed_retime_forward_calls"] = self.retime_workspace.forward_calls
+        self.telemetry["completed_retime_driver_calls"] = self.retime_workspace.driver_calls
         self.telemetry["retime_table_uploads"] = self.retime_workspace.uploads
         self.telemetry["retime_resident_builds"] = self.retime_workspace.resident_builds
         self.telemetry["retime_resident_cells"] = self.retime_workspace.resident_cells

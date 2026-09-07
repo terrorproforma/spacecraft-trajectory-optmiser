@@ -82,6 +82,27 @@ def cuda_retime_dp(*args, **kwargs):
     return gpu.retime_dp(*args, **kwargs) if gpu is not None else NotImplemented
 
 
+def cuda_retime_order(retimer, visits, profile):
+    price = retimer.settings.propellant_price
+    dp = cuda_retime_dp(retimer, visits, profile, price, True, True)
+    if dp is NotImplemented:
+        return NotImplemented
+    ws = _GPU_BACKEND.get().retime_workspace
+    if ws.last_driver is None:
+        return None, dict(
+            objective=-float("inf"), price=price, failure=8, price_rounds=1, mass_rounds=1
+        )
+    result, _profile = ws.last_driver
+    meta = {name: result[name].item() for name in result.dtype.names}
+    if dp is None:
+        return None, meta
+    arrivals = retimer.lattice.epochs[dp[0]].tolist()
+    departures = retimer.lattice.epochs[dp[1]].tolist()
+    plan, _masses, failure = ws.forward_result(retimer, visits, arrivals, departures)
+    assert plan is not None and not failure
+    return plan, meta
+
+
 def cuda_retime_path_values(*args):
     gpu = _GPU_BACKEND.get()
     if gpu is None or gpu.retime_workspace is None:

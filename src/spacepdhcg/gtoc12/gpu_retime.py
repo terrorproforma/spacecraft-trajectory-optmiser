@@ -59,6 +59,20 @@ FORWARD_RESULT = np.dtype(
     + [(n, "f8") for n in ["propellant", "final_mass"]],
     align=True,
 )
+DRIVER_POLICY = np.dtype(
+    [(n, "f8") for n in ["price_growth", "orphan_credit", "orphan_margin", "mission_end"]]
+    + [(n, "i4") for n in ["max_prices", "max_masses"]],
+    align=True,
+)
+DRIVER_WEIGHT = np.dtype([("weight", "f8"), ("orphan", "i4"), ("reserved", "i4")], align=True)
+DRIVER_RESULT = np.dtype(
+    [(n, "f8") for n in ["objective", "price"]]
+    + [
+        (n, "i4")
+        for n in ["feasible", "failure", "price_rounds", "mass_rounds", "evaluations", "reserved"]
+    ],
+    align=True,
+)
 
 
 class GpuRetime:
@@ -69,6 +83,7 @@ class GpuRetime:
         self.lambert = lambert
         self.last_path = None
         self.last_forward = None
+        self.last_driver = None
         self.handle = ct.c_void_p()
         self.key = None
         self.refs = None
@@ -113,6 +128,10 @@ class GpuRetime:
         if self.evaluate_forward is not None:
             self.evaluate_forward.argtypes = self.evaluate.argtypes + [ct.c_void_p] * 6
             self.evaluate_forward.restype = ct.c_int
+        self.evaluate_order = getattr(library, "spacepdhcg_gtoc12_retime_order_host", None)
+        if self.evaluate_order is not None:
+            self.evaluate_order.argtypes = self.evaluate.argtypes + [ct.c_void_p] * 10
+            self.evaluate_order.restype = ct.c_int
         self.set_graph = library.spacepdhcg_gtoc12_retime_set_graph
         self.set_graph.argtypes = [ct.c_void_p, ct.c_int32]
         self.set_graph.restype = ct.c_int
@@ -125,6 +144,7 @@ class GpuRetime:
         self.destroy.restype = ct.c_int
         self.calls = self.uploads = 0
         self.forward_calls = 0
+        self.driver_calls = 0
         self.resident_builds = self.resident_cells = 0
         self.sweep_updates = self.sweep_samples = 0
         self.sweep_keys = {}
@@ -140,6 +160,7 @@ class GpuRetime:
         self.key = self.refs = None
         self.last_path = None
         self.last_forward = None
+        self.last_driver = None
         self.sweep_keys.clear()
         self.graph_enabled = True
 
@@ -235,9 +256,24 @@ class GpuRetime:
         )
         return plan, masses[:count].tolist(), ""
 
-    def solve(self, retimer, visits, masses, price, forward=False):
+    def solve(self, retimer, visits, masses, price, forward=False, driver=False):
         from .retiming import Retimer
 
+        if driver:
+            if (
+                not self.lambert.retime_cuda_driver
+                or not self.lambert.retime_cuda_forward
+                or not self.lambert.retime_cuda_graph
+                or len(visits) == 1
+                or retimer.settings.max_price_rounds <= 0
+                or retimer.settings.max_mass_rounds <= 0
+                or getattr(retimer._dp, "__func__", None) is not Retimer._dp
+                or getattr(retimer._forward, "__func__", None) is not Retimer._forward
+                or getattr(retimer._solve_at_price, "__func__", None) is not Retimer._solve_at_price
+            ):
+                return NotImplemented
+            if self.evaluate_order is None:
+                raise RuntimeError("CUDA price/mass driver requires a rebuilt native library")
         if forward and self.lambert.retime_cuda_forward and self.evaluate_forward is None:
             raise RuntimeError("CUDA forward bookkeeping requires a rebuilt native library")
         if forward and (
@@ -249,6 +285,7 @@ class GpuRetime:
             return NotImplemented
         self.last_path = None
         self.last_forward = None
+        self.last_driver = None
         if len(visits) == 1:
             return [0], [0], 0.0
         s, lat = retimer.settings, retimer.lattice
@@ -455,6 +492,29 @@ class GpuRetime:
                 for a in [metadata, policy, result, forward_masses, inflations, collected_mass]
             ]
             evaluate = self.evaluate_forward
+            if driver:
+                driver_policy = np.zeros(1, DRIVER_POLICY)
+                driver_policy[0] = (
+                    s.price_growth,
+                    s.orphan_credit,
+                    s.orphan_margin_days,
+                    C.MISSION_END_MJD,
+                    s.max_price_rounds,
+                    s.max_mass_rounds,
+                )
+                weights = np.zeros(len(visits), DRIVER_WEIGHT)
+                collected_bodies = {v.body for v in visits if v.collect}
+                for j, visit in enumerate(visits):
+                    weights[j]["weight"] = (
+                        1.0 if retimer.weights is None else retimer.weights.get(visit.body, 1.0)
+                    )
+                    weights[j]["orphan"] = visit.deploy and visit.body not in collected_bodies
+                driver_result = np.zeros(1, DRIVER_RESULT)
+                final_profile = np.empty(len(params))
+                extra += [
+                    a.ctypes.data for a in [driver_policy, weights, driver_result, final_profile]
+                ]
+                evaluate = self.evaluate_order
         self._check(
             evaluate(
                 self.handle,
@@ -472,8 +532,12 @@ class GpuRetime:
                 *extra,
             )
         )
-        self.calls += 1
-        self.forward_calls += int(forward)
+        evaluations = int(driver_result[0]["evaluations"]) if driver else 1
+        self.calls += evaluations
+        self.forward_calls += evaluations * int(forward)
+        if driver:
+            self.driver_calls += 1
+            self.last_driver = (driver_result[0], final_profile)
         if feasible_result.value:
             self.last_path = (
                 retimer,

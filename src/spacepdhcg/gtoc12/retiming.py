@@ -839,6 +839,35 @@ class Retimer:
             )
         if len(profile) != len(visits) - 1:
             raise ValueError("mass profile must have one entry per leg")
+        from .lambert import cuda_retime_order
+
+        native = cuda_retime_order(self, visits, profile)
+        if native is not NotImplemented:
+            best, meta = native
+            failures = {
+                0: "",
+                1: "collect_without_deploy",
+                2: "stay_too_short",
+                3: "tof_outside_grid",
+                4: "leg_infeasible",
+                5: "leg_authority",
+                6: "mass_below_dry_plus_collected",
+                8: "dp_infeasible",
+            }
+            if meta["failure"] == 7:
+                raise ValueError("stay must be finite and non-negative")
+            return RetimeResult(
+                best,
+                original if original is not None else best if best is not None else _empty_plan(),
+                before,
+                meta["objective"] if best is not None else before,
+                meta["price"],
+                meta["mass_rounds"],
+                meta["price_rounds"],
+                self.lambert_evaluations,
+                time.perf_counter() - started,
+                failures[meta["failure"]],
+            )
         best: RoutePlan | None = None
         best_objective = -np.inf
         failure = ""
