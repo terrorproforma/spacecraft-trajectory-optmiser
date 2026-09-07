@@ -172,6 +172,7 @@ class GpuLambert:
         self.owner = threading.get_ident()
         self.closed = False
         self.resident_retime_tables = True
+        self.retime_cuda_graph = True
         self.requests = np.zeros(maximum_batch_size, dtype=REQUEST)
         self.results = np.zeros((maximum_batch_size, 2), dtype=RESULT)
         self.hops = np.zeros(maximum_batch_size, dtype=HOP_REQUEST)

@@ -11,6 +11,7 @@ using SweepCell=spacepdhcg_gtoc12_sweep_cell;
 static_assert(sizeof(Stage)==104);
 static_assert(sizeof(SweepCell)==24);
 struct Result { double objective; int32_t feasible; int32_t reserved; };
+struct Controls { double price,thrust,exhaust; };
 struct Workspace {
     int device,n,stages,cells,nt;
     cudaStream_t stream{};
@@ -19,14 +20,21 @@ struct Workspace {
     SweepCell* samples{};int sample_capacity{};
     int32_t *shifts{},*back_camp{},*back_leg{},*arrivals{},*departures{};
     Stage* params{};Result* result{};
+    Controls* controls{};
+    cudaGraph_t graph{};cudaGraphExec_t graph_exec{};
+    bool use_graph=true;
+    uint64_t graph_builds{},graph_launches{};
     std::mutex mutex;
     ~Workspace() {
         cudaStreamSynchronize(stream);
+        if(graph_exec)cudaGraphExecDestroy(graph_exec);
+        if(graph)cudaGraphDestroy(graph);
         cudaFree(epochs);cudaFree(dv);cudaFree(swept);cudaFree(tofs);
         cudaFree(value);cudaFree(next);cudaFree(departure);cudaFree(ok);cudaFree(swept_ok);
         cudaFree(shifts);cudaFree(back_camp);cudaFree(back_leg);cudaFree(arrivals);
         cudaFree(departures);cudaFree(params);cudaFree(result);cudaFree(path_dv);
         cudaFree(path_swept);cudaFree(path_swept_ok);cudaFree(samples);
+        cudaFree(controls);
         if(stream)cudaStreamDestroy(stream);
     }
 };
@@ -77,10 +85,12 @@ __device__ double return_base(double tof) {
 __global__ void leg(const Stage* params,int stage,int n,const double* dv,
     const uint8_t* feasible,const double* swept,const uint8_t* swept_ok,
     const double* tofs,const int32_t* shifts,const double* departure,
-    double price,double thrust,double exhaust,double* next,int32_t* back) {
+    const Controls* controls,double* next,int32_t* back) {
     const size_t index=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
     if(index>=size_t(n))return;const int a=int(index);
-    const auto s=params[stage];double best=-INFINITY;int winner=0;
+    const auto s=params[stage];const auto control=*controls;
+    const double price=control.price,thrust=control.thrust,exhaust=control.exhaust;
+    double best=-INFINITY;int winner=0;
     if(s.pinned_next<0||a==s.pinned_next)for(int k=0;k<s.tofs;++k) {
         const int shift=shifts[s.tof_offset+k];if(shift>=n)break;
         const int d=a-shift;if(d<0)continue;
@@ -143,7 +153,8 @@ static int create_tables(int32_t device,int32_t n,int32_t stages,
         &&allocate(w->departure,n)&&allocate(w->back_camp,size_t(n)*stages)
         &&allocate(w->back_leg,size_t(n)*stages)&&allocate(w->arrivals,stages+1)
         &&allocate(w->departures,stages+1)&&allocate(w->params,stages)&&allocate(w->result,1)
-        &&allocate(w->path_dv,stages)&&allocate(w->path_swept,stages)&&allocate(w->path_swept_ok,stages);
+        &&allocate(w->path_dv,stages)&&allocate(w->path_swept,stages)&&allocate(w->path_swept_ok,stages)
+        &&allocate(w->controls,1);
     good=good&&upload(w->epochs,epochs,n,w->stream)
         &&(!dv||upload(w->dv,dv,cells,w->stream))&&(!ok||upload(w->ok,ok,cells,w->stream))
         &&(swept?upload(w->swept,swept,cells,w->stream):cudaMemsetAsync(w->swept,255,cells*sizeof(double),w->stream)==cudaSuccess)
@@ -212,6 +223,48 @@ extern "C" int spacepdhcg_gtoc12_retime_read_sweep(void* workspace,int32_t offse
         &&cudaMemcpyAsync(feasible,w->swept_ok+offset,cells,cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;
     const auto done=cudaStreamSynchronize(w->stream);return good&&done==cudaSuccess?0:2;
 }
+// This sequence uses only retained device addresses. Policies, masses and
+// controls are uploaded before replay, so a graph never captures stale values.
+static bool enqueue_dp(Workspace* w) {
+    bool good=cudaMemsetAsync(w->value,0,w->n*sizeof(double),w->stream)==cudaSuccess;
+    auto* value=w->value;auto* next=w->next;
+    for(int j=0;good&&j<w->stages;++j) {
+        camp<<<(unsigned(w->n)+127)/128,128,0,w->stream>>>(w->params,j,w->epochs,w->n,value,w->departure,w->back_camp);
+        good=cudaGetLastError()==cudaSuccess;if(!good)break;
+        leg<<<(unsigned(w->n)+127)/128,128,0,w->stream>>>(w->params,j,w->n,w->dv,w->ok,w->swept,w->swept_ok,
+            w->tofs,w->shifts,w->departure,w->controls,next,w->back_leg);
+        good=cudaGetLastError()==cudaSuccess;std::swap(value,next);
+    }
+    if(good) {
+        finish<<<1,1,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result,w->params,w->dv,w->shifts,w->path_dv,w->swept,w->swept_ok,w->path_swept,w->path_swept_ok);
+        good=cudaGetLastError()==cudaSuccess;
+    }
+    return good;
+}
+static bool enqueue_graph(Workspace* w) {
+    if(!w->graph_exec) {
+        if(cudaStreamBeginCapture(w->stream,cudaStreamCaptureModeThreadLocal)!=cudaSuccess)return false;
+        const bool recorded=enqueue_dp(w);
+        cudaGraph_t graph=nullptr;
+        const auto ended=cudaStreamEndCapture(w->stream,&graph);
+        if(!recorded||ended!=cudaSuccess){if(graph)cudaGraphDestroy(graph);return false;}
+        cudaGraphExec_t executable=nullptr;
+        if(cudaGraphInstantiate(&executable,graph,0)!=cudaSuccess){cudaGraphDestroy(graph);return false;}
+        w->graph=graph;w->graph_exec=executable;++w->graph_builds;
+    }
+    if(cudaGraphLaunch(w->graph_exec,w->stream)!=cudaSuccess)return false;
+    ++w->graph_launches;return true;
+}
+extern "C" int spacepdhcg_gtoc12_retime_set_graph(void* workspace,int32_t enabled) {
+    auto* w=static_cast<Workspace*>(workspace);if(!w||(enabled!=0&&enabled!=1))return 1;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
+    w->use_graph=enabled;return 0;
+}
+extern "C" int spacepdhcg_gtoc12_retime_graph_stats(void* workspace,uint64_t* builds,uint64_t* launches) {
+    auto* w=static_cast<Workspace*>(workspace);if(!w||!builds||!launches)return 1;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
+    *builds=w->graph_builds;*launches=w->graph_launches;return 0;
+}
 static int evaluate_path(void* workspace,const Stage* params,
     double price,double thrust,double exhaust,int32_t* arrivals,int32_t* departures,
     double* objective,int32_t* feasible,double* path_dv,double* path_swept,uint8_t* path_swept_ok) {
@@ -230,21 +283,11 @@ static int evaluate_path(void* workspace,const Stage* params,
             ||std::isnan(s.ratio_limit)||s.ratio_limit<0||!std::isfinite(s.flat)
             ||!std::isfinite(s.floor)||!std::isfinite(s.slope)||!std::isfinite(s.calibration))return 1;
     }
+    const Controls controls{price,thrust,exhaust};
     bool good=upload(w->params,params,w->stages,w->stream)
-        &&cudaMemsetAsync(w->value,0,w->n*sizeof(double),w->stream)==cudaSuccess;
-    auto* value=w->value;auto* next=w->next;
-    for(int j=0;good&&j<w->stages;++j) {
-        camp<<<(unsigned(w->n)+127)/128,128,0,w->stream>>>(w->params,j,w->epochs,w->n,value,w->departure,w->back_camp);
-        good=cudaGetLastError()==cudaSuccess;if(!good)break;
-        leg<<<(unsigned(w->n)+127)/128,128,0,w->stream>>>(w->params,j,w->n,w->dv,w->ok,w->swept,w->swept_ok,
-            w->tofs,w->shifts,w->departure,price,thrust,exhaust,next,w->back_leg);
-        good=cudaGetLastError()==cudaSuccess;std::swap(value,next);
-    }
+        &&upload(w->controls,&controls,1,w->stream);
+    good=good&&(w->use_graph?enqueue_graph(w):enqueue_dp(w));
     Result result{};
-    if(good) {
-        finish<<<1,1,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result,w->params,w->dv,w->shifts,w->path_dv,w->swept,w->swept_ok,w->path_swept,w->path_swept_ok);
-        good=cudaGetLastError()==cudaSuccess;
-    }
     good=good&&cudaMemcpyAsync(&result,w->result,sizeof(result),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
         &&cudaMemcpyAsync(arrivals,w->arrivals,(w->stages+1)*sizeof(int32_t),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
         &&cudaMemcpyAsync(departures,w->departures,(w->stages+1)*sizeof(int32_t),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;

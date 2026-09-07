@@ -55,6 +55,12 @@ int spacepdhcg_gtoc12_retime_swept_path_host(void* workspace,
 /* Explicit diagnostic export; ordinary scheduling only downloads its path. */
 int spacepdhcg_gtoc12_retime_read_sweep(void* workspace,int32_t cell_offset,int32_t tofs,
     double* inflation,uint8_t* feasible);
+/* Graph replay is enabled by default. Disabling it uses the same kernels with
+ * ordinary launches for matched benchmarks. Retained graphs survive toggles;
+ * changed policies and sweep masks are read from current device buffers. */
+int spacepdhcg_gtoc12_retime_set_graph(void* workspace,int32_t enabled);
+/* Read-only counters; no device synchronization or transfer. */
+int spacepdhcg_gtoc12_retime_graph_stats(void* workspace,uint64_t* builds,uint64_t* launches);
 int spacepdhcg_gtoc12_retime_destroy(void** workspace);
 
 #ifdef __cplusplus

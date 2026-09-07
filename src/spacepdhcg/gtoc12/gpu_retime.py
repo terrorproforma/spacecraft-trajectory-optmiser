@@ -98,6 +98,13 @@ class GpuRetime:
             ct.c_void_p,
         ]
         self.evaluate.restype = ct.c_int
+        self.set_graph = library.spacepdhcg_gtoc12_retime_set_graph
+        self.set_graph.argtypes = [ct.c_void_p, ct.c_int32]
+        self.set_graph.restype = ct.c_int
+        self.graph_stats = library.spacepdhcg_gtoc12_retime_graph_stats
+        self.graph_stats.argtypes = [ct.c_void_p, ct.POINTER(ct.c_uint64), ct.POINTER(ct.c_uint64)]
+        self.graph_stats.restype = ct.c_int
+        self.graph_enabled = True
         self.destroy = library.spacepdhcg_gtoc12_retime_destroy
         self.destroy.argtypes = [ct.POINTER(ct.c_void_p)]
         self.destroy.restype = ct.c_int
@@ -117,6 +124,7 @@ class GpuRetime:
         self.key = self.refs = None
         self.last_path = None
         self.sweep_keys.clear()
+        self.graph_enabled = True
 
     def path_values(self, retimer, visits, arrivals, departures, include_sweep=False):
         if self.last_path is None:
@@ -290,6 +298,9 @@ class GpuRetime:
             for j, visit in enumerate(visits[:-1]):
                 if visit.role_out == "earth_return":
                     self._update_sweep(retimer, visit.body, params[j], tofs_all[j])
+        if self.graph_enabled != self.lambert.retime_cuda_graph:
+            self._check(self.set_graph(self.handle, int(self.lambert.retime_cuda_graph)))
+            self.graph_enabled = self.lambert.retime_cuda_graph
         arrivals = np.empty(len(visits), dtype=np.int32)
         departures = np.empty(len(visits), dtype=np.int32)
         path_dv = np.empty(len(params), dtype=np.float64)
