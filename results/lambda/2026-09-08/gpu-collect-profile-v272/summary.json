@@ -1,0 +1,79 @@
+{
+  "source_code_commit": "a02de775",
+  "baseline_source_commit": "49fb0d47",
+  "baseline_dp_seconds": 30.973440413363278,
+  "baseline_cli_seconds": 91.42978998500621,
+  "dp_passes": 378,
+  "dp_fraction_of_cli": 0.33876748944127166,
+  "baseline_cache_audit": {
+    "fraction_calls": 29822,
+    "different_mass_hits": 479,
+    "max_mass_difference_kg": 0.8213552361398797
+  },
+  "local_fixed_audit": {
+    "fraction_calls": 59644,
+    "different_mass_hits": 0,
+    "max_mass_difference_kg": 0.0
+  },
+  "h100_fixed_audit": {
+    "fraction_calls": 59644,
+    "different_mass_hits": 0,
+    "max_mass_difference_kg": 0.0
+  },
+  "local_tests": 41,
+  "h100_collection_tests": 26,
+  "fixtures_per_gpu": 8,
+  "corrected_campaign_seconds": 92.52814528701128,
+  "independent": {
+    "max_mass_error_kg": 7.207745511550456e-11,
+    "max_position_error_km": 0.62864483461944,
+    "max_velocity_error_km_s": 1.0995558854113675e-07,
+    "mined_asteroids": 8,
+    "ok": true,
+    "scored_masses": {
+      "4928": 32.85420944559996,
+      "9595": 71.4579055442,
+      "10664": 13.141683778200104,
+      "16118": 81.72484599589984,
+      "23760": 71.86858316220014,
+      "25792": 85.83162217659992,
+      "53410": 73.5112936344999,
+      "57530": 117.86447638599998
+    },
+    "ship_limit": 17.924449255075547,
+    "ships": 1,
+    "total_mass_kg": 548.2546201231999,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 548.2546201231999
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 8,
+    "ok": true,
+    "return_code": 0,
+    "score_data": {
+      "4928": 32.85420944559996,
+      "9595": 71.4579055442,
+      "10664": 13.141683778200104,
+      "16118": 81.72484599589984,
+      "23760": 71.86858316220014,
+      "25792": 85.83162217659992,
+      "53410": 73.5112936344999,
+      "57530": 117.86447638599998
+    },
+    "ships": 1,
+    "total_mass_kg": 548.255,
+    "wall_seconds": 0.09292687295237556
+  },
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "5a18ec0436204aa9de7bf90da24d609de06d1dfd5f77c7324cad7559c6cdebd7",
+    "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "source_sha256": {
+    "tests/test_gtoc12_collectdp.py": "0fa275cd12fe2e73d39e038a16c1779e41a23cc7ecd29b4ac7a2996f2895713d",
+    "scripts/gpu/replay_gtoc12_collection_fixtures.py": "8ac1ab2ab57104e0e75d0fe6274b166f7191588572b4d0cb35c6a5a22e743fdd",
+    "src/spacepdhcg/gtoc12/collectdp.py": "8097fcf2545414d18263ac44c0efe0354a8fd7f109e11330e3d08138a2adcebb"
+  },
+  "scope": "CPU collection-DP correctness fix and complete-pipeline profile, not a GPU DP implementation or speedup claim. Profile v271 has invalid aggregate timing; use direct v272 timers."
+}

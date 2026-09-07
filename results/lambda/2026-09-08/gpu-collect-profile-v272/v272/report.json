@@ -1,0 +1,73 @@
+{
+  "start": 1788814381.1014261,
+  "pid": 148147,
+  "source_base_commit": "4099dbbd",
+  "source_changes": [
+    "parallel final-epoch selection and path gathers",
+    "coalesced best-candidate copy"
+  ],
+  "complete": true,
+  "scope": "One-ship full-catalogue-box search and top-three GPU refinements; four retiming/extension attempts with device pricing; not an incumbent fleet replacement.",
+  "kernel_source_sha256": {
+    "cpp/cuda/src/gtoc12_retime.cu": "c1b4bb52dda5b06017788504d3a9004c7f4107b419241c2c3e2bd55cb8ca5ab9",
+    "tests/test_gtoc12_retime_finish.py": "461a3c672a21a82ad5fc91c9d802cd55771634590c728f17ae77da0406682361"
+  },
+  "source_sha256": {
+    "cpp/cuda/src/native_qoco_adapter.cpp": "69dfc75826b944ad3f007ab02fcb21b05f2e5d0ce8b858ea4d435cd1b34f6338",
+    "src/spacepdhcg/gtoc12/cli.py": "8de34f33809d007dec837e5ffb195ec3233bcc6816349f4e05cf42b5ba4acb70"
+  },
+  "command": [
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "-c",
+    "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('/home/ubuntu/spacepdhcg-collect-profile-v272/instrument.py',run_name='__main__')",
+    "gtoc12",
+    "run",
+    "--run-id",
+    "gpu_collect_profile_v272",
+    "--output",
+    "/home/ubuntu/spacepdhcg-collect-profile-v272/output",
+    "--full-catalogue",
+    "--ships",
+    "1",
+    "--beam-width",
+    "16",
+    "--max-deploys",
+    "10",
+    "--neighbours",
+    "48",
+    "--refine-top",
+    "3",
+    "--search-budget-seconds",
+    "120",
+    "--budget-seconds",
+    "600",
+    "--retime-attempts",
+    "4",
+    "--retime-budget-seconds",
+    "300",
+    "--no-cooperative",
+    "--node-days",
+    "2",
+    "--scvx-iterations",
+    "40",
+    "--screening-backend",
+    "cuda",
+    "--seed-backend",
+    "cuda",
+    "--discretisation-backend",
+    "cuda",
+    "--assembly-backend",
+    "cuda",
+    "--convex-solver",
+    "qoco",
+    "--outer-loop-backend",
+    "cuda"
+  ],
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "5a18ec0436204aa9de7bf90da24d609de06d1dfd5f77c7324cad7559c6cdebd7",
+    "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "child_pid": 148149,
+  "returncode": 0,
+  "end": 1788814473.932319
+}

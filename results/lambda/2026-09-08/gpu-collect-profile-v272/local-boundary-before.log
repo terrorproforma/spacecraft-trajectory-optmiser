@@ -1,0 +1,124 @@
+.F.F                                                                     [100%]
+=================================== FAILURES ===================================
+__ test_collect_fraction_cache_preserves_mass_authority_boundary[masses0-512] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7747f29e62a0>
+cache_entries = 512, masses = (1000.1, 1000.4)
+
+    @pytest.mark.parametrize("cache_entries", [0, 512])
+    @pytest.mark.parametrize("masses", [(1000.1, 1000.4), (1000.4, 1000.1)])
+    def test_collect_fraction_cache_preserves_mass_authority_boundary(monkeypatch, cache_entries, masses):
+        """Equal rounded masses can lie on opposite sides of the thrust limit."""
+        from dataclasses import replace
+    
+        from spacepdhcg.gtoc12 import collectdp
+        from spacepdhcg.gtoc12.screening import thrust_authority_km_s
+    
+        dv = 0.667 * float(thrust_authority_km_s(1000.25, 120.0, 1.0))
+        table = _FakeTable([11, 12], {(11, 12): dv}, tofs=(120.0,))
+        table.settings = replace(table.settings, fraction_cache_entries=cache_entries)
+        costs = table.hop(11, 12).astype(np.float64)
+        expected = {mass: table.hop_propellant(costs, mass, table.tofs) / mass for mass in masses}
+        assert np.isfinite(expected[1000.1]).all()
+        assert np.isinf(expected[1000.4]).all()
+    
+        def check_fractions(*args):
+            fraction = args[14]
+            for mass in [*masses, *reversed(masses)]:
+                np.testing.assert_array_equal(fraction(0, 1, mass), expected[mass])
+            return None
+    
+        monkeypatch.setattr(collectdp, "_solve_collect_dp", check_fractions)
+>       collectdp.plan_collect_tour(table, [(11, T0), (12, T0)], 11, table.epochs[0], 1000.1)
+
+tests/test_gtoc12_collectdp.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/spacepdhcg/gtoc12/collectdp.py:659: in plan_collect_tour
+    first = solve(0.0)
+            ^^^^^^^^^^
+src/spacepdhcg/gtoc12/collectdp.py:632: in solve
+    return _solve_collect_dp(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<test_gtoc12_collectdp._FakeTable object at 0x7747e60e7b90>, [11, 12], 0, 0, array([66519.5, 66579.5, 66639.5, 66699....3511, 114.20944559, 115.85215606, 117.49486653,
+        119.137577  , 120.78028747, 122.42299795, 124.06570842]]), ...)
+
+    def check_fractions(*args):
+        fraction = args[14]
+        for mass in [*masses, *reversed(masses)]:
+>           np.testing.assert_array_equal(fraction(0, 1, mass), expected[mass])
+E           AssertionError: 
+E           Arrays are not equal
+E           
+E           inf location mismatch:
+E            ACTUAL: array([[0.119179],
+E                  [0.119179],
+E                  [0.119179],...
+E            DESIRED: array([[inf],
+E                  [inf],
+E                  [inf],...
+
+tests/test_gtoc12_collectdp.py:195: AssertionError
+__ test_collect_fraction_cache_preserves_mass_authority_boundary[masses1-512] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7747e60e7d40>
+cache_entries = 512, masses = (1000.4, 1000.1)
+
+    @pytest.mark.parametrize("cache_entries", [0, 512])
+    @pytest.mark.parametrize("masses", [(1000.1, 1000.4), (1000.4, 1000.1)])
+    def test_collect_fraction_cache_preserves_mass_authority_boundary(monkeypatch, cache_entries, masses):
+        """Equal rounded masses can lie on opposite sides of the thrust limit."""
+        from dataclasses import replace
+    
+        from spacepdhcg.gtoc12 import collectdp
+        from spacepdhcg.gtoc12.screening import thrust_authority_km_s
+    
+        dv = 0.667 * float(thrust_authority_km_s(1000.25, 120.0, 1.0))
+        table = _FakeTable([11, 12], {(11, 12): dv}, tofs=(120.0,))
+        table.settings = replace(table.settings, fraction_cache_entries=cache_entries)
+        costs = table.hop(11, 12).astype(np.float64)
+        expected = {mass: table.hop_propellant(costs, mass, table.tofs) / mass for mass in masses}
+        assert np.isfinite(expected[1000.1]).all()
+        assert np.isinf(expected[1000.4]).all()
+    
+        def check_fractions(*args):
+            fraction = args[14]
+            for mass in [*masses, *reversed(masses)]:
+                np.testing.assert_array_equal(fraction(0, 1, mass), expected[mass])
+            return None
+    
+        monkeypatch.setattr(collectdp, "_solve_collect_dp", check_fractions)
+>       collectdp.plan_collect_tour(table, [(11, T0), (12, T0)], 11, table.epochs[0], 1000.1)
+
+tests/test_gtoc12_collectdp.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/spacepdhcg/gtoc12/collectdp.py:659: in plan_collect_tour
+    first = solve(0.0)
+            ^^^^^^^^^^
+src/spacepdhcg/gtoc12/collectdp.py:632: in solve
+    return _solve_collect_dp(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<test_gtoc12_collectdp._FakeTable object at 0x7747e6131cd0>, [11, 12], 0, 0, array([66519.5, 66579.5, 66639.5, 66699....3511, 114.20944559, 115.85215606, 117.49486653,
+        119.137577  , 120.78028747, 122.42299795, 124.06570842]]), ...)
+
+    def check_fractions(*args):
+        fraction = args[14]
+        for mass in [*masses, *reversed(masses)]:
+>           np.testing.assert_array_equal(fraction(0, 1, mass), expected[mass])
+E           AssertionError: 
+E           Arrays are not equal
+E           
+E           inf location mismatch:
+E            ACTUAL: array([[inf],
+E                  [inf],
+E                  [inf],...
+E            DESIRED: array([[0.119179],
+E                  [0.119179],
+E                  [0.119179],...
+
+tests/test_gtoc12_collectdp.py:195: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_gtoc12_collectdp.py::test_collect_fraction_cache_preserves_mass_authority_boundary[masses0-512]
+FAILED tests/test_gtoc12_collectdp.py::test_collect_fraction_cache_preserves_mass_authority_boundary[masses1-512]
+2 failed, 2 passed, 22 deselected in 0.96s

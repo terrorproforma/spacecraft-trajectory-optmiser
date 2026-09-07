@@ -82,6 +82,13 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Next complete-pipeline bottleneck identified:** direct H100 timing places
+**30.97 s of a 91.43 s campaign** inside the still-host-controlled collection-tour
+DP. Its rounded-mass cache could reuse thrust feasibility for a different ship
+mass; the cache now uses exact mass. Boundary regressions, eight real DP fixtures
+on both GPUs and a fresh **548.255 kg** verified campaign pass. The collection DP
+itself still needs its CUDA port. [Evidence and native implementation requirements](docs/GPU_COLLECTION_DP_PORT.md).
+
 **New certified GPU campaign:** the H100 search/refinement/retiming run completed
 in **89.55 s**, evaluated **44.72 million transfer branches** and selected a
 **548.255 kg, eight-asteroid mission**. Both checkers pass: **4.13% more returned
