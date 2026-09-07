@@ -82,6 +82,15 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**CUDA graph retiming:** a retained graph replaces 27 per-stage kernel submissions
+for a 13-leg price evaluation. Matched comparisons against the published runtime
+reduce cached pricing time by **3.3% on H100 and 4.0% on RTX 5090**; complete
+retiming changes by less than 1%, so there is no material overall speedup claim.
+**91 tests pass on each GPU**, both H100 sanitizers report zero errors, and the
+526.489 kg mission passes both checkers again. Native execution, including copies
+and synchronization, accounts for most measured cached-DP time and is the next
+profiling target. [Measurements and remaining work](docs/GPU_RETIMING_GRAPHS.md).
+
 **Resident return-sweep pricing and 526 kg mission:** nearest measured-return
 selection, refusal masks and inflation pricing now run in CUDA, with compact
 sweep updates reusing the transfer tables. The measured sweep workload takes

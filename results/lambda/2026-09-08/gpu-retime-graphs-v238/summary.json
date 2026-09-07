@@ -1,0 +1,45 @@
+{
+  "code_commit": "a9fb798e",
+  "base_commit": "f1e8f2f7",
+  "tests_per_gpu": 91,
+  "sanitizer_tests": 28,
+  "memcheck_errors": 0,
+  "initcheck_errors": 0,
+  "fleet_weighted_kg": 12805.194102488575,
+  "timing": {
+    "H100": {
+      "full": {
+        "old": 0.06369327899301425,
+        "graph": 0.06361750699579716
+      },
+      "cached": {
+        "old": 0.0007877270109020174,
+        "graph": 0.0007619269890710711
+      }
+    },
+    "RTX5090": {
+      "full": {
+        "old": 0.22397218699984478,
+        "graph": 0.22286169099993458
+      },
+      "cached": {
+        "old": 0.0012660390000291954,
+        "graph": 0.0012160010001025512
+      }
+    }
+  },
+  "mission": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 526.4887063655999,
+    "weighted_score_fixed_bonus_kg": 526.4887063655999,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 16.42988620577323,
+    "max_position_error_km": 0.4747672249865066,
+    "max_velocity_error_km_s": 8.08867762635858e-08,
+    "max_mass_error_kg": 6.662048690486699e-11,
+    "violations": []
+  },
+  "refinement_seconds": 9.8727308959933
+}
