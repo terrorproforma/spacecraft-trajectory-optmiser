@@ -32,6 +32,12 @@ Then open `http://127.0.0.1:4173/`. The Node server is preferred because it adds
 
 ## GTOC12 fleet dataset
 
+The **GPU solver validation — latest** panel displays native v157 / QOCO133
+from `data/gtoc12/gpu-outer-validation.json`: the physical thrust gate,
+332 local regression passes, 89 H100 integration passes, and nested GPU graph
+correctness checks. These are validation results, not new fleet trajectories
+or measurements of complete GPU-controlled SCvx; that integration remains open.
+
 The **Lambda solver recovery — 7 September** panel displays native v155 / QOCO131
 H100 validation from `data/gtoc12/gpu-recovery.json`: six physics-qualified
 low-thrust cases, five converged and one at its trust-region limit. These are

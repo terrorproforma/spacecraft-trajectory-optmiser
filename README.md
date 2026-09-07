@@ -82,7 +82,17 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 7 September 2026
 
-**Latest solver repair:** corrected QOCO's small-denominator division guard and
+**Latest GPU correctness checkpoint:** native v157 rejects SCvx candidates
+above the existing physical thrust ceiling on the GPU before acceptance.
+The corrected path passes **332 local regression tests and 89 H100 GTOC12
+integration tests**, with unchanged independent physics tolerances. Prepared
+QOCO133 can also run changing QPs inside a GPU-controlled outer graph, with
+exact synchronous parity in local and H100 probes. The complete GTOC12 SCvx
+loop still needs connecting to that interface. H100 memory checking passes
+the nested solver probes and full GTOC12 guard test; the earlier WSL sanitizer
+failure remains unresolved. See [implementation and validation](docs/GPU_OUTER_GRAPH.md).
+
+**Earlier solver repair:** corrected QOCO's small-denominator division guard and
 repeated dynamics conditioning. Native v155 / QOCO v131 now passes all six
 archived low-thrust recovery cases' independent physics checks on both the RTX
 5090 and Lambda H100. On H100, five converge and one reaches its trust-region

@@ -27,7 +27,7 @@ struct Metrics { double fuel, penalty, virtual_sum, defect, virtual_inf, step, i
 __global__ void reduce_metrics(int nodes, int variables, const double* candidate,
     const double* controls, const double* virtuals, const double* reference,
     const double* reference_controls, const double* propagated, const int* invalid,
-    const double* fuel, double tolerance, Metrics* partial, const int* enabled=nullptr) {
+    const double* fuel, double tolerance, int active_controls, Metrics* partial, const int* enabled=nullptr) {
     if (enabled && !*enabled) return;
     __shared__ double values[7][256];
     const int tid = threadIdx.x;
@@ -47,6 +47,16 @@ __global__ void reduce_metrics(int nodes, int variables, const double* candidate
             v[5] = fmax(v[5], fabs(controls[i]-reference_controls[i]));
         if ((i < variables && !isfinite(candidate[i])) ||
             (i < 4*nodes && !isfinite(controls[i]))) v[6] = 1.0;
+        if (reference_controls && i < active_controls) {
+            // A relative conic residual can pass while an individual thrust
+            // vector exceeds the absolute physical certificate. Apply the same
+            // GTOC12 0.6 N + 1e-9 N limit before accepting a candidate. Initial
+            // references may be infeasible and must remain available to SCvx.
+            // ZOH's last control is inactive and omitted from the certificate.
+            const double tx=0.6*controls[4*i],ty=0.6*controls[4*i+1],tz=0.6*controls[4*i+2];
+            const double thrust=sqrt(tx*tx+ty*ty+tz*tz);
+            if (!isfinite(thrust) || thrust>0.6+1e-9) v[6]=1.0;
+        }
     }
     for (int j = 0; j < 7; ++j) values[j][tid] = v[j];
     __syncthreads();
@@ -270,7 +280,8 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         if (status) return status;
         reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,candidate ? dimensions.variables : 7*nodes,
             x,u,candidate ? x+11*nodes : nullptr,candidate ? w.states : nullptr,
-            candidate ? w.controls : nullptr,propagated,invalid,w.fuel,p.conic_tolerance,w.partial);
+            candidate ? w.controls : nullptr,propagated,invalid,w.fuel,p.conic_tolerance,
+            hold ? nodes : nodes-1,w.partial);
         finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics);
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };
@@ -305,7 +316,8 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
             w.dynamics,w.states,w.controls,&w.state->command.substeps,enabled,0,w.stream);
         if (status) return status;
         reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,7*nodes,w.states,w.controls,nullptr,
-            nullptr,nullptr,propagated,invalid,w.fuel,p.conic_tolerance,w.partial,enabled);
+            nullptr,nullptr,propagated,invalid,w.fuel,p.conic_tolerance,
+            hold ? nodes : nodes-1,w.partial,enabled);
         finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics,enabled);
         set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p,true);
         return cudaGetLastError()==cudaSuccess ? 0 : 2;

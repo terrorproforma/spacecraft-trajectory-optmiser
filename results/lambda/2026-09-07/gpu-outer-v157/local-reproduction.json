@@ -1,0 +1,34 @@
+{
+  "reproduced_prepared_source_sha256": {
+    "qoco_ipm_graph.cuh": "9e34e06495e8675e5d9c14808e9070e71913ef96872c3904e33d90e18d9bc28a",
+    "qoco_gpu_replay.h": "d827706dccfec91254e34077fa38dabcdefaea7fc5efa465e240adba1374c2a4",
+    "qoco_device_update.cuh": "5c81fdf4652431c29a78697cd0feb163d16e42f98b925fb1be13b4d4d56ba987",
+    "qoco_ipm_outer_graph.cuh": "ae138bc91f1a8a43689e8bab5bad412a78dcb18fc1a35e538ef429b2ece87719"
+  },
+  "unit": {
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/gtoc12_scvx_test"
+    ],
+    "returncode": 0,
+    "stdout": "PASS: 14 controller branches, 10 final states, 8 multi-block reductions, 24 physical thrust gates\n",
+    "stderr": "",
+    "seconds": 0.436082124710083
+  },
+  "source_commit": "dcdb812fceda00041db52a2764377e0d1c165414",
+  "source_lf_sha256": {
+    "cpp/cuda/patches/qoco_ipm_outer_graph.cuh": "ae138bc91f1a8a43689e8bab5bad412a78dcb18fc1a35e538ef429b2ece87719",
+    "cpp/cuda/src/gtoc12_scvx.cu": "90703f877b13a9e1c860b8623c05156c29416d3659fc93d7ec9eae08bcbb7e69",
+    "cpp/cuda/tests/gtoc12_device_refresh_test.cu": "8a795ab5a7885565afc7dbbe2fa0c3bc9357dfd2096e7f9581e62c03f689a943",
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": "6925e8b876229992e07ad544f34ba5f4acbfd3ce78941ea675bc255d7b611ab8",
+    "cpp/cuda/tests/qoco_outer_graph_probe.cu": "fd70f675ff81707683901444e24de1ab5bdc7ca2f3d5d00b51caa51a4aa04faa",
+    "cpp/cuda/tests/qoco_outer_numeric_probe.cu": "855cef2e920e2a5efbd91a42da2100fbee2dd0203c6630011a541f12764ebf81",
+    "docs/GPU_OUTER_GRAPH.md": "4e8973c61095927256f4d41e372c37f0c41384eacd89d831fb80b2dbde7064c8",
+    "scripts/gpu/prepare_qoco_outer_graph.py": "0bb5fd6c2a5d2387ea6ef996de570fa3c656d2715356968c6fd1bdf160db9920"
+  },
+  "runtime_sha256": {
+    "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so": "e9cbffd8ad4123fafabf8cadc8e234abd29fd61ce435ac5255242b87b6c4c420",
+    "/home/angus/build-spacepdhcg-gtoc12-v157/final/gtoc12_scvx_test": "cf0135efbc22a1dc6d98ea2212a3f7ce66f0b5b362dd5600a78ec3941dca881d",
+    "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so": "82cf9a32630a386e23137d5df8759d518c34b8fc67b09f6f42bebd932e4d605c"
+  },
+  "local_build_metadata_note": "Native local build reused its CMake directory, so its embedded source commit is stale; source LF hashes and frozen runtime hashes identify this build."
+}

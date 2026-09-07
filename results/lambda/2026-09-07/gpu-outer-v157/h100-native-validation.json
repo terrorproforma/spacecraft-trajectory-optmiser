@@ -1,0 +1,53 @@
+[
+  {
+    "returncode": 0,
+    "stdout": "PASS: 14 controller branches, 10 final states, 8 multi-block reductions, 24 physical thrust gates\n",
+    "stderr": "",
+    "name": "gtoc12_scvx_test",
+    "command": [
+      "/home/ubuntu/spacepdhcg-recovery-v157/final/gtoc12_scvx_test"
+    ],
+    "seconds": 0.4062826633453369
+  },
+  {
+    "returncode": 0,
+    "stdout": "PASS: 12 captured reference refresh/skip/invalid cases; fixed-chain state parity\n",
+    "stderr": "",
+    "name": "gtoc12_device_refresh_test",
+    "command": [
+      "/home/ubuntu/spacepdhcg-recovery-v157/final/gtoc12_device_refresh_test"
+    ],
+    "seconds": 0.3129420280456543
+  },
+  {
+    "returncode": 0,
+    "stdout": "[0/2] Re-checking globbed directories...\n[1/3] Building CUDA object cuda/CMakeFiles/gtoc12_qoco_guard_test.dir/tests/gtoc12_qoco_guard_test.cu.o\n[2/3] Linking CUDA executable cuda/CMakeFiles/gtoc12_qoco_guard_test.dir/cmake_device_link.o\n[3/3] Linking CUDA executable cuda-tests/gtoc12_qoco_guard_test\n",
+    "stderr": "",
+    "name": "build_guard",
+    "command": [
+      "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+      "--build",
+      "/home/ubuntu/spacepdhcg-recovery-v157/core-build",
+      "--target",
+      "gtoc12_qoco_guard_test",
+      "-j",
+      "3"
+    ],
+    "seconds": 2.3243980407714844
+  },
+  {
+    "timeout": true,
+    "stdout": "========= COMPUTE-SANITIZER\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\n",
+    "name": "guard_memcheck",
+    "command": [
+      "/usr/local/cuda/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "98",
+      "/home/ubuntu/spacepdhcg-recovery-v157/core-build/cuda-tests/gtoc12_qoco_guard_test"
+    ],
+    "seconds": 30.003620862960815
+  }
+]
