@@ -596,7 +596,7 @@ def plan_collect_tour(
     # family's beam.  Reuse only exists within a state's expansion (and between the two burn
     # passes for equal masses), which a small LRU captures; the tables are recomputed
     # otherwise (a few vector ops on ~20 KB, ~10 % of the DP time), bit-for-bit identical.
-    fractions: OrderedDict[tuple[int, int, int], FloatArray] = OrderedDict()
+    fractions: OrderedDict[tuple[int, int, float], FloatArray] = OrderedDict()
     hop_tables: dict[tuple[int, int], FloatArray] = {}
     # harvest-phase penalty (kg) per departure epoch of the local lattice, per ordered pair
     penalties: dict[tuple[int, int], FloatArray] = {}
@@ -612,7 +612,9 @@ def plan_collect_tour(
         """Propellant per kg of ship mass for hop ``j -> l`` on the local lattice x TOF grid,
         flyable and priced at the mass the ship has on that move."""
 
-        key = (j, l_i, round(mass))
+        # Authority and calibrated inflation depend on the actual move mass.
+        # Rounding can reuse a flyable table on the other side of a thrust limit.
+        key = (j, l_i, mass)
         cached = fractions.get(key)
         if cached is not None:
             fractions.move_to_end(key)

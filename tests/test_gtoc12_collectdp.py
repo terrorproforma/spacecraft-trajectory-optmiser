@@ -172,6 +172,35 @@ def test_bundle_columns_count_their_ships_in_the_lp() -> None:
 # -- collect DP (synthetic table) ----------------------------------------------------------
 
 
+@pytest.mark.parametrize("cache_entries", [0, 512])
+@pytest.mark.parametrize("masses", [(1000.1, 1000.4), (1000.4, 1000.1)])
+def test_collect_fraction_cache_preserves_mass_authority_boundary(
+    monkeypatch, cache_entries, masses
+):
+    """Equal rounded masses can lie on opposite sides of the thrust limit."""
+    from dataclasses import replace
+
+    from spacepdhcg.gtoc12 import collectdp
+    from spacepdhcg.gtoc12.screening import thrust_authority_km_s
+
+    dv = 0.667 * float(thrust_authority_km_s(1000.25, 120.0, 1.0))
+    table = _FakeTable([11, 12], {(11, 12): dv}, tofs=(120.0,))
+    table.settings = replace(table.settings, fraction_cache_entries=cache_entries)
+    costs = table.hop(11, 12).astype(np.float64)
+    expected = {mass: table.hop_propellant(costs, mass, table.tofs) / mass for mass in masses}
+    assert np.isfinite(expected[1000.1]).all()
+    assert np.isinf(expected[1000.4]).all()
+
+    def check_fractions(*args):
+        fraction = args[14]
+        for mass in [*masses, *reversed(masses)]:
+            np.testing.assert_array_equal(fraction(0, 1, mass), expected[mass])
+        return None
+
+    monkeypatch.setattr(collectdp, "_solve_collect_dp", check_fractions)
+    collectdp.plan_collect_tour(table, [(11, T0), (12, T0)], 11, table.epochs[0], 1000.1)
+
+
 class _FakeTable:
     """Pair table with hand-made costs: a (n_t, n_tof) ΔV per ordered pair, one return table."""
 
