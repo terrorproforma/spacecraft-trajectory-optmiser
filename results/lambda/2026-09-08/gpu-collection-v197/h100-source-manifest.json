@@ -1,0 +1,47 @@
+{
+  "source_parent": "45aa3a64340d68cb822dc5c5eda480973fd09605",
+  "overlay": {
+    "cpp/cuda/CMakeLists.txt": "c5c2a8515e7a5ff4c5bcaea1629f4309c9b8c920bb6a7a5b3c1121c7578c52e5",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_collection_c_api.h": "d72197f51efb775b1aa5b1aa810dfb4290c845e75aa0ba375f4ab6b3240ed679",
+    "cpp/cuda/src/gtoc12_collection.cu": "4a8350c9da5b27407861e8d9c6fb2ffaff3c3f58f4767a8aaadd3f82f1ca9717",
+    "cpp/cuda/tests/gtoc12_collection_test.cu": "61d8b13dacbc2bbb7c5fb185ea305884720d01efc049b3f76bb5a22f61ac8db5",
+    "src/spacepdhcg/gtoc12/gpu_collection.py": "b39a5ec8fb4b28977516c3e7309b3198f8324f3f7ec369fa9610c300ed910abb",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "615a52b20c082af674da33091757e94c8d0418ec4d94b95637a256a6e744ef07",
+    "src/spacepdhcg/gtoc12/lambert.py": "0eac9b715a71bbbb0898612deaff2dfb556efc26e71044af63e17691ca8b0af8",
+    "src/spacepdhcg/gtoc12/search.py": "3dc865aaad586c6214dc8687ec380c3884f648367e677f21478589d0798e1c3e",
+    "tests/test_gtoc12_gpu_collection.py": "8dec472f82002740f27de154a0539d48f9d73199678bf576652cdd073254ffd9",
+    "scripts/gpu/benchmark_gtoc12_collection.py": "a7f4dcf70715e090174f6d5a0f972ffc9304caa3beb63140d39eb51f0765afff"
+  },
+  "base_source_manifest": {
+    "repo/cpp/cuda/CMakeLists.txt": "0762b5697d39bcf48ae4788f81462aa2b3f765055b0261ba49854c3a3e0634d8",
+    "repo/cpp/cuda/include/spacepdhcg/cuda/gtoc12_neighbours_c_api.h": "753b323c619e34cf1b8e1b0c4e36be6621b1beb9d439c0931483e39a6a861a6c",
+    "repo/cpp/cuda/src/gtoc12_neighbours.cu": "16a56239682f4f673c863b152743d38ccbd2b4a21363850773ddf699914b78e9",
+    "repo/cpp/cuda/tests/gtoc12_neighbours_test.cu": "e12018416be6af9fcf5211c7bbef641dcd2249e70509ad8bda7193521a270479",
+    "repo/src/spacepdhcg/gtoc12/gpu_neighbours.py": "c522c449ff4b5047592d3c4b77ba5a254315b3b3755baad97a84e423154d812c",
+    "repo/tests/test_gtoc12_gpu_neighbours.py": "7c39a7e462e0edd69e0cd6a1e4b02347c61182fc0b4c03ac051aa1f102b83e0a",
+    "repo/scripts/gpu/benchmark_gtoc12_neighbours.py": "d75c24c662d88158ee560a7e572eb043c79b6ad4c6d0cd877ebca4664015d1ed",
+    "repo/src/spacepdhcg/gtoc12/search.py": "e7e8c11b09003631e07e411555e53d09e05bebeba92aafe30aee77a85f668184",
+    "repo/scripts/gpu/benchmark_gtoc12_combined_hops.py": "b35e5b94a4bfe59045db87ed8df3b69037424dcc2bac49ff57f3c53dfad38bc5",
+    "repo/cpp/cuda/tests/orbitweaver_hop_test.cu": "c832f2388bfb201587864ddb7ffc173ff42954c03cdf3981b9befed86cb507d3",
+    "repo/src/spacepdhcg/gtoc12/screening.py": "b9678da3935993bae5db0537e30c8f84e470fe780071c2581b2765217e5d87c0",
+    "repo/tests/test_gtoc12_gpu_hops.py": "5ecd4fb293c4a899839835787d4bbb3d0a24eb4bdd8a0f2ef54e91f2c02957a8",
+    "repo/cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": "78ff67e49c9940f168fff5a380f248e0c1888016507fce8629cbe35453d2be48",
+    "repo/cpp/cuda/src/orbitweaver_gpu.cu": "44dae1eac8729d7d1593c01ea7c1b540bdd7db6be7591bae216316e05ce2b420",
+    "repo/cpp/cuda/tests/orbitweaver_screening_test.cu": "302e1fd297c7c2afda6abf87dd8bf094427275c15ab1de6583b786ac79d7ffa0",
+    "repo/cpp/include/spacepdhcg/orbitweaver/lambert.hpp": "367d0eabdf6004ccef5b840666218580d9fdd277feb36e4574286fa776b27f1a",
+    "repo/cpp/include/spacepdhcg/orbitweaver/lambert_family.hpp": "ed71530126b2f6c26635b1f6ac2a7ea47713abbc6b584048030b5c89ff774ca4",
+    "repo/src/spacepdhcg/gtoc12/gpu_lambert.py": "657cf8071be30cd9420fa63dc5bf6dfa08111f73805608547cdc0205c71fe849",
+    "repo/src/spacepdhcg/gtoc12/lambert.py": "5ba0f57ca9d9cf59889900e845da6b68bd1f5a15d804e75f8e93026bde3e2ffb",
+    "repo/src/spacepdhcg/gtoc12/cli.py": "12253ff1412b47463efe6aaa401e73d7e2769fedab954331dce6ed6b8086aa50",
+    "repo/tests/test_gtoc12_gpu_lambert.py": "0c80a0fd67c565d5d46a3f035a81902e4fcfc3d4fff3604b8133bf970707448a",
+    "repo/tests/test_gtoc12_lambert_performance.py": "f71c2b2491103e0f7e170996a575222dd78469ffd6e9922e4c7d6cc38c6d94ae",
+    "repo/scripts/gpu/benchmark_gtoc12_screening.py": "e13fb0cf3137a2ca2eeaa8521bb55c2d361944f79b7950da24326b0587006cd7",
+    "repo/scripts/gpu/benchmark_gtoc12_route_search.py": "d11422ab582585341d65b3472689b51dc74cb4df80ea9f6e8ff16f14826b3dd8",
+    "data/GTOC12_Asteroids_Data.txt": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675",
+    "data/bonus_coefficients.txt": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21"
+  },
+  "objects": {
+    "neighbours.o": "7c1a3c46b696a8cfea51864c95df99ab44f46e127194dadfb2791319f55c4e75",
+    "lambert.o": "cdbbedf7d5c923a0bda8c46e5ca0450b6f2a2fc28c89a9d20d09194e6b2a7ba3"
+  }
+}

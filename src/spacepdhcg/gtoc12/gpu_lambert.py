@@ -125,6 +125,7 @@ class GpuLambert:
         self.batches = self.evaluations = 0
         self.neighbour_workspace = None
         self.neighbour_key = None
+        self.collection_workspace = None
         self.telemetry = {
             "backend": "cuda",
             "completed_batches": 0,
@@ -147,6 +148,9 @@ class GpuLambert:
         if self.closed:
             return
         self._owned()
+        if self.collection_workspace is not None:
+            self.collection_workspace.close()
+            self.collection_workspace = None
         if self.neighbour_workspace is not None:
             self.neighbour_workspace.close()
             self.neighbour_workspace = None
@@ -183,6 +187,21 @@ class GpuLambert:
 
     def __exit__(self, *args):
         self.close()
+
+    def select_collection(self, options, *args, **kwargs):
+        from .gpu_collection import GpuCollection
+
+        self._owned()
+        if self.collection_workspace is None:
+            self.collection_workspace = GpuCollection(self.library, self.device_id)
+        result = self.collection_workspace.select(options, *args, **kwargs)
+        for key, count in [
+            ("completed_collection_queries", 1),
+            ("completed_collection_options", len(options)),
+        ]:
+            self.telemetry[key] = self.telemetry.get(key, 0) + count
+        self.telemetry["gpu_used"] = True
+        return result
 
     def _prepare(self, scan_samples):
         if not isinstance(scan_samples, int) or not 16 <= scan_samples < 2**32 - 1:

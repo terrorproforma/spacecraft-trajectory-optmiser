@@ -1,0 +1,55 @@
+[0/2] Re-checking globbed directories...
+-- GLOB mismatch!
+The following files were added:
+  +/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/gtoc12_collection_test.cu
+[1/2] Re-running CMake...
+-- SpacePDHCG persistent adapter strategy: linked_internal_adapter
+-- Pinned PDHCG commit: 167c8b72b4b96d2f94d405b8763e485514192b81
+-- Pinned PDHCG tree: 62b05e6c1bedd385f6c267af3645ae4aae0421b4
+(Stripping trailing CRs from patch; use --binary to disable.)
+checking file src/solver_state.cu
+Hunk #1 succeeded at 752 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+checking file src/pdhg_core_op.cu
+Hunk #1 succeeded at 1690 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+checking file src/spmv_backend.cu
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file src/solver_state.cu
+Hunk #1 succeeded at 752 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file src/pdhg_core_op.cu
+Hunk #1 succeeded at 1690 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file src/spmv_backend.cu
+-- Pinned PDHCG patch: 0001-free-quadratic-state.patch sha256=dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6
+-- Configuring done (6.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/angus/build-spacepdhcg-gtoc12-v141
+[0/2] Re-checking globbed directories...
+[1/26] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/pdhg_core_op.cu.o
+[2/26] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/solver_state.cu.o
+[3/26] Building CUDA object cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/pdhcg-patched/src/spmv_backend.cu.o
+[4/26] Building CUDA object cuda/CMakeFiles/spacepdhcg_cuda.dir/src/gtoc12_collection.cu.o
+[5/26] Building CUDA object cuda/CMakeFiles/gtoc12_collection_test.dir/tests/gtoc12_collection_test.cu.o
+[6/26] Linking CUDA static library cuda/CMakeFiles/spacepdhcg_pinned_reference.dir/cmake_device_link.o
+[7/26] Linking CUDA static library cuda/libspacepdhcg_pinned_reference.a
+[8/26] Linking CXX shared library cuda/CMakeFiles/spacepdhcg_cuda.dir/cmake_device_link.o
+[9/26] Building CUDA object cuda/CMakeFiles/gtoc12_neighbours_test.dir/tests/gtoc12_neighbours_test.cu.o
+[10/26] Linking CXX shared library cuda/libspacepdhcg_cuda.so
+[11/26] Linking CUDA executable cuda/CMakeFiles/gtoc12_collection_test.dir/cmake_device_link.o
+[12/26] Linking CUDA executable cuda-tests/gtoc12_collection_test
+[13/26] Linking CUDA executable cuda/CMakeFiles/gtoc12_neighbours_test.dir/cmake_device_link.o
+[14/26] Linking CUDA executable cuda-tests/gtoc12_neighbours_test
+[15/26] Building CUDA object cuda/CMakeFiles/orbitweaver_hop_test.dir/tests/orbitweaver_hop_test.cu.o
+[16/26] Linking CUDA executable cuda/CMakeFiles/orbitweaver_hop_test.dir/cmake_device_link.o
+[17/26] Linking CUDA executable cuda-tests/orbitweaver_hop_test
+[18/26] Building CUDA object cuda/CMakeFiles/orbitweaver_g3_adapter_test.dir/tests/orbitweaver_g3_adapter_test.cu.o
+[19/26] Linking CUDA executable cuda/CMakeFiles/orbitweaver_g3_adapter_test.dir/cmake_device_link.o
+[20/26] Linking CUDA executable cuda-tests/orbitweaver_g3_adapter_test
+[21/26] Building CUDA object cuda/CMakeFiles/orbitweaver_gpu_test.dir/tests/orbitweaver_gpu_test.cu.o
+[22/26] Linking CUDA executable cuda/CMakeFiles/orbitweaver_gpu_test.dir/cmake_device_link.o
+[23/26] Linking CUDA executable cuda-tests/orbitweaver_gpu_test
+[24/26] Building CUDA object cuda/CMakeFiles/orbitweaver_screening_test.dir/tests/orbitweaver_screening_test.cu.o
+[25/26] Linking CUDA executable cuda/CMakeFiles/orbitweaver_screening_test.dir/cmake_device_link.o
+[26/26] Linking CUDA executable cuda-tests/orbitweaver_screening_test

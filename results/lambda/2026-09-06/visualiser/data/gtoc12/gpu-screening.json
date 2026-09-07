@@ -31,14 +31,14 @@
     "candidates": 27,
     "branches": 545658,
     "gpu_batches": 373,
-    "neighbour_queries": 77,
-    "cpu_seconds": 12.325621577503625,
-    "gpu_seconds": 1.8564236329984851,
-    "speedup": 6.639444444905794
+    "collection_options": 153799,
+    "cpu_seconds": 12.012763784005074,
+    "gpu_seconds": 1.5359706449962687,
+    "speedup": 7.820959224148621
   },
-  "accuracy": "319 integrated local GTOC12 tests; 26 targeted H100 tests. Neighbour IDs/order match CPU, including the 60,000-asteroid benchmark. Local/H100 memcheck: zero errors; H100 racecheck: zero hazards.",
-  "timing_scope": "Warm timings. Transfer screening uses the combined-operator checkpoint; larger search includes the new GPU neighbours. Cold GPU catalogue setup can be slower. Routes still require low-thrust certification.",
-  "remaining": "Collection scheduling, beam/fleet orchestration, seed/retiming filters, packing and some solver setup.",
+  "accuracy": "323 integrated local GTOC12 tests; 168 H100 GPU integration tests plus 30 screening tests. Collection choices and complete paired-search summaries match CPU. Local/H100 memcheck: zero errors; H100 racecheck: zero hazards.",
+  "timing_scope": "Warm timings. Transfer/neighbour rows retain their named earlier checkpoints; larger search includes CUDA collection selection. Cold setup may be slower. Routes still require low-thrust certification.",
+  "remaining": "Collection option generation, ephemeris packing, tour order, dynamic programming, forward mass replay, beam/fleet orchestration and some setup.",
   "evidence_sha256": {
     "h100-evidence.tar.gz": "107e740b7da472b03acdc6438aa3577372bc4208eea0ad06feb6627b9957bc49",
     "retrieval.json": "d4478892cf1452543d7108fb7387f0906c861dc54b3984c8e55715bafa1b2e7f",
@@ -119,5 +119,14 @@
   "neighbour_evidence": {
     "summary_sha256": "3c23e6ac7bde07ad2ab585cfbcfc88a667384e16bd9e70e98fec221b72bb5271",
     "path": "results/lambda/2026-09-08/gpu-neighbours-v194/summary.json"
+  },
+  "collection_selection": {
+    "local_speedup": 1.0177686129026076,
+    "h100_speedup": 1.1872285170121217,
+    "options": 153799
+  },
+  "collection_evidence": {
+    "summary_sha256": "889aafbfa5d974be339bd43217996b8e7d5d3ed561bab6920f6b78e03ba43664",
+    "path": "results/lambda/2026-09-08/gpu-collection-v197/summary.json"
   }
 }

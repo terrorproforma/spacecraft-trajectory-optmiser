@@ -1883,7 +1883,15 @@ class RouteSearch:
         best_cost = np.inf
         if (source, target) in self.banned_pairs:
             return best_cost, None
-        for dv, departure, tof in self._collect_hop_options(source, target, epoch):
+        from .lambert import cuda_select_collection
+
+        options = self._collect_hop_options(source, target, epoch)
+        selected = cuda_select_collection(
+            options, mass_guess, epoch, s, penalty_scale, max_span_days
+        )
+        if selected is not None:
+            return selected
+        for dv, departure, tof in options:
             if epoch - departure > max_span_days:
                 continue  # hop + camp would not leave time for the remaining collections
             if not self._feasible(mass_guess, dv, tof, "collect_hop"):
@@ -2125,11 +2133,16 @@ class RouteSearch:
             C.maximum_collected_mass(max(end - deploy_epoch, 0.0))
             for _, deploy_epoch in partial.deployed
         )
-        best_return = None
-        for dv, departure, tof in self._return_options(first, end):
-            if self._feasible(mass_guess, dv, tof, "earth_return"):
-                best_return = (dv, departure, tof)
-                break
+        from .lambert import cuda_select_collection
+
+        return_options = self._return_options(first, end)
+        selected = cuda_select_collection(return_options, mass_guess, end, s, first=True)
+        best_return = selected[1] if selected is not None else None
+        if selected is None:
+            for dv, departure, tof in return_options:
+                if self._feasible(mass_guess, dv, tof, "earth_return"):
+                    best_return = (dv, departure, tof)
+                    break
         if best_return is None:
             self.last_failure = "no_return"
             return None

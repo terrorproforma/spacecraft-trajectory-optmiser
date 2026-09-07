@@ -1,0 +1,129 @@
+{
+  "start": 1788795928.8411744,
+  "pid": 126954,
+  "steps": [
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.0035848617553710938
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "cpp",
+        "src",
+        "scripts",
+        "pyproject.toml"
+      ],
+      "returncode": 0,
+      "seconds": 0.16376256942749023
+    },
+    {
+      "name": "git-snapshot",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU snapshot",
+        "-c",
+        "user.email=snapshot@localhost",
+        "commit",
+        "-qm",
+        "Frozen CUDA collection integration source"
+      ],
+      "returncode": 0,
+      "seconds": 0.015538692474365234
+    },
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-collection-full-v198/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-collection-full-v198/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.316800594329834
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-collection-full-v198/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "gtoc12_collection_test",
+        "gtoc12_neighbours_test",
+        "gtoc12_outer_graph_test",
+        "gtoc12_scvx_test",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 49.643115520477295
+    },
+    {
+      "name": "gtoc12_collection_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-collection-full-v198/core-build/cuda-tests/gtoc12_collection_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.4142169952392578
+    },
+    {
+      "name": "gtoc12_neighbours_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-collection-full-v198/core-build/cuda-tests/gtoc12_neighbours_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.31409335136413574
+    },
+    {
+      "name": "integration",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_gpu_collection.py",
+        "tests/test_gtoc12_gpu_conic.py",
+        "tests/test_gtoc12_gpu_discretisation.py",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_gpu_lambert.py",
+        "tests/test_gtoc12_gpu_neighbours.py",
+        "tests/test_gtoc12_gpu_qoco.py",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_seed.py",
+        "tests/test_gtoc12_gpu_verifier.py",
+        "-q",
+        "--tb=short"
+      ],
+      "returncode": 0,
+      "seconds": 21.992003679275513
+    }
+  ],
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "74dea1d57681db957e1a7afdb93414c09cc1c371012e8c944a52e7f2a8929416",
+    "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "complete": true,
+  "end": 1788796004.3948646
+}

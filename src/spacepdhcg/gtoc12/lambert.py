@@ -67,6 +67,11 @@ def cuda_neighbour_candidates(*args, **kwargs):
     return gpu.neighbours(*args, **kwargs) if gpu is not None else None
 
 
+def cuda_select_collection(*args, **kwargs):
+    gpu = _GPU_BACKEND.get()
+    return gpu.select_collection(*args, **kwargs) if gpu is not None else None
+
+
 @contextmanager
 def using_lambert_backend(backend: str, *, maximum_batch_size=16384):
     """Select screening arithmetic for this scope, preserving nested callers."""

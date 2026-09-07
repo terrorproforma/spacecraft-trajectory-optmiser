@@ -1,7 +1,8 @@
 # CUDA neighbour selection
 
-`gtoc12 search --screening-backend cuda --workers 1` now moves RouteSearch's
-neighbour filtering and ranking onto CUDA as well as its Lambert screening.
+Selecting `--screening-backend cuda` now moves RouteSearch's neighbour filtering
+and ranking onto CUDA as well as its Lambert screening. Commands exposing a
+worker count require `--workers 1` for this backend.
 The retained catalogue contains orbital elements, eccentricity/inclination
 vectors, orbital bases and mean motion. Each query computes the original band
 filter, Kepler positions, phasing cost and positional ranking in parallel.

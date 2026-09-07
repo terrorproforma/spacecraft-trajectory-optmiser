@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "kind": "gpu-collection-selection",
+  "source_parent": "45aa3a64340d68cb822dc5c5eda480973fd09605",
+  "fleet_score_changed": false,
+  "full_gpu_application": false,
+  "paired_search": {
+    "local": {
+      "median_seconds": {
+        "cpu_collection": 3.63814794999999,
+        "gpu_collection": 3.5746317029999943
+      },
+      "speedup": 1.0177686129026076
+    },
+    "h100": {
+      "median_seconds": {
+        "cpu_collection": 1.8248671310138889,
+        "gpu_collection": 1.5370816189679317
+      },
+      "speedup": 1.1872285170121217
+    }
+  },
+  "larger_search": {
+    "asteroids": 1000,
+    "candidates": 27,
+    "branches": 545658,
+    "gpu_batches": 373,
+    "collection_options": 153799,
+    "cpu_seconds": 12.012763784005074,
+    "gpu_seconds": 1.5359706449962687,
+    "speedup": 7.820959224148621
+  },
+  "local_integrated_tests_passed": 323,
+  "h100_screening_tests_passed": 30,
+  "h100_integrated_tests_passed": 168,
+  "h100_full_source_files_matched_ignoring_line_endings": 504,
+  "runtime_sha256": {
+    "local": "e6fde30a0691be30e7fa50542d78c20b7cd2811e71fd779faf9b094c797117d4",
+    "h100": "c4090393712299596a6b7160ea4330c99c5837065018784e5826a9b51c22e55e",
+    "h100_full": {
+      "libspacepdhcg_cuda.so": "74dea1d57681db957e1a7afdb93414c09cc1c371012e8c944a52e7f2a8929416",
+      "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+    }
+  },
+  "evidence_sha256": {
+    "h100-collection-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-evidence.tar.gz": "09f3940a069f4f6c3fb5b177801be7dad741db91fe0c3832c27ea1be9b036811",
+    "h100-full-v198/build.log": "60d04676b37ea26cad562a0014f797b51ea1a11004e2d27236a322d05b144789",
+    "h100-full-v198/configure.log": "7a2902432bd939c1cb19814b5092b44219ff06fbd6bc9a27ea3fc01dceab5c29",
+    "h100-full-v198/evidence.tar.gz": "8db231224fd9a3b1f6f0a5f34cb280ad5dde456cfb44f53ffd2c6904e2c8a27c",
+    "h100-full-v198/git-add.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-full-v198/git-init.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-full-v198/git-snapshot.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-full-v198/gtoc12_collection_test.log": "441f87467d7ecf9c968cb6e2deeffa838fccb4ba83613cf5f92b4733f3683a1b",
+    "h100-full-v198/gtoc12_neighbours_test.log": "65fba927171f76dfc62f9f72a88e6fa6325e26e83d01087ed416362417766bd2",
+    "h100-full-v198/integration.log": "505e1af7c90c9ad3c784700cdb86aa8736955bebf15e7af7975dadefaacd0cbd",
+    "h100-full-v198/report.json": "01b66e6ffb5e1b78cf940e67402770324e505334d3433b03efe2912e98d59217",
+    "h100-full-v198/run.py": "c89e59b789487a6c90072905e1abd0b3dcf1b48df4d26b4b51ae8d4c7e5cfdc7",
+    "h100-full-v198/runner.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-full-v198/source-manifest.json": "7b13aff1afa5cb5a409fcd1e6f0d797a064a5bb7ac56b4e11db6f08f7fa5295d",
+    "h100-hardware.log": "932bb9dd36b08a70674d56cdc00eaf41dbe137d83a4c8c56b4c811f6f820f682",
+    "h100-link.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-memcheck.log": "51893ffbe24fbf10f84b4c1e64546ebac9a8efad8c49fe3357891123888fb868",
+    "h100-native-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-native.log": "441f87467d7ecf9c968cb6e2deeffa838fccb4ba83613cf5f92b4733f3683a1b",
+    "h100-paired.json": "865e523c51379be96e28c924c09fe3ac1c05a0a7d774aa7997576095b218e92a",
+    "h100-paired.log": "865e523c51379be96e28c924c09fe3ac1c05a0a7d774aa7997576095b218e92a",
+    "h100-racecheck.log": "4191b8b6fb5914b1653756d4cffe5e36e09f3378e8fdaffa814ed53e8896a39d",
+    "h100-report.json": "3013847ef5da792c1a9c76bf5f846e642e7eb6835c45e45e9169e727a8f5b92b",
+    "h100-routes.json": "16b8b8013b3af1ea40735086f54f1e5da3e41a2f5f0c1d3dbc527ac198685d7e",
+    "h100-routes.log": "b312487b72ab1dfeaca24a74a71b98e645d2bc083bef48abd3410568fa96fee4",
+    "h100-run.py": "c42920f9c8ae0b89d09e550850c0a7fac809780e43242fbf8dfbc0916b8be3a0",
+    "h100-runner.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "h100-source-manifest.json": "9f362516f9645402ee4e140f3b536dc4ceff9744926998dfbdf88e56b67eb243",
+    "h100-tests.log": "f810d29ba4e078e30578a1ca716f4823e61fda8861ca3991b34ba82c733ff7c7",
+    "local-collection-v196-build.json": "17720bd5fc5ad9650ff68647b4f4d37af1d7bfd30232dfa524ddd672b5a396d8",
+    "local-collection-v196-build.log": "a452a12a2be43a84cda2343ded6c6e8d547834e3efde2b0f439c5a7a30235598",
+    "local-collection-v196-checks.json": "7c8854033c070c61190e94c720f3290715919ecb681111a3fa7fa92b380ebf49",
+    "local-collection-v196-paired.json": "7a5123dc20b9a15fbc60ad7805d7f8b1d431328bee55ad937c1a4c49709eff8c",
+    "local-collection-v196-regression.json": "160648e160f31aac679a1542f4a2d0e3fd8be65ecda475d45fafc46742219281",
+    "retrieval.json": "22ca3dd0c0f9ae601abc3928ae7c6071036a23ef1a956b6fbe5d5fa0f5e25b40"
+  }
+}

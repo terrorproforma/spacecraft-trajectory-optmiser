@@ -1,0 +1,154 @@
+{
+  "start": 1788795634.4727166,
+  "pid": 126566,
+  "steps": [
+    {
+      "name": "hardware",
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,utilization.gpu,memory.used",
+        "--format=csv"
+      ],
+      "returncode": 0,
+      "seconds": 0.031720876693725586
+    },
+    {
+      "name": "collection-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++20",
+        "-arch=sm_90",
+        "-lineinfo",
+        "-Icpp/cuda/include",
+        "-Icpp/include",
+        "--fmad=false",
+        "-c",
+        "-Xcompiler=-fPIC,-Wall,-Wextra,-Werror",
+        "cpp/cuda/src/gtoc12_collection.cu",
+        "-o",
+        "/home/ubuntu/spacepdhcg-collection-v197/collection.o"
+      ],
+      "returncode": 0,
+      "seconds": 1.6158936023712158
+    },
+    {
+      "name": "link",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++20",
+        "-arch=sm_90",
+        "-lineinfo",
+        "-Icpp/cuda/include",
+        "-Icpp/include",
+        "-shared",
+        "/home/ubuntu/spacepdhcg-collection-v197/collection.o",
+        "/home/ubuntu/spacepdhcg-collection-v197/neighbours.o",
+        "/home/ubuntu/spacepdhcg-collection-v197/lambert.o",
+        "-o",
+        "/home/ubuntu/spacepdhcg-collection-v197/libscreening.so"
+      ],
+      "returncode": 0,
+      "seconds": 0.11380815505981445
+    },
+    {
+      "name": "native-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++20",
+        "-arch=sm_90",
+        "-lineinfo",
+        "-Icpp/cuda/include",
+        "-Icpp/include",
+        "cpp/cuda/tests/gtoc12_collection_test.cu",
+        "-L/home/ubuntu/spacepdhcg-collection-v197",
+        "-lscreening",
+        "-o",
+        "/home/ubuntu/spacepdhcg-collection-v197/native"
+      ],
+      "returncode": 0,
+      "seconds": 1.0151362419128418
+    },
+    {
+      "name": "native",
+      "command": [
+        "/home/ubuntu/spacepdhcg-collection-v197/native"
+      ],
+      "returncode": 0,
+      "seconds": 0.41429710388183594
+    },
+    {
+      "name": "tests",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_collection.py",
+        "tests/test_gtoc12_gpu_neighbours.py",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_gpu_lambert.py",
+        "tests/test_gtoc12_lambert_performance.py",
+        "-q",
+        "--tb=short"
+      ],
+      "returncode": 0,
+      "seconds": 2.417250633239746
+    },
+    {
+      "name": "paired",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "scripts/gpu/benchmark_gtoc12_collection.py",
+        "/home/ubuntu/spacepdhcg-collection-v197/paired.json"
+      ],
+      "returncode": 0,
+      "seconds": 14.233785390853882
+    },
+    {
+      "name": "routes",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "scripts/gpu/benchmark_gtoc12_route_search.py",
+        "/home/ubuntu/spacepdhcg-collection-v197/routes.json",
+        "--profile",
+        "reduced",
+        "--repeats",
+        "2"
+      ],
+      "returncode": 0,
+      "seconds": 41.71976637840271
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-collection-v197/native"
+      ],
+      "returncode": 0,
+      "seconds": 0.4644148349761963
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-collection-v197/native"
+      ],
+      "returncode": 0,
+      "seconds": 0.8648643493652344
+    }
+  ],
+  "runtime_sha256": "c4090393712299596a6b7160ea4330c99c5837065018784e5826a9b51c22e55e",
+  "complete": true,
+  "end": 1788795697.3712916
+}

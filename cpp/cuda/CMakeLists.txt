@@ -104,13 +104,14 @@ add_library(
         src/gtoc12_scvx.cu
         src/gtoc12_verification.cu
         src/gtoc12_neighbours.cu
+        src/gtoc12_collection.cu
         src/native_qoco_adapter.cpp
         src/native_qoco_gpu.cu
         src/orbitweaver_gpu.cu
         src/persistent_pdhcg.cu
 )
 add_library(SpacePDHCG::cuda ALIAS spacepdhcg_cuda)
-set_source_files_properties(src/gtoc12_discretisation.cu src/gtoc12_conic.cu src/gtoc12_qoco.cu src/gtoc12_scvx.cu src/gtoc12_verification.cu src/gtoc12_neighbours.cu PROPERTIES
+set_source_files_properties(src/gtoc12_discretisation.cu src/gtoc12_conic.cu src/gtoc12_qoco.cu src/gtoc12_scvx.cu src/gtoc12_verification.cu src/gtoc12_neighbours.cu src/gtoc12_collection.cu PROPERTIES
     COMPILE_OPTIONS "--fmad=false"
 )
 target_include_directories(

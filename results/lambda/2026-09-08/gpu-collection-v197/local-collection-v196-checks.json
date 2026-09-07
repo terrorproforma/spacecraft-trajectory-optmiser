@@ -1,0 +1,54 @@
+[
+  {
+    "name": "native",
+    "command": [
+      "/home/angus/build-spacepdhcg-collection-v196/final/gtoc12_collection_test"
+    ],
+    "returncode": 0,
+    "stdout": "GPU collection: graph replay, ordered ties, invalid recovery and guards passed\n",
+    "stderr": "",
+    "seconds": 0.2913362070000005
+  },
+  {
+    "name": "tests",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_gpu_collection.py",
+      "-q",
+      "--tb=short"
+    ],
+    "returncode": 0,
+    "stdout": "....                                                                     [100%]\n4 passed in 1.04s\n",
+    "stderr": "",
+    "seconds": 1.3590578839999807
+  },
+  {
+    "name": "paired",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "scripts/gpu/benchmark_gtoc12_collection.py",
+      "build/performance/collection-v196-paired.json"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"complete\": true,\n  \"seconds\": {\n    \"cpu_collection\": [\n      3.6109414169999923,\n      3.63814794999999,\n      3.655446595000001\n    ],\n    \"gpu_collection\": [\n      3.579307924999995,\n      3.5746317029999943,\n      3.5501248230000044\n    ]\n  },\n  \"median_seconds\": {\n    \"cpu_collection\": 3.63814794999999,\n    \"gpu_collection\": 3.5746317029999943\n  },\n  \"speedup\": 1.0177686129026076,\n  \"collection_options\": {\n    \"gpu_collection\": 153799,\n    \"cpu_collection\": 0\n  },\n  \"branches_per_search\": 545658,\n  \"candidates\": 27,\n  \"catalogue_sha256\": \"99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675\",\n  \"runtime_sha256\": \"e6fde30a0691be30e7fa50542d78c20b7cd2811e71fd779faf9b094c797117d4\"\n}\n",
+    "stderr": "",
+    "seconds": 29.377453481999993
+  },
+  {
+    "name": "memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "98",
+      "/home/angus/build-spacepdhcg-collection-v196/final/gtoc12_collection_test"
+    ],
+    "returncode": 0,
+    "stdout": "========= COMPUTE-SANITIZER\nGPU collection: graph replay, ordered ties, invalid recovery and guards passed\n========= ERROR SUMMARY: 0 errors\n",
+    "stderr": "",
+    "seconds": 0.3459488219999969
+  }
+]

@@ -729,6 +729,10 @@ async function loadGpuScreening() {
         ["60,000 asteroids, four warm queries", `${result.neighbour_selection.local.pool_gpu_ms.toFixed(2)} ms local · ${result.neighbour_selection.h100.pool_gpu_ms.toFixed(2)} ms H100`],
         ["Neighbour queries versus CPU", `${result.neighbour_selection.local.pool_speedup.toFixed(2)}× local · ${result.neighbour_selection.h100.pool_speedup.toFixed(2)}× H100; identical IDs/order`],
       ] : []),
+      ...(result.collection_selection ? [
+        ["Additional gain from GPU collection pricing", `${result.collection_selection.local_speedup.toFixed(2)}× local · ${result.collection_selection.h100_speedup.toFixed(2)}× H100; complete paired search`],
+        ["Collection/return options priced on GPU", `${result.collection_selection.options.toLocaleString()} per search; checks on existing transfers`],
+      ] : []),
       ["Timing scope", result.timing_scope],
       ["Candidate agreement", "Same top 100 on CPU and both GPUs; fleet score unchanged"],
       ["Accuracy checks", result.accuracy],

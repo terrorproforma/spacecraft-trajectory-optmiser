@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+    "--build",
+    "/home/angus/build-spacepdhcg-gtoc12-v141",
+    "--target",
+    "spacepdhcg_cuda",
+    "gtoc12_collection_test",
+    "gtoc12_neighbours_test",
+    "orbitweaver_hop_test",
+    "orbitweaver_screening_test",
+    "orbitweaver_gpu_test",
+    "orbitweaver_g3_adapter_test",
+    "-j",
+    "3"
+  ],
+  "runtime_sha256": {
+    "orbitweaver_hop_test": "95ee14dfcce9729ed5a45d0891f72985861f7581b94dfe78349a5358163ffca4",
+    "libspacepdhcg_cuda.so": "e6fde30a0691be30e7fa50542d78c20b7cd2811e71fd779faf9b094c797117d4",
+    "gtoc12_neighbours_test": "64bf3fa9329d7d2f5c35932204cca89189a3da686e1cbf08e81b31b2cb9cb65b",
+    "orbitweaver_screening_test": "e3503b2a6ca8a5434c4ed9c54411749c95866826b6e62506d2fb54ea7eb59876",
+    "orbitweaver_g3_adapter_test": "5e235b3c9c722c554611003a5fcafe81b93e9c2a1e2895ea3e92551b63d7b9d2",
+    "orbitweaver_gpu_test": "2fdb39224c299705edfff77b678f2e77a060f9df41ad5f55986c9e81631ddb89",
+    "gtoc12_collection_test": "ee0596b4c91997de19949e27bde5caaf1945003e50689d9251c178d8f85dd0c9"
+  }
+}

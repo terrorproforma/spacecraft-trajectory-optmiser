@@ -82,7 +82,17 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
-**GPU neighbour selection:** orbital filtering, Kepler positions, phasing costs,
+**GPU collection pricing and selection:** thrust-authority checks, inflated
+rocket-equation propellant and lost mining yield now run on CUDA for collection
+options, with the original ordered near-tie decision rule. The 1,000-asteroid H100
+search takes **1.54 s versus 12.01 s on CPU (7.82×)** with matching candidates.
+The direct comparison with the previous GPU path adds **1.19× on H100**; the local
+gain is only **1.02×**. CUDA prices **153,799 collection/return options per search**.
+The integrated libraries pass **323 local GTOC12 tests and 168 H100 GPU tests**;
+30 H100 screening tests and sanitizer checks also pass. Fleet score unchanged.
+See [measurement scope, limitations and reproduction](docs/GPU_COLLECTION_SELECTION.md).
+
+**Previous GPU neighbour selection checkpoint:** orbital filtering, Kepler positions, phasing costs,
 stable ranking and deduplication now run on CUDA for route-search neighbours.
 The 1,000-asteroid search takes **1.86 s on H100 versus 12.33 s on CPU (6.64×)**,
 retaining the same 27 proxy routes and **545,658 Lambert branches per search**.
