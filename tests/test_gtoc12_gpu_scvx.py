@@ -33,6 +33,20 @@ def test_invalid_outer_backend_fails_before_seed():
 
 
 @GPU
+def test_native_solution_passes_batched_independent_cuda_certificate():
+    from spacepdhcg.gtoc12.gpu_verifier import certify_legs_cuda
+
+    solution = solve_leg(synthetic_boundary(), settings(max_iterations=30, time_limit_s=30))
+    assert solution.converged
+    reference = certify_leg(solution)
+    certificates = certify_legs_cuda([solution] * 17)
+    for certificate in certificates:
+        assert certificate.within_tolerance
+        assert abs(certificate.final_mass_kg-reference.final_mass_kg) < 1e-7
+        assert abs(certificate.position_error_km-reference.position_error_km) < 0.001
+
+
+@GPU
 @pytest.mark.parametrize("device_scheduling", [False, True])
 @pytest.mark.parametrize("deferred_reports", [False, True])
 @pytest.mark.parametrize("state_origin", [False, True])

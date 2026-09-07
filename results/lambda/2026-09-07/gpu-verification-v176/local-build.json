@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+    "--build",
+    "/home/angus/build-spacepdhcg-gtoc12-v141",
+    "--target",
+    "spacepdhcg_cuda",
+    "gtoc12_verification_test",
+    "-j",
+    "3"
+  ],
+  "runtime_sha256": {
+    "gtoc12_verification_test": "ab31c284fcd5ccea7f202b190d818f66384e9b58dea551f910c9ae77c811ca4b",
+    "libspacepdhcg_cuda.so": "9045aa7c3ccccc64540b142334f78f2dffbf518247f7891992899948338bdd33"
+  }
+}

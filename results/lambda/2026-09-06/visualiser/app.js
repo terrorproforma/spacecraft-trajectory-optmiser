@@ -457,6 +457,7 @@ async function setDataset(dataset, options = {}) {
       void loadSolverProgress();
       void loadGpuRecovery();
       void loadGpuOuterValidation();
+      void loadGpuVerification();
     } else {
       state.preset = null;
       Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
@@ -698,6 +699,32 @@ async function loadGpuOuterValidation() {
     ]);
   } catch (error) {
     el.innerHTML = metricRows([["Status", `Validation results unavailable (${String(error.message || error)})`]]);
+  }
+}
+
+async function loadGpuVerification() {
+  const el = $("gpu-verification");
+  try {
+    const response = await fetch("./data/gtoc12/gpu-verification.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (result.schema_version !== 1 || result.kind !== "gpu-batched-verification") {
+      throw new Error("unrecognised propagation metadata");
+    }
+    el.innerHTML = metricRows([
+      ["Completed trajectories", `${result.legs} / ${result.legs} on both GPUs`],
+      ["Local propagation batch", `${result.local_median_ms.toFixed(2)} ms`],
+      ["H100 propagation batch", `${result.h100_median_ms.toFixed(2)} ms`],
+      ["H100 propagation throughput", `${Math.round(result.legs * 1000 / result.h100_median_ms).toLocaleString()} trajectory legs/s`],
+      ["Timing scope", result.timing_scope],
+      ["Complete verification, local", `${result.mission_cpu_seconds.toFixed(2)} s CPU → ${result.mission_cuda_seconds.toFixed(3)} s CUDA · ${result.mission_speedup.toFixed(1)}×`],
+      ["Complete-check scope", "From parsed inputs, including packing and mission rules; one comparison."],
+      ["Largest CPU position difference", `${result.max_position_difference_m.toFixed(3)} m across all legs`],
+      ["Accuracy checks", result.accuracy],
+      ["Remaining CPU work", result.remaining],
+    ]);
+  } catch (error) {
+    el.innerHTML = metricRows([["Status", `Propagation results unavailable (${String(error.message || error)})`]]);
   }
 }
 

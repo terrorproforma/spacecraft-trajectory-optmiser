@@ -102,13 +102,14 @@ add_library(
         src/gtoc12_conic.cu
         src/gtoc12_qoco.cu
         src/gtoc12_scvx.cu
+        src/gtoc12_verification.cu
         src/native_qoco_adapter.cpp
         src/native_qoco_gpu.cu
         src/orbitweaver_gpu.cu
         src/persistent_pdhcg.cu
 )
 add_library(SpacePDHCG::cuda ALIAS spacepdhcg_cuda)
-set_source_files_properties(src/gtoc12_discretisation.cu src/gtoc12_conic.cu src/gtoc12_qoco.cu src/gtoc12_scvx.cu PROPERTIES
+set_source_files_properties(src/gtoc12_discretisation.cu src/gtoc12_conic.cu src/gtoc12_qoco.cu src/gtoc12_scvx.cu src/gtoc12_verification.cu PROPERTIES
     COMPILE_OPTIONS "--fmad=false"
 )
 target_include_directories(
@@ -340,3 +341,5 @@ install(
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )
+install(FILES "${SPACEPDHCG_REPOSITORY_ROOT}/third_party/licenses/scipy-dop853.txt"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/spacepdhcg")

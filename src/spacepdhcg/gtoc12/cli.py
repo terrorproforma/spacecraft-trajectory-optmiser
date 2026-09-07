@@ -49,7 +49,8 @@ def _scvx_settings(args: argparse.Namespace):
         if not library or not Path(library).is_file():
             raise ValueError("CUDA refinement requires SPACEPDHCG_GTOC12_CUDA_LIBRARY")
     return ScvxSettings(
-        max_iterations=args.scvx_iterations, node_days=args.node_days,
+        max_iterations=args.scvx_iterations,
+        node_days=args.node_days,
         discretisation_backend=backend,
         assembly_backend=assembly,
         convex_solver_backend=solver,
@@ -65,7 +66,8 @@ def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
         "discretisation_backend_requested": backend,
         "assembly_backend_requested": getattr(args, "assembly_backend", "numpy"),
         "convex_solver_backend": "gpu_qoco"
-        if getattr(args, "convex_solver_backend", "clarabel") == "qoco" else "cpu_clarabel",
+        if getattr(args, "convex_solver_backend", "clarabel") == "qoco"
+        else "cpu_clarabel",
         "qoco_ruiz_iterations_requested": getattr(args, "qoco_ruiz_iterations", 0),
         "outer_loop_backend_requested": getattr(args, "outer_loop_backend", "python"),
         "seed_backend_requested": getattr(args, "seed_backend", "auto"),
@@ -110,10 +112,14 @@ def cmd_verify(args: argparse.Namespace) -> int:
     except Exception:
         pass
     started = time.perf_counter()
-    report = Gtoc12Verifier(catalogue, bonus=bonus, rtol=args.rtol).verify_file(args.solution)
+    backend = getattr(args, "propagation_backend", "cpu")
+    report = Gtoc12Verifier(
+        catalogue, bonus=bonus, rtol=args.rtol, propagation_backend=backend
+    ).verify_file(args.solution)
     output: dict[str, Any] = {
         "independent": report.summary(),
         "independent_seconds": time.perf_counter() - started,
+        "propagation_backend": backend,
     }
     output["independent"]["scored_masses"] = report.scored_masses
     if args.official:
@@ -1668,6 +1674,12 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
         "--official", action="store_true", help="also run the organisers' binary and compare"
     )
     verify.add_argument("--rtol", type=float, default=1e-12)
+    verify.add_argument(
+        "--propagation-backend",
+        choices=["cpu", "cuda"],
+        default="cpu",
+        help="independent propagation backend; CUDA batches all event-to-event legs",
+    )
     verify.set_defaults(function=cmd_verify)
 
     reduced = commands.add_parser(
@@ -2134,22 +2146,30 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
     legs.set_defaults(function=cmd_leg_stats)
     for refinement in (run, cluster, master, returns, joint):
         refinement.add_argument(
-            "--convex-solver", dest="convex_solver_backend", choices=("clarabel", "qoco"),
+            "--convex-solver",
+            dest="convex_solver_backend",
+            choices=("clarabel", "qoco"),
             default="clarabel",
             help="conic solver; experimental GPU QOCO requires both CUDA backends",
         )
         refinement.add_argument("--qoco-ruiz-iterations", type=int, default=0)
         refinement.add_argument(
-            "--outer-loop-backend", choices=("python", "cuda"), default="python",
+            "--outer-loop-backend",
+            choices=("python", "cuda"),
+            default="python",
             help="CUDA retains SCvx trajectories and numerical decisions on GPU",
         )
         refinement.add_argument("--seed-backend", choices=("auto", "numpy", "cuda"), default="auto")
         refinement.add_argument(
-            "--assembly-backend", choices=("numpy", "cuda"), default="numpy",
+            "--assembly-backend",
+            choices=("numpy", "cuda"),
+            default="numpy",
             help="conic assembly backend; CUDA requires CUDA discretisation",
         )
         refinement.add_argument(
-            "--discretisation-backend", choices=("numpy", "cuda"), default="numpy",
+            "--discretisation-backend",
+            choices=("numpy", "cuda"),
+            default="numpy",
             help="interval dynamics backend; CUDA requires its native library and workers=1; "
             "assembly, Clarabel and verification remain on CPU",
         )

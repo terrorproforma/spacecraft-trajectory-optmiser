@@ -1,0 +1,47 @@
+[
+  {
+    "name": "native",
+    "command": [
+      "/home/angus/build-spacepdhcg-verification-v177/final/gtoc12_verification_test"
+    ],
+    "returncode": 0,
+    "stdout": "PASS: device graph replay, invalid-leg isolation, retained host workspace and thread ownership\n",
+    "stderr": "",
+    "seconds": 0.2906580069999336
+  },
+  {
+    "name": "regression",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_archive.py",
+      "tests/test_gtoc12_bundles.py",
+      "tests/test_gtoc12_chain.py",
+      "tests/test_gtoc12_collectdp.py",
+      "tests/test_gtoc12_cooperative.py",
+      "tests/test_gtoc12_ephemeris_format.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "tests/test_gtoc12_gpu_conic.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "tests/test_gtoc12_gpu_scvx.py",
+      "tests/test_gtoc12_gpu_seed.py",
+      "tests/test_gtoc12_gpu_verifier.py",
+      "tests/test_gtoc12_harvestphase.py",
+      "tests/test_gtoc12_jointopt.py",
+      "tests/test_gtoc12_lambert_performance.py",
+      "tests/test_gtoc12_pipeline.py",
+      "tests/test_gtoc12_returns.py",
+      "tests/test_gtoc12_rules_and_data.py",
+      "tests/test_gtoc12_search2.py",
+      "tests/test_gtoc12_verifier.py",
+      "-q",
+      "--tb=short"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 24%]\n........................................................................ [ 48%]\n........................................................................ [ 72%]\n........................................................................ [ 97%]\n........                                                                 [100%]\n296 passed in 344.67s (0:05:44)\n",
+    "stderr": "",
+    "seconds": 345.26365312099995
+  }
+]

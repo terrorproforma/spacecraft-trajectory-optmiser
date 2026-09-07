@@ -82,6 +82,14 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 7 September 2026
 
+**Independent propagation now has a batched CUDA backend:** all 413 legs of the
+existing fleet were propagated in about **30 ms on RTX 5090 and 12.4 ms on H100**
+(warm batches, including transfers; parsing and mission checks excluded).
+Every leg was compared with the CPU verifier; the largest position difference
+was below 0.19 m. Use `gtoc12 verify --propagation-backend cuda` with the native
+library and pinned data configured. Mission rules and fleet scores are unchanged.
+See [accuracy, timing scope and reproduction](docs/GPU_BATCHED_VERIFICATION.md).
+
 **GPU solver fixes validated:** low-thrust factor stabilization removes the
 frozen-QP failures in the reported replay matrix, and SCvx now recognizes
 feasible stationary steps instead of collapsing the trust region over negligible

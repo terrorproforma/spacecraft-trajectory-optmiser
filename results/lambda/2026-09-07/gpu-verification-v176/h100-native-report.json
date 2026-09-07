@@ -1,0 +1,49 @@
+{
+  "source_sha256": "cb956bfec3dc220c7dfb3026acca259322a888e7de2f937834ad27d353d920f0",
+  "checks": [
+    {
+      "name": "native-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++20",
+        "-arch=sm_90",
+        "-I/home/ubuntu/spacepdhcg-verification-v176/repo/cpp/cuda/include",
+        "/home/ubuntu/spacepdhcg-verification-v176/native-test.cu",
+        "-L/home/ubuntu/spacepdhcg-verification-v176",
+        "-lverify",
+        "-Xlinker",
+        "-rpath",
+        "-Xlinker",
+        "/home/ubuntu/spacepdhcg-verification-v176",
+        "-o",
+        "/home/ubuntu/spacepdhcg-verification-v176/native-test"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "native",
+      "command": [
+        "/home/ubuntu/spacepdhcg-verification-v176/native-test"
+      ],
+      "returncode": 0,
+      "stdout": "PASS: device graph replay, invalid-leg isolation, retained host workspace and thread ownership\n",
+      "stderr": ""
+    },
+    {
+      "name": "native-racecheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-verification-v176/native-test"
+      ],
+      "returncode": 0,
+      "stdout": "========= COMPUTE-SANITIZER\nPASS: device graph replay, invalid-leg isolation, retained host workspace and thread ownership\n========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)\n",
+      "stderr": ""
+    }
+  ]
+}

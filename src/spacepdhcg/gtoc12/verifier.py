@@ -345,11 +345,17 @@ class Gtoc12Verifier:
         bonus: BonusTable | None = None,
         rtol: float = 1e-12,
         history: dict[int, PropagatedHistory] | None = None,
+        propagation_backend: str = "cpu",
     ) -> None:
+        if propagation_backend not in {"cpu", "cuda"}:
+            raise ValueError("propagation_backend must be 'cpu' or 'cuda'")
+        if propagation_backend == "cuda" and (rtol != 1e-12 or history is not None):
+            raise ValueError("CUDA verification requires rtol=1e-12 and history=None")
         self.catalogue = catalogue
         self.bonus = bonus
         self.rtol = rtol
         self.history = history
+        self.propagation_backend = propagation_backend
 
     # -- public API --
 
@@ -369,8 +375,13 @@ class Gtoc12Verifier:
         legs: list[LegCheck] = []
         visits: list[AsteroidVisit] = []
         unload_events: list[tuple[int, float, float, int]] = []  # ship, epoch, mass, line
+        gpu_legs = None
+        if self.propagation_backend == "cuda":
+            from .gpu_verifier import propagate_solution_cuda
+
+            gpu_legs = propagate_solution_cuda(solution)
         for ship in solution.ships:
-            self._verify_ship(ship, violations, legs, visits, unload_events)
+            self._verify_ship(ship, violations, legs, visits, unload_events, gpu_legs)
         mined = self._mining_bookkeeping(solution, visits, unload_events, violations)
         total = sum(item.collected_mass_kg for item in mined.values() if item.unloaded)
         ship_count = solution.ship_count
@@ -419,6 +430,7 @@ class Gtoc12Verifier:
         legs: list[LegCheck],
         visits: list[AsteroidVisit],
         unload_events: list[tuple[int, float, float, int]],
+        gpu_legs: dict[tuple[int, int, int], LegCheck] | None = None,
     ) -> None:
         sid = ship.ship_id
         history = None
@@ -525,17 +537,20 @@ class Gtoc12Verifier:
                             arc.end,
                         )
                     )
-            leg = self._propagate_leg(
-                sid,
-                state_epoch,
-                position,
-                velocity,
-                mass,
-                pending_burns,
-                previous_event,
-                event,
-                history,
-            )
+            if gpu_legs is not None:
+                leg = gpu_legs[(sid, id(previous_event), id(event))]
+            else:
+                leg = self._propagate_leg(
+                    sid,
+                    state_epoch,
+                    position,
+                    velocity,
+                    mass,
+                    pending_burns,
+                    previous_event,
+                    event,
+                    history,
+                )
             legs.append(leg)
             if leg.position_error_km > C.TOLERANCE_POSITION_KM:
                 violations.append(
