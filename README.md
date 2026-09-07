@@ -82,6 +82,16 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Resident GPU retiming tables:** the common fixed-order path now builds endpoint
+states, Lambert requests and transfer-cost tables directly in device memory,
+then downloads only the selected schedule and one cost per leg. The full retiming
+fixture improves from **71.97 to 63.79 ms on H100 (1.128×)** and **234.06 to
+223.83 ms on RTX 5090 (1.046×)**. All selected schedules match the reference;
+**84 tests pass on each GPU**, and H100 sanitizers report zero errors. The
+524.025 kg mission passes both physics checkers again, with zero host table
+uploads. Custom tables, return sweeps and CPU orchestration remain separate work.
+[Implementation, measurement scope and evidence](docs/GPU_RESIDENT_RETIMING_TABLES.md).
+
 **Certified route objective fixed:** the retiming certification loop now selects
 its preferred route using actual bonus-weighted payload and the configured orphan
 credit, consistently with its planner, instead of raw kilograms. Payload reduced

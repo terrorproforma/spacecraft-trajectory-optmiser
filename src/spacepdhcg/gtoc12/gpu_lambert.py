@@ -171,6 +171,7 @@ class GpuLambert:
         self.scan_samples = None
         self.owner = threading.get_ident()
         self.closed = False
+        self.resident_retime_tables = True
         self.requests = np.zeros(maximum_batch_size, dtype=REQUEST)
         self.results = np.zeros((maximum_batch_size, 2), dtype=RESULT)
         self.hops = np.zeros(maximum_batch_size, dtype=HOP_REQUEST)
@@ -274,10 +275,12 @@ class GpuLambert:
 
         self._owned()
         if self.retime_workspace is None:
-            self.retime_workspace = GpuRetime(self.library, self.device_id)
+            self.retime_workspace = GpuRetime(self.library, self.device_id, self)
         result = self.retime_workspace.solve(*args)
         self.telemetry["completed_retime_dp_calls"] = self.retime_workspace.calls
         self.telemetry["retime_table_uploads"] = self.retime_workspace.uploads
+        self.telemetry["retime_resident_builds"] = self.retime_workspace.resident_builds
+        self.telemetry["retime_resident_cells"] = self.retime_workspace.resident_cells
         if self.retime_workspace.calls:
             self.telemetry["gpu_used"] = True
         return result

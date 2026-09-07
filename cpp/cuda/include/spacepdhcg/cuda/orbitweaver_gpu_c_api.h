@@ -143,6 +143,15 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_elements_host(
     spacepdhcg_orbitweaver_hop_result* results, size_t result_capacity
 );
 
+/* Blocking resident grid bridge. Epochs, TOFs and output arrays are device
+ * buffers on the workspace device. Only the fixed orbital elements are host
+ * data. Writes departure-major scalar costs/flags, with no table download. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_grid_device(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* epochs, size_t epoch_count, const double* tofs, size_t tof_count,
+    double* delta_v, uint8_t* feasible);
+
 /*
  * Fixed per-input stride: short/long directions each own one zero-revolution
  * slot and two slots per supported positive revolution.

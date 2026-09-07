@@ -478,6 +478,20 @@ bool valid_elements(const spacepdhcg_orbitweaver_elements& b) {
         && std::isfinite(b.node) && std::isfinite(b.perihelion) && std::isfinite(b.mean);
 }
 
+__global__ void grid_times(const double* epochs,const double* tofs,size_t nt,
+    size_t start,size_t count,double* times) {
+    const size_t i=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
+    if(i<count){times[2*i]=epochs[(start+i)/nt];times[2*i+1]=tofs[(start+i)%nt];}
+}
+__global__ void grid_costs(const spacepdhcg_orbitweaver_hop_result* results,
+    size_t count,double* dv,uint8_t* ok) {
+    const size_t i=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
+    if(i>=count)return;
+    const double cost=results[i].departure_delta_v+results[i].arrival_delta_v;
+    const bool good=results[i].feasible&&isfinite(cost);
+    dv[i]=good?cost:INFINITY;ok[i]=good;
+}
+
 spacepdhcg_cuda_status mapped(const cudaError_t status) {
     if (status == cudaSuccess) {
         return SPACEPDHCG_CUDA_SUCCESS;
@@ -932,6 +946,39 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_elements_host(
         }
     }
     return mapped(status);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_grid_device(
+    spacepdhcg_orbitweaver_lambert_workspace* w,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* epochs,size_t n,const double* tofs,size_t nt,double* dv,uint8_t* ok
+) {
+    if(!w||!elements||!epochs||!tofs||!dv||!ok||!n||!nt||n>SIZE_MAX/nt
+        ||!valid_elements(elements->departure)||!valid_elements(elements->arrival)
+        ||!std::isfinite(elements->gravitational_parameter)||elements->gravitational_parameter<=0
+        ||!std::isfinite(elements->departure_allowance)||elements->departure_allowance<0
+        ||!std::isfinite(elements->arrival_allowance)||elements->arrival_allowance<0)
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::unique_lock<std::mutex> lock(w->api_mutex,std::try_to_lock);
+    if(!lock.owns_lock()||w->busy.load())return SPACEPDHCG_CUDA_BUSY;
+    int device=-1;auto status=cudaGetDevice(&device);
+    if(status!=cudaSuccess)return mapped(status);
+    if(device!=static_cast<int>(w->config.device_id))return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    auto* times=reinterpret_cast<double*>(w->requests);
+    const size_t total=n*nt;
+    for(size_t start=0;status==cudaSuccess&&start<total;) {
+        const size_t count=total-start<w->config.maximum_batch_size?total-start:w->config.maximum_batch_size;
+        grid_times<<<static_cast<unsigned>((count+127)/128),128,0,w->stream>>>(epochs,tofs,nt,start,count,times);
+        status=cudaGetLastError();if(status!=cudaSuccess)break;
+        element_hops<<<static_cast<unsigned>((count+127)/128),128,0,w->stream>>>(*elements,times,count,w->hops);
+        status=cudaGetLastError();if(status!=cudaSuccess)break;
+        hop_kernel<<<static_cast<unsigned>((count+63)/64),64,0,w->stream>>>(w->hops,count,w->config.scan_samples_per_band,w->hop_results,w->scan_grid);
+        status=cudaGetLastError();if(status!=cudaSuccess)break;
+        grid_costs<<<static_cast<unsigned>((count+127)/128),128,0,w->stream>>>(w->hop_results,count,dv+start,ok+start);
+        status=cudaGetLastError();start+=count;
+    }
+    const auto done=cudaStreamSynchronize(w->stream);
+    return mapped(status==cudaSuccess?done:status);
 }
 
 spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_finish(

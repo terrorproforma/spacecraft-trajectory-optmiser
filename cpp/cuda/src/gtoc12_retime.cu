@@ -12,7 +12,7 @@ struct Result { double objective; int32_t feasible; int32_t reserved; };
 struct Workspace {
     int device,n,stages,cells,nt;
     cudaStream_t stream{};
-    double *epochs{},*dv{},*swept{},*tofs{},*value{},*next{},*departure{};
+    double *epochs{},*dv{},*swept{},*tofs{},*value{},*next{},*departure{},*path_dv{};
     uint8_t *ok{},*swept_ok{};
     int32_t *shifts{},*back_camp{},*back_leg{},*arrivals{},*departures{};
     Stage* params{};Result* result{};
@@ -22,7 +22,7 @@ struct Workspace {
         cudaFree(epochs);cudaFree(dv);cudaFree(swept);cudaFree(tofs);
         cudaFree(value);cudaFree(next);cudaFree(departure);cudaFree(ok);cudaFree(swept_ok);
         cudaFree(shifts);cudaFree(back_camp);cudaFree(back_leg);cudaFree(arrivals);
-        cudaFree(departures);cudaFree(params);cudaFree(result);
+        cudaFree(departures);cudaFree(params);cudaFree(result);cudaFree(path_dv);
         if(stream)cudaStreamDestroy(stream);
     }
 };
@@ -80,7 +80,8 @@ __global__ void leg(const Stage* params,int stage,int n,const double* dv,
     next[a]=best;back[stage*n+a]=winner;
 }
 __global__ void finish(const double* value,int n,int stages,const int32_t* camp_back,
-    const int32_t* leg_back,int32_t* arrivals,int32_t* departures,Result* result) {
+    const int32_t* leg_back,int32_t* arrivals,int32_t* departures,Result* result,
+    const Stage* params,const double* dv,const int32_t* shifts,double* path_dv) {
     // Only the final scalar choice and O(stages) path reconstruction are serial.
     double best=-INFINITY;int winner=0;
     for(int i=0;i<n;++i)if(value[i]>best){best=value[i];winner=i;}
@@ -89,14 +90,22 @@ __global__ void finish(const double* value,int n,int stages,const int32_t* camp_
     for(int j=stages-1;j>=0;--j) {
         departures[j]=leg_back[j*n+arrivals[j+1]];
         arrivals[j]=camp_back[j*n+departures[j]];
+        path_dv[j]=INFINITY;
+        if(isfinite(best)) {
+            const auto s=params[j];
+            const int shift=arrivals[j+1]-departures[j];
+            for(int k=0;k<s.tofs;++k)if(shifts[s.tof_offset+k]==shift) {
+                path_dv[j]=dv[s.cell_offset+departures[j]*s.tofs+k];break;
+            }
+        }
     }
 }
 }
-extern "C" int spacepdhcg_gtoc12_retime_create(int32_t device,int32_t n,int32_t stages,
+static int create_tables(int32_t device,int32_t n,int32_t stages,
     int32_t cells,int32_t nt,const double* epochs,const double* dv,const uint8_t* ok,
     const double* swept,const uint8_t* swept_ok,const double* tofs,const int32_t* shifts,void** output) {
-    if(!output||*output||device<0||n<=0||stages<=0||stages==INT32_MAX||cells<=0||nt<=0||!epochs||!dv||!ok
-        ||!swept||!swept_ok||!tofs||!shifts||int64_t(n)*stages>INT32_MAX)return 1;
+    if(!output||*output||device<0||n<=0||stages<=0||stages==INT32_MAX||cells<=0||nt<=0||!epochs
+        ||!tofs||!shifts||int64_t(n)*stages>INT32_MAX)return 1;
     for(int k=0;k<nt;++k)if(shifts[k]<0||!std::isfinite(tofs[k])||tofs[k]<=0)return 1;
     for(int i=0;i<n;++i)if(!std::isfinite(epochs[i]))return 1;
     if(cudaSetDevice(device)!=cudaSuccess)return 2;
@@ -108,18 +117,48 @@ extern "C" int spacepdhcg_gtoc12_retime_create(int32_t device,int32_t n,int32_t 
         &&allocate(w->shifts,nt)&&allocate(w->value,n)&&allocate(w->next,n)
         &&allocate(w->departure,n)&&allocate(w->back_camp,size_t(n)*stages)
         &&allocate(w->back_leg,size_t(n)*stages)&&allocate(w->arrivals,stages+1)
-        &&allocate(w->departures,stages+1)&&allocate(w->params,stages)&&allocate(w->result,1);
-    good=good&&upload(w->epochs,epochs,n,w->stream)&&upload(w->dv,dv,cells,w->stream)
-        &&upload(w->ok,ok,cells,w->stream)&&upload(w->swept,swept,cells,w->stream)
-        &&upload(w->swept_ok,swept_ok,cells,w->stream)&&upload(w->tofs,tofs,nt,w->stream)
+        &&allocate(w->departures,stages+1)&&allocate(w->params,stages)&&allocate(w->result,1)
+        &&allocate(w->path_dv,stages);
+    good=good&&upload(w->epochs,epochs,n,w->stream)
+        &&(!dv||upload(w->dv,dv,cells,w->stream))&&(!ok||upload(w->ok,ok,cells,w->stream))
+        &&(swept?upload(w->swept,swept,cells,w->stream):cudaMemsetAsync(w->swept,255,cells*sizeof(double),w->stream)==cudaSuccess)
+        &&(swept_ok?upload(w->swept_ok,swept_ok,cells,w->stream):cudaMemsetAsync(w->swept_ok,1,cells,w->stream)==cudaSuccess)
+        &&upload(w->tofs,tofs,nt,w->stream)
         &&upload(w->shifts,shifts,nt,w->stream);
     const auto done=cudaStreamSynchronize(w->stream);
     if(!good||done!=cudaSuccess){delete w;return 2;}
     *output=w;return 0;
 }
-extern "C" int spacepdhcg_gtoc12_retime_host(void* workspace,const Stage* params,
+extern "C" int spacepdhcg_gtoc12_retime_create(int32_t device,int32_t n,int32_t stages,
+    int32_t cells,int32_t nt,const double* epochs,const double* dv,const uint8_t* ok,
+    const double* swept,const uint8_t* swept_ok,const double* tofs,const int32_t* shifts,void** output) {
+    if(!dv||!ok||!swept||!swept_ok)return 1;
+    return create_tables(device,n,stages,cells,nt,epochs,dv,ok,swept,swept_ok,tofs,shifts,output);
+}
+extern "C" int spacepdhcg_gtoc12_retime_create_elements(int32_t device,int32_t n,int32_t stages,
+    int32_t cells,int32_t nt,const double* epochs,const double* tofs,const int32_t* shifts,
+    const Stage* params,const spacepdhcg_orbitweaver_hop_elements* elements,
+    spacepdhcg_orbitweaver_lambert_workspace* lambert,void** output) {
+    if(!params||!elements||!lambert||n<=0||stages<=0)return 1;
+    int64_t cell=0,tof=0;
+    for(int j=0;j<stages;++j) {
+        if(params[j].cell_offset!=cell||params[j].tof_offset!=tof||params[j].tofs<=0)return 1;
+        cell+=int64_t(n)*params[j].tofs;tof+=params[j].tofs;
+    }
+    if(cell!=cells||tof!=nt)return 1;
+    int status=create_tables(device,n,stages,cells,nt,epochs,nullptr,nullptr,nullptr,nullptr,tofs,shifts,output);
+    if(status)return status;
+    auto* w=static_cast<Workspace*>(*output);
+    for(int j=0;j<stages;++j) {
+        const auto code=spacepdhcg_orbitweaver_hop_grid_device(lambert,elements+j,w->epochs,n,
+            w->tofs+params[j].tof_offset,params[j].tofs,w->dv+params[j].cell_offset,w->ok+params[j].cell_offset);
+        if(code!=SPACEPDHCG_CUDA_SUCCESS){delete w;*output=nullptr;return 2;}
+    }
+    return 0;
+}
+static int evaluate_path(void* workspace,const Stage* params,
     double price,double thrust,double exhaust,int32_t* arrivals,int32_t* departures,
-    double* objective,int32_t* feasible) {
+    double* objective,int32_t* feasible,double* path_dv) {
     auto* w=static_cast<Workspace*>(workspace);
     if(!w||!params||!arrivals||!departures||!objective||!feasible||!std::isfinite(price)
         ||price<0||!std::isfinite(thrust)||thrust<=0||!std::isfinite(exhaust)||exhaust<=0)return 1;
@@ -147,15 +186,25 @@ extern "C" int spacepdhcg_gtoc12_retime_host(void* workspace,const Stage* params
     }
     Result result{};
     if(good) {
-        finish<<<1,1,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result);
+        finish<<<1,1,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result,w->params,w->dv,w->shifts,w->path_dv);
         good=cudaGetLastError()==cudaSuccess;
     }
     good=good&&cudaMemcpyAsync(&result,w->result,sizeof(result),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
         &&cudaMemcpyAsync(arrivals,w->arrivals,(w->stages+1)*sizeof(int32_t),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
         &&cudaMemcpyAsync(departures,w->departures,(w->stages+1)*sizeof(int32_t),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;
+    good=good&&(!path_dv||cudaMemcpyAsync(path_dv,w->path_dv,w->stages*sizeof(double),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess);
     const auto done=cudaStreamSynchronize(w->stream);
     if(!good||done!=cudaSuccess)return 2;
     *objective=result.objective;*feasible=result.feasible;return 0;
+}
+extern "C" int spacepdhcg_gtoc12_retime_host(void* w,const Stage* p,double price,double thrust,
+    double exhaust,int32_t* a,int32_t* d,double* objective,int32_t* feasible) {
+    return evaluate_path(w,p,price,thrust,exhaust,a,d,objective,feasible,nullptr);
+}
+extern "C" int spacepdhcg_gtoc12_retime_path_host(void* w,const Stage* p,double price,double thrust,
+    double exhaust,int32_t* a,int32_t* d,double* objective,int32_t* feasible,double* dv) {
+    if(!dv)return 1;
+    return evaluate_path(w,p,price,thrust,exhaust,a,d,objective,feasible,dv);
 }
 extern "C" int spacepdhcg_gtoc12_retime_destroy(void** workspace) {
     if(!workspace)return 1;auto* w=static_cast<Workspace*>(*workspace);if(!w)return 0;

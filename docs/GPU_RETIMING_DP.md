@@ -88,6 +88,11 @@ visits different asteroids, but is below the incumbent's lightest ship at
 
 ## Remaining CPU work and reproduction
 
+The [resident-table follow-up](GPU_RESIDENT_RETIMING_TABLES.md) now removes the
+host table round trip for ordinary fixed-order retiming without return sweeps.
+The paragraph below describes the original v220 implementation; custom tables
+and return sweeps still use that host-table path.
+
 Price bisection, forward mass-profile bookkeeping, route-order selection,
 stage-descriptor preparation, table packing and global fleet optimisation remain
 on CPU. Device-generated transfer tables currently cross the host boundary

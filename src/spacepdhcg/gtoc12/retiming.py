@@ -254,6 +254,7 @@ class Retimer:
         self.bans: dict[tuple[int, int], float] = {}
         self.inflations: dict[tuple[int, int], float] = {}
         self._tables: dict[tuple[int, int, str], tuple[FloatArray, NDArray[np.bool_]]] = {}
+        self._cache_revision = 0
         self.lattice = _Lattice(self.settings.step_days, self.settings.end_margin_days)
         # Earth-out TOF floor (days): set from a certified, continuously optimised Earth leg so
         # the DP may only keep or lengthen it.  Earth legs are nearly thrust-saturated and their
@@ -274,6 +275,7 @@ class Retimer:
         released = len(self._tables) + len(self._return_tables)
         self._tables.clear()
         self._return_tables.clear()
+        self._cache_revision += 1
         return released
 
     # -- Lambert tables ------------------------------------------------------------------
@@ -725,6 +727,9 @@ class Retimer:
         mass = self.search_settings.initial_mass
         masses: list[float] = []
         propellant_total = 0.0
+        from .lambert import cuda_retime_path_values
+
+        path_dv = cuda_retime_path_values(self, visits, arrivals, departures)
         for j, visit in enumerate(visits[:-1]):
             nxt = visits[j + 1]
             if departures[j] > arrivals[j] + 1e-9:
@@ -734,14 +739,17 @@ class Retimer:
             if visit.collect:
                 mass += collected[visit.body]
             role = visit.role_out
-            dv_table, _ = self.leg_table(visit.body, nxt.body, role)
             tofs = self._tofs(role)
             d_index = self.lattice.index(departures[j])
             t_index = round((arrivals[j + 1] - departures[j]) / self.settings.step_days)
             t_index -= round(tofs[0] / self.settings.step_days)
             if not (0 <= t_index < tofs.shape[0]):
                 return None, [], "tof_outside_grid"
-            dv = float(dv_table[d_index, t_index])
+            if path_dv is None:
+                dv_table, _ = self.leg_table(visit.body, nxt.body, role)
+                dv = float(dv_table[d_index, t_index])
+            else:
+                dv = float(path_dv[j])
             if not np.isfinite(dv):
                 return None, [], "leg_infeasible"
             _flat, ratio_limit = self._limits(role, visit.body, nxt.body)

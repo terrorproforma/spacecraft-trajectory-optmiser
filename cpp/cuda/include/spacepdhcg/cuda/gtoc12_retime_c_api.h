@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "spacepdhcg/cuda/orbitweaver_gpu_c_api.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,6 +25,19 @@ int spacepdhcg_gtoc12_retime_host(void* workspace,
     const spacepdhcg_gtoc12_retime_stage* stages, double price,
     double thrust, double exhaust_velocity, int32_t* arrivals,
     int32_t* departures, double* objective, int32_t* feasible);
+/* Build unswept immutable transfer tables directly on the device. Stage offsets
+ * describe a contiguous partition of cells and TOFs. Host elements have one
+ * entry per stage; the Lambert workspace owns bounded construction scratch. */
+int spacepdhcg_gtoc12_retime_create_elements(
+    int32_t device,int32_t epochs,int32_t stages,int32_t cells,int32_t tofs,
+    const double* epoch_values,const double* tof_values,const int32_t* shifts,
+    const spacepdhcg_gtoc12_retime_stage* params,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    spacepdhcg_orbitweaver_lambert_workspace* lambert,void** workspace);
+/* Same evaluation, also downloading one scalar delta-v per selected leg. */
+int spacepdhcg_gtoc12_retime_path_host(void* workspace,
+    const spacepdhcg_gtoc12_retime_stage* stages,double price,double thrust,double exhaust,
+    int32_t* arrivals,int32_t* departures,double* objective,int32_t* feasible,double* delta_v);
 int spacepdhcg_gtoc12_retime_destroy(void** workspace);
 
 #ifdef __cplusplus
