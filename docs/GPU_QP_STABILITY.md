@@ -57,6 +57,23 @@ counterexamples with a material actual increase, material model increase,
 excess dynamics defect, excess virtual control, failed conic audit, or invalid
 candidate. No trust/budget-exhaustion promotion or hidden solver retry was added.
 
+## Validation
+
+The final native v173/QOCO137 build passes **337 local regression tests** and
+**94 H100 integration tests**. Each GPU passes **64/64 complete trajectories**
+covering Ruiz 0/5, original/shifted coordinates, and ordinary, deferred, device,
+and outer-graph execution. H100 also passes 128/128 identical-QP replays and both
+selected nested-SCvx/guarded-solver memory checks. Local native controller,
+ownership, deadline and guard checks pass, as do all three recovery/session tests.
+
+The [result summary](../results/lambda/2026-09-07/gpu-stability-v174/summary.json)
+links the numerical outcomes to source/runtime hashes and checksum-verified
+archives. Earlier failures, including the H100 stationary-step capture, remain
+in those archives. Some unscaled inner QPs still fail their accuracy audit and
+are rejected; every final trajectory in this reported matrix qualified.
+Setup and fleet search still require CPU work, and the previously documented
+vendor determinism/local instrumentation limitations are not claimed resolved.
+
 ## Diagnostic reproduction
 
 Create an empty directory and set `SPACEPDHCG_QOCO_SNAPSHOT_DIRECTORY` to its

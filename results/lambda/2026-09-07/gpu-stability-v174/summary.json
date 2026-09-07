@@ -1,0 +1,494 @@
+{
+  "schema_version": 1,
+  "kind": "gpu-qp-stability-validation",
+  "recorded_utc": "2026-09-07T13:11:18.820886+00:00",
+  "source_commit": "661d28d7907931ee616e0003f6cbdf5d4ed1d29f",
+  "status": "VALIDATED \u2014 reported solver and trajectory tests pass",
+  "runtime": "Native v173 / prepared QOCO137; H100 experiment v174",
+  "local_regression": {
+    "passed": 337,
+    "failed": 0,
+    "seconds": 348.88415419999956
+  },
+  "h100_integration": {
+    "passed": 94,
+    "failed": 0
+  },
+  "local_repeats": {
+    "total": 64,
+    "qualified": 64,
+    "groups": [
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.43040287494659424,
+        "max_mass_error_kg": 1.1641532182693481e-10,
+        "max_position_error_km": 2.1338190055968055e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.53516685962677,
+        "max_mass_error_kg": 4.334651748649776e-09,
+        "max_position_error_km": 0.0006698078178251216
+      },
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.44353151321411133,
+        "max_mass_error_kg": 4.670255293603987e-10,
+        "max_position_error_km": 2.1704623708602985e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.41218459606170654,
+        "max_mass_error_kg": 1.1505107977427542e-10,
+        "max_position_error_km": 2.1036811663897585e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.4409369230270386,
+        "max_mass_error_kg": 1.2356713341432624e-07,
+        "max_position_error_km": 3.3587756838180826e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.44446420669555664,
+        "max_mass_error_kg": 1.177795638795942e-10,
+        "max_position_error_km": 2.080574574499476e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.4539167881011963,
+        "max_mass_error_kg": 2.799573849188164e-06,
+        "max_position_error_km": 0.00033331638025325326
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.41522252559661865,
+        "max_mass_error_kg": 2.0554580260068178e-10,
+        "max_position_error_km": 3.455817036988183e-05
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.4172912836074829,
+        "max_mass_error_kg": 2.8558133635669947e-10,
+        "max_position_error_km": 7.897602974951496e-05
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.4062831401824951,
+        "max_mass_error_kg": 3.828972694464028e-10,
+        "max_position_error_km": 0.00011899606812419831
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.394720196723938,
+        "max_mass_error_kg": 2.1509549696929753e-10,
+        "max_position_error_km": 0.00011785067077243279
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.412054181098938,
+        "max_mass_error_kg": 2.2464519133791327e-10,
+        "max_position_error_km": 0.00013171904414495636
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.40151095390319824,
+        "max_mass_error_kg": 2.5784174795262516e-10,
+        "max_position_error_km": 0.00011084193064368933
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.4059762954711914,
+        "max_mass_error_kg": 2.701199264265597e-10,
+        "max_position_error_km": 7.742203647575989e-05
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.4609004259109497,
+        "max_mass_error_kg": 3.647073754109442e-10,
+        "max_position_error_km": 0.00014053465294107856
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.4259742498397827,
+        "max_mass_error_kg": 3.688001015689224e-10,
+        "max_position_error_km": 8.677174461011327e-05
+      }
+    ]
+  },
+  "h100_repeats": {
+    "total": 64,
+    "qualified": 64,
+    "groups": [
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5820469856262207,
+        "max_mass_error_kg": 3.7047575460746884e-06,
+        "max_position_error_km": 0.0004420314607574695
+      },
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5504729747772217,
+        "max_mass_error_kg": 1.2005330063402653e-10,
+        "max_position_error_km": 2.045645788624294e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.6045299768447876,
+        "max_mass_error_kg": 2.140926881111227e-06,
+        "max_position_error_km": 0.0002553970781749549
+      },
+      {
+        "ruiz": 0,
+        "origin": false,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.6183446645736694,
+        "max_mass_error_kg": 4.6921286411816254e-08,
+        "max_position_error_km": 0.0006520296958515029
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5947080850601196,
+        "max_mass_error_kg": 8.05357558419928e-10,
+        "max_position_error_km": 2.1011803460863206e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.6167950630187988,
+        "max_mass_error_kg": 1.0231815394945443e-10,
+        "max_position_error_km": 2.7481474722074507e-05
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5981535911560059,
+        "max_mass_error_kg": 4.332378011895344e-09,
+        "max_position_error_km": 0.0006696585034339629
+      },
+      {
+        "ruiz": 0,
+        "origin": true,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.6015948057174683,
+        "max_mass_error_kg": 8.073584467638284e-09,
+        "max_position_error_km": 3.229145239497579e-05
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5236333608627319,
+        "max_mass_error_kg": 1.800799509510398e-10,
+        "max_position_error_km": 0.00011152341637228493
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5231062173843384,
+        "max_mass_error_kg": 2.7694113668985665e-10,
+        "max_position_error_km": 0.00014748138155554395
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5297062397003174,
+        "max_mass_error_kg": 3.738023224286735e-10,
+        "max_position_error_km": 0.00010340579075218785
+      },
+      {
+        "ruiz": 5,
+        "origin": false,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.52257239818573,
+        "max_mass_error_kg": 2.7284841053187847e-10,
+        "max_position_error_km": 0.00014530316419090976
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "deferred",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5237786769866943,
+        "max_mass_error_kg": 2.6648194761946797e-10,
+        "max_position_error_km": 0.0001457721087554225
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "device",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5233515501022339,
+        "max_mass_error_kg": 4.156390787102282e-10,
+        "max_position_error_km": 0.00010897483513728272
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "graph",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5285539627075195,
+        "max_mass_error_kg": 2.9695002012886107e-10,
+        "max_position_error_km": 0.00011147283416144762
+      },
+      {
+        "ruiz": 5,
+        "origin": true,
+        "mode": "ordinary",
+        "total": 4,
+        "qualified": 4,
+        "median_seconds": 0.5262337923049927,
+        "max_mass_error_kg": 2.519300323911011e-10,
+        "max_position_error_km": 0.00014937144592175837
+      }
+    ]
+  },
+  "qp_experiments": [
+    {
+      "parameter": "tolerance",
+      "value": "1e-11",
+      "total": 128,
+      "qualified": 90,
+      "max_gap": 7.770945089094598e-08
+    },
+    {
+      "parameter": "tolerance",
+      "value": "1e-10",
+      "total": 128,
+      "qualified": 86,
+      "max_gap": 1.1628300973109504e-07
+    },
+    {
+      "parameter": "tolerance",
+      "value": "3e-10",
+      "total": 128,
+      "qualified": 99,
+      "max_gap": 1.2737263461984715e-07
+    },
+    {
+      "parameter": "regularization",
+      "value": "1e-9",
+      "total": 128,
+      "qualified": 128,
+      "max_gap": 1.8579604228150274e-11
+    },
+    {
+      "parameter": "regularization",
+      "value": "1e-7",
+      "total": 128,
+      "qualified": 128,
+      "max_gap": 7.434387118779046e-11
+    },
+    {
+      "parameter": "regularization",
+      "value": "1e-5",
+      "total": 128,
+      "qualified": 0,
+      "max_gap": 0.0006399064265293368
+    }
+  ],
+  "h100_qp_replays": [
+    {
+      "version": 171,
+      "total": 128,
+      "qualified": 128
+    },
+    {
+      "version": 174,
+      "total": 128,
+      "qualified": 128
+    }
+  ],
+  "native_checks": [
+    {
+      "name": "gtoc12_scvx_test",
+      "returncode": 0,
+      "seconds": 0.20467019081115723
+    },
+    {
+      "name": "gtoc12_outer_graph_test",
+      "returncode": 0,
+      "seconds": 1.2611863613128662
+    },
+    {
+      "name": "gtoc12_graph_deadline_test",
+      "returncode": 0,
+      "seconds": 0.16230344772338867
+    },
+    {
+      "name": "gtoc12_qoco_guard_test",
+      "returncode": 0,
+      "seconds": 2.033702850341797
+    },
+    {
+      "name": "recovery-json",
+      "returncode": 0,
+      "seconds": 2.1425955295562744
+    }
+  ],
+  "sanitizers": [
+    {
+      "name": "gtoc12_outer_graph_test-memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_outer_graph_test"
+      ],
+      "returncode": 0,
+      "seconds": 22.877699613571167
+    },
+    {
+      "name": "gtoc12_qoco_guard_test-memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_qoco_guard_test"
+      ],
+      "returncode": 0,
+      "seconds": 38.982216358184814
+    }
+  ],
+  "retained_failures": [
+    "Previous source: local regression 336 passed / 1 failed.",
+    "H100 regularization-only source: 91 passed / 3 failed; two failures use an older transfer-count assertion, one is an unscaled trajectory failure.",
+    "H100 unscaled capture: 8 qualified trajectories followed by 1 failure; exact history supplies stationary-step regression.",
+    "Stopping-tolerance changes and excessive regularization failed frozen-QP accuracy gates."
+  ],
+  "corrections": [
+    "Stabilize low-thrust factors at 1e-9, retaining original-equation refinement and independent tolerances.",
+    "Recognize feasible stationarity using both actual and predicted objective changes before ratio rejection; retain finer propagation.",
+    "Retain explicit QP snapshots and standalone replays for reproducible diagnostics."
+  ],
+  "fleet_changed": false,
+  "full_gpu_application": false,
+  "limitations": [
+    "This is the reported synthetic-transfer and regression matrix, not a universal convergence guarantee.",
+    "Unscaled inner QPs can still be rejected by the unchanged accuracy audit; the outer loop handles them without false convergence.",
+    "The full SCvx graph is opt-in; setup and fleet search still require CPU work.",
+    "The separately recorded vendor determinism and local WSL sanitizer limitations remain.",
+    "No fleet-score increase or overall application speedup is claimed."
+  ],
+  "archives": {
+    "h100-v171.tar.gz": {
+      "bytes": 17828824,
+      "sha256": "1cf89fada318b994d62890d21714bc61c070e50f2a9885e61f365e537c9fec52"
+    },
+    "h100-v174.tar.gz": {
+      "bytes": 11910431,
+      "sha256": "ae6395fb4e30a762c2dbc832e707a1c7433629c8bce267a8dc9fe3a274d47340"
+    },
+    "local-evidence.tar.gz": {
+      "bytes": 85678115,
+      "sha256": "fdb3690069b71a6f093c686974cb3a93d0fb239ab4706f4a26f5f1653d6de29f"
+    }
+  }
+}

@@ -1,0 +1,947 @@
+{
+  "start": 1788786100.5596302,
+  "stages": [
+    {
+      "name": "core-configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.3099215030670166
+    },
+    {
+      "name": "core-build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "gtoc12_outer_graph_test",
+        "gtoc12_graph_deadline_test",
+        "gtoc12_qoco_guard_test",
+        "qoco_gpu_audit_test",
+        "gtoc12_scvx_test",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 44.36149334907532
+    },
+    {
+      "name": "replay-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v168/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v168/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v168/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-diagnose-v168/qoco/lib/amd",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/cpp/cuda/tests/qoco_snapshot_replay.cu",
+        "-L/home/ubuntu/spacepdhcg-diagnose-v174/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay"
+      ],
+      "returncode": 0,
+      "seconds": 1.7701053619384766
+    },
+    {
+      "name": "qp-0",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-1/qp-376-000000.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 1.0679891109466553
+    },
+    {
+      "name": "qp-1",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-1/qp-376-000001.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 1.067650556564331
+    },
+    {
+      "name": "qp-2",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-12/qp-444-000000.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 0.9599189758300781
+    },
+    {
+      "name": "qp-3",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-12/qp-444-000001.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 1.0689609050750732
+    },
+    {
+      "name": "qp-4",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-23/qp-512-000000.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 0.9577381610870361
+    },
+    {
+      "name": "qp-5",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-23/qp-512-000001.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 0.9254364967346191
+    },
+    {
+      "name": "qp-6",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-3/qp-386-000000.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 0.9557080268859863
+    },
+    {
+      "name": "qp-7",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/final/qoco_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/repo/build/performance/qp-capture-v169/leg-3/qp-386-000001.txt",
+        "16"
+      ],
+      "returncode": 0,
+      "seconds": 1.054086685180664
+    },
+    {
+      "name": "gtoc12_outer_graph_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_outer_graph_test"
+      ],
+      "returncode": 0,
+      "seconds": 1.5322742462158203
+    },
+    {
+      "name": "gtoc12_graph_deadline_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_graph_deadline_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.29796743392944336
+    },
+    {
+      "name": "gtoc12_qoco_guard_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_qoco_guard_test"
+      ],
+      "returncode": 0,
+      "seconds": 2.328855276107788
+    },
+    {
+      "name": "qoco_gpu_audit_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/qoco_gpu_audit_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.34100842475891113
+    },
+    {
+      "name": "gtoc12_scvx_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_scvx_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.3077545166015625
+    },
+    {
+      "name": "gtoc12-integration",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_discretisation.py",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_qoco.py",
+        "tests/test_gtoc12_gpu_seed.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 7.985957860946655
+    },
+    {
+      "name": "leg-0",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-0.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.3524103164672852
+    },
+    {
+      "name": "leg-1",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-1.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.149292230606079
+    },
+    {
+      "name": "leg-2",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-2.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0859780311584473
+    },
+    {
+      "name": "leg-3",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-3.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1618690490722656
+    },
+    {
+      "name": "leg-4",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-4.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.090803623199463
+    },
+    {
+      "name": "leg-5",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-5.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1500201225280762
+    },
+    {
+      "name": "leg-6",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-6.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1473307609558105
+    },
+    {
+      "name": "leg-7",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-7.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.3185639381408691
+    },
+    {
+      "name": "leg-8",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-8.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.220017671585083
+    },
+    {
+      "name": "leg-9",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-9.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0816071033477783
+    },
+    {
+      "name": "leg-10",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-10.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.3163979053497314
+    },
+    {
+      "name": "leg-11",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-11.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1580924987792969
+    },
+    {
+      "name": "leg-12",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-12.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1485130786895752
+    },
+    {
+      "name": "leg-13",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-13.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1499502658843994
+    },
+    {
+      "name": "leg-14",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-14.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0819344520568848
+    },
+    {
+      "name": "leg-15",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-15.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1830565929412842
+    },
+    {
+      "name": "leg-16",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-16.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1818599700927734
+    },
+    {
+      "name": "leg-17",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-17.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.2126524448394775
+    },
+    {
+      "name": "leg-18",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-18.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.3132176399230957
+    },
+    {
+      "name": "leg-19",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-19.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0858955383300781
+    },
+    {
+      "name": "leg-20",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-20.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.157602310180664
+    },
+    {
+      "name": "leg-21",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-21.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.155620813369751
+    },
+    {
+      "name": "leg-22",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-22.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0812571048736572
+    },
+    {
+      "name": "leg-23",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-23.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.2453110218048096
+    },
+    {
+      "name": "leg-24",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-24.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0933732986450195
+    },
+    {
+      "name": "leg-25",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-25.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0952727794647217
+    },
+    {
+      "name": "leg-26",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-26.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1505961418151855
+    },
+    {
+      "name": "leg-27",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-27.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.3207621574401855
+    },
+    {
+      "name": "leg-28",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-28.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.3421423435211182
+    },
+    {
+      "name": "leg-29",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-29.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1712799072265625
+    },
+    {
+      "name": "leg-30",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-30.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.217221736907959
+    },
+    {
+      "name": "leg-31",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-31.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0899813175201416
+    },
+    {
+      "name": "leg-32",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-32.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.086076021194458
+    },
+    {
+      "name": "leg-33",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-33.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.087479829788208
+    },
+    {
+      "name": "leg-34",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-34.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0928828716278076
+    },
+    {
+      "name": "leg-35",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-35.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0939760208129883
+    },
+    {
+      "name": "leg-36",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-36.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0856122970581055
+    },
+    {
+      "name": "leg-37",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-37.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0894250869750977
+    },
+    {
+      "name": "leg-38",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-38.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0962631702423096
+    },
+    {
+      "name": "leg-39",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-39.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0947396755218506
+    },
+    {
+      "name": "leg-40",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-40.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0845584869384766
+    },
+    {
+      "name": "leg-41",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-41.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0912110805511475
+    },
+    {
+      "name": "leg-42",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-42.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0874354839324951
+    },
+    {
+      "name": "leg-43",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-43.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.092437982559204
+    },
+    {
+      "name": "leg-44",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-44.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0908100605010986
+    },
+    {
+      "name": "leg-45",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-45.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.084594488143921
+    },
+    {
+      "name": "leg-46",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-46.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0859432220458984
+    },
+    {
+      "name": "leg-47",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-47.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0987472534179688
+    },
+    {
+      "name": "leg-48",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-48.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0993144512176514
+    },
+    {
+      "name": "leg-49",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-49.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0875732898712158
+    },
+    {
+      "name": "leg-50",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-50.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0861659049987793
+    },
+    {
+      "name": "leg-51",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-51.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0949375629425049
+    },
+    {
+      "name": "leg-52",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-52.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0921878814697266
+    },
+    {
+      "name": "leg-53",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-53.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0946018695831299
+    },
+    {
+      "name": "leg-54",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-54.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0897107124328613
+    },
+    {
+      "name": "leg-55",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-55.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0937016010284424
+    },
+    {
+      "name": "leg-56",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-56.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.089771032333374
+    },
+    {
+      "name": "leg-57",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-57.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0917026996612549
+    },
+    {
+      "name": "leg-58",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-58.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.1098966598510742
+    },
+    {
+      "name": "leg-59",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-59.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.091853380203247
+    },
+    {
+      "name": "leg-60",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-60.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0919747352600098
+    },
+    {
+      "name": "leg-61",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-61.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0907011032104492
+    },
+    {
+      "name": "leg-62",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-62.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.0881731510162354
+    },
+    {
+      "name": "leg-63",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import runpy;sys.argv=['build/performance/diagnose_outer_leg_v158.py',sys.argv[1]];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/leg-63.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.096726417541504
+    },
+    {
+      "name": "gtoc12_outer_graph_test-memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_outer_graph_test"
+      ],
+      "returncode": 0,
+      "seconds": 22.877699613571167
+    },
+    {
+      "name": "gtoc12_qoco_guard_test-memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "98",
+        "/home/ubuntu/spacepdhcg-diagnose-v174/core-build/cuda-tests/gtoc12_qoco_guard_test"
+      ],
+      "returncode": 0,
+      "seconds": 38.982216358184814
+    }
+  ],
+  "source_manifest": {
+    "cpp/cuda/src/native_qoco_adapter.cpp": "8a17c1b1574c6ebc865d457e567e5bf4b179319b01ed7ccfbd2f8e4d21660667",
+    "cpp/cuda/tests/qoco_snapshot_replay.cu": "b24ca9fea93886725caafc4a4c5bb834326ea2d2c94c9d016c6136f632de70fd",
+    "cpp/cuda/src/gtoc12_scvx.cu": "de8f930ee3e4fb4c7df72b9463cd86a739a55b0f5a5266ee4336d8b16ad14bf0",
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": "e98fa2dd1d7750688f137b1d26fbc494d6528a2fb37f12e8d54af26b42e8ed9c",
+    "src/spacepdhcg/gtoc12/low_thrust.py": "a53962442acc23c5fe383e6ca4b0a2d2a8a950a196df2820d7d289c815ed0755",
+    "tests/test_gtoc12_gpu_scvx.py": "e3de21857a2ff4410ad00987c1efb54c3305399693d8d9c1803c14f290e7b9cf",
+    "build/performance/diagnose_outer_leg_v158.py": "c3cbb0bad469db5ffae6a04d47f119b787130e4229c8a0598af1dfc07ab8aa50"
+  },
+  "libraries": {
+    "libspacepdhcg_cuda.so": "7c599a361eba13bda9fa994f545bde39e7bc74a32fa42face7c6770c3ce5ca47",
+    "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "completed": true,
+  "end": 1788786306.9828382
+}

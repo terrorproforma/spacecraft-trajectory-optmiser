@@ -82,15 +82,18 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 7 September 2026
 
-**Experimental GPU solver diagnosis:** translated objective gaps now include
-the origin/stationarity correction. SCvx no longer promotes trust or iteration
-exhaustion to convergence, and polishing verifies a preceding convergence step
-with the finer propagator. The latest repeated checks qualify **22/24 locally
-and 7/8 on H100**; H100 integration is **92 passed, 2 failed**. Numerical failures
-remain, so this is not a finished reliability claim. The full SCvx iteration has
-an opt-in CUDA graph path; setup and fleet search still need CPU work. No fleet
-score or overall speedup has changed. See
-[the diagnosis and retained failures](docs/GPU_ORIGIN_STOPPING.md).
+**GPU solver fixes validated:** low-thrust factor stabilization removes the
+frozen-QP failures in the reported replay matrix, and SCvx now recognizes
+feasible stationary steps instead of collapsing the trust region over negligible
+merit changes. Original-equation refinement, independent physics checks, objective
+tolerances, and finer propagation remain in place. The final build passes
+**337 local regression tests, 94 H100 integration tests, and 64/64 repeated
+trajectories on each GPU**, covering scaled/unscaled and ordinary/graph execution.
+The full SCvx iteration has an opt-in CUDA graph path; setup and fleet search
+still need CPU work. This is validation of the reported cases, not completion
+of the entire GPU-native application or a new fleet score. See
+[the diagnosis and reproduction](docs/GPU_QP_STABILITY.md) and
+[downloaded Lambda results](results/lambda/2026-09-07/gpu-stability-v174/summary.json).
 
 **Previous GPU correctness checkpoint:** native v157 rejects SCvx candidates
 above the existing physical thrust ceiling on the GPU before acceptance.

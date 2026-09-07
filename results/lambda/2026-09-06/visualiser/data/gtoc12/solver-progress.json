@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "gtoc12-synthetic-transfer-benchmark",
-  "runtime": "Native v138 / QOCO v128 (unmerged reference-centred candidate)",
+  "runtime": "Historical native v138 / QOCO v128 timing study (superseded)",
   "hardware": "Local NVIDIA RTX 5090",
   "qualified_transfers": 24,
   "total_transfers": 24,
@@ -17,7 +17,7 @@
   "regression_passed": 331,
   "regression_failed": 1,
   "remaining_cpu_work": "Outer dispatch, per-attempt finish, setup, retries and fleet search",
-  "accuracy_followup": "v138 broad suite: coast equality 1.39e-9 exceeds 1e-9. Centring has not eliminated failures. Full conditional-IPM sanitizers remain unresolved.",
+  "accuracy_followup": "Historical failures retained. Current v173/v174 qualification and corrected failure mechanisms are shown in GPU outer-loop validation.",
   "checkpoint_path": "artifacts/performance/native-origin-v138-checkpoint.json",
   "checkpoint_sha256": "d6dd517570b76217e72bee95fe71d9fd2a222d1d65597b3ece3344dc94713374",
   "recorded_utc": "2026-09-07T06:16:06.911956+00:00",
