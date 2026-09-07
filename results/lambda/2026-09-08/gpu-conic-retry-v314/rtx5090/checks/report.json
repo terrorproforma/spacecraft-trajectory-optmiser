@@ -1,0 +1,50 @@
+{
+  "pid": 737,
+  "complete": true,
+  "checks": [
+    {
+      "name": "gtoc12_scvx_test",
+      "command": [
+        "/home/angus/build-spacepdhcg-conic-retry-v313/final/gtoc12_scvx_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.29909348800015323
+    },
+    {
+      "name": "gtoc12_outer_graph_test",
+      "command": [
+        "/home/angus/build-spacepdhcg-conic-retry-v313/final/gtoc12_outer_graph_test"
+      ],
+      "returncode": 0,
+      "seconds": 1.6544099669999923
+    },
+    {
+      "name": "gtoc12_graph_deadline_test",
+      "command": [
+        "/home/angus/build-spacepdhcg-conic-retry-v313/final/gtoc12_graph_deadline_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.17766100199992252
+    },
+    {
+      "name": "gtoc12_qoco_guard_test",
+      "command": [
+        "/home/angus/build-spacepdhcg-conic-retry-v313/final/gtoc12_qoco_guard_test"
+      ],
+      "returncode": 0,
+      "seconds": 2.1338969880000604
+    },
+    {
+      "name": "pytest",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 4.191345404999993
+    }
+  ]
+}

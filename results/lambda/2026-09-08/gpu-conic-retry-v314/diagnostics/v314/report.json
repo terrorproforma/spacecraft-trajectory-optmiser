@@ -1,0 +1,162 @@
+{
+  "pid": 154905,
+  "complete": true,
+  "stages": [
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.3670603089849465
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "gtoc12_scvx_test",
+        "gtoc12_outer_graph_test",
+        "gtoc12_graph_deadline_test",
+        "gtoc12_qoco_guard_test",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 50.3902487019659
+    },
+    {
+      "name": "gtoc12_scvx_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_scvx_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.41426939802477136
+    },
+    {
+      "name": "gtoc12_outer_graph_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_outer_graph_test"
+      ],
+      "returncode": 0,
+      "seconds": 1.5658579100272618
+    },
+    {
+      "name": "gtoc12_graph_deadline_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_graph_deadline_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.3141697740065865
+    },
+    {
+      "name": "gtoc12_qoco_guard_test",
+      "command": [
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_qoco_guard_test"
+      ],
+      "returncode": 0,
+      "seconds": 2.3169478790368885
+    },
+    {
+      "name": "pytest",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 3.968905101995915
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_scvx_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.4643875050242059
+    },
+    {
+      "name": "initcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_scvx_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.464352292008698
+    },
+    {
+      "name": "synccheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_scvx_test"
+      ],
+      "returncode": 0,
+      "seconds": 0.4642722780117765
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/core-build/cuda-tests/gtoc12_scvx_test"
+      ],
+      "returncode": 0,
+      "seconds": 2.0198182510212064
+    },
+    {
+      "name": "arc",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-conic-retry-v314/arc/run.py"
+      ],
+      "returncode": 0,
+      "seconds": 37.31552439398365
+    }
+  ],
+  "source_lf_sha256": {
+    "cpp/cuda/src/gtoc12_scvx.cu": "57992f98d756585b17d7258a35de534703581332af85816694144ab5acfbaa57",
+    "cpp/cuda/src/native_qoco_adapter.cpp": "74a30d17f30af96f0dfc3aafebbe66977e96373353baab6f7add81f322ab9049",
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": "5e119480b8afd174f6177187235b0347fc3000e641437472d98781fa6046aa16",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": "542a69e45fd5e8eb04bf165c71b0dca8dee5b57ecc315c10fe1acb2ff0db6b0a",
+    "src/spacepdhcg/gtoc12/gpu_scvx.py": "c8a62f8f44bf0c2d48868c2d601c3d6760f5184047c877386ae52d20b6f08691"
+  },
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "79df81283d543862427f1d6235d5cfa5b1bc090fab7f5a2553d125a7963279f1",
+    "libqoco.so": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "arc_qualified": 24
+}
