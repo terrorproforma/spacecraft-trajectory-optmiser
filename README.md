@@ -82,6 +82,16 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Device-controlled retiming:** a conditional CUDA graph now performs mass-profile
+correction, price bracketing/bisection and best weighted-candidate selection.
+Complete retained-table retiming takes **40.0% less time on H100 and 32.3% less
+locally** against the host driver with GPU forward accounting. The trace confirms
+one submission/download for all six price evaluations. **131 tests pass on each
+GPU**, all three H100 sanitizers pass 68 cases with zero errors, and the new
+526.489 kg mission passes both physics checkers. Fresh-table runtime changes
+little and fleet score is unchanged. CPU setup, route construction and fleet
+orchestration remain. [Measurements, accuracy and reproduction](docs/GPU_RETIMING_DRIVER.md).
+
 **GPU forward mass accounting:** mining yield, forward masses, propellant and
 mass-budget checks now execute inside the CUDA retiming completion kernel.
 The complete retained-table pricing loop takes **23.9% less time on H100 and

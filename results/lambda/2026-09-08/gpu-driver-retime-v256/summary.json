@@ -1,0 +1,394 @@
+{
+  "code_commit": "b2fdc059",
+  "base_commit": "06b4cf84",
+  "tests_per_gpu": 131,
+  "sanitizer_tests": 68,
+  "sanitizer_errors": {
+    "memcheck": 0,
+    "initcheck": 0,
+    "synccheck": 0
+  },
+  "timing": {
+    "H100": {
+      "fresh": {
+        "False": 0.05978140700608492,
+        "True": 0.05863831500755623
+      },
+      "cached": {
+        "False": 0.002671441005077213,
+        "True": 0.0016023709904402494
+      }
+    },
+    "RTX5090": {
+      "fresh": {
+        "False": 0.21536191799987137,
+        "True": 0.21536785099988265
+      },
+      "cached": {
+        "False": 0.002778373999717587,
+        "True": 0.0018802829999913229
+      }
+    }
+  },
+  "traces": {
+    "host": {
+      "counters": {
+        "completed_retime_dp_calls": 120,
+        "completed_retime_forward_calls": 120,
+        "completed_retime_driver_calls": 0
+      },
+      "api": [
+        {
+          "Time (%)": "86.6",
+          "Total Time (ns)": "23278629",
+          "Num Calls": "600",
+          "Avg (ns)": "38797.7",
+          "Med (ns)": "2501.0",
+          "Min (ns)": "1861",
+          "Max (ns)": "187362",
+          "StdDev (ns)": "72066.7",
+          "Name": "cudaMemcpyAsync"
+        },
+        {
+          "Time (%)": "12.4",
+          "Total Time (ns)": "3339592",
+          "Num Calls": "120",
+          "Avg (ns)": "27829.9",
+          "Med (ns)": "27142.5",
+          "Min (ns)": "25291",
+          "Max (ns)": "64472",
+          "StdDev (ns)": "3889.5",
+          "Name": "cudaGraphLaunch_v10000"
+        },
+        {
+          "Time (%)": "1.0",
+          "Total Time (ns)": "262623",
+          "Num Calls": "120",
+          "Avg (ns)": "2188.5",
+          "Med (ns)": "2089.0",
+          "Min (ns)": "1848",
+          "Max (ns)": "10554",
+          "StdDev (ns)": "802.9",
+          "Name": "cudaStreamSynchronize"
+        },
+        {
+          "Time (%)": "0.0",
+          "Total Time (ns)": "8791",
+          "Num Calls": "1",
+          "Avg (ns)": "8791.0",
+          "Med (ns)": "8791.0",
+          "Min (ns)": "8791",
+          "Max (ns)": "8791",
+          "StdDev (ns)": "0.0",
+          "Name": "cuProfilerStart"
+        }
+      ],
+      "memory": [
+        {
+          "Time (%)": "60.6",
+          "Total Time (ns)": "510367",
+          "Count": "480",
+          "Avg (ns)": "1063.3",
+          "Med (ns)": "896.0",
+          "Min (ns)": "832",
+          "Max (ns)": "1952",
+          "StdDev (ns)": "293.9",
+          "Operation": "[CUDA memcpy Host-to-Device]"
+        },
+        {
+          "Time (%)": "20.9",
+          "Total Time (ns)": "176256",
+          "Count": "120",
+          "Avg (ns)": "1468.8",
+          "Med (ns)": "1472.0",
+          "Min (ns)": "1440",
+          "Max (ns)": "1664",
+          "StdDev (ns)": "28.6",
+          "Operation": "[CUDA memcpy Device-to-Host]"
+        },
+        {
+          "Time (%)": "18.4",
+          "Total Time (ns)": "155104",
+          "Count": "120",
+          "Avg (ns)": "1292.5",
+          "Med (ns)": "1280.0",
+          "Min (ns)": "1248",
+          "Max (ns)": "1312",
+          "StdDev (ns)": "16.7",
+          "Operation": "[CUDA memset]"
+        }
+      ],
+      "kernels": [
+        {
+          "Time (%)": "34.0",
+          "Total Time (ns)": "6784478",
+          "Instances": "1560",
+          "Avg (ns)": "4349.0",
+          "Med (ns)": "4576.0",
+          "Min (ns)": "1632",
+          "Max (ns)": "4704",
+          "StdDev (ns)": "777.4",
+          "Name": "<unnamed>::camp(const spacepdhcg_gtoc12_retime_stage *, int, const double *, int, const double *, double *, int *)"
+        },
+        {
+          "Time (%)": "33.8",
+          "Total Time (ns)": "6740000",
+          "Instances": "120",
+          "Avg (ns)": "56166.7",
+          "Med (ns)": "55840.0",
+          "Min (ns)": "55711",
+          "Max (ns)": "57536",
+          "StdDev (ns)": "625.2",
+          "Name": "<unnamed>::finish(const double *, int, int, const int *, const int *, int *, int *, <unnamed>::Result *, const spacepdhcg_gtoc12_retime_stage *, const double *, const int *, double *, const double *, const unsigned char *, double *, unsigned char *, const <unnamed>::Controls *, const spacepdhcg_gtoc12_forward_visit *, const spacepdhcg_gtoc12_forward_policy *, const double *, const double *, spacepdhcg_gtoc12_forward_result *, double *, double *, double *)"
+        },
+        {
+          "Time (%)": "32.2",
+          "Total Time (ns)": "6416705",
+          "Instances": "1560",
+          "Avg (ns)": "4113.3",
+          "Med (ns)": "4192.0",
+          "Min (ns)": "3488",
+          "Max (ns)": "4320",
+          "StdDev (ns)": "216.1",
+          "Name": "<unnamed>::leg(const spacepdhcg_gtoc12_retime_stage *, int, int, const double *, const unsigned char *, const double *, const unsigned char *, const double *, const int *, const double *, const <unnamed>::Controls *, double *, int *)"
+        }
+      ]
+    },
+    "device": {
+      "counters": {
+        "completed_retime_dp_calls": 120,
+        "completed_retime_forward_calls": 120,
+        "completed_retime_driver_calls": 20
+      },
+      "api": [
+        {
+          "Time (%)": "98.8",
+          "Total Time (ns)": "29475792",
+          "Num Calls": "140",
+          "Avg (ns)": "210541.4",
+          "Med (ns)": "2450.5",
+          "Min (ns)": "1932",
+          "Max (ns)": "1462648",
+          "StdDev (ns)": "510205.6",
+          "Name": "cudaMemcpyAsync"
+        },
+        {
+          "Time (%)": "1.0",
+          "Total Time (ns)": "284959",
+          "Num Calls": "20",
+          "Avg (ns)": "14248.0",
+          "Med (ns)": "12146.0",
+          "Min (ns)": "10843",
+          "Max (ns)": "47693",
+          "StdDev (ns)": "7974.0",
+          "Name": "cudaGraphLaunch_v10000"
+        },
+        {
+          "Time (%)": "0.2",
+          "Total Time (ns)": "51473",
+          "Num Calls": "20",
+          "Avg (ns)": "2573.7",
+          "Med (ns)": "2478.5",
+          "Min (ns)": "2353",
+          "Max (ns)": "3862",
+          "StdDev (ns)": "340.5",
+          "Name": "cudaStreamSynchronize"
+        },
+        {
+          "Time (%)": "0.0",
+          "Total Time (ns)": "7930",
+          "Num Calls": "1",
+          "Avg (ns)": "7930.0",
+          "Med (ns)": "7930.0",
+          "Min (ns)": "7930",
+          "Max (ns)": "7930",
+          "StdDev (ns)": "0.0",
+          "Name": "cuProfilerStart"
+        }
+      ],
+      "memory": [
+        {
+          "Time (%)": "80.9",
+          "Total Time (ns)": "126592",
+          "Count": "120",
+          "Avg (ns)": "1054.9",
+          "Med (ns)": "896.0",
+          "Min (ns)": "832",
+          "Max (ns)": "1696",
+          "StdDev (ns)": "268.3",
+          "Operation": "[CUDA memcpy Host-to-Device]"
+        },
+        {
+          "Time (%)": "19.1",
+          "Total Time (ns)": "29887",
+          "Count": "20",
+          "Avg (ns)": "1494.3",
+          "Med (ns)": "1472.0",
+          "Min (ns)": "1471",
+          "Max (ns)": "1664",
+          "StdDev (ns)": "58.8",
+          "Operation": "[CUDA memcpy Device-to-Host]"
+        }
+      ],
+      "kernels": [
+        {
+          "Time (%)": "30.0",
+          "Total Time (ns)": "6725538",
+          "Instances": "1560",
+          "Avg (ns)": "4311.2",
+          "Med (ns)": "4544.0",
+          "Min (ns)": "1472",
+          "Max (ns)": "4704",
+          "StdDev (ns)": "809.2",
+          "Name": "<unnamed>::camp(const spacepdhcg_gtoc12_retime_stage *, int, const double *, int, const double *, double *, int *)"
+        },
+        {
+          "Time (%)": "29.8",
+          "Total Time (ns)": "6678342",
+          "Instances": "120",
+          "Avg (ns)": "55652.8",
+          "Med (ns)": "55232.0",
+          "Min (ns)": "55104",
+          "Max (ns)": "57472",
+          "StdDev (ns)": "818.8",
+          "Name": "<unnamed>::finish(const double *, int, int, const int *, const int *, int *, int *, <unnamed>::Result *, const spacepdhcg_gtoc12_retime_stage *, const double *, const int *, double *, const double *, const unsigned char *, double *, unsigned char *, const <unnamed>::Controls *, const spacepdhcg_gtoc12_forward_visit *, const spacepdhcg_gtoc12_forward_policy *, const double *, const double *, spacepdhcg_gtoc12_forward_result *, double *, double *, double *)"
+        },
+        {
+          "Time (%)": "28.7",
+          "Total Time (ns)": "6434240",
+          "Instances": "1560",
+          "Avg (ns)": "4124.5",
+          "Med (ns)": "4224.0",
+          "Min (ns)": "3519",
+          "Max (ns)": "4320",
+          "StdDev (ns)": "226.9",
+          "Name": "<unnamed>::leg(const spacepdhcg_gtoc12_retime_stage *, int, int, const double *, const unsigned char *, const double *, const unsigned char *, const double *, const int *, const double *, const <unnamed>::Controls *, double *, int *)"
+        },
+        {
+          "Time (%)": "10.5",
+          "Total Time (ns)": "2361971",
+          "Instances": "120",
+          "Avg (ns)": "19683.1",
+          "Med (ns)": "23200.0",
+          "Min (ns)": "4127",
+          "Max (ns)": "23488",
+          "StdDev (ns)": "7031.5",
+          "Name": "<unnamed>::advance_driver(int, spacepdhcg_gtoc12_retime_stage *, <unnamed>::Controls *, const spacepdhcg_gtoc12_forward_visit *, const spacepdhcg_gtoc12_forward_policy *, const spacepdhcg_gtoc12_driver_policy *, const spacepdhcg_gtoc12_driver_weight *, <unnamed>::DriverState *, const double *, const int *, const spacepdhcg_gtoc12_forward_result *, const double *, const double *, const unsigned char *, unsigned char *, unsigned long, unsigned long long)"
+        },
+        {
+          "Time (%)": "0.6",
+          "Total Time (ns)": "138047",
+          "Instances": "120",
+          "Avg (ns)": "1150.4",
+          "Med (ns)": "1152.0",
+          "Min (ns)": "1120",
+          "Max (ns)": "1184",
+          "StdDev (ns)": "13.7",
+          "Name": "memset32"
+        },
+        {
+          "Time (%)": "0.3",
+          "Total Time (ns)": "62400",
+          "Instances": "20",
+          "Avg (ns)": "3120.0",
+          "Med (ns)": "3120.0",
+          "Min (ns)": "3104",
+          "Max (ns)": "3136",
+          "StdDev (ns)": "16.4",
+          "Name": "<unnamed>::finish_driver(int, const spacepdhcg_gtoc12_retime_stage *, const <unnamed>::Controls *, const <unnamed>::DriverState *, unsigned char *, unsigned long)"
+        },
+        {
+          "Time (%)": "0.1",
+          "Total Time (ns)": "18208",
+          "Instances": "20",
+          "Avg (ns)": "910.4",
+          "Med (ns)": "896.0",
+          "Min (ns)": "896",
+          "Max (ns)": "928",
+          "StdDev (ns)": "16.3",
+          "Name": "<unnamed>::init_driver(<unnamed>::DriverState *, const <unnamed>::Controls *)"
+        }
+      ]
+    }
+  },
+  "mission": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 526.4887063657998,
+    "weighted_score_fixed_bonus_kg": 526.4887063657998,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 16.429886205786364,
+    "max_position_error_km": 0.47234217333022377,
+    "max_velocity_error_km_s": 8.038985658654337e-08,
+    "max_mass_error_kg": 9.526957001071423e-11,
+    "violations": []
+  },
+  "official": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 526.489,
+    "return_code": 0,
+    "wall_seconds": 0.09356758598005399,
+    "message": "Check successfully!"
+  },
+  "refinement_seconds": 9.25798268901417,
+  "retiming": {
+    "improved": true,
+    "objective_before_kg": 475.9753593429158,
+    "objective_after_kg": 526.488706365503,
+    "collected_before_kg": 475.9753593429158,
+    "collected_after_kg": 526.488706365503,
+    "final_mass_before_kg": 1274.0309637293344,
+    "final_mass_after_kg": 1030.5154025176992,
+    "deploy_phase_days_before": 1470.0,
+    "deploy_phase_days_after": 1080.0,
+    "camp_days_before": 715.0,
+    "camp_days_after": 1140.0,
+    "end_gap_days_before": 304.0,
+    "end_gap_days_after": 259.0,
+    "propellant_price": 0.0234375,
+    "mass_rounds": 1,
+    "price_rounds": 6,
+    "lambert_evaluations": 412116,
+    "wall_seconds": 0.29934541799593717,
+    "failure": ""
+  },
+  "retime_gpu": {
+    "backend": "cuda",
+    "completed_batches": 24,
+    "completed_branch_requests": 412116,
+    "gpu_used": true,
+    "completed_element_hops": 206058,
+    "completed_retime_dp_calls": 6,
+    "completed_retime_forward_calls": 6,
+    "completed_retime_driver_calls": 1,
+    "retime_table_uploads": 0,
+    "retime_resident_builds": 1,
+    "retime_resident_cells": 206058,
+    "retime_sweep_updates": 1,
+    "retime_sweep_samples": 1
+  },
+  "fleet_weighted_kg": 12805.194102488575,
+  "h100_runtime_sha256": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "5da95cb292a94824310807e688c3cee7be55374ac96f903d9dbccc78c8744897",
+    "SPACEPDHCG_QOCO_LIBRARY": "7afbb1e4c06e803fca215be01990c67498a446eb98f4115ff8e7c8449aabb856"
+  },
+  "local_runtime": {
+    "path": "/home/angus/build-spacepdhcg-driver-retime-v255/final/libspacepdhcg_cuda.so",
+    "sha256": "6bd988e9386e43b49268922f517cabf36d6b004bc759f405d692dbaf52e06a18"
+  },
+  "source_sha256": {
+    "cpp/cuda/src/gtoc12_retime.cu": "ca1a6bd916b86ac0348be7f62b6f1616a04c5d1925c9c36da02ba49709b8797f",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_retime_c_api.h": "827c9ae9b4c8668175f9e6dbde148189f81f7c39a971e370bb682abfc09941a0",
+    "src/spacepdhcg/gtoc12/gpu_retime.py": "cba5bc698f36741343f51352ea80aba30955412b94ce99530fd9651d4bb081a0",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "7490e81393c94486a8267ed81e597a644b2ea990594af2f3c04954d6b5b98dee",
+    "src/spacepdhcg/gtoc12/retiming.py": "710cf727eda68681c361c84f327bbf616598c887b31cf093e6791a9da3a13499",
+    "src/spacepdhcg/gtoc12/lambert.py": "4c58d82ef78e34660ef730104935299d4f4ff13ddcecbc6f719a2ac81cd4b7d9",
+    "tests/test_gtoc12_retime_forward.py": "d4777d6d55b931022fa3debf1a95ce9982358bf5073fdddfcdd442015d663e72",
+    "tests/test_gtoc12_resident_retime.py": "e06b9ccd67c7924910410bb846f7d35db2924031df526292b223c2a931077910",
+    "tests/test_gtoc12_retime_driver.py": "1a2e3958ef11aed68704a377878337845b11e91984c68bf22d63b1edb1bc5f29",
+    "cpp/cuda/CMakeLists.txt": "a7a1f778d12f42f6e65ba1695a73f7efdafdcfd115dc2c4770ea1434d8a82415"
+  }
+}

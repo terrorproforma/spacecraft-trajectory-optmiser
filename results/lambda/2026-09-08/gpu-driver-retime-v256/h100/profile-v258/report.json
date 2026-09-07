@@ -1,0 +1,47 @@
+{
+  "complete": true,
+  "steps": [
+    {
+      "command": [
+        "/usr/local/bin/nsys",
+        "profile",
+        "--trace=cuda",
+        "--cuda-graph-trace=node",
+        "--sample=none",
+        "--cpuctxsw=none",
+        "--capture-range=cudaProfilerApi",
+        "--capture-range-end=stop",
+        "--output=/home/ubuntu/spacepdhcg-driver-profile-v258/host",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/tmp/profile_driver_v258.py",
+        "/home/ubuntu/spacepdhcg-driver-profile-v258/host.json",
+        "/home/ubuntu/spacepdhcg-native-campaign-v209/output/ship_01/refinements.json",
+        "/home/ubuntu/spacepdhcg-driver-retime-v256/repo/input-return.json",
+        "host"
+      ],
+      "returncode": 0,
+      "seconds": 3.3685142993927
+    },
+    {
+      "command": [
+        "/usr/local/bin/nsys",
+        "profile",
+        "--trace=cuda",
+        "--cuda-graph-trace=node",
+        "--sample=none",
+        "--cpuctxsw=none",
+        "--capture-range=cudaProfilerApi",
+        "--capture-range-end=stop",
+        "--output=/home/ubuntu/spacepdhcg-driver-profile-v258/device",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/tmp/profile_driver_v258.py",
+        "/home/ubuntu/spacepdhcg-driver-profile-v258/device.json",
+        "/home/ubuntu/spacepdhcg-native-campaign-v209/output/ship_01/refinements.json",
+        "/home/ubuntu/spacepdhcg-driver-retime-v256/repo/input-return.json",
+        "device"
+      ],
+      "returncode": 0,
+      "seconds": 3.2679996490478516
+    }
+  ]
+}
