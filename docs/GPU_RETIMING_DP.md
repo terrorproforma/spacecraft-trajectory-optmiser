@@ -67,6 +67,11 @@ speedup does not translate into the same whole-retimer improvement.
 
 ## Fleet hill climbing
 
+Follow-up: [the complete 23-ship scan and objective fix](GTOC12_CERTIFIED_OBJECTIVE.md)
+recover the eight missing sources and pair the cluster timing settings with their
+cluster search settings. The two passes below remain the original exploratory
+measurements, not the latest fleet coverage.
+
 Two initial retiming passes inspected all 23 incumbent ship labels. Fifteen had
 exact-mass matching local source archives; eight were skipped pending source
 reconciliation. The first pass used default timing settings and the second used

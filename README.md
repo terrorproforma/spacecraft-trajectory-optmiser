@@ -82,6 +82,16 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Certified route objective fixed:** the retiming certification loop now selects
+its preferred route using actual bonus-weighted payload and the configured orphan
+credit, consistently with its planner, instead of raw kilograms. Payload reduced
+during refinement is accounted for. Seventeen targeted tests pass on both RTX
+5090 and H100. All 23 incumbent source archives are now reconciled; a 46-case
+cluster retiming scan completes in 14.33 seconds with no improving schedule. A
+finer-grid candidate predicts +0.425 weighted kg but fails H100 departure
+refinement, so the fleet stays at **12,805.194 weighted kg**.
+[Diagnosis, source archives and failed-candidate evidence](docs/GTOC12_CERTIFIED_OBJECTIVE.md).
+
 **GPU schedule dynamic programme:** camp choices, thrust-authority checks,
 propellant pricing, arrival choices and path reconstruction now run in CUDA,
 with retained transfer tables across price/mass updates. Repeated fixed-order

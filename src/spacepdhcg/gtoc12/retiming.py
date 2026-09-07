@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import math
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import numpy as np
@@ -1374,6 +1374,7 @@ def improve_and_certify(
     refine = refine or (lambda candidate: refine_route(candidate, catalogue, scvx=scvx))
     attempts: list[dict[str, Any]] = []
     best: RefinedRoute | None = None
+    best_objective = -np.inf
     certified_routes: list[RefinedRoute] = []
     reference = plan_value(plan, retimer)
     for attempt in range(max_attempts):
@@ -1415,8 +1416,16 @@ def improve_and_certify(
         calibrate_from_route(retimer, refined)
         if refined.certified:
             certified_routes.append(refined)
-            if best is None or refined.total_collected_kg > best.total_collected_kg:
+            # Refinement can reduce the payload to close the mass budget. Rank the
+            # actual collected masses with the same weights and orphan policy as
+            # the planner, rather than the proxy payload or unweighted kilograms.
+            objective = plan_value(
+                replace(refined.plan, collected_mass=refined.collected_mass), retimer
+            )
+            record["refined"]["objective_kg"] = objective
+            if objective > best_objective:
                 best = refined
+                best_objective = objective
             record["result"] = "certified"
             attempts.append(record)
             # the calibrated inflations may free enough mass for one more asteroid: try again
