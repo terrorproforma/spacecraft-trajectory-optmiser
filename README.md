@@ -82,6 +82,16 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 7 September 2026
 
+**Latest solver repair:** corrected QOCO's small-denominator division guard and
+repeated dynamics conditioning. Native v155 / QOCO v131 now passes all six
+archived low-thrust recovery cases' independent physics checks on both the RTX
+5090 and Lambda H100. On H100, five converge and one reaches its trust-region
+limit with a physics-qualified trajectory; individual SCvx times are
+**0.230–10.696 seconds**. No CPU solver fallback was used. These are separately
+labelled recovery-profile results, not frozen G4 samples or a new fleet score.
+The old failing Lambda campaign has been stopped and archived. See
+[diagnosis, fixes and reproducible results](docs/GPU_SOLVER_RECOVERY.md).
+
 Native C++/CUDA execution is implemented and tested on the local RTX 5090. The
 persistent solver has parallel scaling and reductions, with cooperative
 multiple-block execution for larger problems. The experimental GTOC12 native
@@ -146,12 +156,12 @@ Experimental core v135 extends device step counts through conic assembly and
 candidate propagation. Outer command downloads shrink to eight bytes per
 attempt plus eight initial bytes, with all 36 complete transfers retaining the
 same physics/mass gates. The 357 ms median establishes no additional speedup.
-The unmerged v136 candidate separates GPU submission from report collection,
+The earlier v136 candidate separates GPU submission from report collection,
 letting SCvx queue reference refresh before waiting. Its 36 complete transfers
 qualified (323 ms median), but the broad suite recorded 327 passes and one
-coast qualification failure. A regression is not ruled out, so this candidate
-is not promoted to main. See [deferred reports and v136 evidence](docs/GTOC12_DEFERRED_REPORTS.md).
-The subsequent unmerged v138 candidate adds GPU reference-centred coordinates
+coast qualification failure. It was held back from main pending investigation.
+See [deferred reports and v136 evidence](docs/GTOC12_DEFERRED_REPORTS.md).
+The subsequent v138 candidate adds GPU reference-centred coordinates
 and safe recovery from an invalid first reference. It reconstructs and audits
 the original physical trajectory without changing any tolerance. All 24 full
 transfers in the v137/v138 comparison qualified (291 ms v138 median), but v138's
@@ -159,6 +169,10 @@ broad suite still recorded 331 passes and one strict coast equality failure;
 the option-disabled integration also failed that gate. Centring has not
 eliminated the issue, and no additional reliable speedup is established. See
 [reference-centred coordinates and retained failures](docs/GTOC12_STATE_ORIGIN.md).
+With the later division correction and experimental retry removed, the final
+v155 build passes **332/332** tests in the broader local regression suite,
+including coast accuracy and injected-failure accounting. This does not resolve
+the separate full conditional-IPM sanitizer limitation.
 The existing visualiser now displays these synthetic solver benchmarks in a
 separate GPU solver progress panel; the fleet score remains unchanged.
 

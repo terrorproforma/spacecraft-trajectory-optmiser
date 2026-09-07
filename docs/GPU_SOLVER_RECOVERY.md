@@ -71,8 +71,50 @@ tests caught an experimental retry hiding failures; that retry was removed.
 The final focused suite passes all six recovery, failure-accounting and
 persistent-session tests. No failed candidate was promoted by weakening a gate.
 
+After removing the experimental retry, the final native v155 / QOCO131 runtime
+passes the complete broader regression: **332 passed in 349.89 seconds**.
+This includes the previously failing coast and injected-error cases. The final
+raw test output is retained alongside the H100 results as
+`local-final-regression.json`.
+
 The prior full-IPM-graph compute-sanitizer limitation remains unresolved. Standalone
 audit checks and ordinary numerical tests do not establish a full sanitizer pass.
+
+## Lambda H100 validation
+
+Commit `613e3d3460c0151c3cf0357beb83367b2b1acbaa`, native v155 and corrected
+QOCO131 were built for sm90 with CUDA 12.8 and cuDSS 0.8.0.10. The old campaign
+was stopped after preserving its SQLite checkpoint and raw logs; no other GPU
+process was running when validation began.
+
+| Intervals | Seed | SCvx seconds | Outer disposition |
+|---:|---:|---:|---|
+| 100 | 71 | 0.230 | Converged |
+| 100 | 479 | 0.232 | Converged |
+| 500 | 617 | 3.444 | Converged |
+| 2000 | 389 | 10.696 | Trust region exhausted; physics qualified |
+| 2000 | 101 | 9.022 | Converged |
+| 2000 | 521 | 8.193 | Converged |
+
+All six pass the unchanged physics checks with zero CPU solver fallbacks and
+one retained QOCO workspace each. Objective differences from the local results
+are below 4.72e-9. Outer convergence differs between devices for two seeds, so
+these are individual measurements, not a controlled hardware speedup estimate.
+Seven arithmetic cases, standalone audit/conversion checks, eight native
+conversion configurations and three recovery/session pytest cases pass on H100.
+The additional H100 GTOC12 GPU integration suite passes **89 tests in 10.20
+seconds**. Its first collection attempt imported Lambda's old editable package;
+the corrected invocation bypasses that importer only in the test subprocess
+and loads the pinned new checkout. Both logs are retained separately.
+
+The downloaded [summary](../results/lambda/2026-09-07/gpu-recovery-v155/summary.json)
+and [raw bundle](../results/lambda/2026-09-07/gpu-recovery-v155/results.tar.gz)
+include source/runtime hashes, commands, logs, all six inputs, failed build
+attempts and the preserved legacy campaign. Bundle SHA-256:
+`ec8d75b63b354f9954ffe0dcb70532b5fd212ae034503af45a1f92bc5769d573`.
+
+The existing web visualiser displays these results under **Lambda solver
+recovery — 7 September** in the GTOC12 view. The rendered fleet remains v11.
 
 ## Reproduction
 

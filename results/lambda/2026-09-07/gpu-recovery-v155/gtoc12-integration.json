@@ -1,0 +1,36 @@
+{
+  "command": [
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "-m",
+    "pytest",
+    "tests/test_gtoc12_gpu_discretisation.py",
+    "tests/test_gtoc12_gpu_scvx.py",
+    "tests/test_gtoc12_gpu_qoco.py",
+    "tests/test_gtoc12_gpu_seed.py",
+    "tests/test_gtoc12_gpu_cli.py",
+    "-q"
+  ],
+  "returncode": 2,
+  "stdout": "\n==================================== ERRORS ====================================\n___________ ERROR collecting tests/test_gtoc12_gpu_discretisation.py ___________\nImportError while importing test module '/home/ubuntu/spacepdhcg-recovery-v155/repo/tests/test_gtoc12_gpu_discretisation.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_gtoc12_gpu_discretisation.py:12: in <module>\n    from spacepdhcg.gtoc12 import constants as C\nE   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'\n________________ ERROR collecting tests/test_gtoc12_gpu_scvx.py ________________\nImportError while importing test module '/home/ubuntu/spacepdhcg-recovery-v155/repo/tests/test_gtoc12_gpu_scvx.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_gtoc12_gpu_scvx.py:8: in <module>\n    from test_gtoc12_gpu_discretisation import synthetic_boundary\ntests/test_gtoc12_gpu_discretisation.py:12: in <module>\n    from spacepdhcg.gtoc12 import constants as C\nE   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'\n________________ ERROR collecting tests/test_gtoc12_gpu_qoco.py ________________\nImportError while importing test module '/home/ubuntu/spacepdhcg-recovery-v155/repo/tests/test_gtoc12_gpu_qoco.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_gtoc12_gpu_qoco.py:15: in <module>\n    from test_gtoc12_gpu_discretisation import synthetic_boundary\ntests/test_gtoc12_gpu_discretisation.py:12: in <module>\n    from spacepdhcg.gtoc12 import constants as C\nE   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'\n________________ ERROR collecting tests/test_gtoc12_gpu_seed.py ________________\nImportError while importing test module '/home/ubuntu/spacepdhcg-recovery-v155/repo/tests/test_gtoc12_gpu_seed.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_gtoc12_gpu_seed.py:11: in <module>\n    from test_gtoc12_gpu_discretisation import synthetic_boundary\ntests/test_gtoc12_gpu_discretisation.py:12: in <module>\n    from spacepdhcg.gtoc12 import constants as C\nE   ModuleNotFoundError: No module named 'spacepdhcg.gtoc12'\n________________ ERROR collecting tests/test_gtoc12_gpu_cli.py _________________\nImportError while importing test module '/home/ubuntu/spacepdhcg-recovery-v155/repo/tests/test_gtoc12_gpu_cli.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_gtoc12_gpu_cli.py:7: in <module>\n    from spacepdhcg.cli import build_parser\nE   ModuleNotFoundError: No module named 'spacepdhcg.cli'\n=========================== short test summary info ============================\nERROR tests/test_gtoc12_gpu_discretisation.py\nERROR tests/test_gtoc12_gpu_scvx.py\nERROR tests/test_gtoc12_gpu_qoco.py\nERROR tests/test_gtoc12_gpu_seed.py\nERROR tests/test_gtoc12_gpu_cli.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 5 errors during collection !!!!!!!!!!!!!!!!!!!!\n5 errors in 0.32s\n",
+  "stderr": "",
+  "seconds": 0.5138044357299805,
+  "environment": {
+    "LD_LIBRARY_PATH": "/home/ubuntu/spacepdhcg-recovery-v155/final:/home/ubuntu/spacepdhcg-recovery-v152/cudss/lib:/usr/local/cuda/lib64",
+    "SPACEPDHCG_QOCO_LIBRARY": "/home/ubuntu/spacepdhcg-recovery-v155/final/libqoco.so",
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/ubuntu/spacepdhcg-recovery-v155/final/libspacepdhcg_cuda.so",
+    "PYTHONPATH": "/home/ubuntu/spacepdhcg-recovery-v155/repo/src",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+    "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+    "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+    "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+    "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+    "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1"
+  }
+}

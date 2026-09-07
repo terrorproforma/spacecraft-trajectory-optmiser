@@ -32,6 +32,12 @@ Then open `http://127.0.0.1:4173/`. The Node server is preferred because it adds
 
 ## GTOC12 fleet dataset
 
+The **Lambda solver recovery — 7 September** panel displays native v155 / QOCO131
+H100 validation from `data/gtoc12/gpu-recovery.json`: six physics-qualified
+low-thrust cases, five converged and one at its trust-region limit. These are
+separate solver tests; the scene still renders the verified v11 fleet. Earlier
+v138 transfer benchmarks remain visible as historical evidence.
+
 This results snapshot commits `data/gtoc12/fleet.json`, `manifest.json`, and `compute.json`. The compute panel reports the archived run's CPU fleet assembly and upstream search separately; its time is not a timing measurement of the latest GPU solver. Metadata must match the displayed fleet's run and commit. If you regenerate a different fleet, update its compute metadata too; mismatched or missing metadata displays an unavailable status.
 
 The general-purpose viewer at `web/trajectory-viewer` keeps generated GTOC12 data ignored. Without fleet data, the selector shows "GTOC12 fleet — not installed" (disabled), the help text names the import command, `npm run check` prints a notice, and the archive view is unaffected. To regenerate a dataset:

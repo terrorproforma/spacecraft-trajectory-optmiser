@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "kind": "gpu-ipm-recovery-validation",
+  "recorded_utc": "2026-09-07T09:51:24.196207+00:00",
+  "hardware": "Lambda NVIDIA H100 80GB HBM3",
+  "source_commit": "613e3d3460c0151c3cf0357beb83367b2b1acbaa",
+  "runtime": "Native v155 / corrected QOCO v131",
+  "profile": "gpu-ipm-recovery-v1",
+  "official_g4_sample": false,
+  "qualified": 6,
+  "converged": 5,
+  "trust_region_exhausted": 1,
+  "total": 6,
+  "hidden_cpu_fallback": 0,
+  "fleet_changed": false,
+  "rows": [
+    {
+      "intervals": 500,
+      "seed": 617,
+      "status": 0,
+      "qualified": true,
+      "scvx_seconds": 3.444138625,
+      "objective": 0.14983153814266187,
+      "local_objective_difference": 4.4114711883480595e-11,
+      "canonical_residual": 1.1831452949737283e-14,
+      "terminal_residual": 1.1102230246251565e-13,
+      "outer_iterations": 37,
+      "inner_iterations": 1185,
+      "workspace_creations": 1
+    },
+    {
+      "intervals": 2000,
+      "seed": 389,
+      "status": 2,
+      "qualified": true,
+      "scvx_seconds": 10.69581817,
+      "objective": 0.1445393472155647,
+      "local_objective_difference": 4.713626405861149e-09,
+      "canonical_residual": 3.346558967560099e-14,
+      "terminal_residual": 7.249756350802272e-13,
+      "outer_iterations": 43,
+      "inner_iterations": 1744,
+      "workspace_creations": 1
+    },
+    {
+      "intervals": 2000,
+      "seed": 101,
+      "status": 0,
+      "qualified": true,
+      "scvx_seconds": 9.021716061,
+      "objective": 0.14453934213546457,
+      "local_objective_difference": 7.108029442814967e-10,
+      "canonical_residual": 2.3199376530683963e-14,
+      "terminal_residual": 5.137557046452912e-13,
+      "outer_iterations": 40,
+      "inner_iterations": 1616,
+      "workspace_creations": 1
+    },
+    {
+      "intervals": 100,
+      "seed": 71,
+      "status": 0,
+      "qualified": true,
+      "scvx_seconds": 0.230354149,
+      "objective": 0.14999376228135503,
+      "local_objective_difference": 8.738815227005148e-12,
+      "canonical_residual": 7.528691083876169e-15,
+      "terminal_residual": 2.3646862246096136e-14,
+      "outer_iterations": 3,
+      "inner_iterations": 72,
+      "workspace_creations": 1
+    },
+    {
+      "intervals": 2000,
+      "seed": 521,
+      "status": 0,
+      "qualified": true,
+      "scvx_seconds": 8.192506965,
+      "objective": 0.14453934201157684,
+      "local_objective_difference": 4.895449323694123e-10,
+      "canonical_residual": 2.4877544246091007e-14,
+      "terminal_residual": 5.74207348336131e-13,
+      "outer_iterations": 39,
+      "inner_iterations": 1519,
+      "workspace_creations": 1
+    },
+    {
+      "intervals": 100,
+      "seed": 479,
+      "status": 0,
+      "qualified": true,
+      "scvx_seconds": 0.231788857,
+      "objective": 0.14999376220446978,
+      "local_objective_difference": 9.431982972429864e-12,
+      "canonical_residual": 1.6889455771197207e-14,
+      "terminal_residual": 1.509903313490213e-14,
+      "outer_iterations": 3,
+      "inner_iterations": 74,
+      "workspace_creations": 1
+    }
+  ],
+  "tests": "7 GPU arithmetic cases, audit/conversion checks, 8 native conversion configurations, 3 recovery/session tests and 89 GTOC12 GPU integration tests passed on H100; final local regression 332/332 passed.",
+  "scope": "Six archived low-thrust physical problems under a separate recovery profile. Single measurements; not a fleet score or a matched speedup benchmark. Host setup, dispatch and reporting remain.",
+  "remaining": "One physics-qualified trajectory stops at its trust-region limit; full conditional-IPM sanitizer failures remain unresolved.",
+  "archive_sha256": "ec8d75b63b354f9954ffe0dcb70532b5fd212ae034503af45a1f92bc5769d573",
+  "archive_bytes": 7013151,
+  "legacy_campaign": "Stopped after preserving its checkpoint and logs; old source 1dbcae0 is no longer consuming the GPU.",
+  "build": {
+    "start": 1788774455.574524,
+    "commit": "613e3d3460c0151c3cf0357beb83367b2b1acbaa",
+    "commands": [
+      [
+        "git",
+        "-C",
+        "/home/ubuntu/spacepdhcg/v1",
+        "fetch",
+        "https://github.com/terrorproforma/spacecraft-trajectory-optmiser.git",
+        "codex/lambda-solver-recovery-v139"
+      ],
+      [
+        "git",
+        "-C",
+        "/home/ubuntu/spacepdhcg/v1",
+        "worktree",
+        "add",
+        "--detach",
+        "/home/ubuntu/spacepdhcg-recovery-v155/repo",
+        "613e3d3460c0151c3cf0357beb83367b2b1acbaa"
+      ],
+      [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-recovery-v155/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-recovery-v155/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-recovery-v155/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "device_scvx_integration_test",
+        "native_qoco_conversion_test",
+        "qoco_gpu_audit_test",
+        "qoco_gpu_conversion_test",
+        "-j",
+        "3"
+      ]
+    ],
+    "stages": [
+      {
+        "returncode": 0,
+        "seconds": 10.418214797973633
+      },
+      {
+        "returncode": 0,
+        "seconds": 1.8531074523925781
+      },
+      {
+        "returncode": 0,
+        "seconds": 2.1038520336151123
+      },
+      {
+        "returncode": 0,
+        "seconds": 49.427040338516235
+      }
+    ],
+    "success": true,
+    "runtime_hashes": {
+      "libspacepdhcg_cuda.so": "e2f1edac6bf319412f76caa665e543f0e2bb8f632309c6f3394fdae26f8d7b2b",
+      "qoco_gpu_audit_test": "4d383dbe3319e1c0081088d5f514792520139293128a412e28241bdc5e2c6be4",
+      "native_qoco_conversion_test": "92619e43c60a8ea4c89ea278647c087818406716520197fc0401439cadbbb136",
+      "libqoco.so": "aef845b190e4a0d56ecbe9fdaac9fac71e3c2700c82c222fd58cef14b7a57e89",
+      "qoco_gpu_conversion_test": "5efdcc12a22153e12e14e81461dd43f73d79c62d6d512c288f00ee2943ba4acc",
+      "device_scvx_integration_test": "1eac47c9a137ad0e4a967a66125cd93918327f559d2609adf8cb684676e55a8e"
+    },
+    "end": 1788774519.4085486
+  },
+  "additional_evidence_sha256": {
+    "gtoc12-integration.json": "f6ec3d24e09fc8641feb802435a5163d93074a3e571f64a7c2d3ba2ea56485a2",
+    "gtoc12-integration-source.json": "4927bf3059fc6f76d468e20e3587eab4504c1b5cd4bcccc9fdc56b73ed57cf2b",
+    "local-final-regression.json": "1c5f2f5d451c223321f074ea4a3d402224a6fd2f0bc3c6ca17daf0b7f86e49f0"
+  }
+}

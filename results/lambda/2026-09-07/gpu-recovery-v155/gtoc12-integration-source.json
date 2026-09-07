@@ -1,0 +1,36 @@
+{
+  "command": [
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "-c",
+    "import sys; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__ != '_editable_skbc_spacepdhcg']; import pytest; sys.exit(pytest.main(sys.argv[1:]))",
+    "tests/test_gtoc12_gpu_discretisation.py",
+    "tests/test_gtoc12_gpu_scvx.py",
+    "tests/test_gtoc12_gpu_qoco.py",
+    "tests/test_gtoc12_gpu_seed.py",
+    "tests/test_gtoc12_gpu_cli.py",
+    "-q"
+  ],
+  "returncode": 0,
+  "stdout": "........................................................................ [ 80%]\n.................                                                        [100%]\n89 passed in 10.20s\n",
+  "stderr": "",
+  "seconds": 10.565906286239624,
+  "environment": {
+    "LD_LIBRARY_PATH": "/home/ubuntu/spacepdhcg-recovery-v155/final:/home/ubuntu/spacepdhcg-recovery-v152/cudss/lib:/usr/local/cuda/lib64",
+    "SPACEPDHCG_QOCO_LIBRARY": "/home/ubuntu/spacepdhcg-recovery-v155/final/libqoco.so",
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/ubuntu/spacepdhcg-recovery-v155/final/libspacepdhcg_cuda.so",
+    "PYTHONPATH": "/home/ubuntu/spacepdhcg-recovery-v155/repo/src",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+    "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+    "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+    "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+    "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+    "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+    "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1"
+  }
+}
