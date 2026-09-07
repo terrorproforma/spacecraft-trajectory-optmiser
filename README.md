@@ -80,7 +80,18 @@ Can a persistent, scenario-structured, multi-GPU PDHCG-CQP backend reduce the to
 
 A conditional result is useful: the project will produce a reproducible crossover map showing when first-order multi-GPU conic quadratic optimisation wins, when factorisation-based GPU solvers win, and when a hybrid is best.
 
-## Current status — 7 September 2026
+## Current status — 8 September 2026
+
+**GPU neighbour selection:** orbital filtering, Kepler positions, phasing costs,
+stable ranking and deduplication now run on CUDA for route-search neighbours.
+The 1,000-asteroid search takes **1.86 s on H100 versus 12.33 s on CPU (6.64×)**,
+retaining the same 27 proxy routes and **545,658 Lambert branches per search**.
+Compared with the previous CUDA-Lambert/CPU-neighbour path, this adds **1.15×
+local and 1.49× H100**. Four warm queries across all 60,000 asteroids are **8.10×
+local and 24.08× H100** faster with identical selected IDs; cold GPU setup is slower.
+All **319 local GTOC12 tests and 26 targeted H100 tests pass**. The fleet score
+is unchanged; collection/fleet orchestration and seed/retiming work remain on CPU.
+See [scope, tests and reproduction](docs/GPU_NEIGHBOUR_SELECTION.md).
 
 **Independent propagation now has a batched CUDA backend:** all 413 legs of the
 existing fleet were propagated in about **30 ms on RTX 5090 and 12.4 ms on H100**
@@ -90,7 +101,7 @@ was below 0.19 m. Use `gtoc12 verify --propagation-backend cuda` with the native
 library and pinned data configured. Mission rules and fleet scores are unchanged.
 See [accuracy, timing scope and reproduction](docs/GPU_BATCHED_VERIFICATION.md).
 
-**Combined GPU screening:** velocity-matching costs, Earth allowances and
+**Previous combined GPU screening checkpoint:** velocity-matching costs, Earth allowances and
 short/long direction selection now run in the same CUDA operator as the Lambert
 solve. A direct comparison with the previous GPU path shows another **1.28× local
 and 1.89× H100 speedup**, reaching about **2.42 million candidate transfers/s**

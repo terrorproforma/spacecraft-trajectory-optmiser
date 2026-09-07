@@ -123,6 +123,8 @@ class GpuLambert:
         self.results = np.zeros((maximum_batch_size, 2), dtype=RESULT)
         self.hops = np.zeros(maximum_batch_size, dtype=HOP_REQUEST)
         self.batches = self.evaluations = 0
+        self.neighbour_workspace = None
+        self.neighbour_key = None
         self.telemetry = {
             "backend": "cuda",
             "completed_batches": 0,
@@ -145,12 +147,39 @@ class GpuLambert:
         if self.closed:
             return
         self._owned()
+        if self.neighbour_workspace is not None:
+            self.neighbour_workspace.close()
+            self.neighbour_workspace = None
         if self.handle.value:
             self._check(self.destroy(ct.byref(self.handle)))
         self.closed = True
 
     def __enter__(self):
         return self
+
+    def neighbours(self, catalogue, pool, source, epoch, settings):
+        from .gpu_neighbours import GpuNeighbours
+
+        self._owned()
+        if not len(pool):
+            return np.empty(0, dtype=np.int64)
+        # Retain one immutable snapshot. Pool/TOF changes replace it; nested
+        # searches reacquire by key instead of keeping pointers to closed buffers.
+        key = (id(catalogue), np.asarray(pool, dtype=np.int64).tobytes(), tuple(settings.hop_tofs))
+        if self.neighbour_workspace is None or self.neighbour_key != key:
+            if self.neighbour_workspace is not None:
+                self.neighbour_workspace.close()
+                self.neighbour_workspace = None
+            self.neighbour_workspace = GpuNeighbours(
+                self.library, catalogue, pool, settings.hop_tofs, self.device_id
+            )
+            self.neighbour_key = key
+        result = self.neighbour_workspace.candidates(source, epoch, settings)
+        self.telemetry["completed_neighbour_queries"] = (
+            self.telemetry.get("completed_neighbour_queries", 0) + 1
+        )
+        self.telemetry["gpu_used"] = True
+        return result
 
     def __exit__(self, *args):
         self.close()

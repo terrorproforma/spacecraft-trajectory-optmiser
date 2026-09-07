@@ -31,13 +31,14 @@
     "candidates": 27,
     "branches": 545658,
     "gpu_batches": 373,
-    "cpu_seconds": 12.072507428994868,
-    "gpu_seconds": 2.710050877009053,
-    "speedup": 4.454716157328636
+    "neighbour_queries": 77,
+    "cpu_seconds": 12.325621577503625,
+    "gpu_seconds": 1.8564236329984851,
+    "speedup": 6.639444444905794
   },
-  "accuracy": "314 integrated local GTOC12 tests; 21 targeted H100 tests. Native graph, ties, invalid-input and telemetry checks pass. Local/H100 memcheck: zero errors. H100 racecheck: zero hazards.",
-  "timing_scope": "Warm combined impulsive screening including transfers and GPU cost selection; excludes ephemeris generation and setup. Candidates require low-thrust certification.",
-  "remaining": "Neighbour filtering/ranking, phasing proxies, ephemeris generation, collection scheduling, fleet selection, packing and some solver setup.",
+  "accuracy": "319 integrated local GTOC12 tests; 26 targeted H100 tests. Neighbour IDs/order match CPU, including the 60,000-asteroid benchmark. Local/H100 memcheck: zero errors; H100 racecheck: zero hazards.",
+  "timing_scope": "Warm timings. Transfer screening uses the combined-operator checkpoint; larger search includes the new GPU neighbours. Cold GPU catalogue setup can be slower. Routes still require low-thrust certification.",
+  "remaining": "Collection scheduling, beam/fleet orchestration, seed/retiming filters, packing and some solver setup.",
   "evidence_sha256": {
     "h100-evidence.tar.gz": "107e740b7da472b03acdc6438aa3577372bc4208eea0ad06feb6627b9957bc49",
     "retrieval.json": "d4478892cf1452543d7108fb7387f0906c861dc54b3984c8e55715bafa1b2e7f",
@@ -100,5 +101,23 @@
     "local/route-search-v188.json": "f1211a19bf47644e920e81b291206abe870eb65a5b219987fc96aa4c9ded409c",
     "local/screening-v188.json": "196f24dc806597e1ff28d8d0b0c147b817c13f70c72df4e171645c84894d9ba9"
   },
-  "local_integrated_gtoc12_tests_passed": 314
+  "local_integrated_gtoc12_tests_passed": 314,
+  "neighbour_selection": {
+    "local": {
+      "paired_speedup": 1.1503001178528944,
+      "pool_speedup": 8.102389669805246,
+      "pool_cpu_ms": 26.277419000507507,
+      "pool_gpu_ms": 3.2431689996883506
+    },
+    "h100": {
+      "paired_speedup": 1.4893317878389782,
+      "pool_speedup": 24.084683736864086,
+      "pool_cpu_ms": 44.10623305011541,
+      "pool_gpu_ms": 1.8312979955226183
+    }
+  },
+  "neighbour_evidence": {
+    "summary_sha256": "3c23e6ac7bde07ad2ab585cfbcfc88a667384e16bd9e70e98fec221b72bb5271",
+    "path": "results/lambda/2026-09-08/gpu-neighbours-v194/summary.json"
+  }
 }

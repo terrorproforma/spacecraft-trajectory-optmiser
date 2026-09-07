@@ -724,6 +724,11 @@ async function loadGpuScreening() {
         ["1,000-asteroid search on H100", `${result.larger_search.cpu_seconds.toFixed(2)} s CPU → ${result.larger_search.gpu_seconds.toFixed(2)} s CUDA · ${result.larger_search.speedup.toFixed(2)}×`],
         ["Work per larger search", `${result.larger_search.branches.toLocaleString()} Lambert branches · ${result.larger_search.gpu_batches} GPU batches · ${result.larger_search.candidates} matching proxy candidates`],
       ] : []),
+      ...(result.neighbour_selection ? [
+        ["Additional gain from GPU neighbours", `${result.neighbour_selection.local.paired_speedup.toFixed(2)}× local · ${result.neighbour_selection.h100.paired_speedup.toFixed(2)}× H100; complete paired search`],
+        ["60,000 asteroids, four warm queries", `${result.neighbour_selection.local.pool_gpu_ms.toFixed(2)} ms local · ${result.neighbour_selection.h100.pool_gpu_ms.toFixed(2)} ms H100`],
+        ["Neighbour queries versus CPU", `${result.neighbour_selection.local.pool_speedup.toFixed(2)}× local · ${result.neighbour_selection.h100.pool_speedup.toFixed(2)}× H100; identical IDs/order`],
+      ] : []),
       ["Timing scope", result.timing_scope],
       ["Candidate agreement", "Same top 100 on CPU and both GPUs; fleet score unchanged"],
       ["Accuracy checks", result.accuracy],

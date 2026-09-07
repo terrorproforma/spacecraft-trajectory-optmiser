@@ -1,0 +1,90 @@
+[
+  {
+    "name": "gtoc12_neighbours_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-neighbours-v193/final/gtoc12_neighbours_test"
+    ],
+    "returncode": 0,
+    "stdout": "GPU neighbours: graph replay, stable ties, invalid query recovery and guards passed\n",
+    "stderr": "",
+    "seconds": 0.22276731400052086
+  },
+  {
+    "name": "orbitweaver_hop_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-neighbours-v193/final/orbitweaver_hop_test"
+    ],
+    "returncode": 0,
+    "stdout": "combined hops: device graph, host parity, ties, invalid inputs and telemetry passed\n",
+    "stderr": "",
+    "seconds": 0.222164024000449
+  },
+  {
+    "name": "orbitweaver_screening_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-neighbours-v193/final/orbitweaver_screening_test"
+    ],
+    "returncode": 0,
+    "stdout": "screening: host, async, device graph and concurrent API guards passed\n",
+    "stderr": "",
+    "seconds": 0.23638778399981675
+  },
+  {
+    "name": "orbitweaver_gpu_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-neighbours-v193/final/orbitweaver_gpu_test"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 0.214976303000185
+  },
+  {
+    "name": "orbitweaver_g3_adapter_test",
+    "command": [
+      "/home/angus/build-spacepdhcg-neighbours-v193/final/orbitweaver_g3_adapter_test"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 0.0015224979997583432
+  },
+  {
+    "name": "regression",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_gtoc12_archive.py",
+      "tests/test_gtoc12_bundles.py",
+      "tests/test_gtoc12_chain.py",
+      "tests/test_gtoc12_collectdp.py",
+      "tests/test_gtoc12_cooperative.py",
+      "tests/test_gtoc12_ephemeris_format.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "tests/test_gtoc12_gpu_conic.py",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_hops.py",
+      "tests/test_gtoc12_gpu_lambert.py",
+      "tests/test_gtoc12_gpu_neighbours.py",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "tests/test_gtoc12_gpu_scvx.py",
+      "tests/test_gtoc12_gpu_seed.py",
+      "tests/test_gtoc12_gpu_verifier.py",
+      "tests/test_gtoc12_harvestphase.py",
+      "tests/test_gtoc12_jointopt.py",
+      "tests/test_gtoc12_lambert_performance.py",
+      "tests/test_gtoc12_pipeline.py",
+      "tests/test_gtoc12_returns.py",
+      "tests/test_gtoc12_rules_and_data.py",
+      "tests/test_gtoc12_search2.py",
+      "tests/test_gtoc12_verifier.py",
+      "-q",
+      "--tb=short"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 22%]\n........................................................................ [ 45%]\n........................................................................ [ 67%]\n........................................................................ [ 90%]\n...............................                                          [100%]\n319 passed in 359.58s (0:05:59)\n",
+    "stderr": "",
+    "seconds": 360.145408548
+  }
+]

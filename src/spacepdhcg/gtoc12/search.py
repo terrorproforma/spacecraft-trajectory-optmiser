@@ -802,10 +802,15 @@ class RouteSearch:
     def candidates(self, asteroid_id: int, epoch: float) -> NDArray[np.int64]:
         """Union of the proxy-ΔV ranking and the positional (cluster) ranking, proxy first."""
 
+        from .lambert import cuda_neighbour_candidates
+
         s = self.settings
-        pool = self.band_pool(asteroid_id)
-        by_proxy, _ = proxy_candidates(self.catalogue, asteroid_id, pool, epoch, s)
-        by_position, _ = positional_candidates(self.catalogue, asteroid_id, pool, epoch, s)
+        ranked = cuda_neighbour_candidates(self.catalogue, self.ids, asteroid_id, epoch, s)
+        if ranked is None:
+            pool = self.band_pool(asteroid_id)
+            by_proxy, _ = proxy_candidates(self.catalogue, asteroid_id, pool, epoch, s)
+            by_position, _ = positional_candidates(self.catalogue, asteroid_id, pool, epoch, s)
+            ranked = list(by_proxy[: s.neighbours]) + list(by_position[: s.neighbours // 2])
         chosen: list[int] = []
         seen: set[int] = set()
         comoving: list[int] = []
@@ -817,9 +822,7 @@ class RouteSearch:
             comoving = [int(a) for a in clusters.neighbours(asteroid_id) if int(a) in allowed][
                 : s.neighbours
             ]
-        for item in (
-            comoving + list(by_proxy[: s.neighbours]) + list(by_position[: s.neighbours // 2])
-        ):
+        for item in comoving + list(ranked):
             if int(item) not in seen:
                 seen.add(int(item))
                 chosen.append(int(item))
