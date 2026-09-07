@@ -65,9 +65,40 @@ usable; ZOH's unused last control is excluded, matching the certificate export.
 
 The native test covers 24 physical-thrust cases across problem sizes, including
 within-tolerance controls, the observed violating magnitude, active and
-inactive endpoints, and infeasible initial references. The corrected local
-GTOC12 integration passes 89 tests. H100 validation of this native change is
-pending at this checkpoint.
+inactive endpoints, and infeasible initial references. These native cases pass
+on both GPUs. Native v157 / QOCO133 passes **332 local regression tests** and
+**89 H100 GTOC12 integration tests**. The local standalone GTOC12 integration
+also passes 89 tests; these overlap the broader regression and are not an
+additional 89 distinct tests.
+
+H100 compute-sanitizer memcheck passes the queued-IPM probe with both QOCO131
+and QOCO133, both new nested graph probes, and the full GTOC12 guard test. Every
+process exits zero and reports zero errors. The full guard initially exceeded
+a 30-second allowance, then completed in 43.6 seconds with a longer allowance;
+both records are retained. This narrows the prior Windows/WSL sanitizer problem
+but does not establish its cause or resolve that platform's failure.
+
+H100 initcheck with its default API-memory checking trips the held-stream
+submission watchdog. A diagnostic copy with a 30-second watchdog still waits
+for its release before returning success. A standalone 64-byte device-to-device
+`cudaMemcpyAsync` reproduces this without any solver code: ordinary and
+memcheck submissions return in 20–27 microseconds, default initcheck waits
+3 seconds for the watchdog, and initcheck with `--check-api-memory-access no`
+returns in 25 microseconds. These are single diagnostic observations, not
+performance benchmarks. This isolates the H100 held-stream failure to the
+tool's API-memory instrumentation. NVIDIA documents that this option controls
+[cudaMemcpy/cudaMemset checking](https://docs.nvidia.com/compute-sanitizer/ComputeSanitizer/index.html#command-line-options).
+Do not interpret the failed run's zero error summary as a passing test, or
+claim that disabling API checks provides that missing coverage. Production
+code and the original three-second watchdog test are unchanged.
+The original full guard passes kernel initcheck with API-memory checking
+disabled in 20.8 seconds, exiting zero with zero reported errors.
+
+A fresh preparation from the corrected QOCO131 inputs reproduces all four
+QOCO133 extension file hashes. The local native build reused a CMake directory
+with an older embedded commit; its actual source file and frozen library
+hashes are recorded separately. The H100 native build uses a fresh checkout of
+`dcdb812fceda00041db52a2764377e0d1c165414`.
 
 ## Remaining integration
 
@@ -76,5 +107,23 @@ numeric updates around the solver emitter. The GTOC12 bridge must then append
 objective qualification, candidate propagation, SCvx acceptance and reference
 refresh to an outer WHILE, with device termination/time limits and retained
 per-attempt reports. Initial setup/priming, failed-workspace recovery, reusable
-per-leg workspaces and fleet search still need work. Full conditional-IPM
-sanitizer failures also remain unresolved. No new fleet score is claimed.
+per-leg workspaces and fleet search still need work. The local sanitizer
+failure also remains unresolved. No new fleet score or full-trajectory speedup
+is claimed by these correctness tests.
+
+## Retrieved evidence and viewer
+
+The checked-in [summary](../results/lambda/2026-09-07/gpu-outer-v157/summary.json)
+links source/runtime hashes, test counts, limitations and the checksums of the
+local and H100 raw-evidence archives in the same directory. They retain failed
+builds, the pre-fix certificate failure, sanitizer timeouts and successful
+reruns. `retrieval.json` verifies each downloaded H100 evidence file.
+
+Open the existing viewer at `http://127.0.0.1:4173/`, select **GTOC12 fleet**,
+then find **GPU solver validation — latest**. Its validation data is separate
+from the rendered v11 fleet. To start the local viewer in PowerShell:
+
+```powershell
+Set-Location 'C:\Users\Angus\Desktop\projects\spacecraft-trajectory-optmiser\results\lambda\2026-09-06\visualiser'
+npm.cmd run serve
+```

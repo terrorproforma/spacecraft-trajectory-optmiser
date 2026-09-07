@@ -1,0 +1,318 @@
+[
+  {
+    "name": "native-0-oracle-origin",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "0",
+      "oracle",
+      "origin"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native translated QP: original KKT/unique solution, changing origins, first-invalid recovery, cold-only and pending ownership PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=37780 blocks=8 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.6744472030004545
+  },
+  {
+    "name": "native-0-device-validation-origin",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "0",
+      "device-validation",
+      "origin"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native translated QP: original KKT/unique solution, changing origins, first-invalid recovery, cold-only and pending ownership PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=37780 blocks=8 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.31910146700101905
+  },
+  {
+    "name": "native-3-oracle-origin",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "3",
+      "oracle",
+      "origin"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native translated QP: original KKT/unique solution, changing origins, first-invalid recovery, cold-only and pending ownership PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=37780 blocks=8 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.3124108090014488
+  },
+  {
+    "name": "native-3-device-validation-origin",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "3",
+      "device-validation",
+      "origin"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native translated QP: original KKT/unique solution, changing origins, first-invalid recovery, cold-only and pending ownership PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=37780 blocks=8 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.3406458979989111
+  },
+  {
+    "name": "native-0-oracle-original",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "0",
+      "oracle"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.30035238600248704
+  },
+  {
+    "name": "native-0-device-validation-original",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "0",
+      "device-validation"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.4033691849981551
+  },
+  {
+    "name": "native-3-oracle-original",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "3",
+      "oracle"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.3063433850002184
+  },
+  {
+    "name": "native-3-device-validation-original",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/native_qoco_conversion_test",
+      "3",
+      "device-validation"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "Native GPU conversion: mixed bound/cone maps, duplicate entries, offset views, CPU oracle and mutation contracts PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=179724 blocks=9 misses=0\n",
+    "seconds": 0.41603811499953736
+  },
+  {
+    "name": "guard",
+    "command": [
+      "/home/angus/build-spacepdhcg-gtoc12-v157/final/gtoc12_qoco_guard_test"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "GTOC12 guard: legacy/deferred invalid inputs and recovery PASS; 14 held-stream deferred submissions, pending reuse, wrong stream/thread and double-finish rejection PASS\n",
+    "stderr": "FACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\nFACTOR_GRAPH allocator bytes=1449852 blocks=9 misses=0\n",
+    "seconds": 2.2389492529982817
+  },
+  {
+    "name": "integration",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/pytest",
+      "tests/test_gtoc12_gpu_discretisation.py",
+      "tests/test_gtoc12_gpu_scvx.py",
+      "tests/test_gtoc12_gpu_qoco.py",
+      "tests/test_gtoc12_gpu_seed.py",
+      "tests/test_gtoc12_gpu_cli.py",
+      "-q"
+    ],
+    "environment": {
+      "SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_REFRESH": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_ASSEMBLY_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_DEVICE_VALIDATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_NUMERIC_REPLAY": "1",
+      "SPACEPDHCG_TEST_GTOC12_DEVICE_QUALIFICATION": "1",
+      "SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY": "1",
+      "SPACEPDHCG_TEST_QOCO_IPM_GRAPH": "1",
+      "PYTHONPATH": "src",
+      "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+      "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-gtoc12-v157/final/libspacepdhcg_cuda.so",
+      "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-gpu-device-ir-v133/final/libqoco.so",
+      "LD_LIBRARY_PATH": "/home/angus/build-spacepdhcg-gtoc12-v157/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "returncode": 0,
+    "stdout": "........................................................................ [ 80%]\n.................                                                        [100%]\n89 passed in 7.69s\n",
+    "stderr": "",
+    "seconds": 7.988882818001002
+  }
+]

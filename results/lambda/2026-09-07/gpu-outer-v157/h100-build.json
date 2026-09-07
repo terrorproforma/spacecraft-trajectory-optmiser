@@ -1,0 +1,85 @@
+{
+  "start": 1788776546.5811675,
+  "commit": "dcdb812fceda00041db52a2764377e0d1c165414",
+  "commands": [
+    [
+      "git",
+      "-C",
+      "/home/ubuntu/spacepdhcg/v1",
+      "fetch",
+      "https://github.com/terrorproforma/spacecraft-trajectory-optmiser.git",
+      "codex/gpu-outer-loop-v156"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/ubuntu/spacepdhcg/v1",
+      "worktree",
+      "add",
+      "--detach",
+      "/home/ubuntu/spacepdhcg-recovery-v157/repo",
+      "dcdb812fceda00041db52a2764377e0d1c165414"
+    ],
+    [
+      "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+      "-S",
+      "/home/ubuntu/spacepdhcg-recovery-v157/repo/cpp",
+      "-B",
+      "/home/ubuntu/spacepdhcg-recovery-v157/core-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DSPACEPDHCG_BUILD_CUDA=ON",
+      "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+      "-DBUILD_TESTING=ON",
+      "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+      "-DCMAKE_CUDA_ARCHITECTURES=90",
+      "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+    ],
+    [
+      "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+      "--build",
+      "/home/ubuntu/spacepdhcg-recovery-v157/core-build",
+      "--target",
+      "spacepdhcg_cuda",
+      "device_scvx_integration_test",
+      "native_qoco_conversion_test",
+      "qoco_gpu_audit_test",
+      "qoco_gpu_conversion_test",
+      "gtoc12_scvx_test",
+      "gtoc12_device_refresh_test",
+      "-j",
+      "3"
+    ]
+  ],
+  "stages": [
+    {
+      "returncode": 0,
+      "seconds": 11.867827653884888
+    },
+    {
+      "returncode": 0,
+      "seconds": 1.8666956424713135
+    },
+    {
+      "returncode": 0,
+      "seconds": 2.298203945159912
+    },
+    {
+      "returncode": 0,
+      "seconds": 49.381898641586304
+    }
+  ],
+  "success": true,
+  "runtime_hashes": {
+    "gtoc12_device_refresh_test": "d7bb7700c8fa9229662a6d8208b06e68498ec0cbdb43f66376537c34036ef82a",
+    "libspacepdhcg_cuda.so": "9da01a196676f2dd7b5169a20e8f209c6faa7db1758c36b487e120ac15779c97",
+    "qoco_gpu_audit_test": "f9cf3f8d9654480c5892b26869da469709f92c7ac4fb73545ec164388d7f5440",
+    "gtoc12_scvx_test": "2f5f6e34945e5c6289e93183eac116712070702a1b850874f0875680073cae55",
+    "native_qoco_conversion_test": "44b06b577e8c7ad17f8f8d3a164d22d9ca6cbca7338db04bba6d6ec2c6d1ef52",
+    "libqoco.so": "fbfd61ca17db32694635f473cae5c808ca1d081c5a8052170faa42663798a996",
+    "qoco_gpu_conversion_test": "d13ff902c15fab240e23b6d49e081510b809f1dc2a30971f61aea341c9dce208",
+    "device_scvx_integration_test": "450ceb547cfcc887e4c7d4c9d1a573d03888ac874121f056e13c9e5ce439fb0c"
+  },
+  "end": 1788776612.0289185
+}

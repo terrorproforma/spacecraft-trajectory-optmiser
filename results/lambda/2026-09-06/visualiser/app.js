@@ -456,6 +456,7 @@ async function setDataset(dataset, options = {}) {
       void loadComputeDetails();
       void loadSolverProgress();
       void loadGpuRecovery();
+      void loadGpuOuterValidation();
     } else {
       state.preset = null;
       Object.assign(state.camera, { ...ARCHIVE_CAMERA, target: [0, 0, 0] });
@@ -670,6 +671,30 @@ async function loadGpuRecovery() {
     ]);
   } catch (error) {
     el.innerHTML = metricRows([["Status", `Recovery results unavailable (${String(error.message || error)})`]]);
+  }
+}
+
+async function loadGpuOuterValidation() {
+  const el = $("gpu-outer-validation");
+  try {
+    const response = await fetch("./data/gtoc12/gpu-outer-validation.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (result.schema_version !== 1 || result.kind !== "gpu-outer-graph-validation") {
+      throw new Error("unrecognised validation metadata");
+    }
+    el.innerHTML = metricRows([
+      ["Runtime", `${result.runtime} · ${result.source_commit.slice(0, 8)}`],
+      ["Local regression", `${result.tests.local_regression_passed} passed`],
+      ["H100 GTOC12 integration", `${result.tests.h100_integration_passed} passed`],
+      ["Physical thrust", result.thrust_acceptance],
+      ["GPU graph probes", result.graph_validation],
+      ["H100 sanitizer", result.sanitizer_summary],
+      ["Scope", result.scope],
+      ["Remaining", result.remaining],
+    ]);
+  } catch (error) {
+    el.innerHTML = metricRows([["Status", `Validation results unavailable (${String(error.message || error)})`]]);
   }
 }
 
