@@ -233,17 +233,40 @@ __global__ void finish(const double* value,int n,int stages,const int32_t* camp_
     const Controls* controls,const ForwardVisit* visits,const ForwardPolicy* policy,
     const double* epochs,const double* tofs,ForwardResult* forward,double* masses,
     double* inflations,double* collected) {
-    // Only the final scalar choice and O(stages) path reconstruction are serial.
-    double best=-INFINITY;int winner=0;
-    for(int i=0;i<n;++i)if(value[i]>best){best=value[i];winner=i;}
-    *result={best,isfinite(best)?1:0,0};
-    arrivals[stages]=departures[stages]=winner;
-    for(int j=stages-1;j>=0;--j) {
-        departures[j]=leg_back[j*n+arrivals[j+1]];
-        arrivals[j]=camp_back[j*n+departures[j]];
+    // Reduce only a value/index pair: preserve the first maximum without
+    // reordering any floating-point sum. All four full warps participate.
+    __shared__ double warp_best[4];
+    __shared__ int warp_winner[4];
+    const int tid=threadIdx.x,lane=tid&31;
+    double best=-INFINITY;int winner=INT32_MAX;
+    for(int64_t i=tid;i<n;i+=blockDim.x)if(value[i]>best){best=value[i];winner=int(i);}
+    for(int offset=16;offset;offset/=2) {
+        const double other=__shfl_down_sync(0xffffffff,best,offset);
+        const int key=__shfl_down_sync(0xffffffff,winner,offset);
+        if(other>best||(other==best&&key<winner)){best=other;winner=key;}
+    }
+    if(!lane){warp_best[tid/32]=best;warp_winner[tid/32]=winner;}
+    __syncthreads();
+    if(!tid) {
+        best=-INFINITY;winner=INT32_MAX;
+        for(int w=0;w<4;++w)if(warp_best[w]>best||(warp_best[w]==best&&warp_winner[w]<winner)) {
+            best=warp_best[w];winner=warp_winner[w];
+        }
+        if(winner==INT32_MAX)winner=0;
+        *result={best,isfinite(best)?1:0,0};
+        arrivals[stages]=departures[stages]=winner;
+        // Backpointers depend on the next stage. Keep just this short chain
+        // serial; selected-table gathers below are independent across stages.
+        for(int j=stages-1;j>=0;--j) {
+            departures[j]=leg_back[j*n+arrivals[j+1]];
+            arrivals[j]=camp_back[j*n+departures[j]];
+        }
+    }
+    __syncthreads();
+    for(int64_t j=tid;j<stages;j+=blockDim.x) {
         path_dv[j]=INFINITY;
         path_swept[j]=NAN;path_swept_ok[j]=0;
-        if(isfinite(best)) {
+        if(result->feasible) {
             const auto s=params[j];
             const int shift=arrivals[j+1]-departures[j];
             for(int k=0;k<s.tofs;++k)if(shifts[s.tof_offset+k]==shift) {
@@ -252,12 +275,16 @@ __global__ void finish(const double* value,int n,int stages,const int32_t* camp_
             }
         }
     }
-    forward->failure=-1;
-    if(controls->forward) {
-        if(!isfinite(best)){*forward={8,0,0,0};return;}
-        forward_mass(stages,params,visits,policy,controls,epochs,arrivals,departures,tofs,
-            path_dv,path_swept,path_swept_ok,forward,masses,inflations,collected);
+    __syncthreads();
+    if(!tid) {
+        forward->failure=-1;
+        if(controls->forward) {
+            if(!result->feasible)*forward={8,0,0,0};
+            else forward_mass(stages,params,visits,policy,controls,epochs,arrivals,departures,tofs,
+                path_dv,path_swept,path_swept_ok,forward,masses,inflations,collected);
+        }
     }
+    __syncthreads();
 }
 
 __global__ void init_driver(DriverState* state,const Controls* controls) {
@@ -269,11 +296,11 @@ __device__ bool valid_next_driver(int stages,const Stage* params,const Controls*
     for(int j=0;j<stages;++j)if(!isfinite(params[j].mass)||params[j].mass<=0)return false;
     return true;
 }
-__global__ void advance_driver(int stages,Stage* params,Controls* controls,
+__device__ bool advance_driver_state(int stages,Stage* params,Controls* controls,
     const ForwardVisit* visits,const ForwardPolicy* forward_policy,const DriverPolicy* policy,
     const DriverWeight* weights,DriverState* state,const double* epochs,
     const int32_t* arrivals,const ForwardResult* forward,const double* masses,
-    const double* collected,const uint8_t* output,uint8_t* best,size_t bytes,
+    const double* collected,
     cudaGraphConditionalHandle condition) {
     auto& r=state->result;const auto p=*policy;
     ++r.evaluations;++state->round;r.mass_rounds=max(r.mass_rounds,state->round);
@@ -285,10 +312,10 @@ __global__ void advance_driver(int stages,Stage* params,Controls* controls,
             params[j].mass=j<count?masses[j]:fmax(params[j].mass,params[j].mass*scale);
         if(state->round<p.max_masses) {
             if(!valid_next_driver(stages,params,controls)){r.failure=9;cudaGraphSetConditional(condition,0);}
-            return;
+            return false;
         }
     }
-    bool stop=false,geometric=false;
+    bool stop=false,geometric=false,copy_best=false;
     if(!failure) {
         double weighted=0,orphan=0;
         // Preserve collection insertion order and the separately accumulated
@@ -302,7 +329,7 @@ __global__ void advance_driver(int stages,Stage* params,Controls* controls,
         const double objective=weighted+p.orphan_credit*orphan;
         if(objective>r.objective) {
             r.feasible=1;r.objective=objective;state->best_price=controls->price;
-            for(size_t j=0;j<bytes;++j)best[j]=output[j];
+            copy_best=true;
         }
         state->hi=isnan(state->hi)?controls->price:fmin(state->hi,controls->price);
         if(isnan(state->lo)){controls->price/=p.price_growth;geometric=true;}
@@ -318,6 +345,20 @@ __global__ void advance_driver(int stages,Stage* params,Controls* controls,
     if(!stop&&!valid_next_driver(stages,params,controls)){r.failure=9;stop=true;}
     if(stop)cudaGraphSetConditional(condition,0);
     else {++r.price_rounds;state->round=0;}
+    return copy_best;
+}
+__global__ void advance_driver(int stages,Stage* params,Controls* controls,
+    const ForwardVisit* visits,const ForwardPolicy* forward_policy,const DriverPolicy* policy,
+    const DriverWeight* weights,DriverState* state,const double* epochs,
+    const int32_t* arrivals,const ForwardResult* forward,const double* masses,
+    const double* collected,const uint8_t* output,uint8_t* best,size_t bytes,
+    cudaGraphConditionalHandle condition) {
+    __shared__ bool copy_best;
+    if(threadIdx.x==0)copy_best=advance_driver_state(stages,params,controls,visits,
+        forward_policy,policy,weights,state,epochs,arrivals,forward,masses,collected,condition);
+    __syncthreads();
+    if(copy_best)for(size_t j=threadIdx.x;j<bytes;j+=blockDim.x)best[j]=output[j];
+    __syncthreads();
 }
 __global__ void finish_driver(int stages,const Stage* params,const Controls* controls,
     const DriverState* state,uint8_t* best,size_t bytes) {
@@ -431,7 +472,7 @@ static bool enqueue_dp(Workspace* w) {
     }
     if(good) {
         const PathLayout layout(w->stages);
-        finish<<<1,1,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result,w->params,w->dv,w->shifts,w->path_dv,w->swept,w->swept_ok,w->path_swept,w->path_swept_ok,
+        finish<<<1,128,0,w->stream>>>(value,w->n,w->stages,w->back_camp,w->back_leg,w->arrivals,w->departures,w->result,w->params,w->dv,w->shifts,w->path_dv,w->swept,w->swept_ok,w->path_swept,w->path_swept_ok,
             w->controls,w->visits,w->policy,w->epochs,w->tofs,
             reinterpret_cast<ForwardResult*>(w->output+layout.forward),
             reinterpret_cast<double*>(w->output+layout.masses),
@@ -486,7 +527,7 @@ static bool prepare_driver(Workspace* w) {
         if(cudaStreamBeginCaptureToGraph(w->stream,node.conditional.phGraph_out[0],nullptr,nullptr,0,cudaStreamCaptureModeThreadLocal)!=cudaSuccess){cudaGraphDestroy(graph);return false;}
         good=enqueue_dp(w);
         if(good) {
-            advance_driver<<<1,1,0,w->stream>>>(w->stages,w->params,w->controls,w->visits,w->policy,
+            advance_driver<<<1,128,0,w->stream>>>(w->stages,w->params,w->controls,w->visits,w->policy,
                 w->driver_policy,w->weights,w->driver_state,w->epochs,w->arrivals,
                 reinterpret_cast<ForwardResult*>(w->output+layout.forward),
                 reinterpret_cast<double*>(w->output+layout.masses),
