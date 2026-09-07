@@ -1,0 +1,160 @@
+{
+  "pid": 133227,
+  "start": 1788801564.4853723,
+  "steps": [
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.0036230087280273438
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "cpp",
+        "src",
+        "tests",
+        "scripts",
+        "pyproject.toml"
+      ],
+      "returncode": 0,
+      "seconds": 0.1638627052307129
+    },
+    {
+      "name": "git-snapshot",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU snapshot",
+        "-c",
+        "user.email=snapshot@localhost",
+        "commit",
+        "-qm",
+        "GPU retiming DP validation source"
+      ],
+      "returncode": 0,
+      "seconds": 0.015634775161743164
+    },
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-retime-dp-v220/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-retime-dp-v220/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.366935968399048
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-retime-dp-v220/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 48.9488959312439
+    },
+    {
+      "name": "benchmark",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "benchmark_retime_dp_v219.py",
+        "/home/ubuntu/spacepdhcg-retime-dp-v220/measurement",
+        "/home/ubuntu/spacepdhcg-native-campaign-v209/output/ship_01/refinements.json"
+      ],
+      "returncode": 0,
+      "seconds": 2.4169366359710693
+    },
+    {
+      "name": "cached-benchmark",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "benchmark_cached_dp_v219.py",
+        "/home/ubuntu/spacepdhcg-retime-dp-v220/measurement",
+        "/home/ubuntu/spacepdhcg-native-campaign-v209/output/ship_01/refinements.json"
+      ],
+      "returncode": 0,
+      "seconds": 1.3656320571899414
+    },
+    {
+      "name": "tests",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_retime.py",
+        "tests/test_gtoc12_gpu_elements.py",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_gpu_lambert.py",
+        "tests/test_gtoc12_gpu_neighbours.py",
+        "tests/test_gtoc12_gpu_collection.py",
+        "tests/test_gtoc12_jointopt.py",
+        "tests/test_gtoc12_returns.py",
+        "tests/test_gtoc12_cooperative.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 40.36898374557495
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_retime.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 1.3656871318817139
+    },
+    {
+      "name": "initcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('pytest',run_name='__main__')",
+        "tests/test_gtoc12_gpu_retime.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 1.2655582427978516
+    }
+  ],
+  "complete": true,
+  "runtime_sha256": "1b0fae7dac1ce233abad55b51e59156a52086f0e85c8971c6b8c98177e6d3d90",
+  "end": 1788801663.4554217
+}

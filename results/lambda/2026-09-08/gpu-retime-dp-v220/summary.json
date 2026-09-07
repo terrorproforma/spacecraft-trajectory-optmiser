@@ -1,0 +1,58 @@
+{
+  "scope": "GPU fixed-order schedule DP and pricing, with unchanged physics gates; fleet score unchanged.",
+  "timing": {
+    "RTX5090": {
+      "full_retiming": {
+        "cpu_dp_seconds": 0.2582501899996714,
+        "cuda_dp_seconds": 0.23431654799969692,
+        "speedup": 1.1021423463442517
+      },
+      "cached_price_evaluation": {
+        "cpu_dp_seconds": 0.0054090645003270765,
+        "cuda_dp_seconds": 0.001341951500307914,
+        "speedup": 4.03074514919947
+      }
+    },
+    "H100": {
+      "full_retiming": {
+        "cpu_dp_seconds": 0.14493942499393597,
+        "cuda_dp_seconds": 0.07233492803061381,
+        "speedup": 2.003726677278151
+      },
+      "cached_price_evaluation": {
+        "cpu_dp_seconds": 0.012686828500591218,
+        "cuda_dp_seconds": 0.0008413695031777024,
+        "speedup": 15.078783403338642
+      }
+    }
+  },
+  "source_sha256": {
+    "cpp/cuda/CMakeLists.txt": "bb48a2fe42b93eabd8187e84aec40c4de701fdafa52e1991045edb19ed2c8997",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_retime_c_api.h": "949f6ad4ec5a097347f282cee3d57c662b26afe09e2e7faa84f84699242a8c1a",
+    "cpp/cuda/src/gtoc12_retime.cu": "200c50df478641a6ff2a62123003c21f0c947b1d195333ac29c27e711ce00ce5",
+    "src/spacepdhcg/gtoc12/gpu_retime.py": "92d82059e860d5a218d699e713a4b0b8eb1b3e70c2f6cb592423e13c5c772b1e",
+    "src/spacepdhcg/gtoc12/retiming.py": "5e064e1bdbd6a06a2e056e66bed99f29607986cfce0ad759a59b9f7be0bc6f4e",
+    "src/spacepdhcg/gtoc12/lambert.py": "9a70f36c1f65f33418fa57025a45f80c76f173bd0a8fb9d4dbd350947d4f6c64",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "6ef1235b9e357022ea2a24988ba3b6d332b3b1b2400ad2f0c53f6ee9353644ea",
+    "tests/test_gtoc12_gpu_retime.py": "bfad556f62426f412b641ba69f626884146951de927bef03ea5fb5a3db0c4cd2"
+  },
+  "local_tests": 82,
+  "h100_tests": 75,
+  "final_telemetry_tests_per_gpu": 12,
+  "memcheck_errors": 0,
+  "initcheck_errors": 0,
+  "incumbent_weighted_kg": 12805.194102488575,
+  "mission": {
+    "ok": true,
+    "ships": 1,
+    "mined_asteroids": 6,
+    "total_mass_kg": 524.0246406568999,
+    "weighted_score_fixed_bonus_kg": 524.0246406568999,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 16.268744361688334,
+    "max_position_error_km": 0.5655026886237128,
+    "max_velocity_error_km_s": 9.874586119942016e-08,
+    "max_mass_error_kg": 7.639755494892597e-11,
+    "violations": []
+  }
+}

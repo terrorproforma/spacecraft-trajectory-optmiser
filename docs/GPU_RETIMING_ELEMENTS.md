@@ -1,5 +1,9 @@
 # GPU ephemerides for retiming tables
 
+This describes the v215 endpoint-table checkpoint. The subsequent
+[CUDA dynamic-programming port](GPU_RETIMING_DP.md) removes the CPU recurrence
+described below; the measurements here retain their original scope.
+
 Retiming previously propagated both endpoint bodies on the CPU and packed a
 160-byte rendezvous request for every departure/duration combination. CUDA then
 performed Lambert screening. The initial profile spent 0.824 of 0.869 seconds

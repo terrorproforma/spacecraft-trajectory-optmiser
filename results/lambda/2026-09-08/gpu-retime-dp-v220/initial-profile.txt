@@ -1,0 +1,38 @@
+         65506 function calls in 0.472 seconds
+
+   Ordered by: cumulative time
+   List reduced from 117 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.472    0.472 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:894(retime)
+        1    0.000    0.000    0.471    0.471 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:770(retime_order)
+        6    0.000    0.000    0.471    0.079 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:866(_solve_at_price)
+        6    0.027    0.005    0.469    0.078 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:571(_dp)
+      156    0.000    0.000    0.424    0.003 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:397(leg_table)
+       13    0.000    0.000    0.424    0.033 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/lambert.py:75(cuda_leg_table)
+       13    0.224    0.017    0.424    0.033 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/gpu_lambert.py:280(leg_table)
+       13    0.195    0.015    0.195    0.015 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/gpu_lambert.py:258(_prepare)
+     7074    0.004    0.000    0.006    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/numeric.py:323(full)
+      169    0.004    0.000    0.004    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/screening.py:41(propellant_for_delta_v)
+      169    0.001    0.000    0.003    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:482(leg_inflation)
+     7105    0.003    0.000    0.003    0.000 {built-in method numpy.arange}
+        6    0.000    0.000    0.002    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:692(_forward)
+     3612    0.002    0.000    0.002    0.000 {built-in method builtins.round}
+      143    0.001    0.000    0.002    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/screening.py:69(low_thrust_inflation)
+       24    0.001    0.000    0.001    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/lib/_shape_base_impl.py:607(column_stack)
+     7087    0.001    0.000    0.001    0.000 {built-in method numpy.empty}
+     8353    0.001    0.000    0.001    0.000 {built-in method numpy.asarray}
+       26    0.000    0.000    0.001    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/gpu_lambert.py:48(body_elements)
+      312    0.001    0.000    0.001    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/screening.py:49(thrust_authority_km_s)
+    17384    0.001    0.000    0.001    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/multiarray.py:406(where)
+       24    0.000    0.000    0.001    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/data.py:138(index_of)
+      325    0.000    0.000    0.001    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:444(_limits)
+       54    0.000    0.000    0.001    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py:2474(any)
+       54    0.000    0.000    0.001    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py:86(_wrapreduction_any_all)
+      169    0.000    0.000    0.000    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/retiming.py:280(_tofs)
+       13    0.000    0.000    0.000    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/screening.py:101(return_inflation_model)
+       24    0.000    0.000    0.000    0.000 /mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/gpu_lambert.py:268(_record)
+       13    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray' objects}
+     7074    0.000    0.000    0.000    0.000 /home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/numpy/_core/multiarray.py:1088(copyto)
+
+

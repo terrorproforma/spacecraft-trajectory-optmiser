@@ -95,7 +95,8 @@ class RetimeSettings:
     return_tof_model: bool | None = None
     earth_out_authority_ratio: float | None = None
     earth_return_authority_ratio: float | None = None
-    # a leg SCvx proved infeasible bans ratios >= ban_factor x its ratio for that body pair
+    # A failed refinement heuristically tightens this pair's ratio; it is not
+    # a proof of infeasibility for other schedules or starting trajectories.
     ban_factor: float = 0.9
     # a certified leg calibrates its pair's inflation to (SCvx ΔV / Lambert ΔV) x this margin
     calibration_margin: float = 1.03
@@ -578,6 +579,12 @@ class Retimer:
 
         Returns lattice indices of arrivals and departures per visit and the objective.
         """
+
+        from .lambert import cuda_retime_dp
+
+        gpu_result = cuda_retime_dp(self, visits, masses, price)
+        if gpu_result is not NotImplemented:
+            return gpu_result
 
         s = self.settings
         lat = self.lattice

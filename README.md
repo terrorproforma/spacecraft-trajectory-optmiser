@@ -82,6 +82,17 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**GPU schedule dynamic programme:** camp choices, thrust-authority checks,
+propellant pricing, arrival choices and path reconstruction now run in CUDA,
+with retained transfer tables across price/mass updates. Repeated fixed-order
+price evaluations are **15.08× faster on H100** and **4.03× on RTX 5090**.
+Including transfer-table construction, the same full retiming fixture gains
+**2.00× H100** and **1.10× local** over the previous GPU-endpoint/CPU-DP path.
+The chosen schedules and objectives match the reference, and the 524.025 kg
+mission passes both physics checkers again. **82 local and 75 H100 tests pass**;
+12 DP parity cases pass both H100 sanitizers. The fleet score is unchanged.
+[Scope, negative fleet-search results and reproducible evidence](docs/GPU_RETIMING_DP.md).
+
 **Certified retiming improvement:** the latest six-asteroid mission returns
 **524.025 kg**, up **10.1%** from 475.975 kg. All 13 legs pass the locally run
 official checker and the independent verifier on H100, including a repeat with
@@ -96,7 +107,7 @@ now run in CUDA. The same 412,116-branch retiming fixture takes **0.257 s on RTX
 (2.51×)**, with identical selected schedules and mining yield. These are repeated
 retiming measurements, not full mission speedups. **46 local and 30 H100 tests
 pass**; the seven new cases also pass H100 memcheck and initcheck with zero errors.
-The dynamic programme and fleet orchestration still run on CPU.
+Fleet orchestration and price/mass iteration remain CPU work.
 [Implementation, measurement scope and evidence](docs/GPU_RETIMING_ELEMENTS.md).
 
 **Real-mission departure reliability:** a 500-day Earth leg exposed repeatability

@@ -77,6 +77,11 @@ def cuda_leg_table(*args, **kwargs):
     return gpu.leg_table(*args, **kwargs) if gpu is not None else None
 
 
+def cuda_retime_dp(*args, **kwargs):
+    gpu = _GPU_BACKEND.get()
+    return gpu.retime_dp(*args, **kwargs) if gpu is not None else NotImplemented
+
+
 @contextmanager
 def using_lambert_backend(backend: str, *, maximum_batch_size=16384):
     """Select screening arithmetic for this scope, preserving nested callers."""

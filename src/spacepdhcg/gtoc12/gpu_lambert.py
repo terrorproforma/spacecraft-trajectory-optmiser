@@ -178,6 +178,7 @@ class GpuLambert:
         self.neighbour_workspace = None
         self.neighbour_key = None
         self.collection_workspace = None
+        self.retime_workspace = None
         self.telemetry = {
             "backend": "cuda",
             "completed_batches": 0,
@@ -200,6 +201,9 @@ class GpuLambert:
         if self.closed:
             return
         self._owned()
+        if self.retime_workspace is not None:
+            self.retime_workspace.close()
+            self.retime_workspace = None
         if self.collection_workspace is not None:
             self.collection_workspace.close()
             self.collection_workspace = None
@@ -264,6 +268,19 @@ class GpuLambert:
             config = Config(1, self.device_id, self.capacity, 0, scan_samples)
             self._check(self.create(ct.byref(config), self.stream, ct.byref(self.handle)))
             self.scan_samples = scan_samples
+
+    def retime_dp(self, *args):
+        from .gpu_retime import GpuRetime
+
+        self._owned()
+        if self.retime_workspace is None:
+            self.retime_workspace = GpuRetime(self.library, self.device_id)
+        result = self.retime_workspace.solve(*args)
+        self.telemetry["completed_retime_dp_calls"] = self.retime_workspace.calls
+        self.telemetry["retime_table_uploads"] = self.retime_workspace.uploads
+        if self.retime_workspace.calls:
+            self.telemetry["gpu_used"] = True
+        return result
 
     def _record(self, branches):
         from .lambert import record_completed_branches
