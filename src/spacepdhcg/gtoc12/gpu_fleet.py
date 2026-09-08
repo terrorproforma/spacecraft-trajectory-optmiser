@@ -29,6 +29,9 @@ REPORT = np.dtype(
     ],
     align=True,
 )
+EXCHANGE_REPORT = np.dtype(
+    [("proposals", "u8"), ("moves", "i4"), ("rounds", "i4")], align=True
+)
 
 
 def _csr(rows):
@@ -84,7 +87,8 @@ def pack_columns(columns, weights, incumbent):
 
 
 def solve_fleet_cuda(
-    columns, *, weights=None, max_ships=C.MAX_SHIPS, node_cap=200_000, incumbent=None, prefix_bits=8
+    columns, *, weights=None, max_ships=C.MAX_SHIPS, node_cap=200_000, incumbent=None,
+    prefix_bits=8, exchange_rounds=16
 ):
     from .cooperative import FleetMasterResult, fleet_feasible, usable_columns
 
@@ -94,6 +98,8 @@ def solve_fleet_cuda(
         raise ValueError("CUDA fleet node_cap must fit uint64")
     if not isinstance(prefix_bits, int) or not 0 <= prefix_bits <= 10:
         raise ValueError("CUDA fleet prefix_bits must be in [0,10]")
+    if not isinstance(exchange_rounds, int) or not 0 <= exchange_rounds <= 100:
+        raise ValueError("CUDA fleet exchange_rounds must be in [0,100]")
     usable, rejected = usable_columns(columns, weights)
     if len(usable) > 4096:
         raise ValueError("CUDA fleet currently supports at most 4096 usable columns")
@@ -102,13 +108,18 @@ def solve_fleet_cuda(
     if not path:
         raise RuntimeError("CUDA fleet requires SPACEPDHCG_GTOC12_CUDA_LIBRARY")
     library = ct.CDLL(str(Path(path).resolve(strict=True)))
-    native = getattr(library, "spacepdhcg_gtoc12_fleet_search_host", None)
+    symbol = ("spacepdhcg_gtoc12_fleet_search_v2_host" if exchange_rounds
+              else "spacepdhcg_gtoc12_fleet_search_host")
+    native = getattr(library, symbol, None)
     if native is None:
         raise RuntimeError("CUDA fleet requires a rebuilt native library")
     native.argtypes = [ct.c_int32] * 3 + [ct.c_uint64] + [ct.c_void_p] * 9
+    if exchange_rounds:
+        native.argtypes += [ct.c_int32, ct.c_void_p]
     native.restype = ct.c_int
     selected = np.empty(len(usable), dtype=np.uint8)
     report = np.zeros(1, dtype=REPORT)
+    exchanges = np.zeros(1, dtype=EXCHANGE_REPORT)
     started = time.perf_counter()
     status = native(
         len(usable),
@@ -118,6 +129,7 @@ def solve_fleet_cuda(
         *(a.ctypes.data for a in arrays),
         selected.ctypes.data,
         report.ctypes.data,
+        *((exchange_rounds, exchanges.ctypes.data) if exchange_rounds else ()),
     )
     seconds = time.perf_counter() - started
     if status:
@@ -154,4 +166,7 @@ def solve_fleet_cuda(
         backend="cuda",
         device_tasks=int(row["tasks"]),
         native_seconds=seconds,
+        exchange_proposals=int(exchanges[0]["proposals"]),
+        exchange_moves=int(exchanges[0]["moves"]),
+        exchange_rounds=int(exchanges[0]["rounds"]),
     )

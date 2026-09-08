@@ -14,15 +14,18 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest verified fleet now returns **14,051.855 raw kg / 12,810.136 weighted
-kg**, with **610.950 raw kg per ship** across 23 ships. A targeted GPU search
-recovered an abandoned miner on ship 15, improving the retained fleet by 4.052
-raw kg and 4.942 weighted kg. Both full-fleet physics checkers passed, including
-a fresh independent audit. [Result, work counts and visualiser loading
-instructions](docs/GPU_ORPHAN_RECOVERY.md). The performance checkpoints below
-describe their own historical results.
+The latest verified fleet returns **14,043.751 raw kg / 12,842.971 weighted kg**,
+with **610.598 raw kg per ship** across 23 ships. GPU fleet exchanges replaced
+two routes, gaining **32.835 weighted kg** while returning slightly less raw
+mass. Both replacement routes were freshly refined on GPU: all 33 native leg
+solves converge on both RTX 5090 and Lambda H100, and both complete-fleet physics
+checkers pass. [New score, exact work counts, results and visualiser loading
+instructions](docs/GPU_FLEET_EXCHANGES.md).
 
-The next 61-order GPU search evaluated 49,286 timing candidates in 2.157 seconds
+The earlier orphan-recovery search returned 14,051.855 raw kg / 12,810.136 weighted
+kg. The performance checkpoints below describe their own historical results.
+
+An earlier 61-order GPU search evaluated 49,286 timing candidates in 2.157 seconds
 without improving that incumbent. Six local return-leg diagnostic replays pass
 unchanged physics checks but expose varying convergence for identical inputs;
 that historical failure is addressed by the conditional retry below. [Current score, why progress

@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_fleet_exchange_v733_h100",
+  "fleet_run_id": "cuda_fleet_exchange_v732",
+  "commit": "experimental",
+  "source_revision_note": "Frozen v727 library: GPU fleet exchanges and fresh native refinement of two replacement routes. Full official and independent checks pass; v732 qualification evidence in gpu-fleet-exchange-v733.",
+  "weighted_score_fixed_bonus_kg": 12842.970672270894,
+  "raw_kg_per_ship": 610.5978632860173,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "2,492 archived route columns; 179,205 exchange proposals"
+  },
+  "timing": {
+    "wall_seconds_total": 52.28215289901709,
+    "wall_human": "52.282 s GPU selection + 33 leg solves + full checks and export; historical column generation excluded"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 dynamics; fresh official and independent full-fleet checks at unchanged tolerances",
+    "local_refine": "Two replacement routes: 33 converged native QOCO SCvx solves with CUDA seeds, assembly and certificates. Other 21 routes retained."
+  },
+  "optimisation": {
+    "strategy": "New verified best: +32.835 weighted kg from two GPU-selected swaps. 0.128 s warm fleet selection; 0.051 s native; 3,516,356 exchange proposals/s. These are packing proposals, not certified trajectories. Zero tree nodes. Python orchestration and independent CPU audits remain.",
+    "proven_optimal": false
+  }
+}

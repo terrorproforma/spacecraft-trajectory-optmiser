@@ -71,6 +71,7 @@ const FLEET_DATASETS = {
   "gtoc12-search-v707": { directory: "./data/gtoc12-search-v707", label: "H100 GPU epoch search v707 (23 ships, 12,810 weighted kg; verified)" },
   "gtoc12-certificate-v712": { directory: "./data/gtoc12-certificate-v712", label: "H100 CUDA certificates v712 (23 ships, 12,810 weighted kg; verified)" },
   "gtoc12-fleet-v724": { directory: "./data/gtoc12-fleet-v724", label: "H100 CUDA fleet selector v724 (unchanged verified fleet; packing benchmark)" },
+  "gtoc12-exchange-v733": { directory: "./data/gtoc12-exchange-v733", label: "H100 GPU fleet exchanges v733 (23 ships, 12,843 weighted kg; new verified best)" },
   "gtoc12-v380": { directory: "./data/gtoc12-v380", label: "GPU recovery v380 (4 ships, 2,089 weighted kg)" },
   "gtoc12-v374": { directory: "./data/gtoc12-v374", label: "GPU fleet v374 (3 ships, 1,670 weighted kg)" },
   "gtoc12-v360": { directory: "./data/gtoc12-v360", label: "GPU SOC step v360 (548 kg certified)" },

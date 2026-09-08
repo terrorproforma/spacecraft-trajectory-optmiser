@@ -278,6 +278,9 @@ class FleetMasterResult:
     backend: str = "cpu"
     device_tasks: int = 0
     native_seconds: float = 0.0
+    exchange_proposals: int = 0
+    exchange_moves: int = 0
+    exchange_rounds: int = 0
 
     @property
     def proven(self) -> bool:
@@ -332,6 +335,9 @@ class FleetMasterResult:
             "backend": self.backend,
             "device_tasks": self.device_tasks,
             "native_seconds": self.native_seconds,
+            "exchange_proposals": self.exchange_proposals,
+            "exchange_moves": self.exchange_moves,
+            "exchange_rounds": self.exchange_rounds,
             "collected_kg": self.collected_kg,
             "mean_collected_kg": mean,
             "upper_bound_kg": finite(self.upper_bound),

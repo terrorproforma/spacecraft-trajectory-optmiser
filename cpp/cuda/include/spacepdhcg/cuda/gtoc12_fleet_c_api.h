@@ -13,6 +13,10 @@ typedef struct {
     uint64_t nodes;
     int32_t exhaustive, tasks;
 } spacepdhcg_gtoc12_fleet_report;
+typedef struct {
+    uint64_t proposals;
+    int32_t moves, rounds;
+} spacepdhcg_gtoc12_fleet_exchange_report;
 /* Conflicts and each foreign requirement's alternative providers use CSR.
  * requirement_offsets maps columns to requirement groups; provider_offsets maps
  * groups to providers. All arrays are host resident. Output is one byte/column.
@@ -26,6 +30,18 @@ int spacepdhcg_gtoc12_fleet_search_host(
     const int32_t* requirement_offsets, const int32_t* provider_offsets,
     const int32_t* providers, const uint8_t* incumbent,
     uint8_t* selected, spacepdhcg_gtoc12_fleet_report* report);
+/* Versioned extension: GPU single-column additions, removals and exchanges
+ * improve the best seed before branch-and-bound. The legacy ABI is unchanged.
+ * proposals counts screened exchange combinations separately from B&B nodes.
+ */
+int spacepdhcg_gtoc12_fleet_search_v2_host(
+    int32_t columns, int32_t max_ships, int32_t prefix_bits, uint64_t node_cap,
+    const spacepdhcg_gtoc12_fleet_column* data,
+    const int32_t* conflict_offsets, const int32_t* conflicts,
+    const int32_t* requirement_offsets, const int32_t* provider_offsets,
+    const int32_t* providers, const uint8_t* incumbent,
+    uint8_t* selected, spacepdhcg_gtoc12_fleet_report* report,
+    int32_t exchange_rounds, spacepdhcg_gtoc12_fleet_exchange_report* exchange);
 #ifdef __cplusplus
 }
 #endif

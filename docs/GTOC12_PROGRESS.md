@@ -1,5 +1,14 @@
 # GTOC12 score progress — 9 September 2026
 
+The latest verified checkpoint is **12,842.970672 weighted kg / 14,043.750856 raw
+kg**, across 23 ships. GPU fleet exchanges gained **32.834719 weighted kg**;
+33 native leg solves and both complete-fleet physics checkers pass on both GPUs.
+[Current result, measurements and visualiser](GPU_FLEET_EXCHANGES.md).
+
+## Earlier orphan-recovery checkpoint
+
+The remainder of this page records the preceding checkpoint and its comparisons.
+
 The retained best fleet has improved slightly. The lower per-ship figures in
 recent GPU pilots describe separate trial fleets; they did not replace the
 stronger 23-ship incumbent.

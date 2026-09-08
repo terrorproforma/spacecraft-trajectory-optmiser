@@ -9,7 +9,9 @@
 namespace gtoc12_fleet {
 using Column=spacepdhcg_gtoc12_fleet_column;
 using Report=spacepdhcg_gtoc12_fleet_report;
+using ExchangeReport=spacepdhcg_gtoc12_fleet_exchange_report;
 static_assert(sizeof(Column)==32&&sizeof(Report)==40);
+static_assert(sizeof(ExchangeReport)==16);
 struct Row {double value;uint64_t nodes;int exhaustive;};
 struct Problem {int n,max_ships;const Column* c;const int *co,*ci,*ro,*po,*pi;};
 __device__ bool conflicts(const Problem& p,int i,const uint8_t* selected) {
@@ -78,6 +80,90 @@ __global__ void seed(Problem p,const int* order,const uint8_t* warm,uint8_t* mas
     double mass,value;int ships;
     if(!feasible(p,chosen,ships,mass,value)||value<0){for(int i=0;i<p.n;++i)chosen[i]=0;value=0;}
     rows[mode]={value,0,1};
+}
+struct Exchange {
+    int ids[100],count,active;
+    ExchangeReport report;
+};
+__global__ void start_exchange(Problem p,uint8_t* masks,Row* rows,Exchange* state) {
+    if(threadIdx.x)return;
+    int best=2;
+    for(int i=0;i<2;++i)if(rows[i].value>rows[best].value+1e-9)best=i;
+    auto* chosen=masks+size_t(2)*p.n;
+    if(best!=2){copy(p.n,chosen,masks+size_t(best)*p.n);rows[2]=rows[best];}
+    state->count=0;state->active=1;state->report={0,0,0};
+    for(int i=0;i<p.n;++i)if(chosen[i])state->ids[state->count++]=i;
+}
+__device__ bool exchange_contains(int i,const uint8_t* chosen,int add,int remove) {
+    return i==add||(chosen[i]&&i!=remove);
+}
+__device__ bool exchange_supplied(Problem p,int i,const uint8_t* chosen,int add,int remove) {
+    for(int g=p.ro[i];g<p.ro[i+1];++g) {
+        bool found=false;
+        for(int k=p.po[g];k<p.po[g+1];++k)
+            if(exchange_contains(p.pi[k],chosen,add,remove)){found=true;break;}
+        if(!found)return false;
+    }
+    return true;
+}
+__global__ void evaluate_exchanges(Problem p,const uint8_t* masks,const Row* rows,
+                                   const Exchange* state,double* values) {
+    if(!state->active)return;
+    const int t=int(blockIdx.x*blockDim.x+threadIdx.x);
+    if(t>=(p.n+1)*101)return;
+    values[t]=-INFINITY;
+    const int add=t/101-1,slot=t%101-1;
+    if(slot>=state->count||(slot<0&&add<0))return;
+    const int remove=slot<0?-1:state->ids[slot];
+    const auto* chosen=masks+size_t(2)*p.n;
+    if(add>=0&&chosen[add])return;
+    if((add<0?0:p.c[add].value)-(remove<0?0:p.c[remove].value)<=0)return;
+    if(add>=0)for(int k=p.co[add];k<p.co[add+1];++k)
+        if(chosen[p.ci[k]]&&p.ci[k]!=remove)return;
+    int ships=0;double mass=0,value=0;bool inserted=add<0;
+    // Sum in input order, just as the independent packing check does.
+    for(int k=0;k<state->count;++k) {
+        const int i=state->ids[k];
+        if(!inserted&&add<i){ships+=p.c[add].ships;mass+=p.c[add].mass;value+=p.c[add].value;inserted=true;}
+        if(i==remove)continue;
+        ships+=p.c[i].ships;mass+=p.c[i].mass;value+=p.c[i].value;
+        if(!exchange_supplied(p,i,chosen,add,remove))return;
+    }
+    if(!inserted){ships+=p.c[add].ships;mass+=p.c[add].mass;value+=p.c[add].value;}
+    if(add>=0&&!exchange_supplied(p,add,chosen,add,remove))return;
+    if(ships>p.max_ships||(ships&&ships>fmin(100.0,2.0*exp(.004*mass/ships))+1e-9))return;
+    if(value>rows[2].value+1e-9)values[t]=value;
+}
+__global__ void accept_exchange(Problem p,uint8_t* masks,Row* rows,Exchange* state,
+                                const double* values) {
+    if(!state->active)return;
+    __shared__ double best_values[256];
+    __shared__ int best_indices[256];
+    const int lane=int(threadIdx.x);double value=-INFINITY;int best=-1;
+    for(int i=lane;i<(p.n+1)*101;i+=256)
+        if(values[i]>value||(values[i]==value&&best>=0&&i<best)){value=values[i];best=i;}
+    best_values[lane]=value;best_indices[lane]=best;__syncthreads();
+    if(lane)return;
+    for(int i=1;i<256;++i)if(best_values[i]>value||
+        (best_values[i]==value&&best_indices[i]>=0&&(best<0||best_indices[i]<best))) {
+        value=best_values[i];best=best_indices[i];
+    }
+    state->report.proposals+=uint64_t(p.n+1)*uint64_t(state->count+1)-1;
+    ++state->report.rounds;
+    if(best<0){state->active=0;return;}
+    const int add=best/101-1,slot=best%101-1;
+    auto* chosen=masks+size_t(2)*p.n;
+    const int remove=slot<0?-1:state->ids[slot];
+    if(remove>=0)chosen[remove]=0;
+    if(add>=0)chosen[add]=1;
+    int ships;double mass,checked;
+    if(!feasible(p,chosen,ships,mass,checked)||checked<=rows[2].value+1e-9) {
+        if(add>=0)chosen[add]=0;
+        if(remove>=0)chosen[remove]=1;
+        state->active=0;return;
+    }
+    rows[2].value=checked;state->count=0;++state->report.moves;
+    for(int i=0;i<p.n;++i)if(chosen[i])state->ids[state->count++]=i;
 }
 __global__ void search(Problem p,int bits,int tasks,uint64_t cap,uint8_t* best_masks,
                       uint8_t* active,uint8_t* phase,uint8_t* exclusions,Row* rows) {
@@ -157,12 +243,14 @@ inline bool offsets(const int32_t* p,int n) {
     if(!p||p[0]!=0)return false;for(int i=0;i<n;++i)if(p[i]<0||p[i+1]<p[i])return false;return true;
 }
 }
-extern "C" int spacepdhcg_gtoc12_fleet_search_host(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
+static int run_gtoc12_fleet(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
     const spacepdhcg_gtoc12_fleet_column* columns,const int32_t* co,const int32_t* ci,
     const int32_t* ro,const int32_t* po,const int32_t* pi,const uint8_t* warm,
-    uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report) {
+    uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report,
+    int exchange_rounds,spacepdhcg_gtoc12_fleet_exchange_report* exchange_report) {
     using namespace gtoc12_fleet;
     if(n<0||n>4096||max_ships<0||max_ships>100||bits<0||bits>10||!report||
+       exchange_rounds<0||exchange_rounds>100||(exchange_rounds&&!exchange_report)||
        (n&&(!columns||!warm||!selected))||!offsets(co,n)||!offsets(ro,n)||!offsets(po,ro[n]))return 1;
     if((co[n]&&!ci)||(po[ro[n]]&&!pi))return 1;
     double magnitude=0,total_mass=0;
@@ -176,7 +264,7 @@ extern "C" int spacepdhcg_gtoc12_fleet_search_host(int32_t n,int32_t max_ships,i
     for(int i=0;i<po[ro[n]];++i)if(pi[i]<0||pi[i]>=n)return 1;
     bits=std::min(bits,n);const int tasks=1<<bits;
     try {
-        Memory m;m.pointers.reserve(16);
+        Memory m;m.pointers.reserve(18);
         if(cudaStreamCreateWithFlags(&m.stream,cudaStreamNonBlocking)!=cudaSuccess)return 2;
         Column* c{};int *dco{},*dci{},*dro{},*dpo{},*dpi{},*order{};
         uint8_t *dw{},*masks{},*active{},*phase{},*exclusions{},*out{};Row* rows{};Report* result{};
@@ -187,12 +275,38 @@ extern "C" int spacepdhcg_gtoc12_fleet_search_host(int32_t n,int32_t max_ships,i
            !m.alloc(exclusions,size_t(tasks)*n)||
            !m.alloc(out,n)||!m.alloc(rows,tasks+3)||!m.alloc(result,1))return 2;
         const Problem p{n,max_ships,c,dco,dci,dro,dpo,dpi};
+        Exchange* exchange{};double* proposal_values{};
+        if(exchange_rounds&&(!m.alloc(exchange,1)||!m.alloc(proposal_values,size_t(n+1)*101)))return 2;
         if(n)rank_columns<<<(n+127)/128,128,0,m.stream>>>(p,order);
         seed<<<1,32,0,m.stream>>>(p,order,dw,masks,rows);
+        if(exchange_rounds) {
+            start_exchange<<<1,32,0,m.stream>>>(p,masks,rows,exchange);
+            // Fixed command submission, no host decisions or intermediate downloads.
+            // Device state stops evaluation after a locally optimal sweep.
+            for(int round=0;round<exchange_rounds;++round) {
+                evaluate_exchanges<<<((n+1)*101+127)/128,128,0,m.stream>>>(p,masks,rows,exchange,proposal_values);
+                accept_exchange<<<1,256,0,m.stream>>>(p,masks,rows,exchange,proposal_values);
+            }
+            if(cudaMemcpyAsync(exchange_report,&exchange->report,sizeof(ExchangeReport),cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess)return 2;
+        } else if(exchange_report)*exchange_report={0,0,0};
         search<<<tasks,1,0,m.stream>>>(p,bits,tasks,cap,masks,active,phase,exclusions,rows);
         finish<<<1,32,0,m.stream>>>(p,tasks,masks,rows,out,result);
         if(cudaGetLastError()!=cudaSuccess||cudaMemcpyAsync(report,result,sizeof(Report),cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess||
            (n&&cudaMemcpyAsync(selected,out,n,cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess)||cudaStreamSynchronize(m.stream)!=cudaSuccess)return 2;
         return 0;
     } catch(...){return 2;}
+}
+extern "C" int spacepdhcg_gtoc12_fleet_search_host(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
+    const spacepdhcg_gtoc12_fleet_column* c,const int32_t* co,const int32_t* ci,
+    const int32_t* ro,const int32_t* po,const int32_t* pi,const uint8_t* warm,
+    uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report) {
+    return run_gtoc12_fleet(n,max_ships,bits,cap,c,co,ci,ro,po,pi,warm,selected,report,0,nullptr);
+}
+extern "C" int spacepdhcg_gtoc12_fleet_search_v2_host(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
+    const spacepdhcg_gtoc12_fleet_column* c,const int32_t* co,const int32_t* ci,
+    const int32_t* ro,const int32_t* po,const int32_t* pi,const uint8_t* warm,
+    uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report,int32_t rounds,
+    spacepdhcg_gtoc12_fleet_exchange_report* exchange) {
+    if(!exchange)return 1;
+    return run_gtoc12_fleet(n,max_ships,bits,cap,c,co,ci,ro,po,pi,warm,selected,report,rounds,exchange);
 }
