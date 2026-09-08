@@ -1,0 +1,310 @@
+{
+  "scope": "One full-catalogue ship; ABBA two runs per mode, identical binary per GPU. Complete process includes search, CUDA refinement and official/independent verification.",
+  "campaigns": {
+    "RTX5090": {
+      "cases": [
+        {
+          "name": "baseline0",
+          "process_seconds": 28.816834172,
+          "cli_seconds": 27.043363904000003,
+          "weighted_score_kg": 548.2546201232999
+        },
+        {
+          "name": "candidate0",
+          "process_seconds": 24.33563993,
+          "cli_seconds": 23.279414365999997,
+          "weighted_score_kg": 548.2546201230996
+        },
+        {
+          "name": "candidate1",
+          "process_seconds": 25.030312773000006,
+          "cli_seconds": 23.938034185000006,
+          "weighted_score_kg": 548.2546201231994
+        },
+        {
+          "name": "baseline1",
+          "process_seconds": 29.295490092999998,
+          "cli_seconds": 28.256156650999998,
+          "weighted_score_kg": 548.2546201231996
+        }
+      ],
+      "seconds": {
+        "baseline": [
+          28.816834172,
+          29.295490092999998
+        ],
+        "candidate": [
+          24.33563993,
+          25.030312773000006
+        ]
+      },
+      "medians": {
+        "baseline": 29.0561621325,
+        "candidate": 24.682976351500002
+      },
+      "less_time_percent": 15.050803203319429,
+      "speedup": 1.1771741672772067,
+      "logical_branches": 45188558,
+      "collection_options": 2782091,
+      "core_sha256": "ad7e9775b8d976ff44fc6ffeb3ea8d6e6f06b1924fc8ce486e7bc52739a1f464"
+    },
+    "H100": {
+      "cases": [
+        {
+          "name": "baseline0",
+          "process_seconds": 31.20858210499864,
+          "cli_seconds": 30.255814787989948,
+          "weighted_score_kg": 548.2546201231999
+        },
+        {
+          "name": "candidate0",
+          "process_seconds": 28.254365922010038,
+          "cli_seconds": 27.414660518988967,
+          "weighted_score_kg": 548.2546201230998
+        },
+        {
+          "name": "candidate1",
+          "process_seconds": 29.703509708982892,
+          "cli_seconds": 28.883385319029912,
+          "weighted_score_kg": 548.2546201231003
+        },
+        {
+          "name": "baseline1",
+          "process_seconds": 28.40445691900095,
+          "cli_seconds": 27.558420624991413,
+          "weighted_score_kg": 548.2546201232997
+        }
+      ],
+      "seconds": {
+        "baseline": [
+          31.20858210499864,
+          28.40445691900095
+        ],
+        "candidate": [
+          28.254365922010038,
+          29.703509708982892
+        ]
+      },
+      "medians": {
+        "baseline": 29.806519511999795,
+        "candidate": 28.978937815496465
+      },
+      "less_time_percent": 2.7765123538498138,
+      "speedup": 1.0285580410770192,
+      "logical_branches": 45188558,
+      "collection_options": 2782091,
+      "core_sha256": "9afe0913157f35a44383d601737f3d75d97bdf045363d37003876a681cb5314c"
+    }
+  },
+  "microbenchmarks": {
+    "RTX5090": {
+      "scope": "native host API including input/output transfer and synchronization; excludes request construction",
+      "rows": [
+        {
+          "count": 31,
+          "baseline_seconds": 0.0004592129999991812,
+          "candidate_seconds": 0.0002237507499955882,
+          "speedup": 2.0523417240310287,
+          "hops_per_second": 138547.0216328269
+        },
+        {
+          "count": 1024,
+          "baseline_seconds": 0.0008586099999945418,
+          "candidate_seconds": 0.0004082112500043422,
+          "speedup": 2.103347225206088,
+          "hops_per_second": 2508505.0938432184
+        },
+        {
+          "count": 16384,
+          "baseline_seconds": 0.009415770749996,
+          "candidate_seconds": 0.0034459110000000237,
+          "speedup": 2.732447457289505,
+          "hops_per_second": 4754620.766467819
+        },
+        {
+          "count": 16385,
+          "baseline_seconds": 0.011306887749988448,
+          "candidate_seconds": 0.00374805750000462,
+          "speedup": 3.0167327342161934,
+          "hops_per_second": 4371597.820999225
+        },
+        {
+          "count": 65536,
+          "baseline_seconds": 0.0334233030000064,
+          "candidate_seconds": 0.011311591249992148,
+          "speedup": 2.954783483714513,
+          "hops_per_second": 5793702.98586819
+        }
+      ]
+    },
+    "H100": {
+      "scope": "native host API including input/output transfer and synchronization; excludes request construction",
+      "rows": [
+        {
+          "count": 31,
+          "baseline_seconds": 0.00012524050544016063,
+          "candidate_seconds": 5.93817385379225e-05,
+          "speedup": 2.1090744145218863,
+          "hops_per_second": 522046.01554740116
+        },
+        {
+          "count": 1024,
+          "baseline_seconds": 0.00017048799782060087,
+          "candidate_seconds": 0.0001132145116571337,
+          "speedup": 1.5058846726020245,
+          "hops_per_second": 9044776.901932405
+        },
+        {
+          "count": 16384,
+          "baseline_seconds": 0.0014201445010257885,
+          "candidate_seconds": 0.0009415745007572696,
+          "speedup": 1.508265676145249,
+          "hops_per_second": 17400641.146104768
+        },
+        {
+          "count": 16385,
+          "baseline_seconds": 0.0031712017371319234,
+          "candidate_seconds": 0.0014043787523405626,
+          "speedup": 2.258081540928145,
+          "hops_per_second": 11667080.531297179
+        },
+        {
+          "count": 65536,
+          "baseline_seconds": 0.005005987753975205,
+          "candidate_seconds": 0.002923354259110056,
+          "speedup": 1.71241228748621,
+          "hops_per_second": 22418083.540771704
+        }
+      ]
+    }
+  },
+  "final_validation": {
+    "RTX5090": {
+      "tests": 46,
+      "lambert_sanitizers": [
+        "memcheck",
+        "synccheck",
+        "racecheck"
+      ],
+      "core_sha256": "6d4864417fc0948b03e2ad2bc20b2ad62d141f59928c23f1617997e3e5e4eab3",
+      "source_sha256": {
+        "cpp/cuda/src/orbitweaver_gpu.cu": "b66de4680a115db8ce481ff8675329d99c8df9dbe2f4757bf7b49dd6a44d9e44",
+        "tests/test_gtoc12_gpu_fast_lambert_root.py": "395ea6747c1f8bc262f5346db7bf70f41b8caf9f58130206d35b38502d1b2103",
+        "src/spacepdhcg/gtoc12/gpu_lambert.py": "0a91f8449af3161ad1b98df51c1b232ff16f05bcfa4d43e72d1a273dbdf394ea"
+      },
+      "campaign": {
+        "name": "default",
+        "candidate": true,
+        "process_seconds": 26.05793268700006,
+        "cli_seconds": 24.830351830999973,
+        "score": 548.2546201232997,
+        "screening": {
+          "backend": "cuda",
+          "collect_resident_builds": 1122,
+          "collect_resident_dp_builds": 248,
+          "collect_window_download_bytes": 5536,
+          "collect_window_geometry_upload_bytes": 0,
+          "collect_window_queries": 692,
+          "collection_option_upload_bytes": 0,
+          "compact_option_download_bytes": 9068,
+          "completed_batches": 5663,
+          "completed_branch_requests": 45188558,
+          "completed_collection_dp_passes": 378,
+          "completed_collection_options": 2782091,
+          "completed_collection_queries": 5930,
+          "completed_compact_options": 1131935,
+          "completed_earth_beam_rows": 582,
+          "completed_element_hops": 22345089,
+          "completed_neighbour_queries": 523,
+          "completed_retime_dp_calls": 293,
+          "completed_retime_driver_calls": 50,
+          "completed_retime_forward_calls": 293,
+          "completed_return_feasibility_queries": 132,
+          "earth_beam_download_bytes": 27944,
+          "gpu_used": true,
+          "resident_option_builds": 2267,
+          "resident_option_selection_download_bytes": 242480,
+          "retime_resident_builds": 50,
+          "retime_resident_cells": 13119270,
+          "retime_sweep_samples": 0,
+          "retime_sweep_updates": 0,
+          "retime_table_uploads": 0
+        }
+      }
+    },
+    "H100": {
+      "tests": 46,
+      "lambert_sanitizers": [
+        "memcheck",
+        "synccheck",
+        "racecheck"
+      ],
+      "core_sha256": "561a888deaaf554a516ffe5fd2ad95e72e0029ec8202437f68e0f74298a7c34e",
+      "source_sha256": {
+        "cpp/cuda/src/orbitweaver_gpu.cu": "b66de4680a115db8ce481ff8675329d99c8df9dbe2f4757bf7b49dd6a44d9e44",
+        "tests/test_gtoc12_gpu_fast_lambert_root.py": "395ea6747c1f8bc262f5346db7bf70f41b8caf9f58130206d35b38502d1b2103",
+        "src/spacepdhcg/gtoc12/gpu_lambert.py": "0a91f8449af3161ad1b98df51c1b232ff16f05bcfa4d43e72d1a273dbdf394ea"
+      },
+      "campaign": {
+        "name": "default",
+        "candidate": true,
+        "process_seconds": 29.556435645965394,
+        "cli_seconds": 28.630898226983845,
+        "score": 548.2546201231003,
+        "screening": {
+          "backend": "cuda",
+          "collect_resident_builds": 1122,
+          "collect_resident_dp_builds": 248,
+          "collect_window_download_bytes": 5536,
+          "collect_window_geometry_upload_bytes": 0,
+          "collect_window_queries": 692,
+          "collection_option_upload_bytes": 0,
+          "compact_option_download_bytes": 9068,
+          "completed_batches": 5663,
+          "completed_branch_requests": 45188558,
+          "completed_collection_dp_passes": 378,
+          "completed_collection_options": 2782091,
+          "completed_collection_queries": 5930,
+          "completed_compact_options": 1131935,
+          "completed_earth_beam_rows": 582,
+          "completed_element_hops": 22345089,
+          "completed_neighbour_queries": 523,
+          "completed_retime_dp_calls": 293,
+          "completed_retime_driver_calls": 50,
+          "completed_retime_forward_calls": 293,
+          "completed_return_feasibility_queries": 132,
+          "earth_beam_download_bytes": 27944,
+          "gpu_used": true,
+          "resident_option_builds": 2267,
+          "resident_option_selection_download_bytes": 242480,
+          "retime_resident_builds": 50,
+          "retime_resident_cells": 13119270,
+          "retime_sweep_samples": 0,
+          "retime_sweep_updates": 0,
+          "retime_table_uploads": 0
+        }
+      }
+    }
+  },
+  "incumbent_weighted_kg": 12805.194102488575,
+  "local_archive": {
+    "bytes": 28748982,
+    "sha256": "cee76bbe8cb4af194b1bfa12898fc50c974c5ae06e5ace50438951b8e1a536be",
+    "verified_members": 260
+  },
+  "profiling": "v579 cProfile attribution overcounts elapsed time around HiGHS callbacks and is invalid. v580 disables profiling around separately timed linprog calls; both clocks pass the elapsed-time consistency check. Those instrumented runs locate work and are not speed benchmarks.",
+  "limitations": "No new best fleet or leaderboard submission. CPU orchestration and symbolic setup remain. Sanitizer passes cover Lambert only; previously recorded full-QOCO/cuDSS sanitizer failures remain unresolved. H100 campaign timing ranges overlap.",
+  "viewer": {
+    "dataset": "gtoc12-v588",
+    "source": "campaign-final/default/output/fleet",
+    "weighted_score_kg": 548.2546201231003,
+    "replay_points": 510,
+    "context_points": 3010,
+    "url": "http://127.0.0.1:4173/?dataset=gtoc12-v588&epoch=69807&preset=oblique&z=1",
+    "files_sha256": {
+      "compute.json": "8a97106cf7b73d8333552cd5eed7443f8df821612a2506e5e56e258a348cf086",
+      "fleet.json": "6c04fee88d255b2ca5c4364affe671f9df3ba91a7cb354a66e3d296849c13d65",
+      "manifest.json": "c4f5a2ae0ad7882edcdac026e4f3c3aaf389b1419bf7fe758a2161cc06492bfe"
+    }
+  }
+}

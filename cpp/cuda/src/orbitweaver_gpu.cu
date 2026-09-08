@@ -173,6 +173,64 @@ __device__ bool bisect(
     return false;
 }
 
+// Zero-revolution hop brackets have width <= 8*pi*pi/16. For budgets >=64,
+// sixteen safeguarded interpolation steps leave enough bisections to reach
+// the existing 1e-13 width gate, even if interpolation makes no progress.
+__device__ bool interpolate_bracket(
+    double lower,
+    double upper,
+    const Geometry value,
+    const spacepdhcg_orbitweaver_lambert_request& request,
+    Root& root
+) {
+    if (request.maximum_iterations < 64U) {
+        return bisect(lower, upper, value, request, root);
+    }
+    auto left = evaluate(lower, value, request);
+    auto right = evaluate(upper, value, request);
+    if (!left.valid || !right.valid || left.residual * right.residual > 0.0) {
+        return false;
+    }
+    // Illinois weights affect interpolation only; true residuals retain the bracket.
+    double fl = left.residual, fr = right.residual;
+    int last = 0;
+    std::uint32_t used = 0U;
+    for (; used < 16U; ++used) {
+        double middle = lower + (upper - lower) * (fl / (fl - fr));
+        if (!isfinite(middle) || middle <= lower || middle >= upper || (used & 3U) == 3U) {
+            middle = 0.5 * (lower + upper);
+        }
+        const auto current = evaluate(middle, value, request);
+        if (!current.valid) {
+            ++used;
+            break;
+        }
+        if (fabs(current.residual) <= request.time_tolerance
+            || fabs(upper - lower) <= 1.0e-13) {
+            root = {middle, used + 1U};
+            return true;
+        }
+        if (left.residual * current.residual <= 0.0) {
+            upper = middle;
+            right = current;
+            fr = current.residual;
+            fl = last == 1 ? fl * 0.5 : left.residual;
+            last = 1;
+        } else {
+            lower = middle;
+            left = current;
+            fl = current.residual;
+            fr = last == -1 ? fr * 0.5 : right.residual;
+            last = -1;
+        }
+    }
+    auto fallback = request;
+    fallback.maximum_iterations -= used;
+    const bool found = bisect(lower, upper, value, fallback, root);
+    if (found) root.iterations += used;
+    return found;
+}
+
 __device__ std::uint32_t scan(
     const double lower,
     const double upper,
@@ -181,7 +239,8 @@ __device__ std::uint32_t scan(
     const spacepdhcg_orbitweaver_lambert_request& request,
     Root roots[2],
     const std::uint32_t root_limit = 2U,
-    const double* cached = nullptr
+    const double* cached = nullptr,
+    const bool fast_root = false
 ) {
     bool has_previous = false;
     double previous_parameter = 0.0;
@@ -204,13 +263,13 @@ __device__ std::uint32_t scan(
         const auto found = exact
                                ? (root = Root{parameter, 0U}, true)
                                : bracket
-                                     && bisect(
+                                     && (fast_root ? interpolate_bracket(previous_parameter,parameter,value,request,root) : bisect(
                                          previous_parameter,
                                          parameter,
                                          value,
                                          request,
                                          root
-                                     );
+                                     ));
         if (found && count < 2U
             && (count == 0U
                 || fabs(root.parameter - roots[count - 1U].parameter)
@@ -389,7 +448,7 @@ __global__ void kernel(
 __global__ void hop_kernel(
     const spacepdhcg_orbitweaver_hop_request* requests, const size_t count,
     const uint32_t samples, spacepdhcg_orbitweaver_hop_result* results,
-    const double* cached
+    const double* cached, const bool fast_root
 ) {
     const size_t i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
     if (i >= count) return;
@@ -414,7 +473,7 @@ __global__ void hop_kernel(
         const auto value = geometry(request, direction != 0);
         if (!value.valid) continue;
         Root roots[2]{};
-        if (!scan(-4*pi*pi, 4*pi*pi-1e-8, samples, value, request, roots, 1, cached)) continue;
+        if (!scan(-4*pi*pi, 4*pi*pi-1e-8, samples, value, request, roots, 1, cached, fast_root)) continue;
         spacepdhcg_orbitweaver_lambert_result candidate{};
         if (!solution(request, value, roots[0], candidate)) continue;
         double dep2 = 0, arr2 = 0;
@@ -443,7 +502,7 @@ __global__ void hop_kernel(
 // Experimental small-batch hop operator. Preserve original scan order and bisection.
 __device__ bool scan_warp(const double lower,const double upper,const uint32_t samples,
     const Geometry value,const spacepdhcg_orbitweaver_lambert_request& request,
-    Root& root,const double* cached) {
+    Root& root,const double* cached,const bool fast_root) {
     constexpr unsigned mask=0xffffffffU;
     const int lane=threadIdx.x&31;
     double prior_parameter=0,prior_residual=0;int prior_valid=0;
@@ -466,7 +525,8 @@ __device__ bool scan_warp(const double lower,const double upper,const uint32_t s
             Root local{};bool found=false;
             if(lane==leader) {
                 if(exact){local={parameter,0U};found=true;}
-                else found=bisect(previous_parameter,parameter,value,request,local);
+                else found=fast_root ? interpolate_bracket(previous_parameter,parameter,value,request,local)
+                    : bisect(previous_parameter,parameter,value,request,local);
             }
             const int accepted=__shfl_sync(mask,int(found),leader);
             const double selected=__shfl_sync(mask,local.parameter,leader);
@@ -482,7 +542,7 @@ __device__ bool scan_warp(const double lower,const double upper,const uint32_t s
 }
 
 __global__ void hop_warp_kernel(const spacepdhcg_orbitweaver_hop_request* requests,
-    size_t count,uint32_t samples,spacepdhcg_orbitweaver_hop_result* results,const double* cached) {
+    size_t count,uint32_t samples,spacepdhcg_orbitweaver_hop_result* results,const double* cached,bool fast_root) {
     const size_t i=(size_t(blockIdx.x)*blockDim.x+threadIdx.x)/32;
     const int lane=threadIdx.x&31;
     if(i>=count)return;
@@ -501,7 +561,7 @@ __global__ void hop_warp_kernel(const spacepdhcg_orbitweaver_hop_request* reques
         const auto value=geometry(request,direction!=0);
         if(!value.valid)continue;
         Root root{};
-        if(!scan_warp(-4*pi*pi,4*pi*pi-1e-8,samples,value,request,root,cached))continue;
+        if(!scan_warp(-4*pi*pi,4*pi*pi-1e-8,samples,value,request,root,cached,fast_root))continue;
         if(lane==0) {
             spacepdhcg_orbitweaver_lambert_result candidate{};
             if(solution(request,value,root,candidate)) {
@@ -524,8 +584,10 @@ __global__ void hop_warp_kernel(const spacepdhcg_orbitweaver_hop_request* reques
 }
 void launch_hops(const spacepdhcg_orbitweaver_hop_request* requests,size_t count,
     uint32_t samples,spacepdhcg_orbitweaver_hop_result* results,const double* cached,cudaStream_t stream) {
-    if(count<=16384)hop_warp_kernel<<<static_cast<unsigned>((count+3)/4),128,0,stream>>>(requests,count,samples,results,cached);
-    else hop_kernel<<<static_cast<unsigned>((count+63)/64),64,0,stream>>>(requests,count,samples,results,cached);
+    const auto* setting=std::getenv("SPACEPDHCG_TEST_GTOC12_FAST_LAMBERT_ROOT");
+    const bool fast_root=!setting||setting[0]=='1';
+    if(count<=16384)hop_warp_kernel<<<static_cast<unsigned>((count+3)/4),128,0,stream>>>(requests,count,samples,results,cached,fast_root);
+    else hop_kernel<<<static_cast<unsigned>((count+63)/64),64,0,stream>>>(requests,count,samples,results,cached,fast_root);
 }
 
 __device__ bool element_state(const spacepdhcg_orbitweaver_elements& b,

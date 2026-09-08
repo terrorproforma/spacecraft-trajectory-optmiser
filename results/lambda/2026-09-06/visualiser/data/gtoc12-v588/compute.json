@@ -1,0 +1,24 @@
+{
+  "run_id": "fastroot588",
+  "fleet_run_id": "fastroot588_fleet",
+  "commit": "0c6d983ff47c540a199c98924185c49c53f99ca1",
+  "source_revision_note": "Final default safeguarded CUDA Lambert roots. Frozen source and binary hashes in gpu-fast-lambert-v589.",
+  "weighted_score_fixed_bonus_kg": 548.2546201231003,
+  "raw_kg_per_ship": 548.2546201231003,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "45,188,558 logical CUDA transfer branches; 2,782,091 collection options"
+  },
+  "timing": {
+    "wall_seconds_total": 29.556435645965394,
+    "wall_human": "29.56 s complete one-ship benchmark process"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; official and independent mission verification passed",
+    "local_refine": "CUDA SCvx and QOCO graph loops; GPU safeguarded Lambert screening; zero Ruiz"
+  },
+  "optimisation": {
+    "strategy": "One-ship performance benchmark. Best fleet remains 12,805.194 weighted kg. CPU orchestration remains.",
+    "proven_optimal": false
+  }
+}

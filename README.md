@@ -14,6 +14,16 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+CUDA Lambert screening now uses safeguarded interpolation with bisection fallback.
+The matched one-ship campaign takes **15.05% less time on RTX 5090** (29.06 →
+24.68 s median). H100's median falls **2.78%** (29.81 → 28.98 s), with overlapping
+timing ranges. Isolated screening reaches **22.42 million transfers/s on H100**
+at 65,536 transfers per batch; these are screening estimates, not certified
+low-thrust solutions. Final builds pass 46 tests and three Lambert sanitizer
+modes on each GPU. All ten campaign runs pass both mission verifiers, retaining
+548.254620 weighted kg. The best fleet remains **12,805.194 weighted kg**.
+[Method, measurements, archived results and viewer](docs/GPU_FAST_LAMBERT_ROOTS.md).
+
 Initial bound classification now also runs on CUDA, downloading one byte per
 bound pair instead of four floating-point arrays. First-fresh-solve downloads
 fall from **515,324 to 244,499 bytes**. Both GPUs retain all **205 certified

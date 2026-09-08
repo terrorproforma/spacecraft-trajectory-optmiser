@@ -1,0 +1,77 @@
+{
+  "viewer_manifest": {
+    "files": {
+      "trajectories.json": {
+        "bytes": 438158,
+        "sha256": "92a41c0d129c2b6fb50ea4ffbb9e65445dd9c3c208d556b4ec2830961e3d6039"
+      }
+    },
+    "schema_version": "1.0.0",
+    "source": {
+      "bytes": 427166,
+      "path_basename": "Result.txt",
+      "sha256": "16df8970563daf0a08da30bb3a548478facb78d3ee7e4fa4be9075329ed2e382"
+    },
+    "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 8,
+    "ok": true,
+    "return_code": 0,
+    "score_data": {
+      "4928": 32.85420944559996,
+      "9595": 71.45790554410019,
+      "10664": 13.141683778299921,
+      "16118": 81.72484599580002,
+      "23760": 71.86858316219991,
+      "25792": 85.83162217660015,
+      "53410": 73.51129363450013,
+      "57530": 117.86447638599998
+    },
+    "ships": 1,
+    "total_mass_kg": 548.255,
+    "wall_seconds": 0.0934069330105558
+  },
+  "independent": {
+    "max_mass_error_kg": 6.298250809777528e-11,
+    "max_position_error_km": 0.6332349531199586,
+    "max_velocity_error_km_s": 1.1075933559529296e-07,
+    "mined_asteroids": 8,
+    "ok": true,
+    "scored_masses": {
+      "4928": 32.85420944559996,
+      "9595": 71.45790554410019,
+      "10664": 13.141683778299921,
+      "16118": 81.72484599580002,
+      "23760": 71.86858316219991,
+      "25792": 85.83162217660015,
+      "53410": 73.51129363450013,
+      "57530": 117.86447638599998
+    },
+    "ship_limit": 17.92444925506841,
+    "ships": 1,
+    "total_mass_kg": 548.2546201231003,
+    "violations": [],
+    "weighted_score_dynamic_kg": null,
+    "weighted_score_fixed_bonus_kg": 548.2546201231003
+  },
+  "fleet": {
+    "ships": 1,
+    "total_collected_kg": 548.2546201231003,
+    "collected_kg_per_ship": [
+      548.2546201231003
+    ],
+    "asteroids": [
+      4928,
+      9595,
+      10664,
+      16118,
+      23760,
+      25792,
+      53410,
+      57530
+    ],
+    "ship_limit": 17.92444925506841
+  }
+}
