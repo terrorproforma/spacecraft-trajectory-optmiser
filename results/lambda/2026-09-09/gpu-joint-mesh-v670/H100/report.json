@@ -1,0 +1,94 @@
+{
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init"
+      ],
+      "returncode": 0,
+      "seconds": 0.002784556010738015
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ],
+      "returncode": 0,
+      "seconds": 0.29098617198178545
+    },
+    {
+      "name": "git-freeze",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze resident geometry H100"
+      ],
+      "returncode": 0,
+      "seconds": 0.10761094599729404
+    },
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-joint-mesh-v666/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-joint-mesh-v666/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.3506533770123497
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-joint-mesh-v666/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ],
+      "returncode": 0,
+      "seconds": 51.70749804098159
+    },
+    {
+      "name": "validation",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-joint-mesh-v666/validation.py"
+      ],
+      "returncode": 0,
+      "seconds": 42.23456691898173
+    },
+    {
+      "name": "benchmark",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-joint-mesh-v666/benchmark.py"
+      ],
+      "returncode": 0,
+      "seconds": 1.2985622650012374
+    }
+  ],
+  "core_sha256": "a8dcdf0d75328e4f3f3b1f9f17b148070a25229eef09536800cd2a61e5d3a030"
+}

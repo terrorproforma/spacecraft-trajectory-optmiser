@@ -169,6 +169,29 @@ int spacepdhcg_gtoc12_joint_geometry_host(
     double* masses, double* inflations, double* proxies, double* collected,
     spacepdhcg_gtoc12_joint_geometry_stats* stats);
 
+/* Generate the ordered pattern-search neighbourhood on CUDA, then use the
+ * resident geometry/evaluation pipeline. B=10*N-14 must fit workspace capacity.
+ * Input arrivals/departures each contain N incumbent epochs, delta is finite
+ * and positive, and all +/-delta epoch values must remain finite. Metadata and
+ * sparse override contracts match geometry_host. Optional output epochs contain
+ * B*N doubles with selection=null, or N doubles with a selection output. With
+ * no selected improvement, compact output epochs retain the incumbent.
+ * Candidate order matches JointItinerary.moves, including first-row ties.
+ */
+int spacepdhcg_gtoc12_joint_mesh_host(
+    void* workspace, double delta,
+    const spacepdhcg_gtoc12_joint_policy* policy,
+    const spacepdhcg_gtoc12_joint_visit* visits,
+    const spacepdhcg_gtoc12_joint_stage* stages,
+    const double* arrivals, const double* departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const spacepdhcg_gtoc12_joint_cached_cost* records, int32_t record_count,
+    double minimum_objective, spacepdhcg_gtoc12_joint_result* results,
+    spacepdhcg_gtoc12_joint_selection* selection,
+    double* masses, double* inflations, double* proxies, double* collected,
+    double* output_arrivals, double* output_departures,
+    spacepdhcg_gtoc12_joint_geometry_stats* stats);
+
 #ifdef __cplusplus
 }
 #endif

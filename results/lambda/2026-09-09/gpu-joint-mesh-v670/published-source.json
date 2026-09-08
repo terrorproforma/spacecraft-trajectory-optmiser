@@ -1,0 +1,10 @@
+{
+  "byte_identical_to_final_tested_source": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_joint_c_api.h": "431d0b29322212fd055f3da3389c15a8fa75fb502809fdf15da79135c714a5f5",
+    "cpp/cuda/src/gtoc12_joint.cu": "914b9984138203210f643ea11f1cbc9a47a059e874f29aac21694043dac73e2b",
+    "src/spacepdhcg/gtoc12/gpu_joint.py": "0bb4a0ad65464d3e05e50b5a7a83725dabdccf08964519c2c781492a972c3070",
+    "src/spacepdhcg/gtoc12/jointopt.py": "f94c96b6fedac7e9faeb4c29420febf304404ad50e05199b1f155bceee6b0ede",
+    "tests/test_gtoc12_gpu_joint_mesh.py": "ce20e247a888886b3a4d75bb5b2d8614ff8b29c8a6c9646917fe0cfb896be706"
+  },
+  "note": "The original failed test mistakenly included an extra incumbent row; test-fix-v665.json in the local archive records the correction. Native/runtime source unchanged after build."
+}

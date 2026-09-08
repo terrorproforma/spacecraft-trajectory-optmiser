@@ -227,6 +227,15 @@ class GpuJoint:
         self.evaluate.restype = ct.c_int
         self.best = getattr(gpu.library, "spacepdhcg_gtoc12_joint_best_host", None)
         self.geometry = getattr(gpu.library, "spacepdhcg_gtoc12_joint_geometry_host", None)
+        self.mesh = getattr(gpu.library, "spacepdhcg_gtoc12_joint_mesh_host", None)
+        if self.mesh is not None:
+            self.mesh.argtypes = (
+                [ct.c_void_p, ct.c_double]
+                + [ct.c_void_p] * 7
+                + [ct.c_int32, ct.c_double]
+                + [ct.c_void_p] * 9
+            )
+            self.mesh.restype = ct.c_int
         if self.geometry is not None:
             self.geometry.argtypes = (
                 [ct.c_void_p, ct.c_int32]
@@ -255,7 +264,7 @@ class GpuJoint:
             self.gpu._owned()
             self._check(self.destroy(ct.byref(self.handle)))
 
-    def run(self, joint, visits, arrivals, departures, *, minimum_objective=None):
+    def run(self, joint, visits, arrivals, departures, *, minimum_objective=None, mesh_delta=None):
         from .jointopt import Evaluation
         from .search import PlannedLeg, RoutePlan
 
@@ -271,8 +280,11 @@ class GpuJoint:
         device_selection = minimum_objective is not None and (
             self.best is not None if selection_override is None else selection_override == "1"
         )
+        if mesh_delta is not None and (self.mesh is None or not device_selection):
+            raise RuntimeError("CUDA joint mesh requires the mesh API and device winner selection")
         resident_geometry = (
-            os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "0") == "1"
+            mesh_delta is not None
+            or os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "0") == "1"
         )
         if resident_geometry and self.geometry is None:
             raise RuntimeError(
@@ -280,6 +292,14 @@ class GpuJoint:
             )
         metadata, stages, policy = _metadata(joint, visits)
         count, n = arrivals.shape
+        mesh_epochs = None
+        if mesh_delta is not None:
+            count = 10 * n - 14
+            mesh_epochs = (np.empty((1, n)), np.empty((1, n)))
+
+        def finish(value):
+            return value if mesh_epochs is None else (value, *mesh_epochs)
+
         if resident_geometry:
             elements, records = _geometry_inputs(joint, visits)
             costs = None
@@ -368,24 +388,22 @@ class GpuJoint:
         if resident_geometry:
             selection = np.empty(1, SELECTION) if device_selection else None
             stats = np.zeros(1, GEOMETRY_STATS)
-            self._check(
-                self.geometry(
-                    self.handle,
-                    count,
-                    *(
-                        array.ctypes.data
-                        for array in (policy, metadata, stages, arrivals, departures)
-                    ),
-                    ct.addressof(elements),
-                    records.ctypes.data,
-                    len(records),
-                    float(minimum_objective) if minimum_objective is not None else 0.0,
-                    result.ctypes.data,
-                    selection.ctypes.data if selection is not None else None,
-                    *(array.ctypes.data for array in (masses, inflations, proxies, payload)),
-                    stats.ctypes.data,
-                )
+            geometry_arguments = (
+                self.handle,
+                count if mesh_delta is None else float(mesh_delta),
+                *(array.ctypes.data for array in (policy, metadata, stages, arrivals, departures)),
+                ct.addressof(elements),
+                records.ctypes.data,
+                len(records),
+                float(minimum_objective) if minimum_objective is not None else 0.0,
+                result.ctypes.data,
+                selection.ctypes.data if selection is not None else None,
+                *(array.ctypes.data for array in (masses, inflations, proxies, payload)),
             )
+            if mesh_epochs is not None:
+                geometry_arguments += tuple(a.ctypes.data for a in mesh_epochs)
+            geometry_arguments += (stats.ctypes.data,)
+            self._check((self.geometry if mesh_delta is None else self.mesh)(*geometry_arguments))
             if device_selection:
                 result = selection["value"]
             computed = int(stats["computed_hops"][0])
@@ -402,6 +420,13 @@ class GpuJoint:
             telemetry["joint_geometry_stats_download_bytes"] = (
                 telemetry.get("joint_geometry_stats_download_bytes", 0) + stats.nbytes
             )
+            if mesh_epochs is not None:
+                for key, amount in (
+                    ("completed_joint_mesh_batches", 1),
+                    ("joint_mesh_epoch_upload_bytes", arrivals.nbytes + departures.nbytes),
+                    ("joint_mesh_epoch_download_bytes", sum(a.nbytes for a in mesh_epochs)),
+                ):
+                    telemetry[key] = telemetry.get(key, 0) + amount
         elif device_selection:
             selection = np.empty(1, SELECTION)
             self._check(
@@ -437,12 +462,12 @@ class GpuJoint:
         if device_selection:
             winner = int(selection["index"][0])
             if winner < 0:
-                return (None, None)
+                return finish((None, None))
             indices = [winner]
         elif minimum_objective is not None:
             eligible = (result["failure"] == 0) & (result["objective"] > minimum_objective + 1e-9)
             if not np.any(eligible):
-                return (None, None)
+                return finish((None, None))
             winner = int(np.argmax(np.where(eligible, result["objective"], -np.inf)))
             indices = [winner]
         evaluations = []
@@ -455,7 +480,11 @@ class GpuJoint:
                 continue
             plan = None
             if not failure:
-                arr, dep = arrivals[row], departures[row]
+                arr, dep = (
+                    (arrivals[row], departures[row])
+                    if mesh_epochs is None
+                    else (mesh_epochs[0][0], mesh_epochs[1][0])
+                )
                 deployed, collected, foreign, quantities = {}, {}, {}, {}
                 for j, visit in enumerate(visits):
                     if visit.deploy:
@@ -512,7 +541,7 @@ class GpuJoint:
                     FAILURES[failure],
                 )
             )
-        return evaluations if minimum_objective is None else (indices[0], evaluations[0])
+        return finish(evaluations if minimum_objective is None else (indices[0], evaluations[0]))
 
 
 def cuda_joint_enabled():
@@ -525,7 +554,15 @@ def cuda_joint_enabled():
     )
 
 
-def evaluate_joint(joint, visits, arrivals, departures, *, minimum_objective=None):
+def cuda_mesh_enabled():
+    return (
+        cuda_joint_enabled() and os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_MESH") == "1"
+    )
+
+
+def evaluate_joint(
+    joint, visits, arrivals, departures, *, minimum_objective=None, _mesh_delta=None
+):
     from .jointopt import JointItinerary
     from .lambert import _GPU_BACKEND
     from .retiming import Retimer
@@ -554,16 +591,43 @@ def evaluate_joint(joint, visits, arrivals, departures, *, minimum_objective=Non
     arr, dep = (np.ascontiguousarray(values, dtype=np.float64) for values in (arrivals, departures))
     if arr.ndim != 2 or arr.shape[1] != len(visits) or dep.shape != arr.shape or len(visits) < 2:
         raise ValueError("joint batches require matching (candidates, visits) epoch matrices")
+    if _mesh_delta is not None and (
+        len(arr) != 1 or not math.isfinite(_mesh_delta) or _mesh_delta <= 0
+    ):
+        raise ValueError("joint mesh requires one incumbent and a finite positive mesh step")
     if not len(arr):
         return [] if minimum_objective is None else (None, None)
     gpu._owned()
     current = gpu.joint_workspace
-    if current is None or current.capacity < len(arr) or current.visits != len(visits):
+    required = len(arr) if _mesh_delta is None else 10 * len(visits) - 14
+    if current is None or current.capacity < required or current.visits != len(visits):
         if current is not None:
             current.close()
         # moves() emits both signs of two Earth epochs, five moves per inner
         # visit, and one whole-itinerary move. Reserve that neighbourhood even
         # when the first call only evaluates the incumbent.
-        capacity = max(len(arr), 2 * (3 + 5 * (len(visits) - 2)))
+        capacity = max(required, 2 * (3 + 5 * (len(visits) - 2)))
         gpu.joint_workspace = current = GpuJoint(gpu, capacity, len(visits))
-    return current.run(joint, visits, arr, dep, minimum_objective=minimum_objective)
+    return current.run(
+        joint, visits, arr, dep, minimum_objective=minimum_objective, mesh_delta=_mesh_delta
+    )
+
+
+def evaluate_mesh(joint, visits, arrivals, departures, delta, minimum_objective):
+    """Generate and evaluate one neighbourhood on CUDA; return the winning epochs/plan."""
+    from .jointopt import JointItinerary
+
+    if joint.moves is not JointItinerary.moves:
+        raise ValueError("CUDA joint mesh does not support an overridden move generator")
+    output = evaluate_joint(
+        joint,
+        visits,
+        np.asarray(arrivals)[None],
+        np.asarray(departures)[None],
+        minimum_objective=minimum_objective,
+        _mesh_delta=delta,
+    )
+    if output is None:
+        raise RuntimeError("CUDA joint mesh backend is unavailable")
+    selected, arr, dep = output
+    return None if selected[0] is None else (arr[0], dep[0], selected[1])

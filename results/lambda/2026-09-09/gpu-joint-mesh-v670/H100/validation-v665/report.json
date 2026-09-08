@@ -1,0 +1,68 @@
+{
+  "complete": true,
+  "success": true,
+  "core_sha256": "a8dcdf0d75328e4f3f3b1f9f17b148070a25229eef09536800cd2a61e5d3a030",
+  "checks": [
+    {
+      "name": "pytest",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;raise SystemExit(pytest.main(['-q', 'tests/test_gtoc12_gpu_joint.py', 'tests/test_gtoc12_jointopt.py', 'tests/test_gtoc12_gpu_joint_selection.py', 'tests/test_gtoc12_gpu_joint_compatibility.py', 'tests/test_gtoc12_gpu_joint_geometry.py', 'tests/test_gtoc12_gpu_joint_mesh.py']))"
+      ],
+      "returncode": 0,
+      "seconds": 34.3233519649948
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;raise SystemExit(pytest.main(['-q', 'tests/test_gtoc12_gpu_joint_geometry.py', 'tests/test_gtoc12_gpu_joint_mesh.py']))"
+      ],
+      "returncode": 0,
+      "seconds": 3.1085988380364142
+    },
+    {
+      "name": "synccheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;raise SystemExit(pytest.main(['-q', 'tests/test_gtoc12_gpu_joint_geometry.py', 'tests/test_gtoc12_gpu_joint_mesh.py']))"
+      ],
+      "returncode": 0,
+      "seconds": 1.893986283976119
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;raise SystemExit(pytest.main(['-q', 'tests/test_gtoc12_gpu_joint_geometry.py', 'tests/test_gtoc12_gpu_joint_mesh.py']))"
+      ],
+      "returncode": 0,
+      "seconds": 2.8436617649858817
+    }
+  ]
+}

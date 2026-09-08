@@ -52,6 +52,14 @@ ratios against the previous batched CUDA wrapper. Both GPUs pass 71 tests and th
 resident geometry sanitizer checks. [Scope, measurements and remaining CPU
 work](docs/GPU_JOINT_GEOMETRY.md).
 
+CUDA can now generate the ordered timing neighbourhood directly from incumbent
+epochs. This adds **7–15% component speedup locally and 34–42% on H100**, with
+87 tests per GPU and identical accepted search moves. Eight retained fleets pass
+both checkers at the same score. Whole-process comparisons are confounded by
+alternative-leg convergence failures; a fixed-input replay now reproduces that
+failure, and neither disabling workspace reuse nor five Ruiz iterations fixes
+it. [GPU mesh results, diagnosis and visualiser](docs/GPU_JOINT_MESH.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

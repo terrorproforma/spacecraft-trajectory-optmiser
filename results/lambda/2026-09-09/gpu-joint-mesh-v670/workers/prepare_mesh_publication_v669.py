@@ -1,0 +1,10 @@
+from pathlib import Path
+p=Path('build/performance')
+archive=(p/'archive_geometry_v659.py').read_text().replace('validation-v654','validation-v665').replace('campaign-v656','campaign-v667').replace('benchmark-v653','benchmark-v664')
+(p/'archive_mesh_v670.py').write_text(archive)
+collect=(p/'collect_geometry_v659.py').read_text().replace('gpu-joint-geometry-v659','gpu-joint-mesh-v670').replace('retrieved-geometry-v659','retrieved-mesh-v670').replace('joint-geometry-v659','joint-mesh-v670').replace('campaign-v656','campaign-v667')
+(p/'collect_mesh_v670.py').write_text(collect)
+prepare=(p/'prepare_geometry_archive_lambda_v659.py').read_text().replace('archive_geometry_v659.py','archive_mesh_v670.py').replace('spacepdhcg-joint-geometry-v655','spacepdhcg-joint-mesh-v666').replace('joint-geometry-v659-h100','joint-mesh-v670-h100').replace('campaign-v656','campaign-v667').replace('v659','v670').replace('launch_geometry_archive_lambda','launch_mesh_archive_lambda')
+(p/'prepare_mesh_archive_lambda_v670.py').write_text(prepare)
+status=(p/'status_geometry_archive_v659.py').read_text().replace('spacepdhcg-joint-geometry-v655','spacepdhcg-joint-mesh-v666').replace('campaign-v656','campaign-v667').replace('benchmark-v653','benchmark-v664').replace('archive-status-v659','archive-status-v670').replace('archive-v659','archive-v670')
+(p/'status_mesh_archive_v670.py').write_text(status)

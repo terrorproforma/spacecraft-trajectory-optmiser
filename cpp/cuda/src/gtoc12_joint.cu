@@ -33,6 +33,7 @@ struct Workspace {
     Visit* visits = nullptr;
     Stage* stages = nullptr;
     double *arrivals = nullptr, *departures = nullptr;
+    double *base_arrivals = nullptr, *base_departures = nullptr;
     Cost* costs = nullptr;
     Result* results = nullptr;
     Selection* selection = nullptr;
@@ -288,6 +289,47 @@ __global__ void select_candidate(int count, int n, double minimum,
 }
 
 bool flag(int value) { return value == 0 || value == 1; }
+__global__ void generate_mesh(int n, int count, double delta,
+    const double* base_arrivals, const double* base_departures,
+    double* arrivals, double* departures) {
+    const size_t cell = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    if (cell >= size_t(count) * n) return;
+    const int row = int(cell / n), j = int(cell % n);
+    const int per_sign = count / 2, move = row % per_sign;
+    const double d = row < per_sign ? delta : -delta;
+    bool touched = false, arrival_shift = false, departure_shift = false;
+    if (move < 2) {
+        touched = j == (move == 0 ? 0 : n - 1);
+        arrival_shift = departure_shift = true;
+    } else if (move < 2 + 3 * (n - 2)) {
+        const int local = move - 2, kind = local % 3;
+        touched = j == 1 + local / 3;
+        arrival_shift = kind != 1; departure_shift = kind != 0;
+    } else if (move < per_sign - 1) {
+        const int local = move - (2 + 3 * (n - 2)), pivot = 1 + local / 2;
+        if (local % 2 == 0) {
+            touched = j <= pivot; arrival_shift = true; departure_shift = j < pivot;
+        } else {
+            touched = j >= pivot; arrival_shift = j > pivot; departure_shift = true;
+        }
+    } else {
+        touched = arrival_shift = departure_shift = true;
+    }
+    // Even a zero component is added for touched visits, matching Python's
+    // in-place additions; untouched epochs are copied, including signed zero.
+    arrivals[cell] = touched ? base_arrivals[j] + (arrival_shift ? d : 0.0) : base_arrivals[j];
+    departures[cell] = touched ? base_departures[j] + (departure_shift ? d : 0.0) : base_departures[j];
+}
+
+__global__ void select_mesh_epochs(int n, const Selection* selected,
+    const double* arrivals, const double* departures,
+    double* output_arrivals, double* output_departures) {
+    const int j = int(blockIdx.x * blockDim.x + threadIdx.x);
+    if (j >= n || selected->index < 0) return;
+    const size_t cell = size_t(selected->index) * n + j;
+    output_arrivals[j] = arrivals[cell]; output_departures[j] = departures[cell];
+}
+
 bool finite_or_nan(double value) { return std::isfinite(value) || std::isnan(value); }
 bool nonnegative_bound(double value) { return !std::isnan(value) && value >= 0.0; }
 bool correct_device(const Workspace* w) {
@@ -360,6 +402,7 @@ bool release(Workspace* w) {
     };
     free_buffer(w->policy); free_buffer(w->visits); free_buffer(w->stages);
     free_buffer(w->arrivals); free_buffer(w->departures); free_buffer(w->costs);
+    free_buffer(w->base_arrivals); free_buffer(w->base_departures);
     free_buffer(w->results); free_buffer(w->selection); free_buffer(w->masses); free_buffer(w->inflations);
     free_buffer(w->proxies); free_buffer(w->collected);
     free_buffer(w->elements); free_buffer(w->hop_requests); free_buffer(w->hop_results);
@@ -503,22 +546,29 @@ extern "C" int spacepdhcg_gtoc12_joint_destroy(void** output) {
     return ok ? 0 : 2;
 }
 
-extern "C" int spacepdhcg_gtoc12_joint_geometry_host(void* opaque, int32_t count,
+static int geometry_host_impl(void* opaque, int32_t count,
     const Policy* policy, const Visit* visits, const Stage* stages,
     const double* arrivals, const double* departures,
     const spacepdhcg_orbitweaver_hop_elements* elements,
     const CachedCost* records, int32_t record_count, double minimum,
     Result* results, Selection* selection,
     double* masses, double* inflations, double* proxies, double* collected,
-    GeometryStats* stats) {
+    GeometryStats* stats, bool mesh = false, double delta = 0.0,
+    double* output_arrivals = nullptr, double* output_departures = nullptr) {
     auto* w=static_cast<Workspace*>(opaque);
     if(!correct_device(w) || count<0 || count>w->capacity || !stats || record_count<0) return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);
     if(!lock.owns_lock())return 3;
     if(!count){*stats={};if(selection){*selection={};selection->index=-1;}return 0;}
-    const int status=validate(w->n,count,policy,visits,stages,arrivals,departures,
+    const int status=validate(w->n,mesh?1:count,policy,visits,stages,arrivals,departures,
         nullptr,selection?&selection->value:results,false);
     if(status)return status;
+    if(mesh) {
+        if(!std::isfinite(delta) || delta<=0.0)return 1;
+        for(int j=0;j<w->n;++j)
+            if(!std::isfinite(arrivals[j]+delta)||!std::isfinite(arrivals[j]-delta)
+                ||!std::isfinite(departures[j]+delta)||!std::isfinite(departures[j]-delta))return 1;
+    }
     if(!elements || (record_count && !records) || size_t(count)*(w->n-1)>UINT32_MAX)return 1;
     for(int j=0;j<w->n-1;++j) {
         const auto& e=elements[j];
@@ -540,6 +590,8 @@ extern "C" int spacepdhcg_gtoc12_joint_geometry_host(void* opaque, int32_t count
         ||(!w->hop_requests&&!allocate(w->hop_requests,maximum))
         ||(!w->hop_results&&!allocate(w->hop_results,maximum))
         ||(!w->geometry_stats&&!allocate(w->geometry_stats,1)))return 2;
+    if(mesh && ((!w->base_arrivals&&!allocate(w->base_arrivals,size_t(w->n)))
+        ||(!w->base_departures&&!allocate(w->base_departures,size_t(w->n)))))return 2;
     if(record_count>w->cached_capacity) {
         CachedCost* replacement=nullptr;
         if(!allocate(replacement,size_t(record_count)))return 2;
@@ -549,10 +601,16 @@ extern "C" int spacepdhcg_gtoc12_joint_geometry_host(void* opaque, int32_t count
     const auto failed=[&](){cudaStreamSynchronize(w->stream);return 2;};
     if(!upload(w->policy,policy,1,w->stream)||!upload(w->visits,visits,size_t(w->n),w->stream)
         ||!upload(w->stages,stages,size_t(w->n-1),w->stream)
-        ||!upload(w->arrivals,arrivals,epochs,w->stream)||!upload(w->departures,departures,epochs,w->stream)
+        ||!upload(mesh?w->base_arrivals:w->arrivals,arrivals,mesh?size_t(w->n):epochs,w->stream)
+        ||!upload(mesh?w->base_departures:w->departures,departures,mesh?size_t(w->n):epochs,w->stream)
         ||!upload(w->elements,elements,size_t(w->n-1),w->stream)
         ||(record_count&&!upload(w->cached_costs,records,size_t(record_count),w->stream))
         ||cudaMemsetAsync(w->geometry_stats,0,sizeof(GeometryStats),w->stream)!=cudaSuccess)return failed();
+    if(mesh) {
+        generate_mesh<<<unsigned((epochs+127)/128),128,0,w->stream>>>(w->n,count,delta,
+            w->base_arrivals,w->base_departures,w->arrivals,w->departures);
+        if(cudaGetLastError()!=cudaSuccess)return failed();
+    }
     clear_geometry_costs<<<unsigned((legs+127)/128),128,0,w->stream>>>(legs,w->costs);
     if(cudaGetLastError()!=cudaSuccess)return failed();
     const unsigned blocks=unsigned((size_t(count)+127)/128);
@@ -566,12 +624,50 @@ extern "C" int spacepdhcg_gtoc12_joint_geometry_host(void* opaque, int32_t count
     if(evaluate()!=cudaSuccess)return failed();
     if(selection)select_candidate<<<1,128,0,w->stream>>>(count,w->n,minimum,w->results,
         w->selection,w->masses,w->inflations,w->proxies,w->collected);
+    if(cudaGetLastError()!=cudaSuccess)return failed();
+    if(mesh && selection)
+        select_mesh_epochs<<<unsigned((size_t(w->n)+127)/128),128,0,w->stream>>>(w->n,
+            w->selection,w->arrivals,w->departures,w->base_arrivals,w->base_departures);
     if(cudaGetLastError()!=cudaSuccess
         ||!(selection?download(selection,w->selection,1,w->stream):download(results,w->results,size_t(count),w->stream))
         ||!download(masses,w->masses,selection?size_t(w->n-1):legs,w->stream)
         ||!download(inflations,w->inflations,selection?size_t(w->n-1):legs,w->stream)
         ||!download(proxies,w->proxies,selection?size_t(w->n-1):legs,w->stream)
         ||!download(collected,w->collected,selection?size_t(w->n):epochs,w->stream)
-        ||!download(stats,w->geometry_stats,1,w->stream))return failed();
+        ||!download(stats,w->geometry_stats,1,w->stream)
+        ||(mesh && (!download(output_arrivals,selection?w->base_arrivals:w->arrivals,
+                selection?size_t(w->n):epochs,w->stream)
+            ||!download(output_departures,selection?w->base_departures:w->departures,
+                selection?size_t(w->n):epochs,w->stream))))return failed();
     return cudaStreamSynchronize(w->stream)==cudaSuccess?0:2;
+}
+
+extern "C" int spacepdhcg_gtoc12_joint_geometry_host(void* opaque, int32_t count,
+    const Policy* policy, const Visit* visits, const Stage* stages,
+    const double* arrivals, const double* departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const CachedCost* records, int32_t record_count, double minimum,
+    Result* results, Selection* selection,
+    double* masses, double* inflations, double* proxies, double* collected,
+    GeometryStats* stats) {
+    return geometry_host_impl(opaque,count,policy,visits,stages,arrivals,departures,
+        elements,records,record_count,minimum,results,selection,masses,inflations,
+        proxies,collected,stats);
+}
+
+extern "C" int spacepdhcg_gtoc12_joint_mesh_host(void* opaque, double delta,
+    const Policy* policy, const Visit* visits, const Stage* stages,
+    const double* arrivals, const double* departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const CachedCost* records, int32_t record_count, double minimum,
+    Result* results, Selection* selection,
+    double* masses, double* inflations, double* proxies, double* collected,
+    double* output_arrivals, double* output_departures, GeometryStats* stats) {
+    auto* w=static_cast<Workspace*>(opaque);
+    if(!correct_device(w))return 1;
+    const int64_t count=10*int64_t(w->n)-14;
+    if(count>INT32_MAX)return 1;
+    return geometry_host_impl(opaque,int32_t(count),policy,visits,stages,arrivals,departures,
+        elements,records,record_count,minimum,results,selection,masses,inflations,
+        proxies,collected,stats,true,delta,output_arrivals,output_departures);
 }

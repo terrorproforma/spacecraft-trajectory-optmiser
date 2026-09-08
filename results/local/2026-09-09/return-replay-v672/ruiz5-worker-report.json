@@ -1,0 +1,21 @@
+{
+  "complete": true,
+  "returncode": 0,
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "/home/angus/spacepdhcg-return-replay-v672/ruiz5-run.py",
+    "--repo",
+    "/home/angus/spacepdhcg-joint-mesh-v662/repo",
+    "--output",
+    "/home/angus/spacepdhcg-return-replay-v672/ruiz5",
+    "--fixture",
+    "/home/angus/spacepdhcg-return-replay-v672/ruiz5-fixture.json",
+    "--execute",
+    "--max-solves",
+    "3",
+    "--wall-seconds",
+    "600",
+    "--lock",
+    "/home/angus/spacepdhcg-return-replay-v672/child.lock"
+  ]
+}

@@ -541,7 +541,7 @@ class JointItinerary:
         """Steepest-ascent pattern search over the epoch vector on a shrinking mesh; returns
         the best epochs, their evaluation and the number of moves taken.  Deterministic."""
 
-        from .gpu_joint import cuda_joint_enabled, evaluate_joint
+        from .gpu_joint import cuda_joint_enabled, cuda_mesh_enabled, evaluate_joint, evaluate_mesh
 
         mesh = self.settings.mesh_days if mesh is None else mesh
         max_moves = self.settings.max_moves_per_mesh if max_moves is None else max_moves
@@ -556,37 +556,40 @@ class JointItinerary:
             moves_here = 0
             while moves_here < max_moves and time.perf_counter() < deadline:
                 candidate: tuple[FloatArray, FloatArray, Evaluation] | None = None
-                trial_epochs = [] if cuda_joint_enabled() else None
-                for shift in self.moves(n, delta):
-                    a2 = arr.copy()
-                    d2 = dep.copy()
-                    for j, (da, dd) in shift.items():
-                        a2[j] += da
-                        d2[j] += dd
+                if cuda_mesh_enabled():
+                    candidate = evaluate_mesh(self, visits, arr, dep, delta, best.objective)
+                else:
+                    trial_epochs = [] if cuda_joint_enabled() else None
+                    for shift in self.moves(n, delta):
+                        a2 = arr.copy()
+                        d2 = dep.copy()
+                        for j, (da, dd) in shift.items():
+                            a2[j] += da
+                            d2[j] += dd
+                        if trial_epochs is not None:
+                            trial_epochs.append((a2, d2))
+                        else:
+                            ev = self.evaluate(visits, a2, d2)
+                            if not ev.feasible or ev.objective <= best.objective + 1e-9:
+                                continue
+                            if candidate is None or ev.objective > candidate[2].objective:
+                                candidate = (a2, d2, ev)
                     if trial_epochs is not None:
-                        trial_epochs.append((a2, d2))
-                    else:
-                        ev = self.evaluate(visits, a2, d2)
-                        if not ev.feasible or ev.objective <= best.objective + 1e-9:
-                            continue
-                        if candidate is None or ev.objective > candidate[2].objective:
-                            candidate = (a2, d2, ev)
-                if trial_epochs is not None:
-                    gpu_trials = evaluate_joint(
-                        self,
-                        visits,
-                        np.asarray([a for a, _ in trial_epochs]),
-                        np.asarray([d for _, d in trial_epochs]),
-                        minimum_objective=best.objective,
-                    )
-                    if gpu_trials is None:
-                        raise RuntimeError(
-                            "CUDA joint backend became unavailable during epoch search"
+                        gpu_trials = evaluate_joint(
+                            self,
+                            visits,
+                            np.asarray([a for a, _ in trial_epochs]),
+                            np.asarray([d for _, d in trial_epochs]),
+                            minimum_objective=best.objective,
                         )
-                    if gpu_trials[0] is not None:
-                        winner, ev = gpu_trials
-                        a2, d2 = trial_epochs[winner]
-                        candidate = (a2, d2, ev)
+                        if gpu_trials is None:
+                            raise RuntimeError(
+                                "CUDA joint backend became unavailable during epoch search"
+                            )
+                        if gpu_trials[0] is not None:
+                            winner, ev = gpu_trials
+                            a2, d2 = trial_epochs[winner]
+                            candidate = (a2, d2, ev)
                 if candidate is None:
                     break
                 arr, dep, best = candidate
