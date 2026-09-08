@@ -1,0 +1,82 @@
+{
+  "scope": "Saved tiny metadata plus independent scalar/SOC fixture calculation; no GPU execution",
+  "script_sha256": "29699891a173b68608d67da203e283b1eb526a3e1ae4fb17d789c5ea297b8c00",
+  "tiny_report_sha256": "0b76263d42ab50abe1d4d910fb1f5dac730fd5ffaa99b19360255dc1faf62feb",
+  "raw_log_sha256": {
+    "unit.log": "9f4a1bc03754696ed066505342333a977064ca974c7b0b15986a500e63682312",
+    "weighted.log": "220b08c7741a9347ec5cc7a4f159304b03b78572724051b46111f6c50d0f1361"
+  },
+  "real_runner_sha256": "ae8e3cf663cf563b810e2a75c8b0adc8eb736e00f308bc0cce28f0a4838984c2",
+  "actual_processes": 2,
+  "solve_calls": 22,
+  "actual_updates": 22,
+  "requested_update_cap": 31,
+  "termination_counts": {
+    "1": 3,
+    "2": 13,
+    "3": 2,
+    "4": 4
+  },
+  "scalar_soc_metric_reconstructions": [
+    {
+      "case": "positive_prox",
+      "original_gap": 0.9484528968363334,
+      "maximum_metric_absolute_error": 0.0
+    },
+    {
+      "case": "negative_prox",
+      "original_gap": 0.9956512842209126,
+      "maximum_metric_absolute_error": 0.0
+    },
+    {
+      "case": "positive_zero_prox",
+      "original_gap": 0.8573410023729396,
+      "maximum_metric_absolute_error": 0.0
+    },
+    {
+      "case": "negative_zero_prox",
+      "original_gap": 0.8573410023729396,
+      "maximum_metric_absolute_error": 0.0
+    },
+    {
+      "case": "weighted_quarter_prox",
+      "original_gap": 0.8530544397915619,
+      "maximum_metric_absolute_error": 1.1102230246251565e-16
+    },
+    {
+      "case": "weighted_four_prox",
+      "original_gap": 0.9209757179787829,
+      "maximum_metric_absolute_error": 0.0
+    },
+    {
+      "case": "weighted_positive_zero",
+      "original_gap": 1.5939807670592017,
+      "maximum_metric_absolute_error": 2.220446049250313e-16
+    },
+    {
+      "case": "weighted_negative_zero",
+      "original_gap": 1.5939807670592017,
+      "maximum_metric_absolute_error": 2.220446049250313e-16
+    },
+    {
+      "case": "cancel_global_prox",
+      "original_gap": 0.8559633155492624,
+      "maximum_metric_absolute_error": 4.440892098500626e-16
+    }
+  ],
+  "same_export_history_control_metrics": true,
+  "caveat": "No raw tiny vectors are emitted. In-process frozen test asserts downloaded vectors; this script independently replays fixture metrics, not absent raw vectors.",
+  "real_runner_review": {
+    "disposition": "GO for root-controlled finite run",
+    "executions": 6,
+    "maximum_solve_calls": 8,
+    "maximum_bootstrap_updates": 2,
+    "blocks": 128,
+    "cold_update_cap": 100000,
+    "cold_deadline_seconds": 30,
+    "preserves_original_gates": true,
+    "seed_bits_checked": true,
+    "retries": false,
+    "capacity_fallback": false
+  }
+}

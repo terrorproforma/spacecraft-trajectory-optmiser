@@ -1,0 +1,28 @@
+{
+  "complete": false,
+  "cuda_visible_devices": "",
+  "stages": [
+    {
+      "command": [
+        "/usr/bin/c++",
+        "-std=c++20",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-I/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/include",
+        "-I/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/include",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp",
+        "-o",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/l1-weight-cpu-v618/conversion-test"
+      ],
+      "returncode": 1,
+      "seconds": 1.0786454180000078
+    }
+  ],
+  "source_sha256": {
+    "cpp/cuda/include/spacepdhcg/cuda/l1_epigraph_arithmetic.hpp": "c52bf28be82c9a8848807a57b23dc5fad6b5d41b18994659d7da31a59d6ad2f1",
+    "cpp/cuda/tests/persistent_snapshot_conversion_test.cpp": "47ea535eb6ecfe0a8c42440721b943becb1c2beba4dfa4cc770ca8fcef4571e7"
+  }
+}

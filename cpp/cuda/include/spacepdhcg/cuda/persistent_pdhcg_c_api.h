@@ -424,6 +424,49 @@ spacepdhcg_cuda_status spacepdhcg_cuda_workspace_l1_diagnostics(
     spacepdhcg_cuda_l1_diagnostics* diagnostics
 );
 
+/* Optional reciprocal weight fixed for each enabled L1 solve. Every L1 enable starts
+ * at omega=1; existing callers retain the unit-weight kernel. In native scaled
+ * coordinates tau=eta/omega and sigma=eta*omega, preserving their mathematical
+ * product. The original-coordinate diagonal factors, B/O, eta heuristic and
+ * original KKT gate do not change. CANCEL_GLOBAL chooses omega=O/B on-device
+ * after reduced scaling, once per solve, giving mathematical original-coordinate
+ * steps eta/D^2 and eta/R^2. It reads no reference solution or pilot iterate.
+ * FIXED uses the supplied positive omega. This is not adaptive weighting.
+ * Natural-residual telemetry remains the unweighted legacy metric.
+ * Changing omega restores iterate history and refreshes scaling; original
+ * primal/dual values are untouched. A same-weight call is a no-op. Nonpositive,
+ * nonfinite or unrepresentable reciprocal weights reject before device work;
+ * unrepresentable effective steps/thresholds fail before any solver update.
+ * A nonunit kernel can have a different occupancy limit: unsupported grids
+ * reject without silently changing the requested block count. For CANCEL_GLOBAL
+ * pass omega=0. Weight diagnostics valid/finite describe the chosen weight and
+ * base steps, not original KKT qualification or every diagonal product; an
+ * initial cancellation does not produce a valid weight record. */
+typedef enum spacepdhcg_cuda_l1_weight_mode {
+    SPACEPDHCG_CUDA_L1_WEIGHT_UNIT = 0,
+    SPACEPDHCG_CUDA_L1_WEIGHT_FIXED = 1,
+    SPACEPDHCG_CUDA_L1_WEIGHT_CANCEL_GLOBAL = 2
+} spacepdhcg_cuda_l1_weight_mode;
+typedef struct spacepdhcg_cuda_l1_weight_options {
+    uint32_t abi_version;
+    int32_t mode; /* FIXED or CANCEL_GLOBAL; UNIT is selected by L1 enable. */
+    double omega;
+} spacepdhcg_cuda_l1_weight_options;
+typedef struct spacepdhcg_cuda_l1_weight_diagnostics {
+    uint32_t abi_version;
+    int32_t enabled, valid, finite;
+    int32_t mode, reserved;
+    double requested_omega, omega, primal_base_step, dual_base_step;
+} spacepdhcg_cuda_l1_weight_diagnostics;
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_l1_weight(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_l1_weight_options* options
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_l1_weight_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_l1_weight_diagnostics* diagnostics
+);
+
 spacepdhcg_cuda_status spacepdhcg_cuda_workspace_query(
     spacepdhcg_cuda_workspace* workspace,
     int32_t* complete

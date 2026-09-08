@@ -22,7 +22,7 @@ from __future__ import annotations
 import math
 import time
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import numpy as np
@@ -1627,8 +1627,12 @@ class RouteSearch:
         options = self._return_cache[asteroid]
         if isinstance(options, GpuResidentOptions):
             selected = cuda_select_collection(
-                options, mass_guess, C.MISSION_END_MJD, self.settings,
-                first=True, _return_feasibility=True,
+                options,
+                mass_guess,
+                C.MISSION_END_MJD,
+                self.settings,
+                first=True,
+                _return_feasibility=True,
             )
             if selected is not None:
                 return selected[1] is not None
@@ -2082,9 +2086,6 @@ class RouteSearch:
         """Legs of a DP tour (camps inserted between arrivals and departures) -> RoutePlan."""
 
         deploy = dict(partial.deployed)
-        mass_guess = partial.mass + sum(
-            C.maximum_collected_mass(max(tour.collect_epochs[a] - deploy[a], 0.0)) for a in deploy
-        )
         legs_forward: list[PlannedLeg] = []
         location = partial.location
         epoch = partial.epoch
@@ -2106,7 +2107,7 @@ class RouteSearch:
                     departure,
                     departure + tof,
                     dv,
-                    self._dp_hop_inflation(source, target, departure, dv, mass_guess, tof),
+                    1.0,  # temporary: _finish prices once at the forward mass
                     "collect_hop",
                 )
             )
@@ -2118,12 +2119,6 @@ class RouteSearch:
         elif tour.return_departure < epoch - 1e-6:
             self.last_failure = "dp_return_before_arrival"
             return None
-        # the DP priced the return with the table's (TOF-dependent) inflation at the mass after
-        # the deploys plus the mined mass - or, with a sweep set for the camp, the certified
-        # cell's measured inflation; the forward pass re-prices at the same figure
-        return_inflation = self.collect_table.return_inflation_at(
-            location, tour.return_departure, tour.return_tof, tour.return_dv, mass_guess
-        )
         legs_forward.append(
             PlannedLeg(
                 location,
@@ -2131,11 +2126,13 @@ class RouteSearch:
                 tour.return_departure,
                 tour.return_departure + tour.return_tof,
                 tour.return_dv,
-                return_inflation,
+                1.0,  # temporary: _finish preserves any certified-cell override
                 "earth_return",
             )
         )
-        return self._finish(partial, deploy, dict(tour.collect_epochs), legs_forward)
+        return self._finish(
+            partial, deploy, dict(tour.collect_epochs), legs_forward, use_collect_table=True
+        )
 
     def _schedule(
         self, partial: _Partial, mode: str | bool, penalty_scale: float = 1.0
@@ -2294,8 +2291,14 @@ class RouteSearch:
         deploy: dict[int, float],
         collect: dict[int, float],
         legs_forward: list[PlannedLeg],
+        *,
+        use_collect_table: bool = False,
     ) -> RoutePlan | None:
-        """Exact forward mass pass over the collect-phase legs -> RoutePlan (or None + reason)."""
+        """Forward mass pass retaining each builder's cost model and the inflation spent.
+
+        DP completion uses its calibrated hop fit and certified return-cell pricing;
+        heuristic completion uses the beam models. This does not change authority gates.
+        """
 
         s = self.settings
         for asteroid in deploy:
@@ -2305,13 +2308,14 @@ class RouteSearch:
             if collect[asteroid] - deploy[asteroid] < C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS - 1e-6:
                 self.last_failure = "stay_too_short"
                 return None
-        legs = [*partial.legs, *legs_forward]
+        legs = list(partial.legs)
         # mass proxy forward through the collection tour (heavier ship after each collection)
         mass = partial.mass
         collected: dict[int, float] = {}
         propellant_total = s.initial_mass - partial.mass - C.MINER_MASS_KG * len(deploy)
-        for leg in legs[len(partial.legs) :]:
+        for leg in legs_forward:
             if leg.role == "camp":
+                legs.append(leg)
                 continue
             if leg.role == "collect_hop" or leg.role == "earth_return":
                 # collection happens at departure of the leg (not on the forward tour's
@@ -2325,9 +2329,40 @@ class RouteSearch:
                 self.last_failure = "leg_authority"
                 return None
             inflation = leg.inflation
-            if leg.role == "collect_hop":  # priced at the guessed mass above; use the actual one
-                inflation = self.hop_inflation_for(leg.delta_v_proxy_km_s, mass, leg.tof_days)
+            if leg.role == "collect_hop":
+                # Keep the builder's model, evaluated at the actual forward mass. In
+                # particular, a calibrated DP fit must not become the beam's flat factor.
+                inflation = (
+                    self._dp_hop_inflation(
+                        leg.from_id,
+                        leg.to_id,
+                        leg.departure_epoch,
+                        leg.delta_v_proxy_km_s,
+                        mass,
+                        leg.tof_days,
+                    )
+                    if use_collect_table
+                    else self.hop_inflation_for(leg.delta_v_proxy_km_s, mass, leg.tof_days)
+                )
+            elif leg.role == "earth_return":
+                # A generic model depends on current mass; a DP certified-cell override
+                # retains its measured inflation. Existing authority gates still apply.
+                inflation = (
+                    self.collect_table.return_inflation_at(
+                        leg.from_id,
+                        leg.departure_epoch,
+                        leg.tof_days,
+                        leg.delta_v_proxy_km_s,
+                        mass,
+                    )
+                    if use_collect_table
+                    else self.return_inflation_for(leg.delta_v_proxy_km_s, mass, leg.tof_days)
+                )
+            if not math.isfinite(inflation) or inflation < 0.0:
+                self.last_failure = "invalid_inflation"
+                return None
             propellant = self._propellant(mass, leg.delta_v_proxy_km_s, inflation)
+            legs.append(replace(leg, inflation=inflation))
             propellant_total += propellant
             mass -= propellant
         if mass < C.DRY_MASS_KG + sum(collected.values()):

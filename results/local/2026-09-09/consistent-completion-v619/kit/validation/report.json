@@ -1,0 +1,55 @@
+{
+  "checks": [
+    {
+      "label": "pytest",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incumbent-admission-v619/validate.py",
+        "--tests"
+      ],
+      "exit_code": 1,
+      "log_sha256": "54621c2af2c58603183ffd52f28c1ecca56e8efece7fd447c684081fc3dc3b41"
+    },
+    {
+      "label": "ruff",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "check",
+        "--no-cache",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/search.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/tests/test_gtoc12_completion_costs.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "label": "format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--no-cache",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/search.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/tests/test_gtoc12_completion_costs.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    }
+  ],
+  "passed": false,
+  "GPU_calls": 0,
+  "native_loading_forbidden": true,
+  "final_search_sha256": "9c5d64e37ceea7e5fd8c680556cd41bfbbb1e5a282aacba5d3ede0cbe0797d18",
+  "test_files_sha256": {
+    "test_completion_costs_final.py": "1e4b6c70ced4928b3f5bdf484717183a5dcbdb11c871014d2192601eb141a3b8",
+    "validation/tests/test_gtoc12_collectdp.py": "0fa275cd12fe2e73d39e038a16c1779e41a23cc7ecd29b4ac7a2996f2895713d",
+    "validation/tests/test_gtoc12_returns.py": "b346bf2c0c869b76025e01bc400ef1d0eec3f476cc0578f00c8eb9b6c52e2c4b"
+  }
+}

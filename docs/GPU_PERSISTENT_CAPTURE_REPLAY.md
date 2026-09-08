@@ -327,3 +327,58 @@ fleet promotion follows. Reduced-coordinate balance diagnostics motivate a
 separate investigation; reference-derived weights are not a deployed tuning
 policy or a demonstrated convergence bound.
 [Exact source, preserved build attempts, mathematical review and complete GPU outputs](../results/local/2026-09-09/l1-prox-core-v615/README.md).
+
+## Fixed reciprocal L1 weights
+
+The separate weight API and `--l1-weight` replay option extend the default-off
+L1 diagnostic. The unit default remains available; fixed positive weights and
+`cancel-global` require enabled L1 mode. Cancellation computes `omega=O/B` on
+the GPU once after reduced scaling and holds it fixed. This is a prespecified
+coefficient-only comparison, with no pilot or known-solution tuning. Scaled
+steps become `eta/omega` and `eta*omega`; their mathematical product and the
+original objective and dual units are unchanged. In original coordinates this
+policy cancels only the global factors, giving `eta/D^2` and `eta/R^2`.
+
+Malformed weights reject before mutation; the nonunit specialization checks every
+active diagonal step and positive threshold before updating. A policy change restores history from the
+exported point and refreshes scaling without changing original primal/dual values.
+Reset/reseed retains the policy, while a new L1 enable selects unit weight.
+Each specialization has an explicit occupancy check and no grid fallback.
+The new unit/weighted kernels both compile to 94 registers and zero stack bytes;
+the previous L1 kernel used 198 registers and 40 stack bytes. Production default/
+common resource counts remain unchanged. These are compiler resource observations,
+not runtime parity or a memory-footprint reduction.
+
+Twenty-two tiny GPU calls perform 22 actual updates and pass their expected
+outcomes, including weighted scalar/SOC oracles and invalid effective steps.
+The real comparison uses one frozen source tree and core, 128 blocks, 100,000
+updates and a 30-second cold deadline. Two supplied original points qualify at
+zero updates with bitwise preservation; their two one-step bootstraps are counted
+separately. All four cold calls exhaust the update budget and remain unqualified:
+
+| Capture | Weight | Native solve seconds | Original normalized primal residual | Original normalized gap | Qualified |
+| --- | --- | ---: | ---: | ---: | --- |
+| conditioning | unit | 3.546542 | 0.000173919 | 1.000290548 | No |
+| conditioning | O/B | 3.755116 | 0.000176496 | 0.051505894 | No |
+| difficult | unit | 3.697216 | 0.000005464 | 0.003878469 | No |
+| difficult | O/B | 3.770667 | 0.000087371 | 0.056526601 | No |
+
+The selected weights are 0.0001856525042453329 and 0.00018024670054936622,
+matching the independent coefficient-only scaling calculation. Stationarity
+improves, but feasibility does not; difficult's original gap and primal residual
+both worsen. This finite experiment rejects the policy as a general improvement
+on these captures. It does not justify another unplanned weight sweep, default
+promotion, a qualified-throughput claim or native GTOC12 backend integration.
+Independent 65-digit evaluation agrees with all six original gate decisions,
+the preserved seed bits and the coefficient-derived weights. The dominant
+weighted equality errors are the mass component of the interval dynamics and
+initial mass: the pinned assembler maps them to rows `7*k+6` and
+`7*intervals+6`. Maximum absolute mass-equation defects are about 0.00062484 and
+0.00033482 in the captured problem's original coordinates. Difficult's reduced
+objective also falls dramatically because all virtual-control variables stay
+zero while these equalities remain violated; this is an infeasible point, not
+an improved trajectory. Exact epigraph reconstruction is not the missing step.
+Source identity is an explicit SHA-256 frozen tree with `source_commit=uncommitted`,
+not an invented commit for the Git-free snapshot. The package preserves the
+original build/provenance failures, all inputs and full original primal/dual logs.
+[Weight mathematics, reviewed launch and complete results](../results/local/2026-09-09/l1-weight-core-v618/README.md).

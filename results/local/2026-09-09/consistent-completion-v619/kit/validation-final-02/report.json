@@ -1,0 +1,62 @@
+{
+  "checks": [
+    {
+      "label": "pytest",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incumbent-admission-v619/validate_final.py",
+        "--tests"
+      ],
+      "exit_code": 0,
+      "log_sha256": "337507aac53a002b75ef9fba9664fc25f067a87730d3caeafaacb9ac8fd4276f"
+    },
+    {
+      "label": "ruff",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "check",
+        "--no-cache",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/search.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/tests/test_gtoc12_completion_costs.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "label": "format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--no-cache",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src/spacepdhcg/gtoc12/search.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/tests/test_gtoc12_completion_costs.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    }
+  ],
+  "passed": true,
+  "GPU_calls": 0,
+  "native_loading_allowlist": [
+    "libc.so.6"
+  ],
+  "GPU_and_solver_libraries_forbidden": true,
+  "production_source_unchanged_from_first_regression_pass": true,
+  "test_fixture_commit": "2ccb93c1cb8bcf4c3cb7c64ff8328fce44f7833d",
+  "test_fixture_diff_sha256": "5228eb08c55ef81b49a8460d743c93cfff728a976b5cc2b3cacabaa29b1b4aaa",
+  "prior_validation_preserved": "validation/report.json",
+  "final_search_sha256": "9c5d64e37ceea7e5fd8c680556cd41bfbbb1e5a282aacba5d3ede0cbe0797d18",
+  "test_files_sha256": {
+    "test_completion_costs_final.py": "1e4b6c70ced4928b3f5bdf484717183a5dcbdb11c871014d2192601eb141a3b8",
+    "validation-final-02/tests/test_gtoc12_collectdp.py": "7f60421aff4e0d5db97cae7d8680d4b07e3e8efe7d410fd61111a393ac053034",
+    "validation-final-02/tests/test_gtoc12_returns.py": "b346bf2c0c869b76025e01bc400ef1d0eec3f476cc0578f00c8eb9b6c52e2c4b"
+  }
+}

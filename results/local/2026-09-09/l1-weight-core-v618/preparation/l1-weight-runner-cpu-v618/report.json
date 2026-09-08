@@ -1,0 +1,107 @@
+{
+  "complete": true,
+  "gpu_calls": 0,
+  "syntax_checked": true,
+  "real_executions": 6,
+  "real_solve_api_cap": 8,
+  "tiny_expected_case_modes": {
+    "unit": [
+      [
+        "positive_prox",
+        0
+      ],
+      [
+        "disabled_original_scaling_refresh",
+        0
+      ],
+      [
+        "fresh_original_control",
+        0
+      ],
+      [
+        "negative_prox",
+        0
+      ],
+      [
+        "positive_zero_prox",
+        0
+      ],
+      [
+        "negative_zero_prox",
+        0
+      ],
+      [
+        "original_weak_seed_zero_step",
+        0
+      ],
+      [
+        "cancel_before_initial",
+        0
+      ],
+      [
+        "nonfinite_initial",
+        0
+      ]
+    ],
+    "weighted": [
+      [
+        "weighted_quarter_prox",
+        1
+      ],
+      [
+        "weight_switch_unit",
+        1
+      ],
+      [
+        "fresh_unit_l1_control",
+        0
+      ],
+      [
+        "weighted_four_prox",
+        1
+      ],
+      [
+        "weighted_positive_zero",
+        1
+      ],
+      [
+        "weighted_negative_zero",
+        1
+      ],
+      [
+        "cancel_global_prox",
+        2
+      ],
+      [
+        "weighted_weak_seed_zero_step",
+        1
+      ],
+      [
+        "cancel_global_weak_seed_zero_step",
+        2
+      ],
+      [
+        "cancel_before_initial",
+        2
+      ],
+      [
+        "nonfinite_initial",
+        1
+      ],
+      [
+        "weighted_primal_step_overflow",
+        1
+      ],
+      [
+        "weighted_dual_step_overflow",
+        1
+      ]
+    ]
+  },
+  "strict_nonfinite_json_rejected": true,
+  "signed_zero_preserved": true,
+  "source_sha256": {
+    "run_l1_weight_tiny_v618.py": "874a46be33fc063caecec1f2bb3c652f02659e9981e9a7d84e281643aa76098c",
+    "run_l1_weight_real_v618.py": "ae8e3cf663cf563b810e2a75c8b0adc8eb736e00f308bc0cce28f0a4838984c2"
+  }
+}

@@ -1,0 +1,25 @@
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp: In function ‘void {anonymous}::checks()’:
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:276:16: error: conflicting declaration ‘const auto underflow’
+  276 |     const auto underflow=s::canonical(s::read(bounds_fixture(0,{2},{tiny})),true);
+      |                ^~~~~~~~~
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:79:16: note: previous declaration as ‘const spacepdhcg::cuda::l1::ReciprocalSteps underflow’
+   79 |     const auto underflow=lp::reciprocal_steps(std::numeric_limits<double>::min(),std::numeric_limits<double>::max());
+      |                ^~~~~~~~~
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:277:16: error: conflicting declaration ‘const auto overflow’
+  277 |     const auto overflow=s::canonical(s::read(bounds_fixture(0,{tiny},{1})),true);
+      |                ^~~~~~~~
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:77:16: note: previous declaration as ‘const spacepdhcg::cuda::l1::ReciprocalSteps overflow’
+   77 |     const auto overflow=lp::reciprocal_steps(.5,std::numeric_limits<double>::denorm_min());
+      |                ^~~~~~~~
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:278:26: error: ‘const struct spacepdhcg::cuda::l1::ReciprocalSteps’ has no member named ‘A’
+  278 |     s::require(underflow.A.rows==1 && underflow.retained_out_of_range_ratios==1
+      |                          ^
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:278:49: error: ‘const struct spacepdhcg::cuda::l1::ReciprocalSteps’ has no member named ‘retained_out_of_range_ratios’
+  278 |     s::require(underflow.A.rows==1 && underflow.retained_out_of_range_ratios==1
+      |                                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:279:21: error: ‘const struct spacepdhcg::cuda::l1::ReciprocalSteps’ has no member named ‘A’
+  279 |         && overflow.A.rows==1 && overflow.retained_out_of_range_ratios==1,"out-of-range singleton row removed");
+      |                     ^
+/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/cpp/cuda/tests/persistent_snapshot_conversion_test.cpp:279:43: error: ‘const struct spacepdhcg::cuda::l1::ReciprocalSteps’ has no member named ‘retained_out_of_range_ratios’
+  279 |         && overflow.A.rows==1 && overflow.retained_out_of_range_ratios==1,"out-of-range singleton row removed");
+      |                                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~

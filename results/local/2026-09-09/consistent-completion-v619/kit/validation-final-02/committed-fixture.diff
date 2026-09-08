@@ -1,0 +1,14 @@
+diff --git a/tests/test_gtoc12_collectdp.py b/tests/test_gtoc12_collectdp.py
+index 39c548a5..1171b49e 100644
+--- a/tests/test_gtoc12_collectdp.py
++++ b/tests/test_gtoc12_collectdp.py
+@@ -222,6 +222,9 @@ class _FakeTable:
+     def index_at_or_after(self, epoch):
+         return int(np.searchsorted(self.epochs, epoch - 1e-9))
+ 
++    def _resident_table(self, source, target, tofs, end):
++        return None  # This fixture deliberately provides only host cost tables.
++
+     def hop(self, source, target):
+         self.hops_requested.append((source, target))
+         cost = np.asarray(self.costs[(source, target)], dtype=np.float64)

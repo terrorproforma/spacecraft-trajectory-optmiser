@@ -5,17 +5,26 @@ The next work must establish its advantage at independently verified accuracy
 and improve complete GTOC12 missions. Faster candidate arithmetic and the GPU
 integration are useful intermediate results; neither establishes either outcome.
 
-This plan updates execution priorities after auditing published commit
-`3091c716714c8bdec364d54c5e7357f2b5d85730`. It does not replace historical
-benchmark results, change the preregistered claim thresholds, or declare a new
-score. Concurrent opt-in resident-geometry work is outside this published baseline.
+This plan began with an audit of published commit
+`3091c716714c8bdec364d54c5e7357f2b5d85730`. The current mission baseline below
+includes the separately published fleet-exchange result at `2ccb93c1`. Historical
+experiments retain their original inputs and scores; the preregistered claim
+thresholds and physics gates are unchanged.
 
 ## Two outcomes to pursue together
 
 | Outcome | Current evidence | Required evidence |
 | --- | --- | --- |
 | Competitive trajectory solver | Persistent CUDA operators, multi-block PDHG, native dynamics/assembly and GPU IPM refinement exist. A sustained PDHCG advantage over qualified competitors is not established. | Time to the same qualified solution, independently certified trajectories/second, reliability, objective, and memory versus applicable strong baselines. |
-| Best GTOC12 mission | 23 ships, 14,051.854894 raw kg, 12,810.135953 fixed-bonus weighted kg, 610.950213 raw kg/ship. The latest weighted gain is 0.038593%. | Higher independently verified fleet score under a pinned bonus table and common mission rules, with score versus total search time and GPU-hours. |
+| Best GTOC12 mission | 23 ships, 14,043.750856 raw kg, 12,842.970672 fixed-bonus weighted kg, 610.597863 raw kg/ship. The latest weighted gain is 32.834719 kg (0.256318%). | Higher independently verified fleet score under a pinned bonus table and common mission rules, with score versus total search time and GPU-hours. |
+
+The [fleet-exchange stage](GPU_FLEET_EXCHANGES.md) makes two profitable swaps
+from the same 2,492-column pool. Both complete-fleet verifiers pass on RTX 5090
+and H100; all 33 fresh native leg refinements converge on each GPU. It sacrifices
+8.104038 raw kg to increase the weighted objective. This is a verified mission
+gain from GPU fleet selection and QOCO refinement; it is not evidence that the
+PDHCG core has qualified the difficult cold captures below. The historical
+ship-23 admission controls remain pinned to the earlier v595/v616 fleet.
 
 The recent GTOC12 trajectory refinements use GPU QOCO. The current
 [GTOC12 settings](../src/spacepdhcg/gtoc12/low_thrust.py) accept Clarabel/QOCO as
@@ -83,6 +92,18 @@ is now implemented and measured below. The separate QOCO snapshot executable
 remains QOCO-only. The identical-input pinned upstream C API comparison is now
 [implemented and measured](../results/local/2026-09-09/upstream-identical-capture-v608/README.md).
 Real-capture cold convergence and native GTOC12 backend integration remain gaps.
+
+Do not judge the entire quadratic-solver design from zero-Q cases alone. The
+current GTOC12 [default smoothness weight is zero](../src/spacepdhcg/gtoc12/low_thrust.py),
+so its conic objective has no numerical quadratic term. The native assembler
+supports the existing optional banded control-smoothing Hessian `2*w*D^T*D`;
+turning that option on would change the mission objective and is not a remedy
+for the failed default cases. Instead, add the existing unchanged HCW and
+displaced low-thrust trajectory fixtures from
+[device SCvx integration tests](../cpp/cuda/tests/device_scvx_integration_test.cu)
+as separate nonzero-Q benchmarks. Record actual inner work and residuals; the
+presence of a Hessian alone does not prove useful conjugate-gradient work.
+GTOC12's zero-Q problems remain mandatory for mission integration.
 
 Once captured GTOC12 subproblems qualify through the persistent core, add its
 explicit backend integration to native GTOC12 SCvx: retained assembly, warm-start
@@ -306,6 +327,24 @@ adds private working storage; it is not a memory reduction. These results earn
 neither default selection nor native mission integration.
 [Equivalence, independent review and complete GPU evidence](../results/local/2026-09-09/l1-prox-core-v615/README.md).
 
+The fixed reciprocal-weight comparison v618 now tests one coefficient-only
+policy, `omega=O/B`, against unit weight with the same L1 representation. It
+changes the primal/dual step balance without changing the original equations,
+penalties, acceptance gates or theoretical step-product condition. Twenty-two
+tiny GPU calls pass their expected outcomes, and both supplied certificates
+remain qualified at zero updates with unchanged bits. All four cold calls still
+fail at 100,000 updates. Cancellation of global normalization lowers conditioning's
+normalized gap from 1.000291 to 0.051506, but slightly worsens its primal residual;
+on difficult, the gap rises from 0.00387847 to 0.0565266 and the primal residual
+increases about sixteenfold. Neither weight earns default selection. A smaller
+stationarity error alone is insufficient while feasibility remains unqualified.
+The independent original-equation audit identifies mass continuity and initial
+mass among the dominant remaining errors. Keep those feasibility components
+visible in the next intervention's stopping and comparison records; the much
+lower difficult objective under reciprocal weighting belongs to an infeasible
+iterate. It cannot be credited as fuel saved.
+[Fixed policy, frozen source and complete outcomes](../results/local/2026-09-09/l1-weight-core-v618/README.md).
+
 Preserve the reusable PDHCG-inspired GPU core. The next numerical intervention
 must address the measured feasibility/stationarity and balance behavior; changing
 representation or restarting alone has not delivered qualified cold solves.
@@ -388,6 +427,30 @@ physical infeasibility. All generated candidates retain their full mining-rate
 cargo, so cargo shrinkage does not explain this pool's lower haul. Prioritize
 incumbent reproduction and measured whole-route proxy error before another broad
 generation run. [Complete pool, accounting and positive-control diagnosis](../results/local/2026-09-09/depth-diverse-generation-v616/README.md).
+
+The completion-cost correction v619 fixes two concrete discrepancies: DP's
+calibrated hop model was being replaced by the beam model, and generic return
+inflation was evaluated before collection burns at an overestimated mass.
+Completion now prices each flight once at its actual forward mass and records
+the factor it spends; existing certified return-cell overrides and all mission
+gates are retained. Forty scalar controls compare old/corrected code, estimated/
+measured deployment-prefix masses and flat/existing-fit costs on five historical
+routes. Admissions rise from 0/20 to 2/20, both for the estimated prefix of ship 4;
+all measured-prefix controls remain rejected. Historical ship 23's flat-model
+shortfall falls from 35.56 to 9.59 kg, or 6.39 kg with the existing fit. The 45-test
+CPU suite passes. This is a corrected search calculation, not fresh trajectory
+certification or a score gain.
+
+An independent scalar diagnostic across all 23 historical routes attributes a
+median 22.81 kg of extra predicted return fuel to the old mass argument alone.
+Even at measured return mass the generic model overpredicts 20/23 returns, with
+a median error of 18.36 kg. Next decompose this remaining proxy error and reproduce
+measured-prefix incumbent admission before expanding generation. Port equivalent
+completion across a batch with CPU/GPU parity; existing CUDA joint/retiming code
+already uses forward mass, but its model set does not reproduce DP's five-feature
+hop fit. Do not claim that these differing models are equivalent or relax the
+full-route physics checker to make a proxy pass.
+[Frozen controls, corrected accounting and reproducible CPU evidence](../results/local/2026-09-09/consistent-completion-v619/README.md).
 
 ## Reporting after each tranche
 

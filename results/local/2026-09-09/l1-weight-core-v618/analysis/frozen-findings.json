@@ -1,0 +1,166 @@
+{
+  "scope": "CPU-only frozen source/build/log review; no binary or GPU execution",
+  "script_sha256": "94524eb7c421a533c410b6eb8f730bf45beef25c0bf0bd431106a660e50142a9",
+  "pins": {
+    "manifest": "6ad3dfc586c457afbeaa0da13417f1208484f908fb22977fd086ea41a4f3a4c2",
+    "source_tree_sha256": "e476bbf3065173ed7b06fca49306537ffe1d47804c281bacd441e5a42104e1a9",
+    "library_sha256": "1002c69e2418ab8b4ba1cdb7376f2959b8af455ae7ea4815db751508009fceec",
+    "persistent_snapshot_replay_sha256": "af5cb7bb7c9dff82038945a966952dbd15450f4c4c82a89c69b5c8b4fd78aaad",
+    "persistent_l1_test_sha256": "2ed65a3ef07dc436e51d7ff6d5dd2e6a9d2aea6bf4401cdc6778f0deb067d8a6",
+    "runner": "874a46be33fc063caecec1f2bb3c652f02659e9981e9a7d84e281643aa76098c"
+  },
+  "verified_archive_members_each": 372,
+  "owned_live_files_matched": 10,
+  "a_to_b_changed": [
+    "cpp/cuda/CMakeLists.txt"
+  ],
+  "same_core": true,
+  "stages_verified": 29,
+  "hidden_variants": 12,
+  "parsed_json_records": 16,
+  "resources": {
+    "cooperative_solve_kernelILb0": {
+      "registers": 80,
+      "stack": 0,
+      "shared": 7168
+    },
+    "cooperative_solve_kernelILb1": {
+      "registers": 96,
+      "stack": 0,
+      "shared": 7168
+    },
+    "12solve_kernelILb0": {
+      "registers": 148,
+      "stack": 40,
+      "shared": 1032
+    },
+    "12solve_kernelILb1": {
+      "registers": 204,
+      "stack": 40,
+      "shared": 1032
+    },
+    "cooperative_halpern_kernel": {
+      "registers": 96,
+      "stack": 0,
+      "shared": 7168
+    },
+    "cooperative_l1_kernelILb0": {
+      "registers": 94,
+      "stack": 0,
+      "shared": 7168
+    },
+    "cooperative_l1_kernelILb1": {
+      "registers": 94,
+      "stack": 0,
+      "shared": 7168
+    },
+    "cooperative_l1_initialise_kernel": {
+      "registers": 58,
+      "stack": 0,
+      "shared": 5120
+    }
+  },
+  "exact_case_modes": {
+    "unit": [
+      [
+        "positive_prox",
+        0
+      ],
+      [
+        "disabled_original_scaling_refresh",
+        0
+      ],
+      [
+        "fresh_original_control",
+        0
+      ],
+      [
+        "negative_prox",
+        0
+      ],
+      [
+        "positive_zero_prox",
+        0
+      ],
+      [
+        "negative_zero_prox",
+        0
+      ],
+      [
+        "original_weak_seed_zero_step",
+        0
+      ],
+      [
+        "cancel_before_initial",
+        0
+      ],
+      [
+        "nonfinite_initial",
+        0
+      ]
+    ],
+    "weighted": [
+      [
+        "weighted_quarter_prox",
+        1
+      ],
+      [
+        "weight_switch_unit",
+        1
+      ],
+      [
+        "fresh_unit_l1_control",
+        0
+      ],
+      [
+        "weighted_four_prox",
+        1
+      ],
+      [
+        "weighted_positive_zero",
+        1
+      ],
+      [
+        "weighted_negative_zero",
+        1
+      ],
+      [
+        "cancel_global_prox",
+        2
+      ],
+      [
+        "weighted_weak_seed_zero_step",
+        1
+      ],
+      [
+        "cancel_global_weak_seed_zero_step",
+        2
+      ],
+      [
+        "cancel_before_initial",
+        2
+      ],
+      [
+        "nonfinite_initial",
+        1
+      ],
+      [
+        "weighted_primal_step_overflow",
+        1
+      ],
+      [
+        "weighted_dual_step_overflow",
+        1
+      ]
+    ]
+  },
+  "expected_budget": {
+    "processes": 2,
+    "solve_calls": 22,
+    "requested_updates": 31,
+    "expected_actual_updates": 22
+  },
+  "binary_check_scope": "Manifest/build-log bindings here; reviewed runner rehashes Linux core and test immediately before launch.",
+  "review_correction": "An initial duplicate-label concern referred to provisional source. Frozen b already has distinct weighted and cancel-global weak-seed names; concern retracted before launch.",
+  "disposition": "Clear for root-controlled bounded tiny run; no real-capture qualification or speed claim."
+}

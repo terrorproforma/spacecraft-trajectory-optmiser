@@ -1,0 +1,110 @@
+{
+  "scope": "CPU only; coefficient inputs only; no initial points, known solutions, pilot, solver, or GPU calls",
+  "script_sha256": "accd6e7273dada824a5e6b9150707c97f7172b939d0f1cfd6482da4e63fc5953",
+  "policy": "once after reduced scaling, omega=O/B; freeze within each solve",
+  "limitations": [
+    "This is an interpretable ablation, not a predicted optimal weight or improvement.",
+    "A fixed positive reciprocal weight preserves the same exact-arithmetic spectral condition; the power20 eta remains heuristic.",
+    "The current common original-coordinate qualification gates remain mandatory.",
+    "No guarantee for adaptive changes is inferred from the fixed-weight argument."
+  ],
+  "exact_oracles": {
+    "fraction_exact_prox_cases": 36,
+    "product_and_cancel_global_identities": true,
+    "pair_duals_are_native_without_weight_factor": true
+  },
+  "cases": [
+    {
+      "capture": "conditioning",
+      "input_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "pairs": 1470,
+      "variables": 3791,
+      "rows": 7811,
+      "numerical_entries": 21463,
+      "D_sha256": "2f215026bde82a748df5ec1dad65f829dca9250ab9d458ffac233cda1487e473",
+      "R_sha256": "848f30526e20dc85f93126ec95a3d7885693ec44188e5b4b13345bed10214647",
+      "B": 0.014048666509029594,
+      "O": 2.608170118708883e-06,
+      "eta": 0.32696163721078736,
+      "omega_cancel_global": 0.0001856525042453329,
+      "represented_product_max_relative_error": 4.440892098500626e-16,
+      "represented_cancellation_max_relative_error": 3.3306690738754696e-16,
+      "soc_metric_uniform": true,
+      "unit_ranges": {
+        "tau": [
+          6.0694843748431425e-05,
+          6.07076378999032e-05
+        ],
+        "sigma": [
+          1760.9627697591804,
+          3520.1304570361717
+        ],
+        "threshold": [
+          0.6070124674033669,
+          0.607076378999032
+        ]
+      },
+      "cancel_global_ranges": {
+        "tau": [
+          0.32692714808858947,
+          0.3269960625991897
+        ],
+        "sigma": [
+          0.3269271480885894,
+          0.6535210346190335
+        ],
+        "threshold": [
+          3269.6163721078738,
+          3269.960625991897
+        ]
+      },
+      "scaled_joint_objective_to_rhs_norm": 1.0142461984296707
+    },
+    {
+      "capture": "difficult",
+      "input_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "pairs": 1631,
+      "variables": 4208,
+      "rows": 8666,
+      "numerical_entries": 23815,
+      "D_sha256": "046a0713a3fed245dfbb9794cec8b37402a2303ebd333fe14a4ffa9383324f04",
+      "R_sha256": "d12c1d229e222d5a9ca06f449fd39ff3c2ba0edc44d113f4c3e55c9c7311b93e",
+      "B": 0.013737035079155508,
+      "O": 2.476055248348682e-06,
+      "eta": 0.328991615436598,
+      "omega_cancel_global": 0.00018024670054936622,
+      "represented_product_max_relative_error": 4.440892098500626e-16,
+      "represented_cancellation_max_relative_error": 2.220446049250313e-16,
+      "soc_metric_uniform": true,
+      "unit_ranges": {
+        "tau": [
+          5.9247271895049576e-05,
+          5.935197835481815e-05
+        ],
+        "sigma": [
+          1823.6173285413295,
+          3622.2491076151496
+        ],
+        "threshold": [
+          0.5929965319085273,
+          0.5935197835481815
+        ]
+      },
+      "cancel_global_ranges": {
+        "tau": [
+          0.3287010065342242,
+          0.32928191292224374
+        ],
+        "sigma": [
+          0.32870100653422424,
+          0.6528984502155168
+        ],
+        "threshold": [
+          3289.9161543659798,
+          3292.8191292224374
+        ]
+      },
+      "scaled_joint_objective_to_rhs_norm": 1.01392585903802
+    }
+  ]
+}
