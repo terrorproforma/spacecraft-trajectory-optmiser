@@ -1,0 +1,48 @@
+{
+  "GPU_calls": 0,
+  "CPU_finish_calls": 0,
+  "commands": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "common.py",
+        "finalize.py",
+        "launch.py",
+        "prepare.py",
+        "run.py",
+        "test_construction.py",
+        "validate.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "common.py",
+        "finalize.py",
+        "launch.py",
+        "prepare.py",
+        "run.py",
+        "test_construction.py",
+        "validate.py"
+      ],
+      "exit_code": 1
+    }
+  ],
+  "passed": false,
+  "files_sha256": {
+    "common.py": "14fc4f160358a0ea48a58c0cc62333bb592512875f426b5af97aa4e734d384fa",
+    "finalize.py": "a086d0acea0c3b55a89eb4cff00ce70234ddf749f56b5c8fb514a5d66a881317",
+    "launch.py": "a3f178f6493435527f0970c2b9972d4849732077e1ac7fe3d1165f39ccb5c75b",
+    "prepare.py": "a44fc6ccc30b35b302fa6aa49af22b42e715c9892533c16e04ff5a1dd9cff9a1",
+    "run.py": "ef459a2ae3a6df766727dfa6ad6475838bf0398f4e1bceeef26a20154d6430d1",
+    "test_construction.py": "c90c88a555521d2f3c022bcf829680a7f51f440c8a45a847664348eb4bf230b7",
+    "validate.py": "91cd1609d019106684033ea88ccd604e71e5107fa8cfc66c6f21850bbf8084b4"
+  }
+}

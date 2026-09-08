@@ -1,0 +1,202 @@
+E501 Line too long (250 > 100)
+   --> audit_residuals.py:113:101
+    |
+111 | …
+112 | …
+113 | …negatives in the v619 measured-prefix cases. This arithmetic check does not establish fresh trajectory feasibility or replace either full-fleet verifier.",
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+114 | …
+115 | …
+    |
+
+B905 `zip()` without an explicit `strict=` parameter
+   --> build_fixtures.py:136:29
+    |
+134 |         assert expected["result"]["collected"] == old["cargo_kg"]
+135 |         flights = [
+136 |             d for row, d in zip(rows, expected["leg_results"]) if row["role"] != ROLES["camp"]
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+137 |         ]
+138 |         assert len(flights) == len(old["trace"])
+    |
+help: Add explicit value for parameter `strict=`
+
+B905 `zip()` without an explicit `strict=` parameter
+   --> build_fixtures.py:139:25
+    |
+137 |         ]
+138 |         assert len(flights) == len(old["trace"])
+139 |         for d, saved in zip(flights, old["trace"]):
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+140 |             assert d["departure_mass"] == saved["mass_before_kg"]
+141 |             assert d["inflation"] == saved["inflation_spent"]
+    |
+help: Add explicit value for parameter `strict=`
+
+E501 Line too long (169 > 100)
+   --> build_fixtures.py:367:101
+    |
+365 | …
+366 | …
+367 | …,processed_legs,stage,pickup are exact; numerical mass/cost comparison never changes qualification",
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+368 | … ABI; _finish returns only None/RoutePlan or raises. Both return kind and successful totals are independently cross-checked against …
+369 | …nf; decode before native packing.",
+    |
+
+E501 Line too long (217 > 100)
+   --> build_fixtures.py:368:101
+    |
+366 | …
+367 | …ckup are exact; numerical mass/cost comparison never changes qualification",
+368 | …ly None/RoutePlan or raises. Both return kind and successful totals are independently cross-checked against frozen source.",
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+369 | … packing.",
+370 | …
+    |
+
+E501 Line too long (104 > 100)
+   --> build_fixtures.py:369:101
+    |
+367 |         "qualification_comparison": "failure,failed_leg,failed_deploy,processed_legs,stage,pickup are exact; numerical mass/cost comp…
+368 |         "detail_scope": "Per-leg/early-failure numeric details follow ABI; _finish returns only None/RoutePlan or raises. Both return…
+369 |         "nonfinite_encoding": "A sole float64 key encodes nan,+inf,-inf; decode before native packing.",
+    |                                                                                                     ^^^^
+370 |     }
+371 |     with destination.open("x") as stream:
+    |
+
+E402 Module level import not at top of file
+  --> fixture_oracle.py:21:1
+   |
+19 | sys.path.insert(0, str(KIT / "source/src"))
+20 |
+21 | import numpy as np
+   | ^^^^^^^^^^^^^^^^^^
+22 |
+23 | from spacepdhcg.gtoc12 import constants as C
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> fixture_oracle.py:23:1
+   |
+21 | import numpy as np
+22 |
+23 | from spacepdhcg.gtoc12 import constants as C
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | from spacepdhcg.gtoc12.collectdp import CollectDPSettings, CollectPairTable
+25 | from spacepdhcg.gtoc12.hopcalib import InflationFit
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> fixture_oracle.py:24:1
+   |
+23 | from spacepdhcg.gtoc12 import constants as C
+24 | from spacepdhcg.gtoc12.collectdp import CollectDPSettings, CollectPairTable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 | from spacepdhcg.gtoc12.hopcalib import InflationFit
+26 | from spacepdhcg.gtoc12.screening import (
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> fixture_oracle.py:25:1
+   |
+23 | from spacepdhcg.gtoc12 import constants as C
+24 | from spacepdhcg.gtoc12.collectdp import CollectDPSettings, CollectPairTable
+25 | from spacepdhcg.gtoc12.hopcalib import InflationFit
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 | from spacepdhcg.gtoc12.screening import (
+27 |     exhaust_velocity_km_s,
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> fixture_oracle.py:26:1
+   |
+24 |   from spacepdhcg.gtoc12.collectdp import CollectDPSettings, CollectPairTable
+25 |   from spacepdhcg.gtoc12.hopcalib import InflationFit
+26 | / from spacepdhcg.gtoc12.screening import (
+27 | |     exhaust_velocity_km_s,
+28 | |     low_thrust_inflation,
+29 | |     propellant_for_delta_v,
+30 | |     return_inflation_model,
+31 | |     thrust_authority_km_s,
+32 | | )
+   | |_^
+33 |   from spacepdhcg.gtoc12.search import PlannedLeg, RouteSearch, SearchSettings, _Partial
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> fixture_oracle.py:33:1
+   |
+31 |     thrust_authority_km_s,
+32 | )
+33 | from spacepdhcg.gtoc12.search import PlannedLeg, RouteSearch, SearchSettings, _Partial
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+34 |
+35 | ROLES = {"camp": 0, "earth_out": 1, "deploy_hop": 2, "collect_hop": 3, "earth_return": 4}
+   |
+help: Move module level imports to top of file
+
+E501 Line too long (134 > 100)
+  --> prepare.py:80:101
+   |
+78 |             "inputs": {p.name: sha(p) for p in sorted((KIT / "inputs").iterdir())},
+79 |             "selection_fixed_before_v619_outcomes": [23, 1, 4, 7, 10],
+80 |             "all_23_archival_route_flags_only": "Historical certifications/inventory bindings retained; no new physics verification.",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+81 |         },
+82 |     )
+   |
+
+E501 Line too long (105 > 100)
+   --> prepare.py:194:101
+    |
+192 |                     else None
+193 |                 )
+194 |                 # The DP fit only governs collection hops. Deployment remains the frozen flat beam model.
+    |                                                                                                     ^^^^^
+195 |                 dp_factor = (
+196 |                     float(
+    |
+
+E501 Line too long (111 > 100)
+   --> prepare.py:325:101
+    |
+323 |                 "catalogue_sha256": catalogue.source_sha256,
+324 |                 "feature_source_sha256": sha(KIT / "source/src/spacepdhcg/gtoc12/collectdp.py"),
+325 |                 "feature_function": "CollectPairTable.pair_geometry (deterministic mean-longitude arithmetic)",
+    |                                                                                                     ^^^^^^^^^^^
+326 |                 "feature_arithmetic_calls": feature_calls,
+327 |                 "Lambert_calls": 0,
+    |
+
+E501 Line too long (273 > 100)
+   --> prepare.py:348:101
+    |
+346 | …
+347 | …
+348 | …ed local errors are not a fresh sequential route replay. Existing fit governs collection only; deployment remains flat and injected Earth seed cost is measured by construction.",
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+349 | …
+350 | …
+    |
+
+B905 `zip()` without an explicit `strict=` parameter
+  --> test_fixture_evidence.py:48:25
+   |
+46 |     assert len(batch["candidates"]) == len(DATA[arm])
+47 |     di = li = 0
+48 |     for case, packed in zip(DATA[arm], batch["candidates"]):
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+49 |         assert packed == {
+50 |             "deploy_begin": di,
+   |
+help: Add explicit value for parameter `strict=`
+
+Found 24 errors (7 fixed, 17 remaining).
+No fixes available (3 hidden fixes can be enabled with the `--unsafe-fixes` option).

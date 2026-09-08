@@ -1,0 +1,193 @@
+{
+  "scope": "Planned coefficient-only metric hypothesis; no core implementation, GPU, point data, parameter sweep or optimization solve.",
+  "script_sha256": "a3164ee6ad7e1064ae3d7388807b85507b75481779a518df39585ef2a141bd9f",
+  "reader_sha256": "b8697eedc3d91ed48849725b4fd8e17dc7515c020f5f3d30f1aa151794a5dbc4",
+  "prior_mass_review_sha256": "60efbc1f49c3f485f654bd08822b8504f0d488497d7efe0b69b81df3c75f1104",
+  "old_scaling_report_sha256": "9bfd11597cf1a271ee9b0faa341c3c7d427a350fbe45f4bc153b991d7dc0282a",
+  "prior_mass_review_source_binding": {
+    "cpp/cuda/src/gtoc12_conic.cu": "3e04dac39a852c44dbe4c7347f4f0157430c719d155cb74c004f9250296555ac",
+    "cpp/cuda/src/gtoc12_discretisation.cu": "b0ab40a5ff6ba4c272e895ae09ce64999ec46eb528593ec3cc5e587cd90d359f"
+  },
+  "cases": [
+    {
+      "capture": "conditioning",
+      "input_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "intervals": 210,
+      "retained_variables": 3580,
+      "retained_rows": 7600,
+      "base_numeric_entries": 19989,
+      "logical_numeric_entries": 152919,
+      "mass_rows": 633,
+      "SOC_blocks_tied": 210,
+      "SOC_rows_given_smaller_step": 0,
+      "exact_expansion_matches_scan_absolute_sums": true,
+      "stored_FP64_step_norm_squared_certificate": 0.9025,
+      "certificate_exact_rational": "219157334404215060792834685401108492903694619571324050263516367235833315885910876507/242833611528216133864932738352939863330300854881517440156476551217363035650651062272",
+      "theta_exact": "19/20",
+      "zero_operator_rows_retained": 3,
+      "zero_operator_columns_retained": 0,
+      "tau": {
+        "count": 3580,
+        "min": 0.0015079365079365078,
+        "p10": 0.1793279722885232,
+        "median": 0.316440598600757,
+        "p90": 0.95,
+        "max": 0.95
+      },
+      "tau_mass_virtual": {
+        "count": 210,
+        "min": 0.0015079365079365078,
+        "p10": 0.0016666666666666666,
+        "median": 0.0030158730158730157,
+        "p90": 0.014393939393939393,
+        "max": 0.31666666666666665
+      },
+      "tau_gamma_in_mass_dynamics": {
+        "count": 210,
+        "min": 0.15812641360809673,
+        "p10": 0.16069377548048688,
+        "median": 0.17260407375672698,
+        "p90": 0.18607076467179334,
+        "max": 0.18981780176874985
+      },
+      "sigma": {
+        "count": 7600,
+        "min": 0.004516584054452893,
+        "p10": 0.31306060847237405,
+        "median": 0.95,
+        "p90": 0.95,
+        "max": 0.95
+      },
+      "sigma_nonconstant_mass_rows": {
+        "count": 630,
+        "min": 0.004516584054452893,
+        "p10": 0.004992013954921618,
+        "median": 0.009033168108905787,
+        "p90": 0.043112847792504884,
+        "max": 0.9484826514351076
+      },
+      "L1_thresholds": {
+        "count": 1470,
+        "min": 15.079365079365079,
+        "p10": 49.479166666666664,
+        "median": 9500.0,
+        "p90": 9500.0,
+        "max": 9500.0
+      },
+      "numerical_power_iterations": 80,
+      "numerical_scaled_Gram_Rayleigh_quotient": 0.9019260419217447,
+      "numerical_scaled_Gram_eigenpair_residual_l2": 0.0008457051476121514,
+      "numerical_norm_note": "Rayleigh quotient/residual are a coefficient-only numerical probe, not the certificate or an optimization solve.",
+      "old_Ruiz_D_R_hashes_reproduced": true,
+      "invalid_reused_old_metric_norm_squared_lower_bound": 4748.190712654832,
+      "old_unit_weight_tau_mass_virtual": {
+        "count": 210,
+        "min": 6.0701246740336794e-05,
+        "p10": 6.0701246740336794e-05,
+        "median": 6.0701246740336794e-05,
+        "p90": 6.0701246740336794e-05,
+        "max": 6.0701246740336794e-05
+      },
+      "old_unit_weight_sigma_mass_rows": {
+        "count": 630,
+        "min": 1761.1485422179935,
+        "p10": 1761.1485422179935,
+        "median": 1761.1485422179935,
+        "p90": 1761.1485422179935,
+        "max": 1761.1485422179935
+      },
+      "tau_sha256": "3d76410339888b2a7835f20e06ced5fd9240f3629b0c7d005268685719a16aa0",
+      "sigma_sha256": "a4041cf37e80812aafaccaba058d4d6514b4ecf637cbd1b31319f580fd8aae63"
+    },
+    {
+      "capture": "difficult",
+      "input_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "intervals": 233,
+      "retained_variables": 3974,
+      "retained_rows": 8432,
+      "base_numeric_entries": 22180,
+      "logical_numeric_entries": 185746,
+      "mass_rows": 702,
+      "SOC_blocks_tied": 234,
+      "SOC_rows_given_smaller_step": 1,
+      "exact_expansion_matches_scan_absolute_sums": true,
+      "stored_FP64_step_norm_squared_certificate": 0.9025,
+      "certificate_exact_rational": "3265698766771183323477982044675201188448329260974456170380801912519634484267/3618502788666131106986593281521497120414687020801267626233049500247285301248",
+      "theta_exact": "19/20",
+      "zero_operator_rows_retained": 4,
+      "zero_operator_columns_retained": 0,
+      "tau": {
+        "count": 3974,
+        "min": 0.0013590844062947066,
+        "p10": 0.1834072042556266,
+        "median": 0.31654212194277376,
+        "p90": 0.95,
+        "max": 0.95
+      },
+      "tau_mass_virtual": {
+        "count": 233,
+        "min": 0.0013590844062947066,
+        "p10": 0.0015079365079365078,
+        "median": 0.002706552706552706,
+        "p90": 0.012666666666666666,
+        "max": 0.31666666666666665
+      },
+      "tau_gamma_in_mass_dynamics": {
+        "count": 233,
+        "min": 0.16916426332436396,
+        "p10": 0.1710155030292906,
+        "median": 0.17893322288354238,
+        "p90": 0.18752180148446346,
+        "max": 0.18994979428583778
+      },
+      "sigma": {
+        "count": 8432,
+        "min": 0.004073671873983707,
+        "p10": 0.3130406063133984,
+        "median": 0.95,
+        "p90": 0.95,
+        "max": 0.95
+      },
+      "sigma_nonconstant_mass_rows": {
+        "count": 699,
+        "min": 0.004073671873983707,
+        "p10": 0.004519827398545195,
+        "median": 0.008112510715337529,
+        "p90": 0.03954848973727045,
+        "max": 0.9491637536944909
+      },
+      "L1_thresholds": {
+        "count": 1631,
+        "min": 13.590844062947067,
+        "p10": 45.238095238095234,
+        "median": 9500.0,
+        "p90": 9500.0,
+        "max": 9500.0
+      },
+      "numerical_power_iterations": 80,
+      "numerical_scaled_Gram_Rayleigh_quotient": 0.9021229119758887,
+      "numerical_scaled_Gram_eigenpair_residual_l2": 0.0010220741105502844,
+      "numerical_norm_note": "Rayleigh quotient/residual are a coefficient-only numerical probe, not the certificate or an optimization solve.",
+      "old_Ruiz_D_R_hashes_reproduced": true,
+      "invalid_reused_old_metric_norm_squared_lower_bound": 5913.878557144089,
+      "old_unit_weight_tau_mass_virtual": {
+        "count": 233,
+        "min": 5.929965319085281e-05,
+        "p10": 5.929965319085281e-05,
+        "median": 5.929965319085281e-05,
+        "p90": 5.929965319085281e-05,
+        "max": 5.929965319085281e-05
+      },
+      "old_unit_weight_sigma_mass_rows": {
+        "count": 699,
+        "min": 1825.2296127134584,
+        "p10": 1825.2296127134584,
+        "median": 1825.2296127134584,
+        "p90": 1825.2296127134584,
+        "max": 1825.2296127134584
+      },
+      "tau_sha256": "e67ff4e108f64a31ebe30497938bacecf8763d7fc8d0460020794b50ab1567f1",
+      "sigma_sha256": "c9d6e2c55ad2c14a4b854757ca8b2e81564dcce73532255f468bf359c8b889db"
+    }
+  ]
+}

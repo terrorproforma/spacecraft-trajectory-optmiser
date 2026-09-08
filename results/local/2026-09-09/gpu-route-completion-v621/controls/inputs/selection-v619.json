@@ -1,0 +1,117 @@
+{
+  "frozen_utc": "2026-09-08T19:42:17.013259+00:00",
+  "routes": [
+    {
+      "ship": 23,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-23.json",
+      "sha256": "8a5e629546ee68ac999c0c2aae9fe996057030473b1ecb1ae25bb605a139545d",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 19,
+      "raw_kg": 654.0999315537304,
+      "weighted_kg": 542.1211869125834,
+      "certified_hop_propellant_kg": 1463.613659807222,
+      "maximum_hop_propellant_kg": 190.1757009282278,
+      "purpose": "target"
+    },
+    {
+      "ship": 1,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-01.json",
+      "sha256": "bbfe9885b9637642f9179bebf5be2aae99e187f9b94d87c84a439b684d5fbfc8",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 19,
+      "raw_kg": 617.3853524982889,
+      "weighted_kg": 589.3500649680418,
+      "certified_hop_propellant_kg": 1496.1593758511485,
+      "maximum_hop_propellant_kg": 155.51368583550357,
+      "purpose": "prespecified control"
+    },
+    {
+      "ship": 4,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-04.json",
+      "sha256": "3e075bffdf76af8e345c40b649568d51941e394b6ac7487bcfe4c6df15820318",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 18,
+      "raw_kg": 586.8583162217659,
+      "weighted_kg": 586.8583162217659,
+      "certified_hop_propellant_kg": 1535.1390173728998,
+      "maximum_hop_propellant_kg": 246.2331675751998,
+      "purpose": "prespecified control"
+    },
+    {
+      "ship": 7,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-07.json",
+      "sha256": "033e0c5457fd4aeffea325b7ea6d5a5b1809e2e1a8c5483ed58923e062075068",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 17,
+      "raw_kg": 614.4284736481861,
+      "weighted_kg": 522.6358885649358,
+      "certified_hop_propellant_kg": 1595.6742500287655,
+      "maximum_hop_propellant_kg": 188.4082986404619,
+      "CPU_initial_feasible": true,
+      "failure": "",
+      "visits": 18,
+      "measured_legs": 17,
+      "purpose": "prespecified control"
+    },
+    {
+      "ship": 10,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-10.json",
+      "sha256": "8255accd56912b13e6c35277ebd6536eb69b861146dac341a17dd608621e0bd5",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 17,
+      "raw_kg": 582.0670773442847,
+      "weighted_kg": 556.9120091770276,
+      "certified_hop_propellant_kg": 1529.5596536704777,
+      "maximum_hop_propellant_kg": 174.50352529012298,
+      "CPU_initial_feasible": true,
+      "failure": "",
+      "visits": 18,
+      "measured_legs": 17,
+      "purpose": "prespecified control"
+    }
+  ],
+  "selection_before_replay": true,
+  "models": [
+    "v616_no_fit",
+    "existing_fit_no_refit"
+  ],
+  "prefixes": [
+    "flat_deployment_proxy",
+    "measured_deployment_prefix"
+  ],
+  "implementations": [
+    "baseline",
+    "candidate"
+  ],
+  "scalar_bridge_calls": 40,
+  "GPU_calls": 0,
+  "Lambert_calls": 0,
+  "DP_solves": 0,
+  "refinements": 0,
+  "fit_sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e",
+  "fit_historical_training_and_holdout": {
+    "commit": "8ecd801ad72d9252c9d26d55967ef1498178630a",
+    "holdout_hops": 2925,
+    "holdout_sources": [
+      "results/gtoc12/runs/cluster_fleet_v5",
+      "results/gtoc12/runs/cluster_fleet_v5c",
+      "results/gtoc12/runs/probe_v5_family247"
+    ],
+    "train_hops": 3285,
+    "train_sources": [
+      "results/gtoc12/runs/cluster_fleet_v1",
+      "results/gtoc12/runs/cluster_fleet_v2_deep",
+      "results/gtoc12/runs/cluster_fleet_v3_repair",
+      "results/gtoc12/runs/cluster_fleet_v4",
+      "results/gtoc12/runs/fleet10_master_v1",
+      "results/gtoc12/runs/probe_v4_family"
+    ]
+  },
+  "fit_scope": "Existing coefficients unchanged; these five controls are not claimed statistically held out from the historical fit.",
+  "scope": "CPU bridge replay on archived epochs and saved Lambert DVs. No grid, pruning, native solver, trajectory recertification, fleet emission or promotion."
+}

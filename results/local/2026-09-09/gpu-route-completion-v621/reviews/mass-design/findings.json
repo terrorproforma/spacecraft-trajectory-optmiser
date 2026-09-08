@@ -1,0 +1,111 @@
+{
+  "scope": "Bounded coefficient-only CPU mathematical review; no point files, GPU, compiler or solver calls",
+  "script_sha256": "0d95dc6ab782ed04d8aaeb48792402fd683249538311bab67ccf154d8fb2161b",
+  "reader_sha256": "b8697eedc3d91ed48849725b4fd8e17dc7515c020f5f3d30f1aa151794a5dbc4",
+  "source_hashes": {
+    "cpp/cuda/src/gtoc12_conic.cu": "3e04dac39a852c44dbe4c7347f4f0157430c719d155cb74c004f9250296555ac",
+    "cpp/cuda/src/gtoc12_discretisation.cu": "b0ab40a5ff6ba4c272e895ae09ce64999ec46eb528593ec3cc5e587cd90d359f"
+  },
+  "frozen_source_tree": "e476bbf3065173ed7b06fca49306537ffe1d47804c281bacd441e5a42104e1a9",
+  "cases": [
+    {
+      "capture": "conditioning",
+      "input_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "intervals": 210,
+      "original_variables": 5261,
+      "original_equalities": 1487,
+      "original_cone_rows": 9264,
+      "eliminated_mass_variables": 211,
+      "eliminated_equalities": 211,
+      "all_virtual_variables_retained": 1470,
+      "reduced_variables": 5050,
+      "reduced_equalities": 1276,
+      "combined_L1_reduced_variables": 3580,
+      "current_mass_coefficient": -1,
+      "next_mass_coefficient": 1,
+      "virtual_mass_coefficient": -1,
+      "gamma_coefficient_range": [
+        0.0015997641734369797,
+        0.0015997641734370213
+      ],
+      "affine_rhs_range": [
+        1.5997641734369797e-06,
+        1.5997641734370214e-06
+      ],
+      "initial_mass": 1,
+      "hessian_exactly_zero": true,
+      "original_mass_costs_exactly_zero": true,
+      "retained_equality_mass_entries": 0,
+      "scalar_mass_bound_rows": 633,
+      "SOC_mass_entries": 0,
+      "scan_constant_last": 1.0003359504764218,
+      "exact_fraction_checks": {
+        "eliminated_equalities": true,
+        "original_reduced_mass_slacks": true,
+        "forward_reverse_adjoint": true,
+        "eliminated_dual_stationarity": true,
+        "retained_dual_pullback": true,
+        "dual_objective_offset_sign": true
+      },
+      "synthetic_FP64_mass_residual_max": 1.7545323878318238e-16,
+      "numerical_operator_entries_original": 27343,
+      "numerical_operator_entries_explicit_mass_reduction": 158799,
+      "numerical_operator_entries_combined_L1_before": 21463,
+      "numerical_operator_entries_combined_L1_after": 152919,
+      "explicit_cumulative_mass_entries": 132930,
+      "cumulative_mass_operator_norm_lower_bound": 210.7498517199953,
+      "cumulative_mass_operator_norm_lower_bound_squared_exact": "88831/2",
+      "note": "Three scalar mass rows per node. Their retained mass-virtual columns have unit entries, so infinity-norm Ruiz alone leaves this cumulative subblock unscaled."
+    },
+    {
+      "capture": "difficult",
+      "input_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "intervals": 233,
+      "original_variables": 5839,
+      "original_equalities": 1648,
+      "original_cone_rows": 10280,
+      "eliminated_mass_variables": 234,
+      "eliminated_equalities": 234,
+      "all_virtual_variables_retained": 1631,
+      "reduced_variables": 5605,
+      "reduced_equalities": 1414,
+      "combined_L1_reduced_variables": 3974,
+      "current_mass_coefficient": -1,
+      "next_mass_coefficient": 1,
+      "virtual_mass_coefficient": -1,
+      "gamma_coefficient_range": [
+        0.00044051740400647516,
+        0.0008810348080129503
+      ],
+      "affine_rhs_range": [
+        4.405174040064752e-07,
+        8.810348080129504e-07
+      ],
+      "initial_mass": 1,
+      "hessian_exactly_zero": true,
+      "original_mass_costs_exactly_zero": true,
+      "retained_equality_mass_entries": 0,
+      "scalar_mass_bound_rows": 702,
+      "SOC_mass_entries": 0,
+      "scan_constant_last": 1.000204840592863,
+      "exact_fraction_checks": {
+        "eliminated_equalities": true,
+        "original_reduced_mass_slacks": true,
+        "forward_reverse_adjoint": true,
+        "eliminated_dual_stationarity": true,
+        "retained_dual_pullback": true,
+        "dual_objective_offset_sign": true
+      },
+      "synthetic_FP64_mass_residual_max": 1.1163289027776746e-16,
+      "numerical_operator_entries_original": 30339,
+      "numerical_operator_entries_explicit_mass_reduction": 192270,
+      "numerical_operator_entries_combined_L1_before": 23815,
+      "numerical_operator_entries_combined_L1_after": 185746,
+      "explicit_cumulative_mass_entries": 163566,
+      "cumulative_mass_operator_norm_lower_bound": 233.7498663101222,
+      "cumulative_mass_operator_norm_lower_bound_squared_exact": "54639",
+      "note": "Three scalar mass rows per node. Their retained mass-virtual columns have unit entries, so infinity-norm Ruiz alone leaves this cumulative subblock unscaled."
+    }
+  ],
+  "disposition": "Exact affine reduction is possible for these captures; do not reuse the old operator scaling/step estimate or materialize the cumulative fill without review."
+}

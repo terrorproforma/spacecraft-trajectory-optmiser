@@ -1678,8 +1678,29 @@ class RouteSearch:
         shortlist = self._filter(ordered, max(s.chain_tour_candidates, s.beam_width))
         heuristic_order = [id(p) for p in shortlist[: s.beam_width]]
         started = time.perf_counter()
-        for partial in shortlist:
-            partial.score = self._chain_score(partial)
+        from .gpu_completion import enabled as cuda_completion_enabled
+
+        if (
+            cuda_completion_enabled()
+            and getattr(self._chain_score, "__func__", None) is RouteSearch._chain_score
+        ):
+            tours = [self._chain_tour(partial) for partial in shortlist]
+            available = [
+                (partial, tour)
+                for partial, tour in zip(shortlist, tours, strict=True)
+                if tour is not None
+            ]
+            completed = iter(self._plans_from_tours(available))
+            for partial, tour in zip(shortlist, tours, strict=True):
+                if tour is None:
+                    self.chain_tour_stats["no_tour"] += 1
+                    partial.score -= self.CHAIN_FALLBACK_KG
+                else:
+                    plan, _ = next(completed)
+                    partial.score = self._score_chain_plan(partial, tour, plan)
+        else:
+            for partial in shortlist:
+                partial.score = self._chain_score(partial)
         self.chain_tour_stats["seconds"] += time.perf_counter() - started
         self.chain_tour_stats["levels"] += 1
         selected = self._ordered(shortlist)[: s.beam_width]
@@ -1758,12 +1779,18 @@ class RouteSearch:
         its children.
         """
 
-        s = self.settings
         tour = self._chain_tour(partial)
         if tour is None:
             self.chain_tour_stats["no_tour"] += 1
             return partial.score - self.CHAIN_FALLBACK_KG
         plan = self._plan_from_tour(partial, tour)
+        return self._score_chain_plan(partial, tour, plan)
+
+    def _score_chain_plan(
+        self, partial: _Partial, tour: CollectTour, plan: RoutePlan | None
+    ) -> float:
+        """Apply the existing chain score to an already completed tour."""
+        s = self.settings
         if plan is None or (
             plan.final_mass_proxy_kg - C.DRY_MASS_KG - sum(plan.collected_mass.values())
             < s.chain_tour_margin_kg
@@ -1978,13 +2005,37 @@ class RouteSearch:
 
         plans: list[RoutePlan] = []
         reasons: list[str] = []
+        from .gpu_completion import enabled as cuda_completion_enabled
+
         for penalty_scale in (1.0, 4.0, 16.0):
-            for mode in self.TOUR_MODES:
-                plan = self._schedule(partial, mode, penalty_scale)
-                if plan is not None:
-                    plans.append(plan)
-                else:
-                    reasons.append(f"{mode}x{penalty_scale:g}:{self.last_failure}")
+            if (
+                cuda_completion_enabled()
+                and getattr(self._schedule, "__func__", None) is RouteSearch._schedule
+            ):
+                requests, positions = [], []
+                outcomes = [(None, "")] * len(self.TOUR_MODES)
+                for index, mode in enumerate(self.TOUR_MODES):
+                    request = self._schedule_forward(partial, mode, penalty_scale)
+                    if request is None:
+                        outcomes[index] = (None, self.last_failure)
+                    else:
+                        positions.append(index)
+                        requests.append((partial, *request, False))
+                for index, result in zip(positions, self._finish_many(requests), strict=True):
+                    outcomes[index] = result
+                for mode, (plan, reason) in zip(self.TOUR_MODES, outcomes, strict=True):
+                    if plan is not None:
+                        plans.append(plan)
+                    else:
+                        self.last_failure = reason
+                        reasons.append(f"{mode}x{penalty_scale:g}:{reason}")
+            else:
+                for mode in self.TOUR_MODES:
+                    plan = self._schedule(partial, mode, penalty_scale)
+                    if plan is not None:
+                        plans.append(plan)
+                    else:
+                        reasons.append(f"{mode}x{penalty_scale:g}:{self.last_failure}")
             if plans:
                 break
         heuristic_best = max((self.plan_score(p) for p in plans), default=-np.inf)
@@ -2042,6 +2093,11 @@ class RouteSearch:
         if s.propellant_weight > 0.0 and abs(s.propellant_weight - weights[0]) > 1e-9:
             weights.append(s.propellant_weight)
         burn_per_hop: float | None = None  # the first tour's burn schedule prices the rest
+        from .gpu_completion import enabled as cuda_completion_enabled
+
+        batched = cuda_completion_enabled()
+        pending = []
+        outcomes = []
         for weight in weights:
             tour = plan_collect_tour(
                 self.collect_table,
@@ -2055,15 +2111,24 @@ class RouteSearch:
                 burn_per_hop=burn_per_hop,
             )
             if tour is None:
-                reasons.append(f"w{weight:g}:no_tour")
+                outcomes.append((weight, None, "no_tour"))
                 continue
             if burn_per_hop is None and tour.hop_propellant_kg:
                 mean_burn = float(np.mean(tour.hop_propellant_kg))
                 if np.isfinite(mean_burn):
                     burn_per_hop = mean_burn
-            plan = self._plan_from_tour(partial, tour)
+            if batched:
+                pending.append((partial, tour))
+                outcomes.append((weight, None, None))
+            else:
+                plan = self._plan_from_tour(partial, tour)
+                outcomes.append((weight, plan, self.last_failure if plan is None else ""))
+        completed = iter(self._plans_from_tours(pending)) if batched else iter(())
+        for weight, plan, reason in outcomes:
+            if reason is None:
+                plan, reason = next(completed)
             if plan is None:
-                reasons.append(f"w{weight:g}:{self.last_failure}")
+                reasons.append(f"w{weight:g}:{reason}")
             else:
                 plans.append(plan)
         if not plans:
@@ -2085,7 +2150,44 @@ class RouteSearch:
     def _plan_from_tour(self, partial: _Partial, tour: CollectTour) -> RoutePlan | None:
         """Legs of a DP tour (camps inserted between arrivals and departures) -> RoutePlan."""
 
-        deploy = dict(partial.deployed)
+        legs_forward = self._tour_forward_legs(partial, tour)
+        if legs_forward is None:
+            return None
+        return self._finish(
+            partial,
+            dict(partial.deployed),
+            dict(tour.collect_epochs),
+            legs_forward,
+            use_collect_table=True,
+        )
+
+    def _plans_from_tours(
+        self, rows: list[tuple[_Partial, CollectTour]]
+    ) -> list[tuple[RoutePlan | None, str]]:
+        """Finish a shortlist together, retaining its order and individual failures."""
+
+        results: list[tuple[RoutePlan | None, str]] = [(None, "")] * len(rows)
+        requests = []
+        indices = []
+        for index, (partial, tour) in enumerate(rows):
+            legs = self._tour_forward_legs(partial, tour)
+            if legs is None:
+                results[index] = (None, self.last_failure)
+            else:
+                indices.append(index)
+                requests.append(
+                    (partial, dict(partial.deployed), dict(tour.collect_epochs), legs, True)
+                )
+        for index, result in zip(indices, self._finish_many(requests), strict=True):
+            results[index] = result
+        for _, reason in results:
+            if reason:
+                self.last_failure = reason
+        return results
+
+    def _tour_forward_legs(self, partial: _Partial, tour: CollectTour) -> list[PlannedLeg] | None:
+        """Construct DP flight/camp records before numerical completion costing."""
+
         legs_forward: list[PlannedLeg] = []
         location = partial.location
         epoch = partial.epoch
@@ -2130,13 +2232,19 @@ class RouteSearch:
                 "earth_return",
             )
         )
-        return self._finish(
-            partial, deploy, dict(tour.collect_epochs), legs_forward, use_collect_table=True
-        )
+        return legs_forward
 
     def _schedule(
         self, partial: _Partial, mode: str | bool, penalty_scale: float = 1.0
     ) -> RoutePlan | None:
+        request = self._schedule_forward(partial, mode, penalty_scale)
+        if request is None:
+            return None
+        return self._finish(partial, *request)
+
+    def _schedule_forward(
+        self, partial: _Partial, mode: str | bool, penalty_scale: float = 1.0
+    ) -> tuple[dict[int, float], dict[int, float], list[PlannedLeg]] | None:
         """Schedule the collection tour and Earth return backwards from the window end.
 
         ``mode`` is one of :attr:`TOUR_MODES` (``True``/``False`` are accepted for the legacy
@@ -2202,7 +2310,7 @@ class RouteSearch:
                 best_return[1],
                 best_return[1] + best_return[2],
                 best_return[0],
-                self.return_inflation_for(best_return[0], mass_guess, best_return[2]),
+                1.0,  # completion prices the selected flight at its forward mass
                 "earth_return",
             )
         ]
@@ -2253,7 +2361,7 @@ class RouteSearch:
                     best_hop[1],
                     arrival,
                     best_hop[0],
-                    self.hop_inflation_for(best_hop[0], mass_guess, best_hop[2]),
+                    1.0,  # completion prices the selected flight at its forward mass
                     "collect_hop",
                 )
             )
@@ -2283,9 +2391,46 @@ class RouteSearch:
                 )
             )
         legs_forward.extend(reversed(legs_backward))
-        return self._finish(partial, deploy, collect, legs_forward)
+        return deploy, collect, legs_forward
 
     def _finish(
+        self,
+        partial: _Partial,
+        deploy: dict[int, float],
+        collect: dict[int, float],
+        legs_forward: list[PlannedLeg],
+        *,
+        use_collect_table: bool = False,
+    ) -> RoutePlan | None:
+        from .gpu_completion import finish_many
+
+        result = finish_many(self, [(partial, deploy, collect, legs_forward, use_collect_table)])
+        if result is not None:
+            plan, reason = result[0]
+            if reason:
+                self.last_failure = reason
+            return plan
+        return self._finish_cpu(
+            partial, deploy, collect, legs_forward, use_collect_table=use_collect_table
+        )
+
+    def _finish_many(self, requests) -> list[tuple[RoutePlan | None, str]]:
+        """One native batch, or the unchanged scalar reference outside CUDA mode."""
+        from .gpu_completion import finish_many
+
+        result = finish_many(self, requests)
+        if result is not None:
+            for _, reason in result:
+                if reason:
+                    self.last_failure = reason
+            return result
+        rows = []
+        for partial, deploy, collect, legs, use_table in requests:
+            plan = self._finish(partial, deploy, collect, legs, use_collect_table=use_table)
+            rows.append((plan, self.last_failure if plan is None else ""))
+        return rows
+
+    def _finish_cpu(
         self,
         partial: _Partial,
         deploy: dict[int, float],

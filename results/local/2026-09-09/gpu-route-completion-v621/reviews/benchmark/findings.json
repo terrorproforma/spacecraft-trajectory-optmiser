@@ -1,0 +1,196 @@
+{
+  "passed": true,
+  "scope": "Read-only standard-library audit of saved completion benchmark, no GPU/native loading/new costing experiment.",
+  "script_sha256": "e33ed846bd39a95df6d1c6af7179c68b7e05090744292334cbb7257754649395",
+  "independent_formula_helper_sha256": "86d63e1be44bd2222e8bd7103b489a2bf05a049e82979a3c1c56b0fd661aa88a",
+  "ready_sha256": "6227c91680ab4406d5f3fd3bdd7ac17317d78a2c4b90e8b143c24fb25ad23f2f",
+  "launch_report_sha256": "67d7a39ff7c974e84a00b733cea7e3f77135da5f2958ccb839e456d3dda71d06",
+  "benchmark_report_sha256": "d5145e5bf299f1d4c48fc3a72f13c75062cd6d5d80b3f5821aa0bef00680636a",
+  "output_file_count": 174,
+  "output_tree_sha256": "3a2262d7105dc92dc0f6a623721ffe43e5f77075b8d80c3335abce6486fe98d4",
+  "counts": {
+    "saved_GPU_calls": 60,
+    "timed_CPU_batches": 60,
+    "GPU_candidates": 14200,
+    "CPU_candidates": 14200,
+    "raw_fields_vs_frozen": 1882620,
+    "raw_fields_vs_independent": 1882620,
+    "compact_outcome_fields": 6960
+  },
+  "max_finite_differences": {
+    "raw_fields_vs_frozen": {
+      "absolute": 4.547473508864641e-13,
+      "path": "v616_no_fit-n24/0/6/result/propellant"
+    },
+    "raw_fields_vs_independent": {
+      "absolute": 4.547473508864641e-13,
+      "path": "v616_no_fit-n24/0/6/result/propellant"
+    },
+    "compact_outcome_fields": {
+      "absolute": 2.2737367544323206e-13,
+      "path": "existing_fit_no_refit-n4/gpu/0/mass"
+    }
+  },
+  "paired_share_definition": "Median of four warm per-sample pack/method or native/method fractions, not ratio of unrelated medians.",
+  "unique_historical_controls": 20,
+  "groups": [
+    {
+      "group": "v616_no_fit-n4",
+      "size": 4,
+      "accepted_per_call": 1,
+      "CPU_median_seconds": 0.000332794000001968,
+      "GPU_median_seconds": 0.0007510309999929632,
+      "CPU_over_GPU_speed_ratio": 0.4431161962756346,
+      "GPU_proxy_evaluations_per_second": 5326.011842437234,
+      "median_paired_pack_share_of_GPU_method": 0.23718087297723756,
+      "median_paired_native_share_of_GPU_method": 0.6195545260085937,
+      "first_GPU_method_seconds": 0.2353048539999918,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "v616_no_fit-n24",
+      "size": 24,
+      "accepted_per_call": 3,
+      "CPU_median_seconds": 0.0012102710000192474,
+      "GPU_median_seconds": 0.00125633700000094,
+      "CPU_over_GPU_speed_ratio": 0.963333086598852,
+      "GPU_proxy_evaluations_per_second": 19103.15464718626,
+      "median_paired_pack_share_of_GPU_method": 0.5062225576046488,
+      "median_paired_native_share_of_GPU_method": 0.38281621026930357,
+      "first_GPU_method_seconds": 0.0017257849999623431,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "v616_no_fit-n48",
+      "size": 48,
+      "accepted_per_call": 5,
+      "CPU_median_seconds": 0.0022497095000062473,
+      "GPU_median_seconds": 0.0019450414999653276,
+      "CPU_over_GPU_speed_ratio": 1.1566383031140213,
+      "GPU_proxy_evaluations_per_second": 24678.136688011877,
+      "median_paired_pack_share_of_GPU_method": 0.5830554050978793,
+      "median_paired_native_share_of_GPU_method": 0.28555223888516384,
+      "first_GPU_method_seconds": 0.0024475210000218794,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "v616_no_fit-n64",
+      "size": 64,
+      "accepted_per_call": 7,
+      "CPU_median_seconds": 0.002934022000005143,
+      "GPU_median_seconds": 0.0023571794999952544,
+      "CPU_over_GPU_speed_ratio": 1.244717256369763,
+      "GPU_proxy_evaluations_per_second": 27151.09307548655,
+      "median_paired_pack_share_of_GPU_method": 0.6557485205018745,
+      "median_paired_native_share_of_GPU_method": 0.23290260622513081,
+      "first_GPU_method_seconds": 0.003642017999993641,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "v616_no_fit-n256",
+      "size": 256,
+      "accepted_per_call": 26,
+      "CPU_median_seconds": 0.010558743499984757,
+      "GPU_median_seconds": 0.0068975570000020525,
+      "CPU_over_GPU_speed_ratio": 1.530794671212085,
+      "GPU_proxy_evaluations_per_second": 37114.589991778805,
+      "median_paired_pack_share_of_GPU_method": 0.8097013135644274,
+      "median_paired_native_share_of_GPU_method": 0.0900034355380708,
+      "first_GPU_method_seconds": 0.007371594999995068,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "v616_no_fit-n1024",
+      "size": 1024,
+      "accepted_per_call": 103,
+      "CPU_median_seconds": 0.04267238499997461,
+      "GPU_median_seconds": 0.025061033000014277,
+      "CPU_over_GPU_speed_ratio": 1.702738470515174,
+      "GPU_proxy_evaluations_per_second": 40860.24706162019,
+      "median_paired_pack_share_of_GPU_method": 0.8650529008233674,
+      "median_paired_native_share_of_GPU_method": 0.03437320007251653,
+      "first_GPU_method_seconds": 0.027101770999991004,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "existing_fit_no_refit-n4",
+      "size": 4,
+      "accepted_per_call": 1,
+      "CPU_median_seconds": 0.001211972999954014,
+      "GPU_median_seconds": 0.000814757999989979,
+      "CPU_over_GPU_speed_ratio": 1.4875251301232029,
+      "GPU_proxy_evaluations_per_second": 4909.43323054109,
+      "median_paired_pack_share_of_GPU_method": 0.3424375904612196,
+      "median_paired_native_share_of_GPU_method": 0.5421778726481481,
+      "first_GPU_method_seconds": 0.0012998739999829922,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "existing_fit_no_refit-n24",
+      "size": 24,
+      "accepted_per_call": 3,
+      "CPU_median_seconds": 0.004850129999994124,
+      "GPU_median_seconds": 0.0016165320000141037,
+      "CPU_over_GPU_speed_ratio": 3.000330336765253,
+      "GPU_proxy_evaluations_per_second": 14846.5975308813,
+      "median_paired_pack_share_of_GPU_method": 0.6092211441419517,
+      "median_paired_native_share_of_GPU_method": 0.3065162456142547,
+      "first_GPU_method_seconds": 0.002138983999998345,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "existing_fit_no_refit-n48",
+      "size": 48,
+      "accepted_per_call": 5,
+      "CPU_median_seconds": 0.009544429000015953,
+      "GPU_median_seconds": 0.002812013000010438,
+      "CPU_over_GPU_speed_ratio": 3.394162473637399,
+      "GPU_proxy_evaluations_per_second": 17069.62236654732,
+      "median_paired_pack_share_of_GPU_method": 0.7134788023173291,
+      "median_paired_native_share_of_GPU_method": 0.2107264565063543,
+      "first_GPU_method_seconds": 0.0032321620000175244,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "existing_fit_no_refit-n64",
+      "size": 64,
+      "accepted_per_call": 7,
+      "CPU_median_seconds": 0.013190462499977684,
+      "GPU_median_seconds": 0.003388978499970108,
+      "CPU_over_GPU_speed_ratio": 3.8921647039348373,
+      "GPU_proxy_evaluations_per_second": 18884.74653957365,
+      "median_paired_pack_share_of_GPU_method": 0.7514910135045637,
+      "median_paired_native_share_of_GPU_method": 0.17338358274781243,
+      "first_GPU_method_seconds": 0.0038885840000375538,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "existing_fit_no_refit-n256",
+      "size": 256,
+      "accepted_per_call": 26,
+      "CPU_median_seconds": 0.049677395000003344,
+      "GPU_median_seconds": 0.011227587999968591,
+      "CPU_over_GPU_speed_ratio": 4.424583000386398,
+      "GPU_proxy_evaluations_per_second": 22800.97915961257,
+      "median_paired_pack_share_of_GPU_method": 0.8788783269554329,
+      "median_paired_native_share_of_GPU_method": 0.054851453464631286,
+      "first_GPU_method_seconds": 0.01150750300001846,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    },
+    {
+      "group": "existing_fit_no_refit-n1024",
+      "size": 1024,
+      "accepted_per_call": 103,
+      "CPU_median_seconds": 0.20011986849996788,
+      "GPU_median_seconds": 0.04120661549998772,
+      "CPU_over_GPU_speed_ratio": 4.856498551792673,
+      "GPU_proxy_evaluations_per_second": 24850.378697088217,
+      "median_paired_pack_share_of_GPU_method": 0.9139467896228815,
+      "median_paired_native_share_of_GPU_method": 0.019984449858905094,
+      "first_GPU_method_seconds": 0.04232678299996451,
+      "all_five_GPU_raw_numerical_readbacks_byte_equal": true
+    }
+  ],
+  "interpretation": "Warm proxy completion on repeated saved requests with cached geometry. Setup/construction/capture/validation are separately retained; method timing includes complete CPU loop or GPU pack/native/readout. Four warm samples per group, single device/launch. No distinct-solution, SOTA, current-fleet, physics-certification or full-mission speed claim.",
+  "next_measured_bottleneck": "Host packing/model metadata dominates large GPU batches; preserve scalar parity when considering retained numeric metadata. Small no-fit batches do not justify automatic GPU routing."
+}

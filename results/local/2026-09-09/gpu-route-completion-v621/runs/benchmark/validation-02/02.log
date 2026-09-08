@@ -1,0 +1,1108 @@
+FFFFFFFFFFFF..                                                           [100%]
+=================================== FAILURES ===================================
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n4] _
+
+group = {'id': 'v616_no_fit-n4', 'model': 'v616_no_fit', 'size': 4, 'fixture_indices': [8, 0, 1, 4], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddba090b8c0>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr...8183.0, ...}, {'from_id': 26896, 'to_id': 3909, 'departure_epoch': 68183.0, 'arrival_epoch': 68303.0, ...}, ...], ...}]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n24] _
+
+group = {'id': 'v616_no_fit-n24', 'model': 'v616_no_fit', 'size': 24, 'fixture_indices': [8, 0, 1, 4, 5, 9, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddba36a8830>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n48] _
+
+group = {'id': 'v616_no_fit-n48', 'model': 'v616_no_fit', 'size': 48, 'fixture_indices': [8, 0, 1, 4, 5, 9, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddb978b7770>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n64] _
+
+group = {'id': 'v616_no_fit-n64', 'model': 'v616_no_fit', 'size': 64, 'fixture_indices': [8, 0, 1, 4, 5, 9, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddba4251790>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n256] _
+
+group = {'id': 'v616_no_fit-n256', 'model': 'v616_no_fit', 'size': 256, 'fixture_indices': [8, 0, 1, 4, 5, 9, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddb9afe5bb0>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n1024] _
+
+group = {'id': 'v616_no_fit-n1024', 'model': 'v616_no_fit', 'size': 1024, 'fixture_indices': [8, 0, 1, 4, 5, 9, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddba3fd6900>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n4] _
+
+group = {'id': 'existing_fit_no_refit-n4', 'model': 'existing_fit_no_refit', 'size': 4, 'fixture_indices': [10, 2, 3, 6], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddba3aab890>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr...8183.0, ...}, {'from_id': 26896, 'to_id': 3909, 'departure_epoch': 68183.0, 'arrival_epoch': 68303.0, ...}, ...], ...}]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n24] _
+
+group = {'id': 'existing_fit_no_refit-n24', 'model': 'existing_fit_no_refit', 'size': 24, 'fixture_indices': [10, 2, 3, 6, 7, 11, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddb97f79af0>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n48] _
+
+group = {'id': 'existing_fit_no_refit-n48', 'model': 'existing_fit_no_refit', 'size': 48, 'fixture_indices': [10, 2, 3, 6, 7, 11, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddb9dc49580>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n64] _
+
+group = {'id': 'existing_fit_no_refit-n64', 'model': 'existing_fit_no_refit', 'size': 64, 'fixture_indices': [10, 2, 3, 6, 7, 11, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddb9df5be00>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n256] _
+
+group = {'id': 'existing_fit_no_refit-n256', 'model': 'existing_fit_no_refit', 'size': 256, 'fixture_indices': [10, 2, 3, 6, 7, 11, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddb9793b740>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+_ test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n1024] _
+
+group = {'id': 'existing_fit_no_refit-n1024', 'model': 'existing_fit_no_refit', 'size': 1024, 'fixture_indices': [10, 2, 3, 6, 7, 11, ...], ...}
+
+    @pytest.mark.parametrize("group", PLAN["groups"], ids=[g["id"] for g in PLAN["groups"]])
+    def test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing(group):
+        with (
+            patch.object(ctypes, "CDLL", side_effect=AssertionError("No GPU")),
+            patch.object(
+                search_module, "propellant_for_delta_v", side_effect=AssertionError("No CPU costing")
+            ),
+        ):
+            search, requests, cases, _ = construct(group)
+>           before = signature(requests)
+                     ^^^^^^^^^^^^^^^^^^^
+
+test_construction.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+common.py:112: in signature
+    return hashlib.sha256(json.dumps(data, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x7ddba368eb10>
+o = [{'partial': {'legs': [{'from_id': 0, 'to_id': 42615, 'departure_epoch': 64703.0, 'arrival_epoch': 65313.0, ...}, {'fr..., ...}, {'from_id': 34724, 'to_id': 27344, 'departure_epoch': 68498.0, 'arrival_epoch': 68678.0, ...}, ...], ...}, ...]
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: nan
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py:258: ValueError
+=========================== short test summary info ============================
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n4]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n24]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n48]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n64]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n256]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[v616_no_fit-n1024]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n4]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n24]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n48]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n64]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n256]
+FAILED test_construction.py::test_constructed_requests_preserve_archived_epochs_models_and_cargo_without_costing[existing_fit_no_refit-n1024]
+12 failed, 2 passed in 6.28s

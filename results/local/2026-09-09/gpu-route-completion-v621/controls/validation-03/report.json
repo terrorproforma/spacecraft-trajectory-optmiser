@@ -1,0 +1,96 @@
+{
+  "python": "3.12.13 (main, Jun 23 2026, 15:18:55) [Clang 22.1.3 ]",
+  "commands": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "audit_residuals.py",
+        "build_fixtures.py",
+        "fixture_oracle.py",
+        "prepare.py",
+        "test_fixture_evidence.py",
+        "validate.py"
+      ],
+      "exit_code": 0,
+      "log": "00.log"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix",
+        "audit_residuals.py",
+        "build_fixtures.py",
+        "fixture_oracle.py",
+        "prepare.py",
+        "test_fixture_evidence.py",
+        "validate.py"
+      ],
+      "exit_code": 0,
+      "log": "01.log"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "test_fixture_evidence.py"
+      ],
+      "exit_code": 0,
+      "log": "02.log"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "audit_residuals.py",
+        "build_fixtures.py",
+        "fixture_oracle.py",
+        "prepare.py",
+        "test_fixture_evidence.py",
+        "validate.py"
+      ],
+      "exit_code": 0,
+      "log": "03.log"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "audit_residuals.py",
+        "build_fixtures.py",
+        "fixture_oracle.py",
+        "prepare.py",
+        "test_fixture_evidence.py",
+        "validate.py"
+      ],
+      "exit_code": 0,
+      "log": "04.log"
+    }
+  ],
+  "all_passed": true,
+  "scripts_sha256": {
+    "audit_residuals.py": "8b595ee1ac74f300dae849d64fdc9361264c198d0eafbcc15175223892654aea",
+    "build_fixtures.py": "db4850f4e78d3dc1e8d30b9b2b0f27d758fea908b64cdafda9d256e9d058d519",
+    "fixture_oracle.py": "037daddcc73f4595e18691415bff6312b37d03fc385a47d45d1046d05ec6f415",
+    "prepare.py": "4ceac6f1456c28946478d5479291c39ee9cca0b03fd6db9da080a7f075fcf8df",
+    "test_fixture_evidence.py": "ff1a1db8b13e6133eb0bbcb6a7b4a5d0f6a3160675963edfea3c474b146bd5ac",
+    "validate.py": "c1468e0eb98b34dce05dc57f496c9add718976cc6f399e7c19d9cf8eaf09b812"
+  },
+  "fixtures_sha256": "bd2581b1a7034961adce09f063a5bf57610c3636d4cd95591dcdbd36dab97713",
+  "GPU_calls": 0
+}

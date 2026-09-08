@@ -1,0 +1,215 @@
+{
+  "passed": true,
+  "GPU_calls_by_reviewer": 0,
+  "native_loads_by_reviewer": 0,
+  "input_hashes": {
+    "build\\performance\\completion-native-controls-v621\\fixtures.json": "bd2581b1a7034961adce09f063a5bf57610c3636d4cd95591dcdbd36dab97713",
+    "build\\performance\\completion-native-controls-v621\\gpu-profile.json": "7e4ec0053ee11e438c0b2fa2ce113d796b66071480c2bec480c7de5ccb6cc24a",
+    "build\\performance\\completion-native-controls-v621\\gpu-output\\report.json": "3b0dddee118b28203dbcb136b731c5ab896cf2b6a7dd11378683ada0cff30e99",
+    "build\\performance\\completion-native-controls-v621\\gpu-output\\batch-readback.json": "e65e11eebd606603fe62129883b3cfa399a2fd61dff5d16484051313ea51f464",
+    "build\\performance\\completion-native-controls-v621\\gpu-output\\batch-comparison.json": "7f8d1d9f688ecdcf070a9ea5a8b152dd116e060c139870d2be9dfe61db9cbd9d",
+    "build\\performance\\completion-native-controls-v621\\gpu-output\\native-test.log": "bedc9967f5ad204c41ddd578ba50914dfb315753ab38ec712ae2f746d9839970",
+    "build\\performance\\completion-native-controls-v621\\gpu-output\\batch-events.jsonl": "fc3b247b215491a4b34ab2d8ad367f0e8257bc3cf399f30127c5b3a0c8071106"
+  },
+  "script_sha256": "86d63e1be44bd2222e8bd7103b489a2bf05a049e82979a3c1c56b0fd661aa88a",
+  "counts": {
+    "frozen_fields": 3132,
+    "independent_formula_fields": 3132
+  },
+  "maximum_finite_differences": {
+    "frozen_fields": {
+      "absolute": 4.547473508864641e-13,
+      "path": "historical-12-ship07-v616_no_fit-flat_deployment_proxy.result.propellant"
+    },
+    "independent_formula_fields": {
+      "absolute": 4.547473508864641e-13,
+      "path": "historical-12-ship07-v616_no_fit-flat_deployment_proxy.result.propellant"
+    }
+  },
+  "Decimal65_costed_finite_legs": 206,
+  "Decimal65_max_absolute_fuel_error_kg": "9.909293487611669392569822112775308191732644215222E-14",
+  "recorded_kernel_launches": 3,
+  "recorded_candidate_evaluations": 304,
+  "historical_successes": 2,
+  "synthetic_successes": 14,
+  "readback_stats": {
+    "upload_ms": 0.003776000114157796,
+    "kernel_ms": 37.87472152709961,
+    "download_ms": 0.17529599368572235,
+    "candidates": 42,
+    "deploy_slots": 196,
+    "leg_slots": 260
+  },
+  "recorded_API_seconds": 0.038646997000000294,
+  "timing_scope": "One first-use 42-case correctness batch; not steady-state throughput, comparative speedup or mission speed.",
+  "outcomes": [
+    {
+      "id": "historical-00-ship23-v616_no_fit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-01-ship23-v616_no_fit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-02-ship23-existing_fit_no_refit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-03-ship23-existing_fit_no_refit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-04-ship01-v616_no_fit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-05-ship01-v616_no_fit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-06-ship01-existing_fit_no_refit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-07-ship01-existing_fit_no_refit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-08-ship04-v616_no_fit-flat_deployment_proxy",
+      "failure": 0
+    },
+    {
+      "id": "historical-09-ship04-v616_no_fit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-10-ship04-existing_fit_no_refit-flat_deployment_proxy",
+      "failure": 0
+    },
+    {
+      "id": "historical-11-ship04-existing_fit_no_refit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-12-ship07-v616_no_fit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-13-ship07-v616_no_fit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-14-ship07-existing_fit_no_refit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-15-ship07-existing_fit_no_refit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-16-ship10-v616_no_fit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-17-ship10-v616_no_fit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "historical-18-ship10-existing_fit_no_refit-flat_deployment_proxy",
+      "failure": 5
+    },
+    {
+      "id": "historical-19-ship10-existing_fit_no_refit-measured_deployment_prefix",
+      "failure": 5
+    },
+    {
+      "id": "missing_collect_before_bad_leg",
+      "failure": 1
+    },
+    {
+      "id": "short_stay_before_bad_leg",
+      "failure": 2
+    },
+    {
+      "id": "nan_deploy_raises_mining_before_authority",
+      "failure": 6
+    },
+    {
+      "id": "authority_before_nan_inflation",
+      "failure": 3
+    },
+    {
+      "id": "nan_inflation_after_authority",
+      "failure": 4
+    },
+    {
+      "id": "negative_inflation_after_authority",
+      "failure": 4
+    },
+    {
+      "id": "certified_cell_still_checks_authority",
+      "failure": 3
+    },
+    {
+      "id": "certified_cell_retains_measured_cost",
+      "failure": 0
+    },
+    {
+      "id": "camp_skips_pickup_bad_dv_and_model",
+      "failure": 0
+    },
+    {
+      "id": "reposition_does_not_collect_early",
+      "failure": 0
+    },
+    {
+      "id": "pickup_inside_epoch_tolerance",
+      "failure": 0
+    },
+    {
+      "id": "pickup_outside_epoch_tolerance",
+      "failure": 0
+    },
+    {
+      "id": "repeated_pickup_changes_mass_once_dictionary",
+      "failure": 0
+    },
+    {
+      "id": "exact_dry_plus_cargo_equality",
+      "failure": 0
+    },
+    {
+      "id": "mass_below_dry_plus_cargo",
+      "failure": 5
+    },
+    {
+      "id": "ratio_model_prices_current_mass",
+      "failure": 0
+    },
+    {
+      "id": "fit_model_prices_all_five_features",
+      "failure": 0
+    },
+    {
+      "id": "generic_return_current_mass",
+      "failure": 0
+    },
+    {
+      "id": "table_return_current_mass",
+      "failure": 0
+    },
+    {
+      "id": "negative_infinite_dv_generic_return",
+      "failure": 0
+    },
+    {
+      "id": "negative_infinite_dv_table_return",
+      "failure": 0
+    },
+    {
+      "id": "cpython312_compensated_sum_pickup_order",
+      "failure": 0
+    }
+  ]
+}

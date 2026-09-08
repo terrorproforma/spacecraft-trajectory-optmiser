@@ -1,0 +1,29 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> finalize.py:3:1
+   |
+ 1 |   """Lint and index the finished preparation; never execute the benchmark."""
+ 2 |
+ 3 | / from __future__ import annotations
+ 4 | |
+ 5 | | import hashlib
+ 6 | | import json
+ 7 | | import os
+ 8 | | from pathlib import Path
+ 9 | | import subprocess
+10 | | import sys
+   | |__________^
+11 |
+12 |   KIT = Path(__file__).resolve().parent
+   |
+help: Organize imports
+   |
+7  | import os
+   - from pathlib import Path
+8  | import subprocess
+9  | import sys
+10 + from pathlib import Path
+11 |
+   |
+
+Found 1 error.
+[*] 1 fixable with the `--fix` option.

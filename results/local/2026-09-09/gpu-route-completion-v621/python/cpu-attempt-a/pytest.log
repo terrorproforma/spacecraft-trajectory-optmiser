@@ -1,0 +1,116 @@
+.................ssss........sF......................................F   [100%]
+=================================== FAILURES ===================================
+____ test_chain_prior_extraction_is_reproducible_and_targets_are_quantiles _____
+
+    @requires_data
+    def test_chain_prior_extraction_is_reproducible_and_targets_are_quantiles() -> None:
+        paths = reference_solution_files(data_directory())
+        if not paths:
+            pytest.skip("archived reference solutions not present")
+        catalogue = load_catalogue()
+        first = extract_chain_prior(catalogue, paths[:1])
+        second = extract_chain_prior(catalogue, paths[:1])
+        assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+        assert first["ships_decoded"] > 0
+        assert first["sources"][0]["file"] in REFERENCE_FILES
+        targets, dist = first["targets"], first["distributions"]
+        assert targets["collect_hop_kg_p75"] == dist["collect_hop_kg"]["p75"]
+        assert targets["deploy_hop_kg_p25"] == dist["deploy_hop_kg"]["p25"]
+        assert targets["collect_share_p90"] == dist["collect_share"]["p90"]
+        # the reference structure the ninth iteration targets: cheap collect hops, dearer deploys
+        assert 50.0 < targets["collect_hop_kg_median"] < 80.0
+        assert targets["deploy_hop_kg_median"] > targets["collect_hop_kg_median"]
+        prior = ChainPrior.from_document(first)
+        assert prior.collect_hop_kg_p75 == targets["collect_hop_kg_p75"]
+        # the committed document loads and agrees with a fresh full extraction
+>       committed = load_chain_prior("benchmarks/gtoc12/chain_prior_v1.json")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_gtoc12_chain.py:479: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/spacepdhcg/gtoc12/chainprior.py:293: in load_chain_prior
+    document = json.loads(path.read_text(encoding="utf-8"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('benchmarks/gtoc12/chain_prior_v1.json'), mode = 'r'
+buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'benchmarks/gtoc12/chain_prior_v1.json'
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_ test_harvest_phase_extraction_is_reproducible_and_matches_the_committed_document _
+
+    @requires_data
+    def test_harvest_phase_extraction_is_reproducible_and_matches_the_committed_document() -> None:
+        paths = reference_solution_files(data_directory())
+        if not paths:
+            pytest.skip("archived reference solutions not present")
+        catalogue = load_catalogue()
+        first = extract_harvest_phase(catalogue, paths[:1])
+        second = extract_harvest_phase(catalogue, paths[:1])
+        assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+        assert first["hops_decoded"] > 0 and first["sources"][0]["file"] in REFERENCE_FILES
+        targets = first["targets"]
+        assert 0.0 < targets["phase_deg_median"] <= targets["phase_deg_p75"] <= targets["phase_deg_p90"]
+        assert targets["kg_per_deg"] >= 0.0 and targets["days_per_deg"] >= 0.0
+        assert targets["exchange_kg_per_day"] == pytest.approx(
+            targets["asteroids_per_ship_median"] * C.MINING_RATE_KG_PER_YEAR / C.YEAR_DAYS
+        )
+        # the histogram covers every hop once and its fractions sum to one
+        bins = first["distributions"]["histogram"]
+        assert sum(b["count"] for b in bins) == first["hops_decoded"]
+        assert sum(b["fraction"] for b in bins) == pytest.approx(1.0)
+        # every recorded hop's phase is the pair's |Δλ| at its departure
+        hop = first["hops"][0]
+        leg_phase = phase_deg_at(catalogue, hop["from"], hop["to"], hop["departure_epoch"])
+        assert hop["phase_deg"] == pytest.approx(leg_phase)
+        # the committed document was produced by this extraction on the pinned files
+>       committed = load_harvest_phase(COMMITTED)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_gtoc12_harvestphase.py:186: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/spacepdhcg/gtoc12/harvestphase.py:274: in load_harvest_phase
+    document = json.loads(path.read_text(encoding="utf-8"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('benchmarks/gtoc12/harvest_phase_v1.json'), mode = 'r'
+buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'benchmarks/gtoc12/harvest_phase_v1.json'
+
+/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=========================== short test summary info ============================
+SKIPPED [4] tests/test_gtoc12_gpu_completion.py:99: requires explicitly enabled, serialized CUDA tests
+SKIPPED [1] tests/test_gtoc12_chain.py:423: archived probe run not present
+FAILED tests/test_gtoc12_chain.py::test_chain_prior_extraction_is_reproducible_and_targets_are_quantiles
+FAILED tests/test_gtoc12_harvestphase.py::test_harvest_phase_extraction_is_reproducible_and_matches_the_committed_document
+2 failed, 63 passed, 5 skipped in 49.33s

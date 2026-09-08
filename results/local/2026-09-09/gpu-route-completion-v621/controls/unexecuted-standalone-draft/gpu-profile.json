@@ -1,0 +1,50 @@
+{
+  "python": "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+  "native_manifest_path": "/home/angus/spacepdhcg-completion-v621/manifest.json",
+  "native_manifest_sha256": "b85ab26f26db5e71f7a4c7f7a31ef24b6b01e83cffe81731d674db6615f09c08",
+  "native_source_root": "/home/angus/spacepdhcg-completion-v621/repo",
+  "library": {
+    "path": "/home/angus/spacepdhcg-completion-v621/build/libspacepdhcg_completion.so",
+    "bytes": 1075152,
+    "sha256": "ef68a8d05e9065b02eb1a28d310c4d140b1a38586e42430aee017e24b52287f6"
+  },
+  "test": {
+    "path": "/home/angus/spacepdhcg-completion-v621/build/gtoc12_completion_test",
+    "bytes": 1034040,
+    "sha256": "9bb5435e7b133179dcd42b3115b019c942be7de14b3a8e703a89df13a5bd4a31"
+  },
+  "fixtures_sha256": "bd2581b1a7034961adce09f063a5bf57610c3636d4cd95591dcdbd36dab97713",
+  "gpu_lock": "/home/angus/.spacepdhcg-gpu.lock",
+  "gpu_uuid": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+  "gpu_uuid_provenance": "build/performance/coupled-fuel-search-v611/launch.json; runtime identity and no compute processes required again",
+  "nvidia_smi": "/usr/lib/wsl/lib/nvidia-smi",
+  "ld_library_path": "/home/angus/spacepdhcg-completion-v621/build:/usr/local/cuda-12.8/lib64:/usr/lib/wsl/lib",
+  "comparison": {
+    "absolute_tolerance": 2e-10,
+    "relative_tolerance": 2e-13,
+    "exact_result_cases": [
+      "exact_dry_plus_cargo_equality",
+      "mass_below_dry_plus_cargo",
+      "cpython312_compensated_sum_pickup_order"
+    ],
+    "integer_fields": "Exact failure, failed indices, processed legs, stages and pickup flags",
+    "cargo_arithmetic": "Exact gained, collected-by-deploy, compensated collected sum and insertion order for every case",
+    "nonfinite": "NaN classification and infinity sign exact; never silently replace with zero",
+    "qualification": "Never infer acceptance from a tolerance or approximate margin; compare native failure code to the frozen CPU outcome"
+  },
+  "scope": "Standalone new completion translation unit, not full-core integration or mission certification",
+  "budget": {
+    "native_binary_executions": 1,
+    "native_binary_kernel_launches": 2,
+    "native_binary_case_evaluations": 262,
+    "python_evaluate_API_calls": 1,
+    "python_kernel_launches": 1,
+    "python_case_evaluations": 42,
+    "maximum_seconds_per_process": 180,
+    "cleanup_terminate_seconds": 10,
+    "cleanup_kill_seconds": 30,
+    "automatic_retries": 0,
+    "mission_searches": 0,
+    "mission_refinements": 0
+  }
+}

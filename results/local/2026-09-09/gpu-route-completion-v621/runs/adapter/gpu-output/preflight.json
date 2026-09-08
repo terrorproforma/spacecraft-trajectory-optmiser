@@ -1,0 +1,72 @@
+{
+  "complete": false,
+  "passed": false,
+  "supervisor_pid": 374,
+  "started": 1788900171.1301537,
+  "failures": [],
+  "processes": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/pytest_child.py",
+        "--output",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/gpu-output/child"
+      ],
+      "started": 1788900171.9928288,
+      "timeout_seconds": 180
+    }
+  ],
+  "budget": {
+    "child_processes": 1,
+    "evaluation_calls": 8,
+    "candidates": 1048,
+    "actual_lambert_requests": 0,
+    "timeout_seconds": 180,
+    "automatic_retries": 0
+  },
+  "pins": {
+    "host_report_path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/report.json",
+    "host_report_sha256": "2e7175e8f818d11987fc240b5511c54b498f5485798501703c03e0906359bc8a",
+    "host_source_root": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source",
+    "host_source_tree_sha256": "decb2a37cdfe2119d7d371d1d1ac75dcb39590be420a90b17485d0cea483fa27",
+    "host_source_scope": "Frozen7eb8828f Python base plus four owned adapter/test changes from CPU attemptb; separate from native source.",
+    "native_manifest_path": "/home/angus/spacepdhcg-completion-fullcore-v621/manifest.json",
+    "native_manifest_sha256": "43c3c2974af7a9d16ba060724855a56b5122acf9c53ff29d68243df612d82969",
+    "native_source_root": "/home/angus/spacepdhcg-completion-fullcore-v621/repo",
+    "library": {
+      "path": "/home/angus/spacepdhcg-completion-fullcore-v621/build/cuda/libspacepdhcg_cuda.so",
+      "bytes": 21084184,
+      "sha256": "cb977ff09b206de807996a8a21d7ccec41bb6a2a4c35a37c10ebe4883b83d2fb"
+    },
+    "python": "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "python_sha256": "9544d2a29138833e6177d45dbc57468d37710b5080c901fbb579d53f251cdd6f",
+    "native_controls_report_path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-native-controls-v621/gpu-output/report.json",
+    "native_controls_report_sha256": "3b0dddee118b28203dbcb136b731c5ab896cf2b6a7dd11378683ada0cff30e99",
+    "gpu_uuid": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+    "gpu_uuid_provenance": "build/performance/coupled-fuel-search-v611/launch.json; runtime identity and no compute processes required again",
+    "gpu_lock": "/home/angus/.spacepdhcg-gpu.lock",
+    "nvidia_smi": "/usr/lib/wsl/lib/nvidia-smi",
+    "ld_library_path": "/home/angus/spacepdhcg-completion-fullcore-v621/build/cuda:/usr/local/cuda-12.8/lib64:/usr/lib/wsl/lib",
+    "test_suffixes": [
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]"
+    ],
+    "budget": {
+      "pytest_cases": 4,
+      "evaluation_calls": 8,
+      "candidates": 1048,
+      "lambert_requests": 0,
+      "child_processes": 1,
+      "timeout_seconds": 180,
+      "retries": 0
+    },
+    "observation_scope": "Wrap native evaluation boundary for exact call counts and raw FP64 readbacks. No numerical/model/gate changes. Instrumented timings are not benchmark data."
+  },
+  "ready_sha256": "c420836cce0aa04c819609f09bef9f95261342292fe12fa0927ed2538b67e09f",
+  "lock_acquired": 1788900171.9018936,
+  "gpu_inventory": "NVIDIA GeForce RTX 5090, GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, 595.97\n",
+  "compute_processes_before": ""
+}

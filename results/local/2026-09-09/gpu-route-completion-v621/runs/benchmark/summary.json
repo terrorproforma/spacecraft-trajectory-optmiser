@@ -1,0 +1,705 @@
+{
+  "complete": true,
+  "saved_output_derivation_only": true,
+  "benchmark_report_sha256": "d5145e5bf299f1d4c48fc3a72f13c75062cd6d5d80b3f5821aa0bef00680636a",
+  "launch_report_sha256": "67d7a39ff7c974e84a00b733cea7e3f77135da5f2958ccb839e456d3dda71d06",
+  "ready_sha256": "6227c91680ab4406d5f3fd3bdd7ac17317d78a2c4b90e8b143c24fb25ad23f2f",
+  "raw_index_sha256": "7d455de4b8b76d081f7ed044e065e9bcf3c3b7b9609e0ffe38426b9f888702f7",
+  "plan_sha256": "c5b927d9e94fdc188ad34bfe39a8af8476b723a8b41f70065e17d4061078b753",
+  "unique_historical_controls": 20,
+  "total_worker_seconds": 6.310143074999985,
+  "totals": {
+    "cpu_calls": 60,
+    "gpu_calls": 60,
+    "cpu_candidates": 14200,
+    "gpu_candidates": 14200,
+    "cpu_method_seconds": 1.6948526409995566,
+    "gpu_method_seconds": 0.7403705269998113,
+    "post_method_check_capture_seconds": 1.574397067000291,
+    "construction_seconds": 0.607139103999998,
+    "backend_setup_seconds": 0.07095302700003003,
+    "backend_close_seconds": 0.006083182999930159,
+    "accepted_evaluations_per_backend": 1450,
+    "rejected_evaluations_per_backend": 12750
+  },
+  "groups": [
+    {
+      "id": "v616_no_fit-n4",
+      "model": "v616_no_fit",
+      "size": 4,
+      "size_scope": "schedule_batch_size_only",
+      "unique_controls_in_group": 4,
+      "accepted_per_call": 1,
+      "rejected_per_call": 3,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.000332794000001968,
+      "warm_gpu_seconds": 0.0007510309999929632,
+      "warm_cpu_over_gpu_speed_ratio": 0.4431161962756346,
+      "warm_cpu_proxy_evaluations_per_second": 12019.44746592891,
+      "warm_gpu_proxy_evaluations_per_second": 5326.011842437234,
+      "warm_gpu_pack_seconds_median": 0.0001828749999788215,
+      "warm_gpu_native_call_seconds_median": 0.0004319665000309669,
+      "warm_gpu_kernel_seconds_median": 2.9504000209273212e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.23718087297723756,
+      "warm_gpu_matching_sample_native_call_share_median": 0.6195545260085937,
+      "warm_gpu_matching_sample_readout_share_median": 0.061321348804367584,
+      "first_cpu_seconds": 0.0005182680000075379,
+      "first_gpu_seconds": 0.2353048539999918,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 4,
+        "completion_leg_slots": 46,
+        "completion_pack_seconds": 0.0002551320000065971,
+        "completion_native_call_seconds": 0.047799914999984594,
+        "completion_kernel_seconds": 0.04725775909423828,
+        "completion_total_seconds": 0.048152828000013415
+      },
+      "backend_setup_seconds": 0.06860277200001974,
+      "backend_close_seconds": 0.0008011869999791088,
+      "first_process_GPU_completion": true,
+      "input_construction_seconds": 0.02033911099999841,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.00034579099997245066,
+        0.00032349499997508246,
+        0.0003403460000299674,
+        0.00032524199997396863
+      ],
+      "warm_gpu_samples_seconds": [
+        0.0008034279999833416,
+        0.0007904370000346717,
+        0.0007116249999512547,
+        0.0006773389999921164
+      ]
+    },
+    {
+      "id": "v616_no_fit-n24",
+      "model": "v616_no_fit",
+      "size": 24,
+      "size_scope": "observed_v616_shortlist",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 3,
+      "rejected_per_call": 21,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.0012102710000192474,
+      "warm_gpu_seconds": 0.00125633700000094,
+      "warm_cpu_over_gpu_speed_ratio": 0.963333086598852,
+      "warm_cpu_proxy_evaluations_per_second": 19830.269418682525,
+      "warm_gpu_proxy_evaluations_per_second": 19103.15464718626,
+      "warm_gpu_pack_seconds_median": 0.0006320249999873795,
+      "warm_gpu_native_call_seconds_median": 0.00046672749999743246,
+      "warm_gpu_kernel_seconds_median": 3.18080000579357e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.5062225576046488,
+      "warm_gpu_matching_sample_native_call_share_median": 0.38281621026930357,
+      "warm_gpu_matching_sample_readout_share_median": 0.06854144062712716,
+      "first_cpu_seconds": 0.0011765890000106083,
+      "first_gpu_seconds": 0.0017257849999623431,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0006442979999974341,
+        "completion_native_call_seconds": 0.00031930500000498796,
+        "completion_kernel_seconds": 3.2095998525619506e-05,
+        "completion_total_seconds": 0.0010589940000045317
+      },
+      "backend_setup_seconds": 0.0002269739999860576,
+      "backend_close_seconds": 0.00039917699996294687,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.038645416999997906,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.001229429000034088,
+        0.0011911130000044068,
+        0.0011369960000138235,
+        0.001397064999991926
+      ],
+      "warm_gpu_samples_seconds": [
+        0.0012000269999816737,
+        0.0012759109999933571,
+        0.00127402800001164,
+        0.00123864599999024
+      ]
+    },
+    {
+      "id": "v616_no_fit-n48",
+      "model": "v616_no_fit",
+      "size": 48,
+      "size_scope": "source_default_shortlist",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 5,
+      "rejected_per_call": 43,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.0022497095000062473,
+      "warm_gpu_seconds": 0.0019450414999653276,
+      "warm_cpu_over_gpu_speed_ratio": 1.1566383031140213,
+      "warm_cpu_proxy_evaluations_per_second": 21336.088059310194,
+      "warm_gpu_proxy_evaluations_per_second": 24678.136688011877,
+      "warm_gpu_pack_seconds_median": 0.0011537664999821118,
+      "warm_gpu_native_call_seconds_median": 0.0005556929999954718,
+      "warm_gpu_kernel_seconds_median": 6.505600363016128e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.5830554050978793,
+      "warm_gpu_matching_sample_native_call_share_median": 0.28555223888516384,
+      "warm_gpu_matching_sample_readout_share_median": 0.08811133012310066,
+      "first_cpu_seconds": 0.0022480029999769613,
+      "first_gpu_seconds": 0.0024475210000218794,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 48,
+        "completion_leg_slots": 556,
+        "completion_pack_seconds": 0.0011516460000393636,
+        "completion_native_call_seconds": 0.0005101269999840952,
+        "completion_kernel_seconds": 7.48480036854744e-05,
+        "completion_total_seconds": 0.0018363020000151664
+      },
+      "backend_setup_seconds": 0.0002046380000138015,
+      "backend_close_seconds": 0.0004314629999839781,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.033075546000020495,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.0021643189999736023,
+        0.002170408999973006,
+        0.0023290100000394887,
+        0.0023824030000128005
+      ],
+      "warm_gpu_samples_seconds": [
+        0.0019644759999550843,
+        0.001925606999975571,
+        0.0018143450000138728,
+        0.002537606999965192
+      ]
+    },
+    {
+      "id": "v616_no_fit-n64",
+      "model": "v616_no_fit",
+      "size": 64,
+      "size_scope": "prospective_scaling_batch",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 7,
+      "rejected_per_call": 57,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.002934022000005143,
+      "warm_gpu_seconds": 0.0023571794999952544,
+      "warm_cpu_over_gpu_speed_ratio": 1.244717256369763,
+      "warm_cpu_proxy_evaluations_per_second": 21813.060706391367,
+      "warm_gpu_proxy_evaluations_per_second": 27151.09307548655,
+      "warm_gpu_pack_seconds_median": 0.0015311610000026121,
+      "warm_gpu_native_call_seconds_median": 0.0005502715000034186,
+      "warm_gpu_kernel_seconds_median": 7.153600081801415e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.6557485205018745,
+      "warm_gpu_matching_sample_native_call_share_median": 0.23290260622513081,
+      "warm_gpu_matching_sample_readout_share_median": 0.08025376197591319,
+      "first_cpu_seconds": 0.0028494530000102714,
+      "first_gpu_seconds": 0.003642017999993641,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 64,
+        "completion_leg_slots": 742,
+        "completion_pack_seconds": 0.0022427789999710512,
+        "completion_native_call_seconds": 0.0005640660000381104,
+        "completion_kernel_seconds": 8.006399869918823e-05,
+        "completion_total_seconds": 0.002988996999988558
+      },
+      "backend_setup_seconds": 0.00019835900002362905,
+      "backend_close_seconds": 0.000474060999977155,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.03585463699999991,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.0028654899999764893,
+        0.0030006050000110918,
+        0.003095051999991938,
+        0.0028674389999991945
+      ],
+      "warm_gpu_samples_seconds": [
+        0.002370066000025872,
+        0.0023553119999633054,
+        0.0023590470000272035,
+        0.0022574679999820546
+      ]
+    },
+    {
+      "id": "v616_no_fit-n256",
+      "model": "v616_no_fit",
+      "size": 256,
+      "size_scope": "prospective_scaling_batch",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 26,
+      "rejected_per_call": 230,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.010558743499984757,
+      "warm_gpu_seconds": 0.0068975570000020525,
+      "warm_cpu_over_gpu_speed_ratio": 1.530794671212085,
+      "warm_cpu_proxy_evaluations_per_second": 24245.309112809642,
+      "warm_gpu_proxy_evaluations_per_second": 37114.589991778805,
+      "warm_gpu_pack_seconds_median": 0.005564164999981358,
+      "warm_gpu_native_call_seconds_median": 0.0006148165000183781,
+      "warm_gpu_kernel_seconds_median": 8.764800056815148e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.8097013135644274,
+      "warm_gpu_matching_sample_native_call_share_median": 0.0900034355380708,
+      "warm_gpu_matching_sample_readout_share_median": 0.08188603988825863,
+      "first_cpu_seconds": 0.010462612999958765,
+      "first_gpu_seconds": 0.007371594999995068,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 256,
+        "completion_leg_slots": 2968,
+        "completion_pack_seconds": 0.005455550000021958,
+        "completion_native_call_seconds": 0.0005926160000058189,
+        "completion_kernel_seconds": 9.73759964108467e-05,
+        "completion_total_seconds": 0.006649803000016163
+      },
+      "backend_setup_seconds": 0.00020888300002752658,
+      "backend_close_seconds": 0.0005198489999997946,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.04935122299997374,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.011611164999976609,
+        0.010344308000014735,
+        0.01077317899995478,
+        0.010164006999957564
+      ],
+      "warm_gpu_samples_seconds": [
+        0.006992257999968388,
+        0.006932747000007566,
+        0.006862366999996539,
+        0.006795037000017601
+      ]
+    },
+    {
+      "id": "v616_no_fit-n1024",
+      "model": "v616_no_fit",
+      "size": 1024,
+      "size_scope": "prospective_scaling_batch",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 103,
+      "rejected_per_call": 921,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.04267238499997461,
+      "warm_gpu_seconds": 0.025061033000014277,
+      "warm_cpu_over_gpu_speed_ratio": 1.702738470515174,
+      "warm_cpu_proxy_evaluations_per_second": 23996.783868551272,
+      "warm_gpu_proxy_evaluations_per_second": 40860.24706162019,
+      "warm_gpu_pack_seconds_median": 0.021668146499990826,
+      "warm_gpu_native_call_seconds_median": 0.0008609125000020867,
+      "warm_gpu_kernel_seconds_median": 8.550399914383888e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.8650529008233674,
+      "warm_gpu_matching_sample_native_call_share_median": 0.03437320007251653,
+      "warm_gpu_matching_sample_readout_share_median": 0.08844496266344673,
+      "first_cpu_seconds": 0.042628608999962125,
+      "first_gpu_seconds": 0.027101770999991004,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 1024,
+        "completion_leg_slots": 11878,
+        "completion_pack_seconds": 0.022229947000028005,
+        "completion_native_call_seconds": 0.0009749719999945228,
+        "completion_kernel_seconds": 0.0001632000058889389,
+        "completion_total_seconds": 0.02547604900001943
+      },
+      "backend_setup_seconds": 0.00022727499998609346,
+      "backend_close_seconds": 0.0006034219999833113,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.11747280100001944,
+      "workspace_capacities": [
+        1024,
+        16384,
+        16384
+      ],
+      "warm_cpu_samples_seconds": [
+        0.0428541419999533,
+        0.04343494800002645,
+        0.04249062799999592,
+        0.041634744000020874
+      ],
+      "warm_gpu_samples_seconds": [
+        0.025215129999992314,
+        0.02488184399999227,
+        0.02490693600003624,
+        0.025513357000022552
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n4",
+      "model": "existing_fit_no_refit",
+      "size": 4,
+      "size_scope": "schedule_batch_size_only",
+      "unique_controls_in_group": 4,
+      "accepted_per_call": 1,
+      "rejected_per_call": 3,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.001211972999954014,
+      "warm_gpu_seconds": 0.000814757999989979,
+      "warm_cpu_over_gpu_speed_ratio": 1.4875251301232029,
+      "warm_cpu_proxy_evaluations_per_second": 3300.4035569701405,
+      "warm_gpu_proxy_evaluations_per_second": 4909.43323054109,
+      "warm_gpu_pack_seconds_median": 0.0002870735000044533,
+      "warm_gpu_native_call_seconds_median": 0.00044188949999579563,
+      "warm_gpu_kernel_seconds_median": 4.179199971258641e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.3424375904612196,
+      "warm_gpu_matching_sample_native_call_share_median": 0.5421778726481481,
+      "warm_gpu_matching_sample_readout_share_median": 0.053214019620986014,
+      "first_cpu_seconds": 0.001354180999953769,
+      "first_gpu_seconds": 0.0012998739999829922,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 4,
+        "completion_leg_slots": 46,
+        "completion_pack_seconds": 0.0002940640000019812,
+        "completion_native_call_seconds": 0.0003416149999679874,
+        "completion_kernel_seconds": 4.1439998894929886e-05,
+        "completion_total_seconds": 0.0006753659999958472
+      },
+      "backend_setup_seconds": 0.00019100800000160234,
+      "backend_close_seconds": 0.00046647800002119766,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.022262153999975,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.0013997709999671315,
+        0.0010430019999603246,
+        0.0013809439999477036,
+        0.0009637819999852582
+      ],
+      "warm_gpu_samples_seconds": [
+        0.0009015570000201478,
+        0.000800287999993543,
+        0.0007921100000203296,
+        0.0008292279999864149
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n24",
+      "model": "existing_fit_no_refit",
+      "size": 24,
+      "size_scope": "observed_v616_shortlist",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 3,
+      "rejected_per_call": 21,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.004850129999994124,
+      "warm_gpu_seconds": 0.0016165320000141037,
+      "warm_cpu_over_gpu_speed_ratio": 3.000330336765253,
+      "warm_cpu_proxy_evaluations_per_second": 4948.320972845899,
+      "warm_gpu_proxy_evaluations_per_second": 14846.5975308813,
+      "warm_gpu_pack_seconds_median": 0.0009960719999924095,
+      "warm_gpu_native_call_seconds_median": 0.00048480699999231547,
+      "warm_gpu_kernel_seconds_median": 4.379200004041196e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.6092211441419517,
+      "warm_gpu_matching_sample_native_call_share_median": 0.3065162456142547,
+      "warm_gpu_matching_sample_readout_share_median": 0.056352528511407214,
+      "first_cpu_seconds": 0.004956779999986338,
+      "first_gpu_seconds": 0.002138983999998345,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0010391929999968852,
+        "completion_native_call_seconds": 0.00035984900000585185,
+        "completion_kernel_seconds": 4.425600171089172e-05,
+        "completion_total_seconds": 0.0014844880000168814
+      },
+      "backend_setup_seconds": 0.00020518200000196885,
+      "backend_close_seconds": 0.00040567600001395476,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.03469894699998122,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.0051735710000002655,
+        0.004701882999995632,
+        0.004950957999994898,
+        0.0047493019999933495
+      ],
+      "warm_gpu_samples_seconds": [
+        0.0016040280000311213,
+        0.001853585999981533,
+        0.001629035999997086,
+        0.0015325809999922058
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n48",
+      "model": "existing_fit_no_refit",
+      "size": 48,
+      "size_scope": "source_default_shortlist",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 5,
+      "rejected_per_call": 43,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.009544429000015953,
+      "warm_gpu_seconds": 0.002812013000010438,
+      "warm_cpu_over_gpu_speed_ratio": 3.394162473637399,
+      "warm_cpu_proxy_evaluations_per_second": 5029.111746749834,
+      "warm_gpu_proxy_evaluations_per_second": 17069.62236654732,
+      "warm_gpu_pack_seconds_median": 0.001965831999996226,
+      "warm_gpu_native_call_seconds_median": 0.0005799389999765481,
+      "warm_gpu_kernel_seconds_median": 8.476800099015236e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.7134788023173291,
+      "warm_gpu_matching_sample_native_call_share_median": 0.2107264565063543,
+      "warm_gpu_matching_sample_readout_share_median": 0.05122778251627475,
+      "first_cpu_seconds": 0.009194072000013875,
+      "first_gpu_seconds": 0.0032321620000175244,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 48,
+        "completion_leg_slots": 556,
+        "completion_pack_seconds": 0.0019742680000263135,
+        "completion_native_call_seconds": 0.00047770300000138377,
+        "completion_kernel_seconds": 8.928000181913376e-05,
+        "completion_total_seconds": 0.0025915450000297824
+      },
+      "backend_setup_seconds": 0.0002256340000030832,
+      "backend_close_seconds": 0.000435433000006924,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.03332026999999016,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.009040549999951963,
+        0.009510076000026402,
+        0.009578782000005504,
+        0.009987525999974878
+      ],
+      "warm_gpu_samples_seconds": [
+        0.0025888099999633596,
+        0.0027970040000013796,
+        0.00288512500003435,
+        0.0028270220000194968
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n64",
+      "model": "existing_fit_no_refit",
+      "size": 64,
+      "size_scope": "prospective_scaling_batch",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 7,
+      "rejected_per_call": 57,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.013190462499977684,
+      "warm_gpu_seconds": 0.003388978499970108,
+      "warm_cpu_over_gpu_speed_ratio": 3.8921647039348373,
+      "warm_cpu_proxy_evaluations_per_second": 4851.990595485812,
+      "warm_gpu_proxy_evaluations_per_second": 18884.74653957365,
+      "warm_gpu_pack_seconds_median": 0.002552726000004668,
+      "warm_gpu_native_call_seconds_median": 0.000588796499982891,
+      "warm_gpu_kernel_seconds_median": 8.079999685287477e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.7514910135045637,
+      "warm_gpu_matching_sample_native_call_share_median": 0.17338358274781243,
+      "warm_gpu_matching_sample_readout_share_median": 0.05537114317120915,
+      "first_cpu_seconds": 0.01282462099999293,
+      "first_gpu_seconds": 0.0038885840000375538,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 64,
+        "completion_leg_slots": 742,
+        "completion_pack_seconds": 0.002615480999963893,
+        "completion_native_call_seconds": 0.0004499670000086553,
+        "completion_kernel_seconds": 8.937600255012512e-05,
+        "completion_total_seconds": 0.0032428129999857447
+      },
+      "backend_setup_seconds": 0.00024296399999457208,
+      "backend_close_seconds": 0.00043317600000136736,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.039390904000015325,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.013200257999983478,
+        0.01318066699997189,
+        0.013267875999986245,
+        0.012862025000003996
+      ],
+      "warm_gpu_samples_seconds": [
+        0.0033942459999707353,
+        0.003434015000038926,
+        0.0033837109999694803,
+        0.0033608479999998053
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n256",
+      "model": "existing_fit_no_refit",
+      "size": 256,
+      "size_scope": "prospective_scaling_batch",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 26,
+      "rejected_per_call": 230,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.049677395000003344,
+      "warm_gpu_seconds": 0.011227587999968591,
+      "warm_cpu_over_gpu_speed_ratio": 4.424583000386398,
+      "warm_cpu_proxy_evaluations_per_second": 5153.249279677059,
+      "warm_gpu_proxy_evaluations_per_second": 22800.97915961257,
+      "warm_gpu_pack_seconds_median": 0.009862881499998366,
+      "warm_gpu_native_call_seconds_median": 0.00060271899997133,
+      "warm_gpu_kernel_seconds_median": 9.662400186061858e-05,
+      "warm_gpu_matching_sample_pack_share_median": 0.8788783269554329,
+      "warm_gpu_matching_sample_native_call_share_median": 0.054851453464631286,
+      "warm_gpu_matching_sample_readout_share_median": 0.05189926679508275,
+      "first_cpu_seconds": 0.05213546800001723,
+      "first_gpu_seconds": 0.01150750300001846,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 256,
+        "completion_leg_slots": 2968,
+        "completion_pack_seconds": 0.009455418000015925,
+        "completion_native_call_seconds": 0.0006376339999860647,
+        "completion_kernel_seconds": 0.00010915199667215347,
+        "completion_total_seconds": 0.010778238999989753
+      },
+      "backend_setup_seconds": 0.00021013999997876454,
+      "backend_close_seconds": 0.00040511299999934636,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.05323891799997682,
+      "workspace_capacities": [
+        256,
+        5120,
+        5376
+      ],
+      "warm_cpu_samples_seconds": [
+        0.048671652999985326,
+        0.05068313700002136,
+        0.051006228999995074,
+        0.04795433000003868
+      ],
+      "warm_gpu_samples_seconds": [
+        0.01071148500000163,
+        0.011731382999982998,
+        0.01125961399998232,
+        0.011195561999954862
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n1024",
+      "model": "existing_fit_no_refit",
+      "size": 1024,
+      "size_scope": "prospective_scaling_batch",
+      "unique_controls_in_group": 10,
+      "accepted_per_call": 103,
+      "rejected_per_call": 921,
+      "samples_per_backend": {
+        "first": 1,
+        "warm": 4
+      },
+      "warm_cpu_seconds": 0.20011986849996788,
+      "warm_gpu_seconds": 0.04120661549998772,
+      "warm_cpu_over_gpu_speed_ratio": 4.856498551792673,
+      "warm_cpu_proxy_evaluations_per_second": 5116.933204461727,
+      "warm_gpu_proxy_evaluations_per_second": 24850.378697088217,
+      "warm_gpu_pack_seconds_median": 0.037661502000020164,
+      "warm_gpu_native_call_seconds_median": 0.0008190705000004073,
+      "warm_gpu_kernel_seconds_median": 0.00010012799873948097,
+      "warm_gpu_matching_sample_pack_share_median": 0.9139467896228815,
+      "warm_gpu_matching_sample_native_call_share_median": 0.019984449858905094,
+      "warm_gpu_matching_sample_readout_share_median": 0.05787342419282179,
+      "first_cpu_seconds": 0.19797223800003394,
+      "first_gpu_seconds": 0.04232678299996451,
+      "first_gpu_telemetry": {
+        "completion_batches": 1,
+        "completion_candidates": 1024,
+        "completion_leg_slots": 11878,
+        "completion_pack_seconds": 0.037194920000047205,
+        "completion_native_call_seconds": 0.001097440999956234,
+        "completion_kernel_seconds": 0.00010016000270843506,
+        "completion_total_seconds": 0.04080398500002502
+      },
+      "backend_setup_seconds": 0.00020919799999319366,
+      "backend_close_seconds": 0.0007081480000010743,
+      "first_process_GPU_completion": false,
+      "input_construction_seconds": 0.1294891760000496,
+      "workspace_capacities": [
+        1024,
+        16384,
+        16384
+      ],
+      "warm_cpu_samples_seconds": [
+        0.19573225200002753,
+        0.19943638399996644,
+        0.20080335299996932,
+        0.20678211000000601
+      ],
+      "warm_gpu_samples_seconds": [
+        0.04100603899996713,
+        0.04096373400000175,
+        0.04140719200000831,
+        0.041839844000037374
+      ]
+    }
+  ],
+  "packing_share_definition": "Median of pack_seconds/method_seconds for each matching warm GPU sample; not a ratio of unmatched medians",
+  "kernel_time_definition": "Median of the four recorded warm CUDA-event kernel timings, seconds",
+  "scope": "Repeated proxy completion evaluations with cached historical geometry; not new solutions, physics certifications or whole-mission speedup",
+  "default_changed": false,
+  "new_GPU_calls_in_derivation": 0,
+  "new_CPU_completion_calls_in_derivation": 0
+}

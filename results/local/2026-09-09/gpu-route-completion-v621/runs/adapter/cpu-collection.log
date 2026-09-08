@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/pytest_child.py", line 221, in <module>
+    main()
+  File "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/pytest_child.py", line 186, in main
+    code = pytest.main(command, plugins=[observer])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in main
+    return _main(args=args, plugins=plugins, prog="pytest.main()")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223, in _main
+    config = _prepareconfig(new_args, plugins, prog=prog)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 409, in _prepareconfig
+    pluginmanager.register(plugin)
+  File "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 571, in register
+    plugin_name = super().register(plugin, name)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/pluggy/_manager.py", line 168, in register
+    self._verify_hook(hook, hookimpl)
+  File "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/pluggy/_manager.py", line 343, in _verify_hook
+    raise PluginValidationError(
+pluggy._manager.PluginValidationError: Plugin '132319452850624' for hook 'pytest_runtest_logreport'
+hookimpl definition: pytest_runtest_logreport(value)
+Argument(s) {'value'} are declared in the hookimpl but can not be found in the hookspec

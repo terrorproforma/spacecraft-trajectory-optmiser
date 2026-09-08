@@ -1,0 +1,60 @@
+{
+  "complete": true,
+  "passed": false,
+  "collect_only": true,
+  "started": 1788899963.9670444,
+  "calls": [],
+  "gpu_scopes": [],
+  "pytest_reports": [],
+  "forbidden_gpu_requests": [],
+  "source_bindings": {
+    "spacepdhcg.gtoc12.gpu_completion": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/src/spacepdhcg/gtoc12/gpu_completion.py",
+      "sha256": "be72d2c8a2e1a359d3450911d466c6de060440d6133017166c017e44946a135a"
+    },
+    "spacepdhcg.gtoc12.gpu_lambert": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/src/spacepdhcg/gtoc12/gpu_lambert.py",
+      "sha256": "c7fdc99b6563fd7dd398ce52a1e895eac998e91a8c6f33a94bfaa44b6ae3410d"
+    },
+    "spacepdhcg.gtoc12.search": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/src/spacepdhcg/gtoc12/search.py",
+      "sha256": "c451fa89d7eb0d240234fae423b513c4c1791c714e53dffd734591acfb2a6467"
+    }
+  },
+  "profile_sha256": "3823a2338df68592e5fb98d46ef43ba9a1ceb8205095feeac8639b2ce2ba524c",
+  "failures": [
+    {
+      "type": "PluginValidationError",
+      "message": "Plugin '132319452850624' for hook 'pytest_runtest_logreport'\nhookimpl definition: pytest_runtest_logreport(value)\nArgument(s) {'value'} are declared in the hookimpl but can not be found in the hookspec",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/pytest_child.py\", line 186, in main\n    code = pytest.main(command, plugins=[observer])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py\", line 201, in main\n    return _main(args=args, plugins=plugins, prog=\"pytest.main()\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py\", line 223, in _main\n    config = _prepareconfig(new_args, plugins, prog=prog)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py\", line 409, in _prepareconfig\n    pluginmanager.register(plugin)\n  File \"/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/_pytest/config/__init__.py\", line 571, in register\n    plugin_name = super().register(plugin, name)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/pluggy/_manager.py\", line 168, in register\n    self._verify_hook(hook, hookimpl)\n  File \"/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/pluggy/_manager.py\", line 343, in _verify_hook\n    raise PluginValidationError(\npluggy._manager.PluginValidationError: Plugin '132319452850624' for hook 'pytest_runtest_logreport'\nhookimpl definition: pytest_runtest_logreport(value)\nArgument(s) {'value'} are declared in the hookimpl but can not be found in the hookspec\n"
+    }
+  ],
+  "python": "3.12.13 (main, Jun 23 2026, 15:18:55) [Clang 22.1.3 ]",
+  "numpy": "2.5.2",
+  "pytest": "9.1.1",
+  "pytest_arguments": [
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+    "-q",
+    "-s",
+    "-x",
+    "-o",
+    "addopts=",
+    "-p",
+    "no:cacheprovider",
+    "--rootdir",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source",
+    "--basetemp",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/cpu-collection/pytest-tmp",
+    "--collect-only"
+  ],
+  "ended": 1788899964.6570292,
+  "actual_evaluation_calls": 0,
+  "actual_completed_evaluation_calls": 0,
+  "actual_candidates": 0,
+  "lambert_requests": 0,
+  "lambert_request_guards": "Both bound native Lambert entry points and public request methods reject before GPU execution.",
+  "scope": "Costing parity with readback observation; timings include observation overhead and are not a benchmark."
+}

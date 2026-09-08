@@ -1,0 +1,80 @@
+{
+  "cost_model_calls": 0,
+  "GPU_calls": 0,
+  "commands": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "gpu_batch.py",
+        "gpu_runner.py",
+        "test_gpu_runner_contract.py",
+        "validate_runner.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix",
+        "gpu_batch.py",
+        "gpu_runner.py",
+        "test_gpu_runner_contract.py",
+        "validate_runner.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "test_gpu_runner_contract.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "gpu_batch.py",
+        "gpu_runner.py",
+        "test_gpu_runner_contract.py",
+        "validate_runner.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "gpu_batch.py",
+        "gpu_runner.py",
+        "test_gpu_runner_contract.py",
+        "validate_runner.py"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "passed": true,
+  "files_sha256": {
+    "gpu_batch.py": "7ff051d568ef159bd541adc435b42355d59b2b82375ab4e51fb9e0b29398fa57",
+    "gpu_runner.py": "33daf10b6a4ad48a9c462b7d6ddec55a3737820c0115fb758ad77c2f3dc59ea8",
+    "test_gpu_runner_contract.py": "06dd0c1fba8998b06dfeec5ac05dcd0694c156ac802d5264f98c1377e010bd52",
+    "validate_runner.py": "511b76cfed9e6cb0d1c4fb81cc2fbc598b627331510e1ed6fe6a2838c0fe17f5"
+  }
+}

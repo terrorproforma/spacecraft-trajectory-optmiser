@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "GPU_calls_by_reviewer": 0,
+  "native_loads_by_reviewer": 0,
+  "script_sha256": "86d63e1be44bd2222e8bd7103b489a2bf05a049e82979a3c1c56b0fd661aa88a",
+  "counts": {
+    "frozen_fields": 3132,
+    "independent_formula_fields": 3132
+  },
+  "maximum_finite_differences": {
+    "frozen_fields": {
+      "absolute": 4.547473508864641e-13,
+      "path": "historical-12-ship07-v616_no_fit-flat_deployment_proxy.result.propellant"
+    },
+    "independent_formula_fields": {
+      "absolute": 4.547473508864641e-13,
+      "path": "historical-12-ship07-v616_no_fit-flat_deployment_proxy.result.propellant"
+    }
+  },
+  "Decimal65_costed_finite_legs": 206,
+  "Decimal65_max_absolute_fuel_error_kg": "9.909293487611669392569822112775308191732644215222E-14",
+  "recorded_kernel_launches": 3,
+  "recorded_candidate_evaluations": 304,
+  "historical_successes": 2,
+  "synthetic_successes": 14,
+  "readback_stats": {
+    "upload_ms": 0.003776000114157796,
+    "kernel_ms": 37.87472152709961,
+    "download_ms": 0.17529599368572235,
+    "candidates": 42,
+    "deploy_slots": 196,
+    "leg_slots": 260
+  },
+  "recorded_API_seconds": 0.038646997000000294,
+  "timing_scope": "One first-use 42-case correctness batch; not steady-state throughput, comparative speedup or mission speed."
+}

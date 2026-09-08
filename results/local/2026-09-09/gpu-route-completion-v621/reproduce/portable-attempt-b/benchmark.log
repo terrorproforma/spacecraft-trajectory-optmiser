@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "scope": "Read-only standard-library audit of saved completion benchmark, no GPU/native loading/new costing experiment.",
+  "script_sha256": "e33ed846bd39a95df6d1c6af7179c68b7e05090744292334cbb7257754649395",
+  "independent_formula_helper_sha256": "86d63e1be44bd2222e8bd7103b489a2bf05a049e82979a3c1c56b0fd661aa88a",
+  "ready_sha256": "6227c91680ab4406d5f3fd3bdd7ac17317d78a2c4b90e8b143c24fb25ad23f2f",
+  "launch_report_sha256": "67d7a39ff7c974e84a00b733cea7e3f77135da5f2958ccb839e456d3dda71d06",
+  "benchmark_report_sha256": "d5145e5bf299f1d4c48fc3a72f13c75062cd6d5d80b3f5821aa0bef00680636a",
+  "output_file_count": 174,
+  "output_tree_sha256": "3a2262d7105dc92dc0f6a623721ffe43e5f77075b8d80c3335abce6486fe98d4",
+  "counts": {
+    "saved_GPU_calls": 60,
+    "timed_CPU_batches": 60,
+    "GPU_candidates": 14200,
+    "CPU_candidates": 14200,
+    "raw_fields_vs_frozen": 1882620,
+    "raw_fields_vs_independent": 1882620,
+    "compact_outcome_fields": 6960
+  },
+  "max_finite_differences": {
+    "raw_fields_vs_frozen": {
+      "absolute": 4.547473508864641e-13,
+      "path": "v616_no_fit-n24/0/6/result/propellant"
+    },
+    "raw_fields_vs_independent": {
+      "absolute": 4.547473508864641e-13,
+      "path": "v616_no_fit-n24/0/6/result/propellant"
+    },
+    "compact_outcome_fields": {
+      "absolute": 2.2737367544323206e-13,
+      "path": "existing_fit_no_refit-n4/gpu/0/mass"
+    }
+  },
+  "paired_share_definition": "Median of four warm per-sample pack/method or native/method fractions, not ratio of unrelated medians.",
+  "unique_historical_controls": 20,
+  "interpretation": "Warm proxy completion on repeated saved requests with cached geometry. Setup/construction/capture/validation are separately retained; method timing includes complete CPU loop or GPU pack/native/readout. Four warm samples per group, single device/launch. No distinct-solution, SOTA, current-fleet, physics-certification or full-mission speed claim.",
+  "next_measured_bottleneck": "Host packing/model metadata dominates large GPU batches; preserve scalar parity when considering retained numeric metadata. Small no-fit batches do not justify automatic GPU routing."
+}

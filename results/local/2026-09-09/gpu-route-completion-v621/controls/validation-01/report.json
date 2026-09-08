@@ -1,0 +1,49 @@
+{
+  "python": "3.12.13 (main, Jun 23 2026, 15:18:55) [Clang 22.1.3 ]",
+  "commands": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "audit_residuals.py",
+        "build_fixtures.py",
+        "fixture_oracle.py",
+        "prepare.py",
+        "test_fixture_evidence.py",
+        "validate.py"
+      ],
+      "exit_code": 0,
+      "log": "00.log"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix",
+        "audit_residuals.py",
+        "build_fixtures.py",
+        "fixture_oracle.py",
+        "prepare.py",
+        "test_fixture_evidence.py",
+        "validate.py"
+      ],
+      "exit_code": 1,
+      "log": "01.log"
+    }
+  ],
+  "all_passed": false,
+  "scripts_sha256": {
+    "audit_residuals.py": "b878b0b1c2e6ec2550179749696e6ebe4d23b5bcf1bbe5761f23017bb1b55afd",
+    "build_fixtures.py": "8744e907768fb9eb03e05e9188df64b6c27bad2d8dee407a1a7648d14d276ece",
+    "fixture_oracle.py": "0ab1fa265f4eb5f9bc5114a66cf3f0d11f1409c2f784fbdc953c292274657f52",
+    "prepare.py": "13c45391453cb78968a7fb8850dbc4e3e52cbb7c5b9ed2b0815753aaa5482204",
+    "test_fixture_evidence.py": "b93673bf392e4eab9d51f779aa9e2a8a7cfe0c040fe245a00b82eaf9a0c23473",
+    "validate.py": "1144388d41d9cd79b1d76d5f57db591c9356f122bfb4419750a8608a95d2e3ae"
+  },
+  "fixtures_sha256": "bd2581b1a7034961adce09f063a5bf57610c3636d4cd95591dcdbd36dab97713",
+  "GPU_calls": 0
+}

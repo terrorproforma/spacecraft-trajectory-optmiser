@@ -1,0 +1,110 @@
+{
+  "passed": true,
+  "scope": "Saved production adapter parity, source/budget/lifecycle audit; no new native loads, GPU calls, optimization or timing experiment.",
+  "script_sha256": "48618b933eae32f47a526f44beda7eff5eb466fbdceef8826047959dda5c9c5d",
+  "oracle_sha256": "86d63e1be44bd2222e8bd7103b489a2bf05a049e82979a3c1c56b0fd661aa88a",
+  "input_sha256": {
+    "build\\performance\\completion-adapter-gpu-v621\\ready.json": "c420836cce0aa04c819609f09bef9f95261342292fe12fa0927ed2538b67e09f",
+    "build\\performance\\completion-adapter-gpu-v621\\profile.json": "3823a2338df68592e5fb98d46ef43ba9a1ceb8205095feeac8639b2ce2ba524c",
+    "build\\performance\\completion-adapter-gpu-v621\\gpu-output\\report.json": "e4be5d19878076f44160743455be2745ef6a7879bf150794a4a803f204a03cca",
+    "build\\performance\\completion-adapter-gpu-v621\\gpu-output\\child\\report.json": "dc9e3909e8c6988b1f91fcd1675574e3f65f35fa816549d2b4b3c1517939436f",
+    "build\\performance\\completion-adapter-cpu-v621b\\report.json": "2e7175e8f818d11987fc240b5511c54b498f5485798501703c03e0906359bc8a",
+    "build\\performance\\completion-fullcore-v621\\manifest.json": "43c3c2974af7a9d16ba060724855a56b5122acf9c53ff29d68243df612d82969",
+    "build\\performance\\completion-native-controls-v621\\gpu-output\\report.json": "3b0dddee118b28203dbcb136b731c5ab896cf2b6a7dd11378683ada0cff30e99"
+  },
+  "recorded_evaluation_calls": 8,
+  "recorded_candidate_evaluations": 1048,
+  "recorded_Lambert_requests": 0,
+  "closed_owner_scopes": 4,
+  "passed_pytest_phases": 12,
+  "independently_replayed_fields": 42240,
+  "max_finite_field_absolute_error": 4.547473508864641e-13,
+  "worst_field": "2/44/result/propellant",
+  "Decimal65_costed_legs": 1812,
+  "Decimal65_max_fuel_error_kg": "9.730310231979291768728481725606384013940900010088E-14",
+  "first_three_repeat_readbacks_exact": true,
+  "outcomes": [
+    {
+      "index": 0,
+      "model": "fit",
+      "candidates": 259,
+      "failure_counts": {
+        "0": 219,
+        "1": 16,
+        "2": 13,
+        "3": 11
+      }
+    },
+    {
+      "index": 1,
+      "model": "fit",
+      "candidates": 3,
+      "failure_counts": {
+        "0": 2,
+        "1": 1
+      }
+    },
+    {
+      "index": 2,
+      "model": "flat",
+      "candidates": 259,
+      "failure_counts": {
+        "0": 219,
+        "1": 16,
+        "2": 13,
+        "3": 11
+      }
+    },
+    {
+      "index": 3,
+      "model": "flat",
+      "candidates": 3,
+      "failure_counts": {
+        "0": 2,
+        "1": 1
+      }
+    },
+    {
+      "index": 4,
+      "model": "ratio",
+      "candidates": 259,
+      "failure_counts": {
+        "0": 219,
+        "1": 16,
+        "2": 13,
+        "3": 11
+      }
+    },
+    {
+      "index": 5,
+      "model": "ratio",
+      "candidates": 3,
+      "failure_counts": {
+        "0": 2,
+        "1": 1
+      }
+    },
+    {
+      "index": 6,
+      "model": "certified",
+      "candidates": 259,
+      "failure_counts": {
+        "0": 219,
+        "1": 16,
+        "2": 13,
+        "3": 11
+      }
+    },
+    {
+      "index": 7,
+      "model": "certified",
+      "candidates": 3,
+      "failure_counts": {
+        "0": 2,
+        "1": 1
+      }
+    }
+  ],
+  "qualification_scope": "Original scalar completion success/failure and all native details; route completion remains proxy costing, not full trajectory certification.",
+  "timing_scope": "Instrumentation serializes full input/output arrays inside native-call timing. No throughput or speedup can be derived from those totals."
+}

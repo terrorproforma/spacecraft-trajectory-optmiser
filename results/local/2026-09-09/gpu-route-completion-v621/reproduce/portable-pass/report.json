@@ -1,0 +1,77 @@
+{
+  "passed": true,
+  "GPU_calls": 0,
+  "native_library_loads": 0,
+  "package_verification": {
+    "passed": true,
+    "indexed_files": 0,
+    "archives": 5,
+    "source_snapshots": 5,
+    "unique_source_objects": 344,
+    "GPU_calls": 0,
+    "native_library_loads": 0
+  },
+  "commands": [
+    {
+      "name": "native",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-package-v621/portable-recheck-c/build/performance/completion-integration-review-v621/review_native_readback.py"
+      ],
+      "returncode": 0,
+      "seconds": 0.08797004900003458,
+      "log_sha256": "dd0682801bb504302fe10f749003ecb25cfeb6245c70a89ab2180b29155ea826"
+    },
+    {
+      "name": "adapter",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-package-v621/portable-recheck-c/build/performance/completion-integration-review-v621/review_adapter_readback.py"
+      ],
+      "returncode": 0,
+      "seconds": 0.9456888869999602,
+      "log_sha256": "72e572097dfcff174a51c2e57704841153d817dda2f6c46a7aabfadb7d3114cf"
+    },
+    {
+      "name": "metric",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-package-v621/portable-recheck-c/build/performance/mass-diagonal-metric-v621/audit_metric.py"
+      ],
+      "returncode": 0,
+      "seconds": 1.5148558289999983,
+      "log_sha256": "772a0742fd26db245504515c6a8336aa7931821202cea18212dc1a3fb038f7a3"
+    },
+    {
+      "name": "mass",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-package-v621/portable-recheck-c/build/performance/mass-structure-review-v621/audit_mass.py"
+      ],
+      "returncode": 0,
+      "seconds": 0.2426066369999944,
+      "log_sha256": "a543ef0bf3186e73f11da94270c1f6abe5d26f705a02d9328a2d8634c6fe6dd3"
+    },
+    {
+      "name": "benchmark",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-package-v621/portable-recheck-c/build/performance/completion-benchmark-review-v621/audit_benchmark.py"
+      ],
+      "returncode": 0,
+      "seconds": 2.8674846330000037,
+      "log_sha256": "3c82c994dcd13b4ccce24c8a43f50795027c985291dbfa0675f181ac024e912c"
+    }
+  ],
+  "JSON_value_identical_regenerated_reports": [
+    "mass",
+    "metric",
+    "adapter"
+  ],
+  "serialization_note": "Original bytes remain untouched; generated JSON is compared by value with input-hash path labels normalized from Windows separators."
+}

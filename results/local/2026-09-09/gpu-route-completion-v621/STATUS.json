@@ -1,0 +1,36 @@
+{
+  "state": "complete",
+  "sealed": true,
+  "pending": [],
+  "scope": "Local RTX 5090 route-completion proxy costing; default off; no fleet promotion.",
+  "native_validation": {
+    "passed": true,
+    "kernels": 3,
+    "candidate_evaluations": 304
+  },
+  "adapter_validation": {
+    "passed": true,
+    "evaluation_calls": 8,
+    "candidate_evaluations": 1048,
+    "lambert_requests": 0
+  },
+  "benchmark": {
+    "passed": true,
+    "GPU_calls": 60,
+    "CPU_batches": 60,
+    "candidate_evaluations_per_backend": 14200,
+    "unique_historical_controls": 20,
+    "default_promoted": false
+  },
+  "CPU_portability_audits": {
+    "passed": true,
+    "audits": 5,
+    "GPU_calls": 0,
+    "native_library_loads": 0
+  },
+  "source_storage": {
+    "snapshots": 5,
+    "unique_objects": 344,
+    "executable_binaries_included": false
+  }
+}

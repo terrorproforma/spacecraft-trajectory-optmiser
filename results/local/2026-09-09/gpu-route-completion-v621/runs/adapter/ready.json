@@ -1,0 +1,27 @@
+{
+  "complete": true,
+  "cpu_collect_only_passed": true,
+  "gpu_calls": 0,
+  "files": {
+    "run.py": "cfcd86316f901673d897c1048f3bd80330ef3caf518f8ceacbc85526d0daca37",
+    "pytest_child.py": "3e125b5e9a6048ee9ba703e98310374f39b49e5839aaee1a6cec57d8d8960bd7",
+    "profile.json": "3823a2338df68592e5fb98d46ef43ba9a1ceb8205095feeac8639b2ce2ba524c",
+    "prepare.py": "4b96ef142136c246be2b37995cc300ad4592a4d8fb14e104f5edbe8210771ab0",
+    "cpu-collection-b.log": "975705afe907d4c328ac6252a89f2e60ca293df5047304a1bd09c91c99322432",
+    "cpu-collection-b/report.json": "a5f21ade2da7a2f21dd5d6f9356ce3b11e1f720e5eea23ad16637a16495d3f03"
+  },
+  "validation_command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "-B",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/pytest_child.py",
+    "--collect-only",
+    "--output",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/cpu-collection-b"
+  ],
+  "launch_command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "-B",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/run.py"
+  ],
+  "source_scope": "Frozen7eb8828f Python base plus four owned adapter/test changes from CPU attemptb; separate from native source."
+}

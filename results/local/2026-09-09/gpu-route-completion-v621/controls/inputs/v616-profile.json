@@ -1,0 +1,32 @@
+{
+  "python": "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+  "data": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+  "lock": "/home/angus/.spacepdhcg-gpu.lock",
+  "native_libraries": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": {
+      "path": "/home/angus/spacepdhcg-joint-search-v702/final/libspacepdhcg_cuda.so",
+      "sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa"
+    },
+    "SPACEPDHCG_QOCO_LIBRARY": {
+      "path": "/home/angus/spacepdhcg-retry-conditioning-v683/final/libqoco.so",
+      "sha256": "5b1b1a047f9d5041f821b64490562a3d598f51b47fedb08d89cdae211728940a"
+    }
+  },
+  "LD_LIBRARY_PATH": "/home/angus/spacepdhcg-joint-search-v702/final:/home/angus/spacepdhcg-retry-conditioning-v683/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+  "environment": {
+    "SPACEPDHCG_TEST_GTOC12_CONDITIONING_RETRY": "1",
+    "SPACEPDHCG_TEST_GTOC12_PARALLEL_DIRECTIONS": "0",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "prior_validation": {
+    "GPU_tests": "111 passed without skips on RTX5090 and H100 in v707",
+    "local_active_loop_memcheck": "CUDA error999 unresolved; not claimed memory-clean",
+    "local_racecheck_and_synccheck": "passed moving-search regression",
+    "fullfleet": "v707 local baseline/candidate each36 converged legs and both fleet checkers"
+  },
+  "experiment_scope": "One candidate generation; CUDA Lambert/geometry/collection DP, CPU beam and DP input construction"
+}

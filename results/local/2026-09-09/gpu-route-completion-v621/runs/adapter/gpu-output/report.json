@@ -1,0 +1,102 @@
+{
+  "complete": true,
+  "passed": true,
+  "supervisor_pid": 374,
+  "started": 1788900171.1301537,
+  "failures": [],
+  "processes": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/pytest_child.py",
+        "--output",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/gpu-output/child"
+      ],
+      "started": 1788900171.9928288,
+      "timeout_seconds": 180,
+      "pid": 379,
+      "exit_code": 0,
+      "ended": 1788900174.8390222
+    }
+  ],
+  "budget": {
+    "child_processes": 1,
+    "evaluation_calls": 8,
+    "candidates": 1048,
+    "actual_lambert_requests": 0,
+    "timeout_seconds": 180,
+    "automatic_retries": 0
+  },
+  "pins": {
+    "host_report_path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/report.json",
+    "host_report_sha256": "2e7175e8f818d11987fc240b5511c54b498f5485798501703c03e0906359bc8a",
+    "host_source_root": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source",
+    "host_source_tree_sha256": "decb2a37cdfe2119d7d371d1d1ac75dcb39590be420a90b17485d0cea483fa27",
+    "host_source_scope": "Frozen7eb8828f Python base plus four owned adapter/test changes from CPU attemptb; separate from native source.",
+    "native_manifest_path": "/home/angus/spacepdhcg-completion-fullcore-v621/manifest.json",
+    "native_manifest_sha256": "43c3c2974af7a9d16ba060724855a56b5122acf9c53ff29d68243df612d82969",
+    "native_source_root": "/home/angus/spacepdhcg-completion-fullcore-v621/repo",
+    "library": {
+      "path": "/home/angus/spacepdhcg-completion-fullcore-v621/build/cuda/libspacepdhcg_cuda.so",
+      "bytes": 21084184,
+      "sha256": "cb977ff09b206de807996a8a21d7ccec41bb6a2a4c35a37c10ebe4883b83d2fb"
+    },
+    "python": "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "python_sha256": "9544d2a29138833e6177d45dbc57468d37710b5080c901fbb579d53f251cdd6f",
+    "native_controls_report_path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-native-controls-v621/gpu-output/report.json",
+    "native_controls_report_sha256": "3b0dddee118b28203dbcb136b731c5ab896cf2b6a7dd11378683ada0cff30e99",
+    "gpu_uuid": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+    "gpu_uuid_provenance": "build/performance/coupled-fuel-search-v611/launch.json; runtime identity and no compute processes required again",
+    "gpu_lock": "/home/angus/.spacepdhcg-gpu.lock",
+    "nvidia_smi": "/usr/lib/wsl/lib/nvidia-smi",
+    "ld_library_path": "/home/angus/spacepdhcg-completion-fullcore-v621/build/cuda:/usr/local/cuda-12.8/lib64:/usr/lib/wsl/lib",
+    "test_suffixes": [
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]"
+    ],
+    "budget": {
+      "pytest_cases": 4,
+      "evaluation_calls": 8,
+      "candidates": 1048,
+      "lambert_requests": 0,
+      "child_processes": 1,
+      "timeout_seconds": 180,
+      "retries": 0
+    },
+    "observation_scope": "Wrap native evaluation boundary for exact call counts and raw FP64 readbacks. No numerical/model/gate changes. Instrumented timings are not benchmark data."
+  },
+  "ready_sha256": "c420836cce0aa04c819609f09bef9f95261342292fe12fa0927ed2538b67e09f",
+  "lock_acquired": 1788900171.9018936,
+  "gpu_inventory": "NVIDIA GeForce RTX 5090, GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, 595.97\n",
+  "compute_processes_before": "",
+  "actual_evaluation_calls": 8,
+  "actual_candidates": 1048,
+  "lambert_requests": 0,
+  "child_report_sha256": "dc9e3909e8c6988b1f91fcd1675574e3f65f35fa816549d2b4b3c1517939436f",
+  "ended": 1788900174.8434932,
+  "output_sha256": {
+    "child-launch.json": "3579af551e110629846a6acb017e41d8416dde0a2f3f1c73c3ad982f65dc76c8",
+    "preflight.json": "043ee889329f73d288f17b01dae2c321ced6aafda4da702bd9c8acd20222227c",
+    "pytest.log": "2ee38e09f4d130c99e34f0d924b16d6cb9fe41b7e47d279d80eb458a223ca6b8",
+    "child/call-00-input.json": "2fa002a7d88ace016efc310502bf8a90cd4cd46fa222fb455ee13044d9281a97",
+    "child/call-00-output.json": "19ab757f71fca73248bfeaf767a4312f1b2d168cd402efe5927139badbfe275c",
+    "child/call-01-input.json": "911bb93d58f82ba8cc48c316b7b0950f9bfcf6d36b01f17f45c3991e44302112",
+    "child/call-01-output.json": "2e70ca87151889bb334606a7dbf1835ae9815cd62233532c9a08d9ab07a4ce6b",
+    "child/call-02-input.json": "21a96d053f2ba35c2f74f8efe93f40bb6ffc6cbeac72d8c20600f576180eda1d",
+    "child/call-02-output.json": "242ac7a8474d772af8eecd22a0ad8910575004da58e33f0f2499885b38fb9547",
+    "child/call-03-input.json": "9289be6457eb0826b57a2d6bd8f405e85997124dac6409ba6b50f2eef04c5643",
+    "child/call-03-output.json": "aef04f51dce5e4d44ed538f2275a2d21d21829e8ddbbbf85977294cd25c02ea2",
+    "child/call-04-input.json": "d912841c06681fdbc42314e429fd08a0d1b53154f06d99f517659e76bd027856",
+    "child/call-04-output.json": "549c10c480967ea9396a433ab87653ee483253d4248ca7ff0f707e92eee0fd44",
+    "child/call-05-input.json": "e5d1cd33c5a4355a400cb7f4da430be9c5768756acacec1e98edd8953788e27c",
+    "child/call-05-output.json": "4ef3fa414600310ace28f9a65379c9abce557d9e33840ef9caf5a5e6312549e7",
+    "child/call-06-input.json": "9cd4d81dc9b778256b808d3a871a81aff8bb4ab96cbdb326d6329c4421ac1dc1",
+    "child/call-06-output.json": "a049eb8138b054c49e119dd9cafa1dde1b5eff922ef40ecca8b45695889a3cd0",
+    "child/call-07-input.json": "db5aa7c262a5911668cf68da29d4e7032ae6c0c86ca85be0e3afc7ebf7b14a26",
+    "child/call-07-output.json": "fc6dfbc4056b2e5d340ef77a3d7616724cd79691d1411b03028c950bef39f9b0",
+    "child/report.json": "dc9e3909e8c6988b1f91fcd1675574e3f65f35fa816549d2b4b3c1517939436f"
+  }
+}

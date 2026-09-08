@@ -1,0 +1,78 @@
+E501 Line too long (119 > 100)
+   --> prepare.py:109:101
+    |
+107 |         KIT / "plan.json",
+108 |         {
+109 |             "scope": "Matched production completion costing on repeated historical requests, no mission speedup claim",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+110 |             "historical_fleet": "v595/v616, not the current fleet",
+111 |             "methods": ["RouteSearch._finish_cpu", "RouteSearch._finish_many"],
+    |
+
+E501 Line too long (120 > 100)
+   --> prepare.py:112:101
+    |
+110 |             "historical_fleet": "v595/v616, not the current fleet",
+111 |             "methods": ["RouteSearch._finish_cpu", "RouteSearch._finish_many"],
+112 |             "model_provenance": "Both use CollectPairTable metadata, cached saved pair features; no generated geometry",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+113 |             "groups": groups,
+114 |             "source_size_evidence": {
+    |
+
+E501 Line too long (147 > 100)
+   --> prepare.py:115:101
+    |
+113 | …
+114 | …
+115 | …; benchmark uses archival DP requests at this size, not a measured _complete invocation",
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+116 | …dth24/chain_tour_candidates24",
+117 | …n_tour_candidates default48; _filter can yield fewer requests",
+    |
+
+E501 Line too long (121 > 100)
+   --> prepare.py:117:101
+    |
+115 | …         "four": "search.py TOUR_MODES has4 entries; benchmark uses archival DP requests at this size, not a measured _complete invo…
+116 | …         "twenty_four": "v616 savedsettings beam_width24/chain_tour_candidates24",
+117 | …         "forty_eight": "frozen SearchSettings.chain_tour_candidates default48; _filter can yield fewer requests",
+    |                                                                                               ^^^^^^^^^^^^^^^^^^^^^
+118 | …         "large": "64/256/1024 are prospective scaling probes, not observed live shortlist sizes",
+119 | …     },
+    |
+
+E501 Line too long (105 > 100)
+   --> prepare.py:118:101
+    |
+116 |                 "twenty_four": "v616 savedsettings beam_width24/chain_tour_candidates24",
+117 |                 "forty_eight": "frozen SearchSettings.chain_tour_candidates default48; _filter can yield fewer requests",
+118 |                 "large": "64/256/1024 are prospective scaling probes, not observed live shortlist sizes",
+    |                                                                                                     ^^^^^
+119 |             },
+120 |             "first_call": "One call per backend/group; GPU fresh workspace, only first group may include process CUDA initialization",
+    |
+
+E501 Line too long (134 > 100)
+   --> prepare.py:120:101
+    |
+118 |                 "large": "64/256/1024 are prospective scaling probes, not observed live shortlist sizes",
+119 |             },
+120 |             "first_call": "One call per backend/group; GPU fresh workspace, only first group may include process CUDA initialization",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+121 |             "warm_order": ["cpu", "gpu", "gpu", "cpu", "gpu", "cpu", "cpu", "gpu"],
+122 |             "gpu_evaluate_calls": 60,
+    |
+
+E501 Line too long (127 > 100)
+   --> prepare.py:129:101
+    |
+127 |             "automatic_retries": 0,
+128 |             "construction_and_validation": "Measured separately, excluded from method timers",
+129 |             "throughput_unit": "proxy candidate evaluations/second; repeated controls are not distinct trajectories/solutions",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+130 |             "new_geometry_calls": 0,
+131 |             "Lambert_calls": 0,
+    |
+
+Found 16 errors (9 fixed, 7 remaining).

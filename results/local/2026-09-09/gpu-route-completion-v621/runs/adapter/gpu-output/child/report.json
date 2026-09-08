@@ -1,0 +1,299 @@
+{
+  "complete": true,
+  "passed": true,
+  "collect_only": false,
+  "started": 1788900172.4908683,
+  "calls": [
+    {
+      "index": 0,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "candidates": 259,
+      "deploy_slots": 518,
+      "leg_slots": 785,
+      "entered_native": true,
+      "input_sha256": "2fa002a7d88ace016efc310502bf8a90cd4cd46fa222fb455ee13044d9281a97",
+      "native_status": 0,
+      "output_sha256": "19ab757f71fca73248bfeaf767a4312f1b2d168cd402efe5927139badbfe275c"
+    },
+    {
+      "index": 1,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "candidates": 3,
+      "deploy_slots": 6,
+      "leg_slots": 9,
+      "entered_native": true,
+      "input_sha256": "911bb93d58f82ba8cc48c316b7b0950f9bfcf6d36b01f17f45c3991e44302112",
+      "native_status": 0,
+      "output_sha256": "2e70ca87151889bb334606a7dbf1835ae9815cd62233532c9a08d9ab07a4ce6b"
+    },
+    {
+      "index": 2,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "candidates": 259,
+      "deploy_slots": 518,
+      "leg_slots": 785,
+      "entered_native": true,
+      "input_sha256": "21a96d053f2ba35c2f74f8efe93f40bb6ffc6cbeac72d8c20600f576180eda1d",
+      "native_status": 0,
+      "output_sha256": "242ac7a8474d772af8eecd22a0ad8910575004da58e33f0f2499885b38fb9547"
+    },
+    {
+      "index": 3,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "candidates": 3,
+      "deploy_slots": 6,
+      "leg_slots": 9,
+      "entered_native": true,
+      "input_sha256": "9289be6457eb0826b57a2d6bd8f405e85997124dac6409ba6b50f2eef04c5643",
+      "native_status": 0,
+      "output_sha256": "aef04f51dce5e4d44ed538f2275a2d21d21829e8ddbbbf85977294cd25c02ea2"
+    },
+    {
+      "index": 4,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "candidates": 259,
+      "deploy_slots": 518,
+      "leg_slots": 785,
+      "entered_native": true,
+      "input_sha256": "d912841c06681fdbc42314e429fd08a0d1b53154f06d99f517659e76bd027856",
+      "native_status": 0,
+      "output_sha256": "549c10c480967ea9396a433ab87653ee483253d4248ca7ff0f707e92eee0fd44"
+    },
+    {
+      "index": 5,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "candidates": 3,
+      "deploy_slots": 6,
+      "leg_slots": 9,
+      "entered_native": true,
+      "input_sha256": "e5d1cd33c5a4355a400cb7f4da430be9c5768756acacec1e98edd8953788e27c",
+      "native_status": 0,
+      "output_sha256": "4ef3fa414600310ace28f9a65379c9abce557d9e33840ef9caf5a5e6312549e7"
+    },
+    {
+      "index": 6,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+      "candidates": 259,
+      "deploy_slots": 518,
+      "leg_slots": 785,
+      "entered_native": true,
+      "input_sha256": "9cd4d81dc9b778256b808d3a871a81aff8bb4ab96cbdb326d6329c4421ac1dc1",
+      "native_status": 0,
+      "output_sha256": "a049eb8138b054c49e119dd9cafa1dde1b5eff922ef40ecca8b45695889a3cd0"
+    },
+    {
+      "index": 7,
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+      "candidates": 3,
+      "deploy_slots": 6,
+      "leg_slots": 9,
+      "entered_native": true,
+      "input_sha256": "db5aa7c262a5911668cf68da29d4e7032ae6c0c86ca85be0e3afc7ebf7b14a26",
+      "native_status": 0,
+      "output_sha256": "fc6dfbc4056b2e5d340ef77a3d7616724cd79691d1411b03028c950bef39f9b0"
+    }
+  ],
+  "gpu_scopes": [
+    {
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "telemetry": {
+        "backend": "cuda",
+        "completed_batches": 0,
+        "completed_branch_requests": 0,
+        "gpu_used": true,
+        "completion_batches": 2,
+        "completion_candidates": 262,
+        "completion_leg_slots": 794,
+        "completion_pack_seconds": 0.002524512000007917,
+        "completion_native_call_seconds": 0.14237498699999662,
+        "completion_kernel_seconds": 0.04637811369169504,
+        "completion_total_seconds": 0.1464424220000069
+      },
+      "lambert_batches": 0,
+      "lambert_evaluations": 0,
+      "closed": true
+    },
+    {
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "telemetry": {
+        "backend": "cuda",
+        "completed_batches": 0,
+        "completed_branch_requests": 0,
+        "gpu_used": true,
+        "completion_batches": 2,
+        "completion_candidates": 262,
+        "completion_leg_slots": 794,
+        "completion_pack_seconds": 0.001665918999997018,
+        "completion_native_call_seconds": 0.07783892900000211,
+        "completion_kernel_seconds": 6.566399894654751e-05,
+        "completion_total_seconds": 0.0810420150000013
+      },
+      "lambert_batches": 0,
+      "lambert_evaluations": 0,
+      "closed": true
+    },
+    {
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "telemetry": {
+        "backend": "cuda",
+        "completed_batches": 0,
+        "completed_branch_requests": 0,
+        "gpu_used": true,
+        "completion_batches": 2,
+        "completion_candidates": 262,
+        "completion_leg_slots": 794,
+        "completion_pack_seconds": 0.001738677999995275,
+        "completion_native_call_seconds": 0.08673710300000437,
+        "completion_kernel_seconds": 7.228800095617772e-05,
+        "completion_total_seconds": 0.08999543199999493
+      },
+      "lambert_batches": 0,
+      "lambert_evaluations": 0,
+      "closed": true
+    },
+    {
+      "test": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+      "telemetry": {
+        "backend": "cuda",
+        "completed_batches": 0,
+        "completed_branch_requests": 0,
+        "gpu_used": true,
+        "completion_batches": 2,
+        "completion_candidates": 262,
+        "completion_leg_slots": 794,
+        "completion_pack_seconds": 0.002263468000002433,
+        "completion_native_call_seconds": 0.07862794199999712,
+        "completion_kernel_seconds": 6.39039995148778e-05,
+        "completion_total_seconds": 0.08245484900000122
+      },
+      "lambert_batches": 0,
+      "lambert_evaluations": 0,
+      "closed": true
+    }
+  ],
+  "pytest_reports": [
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00016444100000256867
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.41585942000000387
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 8.33380000031525e-05
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0001255979999967849
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09603237500000006
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 8.818000000587745e-05
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.000140381000001355
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10501480500000326
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 7.013600000504994e-05
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00012541799999610248
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09612967500000025
+    },
+    {
+      "nodeid": "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 9.67809999963265e-05
+    }
+  ],
+  "forbidden_gpu_requests": [],
+  "source_bindings": {
+    "spacepdhcg.gtoc12.gpu_completion": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/src/spacepdhcg/gtoc12/gpu_completion.py",
+      "sha256": "be72d2c8a2e1a359d3450911d466c6de060440d6133017166c017e44946a135a"
+    },
+    "spacepdhcg.gtoc12.gpu_lambert": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/src/spacepdhcg/gtoc12/gpu_lambert.py",
+      "sha256": "c7fdc99b6563fd7dd398ce52a1e895eac998e91a8c6f33a94bfaa44b6ae3410d"
+    },
+    "spacepdhcg.gtoc12.search": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/src/spacepdhcg/gtoc12/search.py",
+      "sha256": "c451fa89d7eb0d240234fae423b513c4c1791c714e53dffd734591acfb2a6467"
+    }
+  },
+  "profile_sha256": "3823a2338df68592e5fb98d46ef43ba9a1ceb8205095feeac8639b2ce2ba524c",
+  "failures": [],
+  "python": "3.12.13 (main, Jun 23 2026, 15:18:55) [Clang 22.1.3 ]",
+  "numpy": "2.5.2",
+  "pytest": "9.1.1",
+  "pytest_arguments": [
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source/tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]",
+    "-q",
+    "-s",
+    "-x",
+    "-o",
+    "addopts=",
+    "-p",
+    "no:cacheprovider",
+    "--rootdir",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-cpu-v621b/source",
+    "--basetemp",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-adapter-gpu-v621/gpu-output/child/pytest-tmp"
+  ],
+  "collected_tests": [
+    "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[fit]",
+    "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[flat]",
+    "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[ratio]",
+    "tests/test_gtoc12_gpu_completion.py::test_native_completion_matches_scalar_for_ragged_batches_and_workspace_reuse[certified]"
+  ],
+  "pytest_exit_code": 0,
+  "ended": 1788900174.703169,
+  "actual_evaluation_calls": 8,
+  "actual_completed_evaluation_calls": 8,
+  "actual_candidates": 1048,
+  "lambert_requests": 0,
+  "lambert_request_guards": "Both bound native Lambert entry points and public request methods reject before GPU execution.",
+  "scope": "Costing parity with readback observation; timings include observation overhead and are not a benchmark."
+}

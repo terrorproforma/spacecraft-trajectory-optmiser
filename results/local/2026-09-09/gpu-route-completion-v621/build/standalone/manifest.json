@@ -1,0 +1,103 @@
+{
+  "complete": true,
+  "gpu_calls": 0,
+  "git_operations": 0,
+  "source_identity_kind": "sha256_tree_not_git_commit",
+  "frozen_commit": null,
+  "source_sha256": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "e176bb0d5848981a140e264a71d10ac744ce1babc946d5edf5caf01dc3f9dc76",
+    "cpp/cuda/src/gtoc12_completion.cu": "b81d72702238a1096a5cec0e49b9b07c3738c4d3ac657cafb116993651a99c2b",
+    "cpp/cuda/tests/gtoc12_completion_test.cu": "52c127e2f66b2c28eb046016a72d8a2c919ae044720ff139cea9679928329faf",
+    "cpp/cuda/CMakeLists.txt": "4fa338c5ae6f153e9ebe89def13da183b0b6f04f1c531e0c0680e6cfdb9b9aac"
+  },
+  "scope": "Standalone completion shared library and linked test; integration CMake recorded, not full-core rebuild.",
+  "stages": [
+    {
+      "name": "compiler-version",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "--version"
+      ],
+      "returncode": 0,
+      "seconds": 0.01634080599999521
+    },
+    {
+      "name": "library-build",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "-std=c++20",
+        "-O3",
+        "--fmad=false",
+        "-gencode=arch=compute_90,code=sm_90",
+        "-gencode=arch=compute_120,code=sm_120",
+        "-I/home/angus/spacepdhcg-completion-v621/repo/cpp/cuda/include",
+        "-shared",
+        "-Xcompiler=-fPIC",
+        "/home/angus/spacepdhcg-completion-v621/repo/cpp/cuda/src/gtoc12_completion.cu",
+        "-o",
+        "/home/angus/spacepdhcg-completion-v621/build/libspacepdhcg_completion.so"
+      ],
+      "returncode": 0,
+      "seconds": 2.022794255000001
+    },
+    {
+      "name": "test-build",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "-std=c++20",
+        "-O3",
+        "--fmad=false",
+        "-gencode=arch=compute_90,code=sm_90",
+        "-gencode=arch=compute_120,code=sm_120",
+        "-I/home/angus/spacepdhcg-completion-v621/repo/cpp/cuda/include",
+        "/home/angus/spacepdhcg-completion-v621/repo/cpp/cuda/tests/gtoc12_completion_test.cu",
+        "-L/home/angus/spacepdhcg-completion-v621/build",
+        "-lspacepdhcg_completion",
+        "-Xlinker=-rpath",
+        "-Xlinker=$ORIGIN",
+        "-o",
+        "/home/angus/spacepdhcg-completion-v621/build/gtoc12_completion_test"
+      ],
+      "returncode": 0,
+      "seconds": 1.818540506000005
+    },
+    {
+      "name": "cpu-fixture-check",
+      "command": [
+        "/home/angus/spacepdhcg-completion-v621/build/gtoc12_completion_test",
+        "--cpu-only"
+      ],
+      "returncode": 0,
+      "seconds": 0.0014218589999970277
+    },
+    {
+      "name": "resource-usage",
+      "command": [
+        "/usr/local/cuda-12.8/bin/cuobjdump",
+        "--dump-resource-usage",
+        "/home/angus/spacepdhcg-completion-v621/build/libspacepdhcg_completion.so"
+      ],
+      "returncode": 0,
+      "seconds": 0.00427958000000217
+    }
+  ],
+  "source_tree_sha256": "a6b304f18a2d710db5c753dcd1b1ceb2e3c29a7b38b252ee27116ee1b32b3db5",
+  "source_archive_sha256": "217f7eac28dd4e78a1bb6b36bd104b15da918469370137931ba696878e6b1c67",
+  "library": {
+    "path": "/home/angus/spacepdhcg-completion-v621/build/libspacepdhcg_completion.so",
+    "bytes": 1075152,
+    "sha256": "ef68a8d05e9065b02eb1a28d310c4d140b1a38586e42430aee017e24b52287f6"
+  },
+  "test": {
+    "path": "/home/angus/spacepdhcg-completion-v621/build/gtoc12_completion_test",
+    "bytes": 1034040,
+    "sha256": "9bb5435e7b133179dcd42b3115b019c942be7de14b3a8e703a89df13a5bd4a31"
+  },
+  "cpu_records": [
+    {
+      "phase": "cpu_only",
+      "fixtures": 262,
+      "GPU_calls": 0
+    }
+  ]
+}

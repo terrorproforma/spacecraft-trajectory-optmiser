@@ -1,0 +1,40 @@
+{
+  "cost_model_calls": 0,
+  "GPU_calls": 0,
+  "commands": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "gpu_batch.py",
+        "gpu_runner.py",
+        "test_gpu_runner_contract.py",
+        "validate_runner.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix",
+        "gpu_batch.py",
+        "gpu_runner.py",
+        "test_gpu_runner_contract.py",
+        "validate_runner.py"
+      ],
+      "exit_code": 1
+    }
+  ],
+  "passed": false,
+  "files_sha256": {
+    "gpu_batch.py": "e1e30a5e1cd684db6a35d102a2d9e798792a7b2a91bed5123d2c81e39a268415",
+    "gpu_runner.py": "e90f985bca1dc0ae1491fb5f333344ca0ef2b1bd4fe6ec7658a577718ff291ce",
+    "test_gpu_runner_contract.py": "06dd0c1fba8998b06dfeec5ac05dcd0694c156ac802d5264f98c1377e010bd52",
+    "validate_runner.py": "511b76cfed9e6cb0d1c4fb81cc2fbc598b627331510e1ed6fe6a2838c0fe17f5"
+  }
+}
