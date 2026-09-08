@@ -468,6 +468,7 @@ struct spacepdhcg_native_qoco {
     // not be an independent attempt. The next update_solve tears the solver
     // down and sets it up again (counted in report.workspace_creations).
     bool needs_fresh_solver{};
+    bool refresh_new_leg{};
     std::vector<double> primal{};
     std::vector<double> accepted_primal{};
     std::vector<double> dual{};
@@ -2008,7 +2009,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             return finish(SPACEPDHCG_CUDA_NUMERICAL_FAILURE);
         }
     }
-    if (workspace->report.solves != 0U || workspace->needs_fresh_solver) {
+    if (workspace->report.solves != 0U || workspace->needs_fresh_solver || workspace->refresh_new_leg) {
         const auto update_start = std::chrono::steady_clock::now();
         auto status = refresh_conversion(workspace, *problem, stream,producer_invalid);
         if (status != SPACEPDHCG_CUDA_SUCCESS) {
@@ -2134,6 +2135,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
             std::chrono::steady_clock::now() - update_start
         ).count();
         ++workspace->report.numeric_updates;
+        workspace->refresh_new_leg=false;
     }
     if (workspace->origin_mode && !workspace->origin_applied) {
         // Initial/rebuilt solver storage is compiled from the original matrices.
@@ -2417,6 +2419,29 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
 void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace) {
     if (workspace && workspace->graph_active) { workspace->destroy_after_graph=true; return; }
     delete workspace;
+}
+
+spacepdhcg_cuda_status spacepdhcg_native_qoco_restart_leg(spacepdhcg_native_qoco* w) {
+    int device=-1;
+    if(!w || w->deferred_active || w->graph_active || w->destroy_after_graph
+        || std::this_thread::get_id()!=w->creation_owner || cudaGetDevice(&device)!=cudaSuccess
+        || device!=w->creation_device) return SPACEPDHCG_CUDA_INVALID_STATE;
+    // Initial prototype excludes scaled restarts: numerical updates otherwise
+    // reuse the preceding leg's Ruiz packet. Qualifying that policy is separate.
+    if(!w->solver || w->configured_settings.ruiz_iters || !w->numeric_update_context
+        || !w->finish_replay || !w->finish_numeric_update || !w->update_settings
+        || !w->primal_start || !w->emit_graph) return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if(w->finish_replay(w->solver) || w->finish_numeric_update(w->numeric_update_context,1)
+        || w->update_settings(w->solver,&w->configured_settings) || w->primal_start(w->solver,0))
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    // The retained IPM graph initializes x/y/z/s, best/stall controls and all
+    // iteration counters before solving. Do not carry an accepted warm start.
+    w->needs_fresh_solver=false;w->refresh_new_leg=true;w->has_accepted=false;
+    w->deferred_ready=false;w->numeric_scale_primed=false;w->origin_applied=false;
+    w->queued_numeric_result=nullptr;w->numeric_update_invalid=false;
+    w->validation_pending=false;w->device_validation=nullptr;w->validation_flags=0;
+    w->report={};w->report.status_code=-1;
+    return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 bool spacepdhcg_native_qoco_can_enqueue(const spacepdhcg_native_qoco* w) {

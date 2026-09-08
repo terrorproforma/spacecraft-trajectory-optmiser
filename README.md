@@ -14,6 +14,15 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+Compatible trajectory legs now reuse GPU QOCO workspaces, sparse conversion and
+vendor graphs. Complete-process one-ship medians fall **5.40% on RTX 5090** and
+**5.03% on H100**, with unchanged verified score. The fixed 225-leg replay takes
+**8.43% / 8.83% less solver time**, retaining all 205 certified legs. Final builds
+pass 54 targeted tests and the workspace-rebind sanitizer probe on both GPUs.
+Reuse defaults on for eligible zero-Ruiz graph execution. The fleet incumbent
+remains **12,805.194 weighted kg**.
+[Implementation, stream-lifetime fix and reproducible evidence](docs/GPU_SOLVER_WORKSPACE_REUSE.md).
+
 New solver phase measurements identify **7.87 s locally / 9.49 s on H100** in
 host-dispatched priming across a 47-call campaign. An early CUDA Graph entry
 experiment reduces priming dispatches from 141 to 94 and retains all 205

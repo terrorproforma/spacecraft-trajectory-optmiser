@@ -1,4 +1,5 @@
 #include "spacepdhcg/cuda/gtoc12_discretisation_c_api.h"
+#include "../internal/gtoc12_workspace_reuse.h"
 
 #include <cuda_runtime.h>
 #include <cmath>
@@ -187,6 +188,18 @@ extern "C" int spacepdhcg_gtoc12_discretisation_create(
     if (cudaMemcpyAsync(w->times, times, (n + 1) * sizeof(double), cudaMemcpyHostToDevice, w->stream) != cudaSuccess
         || cudaStreamSynchronize(w->stream) != cudaSuccess) return failed();
     *output = w;
+    return 0;
+}
+
+int gtoc12_discretisation_rebind(spacepdhcg_gtoc12_discretisation* w,
+    double kappa,double mass_flow,const double* times) {
+    if(!correct_device(w) || !times || !std::isfinite(kappa) || kappa<=0.0
+        || !std::isfinite(mass_flow) || mass_flow<=0.0) return 1;
+    for(int i=0;i<=w->intervals;++i)
+        if(!std::isfinite(times[i]) || (i && !(times[i]>times[i-1]))) return 1;
+    if(cudaMemcpyAsync(w->times,times,(w->intervals+1)*sizeof(double),cudaMemcpyHostToDevice,w->stream)!=cudaSuccess
+        || cudaStreamSynchronize(w->stream)!=cudaSuccess) return 2;
+    w->kappa=kappa;w->mass_flow=mass_flow;
     return 0;
 }
 

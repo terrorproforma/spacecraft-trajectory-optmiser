@@ -1,0 +1,54 @@
+{
+  "pid": 189293,
+  "complete": true,
+  "stages": [
+    {
+      "name": "baseline",
+      "returncode": 0,
+      "seconds": 194.14746943605132,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_workspace_pool.py',run_name='__main__')",
+        "0",
+        "/home/ubuntu/spacepdhcg-workspace-pool-replay-v480/baseline"
+      ]
+    },
+    {
+      "name": "candidate",
+      "returncode": 0,
+      "seconds": 179.03587038099067,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_workspace_pool.py',run_name='__main__')",
+        "1",
+        "/home/ubuntu/spacepdhcg-workspace-pool-replay-v480/candidate"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "candidate",
+  "source_sha256": {
+    "cpp/cuda/src/gtoc12_qoco.cu": "a2413ee7439fec3bdcdff100183641bdb733dd6dd2b33b895a2c656085b04df0",
+    "cpp/cuda/src/gtoc12_conic.cu": "717cea268b1ad69eb76711ea062bb3044b8ae95496a701d4a170dd7272066e61",
+    "cpp/cuda/src/gtoc12_discretisation.cu": "96447c80e2d6df181b8bbd75faf862648ed868e77df87204c3de4b264d1dfe5e",
+    "cpp/cuda/internal/gtoc12_workspace_reuse.h": "4203962a873ef2f0c333bc9ffc00573b18ecbf3dfbae965586e829745b336770",
+    "cpp/cuda/internal/native_qoco_adapter.h": "63a39be9c34d2ee3e6be394df1e3225e5ba5df4498ce93dfdd4b257383872665",
+    "tests/test_gtoc12_gpu_workspace_pool.py": "95cd070646bf880e4c579451a903b7a9538c34e67f283534ce3322046c165193",
+    "cpp/cuda/src/native_qoco_adapter.cpp": "16d2f7c9cc79e44d3d2a519cb8dfc24a0e918086c3fa6d33acccee2b576f669b",
+    "tests/test_gtoc12_gpu_scvx.py": "2b2a8e05fa4eb527626ed7a1b94e39989a7d41bccc03d74ecb55a21ddec5b620",
+    "cpp/cuda/src/gtoc12_scvx.cu": "cbc57ee0df683d71ec2d14ded277fc490b642aff5a0093eb38616175c53914bb",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": "b93ce71dd01ccf96c4f8313a7cbcf6757572176df0895b9657d333d3a0186f99",
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": "0d30413bd29bf42d147faae7c9758c5020d86a945b0626e3604df1e21a780a73",
+    "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e",
+    "build/performance/solver_phase_details.py": "3d859ab7b2fafa0e67f6205996cdc7cebb486213c1155c15a5e4db2a70324648",
+    "build/performance/replay_workspace_pool.py": "f393cd0ac4778116a143cc03fe56584accce4dbd6a68ecbe41922f09363cadad"
+  },
+  "frozen_source_commit": "ea210830cfbd6b3f568676791d353245daf3ab4b",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "e54dd6dc85cbabcfbb6aed2e872e6c6bf0b8c311fbebb57b34d335f43cf234f9",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 189628
+}

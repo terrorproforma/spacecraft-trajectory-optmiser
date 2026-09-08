@@ -1,5 +1,6 @@
 #include "spacepdhcg/cuda/gtoc12_conic_c_api.h"
 #include "spacepdhcg/cuda/gtoc12_discretisation_c_api.h"
+#include "../internal/gtoc12_workspace_reuse.h"
 #include <cuda_runtime.h>
 #include <algorithm>
 #include <cmath>
@@ -243,6 +244,18 @@ extern "C" int spacepdhcg_gtoc12_conic_create(int intervals, int hold, int free_
         *output = w;
         return 0;
     } catch (...) { return failed(2); }
+}
+
+int gtoc12_conic_rebind(spacepdhcg_gtoc12_conic* w,double kappa,double mass_flow,
+    const double* times,const double* boundary,const double* fuel) {
+    if(!correct_device(w) || !boundary || !fuel) return 1;
+    for(int i=0;i<12;++i) if(!std::isfinite(boundary[i])) return 1;
+    for(int i=0;i<=w->intervals;++i) if(!std::isfinite(fuel[i]) || fuel[i]<0.0) return 1;
+    const int status=gtoc12_discretisation_rebind(w->dynamics,kappa,mass_flow,times);
+    if(status) return status;
+    if(!upload(w->boundary,boundary,12,w->stream) || !upload(w->fuel,fuel,w->intervals+1,w->stream)
+        || cudaStreamSynchronize(w->stream)!=cudaSuccess) return 2;
+    return 0;
 }
 
 extern "C" int spacepdhcg_gtoc12_conic_get_dimensions(spacepdhcg_gtoc12_conic* w,

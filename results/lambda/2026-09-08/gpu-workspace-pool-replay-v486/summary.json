@@ -1,0 +1,35 @@
+{
+  "hardware": "Lambda H100",
+  "scope": "Same-binary pool off/on comparison.",
+  "capacity": 8,
+  "default_pool": false,
+  "measurements": {
+    "baseline": {
+      "seconds": 170.4875026542577,
+      "converged": 205,
+      "priming": 675,
+      "control_bytes": 10800,
+      "status_counts": {
+        "converged": 205,
+        "infeasible": 16,
+        "failed": 4
+      },
+      "lost_prior": []
+    },
+    "candidate": {
+      "seconds": 155.43301342765335,
+      "converged": 205,
+      "priming": 522,
+      "control_bytes": 9576,
+      "status_counts": {
+        "converged": 205,
+        "infeasible": 15,
+        "failed": 5
+      },
+      "lost_prior": []
+    },
+    "lost_baseline": [],
+    "max_certified_mass_delta_kg": 1.0292251317878254e-07,
+    "less_time_percent": 8.830259691899112
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "hardware": "Lambda H100",
+  "scope": "Same-binary pool off/on comparison.",
+  "capacity": 8,
+  "default_pool": false,
+  "measurements": {
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "seconds": 31.209248492028564,
+        "score": 548.2546201232003,
+        "native_seconds": 13.292840574868023,
+        "native_calls": 47,
+        "workspace_creations": 47,
+        "setup_seconds": 3.1268368579999994,
+        "priming": 141,
+        "outer_attempts": 209,
+        "inner_iterations": 5059,
+        "process_seconds": 32.208150916034356
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "seconds": 29.039978738990612,
+        "score": 548.2546201232999,
+        "native_seconds": 11.338006016856525,
+        "native_calls": 47,
+        "workspace_creations": 17,
+        "setup_seconds": 1.294363314,
+        "priming": 111,
+        "outer_attempts": 214,
+        "inner_iterations": 5106,
+        "process_seconds": 29.90435751399491
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "seconds": 30.576372650044505,
+        "score": 548.2546201232001,
+        "native_seconds": 12.35041907505365,
+        "native_calls": 47,
+        "workspace_creations": 17,
+        "setup_seconds": 1.296780794,
+        "priming": 111,
+        "outer_attempts": 224,
+        "inner_iterations": 5424,
+        "process_seconds": 31.41289732704172
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "seconds": 31.530072073976044,
+        "score": 548.2546201229995,
+        "native_seconds": 13.772987250064034,
+        "native_calls": 47,
+        "workspace_creations": 47,
+        "setup_seconds": 3.1283542220000014,
+        "priming": 141,
+        "outer_attempts": 215,
+        "inner_iterations": 5203,
+        "process_seconds": 32.35915253299754
+      }
+    ],
+    "baseline_median": 31.369660283002304,
+    "candidate_median": 29.80817569451756,
+    "less_time_percent": 4.97769046396348,
+    "scope": "ABBA two observations per mode, same binary, pool off/on. Exact initial plans and screening counts; both mission checkers pass. Setup timings are cumulative per call, counted once.",
+    "baseline_process_median": 32.28365172451595,
+    "candidate_process_median": 30.658627420518314,
+    "less_process_time_percent": 5.0335826871890195
+  }
+}

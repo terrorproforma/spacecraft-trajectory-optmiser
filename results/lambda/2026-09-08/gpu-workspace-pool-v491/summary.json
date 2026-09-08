@@ -1,0 +1,233 @@
+{
+  "hardware": "Lambda H100",
+  "scope": "Final default-enabled build and one-ship mission confirmation.",
+  "capacity": 8,
+  "default_pool": true,
+  "measurements": {
+    "pid": 191497,
+    "complete": true,
+    "stages": [
+      {
+        "name": "configure",
+        "returncode": 0,
+        "seconds": 2.3670391640043817,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+          "-S",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/repo/cpp",
+          "-B",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/core-build",
+          "-G",
+          "Ninja",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DSPACEPDHCG_BUILD_CUDA=ON",
+          "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+          "-DBUILD_TESTING=ON",
+          "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+          "-DCMAKE_CUDA_ARCHITECTURES=90",
+          "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+        ]
+      },
+      {
+        "name": "build",
+        "returncode": 0,
+        "seconds": 49.88441490998957,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+          "--build",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/core-build",
+          "--target",
+          "spacepdhcg_cuda",
+          "-j",
+          "3"
+        ]
+      },
+      {
+        "name": "pytest",
+        "returncode": 0,
+        "seconds": 21.3428899589926,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_workspace_pool.py",
+          "tests/test_gtoc12_gpu_scvx.py",
+          "tests/test_gtoc12_gpu_cli.py",
+          "tests/test_gtoc12_run_final_verification.py",
+          "-s",
+          "-q"
+        ]
+      },
+      {
+        "name": "compile-probe",
+        "returncode": 0,
+        "seconds": 0.8651684679789469,
+        "command": [
+          "/usr/local/cuda/bin/nvcc",
+          "-std=c++17",
+          "--fmad=false",
+          "-arch=sm_90",
+          "-I/home/ubuntu/spacepdhcg-workspace-pool-v491/repo/cpp/include",
+          "-I/home/ubuntu/spacepdhcg-workspace-pool-v491/repo/cpp/cuda/include",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/repo/cpp/cuda/tests/gtoc12_workspace_reuse_test.cu",
+          "-L/home/ubuntu/spacepdhcg-workspace-pool-v491/core-build/cuda",
+          "-lspacepdhcg_cuda",
+          "-o",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/workspace-pool-probe"
+        ]
+      },
+      {
+        "name": "memcheck",
+        "returncode": 0,
+        "seconds": 0.9150617190171033,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "memcheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/workspace-pool-probe"
+        ]
+      },
+      {
+        "name": "synccheck",
+        "returncode": 0,
+        "seconds": 0.6648232120205648,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "synccheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/workspace-pool-probe"
+        ]
+      },
+      {
+        "name": "racecheck",
+        "returncode": 0,
+        "seconds": 27.800361669040285,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "racecheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/workspace-pool-probe"
+        ]
+      },
+      {
+        "name": "default",
+        "returncode": 0,
+        "seconds": 31.706903466023505,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('spacepdhcg',run_name='__main__')",
+          "gtoc12",
+          "run",
+          "--run-id",
+          "workspace_pool_final",
+          "--output",
+          "/home/ubuntu/spacepdhcg-workspace-pool-v491/default/output",
+          "--full-catalogue",
+          "--ships",
+          "1",
+          "--beam-width",
+          "16",
+          "--max-deploys",
+          "10",
+          "--neighbours",
+          "48",
+          "--refine-top",
+          "3",
+          "--search-budget-seconds",
+          "120",
+          "--budget-seconds",
+          "600",
+          "--retime-attempts",
+          "4",
+          "--retime-budget-seconds",
+          "300",
+          "--no-cooperative",
+          "--node-days",
+          "2",
+          "--scvx-iterations",
+          "40",
+          "--screening-backend",
+          "cuda",
+          "--seed-backend",
+          "cuda",
+          "--discretisation-backend",
+          "cuda",
+          "--assembly-backend",
+          "cuda",
+          "--convex-solver",
+          "qoco",
+          "--outer-loop-backend",
+          "cuda",
+          "--gpu-execution",
+          "graph"
+        ]
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "default",
+        "candidate": true,
+        "seconds": 30.864599989028648,
+        "score": 548.2546201232997,
+        "screening": {
+          "backend": "cuda",
+          "collect_resident_builds": 1122,
+          "collect_resident_dp_builds": 248,
+          "collect_window_download_bytes": 5536,
+          "collect_window_geometry_upload_bytes": 0,
+          "collect_window_queries": 692,
+          "compact_option_download_bytes": 27175508,
+          "completed_batches": 5663,
+          "completed_branch_requests": 45188558,
+          "completed_collection_dp_passes": 378,
+          "completed_collection_options": 2782091,
+          "completed_collection_queries": 5930,
+          "completed_compact_options": 1131935,
+          "completed_earth_beam_rows": 582,
+          "completed_element_hops": 22345089,
+          "completed_neighbour_queries": 523,
+          "completed_retime_dp_calls": 293,
+          "completed_retime_driver_calls": 50,
+          "completed_retime_forward_calls": 293,
+          "earth_beam_download_bytes": 27944,
+          "gpu_used": true,
+          "retime_resident_builds": 50,
+          "retime_resident_cells": 13119270,
+          "retime_sweep_samples": 0,
+          "retime_sweep_updates": 0,
+          "retime_table_uploads": 0
+        }
+      }
+    ],
+    "stage": "default",
+    "source_sha256": {
+      "cpp/cuda/src/gtoc12_qoco.cu": "534b362452c0953a81b474cf8c8b003fa51c985728b5deafb1ed27eae769c149",
+      "cpp/cuda/src/gtoc12_conic.cu": "717cea268b1ad69eb76711ea062bb3044b8ae95496a701d4a170dd7272066e61",
+      "cpp/cuda/src/gtoc12_discretisation.cu": "96447c80e2d6df181b8bbd75faf862648ed868e77df87204c3de4b264d1dfe5e",
+      "cpp/cuda/internal/gtoc12_workspace_reuse.h": "4203962a873ef2f0c333bc9ffc00573b18ecbf3dfbae965586e829745b336770",
+      "cpp/cuda/internal/native_qoco_adapter.h": "63a39be9c34d2ee3e6be394df1e3225e5ba5df4498ce93dfdd4b257383872665",
+      "tests/test_gtoc12_gpu_workspace_pool.py": "73f6a39db3fb2017b8bcf8af3fdf37d0cc0b15064d015c994d14ccbb5ace2217",
+      "cpp/cuda/src/native_qoco_adapter.cpp": "16d2f7c9cc79e44d3d2a519cb8dfc24a0e918086c3fa6d33acccee2b576f669b",
+      "tests/test_gtoc12_gpu_scvx.py": "0ce18c19f976ca5c77beb66ea9573ff1f38f04f544edeb93410c88bca9ef7d3f",
+      "cpp/cuda/src/gtoc12_scvx.cu": "cbc57ee0df683d71ec2d14ded277fc490b642aff5a0093eb38616175c53914bb",
+      "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": "b93ce71dd01ccf96c4f8313a7cbcf6757572176df0895b9657d333d3a0186f99",
+      "cpp/cuda/tests/gtoc12_scvx_test.cu": "0d30413bd29bf42d147faae7c9758c5020d86a945b0626e3604df1e21a780a73",
+      "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e",
+      "build/performance/solver_phase_details.py": "3d859ab7b2fafa0e67f6205996cdc7cebb486213c1155c15a5e4db2a70324648",
+      "cpp/cuda/tests/gtoc12_workspace_reuse_test.cu": "502785f1b5956190872365f6c73ebc7a27df7d015e685190e3dc96811ed0fdf6"
+    },
+    "frozen_source_commit": "e93092d6c6f0c1d3e186a547625be8b476cb6fcb",
+    "child_pid": 192211,
+    "runtime_sha256": {
+      "libspacepdhcg_cuda.so": "c82451cebbeeea2da57210e4241113b6c66a9da3b2c0340f8fda09e39ba7b748",
+      "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+    }
+  }
+}

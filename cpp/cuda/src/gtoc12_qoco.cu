@@ -1,6 +1,7 @@
 #include "spacepdhcg/cuda/gtoc12_qoco_c_api.h"
 #include "native_qoco_adapter.h"
 #include "gtoc12_qoco_graph.h"
+#include "gtoc12_workspace_reuse.h"
 #include "graph_append.h"
 #include "gtoc12_qoco_qualification.cuh"
 #include <cuda_runtime.h>
@@ -13,7 +14,14 @@
 #include <new>
 #include <type_traits>
 #include <thread>
+#include <string>
 #include <vector>
+
+#if defined(_WIN32)
+extern char** _environ;
+#else
+extern char** environ;
+#endif
 
 namespace {
 struct Map { int source; double scale; };
@@ -121,6 +129,8 @@ struct spacepdhcg_gtoc12_qoco {
     spacepdhcg_native_qoco* solver{};
     spacepdhcg_native_qoco_report native_report{};
     int intervals{},device{},ruiz{},count{};
+    int hold{},free_departure{},free_arrival{};
+    std::string pool_configuration;
     int scalar_rows{},affine_rows{};
     double tolerance{};
     cudaStream_t stream{},pending_stream{};
@@ -200,6 +210,7 @@ extern "C" int spacepdhcg_gtoc12_qoco_create(int intervals,int hold,int free_dep
     if (cudaGetDevice(&w->device)!=cudaSuccess) { delete w; return 2; }
     const auto failed=[&](int code) { spacepdhcg_gtoc12_qoco_destroy(w); return code; };
     w->intervals=intervals; w->tolerance=tolerance; w->ruiz=ruiz;
+    w->hold=hold;w->free_departure=free_dep;w->free_arrival=free_arr;
     const char* origin_option=std::getenv("SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN");
     w->state_origin=origin_option && origin_option[0]=='1';
     try {
@@ -300,6 +311,91 @@ extern "C" int spacepdhcg_gtoc12_qoco_create(int intervals,int hold,int free_dep
             view(w->variable_upper,d.variables,w->device)};
         *output=w; return 0;
     } catch (...) { return failed(2); }
+}
+
+namespace {
+// Retained vendor graphs are thread/device/configuration owned. Eight entries
+// bound retention; a changed execution environment invalidates the whole pool.
+struct QocoPool {
+    std::vector<spacepdhcg_gtoc12_qoco*> entries;
+    std::string configuration;
+    void clear() { for(auto* w:entries)spacepdhcg_gtoc12_qoco_destroy(w);entries.clear(); }
+    ~QocoPool() { clear(); }
+};
+thread_local QocoPool qoco_pool;
+bool pool_enabled() {
+    const auto on=[](const char* name){const auto* v=std::getenv(name);return v && v[0]=='1';};
+    const auto* selected=std::getenv("SPACEPDHCG_TEST_GTOC12_QOCO_POOL");
+    return (!selected || selected[0]!='0') && on("SPACEPDHCG_TEST_GTOC12_OUTER_GRAPH")
+        && on("SPACEPDHCG_TEST_QOCO_IPM_GRAPH") && on("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY")
+        && !std::getenv("SPACEPDHCG_QOCO_SNAPSHOT_DIRECTORY")
+        && !std::getenv("SPACEPDHCG_TEST_QOCO_IPM_INIT_DISABLE");
+}
+std::string pool_configuration() {
+    std::vector<std::string> values;
+#if defined(_WIN32)
+    auto** environment=_environ;
+#else
+    auto** environment=environ;
+#endif
+    for(auto** e=environment;e && *e;++e) {
+        std::string value=*e;
+        if(value.rfind("SPACEPDHCG_",0)==0 || value.rfind("QOCO_",0)==0)values.push_back(std::move(value));
+    }
+    std::sort(values.begin(),values.end());std::string result;
+    for(const auto& v:values){result+=v;result+='\n';}
+    return result;
+}
+}
+
+int gtoc12_qoco_acquire(int intervals,int hold,int free_dep,int free_arr,double kappa,double mass_flow,
+    const double* times,const double* boundary,const double* fuel,double tolerance,int ruiz,
+    spacepdhcg_gtoc12_qoco** output) {
+    if(!output)return 1;
+    *output=nullptr;
+    try {
+        const bool enabled=pool_enabled() && ruiz==0;
+        const auto configuration=enabled?pool_configuration():std::string{};
+        if(qoco_pool.configuration!=configuration) {
+            qoco_pool.clear();qoco_pool.configuration=configuration;
+        }
+        int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;
+        if(enabled) for(auto it=qoco_pool.entries.begin();it!=qoco_pool.entries.end();++it) {
+            auto* w=*it;
+            if(w->device!=device || w->intervals!=intervals || w->hold!=hold
+                || w->free_departure!=free_dep || w->free_arrival!=free_arr || w->tolerance!=tolerance)continue;
+            qoco_pool.entries.erase(it);
+            const int rebound=gtoc12_conic_rebind(w->conic,kappa,mass_flow,times,boundary,fuel);
+            if(rebound) {spacepdhcg_gtoc12_qoco_destroy(w);return rebound;}
+            *output=w;return 0;
+        }
+        const int code=spacepdhcg_gtoc12_qoco_create(intervals,hold,free_dep,free_arr,kappa,mass_flow,
+            times,boundary,fuel,tolerance,ruiz,output);
+        if(!code && enabled)(*output)->pool_configuration=configuration;
+        return code;
+    } catch(...) {spacepdhcg_gtoc12_qoco_destroy(*output);*output=nullptr;return 2;}
+}
+
+void gtoc12_qoco_release(spacepdhcg_gtoc12_qoco* w,bool converged) {
+    if(!w)return;
+    // Only SCvx success with all external graphs destroyed may enter the pool.
+    if(converged && !w->pending && !w->graph_active && w->solver && !w->pool_configuration.empty()) {
+        try {
+            // Materialize the numeric packet while the just-finished SCvx
+            // stream still exists: the vendor updater retains that stream for
+            // its stale-host metadata. It cannot be drained on a later lease.
+            if(pool_enabled() && w->pool_configuration==qoco_pool.configuration
+                && spacepdhcg_native_qoco_restart_leg(w->solver)==SPACEPDHCG_CUDA_SUCCESS) {
+                w->native_report={};
+                if(qoco_pool.entries.size()==8) {
+                    spacepdhcg_gtoc12_qoco_destroy(qoco_pool.entries.front());
+                    qoco_pool.entries.erase(qoco_pool.entries.begin());
+                }
+                qoco_pool.entries.push_back(w);return;
+            }
+        } catch(...) { }
+    }
+    spacepdhcg_gtoc12_qoco_destroy(w);
 }
 
 extern "C" int spacepdhcg_gtoc12_qoco_get_dimensions(spacepdhcg_gtoc12_qoco* w,

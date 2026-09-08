@@ -1,0 +1,43 @@
+{
+  "hardware": "Lambda H100",
+  "scope": "Baseline variability only; campaign labels are incorrect.",
+  "capacity": 8,
+  "default_pool": false,
+  "measurements": {
+    "scope": "Baseline repeats only: runner changed the early-graph flag to zero in both branches and never enabled workspace pooling. Candidate labels in raw reports are incorrect; these runs do not measure pool performance. Test matrix still explicitly exercises pool on/off.",
+    "rows": [
+      {
+        "label": "baseline0",
+        "pool_enabled": false,
+        "seconds": 31.699093130999245,
+        "score": 548.2546201231003,
+        "workspace_creations": 47,
+        "native_seconds": 13.842274434980936
+      },
+      {
+        "label": "candidate0",
+        "pool_enabled": false,
+        "seconds": 32.00186041695997,
+        "score": 548.2546201231999,
+        "workspace_creations": 47,
+        "native_seconds": 14.263555361132603
+      },
+      {
+        "label": "candidate1",
+        "pool_enabled": false,
+        "seconds": 30.981895418954082,
+        "score": 548.2546201232001,
+        "workspace_creations": 47,
+        "native_seconds": 13.189501414773986
+      },
+      {
+        "label": "baseline1",
+        "pool_enabled": false,
+        "seconds": 34.18161583901383,
+        "score": 548.2546201232001,
+        "workspace_creations": 47,
+        "native_seconds": 15.894816855783574
+      }
+    ]
+  }
+}

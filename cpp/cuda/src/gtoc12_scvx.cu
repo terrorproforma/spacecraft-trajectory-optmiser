@@ -11,6 +11,7 @@
 #include <cstdio>
 #include "../internal/gtoc12_seed.cuh"
 #include "../internal/gtoc12_qoco_graph.h"
+#include "../internal/gtoc12_workspace_reuse.h"
 #include "../internal/graph_append.h"
 
 namespace {
@@ -317,6 +318,7 @@ struct Workspace {
     cudaGraph_t graph{};
     cudaGraphExec_t executable{};
     bool graph_lease{};
+    bool retain_qoco{};
     const QocoGraphProgress* graph_progress{};
     GraphExit* graph_exit_result{};
     spacepdhcg_gtoc12_qoco_report *graph_reports{},graph_base{};
@@ -330,7 +332,7 @@ struct Workspace {
     ~Workspace() {
         if (stream) cudaStreamSynchronize(stream);
         close_graph();
-        spacepdhcg_gtoc12_qoco_destroy(qoco); spacepdhcg_gtoc12_discretisation_destroy(dynamics);
+        gtoc12_qoco_release(qoco,retain_qoco); spacepdhcg_gtoc12_discretisation_destroy(dynamics);
         cudaFree(states); cudaFree(controls); cudaFree(fuel); cudaFree(partial); cudaFree(metrics);
         cudaFree(state); cudaFree(records); cudaFree(parameters);
         cudaFree(graph_exit_result);cudaFree(graph_reports);
@@ -391,7 +393,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     }
     PhaseTrace trace(intervals);
     Workspace w;
-    int code=spacepdhcg_gtoc12_qoco_create(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,
+    int code=gtoc12_qoco_acquire(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,
         fuel,p.conic_tolerance,ruiz,&w.qoco);
     if (code) return code;
     code=spacepdhcg_gtoc12_discretisation_create(intervals,hold,kappa,mass_flow,times,&w.dynamics);
@@ -611,6 +613,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     result->trajectory_download_bytes=11*nodes*sizeof(double);
     result->control_download_bytes=control_bytes;
     trace.iterations=result->iterations;trace.status=result->status;
+    w.retain_qoco=result->status==1;
     trace.phase(PhaseTrace::Cleanup);
     return 0;
 }

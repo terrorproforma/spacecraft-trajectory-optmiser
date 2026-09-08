@@ -130,6 +130,9 @@ void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace);
 // Finish on the same host thread/device/stream collects the original audit and
 // applies unchanged status gates. Destruction drains pending work. Not capturable.
 bool spacepdhcg_native_qoco_can_enqueue(const spacepdhcg_native_qoco*);
+// Restart an independently initialized leg using retained symbolic/vendor storage.
+// No graphs/borrows may survive. Forces numerical refresh before any replay.
+spacepdhcg_cuda_status spacepdhcg_native_qoco_restart_leg(spacepdhcg_native_qoco*);
 spacepdhcg_cuda_status spacepdhcg_native_qoco_enqueue(
     spacepdhcg_native_qoco*, const spacepdhcg_cuda_scvx_problem*, cudaStream_t,
     double* device_primal, double* device_dual, spacepdhcg_native_qoco_consumer,

@@ -137,6 +137,9 @@ def test_gpu_outer_graph_retains_physics_and_objective(
     from spacepdhcg.gtoc12.gpu_discretisation import GpuDiscretisation
     from spacepdhcg.gtoc12.gpu_qoco import GpuQocoProblem
 
+    # This test measures cold priming; cross-leg reuse has a separate matrix.
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_QOCO_POOL", "0")
+
     for flag in (
         "GTOC12_OUTER_GRAPH",
         "QOCO_DEVICE_VALIDATION",

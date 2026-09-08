@@ -1,0 +1,37 @@
+{
+  "scope": "Baseline repeats only: runner changed the early-graph flag to zero in both branches and never enabled workspace pooling. Candidate labels in raw reports are incorrect; these runs do not measure pool performance. Test matrix still explicitly exercises pool on/off.",
+  "rows": [
+    {
+      "label": "baseline0",
+      "pool_enabled": false,
+      "seconds": 30.865005777042825,
+      "score": 548.2546201232001,
+      "workspace_creations": 47,
+      "native_seconds": 13.118569621874485
+    },
+    {
+      "label": "candidate0",
+      "pool_enabled": false,
+      "seconds": 35.77782371401554,
+      "score": 548.2546201230996,
+      "workspace_creations": 47,
+      "native_seconds": 17.999271602893714
+    },
+    {
+      "label": "candidate1",
+      "pool_enabled": false,
+      "seconds": 31.99775869800942,
+      "score": 548.2546201232999,
+      "workspace_creations": 47,
+      "native_seconds": 14.174704554141499
+    },
+    {
+      "label": "baseline1",
+      "pool_enabled": false,
+      "seconds": 30.725647621962707,
+      "score": 548.2546201231999,
+      "workspace_creations": 47,
+      "native_seconds": 12.94535011908738
+    }
+  ]
+}
