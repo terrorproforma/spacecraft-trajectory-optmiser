@@ -22,6 +22,24 @@ GPU = pytest.mark.skipif(
 )
 
 
+@GPU
+def test_seed_rejects_overfull_warm_mask_and_handles_one_hundred_selected_columns():
+    columns = [column(i, [i], [i], 1000.0) for i in range(128)]
+    result = solve_fleet_cuda(
+        columns, incumbent=tuple(columns), node_cap=0, prefix_bits=0, exchange_rounds=0
+    )
+    assert result.objective == 100000.0
+    assert [c.identifier for c in result.selected] == list(range(100))
+
+
+@GPU
+def test_seed_handles_full_column_capacity():
+    columns = [column(i, [1], [1], 500.0 + i % 17) for i in range(4096)]
+    result = solve_fleet_cuda(columns, node_cap=0, prefix_bits=0, exchange_rounds=0)
+    assert result.objective == 516.0
+    assert [c.identifier for c in result.selected] == [16]
+
+
 def column(i, deploy, collect, mass, foreign=None):
     return FleetColumn(
         i,

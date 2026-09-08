@@ -1,5 +1,9 @@
 # CUDA fleet scoring and topology construction
 
+This page records the GPU setup checkpoint. Subsequent
+[parallel seed construction](GPU_FLEET_SEEDS.md) reduces retained selection to
+7.49 ms locally / 8.86 ms on H100 with the same fleet.
+
 The CUDA fleet backend now builds its numerical problem on the GPU. Column
 scoring, raw-mass aggregation, foreign-provider eligibility, canonical ordering,
 conflict discovery and provider CSR construction join the existing CUDA search.

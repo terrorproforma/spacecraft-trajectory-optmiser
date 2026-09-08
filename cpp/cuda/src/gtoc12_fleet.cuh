@@ -54,33 +54,100 @@ __global__ void rank_columns(Problem p,int* order) {
         order[mode*p.n+rank]=i;
     }
 }
+struct Victim {double density;int64_t identifier;int index;};
+__device__ Victim lighter(Victim a,Victim b) {
+    if(a.index<0)return b;if(b.index<0)return a;
+    if(b.density<a.density||(b.density==a.density&&
+       (b.identifier>a.identifier||(b.identifier==a.identifier&&b.index<a.index))))return b;
+    return a;
+}
 __global__ void seed(Problem p,const int* order,const uint8_t* warm,uint8_t* masks,Row* rows) {
-    const int mode=int(threadIdx.x);if(mode>=3)return;
+    const int mode=int(blockIdx.x),lane=int(threadIdx.x);
     auto* chosen=masks+size_t(mode)*p.n;
-    for(int i=0;i<p.n;++i)chosen[i]=mode==2?warm[i]:0;
+    __shared__ uint8_t held[4096],blocked[4096],sizes[4096];
+    __shared__ uint16_t sequence[4096];
+    __shared__ int next,cursor,ships,action,invalid[128],selected_count,ids[100];
+    __shared__ double masses[100],values[100];
+    __shared__ Victim lightest[128],stranded[128];
+    for(int i=lane;i<p.n;i+=128) {
+        held[i]=chosen[i]=mode==2?warm[i]:0;blocked[i]=0;sizes[i]=uint8_t(p.c[i].ships);
+        if(mode<2)sequence[i]=uint16_t(order[mode*p.n+i]);
+    }
+    if(!lane){cursor=0;ships=0;}
+    __syncthreads();
     if(mode<2) {
-        int ships=0;
-        for(int k=0;k<p.n;++k) {
-            const int i=order[mode*p.n+k];
-            if(ships+p.c[i].ships<=p.max_ships&&!conflicts(p,i,chosen)){chosen[i]=1;ships+=p.c[i].ships;}
-        }
         for(;;) {
-            double mass,value;int count;
-            if(feasible(p,chosen,count,mass,value))break;
-            bool stranded=false;
-            for(int i=0;i<p.n;++i)if(chosen[i]&&!supplied(p,i,chosen))stranded=true;
-            int victim=-1;
-            for(int i=0;i<p.n;++i)if(chosen[i]&&(!stranded||!supplied(p,i,chosen))) {
-                if(victim<0||p.c[i].mass/p.c[i].ships<p.c[victim].mass/p.c[victim].ships||
-                   (p.c[i].mass/p.c[i].ships==p.c[victim].mass/p.c[victim].ships&&p.c[i].identifier>p.c[victim].identifier))victim=i;
+            if(!lane) {
+                next=-1;
+                // Greedy choice stays ordered. Only accepted columns update
+                // exclusions; neighbours are marked in parallel by the block.
+                while(cursor<p.n) {
+                    const int i=sequence[cursor++];
+                    if(ships+sizes[i]<=p.max_ships&&!blocked[i]) {
+                        held[i]=chosen[i]=1;ships+=sizes[i];next=i;break;
+                    }
+                }
             }
-            if(victim<0)break;
-            chosen[victim]=0;
+            __syncthreads();
+            if(next<0)break;
+            for(int k=p.co[next]+lane;k<p.co[next+1];k+=128)blocked[p.ci[k]]=1;
+            __syncthreads();
         }
     }
-    double mass,value;int ships;
-    if(!feasible(p,chosen,ships,mass,value)||value<0){for(int i=0;i<p.n;++i)chosen[i]=0;value=0;}
-    rows[mode]={value,0,1};
+    if(!lane) {
+        selected_count=0;action=0;
+        for(int i=0;i<p.n;++i)if(held[i]) {
+            // Only an invalid external warm mask can contain over 100 columns.
+            if(selected_count==100){action=2;break;}
+            ids[selected_count++]=i;
+        }
+        if(action)rows[mode]={0,0,1};
+    }
+    __syncthreads();
+    if(action) {for(int i=lane;i<p.n;i+=128)chosen[i]=0;return;}
+    Victim owned{0,0,-1};
+    if(lane<selected_count) {
+        const int i=ids[lane];masses[lane]=p.c[i].mass;values[lane]=p.c[i].value;
+        owned={p.c[i].mass/p.c[i].ships,p.c[i].identifier,i};
+    }
+    __syncthreads();
+    for(;;) {
+        Victim any{0,0,-1},missing{0,0,-1};int bad=0;
+        if(owned.index>=0&&held[owned.index]) {
+            const int i=owned.index;
+            const bool unsupported=!supplied(p,i,chosen);
+            // Greedy seeds are conflict-free by construction and removals
+            // preserve that invariant. The external warm seed is checked fully.
+            bad|=unsupported||(mode==2&&conflicts(p,i,chosen));
+            any=owned;if(unsupported)missing=owned;
+        }
+        lightest[lane]=any;stranded[lane]=missing;invalid[lane]=bad;
+        __syncthreads();
+        if(!lane) {
+            int count=0;double mass=0,value=0;
+            // Canonical IDs preserve the original sums while visiting only
+            // the initial selected set (at most 100), including after removals.
+            for(int k=0;k<selected_count;++k)if(held[ids[k]]){count+=sizes[ids[k]];mass+=masses[k];value+=values[k];}
+            any={0,0,-1};missing={0,0,-1};bad=0;
+            for(int i=0;i<128;++i){any=lighter(any,lightest[i]);missing=lighter(missing,stranded[i]);bad|=invalid[i];}
+            const bool valid=!bad&&count<=p.max_ships&&
+                (!count||count<=fmin(100.0,2.0*exp(.004*mass/count))+1e-9);
+            action=1;
+            if(mode<2&&!valid) {
+                const int victim=missing.index>=0?missing.index:any.index;
+                if(victim>=0){held[victim]=chosen[victim]=0;action=0;}
+            }
+            if(action) {
+                if(!valid||value<0){value=0;action=2;}
+                rows[mode]={value,0,1};
+            }
+        }
+        __syncthreads();
+        if(action) {
+            if(action==2)for(int i=lane;i<p.n;i+=128)chosen[i]=0;
+            return;
+        }
+    }
 }
 struct Exchange {
     int ids[100],count,active;
@@ -287,7 +354,7 @@ struct Workspace {
         for(int i=0;i<n;++i)if(warm[i]>1)return 1;
         if(n&&cudaMemcpyAsync(dw,warm,n,cudaMemcpyHostToDevice,m.stream)!=cudaSuccess)return 2;
         const auto p=problem(max_ships);
-        seed<<<1,32,0,m.stream>>>(p,order,dw,masks,rows);
+        seed<<<3,128,0,m.stream>>>(p,order,dw,masks,rows);
         if(rounds) {
             start_exchange<<<1,32,0,m.stream>>>(p,masks,rows,exchange);
             // Device state stops evaluation after a locally optimal sweep.

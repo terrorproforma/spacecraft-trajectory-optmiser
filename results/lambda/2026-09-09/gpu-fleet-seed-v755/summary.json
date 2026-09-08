@@ -1,0 +1,170 @@
+{
+  "verified_score_kg": 12842.970672270894,
+  "score_change_kg": 0,
+  "solution_sha256": "fba0ee086ae55d6c690f0e5dbaf874834b6f63e2f238e436d90671bdddff3c5f",
+  "scope": "Parallel CUDA fleet seed construction from existing route records. No new trajectory or mission qualification.",
+  "method": "Seven rotating interleaved repetitions per mode/cap; medians exclude repeat zero; exact selection, objective, bound and search-count equality.",
+  "profile_method": "Standalone instrumented fleet libraries with CUDA events; three repetitions per cap/rounds, medians exclude repeat zero. Stage times are not production API timings.",
+  "local": {
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.07321547199999978,
+          "native_seconds": 0.050424521999999694
+        },
+        "new_one_shot": {
+          "seconds": 0.030920628999999922,
+          "native_seconds": 0.008855271999999914
+        },
+        "old_retained": {
+          "seconds": 0.04961861099999987,
+          "native_seconds": 0.04450549150000027
+        },
+        "retained": {
+          "seconds": 0.007485709000000007,
+          "native_seconds": 0.00331801899999995
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.33077616949999955,
+          "native_seconds": 0.30815668750000036
+        },
+        "new_one_shot": {
+          "seconds": 0.28932571500000037,
+          "native_seconds": 0.26766117750000085
+        },
+        "old_retained": {
+          "seconds": 0.3091903000000009,
+          "native_seconds": 0.30417117250000114
+        },
+        "retained": {
+          "seconds": 0.26739146999999974,
+          "native_seconds": 0.2622475409999998
+        }
+      }
+    },
+    "retained_speedup": 6.628445081153946,
+    "retained_selections_per_second": 133.58788058686213,
+    "logical_proposals_per_second": 23939616.140568625,
+    "one_shot_speedup": 2.3678519605794555,
+    "first_workspace_setup_seconds": 0.07186323200000011,
+    "seed_stage_speedup": 30.984771942645978,
+    "profile_stages": {
+      "v746": {
+        "seed_ms": 42.67718505859375,
+        "search_ms": 0.0849439986050129,
+        "finish_ms": 0.2548000067472458,
+        "sum_ms": 44.58182507462334,
+        "evaluate_ms": 0.24518400058150291,
+        "accept_ms": 1.2081120096845552
+      },
+      "v748": {
+        "seed_ms": 11.295392036437988,
+        "search_ms": 0.08832000195980072,
+        "finish_ms": 0.25601600110530853,
+        "sum_ms": 13.293024033191614,
+        "evaluate_ms": 0.25777600216679275,
+        "accept_ms": 1.2835359919117764
+      },
+      "v751": {
+        "seed_ms": 1.3773599863052368,
+        "search_ms": 0.0772320032119751,
+        "finish_ms": 0.25644800066947937,
+        "sum_ms": 3.2402879840228707,
+        "evaluate_ms": 0.21713599818758667,
+        "accept_ms": 1.2001279960386455
+      }
+    },
+    "input_columns": 2492,
+    "usable_columns": 2488,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "differential_cases": 128,
+    "archive_sha256": "a4eb54a7b1a498b372429ac647e8a3cdb57b7513e09449a79c1f18d53d8f582c",
+    "verified_members": 1717
+  },
+  "h100": {
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.08606696053175256,
+          "native_seconds": 0.05302397147170268
+        },
+        "new_one_shot": {
+          "seconds": 0.041188896022504196,
+          "native_seconds": 0.007482161483494565
+        },
+        "old_retained": {
+          "seconds": 0.05450929800281301,
+          "native_seconds": 0.04899026901694015
+        },
+        "retained": {
+          "seconds": 0.008856486500008032,
+          "native_seconds": 0.0034154550230596215
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.298138749494683,
+          "native_seconds": 0.260021571040852
+        },
+        "new_one_shot": {
+          "seconds": 0.25012459699064493,
+          "native_seconds": 0.21403206448303536
+        },
+        "old_retained": {
+          "seconds": 0.2625278235063888,
+          "native_seconds": 0.2557089274923783
+        },
+        "retained": {
+          "seconds": 0.21650601096916944,
+          "native_seconds": 0.2097909095173236
+        }
+      }
+    },
+    "retained_speedup": 6.154731676355356,
+    "retained_selections_per_second": 112.91159310174449,
+    "logical_proposals_per_second": 20234322.04179812,
+    "one_shot_speedup": 2.0895670640147417,
+    "first_workspace_setup_seconds": 0.0736702389549464,
+    "seed_stage_speedup": 26.14563902116752,
+    "profile_stages": {
+      "v746": {
+        "seed_ms": 47.85655975341797,
+        "search_ms": 0.09831999987363815,
+        "finish_ms": 0.16766399890184402,
+        "sum_ms": 49.320623738341965,
+        "evaluate_ms": 0.11358399828895926,
+        "accept_ms": 0.961791988578625
+      },
+      "v748": {
+        "seed_ms": 5.05734395980835,
+        "search_ms": 0.09843199700117111,
+        "finish_ms": 0.1676959991455078,
+        "sum_ms": 6.526495943777263,
+        "evaluate_ms": 0.11631999956443906,
+        "accept_ms": 0.9638079875148833
+      },
+      "v751": {
+        "seed_ms": 1.8303840160369873,
+        "search_ms": 0.0976479984819889,
+        "finish_ms": 0.16686400026082993,
+        "sum_ms": 3.286272010882385,
+        "evaluate_ms": 0.11350399954244494,
+        "accept_ms": 0.9560159962857142
+      }
+    },
+    "input_columns": 2492,
+    "usable_columns": 2488,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "differential_cases": 128,
+    "archive_sha256": "8007162a2914bc88538b587027f4b91b20ecd298800362096401c6ff4b0cfed8",
+    "verified_members": 1717
+  }
+}
