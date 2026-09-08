@@ -1,0 +1,77 @@
+{
+  "checks": [
+    {
+      "name": "control",
+      "returncode": 0,
+      "seconds": 0.2078748449998784,
+      "command": [
+        "/home/angus/build-qoco-nonfinite-ir-v336/final/qoco_ir_control_probe"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 0.341310182999905,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-qoco-nonfinite-ir-v336/final/qoco_ir_control_probe"
+      ]
+    },
+    {
+      "name": "initcheck",
+      "returncode": 0,
+      "seconds": 0.3587214080000649,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-qoco-nonfinite-ir-v336/final/qoco_ir_control_probe"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 0.8863911659998394,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-qoco-nonfinite-ir-v336/final/qoco_ir_control_probe"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 0.2892082670000491,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-qoco-nonfinite-ir-v336/final/qoco_ir_control_probe"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 5.920761739,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "-q"
+      ]
+    }
+  ]
+}

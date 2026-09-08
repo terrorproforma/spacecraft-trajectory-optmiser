@@ -82,6 +82,14 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Development refinement fix:** the GPU no longer accepts a NaN correction as an
+improvement or overwrites its finite backup. Four matched H100 campaigns reduce
+median complete time from **59.18 to 53.08 s (10.31% less time)**, with the same
+548.255 kg and both checker passes. The new v342 result is downloaded and displayed.
+Exact-QP qualification failures remain; this is a confirmed controller fix and
+measured performance improvement, not a completed solver-reliability repair.
+[Validation, raw evidence and loading instructions](results/lambda/2026-09-08/gpu-nonfinite-ir-v337/README.md).
+
 **Development GPU graph comparison:** the public CLI now selects native SCvx/QOCO
 graph execution with `--gpu-execution graph` (or automatically for CUDA SCvx).
 Four matched H100 campaigns reduce median complete time from **60.83 to 58.85 s**

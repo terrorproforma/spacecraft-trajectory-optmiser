@@ -1,0 +1,47 @@
+[  3%] Building C object lib/amd/CMakeFiles/amd.dir/amd_1.c.o
+[  7%] Building C object lib/qdldl/CMakeFiles/qdldlobject.dir/src/qdldl.c.o
+[ 11%] Building C object lib/amd/CMakeFiles/amd.dir/amd_2.c.o
+[ 14%] Building C object lib/amd/CMakeFiles/amd.dir/amd_aat.c.o
+[ 14%] Built target qdldlobject
+[ 18%] Building C object lib/amd/CMakeFiles/amd.dir/amd_control.c.o
+[ 22%] Building C object lib/amd/CMakeFiles/amd.dir/amd_defaults.c.o
+[ 25%] Building C object lib/amd/CMakeFiles/amd.dir/amd_dump.c.o
+[ 29%] Building C object lib/amd/CMakeFiles/amd.dir/amd_info.c.o
+[ 33%] Building C object lib/amd/CMakeFiles/amd.dir/amd_order.c.o
+[ 37%] Building C object lib/amd/CMakeFiles/amd.dir/amd_post_tree.c.o
+[ 40%] Building C object lib/amd/CMakeFiles/amd.dir/amd_postorder.c.o
+[ 44%] Building C object lib/amd/CMakeFiles/amd.dir/amd_preprocess.c.o
+[ 48%] Building C object lib/amd/CMakeFiles/amd.dir/amd_valid.c.o
+[ 51%] Building C object lib/amd/CMakeFiles/amd.dir/amd_version.c.o
+[ 55%] Building C object lib/amd/CMakeFiles/amd.dir/SuiteSparse_config.c.o
+[ 55%] Built target amd
+[ 59%] Building C object CMakeFiles/qoco.dir/src/qoco_api.c.o
+[ 62%] Building C object CMakeFiles/qoco.dir/src/input_validation.c.o
+[ 66%] Building C object CMakeFiles/qoco.dir/src/common_linalg.c.o
+[ 70%] Building C object CMakeFiles/qoco.dir/src/kkt.c.o
+[ 74%] Building C object CMakeFiles/qoco.dir/src/qoco_status.c.o
+[ 77%] Building C object CMakeFiles/qoco.dir/src/equilibration.c.o
+[ 81%] Building C object CMakeFiles/qoco.dir/src/qoco_utils.c.o
+/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/src/qoco_utils.c: In function ‘qoco_reference_stopping_metrics’:
+/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/src/qoco_utils.c:233:14: warning: unused variable ‘Fruiz_data’ [-Wunused-variable]
+  233 |   QOCOFloat* Fruiz_data = get_data_vectorf(work->scaling->Fruiz);
+      |              ^~~~~~~~~~
+/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/src/qoco_utils.c:224:14: warning: unused variable ‘ubuff2’ [-Wunused-variable]
+  224 |   QOCOFloat* ubuff2 = get_data_vectorf(work->ubuff2);
+      |              ^~~~~~
+[ 85%] Building C object CMakeFiles/qoco.dir/src/timer_linux.c.o
+[ 88%] Building CUDA object CMakeFiles/qoco.dir/algebra/cuda/cudss_backend.cu.o
+[ 92%] Building CUDA object CMakeFiles/qoco.dir/algebra/cuda/cuda_linalg.cu.o
+[ 96%] Building CUDA object CMakeFiles/qoco.dir/src/cone.cu.o
+/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/algebra/cuda/qoco_batched_stopping.cuh(86): warning #177-D: variable "u2" was declared but never referenced
+           *u2 = w->ubuff2->d_data, *u3 = w->ubuff3->d_data, *res = w->kktres->d_data;
+            ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/algebra/cuda/qoco_batched_stopping.cuh(88): warning #177-D: variable "f" was declared but never referenced
+           *fi = scale->Finvruiz->d_data, *f = scale->Fruiz->d_data;
+                                           ^
+
+[100%] Linking CUDA shared library libqoco.so
+[100%] Built target qoco

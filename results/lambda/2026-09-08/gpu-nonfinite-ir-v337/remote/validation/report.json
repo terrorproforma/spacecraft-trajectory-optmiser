@@ -1,0 +1,149 @@
+{
+  "pid": 158802,
+  "complete": true,
+  "stages": [
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco",
+        "-B",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/build",
+        "-DQOCO_ALGEBRA_BACKEND=cuda",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DQOCO_BUILD_TYPE=Release",
+        "-DBUILD_QOCO_DEMO=OFF",
+        "-DCUDSS_LIB=/home/ubuntu/spacepdhcg-recovery-v152/cudss/lib/libcudss.so",
+        "-DCMAKE_CUDA_FLAGS=--default-stream per-thread -I/home/ubuntu/spacepdhcg-recovery-v152/cudss/include",
+        "-DCMAKE_C_FLAGS=-Werror=implicit-function-declaration"
+      ],
+      "returncode": 0,
+      "seconds": 2.2669754910166375
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/build",
+        "--target",
+        "qoco",
+        "-j",
+        "3"
+      ],
+      "returncode": 0,
+      "seconds": 15.33495872200001
+    },
+    {
+      "name": "control-build",
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-O2",
+        "-std=c++17",
+        "-arch=sm_90",
+        "--default-stream",
+        "per-thread",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/overlay/cpp/cuda/tests/qoco_ir_control_probe.cu",
+        "-I/home/ubuntu/spacepdhcg-nonfinite-ir-v337/overlay/cpp/cuda/patches",
+        "-I/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-nonfinite-ir-v337/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-recovery-v152/cudss/include",
+        "-L/home/ubuntu/spacepdhcg-nonfinite-ir-v337/final",
+        "-lqoco",
+        "-ldl",
+        "-o",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/final/qoco_ir_control_probe"
+      ],
+      "returncode": 0,
+      "seconds": 1.5657794029684737
+    },
+    {
+      "name": "control",
+      "command": [
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/final/qoco_ir_control_probe"
+      ],
+      "returncode": 0,
+      "seconds": 0.41416877502342686
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/final/qoco_ir_control_probe"
+      ],
+      "returncode": 0,
+      "seconds": 0.41428392397938296
+    },
+    {
+      "name": "initcheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "initcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/final/qoco_ir_control_probe"
+      ],
+      "returncode": 0,
+      "seconds": 0.46432149002794176
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/final/qoco_ir_control_probe"
+      ],
+      "returncode": 0,
+      "seconds": 1.016775903000962
+    },
+    {
+      "name": "synccheck",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-nonfinite-ir-v337/final/qoco_ir_control_probe"
+      ],
+      "returncode": 0,
+      "seconds": 0.4142870880314149
+    },
+    {
+      "name": "pytest",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 4.870234616973903
+    }
+  ],
+  "replays": [],
+  "source_sha256": {
+    "qoco/algebra/cuda/qoco_ir_runtime.cuh": "88ca3ab6430c7e5fad140101dd61419332661dad2eead7f4b6f09df61e6726e0",
+    "qoco/algebra/cuda/cudss_backend.cu": "be30b4f3f600a4a184dd052d75c0cc3a85c9edc4211b0828375b1b55b1953e2a",
+    "overlay/audit.py": "7adb8ed1094f97f447cfcb689eeaccd00b8db760931b6c7d4322a5ab860151f4",
+    "overlay/scripts/gpu/prepare_qoco_device_ir.py": "9013a41f6592e0d25a569c6214dff0775b6d0ea604832cfeac49185445165ebe",
+    "overlay/cpp/cuda/tests/qoco_ir_control_probe.cu": "3a5f2572cd9272d5da3ee21c404a6d5425a7a297fa0ca9ceacb17349f62f4fd8",
+    "overlay/cpp/cuda/patches/qoco_ir_runtime.cuh": "54d7c5870e17f29dde341c3408f2a116969daeed652290700e2e75a4213116a1"
+  },
+  "library_sha256": "a33f30e8f177ebac740aa01744e2c17e8619657a9656c6e60d887b1fb41b3721",
+  "previous_replay_recipe": "/home/ubuntu/spacepdhcg-qp-graph-v325/run.py"
+}

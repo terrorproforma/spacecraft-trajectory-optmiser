@@ -1,0 +1,25 @@
+{
+  "run_id": "gpu_nonfinite_342",
+  "fleet_run_id": "gpu_nonfinite_342_fleet",
+  "commit": "3c7521bae0cd0e3522c9316bfcabf16b2130741d",
+  "source_code_commit": "bef73903 plus gpu-nonfinite-ir-v337 source manifest",
+  "source_revision_note": "Development source, not merged into main. Guard source and native binary hashes are in gpu-nonfinite-ir-v337 reports.",
+  "weighted_score_fixed_bonus_kg": 548.2546201231,
+  "raw_kg_per_ship": 548.2546201231,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "45,188,558 CUDA transfer branches; 2,782,091 collection options"
+  },
+  "timing": {
+    "wall_seconds_total": 52.8645484810113,
+    "wall_human": "52.86 s complete campaign; GPU graph execution"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; both mission checkers pass",
+    "local_refine": "CUDA SCvx and QOCO graph loops after priming"
+  },
+  "optimisation": {
+    "strategy": "Nonfinite IR guard benchmark. Fleet incumbent unchanged at 12,805.194 weighted kg. CPU orchestration remains.",
+    "proven_optimal": false
+  }
+}
