@@ -42,6 +42,25 @@ int spacepdhcg_gtoc12_fleet_search_v2_host(
     const int32_t* providers, const uint8_t* incumbent,
     uint8_t* selected, spacepdhcg_gtoc12_fleet_report* report,
     int32_t exchange_rounds, spacepdhcg_gtoc12_fleet_exchange_report* exchange);
+/* Retained immutable pool. Creation copies all input arrays and ranks columns
+ * once on the current CUDA device. Solve uploads only the incumbent mask; all
+ * search buffers remain allocated until destroy. Create a new workspace when
+ * columns, weights or prefix_bits change. Calls on a workspace must be serial
+ * and solve must use the creation device. Destroy(NULL) is a no-op.
+ * Conflict rows must be symmetric, unique and exclude their own column.
+ */
+int spacepdhcg_gtoc12_fleet_workspace_create_host(
+    int32_t columns, int32_t prefix_bits,
+    const spacepdhcg_gtoc12_fleet_column* data,
+    const int32_t* conflict_offsets, const int32_t* conflicts,
+    const int32_t* requirement_offsets, const int32_t* provider_offsets,
+    const int32_t* providers, void** workspace);
+int spacepdhcg_gtoc12_fleet_workspace_solve_host(
+    void* workspace, int32_t max_ships, uint64_t node_cap,
+    const uint8_t* incumbent, uint8_t* selected,
+    spacepdhcg_gtoc12_fleet_report* report, int32_t exchange_rounds,
+    spacepdhcg_gtoc12_fleet_exchange_report* exchange);
+void spacepdhcg_gtoc12_fleet_workspace_destroy_host(void* workspace);
 #ifdef __cplusplus
 }
 #endif

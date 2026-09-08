@@ -1,0 +1,93 @@
+{
+  "verified_score_kg": 12842.970672270894,
+  "score_change_kg": 0,
+  "solution_sha256": "fba0ee086ae55d6c690f0e5dbaf874834b6f63e2f238e436d90671bdddff3c5f",
+  "scope": "Fixed-pool fleet packing, not trajectory propagation/refinement; no new mission solution.",
+  "profiling_note": "Local Nsight Systems exited successfully but captured no CUDA kernel data. No kernel-stage timing conclusions are drawn from that trace.",
+  "local": {
+    "setup_seconds": 0.12490324300000566,
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.1019578559999843,
+          "native_seconds": 0.04831523650003078
+        },
+        "new_one_shot": {
+          "seconds": 0.10741461750001235,
+          "native_seconds": 0.04792975299997693
+        },
+        "retained": {
+          "seconds": 0.05025768999999514,
+          "native_seconds": 0.04520969099996819
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.3542125664999958,
+          "native_seconds": 0.3025004899999999
+        },
+        "new_one_shot": {
+          "seconds": 0.34744117400001073,
+          "native_seconds": 0.30178516899999863
+        },
+        "retained": {
+          "seconds": 0.3029617174999544,
+          "native_seconds": 0.29804396199997996
+        }
+      }
+    },
+    "repeat_speedup": 2.028701597705628,
+    "ten_calls_including_setup_speedup": 1.624877809081383,
+    "fleet_selections_per_second": 19.89745250925971,
+    "native_proposals_per_second": 3963862.52673406,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "archive_sha256": "56c5c41feaca7c2b6d0838046bb2396655cdbea0b118cd8f2d5d60211459e917",
+    "verified_members": 853
+  },
+  "h100": {
+    "setup_seconds": 0.12569878197973594,
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.12595008048810996,
+          "native_seconds": 0.05079821101389825
+        },
+        "new_one_shot": {
+          "seconds": 0.13092257402604446,
+          "native_seconds": 0.050838091992773116
+        },
+        "retained": {
+          "seconds": 0.054346874996554106,
+          "native_seconds": 0.049349465989507735
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.34276131450315006,
+          "native_seconds": 0.26227839197963476
+        },
+        "new_one_shot": {
+          "seconds": 0.3333092340035364,
+          "native_seconds": 0.2622275030298624
+        },
+        "retained": {
+          "seconds": 0.26319468949805014,
+          "native_seconds": 0.25609247901593335
+        }
+      }
+    },
+    "repeat_speedup": 2.3175220377638253,
+    "ten_calls_including_setup_speedup": 1.8821905498309484,
+    "fleet_selections_per_second": 18.40032200680178,
+    "native_proposals_per_second": 3631346.285248579,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "archive_sha256": "08bc8760e1d72685fd59a46e392767bdc5fba31aa0c0b5b3d42808c7cc2177a7",
+    "verified_members": 850
+  }
+}

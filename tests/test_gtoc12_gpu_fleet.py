@@ -13,7 +13,7 @@ from spacepdhcg.gtoc12.cooperative import (
     fleet_feasible,
     solve_fleet_master,
 )
-from spacepdhcg.gtoc12.gpu_fleet import pack_columns, solve_fleet_cuda
+from spacepdhcg.gtoc12.gpu_fleet import CudaFleetWorkspace, pack_columns, solve_fleet_cuda
 
 GPU = pytest.mark.skipif(
     os.environ.get("SPACEPDHCG_GTOC12_GPU_TESTS") != "1",
@@ -41,6 +41,127 @@ def exact(columns, weights=None, max_ships=100):
         if sum(c.ships for c in chosen) <= max_ships and not fleet_feasible(chosen):
             best = max(best, sum(c.value(weights) for c in chosen))
     return best
+
+
+@GPU
+@pytest.mark.parametrize("seed", range(3))
+def test_retained_workspace_resets_search_state_and_matches_one_shot(seed):
+    rng = np.random.default_rng(seed)
+    columns = [
+        column(i, (a := rng.choice(10, 2, replace=False).tolist()), a, float(rng.uniform(50, 1400)))
+        for i in range(9)
+    ]
+    columns += [
+        column(20, [20], [21], 850, {21: 65000.0}),
+        column(21, [21], [20], 900, {20: 65000.0}),
+    ]
+    with CudaFleetWorkspace(columns, prefix_bits=3) as workspace:
+        incumbent = None
+        for cap, rounds, ships in [
+            (0, 16, 5),
+            (100000, 0, 7),
+            (1, 1, 2),
+            (100000, 16, 6),
+            (0, 0, 0),
+            (100000, 16, 7),
+        ]:
+            expected = solve_fleet_cuda(
+                columns,
+                incumbent=incumbent,
+                node_cap=cap,
+                exchange_rounds=rounds,
+                max_ships=ships,
+                prefix_bits=3,
+            )
+            result = workspace.solve(
+                incumbent=incumbent, node_cap=cap, exchange_rounds=rounds, max_ships=ships
+            )
+            for name in (
+                "objective",
+                "upper_bound",
+                "nodes",
+                "exhaustive",
+                "device_tasks",
+                "exchange_moves",
+                "exchange_proposals",
+                "exchange_rounds",
+            ):
+                assert getattr(result, name) == getattr(expected, name)
+            assert [c.identifier for c in result.selected] == [
+                c.identifier for c in expected.selected
+            ]
+            if result.exhaustive:
+                assert result.objective == pytest.approx(exact(columns, max_ships=ships))
+            incumbent = result.selected
+        assert workspace.setup_seconds > 0
+    workspace.close()
+    with pytest.raises(RuntimeError, match="closed"):
+        workspace.solve()
+
+
+@GPU
+def test_retained_workspace_owns_packing_snapshot_and_recovers_after_invalid_input():
+    a, b = column(1, [1], [1], 700), column(2, [2], [2], 800)
+    columns = [FleetColumn.from_bundle(3, "pair", [a, b])]
+    weights = {1: 2.0, 2: 1.0}
+    with CudaFleetWorkspace(columns, weights=weights) as workspace:
+        weights[1] = -10
+        a.collected_mass[1] = -1
+        columns[0].collected_mass[1] = -100
+        first = workspace.solve()
+        assert first.objective == 2200
+        first.selected[0].collected_mass[1] = -200
+        first.selected[0].members[0].deploys.clear()
+        with pytest.raises(ValueError):
+            workspace.solve(max_ships=-1)
+        import ctypes as ct
+
+        from spacepdhcg.gtoc12.gpu_fleet import EXCHANGE_REPORT, REPORT
+
+        warm = np.array([2], dtype=np.uint8)
+        selected = np.empty(1, dtype=np.uint8)
+        report = np.zeros(1, dtype=REPORT)
+        exchanges = np.zeros(1, dtype=EXCHANGE_REPORT)
+        assert (
+            workspace._solve(
+                workspace._handle,
+                100,
+                100,
+                warm.ctypes.data,
+                selected.ctypes.data,
+                report.ctypes.data,
+                16,
+                exchanges.ctypes.data,
+            )
+            == 1
+        )
+        assert (
+            workspace._solve(
+                ct.c_void_p(),
+                100,
+                0,
+                warm.ctypes.data,
+                selected.ctypes.data,
+                report.ctypes.data,
+                0,
+                exchanges.ctypes.data,
+            )
+            == 1
+        )
+        again = workspace.solve()
+        assert again.objective == 2200 and not fleet_feasible(again.selected)
+        assert again.selected[0].members[0].deploys == {1: 65000.0}
+
+
+@GPU
+def test_retained_workspace_empty_repeated_lifetime_and_failed_create():
+    for _ in range(5):
+        with CudaFleetWorkspace([]) as workspace:
+            for rounds in (16, 0):
+                result = workspace.solve(node_cap=0, exchange_rounds=rounds)
+                assert result.objective == 0 and result.exhaustive and not result.selected
+    with pytest.raises(RuntimeError, match="native status 1"):
+        CudaFleetWorkspace([column(1, [1], [1], np.nan)])
 
 
 def test_dependency_packing_is_epoch_specific_and_conflicts_symmetric():
@@ -128,8 +249,9 @@ def test_native_rejects_nonfinite_and_duplicate_column_identity():
 def test_exchanges_repair_greedy_ship_rule_discard_without_tree_search(rounds, expected):
     columns = [column(i, [i], [i], mass) for i, mass in enumerate([20, 20, 200, 500])]
     weights = {0: 50.0, 1: 45.0, 2: 4.0, 3: 1.4}
-    result = solve_fleet_cuda(columns, weights=weights, max_ships=3, node_cap=0,
-                              exchange_rounds=rounds)
+    result = solve_fleet_cuda(
+        columns, weights=weights, max_ships=3, node_cap=0, exchange_rounds=rounds
+    )
     assert result.objective == pytest.approx(expected)
     assert result.nodes == 0 and not result.exhaustive
     assert not fleet_feasible(result.selected)
@@ -141,11 +263,14 @@ def test_exchanges_repair_greedy_ship_rule_discard_without_tree_search(rounds, e
 @pytest.mark.parametrize("seed", range(12))
 def test_exchange_termination_matches_cpu_one_swap_local_optimum(seed):
     rng = np.random.default_rng(seed)
-    columns = [column(i, (a := rng.choice(13, 2, replace=False).tolist()), a,
-                      float(rng.uniform(10, 1100))) for i in range(11)]
-    weights = {a: float(rng.uniform(.05, 2)) for a in range(13)}
-    result = solve_fleet_cuda(columns, weights=weights, max_ships=6, node_cap=0,
-                              exchange_rounds=100)
+    columns = [
+        column(i, (a := rng.choice(13, 2, replace=False).tolist()), a, float(rng.uniform(10, 1100)))
+        for i in range(11)
+    ]
+    weights = {a: float(rng.uniform(0.05, 2)) for a in range(13)}
+    result = solve_fleet_cuda(
+        columns, weights=weights, max_ships=6, node_cap=0, exchange_rounds=100
+    )
     assert result.exchange_rounds < 100 and not fleet_feasible(result.selected)
     for remove in [None, *result.selected]:
         kept = tuple(c for c in result.selected if c is not remove)
@@ -159,18 +284,21 @@ def test_exchange_termination_matches_cpu_one_swap_local_optimum(seed):
 @pytest.mark.parametrize("cycle", [False, True])
 def test_profitable_exchange_cannot_strand_another_ships_miner(cycle):
     if cycle:
-        columns = [column(0, [1], [2], 700, {2: 65000.0}),
-                   column(1, [2], [1], 800, {1: 65000.0}),
-                   column(2, [3], [3], 1000)]
+        columns = [
+            column(0, [1], [2], 700, {2: 65000.0}),
+            column(1, [2], [1], 800, {1: 65000.0}),
+            column(2, [3], [3], 1000),
+        ]
         weights = None
     else:
-        columns = [column(0, [1, 3], [3], 1),
-                   column(1, [2], [1], 800, {1: 65000.0}),
-                   column(2, [4], [4], 700)]
+        columns = [
+            column(0, [1, 3], [3], 1),
+            column(1, [2], [1], 800, {1: 65000.0}),
+            column(2, [4], [4], 700),
+        ]
         weights = {3: -50.0}
     warm = tuple(columns[:2])
-    result = solve_fleet_cuda(columns, weights=weights, incumbent=warm,
-                              max_ships=2, node_cap=0)
+    result = solve_fleet_cuda(columns, weights=weights, incumbent=warm, max_ships=2, node_cap=0)
     assert {c.identifier for c in result.selected} == {0, 1}
     assert result.exchange_moves == 0 and not fleet_feasible(result.selected)
     assert result.objective == pytest.approx(exact(columns, weights, 2))

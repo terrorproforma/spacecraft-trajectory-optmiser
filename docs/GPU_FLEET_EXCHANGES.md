@@ -111,4 +111,6 @@ Start-Process 'http://127.0.0.1:4173/?dataset=gtoc12-exchange-v733&epoch=69807&p
 The full application is still not GPU native: Python packs topology/values and
 orchestrates routes, and independent CPU mission checks dominate elapsed time.
 Further score gains need better route generation and richer exchanges, alongside
-work redistribution, stronger GPU bounds and retained fleet workspaces.
+work redistribution and stronger GPU bounds. A subsequent
+[retained workspace](GPU_FLEET_WORKSPACE.md) removes repeated topology packing
+and allocation, with measured gains on both GPUs and no score change.

@@ -1,0 +1,148 @@
+{
+  "pid": 234170,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "git-init",
+      "code": 0,
+      "seconds": 0.001998900028411299,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "code": 0,
+      "seconds": 0.20948283898178488,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "code": 0,
+      "seconds": 0.049464437004644424,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze CUDA fleet search"
+      ]
+    },
+    {
+      "name": "configure",
+      "code": 0,
+      "seconds": 2.368585334974341,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-fleet-v735/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-fleet-v735/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "code": 0,
+      "seconds": 84.93604411004344,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-fleet-v735/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 1.7698454720084555,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_fleet.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 1.9529112339951098,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_fleet.py",
+        "-k",
+        "foreign_cycles or random_conflicts or exchanges or exchange_termination or retained_workspace"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 3.9253310360363685,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_fleet.py",
+        "-k",
+        "foreign_cycles or random_conflicts or exchanges or exchange_termination or retained_workspace"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 1.6080430049914867,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_fleet.py",
+        "-k",
+        "foreign_cycles or random_conflicts or exchanges or exchange_termination or retained_workspace"
+      ]
+    }
+  ],
+  "stage": "synccheck",
+  "child_pid": 234794,
+  "core_sha256": "0497ff500c811dcdc4aca3b972bc89beb17b9fe37814370738dfd3e6cc0f8e1f"
+}

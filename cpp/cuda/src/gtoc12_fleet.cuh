@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace gtoc12_fleet {
@@ -229,8 +230,15 @@ __global__ void finish(Problem p,int tasks,const uint8_t* masks,const Row* rows,
     copy(p.n,output,masks+size_t(best)*p.n);
 }
 struct Memory {
-    std::vector<void*> pointers;cudaStream_t stream{};
-    ~Memory(){if(stream)cudaStreamSynchronize(stream);for(void* p:pointers)cudaFree(p);if(stream)cudaStreamDestroy(stream);}
+    std::vector<void*> pointers;cudaStream_t stream{};int device=-1;
+    ~Memory(){
+        int previous=-1;cudaGetDevice(&previous);
+        if(device>=0&&previous!=device)cudaSetDevice(device);
+        if(stream)cudaStreamSynchronize(stream);
+        for(void* p:pointers)cudaFree(p);
+        if(stream)cudaStreamDestroy(stream);
+        if(previous>=0&&previous!=device)cudaSetDevice(previous);
+    }
     template<class T> bool alloc(T*& out,size_t n) {
         if(cudaMalloc(&out,std::max(size_t(1),n)*sizeof(T))!=cudaSuccess)return false;
         pointers.push_back(out);return true;
@@ -242,59 +250,103 @@ struct Memory {
 inline bool offsets(const int32_t* p,int n) {
     if(!p||p[0]!=0)return false;for(int i=0;i<n;++i)if(p[i]<0||p[i+1]<p[i])return false;return true;
 }
+struct Workspace {
+    Memory m;int n{},bits{},tasks{};
+    Column* c{};int *dco{},*dci{},*dro{},*dpo{},*dpi{},*order{};
+    uint8_t *dw{},*masks{},*active{},*phase{},*exclusions{},*out{};
+    Row* rows{};Report* result{};Exchange* exchange{};double* proposal_values{};
+    Problem problem(int max_ships) const {return {n,max_ships,c,dco,dci,dro,dpo,dpi};}
+    bool init(int count,int prefix,const Column* columns,const int32_t* co,const int32_t* ci,
+              const int32_t* ro,const int32_t* po,const int32_t* pi) {
+        n=count;bits=std::min(prefix,n);tasks=1<<bits;m.pointers.reserve(18);
+        if(cudaGetDevice(&m.device)!=cudaSuccess||
+           cudaStreamCreateWithFlags(&m.stream,cudaStreamNonBlocking)!=cudaSuccess)return false;
+        if(!m.input(c,columns,n)||!m.input(dco,co,n+1)||!m.input(dci,ci,co[n])||
+           !m.input(dro,ro,n+1)||!m.input(dpo,po,ro[n]+1)||!m.input(dpi,pi,po[ro[n]])||
+           !m.alloc(dw,n)||!m.alloc(order,2*size_t(n))||!m.alloc(masks,size_t(tasks+3)*n)||
+           !m.alloc(active,size_t(tasks)*n)||!m.alloc(phase,size_t(tasks)*(n+1))||
+           !m.alloc(exclusions,size_t(tasks)*n)||!m.alloc(out,n)||!m.alloc(rows,tasks+3)||
+           !m.alloc(result,1)||!m.alloc(exchange,1)||!m.alloc(proposal_values,size_t(n+1)*101))return false;
+        if(n)rank_columns<<<(n+127)/128,128,0,m.stream>>>(problem(100),order);
+        return cudaGetLastError()==cudaSuccess&&cudaStreamSynchronize(m.stream)==cudaSuccess;
+    }
+    int solve(int max_ships,uint64_t cap,const uint8_t* warm,uint8_t* selected,
+              Report* report,int rounds,ExchangeReport* exchange_report) {
+        int device=-1;
+        if(max_ships<0||max_ships>100||rounds<0||rounds>100||!report||!exchange_report||
+           (n&&(!warm||!selected)))return 1;
+        if(cudaGetDevice(&device)!=cudaSuccess)return 2;
+        if(device!=m.device)return 1;
+        for(int i=0;i<n;++i)if(warm[i]>1)return 1;
+        if(n&&cudaMemcpyAsync(dw,warm,n,cudaMemcpyHostToDevice,m.stream)!=cudaSuccess)return 2;
+        const auto p=problem(max_ships);
+        seed<<<1,32,0,m.stream>>>(p,order,dw,masks,rows);
+        if(rounds) {
+            start_exchange<<<1,32,0,m.stream>>>(p,masks,rows,exchange);
+            // Device state stops evaluation after a locally optimal sweep.
+            for(int round=0;round<rounds;++round) {
+                evaluate_exchanges<<<((n+1)*101+127)/128,128,0,m.stream>>>(p,masks,rows,exchange,proposal_values);
+                accept_exchange<<<1,256,0,m.stream>>>(p,masks,rows,exchange,proposal_values);
+            }
+        }
+        search<<<tasks,1,0,m.stream>>>(p,bits,tasks,cap,masks,active,phase,exclusions,rows);
+        finish<<<1,32,0,m.stream>>>(p,tasks,masks,rows,out,result);
+        // Submit all computation before collecting any host diagnostics.
+        if(rounds) {
+            if(cudaMemcpyAsync(exchange_report,&exchange->report,sizeof(ExchangeReport),cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess)return 2;
+        } else *exchange_report={0,0,0};
+        if(cudaGetLastError()!=cudaSuccess||cudaMemcpyAsync(report,result,sizeof(Report),cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess||
+           (n&&cudaMemcpyAsync(selected,out,n,cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess)||cudaStreamSynchronize(m.stream)!=cudaSuccess)return 2;
+        return 0;
+    }
+};
 }
-static int run_gtoc12_fleet(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
+extern "C" int spacepdhcg_gtoc12_fleet_workspace_create_host(int32_t n,int32_t bits,
     const spacepdhcg_gtoc12_fleet_column* columns,const int32_t* co,const int32_t* ci,
-    const int32_t* ro,const int32_t* po,const int32_t* pi,const uint8_t* warm,
-    uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report,
-    int exchange_rounds,spacepdhcg_gtoc12_fleet_exchange_report* exchange_report) {
+    const int32_t* ro,const int32_t* po,const int32_t* pi,void** workspace) {
     using namespace gtoc12_fleet;
-    if(n<0||n>4096||max_ships<0||max_ships>100||bits<0||bits>10||!report||
-       exchange_rounds<0||exchange_rounds>100||(exchange_rounds&&!exchange_report)||
-       (n&&(!columns||!warm||!selected))||!offsets(co,n)||!offsets(ro,n)||!offsets(po,ro[n]))return 1;
+    if(!workspace)return 1;*workspace=nullptr;
+    if(n<0||n>4096||bits<0||bits>10||(n&&!columns)||
+       !offsets(co,n)||!offsets(ro,n)||!offsets(po,ro[n]))return 1;
     if((co[n]&&!ci)||(po[ro[n]]&&!pi))return 1;
     double magnitude=0,total_mass=0;
     for(int i=0;i<n;++i) {
-        if(columns[i].ships<=0||columns[i].ships>100||warm[i]>1||
+        if(columns[i].ships<=0||columns[i].ships>100||
            !std::isfinite(columns[i].value)||!std::isfinite(columns[i].mass)||columns[i].mass<0)return 1;
         magnitude+=std::abs(columns[i].value);total_mass+=columns[i].mass;
         if(!std::isfinite(magnitude)||!std::isfinite(total_mass))return 1;
     }
     for(int i=0;i<co[n];++i)if(ci[i]<0||ci[i]>=n)return 1;
     for(int i=0;i<po[ro[n]];++i)if(pi[i]<0||pi[i]>=n)return 1;
-    bits=std::min(bits,n);const int tasks=1<<bits;
     try {
-        Memory m;m.pointers.reserve(18);
-        if(cudaStreamCreateWithFlags(&m.stream,cudaStreamNonBlocking)!=cudaSuccess)return 2;
-        Column* c{};int *dco{},*dci{},*dro{},*dpo{},*dpi{},*order{};
-        uint8_t *dw{},*masks{},*active{},*phase{},*exclusions{},*out{};Row* rows{};Report* result{};
-        if(!m.input(c,columns,n)||!m.input(dco,co,n+1)||!m.input(dci,ci,co[n])||
-           !m.input(dro,ro,n+1)||!m.input(dpo,po,ro[n]+1)||!m.input(dpi,pi,po[ro[n]])||
-           !m.input(dw,warm,n)||!m.alloc(order,2*size_t(n))||!m.alloc(masks,size_t(tasks+3)*n)||
-           !m.alloc(active,size_t(tasks)*n)||!m.alloc(phase,size_t(tasks)*(n+1))||
-           !m.alloc(exclusions,size_t(tasks)*n)||
-           !m.alloc(out,n)||!m.alloc(rows,tasks+3)||!m.alloc(result,1))return 2;
-        const Problem p{n,max_ships,c,dco,dci,dro,dpo,dpi};
-        Exchange* exchange{};double* proposal_values{};
-        if(exchange_rounds&&(!m.alloc(exchange,1)||!m.alloc(proposal_values,size_t(n+1)*101)))return 2;
-        if(n)rank_columns<<<(n+127)/128,128,0,m.stream>>>(p,order);
-        seed<<<1,32,0,m.stream>>>(p,order,dw,masks,rows);
-        if(exchange_rounds) {
-            start_exchange<<<1,32,0,m.stream>>>(p,masks,rows,exchange);
-            // Fixed command submission, no host decisions or intermediate downloads.
-            // Device state stops evaluation after a locally optimal sweep.
-            for(int round=0;round<exchange_rounds;++round) {
-                evaluate_exchanges<<<((n+1)*101+127)/128,128,0,m.stream>>>(p,masks,rows,exchange,proposal_values);
-                accept_exchange<<<1,256,0,m.stream>>>(p,masks,rows,exchange,proposal_values);
-            }
-            if(cudaMemcpyAsync(exchange_report,&exchange->report,sizeof(ExchangeReport),cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess)return 2;
-        } else if(exchange_report)*exchange_report={0,0,0};
-        search<<<tasks,1,0,m.stream>>>(p,bits,tasks,cap,masks,active,phase,exclusions,rows);
-        finish<<<1,32,0,m.stream>>>(p,tasks,masks,rows,out,result);
-        if(cudaGetLastError()!=cudaSuccess||cudaMemcpyAsync(report,result,sizeof(Report),cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess||
-           (n&&cudaMemcpyAsync(selected,out,n,cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess)||cudaStreamSynchronize(m.stream)!=cudaSuccess)return 2;
-        return 0;
+        auto w=std::make_unique<Workspace>();
+        if(!w->init(n,bits,columns,co,ci,ro,po,pi))return 2;
+        *workspace=w.release();return 0;
     } catch(...){return 2;}
+}
+extern "C" int spacepdhcg_gtoc12_fleet_workspace_solve_host(void* workspace,int32_t max_ships,
+    uint64_t cap,const uint8_t* warm,uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report,
+    int32_t rounds,spacepdhcg_gtoc12_fleet_exchange_report* exchange) {
+    if(!workspace)return 1;
+    return static_cast<gtoc12_fleet::Workspace*>(workspace)->solve(max_ships,cap,warm,selected,report,rounds,exchange);
+}
+extern "C" void spacepdhcg_gtoc12_fleet_workspace_destroy_host(void* workspace) {
+    delete static_cast<gtoc12_fleet::Workspace*>(workspace);
+}
+static int run_gtoc12_fleet(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
+    const spacepdhcg_gtoc12_fleet_column* c,const int32_t* co,const int32_t* ci,
+    const int32_t* ro,const int32_t* po,const int32_t* pi,const uint8_t* warm,
+    uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report,
+    int rounds,spacepdhcg_gtoc12_fleet_exchange_report* exchange) {
+    // Keep the original one-shot entry points and output semantics.
+    if(max_ships<0||max_ships>100||rounds<0||rounds>100||!report||
+       (n>0&&(!warm||!selected)))return 1;
+    void* handle=nullptr;
+    int status=spacepdhcg_gtoc12_fleet_workspace_create_host(n,bits,c,co,ci,ro,po,pi,&handle);
+    if(status)return status;
+    std::unique_ptr<gtoc12_fleet::Workspace> w(static_cast<gtoc12_fleet::Workspace*>(handle));
+    gtoc12_fleet::ExchangeReport unused{};
+    return w->solve(max_ships,cap,warm,selected,report,rounds,exchange?exchange:&unused);
 }
 extern "C" int spacepdhcg_gtoc12_fleet_search_host(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
     const spacepdhcg_gtoc12_fleet_column* c,const int32_t* co,const int32_t* ci,

@@ -1,0 +1,84 @@
+{
+  "pid": 374,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 2.268841343999952,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "/home/angus/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_gpu_fleet.py",
+        "/home/angus/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_gpu_cli.py",
+        "/home/angus/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_cooperative.py",
+        "/home/angus/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_collectdp.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 20.403751035999903,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "--leak-check",
+        "full",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-workspace-v737/case.py"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 3.1468014060000087,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-workspace-v737/case.py"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 1.575481093999997,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-workspace-v737/case.py"
+      ]
+    },
+    {
+      "name": "nsys",
+      "code": 0,
+      "seconds": 3.2366285389999803,
+      "command": [
+        "nsys",
+        "profile",
+        "--trace=cuda",
+        "--sample=none",
+        "--cpuctxsw=none",
+        "-o",
+        "/home/angus/spacepdhcg-fleet-workspace-v737/retained",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-workspace-v737/case.py"
+      ]
+    }
+  ],
+  "stage": "nsys",
+  "child_pid": 477
+}

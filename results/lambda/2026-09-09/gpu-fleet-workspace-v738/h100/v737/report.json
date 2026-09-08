@@ -1,0 +1,68 @@
+{
+  "pid": 235021,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 3.0438134720316157,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "/home/ubuntu/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_gpu_fleet.py",
+        "/home/ubuntu/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_gpu_cli.py",
+        "/home/ubuntu/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_cooperative.py",
+        "/home/ubuntu/spacepdhcg-fleet-v735/repo/tests/test_gtoc12_collectdp.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 50.61729467200348,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "--leak-check",
+        "full",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-fleet-workspace-v737/case.py"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 2.639593284984585,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-fleet-workspace-v737/case.py"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 1.8528217209968716,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-fleet-workspace-v737/case.py"
+      ]
+    }
+  ],
+  "stage": "synccheck",
+  "child_pid": 235188
+}

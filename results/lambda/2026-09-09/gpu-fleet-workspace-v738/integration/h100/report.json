@@ -1,0 +1,95 @@
+{
+  "pid": 235458,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "git-init",
+      "code": 0,
+      "seconds": 0.0021891220239922404,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "code": 0,
+      "seconds": 0.20991066901478916,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "code": 0,
+      "seconds": 0.04910611500963569,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze CUDA fleet search"
+      ]
+    },
+    {
+      "name": "configure",
+      "code": 0,
+      "seconds": 2.353504642029293,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-fleet-v739/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-fleet-v739/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "code": 0,
+      "seconds": 92.05508991604438,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-fleet-v739/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 3.1413718400290236,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_fleet.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_cooperative.py",
+        "tests/test_gtoc12_collectdp.py",
+        "tests/test_gtoc12_completion_costs.py"
+      ]
+    }
+  ],
+  "stage": "pytest",
+  "child_pid": 235993,
+  "core_sha256": "721b5250c5e5def8ca2cc92108ce9555f31ed32a4b66e9d6300f125a44dcdc12"
+}

@@ -5,6 +5,10 @@ kg**, across 23 ships. GPU fleet exchanges gained **32.834719 weighted kg**;
 33 native leg solves and both complete-fleet physics checkers pass on both GPUs.
 [Current result, measurements and visualiser](GPU_FLEET_EXCHANGES.md).
 
+The subsequent retained CUDA workspace accelerates repeated fixed-pool fleet
+selection by **2.03× locally / 2.32× on H100**, to **50 / 54 ms** after setup.
+The score is unchanged. [Measurements, tests and retained API](GPU_FLEET_WORKSPACE.md).
+
 ## Earlier orphan-recovery checkpoint
 
 The remainder of this page records the preceding checkpoint and its comparisons.
