@@ -231,7 +231,9 @@ class JointItinerary:
 
     @staticmethod
     def key(from_body: int, to_body: int, departure: float, arrival: float) -> EpochKey:
-        return (int(from_body), int(to_body), round(float(departure), 5), round(float(arrival), 5))
+        # Distinct continuous epochs need distinct costs and measured-leg records.
+        # Rounding lets an eagerly evaluated batch leg alias a later candidate.
+        return (int(from_body), int(to_body), float(departure), float(arrival))
 
     def learn(self, route: RefinedRoute) -> int:
         """Memoise the measured ΔV of every certified leg of ``route`` and calibrate the
@@ -319,13 +321,19 @@ class JointItinerary:
     def evaluate(self, visits: list[Visit], arrivals: FloatArray, departures: FloatArray):
         """Exact bookkeeping of one epoch vector for a fixed visit order."""
 
-        self.evaluations += 1
+        from .gpu_joint import cuda_joint_enabled, evaluate_joint
+
         n = len(visits)
-        s = self.retimer.settings
         arr = np.asarray(arrivals, dtype=np.float64)
         dep = np.asarray(departures, dtype=np.float64)
         if arr.shape != (n,) or dep.shape != (n,):
             raise ValueError("one arrival and one departure epoch per visit")
+        if cuda_joint_enabled():
+            gpu_result = evaluate_joint(self, visits, arr[None, :], dep[None, :])
+            if gpu_result is not None:
+                return gpu_result[0]
+        self.evaluations += 1
+        s = self.retimer.settings
         fail = self._fail
         if arr[0] < C.MISSION_START_MJD - 1e-9:
             return fail("launch_before_window")
@@ -533,6 +541,8 @@ class JointItinerary:
         """Steepest-ascent pattern search over the epoch vector on a shrinking mesh; returns
         the best epochs, their evaluation and the number of moves taken.  Deterministic."""
 
+        from .gpu_joint import cuda_joint_enabled, evaluate_joint
+
         mesh = self.settings.mesh_days if mesh is None else mesh
         max_moves = self.settings.max_moves_per_mesh if max_moves is None else max_moves
         arr = np.array(arrivals, dtype=np.float64)
@@ -546,16 +556,36 @@ class JointItinerary:
             moves_here = 0
             while moves_here < max_moves and time.perf_counter() < deadline:
                 candidate: tuple[FloatArray, FloatArray, Evaluation] | None = None
+                trial_epochs = [] if cuda_joint_enabled() else None
                 for shift in self.moves(n, delta):
                     a2 = arr.copy()
                     d2 = dep.copy()
                     for j, (da, dd) in shift.items():
                         a2[j] += da
                         d2[j] += dd
-                    ev = self.evaluate(visits, a2, d2)
-                    if not ev.feasible or ev.objective <= best.objective + 1e-9:
-                        continue
-                    if candidate is None or ev.objective > candidate[2].objective:
+                    if trial_epochs is not None:
+                        trial_epochs.append((a2, d2))
+                    else:
+                        ev = self.evaluate(visits, a2, d2)
+                        if not ev.feasible or ev.objective <= best.objective + 1e-9:
+                            continue
+                        if candidate is None or ev.objective > candidate[2].objective:
+                            candidate = (a2, d2, ev)
+                if trial_epochs is not None:
+                    gpu_trials = evaluate_joint(
+                        self,
+                        visits,
+                        np.asarray([a for a, _ in trial_epochs]),
+                        np.asarray([d for _, d in trial_epochs]),
+                        minimum_objective=best.objective,
+                    )
+                    if gpu_trials is None:
+                        raise RuntimeError(
+                            "CUDA joint backend became unavailable during epoch search"
+                        )
+                    if gpu_trials[0] is not None:
+                        winner, ev = gpu_trials
+                        a2, d2 = trial_epochs[winner]
                         candidate = (a2, d2, ev)
                 if candidate is None:
                     break

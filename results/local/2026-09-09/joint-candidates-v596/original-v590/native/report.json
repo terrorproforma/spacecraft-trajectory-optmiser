@@ -1,0 +1,53 @@
+{
+  "library": "/home/angus/build-spacepdhcg-joint-v590/build/cuda/libspacepdhcg_cuda.so",
+  "library_sha256": "ffbae813f1f683d276213cb83ec8be17d1c2338c9c4a96f3ec5283e26a432b73",
+  "checks": [
+    {
+      "name": "smoke",
+      "command": [
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-native-v590/joint-smoke"
+      ],
+      "seconds": 0.2429797210002107,
+      "returncode": 0
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-native-v590/joint-smoke"
+      ],
+      "seconds": 0.34556323500009967,
+      "returncode": 0
+    },
+    {
+      "name": "synccheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-native-v590/joint-smoke"
+      ],
+      "seconds": 0.39197271900002306,
+      "returncode": 0
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-native-v590/joint-smoke"
+      ],
+      "seconds": 0.7659363269999631,
+      "returncode": 0
+    }
+  ]
+}

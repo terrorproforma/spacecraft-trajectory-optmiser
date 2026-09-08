@@ -1,0 +1,26 @@
+--- v596/cpp/cuda/CMakeLists.txt
++++ registered-tests/cpp/cuda/CMakeLists.txt
+@@ -224,6 +224,11 @@
+         CONFIGURE_DEPENDS
+         "${CMAKE_CURRENT_SOURCE_DIR}/tests/*_test.cu"
+     )
++    list(APPEND SPACEPDHCG_CUDA_TEST_SOURCES
++        "${CMAKE_CURRENT_SOURCE_DIR}/tests/gtoc12_joint_smoke.cu"
++        "${CMAKE_CURRENT_SOURCE_DIR}/tests/gtoc12_joint_selection_test.cu"
++    )
++    list(REMOVE_DUPLICATES SPACEPDHCG_CUDA_TEST_SOURCES)
+     foreach(source IN LISTS SPACEPDHCG_CUDA_TEST_SOURCES)
+         get_filename_component(test_name "${source}" NAME_WE)
+         # This standalone test needs the isolated QOCO source headers/library;
+@@ -256,6 +261,11 @@
+             "${test_name}"
+             PRIVATE SPACEPDHCG_SOURCE_COMMIT="${SPACEPDHCG_SOURCE_COMMIT}"
+         )
++        if(test_name STREQUAL "gtoc12_joint_smoke"
++           OR test_name STREQUAL "gtoc12_joint_selection_test")
++            # These tests perform their native API calls inside assert().
++            target_compile_options("${test_name}" PRIVATE -UNDEBUG)
++        endif()
+         set_target_properties(
+             "${test_name}"
+             PROPERTIES

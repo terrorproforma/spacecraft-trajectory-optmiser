@@ -22,6 +22,14 @@ a fresh independent audit. [Result, work counts and visualiser loading
 instructions](docs/GPU_ORPHAN_RECOVERY.md). The performance checkpoints below
 describe their own historical results.
 
+Joint timing candidates can now be evaluated and ranked in native CUDA batches.
+On two real incumbent routes, the measured controller stage runs **7.58–8.88x
+faster on RTX 5090**, including candidate construction, geometry and transfers.
+The final wrapper passes 62 tests with the current core and 54 with the older
+core; the native implementation passes memory, race and synchronization checks.
+The feature remains opt-in, with Python still orchestrating the wider search.
+[Implementation, exact measurements and GPU/CPU boundaries](docs/GPU_JOINT_CANDIDATES.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

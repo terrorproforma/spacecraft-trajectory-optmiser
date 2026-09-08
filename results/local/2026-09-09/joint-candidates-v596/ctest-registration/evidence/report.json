@@ -1,0 +1,134 @@
+{
+  "schema": "joint-ctest-registration-20260909",
+  "complete": true,
+  "success": true,
+  "commands": [
+    {
+      "name": "configure",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/source/cpp",
+        "-B",
+        "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBUILD_TESTING=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg"
+      ],
+      "started_utc": "2026-09-08T14:49:54.579861+00:00",
+      "returncode": 0,
+      "seconds": 17.17675254300002
+    },
+    {
+      "name": "ctest-list",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/ctest",
+        "--test-dir",
+        "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/build",
+        "-N",
+        "-R",
+        "^(gtoc12_joint_smoke|gtoc12_joint_selection_test)$"
+      ],
+      "started_utc": "2026-09-08T14:50:11.759097+00:00",
+      "returncode": 0,
+      "seconds": 0.0937987150000481
+    },
+    {
+      "name": "build-two-targets",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/build",
+        "--target",
+        "gtoc12_joint_smoke",
+        "gtoc12_joint_selection_test",
+        "--parallel",
+        "8",
+        "--verbose"
+      ],
+      "started_utc": "2026-09-08T14:50:11.859916+00:00",
+      "returncode": 0,
+      "seconds": 50.56227578499988
+    },
+    {
+      "name": "ctest-two-targets",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/ctest",
+        "--test-dir",
+        "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/build",
+        "--output-on-failure",
+        "-j",
+        "1",
+        "-R",
+        "^(gtoc12_joint_smoke|gtoc12_joint_selection_test)$",
+        "--output-junit",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-ctest-registration-20260909/evidence/ctest.xml"
+      ],
+      "started_utc": "2026-09-08T14:51:02.440842+00:00",
+      "returncode": 0,
+      "seconds": 0.5596324059999915
+    }
+  ],
+  "pid": 303,
+  "scope": "Only two registered CUDA joint tests; no fleet or trajectory evaluation.",
+  "started_utc": "2026-09-08T14:49:54.290320+00:00",
+  "preserved_v596": {
+    "core": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "core_sha256": "86d7fdc952e82f7e5557c1651a1722900d83cdd98d8a709a4b6274fd83af4671",
+    "cmake_sha256": "7c078a7e437eeb36dfe230df4db02f06ad5e1feb07423c0395829d73fdb2a6c6"
+  },
+  "phase": "complete",
+  "updated_utc": "2026-09-08T14:51:03.014205+00:00",
+  "isolated_source": "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/source",
+  "cmake_test_registration_sha256": "1fca2deaa9ea496773f82e017d9849da47778717ca6daa7ce63a02c13e365b5a",
+  "native_sources": {
+    "cpp/cuda/src/gtoc12_joint.cu": "51bf1c995327da59763d84eaae3e89787c2ec606bb1837afebe4781a07d86014",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_joint_c_api.h": "bb5eb7c6ca6600579664f59dbacad4318208bee05543ae209311b386c5c17979",
+    "cpp/cuda/tests/gtoc12_joint_smoke.cu": "7e0aceea8f77b2b4c8b807f7a26a6c73f94cef37dcec21d7ffee8ce094fb9f4f",
+    "cpp/cuda/tests/gtoc12_joint_selection_test.cu": "f4860fdbcaf0eae59dcee80c3b28c752bb1ff79c1231a63cd38f1afb11d37408"
+  },
+  "returncode": 0,
+  "gpu_lock_acquired_utc": "2026-09-08T14:50:11.859902+00:00",
+  "release_assertions": [
+    {
+      "target": "gtoc12_joint_smoke",
+      "compile": {
+        "directory": "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/build/cuda",
+        "command": "/usr/local/cuda-12.8/bin/nvcc -forward-unknown-to-host-compiler -DCUSPARSE_ENABLE_EXPERIMENTAL_API -DPDHCG_VERSION=\\\"0.3.0-pinned\\\" -DSPACEPDHCG_SOURCE_COMMIT=\\\"4e108dd142aeb57f1d2ad82c8b7b8ea44d9e8b78\\\" --options-file CMakeFiles/gtoc12_joint_smoke.dir/includes_CUDA.rsp -O3 -DNDEBUG -std=c++20 \"--generate-code=arch=compute_120,code=[compute_120,sm_120]\" -UNDEBUG -x cu -c /home/angus/build-spacepdhcg-joint-ctest-registration-20260909/source/cpp/cuda/tests/gtoc12_joint_smoke.cu -o CMakeFiles/gtoc12_joint_smoke.dir/tests/gtoc12_joint_smoke.cu.o",
+        "file": "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/source/cpp/cuda/tests/gtoc12_joint_smoke.cu",
+        "output": "cuda/CMakeFiles/gtoc12_joint_smoke.dir/tests/gtoc12_joint_smoke.cu.o"
+      },
+      "assert_fail_symbol_present": true,
+      "executable_sha256": "0c47d98c52e79faa85d0e44128bb89d042f5b9a903ae17d7cbbb90001ccb07c6"
+    },
+    {
+      "target": "gtoc12_joint_selection_test",
+      "compile": {
+        "directory": "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/build/cuda",
+        "command": "/usr/local/cuda-12.8/bin/nvcc -forward-unknown-to-host-compiler -DCUSPARSE_ENABLE_EXPERIMENTAL_API -DPDHCG_VERSION=\\\"0.3.0-pinned\\\" -DSPACEPDHCG_SOURCE_COMMIT=\\\"4e108dd142aeb57f1d2ad82c8b7b8ea44d9e8b78\\\" --options-file CMakeFiles/gtoc12_joint_selection_test.dir/includes_CUDA.rsp -O3 -DNDEBUG -std=c++20 \"--generate-code=arch=compute_120,code=[compute_120,sm_120]\" -UNDEBUG -x cu -c /home/angus/build-spacepdhcg-joint-ctest-registration-20260909/source/cpp/cuda/tests/gtoc12_joint_selection_test.cu -o CMakeFiles/gtoc12_joint_selection_test.dir/tests/gtoc12_joint_selection_test.cu.o",
+        "file": "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/source/cpp/cuda/tests/gtoc12_joint_selection_test.cu",
+        "output": "cuda/CMakeFiles/gtoc12_joint_selection_test.dir/tests/gtoc12_joint_selection_test.cu.o"
+      },
+      "assert_fail_symbol_present": true,
+      "executable_sha256": "b5d6fbaf6ab630c7fca035a911f38622868e2ed99afc11363806c1496058a7e2"
+    }
+  ],
+  "isolated_core": {
+    "path": "/home/angus/build-spacepdhcg-joint-ctest-registration-20260909/build/cuda/libspacepdhcg_cuda.so",
+    "sha256": "dedb703ae166fc34b0e4981f5063f8601f83c80f39bf67aa093d641fd9242c58"
+  },
+  "ctest_totals": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "gpu_lock_released_utc": "2026-09-08T14:51:03.004206+00:00",
+  "v596_unchanged": true,
+  "finished_utc": "2026-09-08T14:51:03.016641+00:00"
+}

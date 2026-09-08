@@ -1,0 +1,104 @@
+{
+  "cpp/cuda/CMakeLists.txt": {
+    "sha256": "1fca2deaa9ea496773f82e017d9849da47778717ca6daa7ce63a02c13e365b5a",
+    "validated_snapshot_sha256": "7c078a7e437eeb36dfe230df4db02f06ad5e1feb07423c0395829d73fdb2a6c6",
+    "same_as_validated_snapshot": false,
+    "normalized_source_equal": false,
+    "note": "Test-registration-only CMake overlay; independent CTest evidence is separate."
+  },
+  "cpp/cuda/include/spacepdhcg/cuda/gtoc12_joint_c_api.h": {
+    "sha256": "bb5eb7c6ca6600579664f59dbacad4318208bee05543ae209311b386c5c17979",
+    "validated_snapshot_sha256": "bb5eb7c6ca6600579664f59dbacad4318208bee05543ae209311b386c5c17979",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "cpp/cuda/src/gtoc12_joint.cu": {
+    "sha256": "51bf1c995327da59763d84eaae3e89787c2ec606bb1837afebe4781a07d86014",
+    "validated_snapshot_sha256": "51bf1c995327da59763d84eaae3e89787c2ec606bb1837afebe4781a07d86014",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "cpp/cuda/src/orbitweaver_gpu.cu": {
+    "sha256": "65df49574eee085935368af0cbb44c7296ee9924dd74bb5dd88f5ce901bca39c",
+    "validated_snapshot_sha256": "65df49574eee085935368af0cbb44c7296ee9924dd74bb5dd88f5ce901bca39c",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "cpp/include/spacepdhcg/orbitweaver/lambert.hpp": {
+    "sha256": "2b82ed26dc499d30265aec05f341e3ed5c6280253f8fb9d13e8a3117d404b8b6",
+    "validated_snapshot_sha256": "367d0eabdf6004ccef5b840666218580d9fdd277feb36e4574286fa776b27f1a",
+    "same_as_validated_snapshot": false,
+    "normalized_source_equal": true,
+    "note": "Git checkout CRLF versus git-archive LF only; CRLF-to-LF bytes are exactly equal."
+  },
+  "cpp/cuda/tests/gtoc12_joint_smoke.cu": {
+    "sha256": "7e0aceea8f77b2b4c8b807f7a26a6c73f94cef37dcec21d7ffee8ce094fb9f4f",
+    "validated_snapshot_sha256": "7e0aceea8f77b2b4c8b807f7a26a6c73f94cef37dcec21d7ffee8ce094fb9f4f",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "cpp/cuda/tests/gtoc12_joint_selection_test.cu": {
+    "sha256": "f4860fdbcaf0eae59dcee80c3b28c752bb1ff79c1231a63cd38f1afb11d37408",
+    "validated_snapshot_sha256": "f4860fdbcaf0eae59dcee80c3b28c752bb1ff79c1231a63cd38f1afb11d37408",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "src/spacepdhcg/gtoc12/gpu_joint.py": {
+    "sha256": "5f70cf173929b8324e9e40885200e71272732f3e8210b5372dc238a07ae25689",
+    "validated_snapshot_sha256": "5f70cf173929b8324e9e40885200e71272732f3e8210b5372dc238a07ae25689",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "src/spacepdhcg/gtoc12/gpu_lambert.py": {
+    "sha256": "00d3941c00b5c8d2aa88580eed38bfd099b29f468facd8f18b85e52a07849475",
+    "validated_snapshot_sha256": "00d3941c00b5c8d2aa88580eed38bfd099b29f468facd8f18b85e52a07849475",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "src/spacepdhcg/gtoc12/jointopt.py": {
+    "sha256": "80ae101b05681585bf9f6cb4cd57b71c88677e92318be75bf7dd0dd409741ecf",
+    "validated_snapshot_sha256": "80ae101b05681585bf9f6cb4cd57b71c88677e92318be75bf7dd0dd409741ecf",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "tests/test_gtoc12_gpu_joint.py": {
+    "sha256": "42d9df18e2eda5d0bb38b5f64ecdf4bc89476d6c1c83654cfd14019756608388",
+    "validated_snapshot_sha256": "42d9df18e2eda5d0bb38b5f64ecdf4bc89476d6c1c83654cfd14019756608388",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "tests/test_gtoc12_jointopt.py": {
+    "sha256": "6bb92e6b9e33a0243fa40e2c30a652d17b9c02fb8d852c7a9e85246d320c06e8",
+    "validated_snapshot_sha256": "6bb92e6b9e33a0243fa40e2c30a652d17b9c02fb8d852c7a9e85246d320c06e8",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "tests/test_gtoc12_gpu_joint_selection.py": {
+    "sha256": "b50683b08d7e8541ce725d435afd36e898dfbfdc1e3b1d681a7bf51f60f81247",
+    "validated_snapshot_sha256": "b50683b08d7e8541ce725d435afd36e898dfbfdc1e3b1d681a7bf51f60f81247",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "tests/test_gtoc12_gpu_joint_compatibility.py": {
+    "sha256": "80bec43e3c68d45e50a60ab0b2e3cc8532fb6ec61cb01021a87a8324fcc33cf4",
+    "validated_snapshot_sha256": "80bec43e3c68d45e50a60ab0b2e3cc8532fb6ec61cb01021a87a8324fcc33cf4",
+    "same_as_validated_snapshot": true,
+    "normalized_source_equal": true,
+    "note": "Exact validated source bytes."
+  },
+  "docs/GPU_JOINT_CANDIDATES.md": {
+    "sha256": "6fb538f61dc5a4a120a2df9115f734a8550c57cd624db218b4d51abdced10eb0",
+    "note": "Authored documentation of this evidence; root README is separately owned."
+  }
+}

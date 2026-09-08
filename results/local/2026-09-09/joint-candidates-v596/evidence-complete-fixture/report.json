@@ -1,0 +1,274 @@
+{
+  "schema": "joint-local-v596",
+  "started_utc": "2026-09-08T14:37:56.026220+00:00",
+  "pid": 374,
+  "complete": true,
+  "success": true,
+  "commands": [
+    {
+      "name": "gpu-before",
+      "command": [
+        "nvidia-smi",
+        "-q"
+      ],
+      "started_utc": "2026-09-08T14:37:56.163459+00:00",
+      "pid": 377,
+      "returncode": 0,
+      "seconds": 1.7586082290000036,
+      "finished_utc": "2026-09-08T14:37:57.922070+00:00"
+    },
+    {
+      "name": "python-parity",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint.py','tests/test_gtoc12_jointopt.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-parity.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:37:57.928002+00:00",
+      "pid": 379,
+      "returncode": 0,
+      "seconds": 17.778656855999998,
+      "finished_utc": "2026-09-08T14:38:15.706664+00:00"
+    },
+    {
+      "name": "python-parity-memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint.py','tests/test_gtoc12_jointopt.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-parity-memcheck.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:38:15.713476+00:00",
+      "pid": 395,
+      "returncode": 0,
+      "seconds": 17.699709659999996,
+      "finished_utc": "2026-09-08T14:38:33.413190+00:00"
+    },
+    {
+      "name": "python-parity-synccheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint.py','tests/test_gtoc12_jointopt.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-parity-synccheck.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:38:33.419907+00:00",
+      "pid": 430,
+      "returncode": 0,
+      "seconds": 17.59142621899997,
+      "finished_utc": "2026-09-08T14:38:51.011338+00:00"
+    },
+    {
+      "name": "python-parity-racecheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint.py','tests/test_gtoc12_jointopt.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-parity-racecheck.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:38:51.018028+00:00",
+      "pid": 571,
+      "returncode": 0,
+      "seconds": 18.434136792999993,
+      "finished_utc": "2026-09-08T14:39:09.452173+00:00"
+    },
+    {
+      "name": "python-selection",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint_selection.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-selection.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:39:09.459817+00:00",
+      "pid": 607,
+      "returncode": 0,
+      "seconds": 0.732994708000092,
+      "finished_utc": "2026-09-08T14:39:10.192819+00:00"
+    },
+    {
+      "name": "python-selection-memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint_selection.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-selection-memcheck.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:39:10.199800+00:00",
+      "pid": 612,
+      "returncode": 0,
+      "seconds": 0.9700624350000453,
+      "finished_utc": "2026-09-08T14:39:11.169866+00:00"
+    },
+    {
+      "name": "python-selection-synccheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint_selection.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-selection-synccheck.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:39:11.179173+00:00",
+      "pid": 630,
+      "returncode": 0,
+      "seconds": 1.0930391880000343,
+      "finished_utc": "2026-09-08T14:39:12.272218+00:00"
+    },
+    {
+      "name": "python-selection-racecheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint_selection.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/python-selection-racecheck.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:39:12.278629+00:00",
+      "pid": 648,
+      "returncode": 0,
+      "seconds": 1.5207500620000474,
+      "finished_utc": "2026-09-08T14:39:13.799386+00:00"
+    },
+    {
+      "name": "benchmark",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys,runpy; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); sys.argv=['/home/angus/build-spacepdhcg-joint-v596/source/build/performance/joint-benchmark-v593/benchmark_joint.py', '/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence-complete-fixture/benchmark.json', '--archive-dir', '/home/angus/build-spacepdhcg-joint-v596/source/incumbent-sources', '--data-dir', '/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data', '--core', '/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so', '--source-root', '/home/angus/build-spacepdhcg-joint-v596/source', '--mesh-days', '3', '--repeats', '3', '--warmups', '1']; runpy.run_path(sys.argv[0],run_name='__main__')"
+      ],
+      "started_utc": "2026-09-08T14:39:13.805024+00:00",
+      "pid": 681,
+      "returncode": 0,
+      "seconds": 2.6080550930000754,
+      "finished_utc": "2026-09-08T14:39:16.413084+00:00"
+    },
+    {
+      "name": "gpu-after",
+      "command": [
+        "nvidia-smi",
+        "-q"
+      ],
+      "started_utc": "2026-09-08T14:39:16.422171+00:00",
+      "pid": 687,
+      "returncode": 0,
+      "seconds": 1.8147637069999973,
+      "finished_utc": "2026-09-08T14:39:18.236939+00:00"
+    }
+  ],
+  "claim": "Search-surrogate parity and timing only; no new trajectory or fleet certification.",
+  "environment": {
+    "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "SPACEPDHCG_GTOC12_DATA": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+    "SPACEPDHCG_GTOC12_JOINT_ARCHIVE": "/home/angus/build-spacepdhcg-joint-v596/source/incumbent-sources",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONPATH": "/home/angus/build-spacepdhcg-joint-v596/source/src"
+  },
+  "native_smoke_scope": "Original full-evaluation API; does not call the new best_host selection API.",
+  "python_sanitizer_scope": "Fresh frozen 42-test parity suite, including best_host winner selection, under all three sanitizers.",
+  "prior_local_results_apply": false,
+  "prior_local_note": "This snapshot adds native device winner selection after the earlier 42-test local run and benchmark; it requires its own fresh build and checks.",
+  "source_manifest_sha256": "ac591c510cc19203898d293abc327ee51e4e1f30bf4c72c8785cf0c51eff8027",
+  "base_commit": "bd944af935e5b71e50ef7ff4d34ea7674602832a",
+  "isolated_snapshot_commit": "4e108dd142aeb57f1d2ad82c8b7b8ea44d9e8b78",
+  "snapshot_addendum": "Only the omitted historical test fixture was added after the isolated snapshot commit; all native/Python/test source bytes are unchanged.",
+  "core": {
+    "path": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "sha256": "86d7fdc952e82f7e5557c1651a1722900d83cdd98d8a709a4b6274fd83af4671",
+    "bytes": 14373680
+  },
+  "native_checks_record": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence/report.json",
+  "native_checks_record_sha256": "ef6bfa99e6b331a7025ee9cc411af2e499253479f8b0177b04e88e9494509d77",
+  "gpu_lock_acquired_utc": "2026-09-08T14:37:56.116293+00:00",
+  "pytest_totals": {
+    "python-parity": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-parity-memcheck": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-parity-synccheck": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-parity-racecheck": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection-memcheck": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection-synccheck": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection-racecheck": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "benchmark_correctness_passed": true,
+  "gpu_lock_released_utc": "2026-09-08T14:39:18.241703+00:00",
+  "finished_utc": "2026-09-08T14:39:18.241723+00:00"
+}

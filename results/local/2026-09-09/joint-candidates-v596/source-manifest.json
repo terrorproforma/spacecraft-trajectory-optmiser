@@ -1,0 +1,2765 @@
+{
+  "created_utc": "2026-09-08T14:24:06.746439+00:00",
+  "base_commit": "bd944af935e5b71e50ef7ff4d34ea7674602832a",
+  "cpp_baseline": "Current published main including opt-in parallel Lambert; joint overlays follow.",
+  "production_source_or_git_changes": false,
+  "overlay_paths": [
+    "cpp/cuda/CMakeLists.txt",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_joint_c_api.h",
+    "cpp/cuda/src/gtoc12_joint.cu",
+    "cpp/cuda/tests/gtoc12_joint_smoke.cu",
+    "tests/test_gtoc12_gpu_joint.py",
+    "tests/test_gtoc12_jointopt.py",
+    "tests/conftest.py"
+  ],
+  "files": {
+    "benchmarks/gtoc12/gtoc12_rules.json": {
+      "sha256": "827a86d5920625a0db76fee31f75ac5d4768a99626eab44f0ba3adf83035199b",
+      "bytes": 3759,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "benchmarks/gtoc12/pins.json": {
+      "sha256": "e953d9553e6d8a2d382c9b48f0bf59b0c1439f4ac207d1f7d2a68b101cc5b41f",
+      "bytes": 6873,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "build/performance/joint-benchmark-v593/benchmark_joint.py": {
+      "sha256": "1d6d0c75924f1637f0a161cf153271094abe01e86ab6fbb5d9c774d4ef797a5f",
+      "bytes": 28104,
+      "origin": "current working tree"
+    },
+    "cpp/CMakeLists.txt": {
+      "sha256": "5965b4c14e60519f8410646ec385c250a384703536784bf44cffd49e8e92dc34",
+      "bytes": 6338,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/all/CMakeLists.txt": {
+      "sha256": "57ccbffff50cb28b4420428e9107435c3ba0d2f06498b6d59199c176db844996",
+      "bytes": 1908,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cmake/SpacePDHCGConfig.cmake.in": {
+      "sha256": "de498bb4f20967da6edb64a9ce2d3282fd527604f226dc5b4c32f3c6d82b1d8c",
+      "bytes": 116,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/core/CMakeLists.txt": {
+      "sha256": "d6b1154e017325b93d6365b9297f199764f7792d1c62bf742ad0fe5f8d216029",
+      "bytes": 1851,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/CMakeLists.txt": {
+      "sha256": "7c078a7e437eeb36dfe230df4db02f06ad5e1feb07423c0395829d73fdb2a6c6",
+      "bytes": 12197,
+      "origin": "current working tree"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/allocation_ledger.hpp": {
+      "sha256": "756211cea5a0f3c9d1418d5854d48f0e063ab4d6f91e5d368093543eca1e6f46",
+      "bytes": 5132,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/device_buffers.hpp": {
+      "sha256": "eaaed8053c8b49006afdac4054ec2c0ed57078a7319d0b883fb6f00b4770d2dc",
+      "bytes": 1570,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/device_scvx_c_api.h": {
+      "sha256": "9a25c7e2b7fe24fd3e3251c88a0d3d6fd1046395f242b030a933e7c5013c12a3",
+      "bytes": 4802,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/device_scvx_driver_c_api.h": {
+      "sha256": "8aa545542e64b58adaf208227dc2e2eb8ca3db5695045f4534cdf62fd1234a76",
+      "bytes": 14766,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_collect_dp_c_api.h": {
+      "sha256": "b148d5f11f5754ed295272df07948193af5fbc807d91250542fbcd27479fe5c5",
+      "bytes": 3983,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_collection_c_api.h": {
+      "sha256": "fc928c6dae1b2444869bdf289b4d6349ec001c9db760f5692e09fdd736b5ef3a",
+      "bytes": 3092,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_conic_c_api.h": {
+      "sha256": "86dd83dce730edb84652f4c3a17f56b26f8033cc914f426d3bac545d728cbf98",
+      "bytes": 3932,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_discretisation_c_api.h": {
+      "sha256": "066de158b1f7d5ba0fdf9cc2dfb0b8cd8f71c4cea366dad026cd491da4a39a4c",
+      "bytes": 3361,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_joint_c_api.h": {
+      "sha256": "bb5eb7c6ca6600579664f59dbacad4318208bee05543ae209311b386c5c17979",
+      "bytes": 6856,
+      "origin": "current working tree"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_neighbours_c_api.h": {
+      "sha256": "753b323c619e34cf1b8e1b0c4e36be6621b1beb9d439c0931483e39a6a861a6c",
+      "bytes": 2078,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_qoco_c_api.h": {
+      "sha256": "f36c0eda579179ae360123f934eb68262b177d7ccda88336f56cee7143f5ee59",
+      "bytes": 6557,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_retime_c_api.h": {
+      "sha256": "827c9ae9b4c8668175f9e6dbde148189f81f7c39a971e370bb682abfc09941a0",
+      "bytes": 6365,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": {
+      "sha256": "b93ce71dd01ccf96c4f8313a7cbcf6757572176df0895b9657d333d3a0186f99",
+      "bytes": 4463,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_verification_c_api.h": {
+      "sha256": "c6fddf2d205a71641a9143c2b84e747cec2abe92d68e0d6d265d8b4b147ee9ba",
+      "bytes": 2424,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_g3_adapter.hpp": {
+      "sha256": "bf9d0f4487e6cc14874c7799036b67cf13296c1ae93878f5f61c253d7550df3a",
+      "bytes": 13223,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": {
+      "sha256": "07bfdb066a60bc7b164763054f24ead6db7d26955ea9500974662b2e4eab2a17",
+      "bytes": 13349,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h": {
+      "sha256": "c3e9aecbfb4dde6200c1e3d0f662a9b64dba0ce02a1522efcf4d5c5caee0d829",
+      "bytes": 11875,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_dlpack_c_api.h": {
+      "sha256": "ff99bfb616b036ff801070d06f5c59d630f9863230b2ecf289a7b1a9ce88ae33",
+      "bytes": 3257,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/stream_event.hpp": {
+      "sha256": "a9423cc2034dec7f6184e79f619055660ea5759bc78db9762063889d4bb33361",
+      "bytes": 2751,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/include/spacepdhcg/cuda/upstream_adapter.hpp": {
+      "sha256": "7739f2ab7993779aa9a879268bdad5783cf1f04308563793a66ea21db8f04989",
+      "bytes": 834,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/dop853_coefficients.cuh": {
+      "sha256": "d283c24397e88c3c7a33af561ec5f856365be9ed8651f99cfb7f5d94c50724d5",
+      "bytes": 4153,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/graph_append.h": {
+      "sha256": "e11e7cc0aeae3bdb4fc2dc4fad84ee6486ae88f7f5518aa2ac4ff3f42a17d8f0",
+      "bytes": 1613,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/gtoc12_collection_options.h": {
+      "sha256": "654c85cfaa81be0243f4019ec4a6465b6c09feeec33f00b7db75e920d1458a2b",
+      "bytes": 427,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/gtoc12_qoco_graph.h": {
+      "sha256": "d0c2e5c66e5e85a71014962f17eed7e4f16d45f6a48eb631a6cfd5639a054ba5",
+      "bytes": 1096,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/gtoc12_qoco_qualification.cuh": {
+      "sha256": "9a82db51dc3c25455b8e2ef75674e66bfb94c7913b74e5f4e58f61ed9c786fba",
+      "bytes": 1325,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/gtoc12_seed.cuh": {
+      "sha256": "a457a713f420dd8e45fc2b704c8762675e1072ab0bac51ca0320e9af8c5e1e55",
+      "bytes": 10439,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/gtoc12_workspace_reuse.h": {
+      "sha256": "4203962a873ef2f0c333bc9ffc00573b18ecbf3dfbae965586e829745b336770",
+      "bytes": 674,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/hcw_replay.cuh": {
+      "sha256": "fd4fe194abfa2d2a9c8b3cac516189c3ea69d5597ef8742e9276b95d51d5dfb2",
+      "bytes": 5519,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/native_qoco_adapter.h": {
+      "sha256": "2016290cdc8b2eeb5668401dbcdd2f0fdea790f4ad4d639214e1377bad91d008",
+      "bytes": 8562,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/native_qoco_gpu.h": {
+      "sha256": "7d5b3e44b7fa3c8687e4431edab2b81d464ef9fa64dd26d04f54e1d3639947ac",
+      "bytes": 8413,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/numeric_fingerprint.cuh": {
+      "sha256": "4e812f669df97b2d7dd33cf9f729da39503c17ad26ec8491e9e7be599989d65c",
+      "bytes": 1866,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/scvx_gather.cuh": {
+      "sha256": "81969152c90eb2777e4b9b613c1c09271592c1edaf1bdb2be0b1d0a3b16f34dc",
+      "bytes": 1265,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/internal/scvx_metrics.cuh": {
+      "sha256": "e593a06dbac3df8e44d9f88696b89c0f83c7cd02d3de2750648baf25b6c3b7e5",
+      "bytes": 24056,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_batched_stopping.cuh": {
+      "sha256": "50d72b5f1a1257240bc95e409740ffb901a450b552963519ded646f8b11a344d",
+      "bytes": 6161,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_deferred_transpose.cuh": {
+      "sha256": "2626113f95099e0a2474d8b36e71a695181eca6f535e4bc561a1f78d2212c3c9",
+      "bytes": 2153,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_combined_cones.cuh": {
+      "sha256": "e0f936038ef388ea38fbb7522195752e33ed7b2d4affe73e5f6982b85f333697",
+      "bytes": 1950,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_combined_rhs.cuh": {
+      "sha256": "9d90d0fa503d4c4f79e46c97c6fa25775db019dd7f8db6b9077e88a69d26f360",
+      "bytes": 3907,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_cone_reductions.cuh": {
+      "sha256": "43eecb30d4ab60dfea152472ec7588a4e7e3ac8f34517aae9a4a98245997ed59",
+      "bytes": 4457,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_control.cuh": {
+      "sha256": "5f093e30ac3e4bd6c80fe0a1da12d7fc3f7b53644eadc6d7516a18e40c6fef68",
+      "bytes": 7424,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_direction.cuh": {
+      "sha256": "0e4bdeeb1f64967881c6cab65e5dbc33c7a8447386098cfb46779dcb5a3eecaa",
+      "bytes": 1225,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_io.cuh": {
+      "sha256": "456b9d7089997b359c5fa6dbb5fdc5e8c6143d3f77afaac6786ee5a1662facdb",
+      "bytes": 1813,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_ir.cuh": {
+      "sha256": "b93ae8519140c016839df16288d8ed6b7f0c7a97672eadc7fb88da1e59bab4de",
+      "bytes": 5791,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_scalar.cuh": {
+      "sha256": "6316e09293a2faf4872daf9946d646ee48f0a06e7d25d2fcb90959588c74ab92",
+      "bytes": 2394,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_solution.cuh": {
+      "sha256": "acdf8cda6fc0cb9f80b200e57089afa505c709184ac39388fae22fb546b41a69",
+      "bytes": 901,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_step_cones.cuh": {
+      "sha256": "4b19c1e3d79ad26d19cc77c61a3d23969a1b6812c5680d6335ce7d41d506ca1e",
+      "bytes": 1243,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_step_control.cuh": {
+      "sha256": "4a935bf41858ad9c85e4455179a0fd09401b7a2ce20a84b2f2d748c2d3566972",
+      "bytes": 6045,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_device_update.cuh": {
+      "sha256": "139c1e395341de98728e72055bfc7a86c4d203e9204badf8d6fbe84af538e179",
+      "bytes": 21000,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_factor_runtime.cuh": {
+      "sha256": "d0f76d9fb942cd20b4abd5766bc400dfc8bae7433321a5d557c078e653585064",
+      "bytes": 4978,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_fused_kkt_product.cuh": {
+      "sha256": "4b227ae4ef31b9bbcff82fc60d8dcf16d00771e1c4ff4418aa17ec5886e0f86c",
+      "bytes": 2387,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_gather.cuh": {
+      "sha256": "24fd71a17cdc34791fb933f72865e5abbc596efe88b8208dcb2ebc54755222c9",
+      "bytes": 4649,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_gpu_kkt.cuh": {
+      "sha256": "d05ddae5a54c519cd7542715e0d1894a5a9fe679211352cee2f914146a2cdfa3",
+      "bytes": 11860,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_gpu_ordering.cuh": {
+      "sha256": "30cdfed1e6d9e53a5ac8e69ed4e9fb95994038f8219a66a68dab048a777a070e",
+      "bytes": 1826,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_gpu_replay.h": {
+      "sha256": "f37d03d46ef640b4e28b00389787f4b30d48301671887dc3eb6aeddf5c4860f1",
+      "bytes": 1720,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_gpu_transpose.cuh": {
+      "sha256": "881c31dc05eaf305770f859a090f426aa85c7829614783f3eda208589fe631fb",
+      "bytes": 4240,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_initial_cones.cuh": {
+      "sha256": "e59fd9d208a4d88a4fbf27155440ec4d8c0e990ae537d2e50b1591356f834c2b",
+      "bytes": 2563,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_cache.cuh": {
+      "sha256": "81efc094a41daacd85595cdf5cd2c679e1f346937c4cb915bdd80583d3b0639e",
+      "bytes": 1538,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_completion.cuh": {
+      "sha256": "4d4819a783d8b2c717b31247bd42ff64efc39eac53f788d6729fd33e853846f5",
+      "bytes": 850,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_control.cuh": {
+      "sha256": "eac1470204e719a4650a70180315cc9a556059e7c83eb168478a993613fa335d",
+      "bytes": 2949,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_graph.cuh": {
+      "sha256": "842e460d2e070ac22f6f6436d3e6b53c38e32415be8d59770e7c8761fb9a17f7",
+      "bytes": 9663,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_initial_control.cuh": {
+      "sha256": "4e093c1c59bcdbae3a76b02f9296ec95941ef405c9aecf9d71d348e511094a64",
+      "bytes": 978,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_outer_graph.cuh": {
+      "sha256": "ae138bc91f1a8a43689e8bab5bad412a78dcb18fc1a35e538ef429b2ece87719",
+      "bytes": 3530,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_parameters.cuh": {
+      "sha256": "74ac3e4708e298fb42d70242eb5fad2a006662ccc139f888e4b87f0d6c68febf",
+      "bytes": 666,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_replay.cuh": {
+      "sha256": "5a6614cd6014c7ef57d355a3220a99ef428d97ce756dd6478831cf754eef7517",
+      "bytes": 3289,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_resources.cuh": {
+      "sha256": "1d7af040fe785d4d9dfd6aaa4594c22f7174babfdfe70e5b4b567bd55e2c0e43",
+      "bytes": 2826,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_terminal.cuh": {
+      "sha256": "925804504db4d40e0f9f2711a28d989bc273ea838b68550b001e17be51f68e4b",
+      "bytes": 2026,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ipm_warmstart.cuh": {
+      "sha256": "4fe65533137ca1e80dd6182cc2312f5f9439e27f1d62a5ac9c75508ae13bd651",
+      "bytes": 1891,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ir_cache.cuh": {
+      "sha256": "be134734d90354e44ab65b82d88895da536138a0c812bc5386ddef494358024e",
+      "bytes": 923,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ir_device_counts.cuh": {
+      "sha256": "21c9a6fc12f118e56c5a191eca326d07c9f8c3ac4e6c3438cc3a46e2e83322a9",
+      "bytes": 1872,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_ir_runtime.cuh": {
+      "sha256": "54d7c5870e17f29dde341c3408f2a116969daeed652290700e2e75a4213116a1",
+      "bytes": 4340,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_lazy_host_mirror.cuh": {
+      "sha256": "bdf83167f6175e39f47bbcac9100ba77500d6c9420b54cd8e033f9889baa3f30",
+      "bytes": 1425,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_metric_graph.cuh": {
+      "sha256": "b4edec26de0ca34b089a031b63efe110fcf704ce4fd10c2798cde067b8f52356",
+      "bytes": 4460,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_reduction_scope.cuh": {
+      "sha256": "e67866763d16461742c4850897b4af51d9297f66d8551fc8b569eb9294332a23",
+      "bytes": 4091,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_setup_profile.cuh": {
+      "sha256": "b19876487cf25c8d7d7ec436a7a412b6be2e871729de2aa2c40d49d8cf86928d",
+      "bytes": 930,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_soc_step.cuh": {
+      "sha256": "24b23403a668f2fca8fb5f57fbfa2daf253675790cc34dad357b904ea0398205",
+      "bytes": 3296,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_trajectory_ordering.cuh": {
+      "sha256": "63e87e187d65fbfe2f0d171a404e1ce817fe48d089c75393b3d6c89307e02045",
+      "bytes": 13548,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/patches/qoco_vector_arena.cuh": {
+      "sha256": "690735831da26e87378bfa5167b7c9982b242152f490e8a9f6706913ec60b075",
+      "bytes": 3370,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/cooperative_pdhg.cuh": {
+      "sha256": "3ca44177992eaadd6acc3f4be7c9360949c27b445dede4db15247dd63cfead98",
+      "bytes": 41188,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/device_scvx.cu": {
+      "sha256": "b061a8ca88be5ccd61120593d0b70543bc737c785c6d7bc0b2f395e11e4ce727",
+      "bytes": 145894,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_collect_dp.cu": {
+      "sha256": "523800cc4594a49bffbd90340cc129e58a9fcd3507b8408c11dcbd316a5db6ce",
+      "bytes": 26353,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_collection.cu": {
+      "sha256": "6661553325e29444d05a3d1808ffc57eca5c24d41faf636d9ac21c42ecb672bf",
+      "bytes": 12071,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_conic.cu": {
+      "sha256": "3e04dac39a852c44dbe4c7347f4f0157430c719d155cb74c004f9250296555ac",
+      "bytes": 18095,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_discretisation.cu": {
+      "sha256": "b0ab40a5ff6ba4c272e895ae09ce64999ec46eb528593ec3cc5e587cd90d359f",
+      "bytes": 14486,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_joint.cu": {
+      "sha256": "51bf1c995327da59763d84eaae3e89787c2ec606bb1837afebe4781a07d86014",
+      "bytes": 22991,
+      "origin": "current working tree"
+    },
+    "cpp/cuda/src/gtoc12_neighbours.cu": {
+      "sha256": "16a56239682f4f673c863b152743d38ccbd2b4a21363850773ddf699914b78e9",
+      "bytes": 15387,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_qoco.cu": {
+      "sha256": "632a65a11b066fc19b4f015fefb0bf4efb2d40349896dc6097239f25654915e6",
+      "bytes": 37605,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_retime.cu": {
+      "sha256": "c88ea5542e20b755cc6934c7b932130f1543730b6b721099cfc42f6de45a3fc1",
+      "bytes": 39405,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_scvx.cu": {
+      "sha256": "cbc57ee0df683d71ec2d14ded277fc490b642aff5a0093eb38616175c53914bb",
+      "bytes": 37459,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/gtoc12_verification.cu": {
+      "sha256": "d4b3ccb52e7d770f70d9c0ece9481325d2a85ac235d60e0d6927389c2053d8e6",
+      "bytes": 12302,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/native_qoco_adapter.cpp": {
+      "sha256": "6b7abade0300770260b782f01e80878f868023e936767982ea0255a5670f94fe",
+      "bytes": 135505,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/native_qoco_gpu.cu": {
+      "sha256": "4a50b3ed622c9a9669825bdf5994dbe2f68ea498370ffd9984454b090e6675e1",
+      "bytes": 43393,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/orbitweaver_beam.cuh": {
+      "sha256": "de060662ff89fc7f9006f702d6666ff7bde79abc06155c8c6d3e6b10b15ef793",
+      "bytes": 11176,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/orbitweaver_gpu.cu": {
+      "sha256": "65df49574eee085935368af0cbb44c7296ee9924dd74bb5dd88f5ce901bca39c",
+      "bytes": 74388,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/src/persistent_pdhcg.cu": {
+      "sha256": "af2ffcc7d101bb1c9cf5069274c03c52855653d17476675047573539729c5246",
+      "bytes": 206567,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/allocation_lifecycle_test.cu": {
+      "sha256": "e4bf200a3219a230ff18bc682b0b7b73ae2c4e73516881a84fbd9a93ec10d76d",
+      "bytes": 5333,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/cancellation_deadline_test.cu": {
+      "sha256": "9a51719676dd279523f888002bc80deaa3119f656c1c137970222172f416a52f",
+      "bytes": 18075,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/cone_inventory_test.cu": {
+      "sha256": "ee7d293a419b57e58a91f46ec877ea7bfd6fe946f173710bf2fa17a3090e354b",
+      "bytes": 1333,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/cooperative_pdhg_test.cu": {
+      "sha256": "06d58b55b895fee027265c08a222cf905760c06f4ffabe193ac353d426209c1a",
+      "bytes": 17486,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/cuda_conditional_copy_probe.cu": {
+      "sha256": "71f1e32f8235826fa64cd64e1eb2dd1a04083bf22aa76198bbaba7866d919504",
+      "bytes": 4671,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/cuda_test_support.hpp": {
+      "sha256": "6623b3ca99926d46a8b425f9da738fbfca096d5168f4c3c1e4e3580279be48e3",
+      "bytes": 17344,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/device_scvx_integration_test.cu": {
+      "sha256": "c31abd8b87e97d6638ef23f52ac3b9a2add176e701b68d4200b449b7c583f963",
+      "bytes": 257341,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/device_time_dilated_test.cu": {
+      "sha256": "15b5704a9640175c978e77befc620407f3a9bad2459e1421250fb33fa318c504",
+      "bytes": 21660,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/device_variational_test.cu": {
+      "sha256": "36be29f72d9053cc439051899f93b07c59258db240169a243d72fa9c8b151401",
+      "bytes": 15829,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/dlpack_contract_test.cu": {
+      "sha256": "b76f536d16b3b9d328f04b9b0b39101ab2b801e49c63e017825ab2ae046ed09c",
+      "bytes": 11672,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_collection_test.cu": {
+      "sha256": "61d8b13dacbc2bbb7c5fb185ea305884720d01efc049b3f76bb5a22f61ac8db5",
+      "bytes": 3193,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_conic_test.cu": {
+      "sha256": "fab91a86a2eab26dc7c62b2056686ba71ba1f2481e0590f8e55b30398c0157d9",
+      "bytes": 9456,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_device_qualification_test.cu": {
+      "sha256": "7e696dc08cd78bc6f46f513d5f09b4d71cd687719610f495a1810a668e5d0a77",
+      "bytes": 3574,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_device_refresh_test.cu": {
+      "sha256": "8a795ab5a7885565afc7dbbe2fa0c3bc9357dfd2096e7f9581e62c03f689a943",
+      "bytes": 5223,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_discretisation_test.cu": {
+      "sha256": "ef47355286d9ca6e724b265108b0f1407e8874a1a9e84724d47699b6e7368746",
+      "bytes": 8358,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_graph_deadline_test.cu": {
+      "sha256": "56a5552e4742cf17f0fc5505cfd3569eff92ac2b1f79922f7d57b68005fc9a44",
+      "bytes": 3275,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_joint_smoke.cu": {
+      "sha256": "7e0aceea8f77b2b4c8b807f7a26a6c73f94cef37dcec21d7ffee8ce094fb9f4f",
+      "bytes": 5625,
+      "origin": "current working tree"
+    },
+    "cpp/cuda/tests/gtoc12_neighbours_test.cu": {
+      "sha256": "e12018416be6af9fcf5211c7bbef641dcd2249e70509ad8bda7193521a270479",
+      "bytes": 3245,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_outer_graph_test.cu": {
+      "sha256": "38cdc33eba2537da09092d2f118b3c7dad00e1aa52ed785c8347585aa74768b5",
+      "bytes": 11220,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_qoco_guard_test.cu": {
+      "sha256": "3bb59546641a88f994489ef854418a907f258a103efcffeed9b338af0e1a8646",
+      "bytes": 9397,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_qoco_test.cu": {
+      "sha256": "bd8dff671ec44564136f1affa8888fd98cd70a1582c6064c8018e70719312d5f",
+      "bytes": 5293,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_resident_options_test.cu": {
+      "sha256": "e4ee659c4a2ead9e6b0a49c22777feedad9ec6b32ad987a2c0c9d4b50ef8b157",
+      "bytes": 5491,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": {
+      "sha256": "0d30413bd29bf42d147faae7c9758c5020d86a945b0626e3604df1e21a780a73",
+      "bytes": 17485,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_verification_test.cu": {
+      "sha256": "cb956bfec3dc220c7dfb3026acca259322a888e7de2f937834ad27d353d920f0",
+      "bytes": 3235,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_workspace_reuse_test.cu": {
+      "sha256": "502785f1b5956190872365f6c73ebc7a27df7d015e685190e3dc96811ed0fdf6",
+      "bytes": 3019,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/hcw_replay_test.cu": {
+      "sha256": "b6303bf51e2cf00f6adcf39ebd91cfa9dc80651852c69764d1d1c843a88cb7ab",
+      "bytes": 3804,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/native_qoco_conversion_test.cu": {
+      "sha256": "fea7ef005ebb0d0fc388a03627d774a844d442b1fea607bba9e95d9543ff1863",
+      "bytes": 14040,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/numeric_fingerprint_test.cu": {
+      "sha256": "9ceb6397e12c1ece05e3fad2b845ca8f8f64c7dd96cc66f764afed900aaddcb7",
+      "bytes": 4538,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/orbitweaver_beam_test.cu": {
+      "sha256": "78656c102320357ad161c228a6f7e58699f2e707d2679824342bad368ac3cd9f",
+      "bytes": 5330,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/orbitweaver_g3_adapter_test.cu": {
+      "sha256": "7957a17a2f977a7d16ccafd6f7668d910b4300d158b3e6193c65fc0db2aa7eb0",
+      "bytes": 461,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/orbitweaver_gpu_test.cu": {
+      "sha256": "fa4fdfab922bc3abd86be026932f54440723535f2239c8963a0fe0b0ad29c05e",
+      "bytes": 3492,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/orbitweaver_grid_cache_test.cu": {
+      "sha256": "fc68fb94962035943a44486301f3080c5a37517d898f5bd3fced20956ab17f2c",
+      "bytes": 4630,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/orbitweaver_hop_test.cu": {
+      "sha256": "c832f2388bfb201587864ddb7ffc173ff42954c03cdf3981b9befed86cb507d3",
+      "bytes": 4016,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/orbitweaver_options_test.cu": {
+      "sha256": "4a152fa393469cbee827df9f42110e381649f64653d7a6df67afed9af663db48",
+      "bytes": 5410,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/orbitweaver_screening_test.cu": {
+      "sha256": "302e1fd297c7c2afda6abf87dd8bf094427275c15ab1de6583b786ac79d7ffa0",
+      "bytes": 5777,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/persistent_cw_test.cu": {
+      "sha256": "43c8d453eb4031a7fb7d33b0945ad521203818eff0dddf04daba8cc63b12770a",
+      "bytes": 9616,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/persistent_soc_test.cu": {
+      "sha256": "d79076b661a8b5a029fc6f1997c66517702164fb93ef54c11021389e64b090ed",
+      "bytes": 7292,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/pointer_contract_test.cu": {
+      "sha256": "700ba5244d73a0f7ffa78220d71b5ba7c4ee159cdc51e1bf8be8a4a448fb73e7",
+      "bytes": 4269,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_accuracy_probe.cpp": {
+      "sha256": "45276e93ab3eb5e17877be0b174304be2ba5f7922b38b6cdfddc89a9909fafb3",
+      "bytes": 1146,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_best_return_probe.cu": {
+      "sha256": "5760714c886711739d4f2c4086d90c0216183ea6aa198a7dc072561268719c51",
+      "bytes": 2926,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_cudss_conditional_probe.cuh": {
+      "sha256": "f2df3cd242836020b8b514de17320de1e0c5e885c118f848307dfe5cd1dd5a5f",
+      "bytes": 12694,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_device_control_probe.cu": {
+      "sha256": "8e25178d7a59f4d743c8ca49b3ef14da4179ed4ab0f1e0de0f29799682654457",
+      "bytes": 4494,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_device_direction_test.cu": {
+      "sha256": "9aef6e3a6854748ab5dfbdb2617c57ee6007e62e843ab0ae448749a04602baf0",
+      "bytes": 5535,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_device_io_test.cu": {
+      "sha256": "97bd1e0c571accf6a3573aeef80ea1f1476544da420fff5fe2a8452ce703ae7b",
+      "bytes": 4880,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_equilibrated_stopping_test.cu": {
+      "sha256": "dfb00c73febe692944a74b50ac9904f1ac991f575526f9c36d5346c0c5f54009",
+      "bytes": 7929,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_factor_graph_memory.cuh": {
+      "sha256": "ddde581ab2a91065a2dc1565d086d1a8383e0f26ffeaff93e6e9dec56332cfea",
+      "bytes": 2577,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_factor_graph_probe.cuh": {
+      "sha256": "54e3e0b56c38b1c1923f134aef499da03bc8c695c4298e5f8e0260ff596bba98",
+      "bytes": 4981,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_fused_kkt_product_test.cu": {
+      "sha256": "62cb91aa41dbc22538c00e24f77658cc470416cfdfe859b8b638b9df5f2a1fc5",
+      "bytes": 4187,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_audit_test.cu": {
+      "sha256": "04857c445f856a385ec0145db54c0e5d3eb9cf904649d7fd16261f80a8209b3b",
+      "bytes": 17195,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_bound_types_test.cu": {
+      "sha256": "4342cc3dd01f97b812c63412d1702c7167c51771cd0f6565a45eb4a0af762982",
+      "bytes": 2337,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_conversion_test.cu": {
+      "sha256": "02b805948bb0bd4057591bb808fa30290654c29f0ee2235a8a7abf9b86aafc0e",
+      "bytes": 11067,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_kkt_test.cu": {
+      "sha256": "a8969f99c77f1e7ef43c8e885ba5a502097c193a8709eb3019f5dd0c84030eac",
+      "bytes": 2317,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_numeric_update_test.cu": {
+      "sha256": "95bb447fe8028e232be1776cf6b521f71ff0fb6c4c5039e8c17d622c843250b2",
+      "bytes": 11408,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_operators_test.cu": {
+      "sha256": "c9e371e541bf912cc508af5aff4f4c0f6242f3400db5413d3cb4e559d61cbe6d",
+      "bytes": 16886,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_ordering_test.cu": {
+      "sha256": "f1e8f238c4e3382c23b3b64160f604ceba235383230154243fe6558c53b247f8",
+      "bytes": 2927,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_scalar_test.cu": {
+      "sha256": "d3c44efd58fc4237514777641c8c166e64e14a4e69297e58402d62e75d25e8d2",
+      "bytes": 3141,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_step_control_test.cu": {
+      "sha256": "196d4ab355d01200cc4ed1ce7f6276ca3deb7e9d89e6f43997eb12ad4780bce4",
+      "bytes": 12100,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_stopping_test.cu": {
+      "sha256": "a12b89124a28ff0072dafce5e5a99c2c6673b06786dc6cb98bd97cfc9c7da2df",
+      "bytes": 11692,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_gpu_transpose_test.cu": {
+      "sha256": "f81e841e2734dcda5c9c3f8981db2c21a6d04baf2df60f88d2eb3ba835fea06d",
+      "bytes": 8902,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_host_kkt_tracker.cpp": {
+      "sha256": "8862ef1347b5a4833f35a7772d969b030790658ffbd210869ee459622011285f",
+      "bytes": 2525,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_initial_cones_probe.cpp": {
+      "sha256": "85ba146ee6a3fd564f0c79e1145f48694826796e0c7f6195c0999e2874eadf42",
+      "bytes": 6630,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ipm_cache_probe.cpp": {
+      "sha256": "0810e51a7659d26ea533be54badf8c8d651cd62dd1150d76cd64606d92c0fed8",
+      "bytes": 5362,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ipm_replay_probe.cu": {
+      "sha256": "0d2ae0f5b70db0928b226e2bff8e8898c5cea723fdf6b73acb7b019eccbf6d57",
+      "bytes": 6375,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ipm_resources_probe.cpp": {
+      "sha256": "29ce3cc319ffb1784065634a742c478c84b4b3cdb537464d68fa008c8c127d45",
+      "bytes": 2601,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ipm_terminal_probe.cu": {
+      "sha256": "fcec1255ecda55c54228bf1cc03998a2db6e19dfde92bf691c674e4badf40f99",
+      "bytes": 4482,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ir_control_probe.cu": {
+      "sha256": "3a5f2572cd9272d5da3ee21c404a6d5425a7a297fa0ca9ceacb17349f62f4fd8",
+      "bytes": 5868,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ir_nonfinite_graph_probe.cu": {
+      "sha256": "696f9b4ae58039cdc6ee20c0afd26ff411cc4190a36f9b3fa8650a909422fec8",
+      "bytes": 4215,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ir_reuse_probe.cpp": {
+      "sha256": "78517bf66581fff15817b9bbb563e1106fadf8c871ef22b6ed55bf983929e7bf",
+      "bytes": 3556,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_metric_graph_benchmark.cu": {
+      "sha256": "0a83d765c98cc662ac262f35f58c375097b99e253e0b1878d086653ad2872e31",
+      "bytes": 4397,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_metric_graph_parity.cu": {
+      "sha256": "2b12086bf7de3fe84123921efbdf960b2c0bd17a00f66beaf6fdcc34c34ac941",
+      "bytes": 2059,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_numeric_replay_probe.cu": {
+      "sha256": "ae59c583478660028705a7fa748b1298bc4711d87d48ce8014f2d71d9f47ef75",
+      "bytes": 10467,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_outer_graph_probe.cu": {
+      "sha256": "fd70f675ff81707683901444e24de1ab5bdc7ca2f3d5d00b51caa51a4aa04faa",
+      "bytes": 6037,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_outer_numeric_probe.cu": {
+      "sha256": "855cef2e920e2a5efbd91a42da2100fbee2dd0203c6630011a541f12764ebf81",
+      "bytes": 6454,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_pure_soc_probe.cpp": {
+      "sha256": "fff0b18b163d9f1053c77b43510949ebd4d0ebbf8364f9566a31507e2f2ab81b",
+      "bytes": 3046,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_recreate_probe.cpp": {
+      "sha256": "093a84e617439842dbcf6eb0a2eca21e5e3e25d7df3c82ef1f4141c4107793af",
+      "bytes": 717,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_replay_status_test.cu": {
+      "sha256": "59748ce71bc288b23b4852e9bc38f20b47f608c5b122fc72d7724cf070b4077e",
+      "bytes": 2428,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ruiz_sync_test.cu": {
+      "sha256": "8a296998c84160a17c21feb20128e3b030b07d581da9ad7c30b795319b3e4d76",
+      "bytes": 2462,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_ruiz_zero_test.cu": {
+      "sha256": "a5fdbf1bb5a0c53363efe269b5ecca0b03044b643ad1a817302723f5c0ac3480",
+      "bytes": 4644,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_safe_division_test.cu": {
+      "sha256": "fde25d07940b27f0dd7af474bec1e5cd901ffd39302a2c6d2a414f25716b4a7b",
+      "bytes": 1621,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_snapshot_replay.cu": {
+      "sha256": "b24ca9fea93886725caafc4a4c5bb834326ea2d2c94c9d016c6136f632de70fd",
+      "bytes": 7220,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_soc_step_probe.cu": {
+      "sha256": "a54c918f3496063eff2bda2c428d7679c03c3ce4ed12570a0a9ed881293a6863",
+      "bytes": 3245,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_solve_state_test.cu": {
+      "sha256": "1203cf865e6b3a2a12adf3175cfd25007fa3be1ca569bb40fe6461475efc6b18",
+      "bytes": 4041,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_solve_trace_probe.cu": {
+      "sha256": "6ccf7290bd1a6a24fe80869a2536a1183e4e8ce75ea41f55f1dec498e8791b42",
+      "bytes": 2988,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_trajectory_ordering_test.cu": {
+      "sha256": "7ba522fa08cff43ddba7d2bdfb7f3ef491ebb12d58cdbde39544cac592350a50",
+      "bytes": 6595,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_transpose_benchmark.cu": {
+      "sha256": "8cd07737668456d1a90ac829d9caaee18c7c219840df2e72057d7af131ccdf85",
+      "bytes": 3125,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/qoco_vector_arena_test.cu": {
+      "sha256": "cf7c0acb75e160b34736b177fa81b57b75343ea6f8f05b41847bb65324714c7a",
+      "bytes": 4171,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/recovery_test.cu": {
+      "sha256": "279a86dc6c316cd6b79231dddb9ea4fd545b181127172c1ce1ce702ca36c4cd4",
+      "bytes": 20167,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/scvx_cancel_before_solve_probe.cpp": {
+      "sha256": "16a50f4c788a439e6290dcfea2a237556e608397f5ec07a9ef7463a87a6c92cc",
+      "bytes": 1257,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/scvx_gather_benchmark.cu": {
+      "sha256": "b36b32bdba1e73026dbf63dc3dc0c2ea4615cc905d38d7ae149ff413882c5bb4",
+      "bytes": 7683,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/scvx_gather_launch_probe.cpp": {
+      "sha256": "d6d084103afab6c5146d5626f2e66bdfeddef09a1e45106c486ed00d7f63ad72",
+      "bytes": 1045,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/scvx_metrics_test.cu": {
+      "sha256": "98523aa523944b0a3a19ab99be7ed83ab9cee20b07bf6288a84181d7529c2d5f",
+      "bytes": 7240,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/scvx_qoco_failure_timing_probe.cpp": {
+      "sha256": "8286ce4a5914c3f35e1eff454bfbd238f507ed358ac1443bb49de967b72b9a1f",
+      "bytes": 1823,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/stream_lifetime_test.cu": {
+      "sha256": "a66714c79a460b383f2fa3c10f84551e3f8fdf85f33fe1ee05209aafd7711282",
+      "bytes": 3500,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tools/spacepdhcg_plan.cu": {
+      "sha256": "c6fda31cdadde152970ff7f9c28903064e0df4d7c7b707b148784996c35ee4e2",
+      "bytes": 73472,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/CMakeLists.txt": {
+      "sha256": "98a59f84e211659dca9c0755cf423faa4514554500016b3713b2199f4eac95bd",
+      "bytes": 4889,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/include/spacepdhcg/distributed/orbitweaver_g5_adapter.hpp": {
+      "sha256": "6700d04ec2b5274989865165357831442631414b250b0d06167df2a8f3c6d75b",
+      "bytes": 7355,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/include/spacepdhcg/distributed/runtime.hpp": {
+      "sha256": "e51fc10d2a1ca25c8a7054272c9cf0244d72ad38b96ecc53825af8526a7b0e76",
+      "bytes": 25963,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/include/spacepdhcg/distributed/workspace.hpp": {
+      "sha256": "8ce6804de8ffe27e73fc9a9963f8e2ee71687c0a888cad0d42cae71ae5a7b740",
+      "bytes": 3883,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/src/runtime.cu": {
+      "sha256": "189a6df3c20640ba1df453198c19767bac002ec55d4d4c00ebd08739ec5a0671",
+      "bytes": 20999,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/src/workspace.cu": {
+      "sha256": "351f04b7515c42162d483319ae86ab466007c8b99129de78b857a180ecf22fa2",
+      "bytes": 18062,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/tests/logical_rank_test.cpp": {
+      "sha256": "2bc365b1efe54bb21a56080c1a1ac0a6d41b45eb5594b0a1723fb8737c11c622",
+      "bytes": 14167,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/tests/one_rank_runtime_test.cu": {
+      "sha256": "6e920ce067a752ae8f160842ac8c5776c97989272772019b0e8f3e2df423a16b",
+      "bytes": 16555,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/distributed/tools/physical_validation_harness.cu": {
+      "sha256": "021ef267840bc90654f5957b18b2253c2aab532915f401ee6480a8e3e6653641",
+      "bytes": 15034,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/accelerator_c_api.h": {
+      "sha256": "1936e871851394fd5df478a4be69a44f3c052bf18e4f64284043d3fe080284ca",
+      "bytes": 2993,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/backends/dense_admm.hpp": {
+      "sha256": "5717ac2b0b595fbe8e0986b32c7af77f83b75dafbb1fe658b21f8df2592f340a",
+      "bytes": 23144,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/c_api.h": {
+      "sha256": "3448a6f7f24940bd2f6d5fadf08ee4b09ef33e6d61314fa7ef480ab95646bec7",
+      "bytes": 15715,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/core/accelerator_view.hpp": {
+      "sha256": "01861f6325d46f8bb56e8d700cbeb08dcb6c826be5ddee96d4809bfea7d7d3cd",
+      "bytes": 13591,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/core/checkpoint.hpp": {
+      "sha256": "bd9e03ec9930b7008b049a28a6a30e123f973b2a27bc973fdf2796f62488af85",
+      "bytes": 8309,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/core/fixed_cqp.hpp": {
+      "sha256": "10f7852032c12474218b41c811c40f4af5229e015cd6026e8979d426e5c19413",
+      "bytes": 14218,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/core/host_backend.hpp": {
+      "sha256": "579d1e75200f8eccd30fc80fba04be224441c209cc0f71635f399bbcd1ef5cdb",
+      "bytes": 1875,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/core/persistent_session.hpp": {
+      "sha256": "865f3c3eb1b48e71e3ddcf0bce490f4608d34d1bf0d638595178697b5b2f0d29",
+      "bytes": 7607,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/core/scaling_reuse.hpp": {
+      "sha256": "e0179ba2a1181c37f3b10ed92b0717808330bd436c5ef24f3d429b426acddeba",
+      "bytes": 4912,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/distributed/risk.hpp": {
+      "sha256": "2a4981e2c71bbbf4265b4ad1eafd813262c3d1e66ee1f33c213931129cd1a102",
+      "bytes": 3502,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/distributed/risk_cqp.hpp": {
+      "sha256": "9ef33cfb41a9244aed83b631d2a6f5ff1bd9856b96956ffa4a2740f214e2e7a8",
+      "bytes": 24097,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/distributed/scenario_cqp.hpp": {
+      "sha256": "83edcad73fd0ca7fd458543d11f86c5d5e2a07c4a0db788b1ee53e1c2bd20208",
+      "bytes": 25621,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/distributed/scenario_layout.hpp": {
+      "sha256": "8f6a83baabe3a7fc85bb4697bbbb819b5b754ddb0556d48b9047594b0b0c82ec",
+      "bytes": 18010,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/dlpack_adapter.hpp": {
+      "sha256": "e45e39c1b3e1ceb90783bc58e93da8e49c087d40fa67aea89aafa9afd3219fc8",
+      "bytes": 5223,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/dynamics/continuous_check.hpp": {
+      "sha256": "72ca57969bb20c753293e8f126a12c5b51dbb3111bd30b7028970539e060c8b8",
+      "bytes": 2752,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/dynamics/hcw.hpp": {
+      "sha256": "8b908ab9303257b97f92cdb6ee2fd950773c6c538edec825b7635fb39126d121",
+      "bytes": 3315,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/dynamics/low_thrust_two_body.hpp": {
+      "sha256": "b6cfff8890e99041c1e0da3e9a003f3ee5d5a02201a2ec92549098f0a0ca6f89",
+      "bytes": 12604,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/dynamics/powered_descent_3dof.hpp": {
+      "sha256": "bbd97178b5f29f642843897b9b2b0c8cc94371888e820e08609928000cd81b6a",
+      "bytes": 15097,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/dynamics/powered_descent_6dof.hpp": {
+      "sha256": "c483ab33c885290f8762771b4a5cb2ce52639bb0317652cd4e367b46449525a4",
+      "bytes": 21633,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/dynamics/powered_descent_6dof_variational.hpp": {
+      "sha256": "925bdd5cae46d96cfe9065dcb2b3c11ea8995c57f770eeb563bcdeb49d8ee672",
+      "bytes": 2758,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/beam_search.hpp": {
+      "sha256": "be4118966a24805d4de94efb0fc6857624ca66c7e81bfa12beeea012c4a46224",
+      "bytes": 6082,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/column_generation.hpp": {
+      "sha256": "57804b5e8ae94c5eeea4c0a77864f5712f2546ca8f136be5c28596aed3ad1285",
+      "bytes": 8253,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/dynamic_discretisation.hpp": {
+      "sha256": "27930ba494d30770be4d0e6e2f971da510f27fd1c66ae1f1f941088dec0e1321",
+      "bytes": 11840,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/g7_orchestration.hpp": {
+      "sha256": "87a228a7574770bca0ac972d5983c9810e29f22efb4e4cc5d167225035207ee8",
+      "bytes": 21685,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/high_fidelity_certification.hpp": {
+      "sha256": "5c5755f6d9f0dd6ad5633292dd0644f9c4c5643770cd5e9cc3dd8e31784c3487",
+      "bytes": 20348,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/host_cqp_oracle.hpp": {
+      "sha256": "4efd5a842d86a5e754013f53a0ccb5181adf74d8060860041d5b847777a43176",
+      "bytes": 5513,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/lambert.hpp": {
+      "sha256": "367d0eabdf6004ccef5b840666218580d9fdd277feb36e4574286fa776b27f1a",
+      "bytes": 12838,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/lambert_family.hpp": {
+      "sha256": "ed71530126b2f6c26635b1f6ac2a7ea47713abbc6b584048030b5c89ff774ca4",
+      "bytes": 15172,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/lambert_oracle.hpp": {
+      "sha256": "8073f5ea0214c84efb069bd32bf3c96ebebe19d0e8baae5caa2169331858195d",
+      "bytes": 9512,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/low_thrust_oracle.hpp": {
+      "sha256": "fd7379927520d322b8c2c369e660ee4f867276603c80032299ee2009be0182b5",
+      "bytes": 24202,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/low_thrust_screening.hpp": {
+      "sha256": "3245d030ccd22697b298f6e7704b98100efb47b9d71a44e86261a21a772cf575",
+      "bytes": 3144,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/restricted_master_lp.hpp": {
+      "sha256": "575f307b35132547e72e2cba9a9f150b80f847354cd9f1cc4fd0cb7445a6c213",
+      "bytes": 19517,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/robust_low_thrust_oracle.hpp": {
+      "sha256": "68e80fe6fbb841f341f1d1b368761b1550070626748acb27548e8f4d82adba57",
+      "bytes": 9560,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/route_master.hpp": {
+      "sha256": "761cfdd38e5416d217466f3b92b5923621dc692f7b1b732b96ce0ba5fe2edca3",
+      "bytes": 13396,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/time_expanded_graph.hpp": {
+      "sha256": "8b0d55fbc93e5733268501ed1dbeb213f01e3bb7e2906b0a5f94506404390804",
+      "bytes": 13045,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/orbitweaver/trajectory_oracle.hpp": {
+      "sha256": "27296326350f6ba36c2add8450ab22f983105efac7faf246fad40ead6f5f0e13",
+      "bytes": 10949,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/persistent_cqp.hpp": {
+      "sha256": "7f67961f656dd9e4d1878c56308e30acd78b15b57e22cf03c3348ad0bb5190bb",
+      "bytes": 7272,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/planner/describe.hpp": {
+      "sha256": "09c64a52aa43524317164c0307bd4b40f8079211a0b4bce8b3b830e11d4b4a28",
+      "bytes": 10427,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/planner/families.hpp": {
+      "sha256": "d7b9d6e087a33c93d46fef896793627ebd34551d00267e0a06a178325e7bef41",
+      "bytes": 58457,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/planner/json.hpp": {
+      "sha256": "cbcfb22eea7fb9dfd0621e70b753fe633153945120fa1e7eb6fda91ff38cf4a4",
+      "bytes": 24748,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/planner/problem.hpp": {
+      "sha256": "7c8465fc51f45b887ccc27b912765fe809ac54fa8f447477e239998ce68deca4",
+      "bytes": 51014,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/scvx/g4_policy.generated.hpp": {
+      "sha256": "a405cdef14c238ce7766f77a10519710e8f130cf545ae8cab899a4eba9ba726b",
+      "bytes": 1855,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/scvx/low_thrust_benchmark.hpp": {
+      "sha256": "6197c9ec415a0d5659dd29182dfdd3d00af7ae4d54a0891b8246c1462bcfa593",
+      "bytes": 4872,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/scvx/low_thrust_driver.hpp": {
+      "sha256": "8c33a80e0a82f8d861a576dc23ab46eaedb4f519563389506f3d5f8639ffc3ed",
+      "bytes": 34026,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/scvx/policies.hpp": {
+      "sha256": "aad428fd3ca5d0969b8e936ab5affe43f55e0ca130c44a0dab6ce812fa3eeb55",
+      "bytes": 15715,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/scvx/powered_descent_3dof_driver.hpp": {
+      "sha256": "a47387d78913d1b92d67a34687b14287857d81096a21e43ffc7bed8e5a784b8d",
+      "bytes": 31669,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/scvx/robust_low_thrust_driver.hpp": {
+      "sha256": "b8363b92ed423d2fbe9332f6db342dbf1d1e29b616717f18a65be02297435458",
+      "bytes": 48262,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/ct_sampling.hpp": {
+      "sha256": "f0f04933dc726a3805168da92b44e39d20d5a47f6885edd3b97945452612f970",
+      "bytes": 17720,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/ct_violation_state.hpp": {
+      "sha256": "5d1c626124daf62e4986fbe825d6714c670e16bc8313004628cb51ab68c77259",
+      "bytes": 27450,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/discrete_flow_linearisation.hpp": {
+      "sha256": "405b63865b9111655a15039d6cb06f1e2e9668ec7ffc490994794af8a0353ffc",
+      "bytes": 8334,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/discretisation.hpp": {
+      "sha256": "6a39fa2cc0e5dff2330ff0b9d250fb1bd475bc366d6c2166e0dd93d74f3c6bce",
+      "bytes": 1041,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/free_time_common.hpp": {
+      "sha256": "e5bbbb94f2789c7eb682bc5991c8975646dfaf085fb0d55ba45d43a7ad261908",
+      "bytes": 6099,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/hcw_rendezvous.hpp": {
+      "sha256": "e1725f9457d15197a5aedb34bac396b68eab2a62cf9fcabdf47ce68374d434a2",
+      "bytes": 24531,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/linearisation_types.hpp": {
+      "sha256": "075c53eff55870b1a4b5395d1e598581e157ee061e40e9f51d6b116bb0886456",
+      "bytes": 424,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/low_thrust.hpp": {
+      "sha256": "a69bcd0ca17d6e6e38bc6bc3e809585b0b94421e18c506d460525070e154c3f9",
+      "bytes": 38008,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/powered_descent_3dof.hpp": {
+      "sha256": "ec239928a821f7e768efacdde386f3c3532af3f9abb6198e78ebc69a2fbc12a1",
+      "bytes": 43868,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/powered_descent_3dof_free_time.hpp": {
+      "sha256": "62c4300f0a374c258c3e25e06b58e3b768045fef537e875fca592efea6d9a7f9",
+      "bytes": 35766,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/powered_descent_6dof.hpp": {
+      "sha256": "271decaba2ff0b75f6507084e1f5b8e9c183725687d887ecfd20330d82bc0a05",
+      "bytes": 44117,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/powered_descent_6dof_free_time.hpp": {
+      "sha256": "b3ec65346909f48d2b5dae98a1a76cf63c6131f9b6b16d87d097dbb22ac9a93c",
+      "bytes": 49254,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/time_dilated_flow_linearisation.hpp": {
+      "sha256": "0afe52a2dbf9c43fda30abe3082c8cef7398a716c6e84707be0178722d8a20cc",
+      "bytes": 17017,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/include/spacepdhcg/transcription/variational_rk4.hpp": {
+      "sha256": "c58003ad3d63a44e986c4ec4fcb89fa45bb56c67478e4ade4d9cd68281a1fe62",
+      "bytes": 10561,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/CMakeLists.txt": {
+      "sha256": "0ea601cc00ff713032ae9f185b1fdf06a898b37141597359036f75d50f8fc86e",
+      "bytes": 4286,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/backend.hpp": {
+      "sha256": "17e2dc9d4c0c6b21467e2dfd41cc9f9d0c4da2987138e0c0557c8c37784618e2",
+      "bytes": 2104,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/cqp.hpp": {
+      "sha256": "c1b98efecb28ec41972996c5e27bfdc690ba434367430ebf19daf8cec1484158",
+      "bytes": 16206,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/cw.hpp": {
+      "sha256": "70eb572616227c1b71529fcf39a06a49f3f896fa6e2fcae8db3b38d757a46159",
+      "bytes": 1346,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/cw_problem.hpp": {
+      "sha256": "80c47892d2d97b17dfff7cdfe2180b9cfa73e544033224ae64f1ef097d92ff54",
+      "bytes": 3044,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/persistent_session.hpp": {
+      "sha256": "10b2beac432dd8e9382fa0ce100e20de43f802af673c5e5a8789f643f928f22c",
+      "bytes": 1938,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/powered_descent_3dof.hpp": {
+      "sha256": "33a2f11b50c1f749375a2658786bd923e44357a7eb317a71e110ec8d50406632",
+      "bytes": 4234,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/powered_descent_6dof.hpp": {
+      "sha256": "1d3152fc19d69173761c5ddb20722b287598f3457753383be60833c9bc6a6ad9",
+      "bytes": 4026,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/powered_descent_cqp.hpp": {
+      "sha256": "ca707e67b7115b14d20ed4a7940b6d8c989467bed982ceb478ac4e1d957db139",
+      "bytes": 5078,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/powered_descent_scvx.hpp": {
+      "sha256": "03f68c20c9f2998e171087787c9a026eb890f958c179eafbabf858425b6fc2ae",
+      "bytes": 3563,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/robust_cqp.hpp": {
+      "sha256": "50396c7b470187a7ca579f6a891d27724e704522c25318d458e9ac032eac4c20",
+      "bytes": 2691,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/scenario_partition.hpp": {
+      "sha256": "a2ef08f79826bec2ef4b3c2b638b18e9039d76ed300b6309144aab9b281c4c08",
+      "bytes": 5202,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/scenario_tree.hpp": {
+      "sha256": "108efcde168be37d8f6c12c0a8e201c5ac7de6d1fe5dbeb5e20645067f991a77",
+      "bytes": 3871,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native/scvx_policy.hpp": {
+      "sha256": "7e78ab584031054d687bd53aa7d0992653bdac649e71a5b616f798349905520b",
+      "bytes": 10913,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/include/spacepdhcg/native_c_api.h": {
+      "sha256": "f673b062135daa6b474aac4475dd15a47fdeeb217170b15c42f8110adbac11b6",
+      "bytes": 1054,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/backend.cpp": {
+      "sha256": "1bf7e125cec656377bfcb8ea86f02b5445c6a6226c780626bb693bc25058ef9c",
+      "bytes": 1094,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/cw.cpp": {
+      "sha256": "c7f0b55ff27ebe8c66314d476fbe2e176ce8425f0a1282d6cf9aec5d6eaf6321",
+      "bytes": 6399,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/cw_problem.cpp": {
+      "sha256": "6d7be7f4d97fd0f954850a8ab7b39eaf38e0f791f5f70235d9b319c046a5ead1",
+      "bytes": 15574,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/native_c_api.cpp": {
+      "sha256": "8dec55162460c02db05fc7658a7cf83bbc8c32a0613f3aa42678de77dce5e5dd",
+      "bytes": 1981,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/persistent_session.cpp": {
+      "sha256": "a651effca8dcc321a486859a34452909dad77d33ed8345d7f207b10f747dc8f4",
+      "bytes": 4969,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/powered_descent_3dof.cpp": {
+      "sha256": "e02f4ffe0e20b5cbe4bac0f4f1722cca72506851d66b01ab5bed14a84d9b9514",
+      "bytes": 12243,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/powered_descent_6dof.cpp": {
+      "sha256": "f20906a9192e3dbc7f1e0931a2d51172b064db772efbea51baf6fa917a60349d",
+      "bytes": 19787,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/powered_descent_cqp.cpp": {
+      "sha256": "06a2fc0185fa0e896632e79d6e0d3086e3b490a8e144310e15ef0b44218e45b0",
+      "bytes": 33526,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/powered_descent_scvx.cpp": {
+      "sha256": "c03715a5c4dbbe5e56804fa14d159117dd1a8342091e686f4cb9f4e20e566d3e",
+      "bytes": 24816,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/robust_cqp.cpp": {
+      "sha256": "94f545e4c5774e5b5662ed24ddeaf1f1f893b9f280234707f687a100589c7114",
+      "bytes": 25158,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/src/scenario_tree.cpp": {
+      "sha256": "9196a4f878d357b2054cfaf0775a28d76fc868d443d225c0162897515f97f37d",
+      "bytes": 12452,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/native_core_smoke.cpp": {
+      "sha256": "739fb90ce5ad1effde0fede954f616159a3715ad9719ebc9ddab511071f5ca26",
+      "bytes": 7898,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/persistent_session_smoke.cpp": {
+      "sha256": "42a589fb7e9399a4c2ec248e38c532e73e808ca25957999fe6a3a513bf473042",
+      "bytes": 4767,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/powered_descent_6dof_smoke.cpp": {
+      "sha256": "701f0478021e5af22ad1478955a0bd3a43187c0b7cc6206965733f59bdb6b3c2",
+      "bytes": 5022,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/powered_descent_cqp_smoke.cpp": {
+      "sha256": "b43f72cd423591c0d669b2ed6f5bf9087358fc0bd4db0fb10337bebf89152a67",
+      "bytes": 4545,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/powered_descent_scvx_smoke.cpp": {
+      "sha256": "36e952c4d706caee167b02dc4452e6b399affad6d1206ed61b1436626d1a8c44",
+      "bytes": 6072,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/powered_descent_smoke.cpp": {
+      "sha256": "8fe55eb90ee1b2c3ec94a6140280609adf64ae074d94e3a7a4c1a056106318df",
+      "bytes": 6585,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/robust_cqp_smoke.cpp": {
+      "sha256": "a56923ed0187912a6bb3ab9349c0cd3a61bf0538e665f3a8c528432252e0c0e2",
+      "bytes": 6160,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/native/tests/scenario_tree_smoke.cpp": {
+      "sha256": "7181680bacf720fe6bd558cf39a1475922181d06570810b4c189e3e57d70e758",
+      "bytes": 3131,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/package-smoke/CMakeLists.txt": {
+      "sha256": "56fcc9050bf1c74e6cc70a78cf6f0f63347dc8b1913e777d687ebd9cce3117dd",
+      "bytes": 473,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/package-smoke/main.cpp": {
+      "sha256": "eb5961da756af44e89c757c5dc013a936449228197fc0443bbff179c5d4fd396",
+      "bytes": 674,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/src/c_api.cpp": {
+      "sha256": "86b5a9f92789e899684cf984fcf94cb47fb06b76d488b980d83625162e870e0f",
+      "bytes": 49911,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/accelerator_view_property_smoke.cpp": {
+      "sha256": "6536c3603ba6359c355432c2ab5a00bcc27c8367312626ab41d390c4373ac178",
+      "bytes": 8894,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/beam_search_smoke.cpp": {
+      "sha256": "c5357ac4cca6f0563c96f9d90b6536d406a759e3e8664d9cfe80ad5e1d7e690e",
+      "bytes": 1581,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/column_generation_smoke.cpp": {
+      "sha256": "864ca16d779244782262b75f76f11a531c1b73594299143dd55eb0a695d77977",
+      "bytes": 2525,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/continuous_check_smoke.cpp": {
+      "sha256": "e0cd819283e2474866734abfb8c9df6e532fe80704d604e39560b4fa1fb3b368",
+      "bytes": 3569,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/ct_sampling_smoke.cpp": {
+      "sha256": "8d2b539f3b96d599b206965a2b0a994f5faf4083becf6e81d7cab99c2c67323e",
+      "bytes": 4442,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/ct_violation_state_smoke.cpp": {
+      "sha256": "59a8755956e7347aeb725a5de9f98976b26c01db10d3930b1c58dc8559de9a7a",
+      "bytes": 2865,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/dense_admm_smoke.cpp": {
+      "sha256": "c7adc72799b141ba7895b597fa71350fb81976ebf7397107108828a890688126",
+      "bytes": 3207,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/dlpack_optional_smoke.cpp": {
+      "sha256": "bef6b01714a35f2f65e4b42c00d78c27402f8b0cadeefcddef732f1ea00a3932",
+      "bytes": 148,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/dynamic_discretisation_smoke.cpp": {
+      "sha256": "f4096723de431d9e013a7fd2d4ed90ab57b82f5e283e684559e59e6ae60b74c9",
+      "bytes": 1915,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/fixed_cqp_smoke.cpp": {
+      "sha256": "379219836326b444004ff198821b2e874bea624be0af2b33a214ef35c48cd9cf",
+      "bytes": 1640,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/hcw_rendezvous_smoke.cpp": {
+      "sha256": "a99c210bee7b90a7a9fcb51ce09eebdfbdb15ccabe2545d9f59b0902083c81b6",
+      "bytes": 4411,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/high_fidelity_certification_smoke.cpp": {
+      "sha256": "5b9361134d4313e522f8b46eafc08e4c6332bdbcaa87ddb4e3c3d247cf7c85c4",
+      "bytes": 3081,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/higher_order_transcription_smoke.cpp": {
+      "sha256": "e12b4792baa3dd28c1e35f3a6f1bde0a5cc4a485d13791679da191dd8552d475",
+      "bytes": 6166,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/host_cqp_oracle_smoke.cpp": {
+      "sha256": "e96079494e48606160e19fc4147a7241eb8c452bc46d1e3b634cf89d62d1243e",
+      "bytes": 4931,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/interface_smoke.cpp": {
+      "sha256": "1262a94b49b9d6f38cd08324ba430e207642408ae528e19e4c3a7576e22d8bd4",
+      "bytes": 1349,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/lambert_family_oracle_smoke.cpp": {
+      "sha256": "73568c481afd111a70db3dfc844282a9b48f28566db7d1c90bec1297fe0eb3a6",
+      "bytes": 2723,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/lambert_family_smoke.cpp": {
+      "sha256": "d78819be96cd05048526207d7d104321f08561fe539204b0d758dbaac5eed83d",
+      "bytes": 3175,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/lambert_oracle_smoke.cpp": {
+      "sha256": "a7188981151fec4c9518e4ed2b4d3ab11f3337b0831651824691954f2f94b05a",
+      "bytes": 2654,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/lambert_smoke.cpp": {
+      "sha256": "b65f26ed8caa0b960487db6571a61f6d8834a78078519161473d5d97a424358f",
+      "bytes": 1627,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/low_thrust_driver_smoke.cpp": {
+      "sha256": "cd7e04de3975fa337029d36136c045a2708531d8c7548ed000b4acedb88aaf37",
+      "bytes": 12570,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/low_thrust_oracle_smoke.cpp": {
+      "sha256": "d8cdba755d86e195367865ddac22acde6d20c3e69159c99c9b69d08ee259c9c4",
+      "bytes": 8242,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/low_thrust_smoke.cpp": {
+      "sha256": "562e1e061966e12d02c05edd9f9e58a7a558552c6e103d864119b50b1b3ac52a",
+      "bytes": 4353,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/orbitweaver_g7_c_api_smoke.cpp": {
+      "sha256": "e40a13f508b72af2f0d644ac79217f3aaee34e10069b076dae857fbe23e974f6",
+      "bytes": 1161,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/orbitweaver_g7_smoke.cpp": {
+      "sha256": "260e1003c8649b8de598578e1c972389bc796c870d949a15f3e7b27b20dba5a1",
+      "bytes": 3975,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/persistent_session_smoke.cpp": {
+      "sha256": "a99ea15ec992d14c9df8f5645c91a896e12505df0706d5f6b2365487143ad9cc",
+      "bytes": 9199,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/planner_c_api_smoke.cpp": {
+      "sha256": "497384fd96678709565dd00683fdbce0776a7415ec081a4c8c1a8039f371df4e",
+      "bytes": 7824,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/planner_problem_smoke.cpp": {
+      "sha256": "92ec02d9dd0f899b3253933db13c35a008bfce93745240ab0a7b0c7a9bfc0714",
+      "bytes": 9857,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/powered_descent_6dof_smoke.cpp": {
+      "sha256": "542cc7177a40b76df882738841338fc88fb6799b4c1ec642e4a8fa0dbdd7fc6b",
+      "bytes": 6231,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/powered_descent_6dof_transcription_smoke.cpp": {
+      "sha256": "e769a6fcc7e3555461680c019b268d118aea1a8503c40785e14affc2f3b4b431",
+      "bytes": 7810,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/powered_descent_driver_smoke.cpp": {
+      "sha256": "5998618d4b45bc71b06bdc7ffbf3ea8e3c8aa3f0b4c7ee1b2f7f08a52bd6071e",
+      "bytes": 5951,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/powered_descent_free_time_transcription_smoke.cpp": {
+      "sha256": "244f997f20eb37638ced48c97c23af2cab0277cff56b48ae900d912ba786f868",
+      "bytes": 13382,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/powered_descent_smoke.cpp": {
+      "sha256": "c0da6a028190d65fa1a9a370bbbf157bff386aabdde3a27898b96cb6bc9904d3",
+      "bytes": 3827,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/powered_descent_transcription_smoke.cpp": {
+      "sha256": "83ba9ab4999335c49ec803bf2abe07bce861e5888ebb99792140650f2783ffbe",
+      "bytes": 2451,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/restricted_master_lp_smoke.cpp": {
+      "sha256": "3227b1bb9fd67d1f64bb60ae6031ed8bb8843b5419c26f8a881601e4d9c8c3cd",
+      "bytes": 2628,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/risk_cqp_smoke.cpp": {
+      "sha256": "ac66a08623a448cf481ee61fe1bcf0e9ae2d68737f6e6eaa6be02bfeb6c86220",
+      "bytes": 4059,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/robust_6dof_smoke.cpp": {
+      "sha256": "1071d8cd3ca9ebcd7ef997e641d20031e8fc00888328ce5a7ee58e99d08f9e6e",
+      "bytes": 4227,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/robust_low_thrust_driver_smoke.cpp": {
+      "sha256": "4d960b900650d5dde046a20148ecb8834546115f23d6d36fdb1ef65bda9b4415",
+      "bytes": 7194,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/robust_low_thrust_oracle_smoke.cpp": {
+      "sha256": "406a7fa2cc12a5784d69171cffa57480ef9c142171d6c4e6d3b322f618026476",
+      "bytes": 6758,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/route_master_smoke.cpp": {
+      "sha256": "847f0187ce8ff5139b7cdcd7137b0bbab46e68509f3f53b70fa2d9c3897d6cff",
+      "bytes": 2154,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/scenario_cqp_smoke.cpp": {
+      "sha256": "d3a4e7d758c9c2786542e93e4e38788f572f0a54ac4087d7470bf258d74bf7f3",
+      "bytes": 4006,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/scenario_layout_smoke.cpp": {
+      "sha256": "dddb31bdda3fb2085c5993c4687dd99a31b7e0030c95a7fafa439745057a6dea",
+      "bytes": 1462,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/scvx_policy_smoke.cpp": {
+      "sha256": "8e2eefdd2ad0cb6cf8ae57587a3d7860ca49493f40c74c59ee12a2bf6e1fafc1",
+      "bytes": 2645,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/time_dilated_flow_include_order_smoke.cpp": {
+      "sha256": "d7edcf4e1c6aa553190fde7df339f1dd9913077da9d0f8c7f9bedc9995080afe",
+      "bytes": 8064,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/time_dilated_flow_smoke.cpp": {
+      "sha256": "cc78c9be03106b80d3ff682752bf54a365795cba8890ae9deb07ee21b9f1c7cf",
+      "bytes": 9422,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/time_expanded_graph_smoke.cpp": {
+      "sha256": "06046693b32650deeb00ef38981b8d7cac3e320f6bb7716d50a312b2606b6325",
+      "bytes": 2473,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/trajectory_oracle_smoke.cpp": {
+      "sha256": "4fa9217fb80a0453a6454317b9e370b47d61fb9b77b67651ee47d9059f7eece4",
+      "bytes": 4750,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/variational_rk4_property_smoke.cpp": {
+      "sha256": "0b01e59a8b2748953998adbf243183684001e09ba76106d01b8f3cb4a0745ea5",
+      "bytes": 11910,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tests/variational_rk4_smoke.cpp": {
+      "sha256": "966c566c9da9914cf327a73192f1ce21f4d0adf4c59cc28a69783431c6d2e71a",
+      "bytes": 3178,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tools/cpu_reference_emitter.cpp": {
+      "sha256": "99733881b78ee53bbccff11e30c2fef93865e5e3eae9366216834e9754c7bc0a",
+      "bytes": 10143,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tools/parity_probe.cpp": {
+      "sha256": "2c3ac84dd916ab1d78e9a8da1e9689503afc73eb62fda77fc2aacfdb492ef21b",
+      "bytes": 4498,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/tools/trajectory_history_emitter.cpp": {
+      "sha256": "9e47b05fab88dbc8b301514fbd71fb8884b7d51bec30f727d9af29054c88658a",
+      "bytes": 15048,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "incumbent-sources/ship-01.json": {
+      "sha256": "bbfe9885b9637642f9179bebf5be2aae99e187f9b94d87c84a439b684d5fbfc8",
+      "bytes": 16620,
+      "origin": "incumbent source artifact"
+    },
+    "incumbent-sources/ship-02.json": {
+      "sha256": "1b8f84cf32a5a7f9fe0f9bd2fcbf9067a269b457600d40262f98f1993a32c341",
+      "bytes": 14134,
+      "origin": "incumbent source artifact"
+    },
+    "pyproject.toml": {
+      "sha256": "41ea3df02ac9012b485a27cd4cb065eda305cef92e1e940a00a793d172cda7b0",
+      "bytes": 2514,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "src/spacepdhcg/__init__.py": {
+      "sha256": "54ac6174df698b00dce7c65a8fd6b1f54979e7409f0472c85ab5a6424a3c622b",
+      "bytes": 526,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/__main__.py": {
+      "sha256": "9aba4063198a56a956da3acf370a49e0c53c9a2014a1770a9adb84e7c33898fc",
+      "bytes": 61,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/README.md": {
+      "sha256": "aab567b3b2332d9f90fdcd738b5e06a1ea62d8f5ef62f86811af8c1df7bf5552",
+      "bytes": 748,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/campaign_scopes/full-multi-gpu-v1.json": {
+      "sha256": "9e6611077172dfb3c4279dc8616fef706daf9f8cd876cc483b354382de054583",
+      "bytes": 831,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/campaign_scopes/single-gpu-v1.json": {
+      "sha256": "17a3504b4ae65a9df4906b42143d208783a4a8fd792e5245ce1e90ce00724129",
+      "bytes": 2665,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/g4_applicability.json": {
+      "sha256": "c5451cdc115bd1f3d2ac681c2b462763ab627af63c4a7d89d9b7a4e3a6407c8f",
+      "bytes": 9115,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/g4_applicability.sha256": {
+      "sha256": "23f142eedba85553ef0498cb16529e9d8b0943c95db1082ca43dbf3902e60d87",
+      "bytes": 89,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/g4_h5_h6_claim_core.json": {
+      "sha256": "aee7bd10a80c6c688d96cde9e029f61f422e8372fadcdba69507792e7df38703",
+      "bytes": 2733,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/g4_h5_h6_claim_core.sha256": {
+      "sha256": "6616e2cde0b345ea0c787661db4c44da7b38b7f270d937a6a1ba5bc3838cf070",
+      "bytes": 92,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/g4_policy.json": {
+      "sha256": "9ab3b444e3dd21fdd2a75c3cebfe8fd8374f9e5ff672cd757afaeb6036530024",
+      "bytes": 7080,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/g4_policy.sha256": {
+      "sha256": "a8f4ae2361977ec41d6cefb5ee5dde5e27676dafe5fc4b51ede3f3bc3142ea3f",
+      "bytes": 82,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/gtoc12/gtoc12_rules.json": {
+      "sha256": "44bd365632c3818cec55cfe218affef89b264c300601dbbcb278117d8c92df86",
+      "bytes": 3874,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/gtoc12/pins.json": {
+      "sha256": "c7cf9aceeaa0930634e63a30e4204c16056655b025ecc344461f184da5eee88b",
+      "bytes": 7020,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/gtoc12/reduced_instance_v1.json": {
+      "sha256": "b7bde29f58fe5deae6ad79581fc9574e5f8e1417d3846173b160072a5e4f081d",
+      "bytes": 1687,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/gtoc12/reference_reproductions.json": {
+      "sha256": "2f4415e5da67d70e176cee07a242a2aed4799837a8a759588ba8488fcab9c487",
+      "bytes": 5698,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/chari_2024_initial_positions.json": {
+      "sha256": "265089acbaf66717a3051eaec2ed35dcbb8c880269af74e90bc805829edb5ce9",
+      "bytes": 30805,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/external_sources.json": {
+      "sha256": "313203c857626433e68d4ba6ae4bf922e0bd6ac26cdc0096ca5c482c6942603f",
+      "bytes": 16664,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/gtoc_reduced_subsets.json": {
+      "sha256": "1ad17536bf8ea10354672bda94e51270f1e7695c9cdce09f0dffeeb2bba86fb5",
+      "bytes": 7138,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/acikmese-ploen-2007-pd3.json": {
+      "sha256": "5b0341e5eb4271e21ca50132f8e8ff81bd22eb821581b0db048ee922cac2e12e",
+      "bytes": 1812,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/blackmore-2010-pd3-case1.json": {
+      "sha256": "7c18bbc218e76d31dc914a5821076f42112b4b8ab764864bf5374ea3a174a3f0",
+      "bytes": 1687,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/chari-2024-pd6-monte-carlo.json": {
+      "sha256": "bb0dac658a979c4a639eebe5a38138381b61b47a44730c37e85edcaafaefe3fb",
+      "bytes": 1383,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/esa-tops-2026.json": {
+      "sha256": "2dfacac242b67f9ea666fc60eced7eff5c311383574391e8194680938dea734f",
+      "bytes": 1675,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/gtoc12-official-verifier.json": {
+      "sha256": "7352c8d2af3d9313403b2865584daa2796a6c4aeb17f84ba8204730180d139d0",
+      "bytes": 846,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/gtoc5-data-pin.json": {
+      "sha256": "77669922cae471e10c526ca632e942be173d54710497df97952e8270a2dadcdf",
+      "bytes": 584,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/gtoc9-example-validation.json": {
+      "sha256": "2058b0e0796d55affad6fc342a36a5615bf717c3928d0935dcdf084c69c0553c",
+      "bytes": 780,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/gtopx-2021.json": {
+      "sha256": "0f78d2185d65902de6d47186b418079dbad4b8ff4085a5513ff87ae020c22cb4",
+      "bytes": 920,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/szmuk-acikmese-2018-pd6-2d.json": {
+      "sha256": "7cd88a0d2b594e38408ad82b85b11e533cfecd672e79f49a95223692df5f4389",
+      "bytes": 2114,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/tafazzol-taheri-earth-dionysus.json": {
+      "sha256": "4cd888471f784ca97743fb390c37fd02f3cd084572f13202cd269d80d3489a6f",
+      "bytes": 1725,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/profiles/tafazzol-taheri-earth-mars.json": {
+      "sha256": "433396899e298b0eaf36cb2e93712764c814ab30b741046e1ecc94f513ebf420",
+      "bytes": 1267,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/provenance.json": {
+      "sha256": "3f41aba6e33b95a4d8381a078429b6a8fde52b6695ea987d003f44f1e539e3df",
+      "bytes": 115634,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/targets.json": {
+      "sha256": "048a04be6e7e7e4f1e835692f13c967578b3893df1d0af0b9e0916a959ad5325",
+      "bytes": 7746,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature/tops_selection.json": {
+      "sha256": "bd8e5914c77295739abe68fcbf1367ce00fe72083801d8862deb8ecb57cc52af",
+      "bytes": 14443,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/literature_baselines.json": {
+      "sha256": "e712fd5b73feda7bbb70f777801efec994a31a5c8d348ff4c24f2c11eb8487f5",
+      "bytes": 11559,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/paper1_matrix.json": {
+      "sha256": "922905dde36ff8485c7bf2ad246e589e6483f256a8a27ec87c1230b2a0c15bad",
+      "bytes": 8701,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/paper2_instances.json": {
+      "sha256": "688b0d3d9bf117d034c2e9d770213dd2b5a20714470e8df70935c3109e7bc0aa",
+      "bytes": 1938,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/benchmarks/paper2_matrix.json": {
+      "sha256": "cb2f7b357d35acaa657f17fd9d59a52c3d0888a610cb9f787103bc70b172363c",
+      "bytes": 3920,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/_data/experiments/schema/literature_provenance.schema.json": {
+      "sha256": "5880539b5377c6f4a01c2e795ee677bbc50834f5162e1c7399dac508829a21e5",
+      "bytes": 4915,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/__init__.py": {
+      "sha256": "1e9e00316acebfb2b1f73bc230a6e23679e3e59b21d4075026e5c5602858ed96",
+      "bytes": 1893,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/base.py": {
+      "sha256": "d27f0ee9d69bf31301d8c68422fb1803ad7f4f8d027bf5d5115035fe2d2f282e",
+      "bytes": 953,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/clarabel_backend.py": {
+      "sha256": "9c463b63229dc3e4dd691fead10d69a2fd2f7f4adc8ea5bf6ba11d2732960806",
+      "bytes": 21252,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/dlpack_capsule.py": {
+      "sha256": "06e187689f8e78d41febbe774ebf45cb4140ebcab3cceec5b3dece77071a026f",
+      "bytes": 2610,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/osqp_backend.py": {
+      "sha256": "33161e8b59618c38fbec2c7c287820076d845f9cad4d5bc90a6a620fd1701907",
+      "bytes": 5921,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/pdhcg_oneshot.py": {
+      "sha256": "35fc92602f0c02c2f910bd9c4a52ad9268e9127af9d3262ec84c2199bf384cc9",
+      "bytes": 9364,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/qoco_gpu.py": {
+      "sha256": "62ab83b7a088b47674ed0ff0782dbbb6513a8c7c00c01bde1cdb9d1303feb38e",
+      "bytes": 49054,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/backends/qoco_handback.py": {
+      "sha256": "5fd6ed0062f0b97a0f3d89bda4debedae98117b6ddd5d145e7fc0ea72f574133",
+      "bytes": 14981,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/__init__.py": {
+      "sha256": "984d9d2d0b4aadd631a8c9ccd9f5299b285e2635dee4571d88d980a264df0d83",
+      "bytes": 408,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/banded_correctness.py": {
+      "sha256": "225a534c685f90ea07903a5c0906878dabdcf80f43fbc506010c7f85717b3d63",
+      "bytes": 5695,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/condensed_correctness.py": {
+      "sha256": "e113eeba39a814ad760821248bcbd09696687dfff53ed434f456a64313717e6d",
+      "bytes": 6690,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/cw_repeat.py": {
+      "sha256": "3bc850b774ae480ef5661a4c4f29aa77ab92afecfeba26c037912cffbc839504",
+      "bytes": 6021,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/cw_socp_repeat.py": {
+      "sha256": "a7f41ef91653f95775193d66ac4a333008c19674a751044b870d6ee4ca1830a6",
+      "bytes": 6236,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/g1_correctness.py": {
+      "sha256": "4568ee01c6fade5b8fe52375805eaf5127096af46217b3ff886a828fba0ba7da",
+      "bytes": 19883,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/powered_descent_scvx.py": {
+      "sha256": "d84efdd0913e62ec0c1e30b3483c5284ca42a851ad834178d693ae305471f5c9",
+      "bytes": 6602,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/robust_powered_descent_cqp.py": {
+      "sha256": "8148cd48c9601b1b28f61f44197280c17e2c545b4d6d01240ddea6617c335b51",
+      "bytes": 16938,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/scenario_layout.py": {
+      "sha256": "09b25df56cbb999bc6983a1153957d2a7b43a5dde89ff2aad4e92b4b27251c0a",
+      "bytes": 3101,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/benchmarks/trajectory_banded.py": {
+      "sha256": "b437009e0bf103244bf37c83a587f1fb6e5b91829a691cad1c93f063868a698f",
+      "bytes": 17334,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/campaign_scope.py": {
+      "sha256": "5c7026bad0f87987e6de372b67b66b82194f3863b3d79f2f08e84791042b146e",
+      "bytes": 6817,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/cli.py": {
+      "sha256": "e8badd863e78d492b953690d6c5d3e2f0231de1926fb4a3f07afa2f6a1e4a87e",
+      "bytes": 2743,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/cqp/__init__.py": {
+      "sha256": "b0083ce3bd29d1812a9d4cf20c6aa70b1f0106d61c59622cbe485775968a543b",
+      "bytes": 608,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/cqp/fingerprint.py": {
+      "sha256": "f9c83478bdfb713b43fa6e9c8127842e30af5fd5c06526b06c68ce7bafd204c8",
+      "bytes": 2802,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/cqp/problem.py": {
+      "sha256": "9d7d9dfe6ba255110365af714415d663f90c2fb7769cb1b98c5bd21e5fd86009",
+      "bytes": 12707,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/cqp/quality.py": {
+      "sha256": "57b989d65a87513963d1ad28ccaf8c4b452f0a95957ea0b262587414da749731",
+      "bytes": 8494,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/distributed/__init__.py": {
+      "sha256": "642e3da5b498ff565c9fac41716332f0e3479e51261cbc59c8713ab8af896b2d",
+      "bytes": 1082,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/distributed/certification.py": {
+      "sha256": "d80189bcb55b767190d8d92d7c533b9a1152a5d5a9578fd74dd7f91d43777f30",
+      "bytes": 2446,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/distributed/condensed_cqp.py": {
+      "sha256": "46ddd35c0d1f8e2575b887518ec72b0530a799363b87577768bd094a1411d74b",
+      "bytes": 21403,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/distributed/layout.py": {
+      "sha256": "524502db344d5ad3a196c4addeec2bbd7c969d1666a34c5da6bfd5fb430e9d62",
+      "bytes": 12099,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/distributed/robust_cqp.py": {
+      "sha256": "24a87634c3609327ca4080e74a1f1afcc49ae59809f06269429451fb0a3824b0",
+      "bytes": 21244,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/distributed/scenario_tree.py": {
+      "sha256": "8c7426b9ee2efe9cdf3d254c149c9edfe1a8d41d5ce95d7058f562de2f0c051c",
+      "bytes": 7342,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/experiments/__init__.py": {
+      "sha256": "636e67f215c53290ccb8fd6e5cdda2059abbe54e3ad25d12455679f7c98e3d7d",
+      "bytes": 2963,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/experiments/g4.py": {
+      "sha256": "f0952a9c6cd862cd756573fc300b2423b2ada75adad77aa3abbb2198015938b2",
+      "bytes": 41891,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/experiments/g4_execution_contract.py": {
+      "sha256": "891da58cb0cc53562a2972c3a20be7e08d6e224a8605c48ec2450997a42fcc99",
+      "bytes": 44125,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/experiments/g4_scheduler.py": {
+      "sha256": "a2668cc08c36d29d731d906da59a6ec26a32a4a84adfeea1ed2d00946befaab6",
+      "bytes": 32537,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/experiments/g5_campaign.py": {
+      "sha256": "4588f389d1f896dc28f83d94798f4689b7042558b9e6efe6fa71cde288d97feb",
+      "bytes": 47413,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/experiments/manifest.py": {
+      "sha256": "afd5ab8a62e26309eb56866f60edb39e974ceea47a4c24a95b681ef2b7282ae8",
+      "bytes": 9193,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/experiments/paper1.py": {
+      "sha256": "39ef3d41a449714449bae4f34221113ec5dfabeb01ad133a61b6bced8ab0181c",
+      "bytes": 39976,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/__init__.py": {
+      "sha256": "ac225d7a1da88bbde102908bb37ad74f7c447ec5925ecd6310255b6e852eb4c5",
+      "bytes": 1205,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/archive.py": {
+      "sha256": "98d7b6743f49d755e1668a046165b68f59eac49090dd4511bbd57f4eecc45eb2",
+      "bytes": 10853,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/bundles.py": {
+      "sha256": "95a5ab8decdf9ddf135e66ff198c497673fc65e41bf6c75179ebef3a14fc376f",
+      "bytes": 75471,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/chainprior.py": {
+      "sha256": "e9fc6134cb049c31d364b4d02a0a285abb06211905df0d7c53f20c0cdc192cb9",
+      "bytes": 13192,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/cli.py": {
+      "sha256": "2d34dcaf9052b098621a51233f0e476a402680e16788c5f23152ef6f3f5f0b35",
+      "bytes": 103072,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/clusters.py": {
+      "sha256": "a7285b2675c7ed855e12a43f5664381eccdf7b736e35c68127b5c11c0f7964cf",
+      "bytes": 12682,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/collectdp.py": {
+      "sha256": "e50f3d55ec1086e308d2c684d0efbded423ec1bb6b76fb2aaf083e657d3f3a48",
+      "bytes": 44007,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/constants.py": {
+      "sha256": "02a47133a5d709fe81d1cc28807edcdb790b1325e4c2fb12d046db8c5029a00e",
+      "bytes": 9577,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/cooperative.py": {
+      "sha256": "460af7f69811c668cc5cc3443b576013ac30b1b3836d02b1c99fec8b4689a05b",
+      "bytes": 50479,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/data.py": {
+      "sha256": "919840f7e7902b0d9ad5aa557c057c6b5b71101a50c525ef7b29fee6f4a7d8d8",
+      "bytes": 9733,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/earthleg.py": {
+      "sha256": "876c4f2e99c47ece83002f590db894b5427ddc43e29d865cb6c865bc720d2b8f",
+      "bytes": 18262,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/ephemeris.py": {
+      "sha256": "b0c583ce0092709f40deba7904efeb6314e3db98a1225705f9de5103e60112fe",
+      "bytes": 10881,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/fetch.py": {
+      "sha256": "d5b19c6f2865c94e52a17d28b718830cb5d2d6c2f5eef52fed7ad9cd7f3c2046",
+      "bytes": 5515,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/fleet.py": {
+      "sha256": "68506f32ea10c9ef65e10b7aa9830983fa2b6d9ca44f877a775bddcdd05dd9c4",
+      "bytes": 2729,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_beam.py": {
+      "sha256": "92824506f03c381cb781d6ea756ebb890f003b644466fd53c6d6c3cfd03867ce",
+      "bytes": 4895,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_collect_dp.py": {
+      "sha256": "00e87a1b2924c23d618b60ee13bd7faa5483c3dfba3f31bc19c0403d15e6d52a",
+      "bytes": 11147,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_collect_tables.py": {
+      "sha256": "04ed6a70e12a85619842a0cdf91d1d6382d3de49216c5d4fa31fed4d0d8afff0",
+      "bytes": 5280,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_collection.py": {
+      "sha256": "c4939d1cc982cf9f7c13fe582551848f1d2b1916b2130eec4e40c7a11e29bffa",
+      "bytes": 4759,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_conic.py": {
+      "sha256": "c90712f0b1cd9e7272c789395cb30d6f4e3d76be2946bc4b8876a21e5f4906b7",
+      "bytes": 7050,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_discretisation.py": {
+      "sha256": "252af6ea53f856069e22ddf326457eb8ffaa1c7796e480ad3871a3aa832e4a8a",
+      "bytes": 5261,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_execution.py": {
+      "sha256": "3dde7ea9e1e43aa14de8ba097ef8c781480e494ee6c9396d8bd88b3069885277",
+      "bytes": 2673,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_joint.py": {
+      "sha256": "dbe86c82f0107da7d492cd4a68d7c50cd63e751e9b7fb39928dd594ef1083877",
+      "bytes": 18833,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": {
+      "sha256": "00d3941c00b5c8d2aa88580eed38bfd099b29f468facd8f18b85e52a07849475",
+      "bytes": 26024,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_neighbours.py": {
+      "sha256": "c522c449ff4b5047592d3c4b77ba5a254315b3b3755baad97a84e423154d812c",
+      "bytes": 4384,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_options.py": {
+      "sha256": "915e4e4ab022072a3b3f9e6a9c292003ad54ae45a8355cca7bcd301220ac5c7f",
+      "bytes": 1737,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_qoco.py": {
+      "sha256": "556105ddaed229fd4208c16c84536b3b6c0406d3214ef5ecab89e5104c39321e",
+      "bytes": 7373,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_retime.py": {
+      "sha256": "cba5bc698f36741343f51352ea80aba30955412b94ce99530fd9651d4bb081a0",
+      "bytes": 24813,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_scvx.py": {
+      "sha256": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e",
+      "bytes": 9168,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/gpu_verifier.py": {
+      "sha256": "59ac5847130196565ee51b7eefcd0bf994b4001993e1ea777a0833c147238a23",
+      "bytes": 10269,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/harvest.py": {
+      "sha256": "702d32be6728a484cc6b31566859bc843372cccbeafb15580c6357f747b8669f",
+      "bytes": 10702,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/harvestphase.py": {
+      "sha256": "c1014533eb970af0301305063f048d6c8d021c9a8b564def20fb4395e590db4a",
+      "bytes": 12130,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/hopcalib.py": {
+      "sha256": "6684d05881f2a613a0e0f537498e04a1b1a64fcf913dd37a18d53c1267c51c98",
+      "bytes": 15287,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/jointcampaign.py": {
+      "sha256": "1a05ff040514c3f2fa90a2684003fcdd3c3d9b7ae5272442aca6cd217ba10ce6",
+      "bytes": 15140,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/jointopt.py": {
+      "sha256": "80ae101b05681585bf9f6cb4cd57b71c88677e92318be75bf7dd0dd409741ecf",
+      "bytes": 55164,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/lambert.py": {
+      "sha256": "1f6c1dd25e09a0782a7c186e697dbba61ca31855b7921190700b93bdbe18b4c8",
+      "bytes": 23324,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/legstats.py": {
+      "sha256": "55e298506965944a77178869e8be5fcca50c76db8a65ff0b33fb501585bfe546",
+      "bytes": 6246,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/low_thrust.py": {
+      "sha256": "c0b51d7c0d8654ebd6ac43e28bb05f21994a23b6112c21b474769facd850aafd",
+      "bytes": 43309,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/memory.py": {
+      "sha256": "cca761a465a700922b34cbd51344d930ba83e438bdf6ef67c93aea3f5b1251ec",
+      "bytes": 6817,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/official.py": {
+      "sha256": "bfba9ee22a9819b1f5bf5d225d399dcd85e7a7745143447e25d62a700d5d0412",
+      "bytes": 4283,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/pipeline.py": {
+      "sha256": "62dab69643cd644efafe82044f1dc2de5ca77023513b5ddb8f7d2ce2b9330732",
+      "bytes": 28710,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/proxies.py": {
+      "sha256": "9c1b279de813aa5d3ac2d8cfaf9f4fd73d9ce6db300a869dc83aaf1cd2d94156",
+      "bytes": 4671,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/reduced_instance.py": {
+      "sha256": "9115569684c96b7d526171957655b69615556d525453f6a0eb3da49fbdc84dcd",
+      "bytes": 4010,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/references.py": {
+      "sha256": "ab5397270a21ae468df4be0772a2d3c40e597f15afc9dd6ff6ca9091afd50cfa",
+      "bytes": 12245,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/refinement_queue.py": {
+      "sha256": "67c3dfea6b93d8d1f437095bf724f05569ed0d961b95b2738461fcd2858eecaf",
+      "bytes": 2254,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/retiming.py": {
+      "sha256": "710cf727eda68681c361c84f327bbf616598c887b31cf093e6791a9da3a13499",
+      "bytes": 70023,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/returncampaign.py": {
+      "sha256": "8ef8fb97e75fa902853155d7f0a33a712a8412cb4eba39462f66886a7b78f824",
+      "bytes": 10314,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/returnsweep.py": {
+      "sha256": "2988e7a7628106231bc7a04d6f92f90f361cd14e8bed84fcc78474924e1fd7e3",
+      "bytes": 18818,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/screening.py": {
+      "sha256": "b9678da3935993bae5db0537e30c8f84e470fe780071c2581b2765217e5d87c0",
+      "bytes": 14573,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/search.py": {
+      "sha256": "f5b0bf717ed40157b19e2d8ae61e4cc5d6025018edb779d388e1fd5c9968f0b4",
+      "bytes": 113459,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/solution.py": {
+      "sha256": "25ac567dc8fc9af4146adb620bf433ca3e318c98bc0bf0a818b6f9753a289108",
+      "bytes": 12304,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/verifier.py": {
+      "sha256": "56148828b0c0bed3e52263f54f1ad189019cf250b15008a75d8d5f3ea3b658cd",
+      "bytes": 43005,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/gtoc12/viewer_export.py": {
+      "sha256": "a664c8c998b57caacc1141da388998284a2a6bfdf2fe4a18da5542042da9e37b",
+      "bytes": 11357,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/__init__.py": {
+      "sha256": "28b793d92cd8b2cf8847232e87bf2897331c8139924a5e815b1767cf323c45a3",
+      "bytes": 962,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/_socp.py": {
+      "sha256": "4c37534efefcfc14cd577a0d5e49ceeb8e501225947e0d095d582640c1584318",
+      "bytes": 11186,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/cli.py": {
+      "sha256": "c7fd0ea97c40e6674f2a47fcd4ebdd22dc9402790d1edddfbdc752d7dcbc5f44",
+      "bytes": 7264,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/external_sources.py": {
+      "sha256": "aac99078a06a97e8a3e69a84dd7a57cae0b3040373a249d76b0ac3a1d3ac926a",
+      "bytes": 5720,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/gpu_preflight.py": {
+      "sha256": "658ebb949609e669f1194801c251e9061cac7ef0467cf9d63ae5fba5a84197e6",
+      "bytes": 6874,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/gtoc.py": {
+      "sha256": "4cb3a92d39342ae8ec220e1b860b93f2a4cc0227141a3b6278f7138b0bc70d2c",
+      "bytes": 28259,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/gtopx.py": {
+      "sha256": "1c556f47e2c16c6e01f9361c522ce2886fe716c3ef3ae707aa21027f1473d3f4",
+      "bytes": 8626,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/low_thrust.py": {
+      "sha256": "87ce428189527b8d586c345c7bba8b5cbb6ef4be0b76146e73887012ff7e39ba",
+      "bytes": 26067,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/low_thrust_mee.py": {
+      "sha256": "28508b1f0adbdc86a900910d290e0e60204333d28e8c41b68e72f71b0e69f18e",
+      "bytes": 29141,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/pd3_acikmese_ploen.py": {
+      "sha256": "09f083f06a8afbe257b4daf40deb37c82d36e2f3febd95039e4b82704a51481d",
+      "bytes": 35760,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/pd6_monte_carlo.py": {
+      "sha256": "aa2ceeb35bc81f729baa5365718dbb3a6213837e0bb2124d2d14a2d7c76ec95d",
+      "bytes": 15925,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/pd6_szmuk_2018.py": {
+      "sha256": "1a83e5f456403c38b93e5846bf68ffd3306f32fbe8fd788c3a9e726e2ba63509",
+      "bytes": 22593,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/pd6_szmuk_2018_native.py": {
+      "sha256": "f07607b6d3ee1a3624f0dbbd86aa1d6843da8799ac56b45855ef43cb966b9beb",
+      "bytes": 12184,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/pinned_values.py": {
+      "sha256": "412bcd5002930693997bf485848b98867ef0e6daf9fced3096572fa440113371",
+      "bytes": 27986,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/provenance.py": {
+      "sha256": "19defb51d6dd9190f44023d1a6bca2bb2efdbca816da8fe0a9faac55ca12500b",
+      "bytes": 15571,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/registry.py": {
+      "sha256": "8b8007ee82c5f4e4025a91af3807fde89867df8a6017b3435f511a900dcf69f9",
+      "bytes": 7143,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/report.py": {
+      "sha256": "43aaf88f760e1d4737b27743703531b8cb3db0c90f1cd6420be49047f0128da1",
+      "bytes": 14694,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/scvx_core.py": {
+      "sha256": "df737ace1c34a5b5f7bd63d6e686e05178dbbe5ac02b40e819a0e4c3e9ae9fcc",
+      "bytes": 20748,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/literature/tops.py": {
+      "sha256": "4992ac0f6d3114ba54f2c93a9e0a2e1d219d9a5ff458dffd34365f85a3fc304e",
+      "bytes": 11306,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/models/__init__.py": {
+      "sha256": "3e11304774fd9eae551d8e6ea09f406649f667dac3d5df5ca66ed2e6042e58be",
+      "bytes": 691,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/models/cw.py": {
+      "sha256": "8e06ae145506f9eb6726efc4d3aacdaf515693ed9a0da417cd73bca25beb4926",
+      "bytes": 16499,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/models/powered_descent_3dof.py": {
+      "sha256": "2ae2721fb04da6e2050e7256a1c587aa12741491060fbe72b235a923076903a3",
+      "bytes": 16635,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/native/__init__.py": {
+      "sha256": "2adc3143ad99d16e209548ed5da58e95dee213535560e05eaa987f3c1c194c25",
+      "bytes": 406,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/native/_library.py": {
+      "sha256": "35360339824aa6a4a9d25de0ad604e2878a0ae7f31fdf9bbe42f5a706326ffb7",
+      "bytes": 3794,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/native/free_time.py": {
+      "sha256": "56f91359c4afcf50f22077262fd5e2ffa681d243333168fb613e62049b02971d",
+      "bytes": 30147,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/orbitweaver/__init__.py": {
+      "sha256": "47ec44d6c884e9a8630460d02c47d0109d14d2fe41af60dd8d9079ddd897eeec",
+      "bytes": 2674,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/orbitweaver/adapters.py": {
+      "sha256": "d7439dc9fa2440d5397d68cc0e591f5cf442c7b512e4393d98e3951e33cfa70e",
+      "bytes": 30934,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/orbitweaver/cli.py": {
+      "sha256": "e6ba5fa8b51681f05840ba1e78dc6fdbd72d60774ffa9dc8440a1512c2db06f8",
+      "bytes": 5543,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/orbitweaver/contracts.py": {
+      "sha256": "bb448b9705c1f628827739c4159e806401bcd60db5567c6b892947354f828c02",
+      "bytes": 18411,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/orbitweaver/g7.py": {
+      "sha256": "9c31c8d3b41a2dcd38e2c5822295d50a30c679b3f77b0900a14a61794f9d82aa",
+      "bytes": 38722,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/orbitweaver/instances.py": {
+      "sha256": "ae9ae5907b114ed4b24e054bc184a5120b10e81d3006956ea6efc9bd9b499dba",
+      "bytes": 5272,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/paper1/__init__.py": {
+      "sha256": "801e3dc38f1bb5f150915d0487df0a34ce8222b23eaccd071d4f9d0321b5c5c0",
+      "bytes": 804,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/paper1/aggregate.py": {
+      "sha256": "7caca4a56b13a01bc502a4bcf0e6acb7114e65b8f7d4b053c9d4a22d1ad17551",
+      "bytes": 79007,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/paper1/cli.py": {
+      "sha256": "1f98e377879be45986caea6a6717315b586a3d50ff6a35bced23f01a8fd7145d",
+      "bytes": 4980,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/paper1/decisions.py": {
+      "sha256": "013d61c655f696f09e5f5ddf0dbfb26d787f7551069793891d61ea56981e3044",
+      "bytes": 29534,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/paper1/evidence.py": {
+      "sha256": "5c9ebcc34ffdae85bf40c17d5ea383dff904fc5098cf24d9da265e350dbad19b",
+      "bytes": 12069,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/paper1/freeze.py": {
+      "sha256": "a37bc788b0a78a2644d6b8ca86fbd9dca91e8fefb42253a1b6af1a91446b5369",
+      "bytes": 22606,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/paper1/synthetic.py": {
+      "sha256": "ec3671ceca9903ae56e568978e67976763aa7dfd9fc5a10487074ec8405205d3",
+      "bytes": 18195,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/__init__.py": {
+      "sha256": "9ec749f6efbfc59d861466017ffdf92bfda934072f4e4d99dac355046b458779",
+      "bytes": 1183,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/api.py": {
+      "sha256": "6742553d80374a7daf454d57efb74b0c4a8c58ff7927c42b81dc0a55670c0ea5",
+      "bytes": 6522,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/cli.py": {
+      "sha256": "acacaac0c9073ecff09c30dcaf67dc36e50c038af65237d73d7d2a813fc44517",
+      "bytes": 10480,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/cpu_reference.py": {
+      "sha256": "c38794adb81d0951ea48c69d22b84ef5643f5a74cc5d7ee2c8d0d9fa96308117",
+      "bytes": 33712,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/native_library.py": {
+      "sha256": "43d48ef94dc6b60e4324c85af8100e6e122e54c597369ca3e788f472b410944b",
+      "bytes": 23254,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/native_runner.py": {
+      "sha256": "97a048bb297b454d73f398d50c0035c8327ebc25784d2e3e70c3951c73134b02",
+      "bytes": 6970,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/problem.py": {
+      "sha256": "ba762b847dad81b7f0003c31f943e991a5a70a59998d9af0a2425557c2881d3f",
+      "bytes": 21233,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/result.py": {
+      "sha256": "b08e83bd4540c0389a28da89f9adeecbcd1cb4a290ce989f5654d446ceeb7a7e",
+      "bytes": 15610,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/schema/__init__.py": {
+      "sha256": "3ce436ef604a4abbaf2e1d14ef7ef06bb7acebc1e8e15eac1f6e4a77d945f870",
+      "bytes": 46,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/schema/problem.schema.json": {
+      "sha256": "0f29ade96baf76494d4025c8d40238e9be822fb25ffda8d72291e8da5ba759d9",
+      "bytes": 11997,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/planner/viewer_export.py": {
+      "sha256": "6747873bf79f7245602bddcf7b332c88736acbf3682d1a4846963ba36e80fb29",
+      "bytes": 14821,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/resources.py": {
+      "sha256": "04244a64d85366cd5596f7f37bcb63f4d7a62a945618689235759f287bde5fcc",
+      "bytes": 12040,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/scvx/__init__.py": {
+      "sha256": "b5cae65c45bc9c6cdf0b255cec4ed42aac716ca0e97cd60d145cd3ae5f5d39eb",
+      "bytes": 1021,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/scvx/forcing_rule.py": {
+      "sha256": "160cca55d6645f2e067b077fe77666cd2e9fdcb76b8489b98a0c95825aef17e2",
+      "bytes": 7757,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/scvx/powered_descent_3dof.py": {
+      "sha256": "f606a72d25b790aa22b38af5798356c17d505ab8a87b69e7e6ea0b5c0ce5ae13",
+      "bytes": 43484,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/scvx/trust_region.py": {
+      "sha256": "4812c4b1e6b14d90058f2dbeddff043a9bb644a7001cee6bce9a74db91c6f122",
+      "bytes": 3735,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/transcription/__init__.py": {
+      "sha256": "8ff8431397084a0737701dbd700629734de1d0ef08436dca7d3c473e411286f2",
+      "bytes": 421,
+      "origin": "current working tree"
+    },
+    "src/spacepdhcg/transcription/powered_descent_3dof.py": {
+      "sha256": "b5a62c735a1816a86c400ee08e6d1519f6b7fb573334947c49d4ed4948e964e1",
+      "bytes": 32832,
+      "origin": "current working tree"
+    },
+    "tests/conftest.py": {
+      "sha256": "63a6594111dde8dc2d2dcdf1c3d7500e2d839fe7f2ddbd0e5bc3a9ccf4587025",
+      "bytes": 2676,
+      "origin": "current working tree"
+    },
+    "tests/test_gtoc12_gpu_joint.py": {
+      "sha256": "42d9df18e2eda5d0bb38b5f64ecdf4bc89476d6c1c83654cfd14019756608388",
+      "bytes": 25932,
+      "origin": "current working tree"
+    },
+    "tests/test_gtoc12_jointopt.py": {
+      "sha256": "6bb92e6b9e33a0243fa40e2c30a652d17b9c02fb8d852c7a9e85246d320c06e8",
+      "bytes": 30423,
+      "origin": "current working tree"
+    },
+    "third_party/dlpack.lock.json": {
+      "sha256": "5c53db9b5571033bb3dae86affe7dab99e122500d615a77349eafd870089d888",
+      "bytes": 398,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "third_party/licenses/scipy-dop853.txt": {
+      "sha256": "221e59f5e910fd7f94e44f0dac77436a11338c285c6346232e4a850a50da0e94",
+      "bytes": 1531,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "third_party/patches/pdhcg/0001-free-quadratic-state.patch": {
+      "sha256": "dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6",
+      "bytes": 3258,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "third_party/pdhcg.lock.json": {
+      "sha256": "affd0a06fa71a128c0d1f77602a38c2e505d1e5361c3de5fa52e6e7fb9052a14",
+      "bytes": 1108,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "third_party/qoco_gpu.lock.json": {
+      "sha256": "2f0756a0a4b4c17107aee56180cb83cc239422d475bcfe6c63d1e0f8a4a6f5f4",
+      "bytes": 2570,
+      "origin": "git archive bd944af935e5b71e50ef7ff4d34ea7674602832a"
+    },
+    "cpp/cuda/tests/gtoc12_joint_selection_test.cu": {
+      "sha256": "f4860fdbcaf0eae59dcee80c3b28c752bb1ff79c1231a63cd38f1afb11d37408",
+      "bytes": 3744,
+      "origin": "Current working tree test-only overlay for local v596"
+    },
+    "tests/test_gtoc12_gpu_joint_selection.py": {
+      "sha256": "b50683b08d7e8541ce725d435afd36e898dfbfdc1e3b1d681a7bf51f60f81247",
+      "bytes": 4474,
+      "origin": "Current working tree test-only overlay for local v596"
+    }
+  },
+  "python_note": "All current src files frozen; bytecode/shared objects excluded.",
+  "cpp_manifest_sha256": "b9dfb28a4ebbb451d00e05e9f17a137b3b49d2fad97e01ff279b2a4212a19516",
+  "original_h100_payload_sha256": "5ffa631d294a45231a6f37a6dae955f2bc54ad3914a15e1ce52c93a1e65efe36",
+  "local_validation_variant": "Identical frozen implementation; additional explicitly hashed selection tests only.",
+  "additional_test_overlays": [
+    "cpp/cuda/tests/gtoc12_joint_selection_test.cu",
+    "tests/test_gtoc12_gpu_joint_selection.py"
+  ]
+}

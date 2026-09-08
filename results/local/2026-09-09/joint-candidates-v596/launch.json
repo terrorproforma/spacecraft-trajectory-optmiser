@@ -1,0 +1,22 @@
+{
+  "pid": 363,
+  "started_utc": "2026-09-08T14:34:40.921894+00:00",
+  "root": "/home/angus/build-spacepdhcg-joint-v596",
+  "evidence": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596",
+  "payload_sha256": "5ffa631d294a45231a6f37a6dae955f2bc54ad3914a15e1ce52c93a1e65efe36",
+  "runner_sha256": "08c508c92bda88b25c7bb719d8c7fdaf0359aa2a784837f0df05f181dff6a029",
+  "test_overlays": {
+    "cpp/cuda/tests/gtoc12_joint_selection_test.cu": {
+      "sha256": "f4860fdbcaf0eae59dcee80c3b28c752bb1ff79c1231a63cd38f1afb11d37408",
+      "bytes": 3744,
+      "origin": "Current working tree test-only overlay for local v596"
+    },
+    "tests/test_gtoc12_gpu_joint_selection.py": {
+      "sha256": "b50683b08d7e8541ce725d435afd36e898dfbfdc1e3b1d681a7bf51f60f81247",
+      "bytes": 4474,
+      "origin": "Current working tree test-only overlay for local v596"
+    }
+  },
+  "gpu_lock": "/home/angus/.spacepdhcg-gpu.lock",
+  "no_remote_transfer": true
+}

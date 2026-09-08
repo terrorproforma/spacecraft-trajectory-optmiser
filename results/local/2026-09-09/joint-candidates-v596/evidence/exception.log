@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/angus/build-spacepdhcg-joint-v596/runner.py", line 147, in <module>
+    check_parity('python-parity', junit)
+  File "/home/angus/build-spacepdhcg-joint-v596/runner.py", line 88, in check_parity
+    assert totals == {'tests': 42, 'failures': 0, 'errors': 0, 'skipped': 0}, (name, totals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('python-parity', {'tests': 42, 'failures': 0, 'errors': 0, 'skipped': 7})

@@ -1,0 +1,319 @@
+{
+  "schema": "joint-local-v596",
+  "started_utc": "2026-09-08T14:34:40.947139+00:00",
+  "pid": 363,
+  "complete": true,
+  "success": false,
+  "commands": [
+    {
+      "name": "snapshot-git-init",
+      "command": [
+        "git",
+        "init",
+        "/home/angus/build-spacepdhcg-joint-v596/source"
+      ],
+      "started_utc": "2026-09-08T14:34:40.953631+00:00",
+      "pid": 364,
+      "returncode": 0,
+      "seconds": 0.012067768999997952,
+      "finished_utc": "2026-09-08T14:34:40.965705+00:00"
+    },
+    {
+      "name": "snapshot-git-add",
+      "command": [
+        "git",
+        "-C",
+        "/home/angus/build-spacepdhcg-joint-v596/source",
+        "add",
+        "-f",
+        "."
+      ],
+      "started_utc": "2026-09-08T14:34:40.970085+00:00",
+      "pid": 365,
+      "returncode": 0,
+      "seconds": 0.0885898740000357,
+      "finished_utc": "2026-09-08T14:34:41.058677+00:00"
+    },
+    {
+      "name": "snapshot-git-commit",
+      "command": [
+        "git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-C",
+        "/home/angus/build-spacepdhcg-joint-v596/source",
+        "commit",
+        "-m",
+        "Isolated H100 joint validation snapshot based on bd944af935e5b71e50ef7ff4d34ea7674602832a"
+      ],
+      "started_utc": "2026-09-08T14:34:41.063461+00:00",
+      "pid": 366,
+      "returncode": 0,
+      "seconds": 0.03175301299995681,
+      "finished_utc": "2026-09-08T14:34:41.095222+00:00"
+    },
+    {
+      "name": "cmake-configure",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/build-spacepdhcg-joint-v596/source/cpp",
+        "-B",
+        "/home/angus/build-spacepdhcg-joint-v596/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg"
+      ],
+      "started_utc": "2026-09-08T14:34:41.102256+00:00",
+      "pid": 369,
+      "returncode": 0,
+      "seconds": 16.822096266000017,
+      "finished_utc": "2026-09-08T14:34:57.924356+00:00"
+    },
+    {
+      "name": "cmake-build",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/build-spacepdhcg-joint-v596/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "8"
+      ],
+      "started_utc": "2026-09-08T14:34:57.928720+00:00",
+      "pid": 533,
+      "returncode": 0,
+      "seconds": 44.134897851000005,
+      "finished_utc": "2026-09-08T14:35:42.063623+00:00"
+    },
+    {
+      "name": "smoke-build",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "-std=c++17",
+        "-UNDEBUG",
+        "-arch=sm_120",
+        "--fmad=false",
+        "-I/home/angus/build-spacepdhcg-joint-v596/source/cpp/cuda/include",
+        "/home/angus/build-spacepdhcg-joint-v596/source/cpp/cuda/tests/gtoc12_joint_smoke.cu",
+        "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+        "-Xlinker",
+        "-rpath=/home/angus/build-spacepdhcg-joint-v596/build/cuda",
+        "-o",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:42.077787+00:00",
+      "pid": 1154,
+      "returncode": 0,
+      "seconds": 0.6793972899999972,
+      "finished_utc": "2026-09-08T14:35:42.757188+00:00"
+    },
+    {
+      "name": "selection-build",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "-std=c++17",
+        "-UNDEBUG",
+        "-arch=sm_120",
+        "--fmad=false",
+        "-I/home/angus/build-spacepdhcg-joint-v596/source/cpp/cuda/include",
+        "/home/angus/build-spacepdhcg-joint-v596/source/cpp/cuda/tests/gtoc12_joint_selection_test.cu",
+        "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+        "-Xlinker",
+        "-rpath=/home/angus/build-spacepdhcg-joint-v596/build/cuda",
+        "-o",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:42.762648+00:00",
+      "pid": 1187,
+      "returncode": 0,
+      "seconds": 0.6726252889999955,
+      "finished_utc": "2026-09-08T14:35:43.435277+00:00"
+    },
+    {
+      "name": "gpu-before",
+      "command": [
+        "nvidia-smi",
+        "-q"
+      ],
+      "started_utc": "2026-09-08T14:35:43.492209+00:00",
+      "pid": 1222,
+      "returncode": 0,
+      "seconds": 1.822773896000001,
+      "finished_utc": "2026-09-08T14:35:45.314986+00:00"
+    },
+    {
+      "name": "native-smoke",
+      "command": [
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:45.319689+00:00",
+      "pid": 1224,
+      "returncode": 0,
+      "seconds": 0.2830640790000416,
+      "finished_utc": "2026-09-08T14:35:45.602757+00:00"
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:45.610874+00:00",
+      "pid": 1229,
+      "returncode": 0,
+      "seconds": 0.3891923559999668,
+      "finished_utc": "2026-09-08T14:35:46.000069+00:00"
+    },
+    {
+      "name": "synccheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:46.005176+00:00",
+      "pid": 1247,
+      "returncode": 0,
+      "seconds": 0.3289368459999764,
+      "finished_utc": "2026-09-08T14:35:46.334117+00:00"
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:46.339195+00:00",
+      "pid": 1265,
+      "returncode": 0,
+      "seconds": 0.8118955859999915,
+      "finished_utc": "2026-09-08T14:35:47.151094+00:00"
+    },
+    {
+      "name": "native-selection",
+      "command": [
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:47.156104+00:00",
+      "pid": 1298,
+      "returncode": 0,
+      "seconds": 0.21216865100001314,
+      "finished_utc": "2026-09-08T14:35:47.368277+00:00"
+    },
+    {
+      "name": "selection-memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:47.373326+00:00",
+      "pid": 1303,
+      "returncode": 0,
+      "seconds": 0.39304238699997995,
+      "finished_utc": "2026-09-08T14:35:47.766373+00:00"
+    },
+    {
+      "name": "selection-synccheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:47.772220+00:00",
+      "pid": 1321,
+      "returncode": 0,
+      "seconds": 0.5394803720000141,
+      "finished_utc": "2026-09-08T14:35:48.311704+00:00"
+    },
+    {
+      "name": "selection-racecheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:48.316097+00:00",
+      "pid": 1339,
+      "returncode": 0,
+      "seconds": 0.9062682780000273,
+      "finished_utc": "2026-09-08T14:35:49.222369+00:00"
+    },
+    {
+      "name": "python-parity",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint.py','tests/test_gtoc12_jointopt.py','--junitxml','/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/joint-local-v596/evidence/pytest.xml']))"
+      ],
+      "started_utc": "2026-09-08T14:35:49.227552+00:00",
+      "pid": 1372,
+      "returncode": 0,
+      "seconds": 1.2434006560000057,
+      "finished_utc": "2026-09-08T14:35:50.470962+00:00"
+    }
+  ],
+  "claim": "Search-surrogate parity and timing only; no new trajectory or fleet certification.",
+  "environment": {
+    "SPACEPDHCG_GTOC12_GPU_TESTS": "1",
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "SPACEPDHCG_GTOC12_DATA": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+    "SPACEPDHCG_GTOC12_JOINT_ARCHIVE": "/home/angus/build-spacepdhcg-joint-v596/source/incumbent-sources",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONPATH": "/home/angus/build-spacepdhcg-joint-v596/source/src"
+  },
+  "native_smoke_scope": "Original full-evaluation API; does not call the new best_host selection API.",
+  "python_sanitizer_scope": "Fresh frozen 42-test parity suite, including best_host winner selection, under all three sanitizers.",
+  "prior_local_results_apply": false,
+  "prior_local_note": "This snapshot adds native device winner selection after the earlier 42-test local run and benchmark; it requires its own fresh build and checks.",
+  "source_manifest_sha256": "bc1a10ecf98c0f7aac3a8f764e45701448ac94dd5d4e1aedd3fc1651a10ee177",
+  "base_commit": "bd944af935e5b71e50ef7ff4d34ea7674602832a",
+  "isolated_snapshot_commit": "4e108dd142aeb57f1d2ad82c8b7b8ea44d9e8b78",
+  "core": {
+    "path": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "sha256": "86d7fdc952e82f7e5557c1651a1722900d83cdd98d8a709a4b6274fd83af4671",
+    "bytes": 14373680
+  },
+  "smoke_sha256": "698307d4ad0da5ec4c002d0c2f39dfea43f08abaae3d4bc7238e0738c6299ddf",
+  "selection_test_sha256": "cadf5c2726031e199da474ff0a12b530da73bd488569062fdabe9564abd8965e",
+  "gpu_lock_acquired_utc": "2026-09-08T14:35:43.446401+00:00",
+  "pytest_totals": {
+    "python-parity": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 7
+    }
+  },
+  "exception": "Traceback (most recent call last):\n  File \"/home/angus/build-spacepdhcg-joint-v596/runner.py\", line 147, in <module>\n    check_parity('python-parity', junit)\n  File \"/home/angus/build-spacepdhcg-joint-v596/runner.py\", line 88, in check_parity\n    assert totals == {'tests': 42, 'failures': 0, 'errors': 0, 'skipped': 0}, (name, totals)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ('python-parity', {'tests': 42, 'failures': 0, 'errors': 0, 'skipped': 7})\n",
+  "finished_utc": "2026-09-08T14:35:50.479966+00:00"
+}

@@ -192,6 +192,7 @@ class GpuLambert:
         self.collect_table_objects = WeakSet()
         self.option_objects = WeakSet()
         self.retime_workspace = None
+        self.joint_workspace = None
         self.telemetry = {
             "backend": "cuda",
             "completed_batches": 0,
@@ -214,6 +215,9 @@ class GpuLambert:
         if self.closed:
             return
         self._owned()
+        if self.joint_workspace is not None:
+            self.joint_workspace.close()
+            self.joint_workspace = None
         if self.collect_dp_workspace is not None:
             self.collect_dp_workspace.close()
             self.collect_dp_workspace = None

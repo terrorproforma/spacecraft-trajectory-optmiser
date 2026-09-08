@@ -1,0 +1,316 @@
+{
+  "schema": "joint-local-v596-publication-evidence",
+  "complete": true,
+  "hardware": "GeForce RTX 5090, local WSL, sm120",
+  "base_commit": "bd944af935e5b71e50ef7ff4d34ea7674602832a",
+  "new_core": {
+    "path": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "sha256": "86d7fdc952e82f7e5557c1651a1722900d83cdd98d8a709a4b6274fd83af4671",
+    "bytes": 14373680
+  },
+  "core_libraries_and_api_presence": {
+    "new": {
+      "path": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+      "sha256": "86d7fdc952e82f7e5557c1651a1722900d83cdd98d8a709a4b6274fd83af4671",
+      "tests": 62,
+      "exports_best_host": true
+    },
+    "old": {
+      "path": "/home/angus/build-spacepdhcg-joint-v590/build/cuda/libspacepdhcg_cuda.so",
+      "sha256": "ffbae813f1f683d276213cb83ec8be17d1c2338c9c4a96f3ec5283e26a432b73",
+      "tests": 54,
+      "exports_best_host": false
+    }
+  },
+  "publication_source_manifest_sha256": "6d406f3757a4b94e168a1c9a577159670e53f3cd3f4299e44e4c5b8195387963",
+  "publication_source_archive": {
+    "path": "publication-source.tar.gz",
+    "sha256": "a1cfd314ec94ff606d9548ae5c06f7a567452cc428b40f5797ade22ae2897fd4",
+    "bytes": 1461951,
+    "files": 550
+  },
+  "native_test_commands": [
+    {
+      "name": "native-smoke",
+      "command": [
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:45.319689+00:00",
+      "pid": 1224,
+      "returncode": 0,
+      "seconds": 0.2830640790000416,
+      "finished_utc": "2026-09-08T14:35:45.602757+00:00"
+    },
+    {
+      "name": "memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:45.610874+00:00",
+      "pid": 1229,
+      "returncode": 0,
+      "seconds": 0.3891923559999668,
+      "finished_utc": "2026-09-08T14:35:46.000069+00:00"
+    },
+    {
+      "name": "synccheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:46.005176+00:00",
+      "pid": 1247,
+      "returncode": 0,
+      "seconds": 0.3289368459999764,
+      "finished_utc": "2026-09-08T14:35:46.334117+00:00"
+    },
+    {
+      "name": "racecheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-smoke"
+      ],
+      "started_utc": "2026-09-08T14:35:46.339195+00:00",
+      "pid": 1265,
+      "returncode": 0,
+      "seconds": 0.8118955859999915,
+      "finished_utc": "2026-09-08T14:35:47.151094+00:00"
+    },
+    {
+      "name": "native-selection",
+      "command": [
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:47.156104+00:00",
+      "pid": 1298,
+      "returncode": 0,
+      "seconds": 0.21216865100001314,
+      "finished_utc": "2026-09-08T14:35:47.368277+00:00"
+    },
+    {
+      "name": "selection-memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:47.373326+00:00",
+      "pid": 1303,
+      "returncode": 0,
+      "seconds": 0.39304238699997995,
+      "finished_utc": "2026-09-08T14:35:47.766373+00:00"
+    },
+    {
+      "name": "selection-synccheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:47.772220+00:00",
+      "pid": 1321,
+      "returncode": 0,
+      "seconds": 0.5394803720000141,
+      "finished_utc": "2026-09-08T14:35:48.311704+00:00"
+    },
+    {
+      "name": "selection-racecheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/angus/build-spacepdhcg-joint-v596/joint-selection-test"
+      ],
+      "started_utc": "2026-09-08T14:35:48.316097+00:00",
+      "pid": 1339,
+      "returncode": 0,
+      "seconds": 0.9062682780000273,
+      "finished_utc": "2026-09-08T14:35:49.222369+00:00"
+    }
+  ],
+  "sanitizer_python_cases": {
+    "python-parity": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-parity-memcheck": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-parity-synccheck": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-parity-racecheck": {
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection-memcheck": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection-synccheck": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python-selection-racecheck": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "final_compatibility_python_cases": {
+    "new": {
+      "tests": 62,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "old": {
+      "tests": 54,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "final_ruff": [
+    {
+      "name": "ruff-check",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "src/spacepdhcg/gtoc12/gpu_joint.py",
+        "tests/test_gtoc12_gpu_joint_compatibility.py"
+      ],
+      "started_utc": "2026-09-08T14:43:34.831537+00:00",
+      "pid": 635,
+      "returncode": 0,
+      "seconds": 0.02135445199996866,
+      "finished_utc": "2026-09-08T14:43:34.852895+00:00"
+    },
+    {
+      "name": "ruff-format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "src/spacepdhcg/gtoc12/gpu_joint.py",
+        "tests/test_gtoc12_gpu_joint_compatibility.py"
+      ],
+      "started_utc": "2026-09-08T14:43:34.859037+00:00",
+      "pid": 664,
+      "returncode": 0,
+      "seconds": 0.02160294899999826,
+      "finished_utc": "2026-09-08T14:43:34.880644+00:00"
+    }
+  ],
+  "benchmark": {
+    "path": "publication-validation/benchmark.json",
+    "sha256": "e96792418dd39e56d9b0267f9709bbaf940d2103eb863e9c538d4eff79587053",
+    "order_per_block": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "blocks": 3,
+    "mesh_days": 3,
+    "cases": [
+      {
+        "ship": "ship-01.json",
+        "cache": "cold",
+        "candidates": 186,
+        "scalar_median_seconds": 0.084988485,
+        "batched_median_seconds": 0.0095721425,
+        "speedup": 8.878731694602331,
+        "batched_candidates_per_second": 19431.3864424814,
+        "correctness_passed": true
+      },
+      {
+        "ship": "ship-01.json",
+        "cache": "warm",
+        "candidates": 186,
+        "scalar_median_seconds": 0.03381709250000001,
+        "batched_median_seconds": 0.004284932,
+        "speedup": 7.892095487162925,
+        "batched_candidates_per_second": 43407.92339295,
+        "correctness_passed": true
+      },
+      {
+        "ship": "ship-02.json",
+        "cache": "cold",
+        "candidates": 156,
+        "scalar_median_seconds": 0.0668884465,
+        "batched_median_seconds": 0.0083217215,
+        "speedup": 8.037813630268689,
+        "batched_candidates_per_second": 18746.121220230692,
+        "correctness_passed": true
+      },
+      {
+        "ship": "ship-02.json",
+        "cache": "warm",
+        "candidates": 156,
+        "scalar_median_seconds": 0.02444415,
+        "batched_median_seconds": 0.003223498,
+        "speedup": 7.583113127416242,
+        "batched_candidates_per_second": 48394.632166671116,
+        "correctness_passed": true
+      }
+    ]
+  },
+  "scope": "Search-surrogate arithmetic, bookkeeping and controller performance only; no new low-thrust trajectory or fleet certificate is produced by these tests.",
+  "initial_fixture_omission": "The initial strict harness stopped on 35 passed / 7 skipped because an existing hardcoded historical jointopt route fixture was absent. Its exact Git-tracked bytes were then pinned and copied, all source remained unchanged, and all 42+8 tests were rerun normally and under every sanitizer with zero skips.",
+  "native_source_unchanged_for_final_python_overlay": true,
+  "original_v590_evidence": "original-v590/evidence-files.json",
+  "h100_status": "No upload or run. Automatic approval review rejected the remote action; root is awaiting explicit user approval. These are not H100 measurements.",
+  "ctest_registration_addendum": {
+    "report": "ctest-registration/evidence/report.json",
+    "report_sha256": "1d8e800d183edbaf7505dd32c432bffb082b8d315e98d69d567d6b5c48af1d3d",
+    "cmake_sha256": "1fca2deaa9ea496773f82e017d9849da47778717ca6daa7ce63a02c13e365b5a",
+    "scope": "Separate test-only registration/build; v596 core and original source snapshot unchanged."
+  }
+}

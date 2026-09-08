@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "-c",
+    "import sys; from pathlib import Path; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,str(Path('src').resolve())); import pytest; raise SystemExit(pytest.main(['-q','tests/test_gtoc12_gpu_joint.py','tests/test_gtoc12_jointopt.py']))"
+  ],
+  "seconds": 18.660912554,
+  "returncode": 0,
+  "library": "/home/angus/build-spacepdhcg-joint-v590/build/cuda/libspacepdhcg_cuda.so",
+  "library_sha256": "ffbae813f1f683d276213cb83ec8be17d1c2338c9c4a96f3ec5283e26a432b73",
+  "source_sha256": {
+    "src/spacepdhcg/gtoc12/gpu_joint.py": "a6c107c4a336cce3d612d3c946eec7a4f85c9c6656ee3241ed21845e99cbba02",
+    "src/spacepdhcg/gtoc12/jointopt.py": "80ae101b05681585bf9f6cb4cd57b71c88677e92318be75bf7dd0dd409741ecf",
+    "tests/test_gtoc12_gpu_joint.py": "42d9df18e2eda5d0bb38b5f64ecdf4bc89476d6c1c83654cfd14019756608388"
+  }
+}

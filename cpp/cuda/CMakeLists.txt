@@ -108,12 +108,14 @@ add_library(
         src/gtoc12_collection.cu
         src/gtoc12_retime.cu
         src/gtoc12_collect_dp.cu
+        src/gtoc12_joint.cu
         src/native_qoco_adapter.cpp
         src/native_qoco_gpu.cu
         src/orbitweaver_gpu.cu
         src/persistent_pdhcg.cu
 )
 add_library(SpacePDHCG::cuda ALIAS spacepdhcg_cuda)
+set_source_files_properties(src/gtoc12_joint.cu PROPERTIES COMPILE_OPTIONS "--fmad=false")
 set_source_files_properties(src/gtoc12_discretisation.cu src/gtoc12_conic.cu src/gtoc12_qoco.cu src/gtoc12_scvx.cu src/gtoc12_verification.cu src/gtoc12_neighbours.cu src/gtoc12_collection.cu src/gtoc12_retime.cu src/gtoc12_collect_dp.cu PROPERTIES
     COMPILE_OPTIONS "--fmad=false"
 )
@@ -222,6 +224,11 @@ if(BUILD_TESTING)
         CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/*_test.cu"
     )
+    list(APPEND SPACEPDHCG_CUDA_TEST_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/gtoc12_joint_smoke.cu"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/gtoc12_joint_selection_test.cu"
+    )
+    list(REMOVE_DUPLICATES SPACEPDHCG_CUDA_TEST_SOURCES)
     foreach(source IN LISTS SPACEPDHCG_CUDA_TEST_SOURCES)
         get_filename_component(test_name "${source}" NAME_WE)
         # This standalone test needs the isolated QOCO source headers/library;
@@ -254,6 +261,11 @@ if(BUILD_TESTING)
             "${test_name}"
             PRIVATE SPACEPDHCG_SOURCE_COMMIT="${SPACEPDHCG_SOURCE_COMMIT}"
         )
+        if(test_name STREQUAL "gtoc12_joint_smoke"
+           OR test_name STREQUAL "gtoc12_joint_selection_test")
+            # These tests perform their native API calls inside assert().
+            target_compile_options("${test_name}" PRIVATE -UNDEBUG)
+        endif()
         set_target_properties(
             "${test_name}"
             PROPERTIES
