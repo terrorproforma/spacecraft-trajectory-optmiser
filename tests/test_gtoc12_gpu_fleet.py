@@ -1,5 +1,6 @@
 """CUDA fleet search versus exhaustive subsets, including cooperative closures."""
 
+import ctypes as ct
 import itertools
 import json
 import os
@@ -41,6 +42,131 @@ def exact(columns, weights=None, max_ships=100):
         if sum(c.ships for c in chosen) <= max_ships and not fleet_feasible(chosen):
             best = max(best, sum(c.value(weights) for c in chosen))
     return best
+
+
+def csr_reference(columns, weights=None, incumbent=None, cap=200000, rounds=16):
+    """Keep the CPU topology + legacy native ABI as an independent setup oracle."""
+    from spacepdhcg.gtoc12.cooperative import usable_columns
+    from spacepdhcg.gtoc12.gpu_fleet import EXCHANGE_REPORT, REPORT
+
+    usable, _ = usable_columns(columns, weights)
+    arrays = pack_columns(usable, weights, incumbent)
+    library = ct.CDLL(os.environ["SPACEPDHCG_GTOC12_CUDA_LIBRARY"])
+    native = library.spacepdhcg_gtoc12_fleet_search_v2_host
+    native.argtypes = (
+        [ct.c_int32] * 3 + [ct.c_uint64] + [ct.c_void_p] * 9 + [ct.c_int32, ct.c_void_p]
+    )
+    native.restype = ct.c_int
+    selected = np.empty(len(usable), dtype=np.uint8)
+    report = np.zeros(1, dtype=REPORT)
+    exchanges = np.zeros(1, dtype=EXCHANGE_REPORT)
+    status = native(
+        len(usable),
+        100,
+        3,
+        cap,
+        *(a.ctypes.data for a in arrays),
+        selected.ctypes.data,
+        report.ctypes.data,
+        rounds,
+        exchanges.ctypes.data,
+    )
+    assert status == 0
+    return (
+        sorted(c.identifier for i, c in enumerate(usable) if selected[i]),
+        report[0],
+        exchanges[0],
+    )
+
+
+@GPU
+@pytest.mark.parametrize("seed", range(6))
+def test_cuda_route_setup_matches_csr_oracle_including_filtered_dependencies(seed):
+    from dataclasses import replace
+
+    rng = np.random.default_rng(seed)
+    columns = [
+        column(
+            30 - i,
+            (a := rng.choice(20, 3, replace=False).tolist()),
+            a,
+            float(rng.integers(1, 20)) * 100,
+        )
+        for i in range(14)
+    ]
+    # The provider is itself unsupported. Single-pass eligibility keeps its user,
+    # but the final provider CSR must not include the filtered-out column.
+    columns += [
+        column(50, [50], [51], 700, {99: 65000.0}),
+        column(51, [51], [50], 900, {50: 65000.0}),
+        replace(column(52, [99], [99], float("nan")), certified=False),
+        column(53, [53], [54], 700, {54: 65000.0}),
+        column(54, [54], [53], 900, {53: 65000.0}),
+        column(55, [55], [56], 400, {56: 65000.0 + 2e-6}),
+        column(56, [56], [56], 500),
+    ]
+    weights = {i: float(rng.choice([-0.5, 0, 0.5, 1, 2])) for i in range(60)}
+    warm = tuple(columns[-2:])
+    for cap, rounds in [(0, 16), (50000, 0), (100, 1)]:
+        ids, report, exchanges = csr_reference(columns, weights, warm, cap, rounds)
+        result = solve_fleet_cuda(
+            columns,
+            weights=weights,
+            incumbent=warm,
+            node_cap=cap,
+            exchange_rounds=rounds,
+            prefix_bits=3,
+        )
+        assert [c.identifier for c in result.selected] == ids
+        for name in ("objective", "upper_bound", "nodes", "exhaustive"):
+            assert getattr(result, name) == report[name]
+        for name in ("moves", "rounds", "proposals"):
+            assert getattr(result, "exchange_" + name) == exchanges[name]
+
+
+@GPU
+def test_cuda_workspace_creation_does_not_use_cpu_scoring_or_topology(monkeypatch):
+    from spacepdhcg.gtoc12 import cooperative, gpu_fleet
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("CPU numerical setup was called")
+
+    columns = [column(2, [2], [2], 800), column(1, [1], [1], 700)]
+    with monkeypatch.context() as patch:
+        patch.setattr(cooperative, "usable_columns", forbidden)
+        patch.setattr(gpu_fleet, "pack_columns", forbidden)
+        patch.setattr(FleetColumn, "value", forbidden)
+        workspace = CudaFleetWorkspace(columns, weights={1: 2.0})
+    with workspace:
+        result = workspace.solve()
+        assert result.objective == 2200
+        assert [c.identifier for c in result.selected] == [1, 2]
+
+
+@GPU
+def test_cuda_scoring_preserves_small_terms_during_weighted_cancellation():
+    c = column(1, [1, 2, 3, 4], [1, 2, 3, 4], 4.0)
+    weights = {1: 1e16, 2: 1.0, 3: 1.0, 4: -1e16}
+    result = solve_fleet_cuda([c], weights=weights)
+    assert result.objective == 2.0
+
+
+@GPU
+def test_cuda_setup_handles_more_requirements_than_columns_and_an_empty_usable_pool():
+    from dataclasses import replace
+
+    provider = column(1, list(reversed(range(1, 97))), [], 0)
+    consumer = column(2, [200], list(range(1, 97)), 2000, dict.fromkeys(range(1, 97), 65000.0))
+    for columns in (
+        [consumer, provider],
+        [consumer],
+        [replace(provider, certified=False), consumer],
+    ):
+        ids, report, _ = csr_reference(columns)
+        with CudaFleetWorkspace(columns) as workspace:
+            result = workspace.solve()
+            assert [c.identifier for c in result.selected] == ids
+            assert result.objective == report["objective"]
 
 
 @GPU

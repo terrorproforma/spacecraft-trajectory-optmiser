@@ -108,8 +108,9 @@ if (-not (Get-NetTCPConnection -LocalPort 4173 -State Listen -ErrorAction Silent
 Start-Process 'http://127.0.0.1:4173/?dataset=gtoc12-exchange-v733&epoch=69807&preset=oblique&z=1'
 ```
 
-The full application is still not GPU native: Python packs topology/values and
-orchestrates routes, and independent CPU mission checks dominate elapsed time.
+The full application is still not GPU native: Python orchestrates routes, and
+independent CPU mission checks dominate elapsed time. Numerical fleet setup has
+subsequently moved to [CUDA scoring and topology construction](GPU_FLEET_TOPOLOGY.md).
 Further score gains need better route generation and richer exchanges, alongside
 work redistribution and stronger GPU bounds. A subsequent
 [retained workspace](GPU_FLEET_WORKSPACE.md) removes repeated topology packing

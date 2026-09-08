@@ -1,5 +1,9 @@
 # Retained CUDA fleet workspace
 
+This page records the v735 retained-workspace checkpoint. The current backend
+also performs [scoring and topology construction on CUDA](GPU_FLEET_TOPOLOGY.md);
+the benchmark results below remain tied to their original frozen builds.
+
 Repeated selection from the same 2,492-column pool now takes **50 ms on RTX 5090
 and 54 ms on H100**, including Python result materialisation and independent
 packing checks. This is **2.03× / 2.32× faster** than the published one-shot
@@ -14,7 +18,7 @@ GPU-computed column order and all search buffers. Each solve uploads only the
 incumbent mask and submits GPU search with the requested ship, node and exchange
 limits. All kernels are submitted before the final diagnostic downloads.
 
-Creation still constructs topology and aggregates column values in Python.
+At this checkpoint, creation constructs topology and aggregates values in Python.
 Subsequent searches reuse that work. The original one-shot entry points remain
 available; existing CLI calls still use them. Repeated callers explicitly own a
 workspace rather than relying on a hidden global cache. A changed pool, bonus
@@ -116,7 +120,8 @@ not rerun mission physics. The verified fleet remains displayed in
 `gtoc12-exchange-v733` in the existing web visualiser.
 
 The whole application is not yet GPU native. Python route orchestration and
-initial topology construction remain, as do the independent CPU mission audits.
+independent CPU mission audits remain; initial numerical topology construction
+has subsequently moved to CUDA as described above.
 Further work should target measured kernel bottlenecks, stronger route generation
 and broader GPU-controlled search; this fixed pool is already close to the older
 CPU relaxation bound and offers limited remaining score headroom.

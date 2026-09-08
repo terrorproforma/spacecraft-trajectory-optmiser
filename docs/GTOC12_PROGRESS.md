@@ -9,6 +9,11 @@ The subsequent retained CUDA workspace accelerates repeated fixed-pool fleet
 selection by **2.03× locally / 2.32× on H100**, to **50 / 54 ms** after setup.
 The score is unchanged. [Measurements, tests and retained API](GPU_FLEET_WORKSPACE.md).
 
+The latest backend also computes fleet scores, eligibility and topology on CUDA.
+One-shot selection improves to **72 ms locally / 87 ms on H100** with identical
+full-pool score and search counts. Both GPUs pass 115 tests.
+[GPU setup implementation and evidence](GPU_FLEET_TOPOLOGY.md).
+
 ## Earlier orphan-recovery checkpoint
 
 The remainder of this page records the preceding checkpoint and its comparisons.

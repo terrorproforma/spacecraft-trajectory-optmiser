@@ -106,6 +106,13 @@ safety checks, including zero leaked allocations. This accelerates packing
 existing routes; route generation and full physics validation are separate.
 [Retained API, exact timings and retrieved evidence](docs/GPU_FLEET_WORKSPACE.md).
 
+The current CUDA backend also builds fleet scores, eligibility, ordering and
+conflict/provider topology on the GPU. Existing one-shot CLI calls improve from
+**95 to 72 ms locally** and **124 to 87 ms on H100**, with identical full-pool
+score, selections and search counts. Both GPUs pass 115 tests; full-pool CUDA
+checks find no errors or leaks. Python still serialises inputs and orchestrates
+the broader mission search. [GPU setup and measurements](docs/GPU_FLEET_TOPOLOGY.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

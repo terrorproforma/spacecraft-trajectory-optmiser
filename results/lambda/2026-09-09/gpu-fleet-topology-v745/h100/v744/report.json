@@ -1,0 +1,69 @@
+{
+  "pid": 238233,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 3.1685475060367025,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "/home/ubuntu/spacepdhcg-fleet-v742/repo/tests/test_gtoc12_gpu_fleet.py",
+        "/home/ubuntu/spacepdhcg-fleet-v742/repo/tests/test_gtoc12_gpu_cli.py",
+        "/home/ubuntu/spacepdhcg-fleet-v742/repo/tests/test_gtoc12_cooperative.py",
+        "/home/ubuntu/spacepdhcg-fleet-v742/repo/tests/test_gtoc12_collectdp.py",
+        "/home/ubuntu/spacepdhcg-fleet-v742/repo/tests/test_gtoc12_completion_costs.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 51.96546660998138,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "--leak-check",
+        "full",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-fleet-workspace-v744/case.py"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 2.7717897520051338,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-fleet-workspace-v744/case.py"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 1.8043235939694569,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-fleet-workspace-v744/case.py"
+      ]
+    }
+  ],
+  "stage": "synccheck",
+  "child_pid": 238337
+}

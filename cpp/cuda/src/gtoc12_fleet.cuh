@@ -230,13 +230,13 @@ __global__ void finish(Problem p,int tasks,const uint8_t* masks,const Row* rows,
     copy(p.n,output,masks+size_t(best)*p.n);
 }
 struct Memory {
-    std::vector<void*> pointers;cudaStream_t stream{};int device=-1;
+    std::vector<void*> pointers;cudaStream_t stream{};int device=-1;bool owns_stream=true;
     ~Memory(){
         int previous=-1;cudaGetDevice(&previous);
         if(device>=0&&previous!=device)cudaSetDevice(device);
         if(stream)cudaStreamSynchronize(stream);
         for(void* p:pointers)cudaFree(p);
-        if(stream)cudaStreamDestroy(stream);
+        if(stream&&owns_stream)cudaStreamDestroy(stream);
         if(previous>=0&&previous!=device)cudaSetDevice(previous);
     }
     template<class T> bool alloc(T*& out,size_t n) {
@@ -256,17 +256,24 @@ struct Workspace {
     uint8_t *dw{},*masks{},*active{},*phase{},*exclusions{},*out{};
     Row* rows{};Report* result{};Exchange* exchange{};double* proposal_values{};
     Problem problem(int max_ships) const {return {n,max_ships,c,dco,dci,dro,dpo,dpi};}
+    bool open() {
+        m.pointers.reserve(18);
+        return cudaGetDevice(&m.device)==cudaSuccess&&
+               cudaStreamCreateWithFlags(&m.stream,cudaStreamNonBlocking)==cudaSuccess;
+    }
+    bool buffers(int count,int prefix) {
+        n=count;bits=std::min(prefix,n);tasks=1<<bits;
+        return m.alloc(dw,n)&&m.alloc(order,2*size_t(n))&&m.alloc(masks,size_t(tasks+3)*n)&&
+               m.alloc(active,size_t(tasks)*n)&&m.alloc(phase,size_t(tasks)*(n+1))&&
+               m.alloc(exclusions,size_t(tasks)*n)&&m.alloc(out,n)&&m.alloc(rows,tasks+3)&&
+               m.alloc(result,1)&&m.alloc(exchange,1)&&m.alloc(proposal_values,size_t(n+1)*101);
+    }
     bool init(int count,int prefix,const Column* columns,const int32_t* co,const int32_t* ci,
               const int32_t* ro,const int32_t* po,const int32_t* pi) {
-        n=count;bits=std::min(prefix,n);tasks=1<<bits;m.pointers.reserve(18);
-        if(cudaGetDevice(&m.device)!=cudaSuccess||
-           cudaStreamCreateWithFlags(&m.stream,cudaStreamNonBlocking)!=cudaSuccess)return false;
+        n=count;if(!open())return false;
         if(!m.input(c,columns,n)||!m.input(dco,co,n+1)||!m.input(dci,ci,co[n])||
            !m.input(dro,ro,n+1)||!m.input(dpo,po,ro[n]+1)||!m.input(dpi,pi,po[ro[n]])||
-           !m.alloc(dw,n)||!m.alloc(order,2*size_t(n))||!m.alloc(masks,size_t(tasks+3)*n)||
-           !m.alloc(active,size_t(tasks)*n)||!m.alloc(phase,size_t(tasks)*(n+1))||
-           !m.alloc(exclusions,size_t(tasks)*n)||!m.alloc(out,n)||!m.alloc(rows,tasks+3)||
-           !m.alloc(result,1)||!m.alloc(exchange,1)||!m.alloc(proposal_values,size_t(n+1)*101))return false;
+           !buffers(count,prefix))return false;
         if(n)rank_columns<<<(n+127)/128,128,0,m.stream>>>(problem(100),order);
         return cudaGetLastError()==cudaSuccess&&cudaStreamSynchronize(m.stream)==cudaSuccess;
     }
@@ -362,3 +369,4 @@ extern "C" int spacepdhcg_gtoc12_fleet_search_v2_host(int32_t n,int32_t max_ship
     if(!exchange)return 1;
     return run_gtoc12_fleet(n,max_ships,bits,cap,c,co,ci,ro,po,pi,warm,selected,report,rounds,exchange);
 }
+#include "gtoc12_fleet_topology.cuh"

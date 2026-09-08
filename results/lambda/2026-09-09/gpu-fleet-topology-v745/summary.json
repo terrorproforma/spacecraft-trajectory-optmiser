@@ -1,0 +1,115 @@
+{
+  "verified_score_kg": 12842.970672270894,
+  "score_change_kg": 0,
+  "solution_sha256": "fba0ee086ae55d6c690f0e5dbaf874834b6f63e2f238e436d90671bdddff3c5f",
+  "scope": "GPU numerical fleet setup and selection from existing route records; no new trajectory or mission qualification.",
+  "initial_failure": "The v741 strict comparison caught a 1.82e-12 kg score discrepancy from uncorrected summation. v742 uses compensated sums; all v743 comparisons require exact equality of selection, objective, bound and work counts.",
+  "local": {
+    "first_workspace_setup_seconds": 0.06979140199999279,
+    "legacy_first_workspace_setup_seconds": 0.060999514000002364,
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.09492966600001296,
+          "native_seconds": 0.04691747649999911
+        },
+        "new_one_shot": {
+          "seconds": 0.07226548799999932,
+          "native_seconds": 0.04991414850000808
+        },
+        "old_retained": {
+          "seconds": 0.04924443200000894,
+          "native_seconds": 0.044099762000001874
+        },
+        "retained": {
+          "seconds": 0.04980603400001371,
+          "native_seconds": 0.04429809799999873
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.3540793889999918,
+          "native_seconds": 0.30034358849999876
+        },
+        "new_one_shot": {
+          "seconds": 0.3251679470000113,
+          "native_seconds": 0.3028601794999588
+        },
+        "old_retained": {
+          "seconds": 0.30267197249997935,
+          "native_seconds": 0.297735353500002
+        },
+        "retained": {
+          "seconds": 0.30155353799997897,
+          "native_seconds": 0.29632378050004604
+        }
+      }
+    },
+    "one_shot_speedup": 1.3136238144550252,
+    "one_shot_reduction_percent": 23.874705300248866,
+    "fleet_selections_per_second": 13.837864071436277,
+    "retained_selections_per_second": 20.077888554622213,
+    "input_columns": 2492,
+    "usable_columns": 2488,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "archive_sha256": "6f4fa70aadab29c9f93c0ed98abbf49d78942eff1b9795092c643064c98a6f31",
+    "verified_members": 1696
+  },
+  "h100": {
+    "first_workspace_setup_seconds": 0.07186148298205808,
+    "legacy_first_workspace_setup_seconds": 0.09453103499254212,
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.12397803401108831,
+          "native_seconds": 0.050330893980572
+        },
+        "new_one_shot": {
+          "seconds": 0.08692903548944741,
+          "native_seconds": 0.05290903797140345
+        },
+        "old_retained": {
+          "seconds": 0.05404240998905152,
+          "native_seconds": 0.048977986501995474
+        },
+        "retained": {
+          "seconds": 0.054632117971777916,
+          "native_seconds": 0.04893182500381954
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.3439610304776579,
+          "native_seconds": 0.2553389145177789
+        },
+        "new_one_shot": {
+          "seconds": 0.2968431854969822,
+          "native_seconds": 0.25798947204020806
+        },
+        "old_retained": {
+          "seconds": 0.2610835489758756,
+          "native_seconds": 0.25496695152833126
+        },
+        "retained": {
+          "seconds": 0.26098006949177943,
+          "native_seconds": 0.25374996548634954
+        }
+      }
+    },
+    "one_shot_speedup": 1.4261982007857248,
+    "one_shot_reduction_percent": 29.883518332229176,
+    "fleet_selections_per_second": 11.503636205895706,
+    "retained_selections_per_second": 18.304250999688207,
+    "input_columns": 2492,
+    "usable_columns": 2488,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "archive_sha256": "0bea87fcad346c48bbbf9b28b698332f5a5cf07e917e1254babc0429bcaffa26",
+    "verified_members": 1696
+  }
+}

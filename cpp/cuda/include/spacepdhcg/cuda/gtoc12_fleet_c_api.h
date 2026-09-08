@@ -61,6 +61,25 @@ int spacepdhcg_gtoc12_fleet_workspace_solve_host(
     spacepdhcg_gtoc12_fleet_report* report, int32_t exchange_rounds,
     spacepdhcg_gtoc12_fleet_exchange_report* exchange);
 void spacepdhcg_gtoc12_fleet_workspace_destroy_host(void* workspace);
+typedef struct { int64_t asteroid; double epoch; } spacepdhcg_gtoc12_fleet_event;
+typedef struct { double mass, weight; } spacepdhcg_gtoc12_fleet_mass;
+/* Build the pool on CUDA from serialized route records. metadata supplies ships,
+ * identifier and reserved=certified (0/1); its value/mass fields are ignored.
+ * Each offsets array has columns+1 entries. Mass records preserve source order.
+ * CUDA scores, filters, sorts and constructs conflict/provider CSR. permutation
+ * receives usable_count original row indices, in canonical search order.
+ * All arrays are host resident; outputs must hold columns indices and one count.
+ * Missing foreign providers are checked against ALL certified input columns,
+ * matching the existing single-pass eligibility policy (not recursive closure).
+ */
+int spacepdhcg_gtoc12_fleet_workspace_create_routes_host(
+    int32_t columns, int32_t prefix_bits,
+    const spacepdhcg_gtoc12_fleet_column* metadata,
+    const int32_t* deploy_offsets, const spacepdhcg_gtoc12_fleet_event* deploys,
+    const int32_t* collect_offsets, const int64_t* collects,
+    const int32_t* foreign_offsets, const spacepdhcg_gtoc12_fleet_event* foreign,
+    const int32_t* mass_offsets, const spacepdhcg_gtoc12_fleet_mass* masses,
+    void** workspace, int32_t* permutation, int32_t* usable_count);
 #ifdef __cplusplus
 }
 #endif
