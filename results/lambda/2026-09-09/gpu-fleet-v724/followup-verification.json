@@ -1,0 +1,61 @@
+{
+  "receipts": {
+    "local": {
+      "sha256": "94a0ed2024dd3eafad575f03a90c423936e605771d6bebd5e9f23f0603c90666",
+      "members": 18,
+      "tests": "72 passed, 10 skipped in 1.55s"
+    },
+    "h100": {
+      "sha256": "88ab367d0e5a19f5db440ff13d094a592cafcfc19a9c7fbdbf9abcac62620a42",
+      "members": 17,
+      "tests": "72 passed, 10 skipped in 2.66s"
+    }
+  },
+  "source_checks": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_fleet_c_api.h": {
+      "comparison": "text identical after newline normalization",
+      "checkout_sha256": "e4666b1aa0b3758c475b79cff513752727be9888e3d6aa01be67969e7e2dfd14",
+      "tested_sha256": "e4666b1aa0b3758c475b79cff513752727be9888e3d6aa01be67969e7e2dfd14"
+    },
+    "cpp/cuda/src/gtoc12_fleet.cuh": {
+      "comparison": "text identical after newline normalization",
+      "checkout_sha256": "2127933f3374156ddcea4a8a0c21bfd10a0ee574c312be492fca34d8dba2d409",
+      "tested_sha256": "2127933f3374156ddcea4a8a0c21bfd10a0ee574c312be492fca34d8dba2d409"
+    },
+    "cpp/cuda/src/orbitweaver_gpu.cu": {
+      "comparison": "text identical after newline normalization",
+      "checkout_sha256": "9499c52673ea3839384c74f68578ac106ad4a7caa4de58355915ab83844fa886",
+      "tested_sha256": "9499c52673ea3839384c74f68578ac106ad4a7caa4de58355915ab83844fa886"
+    },
+    "src/spacepdhcg/gtoc12/cli.py": {
+      "comparison": "Python AST identical",
+      "checkout_sha256": "692b83262edc13cca242f04b32779c068ee430fbb9894d820199108bcd541b67",
+      "tested_sha256": "692b83262edc13cca242f04b32779c068ee430fbb9894d820199108bcd541b67"
+    },
+    "src/spacepdhcg/gtoc12/cooperative.py": {
+      "comparison": "Python AST identical",
+      "checkout_sha256": "468c20c83dd3b248c446b302ee039be91f795f87c05ae89b1995c24693662f79",
+      "tested_sha256": "ac6392617cf2e68c8114bd48905be9b066572d3b136bb189eda5504bb7525d31"
+    },
+    "src/spacepdhcg/gtoc12/gpu_fleet.py": {
+      "comparison": "Python AST identical",
+      "checkout_sha256": "961175ee8e7d4ee822ff59dbfe4a12f328389136d707dd0e258e925853427e58",
+      "tested_sha256": "961175ee8e7d4ee822ff59dbfe4a12f328389136d707dd0e258e925853427e58"
+    },
+    "tests/test_gtoc12_collectdp.py": {
+      "comparison": "Python AST identical",
+      "checkout_sha256": "b9d6cd2ec4b35033c76131ca2d120285d06fadf3aeb3c987257b9fbf1b7c105e",
+      "tested_sha256": "7f60421aff4e0d5db97cae7d8680d4b07e3e8efe7d410fd61111a393ac053034"
+    },
+    "tests/test_gtoc12_gpu_cli.py": {
+      "comparison": "Python AST identical",
+      "checkout_sha256": "0541c4ad51d55b5c91e68be7287eb4e328380efd746eedfbef67c353263dd717",
+      "tested_sha256": "0541c4ad51d55b5c91e68be7287eb4e328380efd746eedfbef67c353263dd717"
+    },
+    "tests/test_gtoc12_gpu_fleet.py": {
+      "comparison": "Python AST identical",
+      "checkout_sha256": "d098ddae1596685cecb2442ef3059f471b7d60b2035decece437c777ca3a6564",
+      "tested_sha256": "d098ddae1596685cecb2442ef3059f471b7d60b2035decece437c777ca3a6564"
+    }
+  }
+}

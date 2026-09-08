@@ -86,6 +86,15 @@ on H100**. Four complete campaigns retain the verified fleet score. Independent
 CPU fleet audits still dominate total runtime; the overall timing difference is
 small. [Profiles, measurements, validation and downloaded results](docs/GPU_LEG_CERTIFICATION.md).
 
+Fleet packing now has an opt-in CUDA backend. On the 2,492-column archived pool,
+conflict counters make the same 35,145-node search **9.02x faster locally and
+14.04x on H100** than the initial CUDA implementation (0.300 s and 0.256 s native
+calls). Both GPUs pass 50 tests and full-pool memory, race and synchronization
+checks. The verified score remains **12,810.136 weighted kg**. Search quality and
+bounds still trail the CPU LP-assisted master; these component ratios are not
+whole-campaign or CPU-equivalent speedups. [Implementation, exact work counts,
+limitations and retrieved evidence](docs/GPU_FLEET_MASTER.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

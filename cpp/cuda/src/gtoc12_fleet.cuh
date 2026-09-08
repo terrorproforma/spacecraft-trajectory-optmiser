@@ -1,0 +1,198 @@
+#pragma once
+#include "spacepdhcg/cuda/gtoc12_fleet_c_api.h"
+#include <cuda_runtime.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <vector>
+
+namespace gtoc12_fleet {
+using Column=spacepdhcg_gtoc12_fleet_column;
+using Report=spacepdhcg_gtoc12_fleet_report;
+static_assert(sizeof(Column)==32&&sizeof(Report)==40);
+struct Row {double value;uint64_t nodes;int exhaustive;};
+struct Problem {int n,max_ships;const Column* c;const int *co,*ci,*ro,*po,*pi;};
+__device__ bool conflicts(const Problem& p,int i,const uint8_t* selected) {
+    for(int k=p.co[i];k<p.co[i+1];++k)if(selected[p.ci[k]])return true;
+    return false;
+}
+__device__ bool supplied(const Problem& p,int i,const uint8_t* selected) {
+    for(int g=p.ro[i];g<p.ro[i+1];++g) {
+        bool found=false;
+        for(int k=p.po[g];k<p.po[g+1];++k)if(selected[p.pi[k]]){found=true;break;}
+        if(!found)return false;
+    }
+    return true;
+}
+__device__ bool feasible(const Problem& p,const uint8_t* selected,int& ships,double& mass,double& value) {
+    ships=0;mass=value=0;
+    bool valid=true;
+    for(int i=0;i<p.n;++i)if(selected[i]) {
+        ships+=p.c[i].ships;mass+=p.c[i].mass;value+=p.c[i].value;
+        if(conflicts(p,i,selected)||!supplied(p,i,selected))valid=false;
+    }
+    return valid&&ships<=p.max_ships&&(!ships||ships<=fmin(100.0,2.0*exp(.004*mass/ships))+1e-9);
+}
+__device__ void copy(int n,uint8_t* dst,const uint8_t* src) {for(int i=0;i<n;++i)dst[i]=src[i];}
+// A selected fleet contains at most 100 columns. Counts therefore fit in a byte.
+// Updating adjacent columns on each push/pop replaces repeated CSR scans at every node.
+__device__ void mark(const Problem& p,int i,uint8_t* blocked,int delta) {
+    for(int k=p.co[i];k<p.co[i+1];++k)blocked[p.ci[k]]+=delta;
+}
+__global__ void rank_columns(Problem p,int* order) {
+    const int i=int(blockIdx.x*blockDim.x+threadIdx.x);if(i>=p.n)return;
+    for(int mode=0;mode<2;++mode) {
+        const double a=mode?p.c[i].value/p.c[i].ships:p.c[i].value;int rank=0;
+        for(int j=0;j<p.n;++j) {
+            const double b=mode?p.c[j].value/p.c[j].ships:p.c[j].value;
+            if(b>a||(b==a&&(p.c[j].value>p.c[i].value||(p.c[j].value==p.c[i].value&&
+                (p.c[j].identifier<p.c[i].identifier||(p.c[j].identifier==p.c[i].identifier&&j<i))))))++rank;
+        }
+        order[mode*p.n+rank]=i;
+    }
+}
+__global__ void seed(Problem p,const int* order,const uint8_t* warm,uint8_t* masks,Row* rows) {
+    const int mode=int(threadIdx.x);if(mode>=3)return;
+    auto* chosen=masks+size_t(mode)*p.n;
+    for(int i=0;i<p.n;++i)chosen[i]=mode==2?warm[i]:0;
+    if(mode<2) {
+        int ships=0;
+        for(int k=0;k<p.n;++k) {
+            const int i=order[mode*p.n+k];
+            if(ships+p.c[i].ships<=p.max_ships&&!conflicts(p,i,chosen)){chosen[i]=1;ships+=p.c[i].ships;}
+        }
+        for(;;) {
+            double mass,value;int count;
+            if(feasible(p,chosen,count,mass,value))break;
+            bool stranded=false;
+            for(int i=0;i<p.n;++i)if(chosen[i]&&!supplied(p,i,chosen))stranded=true;
+            int victim=-1;
+            for(int i=0;i<p.n;++i)if(chosen[i]&&(!stranded||!supplied(p,i,chosen))) {
+                if(victim<0||p.c[i].mass/p.c[i].ships<p.c[victim].mass/p.c[victim].ships||
+                   (p.c[i].mass/p.c[i].ships==p.c[victim].mass/p.c[victim].ships&&p.c[i].identifier>p.c[victim].identifier))victim=i;
+            }
+            if(victim<0)break;
+            chosen[victim]=0;
+        }
+    }
+    double mass,value;int ships;
+    if(!feasible(p,chosen,ships,mass,value)||value<0){for(int i=0;i<p.n;++i)chosen[i]=0;value=0;}
+    rows[mode]={value,0,1};
+}
+__global__ void search(Problem p,int bits,int tasks,uint64_t cap,uint8_t* best_masks,
+                      uint8_t* active,uint8_t* phase,uint8_t* exclusions,Row* rows) {
+    const int t=int(blockIdx.x*blockDim.x+threadIdx.x);if(t>=tasks)return;
+    const uint64_t budget=cap/uint64_t(tasks)+(uint64_t(t)<cap%uint64_t(tasks));
+    uint8_t* chosen=active+size_t(t)*p.n;
+    uint8_t* best=best_masks+size_t(t+3)*p.n;
+    uint8_t* state=phase+size_t(t)*(p.n+1);
+    uint8_t* blocked=exclusions+size_t(t)*p.n;
+    int initial=0;for(int i=1;i<3;++i)if(rows[i].value>rows[initial].value+1e-9)initial=i;
+    copy(p.n,best,best_masks+size_t(initial)*p.n);double best_value=rows[initial].value;
+    for(int i=0;i<p.n;++i){chosen[i]=0;blocked[i]=0;}
+    uint64_t nodes=0;bool exhaustive=true;
+    int prefix_ships=0;
+    for(int i=0;i<bits;++i)if(((t>>(bits-1-i))&1)==0) {
+        if(prefix_ships+p.c[i].ships>p.max_ships||blocked[i]) {
+            rows[t+3]={best_value,0,1};return;
+        }
+        chosen[i]=1;prefix_ships+=p.c[i].ships;mark(p,i,blocked,1);
+    }
+    int index=bits;bool enter=true;
+    for(;;) {
+        if(enter) {
+            if(nodes==budget){exhaustive=false;break;}++nodes;
+            int ships=0;double mass=0,value=0;bool supplied_all=true;
+            for(int i=0;i<p.n;++i)if(chosen[i]) {
+                ships+=p.c[i].ships;mass+=p.c[i].mass;value+=p.c[i].value;
+                if(!supplied(p,i,chosen))supplied_all=false;
+            }
+            const bool valid=supplied_all&&(!ships||ships<=fmin(100.0,2.0*exp(.004*mass/ships))+1e-9);
+            if(valid&&value>best_value+1e-9) {
+                best_value=value;copy(p.n,best,chosen);
+            }
+            double bound=value;
+            for(int j=index;j<p.n;++j)if(p.c[j].value>0&&!blocked[j])
+                bound=__dadd_ru(bound,p.c[j].value);
+            if(index==p.n||ships>=p.max_ships||bound<=best_value+1e-9)enter=false;
+            else {
+                const bool include=ships+p.c[index].ships<=p.max_ships&&!blocked[index];
+                state[index]=include?1:2;chosen[index]=include;
+                if(include)mark(p,index,blocked,1);
+                ++index;continue;
+            }
+        }
+        --index;if(index<bits)break;
+        if(state[index]==1){chosen[index]=0;mark(p,index,blocked,-1);state[index]=2;++index;enter=true;}
+        else enter=false;
+    }
+    rows[t+3]={best_value,nodes,int(exhaustive)};
+}
+__global__ void finish(Problem p,int tasks,const uint8_t* masks,const Row* rows,
+                       uint8_t* output,Report* report) {
+    if(threadIdx.x)return;
+    int best=0;uint64_t nodes=0;bool exhaustive=true;
+    for(int i=0;i<tasks+3;++i) {
+        if(rows[i].value>rows[best].value+1e-9)best=i;
+        if(i>=3){nodes+=rows[i].nodes;exhaustive=exhaustive&&rows[i].exhaustive;}
+    }
+    double bound=0;for(int i=0;i<p.n;++i)if(p.c[i].value>0)bound=__dadd_ru(bound,p.c[i].value);
+    if(p.n==0)exhaustive=true;
+    *report={rows[best].value,exhaustive?rows[best].value:fmax(bound,rows[best].value),
+             fmax(rows[0].value,rows[1].value),nodes,int(exhaustive),tasks};
+    copy(p.n,output,masks+size_t(best)*p.n);
+}
+struct Memory {
+    std::vector<void*> pointers;cudaStream_t stream{};
+    ~Memory(){if(stream)cudaStreamSynchronize(stream);for(void* p:pointers)cudaFree(p);if(stream)cudaStreamDestroy(stream);}
+    template<class T> bool alloc(T*& out,size_t n) {
+        if(cudaMalloc(&out,std::max(size_t(1),n)*sizeof(T))!=cudaSuccess)return false;
+        pointers.push_back(out);return true;
+    }
+    template<class T> bool input(T*& out,const T* in,size_t n) {
+        return alloc(out,n)&&(!n||cudaMemcpyAsync(out,in,n*sizeof(T),cudaMemcpyHostToDevice,stream)==cudaSuccess);
+    }
+};
+inline bool offsets(const int32_t* p,int n) {
+    if(!p||p[0]!=0)return false;for(int i=0;i<n;++i)if(p[i]<0||p[i+1]<p[i])return false;return true;
+}
+}
+extern "C" int spacepdhcg_gtoc12_fleet_search_host(int32_t n,int32_t max_ships,int32_t bits,uint64_t cap,
+    const spacepdhcg_gtoc12_fleet_column* columns,const int32_t* co,const int32_t* ci,
+    const int32_t* ro,const int32_t* po,const int32_t* pi,const uint8_t* warm,
+    uint8_t* selected,spacepdhcg_gtoc12_fleet_report* report) {
+    using namespace gtoc12_fleet;
+    if(n<0||n>4096||max_ships<0||max_ships>100||bits<0||bits>10||!report||
+       (n&&(!columns||!warm||!selected))||!offsets(co,n)||!offsets(ro,n)||!offsets(po,ro[n]))return 1;
+    if((co[n]&&!ci)||(po[ro[n]]&&!pi))return 1;
+    double magnitude=0,total_mass=0;
+    for(int i=0;i<n;++i) {
+        if(columns[i].ships<=0||columns[i].ships>100||warm[i]>1||
+           !std::isfinite(columns[i].value)||!std::isfinite(columns[i].mass)||columns[i].mass<0)return 1;
+        magnitude+=std::abs(columns[i].value);total_mass+=columns[i].mass;
+        if(!std::isfinite(magnitude)||!std::isfinite(total_mass))return 1;
+    }
+    for(int i=0;i<co[n];++i)if(ci[i]<0||ci[i]>=n)return 1;
+    for(int i=0;i<po[ro[n]];++i)if(pi[i]<0||pi[i]>=n)return 1;
+    bits=std::min(bits,n);const int tasks=1<<bits;
+    try {
+        Memory m;m.pointers.reserve(16);
+        if(cudaStreamCreateWithFlags(&m.stream,cudaStreamNonBlocking)!=cudaSuccess)return 2;
+        Column* c{};int *dco{},*dci{},*dro{},*dpo{},*dpi{},*order{};
+        uint8_t *dw{},*masks{},*active{},*phase{},*exclusions{},*out{};Row* rows{};Report* result{};
+        if(!m.input(c,columns,n)||!m.input(dco,co,n+1)||!m.input(dci,ci,co[n])||
+           !m.input(dro,ro,n+1)||!m.input(dpo,po,ro[n]+1)||!m.input(dpi,pi,po[ro[n]])||
+           !m.input(dw,warm,n)||!m.alloc(order,2*size_t(n))||!m.alloc(masks,size_t(tasks+3)*n)||
+           !m.alloc(active,size_t(tasks)*n)||!m.alloc(phase,size_t(tasks)*(n+1))||
+           !m.alloc(exclusions,size_t(tasks)*n)||
+           !m.alloc(out,n)||!m.alloc(rows,tasks+3)||!m.alloc(result,1))return 2;
+        const Problem p{n,max_ships,c,dco,dci,dro,dpo,dpi};
+        if(n)rank_columns<<<(n+127)/128,128,0,m.stream>>>(p,order);
+        seed<<<1,32,0,m.stream>>>(p,order,dw,masks,rows);
+        search<<<tasks,1,0,m.stream>>>(p,bits,tasks,cap,masks,active,phase,exclusions,rows);
+        finish<<<1,32,0,m.stream>>>(p,tasks,masks,rows,out,result);
+        if(cudaGetLastError()!=cudaSuccess||cudaMemcpyAsync(report,result,sizeof(Report),cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess||
+           (n&&cudaMemcpyAsync(selected,out,n,cudaMemcpyDeviceToHost,m.stream)!=cudaSuccess)||cudaStreamSynchronize(m.stream)!=cudaSuccess)return 2;
+        return 0;
+    } catch(...){return 2;}
+}

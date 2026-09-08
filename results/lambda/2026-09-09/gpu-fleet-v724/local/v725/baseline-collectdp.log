@@ -1,0 +1,63 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_harvest_window_cost_is_the_window_minimum_over_both_directions ______
+
+    def test_harvest_window_cost_is_the_window_minimum_over_both_directions() -> None:
+        ids = [11, 12]
+        n_t = 40
+        # 11 -> 12 is dear except for a cheap window late in the lattice; 12 -> 11 cheap early only
+        forward = np.full(n_t, 3.0)
+        forward[30:34] = 0.4
+        backward = np.full(n_t, 3.0)
+        backward[2:6] = 0.3
+        table = _FakeTable(ids, {(11, 12): forward, (12, 11): backward}, n_t=n_t)
+        # every ΔV flyable: the test is about the window minimum, not the authority limit
+        table.settings = dataclasses.replace(table.settings, hop_authority_ratio=100.0)
+        table._geometry = {}
+        _FakeTable.harvest_window_cost = CollectPairTable.harvest_window_cost
+        early = (float(table.epochs[0]), float(table.epochs[8]))
+        late = (float(table.epochs[28]), float(table.epochs[36]))
+        mass = 1400.0
+        cost = table.harvest_window_cost
+>       cheap_early = cost(11, 12, mass, window=early, max_tof_days=200.0)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_gtoc12_collectdp.py:262: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_gtoc12_collectdp._FakeTable object at 0x76c58c807860>, a = 11
+b = 12, mass = 1400.0, window = (66519.5, 66999.5), max_tof_days = 200.0
+
+    def harvest_window_cost(
+        self,
+        a: int,
+        b: int,
+        mass: float,
+        *,
+        window: tuple[float, float],
+        max_tof_days: float,
+    ) -> float:
+        """Cheapest calibrated collect-hop propellant (kg) between ``a`` and ``b`` - either
+        direction - departing inside ``window`` (MJD) with a TOF of at most ``max_tof_days``.
+    
+        This is what the pair will cost the collect DP if both asteroids end up in the same
+        tour: the DP picks the epoch and direction, so the window minimum (not the cost at one
+        epoch) is the deploy-time predictor of the harvest.  ``inf`` when the pair cannot be
+        re-flown inside the window.
+        """
+    
+        lo = self.index_at_or_after(window[0])
+        hi = max(self.index_at_or_after(window[1]), lo)
+        keep = self.tofs <= max_tof_days + 1e-9
+        if lo >= hi or not np.any(keep):
+            return float("inf")
+        best = float("inf")
+        for source, target in ((int(a), int(b)), (int(b), int(a))):
+>           resident = self._resident_table(source, target, self.tofs, self.epochs[-1])
+                       ^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: '_FakeTable' object has no attribute '_resident_table'
+
+src/spacepdhcg/gtoc12/collectdp.py:467: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_gtoc12_collectdp.py::test_harvest_window_cost_is_the_window_minimum_over_both_directions
+1 failed in 0.35s

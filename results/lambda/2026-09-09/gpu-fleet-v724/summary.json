@@ -1,0 +1,75 @@
+{
+  "score_kg": 12810.135953048562,
+  "raw_kg": 14051.854893908598,
+  "ships": 23,
+  "physics_reverified": false,
+  "devices": {
+    "local": {
+      "initial": {
+        "native_seconds": 2.7065722714999936,
+        "call_seconds": 2.7597157415000027
+      },
+      "final": {
+        "native_seconds": 0.3002201630000343,
+        "call_seconds": 0.3558815425000148
+      },
+      "native_ratio": 9.015291459620201,
+      "native_nodes_per_second": 117064.08939627411,
+      "cpu_call_seconds": 110.025564976,
+      "cpu_metadata_score": 12810.437045214438,
+      "cpu_missing_selected_sources": [
+        1786,
+        1787,
+        1818,
+        1897,
+        1991,
+        2100,
+        2123,
+        2141,
+        2143,
+        2389
+      ],
+      "larger_search": [
+        {
+          "nodes": 3515625,
+          "seconds": 15.264862336000022,
+          "objective_kg": 12810.135953048562
+        }
+      ]
+    },
+    "h100": {
+      "initial": {
+        "native_seconds": 3.59701913248864,
+        "call_seconds": 3.6833627035084646
+      },
+      "final": {
+        "native_seconds": 0.256157305004308,
+        "call_seconds": 0.3392496815067716
+      },
+      "native_ratio": 14.042227421264235,
+      "native_nodes_per_second": 137200.85007690467,
+      "cpu_call_seconds": 196.20707768696593,
+      "cpu_metadata_score": 12810.437045214438,
+      "cpu_missing_selected_sources": [
+        1786,
+        1787,
+        1818,
+        1897,
+        1991,
+        2100,
+        2123,
+        2141,
+        2143,
+        2389
+      ],
+      "larger_search": [
+        {
+          "nodes": 3515625,
+          "seconds": 14.416916996007785,
+          "objective_kg": 12810.135953048562
+        }
+      ]
+    }
+  },
+  "retained_solution_sha256": "09067976120623cb6784b8439ee53490a7e9ee9dfcd1f045f394952865319ff3"
+}

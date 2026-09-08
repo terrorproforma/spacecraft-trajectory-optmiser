@@ -1,0 +1,51 @@
+{
+  "pid": 398,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 9.074505575,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-v723/case.py"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 1.4796633619999966,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-v723/case.py"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 1.168964092000003,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-v723/case.py"
+      ]
+    }
+  ],
+  "stage": "synccheck",
+  "child_pid": 465
+}

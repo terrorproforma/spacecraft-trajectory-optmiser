@@ -1,0 +1,26 @@
+{
+  "pid": 466,
+  "complete": true,
+  "success": true,
+  "base": "/home/angus/spacepdhcg-fleet-v713",
+  "stages": [
+    {
+      "name": "configure",
+      "code": 1,
+      "seconds": 15.760823703
+    },
+    {
+      "name": "configure-retry",
+      "code": 0,
+      "seconds": 6.4533790469999985
+    },
+    {
+      "name": "build-retry",
+      "code": 0,
+      "seconds": 39.102075429000024
+    }
+  ],
+  "child_pid": 553,
+  "error": "Traceback (most recent call last):\n  File \"/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/build_fleet_layout_v718.py\", line 19, in <module>\n    if code:raise RuntimeError(stage['name'])\nRuntimeError: configure\n",
+  "sha256": "3a7b3212eef619055d01ffd9322823d3f0229e04ca72c6fd1c66076e1eb693a0"
+}

@@ -1,0 +1,31 @@
+#pragma once
+#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct {
+    double value, mass;
+    int32_t ships, reserved;
+    int64_t identifier;
+} spacepdhcg_gtoc12_fleet_column;
+typedef struct {
+    double objective, upper_bound, greedy_objective;
+    uint64_t nodes;
+    int32_t exhaustive, tasks;
+} spacepdhcg_gtoc12_fleet_report;
+/* Conflicts and each foreign requirement's alternative providers use CSR.
+ * requirement_offsets maps columns to requirement groups; provider_offsets maps
+ * groups to providers. All arrays are host resident. Output is one byte/column.
+ * Inputs describe already certified columns, with the same physics/bonus table.
+ * No CPU optimisation or LP fallback is performed. Returns 0/invalid=1/CUDA=2.
+ */
+int spacepdhcg_gtoc12_fleet_search_host(
+    int32_t columns, int32_t max_ships, int32_t prefix_bits, uint64_t node_cap,
+    const spacepdhcg_gtoc12_fleet_column* data,
+    const int32_t* conflict_offsets, const int32_t* conflicts,
+    const int32_t* requirement_offsets, const int32_t* provider_offsets,
+    const int32_t* providers, const uint8_t* incumbent,
+    uint8_t* selected, spacepdhcg_gtoc12_fleet_report* report);
+#ifdef __cplusplus
+}
+#endif

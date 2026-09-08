@@ -1,0 +1,18 @@
+{
+  "pid": 231613,
+  "complete": true,
+  "success": false,
+  "command": [
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "-c",
+    "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+    "-q",
+    "tests/test_gtoc12_gpu_fleet.py",
+    "tests/test_gtoc12_gpu_cli.py",
+    "tests/test_gtoc12_cooperative.py",
+    "tests/test_gtoc12_collectdp.py"
+  ],
+  "library_sha256": "65287f398e1c48ddb69b1e0f48b5dd226427a8862e8bc1b9a0f10c0a3b048cae",
+  "code": 1,
+  "seconds": 3.01939917501295
+}

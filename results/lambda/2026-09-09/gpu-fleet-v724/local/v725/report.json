@@ -1,0 +1,18 @@
+{
+  "pid": 381,
+  "complete": true,
+  "success": false,
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "-c",
+    "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+    "-q",
+    "tests/test_gtoc12_gpu_fleet.py",
+    "tests/test_gtoc12_gpu_cli.py",
+    "tests/test_gtoc12_cooperative.py",
+    "tests/test_gtoc12_collectdp.py"
+  ],
+  "library_sha256": "810b6ca75be3d52ec1d95ce9760e11be67edf343a757e5467bdc5d535ae43c67",
+  "code": 1,
+  "seconds": 2.146195059000007
+}

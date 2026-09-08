@@ -58,6 +58,29 @@ def test_cuda_certificate_with_cpu_solver_requires_runtime_and_reports_selection
         _scvx_settings(args)
 
 
+@pytest.mark.parametrize("command", ["run", "cluster-fleet", "fleet-master"])
+def test_cuda_fleet_backend_is_explicit_and_validated(command, tmp_path, monkeypatch):
+    words = ["gtoc12", command, "--run-id", "test", "--output", "unused",
+             "--fleet-backend", "cuda"]
+    if command != "run":
+        words += ["--workers", "1"]
+    if command == "fleet-master":
+        words += ["--source", "unused"]
+    args = build_parser().parse_args(words)
+    monkeypatch.delenv("SPACEPDHCG_GTOC12_CUDA_LIBRARY", raising=False)
+    with pytest.raises(ValueError, match="SPACEPDHCG_GTOC12_CUDA_LIBRARY"):
+        _scvx_settings(args)
+    library = tmp_path / "cuda.so"
+    library.write_bytes(b"configuration only")
+    monkeypatch.setenv("SPACEPDHCG_GTOC12_CUDA_LIBRARY", str(library))
+    _scvx_settings(args)
+    report = _refinement_backend_report(args)
+    assert report["fleet_backend_requested"] == "cuda" and report["gpu_used"] is None
+    args.workers = 2
+    with pytest.raises(ValueError, match="workers 1"):
+        _scvx_settings(args)
+
+
 @pytest.mark.parametrize("mode", ["graph", "dispatch"])
 def test_execution_command_scope_restores_flags_even_after_failure(monkeypatch, mode):
     import os

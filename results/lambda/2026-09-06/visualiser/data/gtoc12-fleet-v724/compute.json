@@ -1,0 +1,99 @@
+{
+  "run_id": "gpu_fleet_selection_v724_h100",
+  "fleet_run_id": "orphan_recovery_v595",
+  "commit": "experimental",
+  "source_revision_note": "Frozen v720 CUDA fleet selector. Archived full-pool measurements; displayed trajectories retained unchanged from verified v712. Source, library and input hashes in gpu-fleet-v724.",
+  "weighted_score_fixed_bonus_kg": 12810.135953048562,
+  "raw_kg_per_ship": 610.9502127786346,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "2,492 archived route columns; 23-ship verified incumbent"
+  },
+  "timing": {
+    "wall_seconds_total": 0.3392496815067716,
+    "wall_human": "0.339 s median fleet selection only; displayed trajectories retained from v712"
+  },
+  "model": {
+    "dynamics": "Previously verified GTOC12 fleet; identical solution bytes; no new trajectory propagation in this benchmark",
+    "local_refine": "No trajectory refinement during this packing benchmark. Fleet search and winner selection execute on CUDA; Python packs topology and checks output."
+  },
+  "optimisation": {
+    "strategy": "2,492 columns; 35,145 actual search nodes per measured call. 0.256 s native; 137,201 packing nodes/s. 14.04x versus initial CUDA selector; not whole-campaign speedup. Larger 3.52-million-node search found no score gain. CPU metadata candidate 12,810.437 remains unverified. Whole application is not yet fully GPU native.",
+    "proven_optimal": false
+  },
+  "fleet_benchmark": {
+    "score_kg": 12810.135953048562,
+    "raw_kg": 14051.854893908598,
+    "ships": 23,
+    "physics_reverified": false,
+    "devices": {
+      "local": {
+        "initial": {
+          "native_seconds": 2.7065722714999936,
+          "call_seconds": 2.7597157415000027
+        },
+        "final": {
+          "native_seconds": 0.3002201630000343,
+          "call_seconds": 0.3558815425000148
+        },
+        "native_ratio": 9.015291459620201,
+        "native_nodes_per_second": 117064.08939627411,
+        "cpu_call_seconds": 110.025564976,
+        "cpu_metadata_score": 12810.437045214438,
+        "cpu_missing_selected_sources": [
+          1786,
+          1787,
+          1818,
+          1897,
+          1991,
+          2100,
+          2123,
+          2141,
+          2143,
+          2389
+        ],
+        "larger_search": [
+          {
+            "nodes": 3515625,
+            "seconds": 15.264862336000022,
+            "objective_kg": 12810.135953048562
+          }
+        ]
+      },
+      "h100": {
+        "initial": {
+          "native_seconds": 3.59701913248864,
+          "call_seconds": 3.6833627035084646
+        },
+        "final": {
+          "native_seconds": 0.256157305004308,
+          "call_seconds": 0.3392496815067716
+        },
+        "native_ratio": 14.042227421264235,
+        "native_nodes_per_second": 137200.85007690467,
+        "cpu_call_seconds": 196.20707768696593,
+        "cpu_metadata_score": 12810.437045214438,
+        "cpu_missing_selected_sources": [
+          1786,
+          1787,
+          1818,
+          1897,
+          1991,
+          2100,
+          2123,
+          2141,
+          2143,
+          2389
+        ],
+        "larger_search": [
+          {
+            "nodes": 3515625,
+            "seconds": 14.416916996007785,
+            "objective_kg": 12810.135953048562
+          }
+        ]
+      }
+    },
+    "retained_solution_sha256": "09067976120623cb6784b8439ee53490a7e9ee9dfcd1f045f394952865319ff3"
+  }
+}

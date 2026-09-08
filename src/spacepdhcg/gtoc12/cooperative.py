@@ -275,6 +275,9 @@ class FleetMasterResult:
     lp_nodes: int = 0  # LPs solved by the LP branch and bound
     lp_proven: bool = False  # the LP branch and bound closed every fleet size
     lp_sizes_searched: list[int] = field(default_factory=list)
+    backend: str = "cpu"
+    device_tasks: int = 0
+    native_seconds: float = 0.0
 
     @property
     def proven(self) -> bool:
@@ -316,23 +319,32 @@ class FleetMasterResult:
 
     def summary(self) -> dict[str, Any]:
         mean = self.collected_kg / self.ships if self.selected else 0.0
+        # Uncomputed LP bounds are internal infinities, but JSON consumers need null.
+        def finite(value: float) -> float | None:
+            return value if math.isfinite(value) else None
+
         return {
             "ships": self.ships,
             "columns": len(self.selected),
             "cooperative": self.cooperative_columns(),
             "objective_kg": self.objective,
             "greedy_objective_kg": self.greedy_objective,
+            "backend": self.backend,
+            "device_tasks": self.device_tasks,
+            "native_seconds": self.native_seconds,
             "collected_kg": self.collected_kg,
             "mean_collected_kg": mean,
-            "upper_bound_kg": self.upper_bound,
-            "gap_kg": self.upper_bound - self.objective,
-            "lp_bound_kg": self.lp_bound,
-            "lp_gap_kg": self.lp_bound - self.objective,
-            "lp_relaxations_kg": {str(k): v for k, v in sorted(self.lp_relaxations.items())},
+            "upper_bound_kg": finite(self.upper_bound),
+            "gap_kg": finite(self.upper_bound - self.objective),
+            "lp_bound_kg": finite(self.lp_bound),
+            "lp_gap_kg": finite(self.lp_bound - self.objective),
+            "lp_relaxations_kg": {
+                str(k): finite(v) for k, v in sorted(self.lp_relaxations.items())
+            },
             "lp_seconds": self.lp_seconds,
             "lp_nodes": self.lp_nodes,
             "lp_sizes_searched": list(self.lp_sizes_searched),
-            "root_bound_kg": self.root_bound,
+            "root_bound_kg": finite(self.root_bound),
             "proven_optimal": self.proven,
             "nodes": self.nodes,
             "exhaustive": self.exhaustive,
@@ -956,6 +968,7 @@ def solve_fleet_master(
     incumbent: tuple[FleetColumn, ...] | list[FleetColumn] | None = None,
     lp_bound: bool = True,
     lp_node_limit: int = 4000,
+    backend: str = "cpu",
 ) -> FleetMasterResult:
     """Exact branch-and-bound packing master (see module docstring).
 
@@ -967,6 +980,13 @@ def solve_fleet_master(
     (:func:`ship_rule_bound`) on top of the asteroid conflicts.
     """
 
+    if backend == "cuda":
+        from .gpu_fleet import solve_fleet_cuda
+
+        return solve_fleet_cuda(columns, weights=weights, max_ships=max_ships,
+                               node_cap=node_cap, incumbent=incumbent)
+    if backend != "cpu":
+        raise ValueError("fleet backend must be cpu or cuda")
     # columns whose foreign collects no column can supply can never be selected
     usable, rejected = usable_columns(columns, weights)
     values = [column.value(weights) for column in usable]
