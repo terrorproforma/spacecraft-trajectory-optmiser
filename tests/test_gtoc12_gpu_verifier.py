@@ -31,6 +31,26 @@ def fixture(n=1, days=365.25, eccentricity=0.0):
     return legs, np.empty(0, dtype=ARC), np.empty(0, dtype=SAMPLE)
 
 
+def test_retained_session_reuses_grows_and_closes():
+    from spacepdhcg.gtoc12.gpu_verifier import GpuVerifierSession
+
+    with GpuVerifierSession() as session:
+        first = session.propagate(*fixture(2))
+        handle = session._gpu
+        second = session.propagate(*fixture(1))
+        assert session._gpu is handle
+        np.testing.assert_array_equal(first[:1], second)
+        grown = session.propagate(*fixture(17))
+        assert session._gpu is not handle
+        np.testing.assert_array_equal(grown[0], first[0])
+        with ThreadPoolExecutor(1) as pool:
+            with pytest.raises(RuntimeError, match="creating thread"):
+                pool.submit(session.propagate, *fixture(1)).result()
+    session.close()
+    with pytest.raises(RuntimeError, match="closed"):
+        session.propagate(*fixture(1))
+
+
 @pytest.mark.parametrize("days,eccentricity", [(0, 0), (365.25, 0), (5479, 0), (250, 0.65)])
 def test_coast_matches_exact_kepler(days, eccentricity):
     legs, arcs, samples = fixture(17, days, eccentricity)

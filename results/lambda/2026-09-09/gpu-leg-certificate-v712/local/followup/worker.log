@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/angus/spacepdhcg-certificate-v709/followup-v710/worker.py", line 6, in <module>
+    exec((base/'worker.py').read_text().split('report=dict(')[0],namespace)
+  File "<string>", line 15
+    exec(old.read_text().split('
+                               ^
+SyntaxError: unterminated string literal (detected at line 15)

@@ -1,0 +1,140 @@
+Wed Sep  9 04:00:38 2026    /home/angus/spacepdhcg-campaign-profile-v708/campaign.pstats
+
+         182530825 function calls (179152562 primitive calls) in 115.026 seconds
+
+   Ordered by: cumulative time
+   List reduced from 3694 to 70 due to restriction <70>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+   1166/1    0.032    0.000  115.176  115.176 {built-in method builtins.exec}
+        1    0.031    0.031  115.176  115.176 run.py:1(<module>)
+        1    0.068    0.068  115.130  115.130 run.py:144(run)
+        3    0.000    0.000   98.019   32.673 run.py:223(verify)
+        3    0.017    0.006   97.406   32.469 verifier.py:389(verify_file)
+        3    0.000    0.000   95.018   31.673 verifier.py:395(verify)
+       69    0.057    0.001   95.014    1.377 verifier.py:453(_verify_ship)
+    59457    1.697    0.000   93.998    0.002 verifier.py:266(propagate_burn)
+     1241    0.174    0.000   93.985    0.076 verifier.py:950(_propagate_leg)
+    59457    1.515    0.000   86.843    0.001 ivp.py:160(solve_ivp)
+   467578    0.360    0.000   69.491    0.000 base.py:179(step)
+   467578    2.491    0.000   69.132    0.000 rk.py:111(_step_impl)
+   467578   11.361    0.000   62.615    0.000 rk.py:14(rk_step)
+  6227700    1.300    0.000   57.263    0.000 base.py:156(fun)
+  6227700    2.154    0.000   55.962    0.000 base.py:23(fun_wrapped)
+  6227700   11.421    0.000   53.147    0.000 verifier.py:216(fun)
+  6400628   23.447    0.000   39.925    0.000 verifier.py:194(__call__)
+  6400628    5.816    0.000   15.442    0.000 verifier.py:187(stencil)
+        2    0.001    0.001   11.116    5.558 pipeline.py:293(refine_route)
+       36    0.001    0.000   11.103    0.308 g7.py:292(run)
+       36    0.000    0.000   11.101    0.308 g7.py:370(_evaluate)
+       36    0.000    0.000   11.101    0.308 adapters.py:204(evaluate)
+       36    0.001    0.000   11.100    0.308 pipeline.py:128(solve)
+       36    0.001    0.000    8.304    0.231 low_thrust.py:645(solve_leg)
+       36    0.001    0.000    8.303    0.231 low_thrust.py:652(_solve_leg)
+       36    0.001    0.000    8.301    0.231 run.py:40(measured)
+       36    8.285    0.230    8.296    0.230 gpu_scvx.py:111(solve_native)
+   165950    0.110    0.000    7.699    0.000 base.py:212(dense_output)
+   165950    2.428    0.000    7.589    0.000 rk.py:693(_dense_output_impl)
+  6987120    1.781    0.000    7.270    0.000 fromnumeric.py:1459(searchsorted)
+  6995703    1.898    0.000    5.502    0.000 fromnumeric.py:48(_wrapfunc)
+    59457    0.103    0.000    4.169    0.000 rk.py:665(__init__)
+    59457    0.196    0.000    4.041    0.000 rk.py:85(__init__)
+   467578    1.790    0.000    3.924    0.000 rk.py:683(_estimate_error_norm)
+  1665078    1.810    0.000    3.519    0.000 _linalg.py:2598(norm)
+        4    0.006    0.001    3.106    0.777 solution.py:148(read)
+        4    1.115    0.279    3.084    0.771 solution.py:161(parse_solution)
+  6987120    2.986    0.000    2.986    0.000 {method 'searchsorted' of 'numpy.ndarray' objects}
+       36    0.009    0.000    2.793    0.078 low_thrust.py:976(certify_leg)
+       36    0.000    0.000    2.479    0.069 retiming.py:800(retime_order)
+       36    0.001    0.000    2.477    0.069 lambert.py:109(cuda_retime_order)
+       36    0.000    0.000    2.476    0.069 lambert.py:104(cuda_retime_dp)
+       36    0.001    0.000    2.476    0.069 gpu_lambert.py:309(retime_dp)
+       36    2.100    0.058    2.474    0.069 gpu_retime.py:259(solve)
+     1519    0.049    0.000    2.460    0.002 verifier.py:334(propagate_coast)
+     1519    0.598    0.000    2.243    0.001 ephemeris.py:190(propagate_kepler)
+  6291864    2.240    0.000    2.240    0.000 {built-in method numpy.array}
+   165950    0.100    0.000    2.238    0.000 base.py:266(__call__)
+   165950    2.040    0.000    2.123    0.000 rk.py:747(_call_impl)
+       77    0.002    0.000    2.109    0.027 __init__.py:1(<module>)
+    59457    0.386    0.000    1.672    0.000 common.py:68(select_initial_step)
+ 13825949    1.533    0.000    1.533    0.000 {built-in method builtins.min}
+  1205732    0.805    0.000    1.504    0.000 fromnumeric.py:86(_wrapreduction_any_all)
+ 13153387    1.454    0.000    1.455    0.000 {built-in method builtins.max}
+    65790    0.445    0.000    1.355    0.000 ephemeris.py:213(time_equation)
+    59457    0.634    0.000    1.239    0.000 verifier.py:171(__init__)
+  9672601    1.175    0.000    1.175    0.000 {built-in method numpy.asarray}
+        1    0.004    0.004    1.164    1.164 viewer_export.py:219(write_viewer_dataset)
+   832332    0.234    0.000    1.103    0.000 fromnumeric.py:2586(all)
+  6574923    1.095    0.000    1.095    0.000 {built-in method numpy.zeros}
+      181    0.008    0.000    1.076    0.006 __init__.py:183(dumps)
+      181    0.054    0.000    1.068    0.006 encoder.py:183(encode)
+   824532    0.074    0.000    0.943    0.000 encoder.py:414(_iterencode)
+    67309    0.913    0.000    0.930    0.000 ephemeris.py:171(_stumpff)
+ 12455406    0.913    0.000    0.913    0.000 {built-in method math.sqrt}
+   384668    0.305    0.000    0.870    0.000 solution.py:157(_is_zero)
+2399623/824529    0.232    0.000    0.869    0.000 encoder.py:334(_iterencode_dict)
+   373400    0.157    0.000    0.791    0.000 fromnumeric.py:2474(any)
+    65971    0.088    0.000    0.789    0.000 _arraysetops_impl.py:145(unique)
+  1526538    0.786    0.000    0.786    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+
+
+Wed Sep  9 04:00:38 2026    /home/angus/spacepdhcg-campaign-profile-v708/campaign.pstats
+
+         182530825 function calls (179152562 primitive calls) in 115.026 seconds
+
+   Ordered by: internal time
+   List reduced from 3694 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  6400628   23.447    0.000   39.925    0.000 verifier.py:194(__call__)
+  6227700   11.421    0.000   53.147    0.000 verifier.py:216(fun)
+   467578   11.361    0.000   62.615    0.000 rk.py:14(rk_step)
+       36    8.285    0.230    8.296    0.230 gpu_scvx.py:111(solve_native)
+  6400628    5.816    0.000   15.442    0.000 verifier.py:187(stencil)
+  6987120    2.986    0.000    2.986    0.000 {method 'searchsorted' of 'numpy.ndarray' objects}
+   467578    2.491    0.000   69.132    0.000 rk.py:111(_step_impl)
+   165950    2.428    0.000    7.589    0.000 rk.py:693(_dense_output_impl)
+  6291864    2.240    0.000    2.240    0.000 {built-in method numpy.array}
+  6227700    2.154    0.000   55.962    0.000 base.py:23(fun_wrapped)
+       36    2.100    0.058    2.474    0.069 gpu_retime.py:259(solve)
+   165950    2.040    0.000    2.123    0.000 rk.py:747(_call_impl)
+  6995703    1.898    0.000    5.502    0.000 fromnumeric.py:48(_wrapfunc)
+  1665078    1.810    0.000    3.519    0.000 _linalg.py:2598(norm)
+   467578    1.790    0.000    3.924    0.000 rk.py:683(_estimate_error_norm)
+  6987120    1.781    0.000    7.270    0.000 fromnumeric.py:1459(searchsorted)
+    59457    1.697    0.000   93.998    0.002 verifier.py:266(propagate_burn)
+ 13825949    1.533    0.000    1.533    0.000 {built-in method builtins.min}
+    59457    1.515    0.000   86.843    0.001 ivp.py:160(solve_ivp)
+ 13153387    1.454    0.000    1.455    0.000 {built-in method builtins.max}
+  6227700    1.300    0.000   57.263    0.000 base.py:156(fun)
+  9672601    1.175    0.000    1.175    0.000 {built-in method numpy.asarray}
+        4    1.115    0.279    3.084    0.771 solution.py:161(parse_solution)
+  6574923    1.095    0.000    1.095    0.000 {built-in method numpy.zeros}
+ 12455406    0.913    0.000    0.913    0.000 {built-in method math.sqrt}
+    67309    0.913    0.000    0.930    0.000 ephemeris.py:171(_stumpff)
+  1205732    0.805    0.000    1.504    0.000 fromnumeric.py:86(_wrapreduction_any_all)
+  1526538    0.786    0.000    0.786    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+  1600993    0.655    0.000    0.655    0.000 {method 'dot' of 'numpy.ndarray' objects}
+  7170917    0.641    0.000    0.641    0.000 {built-in method builtins.getattr}
+    59457    0.634    0.000    1.239    0.000 verifier.py:171(__init__)
+     1519    0.598    0.000    2.243    0.001 ephemeris.py:190(propagate_kepler)
+        6    0.570    0.095    0.570    0.095 {method 'poll' of 'select.poll' objects}
+   183402    0.492    0.000    0.579    0.000 _function_base_impl.py:1413(diff)
+    65971    0.450    0.000    0.672    0.000 _arraysetops_impl.py:350(_unique1d)
+    65790    0.445    0.000    1.355    0.000 ephemeris.py:213(time_equation)
+  6987120    0.437    0.000    0.437    0.000 fromnumeric.py:1455(_searchsorted_dispatcher)
+  7209961    0.431    0.000    0.431    0.000 multiarray.py:751(dot)
+2563786/786450    0.428    0.000    0.783    0.000 encoder.py:278(_iterencode_list)
+    59457    0.386    0.000    1.672    0.000 common.py:68(select_initial_step)
+   467578    0.360    0.000   69.491    0.000 base.py:179(step)
+   224810    0.333    0.000    0.681    0.000 verifier.py:249(append)
+   384668    0.305    0.000    0.870    0.000 solution.py:157(_is_zero)
+   118914    0.294    0.000    0.514    0.000 shape_base.py:293(hstack)
+  1203523    0.294    0.000    0.294    0.000 {method 'copy' of 'numpy.ndarray' objects}
+       36    0.291    0.008    0.291    0.008 gpu_lambert.py:299(_prepare)
+  1601007    0.265    0.000    0.265    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+  3445508    0.265    0.000    0.265    0.000 {built-in method builtins.issubclass}
+    59457    0.251    0.000    0.586    0.000 base.py:5(check_arguments)
+  2600551    0.248    0.000    0.248    0.000 {method 'append' of 'list' objects}
+
+

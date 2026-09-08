@@ -1,7 +1,7 @@
 """OrbitWeaver pipeline for GTOC12: plan -> refined certified arcs -> official solution file.
 
-The refinement stage drives the CPU SCvx leg solver through the existing G7 contracts: every leg
-becomes an :class:`ArcRequest`, the :class:`G3TrajectoryOracleAdapter` owns one
+The refinement stage drives the selected SCvx leg solver through G7 contracts. Every leg becomes
+an :class:`ArcRequest`, the :class:`G3TrajectoryOracleAdapter` owns one
 :class:`Gtoc12ScvxDriver` per topology group, the :class:`BoundedScheduler` batches and orders the
 work deterministically, and an :class:`IndependentCertifier` re-propagates each emitted arc with the
 verifier model (DOP853 + cubic Lagrange thrust) before it may enter the route master.
@@ -78,6 +78,7 @@ class LegRecord:
     boundary: LegBoundary
     solution: LegSolution | None = None
     certificate: LegCertificate | None = None
+    certification_backend: str | None = None
     result: ArcResult | None = None
 
 
@@ -92,7 +93,7 @@ class LegRegistry:
 
 
 class Gtoc12ScvxDriver:
-    """CPU SCvx driver implementing the public G3 persistent-driver protocol."""
+    """SCvx driver with backend-selected propagation and retained CUDA certificate buffers."""
 
     def __init__(
         self, topology: TopologyKey, owner: Ownership, registry: LegRegistry, settings: ScvxSettings
@@ -101,6 +102,8 @@ class Gtoc12ScvxDriver:
         self.owner = owner
         self.registry = registry
         self.settings = settings
+        self.certification_backend = settings.selected_certification_backend()
+        self._certificate_workspace = None
         self._request: ArcRequest | None = None
         self._cancelled = False
         self.numeric_updates = 0
@@ -129,6 +132,8 @@ class Gtoc12ScvxDriver:
         if cancelled.is_set() or self._cancelled:
             return G3Solve(G3Status.CANCELLED, diagnostic="cancelled before solve")
         record = self.registry.records[request.deterministic_id]
+        record.certificate = None
+        record.certification_backend = None
         try:
             solution = solve_leg(record.boundary, self.settings)
         except Exception as error:
@@ -143,8 +148,26 @@ class Gtoc12ScvxDriver:
         if solution.status == "failed":
             return G3Solve(G3Status.NUMERICAL_FAILURE, diagnostic=solution.diagnostic)
         clamp_thrust(solution)
-        certificate = certify_leg(solution)
+        try:
+            if self.certification_backend == "cuda":
+                from .gpu_verifier import GpuVerifierSession, certify_legs_cuda
+
+                if self._certificate_workspace is None:
+                    self._certificate_workspace = GpuVerifierSession()
+                certificate = certify_legs_cuda(
+                    [solution], workspace=self._certificate_workspace
+                )[0]
+            else:
+                certificate = certify_leg(solution)
+        except Exception as error:
+            return G3Solve(
+                G3Status.NUMERICAL_FAILURE,
+                diagnostic=(
+                    f"{self.certification_backend} certification: {type(error).__name__}: {error}"
+                ),
+            )
         record.certificate = certificate
+        record.certification_backend = self.certification_backend
         status = G3Status.CONVERGED if solution.status == "converged" else G3Status.ITERATION_LIMIT
         return G3Solve(
             status=status,
@@ -172,6 +195,9 @@ class Gtoc12ScvxDriver:
         self._cancelled = True
 
     def close(self) -> None:
+        if self._certificate_workspace is not None:
+            self._certificate_workspace.close()
+            self._certificate_workspace = None
         self._request = None
 
 
@@ -214,6 +240,7 @@ class RefinedLeg:
     certified: bool
     mass_before: float
     mass_after_leg: float
+    certification_backend: str | None = None
 
 
 @dataclass(slots=True)
@@ -258,6 +285,7 @@ class RefinedRoute:
                     "tf": leg.planned.arrival_epoch,
                     "status": leg.result.status.value,
                     "certified": leg.certified,
+                    "certification_backend": leg.certification_backend,
                     "mass_before": leg.mass_before,
                     "mass_after": leg.mass_after_leg,
                     "propellant_kg": None if leg.solution is None else leg.solution.propellant_kg,
@@ -396,6 +424,7 @@ def refine_route(
                     certified,
                     mass,
                     mass_after,
+                    record.certification_backend,
                 )
             )
             if not result.feasible or not certified:

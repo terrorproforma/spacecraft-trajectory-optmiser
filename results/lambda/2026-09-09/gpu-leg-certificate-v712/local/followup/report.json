@@ -1,0 +1,35 @@
+{
+  "pid": 361,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 0.9656367710000495,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_certificate_backend.py"
+      ]
+    },
+    {
+      "name": "benchmark",
+      "code": 0,
+      "seconds": 11.071790915000065,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import runpy,sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/angus/spacepdhcg-certificate-v709/followup-v710/benchmark.py",
+        "/home/angus/spacepdhcg-certificate-v709",
+        "/home/angus/spacepdhcg-certificate-v709/followup-v710/benchmark.json"
+      ]
+    }
+  ],
+  "child_pid": 367,
+  "stage": "benchmark"
+}

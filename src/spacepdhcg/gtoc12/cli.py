@@ -150,6 +150,10 @@ def _scvx_settings(args: argparse.Namespace):
     ruiz = getattr(args, "qoco_ruiz_iterations", 0)
     outer = getattr(args, "outer_loop_backend", "python")
     seed = getattr(args, "seed_backend", "auto")
+    certificate = getattr(args, "certification_backend", "auto")
+    selected_certificate = ScvxSettings(
+        outer_loop_backend=outer, certification_backend=certificate
+    ).selected_certification_backend()
     if seed == "cuda" and outer != "cuda":
         raise ValueError("CUDA seed requires --outer-loop-backend cuda")
     if outer == "cuda" and (solver != "qoco" or assembly != "cuda" or backend != "cuda"):
@@ -164,11 +168,11 @@ def _scvx_settings(args: argparse.Namespace):
             raise ValueError("GPU QOCO requires SPACEPDHCG_QOCO_LIBRARY")
     if assembly == "cuda" and backend != "cuda":
         raise ValueError("CUDA assembly requires --discretisation-backend cuda")
-    if backend == "cuda" and getattr(args, "workers", 1) != 1:
+    if (backend == "cuda" or selected_certificate == "cuda") and getattr(args, "workers", 1) != 1:
         raise ValueError(
             "CUDA interval refinement currently requires --workers 1; GPU batching is pending"
         )
-    if backend == "cuda":
+    if backend == "cuda" or selected_certificate == "cuda":
         library = os.environ.get("SPACEPDHCG_GTOC12_CUDA_LIBRARY")
         if not library or not Path(library).is_file():
             raise ValueError("CUDA refinement requires SPACEPDHCG_GTOC12_CUDA_LIBRARY")
@@ -181,15 +185,22 @@ def _scvx_settings(args: argparse.Namespace):
         qoco_ruiz_iterations=ruiz,
         outer_loop_backend=outer,
         seed_backend=seed,
+        certification_backend=certificate,
     )
 
 
 def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
     from .gpu_execution import selected_execution
     from .lambert import screening_telemetry
+    from .low_thrust import ScvxSettings
 
     backend = getattr(args, "discretisation_backend", "numpy")
-    cpu_only = backend == "numpy" and getattr(args, "screening_backend", "numpy") == "numpy"
+    certificate = ScvxSettings(
+        outer_loop_backend=getattr(args, "outer_loop_backend", "python"),
+        certification_backend=getattr(args, "certification_backend", "auto"),
+    ).selected_certification_backend()
+    cpu_only = (backend == "numpy" and getattr(args, "screening_backend", "numpy") == "numpy"
+                and certificate == "cpu")
     return {
         "discretisation_backend_requested": backend,
         "screening_backend_requested": getattr(args, "screening_backend", "numpy"),
@@ -203,6 +214,8 @@ def _refinement_backend_report(args: argparse.Namespace) -> dict[str, Any]:
         "gpu_execution_requested": getattr(args, "gpu_execution", "auto"),
         "gpu_execution_selected": selected_execution(args),
         "seed_backend_requested": getattr(args, "seed_backend", "auto"),
+        "certification_backend_requested": getattr(args, "certification_backend", "auto"),
+        "certification_backend_selected": certificate,
         # A selected backend is not evidence that a search actually reached
         # refinement. Completed leg summaries record their actual backend.
         "cpu_only": True if cpu_only else None,
@@ -2470,6 +2483,11 @@ def add_parser(subparsers: argparse._SubParsersAction) -> None:
             help="CUDA retains SCvx trajectories and numerical decisions on GPU",
         )
         refinement.add_argument("--seed-backend", choices=("auto", "numpy", "cuda"), default="auto")
+        refinement.add_argument(
+            "--certification-backend", choices=("auto", "cpu", "cuda"), default="auto",
+            help="Leg DOP853 propagation; auto follows the outer loop. "
+                 "Final fleet CPU verification is retained.",
+        )
         refinement.add_argument(
             "--gpu-execution",
             choices=("auto", "graph", "dispatch"),

@@ -1,0 +1,1968 @@
+{
+  "profiles": {
+    "local": {
+      "complete": true,
+      "pid": 387,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "cProfile",
+        "-o",
+        "/home/angus/spacepdhcg-campaign-profile-v708/campaign.pstats",
+        "/home/angus/spacepdhcg-search-campaign-v703/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-search-campaign-v703/repo",
+        "--output",
+        "/home/angus/spacepdhcg-campaign-profile-v708/campaign",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/angus/spacepdhcg-campaign-profile-v708/child.lock"
+      ],
+      "core_sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa",
+      "child_pid": 388,
+      "returncode": 0,
+      "process_seconds": 115.53787173500001,
+      "success": true
+    },
+    "h100": {
+      "complete": true,
+      "pid": 227591,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-m",
+        "cProfile",
+        "-o",
+        "/home/ubuntu/spacepdhcg-campaign-profile-v708/campaign.pstats",
+        "/home/ubuntu/spacepdhcg-search-campaign-v703/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/ubuntu/spacepdhcg-search-campaign-v703/repo",
+        "--output",
+        "/home/ubuntu/spacepdhcg-campaign-profile-v708/campaign",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/ubuntu/spacepdhcg-campaign-profile-v708/child.lock"
+      ],
+      "core_sha256": "4288e12e3cf77664ca4e305778a11b4d13662f30474585844db0fb521f2d60a3",
+      "child_pid": 227592,
+      "returncode": 0,
+      "process_seconds": 210.06100690597668,
+      "success": true
+    }
+  },
+  "campaigns": {
+    "local": [
+      {
+        "mode": "cpu",
+        "process_seconds": 76.97598236200008,
+        "campaign_seconds": 76.002519302,
+        "best": {
+          "ok": true,
+          "independent": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.854893908498,
+            "weighted_score_fixed_bonus_kg": 12810.135953048477,
+            "weighted_score_dynamic_kg": null,
+            "ship_limit": 23.03346208009802,
+            "max_position_error_km": 66.8554004821042,
+            "max_velocity_error_km_s": 4.94967112012233e-06,
+            "max_mass_error_kg": 9.367795428261161e-11,
+            "violations": []
+          },
+          "official": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.9,
+            "return_code": 0,
+            "wall_seconds": 0.18617964500003836,
+            "message": "Check successfully!"
+          },
+          "score_kg": 12810.135953048477,
+          "total_mass_kg": 14051.854893908498,
+          "solution": "/home/angus/spacepdhcg-certificate-v709/campaign-cpu/best/Result.txt",
+          "viewer_manifest": "/home/angus/spacepdhcg-certificate-v709/campaign-cpu/best/viewer/manifest.json",
+          "viewer": {
+            "schema_version": "1.0.0",
+            "files": {
+              "trajectories.json": {
+                "bytes": 10557352,
+                "sha256": "24aa7c44f0c68e8116f4e6f3b07f8ae9545626b002d8e514faca670ad06ed8ff"
+              }
+            },
+            "source": {
+              "path_basename": "Result.txt",
+              "sha256": "3dd5137fc8fd8fea789cb863a6a775f22a27d96a8fe094cb348aae32aeeb6822",
+              "bytes": 10084994
+            },
+            "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+          },
+          "source": "verified_candidate"
+        },
+        "native_solves": 36,
+        "native_seconds": 8.11080575800031,
+        "routes": [
+          {
+            "legs": 18,
+            "backend": "cpu"
+          },
+          {
+            "legs": 18,
+            "backend": "cpu"
+          }
+        ],
+        "screening": {
+          "backend": "cuda",
+          "completed_batches": 3600,
+          "completed_branch_requests": 106462390,
+          "gpu_used": true,
+          "completed_element_hops": 53231195,
+          "completed_retime_dp_calls": 277,
+          "completed_retime_forward_calls": 277,
+          "completed_retime_driver_calls": 36,
+          "retime_table_uploads": 0,
+          "retime_resident_builds": 36,
+          "retime_resident_cells": 53010172,
+          "retime_sweep_updates": 0,
+          "retime_sweep_samples": 0,
+          "joint_geometry_computed_hops": 221023,
+          "joint_geometry_cached_hops": 0,
+          "joint_geometry_rejected_hops": 206881,
+          "joint_geometry_stats_download_bytes": 96,
+          "completed_joint_mesh_batches": 128,
+          "joint_mesh_epoch_upload_bytes": 1248,
+          "joint_mesh_epoch_download_bytes": 1248,
+          "completed_joint_searches": 4,
+          "joint_search_accepted_moves": 112,
+          "joint_search_report_download_bytes": 128,
+          "completed_joint_batches": 4,
+          "completed_joint_evaluations": 23142,
+          "joint_result_download_bytes": 2688
+        }
+      },
+      {
+        "mode": "auto",
+        "process_seconds": 76.6443625789999,
+        "campaign_seconds": 75.78518645999998,
+        "best": {
+          "ok": true,
+          "independent": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.854893908698,
+            "weighted_score_fixed_bonus_kg": 12810.135953048677,
+            "weighted_score_dynamic_kg": null,
+            "ship_limit": 23.03346208009882,
+            "max_position_error_km": 66.8554004821042,
+            "max_velocity_error_km_s": 4.94967112012233e-06,
+            "max_mass_error_kg": 9.367795428261161e-11,
+            "violations": []
+          },
+          "official": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.9,
+            "return_code": 0,
+            "wall_seconds": 0.20396250099997815,
+            "message": "Check successfully!"
+          },
+          "score_kg": 12810.135953048677,
+          "total_mass_kg": 14051.854893908698,
+          "solution": "/home/angus/spacepdhcg-certificate-v709/campaign-auto/best/Result.txt",
+          "viewer_manifest": "/home/angus/spacepdhcg-certificate-v709/campaign-auto/best/viewer/manifest.json",
+          "viewer": {
+            "schema_version": "1.0.0",
+            "files": {
+              "trajectories.json": {
+                "bytes": 10557345,
+                "sha256": "356898eb3b3d68c1dda6b45abf687354a7a3752cebe0f5c2839618bd0ba69827"
+              }
+            },
+            "source": {
+              "path_basename": "Result.txt",
+              "sha256": "234b01d1358f7d12804a5bedf255ca0d853027b926a1551a50fcc8b9ca0662bb",
+              "bytes": 10084994
+            },
+            "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+          },
+          "source": "verified_candidate"
+        },
+        "native_solves": 36,
+        "native_seconds": 8.14615132899985,
+        "routes": [
+          {
+            "legs": 18,
+            "backend": "cuda"
+          },
+          {
+            "legs": 18,
+            "backend": "cuda"
+          }
+        ],
+        "screening": {
+          "backend": "cuda",
+          "completed_batches": 3600,
+          "completed_branch_requests": 106462390,
+          "gpu_used": true,
+          "completed_element_hops": 53231195,
+          "completed_retime_dp_calls": 277,
+          "completed_retime_forward_calls": 277,
+          "completed_retime_driver_calls": 36,
+          "retime_table_uploads": 0,
+          "retime_resident_builds": 36,
+          "retime_resident_cells": 53010172,
+          "retime_sweep_updates": 0,
+          "retime_sweep_samples": 0,
+          "joint_geometry_computed_hops": 221023,
+          "joint_geometry_cached_hops": 0,
+          "joint_geometry_rejected_hops": 206881,
+          "joint_geometry_stats_download_bytes": 96,
+          "completed_joint_mesh_batches": 128,
+          "joint_mesh_epoch_upload_bytes": 1248,
+          "joint_mesh_epoch_download_bytes": 1248,
+          "completed_joint_searches": 4,
+          "joint_search_accepted_moves": 112,
+          "joint_search_report_download_bytes": 128,
+          "completed_joint_batches": 4,
+          "completed_joint_evaluations": 23142,
+          "joint_result_download_bytes": 2688
+        }
+      }
+    ],
+    "h100": [
+      {
+        "mode": "cpu",
+        "process_seconds": 135.46381967898924,
+        "campaign_seconds": 133.89796419703634,
+        "best": {
+          "ok": true,
+          "independent": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.854893908598,
+            "weighted_score_fixed_bonus_kg": 12810.135953048577,
+            "weighted_score_dynamic_kg": null,
+            "ship_limit": 23.03346208009841,
+            "max_position_error_km": 66.8554018025909,
+            "max_velocity_error_km_s": 4.949671007934027e-06,
+            "max_mass_error_kg": 9.185896487906575e-11,
+            "violations": []
+          },
+          "official": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.9,
+            "return_code": 0,
+            "wall_seconds": 0.3562104349839501,
+            "message": "Check successfully!"
+          },
+          "score_kg": 12810.135953048577,
+          "total_mass_kg": 14051.854893908598,
+          "solution": "/home/ubuntu/spacepdhcg-certificate-v709/campaign-cpu/best/Result.txt",
+          "viewer_manifest": "/home/ubuntu/spacepdhcg-certificate-v709/campaign-cpu/best/viewer/manifest.json",
+          "viewer": {
+            "schema_version": "1.0.0",
+            "files": {
+              "trajectories.json": {
+                "bytes": 10557223,
+                "sha256": "5ac52a59c42a52da16b5efcd19b59814a28d0b74bfe864367fa467f729bead0c"
+              }
+            },
+            "source": {
+              "path_basename": "Result.txt",
+              "sha256": "b10914580c765482fdf0cfe349b366fe87d7ef141cfa1b8013e0e46e7389d738",
+              "bytes": 10084994
+            },
+            "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+          },
+          "source": "verified_candidate"
+        },
+        "native_solves": 36,
+        "native_seconds": 9.565545245131943,
+        "routes": [
+          {
+            "legs": 18,
+            "backend": "cpu"
+          },
+          {
+            "legs": 18,
+            "backend": "cpu"
+          }
+        ],
+        "screening": {
+          "backend": "cuda",
+          "completed_batches": 3600,
+          "completed_branch_requests": 106462390,
+          "gpu_used": true,
+          "completed_element_hops": 53231195,
+          "completed_retime_dp_calls": 277,
+          "completed_retime_forward_calls": 277,
+          "completed_retime_driver_calls": 36,
+          "retime_table_uploads": 0,
+          "retime_resident_builds": 36,
+          "retime_resident_cells": 53010172,
+          "retime_sweep_updates": 0,
+          "retime_sweep_samples": 0,
+          "joint_geometry_computed_hops": 221023,
+          "joint_geometry_cached_hops": 0,
+          "joint_geometry_rejected_hops": 206881,
+          "joint_geometry_stats_download_bytes": 96,
+          "completed_joint_mesh_batches": 128,
+          "joint_mesh_epoch_upload_bytes": 1248,
+          "joint_mesh_epoch_download_bytes": 1248,
+          "completed_joint_searches": 4,
+          "joint_search_accepted_moves": 112,
+          "joint_search_report_download_bytes": 128,
+          "completed_joint_batches": 4,
+          "completed_joint_evaluations": 23142,
+          "joint_result_download_bytes": 2688
+        }
+      },
+      {
+        "mode": "auto",
+        "process_seconds": 133.784363455954,
+        "campaign_seconds": 132.2489671499934,
+        "best": {
+          "ok": true,
+          "independent": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.854893908598,
+            "weighted_score_fixed_bonus_kg": 12810.135953048562,
+            "weighted_score_dynamic_kg": null,
+            "ship_limit": 23.03346208009841,
+            "max_position_error_km": 66.8554018025909,
+            "max_velocity_error_km_s": 4.949671007934027e-06,
+            "max_mass_error_kg": 9.185896487906575e-11,
+            "violations": []
+          },
+          "official": {
+            "ok": true,
+            "ships": 23,
+            "mined_asteroids": 195,
+            "total_mass_kg": 14051.9,
+            "return_code": 0,
+            "wall_seconds": 0.35630834999028593,
+            "message": "Check successfully!"
+          },
+          "score_kg": 12810.135953048562,
+          "total_mass_kg": 14051.854893908598,
+          "solution": "/home/ubuntu/spacepdhcg-certificate-v709/campaign-auto/best/Result.txt",
+          "viewer_manifest": "/home/ubuntu/spacepdhcg-certificate-v709/campaign-auto/best/viewer/manifest.json",
+          "viewer": {
+            "schema_version": "1.0.0",
+            "files": {
+              "trajectories.json": {
+                "bytes": 10557188,
+                "sha256": "fb6f99cc512177dfe29d7a1ed573a285db8c7467f0fc2113ab8069f2b09068dc"
+              }
+            },
+            "source": {
+              "path_basename": "Result.txt",
+              "sha256": "09067976120623cb6784b8439ee53490a7e9ee9dfcd1f045f394952865319ff3",
+              "bytes": 10084994
+            },
+            "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+          },
+          "source": "verified_candidate"
+        },
+        "native_solves": 36,
+        "native_seconds": 9.604387227096595,
+        "routes": [
+          {
+            "legs": 18,
+            "backend": "cuda"
+          },
+          {
+            "legs": 18,
+            "backend": "cuda"
+          }
+        ],
+        "screening": {
+          "backend": "cuda",
+          "completed_batches": 3600,
+          "completed_branch_requests": 106462390,
+          "gpu_used": true,
+          "completed_element_hops": 53231195,
+          "completed_retime_dp_calls": 277,
+          "completed_retime_forward_calls": 277,
+          "completed_retime_driver_calls": 36,
+          "retime_table_uploads": 0,
+          "retime_resident_builds": 36,
+          "retime_resident_cells": 53010172,
+          "retime_sweep_updates": 0,
+          "retime_sweep_samples": 0,
+          "joint_geometry_computed_hops": 221023,
+          "joint_geometry_cached_hops": 0,
+          "joint_geometry_rejected_hops": 206881,
+          "joint_geometry_stats_download_bytes": 96,
+          "completed_joint_mesh_batches": 128,
+          "joint_mesh_epoch_upload_bytes": 1248,
+          "joint_mesh_epoch_download_bytes": 1248,
+          "completed_joint_searches": 4,
+          "joint_search_accepted_moves": 112,
+          "joint_search_report_download_bytes": 128,
+          "completed_joint_batches": 4,
+          "completed_joint_evaluations": 23142,
+          "joint_result_download_bytes": 2688
+        }
+      }
+    ]
+  },
+  "benchmarks": {
+    "local": {
+      "cases": [
+        {
+          "source": "/home/angus/spacepdhcg-certificate-v709/campaign-cpu/candidates/ship_15_attempt_01/route/Result.txt",
+          "legs": 19,
+          "samples": [
+            {
+              "repeat": 0,
+              "backend": "cpu",
+              "seconds": 0.8370672710000235,
+              "warmup": true
+            },
+            {
+              "repeat": 0,
+              "backend": "cuda",
+              "seconds": 0.45514439900000525,
+              "warmup": true
+            },
+            {
+              "repeat": 1,
+              "backend": "cuda",
+              "seconds": 0.17154978600001414,
+              "warmup": false
+            },
+            {
+              "repeat": 1,
+              "backend": "cpu",
+              "seconds": 0.818637838000086,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cpu",
+              "seconds": 0.8324612530000195,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cuda",
+              "seconds": 0.1734082399999579,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cuda",
+              "seconds": 0.1734912990000339,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cpu",
+              "seconds": 0.8601609959999905,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cpu",
+              "seconds": 0.8711573379999891,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cuda",
+              "seconds": 0.17493157399997017,
+              "warmup": false
+            }
+          ],
+          "medians": {
+            "cpu": 0.846311124500005,
+            "cuda": 0.1734497694999959
+          },
+          "ratio": 4.879286533154055,
+          "cpu_certificates": [
+            {
+              "position_error_km": 0.19489063419280905,
+              "velocity_error_km_s": 8.062784209127842e-09,
+              "final_mass_kg": 2532.6566603253755,
+              "minimum_sun_distance_au": 1.0028933920390004,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.19489063419280905
+            },
+            {
+              "position_error_km": 0.002163758197886207,
+              "velocity_error_km_s": 7.048208758799624e-10,
+              "final_mass_kg": 2417.4921048386423,
+              "minimum_sun_distance_au": 2.6820105699115833,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.0021637579897541915
+            },
+            {
+              "position_error_km": 0.029384121479510295,
+              "velocity_error_km_s": 1.1455736470460745e-09,
+              "final_mass_kg": 2263.1403365374445,
+              "minimum_sun_distance_au": 2.681450843022116,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.029384121479510295
+            },
+            {
+              "position_error_km": 0.016135100178100208,
+              "velocity_error_km_s": 6.929006310804624e-10,
+              "final_mass_kg": 2129.832342112055,
+              "minimum_sun_distance_au": 2.6538462006100745,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.016135100095147074
+            },
+            {
+              "position_error_km": 0.020957379008228402,
+              "velocity_error_km_s": 7.709789055709426e-10,
+              "final_mass_kg": 1981.8111423363778,
+              "minimum_sun_distance_au": 2.641890057117512,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.02095737432758508
+            },
+            {
+              "position_error_km": 0.007554836154756367,
+              "velocity_error_km_s": 6.753188356724211e-10,
+              "final_mass_kg": 1858.2463595553568,
+              "minimum_sun_distance_au": 2.661100233751348,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.007554836154756367
+            },
+            {
+              "position_error_km": 0.01106339856912849,
+              "velocity_error_km_s": 2.6114121535644947e-10,
+              "final_mass_kg": 1733.2411253824569,
+              "minimum_sun_distance_au": 2.5776743412253946,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.01106339856912849
+            },
+            {
+              "position_error_km": 0.02581300992097382,
+              "velocity_error_km_s": 1.5458214764266868e-09,
+              "final_mass_kg": 1559.7883564057809,
+              "minimum_sun_distance_au": 2.519079804244212,
+              "maximum_thrust_n": 0.5999999994000048,
+              "rk4_vs_dop853_km": 0.02581300992097382
+            },
+            {
+              "position_error_km": 0.026019198064801265,
+              "velocity_error_km_s": 7.980311771903853e-10,
+              "final_mass_kg": 1439.4206922392088,
+              "minimum_sun_distance_au": 2.555868791768084,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.026019208263873193
+            },
+            {
+              "position_error_km": 2.4655688270218694e-06,
+              "velocity_error_km_s": 1.6354440597518948e-13,
+              "final_mass_kg": 1399.4206922392,
+              "minimum_sun_distance_au": 2.849934890233902,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 2.464737759667697e-06
+            },
+            {
+              "position_error_km": 0.03228070367329825,
+              "velocity_error_km_s": 1.3046711212829015e-09,
+              "final_mass_kg": 1339.2538637993953,
+              "minimum_sun_distance_au": 2.754782028902046,
+              "maximum_thrust_n": 0.5999999994000064,
+              "rk4_vs_dop853_km": 0.03228070367329825
+            },
+            {
+              "position_error_km": 0.02413780384316948,
+              "velocity_error_km_s": 1.3230051637279015e-09,
+              "final_mass_kg": 1283.469819011444,
+              "minimum_sun_distance_au": 2.624057193952923,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.02413780384316948
+            },
+            {
+              "position_error_km": 0.010650191181428662,
+              "velocity_error_km_s": 3.229515633872363e-10,
+              "final_mass_kg": 1269.0443764981794,
+              "minimum_sun_distance_au": 2.5994244174957712,
+              "maximum_thrust_n": 0.5999999994000045,
+              "rk4_vs_dop853_km": 0.010650191181428662
+            },
+            {
+              "position_error_km": 0.06646186495483267,
+              "velocity_error_km_s": 2.392840051309788e-09,
+              "final_mass_kg": 1218.815649118026,
+              "minimum_sun_distance_au": 2.6075695291300938,
+              "maximum_thrust_n": 0.5999999994000053,
+              "rk4_vs_dop853_km": 0.06646184101293093
+            },
+            {
+              "position_error_km": 0.01797067675200438,
+              "velocity_error_km_s": 8.361375566772255e-10,
+              "final_mass_kg": 1223.964035801429,
+              "minimum_sun_distance_au": 2.691347399616082,
+              "maximum_thrust_n": 0.5999999994000054,
+              "rk4_vs_dop853_km": 0.017970708119754934
+            },
+            {
+              "position_error_km": 0.015697656420170698,
+              "velocity_error_km_s": 1.6857556132298734e-09,
+              "final_mass_kg": 1239.7246684889024,
+              "minimum_sun_distance_au": 2.662169113223657,
+              "maximum_thrust_n": 0.599999999400005,
+              "rk4_vs_dop853_km": 0.015697656420170698
+            },
+            {
+              "position_error_km": 0.025787576668027785,
+              "velocity_error_km_s": 1.7080083040679693e-09,
+              "final_mass_kg": 1237.6391367954416,
+              "minimum_sun_distance_au": 2.658859880535598,
+              "maximum_thrust_n": 0.5999999994000058,
+              "rk4_vs_dop853_km": 0.025787576668027785
+            },
+            {
+              "position_error_km": 0.015473602347467577,
+              "velocity_error_km_s": 1.7287798044084788e-09,
+              "final_mass_kg": 1245.9749761152136,
+              "minimum_sun_distance_au": 2.6917874167035123,
+              "maximum_thrust_n": 0.5999999994000036,
+              "rk4_vs_dop853_km": 0.015473602347467577
+            },
+            {
+              "position_error_km": 0.5160601158297061,
+              "velocity_error_km_s": 8.898616895134302e-08,
+              "final_mass_kg": 1118.6465592063519,
+              "minimum_sun_distance_au": 0.9833450720951044,
+              "maximum_thrust_n": 0.599999999400007,
+              "rk4_vs_dop853_km": 0.5160601158297061
+            }
+          ],
+          "cuda_certificates": [
+            {
+              "position_error_km": 0.19495671113151253,
+              "velocity_error_km_s": 8.066483037160048e-09,
+              "final_mass_kg": 2532.656660325327,
+              "minimum_sun_distance_au": 1.0028933920390004,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.19495671113151253
+            },
+            {
+              "position_error_km": 0.0021642259510402154,
+              "velocity_error_km_s": 7.048221550560164e-10,
+              "final_mass_kg": 2417.4921048386395,
+              "minimum_sun_distance_au": 2.682010569911582,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.002164225742952582
+            },
+            {
+              "position_error_km": 0.029383638271395042,
+              "velocity_error_km_s": 1.145551792633634e-09,
+              "final_mass_kg": 2263.140336537436,
+              "minimum_sun_distance_au": 2.6814508430221164,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.029383638271395042
+            },
+            {
+              "position_error_km": 0.016135030973700917,
+              "velocity_error_km_s": 6.928840441782762e-10,
+              "final_mass_kg": 2129.8323421120504,
+              "minimum_sun_distance_au": 2.6538462006100745,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.016135030890730224
+            },
+            {
+              "position_error_km": 0.020958068500317853,
+              "velocity_error_km_s": 7.709676296043029e-10,
+              "final_mass_kg": 1981.8111423363773,
+              "minimum_sun_distance_au": 2.64189005711751,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.020958063819613976
+            },
+            {
+              "position_error_km": 0.00755542969410183,
+              "velocity_error_km_s": 6.753086167756124e-10,
+              "final_mass_kg": 1858.246359555362,
+              "minimum_sun_distance_au": 2.661100233751344,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.00755542969410183
+            },
+            {
+              "position_error_km": 0.01106340311933209,
+              "velocity_error_km_s": 2.6114457006166247e-10,
+              "final_mass_kg": 1733.241125382463,
+              "minimum_sun_distance_au": 2.577674341225395,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.01106340311933209
+            },
+            {
+              "position_error_km": 0.025812565609210275,
+              "velocity_error_km_s": 1.5458164819403548e-09,
+              "final_mass_kg": 1559.788356405791,
+              "minimum_sun_distance_au": 2.5190798042442104,
+              "maximum_thrust_n": 0.5999999994000048,
+              "rk4_vs_dop853_km": 0.025812565609210275
+            },
+            {
+              "position_error_km": 0.026019046322744988,
+              "velocity_error_km_s": 7.980267506617458e-10,
+              "final_mass_kg": 1439.4206922392152,
+              "minimum_sun_distance_au": 2.555868791768084,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.026019056522832196
+            },
+            {
+              "position_error_km": 2.656678572422643e-06,
+              "velocity_error_km_s": 1.662414310465784e-13,
+              "final_mass_kg": 1399.4206922392,
+              "minimum_sun_distance_au": 2.849934890233901,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 2.6559308199592897e-06
+            },
+            {
+              "position_error_km": 0.03228062848594805,
+              "velocity_error_km_s": 1.3046737955745012e-09,
+              "final_mass_kg": 1339.2538637994,
+              "minimum_sun_distance_au": 2.754782028902046,
+              "maximum_thrust_n": 0.5999999994000064,
+              "rk4_vs_dop853_km": 0.03228062848594805
+            },
+            {
+              "position_error_km": 0.024137708177703478,
+              "velocity_error_km_s": 1.3230063390526937e-09,
+              "final_mass_kg": 1283.4698190114511,
+              "minimum_sun_distance_au": 2.624057193952925,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.024137708177703478
+            },
+            {
+              "position_error_km": 0.010650166169156846,
+              "velocity_error_km_s": 3.229512112201852e-10,
+              "final_mass_kg": 1269.0443764981817,
+              "minimum_sun_distance_au": 2.599424417495772,
+              "maximum_thrust_n": 0.5999999994000045,
+              "rk4_vs_dop853_km": 0.010650166169156846
+            },
+            {
+              "position_error_km": 0.06646160259229147,
+              "velocity_error_km_s": 2.392824078743655e-09,
+              "final_mass_kg": 1218.8156491180334,
+              "minimum_sun_distance_au": 2.6075695291300938,
+              "maximum_thrust_n": 0.5999999994000053,
+              "rk4_vs_dop853_km": 0.0664615786504556
+            },
+            {
+              "position_error_km": 0.01797023866338528,
+              "velocity_error_km_s": 8.361555833698307e-10,
+              "final_mass_kg": 1223.9640358014362,
+              "minimum_sun_distance_au": 2.6913473996160784,
+              "maximum_thrust_n": 0.5999999994000054,
+              "rk4_vs_dop853_km": 0.01797027003091204
+            },
+            {
+              "position_error_km": 0.015697681602940435,
+              "velocity_error_km_s": 1.6857620596261349e-09,
+              "final_mass_kg": 1239.7246684889085,
+              "minimum_sun_distance_au": 2.6621691132236585,
+              "maximum_thrust_n": 0.599999999400005,
+              "rk4_vs_dop853_km": 0.015697681602940435
+            },
+            {
+              "position_error_km": 0.02578810524177394,
+              "velocity_error_km_s": 1.708023840618124e-09,
+              "final_mass_kg": 1237.6391367954482,
+              "minimum_sun_distance_au": 2.658859880535595,
+              "maximum_thrust_n": 0.5999999994000058,
+              "rk4_vs_dop853_km": 0.02578810524177394
+            },
+            {
+              "position_error_km": 0.015473180379152036,
+              "velocity_error_km_s": 1.7287773172751897e-09,
+              "final_mass_kg": 1245.9749761152211,
+              "minimum_sun_distance_au": 2.6917874167035083,
+              "maximum_thrust_n": 0.5999999994000036,
+              "rk4_vs_dop853_km": 0.015473180379152036
+            },
+            {
+              "position_error_km": 0.5160616933810452,
+              "velocity_error_km_s": 8.898646028444736e-08,
+              "final_mass_kg": 1118.646559206367,
+              "minimum_sun_distance_au": 0.9833450720951252,
+              "maximum_thrust_n": 0.599999999400007,
+              "rk4_vs_dop853_km": 0.5160616933810452
+            }
+          ]
+        },
+        {
+          "source": "/home/angus/spacepdhcg-certificate-v709/campaign-cpu/candidates/ship_15_attempt_02/route/Result.txt",
+          "legs": 19,
+          "samples": [
+            {
+              "repeat": 0,
+              "backend": "cpu",
+              "seconds": 0.8541830389999632,
+              "warmup": true
+            },
+            {
+              "repeat": 0,
+              "backend": "cuda",
+              "seconds": 0.17333936400007133,
+              "warmup": true
+            },
+            {
+              "repeat": 1,
+              "backend": "cuda",
+              "seconds": 0.17462704800004758,
+              "warmup": false
+            },
+            {
+              "repeat": 1,
+              "backend": "cpu",
+              "seconds": 1.0395093739999766,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cpu",
+              "seconds": 0.9123525390000395,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cuda",
+              "seconds": 0.1725960800000621,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cuda",
+              "seconds": 0.17154118299993115,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cpu",
+              "seconds": 0.8481633919999467,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cpu",
+              "seconds": 0.8323029550000456,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cuda",
+              "seconds": 0.1736654300000282,
+              "warmup": false
+            }
+          ],
+          "medians": {
+            "cpu": 0.8802579654999931,
+            "cuda": 0.17313075500004516
+          },
+          "ratio": 5.084353530946963,
+          "cpu_certificates": [
+            {
+              "position_error_km": 0.05762969236907383,
+              "velocity_error_km_s": 4.575404417725237e-09,
+              "final_mass_kg": 2553.488813054694,
+              "minimum_sun_distance_au": 1.0048190239405468,
+              "maximum_thrust_n": 0.5999999994000069,
+              "rk4_vs_dop853_km": 0.05762969236907383
+            },
+            {
+              "position_error_km": 0.0024355856892699394,
+              "velocity_error_km_s": 7.298438343582518e-10,
+              "final_mass_kg": 2443.8431954802527,
+              "minimum_sun_distance_au": 2.680945892904382,
+              "maximum_thrust_n": 0.5999999994000041,
+              "rk4_vs_dop853_km": 0.0024355856892699394
+            },
+            {
+              "position_error_km": 0.02899638666370898,
+              "velocity_error_km_s": 1.147853019636528e-09,
+              "final_mass_kg": 2280.7156029440575,
+              "minimum_sun_distance_au": 2.6804426325765123,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.02899638666370898
+            },
+            {
+              "position_error_km": 0.015009361441370602,
+              "velocity_error_km_s": 6.590861122057526e-10,
+              "final_mass_kg": 2137.545896188394,
+              "minimum_sun_distance_au": 2.660634128542078,
+              "maximum_thrust_n": 0.5999999994000055,
+              "rk4_vs_dop853_km": 0.015009361441370602
+            },
+            {
+              "position_error_km": 0.020108842740544045,
+              "velocity_error_km_s": 8.029366545161202e-10,
+              "final_mass_kg": 1991.390379745287,
+              "minimum_sun_distance_au": 2.6439960399294353,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.020108842740544045
+            },
+            {
+              "position_error_km": 0.007683536791223611,
+              "velocity_error_km_s": 7.043309861545244e-10,
+              "final_mass_kg": 1869.24396205538,
+              "minimum_sun_distance_au": 2.6602906073843764,
+              "maximum_thrust_n": 0.5999999994000065,
+              "rk4_vs_dop853_km": 0.007683564367112258
+            },
+            {
+              "position_error_km": 0.011079694431456929,
+              "velocity_error_km_s": 2.6357421835133265e-10,
+              "final_mass_kg": 1749.809869350713,
+              "minimum_sun_distance_au": 2.5743591385880142,
+              "maximum_thrust_n": 0.5999999994000051,
+              "rk4_vs_dop853_km": 0.011079691413904478
+            },
+            {
+              "position_error_km": 0.0255997113634584,
+              "velocity_error_km_s": 1.5747174588968645e-09,
+              "final_mass_kg": 1580.264025317675,
+              "minimum_sun_distance_au": 2.522612552633342,
+              "maximum_thrust_n": 0.5999999994000049,
+              "rk4_vs_dop853_km": 0.0255997113634584
+            },
+            {
+              "position_error_km": 0.027684656212729527,
+              "velocity_error_km_s": 7.646729857627805e-10,
+              "final_mass_kg": 1458.0594018818933,
+              "minimum_sun_distance_au": 2.5704054294798837,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.027684656212729527
+            },
+            {
+              "position_error_km": 3.6000724360586346e-06,
+              "velocity_error_km_s": 2.068602623947743e-13,
+              "final_mass_kg": 1418.0594018818,
+              "minimum_sun_distance_au": 2.853879572406839,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 3.6000724360586346e-06
+            },
+            {
+              "position_error_km": 0.030211695371723725,
+              "velocity_error_km_s": 1.236596159282149e-09,
+              "final_mass_kg": 1357.1626270811978,
+              "minimum_sun_distance_au": 2.759406327537601,
+              "maximum_thrust_n": 0.5999999994000063,
+              "rk4_vs_dop853_km": 0.030211695371723725
+            },
+            {
+              "position_error_km": 0.02401086868234521,
+              "velocity_error_km_s": 1.319936649638725e-09,
+              "final_mass_kg": 1300.6985831327272,
+              "minimum_sun_distance_au": 2.626177535897709,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.02401086868234521
+            },
+            {
+              "position_error_km": 0.010956377476039923,
+              "velocity_error_km_s": 3.2131307419381126e-10,
+              "final_mass_kg": 1286.8812032431101,
+              "minimum_sun_distance_au": 2.599595484120851,
+              "maximum_thrust_n": 0.5999999994000066,
+              "rk4_vs_dop853_km": 0.010956377476039923
+            },
+            {
+              "position_error_km": 0.06555133797287922,
+              "velocity_error_km_s": 2.3893948540948216e-09,
+              "final_mass_kg": 1234.9414375397123,
+              "minimum_sun_distance_au": 2.607579667697912,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.06555136231621692
+            },
+            {
+              "position_error_km": 0.016960513589027608,
+              "velocity_error_km_s": 7.661267097511375e-10,
+              "final_mass_kg": 1242.4653993074942,
+              "minimum_sun_distance_au": 2.692498166695485,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.016960513589027608
+            },
+            {
+              "position_error_km": 0.016316299312887285,
+              "velocity_error_km_s": 1.7038228293825368e-09,
+              "final_mass_kg": 1255.4608053385846,
+              "minimum_sun_distance_au": 2.6594801944247353,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.016316299312887285
+            },
+            {
+              "position_error_km": 0.02563122365803661,
+              "velocity_error_km_s": 1.7019839709237594e-09,
+              "final_mass_kg": 1245.8361608909872,
+              "minimum_sun_distance_au": 2.6562143404707586,
+              "maximum_thrust_n": 0.5999999994000054,
+              "rk4_vs_dop853_km": 0.02563122365803661
+            },
+            {
+              "position_error_km": 0.015043664627845298,
+              "velocity_error_km_s": 1.709800548460146e-09,
+              "final_mass_kg": 1251.1645762653236,
+              "minimum_sun_distance_au": 2.693453777642636,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.01504366443681082
+            },
+            {
+              "position_error_km": 0.5047577589634349,
+              "velocity_error_km_s": 8.673536328402178e-08,
+              "final_mass_kg": 1123.635583006316,
+              "minimum_sun_distance_au": 0.9833450720520609,
+              "maximum_thrust_n": 0.5999999994000051,
+              "rk4_vs_dop853_km": 0.5047577589634349
+            }
+          ],
+          "cuda_certificates": [
+            {
+              "position_error_km": 0.05763948824493035,
+              "velocity_error_km_s": 4.574776176758038e-09,
+              "final_mass_kg": 2553.4888130546565,
+              "minimum_sun_distance_au": 1.0048190239405468,
+              "maximum_thrust_n": 0.5999999994000069,
+              "rk4_vs_dop853_km": 0.05763948824493035
+            },
+            {
+              "position_error_km": 0.00243554654629538,
+              "velocity_error_km_s": 7.298380018101189e-10,
+              "final_mass_kg": 2443.843195480246,
+              "minimum_sun_distance_au": 2.6809458929043823,
+              "maximum_thrust_n": 0.5999999994000041,
+              "rk4_vs_dop853_km": 0.00243554654629538
+            },
+            {
+              "position_error_km": 0.028994459223978128,
+              "velocity_error_km_s": 1.1477902571120595e-09,
+              "final_mass_kg": 2280.7156029440516,
+              "minimum_sun_distance_au": 2.680442632576513,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.028994459223978128
+            },
+            {
+              "position_error_km": 0.01500875144970955,
+              "velocity_error_km_s": 6.590945749018258e-10,
+              "final_mass_kg": 2137.5458961883855,
+              "minimum_sun_distance_au": 2.660634128542074,
+              "maximum_thrust_n": 0.5999999994000055,
+              "rk4_vs_dop853_km": 0.01500875144970955
+            },
+            {
+              "position_error_km": 0.020109076181365138,
+              "velocity_error_km_s": 8.029273068423889e-10,
+              "final_mass_kg": 1991.3903797452874,
+              "minimum_sun_distance_au": 2.643996039929435,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.020109076181365138
+            },
+            {
+              "position_error_km": 0.007683065440242495,
+              "velocity_error_km_s": 7.04345103079514e-10,
+              "final_mass_kg": 1869.243962055384,
+              "minimum_sun_distance_au": 2.6602906073843786,
+              "maximum_thrust_n": 0.5999999994000065,
+              "rk4_vs_dop853_km": 0.007683093015973271
+            },
+            {
+              "position_error_km": 0.011079621033695676,
+              "velocity_error_km_s": 2.6356812480691255e-10,
+              "final_mass_kg": 1749.8098693507168,
+              "minimum_sun_distance_au": 2.5743591385880134,
+              "maximum_thrust_n": 0.5999999994000051,
+              "rk4_vs_dop853_km": 0.011079618016123234
+            },
+            {
+              "position_error_km": 0.02559889750925768,
+              "velocity_error_km_s": 1.5746914537138272e-09,
+              "final_mass_kg": 1580.264025317687,
+              "minimum_sun_distance_au": 2.5226125526333396,
+              "maximum_thrust_n": 0.5999999994000049,
+              "rk4_vs_dop853_km": 0.02559889750925768
+            },
+            {
+              "position_error_km": 0.02768519213170906,
+              "velocity_error_km_s": 7.646761672413454e-10,
+              "final_mass_kg": 1458.0594018819002,
+              "minimum_sun_distance_au": 2.5704054294798837,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.02768519213170906
+            },
+            {
+              "position_error_km": 4.153132750918303e-06,
+              "velocity_error_km_s": 2.3868390426892554e-13,
+              "final_mass_kg": 1418.0594018818,
+              "minimum_sun_distance_au": 2.8538795724068424,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 4.153132750918303e-06
+            },
+            {
+              "position_error_km": 0.03021103478961657,
+              "velocity_error_km_s": 1.23657063150624e-09,
+              "final_mass_kg": 1357.1626270812021,
+              "minimum_sun_distance_au": 2.7594063275376075,
+              "maximum_thrust_n": 0.5999999994000063,
+              "rk4_vs_dop853_km": 0.03021103478961657
+            },
+            {
+              "position_error_km": 0.02401078512707171,
+              "velocity_error_km_s": 1.3199378496527697e-09,
+              "final_mass_kg": 1300.6985831327315,
+              "minimum_sun_distance_au": 2.626177535897709,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.02401078512707171
+            },
+            {
+              "position_error_km": 0.010956631543655017,
+              "velocity_error_km_s": 3.2132486877588097e-10,
+              "final_mass_kg": 1286.8812032431129,
+              "minimum_sun_distance_au": 2.5995954841208486,
+              "maximum_thrust_n": 0.5999999994000066,
+              "rk4_vs_dop853_km": 0.010956631543655017
+            },
+            {
+              "position_error_km": 0.0655497197209622,
+              "velocity_error_km_s": 2.389266176961247e-09,
+              "final_mass_kg": 1234.9414375397191,
+              "minimum_sun_distance_au": 2.607579667697912,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.0655497440631123
+            },
+            {
+              "position_error_km": 0.016961000639628705,
+              "velocity_error_km_s": 7.66132492620357e-10,
+              "final_mass_kg": 1242.4653993074999,
+              "minimum_sun_distance_au": 2.692498166695487,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.016961000639628705
+            },
+            {
+              "position_error_km": 0.016316729401720617,
+              "velocity_error_km_s": 1.7038450907938596e-09,
+              "final_mass_kg": 1255.4608053385898,
+              "minimum_sun_distance_au": 2.659480194424739,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.016316729401720617
+            },
+            {
+              "position_error_km": 0.025631537843361935,
+              "velocity_error_km_s": 1.7019837986199818e-09,
+              "final_mass_kg": 1245.8361608909945,
+              "minimum_sun_distance_au": 2.6562143404707568,
+              "maximum_thrust_n": 0.5999999994000054,
+              "rk4_vs_dop853_km": 0.025631537843361935
+            },
+            {
+              "position_error_km": 0.015043972349883701,
+              "velocity_error_km_s": 1.709829097349987e-09,
+              "final_mass_kg": 1251.1645762653318,
+              "minimum_sun_distance_au": 2.6934537776426373,
+              "maximum_thrust_n": 0.5999999994000061,
+              "rk4_vs_dop853_km": 0.01504397215885342
+            },
+            {
+              "position_error_km": 0.5047655748162285,
+              "velocity_error_km_s": 8.673670534279392e-08,
+              "final_mass_kg": 1123.6355830063296,
+              "minimum_sun_distance_au": 0.9833450720520932,
+              "maximum_thrust_n": 0.5999999994000051,
+              "rk4_vs_dop853_km": 0.5047655748162285
+            }
+          ]
+        }
+      ]
+    },
+    "h100": {
+      "cases": [
+        {
+          "source": "/home/ubuntu/spacepdhcg-certificate-v709/campaign-cpu/candidates/ship_15_attempt_01/route/Result.txt",
+          "legs": 19,
+          "samples": [
+            {
+              "repeat": 0,
+              "backend": "cpu",
+              "seconds": 1.6163755499874242,
+              "warmup": true
+            },
+            {
+              "repeat": 0,
+              "backend": "cuda",
+              "seconds": 0.42851689201779664,
+              "warmup": true
+            },
+            {
+              "repeat": 1,
+              "backend": "cuda",
+              "seconds": 0.08258173597278073,
+              "warmup": false
+            },
+            {
+              "repeat": 1,
+              "backend": "cpu",
+              "seconds": 1.6152735829818994,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cpu",
+              "seconds": 1.6147802170016803,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cuda",
+              "seconds": 0.08297388895880431,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cuda",
+              "seconds": 0.0825319190043956,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cpu",
+              "seconds": 1.6151780460495502,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cpu",
+              "seconds": 1.6160404570400715,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cuda",
+              "seconds": 0.08264314598636702,
+              "warmup": false
+            }
+          ],
+          "medians": {
+            "cpu": 1.6152258145157248,
+            "cuda": 0.08261244097957388
+          },
+          "ratio": 19.551847099096047,
+          "cpu_certificates": [
+            {
+              "position_error_km": 0.19495340997335014,
+              "velocity_error_km_s": 8.065482078925942e-09,
+              "final_mass_kg": 2532.6566603252536,
+              "minimum_sun_distance_au": 1.0028933920390004,
+              "maximum_thrust_n": 0.5999999994000057,
+              "rk4_vs_dop853_km": 0.19495340997335014
+            },
+            {
+              "position_error_km": 0.0021783220580300785,
+              "velocity_error_km_s": 7.068418426149756e-10,
+              "final_mass_kg": 2417.492104838669,
+              "minimum_sun_distance_au": 2.682010569911567,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.002178321849002058
+            },
+            {
+              "position_error_km": 0.029385409014334674,
+              "velocity_error_km_s": 1.1456148201571925e-09,
+              "final_mass_kg": 2263.140336537444,
+              "minimum_sun_distance_au": 2.6814508430221182,
+              "maximum_thrust_n": 0.5999999994000058,
+              "rk4_vs_dop853_km": 0.029385409014334674
+            },
+            {
+              "position_error_km": 0.016136815371984206,
+              "velocity_error_km_s": 6.902273038306746e-10,
+              "final_mass_kg": 2129.8323421120554,
+              "minimum_sun_distance_au": 2.6538462006102046,
+              "maximum_thrust_n": 0.5999999994000059,
+              "rk4_vs_dop853_km": 0.016136815277649947
+            },
+            {
+              "position_error_km": 0.02095794836085583,
+              "velocity_error_km_s": 7.713318664132855e-10,
+              "final_mass_kg": 1981.8111423364035,
+              "minimum_sun_distance_au": 2.6418900571175423,
+              "maximum_thrust_n": 0.5999999994000064,
+              "rk4_vs_dop853_km": 0.020957943679982088
+            },
+            {
+              "position_error_km": 0.00755461056962233,
+              "velocity_error_km_s": 6.74989534993188e-10,
+              "final_mass_kg": 1858.246359555363,
+              "minimum_sun_distance_au": 2.6611002337513248,
+              "maximum_thrust_n": 0.5999999994000068,
+              "rk4_vs_dop853_km": 0.00755461056962233
+            },
+            {
+              "position_error_km": 0.011055366305290321,
+              "velocity_error_km_s": 2.58104821161594e-10,
+              "final_mass_kg": 1733.241125382404,
+              "minimum_sun_distance_au": 2.57767434122548,
+              "maximum_thrust_n": 0.5999999994000044,
+              "rk4_vs_dop853_km": 0.011055366305290321
+            },
+            {
+              "position_error_km": 0.025811908647781732,
+              "velocity_error_km_s": 1.5458658267646741e-09,
+              "final_mass_kg": 1559.7883564057843,
+              "minimum_sun_distance_au": 2.519079804244369,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.025811908647781732
+            },
+            {
+              "position_error_km": 0.02597091457342092,
+              "velocity_error_km_s": 7.935607517924841e-10,
+              "final_mass_kg": 1439.4206922391156,
+              "minimum_sun_distance_au": 2.555868791768084,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.025970924906225996
+            },
+            {
+              "position_error_km": 2.4655688270218694e-06,
+              "velocity_error_km_s": 1.6354440597518948e-13,
+              "final_mass_kg": 1399.4206922391,
+              "minimum_sun_distance_au": 2.849934890233902,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 2.464737759667697e-06
+            },
+            {
+              "position_error_km": 0.03228424429162373,
+              "velocity_error_km_s": 1.3048460010982281e-09,
+              "final_mass_kg": 1339.2538637993075,
+              "minimum_sun_distance_au": 2.7547820289020266,
+              "maximum_thrust_n": 0.5999999994000071,
+              "rk4_vs_dop853_km": 0.03228424429162373
+            },
+            {
+              "position_error_km": 0.024137084124740513,
+              "velocity_error_km_s": 1.322498265641604e-09,
+              "final_mass_kg": 1283.4698190113559,
+              "minimum_sun_distance_au": 2.6240571939529436,
+              "maximum_thrust_n": 0.5999999994000046,
+              "rk4_vs_dop853_km": 0.024137084124740513
+            },
+            {
+              "position_error_km": 0.010649138002301585,
+              "velocity_error_km_s": 3.232073519041041e-10,
+              "final_mass_kg": 1269.0443764980994,
+              "minimum_sun_distance_au": 2.599424417495748,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.010649138002301585
+            },
+            {
+              "position_error_km": 0.06637852252099902,
+              "velocity_error_km_s": 2.392927638336106e-09,
+              "final_mass_kg": 1218.8156491181603,
+              "minimum_sun_distance_au": 2.6075695291300938,
+              "maximum_thrust_n": 0.5999999994000045,
+              "rk4_vs_dop853_km": 0.06637849858489647
+            },
+            {
+              "position_error_km": 0.017967403681518435,
+              "velocity_error_km_s": 8.36083968586128e-10,
+              "final_mass_kg": 1223.9640358014192,
+              "minimum_sun_distance_au": 2.691347399616063,
+              "maximum_thrust_n": 0.599999999400005,
+              "rk4_vs_dop853_km": 0.017967435049842155
+            },
+            {
+              "position_error_km": 0.015697771340318637,
+              "velocity_error_km_s": 1.6856968982528987e-09,
+              "final_mass_kg": 1239.7246684888944,
+              "minimum_sun_distance_au": 2.6621691132236682,
+              "maximum_thrust_n": 0.5999999994000057,
+              "rk4_vs_dop853_km": 0.015697771340318637
+            },
+            {
+              "position_error_km": 0.025785227751923125,
+              "velocity_error_km_s": 1.7023721955693037e-09,
+              "final_mass_kg": 1237.639136795639,
+              "minimum_sun_distance_au": 2.658859880535581,
+              "maximum_thrust_n": 0.5999999994000053,
+              "rk4_vs_dop853_km": 0.025785227751923125
+            },
+            {
+              "position_error_km": 0.015503679154228112,
+              "velocity_error_km_s": 1.729955957166488e-09,
+              "final_mass_kg": 1245.974976115443,
+              "minimum_sun_distance_au": 2.691787416703666,
+              "maximum_thrust_n": 0.5999999994000038,
+              "rk4_vs_dop853_km": 0.015503679154228112
+            },
+            {
+              "position_error_km": 0.5160105842934425,
+              "velocity_error_km_s": 8.897521253048923e-08,
+              "final_mass_kg": 1118.6465592065194,
+              "minimum_sun_distance_au": 0.9833450720948559,
+              "maximum_thrust_n": 0.5999999994000063,
+              "rk4_vs_dop853_km": 0.5160105842934425
+            }
+          ],
+          "cuda_certificates": [
+            {
+              "position_error_km": 0.19501854977799746,
+              "velocity_error_km_s": 8.069155910332102e-09,
+              "final_mass_kg": 2532.656660325204,
+              "minimum_sun_distance_au": 1.0028933920390004,
+              "maximum_thrust_n": 0.5999999994000057,
+              "rk4_vs_dop853_km": 0.19501854977799746
+            },
+            {
+              "position_error_km": 0.002178665847779604,
+              "velocity_error_km_s": 7.068395107371626e-10,
+              "final_mass_kg": 2417.492104838664,
+              "minimum_sun_distance_au": 2.6820105699115664,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.002178665638782776
+            },
+            {
+              "position_error_km": 0.029384187422769034,
+              "velocity_error_km_s": 1.145578182894291e-09,
+              "final_mass_kg": 2263.140336537434,
+              "minimum_sun_distance_au": 2.681450843022119,
+              "maximum_thrust_n": 0.5999999994000058,
+              "rk4_vs_dop853_km": 0.029384187422769034
+            },
+            {
+              "position_error_km": 0.01613697731399592,
+              "velocity_error_km_s": 6.902336381390988e-10,
+              "final_mass_kg": 2129.8323421120513,
+              "minimum_sun_distance_au": 2.6538462006102064,
+              "maximum_thrust_n": 0.5999999994000059,
+              "rk4_vs_dop853_km": 0.016136977219590364
+            },
+            {
+              "position_error_km": 0.020957656475754507,
+              "velocity_error_km_s": 7.71319908845294e-10,
+              "final_mass_kg": 1981.8111423364046,
+              "minimum_sun_distance_au": 2.6418900571175423,
+              "maximum_thrust_n": 0.5999999994000064,
+              "rk4_vs_dop853_km": 0.020957651794863252
+            },
+            {
+              "position_error_km": 0.007555537769972398,
+              "velocity_error_km_s": 6.749736270419838e-10,
+              "final_mass_kg": 1858.2463595553688,
+              "minimum_sun_distance_au": 2.6611002337513194,
+              "maximum_thrust_n": 0.5999999994000068,
+              "rk4_vs_dop853_km": 0.007555537769972398
+            },
+            {
+              "position_error_km": 0.011055623540192981,
+              "velocity_error_km_s": 2.5811008907999875e-10,
+              "final_mass_kg": 1733.2411253824084,
+              "minimum_sun_distance_au": 2.577674341225484,
+              "maximum_thrust_n": 0.5999999994000044,
+              "rk4_vs_dop853_km": 0.011055623540192981
+            },
+            {
+              "position_error_km": 0.02581265230046568,
+              "velocity_error_km_s": 1.545891181284611e-09,
+              "final_mass_kg": 1559.7883564057943,
+              "minimum_sun_distance_au": 2.519079804244373,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.02581265230046568
+            },
+            {
+              "position_error_km": 0.025970847329510455,
+              "velocity_error_km_s": 7.93563702958364e-10,
+              "final_mass_kg": 1439.420692239123,
+              "minimum_sun_distance_au": 2.555868791768084,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.02597085766275268
+            },
+            {
+              "position_error_km": 2.656678572422643e-06,
+              "velocity_error_km_s": 1.662414310465784e-13,
+              "final_mass_kg": 1399.4206922391,
+              "minimum_sun_distance_au": 2.849934890233901,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 2.6559308199592897e-06
+            },
+            {
+              "position_error_km": 0.032284551217762365,
+              "velocity_error_km_s": 1.3048500923424405e-09,
+              "final_mass_kg": 1339.2538637993123,
+              "minimum_sun_distance_au": 2.7547820289020235,
+              "maximum_thrust_n": 0.5999999994000071,
+              "rk4_vs_dop853_km": 0.032284551217762365
+            },
+            {
+              "position_error_km": 0.024137083551566924,
+              "velocity_error_km_s": 1.3224970166903897e-09,
+              "final_mass_kg": 1283.4698190113625,
+              "minimum_sun_distance_au": 2.624057193952946,
+              "maximum_thrust_n": 0.5999999994000046,
+              "rk4_vs_dop853_km": 0.024137083551566924
+            },
+            {
+              "position_error_km": 0.01064899407895172,
+              "velocity_error_km_s": 3.232157745190159e-10,
+              "final_mass_kg": 1269.044376498103,
+              "minimum_sun_distance_au": 2.5994244174957495,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.01064899407895172
+            },
+            {
+              "position_error_km": 0.06638006345015146,
+              "velocity_error_km_s": 2.3930793562316036e-09,
+              "final_mass_kg": 1218.8156491181676,
+              "minimum_sun_distance_au": 2.6075695291300938,
+              "maximum_thrust_n": 0.5999999994000045,
+              "rk4_vs_dop853_km": 0.06638003951262429
+            },
+            {
+              "position_error_km": 0.01796708093856456,
+              "velocity_error_km_s": 8.360846660955015e-10,
+              "final_mass_kg": 1223.9640358014258,
+              "minimum_sun_distance_au": 2.69134739961606,
+              "maximum_thrust_n": 0.599999999400005,
+              "rk4_vs_dop853_km": 0.017967112306858542
+            },
+            {
+              "position_error_km": 0.015697737889108145,
+              "velocity_error_km_s": 1.6856969399892747e-09,
+              "final_mass_kg": 1239.7246684889017,
+              "minimum_sun_distance_au": 2.6621691132236673,
+              "maximum_thrust_n": 0.5999999994000057,
+              "rk4_vs_dop853_km": 0.015697737889108145
+            },
+            {
+              "position_error_km": 0.025785963682081563,
+              "velocity_error_km_s": 1.7023733812765717e-09,
+              "final_mass_kg": 1237.6391367956446,
+              "minimum_sun_distance_au": 2.6588598805355788,
+              "maximum_thrust_n": 0.5999999994000053,
+              "rk4_vs_dop853_km": 0.025785963682081563
+            },
+            {
+              "position_error_km": 0.015503710643422411,
+              "velocity_error_km_s": 1.729973368233014e-09,
+              "final_mass_kg": 1245.9749761154494,
+              "minimum_sun_distance_au": 2.691787416703666,
+              "maximum_thrust_n": 0.5999999994000038,
+              "rk4_vs_dop853_km": 0.015503710643422411
+            },
+            {
+              "position_error_km": 0.5160218580736445,
+              "velocity_error_km_s": 8.897710481959172e-08,
+              "final_mass_kg": 1118.646559206534,
+              "minimum_sun_distance_au": 0.9833450720948886,
+              "maximum_thrust_n": 0.5999999994000063,
+              "rk4_vs_dop853_km": 0.5160218580736445
+            }
+          ]
+        },
+        {
+          "source": "/home/ubuntu/spacepdhcg-certificate-v709/campaign-cpu/candidates/ship_15_attempt_02/route/Result.txt",
+          "legs": 19,
+          "samples": [
+            {
+              "repeat": 0,
+              "backend": "cpu",
+              "seconds": 1.6323058269917965,
+              "warmup": true
+            },
+            {
+              "repeat": 0,
+              "backend": "cuda",
+              "seconds": 0.08229906903579831,
+              "warmup": true
+            },
+            {
+              "repeat": 1,
+              "backend": "cuda",
+              "seconds": 0.08132942602969706,
+              "warmup": false
+            },
+            {
+              "repeat": 1,
+              "backend": "cpu",
+              "seconds": 1.596875393006485,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cpu",
+              "seconds": 1.596345018944703,
+              "warmup": false
+            },
+            {
+              "repeat": 2,
+              "backend": "cuda",
+              "seconds": 0.08172869199188426,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cuda",
+              "seconds": 0.08138955902541056,
+              "warmup": false
+            },
+            {
+              "repeat": 3,
+              "backend": "cpu",
+              "seconds": 1.597910626034718,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cpu",
+              "seconds": 1.5959274630295113,
+              "warmup": false
+            },
+            {
+              "repeat": 4,
+              "backend": "cuda",
+              "seconds": 0.08171602903166786,
+              "warmup": false
+            }
+          ],
+          "medians": {
+            "cpu": 1.596610205975594,
+            "cuda": 0.08155279402853921
+          },
+          "ratio": 19.577627290327587,
+          "cpu_certificates": [
+            {
+              "position_error_km": 0.05763077516552936,
+              "velocity_error_km_s": 4.575524375833796e-09,
+              "final_mass_kg": 2553.4888130546915,
+              "minimum_sun_distance_au": 1.0048190239405468,
+              "maximum_thrust_n": 0.5999999994000059,
+              "rk4_vs_dop853_km": 0.05763077516552936
+            },
+            {
+              "position_error_km": 0.0024846637629736368,
+              "velocity_error_km_s": 7.394408649776581e-10,
+              "final_mass_kg": 2443.843195480802,
+              "minimum_sun_distance_au": 2.680945892904335,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.0024846637629736368
+            },
+            {
+              "position_error_km": 0.028992913837691835,
+              "velocity_error_km_s": 1.1473261007602328e-09,
+              "final_mass_kg": 2280.71560294463,
+              "minimum_sun_distance_au": 2.680442632576514,
+              "maximum_thrust_n": 0.5999999994000063,
+              "rk4_vs_dop853_km": 0.028992913837691835
+            },
+            {
+              "position_error_km": 0.015007871304339218,
+              "velocity_error_km_s": 6.584522719492326e-10,
+              "final_mass_kg": 2137.545896188842,
+              "minimum_sun_distance_au": 2.660634128542083,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.015007871304339218
+            },
+            {
+              "position_error_km": 0.020108588324259304,
+              "velocity_error_km_s": 8.027491060736819e-10,
+              "final_mass_kg": 1991.3903797457458,
+              "minimum_sun_distance_au": 2.643996039929435,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.020108588324259304
+            },
+            {
+              "position_error_km": 0.007685194318751862,
+              "velocity_error_km_s": 7.023502236116174e-10,
+              "final_mass_kg": 1869.2439620557802,
+              "minimum_sun_distance_au": 2.660290607384142,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.007685221793116914
+            },
+            {
+              "position_error_km": 0.011078931224832448,
+              "velocity_error_km_s": 2.6402073114841794e-10,
+              "final_mass_kg": 1749.8098693510879,
+              "minimum_sun_distance_au": 2.574359138588007,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.011078928206811577
+            },
+            {
+              "position_error_km": 0.02560006988593206,
+              "velocity_error_km_s": 1.5746634056431956e-09,
+              "final_mass_kg": 1580.2640253180439,
+              "minimum_sun_distance_au": 2.522612552633707,
+              "maximum_thrust_n": 0.599999999400005,
+              "rk4_vs_dop853_km": 0.02560006988593206
+            },
+            {
+              "position_error_km": 0.027683570905779487,
+              "velocity_error_km_s": 7.646567574026504e-10,
+              "final_mass_kg": 1458.059401882172,
+              "minimum_sun_distance_au": 2.5704054294798837,
+              "maximum_thrust_n": 0.599999999400004,
+              "rk4_vs_dop853_km": 0.02768356048803136
+            },
+            {
+              "position_error_km": 3.07284347586353e-06,
+              "velocity_error_km_s": 1.335608911686454e-13,
+              "final_mass_kg": 1418.0594018822,
+              "minimum_sun_distance_au": 2.8538795724068082,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 3.07284347586353e-06
+            },
+            {
+              "position_error_km": 0.03032380809000309,
+              "velocity_error_km_s": 1.2304908354940306e-09,
+              "final_mass_kg": 1357.1626270816569,
+              "minimum_sun_distance_au": 2.7594063275376697,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.03032380809000309
+            },
+            {
+              "position_error_km": 0.023984620988928732,
+              "velocity_error_km_s": 1.3247608545799904e-09,
+              "final_mass_kg": 1300.6985831336783,
+              "minimum_sun_distance_au": 2.6261775358987007,
+              "maximum_thrust_n": 0.5999999994000055,
+              "rk4_vs_dop853_km": 0.023984620988928732
+            },
+            {
+              "position_error_km": 0.01095569937213092,
+              "velocity_error_km_s": 3.2129402502985163e-10,
+              "final_mass_kg": 1286.881203243964,
+              "minimum_sun_distance_au": 2.5995954841207674,
+              "maximum_thrust_n": 0.5999999994000036,
+              "rk4_vs_dop853_km": 0.01095569937213092
+            },
+            {
+              "position_error_km": 0.0655787756502982,
+              "velocity_error_km_s": 2.3826210986698677e-09,
+              "final_mass_kg": 1234.941437540214,
+              "minimum_sun_distance_au": 2.607579667697912,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.06557879995983062
+            },
+            {
+              "position_error_km": 0.016961152698900674,
+              "velocity_error_km_s": 7.664119512394699e-10,
+              "final_mass_kg": 1242.4653993080556,
+              "minimum_sun_distance_au": 2.6924981666954837,
+              "maximum_thrust_n": 0.5999999994000067,
+              "rk4_vs_dop853_km": 0.016961152698900674
+            },
+            {
+              "position_error_km": 0.016315466418860426,
+              "velocity_error_km_s": 1.70362049249347e-09,
+              "final_mass_kg": 1255.4608053389459,
+              "minimum_sun_distance_au": 2.6594801944247233,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.016315466418860426
+            },
+            {
+              "position_error_km": 0.02562749549883069,
+              "velocity_error_km_s": 1.7021797061531051e-09,
+              "final_mass_kg": 1245.836160891333,
+              "minimum_sun_distance_au": 2.6562143404707514,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.02562749549883069
+            },
+            {
+              "position_error_km": 0.015005227111149055,
+              "velocity_error_km_s": 1.701090642025726e-09,
+              "final_mass_kg": 1251.164576265602,
+              "minimum_sun_distance_au": 2.693453777642277,
+              "maximum_thrust_n": 0.5999999994000041,
+              "rk4_vs_dop853_km": 0.015005226918463968
+            },
+            {
+              "position_error_km": 0.49795182563390145,
+              "velocity_error_km_s": 8.544994491143761e-08,
+              "final_mass_kg": 1123.6355829818854,
+              "minimum_sun_distance_au": 0.983345072028494,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.49795182563390145
+            }
+          ],
+          "cuda_certificates": [
+            {
+              "position_error_km": 0.05763949222171305,
+              "velocity_error_km_s": 4.574865411054041e-09,
+              "final_mass_kg": 2553.48881305465,
+              "minimum_sun_distance_au": 1.0048190239405468,
+              "maximum_thrust_n": 0.5999999994000059,
+              "rk4_vs_dop853_km": 0.05763949222171305
+            },
+            {
+              "position_error_km": 0.0024848155706843943,
+              "velocity_error_km_s": 7.394396298098328e-10,
+              "final_mass_kg": 2443.8431954807934,
+              "minimum_sun_distance_au": 2.6809458929043357,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.0024848155706843943
+            },
+            {
+              "position_error_km": 0.02899220091360642,
+              "velocity_error_km_s": 1.1472868333852174e-09,
+              "final_mass_kg": 2280.715602944621,
+              "minimum_sun_distance_au": 2.680442632576515,
+              "maximum_thrust_n": 0.5999999994000063,
+              "rk4_vs_dop853_km": 0.02899220091360642
+            },
+            {
+              "position_error_km": 0.01500797468054432,
+              "velocity_error_km_s": 6.584662501264628e-10,
+              "final_mass_kg": 2137.545896188832,
+              "minimum_sun_distance_au": 2.660634128542084,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.01500797468054432
+            },
+            {
+              "position_error_km": 0.020108139683383174,
+              "velocity_error_km_s": 8.027744766672381e-10,
+              "final_mass_kg": 1991.3903797457453,
+              "minimum_sun_distance_au": 2.643996039929435,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.020108139683383174
+            },
+            {
+              "position_error_km": 0.007684793360781967,
+              "velocity_error_km_s": 7.023684764245763e-10,
+              "final_mass_kg": 1869.243962055785,
+              "minimum_sun_distance_au": 2.6602906073841446,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.007684820835193595
+            },
+            {
+              "position_error_km": 0.01107895791918584,
+              "velocity_error_km_s": 2.640470422491359e-10,
+              "final_mass_kg": 1749.8098693510917,
+              "minimum_sun_distance_au": 2.574359138588008,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.011078954901159715
+            },
+            {
+              "position_error_km": 0.02560002812899857,
+              "velocity_error_km_s": 1.5746782587459668e-09,
+              "final_mass_kg": 1580.2640253180555,
+              "minimum_sun_distance_au": 2.5226125526337064,
+              "maximum_thrust_n": 0.599999999400005,
+              "rk4_vs_dop853_km": 0.02560002812899857
+            },
+            {
+              "position_error_km": 0.027683698744842687,
+              "velocity_error_km_s": 7.646445333352212e-10,
+              "final_mass_kg": 1458.0594018821791,
+              "minimum_sun_distance_au": 2.5704054294798837,
+              "maximum_thrust_n": 0.599999999400004,
+              "rk4_vs_dop853_km": 0.02768368832662934
+            },
+            {
+              "position_error_km": 3.2353760199393196e-06,
+              "velocity_error_km_s": 1.4566278399468932e-13,
+              "final_mass_kg": 1418.0594018822,
+              "minimum_sun_distance_au": 2.8538795724068056,
+              "maximum_thrust_n": 0.0,
+              "rk4_vs_dop853_km": 3.2353760199393196e-06
+            },
+            {
+              "position_error_km": 0.030323317968270622,
+              "velocity_error_km_s": 1.2304684936517543e-09,
+              "final_mass_kg": 1357.162627081662,
+              "minimum_sun_distance_au": 2.7594063275376746,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.030323317968270622
+            },
+            {
+              "position_error_km": 0.023984727460554644,
+              "velocity_error_km_s": 1.3247677943923562e-09,
+              "final_mass_kg": 1300.6985831336835,
+              "minimum_sun_distance_au": 2.6261775358986963,
+              "maximum_thrust_n": 0.5999999994000055,
+              "rk4_vs_dop853_km": 0.023984727460554644
+            },
+            {
+              "position_error_km": 0.010955729324879208,
+              "velocity_error_km_s": 3.212916449911136e-10,
+              "final_mass_kg": 1286.8812032439675,
+              "minimum_sun_distance_au": 2.5995954841207674,
+              "maximum_thrust_n": 0.5999999994000036,
+              "rk4_vs_dop853_km": 0.010955729324879208
+            },
+            {
+              "position_error_km": 0.06557912967988003,
+              "velocity_error_km_s": 2.3826701603330997e-09,
+              "final_mass_kg": 1234.9414375402214,
+              "minimum_sun_distance_au": 2.607579667697912,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.0655791539897688
+            },
+            {
+              "position_error_km": 0.01696112133482503,
+              "velocity_error_km_s": 7.66425852569333e-10,
+              "final_mass_kg": 1242.4653993080613,
+              "minimum_sun_distance_au": 2.692498166695483,
+              "maximum_thrust_n": 0.5999999994000067,
+              "rk4_vs_dop853_km": 0.01696112133482503
+            },
+            {
+              "position_error_km": 0.01631576456057163,
+              "velocity_error_km_s": 1.7036413979440097e-09,
+              "final_mass_kg": 1255.4608053389534,
+              "minimum_sun_distance_au": 2.6594801944247255,
+              "maximum_thrust_n": 0.5999999994000056,
+              "rk4_vs_dop853_km": 0.01631576456057163
+            },
+            {
+              "position_error_km": 0.02562836334972623,
+              "velocity_error_km_s": 1.7021940494735867e-09,
+              "final_mass_kg": 1245.836160891339,
+              "minimum_sun_distance_au": 2.65621434047075,
+              "maximum_thrust_n": 0.5999999994000047,
+              "rk4_vs_dop853_km": 0.02562836334972623
+            },
+            {
+              "position_error_km": 0.015005699878268792,
+              "velocity_error_km_s": 1.7011041267831716e-09,
+              "final_mass_kg": 1251.1645762656094,
+              "minimum_sun_distance_au": 2.6934537776422802,
+              "maximum_thrust_n": 0.5999999994000041,
+              "rk4_vs_dop853_km": 0.01500569968559008
+            },
+            {
+              "position_error_km": 0.4979678163329985,
+              "velocity_error_km_s": 8.54526620758404e-08,
+              "final_mass_kg": 1123.6355829818997,
+              "minimum_sun_distance_au": 0.9833450720285327,
+              "maximum_thrust_n": 0.599999999400006,
+              "rk4_vs_dop853_km": 0.4979678163329985
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "libraries": {
+    "local": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa",
+    "h100": "4288e12e3cf77664ca4e305778a11b4d13662f30474585844db0fb521f2d60a3"
+  },
+  "sources": {
+    "src/spacepdhcg/gtoc12/cli.py": "ef0f05f21b7bea021efe6f313c6826813aec86d056a7039d439cd64a489f378f",
+    "src/spacepdhcg/gtoc12/gpu_verifier.py": "64291fe6f80a25a9eb3e6e279fd5eb1d9b26da8403d4d27ab90b747901244abd",
+    "src/spacepdhcg/gtoc12/low_thrust.py": "f1f12cd97c336c1427b399fe0ede133c06e20003d04bc18a030013761c88a7f8",
+    "src/spacepdhcg/gtoc12/pipeline.py": "ae911213a1235883d706e117ab1a51124eaa2d0bae6d9fa269aed2bc07e02c38",
+    "tests/test_gtoc12_certificate_backend.py": "189c37e4e044f42b638a61c9c1e3279072a576a2dfa2add76ffcbd6bb47759d2",
+    "tests/test_gtoc12_gpu_scvx.py": "dfcbf6b265b49d62caea22cdf95f146b78ba53ea2bcc7ddb2f2aa77d07ed713a",
+    "tests/test_gtoc12_gpu_verifier.py": "82e312c9c9d993937e61ea685bd4c573a09519c16c379dd7c8e45d73b6cb1646",
+    "tests/test_gtoc12_gpu_cli.py": "023d7ffba26dbe0627a4c1f7e34a56b8431b338c3e363e3582aae02dcc4c9bbf"
+  }
+}

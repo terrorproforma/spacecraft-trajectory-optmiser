@@ -35,7 +35,27 @@ def test_refinement_commands_expose_cuda_backend(command):
     assert parsed.convex_solver_backend == "qoco" and parsed.qoco_ruiz_iterations == 2
     assert parsed.outer_loop_backend == "cuda"
     assert parsed.gpu_execution == "auto"
+    assert parsed.certification_backend == "auto"
+    assert _refinement_backend_report(parsed)["certification_backend_selected"] == "cuda"
     assert _refinement_backend_report(parsed)["gpu_execution_selected"] == "graph"
+
+
+def test_cuda_certificate_with_cpu_solver_requires_runtime_and_reports_selection(
+    tmp_path, monkeypatch
+):
+    args = Namespace(scvx_iterations=3, node_days=2., workers=1, certification_backend="cuda")
+    monkeypatch.delenv("SPACEPDHCG_GTOC12_CUDA_LIBRARY", raising=False)
+    with pytest.raises(ValueError, match="SPACEPDHCG_GTOC12_CUDA_LIBRARY"):
+        _scvx_settings(args)
+    library = tmp_path / "library.so"
+    library.write_bytes(b"configuration only")
+    monkeypatch.setenv("SPACEPDHCG_GTOC12_CUDA_LIBRARY", str(library))
+    assert _scvx_settings(args).selected_certification_backend() == "cuda"
+    report = _refinement_backend_report(args)
+    assert report["cpu_only"] is None and report["gpu_used"] is None
+    args.workers = 2
+    with pytest.raises(ValueError, match="workers 1"):
+        _scvx_settings(args)
 
 
 @pytest.mark.parametrize("mode", ["graph", "dispatch"])

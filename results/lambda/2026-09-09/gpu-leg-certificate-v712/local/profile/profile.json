@@ -1,0 +1,29 @@
+{
+  "complete": true,
+  "pid": 387,
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "-m",
+    "cProfile",
+    "-o",
+    "/home/angus/spacepdhcg-campaign-profile-v708/campaign.pstats",
+    "/home/angus/spacepdhcg-search-campaign-v703/repo/build/performance/orphan-recovery-v595/run.py",
+    "--repo",
+    "/home/angus/spacepdhcg-search-campaign-v703/repo",
+    "--output",
+    "/home/angus/spacepdhcg-campaign-profile-v708/campaign",
+    "--wall-seconds",
+    "1800",
+    "--joint-seconds",
+    "15",
+    "--max-certifications",
+    "4",
+    "--lock",
+    "/home/angus/spacepdhcg-campaign-profile-v708/child.lock"
+  ],
+  "core_sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa",
+  "child_pid": 388,
+  "returncode": 0,
+  "process_seconds": 115.53787173500001,
+  "success": true
+}

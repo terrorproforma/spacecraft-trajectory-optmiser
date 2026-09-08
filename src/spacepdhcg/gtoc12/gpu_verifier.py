@@ -144,16 +144,63 @@ def pack_legs(solutions):
     return legs, np.array(arcs, dtype=ARC), np.array(samples, dtype=SAMPLE)
 
 
-def certify_legs_cuda(solutions):
-    """Opt-in batched numerical certificates; no mission/score certification claim."""
+class GpuVerifierSession:
+    """Reuse propagation buffers across calls, growing only when capacity is insufficient."""
+
+    def __init__(self):
+        self._gpu = None
+        self._capacity = (0, 0, 0)
+        self._owner = threading.get_ident()
+        self._closed = False
+
+    def _owned(self):
+        if threading.get_ident() != self._owner:
+            raise RuntimeError("CUDA verifier session must stay on its creating thread")
+        if self._closed:
+            raise RuntimeError("CUDA verifier session is closed")
+
+    def propagate(self, legs, arcs, samples, *, max_steps=1_000_000):
+        self._owned()
+        required = (max(1, len(legs)), len(arcs), len(samples))
+        if self._gpu is None or any(a > b for a, b in zip(required, self._capacity, strict=True)):
+            capacity = tuple(max(a, b) for a, b in zip(required, self._capacity, strict=True))
+            if self._gpu is not None:
+                self._gpu.close()
+                self._gpu = None
+            self._gpu = GpuVerifier(*capacity)
+            self._capacity = capacity
+        return self._gpu.propagate(legs, arcs, samples, max_steps=max_steps)
+
+    def close(self):
+        if self._closed:
+            return
+        self._owned()
+        if self._gpu is not None:
+            self._gpu.close()
+            self._gpu = None
+        self._closed = True
+
+    def __enter__(self):
+        self._owned()
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+
+def certify_legs_cuda(solutions, *, workspace=None):
+    """Batched numerical certificates; final fleet certification remains separate."""
     from . import constants as C
     from .low_thrust import DU_KM, LegCertificate
 
     if not solutions:
         return []
     legs, arcs, samples = pack_legs(solutions)
-    with GpuVerifier(len(legs), len(arcs), len(samples)) as verifier:
-        output = verifier.propagate(legs, arcs, samples)
+    if workspace is None:
+        with GpuVerifier(len(legs), len(arcs), len(samples)) as verifier:
+            output = verifier.propagate(legs, arcs, samples)
+    else:
+        output = workspace.propagate(legs, arcs, samples)
     if np.any(output["status"]):
         failures = [(i, int(row["status"])) for i, row in enumerate(output) if row["status"]]
         raise RuntimeError(f"CUDA independent propagation failed: {failures}")

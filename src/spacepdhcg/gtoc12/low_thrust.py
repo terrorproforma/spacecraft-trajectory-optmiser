@@ -94,6 +94,14 @@ class ScvxSettings:
     qoco_ruiz_iterations: int = 0
     outer_loop_backend: str = "python"  # "cuda" retains trajectories and decisions on device
     seed_backend: str = "auto"  # auto follows outer_loop_backend; numpy is an explicit ablation
+    certification_backend: str = "auto"  # native outer loop uses CUDA DOP853; cpu is an ablation
+
+    def selected_certification_backend(self) -> str:
+        if self.certification_backend not in {"auto", "cpu", "cuda"}:
+            raise ValueError("certification_backend must be auto, cpu or cuda")
+        if self.certification_backend == "auto":
+            return "cuda" if self.outer_loop_backend == "cuda" else "cpu"
+        return self.certification_backend
 
 
 @dataclass(slots=True)

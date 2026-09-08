@@ -79,6 +79,13 @@ physics checkers at the same score; joint host calls fall from **132 to 4**.
 This completes GPU control of that search stage; broader route and fleet control
 remain. [Measurements, sanitizer limits, evidence and visualiser](docs/GPU_DEVICE_EPOCH_SEARCH.md).
 
+Native CUDA refinement now also uses CUDA DOP853 for per-leg certificates,
+with retained buffers and no CPU propagation fallback. Sequential certificate
+benchmarks on two emitted routes are **4.88–5.08x faster locally and 19.55–19.58x
+on H100**. Four complete campaigns retain the verified fleet score. Independent
+CPU fleet audits still dominate total runtime; the overall timing difference is
+small. [Profiles, measurements, validation and downloaded results](docs/GPU_LEG_CERTIFICATION.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

@@ -47,6 +47,34 @@ def test_native_solution_passes_batched_independent_cuda_certificate():
 
 
 @GPU
+def test_pipeline_native_certificate_never_calls_cpu(monkeypatch):
+    import threading
+    from types import SimpleNamespace
+    from spacepdhcg.gtoc12 import pipeline
+
+    request = SimpleNamespace(deterministic_id=17)
+    registry = pipeline.LegRegistry()
+    registry.register(request, synthetic_boundary())
+    driver = pipeline.Gtoc12ScvxDriver(None, None, registry,
+                                      settings(max_iterations=30, time_limit_s=30))
+    def forbidden(*args):
+        raise AssertionError("CPU leg certificate was called")
+    monkeypatch.setattr(pipeline, "certify_leg", forbidden)
+    try:
+        for _ in range(2):
+            result = driver.solve(request, threading.Event())
+            assert result.status == pipeline.G3Status.CONVERGED, result.diagnostic
+            record = registry.records[17]
+            assert record.certification_backend == "cuda"
+            assert record.certificate.within_tolerance
+            reference = certify_leg(record.solution)
+            assert abs(record.certificate.final_mass_kg-reference.final_mass_kg) < 1e-7
+            assert abs(record.certificate.position_error_km-reference.position_error_km) < 0.001
+    finally:
+        driver.close()
+
+
+@GPU
 @pytest.mark.parametrize("device_scheduling", [False, True])
 @pytest.mark.parametrize("deferred_reports", [False, True])
 @pytest.mark.parametrize("state_origin", [False, True])
