@@ -104,3 +104,19 @@ both final mission checkers. This is two samples per mode on the named fixture,
 not a universal cross-hardware estimate.
 [H100 raw outputs, overlay, native probe and checksums](../results/lambda/2026-09-08/gpu-warp-hops-v387/summary.json)
 are retained separately from the local measurements.
+
+## Remaining costs after promotion
+
+A fresh instrumented RTX 5090 campaign using the promoted source passed both
+final mission checkers and the new final-status gate. Direct wall timers measured
+3.561 seconds in 2,999 native hop calls, compared with 24.302 seconds in the
+earlier diagnostic. The full profiled process took 43.275 seconds. The remaining
+larger measured costs are 14.690 seconds across 47 native SCvx calls and 7.477
+seconds across 50 retiming calls. Independent mission verification took 3.324
+seconds across four calls; fleet-master selection took 0.0045 seconds.
+
+These are inclusive, potentially nested diagnostic timers and must not be added
+together or substituted for the paired benchmark medians. They shift the next
+performance investigation toward SCvx and retiming.
+[Profile, complete mission output, runtime hashes and reproduction commands](../results/lambda/2026-09-08/gpu-pipeline-profile-v392/timers.json)
+are archived separately.

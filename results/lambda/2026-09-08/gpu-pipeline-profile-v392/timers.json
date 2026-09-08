@@ -1,0 +1,75 @@
+{
+  "scope": "Inclusive direct wall timers; nested rows must not be summed. Native screening includes CUDA synchronization.",
+  "wall_seconds": 43.27505399599977,
+  "timers": {
+    "native_hop_screening_including_sync": {
+      "calls": 2999,
+      "seconds": 3.561015798988592,
+      "max_seconds": 0.01040394799929345
+    },
+    "GpuLambert.screen_hops": {
+      "calls": 2794,
+      "seconds": 4.025194535013725,
+      "max_seconds": 0.4934063340006105
+    },
+    "RouteSearch._return_options": {
+      "calls": 1341,
+      "seconds": 2.3800198690114485,
+      "max_seconds": 0.010228540000753128
+    },
+    "GpuCollection.select": {
+      "calls": 5930,
+      "seconds": 1.2420082238932082,
+      "max_seconds": 0.005123467999510467
+    },
+    "RouteSearch._collect_hop_options": {
+      "calls": 4602,
+      "seconds": 1.4197687799605774,
+      "max_seconds": 0.02537188799942669
+    },
+    "GpuCollectTable.__init__": {
+      "calls": 1122,
+      "seconds": 2.837815493985545,
+      "max_seconds": 0.010358249999626423
+    },
+    "GpuCollectTable.minimum_propellant": {
+      "calls": 692,
+      "seconds": 0.0789540769692394,
+      "max_seconds": 0.0003606159989431035
+    },
+    "RouteSearch.run": {
+      "calls": 1,
+      "seconds": 14.020669692999945,
+      "max_seconds": 14.020669692999945
+    },
+    "spacepdhcg.gtoc12.gpu_scvx.solve_native": {
+      "calls": 47,
+      "seconds": 14.689557971001705,
+      "max_seconds": 4.34778757300046
+    },
+    "Gtoc12Verifier.verify_file": {
+      "calls": 4,
+      "seconds": 3.3236829390007188,
+      "max_seconds": 0.9037952340004267
+    },
+    "GpuRetime.solve": {
+      "calls": 50,
+      "seconds": 7.476651996003056,
+      "max_seconds": 0.1681301960015844
+    },
+    "spacepdhcg.gtoc12.cooperative.solve_fleet_master": {
+      "calls": 2,
+      "seconds": 0.004491776000577374,
+      "max_seconds": 0.002708166000957135
+    }
+  },
+  "screening_batch_sizes": {
+    "451": 926,
+    "480": 512,
+    "490": 7,
+    "533": 1341,
+    "3632": 1,
+    "12364": 7,
+    "16384": 205
+  }
+}
