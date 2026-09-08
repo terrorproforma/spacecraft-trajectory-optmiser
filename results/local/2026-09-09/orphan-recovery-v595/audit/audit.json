@@ -1,0 +1,163 @@
+{
+  "status": "passed",
+  "fresh_cpu_verifiers": {
+    "independent_ok": true,
+    "official_ok": true,
+    "independent_seconds": 20.40536406900003
+  },
+  "solution_sha256": "33701ef2b797f44ef2e8aa50a2dd59cb238df9aab604e7cef25ead6cbdd669e8",
+  "artifact_checks": {
+    "promoted_equals_first_candidate": true,
+    "promoted_is_not_second_candidate": true,
+    "viewer_source_and_data_hashes_match": true,
+    "source_modules_match_run_hashes": 52,
+    "driver_matches_run_hash": true,
+    "original_solution_matches_recorded_hash": true,
+    "unchanged_ship_sections_token_identical": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ]
+  },
+  "changed_ships": [
+    15
+  ],
+  "newly_collected_asteroids": [
+    19102
+  ],
+  "deployed_asteroids": 196,
+  "mined_asteroids_before": 194,
+  "mined_asteroids_after": 195,
+  "score": {
+    "raw_kg_before": 14047.802874743698,
+    "raw_kg_after": 14051.854893908598,
+    "raw_gain_kg": 4.0520191648993205,
+    "weighted_kg_before": 12805.194102488575,
+    "weighted_kg_after": 12810.135953048577,
+    "weighted_gain_kg": 4.941850560002422,
+    "raw_kg_per_ship_before": 610.7740380323347,
+    "raw_kg_per_ship_after": 610.9502127786346,
+    "weighted_kg_per_ship_after": 556.9624327412424,
+    "physical_ore_recomputed_from_earth_unload_events_kg": 14051.854893908501
+  },
+  "ship_15": {
+    "raw_kg_before": 605.6399726214921,
+    "raw_kg_after": 609.6919917864477,
+    "new_asteroid": 19102,
+    "new_asteroid_ore_kg": 12.484599589322382,
+    "deploy_mjd": 66969.0,
+    "collect_mjd": 67425.0,
+    "other_asteroid_net_raw_change_kg": -8.432580424366833,
+    "final_mass_after_unload_kg": 508.95456741902876
+  },
+  "work": {
+    "distinct_new_orders": 18,
+    "grid_days": [
+      15.0,
+      5.0
+    ],
+    "retime_driver_calls": 36,
+    "proxy_feasible_cases": 4,
+    "proxy_failures": {
+      "": 4,
+      "mass_below_dry_plus_collected": 32
+    },
+    "eligible_proxies": 2,
+    "route_refinements": 2,
+    "native_leg_solves": 36,
+    "native_solve_statuses": {
+      "converged": 36
+    },
+    "native_iterations": 159,
+    "native_accepted_iterations": 153,
+    "native_solve_seconds_sum": 9.650684057,
+    "route_refinement_seconds_sum": 11.487756708,
+    "joint_batches": 132,
+    "joint_candidate_evaluations": 23142,
+    "retime_internal_dp_calls": 277,
+    "retime_internal_forward_calls": 277,
+    "lambert_logical_branch_requests": 106024898,
+    "lambert_element_hops": 53012449,
+    "resident_table_cells": 53010172,
+    "verified_promotions": 1
+  },
+  "timing": {
+    "campaign_timer_seconds": 78.115478241,
+    "scope": "Begins after imports, data/native hashes and original fleet parsing; includes fresh baseline verification, GPU context and searches, both refinements and both full-fleet candidate verifications, viewer export, checkpoint IO; ends before final report serialization and process exit.",
+    "not_pure_gpu_time": true,
+    "not_a_repeated_speed_benchmark": true,
+    "fresh_audit_seconds_excluded": 20.40536406900003
+  },
+  "execution_qualification": {
+    "gpu_joint_evaluation": true,
+    "joint_device_selection": 0,
+    "winner_selection": "CPU NumPy argmax (compatible setting)",
+    "native_refinement_backends": {
+      "node_days": 2.0,
+      "hold": "zoh",
+      "substeps": 8,
+      "polish_substeps": 16,
+      "polish_iterations": 4,
+      "max_iterations": 40,
+      "virtual_weight": 10000.0,
+      "smoothness_weight": 0.0,
+      "initial_trust_state": 0.2,
+      "initial_trust_control": 1.0,
+      "minimum_trust": 1e-06,
+      "maximum_trust": 2.0,
+      "ratio_reject": 0.0,
+      "ratio_shrink": 0.25,
+      "ratio_grow": 0.7,
+      "shrink_factor": 0.5,
+      "grow_factor": 1.6,
+      "defect_tolerance": 5e-09,
+      "step_tolerance": 1e-07,
+      "objective_tolerance": 1e-06,
+      "clarabel_tolerance": 1e-09,
+      "time_limit_s": 900.0,
+      "discretisation_backend": "cuda",
+      "assembly_backend": "cuda",
+      "convex_solver_backend": "qoco",
+      "qoco_ruiz_iterations": 0,
+      "outer_loop_backend": "cuda",
+      "seed_backend": "cuda"
+    }
+  },
+  "verification_limits": {
+    "fresh_run_default_tolerances": {
+      "position_km": 1000.0,
+      "velocity_km_s": 0.001,
+      "mass_kg": 0.001
+    },
+    "max_position_error_km_unchanged_from_baseline": true,
+    "max_velocity_error_unchanged_from_baseline": true
+  },
+  "publication_issues": [],
+  "publication_caveats": [
+    "Publish output-compatible, not the failed preceding output directory.",
+    "195 is the mined-asteroid count; the asteroid footprint remains196 deployed asteroids.",
+    "Lambert requests/joint evaluations are proxy work, not that many certified trajectories.",
+    "The 78.115-second campaign timer is not pure GPU time or complete process startup time.",
+    "Reproduction needs SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION=0 with the recorded library; the failed preceding run requested an unavailable device-winner entry point.",
+    "The driver and independent verification retain CPU orchestration; do not claim the entire program is GPU-native."
+  ]
+}

@@ -55,7 +55,7 @@ const canvas = $("trajectory-canvas");
 const ARCHIVE_CAMERA = { yaw: -0.72, pitch: 0.48, distance: 3.25, target: [0, 0, 0] };
 const ARCHIVE_ZOOM = { minimum: 1.35, maximum: 12 };
 const FLEET_DATASETS = {
-  gtoc12: { directory: "./data/gtoc12", label: "Incumbent GTOC12 fleet" },
+  gtoc12: { directory: "./data/gtoc12", label: "Historical baseline v11" },
   "gtoc12-v200": { directory: "./data/gtoc12-v200", label: "GPU campaign v200 (before fix)" },
   "gtoc12-v209": { directory: "./data/gtoc12-v209", label: "GPU campaign v209 (corrected solver)" },
   "gtoc12-v213": { directory: "./data/gtoc12-v213", label: "GPU retiming v213 (524 kg certified)" },
@@ -63,6 +63,7 @@ const FLEET_DATASETS = {
   "gtoc12-v548": { directory: "./data/gtoc12-v548", label: "H100 scaled reuse v548 (1 ship, 548 weighted kg; benchmark)" },
   "gtoc12-v588": { directory: "./data/gtoc12-v588", label: "H100 faster Lambert v588 (1 ship, 548 weighted kg; benchmark)" },
   "gtoc12-family-v589": { directory: "./data/gtoc12-family-v589", label: "H100 richer family v589 (3 ships, 1,421 weighted kg; pilot)" },
+  "gtoc12-orphan-v595": { directory: "./data/gtoc12-orphan-v595", label: "Improved fleet v595 (23 ships, 12,810 weighted kg; best)" },
   "gtoc12-v380": { directory: "./data/gtoc12-v380", label: "GPU recovery v380 (4 ships, 2,089 weighted kg)" },
   "gtoc12-v374": { directory: "./data/gtoc12-v374", label: "GPU fleet v374 (3 ships, 1,670 weighted kg)" },
   "gtoc12-v360": { directory: "./data/gtoc12-v360", label: "GPU SOC step v360 (548 kg certified)" },

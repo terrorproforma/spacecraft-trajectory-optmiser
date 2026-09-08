@@ -1,0 +1,24 @@
+{
+  "run_id": "orphan_recovery_v595",
+  "fleet_run_id": "orphan_recovery_v595",
+  "commit": "experimental",
+  "source_revision_note": "Frozen bd944af9 Python plus native joint overlays; v590 core ffbae813. Exact source/binary hashes and compatibility flags in the published v595 report. Experimental is the exporter label, not a Git revision.",
+  "weighted_score_fixed_bonus_kg": 12810.135953048577,
+  "raw_kg_per_ship": 610.9502127786346,
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5090 (WSL CUDA)",
+    "upstream_search": "Retained historical 23-ship fleet: local RTX 5090 and Lambda H100 campaigns"
+  },
+  "timing": {
+    "wall_seconds_total": 78.115478241,
+    "wall_human": "78.115 s incremental recovery experiment; historical fleet search excluded"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; both complete-fleet checkers passed at unchanged tolerances",
+    "local_refine": "CUDA seed, SCvx outer loop, dynamics, conic assembly and GPU QOCO; GPU Lambert/DP/joint arithmetic. Native winner reduction disabled for the pinned older core."
+  },
+  "optimisation": {
+    "strategy": "Recover own orphan miner 19102 on ship 15. 18 collection orders × 2 DP grids; 23,142 joint candidates; two routes certified; one fleet improvement retained. +4.052 raw kg / +4.942 weighted kg at the same 23 ships. Python orchestration and CPU verification remain.",
+    "proven_optimal": false
+  }
+}
