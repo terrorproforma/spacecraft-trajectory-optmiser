@@ -1,0 +1,27 @@
+{
+  "source_commit": "3f204b8b3cdfadf62be9e24e1f1a02d0ff00ff2d",
+  "scope": "Two diagnostic campaigns, not a matched speed comparison. Native host-wall phases use existing synchronization points; they are not isolated kernel timings.",
+  "profile_process_seconds": 31.447184169999673,
+  "phase_process_seconds": 27.811241409000104,
+  "calls": 47,
+  "solver_wall_seconds": 9.42022363799606,
+  "phase_seconds": {
+    "setup": 0.16265796599999996,
+    "priming": 5.268727563000001,
+    "graph_build": 0.112067256,
+    "graph_run": 3.716390923,
+    "graph_close": 0.028637676999999997,
+    "download": 0.012912112999999996,
+    "cleanup": 0.067318888
+  },
+  "statuses": {
+    "converged": 46,
+    "failed": 1
+  },
+  "limitations": [
+    "The first profile recorded a 4.06-second single-leg outlier. The detailed follow-up did not reproduce it; its slowest leg took 0.877 seconds.",
+    "Priming remains the largest native phase and includes initial numerical solves, not just allocation.",
+    "One leg remained stationary with nonzero defects; it was rejected. No solver tolerance or acceptance criterion changed.",
+    "Both campaigns passed official and independent mission checks. They did not produce a new best fleet."
+  ]
+}
