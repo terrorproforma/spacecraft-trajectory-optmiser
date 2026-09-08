@@ -1,0 +1,88 @@
+{
+  "complete": true,
+  "success": true,
+  "pid": 215297,
+  "stages": [
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init"
+      ],
+      "returncode": 0,
+      "seconds": 0.0024031680077314377
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ],
+      "returncode": 0,
+      "seconds": 0.30681625299621373
+    },
+    {
+      "name": "git-freeze",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze joint selection validation"
+      ],
+      "returncode": 0,
+      "seconds": 0.10725166194606572
+    },
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-joint-selection-v632/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-joint-selection-v632/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 2.3305489699705504
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-joint-selection-v632/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ],
+      "returncode": 0,
+      "seconds": 52.29999458300881
+    },
+    {
+      "name": "validation",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-joint-selection-v632/repo/build/performance/check_joint_selection_v632.py"
+      ],
+      "returncode": 0,
+      "seconds": 41.45304173399927
+    }
+  ],
+  "stage": "validation",
+  "child_pid": 215809,
+  "core_sha256": "29a6b10b6349a21fd49f3b2d3f425cdca0d4e3acc4d97fd14cd16c42de54b44e"
+}

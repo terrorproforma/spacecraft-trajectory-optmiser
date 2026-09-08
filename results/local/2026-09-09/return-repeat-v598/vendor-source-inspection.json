@@ -1,0 +1,31 @@
+{
+  "path": "/home/angus/build-qoco-scaled-pool-v540/source/algebra/cuda/cudss_backend.cu",
+  "sha256": "be30b4f3f600a4a184dd052d75c0cc3a85c9edc4211b0828375b1b55b1953e2a",
+  "excerpt": [
+    {
+      "line": 366,
+      "text": "  int value = 0;"
+    },
+    {
+      "line": 367,
+      "text": "  CUDSS_CHECK(g_cuda_funcs.cudssConfigSet(linsys_data->config,"
+    },
+    {
+      "line": 368,
+      "text": "                                          CUDSS_CONFIG_USE_SUPERPANELS,"
+    },
+    {
+      "line": 369,
+      "text": "                                          (void*)&value, sizeof(int)));"
+    },
+    {
+      "line": 370,
+      "text": ""
+    },
+    {
+      "line": 371,
+      "text": "  // Initialize cuSPARSE"
+    }
+  ],
+  "interpretation": "Configuration and retained vendor paths are hypotheses to isolate; no v598 factor/solve dump or workspace-reset comparison locates the cause."
+}

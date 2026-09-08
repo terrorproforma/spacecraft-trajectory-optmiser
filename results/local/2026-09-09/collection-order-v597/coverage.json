@@ -1,0 +1,118 @@
+{
+  "scope": "locally unpacked route_summary.json files in results, plus the completed v595 route outputs",
+  "files_examined": 3738,
+  "certified_routes": 3553,
+  "same_deploy_set": [
+    {
+      "path": "results/gtoc12/runs/joint_itinerary_v11/ships/cluster_fleet_v11_plane_clusters_family_0072/ship_01/route_summary.json",
+      "raw_kg": 605.6399726214921,
+      "collect_order": [
+        6757,
+        51831,
+        49856,
+        3299,
+        5162,
+        23153,
+        35473,
+        13077
+      ],
+      "sha256": "0d0e26bafcf2fd043a85afc191ff12a9e7602e1746d6a8fdfa96b1491de91654"
+    },
+    {
+      "path": "results/lambda/2026-09-08/fleet-objective-v229/recovered-archives/sources/joint_itinerary_v11/ships/cluster_fleet_v11_plane_clusters_family_0072/ship_01/route_summary.json",
+      "raw_kg": 605.6399726214921,
+      "collect_order": [
+        6757,
+        51831,
+        49856,
+        3299,
+        5162,
+        23153,
+        35473,
+        13077
+      ],
+      "sha256": "0d0e26bafcf2fd043a85afc191ff12a9e7602e1746d6a8fdfa96b1491de91654"
+    },
+    {
+      "path": "build/performance/orphan-recovery-v595/output-compatible/candidates/ship_15_attempt_01/route/route_summary.json",
+      "raw_kg": 609.6919917864477,
+      "collect_order": [
+        19102,
+        6757,
+        51831,
+        49856,
+        3299,
+        5162,
+        23153,
+        35473,
+        13077
+      ],
+      "sha256": "17bfe449576e6557a2d2cbb48e9c36b45d860e2e3f72e69954de4a0d44e167f7"
+    },
+    {
+      "path": "build/performance/orphan-recovery-v595/output-compatible/candidates/ship_15_attempt_02/route/route_summary.json",
+      "raw_kg": 608.1587953456536,
+      "collect_order": [
+        19102,
+        6757,
+        51831,
+        49856,
+        3299,
+        5162,
+        23153,
+        35473,
+        13077
+      ],
+      "sha256": "12df9b39f232de5c259f57681b501f4a70a34f431e1bc46e744e85d831ba4101"
+    }
+  ],
+  "exact_collect_order_matches": [],
+  "unreadable": [],
+  "candidate_orders": 61,
+  "input_sha256": {
+    "ship-01.json": "bbfe9885b9637642f9179bebf5be2aae99e187f9b94d87c84a439b684d5fbfc8",
+    "ship-02.json": "1b8f84cf32a5a7f9fe0f9bd2fcbf9067a269b457600d40262f98f1993a32c341",
+    "ship-03.json": "331462e1778ddd477ece9a1f1e7a062e775a1f73e2ed05546f5469509816e624",
+    "ship-04.json": "3e075bffdf76af8e345c40b649568d51941e394b6ac7487bcfe4c6df15820318",
+    "ship-05.json": "d368e5fd62ff5eb2c4373ff2592a116ebd26ef69e57325dfad6dd7b983c3eab3",
+    "ship-06.json": "ba695df0719ea5dbfd810569ab4783a3e57df5e11049973714ef174aec445638",
+    "ship-07.json": "033e0c5457fd4aeffea325b7ea6d5a5b1809e2e1a8c5483ed58923e062075068",
+    "ship-08.json": "597ffc9760d8804b2ae491afbe6b3e27722c363c08d8b49086a81460af24170e",
+    "ship-09.json": "9bb470c453a6f84aae9552ac9dd4c508c319fa7f812b3e936375c52ebb78834f",
+    "ship-10.json": "8255accd56912b13e6c35277ebd6536eb69b861146dac341a17dd608621e0bd5",
+    "ship-11.json": "5071d85638abd163189b541f73583efad1845d46154665b002e2e52ddc086f2d",
+    "ship-12.json": "345af76ba5c2193c4f29f1c033ac56669ae872cbb4c66ad0ecece04ec1ae3d66",
+    "ship-13.json": "5e590a8de6295666aa759503fd2aacf394d2e83a6953ca0c034a7693f11515e9",
+    "ship-14.json": "f2640dcfa495e16fbc390f2d573af6b161d50a74c746dda8ac0a63114adef928",
+    "ship-15.json": "17bfe449576e6557a2d2cbb48e9c36b45d860e2e3f72e69954de4a0d44e167f7",
+    "ship-16.json": "288d872277e10e6e55f45867df426f84d3fdbd59834ebaabf1e670a8c7e91d0d",
+    "ship-17.json": "ef3cc6e366a3d788660dee4b8adf7995af2f5592a7f196468ab51638df0c9e92",
+    "ship-18.json": "8dd27054af9db6b0f863079b4f8359867bb2201af6b474e420f17443a7d69d43",
+    "ship-19.json": "cc97248f84f1eab1d6dd69e8cdfdd17548223b91482fef8f82e870dd23a67343",
+    "ship-20.json": "a98be42e862f6915e783ddbe43a5786f18bf01688578f11afc441ac4448fe905",
+    "ship-21.json": "11513e92885c6e70214d426141ab6661a4d7f85cfe1ea920e3bb0af45c0c71ea",
+    "ship-22.json": "4fe4af79174fbf427e69347e6e2500621914371f2f7662d566efa74fdea793ac",
+    "ship-23.json": "8a5e629546ee68ac999c0c2aae9fe996057030473b1ecb1ae25bb605a139545d",
+    "Result.txt": "33701ef2b797f44ef2e8aa50a2dd59cb238df9aab604e7cef25ead6cbdd669e8"
+  },
+  "concurrent_scripts": {
+    "run_joint_campaign_v636.py": {
+      "sha256": "25507441e614063841bfa205f19c34d1b1368cabf643feb4d91a2661f0c3ace3",
+      "scope": "replay old v595 own-orphan campaign to compare native joint device selection; no new-incumbent interior order mutation"
+    },
+    "prepare_joint_campaign_v637.py": {
+      "sha256": "2f635dcf40469c57e7dcfdde334f6df467ac4e2e80931ebf7ca4ddef16d8bf0a",
+      "scope": "replay old v595 own-orphan campaign to compare native joint device selection; no new-incumbent interior order mutation"
+    },
+    "retry_joint_campaign_v639.py": {
+      "sha256": "aefe7065edea7cad5d7fc69376ba899b0f49a2b0cfcea0e8023793c643379755",
+      "scope": "replay old v595 own-orphan campaign to compare native joint device selection; no new-incumbent interior order mutation"
+    }
+  },
+  "limitations": [
+    "This audit does not enumerate hidden or transient candidates inside earlier GPU or DP searches.",
+    "Earlier Held-Karp collection pricing allowed order permutations under its then-current deploy epochs, model, and grid.",
+    "The proposed search is new post-certification work around the promoted nine-collect v595 schedule; no claim all permutations were never implicitly considered.",
+    "Packed archives not also unpacked locally are not inspected."
+  ]
+}

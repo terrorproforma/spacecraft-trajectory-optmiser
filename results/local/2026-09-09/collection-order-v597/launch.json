@@ -1,0 +1,31 @@
+{
+  "pid": 358,
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/next-score-v597/source/run.py",
+    "--repo",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/next-score-v597/source",
+    "--inputs",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/next-score-v597/source/inputs",
+    "--output",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/next-score-v597/output",
+    "--proxy-seconds",
+    "120",
+    "--wall-seconds",
+    "1800",
+    "--max-certifications",
+    "4"
+  ],
+  "source_commit": "2408ca9b80f3f1d1041861c3cfebc27613114047",
+  "source_files": 217,
+  "core": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+  "core_sha256": "86d7fdc952e82f7e5557c1651a1722900d83cdd98d8a709a4b6274fd83af4671",
+  "device_selection": 1,
+  "environment": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+    "SPACEPDHCG_GTOC12_DATA": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_BATCH": "1",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION": "1"
+  }
+}

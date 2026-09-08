@@ -165,3 +165,49 @@ On a fresh checkout, the archived `viewer-dataset` directory can be copied to
 `results/lambda/2026-09-06/visualiser/data/gtoc12-joint-v642` before starting the
 server. The larger verifier export is also retained for importing again from
 the checksum-verified asteroid catalogue.
+
+
+## Audited existing H100 v632 evidence
+
+The [v632 evidence bundle](../results/lambda/2026-09-09/joint-candidates-v632/)
+preserves all **80 files retrieved from the existing Lambda run**, with their
+original [retrieval hashes](../results/lambda/2026-09-09/joint-candidates-v632/evidence/download-manifest.json)
+and [viewer-file hashes](../results/lambda/2026-09-09/joint-candidates-v632/evidence/viewer-download-manifest.json).
+The redundant transport archives are omitted; their hashes remain recorded.
+Retrieval and publication started no new GPU run and performed no new trajectory
+verification. The [source manifest](../results/lambda/2026-09-09/joint-candidates-v632/evidence/source-manifest.json)
+and [recorded source/configuration identity](../results/lambda/2026-09-09/joint-candidates-v632/evidence/remote-provenance.json)
+distinguish the measured implementation from the later compatibility wrapper.
+
+The separate selection-only transfer measurement forces an eligible winner with
+`minimum_objective=-math.inf`, as shown by its
+[driver](../results/lambda/2026-09-09/joint-candidates-v632/supporting-source/benchmark_joint_selection_v634.py).
+That file is preserved as a labeled local audit reference, separately from the
+remote downloads; the result JSON itself does not record the threshold. The
+[selection report](../results/lambda/2026-09-09/joint-candidates-v632/evidence/benchmark-v634/selection.json)
+therefore measures returning the best candidate even when it would not improve
+the incumbent. In the
+[main scalar-versus-batched report](../results/lambda/2026-09-09/joint-candidates-v632/evidence/benchmark-v634/scalar-vs-batched.json),
+ship 2 has **no improving winner** in either cache condition. Its matching null
+winner is a correct search outcome, not evidence of a new physical solution.
+
+All four v636 retained best fleets in the
+[campaign reports](../results/lambda/2026-09-09/joint-candidates-v632/evidence/campaign-v636/)
+pass both recorded official and independent checkers at **12,810.135953 weighted
+kg / 14,051.854894 physical kg**, to the displayed precision. They reproduce the
+v595 improvement rather than adding another score increment. Candidate1's
+[second refinement](../results/lambda/2026-09-09/joint-candidates-v632/evidence/campaign-v636/candidate1/candidates/ship_15_attempt_02/refinement.json)
+failed on return leg 17, asteroid 13077 to Earth, with
+`virtual control remains 1.380e-01`. The earlier verified best fleet remained
+retained. Its **120.727-second campaign timer** consequently covers different
+downstream work from the runs that also certified and checked their second
+candidate; it is not evidence of an end-to-end selection speedup. The reports do
+not establish why that refinement outcome differs.
+
+The later [compatibility validation](../results/lambda/2026-09-09/joint-candidates-v632/evidence/compatibility-validation-v640/report.json)
+and [test output](../results/lambda/2026-09-09/joint-candidates-v632/evidence/compatibility-validation-v640/pytest.log)
+record **62 passing tests** on the H100 core with the exact final wrapper SHA-256
+`5f70cf173929b8324e9e40885200e71272732f3e8210b5372dc238a07ae25689`.
+This is separate from the earlier performance/campaign wrapper `b8a423…`.
+The [local v596 evidence](GPU_JOINT_CANDIDATES.md) remains a separate measurement
+and validation set; its local speedup table is unchanged by this retrieval.

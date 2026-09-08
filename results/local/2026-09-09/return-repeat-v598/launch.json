@@ -1,0 +1,27 @@
+{
+  "pid": 471,
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-repeat-v598/run.py",
+    "--repo",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/next-score-v597/source",
+    "--fixture",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-repeat-v598/fixture.json",
+    "--output",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-repeat-v598/output",
+    "--max-solves",
+    "6",
+    "--wall-seconds",
+    "600",
+    "--execute"
+  ],
+  "frozen_source_commit": "2408ca9b80f3f1d1041861c3cfebc27613114047",
+  "source_manifest_sha256": "67341900a5d691bccfc4035879b7f0955362795858d5957ee1da0b62ec78d007",
+  "driver_sha256": "08b90ba82c1a6ec339fdeb5fcaa23ca93ca474dab1ab7e1599939f8c607101bd",
+  "fixture_sha256": "783caf8a0e14196111650d5e5fbef997b5324836017e6e9ada9b1409584c9259",
+  "environment": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+    "SPACEPDHCG_GTOC12_DATA": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data"
+  }
+}

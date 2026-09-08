@@ -22,6 +22,12 @@ a fresh independent audit. [Result, work counts and visualiser loading
 instructions](docs/GPU_ORPHAN_RECOVERY.md). The performance checkpoints below
 describe their own historical results.
 
+The next 61-order GPU search evaluated 49,286 timing candidates in 2.157 seconds
+without improving that incumbent. Six local return-leg diagnostic replays pass
+unchanged physics checks but expose varying convergence for identical inputs;
+the intermittent H100 failure remains unresolved. [Current score, why progress
+has been slow, remaining GPU work and displayed result](docs/GTOC12_PROGRESS.md).
+
 Joint timing candidates can now be evaluated and ranked in native CUDA batches.
 On two real incumbent routes, the measured controller stage runs **7.58–8.88x
 faster on RTX 5090**, including candidate construction, geometry and transfers.

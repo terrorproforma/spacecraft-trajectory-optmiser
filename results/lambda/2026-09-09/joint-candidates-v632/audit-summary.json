@@ -1,0 +1,312 @@
+{
+  "scope": "Existing Lambda v632/v636 reports, retrieved read-only; no new tests, jobs or trajectory verification executed.",
+  "core_sha256": "29a6b10b6349a21fd49f3b2d3f425cdca0d4e3acc4d97fd14cd16c42de54b44e",
+  "qoco_sha256": "b50d61903921659c1f431b7c2f3472e0f353e5e5a72159e4164d7d282d27c906",
+  "configuration": {
+    "repo": "/home/ubuntu/spacepdhcg-joint-selection-v632/repo",
+    "output": "/home/ubuntu/spacepdhcg-joint-selection-v632/campaign-v636/baseline0",
+    "ships": [
+      15,
+      3
+    ],
+    "grids": [
+      15.0,
+      5.0
+    ],
+    "wall_seconds": 1800.0,
+    "max_certifications": 4,
+    "per_ship_certifications": 2,
+    "minimum_proxy_weighted_gain": 0.5,
+    "minimum_proxy_raw_gain": 0.5,
+    "joint_seconds": 15.0,
+    "screening_backend": "cuda",
+    "gpu_execution": "graph",
+    "plan_only": false,
+    "proxy_only": false,
+    "lock": "/home/ubuntu/.spacepdhcg-gpu.lock",
+    "_output_created": true
+  },
+  "scvx_settings": {
+    "node_days": 2.0,
+    "hold": "zoh",
+    "substeps": 8,
+    "polish_substeps": 16,
+    "polish_iterations": 4,
+    "max_iterations": 40,
+    "virtual_weight": 10000.0,
+    "smoothness_weight": 0.0,
+    "initial_trust_state": 0.2,
+    "initial_trust_control": 1.0,
+    "minimum_trust": 1e-06,
+    "maximum_trust": 2.0,
+    "ratio_reject": 0.0,
+    "ratio_shrink": 0.25,
+    "ratio_grow": 0.7,
+    "shrink_factor": 0.5,
+    "grow_factor": 1.6,
+    "defect_tolerance": 5e-09,
+    "step_tolerance": 1e-07,
+    "objective_tolerance": 1e-06,
+    "clarabel_tolerance": 1e-09,
+    "time_limit_s": 900.0,
+    "discretisation_backend": "cuda",
+    "assembly_backend": "cuda",
+    "convex_solver_backend": "qoco",
+    "qoco_ruiz_iterations": 0,
+    "outer_loop_backend": "cuda",
+    "seed_backend": "cuda"
+  },
+  "joint_batch_requested": "1",
+  "physics_tolerances_changed": false,
+  "all_recorded_input_hashes_equal": true,
+  "all_recorded_python_hashes_equal": true,
+  "proxy_hashes": {
+    "ship_15_position_00_grid_15.json": {
+      "baseline0": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc",
+      "candidate0": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc",
+      "candidate1": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc",
+      "baseline1": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc"
+    },
+    "ship_15_position_00_grid_5.json": {
+      "baseline0": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903",
+      "candidate0": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903",
+      "candidate1": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903",
+      "baseline1": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903"
+    },
+    "ship_15_position_01_grid_15.json": {
+      "baseline0": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b",
+      "candidate0": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b",
+      "candidate1": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b",
+      "baseline1": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b"
+    },
+    "ship_15_position_01_grid_5.json": {
+      "baseline0": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332",
+      "candidate0": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332",
+      "candidate1": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332",
+      "baseline1": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332"
+    }
+  },
+  "all_proxy_artifacts_byte_identical": true,
+  "baseline_weighted_kg": 12805.194102488575,
+  "baseline_raw_kg": 14047.802874743698,
+  "best_weighted_span_kg": 1.709850039333105e-10,
+  "candidate0_weighted_gain_kg": 4.941850560002422,
+  "candidate0_raw_gain_kg": 4.0520191648993205,
+  "campaigns": [
+    {
+      "name": "baseline0",
+      "device_selection": 0,
+      "seconds": 135.88429415295832,
+      "weighted_kg": 12810.135953048666,
+      "raw_kg": 14051.854893908698,
+      "official_pass": true,
+      "independent_pass": true,
+      "mined_asteroids": 195,
+      "ships": 23,
+      "native_solves": 36,
+      "screening_telemetry": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 15359152
+      },
+      "refinements": [
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 15.0,
+          "certified": true,
+          "seconds": 6.626093189988751,
+          "status": "promoted_verified_fleet",
+          "failures": []
+        },
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 5.0,
+          "certified": true,
+          "seconds": 7.979047285974957,
+          "status": "retained_verified_incumbent",
+          "failures": []
+        }
+      ]
+    },
+    {
+      "name": "candidate0",
+      "device_selection": 1,
+      "seconds": 137.59962073800853,
+      "weighted_kg": 12810.135953048577,
+      "raw_kg": 14051.854893908598,
+      "official_pass": true,
+      "independent_pass": true,
+      "mined_asteroids": 195,
+      "ships": 23,
+      "native_solves": 36,
+      "screening_telemetry": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "refinements": [
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 15.0,
+          "certified": true,
+          "seconds": 6.619611872010864,
+          "status": "promoted_verified_fleet",
+          "failures": []
+        },
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 5.0,
+          "certified": true,
+          "seconds": 8.048565083008725,
+          "status": "retained_verified_incumbent",
+          "failures": []
+        }
+      ]
+    },
+    {
+      "name": "candidate1",
+      "device_selection": 1,
+      "seconds": 120.72710374899907,
+      "weighted_kg": 12810.135953048577,
+      "raw_kg": 14051.854893908598,
+      "official_pass": true,
+      "independent_pass": true,
+      "mined_asteroids": 195,
+      "ships": 23,
+      "native_solves": 36,
+      "screening_telemetry": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "refinements": [
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 15.0,
+          "certified": true,
+          "seconds": 6.596575085015502,
+          "status": "promoted_verified_fleet",
+          "failures": []
+        },
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 5.0,
+          "certified": false,
+          "seconds": 32.899949826998636,
+          "status": "failed_refinement",
+          "failures": [
+            {
+              "pass": 1,
+              "leg": 17,
+              "from": 13077,
+              "to": 0,
+              "status": "infeasible",
+              "diagnostic": "virtual control remains 1.380e-01",
+              "certification": "optimizer status is not certification"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "baseline1",
+      "device_selection": 0,
+      "seconds": 136.14599499799078,
+      "weighted_kg": 12810.135953048495,
+      "raw_kg": 14051.854893908498,
+      "official_pass": true,
+      "independent_pass": true,
+      "mined_asteroids": 195,
+      "ships": 23,
+      "native_solves": 36,
+      "screening_telemetry": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 15359152
+      },
+      "refinements": [
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 15.0,
+          "certified": true,
+          "seconds": 6.775216098991223,
+          "status": "promoted_verified_fleet",
+          "failures": []
+        },
+        {
+          "ship": 15,
+          "case": "ship_15_position_00",
+          "grid_days": 5.0,
+          "certified": true,
+          "seconds": 8.04266875400208,
+          "status": "retained_verified_incumbent",
+          "failures": []
+        }
+      ]
+    }
+  ],
+  "timing_limit": "Candidate1 failed its second refinement and therefore has different downstream verification work. The four durations do not establish a device-selection end-to-end speedup."
+}

@@ -123,3 +123,11 @@ The separately verified fleet improvement is documented in
 [GPU orphan recovery](GPU_ORPHAN_RECOVERY.md). That experiment used the older
 v590 core with host winner selection explicitly enabled via selection `0`;
 these candidate-speed measurements do not change or re-certify its result.
+
+
+Additional, already-existing H100 v632 measurements were subsequently retrieved
+and audited without launching another GPU run. Their source-linked results and
+campaign timing qualifications are documented in
+[audited existing H100 evidence](GPU_JOINT_ITINERARY.md#audited-existing-h100-v632-evidence)
+and the [v632 publication bundle](../results/lambda/2026-09-09/joint-candidates-v632/).
+They are separate from this local v596 evidence set and do not alter its timings.

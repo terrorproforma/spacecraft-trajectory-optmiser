@@ -1,0 +1,416 @@
+{
+  "prepared_utc": "2026-09-08T15:01:52.106107+00:00",
+  "scope": "Local packaging of already-retrieved Lambda evidence. No network access, remote mutation, GPU job or new trajectory verification.",
+  "remote_files_preserved": 80,
+  "all_remote_hashes_verified_before_and_after_copy": true,
+  "retrieval_manifests": {
+    "download-manifest.json": {
+      "sha256": "08340ce862c674576f2149167ea656eb545b26f02e1ec36660979046f7322d19",
+      "files": 78,
+      "snapshot_utc": "2026-09-08T14:54:24.699857+00:00"
+    },
+    "viewer-download-manifest.json": {
+      "sha256": "64455f65211c50ac0c4e4f67a10d04d5516ecebedcd85e500f392ae99cf831b9",
+      "files": 2,
+      "snapshot_utc": "2026-09-08T14:58:30.342723+00:00"
+    }
+  },
+  "omitted_redundant_archives": {
+    "lambda-evidence.tar.gz": {
+      "sha256": "3774c7d36d9bcd0ca3c4f22599e264a7f48d136282bc72e22761f4f58142cd1b",
+      "bytes": 1199917,
+      "reason": "Redundant transport archive; every extracted remote file and original retrieval manifest is retained."
+    },
+    "viewer-evidence.tar.gz": {
+      "sha256": "ced0d495d988578aa6f7bb31e94f091d11b82c9e931ab44be32337fda229826b",
+      "bytes": 3313033,
+      "reason": "Redundant transport archive; every extracted remote file and original retrieval manifest is retained."
+    }
+  },
+  "copied_files": {
+    "README.md": {
+      "sha256": "13094e13a23f7245b4c0adeacf5b711b0d04886e669ce487073259aebf790f57",
+      "bytes": 6226
+    },
+    "audit-summary.json": {
+      "sha256": "4d23fa671efea1bdba070d1ac3518c173c66f86aec316ab45b26ca91395c2ad2",
+      "bytes": 10995
+    },
+    "audit_reports.py": {
+      "sha256": "3b257104e655ffb548d659c6aa57a8ed612f15a91321135cb74744fce25a44b8",
+      "bytes": 3859
+    },
+    "download-verified.json": {
+      "sha256": "1bbb4f426bfbc28ee9c3232a6e70d64f60bc5898e59ec148aa246ec99e5909ae",
+      "bytes": 389
+    },
+    "evidence/benchmark-v634/report.json": {
+      "sha256": "5b153f3db6e5da8ab2c74c52894201d6a8c2f2fd89b21af5081393a31a25ee1f",
+      "bytes": 331
+    },
+    "evidence/benchmark-v634/scalar-vs-batched.json": {
+      "sha256": "3b6c2bc01606d69a3272444a1ef94077d3979a204504e99a24f6a79cf29f09bf",
+      "bytes": 576881
+    },
+    "evidence/benchmark-v634/scalar-vs-batched.log": {
+      "sha256": "21af0414d9fba8c8773dd08e93e16c6dcb8f96320745251ace2ee6d603dc8009",
+      "bytes": 428
+    },
+    "evidence/benchmark-v634/selection.json": {
+      "sha256": "d77d426b7b1e3b4cfbca8c0a2d77614eaf17fee4beae3aae9ea25f2166102edd",
+      "bytes": 155621
+    },
+    "evidence/benchmark-v634/selection.log": {
+      "sha256": "008d79c55ff379b92de0d078b3ce198405987dc7c7be17172eae943928bdcb4c",
+      "bytes": 147
+    },
+    "evidence/build.log": {
+      "sha256": "7fb2f625231738b1806c920d2a0a3e6ae782c09fd4d4c004636dc8e9a1df07a1",
+      "bytes": 1536
+    },
+    "evidence/campaign-fixtures.json": {
+      "sha256": "735fe751ffba84857a71c890691abafcf12007883c45b92f03877236674ae85a",
+      "bytes": 365
+    },
+    "evidence/campaign-v636/baseline0/candidates/ship_15_attempt_01/refinement.json": {
+      "sha256": "ee937f9011b82974e9995af682291e16298593d855803c2b9e88998cb49189c9",
+      "bytes": 98315
+    },
+    "evidence/campaign-v636/baseline0/candidates/ship_15_attempt_01/route/route_summary.json": {
+      "sha256": "3726d3437a06ffb581450dd58a9d304c89cc0e41650f65fc2585915c7d10fa15",
+      "bytes": 98315
+    },
+    "evidence/campaign-v636/baseline0/candidates/ship_15_attempt_01/verification.json": {
+      "sha256": "7d2c19921307949eda78acd70a918af6ce1177f3fc4ecd6d487b529738de8a9a",
+      "bytes": 730
+    },
+    "evidence/campaign-v636/baseline0/candidates/ship_15_attempt_02/refinement.json": {
+      "sha256": "b6ae60e83089d070c93f9ab81c1835087e857f87c54bf094155078e47b7f2d19",
+      "bytes": 106092
+    },
+    "evidence/campaign-v636/baseline0/candidates/ship_15_attempt_02/route/route_summary.json": {
+      "sha256": "e5eca85cf015b20969b5c4c1b1f4623c9059cc7cc5ac2cfb722d1bdd20c514d7",
+      "bytes": 106092
+    },
+    "evidence/campaign-v636/baseline0/candidates/ship_15_attempt_02/verification.json": {
+      "sha256": "4116c827c47b1af4fc02bc84f46d359aac033ee8b29d516d1d50086f0001454f",
+      "bytes": 731
+    },
+    "evidence/campaign-v636/baseline0/orders.json": {
+      "sha256": "b589eacc7fa308b8a156904d5dec9fb97794868fc81febcd56bcb5e600f82f90",
+      "bytes": 9874
+    },
+    "evidence/campaign-v636/baseline0/proxies/ship_15_position_00_grid_15.json": {
+      "sha256": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc",
+      "bytes": 4991
+    },
+    "evidence/campaign-v636/baseline0/proxies/ship_15_position_00_grid_5.json": {
+      "sha256": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903",
+      "bytes": 4993
+    },
+    "evidence/campaign-v636/baseline0/proxies/ship_15_position_01_grid_15.json": {
+      "sha256": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/baseline0/proxies/ship_15_position_01_grid_5.json": {
+      "sha256": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/baseline0/report.json": {
+      "sha256": "057d8f4d8cae43554968573f00553bbae5efca6519044019e409390290f04b14",
+      "bytes": 54373
+    },
+    "evidence/campaign-v636/baseline0.log": {
+      "sha256": "fe255661d47d602daa139c4c4a3ebdbcdbd287ac70ae951763c465b13fbdb678",
+      "bytes": 8779
+    },
+    "evidence/campaign-v636/baseline1/candidates/ship_15_attempt_01/refinement.json": {
+      "sha256": "478809ffa8abfe411812fb66ab0a759fd05f49dcb641932c8a6eb7391753dfc9",
+      "bytes": 99271
+    },
+    "evidence/campaign-v636/baseline1/candidates/ship_15_attempt_01/route/route_summary.json": {
+      "sha256": "d312fc0b8b30e2ed2a33d81116dbfa4b3b436270a83afe076e01ba9733769de5",
+      "bytes": 99271
+    },
+    "evidence/campaign-v636/baseline1/candidates/ship_15_attempt_01/verification.json": {
+      "sha256": "f0222f26a64a12519c886da64ccb4e64b55f79ae7540445b7534cc97029fec5e",
+      "bytes": 731
+    },
+    "evidence/campaign-v636/baseline1/candidates/ship_15_attempt_02/refinement.json": {
+      "sha256": "756fc42fa874053525547992a72a5264f468046c2518dd7ad460223d3c576e12",
+      "bytes": 106082
+    },
+    "evidence/campaign-v636/baseline1/candidates/ship_15_attempt_02/route/route_summary.json": {
+      "sha256": "df61c5eb804b71872e069fc5994e80c761e144f689f7ec30b04f15b4ae9fb52a",
+      "bytes": 106082
+    },
+    "evidence/campaign-v636/baseline1/candidates/ship_15_attempt_02/verification.json": {
+      "sha256": "4db21460216c917ad879dfeaccd953af54b984c29faf94ee02de558ffa68b2db",
+      "bytes": 732
+    },
+    "evidence/campaign-v636/baseline1/orders.json": {
+      "sha256": "b589eacc7fa308b8a156904d5dec9fb97794868fc81febcd56bcb5e600f82f90",
+      "bytes": 9874
+    },
+    "evidence/campaign-v636/baseline1/proxies/ship_15_position_00_grid_15.json": {
+      "sha256": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc",
+      "bytes": 4991
+    },
+    "evidence/campaign-v636/baseline1/proxies/ship_15_position_00_grid_5.json": {
+      "sha256": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903",
+      "bytes": 4993
+    },
+    "evidence/campaign-v636/baseline1/proxies/ship_15_position_01_grid_15.json": {
+      "sha256": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/baseline1/proxies/ship_15_position_01_grid_5.json": {
+      "sha256": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/baseline1/report.json": {
+      "sha256": "6a795568a263ca452cd50fe367a808ff7a9ea99647c87e669cd9f849e0abef22",
+      "bytes": 54370
+    },
+    "evidence/campaign-v636/baseline1.log": {
+      "sha256": "d56c895e3cc976bd5a4e514328d05af403a627d702bbf135f2e72db985217f3a",
+      "bytes": 8783
+    },
+    "evidence/campaign-v636/candidate0/best/Result.txt": {
+      "sha256": "e408ff46f547890aaaa8d65505b969829ff9497b0264bf7b558f1bf1d6b9fb17",
+      "bytes": 10084994
+    },
+    "evidence/campaign-v636/candidate0/best/viewer/manifest.json": {
+      "sha256": "7c0d74bf7a807da3cc13f5c950c0f201b8fbe286cb9aedaa31fa750be67819eb",
+      "bytes": 469
+    },
+    "evidence/campaign-v636/candidate0/best/viewer/trajectories.json": {
+      "sha256": "533226bd53b2e22c20d331f318de3f1581c86f4e4013a41df110c438ef76c59c",
+      "bytes": 10557251
+    },
+    "evidence/campaign-v636/candidate0/candidates/ship_15_attempt_01/refinement.json": {
+      "sha256": "eae9153436f03600648d79462b921bc96670a2f44484d0855d6089fe98c16f12",
+      "bytes": 98154
+    },
+    "evidence/campaign-v636/candidate0/candidates/ship_15_attempt_01/route/route_summary.json": {
+      "sha256": "6e457fe0149731e76c567024fd7f7389145e37601b4d6e11231e75f7c9fc776e",
+      "bytes": 98154
+    },
+    "evidence/campaign-v636/candidate0/candidates/ship_15_attempt_01/verification.json": {
+      "sha256": "972ed0d61ac4f23f24f953f1d49b92c13c7ad0213fa4efff73e9a2df4fdf5eb2",
+      "bytes": 730
+    },
+    "evidence/campaign-v636/candidate0/candidates/ship_15_attempt_02/refinement.json": {
+      "sha256": "307f0baa2cd59a034c22d16ccda5b8cb863cd4af6beba440317711da4cdeabdf",
+      "bytes": 106164
+    },
+    "evidence/campaign-v636/candidate0/candidates/ship_15_attempt_02/route/route_summary.json": {
+      "sha256": "681c4a0da4cbe6c4a0321e3d7bad5929f3e0936abb510cef501f9a67321b5b70",
+      "bytes": 106164
+    },
+    "evidence/campaign-v636/candidate0/candidates/ship_15_attempt_02/verification.json": {
+      "sha256": "828d80f7f6556cbc4353bfa3411ecd8dccd9b5d15b003112070c46c5c9fd7ea2",
+      "bytes": 732
+    },
+    "evidence/campaign-v636/candidate0/orders.json": {
+      "sha256": "b589eacc7fa308b8a156904d5dec9fb97794868fc81febcd56bcb5e600f82f90",
+      "bytes": 9874
+    },
+    "evidence/campaign-v636/candidate0/proxies/ship_15_position_00_grid_15.json": {
+      "sha256": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc",
+      "bytes": 4991
+    },
+    "evidence/campaign-v636/candidate0/proxies/ship_15_position_00_grid_5.json": {
+      "sha256": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903",
+      "bytes": 4993
+    },
+    "evidence/campaign-v636/candidate0/proxies/ship_15_position_01_grid_15.json": {
+      "sha256": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/candidate0/proxies/ship_15_position_01_grid_5.json": {
+      "sha256": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/candidate0/report.json": {
+      "sha256": "4e85dc14a6128c7c8f3c297bd0694b992ed125cb1e5ef69897a0c7c04cb3e359",
+      "bytes": 54373
+    },
+    "evidence/campaign-v636/candidate0.log": {
+      "sha256": "08b57525f3f0797ac93d4857630ca08c4fb2c32db33c48b03e564679744ea943",
+      "bytes": 8783
+    },
+    "evidence/campaign-v636/candidate1/candidates/ship_15_attempt_01/refinement.json": {
+      "sha256": "c331c139c9f33312f284905eb20dc00d92802dc3a049b0d0b59eec9049e6317a",
+      "bytes": 98147
+    },
+    "evidence/campaign-v636/candidate1/candidates/ship_15_attempt_01/route/route_summary.json": {
+      "sha256": "e52fda495c047ed0ed12d9c83542878c243bcc15d3831301bf2400b7620c0430",
+      "bytes": 98147
+    },
+    "evidence/campaign-v636/candidate1/candidates/ship_15_attempt_01/verification.json": {
+      "sha256": "091c6a4555f7658d1de6d9eac39c1bd328ac79717cb9a84287b42fb621fb24bf",
+      "bytes": 730
+    },
+    "evidence/campaign-v636/candidate1/candidates/ship_15_attempt_02/refinement.json": {
+      "sha256": "1f632ff70a29e72f2055c804ab00e1352056d1a2c5b1e98d66ddaba5758054dd",
+      "bytes": 135997
+    },
+    "evidence/campaign-v636/candidate1/orders.json": {
+      "sha256": "b589eacc7fa308b8a156904d5dec9fb97794868fc81febcd56bcb5e600f82f90",
+      "bytes": 9874
+    },
+    "evidence/campaign-v636/candidate1/proxies/ship_15_position_00_grid_15.json": {
+      "sha256": "a571f7b0a65f9d0607409b6e1cc5104e9928970aefacbb4bde28283fe514b9fc",
+      "bytes": 4991
+    },
+    "evidence/campaign-v636/candidate1/proxies/ship_15_position_00_grid_5.json": {
+      "sha256": "90b6e611dcdfc0e1047df518ac95427caa1f13b281f9e5a695f1d31759540903",
+      "bytes": 4993
+    },
+    "evidence/campaign-v636/candidate1/proxies/ship_15_position_01_grid_15.json": {
+      "sha256": "7add3b794a3743daade054a975c7f5cb77c618458d2358908b5c8a2399e6ee8b",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/candidate1/proxies/ship_15_position_01_grid_5.json": {
+      "sha256": "c4adc456c02520009f6078729e52b5fad5d78ca80bad7df6b116d93cbc3c8332",
+      "bytes": 5022
+    },
+    "evidence/campaign-v636/candidate1/report.json": {
+      "sha256": "8671d29e39a158555c00c411de3ab7539dd5f7542d8a56439592fabf93502b4f",
+      "bytes": 53724
+    },
+    "evidence/campaign-v636/candidate1.log": {
+      "sha256": "b96bdfeb090ee4bbec32a37dee63e387dd2111d71135baf57f17ba8dc13dbf1f",
+      "bytes": 8790
+    },
+    "evidence/campaign-v636/report.json": {
+      "sha256": "5a1f27b2f533872c505d720ec72e552db97200219a20c01ad2469a4a3e7b2738",
+      "bytes": 13061
+    },
+    "evidence/compatibility-source.json": {
+      "sha256": "1db43e8082bd123f49b10030c5e965211066c402702e43038933ceece536037a",
+      "bytes": 86287
+    },
+    "evidence/compatibility-validation-v640/pytest.log": {
+      "sha256": "5c3c3d2894cc5a7293232445708757918511ead9110ee4fc2f5f3b70b852b307",
+      "bytes": 100
+    },
+    "evidence/compatibility-validation-v640/report.json": {
+      "sha256": "ad703c9f4be758936e3de65fce417ac410fed6c63c06eb33a49c14907cc49b3b",
+      "bytes": 245
+    },
+    "evidence/configure.log": {
+      "sha256": "83fb302ec0db85180c599b061f0dad6fd6a8474006aecabb702a76d08bae389f",
+      "bytes": 2400
+    },
+    "evidence/download-manifest.json": {
+      "sha256": "08340ce862c674576f2149167ea656eb545b26f02e1ec36660979046f7322d19",
+      "bytes": 22583
+    },
+    "evidence/remote-provenance.json": {
+      "sha256": "6d2f310a3fdcfe717688d118fcc903232eba113e24bd1b83061ed88f37483376",
+      "bytes": 5482
+    },
+    "evidence/report.json": {
+      "sha256": "c91cc559875de1573ae4618103072d0ff88f075997a3dafac271e301ac165d9e",
+      "bytes": 2192
+    },
+    "evidence/source-manifest.json": {
+      "sha256": "280380a47d0da4e8ff597350bbd4006ddb4954dac465e81cf48fbed9895fafc7",
+      "bytes": 86298
+    },
+    "evidence/validation-v631/compile-selection_test.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "evidence/validation-v631/compile-smoke.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "evidence/validation-v631/pytest.log": {
+      "sha256": "b553d3b145ab8bb0845cf0b04791839aba7230af54ddc65a1ab6c7d62b0a52dc",
+      "bytes": 100
+    },
+    "evidence/validation-v631/report.json": {
+      "sha256": "9e755ee3b3032badf226b4cd3ca37f7b936a99cb485f184b180c20542745d458",
+      "bytes": 4507
+    },
+    "evidence/validation-v631/selection_test-memcheck.log": {
+      "sha256": "0216920306fd6facee82c3ccd32c67f55ad851954e6363f1bb4787fcfd3dea62",
+      "bytes": 139
+    },
+    "evidence/validation-v631/selection_test-racecheck.log": {
+      "sha256": "54def6081a15d558fe1b448fd42f7a9a0663f0909ae1df2d05b0b30c20411d12",
+      "bytes": 177
+    },
+    "evidence/validation-v631/selection_test-synccheck.log": {
+      "sha256": "0216920306fd6facee82c3ccd32c67f55ad851954e6363f1bb4787fcfd3dea62",
+      "bytes": 139
+    },
+    "evidence/validation-v631/selection_test.log": {
+      "sha256": "375a279a5bc42c9a219ce1d7fb73da240cf77a23a81d0c82aeba30a262eb54df",
+      "bytes": 77
+    },
+    "evidence/validation-v631/smoke-memcheck.log": {
+      "sha256": "87a6ffcb4adba62cf7f2201b6cea6e68c78780ed5926b3c77b34823902d778ec",
+      "bytes": 141
+    },
+    "evidence/validation-v631/smoke-racecheck.log": {
+      "sha256": "9022883cad832a6699ff58e5b35b8eed6db1bede462cc382fa193485815ccf89",
+      "bytes": 179
+    },
+    "evidence/validation-v631/smoke-synccheck.log": {
+      "sha256": "87a6ffcb4adba62cf7f2201b6cea6e68c78780ed5926b3c77b34823902d778ec",
+      "bytes": 141
+    },
+    "evidence/validation-v631/smoke.log": {
+      "sha256": "1a112f5abd806b4ff160feae760506c9cf69b3fc7c05adbdace830c05e09274c",
+      "bytes": 79
+    },
+    "evidence/viewer-download-manifest.json": {
+      "sha256": "64455f65211c50ac0c4e4f67a10d04d5516ecebedcd85e500f392ae99cf831b9",
+      "bytes": 835
+    },
+    "inspect_remote.py": {
+      "sha256": "3c4b39bb4409bb87a26a83e212f96325e6c8bd8f0fb7bcfa1aedec70bec817a2",
+      "bytes": 1523
+    },
+    "remote-inventory.txt": {
+      "sha256": "cec447118164602f9c07bc6654a9cefe60999b3f6e85165f380cd601a6193f6f",
+      "bytes": 26141
+    },
+    "retrieve.py": {
+      "sha256": "cfb0fba2bac53cd738072ca04d70e769ce17011d2ca6ec147665296d9c7de466",
+      "bytes": 5403
+    },
+    "retrieve_viewer.py": {
+      "sha256": "7fbbbf56b30a887defc0b258344a12c45dbad838a107b046a154941744914e0c",
+      "bytes": 4086
+    },
+    "viewer-download-verified.json": {
+      "sha256": "f18a579c656aabca6a19ecbaa23abccdddf579564a8c71214ee0956b07d15f2b",
+      "bytes": 502
+    }
+  },
+  "local_supporting_source": {
+    "benchmark_joint_selection_v634.py": {
+      "sha256": "4ff18823a888399d1b9b2c2ed773dfb92056bbeec971e4c2ff8266b5b8607dff",
+      "bytes": 3755,
+      "source": "build/performance/benchmark_joint_selection_v634.py",
+      "origin": "Local audit reference, copied separately from the 80 remote download files.",
+      "scope": "Shows the selection-only benchmark threshold explicitly. selection.json itself does not record that threshold; the remote source manifest does not pin this driver."
+    }
+  },
+  "raw_evidence_attributes": {
+    "path": ".gitattributes",
+    "bytes": 80,
+    "sha256": "c25953fc3063016e7d371299560fd5b56c76295bc5c154becad191594cf39ba1",
+    "policy": "Disable Git text normalization for every bundle file; retain raw vendor-log whitespace."
+  },
+  "publication_readme": {
+    "path": "README.md",
+    "bytes": 6226,
+    "sha256": "13094e13a23f7245b4c0adeacf5b711b0d04886e669ce487073259aebf790f57"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "kind": "exact_recorded_return_masses_with_reconstructed_pinned_ephemeris",
+  "case": "ship_15_attempt_02_return_leg_17",
+  "from": 13077,
+  "to": 0,
+  "source_sha256": {
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/baseline0/candidates/ship_15_attempt_02/refinement.json": "b6ae60e83089d070c93f9ab81c1835087e857f87c54bf094155078e47b7f2d19",
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/baseline0/report.json": "057d8f4d8cae43554968573f00553bbae5efca6519044019e409390290f04b14",
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/candidate0/candidates/ship_15_attempt_02/refinement.json": "307f0baa2cd59a034c22d16ccda5b8cb863cd4af6beba440317711da4cdeabdf",
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/candidate0/report.json": "4e85dc14a6128c7c8f3c297bd0694b992ed125cb1e5ef69897a0c7c04cb3e359",
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/candidate1/candidates/ship_15_attempt_02/refinement.json": "1f632ff70a29e72f2055c804ab00e1352056d1a2c5b1e98d66ddaba5758054dd",
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/candidate1/report.json": "8671d29e39a158555c00c411de3ab7539dd5f7542d8a56439592fabf93502b4f",
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/baseline1/candidates/ship_15_attempt_02/refinement.json": "756fc42fa874053525547992a72a5264f468046c2518dd7ad460223d3c576e12",
+    "build/performance/retrieved-joint-v632/evidence/campaign-v636/baseline1/report.json": "6a795568a263ca452cd50fe367a808ff7a9ea99647c87e669cd9f849e0abef22"
+  },
+  "catalogue_sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675",
+  "settings": {
+    "node_days": 2.0,
+    "hold": "zoh",
+    "substeps": 8,
+    "polish_substeps": 16,
+    "polish_iterations": 4,
+    "max_iterations": 40,
+    "virtual_weight": 10000.0,
+    "smoothness_weight": 0.0,
+    "initial_trust_state": 0.2,
+    "initial_trust_control": 1.0,
+    "minimum_trust": 1e-06,
+    "maximum_trust": 2.0,
+    "ratio_reject": 0.0,
+    "ratio_shrink": 0.25,
+    "ratio_grow": 0.7,
+    "shrink_factor": 0.5,
+    "grow_factor": 1.6,
+    "defect_tolerance": 5e-09,
+    "step_tolerance": 1e-07,
+    "objective_tolerance": 1e-06,
+    "clarabel_tolerance": 1e-09,
+    "time_limit_s": 900.0,
+    "discretisation_backend": "cuda",
+    "assembly_backend": "cuda",
+    "convex_solver_backend": "qoco",
+    "qoco_ruiz_iterations": 0,
+    "outer_loop_backend": "cuda",
+    "seed_backend": "cuda"
+  },
+  "boundary_shared": {
+    "departure_epoch": 69230.0,
+    "arrival_epoch": 69805.0,
+    "departure_position": [
+      -51945854.86115971,
+      -399563180.8101256,
+      -2732503.7166425763
+    ],
+    "departure_velocity": [
+      18.011395736176844,
+      -1.5968006040524707,
+      -2.3703923092796444
+    ],
+    "arrival_position": [
+      -23138116.42653124,
+      145275253.8636269,
+      -11745.354691986835
+    ],
+    "arrival_velocity": [
+      -29.902289233707247,
+      -4.787539942626289,
+      -0.0004203174172971785
+    ],
+    "free_departure_vinf": false,
+    "free_arrival_vinf": true,
+    "minimum_final_mass": 1108.1587953456537
+  },
+  "collected_mass_kg": {
+    "19102": 11.772758384668036,
+    "6757": 27.32375085557837,
+    "51831": 41.752224503764545,
+    "49856": 51.90965092402464,
+    "3299": 86.18754277891856,
+    "5162": 100.01368925393567,
+    "23153": 89.30869267624914,
+    "35473": 111.75906913073237,
+    "13077": 88.13141683778234
+  },
+  "carried_mass_kg": 608.1587953456536,
+  "variants": {
+    "candidate1": {
+      "initial_mass": 1339.2959931028731,
+      "initial_mass_hex": "0x1.4ed2f18d0e2bap+10",
+      "historical_status": "infeasible"
+    },
+    "candidate0": {
+      "initial_mass": 1339.2959931034932,
+      "initial_mass_hex": "0x1.4ed2f18d0ed61p+10",
+      "historical_status": "feasible"
+    }
+  },
+  "repeat_order": [
+    "candidate1",
+    "candidate0",
+    "candidate1",
+    "candidate0",
+    "candidate1",
+    "candidate0"
+  ],
+  "physics_tolerances_changed": false
+}
