@@ -1,9 +1,15 @@
 # GTOC12 score progress — 9 September 2026
 
-The latest verified checkpoint is **12,842.970672 weighted kg / 14,043.750856 raw
+The latest verified checkpoint is **12,843.555696 weighted kg / 14,044.353183 raw
+kg**, across 23 ships and 195 asteroids. GPU timing searches around two routes
+gain **0.585023 weighted kg / 0.602327 raw kg**. Both full-fleet physics checkers
+pass on both GPUs. The H100 result is downloaded and displayed in the visualiser.
+[Current score, actual work and loading instructions](GPU_ROUTE_HILLCLIMB.md).
+
+The preceding checkpoint was **12,842.970672 weighted kg / 14,043.750856 raw
 kg**, across 23 ships. GPU fleet exchanges gained **32.834719 weighted kg**;
 33 native leg solves and both complete-fleet physics checkers pass on both GPUs.
-[Current result, measurements and visualiser](GPU_FLEET_EXCHANGES.md).
+[Fleet-exchange result, measurements and visualiser](GPU_FLEET_EXCHANGES.md).
 
 The subsequent retained CUDA workspace accelerates repeated fixed-pool fleet
 selection by **2.03× locally / 2.32× on H100**, to **50 / 54 ms** after setup.

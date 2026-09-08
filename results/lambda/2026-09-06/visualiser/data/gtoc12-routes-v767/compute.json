@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_route_search_v767_h100",
+  "fleet_run_id": "gpu_route_search_v766",
+  "commit": "258e5c3a",
+  "source_revision_note": "Frozen v763 CUDA core with retained QOCO v686; GPU timing search and native refinement around the two newly selected routes. Both full-fleet checkers pass.",
+  "weighted_score_fixed_bonus_kg": 12843.555695585188,
+  "raw_kg_per_ship": 610.6240514239826,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "Two routes; 15,748 joint evaluations and 220,079 computed geometry hops"
+  },
+  "timing": {
+    "wall_seconds_total": 82.02399265998974,
+    "wall_human": "82.024 s search + 36 native leg attempts + full checks and export; historical fleet generation excluded"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 dynamics; fresh official and independent full-fleet checks at unchanged tolerances",
+    "local_refine": "33 legs in two accepted routes converge and have CUDA certificates. Three exploratory Earth-leg attempts are also included in work/timing. Other 21 routes retained."
+  },
+  "optimisation": {
+    "strategy": "New verified best: +0.585023 weighted kg / +0.602327 raw kg. Four GPU-accepted timing moves; no asteroid insertion qualified. 13,172 joint batches expose remaining host dispatch overhead. Python route orchestration and independent CPU audits remain.",
+    "proven_optimal": false
+  }
+}

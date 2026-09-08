@@ -1,5 +1,9 @@
 # GPU fleet exchanges and the improved verified mission
 
+This page records the fleet-exchange checkpoint. Subsequent
+[GPU route hill climbing](GPU_ROUTE_HILLCLIMB.md) increases the verified score
+to 12,843.555696 weighted kg.
+
 The new best fleet returns **12,842.970672 weighted kg**, an improvement of
 **32.834719 kg** over 12,810.135953 kg with the same pinned fixed bonus table.
 Raw returned mass is **14,043.750856 kg**, or **610.597863 kg per ship**, across

@@ -14,8 +14,14 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest verified fleet returns **14,043.751 raw kg / 12,842.971 weighted kg**,
-with **610.598 raw kg per ship** across 23 ships. GPU fleet exchanges replaced
+The latest verified fleet returns **14,044.353 raw kg / 12,843.556 weighted kg**,
+with **610.624 raw kg per ship** across 23 ships. GPU-controlled timing searches
+around the two recently replaced routes gained another **0.585 weighted kg**.
+Both full-fleet physics checkers pass on RTX 5090 and Lambda H100. The new H100
+mission is downloaded and displayed in the existing web visualiser.
+[Current score, actual work, evidence and copy-paste loading instructions](docs/GPU_ROUTE_HILLCLIMB.md).
+
+The preceding GPU fleet exchanges replaced
 two routes, gaining **32.835 weighted kg** while returning slightly less raw
 mass. Both replacement routes were freshly refined on GPU: all 33 native leg
 solves converge on both RTX 5090 and Lambda H100, and both complete-fleet physics
@@ -755,6 +761,11 @@ boundaries, test evidence and limitations. Reported performance improvements
 apply to their named fixtures; they are not universal speedup claims.
 
 ## GTOC12 score versus the published leaderboard
+
+The comparison below records the earlier v595 snapshot. The current independently
+verified result is **12,843.556 weighted kg**; see the
+[new mission evidence](docs/GPU_ROUTE_HILLCLIMB.md). This update makes no new
+official leaderboard-placement claim.
 
 Our verified `orphan_recovery_v595` snapshot collects **14,051.855 kg**, using **23 ships**
 and collecting from **195 asteroids**. Both the locally run official checker and
