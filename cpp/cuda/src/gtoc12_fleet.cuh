@@ -235,52 +235,102 @@ __global__ void accept_exchange(Problem p,uint8_t* masks,Row* rows,Exchange* sta
 }
 __global__ void search(Problem p,int bits,int tasks,uint64_t cap,uint8_t* best_masks,
                       uint8_t* active,uint8_t* phase,uint8_t* exclusions,Row* rows) {
-    const int t=int(blockIdx.x*blockDim.x+threadIdx.x);if(t>=tasks)return;
+    const int t=int(blockIdx.x),lane=int(threadIdx.x);if(t>=tasks)return;
     const uint64_t budget=cap/uint64_t(tasks)+(uint64_t(t)<cap%uint64_t(tasks));
-    uint8_t* chosen=active+size_t(t)*p.n;
-    uint8_t* best=best_masks+size_t(t+3)*p.n;
-    uint8_t* state=phase+size_t(t)*(p.n+1);
-    uint8_t* blocked=exclusions+size_t(t)*p.n;
-    int initial=0;for(int i=1;i<3;++i)if(rows[i].value>rows[initial].value+1e-9)initial=i;
-    copy(p.n,best,best_masks+size_t(initial)*p.n);double best_value=rows[initial].value;
-    for(int i=0;i<p.n;++i){chosen[i]=0;blocked[i]=0;}
-    uint64_t nodes=0;bool exhaustive=true;
-    int prefix_ships=0;
-    for(int i=0;i<bits;++i)if(((t>>(bits-1-i))&1)==0) {
-        if(prefix_ships+p.c[i].ships>p.max_ships||blocked[i]) {
-            rows[t+3]={best_value,0,1};return;
-        }
-        chosen[i]=1;prefix_ships+=p.c[i].ships;mark(p,i,blocked,1);
+    auto* best=best_masks+size_t(t+3)*p.n;
+    auto* state=phase+size_t(t)*(p.n+1);
+    __shared__ uint8_t chosen[4096],blocked[4096],sizes[4096];
+    __shared__ double values[4096],masses[100],best_value,upper[128];
+    __shared__ int ids[100],invalid[128],count,ships,index,next,initial,action,changed;
+    __shared__ bool enter;
+    if(!lane) {
+        initial=0;for(int i=1;i<3;++i)if(rows[i].value>rows[initial].value+1e-9)initial=i;
+        best_value=rows[initial].value;count=ships=0;
     }
-    int index=bits;bool enter=true;
+    __syncthreads();
+    for(int i=lane;i<p.n;i+=128) {
+        best[i]=best_masks[size_t(initial)*p.n+i];chosen[i]=blocked[i]=0;
+        sizes[i]=uint8_t(p.c[i].ships);values[i]=p.c[i].value;
+    }
+    __syncthreads();
+    for(int i=0;i<bits;++i) {
+        if(!lane) {
+            action=0;next=-1;
+            if(((t>>(bits-1-i))&1)==0) {
+                if(ships+sizes[i]>p.max_ships||blocked[i])action=1;
+                else {chosen[i]=1;ships+=sizes[i];ids[count]=i;masses[count++]=p.c[i].mass;next=i;}
+            }
+        }
+        __syncthreads();
+        if(action){if(!lane)rows[t+3]={best_value,0,1};return;}
+        if(next>=0)for(int k=p.co[next]+lane;k<p.co[next+1];k+=128)++blocked[p.ci[k]];
+        __syncthreads();
+    }
+    uint64_t nodes=0;bool exhaustive=true;
+    if(!lane){index=bits;enter=true;}
+    __syncthreads();
     for(;;) {
         if(enter) {
             if(nodes==budget){exhaustive=false;break;}++nodes;
-            int ships=0;double mass=0,value=0;bool supplied_all=true;
-            for(int i=0;i<p.n;++i)if(chosen[i]) {
-                ships+=p.c[i].ships;mass+=p.c[i].mass;value+=p.c[i].value;
-                if(!supplied(p,i,chosen))supplied_all=false;
+            invalid[lane]=lane<count&&!supplied(p,ids[lane],chosen);
+            double remaining=0;
+            for(int j=index+lane;j<p.n;j+=128)if(values[j]>0&&!blocked[j])
+                remaining=__dadd_ru(remaining,values[j]);
+            upper[lane]=remaining;
+            __syncthreads();
+            if(!lane) {
+                double mass=0,value=0;bool supplied_all=true;
+                // The DFS stack is in canonical column order. Recompute in
+                // that order so pruning and accepted scores stay bit-identical.
+                for(int k=0;k<count;++k){mass+=masses[k];value+=values[ids[k]];supplied_all&=!invalid[k];}
+                const bool valid=supplied_all&&(!ships||ships<=fmin(100.0,2.0*exp(.004*mass/ships))+1e-9);
+                changed=valid&&value>best_value+1e-9;
+                if(changed)best_value=value;
+                double bound=value;
+                // Each partial sum and their reduction round upward. The
+                // parallel bound remains conservative; accepted scores above
+                // retain their original sequential arithmetic.
+                for(int k=0;k<128;++k)bound=__dadd_ru(bound,upper[k]);
+                action=!(index==p.n||ships>=p.max_ships||bound<=best_value+1e-9);
             }
-            const bool valid=supplied_all&&(!ships||ships<=fmin(100.0,2.0*exp(.004*mass/ships))+1e-9);
-            if(valid&&value>best_value+1e-9) {
-                best_value=value;copy(p.n,best,chosen);
+            __syncthreads();
+            if(changed)for(int i=lane;i<p.n;i+=128)best[i]=chosen[i];
+            __syncthreads();
+            if(!lane) {
+                next=-1;
+                if(action) {
+                    const bool include=ships+sizes[index]<=p.max_ships&&!blocked[index];
+                    state[index]=include?1:2;chosen[index]=include;
+                    if(include) {
+                        ids[count]=index;masses[count++]=p.c[index].mass;
+                        ships+=sizes[index];next=index;
+                    }
+                    ++index;
+                } else enter=false;
             }
-            double bound=value;
-            for(int j=index;j<p.n;++j)if(p.c[j].value>0&&!blocked[j])
-                bound=__dadd_ru(bound,p.c[j].value);
-            if(index==p.n||ships>=p.max_ships||bound<=best_value+1e-9)enter=false;
-            else {
-                const bool include=ships+p.c[index].ships<=p.max_ships&&!blocked[index];
-                state[index]=include?1:2;chosen[index]=include;
-                if(include)mark(p,index,blocked,1);
-                ++index;continue;
+            __syncthreads();
+            if(next>=0)for(int k=p.co[next]+lane;k<p.co[next+1];k+=128)++blocked[p.ci[k]];
+            __syncthreads();
+            if(action)continue;
+        }
+        // Every lane must consume the prior control flags before lane zero
+        // changes them for backtracking, including iterations that skip entry.
+        __syncthreads();
+        if(!lane) {
+            next=-1;--index;action=index<bits;
+            if(!action) {
+                if(state[index]==1) {
+                    chosen[index]=0;--count;ships-=sizes[index];next=index;
+                    state[index]=2;++index;enter=true;
+                } else enter=false;
             }
         }
-        --index;if(index<bits)break;
-        if(state[index]==1){chosen[index]=0;mark(p,index,blocked,-1);state[index]=2;++index;enter=true;}
-        else enter=false;
+        __syncthreads();
+        if(action)break;
+        if(next>=0)for(int k=p.co[next]+lane;k<p.co[next+1];k+=128)--blocked[p.ci[k]];
+        __syncthreads();
     }
-    rows[t+3]={best_value,nodes,int(exhaustive)};
+    if(!lane)rows[t+3]={best_value,nodes,int(exhaustive)};
 }
 __global__ void finish(Problem p,int tasks,const uint8_t* masks,const Row* rows,
                        uint8_t* output,Report* report) {
@@ -363,7 +413,7 @@ struct Workspace {
                 accept_exchange<<<1,256,0,m.stream>>>(p,masks,rows,exchange,proposal_values);
             }
         }
-        search<<<tasks,1,0,m.stream>>>(p,bits,tasks,cap,masks,active,phase,exclusions,rows);
+        search<<<tasks,128,0,m.stream>>>(p,bits,tasks,cap,masks,active,phase,exclusions,rows);
         finish<<<1,32,0,m.stream>>>(p,tasks,masks,rows,out,result);
         // Submit all computation before collecting any host diagnostics.
         if(rounds) {

@@ -1,0 +1,339 @@
+========= COMPUTE-SANITIZER
+..========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [380 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [137 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [71 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [380 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [137 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [71 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [24 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [24 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [696 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [208 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [114 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [696 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [208 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [114 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [52 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [6 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [5 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [52 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [6 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [5 hazards]
+========= 
+.========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [36 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [1 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [3 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [36 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [1 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [3 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [36 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [1 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [3 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [36 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [1 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [3 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [416 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [114 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [65 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [416 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [114 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [65 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [12 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [2 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [2 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [12 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [2 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [2 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [92 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [18 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [6 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [92 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [18 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [6 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [48 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [1 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [2 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [48 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [1 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [2 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [1800 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [618 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [206 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [1800 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [618 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [206 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [4 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [4 hazards]
+========= 
+.========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [16 hazards]
+========= 
+.========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [8 hazards]
+========= 
+.========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [16 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [16 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [4 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [4 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [4 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [4 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [44 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [3 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [80 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [10 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [80 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [10 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [80 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [10 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [80 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [10 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [80 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [10 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [80 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [10 hazards]
+========= 
+.========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [76 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [9 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [7 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [76 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [9 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [7 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [76 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [9 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [7 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [76 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [9 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [7 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [76 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [9 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [7 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [76 hazards]
+========= 
+========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [9 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [7 hazards]
+========= 
+.========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [8 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [8 hazards]
+========= 
+..========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [296 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [132 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [2 hazards]
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x7090 in gtoc12_fleet.cuh:314 [1 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [268 hazards]
+========= 
+========= Warning: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x2490
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6ed0 in gtoc12_fleet.cuh:315 [2 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [388 hazards]
+========= 
+.========= Error: Race reported between Read access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6c60 in gtoc12_fleet.cuh:307
+=========     and Write access at gtoc12_fleet::search(gtoc12_fleet::Problem, int, int, unsigned long, unsigned char *, unsigned char *, unsigned char *, unsigned char *, gtoc12_fleet::Row *)+0x6df0 in gtoc12_fleet.cuh:310 [192 hazards]
+========= 
+.........................                            [100%]
+45 passed, 10 deselected in 24.11s
+========= RACECHECK SUMMARY: 100 hazards displayed (62 errors, 52 warnings)

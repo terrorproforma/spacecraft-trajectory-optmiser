@@ -121,6 +121,14 @@ logical packing proposals from 2,488 usable columns. Both GPUs pass 117 tests,
 unchanged; these are selections from existing routes, not new trajectory solves.
 [Bottleneck profile, full-call measurements and retrieved evidence](docs/GPU_FLEET_SEEDS.md).
 
+Cooperative CUDA tree search now reduces the same **35,145-node** retained call
+to **16.29 ms locally / 11.74 ms on H100**, **16.36× / 18.25× faster** than the
+seed checkpoint. Blocks share conflict state, track selected columns and compute
+conservative bounds in parallel. Both GPUs pass 119 tests, 192 randomized exact
+comparisons and full-pool CUDA safety checks. This accelerates search through
+existing routes; the verified mission score is unchanged.
+[Tree implementation, rejected prototype, measurements and replay](docs/GPU_FLEET_TREE.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

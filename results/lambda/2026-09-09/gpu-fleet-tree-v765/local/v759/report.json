@@ -1,0 +1,69 @@
+{
+  "pid": 498,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 2.110931171999937,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "/home/angus/spacepdhcg-fleet-v763/repo/tests/test_gtoc12_gpu_fleet.py",
+        "/home/angus/spacepdhcg-fleet-v763/repo/tests/test_gtoc12_gpu_cli.py",
+        "/home/angus/spacepdhcg-fleet-v763/repo/tests/test_gtoc12_cooperative.py",
+        "/home/angus/spacepdhcg-fleet-v763/repo/tests/test_gtoc12_collectdp.py",
+        "/home/angus/spacepdhcg-fleet-v763/repo/tests/test_gtoc12_completion_costs.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 2.3667618790000233,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "--leak-check",
+        "full",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-workspace-v759/case.py"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 44.8737631219999,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-workspace-v759/case.py"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 1.5031447589999516,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-fleet-workspace-v759/case.py"
+      ]
+    }
+  ],
+  "stage": "synccheck",
+  "child_pid": 597
+}

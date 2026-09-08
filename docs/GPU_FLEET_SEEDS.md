@@ -1,5 +1,9 @@
 # Parallel CUDA fleet seed construction
 
+This page records the seed checkpoint. Subsequent
+[cooperative tree search](GPU_FLEET_TREE.md) reduces the same 35,145-node retained
+call to 16.29 ms locally / 11.74 ms on H100 with unchanged selected routes.
+
 Repeated fleet selection now takes **7.49 ms on RTX 5090 / 8.86 ms on H100**,
 including the Python call and independent packing checks. That is **6.63× /
 6.15× faster** than the preceding GPU topology implementation on the same pool.

@@ -40,6 +40,21 @@ def test_seed_handles_full_column_capacity():
     assert [c.identifier for c in result.selected] == [16]
 
 
+@GPU
+@pytest.mark.parametrize("prefix_bits", [0, 3])
+def test_tree_backtracks_from_one_hundred_selected_columns(prefix_bits):
+    columns = [column(i, [i], [i], 700.0) for i in range(112)]
+    # A 100-column branch violates the mass-dependent ship limit; the tree
+    # must safely pop it and retain the feasible 32-ship greedy incumbent.
+    result = solve_fleet_cuda(
+        columns, node_cap=1000, prefix_bits=prefix_bits, exchange_rounds=0
+    )
+    assert result.objective == 22400.0
+    assert [c.identifier for c in result.selected] == list(range(32))
+    assert result.nodes == 1000
+    assert not result.exhaustive
+
+
 def column(i, deploy, collect, mass, foreign=None):
     return FleetColumn(
         i,

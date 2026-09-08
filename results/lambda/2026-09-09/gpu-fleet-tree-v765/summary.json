@@ -1,0 +1,173 @@
+{
+  "verified_score_kg": 12842.970672270894,
+  "score_change_kg": 0,
+  "solution_sha256": "fba0ee086ae55d6c690f0e5dbaf874834b6f63e2f238e436d90671bdddff3c5f",
+  "scope": "Cooperative CUDA fleet tree search from existing route records. No new trajectory or mission qualification.",
+  "method": "Seven rotating interleaved repetitions per mode/cap; medians exclude repeat zero; exact selection, objective, bound and search-count equality.",
+  "profile_method": "Standalone instrumented fleet libraries with CUDA events; three repetitions per cap/rounds, medians exclude repeat zero. Stage times are not production API timings.",
+  "failed_prototype": "v756 passed ordinary tests but failed racecheck: backtracking overwrote shared control flags before all lanes consumed them. v761 adds a block barrier; v763 additionally parallelizes conservative upward-rounded bounds. v760 profiles the rejected v756 build and is not used for speedup claims.",
+  "local": {
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.030679323999947883,
+          "native_seconds": 0.009480391500119367
+        },
+        "new_one_shot": {
+          "seconds": 0.032395908500006954,
+          "native_seconds": 0.009488176499985457
+        },
+        "old_retained": {
+          "seconds": 0.008550678000005973,
+          "native_seconds": 0.00379175699993084
+        },
+        "retained": {
+          "seconds": 0.007179480499985402,
+          "native_seconds": 0.003189960999975483
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.28988121550003143,
+          "native_seconds": 0.266539041499982
+        },
+        "new_one_shot": {
+          "seconds": 0.04054456749997826,
+          "native_seconds": 0.017122412500043538
+        },
+        "old_retained": {
+          "seconds": 0.26643731149988525,
+          "native_seconds": 0.2608916095000495
+        },
+        "retained": {
+          "seconds": 0.01628737299995464,
+          "native_seconds": 0.011113589000046886
+        }
+      }
+    },
+    "retained_tree_speedup": 16.358519664320774,
+    "retained_tree_selections_per_second": 61.39725540778031,
+    "actual_tree_nodes_per_second": 2157806.541306439,
+    "retained_exchange_selections_per_second": 139.28584387157724,
+    "one_shot_tree_speedup": 7.149693124737041,
+    "first_workspace_setup_seconds": 0.07339204699997026,
+    "tree_stage_speedup": 36.36723834979254,
+    "profile_stages": {
+      "v751": {
+        "seed_ms": 1.384175956249237,
+        "search_ms": 258.89691162109375,
+        "finish_ms": 0.25702400505542755,
+        "sum_ms": 262.2459675822174,
+        "evaluate_ms": 0.15988799813203514,
+        "accept_ms": 1.4355680026346818
+      },
+      "v762": {
+        "seed_ms": 1.3725759983062744,
+        "search_ms": 99.52899169921875,
+        "finish_ms": 0.25600001215934753,
+        "sum_ms": 102.70910369901685,
+        "evaluate_ms": 0.26931199966929853,
+        "accept_ms": 1.170623989251908
+      },
+      "v764": {
+        "seed_ms": 1.4027360081672668,
+        "search_ms": 7.118959903717041,
+        "finish_ms": 0.25648000836372375,
+        "sum_ms": 10.197007908835076,
+        "evaluate_ms": 0.14660799922421575,
+        "accept_ms": 1.1599199873162434
+      }
+    },
+    "input_columns": 2492,
+    "usable_columns": 2488,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "differential_cases": 192,
+    "archive_sha256": "08e7e7ee481b12ca8d0ef4cb7851364e8f0ae7a07472b3c4aaf19b2d313d8852",
+    "verified_members": 1737
+  },
+  "h100": {
+    "medians": {
+      "0": {
+        "old_one_shot": {
+          "seconds": 0.040878998494008556,
+          "native_seconds": 0.007430890982504934
+        },
+        "new_one_shot": {
+          "seconds": 0.04106485401280224,
+          "native_seconds": 0.007341784454183653
+        },
+        "old_retained": {
+          "seconds": 0.008863123483024538,
+          "native_seconds": 0.0034056200238410383
+        },
+        "retained": {
+          "seconds": 0.008776366506936029,
+          "native_seconds": 0.0033231255074497312
+        }
+      },
+      "200000": {
+        "old_one_shot": {
+          "seconds": 0.24647810551687144,
+          "native_seconds": 0.21229317944380455
+        },
+        "new_one_shot": {
+          "seconds": 0.0436636199883651,
+          "native_seconds": 0.009878446027869359
+        },
+        "old_retained": {
+          "seconds": 0.2142463065101765,
+          "native_seconds": 0.2082696084980853
+        },
+        "retained": {
+          "seconds": 0.011738406989024952,
+          "native_seconds": 0.005864792532520369
+        }
+      }
+    },
+    "retained_tree_speedup": 18.251736092511546,
+    "retained_tree_selections_per_second": 85.19043520428019,
+    "actual_tree_nodes_per_second": 2994017.8452544278,
+    "retained_exchange_selections_per_second": 113.94237002405181,
+    "one_shot_tree_speedup": 5.6449306214773225,
+    "first_workspace_setup_seconds": 0.07438253500731662,
+    "tree_stage_speedup": 82.6497977671704,
+    "profile_stages": {
+      "v751": {
+        "seed_ms": 1.8407679796218872,
+        "search_ms": 197.08869171142578,
+        "finish_ms": 0.1668960005044937,
+        "sum_ms": 200.28731568611693,
+        "evaluate_ms": 0.11305599962361157,
+        "accept_ms": 0.9561759919160977
+      },
+      "v762": {
+        "seed_ms": 1.8360159993171692,
+        "search_ms": 56.57067108154297,
+        "finish_ms": 0.16678400337696075,
+        "sum_ms": 59.76420708466321,
+        "evaluate_ms": 0.11335999821312726,
+        "accept_ms": 0.9556480029132217
+      },
+      "v764": {
+        "seed_ms": 1.8282719850540161,
+        "search_ms": 2.3846240043640137,
+        "finish_ms": 0.16684799641370773,
+        "sum_ms": 5.571439996245317,
+        "evaluate_ms": 0.11422399990260601,
+        "accept_ms": 0.9558400082169101
+      }
+    },
+    "input_columns": 2492,
+    "usable_columns": 2488,
+    "proposals": 179205,
+    "moves": 2,
+    "sweeps": 3,
+    "tree_nodes_with_200000_budget": 35145,
+    "differential_cases": 192,
+    "archive_sha256": "61ccef2496608406663845035ecc08c9c9198d2538db10b196def416ade2bbf9",
+    "verified_members": 1737
+  }
+}

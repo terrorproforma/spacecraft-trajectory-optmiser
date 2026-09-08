@@ -14,12 +14,18 @@ One-shot selection improves to **72 ms locally / 87 ms on H100** with identical
 full-pool score and search counts. Both GPUs pass 115 tests.
 [GPU setup implementation and evidence](GPU_FLEET_TOPOLOGY.md).
 
-The latest parallel seed kernel reduces repeated selection to **7.49 ms locally
+The parallel seed kernel reduces repeated selection to **7.49 ms locally
 / 8.86 ms on H100**, **6.63× / 6.15× faster** than the GPU setup checkpoint.
 Each selection screens 179,205 logical packing proposals from 2,488 usable
 columns and returns the same fleet. Both GPUs pass 117 tests, 128 randomized
 exact comparisons and CUDA safety checks. The mission score is unchanged.
 [Profile, complete-call measurements and retrieved results](GPU_FLEET_SEEDS.md).
+
+The latest cooperative tree kernel reduces the same **35,145-node** retained
+search from 266.4 to **16.29 ms locally** and 214.2 to **11.74 ms on H100**,
+**16.36× / 18.25× faster**. Both GPUs pass 119 tests, 192 randomized exact
+comparisons and full-pool CUDA safety checks. Selected routes and the verified
+score remain unchanged. [Tree search measurements and evidence](GPU_FLEET_TREE.md).
 
 ## Earlier orphan-recovery checkpoint
 
