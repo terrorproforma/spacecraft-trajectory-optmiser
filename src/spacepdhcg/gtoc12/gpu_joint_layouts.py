@@ -20,15 +20,13 @@ from .gpu_joint import (
     evaluate_joint,
 )
 from .gpu_lambert import HopElements, body_elements
-from .jointopt import JointItinerary
+from .jointopt import JointItinerary, insertion_pivot
 from .retiming import Visit
 
 
 def compile_source(joint, visits, arrivals, departures, candidates):
     """O(candidates * visits) shared edges, rather than all O(C*N*N) layouts."""
-    camp = next(
-        (j for j in range(1, len(visits) - 1) if visits[j].deploy and visits[j].collect), None
-    )
+    camp = insertion_pivot(visits)
     present = {v.body for v in visits}
     candidates = [int(a) for a in candidates if a not in present]
     if camp is None or camp < 2 or not candidates:

@@ -23,6 +23,7 @@ from .gpu_joint import (
     _metadata,
     evaluate_joint,
 )
+from .jointopt import insertion_pivot
 
 
 def _layouts(visits, candidates, camp):
@@ -190,9 +191,7 @@ def insertions(joint, visits, arrivals, departures, candidates, *, layouts_per_b
     if layouts_per_batch is None:
         layouts_per_batch = 256
 
-    camp = next(
-        (j for j in range(1, len(visits) - 1) if visits[j].deploy and visits[j].collect), None
-    )
+    camp = insertion_pivot(visits)
     if camp is None:
         return []
     if layouts_per_batch < 1:

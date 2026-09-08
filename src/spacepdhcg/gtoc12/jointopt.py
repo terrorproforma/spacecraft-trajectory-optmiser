@@ -73,6 +73,18 @@ FloatArray = NDArray[np.float64]
 EpochKey = tuple[int, int, float, float]
 
 
+def insertion_pivot(visits: list[Visit]) -> int | None:
+    """Keep camp routes unchanged; also admit a last deploy collected on a later visit.
+
+    The pivot separates the new deployment and collection slots, not the original
+    route's mining events. Evaluation still checks every miner's actual stay.
+    """
+    deployments = [j for j in range(1, len(visits) - 1) if visits[j].deploy]
+    return next(
+        (j for j in deployments if visits[j].collect), deployments[-1] if deployments else None
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class JointSettings:
     # pattern-search mesh schedule (days); each level runs until no move improves
@@ -760,7 +772,7 @@ class JointItinerary:
 
         n = len(visits)
         present = {v.body for v in visits}
-        camp = next((j for j in range(1, n - 1) if visits[j].deploy and visits[j].collect), None)
+        camp = insertion_pivot(visits)
         if camp is None:
             return []
         # a new deploy visit between j and j+1 of the deploy phase (never splitting the
@@ -848,7 +860,9 @@ class JointItinerary:
 
         gap_d = arrivals[i + 1] - departures[i]
         gap_c = arrivals[k + 1] - departures[k]
-        # the camp dwell is the slack both phases borrow from: never below the one-year stay
+        # Retain the conservative one-year dwell reserve even for a deploy-only
+        # pivot. Midpoint seeds need no dwell; actual mining stays are checked
+        # separately by the evaluator, including collection on a later revisit.
         dwell = departures[camp] - arrivals[camp]
         slack = max(0.0, dwell - C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS - 5.0)
         yield build(departures[i] + 0.5 * gap_d, 0.0, departures[k] + 0.5 * gap_c, 0.0)

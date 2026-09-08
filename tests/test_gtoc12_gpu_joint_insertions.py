@@ -10,7 +10,7 @@ import test_gtoc12_gpu_joint as oracle
 
 from spacepdhcg.gtoc12.gpu_joint import _decode_evaluation, evaluate_joint
 from spacepdhcg.gtoc12.gpu_joint_insertions import _layouts, insertion_batch, insertions
-from spacepdhcg.gtoc12.jointopt import JointItinerary
+from spacepdhcg.gtoc12.jointopt import JointItinerary, insertion_pivot
 
 catalogue_and_bonus = oracle.catalogue_and_bonus
 incumbent = oracle.incumbent
@@ -23,14 +23,8 @@ pytestmark = oracle.requires_gpu
 def test_generated_heterogeneous_rows(monkeypatch, gpu, incumbent, warm, slack):
     joint, visits, arr, dep = incumbent
     monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
-    camp = next((j for j, v in enumerate(visits) if v.deploy and v.collect), None)
-    if camp is None:
-        assert (
-            insertions(joint, visits, arr, dep, [1, 2])
-            == joint.insertions(visits, arr, dep, [1, 2])
-            == []
-        )
-        return
+    camp = insertion_pivot(visits)
+    assert camp is not None and camp >= 2
     dep = dep.copy()
     dep[camp] = arr[camp] + 365.25 + 5.0 + slack
     present = {v.body for v in visits}
@@ -92,10 +86,8 @@ def test_full_insertion_ranking_and_no_scalar_generation(monkeypatch, gpu, incum
     present = {v.body for v in visits}
     asteroid = next(a for a in range(1, 30) if a not in present)
     candidates = [visits[1].body, asteroid, asteroid]
-    camp = next((j for j, v in enumerate(visits) if v.deploy and v.collect), None)
-    if camp is None:
-        assert insertions(joint, visits, arr, dep, candidates) == []
-        return
+    camp = insertion_pivot(visits)
+    assert camp is not None and camp >= 2
     # Cheap known geometry admits real feasible rows, exercising plans and stable
     # duplicate/tie ordering rather than merely comparing empty result lists.
     for expanded, i, k, a in _layouts(visits, candidates, camp):
@@ -124,10 +116,8 @@ def test_full_insertion_ranking_and_no_scalar_generation(monkeypatch, gpu, incum
 
 def test_native_input_gates_preserve_outputs(monkeypatch, gpu, incumbent):
     joint, visits, arr, dep = incumbent
-    camp = next((j for j, v in enumerate(visits) if v.deploy and v.collect), None)
-    if camp is None:
-        assert insertions(joint, visits, arr, dep, [1]) == []
-        return
+    camp = insertion_pivot(visits)
+    assert camp is not None and camp >= 2
     layouts = list(_layouts(visits, [1, 2, 3], camp))[:3]
     native = gpu.library.spacepdhcg_gtoc12_joint_insertions_host
     checked = []

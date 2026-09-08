@@ -10,7 +10,7 @@ import test_gtoc12_gpu_joint as oracle
 from spacepdhcg.gtoc12.gpu_joint import GEOMETRY_STATS, RESULT, _metadata
 from spacepdhcg.gtoc12.gpu_joint_insertions import _layouts, insertion_batch
 from spacepdhcg.gtoc12.gpu_joint_layouts import PreparedInsertions, insertions
-from spacepdhcg.gtoc12.jointopt import JointItinerary
+from spacepdhcg.gtoc12.jointopt import JointItinerary, insertion_pivot
 
 catalogue_and_bonus = oracle.catalogue_and_bonus
 incumbent = oracle.incumbent
@@ -23,10 +23,8 @@ def test_device_layout_metadata_and_every_candidate(monkeypatch, gpu, incumbent,
     joint, visits, arr, dep = incumbent
     present = {v.body for v in visits}
     candidates = [a for a in range(1, 30) if a not in present][:2]
-    camp = next((j for j, v in enumerate(visits) if v.deploy and v.collect), None)
-    if camp is None:
-        assert insertions(joint, visits, arr, dep, candidates) == []
-        return
+    camp = insertion_pivot(visits)
+    assert camp is not None and camp >= 2
     layouts = list(_layouts(visits, candidates, camp))
     if warm:
         for expanded, i, k, a in layouts:
@@ -61,10 +59,8 @@ def test_device_layout_metadata_and_every_candidate(monkeypatch, gpu, incumbent,
 
 def test_layout_generation_does_not_enumerate_host_routes(monkeypatch, gpu, incumbent):
     joint, visits, arr, dep = incumbent
-    camp = next((j for j, v in enumerate(visits) if v.deploy and v.collect), None)
-    if camp is None:
-        assert insertions(joint, visits, arr, dep, [1, 2]) == []
-        return
+    camp = insertion_pivot(visits)
+    assert camp is not None and camp >= 2
     candidates = [a for a in range(1, 30) if a not in {v.body for v in visits}][:2]
     import spacepdhcg.gtoc12.gpu_joint_insertions as old
 

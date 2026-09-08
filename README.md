@@ -14,6 +14,12 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+The insertion search now also covers routes that deploy at their turnaround and
+return to collect that miner later. The widest two-route probe evaluates **499,380
+surrogate schedules** on each GPU, including 85,428 previously skipped schedules.
+It finds no feasible insertion, so the verified fleet score remains **12,843.556
+weighted kg**. [Coverage fix, regression checks and fresh mission replays](docs/GPU_INSERTION_TURNAROUNDS.md).
+
 Insertion route layouts are now constructed on CUDA from shared edge inputs.
 The same 12,992-schedule screen takes **60 ms on RTX 5090 / 56 ms on H100**,
 another **18.4× / 37.4× improvement** over host layout construction in the same

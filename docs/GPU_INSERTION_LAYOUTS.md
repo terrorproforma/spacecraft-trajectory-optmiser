@@ -33,8 +33,10 @@ The benchmark rotates execution order, uses a fresh learned-itinerary copy for
 each call, and records five repetitions after one warm-up. Candidate counts and
 result signatures agree in every mode. This particular neighbourhood has zero
 feasible insertions; separate warm-cache tests admit feasible rows and check
-their mass values and plans. The second archived route has no legal insertion
-positions and performs zero evaluations; its no-op timings are not a speed claim.
+their mass values and plans. The second archived route has no combined deployment/
+collection turnaround and was excluded by the insertion search at this checkpoint;
+its no-op timings are not a speed claim. This search-coverage restriction is now
+[fixed and tested on both GPUs](GPU_INSERTION_TURNAROUNDS.md).
 
 The default is now 4,096 layouts per batch when the native prepared-input API is
 available. `SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_LAYOUTS=0` selects the prior path;
