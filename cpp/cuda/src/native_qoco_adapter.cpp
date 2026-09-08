@@ -197,7 +197,8 @@ spacepdhcg_cuda_status download(
     const spacepdhcg_accelerator_buffer_view& view,
     const std::size_t count,
     const cudaStream_t stream,
-    std::vector<T>* output
+    std::vector<T>* output,
+    bool layout_only = false
 ) {
     output->assign(count, T{});
     if (count == 0U) {
@@ -207,6 +208,7 @@ spacepdhcg_cuda_status download(
         || view.element_stride != 1) {
         return SPACEPDHCG_CUDA_POINTER_CONTRACT;
     }
+    if (layout_only) return SPACEPDHCG_CUDA_SUCCESS;
     const auto* source = static_cast<const unsigned char*>(view.data)
         + view.byte_offset;
     const auto status = cudaMemcpyAsync(
@@ -472,6 +474,7 @@ struct spacepdhcg_native_qoco {
     // down and sets it up again (counted in report.workspace_creations).
     bool needs_fresh_solver{};
     bool refresh_new_leg{};
+    bool device_initialization{};
     std::vector<double> primal{};
     std::vector<double> accepted_primal{};
     std::vector<double> dual{};
@@ -724,7 +727,8 @@ spacepdhcg_cuda_status convert(
     Formulation* output,
     std::uint64_t* copy_count,
     std::uint64_t* copy_bytes,
-    TopologyCache* topology
+    TopologyCache* topology,
+    bool layout_only = false
 ) {
     const auto& structure = problem.canonical_structure;
     if (structure.abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
@@ -756,10 +760,10 @@ spacepdhcg_cuda_status convert(
     DownloadBatch downloads{stream};
     bool loading_topology = true;
 
-    const auto load = [&](const auto& view, std::size_t count, auto* values) {
+    const auto load = [&](const auto& view, std::size_t count, auto* values, bool numeric_layout = false) {
         if (loading_topology && topology->device) return SPACEPDHCG_CUDA_SUCCESS;
-        const auto status = download(view, count, stream, values);
-        if (status == SPACEPDHCG_CUDA_SUCCESS && count != 0U) {
+        const auto status = download(view, count, stream, values, numeric_layout);
+        if (status == SPACEPDHCG_CUDA_SUCCESS && count != 0U && !numeric_layout) {
             ++*copy_count;
             *copy_bytes += count * sizeof(typename std::decay_t<decltype(*values)>::value_type);
         }
@@ -800,22 +804,26 @@ spacepdhcg_cuda_status convert(
         f_indices
     )
     loading_topology = false;
-    SPACEPDHCG_QOCO_LOAD(
+#define SPACEPDHCG_QOCO_LOAD_NUMERIC(view, count, target) \
+    if (status == SPACEPDHCG_CUDA_SUCCESS) { \
+        status = load((view), (count), &(target), layout_only); \
+    }
+    SPACEPDHCG_QOCO_LOAD_NUMERIC(
         problem.numeric.quadratic,
         structure.quadratic_nonzeros,
         q_values
     )
-    SPACEPDHCG_QOCO_LOAD(
+    SPACEPDHCG_QOCO_LOAD_NUMERIC(
         problem.numeric.scalar_constraint,
         structure.scalar_nonzeros,
         a_values
     )
-    SPACEPDHCG_QOCO_LOAD(
+    SPACEPDHCG_QOCO_LOAD_NUMERIC(
         problem.numeric.affine_cone,
         structure.affine_nonzeros,
         f_values
     )
-    SPACEPDHCG_QOCO_LOAD(
+    SPACEPDHCG_QOCO_LOAD_NUMERIC(
         problem.numeric.linear_objective,
         static_cast<std::size_t>(n),
         output->c
@@ -830,7 +838,7 @@ spacepdhcg_cuda_status convert(
         static_cast<std::size_t>(structure.scalar_rows),
         upper
     )
-    SPACEPDHCG_QOCO_LOAD(
+    SPACEPDHCG_QOCO_LOAD_NUMERIC(
         problem.numeric.affine_offset,
         static_cast<std::size_t>(structure.affine_rows),
         affine_offset
@@ -846,6 +854,7 @@ spacepdhcg_cuda_status convert(
         variable_upper
     )
 #undef SPACEPDHCG_QOCO_LOAD
+#undef SPACEPDHCG_QOCO_LOAD_NUMERIC
     const auto downloaded = downloads.finish();
     if (status != SPACEPDHCG_CUDA_SUCCESS) {
         return status;
@@ -1143,7 +1152,8 @@ spacepdhcg_cuda_status compile_conversion(spacepdhcg_native_qoco* w,
 
 bool conversion_needs_host(const spacepdhcg_native_qoco* w) {
     const auto enabled=[](const char* name) { const auto* value=std::getenv(name); return value && value[0]=='1'; };
-    return !w->numeric_update_context || w->needs_fresh_solver || w->configured_settings.verbose
+    return ((!w->numeric_update_context || w->needs_fresh_solver) && !w->device_initialization)
+        || w->configured_settings.verbose || enabled("SPACEPDHCG_QOCO_VERBOSE")
         || enabled("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE") || enabled("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE");
 }
 spacepdhcg_cuda_status refresh_conversion(spacepdhcg_native_qoco* w,
@@ -1426,6 +1436,13 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
     if (code == 0 && workspace->create_numeric_update) {
         int created = workspace->create_numeric_update(workspace->solver, p.nnz, a.nnz, g.nnz,
             &workspace->numeric_update_context);
+        // Seed actual coefficients at zero Ruiz before cost normalization can
+        // inspect the old objective. No placeholder problem is ever solved.
+        if (created == 0 && workspace->device_initialization) {
+            created = workspace->device_numeric_update(workspace->numeric_update_context,
+                qoco_gpu_conversion_values(workspace->conversion.device), nullptr);
+            if (created == 0) ++workspace->report.device_numeric_updates;
+        }
         if (created == 0 && workspace->configured_settings.ruiz_iters > 0) {
             created = workspace->update_settings(workspace->solver, &workspace->configured_settings);
             if (created == 0) created = workspace->device_numeric_update(workspace->numeric_update_context,
@@ -1581,6 +1598,8 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     if ((result->begin_reduction_scope == nullptr) != (result->end_reduction_scope == nullptr)) {
         return SPACEPDHCG_CUDA_UNSUPPORTED;
     }
+    const auto* device_setup = std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION");
+    result->device_initialization = require_device_extensions && (!device_setup || device_setup[0]!='0');
     const auto conversion_start = std::chrono::steady_clock::now();
     auto status = convert(
         *problem,
@@ -1588,7 +1607,8 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         &result->formulation,
         &result->report.d2h_copy_count,
         &result->report.d2h_bytes,
-        &result->topology
+        &result->topology,
+        result->device_initialization
     );
     if (status == SPACEPDHCG_CUDA_SUCCESS) status = compile_conversion(result.get(), *problem, stream);
     if (status == SPACEPDHCG_CUDA_SUCCESS) status = refresh_conversion(result.get(), *problem, stream);
@@ -1655,6 +1675,9 @@ spacepdhcg_cuda_status native_qoco_create_impl(
         std::chrono::steady_clock::now() - audit_start).count();
     if (audit_status != cudaSuccess) return audit_status == cudaErrorMemoryAllocation
         ? SPACEPDHCG_CUDA_OUT_OF_MEMORY : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    if (result->device_initialization && qoco_gpu_audit_update_device(result->gpu_audit,
+            qoco_gpu_conversion_values(result->conversion.device), stream) != cudaSuccess)
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
     result->report.workspace_creations = 1U;
     *workspace = result.release();
     return SPACEPDHCG_CUDA_SUCCESS;

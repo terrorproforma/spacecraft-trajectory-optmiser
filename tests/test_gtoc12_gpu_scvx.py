@@ -174,7 +174,8 @@ def test_gpu_outer_graph_retains_physics_and_objective(
     priming_count = len(sol.solver_reports) - len(graph_rows)
     assert priming_count in (2, 3)
     if ruiz == 0 and not state_origin:
-        assert priming_count == (2 if early_graph else 3)
+        device_init = os.environ.get("SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION", "1") != "0"
+        assert priming_count == (2 if early_graph or device_init else 3)
     assert sol.outer_transfer_bytes["control_download_bytes"] == 8 * (priming_count + 1) + 16
     assert sol.outer_transfer_bytes["trajectory_upload_bytes"] == 0
     assert graph_rows[-1]["workspace_creations"] == 1

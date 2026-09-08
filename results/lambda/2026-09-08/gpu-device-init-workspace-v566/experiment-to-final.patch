@@ -1,0 +1,20 @@
+--- experiment-v555
++++ final-default-v564-v565
+@@ -1153,7 +1153,7 @@
+ bool conversion_needs_host(const spacepdhcg_native_qoco* w) {
+     const auto enabled=[](const char* name) { const auto* value=std::getenv(name); return value && value[0]=='1'; };
+     return ((!w->numeric_update_context || w->needs_fresh_solver) && !w->device_initialization)
+-        || w->configured_settings.verbose
++        || w->configured_settings.verbose || enabled("SPACEPDHCG_QOCO_VERBOSE")
+         || enabled("SPACEPDHCG_TEST_QOCO_GPU_CONVERSION_COMPARE") || enabled("SPACEPDHCG_TEST_QOCO_GPU_AUDIT_COMPARE");
+ }
+ spacepdhcg_cuda_status refresh_conversion(spacepdhcg_native_qoco* w,
+@@ -1599,7 +1599,7 @@
+         return SPACEPDHCG_CUDA_UNSUPPORTED;
+     }
+     const auto* device_setup = std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION");
+-    result->device_initialization = require_device_extensions && device_setup && device_setup[0]=='1';
++    result->device_initialization = require_device_extensions && (!device_setup || device_setup[0]!='0');
+     const auto conversion_start = std::chrono::steady_clock::now();
+     auto status = convert(
+         *problem,

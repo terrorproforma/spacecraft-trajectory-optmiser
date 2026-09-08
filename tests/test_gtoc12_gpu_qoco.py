@@ -68,6 +68,11 @@ def test_known_coast_optimum_and_device_updates(hold, free_dep, free_arr):
             # Reference-centred solves perform one initial GPU numeric update
             # after compiling the original symbolic structure and audit.
             initial_update = int(os.environ.get("SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN") == "1")
+            # Device initialization seeds the initial coefficients without a
+            # matrix download; count that real update separately from shifting.
+            initial_update += int(
+                os.environ.get("SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION", "1") != "0"
+            )
             assert (
                 r["workspace_creations"] == 1
                 and r["device_numeric_updates"] == repeat + initial_update

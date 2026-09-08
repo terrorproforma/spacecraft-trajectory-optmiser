@@ -14,6 +14,15 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+Fresh native trajectory workspaces now initialize numerical values from GPU
+buffers, removing their initial CPU conversion round trip. The first campaign
+solve downloads **61.10% fewer bytes**, and the 225-leg replay removes **72 host
+priming dispatches** while retaining all 205 certified legs on both GPUs. Final
+builds pass 65 tests per GPU and the selected H100 memory check. Full campaign
+timings remain flat; the local full replay is 2.98% slower and H100 is 0.45% faster.
+This is a GPU residency improvement, not an established overall speedup.
+[Implementation, measurements and retrieved evidence](docs/GPU_DEVICE_INITIALIZATION.md).
+
 Return and collection options now stay on CUDA through selection and return
 pruning. The measured one-ship run eliminates **66.77 MB of option uploads** and
 reduces generation-result downloads from **27.18 MB to 9.1 kB**. Complete-process
