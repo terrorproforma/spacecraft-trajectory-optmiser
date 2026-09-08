@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "spacepdhcg/cuda/orbitweaver_gpu_c_api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,8 +88,9 @@ typedef struct spacepdhcg_gtoc12_joint_result {
 
 /* Status: 0 success (inspect EACH result.failure), 1 malformed input/device,
  * 2 CUDA/allocation error, 3 workspace busy, 4 unsupported policy/model/flags.
- * Creation retains all device and transfer buffers for max_candidates; calls
- * never grow them. Workspaces bind to device and reject a different current
+ * Creation retains evaluation buffers for max_candidates. The optional geometry
+ * API adds retained buffers lazily and grows sparse-record storage as needed.
+ * Workspaces bind to device and reject a different current
  * device at evaluation. One internal nonblocking stream, one final sync.
  */
 int spacepdhcg_gtoc12_joint_create(
@@ -133,6 +135,39 @@ int spacepdhcg_gtoc12_joint_best_host(
     const spacepdhcg_gtoc12_joint_cost* costs, double minimum_objective,
     spacepdhcg_gtoc12_joint_selection* selection,
     double* masses, double* inflations, double* proxies, double* collected);
+
+/* Sparse exact-epoch overrides for one fixed stage. cached=0 computes Lambert
+ * on CUDA while retaining an optional measured leg; cached=1 reuses value.lambert.
+ * Duplicate (leg, departure, arrival) records are forbidden. */
+typedef struct spacepdhcg_gtoc12_joint_cached_cost {
+    int32_t leg, cached;
+    double departure, arrival;
+    spacepdhcg_gtoc12_joint_cost value;
+} spacepdhcg_gtoc12_joint_cached_cost;
+typedef struct spacepdhcg_gtoc12_joint_geometry_stats {
+    uint64_t computed_hops, cached_hops, rejected_hops;
+} spacepdhcg_gtoc12_joint_geometry_stats;
+
+/* Keeps preflight, sparse exact-epoch lookup, ephemerides and Lambert costs on
+ * CUDA, then evaluates and optionally selects candidates. elements[N-1] and
+ * records[record_count] are host inputs. selection=null returns every result;
+ * nonnull selection uses the compact best_host output contract. stats is a
+ * required host output. No CPU geometry fallback and no intermediate downloads.
+ * All elements must be valid elliptic orbits, even for skipped/cached requests.
+ * Record order is strictly increasing (leg, departure, arrival).
+ */
+int spacepdhcg_gtoc12_joint_geometry_host(
+    void* workspace, int32_t candidates,
+    const spacepdhcg_gtoc12_joint_policy* policy,
+    const spacepdhcg_gtoc12_joint_visit* visits,
+    const spacepdhcg_gtoc12_joint_stage* stages,
+    const double* arrivals, const double* departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const spacepdhcg_gtoc12_joint_cached_cost* records, int32_t record_count,
+    double minimum_objective, spacepdhcg_gtoc12_joint_result* results,
+    spacepdhcg_gtoc12_joint_selection* selection,
+    double* masses, double* inflations, double* proxies, double* collected,
+    spacepdhcg_gtoc12_joint_geometry_stats* stats);
 
 #ifdef __cplusplus
 }

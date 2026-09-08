@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_joint_geometry_v659_h100",
+  "fleet_run_id": "orphan_recovery_v595",
+  "commit": "experimental",
+  "source_revision_note": "Frozen 34cfb4b7 plus resident CUDA joint geometry. Exact source/core hashes, repeated campaigns and verifier reports are archived in gpu-joint-geometry-v659.",
+  "weighted_score_fixed_bonus_kg": 12810.135953048395,
+  "raw_kg_per_ship": 610.950212778626,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "Retained historical 23-ship fleet"
+  },
+  "timing": {
+    "wall_seconds_total": 136.2777899109642,
+    "wall_human": "136.278 s recovery replay including CPU checks and export; historical fleet search excluded"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 dynamics; both complete-fleet checkers passed at unchanged tolerances",
+    "local_refine": "CUDA seed, SCvx, dynamics, conic assembly and QOCO; GPU Lambert/DP/joint preflight, geometry, evaluation and winner selection"
+  },
+  "optimisation": {
+    "strategy": "H100 resident-geometry replay: 18 orders, 36 DP grids, 23,142 joint candidates, 36 native leg solves. No joint preflight downloads; 88,576 final-result bytes and 3,168 counter bytes. Same verified score. Python search orchestration and independent CPU physics checks remain.",
+    "proven_optimal": false
+  }
+}

@@ -1,4 +1,5 @@
 #include "spacepdhcg/cuda/gtoc12_joint_c_api.h"
+#include "../internal/gtoc12_joint_geometry.h"
 
 #include <cuda_runtime.h>
 #include <cmath>
@@ -14,12 +15,16 @@ using Cost = spacepdhcg_gtoc12_joint_cost;
 using Policy = spacepdhcg_gtoc12_joint_policy;
 using Result = spacepdhcg_gtoc12_joint_result;
 using Selection = spacepdhcg_gtoc12_joint_selection;
+using CachedCost = spacepdhcg_gtoc12_joint_cached_cost;
+using GeometryStats = spacepdhcg_gtoc12_joint_geometry_stats;
 static_assert(sizeof(Visit) == 48, "joint visit ABI");
 static_assert(sizeof(Stage) == 72, "joint stage ABI");
 static_assert(sizeof(Cost) == 32, "joint cost ABI");
 static_assert(sizeof(Policy) == 128, "joint policy ABI");
 static_assert(sizeof(Result) == 64, "joint result ABI");
 static_assert(sizeof(Selection) == 72, "joint selection ABI");
+static_assert(sizeof(CachedCost) == 56, "joint cached cost ABI");
+static_assert(sizeof(GeometryStats) == 24, "joint geometry stats ABI");
 
 struct Workspace {
     int device = -1, capacity = 0, n = 0;
@@ -32,6 +37,12 @@ struct Workspace {
     Result* results = nullptr;
     Selection* selection = nullptr;
     double *masses = nullptr, *inflations = nullptr, *proxies = nullptr, *collected = nullptr;
+    spacepdhcg_orbitweaver_hop_elements* elements = nullptr;
+    spacepdhcg_orbitweaver_hop_request* hop_requests = nullptr;
+    spacepdhcg_orbitweaver_hop_result* hop_results = nullptr;
+    CachedCost* cached_costs = nullptr;
+    int cached_capacity = 0;
+    GeometryStats* geometry_stats = nullptr;
     std::mutex mutex;
 };
 
@@ -285,8 +296,9 @@ bool correct_device(const Workspace* w) {
 }
 
 int validate(int n, int count, const Policy* p, const Visit* visits, const Stage* stages,
-    const double* arr, const double* dep, const Cost* costs, const Result* results) {
-    if (!p || !visits || !stages || !arr || !dep || !costs || !results) return 1;
+    const double* arr, const double* dep, const Cost* costs, const Result* results,
+    bool inspect_costs = true) {
+    if (!p || !visits || !stages || !arr || !dep || (inspect_costs && !costs) || !results) return 1;
     if (p->reserved0 || p->reserved1 || !flag(p->free_earth_leg) || !flag(p->screen_earth_out)) return 4;
     if (!std::isfinite(p->mission_start) || !std::isfinite(p->latest_arrival)
         || p->latest_arrival < p->mission_start || !std::isfinite(p->initial_mass)
@@ -322,7 +334,7 @@ int validate(int n, int count, const Policy* p, const Visit* visits, const Stage
     for (size_t k = 0; k < visits_count; ++k)
         if (!std::isfinite(arr[k]) || !std::isfinite(dep[k])) return 1;
     const size_t legs_count = size_t(count) * (n - 1);
-    for (size_t k = 0; k < legs_count; ++k) {
+    for (size_t k = 0; inspect_costs && k < legs_count; ++k) {
         const Cost& c = costs[k];
         if (!flag(c.measured) || c.reserved) return 4;
         if (c.measured && (!std::isfinite(c.measured_delta_v) || !std::isfinite(c.measured_mass))) return 1;
@@ -350,8 +362,25 @@ bool release(Workspace* w) {
     free_buffer(w->arrivals); free_buffer(w->departures); free_buffer(w->costs);
     free_buffer(w->results); free_buffer(w->selection); free_buffer(w->masses); free_buffer(w->inflations);
     free_buffer(w->proxies); free_buffer(w->collected);
+    free_buffer(w->elements); free_buffer(w->hop_requests); free_buffer(w->hop_results);
+    free_buffer(w->cached_costs); free_buffer(w->geometry_stats);
     if (w->stream && cudaStreamDestroy(w->stream) != cudaSuccess) ok = false;
     return ok;
+}
+
+bool valid_orbit(const spacepdhcg_orbitweaver_elements& e) {
+    return std::isfinite(e.epoch) && std::isfinite(e.a) && e.a>0.0
+        && std::isfinite(e.e) && e.e>=0.0 && e.e<1.0
+        && std::isfinite(e.inclination) && std::isfinite(e.node)
+        && std::isfinite(e.perihelion) && std::isfinite(e.mean);
+}
+bool key_before(const CachedCost& a, const CachedCost& b) {
+    return a.leg<b.leg || (a.leg==b.leg && (a.departure<b.departure
+        || (a.departure==b.departure && a.arrival<b.arrival)));
+}
+__global__ void clear_geometry_costs(size_t count, Cost* costs) {
+    const size_t i=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
+    if(i<count){costs[i]={};costs[i].lambert=NAN;}
 }
 } // namespace
 
@@ -472,4 +501,77 @@ extern "C" int spacepdhcg_gtoc12_joint_destroy(void** output) {
     delete w;
     *output = nullptr;
     return ok ? 0 : 2;
+}
+
+extern "C" int spacepdhcg_gtoc12_joint_geometry_host(void* opaque, int32_t count,
+    const Policy* policy, const Visit* visits, const Stage* stages,
+    const double* arrivals, const double* departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const CachedCost* records, int32_t record_count, double minimum,
+    Result* results, Selection* selection,
+    double* masses, double* inflations, double* proxies, double* collected,
+    GeometryStats* stats) {
+    auto* w=static_cast<Workspace*>(opaque);
+    if(!correct_device(w) || count<0 || count>w->capacity || !stats || record_count<0) return 1;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);
+    if(!lock.owns_lock())return 3;
+    if(!count){*stats={};if(selection){*selection={};selection->index=-1;}return 0;}
+    const int status=validate(w->n,count,policy,visits,stages,arrivals,departures,
+        nullptr,selection?&selection->value:results,false);
+    if(status)return status;
+    if(!elements || (record_count && !records) || size_t(count)*(w->n-1)>UINT32_MAX)return 1;
+    for(int j=0;j<w->n-1;++j) {
+        const auto& e=elements[j];
+        if(!valid_orbit(e.departure)||!valid_orbit(e.arrival)
+            ||!std::isfinite(e.gravitational_parameter)||e.gravitational_parameter<=0.0
+            ||!std::isfinite(e.departure_allowance)||e.departure_allowance<0.0
+            ||!std::isfinite(e.arrival_allowance)||e.arrival_allowance<0.0)return 1;
+    }
+    for(int i=0;i<record_count;++i) {
+        const auto& r=records[i];
+        if(!flag(r.cached)||!flag(r.value.measured)||r.value.reserved)return 4;
+        if(r.leg<0||r.leg>=w->n-1||!std::isfinite(r.departure)||!std::isfinite(r.arrival)
+            ||(i && !key_before(records[i-1],r))
+            ||(r.value.measured && (!std::isfinite(r.value.measured_delta_v)
+                ||!std::isfinite(r.value.measured_mass))))return 1;
+    }
+    const size_t maximum=size_t(w->capacity)*(w->n-1),legs=size_t(count)*(w->n-1),epochs=size_t(count)*w->n;
+    if((!w->elements&&!allocate(w->elements,size_t(w->n-1)))
+        ||(!w->hop_requests&&!allocate(w->hop_requests,maximum))
+        ||(!w->hop_results&&!allocate(w->hop_results,maximum))
+        ||(!w->geometry_stats&&!allocate(w->geometry_stats,1)))return 2;
+    if(record_count>w->cached_capacity) {
+        CachedCost* replacement=nullptr;
+        if(!allocate(replacement,size_t(record_count)))return 2;
+        if(w->cached_costs && cudaFree(w->cached_costs)!=cudaSuccess){cudaFree(replacement);return 2;}
+        w->cached_costs=replacement;w->cached_capacity=record_count;
+    }
+    const auto failed=[&](){cudaStreamSynchronize(w->stream);return 2;};
+    if(!upload(w->policy,policy,1,w->stream)||!upload(w->visits,visits,size_t(w->n),w->stream)
+        ||!upload(w->stages,stages,size_t(w->n-1),w->stream)
+        ||!upload(w->arrivals,arrivals,epochs,w->stream)||!upload(w->departures,departures,epochs,w->stream)
+        ||!upload(w->elements,elements,size_t(w->n-1),w->stream)
+        ||(record_count&&!upload(w->cached_costs,records,size_t(record_count),w->stream))
+        ||cudaMemsetAsync(w->geometry_stats,0,sizeof(GeometryStats),w->stream)!=cudaSuccess)return failed();
+    clear_geometry_costs<<<unsigned((legs+127)/128),128,0,w->stream>>>(legs,w->costs);
+    if(cudaGetLastError()!=cudaSuccess)return failed();
+    const unsigned blocks=unsigned((size_t(count)+127)/128);
+    const auto evaluate=[&](){evaluate_candidates<<<blocks,128,0,w->stream>>>(count,w->n,
+        w->policy,w->visits,w->stages,w->arrivals,w->departures,w->costs,w->results,
+        w->masses,w->inflations,w->proxies,w->collected);return cudaGetLastError();};
+    if(evaluate()!=cudaSuccess)return failed();
+    if(spacepdhcg_joint_geometry_launch(count,w->n,w->elements,w->arrivals,w->departures,
+        w->results,w->cached_costs,record_count,w->costs,w->hop_requests,w->hop_results,
+        w->geometry_stats,w->stream)!=cudaSuccess)return failed();
+    if(evaluate()!=cudaSuccess)return failed();
+    if(selection)select_candidate<<<1,128,0,w->stream>>>(count,w->n,minimum,w->results,
+        w->selection,w->masses,w->inflations,w->proxies,w->collected);
+    if(cudaGetLastError()!=cudaSuccess
+        ||!(selection?download(selection,w->selection,1,w->stream):download(results,w->results,size_t(count),w->stream))
+        ||!download(masses,w->masses,selection?size_t(w->n-1):legs,w->stream)
+        ||!download(inflations,w->inflations,selection?size_t(w->n-1):legs,w->stream)
+        ||!download(proxies,w->proxies,selection?size_t(w->n-1):legs,w->stream)
+        ||!download(collected,w->collected,selection?size_t(w->n):epochs,w->stream)
+        ||!download(stats,w->geometry_stats,1,w->stream))return failed();
+    return cudaStreamSynchronize(w->stream)==cudaSuccess?0:2;
 }

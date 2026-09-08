@@ -64,6 +64,19 @@ RESULT = _layout(
 SELECTION = np.dtype(
     [("index", np.int32), ("invalid_stay", np.int32), ("value", RESULT)], align=True
 )
+CACHED_COST = np.dtype(
+    [
+        ("leg", np.int32),
+        ("cached", np.int32),
+        ("departure", np.float64),
+        ("arrival", np.float64),
+        ("value", COST),
+    ],
+    align=True,
+)
+GEOMETRY_STATS = np.dtype(
+    [(name, np.uint64) for name in ("computed_hops", "cached_hops", "rejected_hops")]
+)
 FAILURES = (
     "",
     "launch_before_window",
@@ -165,6 +178,43 @@ def _metadata(joint, visits):
     return metadata, stages, policy
 
 
+def _geometry_inputs(joint, visits):
+    """Pack stage orbits and sparse authoritative overrides, never trial rows."""
+    from .gpu_lambert import HopElements, body_elements
+
+    elements = (HopElements * (len(visits) - 1))()
+    stages_by_pair = {}
+    for leg, (a, b) in enumerate(pairwise(visits)):
+        elements[leg] = HopElements(
+            body_elements(joint.catalogue, a.body),
+            body_elements(joint.catalogue, b.body),
+            C.MU_SUN_KM3_S2,
+            C.MAX_VINF_EARTH_KM_S if a.body == 0 else 0.0,
+            C.MAX_VINF_EARTH_KM_S if b.body == 0 else 0.0,
+        )
+        stages_by_pair.setdefault((a.body, b.body), []).append(leg)
+    entries = []
+    for key in joint._lambert.keys() | joint.measured.keys():
+        a, b, departure, arrival = key
+        if not math.isfinite(departure) or not math.isfinite(arrival):
+            continue  # Cannot match any finite trial epoch accepted by the C API.
+        for leg in stages_by_pair.get((a, b), ()):
+            entries.append((leg, departure, arrival, key))
+    entries.sort(key=lambda item: item[:3])
+    records = np.zeros(len(entries), CACHED_COST)
+    for index, (leg, departure, arrival, key) in enumerate(entries):
+        row = records[index]
+        row["leg"], row["departure"], row["arrival"] = leg, departure, arrival
+        row["cached"] = key in joint._lambert
+        row["value"]["lambert"] = joint._lambert.get(key, math.nan)
+        measured = joint.measured.get(key)
+        if measured is not None:
+            row["value"]["measured"] = 1
+            row["value"]["measured_delta_v"] = measured.delta_v_km_s
+            row["value"]["measured_mass"] = measured.mass_before_kg
+    return elements, records
+
+
 class GpuJoint:
     def __init__(self, gpu, count, visits):
         self.gpu, self.capacity, self.visits = gpu, count, visits
@@ -176,6 +226,15 @@ class GpuJoint:
         self.evaluate.argtypes = [ct.c_void_p, ct.c_int32] + [ct.c_void_p] * 11
         self.evaluate.restype = ct.c_int
         self.best = getattr(gpu.library, "spacepdhcg_gtoc12_joint_best_host", None)
+        self.geometry = getattr(gpu.library, "spacepdhcg_gtoc12_joint_geometry_host", None)
+        if self.geometry is not None:
+            self.geometry.argtypes = (
+                [ct.c_void_p, ct.c_int32]
+                + [ct.c_void_p] * 7
+                + [ct.c_int32, ct.c_double]
+                + [ct.c_void_p] * 7
+            )
+            self.geometry.restype = ct.c_int
         if self.best is not None:
             self.best.argtypes = (
                 [ct.c_void_p, ct.c_int32] + [ct.c_void_p] * 6 + [ct.c_double] + [ct.c_void_p] * 5
@@ -212,72 +271,83 @@ class GpuJoint:
         device_selection = minimum_objective is not None and (
             self.best is not None if selection_override is None else selection_override == "1"
         )
+        resident_geometry = (
+            os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "0") == "1"
+        )
+        if resident_geometry and self.geometry is None:
+            raise RuntimeError(
+                "CUDA joint resident geometry requires spacepdhcg_gtoc12_joint_geometry_host"
+            )
         metadata, stages, policy = _metadata(joint, visits)
         count, n = arrivals.shape
-        costs = np.zeros((count, n - 1), COST)
-        costs["lambert"] = np.nan
-        preflight = np.empty(count, RESULT)
-        # Validate epochs, event order and mining stays before touching body
-        # geometry. An unmeasured NaN first leg stops each otherwise valid row
-        # at leg_infeasible, after the same gates as scalar evaluate().
-        preflight_arrays = (policy, metadata, stages, arrivals, departures, costs, preflight)
-        self._check(
-            self.evaluate(
-                self.handle,
-                count,
-                *(array.ctypes.data for array in preflight_arrays),
-                None,
-                None,
-                None,
-                None,
-            )
-        )
-        telemetry = self.gpu.telemetry
-        telemetry["joint_preflight_download_bytes"] = (
-            telemetry.get("joint_preflight_download_bytes", 0) + preflight.nbytes
-        )
-        if np.any(preflight["failure"] == 17):
-            raise ValueError("mining stay must be finite and nonnegative")
-        active = np.flatnonzero(preflight["failure"] == 12)
-        pending = {}
-        keys = {}
-        # Group unique uncached epochs by body pair. The native paired operator
-        # propagates both bodies and screens the full batch on the GPU.
-        for row in active:
-            row_keys = []
-            for j, (visit, nxt) in enumerate(pairwise(visits)):
-                departure, arrival = float(departures[row, j]), float(arrivals[row, j + 1])
-                key = joint.key(visit.body, nxt.body, departure, arrival)
-                row_keys.append(key)
-                if key not in joint._lambert:
-                    pending.setdefault((visit.body, nxt.body), {}).setdefault(
-                        key, (departure, arrival - departure)
-                    )
-            keys[row] = row_keys
-        for (from_body, to_body), queries in pending.items():
-            times = np.asarray(list(queries.values()), dtype=np.float64)
-            hops = self.gpu.paired_hops(
-                joint.catalogue, from_body, to_body, times[:, 0], times[:, 1]
-            )
-            for key, value, feasible in zip(
-                queries, hops.total_delta_v, hops.feasible, strict=True
-            ):
-                joint._lambert[key] = (
-                    float(value) if feasible and math.isfinite(value) else math.inf
+        if resident_geometry:
+            elements, records = _geometry_inputs(joint, visits)
+            costs = None
+        else:
+            costs = np.zeros((count, n - 1), COST)
+            costs["lambert"] = np.nan
+            preflight = np.empty(count, RESULT)
+            # Validate epochs, event order and mining stays before touching body
+            # geometry. An unmeasured NaN first leg stops each otherwise valid row
+            # at leg_infeasible, after the same gates as scalar evaluate().
+            preflight_arrays = (policy, metadata, stages, arrivals, departures, costs, preflight)
+            self._check(
+                self.evaluate(
+                    self.handle,
+                    count,
+                    *(array.ctypes.data for array in preflight_arrays),
+                    None,
+                    None,
+                    None,
+                    None,
                 )
-            joint.lambert_evaluations += 2 * len(queries)
-        for row, row_keys in keys.items():
-            for j, key in enumerate(row_keys):
-                costs[row, j]["lambert"] = joint._lambert[key]
-                measured = joint.measured.get(key)
-                if measured is not None:
-                    costs[row, j]["measured"] = 1
-                    costs[row, j]["measured_delta_v"] = measured.delta_v_km_s
-                    costs[row, j]["measured_mass"] = measured.mass_before_kg
-        # Current call owns its packed costs, so clearing cannot invalidate it.
-        # Match the scalar path's bounded retained cache across mesh iterations.
-        if len(joint._lambert) > 400_000:
-            joint._lambert.clear()
+            )
+            telemetry = self.gpu.telemetry
+            telemetry["joint_preflight_download_bytes"] = (
+                telemetry.get("joint_preflight_download_bytes", 0) + preflight.nbytes
+            )
+            if np.any(preflight["failure"] == 17):
+                raise ValueError("mining stay must be finite and nonnegative")
+            active = np.flatnonzero(preflight["failure"] == 12)
+            pending = {}
+            keys = {}
+            # Group unique uncached epochs by body pair. The native paired operator
+            # propagates both bodies and screens the full batch on the GPU.
+            for row in active:
+                row_keys = []
+                for j, (visit, nxt) in enumerate(pairwise(visits)):
+                    departure, arrival = float(departures[row, j]), float(arrivals[row, j + 1])
+                    key = joint.key(visit.body, nxt.body, departure, arrival)
+                    row_keys.append(key)
+                    if key not in joint._lambert:
+                        pending.setdefault((visit.body, nxt.body), {}).setdefault(
+                            key, (departure, arrival - departure)
+                        )
+                keys[row] = row_keys
+            for (from_body, to_body), queries in pending.items():
+                times = np.asarray(list(queries.values()), dtype=np.float64)
+                hops = self.gpu.paired_hops(
+                    joint.catalogue, from_body, to_body, times[:, 0], times[:, 1]
+                )
+                for key, value, feasible in zip(
+                    queries, hops.total_delta_v, hops.feasible, strict=True
+                ):
+                    joint._lambert[key] = (
+                        float(value) if feasible and math.isfinite(value) else math.inf
+                    )
+                joint.lambert_evaluations += 2 * len(queries)
+            for row, row_keys in keys.items():
+                for j, key in enumerate(row_keys):
+                    costs[row, j]["lambert"] = joint._lambert[key]
+                    measured = joint.measured.get(key)
+                    if measured is not None:
+                        costs[row, j]["measured"] = 1
+                        costs[row, j]["measured_delta_v"] = measured.delta_v_km_s
+                        costs[row, j]["measured_mass"] = measured.mass_before_kg
+            # Current call owns its packed costs, so clearing cannot invalidate it.
+            # Match the scalar path's bounded retained cache across mesh iterations.
+            if len(joint._lambert) > 400_000:
+                joint._lambert.clear()
         output_rows = 1 if device_selection else count
         result = np.empty(output_rows, RESULT)
         masses, inflations, proxies = (np.empty((output_rows, n - 1)) for _ in range(3))
@@ -295,7 +365,44 @@ class GpuJoint:
             proxies,
             payload,
         )
-        if device_selection:
+        if resident_geometry:
+            selection = np.empty(1, SELECTION) if device_selection else None
+            stats = np.zeros(1, GEOMETRY_STATS)
+            self._check(
+                self.geometry(
+                    self.handle,
+                    count,
+                    *(
+                        array.ctypes.data
+                        for array in (policy, metadata, stages, arrivals, departures)
+                    ),
+                    ct.addressof(elements),
+                    records.ctypes.data,
+                    len(records),
+                    float(minimum_objective) if minimum_objective is not None else 0.0,
+                    result.ctypes.data,
+                    selection.ctypes.data if selection is not None else None,
+                    *(array.ctypes.data for array in (masses, inflations, proxies, payload)),
+                    stats.ctypes.data,
+                )
+            )
+            if device_selection:
+                result = selection["value"]
+            computed = int(stats["computed_hops"][0])
+            joint.lambert_evaluations += 2 * computed
+            if computed:
+                self.gpu._record(2 * computed)
+            telemetry = self.gpu.telemetry
+            for field in ("computed_hops", "cached_hops", "rejected_hops"):
+                key = "joint_geometry_" + field
+                telemetry[key] = telemetry.get(key, 0) + int(stats[field][0])
+            telemetry["completed_element_hops"] = (
+                telemetry.get("completed_element_hops", 0) + computed
+            )
+            telemetry["joint_geometry_stats_download_bytes"] = (
+                telemetry.get("joint_geometry_stats_download_bytes", 0) + stats.nbytes
+            )
+        elif device_selection:
             selection = np.empty(1, SELECTION)
             self._check(
                 self.best(

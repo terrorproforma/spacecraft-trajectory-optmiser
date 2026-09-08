@@ -1,0 +1,42 @@
+{
+  "source_files": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_joint_c_api.h": {
+      "frozen_sha256": "e6bd0d9a2a2630273a4e21b83456262a67159cc80b2a2a1a875e6ce2a586fd4d",
+      "published_sha256": "3fc8512ed1dd10dfd4fbffbe1216c6fa0a76d31b60383fdd22ceb8fd7ac9a371",
+      "byte_identical": false,
+      "comment_only": true
+    },
+    "cpp/cuda/internal/gtoc12_joint_geometry.h": {
+      "frozen_sha256": "1786cd40f3b3a45d92cf983df6dfd0746102c356eb518db1e33295ebf2cd3c46",
+      "published_sha256": "1786cd40f3b3a45d92cf983df6dfd0746102c356eb518db1e33295ebf2cd3c46",
+      "byte_identical": true,
+      "comment_only": false
+    },
+    "cpp/cuda/src/gtoc12_joint.cu": {
+      "frozen_sha256": "3e01a3465ad4d5cf277c1df2deac77c98450ae585010cdb834c81e78e97805a5",
+      "published_sha256": "3e01a3465ad4d5cf277c1df2deac77c98450ae585010cdb834c81e78e97805a5",
+      "byte_identical": true,
+      "comment_only": false
+    },
+    "cpp/cuda/src/orbitweaver_gpu.cu": {
+      "frozen_sha256": "7f46a6b57f5632c0c03dc5b42d84ecb9d621b52e76a3f38254b8b65fbb85270d",
+      "published_sha256": "7f46a6b57f5632c0c03dc5b42d84ecb9d621b52e76a3f38254b8b65fbb85270d",
+      "byte_identical": true,
+      "comment_only": false
+    },
+    "src/spacepdhcg/gtoc12/gpu_joint.py": {
+      "frozen_sha256": "99197ff75c275805dfbf0e1d12e46ce7ef9ed2c1d8069233fd0d7ab65eca6901",
+      "published_sha256": "99197ff75c275805dfbf0e1d12e46ce7ef9ed2c1d8069233fd0d7ab65eca6901",
+      "byte_identical": true,
+      "comment_only": false
+    },
+    "tests/test_gtoc12_gpu_joint_geometry.py": {
+      "frozen_sha256": "483f04ef1fb78ed8782d3d9c4aa3ff8779473e57229dd2307834b9c26baea67d",
+      "published_sha256": "483f04ef1fb78ed8782d3d9c4aa3ff8779473e57229dd2307834b9c26baea67d",
+      "byte_identical": true,
+      "comment_only": false
+    }
+  },
+  "note": "After measurements, only the public header buffer-ownership comment changed. Runtime source and final test are otherwise byte-identical to the frozen tested source.",
+  "parent_at_publication": "c2671c8c8cfa2f82083a34e6fd30a088c5132c3b"
+}

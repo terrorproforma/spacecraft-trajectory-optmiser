@@ -1,0 +1,86 @@
+{
+  "complete": true,
+  "success": true,
+  "base_commit": "34cfb4b710be830307065cbb07a754712b60c465",
+  "source_sha256": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_joint_c_api.h": "e6bd0d9a2a2630273a4e21b83456262a67159cc80b2a2a1a875e6ce2a586fd4d",
+    "cpp/cuda/internal/gtoc12_joint_geometry.h": "1786cd40f3b3a45d92cf983df6dfd0746102c356eb518db1e33295ebf2cd3c46",
+    "cpp/cuda/src/gtoc12_joint.cu": "3e01a3465ad4d5cf277c1df2deac77c98450ae585010cdb834c81e78e97805a5",
+    "cpp/cuda/src/orbitweaver_gpu.cu": "7f46a6b57f5632c0c03dc5b42d84ecb9d621b52e76a3f38254b8b65fbb85270d",
+    "src/spacepdhcg/gtoc12/gpu_joint.py": "99197ff75c275805dfbf0e1d12e46ce7ef9ed2c1d8069233fd0d7ab65eca6901",
+    "tests/test_gtoc12_gpu_joint_geometry.py": "c48a2e8c88d13e043199ef49237544c11032603e155c7acf12d6480f07818a2a",
+    "results/gtoc12/runs/return_sweep_v2/ships/cluster_fleet_v7_clusters_family_0007/ship_01/route_summary.json": "0fe277102d791cc612a3d91f05d3106d72c8eba46df234207da88e4a8585e068"
+  },
+  "stages": [
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init"
+      ],
+      "returncode": 0,
+      "seconds": 0.004741008999999963
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ],
+      "returncode": 0,
+      "seconds": 0.17677415799998641
+    },
+    {
+      "name": "git-freeze",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze joint resident geometry"
+      ],
+      "returncode": 0,
+      "seconds": 0.08070083900000213
+    },
+    {
+      "name": "configure",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo/cpp",
+        "-B",
+        "/home/angus/spacepdhcg-joint-geometry-v651/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 16.825443492999995
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/spacepdhcg-joint-geometry-v651/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ],
+      "returncode": 0,
+      "seconds": 52.995737459
+    }
+  ],
+  "core_sha256": "ea30dafe2e307df482b96139d91a4e85afa588c9e8ac4ac5db09463f0330aa73"
+}

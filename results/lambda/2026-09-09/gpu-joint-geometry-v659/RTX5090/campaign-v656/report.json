@@ -1,0 +1,369 @@
+{
+  "complete": true,
+  "success": true,
+  "pid": 378,
+  "core_sha256": "ea30dafe2e307df482b96139d91a4e85afa588c9e8ac4ac5db09463f0330aa73",
+  "qoco_sha256": "0cc27a1d8bde1edd74f7ef00e04ec64c2d6c0f8fe526a1d94b04d509a74b3315",
+  "runs": [
+    {
+      "name": "baseline0",
+      "resident_geometry": 0,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo",
+        "--output",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/baseline0",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/child.lock"
+      ],
+      "process_seconds": 79.42440415300001,
+      "campaign_seconds": 78.079295135,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908498,
+          "weighted_score_fixed_bonus_kg": 12810.135953048493,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009802,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.18609113900001262,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048493,
+        "total_mass_kg": 14051.854893908498,
+        "solution": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/baseline0/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/baseline0/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557373,
+              "sha256": "352c5543c897b5df76ddf503dbdf24f6e362b7885c8f2f0b5af600df42891b49"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "73a903a212dd3cdfced84fcec24dfc9e368f207b0d9f7a591880172bde834d44",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "native_solves": 36
+    },
+    {
+      "name": "candidate0",
+      "resident_geometry": 1,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo",
+        "--output",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/candidate0",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/child.lock"
+      ],
+      "process_seconds": 79.52831215200001,
+      "campaign_seconds": 78.676034975,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908598,
+          "weighted_score_fixed_bonus_kg": 12810.135953048577,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009841,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.19893881999996665,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048577,
+        "total_mass_kg": 14051.854893908598,
+        "solution": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/candidate0/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/candidate0/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557410,
+              "sha256": "85938f04d2668e64e9f181c1f78427671ee014c2dfbf454d1e786f3a7d6f029e"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "abade6359975fe56b280dfdda225a2d021ffd71438115fb9c119c1fb73164c2f",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 3728,
+        "completed_branch_requests": 106462390,
+        "gpu_used": true,
+        "completed_element_hops": 53231195,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_geometry_computed_hops": 221023,
+        "joint_geometry_cached_hops": 0,
+        "joint_geometry_rejected_hops": 206881,
+        "joint_geometry_stats_download_bytes": 3168,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "native_solves": 36
+    },
+    {
+      "name": "candidate1",
+      "resident_geometry": 1,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo",
+        "--output",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/candidate1",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/child.lock"
+      ],
+      "process_seconds": 78.625972607,
+      "campaign_seconds": 77.79039686800002,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908498,
+          "weighted_score_fixed_bonus_kg": 12810.135953048497,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009802,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.18207765099998596,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048497,
+        "total_mass_kg": 14051.854893908498,
+        "solution": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/candidate1/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/candidate1/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557358,
+              "sha256": "79d7c49b2b7d551b97a4f10bd3b7f60b597b90d112b3b6b37983f5fe8a5e620a"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "900dcdd16b02c42ee60ace8752fbdd48edc7a6efb75943a77197ee192197b408",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 3728,
+        "completed_branch_requests": 106462390,
+        "gpu_used": true,
+        "completed_element_hops": 53231195,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_geometry_computed_hops": 221023,
+        "joint_geometry_cached_hops": 0,
+        "joint_geometry_rejected_hops": 206881,
+        "joint_geometry_stats_download_bytes": 3168,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "native_solves": 36
+    },
+    {
+      "name": "baseline1",
+      "resident_geometry": 0,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-joint-geometry-v651/repo",
+        "--output",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/baseline1",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/child.lock"
+      ],
+      "process_seconds": 78.55608365500001,
+      "campaign_seconds": 77.71508991399998,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908598,
+          "weighted_score_fixed_bonus_kg": 12810.135953048592,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009841,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.18800053899997238,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048592,
+        "total_mass_kg": 14051.854893908598,
+        "solution": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/baseline1/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-joint-geometry-v651/campaign-v656/baseline1/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557354,
+              "sha256": "dbab032a760b4c2570ddc0f8a019ecdf97f3b12f2a371f24f9f61ef90cab6fa9"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "260650be4b9c9d0b24fd11474e7c77716d54f98ebfe890dd55714cf829924da0",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "native_solves": 36
+    }
+  ],
+  "stage": "baseline1",
+  "child_pid": 771
+}

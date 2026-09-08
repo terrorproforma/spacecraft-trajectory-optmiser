@@ -44,6 +44,14 @@ whole-process timing remains too variable to claim a reliable additional speedup
 The retrieved H100 fleet is available in the existing visualiser.
 [H100 evidence, repeated campaigns and loading instructions](docs/GPU_JOINT_ITINERARY.md).
 
+An additional opt-in path keeps joint preflight, exact-epoch lookup and Lambert
+geometry on the GPU through winner selection. It removes intermediate preflight
+downloads and the Python loop over candidate legs. The tested stage is another
+**2.13–4.77× faster on RTX 5090** and **3.20–6.40× on H100**; these are component
+ratios against the previous batched CUDA wrapper. Both GPUs pass 71 tests and the
+resident geometry sanitizer checks. [Scope, measurements and remaining CPU
+work](docs/GPU_JOINT_GEOMETRY.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection
