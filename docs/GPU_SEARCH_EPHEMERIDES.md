@@ -1,5 +1,10 @@
 # GPU ephemerides for return and collection search
 
+This records the ephemeris migration measurements. Subsequent
+[compact CUDA options](GPU_COMPACT_SEARCH_OPTIONS.md) also migrate cost summation,
+filtering and return ordering; the host-option discussion below describes the
+implementation measured in this report.
+
 Return-window and collection-hop candidate generation now sends orbital elements
 and paired departure epochs / flight durations to the existing C++/CUDA screening
 bridge. CUDA propagates both bodies, builds Cartesian Lambert requests, solves

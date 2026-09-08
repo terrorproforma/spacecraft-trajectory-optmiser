@@ -103,7 +103,6 @@ def test_paired_search_uses_cuda_ephemerides_and_retains_options(monkeypatch):
     from spacepdhcg.gtoc12 import search
 
     cat = load_catalogue()
-    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_COMPACT_OPTIONS", "0")
     runner = search.RouteSearch(cat, np.array([45738, 25792]), SearchSettings())
     with using_lambert_backend("cuda", maximum_batch_size=97) as gpu:
         monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_PAIRED_EPHEMERIDES", "0")
@@ -197,7 +196,7 @@ def test_compact_search_bypasses_detailed_host_screening(monkeypatch):
         assert expected_return and expected_collect
         runner._collect_cache.clear()
         before = runner.lambert_evaluations
-        monkeypatch.delenv("SPACEPDHCG_TEST_GTOC12_COMPACT_OPTIONS")
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_COMPACT_OPTIONS", "1")
 
         def forbidden(*args, **kwargs):
             pytest.fail(

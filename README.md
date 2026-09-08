@@ -25,9 +25,19 @@ The wider local confirmation retained four ships and 2,088.669 weighted kg in
 Return-window and collection-hop search now also computes body ephemerides on
 CUDA, moving another **1.13 million transfer requests per one-ship run** off CPU
 ephemeris calculations. Verified scores and logical search counts are unchanged.
-Two runs per mode show overlapping timings, so this is a GPU-residency improvement
-without an established overall speedup. Option ordering and orchestration remain
-on the CPU. [Implementation, profiles and accuracy evidence](docs/GPU_SEARCH_EPHEMERIDES.md).
+Two runs per mode show overlapping timings, so this ephemeris migration is a GPU-residency
+improvement without an established overall speedup.
+[Implementation, profiles and accuracy evidence](docs/GPU_SEARCH_EPHEMERIDES.md).
+
+Return and collection search now also sums delta-v, filters invalid options and
+orders return candidates on CUDA, preserving exact option values and tie order.
+These paths download **66.7% less result data** in the one-ship fixture. A separate
+paired H100 comparison reduced complete-run median time from **37.55 to 34.29 s**
+(8.69% less time); the RTX 5090 comparison was effectively flat at **30.66 to
+30.61 s**. All search counts, scores and final physics checks are retained.
+The wider local confirmation returned four ships and 2,088.669 weighted kg in
+231.98 seconds. Python still constructs schedule axes and orchestrates the beam
+and fleet. [Implementation, limits and reproducible evidence](docs/GPU_COMPACT_SEARCH_OPTIONS.md).
 
 A larger H100 campaign generated **32 individual routes** in
 **56 min 59 sec**, evaluating **1.417 billion transfer branches** and **137.35

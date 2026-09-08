@@ -1814,14 +1814,7 @@ class RouteSearch:
         )
         a_idx, t_idx = a_idx.ravel(), t_idx.ravel()
         departures = arrivals[a_idx] - tofs[t_idx]
-        from .lambert import cuda_paired_hops, cuda_paired_options
-
-        options = cuda_paired_options(
-            self.catalogue, asteroid, EARTH_ID, departures, tofs[t_idx], sort_returns=True
-        )
-        if options is not None:
-            self.lambert_evaluations += 2 * departures.shape[0]
-            return options
+        from .lambert import cuda_paired_hops
 
         hop = cuda_paired_hops(self.catalogue, asteroid, EARTH_ID, departures, tofs[t_idx])
         if hop is None:
@@ -1839,11 +1832,10 @@ class RouteSearch:
                 arrival_allowance_km_s=C.MAX_VINF_EARTH_KM_S,
             )
         self.lambert_evaluations += 2 * departures.shape[0]
-        delta_v = hop.total_delta_v
         options = [
-            (float(delta_v[k]), float(departures[k]), float(tofs[t_idx[k]]))
+            (float(hop.total_delta_v[k]), float(departures[k]), float(tofs[t_idx[k]]))
             for k in range(departures.shape[0])
-            if hop.feasible[k] and np.isfinite(delta_v[k])
+            if hop.feasible[k] and np.isfinite(hop.total_delta_v[k])
         ]
         options.sort(key=lambda item: (item[0], -item[1]))
         return options
@@ -1869,15 +1861,7 @@ class RouteSearch:
         w_idx, t_idx = w_idx.ravel(), t_idx.ravel()
         arrivals = latest_arrival - waits[w_idx]
         departures = arrivals - tofs[t_idx]
-        from .lambert import cuda_paired_hops, cuda_paired_options
-
-        options = cuda_paired_options(
-            self.catalogue, source, target, departures, tofs[t_idx], sort_returns=False
-        )
-        if options is not None:
-            self.lambert_evaluations += 2 * departures.shape[0]
-            self._collect_cache[key] = options
-            return options
+        from .lambert import cuda_paired_hops
 
         hop = cuda_paired_hops(self.catalogue, source, target, departures, tofs[t_idx])
         if hop is None:
@@ -1889,11 +1873,10 @@ class RouteSearch:
             )
             hop = lambert_hops(r_s, v_s, r_t, v_t, departures, tofs[t_idx])
         self.lambert_evaluations += 2 * departures.shape[0]
-        delta_v = hop.total_delta_v
         options = [
-            (float(delta_v[k]), float(departures[k]), float(tofs[t_idx[k]]))
+            (float(hop.total_delta_v[k]), float(departures[k]), float(tofs[t_idx[k]]))
             for k in range(departures.shape[0])
-            if hop.feasible[k] and np.isfinite(delta_v[k])
+            if hop.feasible[k] and np.isfinite(hop.total_delta_v[k])
         ]
         self._collect_cache[key] = options
         return options

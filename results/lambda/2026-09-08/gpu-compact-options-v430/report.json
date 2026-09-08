@@ -1,0 +1,158 @@
+{
+  "pid": 179745,
+  "complete": true,
+  "stages": [
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 2.3669646729831584,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_elements.py",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_search2.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 5.120743624982424,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_elements.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 1.4158480699989013,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_elements.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "default",
+      "returncode": 0,
+      "seconds": 33.663177428010385,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('spacepdhcg',run_name='__main__')",
+        "gtoc12",
+        "run",
+        "--run-id",
+        "compact430_default",
+        "--output",
+        "/home/ubuntu/spacepdhcg-compact-options-v430/default/output",
+        "--full-catalogue",
+        "--ships",
+        "1",
+        "--beam-width",
+        "16",
+        "--max-deploys",
+        "10",
+        "--neighbours",
+        "48",
+        "--refine-top",
+        "3",
+        "--search-budget-seconds",
+        "120",
+        "--budget-seconds",
+        "600",
+        "--retime-attempts",
+        "4",
+        "--retime-budget-seconds",
+        "300",
+        "--no-cooperative",
+        "--node-days",
+        "2",
+        "--scvx-iterations",
+        "40",
+        "--screening-backend",
+        "cuda",
+        "--seed-backend",
+        "cuda",
+        "--discretisation-backend",
+        "cuda",
+        "--assembly-backend",
+        "cuda",
+        "--convex-solver",
+        "qoco",
+        "--outer-loop-backend",
+        "cuda",
+        "--gpu-execution",
+        "graph"
+      ]
+    }
+  ],
+  "campaigns": [
+    {
+      "name": "default",
+      "candidate": true,
+      "seconds": 32.76644121698337,
+      "score": 548.2546201231996,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "compact_option_download_bytes": 27175508,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_compact_options": 1131935,
+        "completed_element_hops": 18896189,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    }
+  ],
+  "stage": "default",
+  "source_sha256": {
+    "cpp/cuda/src/orbitweaver_gpu.cu": "fe6e023750d9937f77a2303ec9abc13173ae89ab57d76316d0d5be23077e5735",
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": "03a38a87340225991b3a82513d9f90a606010852be4bc6163881bacbd7530c34",
+    "cpp/cuda/tests/orbitweaver_options_test.cu": "4a152fa393469cbee827df9f42110e381649f64653d7a6df67afed9af663db48",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "7c8ecec05550b4947bef59d44ab7b3c3bb65d7a245b5c2073a5a851b2e576b13",
+    "src/spacepdhcg/gtoc12/lambert.py": "096ebe445a17908b5a7b555734d951dbb64839e9de7a1a8a87e324a17270e4ee",
+    "src/spacepdhcg/gtoc12/search.py": "ac2bec79aa6c0bf18886ff22ed18b27dae63e972ab67a316a7c7269232b14498",
+    "tests/test_gtoc12_gpu_elements.py": "65cd923bd471eebc3515010ad6f86488ea80ebd52224d887b5f7dab65605eb69"
+  },
+  "frozen_source_commit": "ee4429604602c6df53bc8a46bdee9a181b6ec6ed",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "33899685280dc5e246ebc85d1379211d6c5085cf5e295c82a2c1c94a2bd4a5ac",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 179795
+}
