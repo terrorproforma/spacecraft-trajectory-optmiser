@@ -9,10 +9,13 @@
 #include "spacepdhcg/cuda/allocation_ledger.hpp"
 #include "spacepdhcg/cuda/device_buffers.hpp"
 #include "spacepdhcg/cuda/stream_event.hpp"
+#include "spacepdhcg/cuda/common_kkt_arithmetic.hpp"
+#include <math_constants.h>
 
 #include <cuda_runtime.h>
 #include <cooperative_groups.h>
 #include <cusparse.h>
+#include <cub/device/device_radix_sort.cuh>
 
 #include <algorithm>
 #include <atomic>
@@ -137,6 +140,7 @@ struct DeviceCone {
     double power_alpha;
 };
 
+struct CommonKktState;
 struct DeviceProblem {
     int variables;
     int scalar_rows;
@@ -184,6 +188,7 @@ struct DeviceProblem {
     int variable_cone_count;
     double* grid_partials;
     int* grid_flags;
+    CommonKktState* common_kkt;
 };
 
 struct DeviceControl {
@@ -240,6 +245,8 @@ struct DeviceReport {
     double recovery_stationarity_value;
     spacepdhcg_cuda_recovery_profile recovery_profile;
 };
+
+#include "persistent_common_kkt.cuh"
 
 struct NumericPointers {
     const double* q;
@@ -1140,7 +1147,7 @@ __device__ void evaluate_report(
     __syncthreads();
 }
 
-__global__ void solve_kernel(
+template<bool Common> __global__ void solve_kernel(
     DeviceProblem* problem,
     DeviceControl* control,
     DeviceReport* report,
@@ -1172,11 +1179,34 @@ __global__ void solve_kernel(
     const unsigned int check_frequency =
         control->residual_check_frequency == 0U ? 1U : control->residual_check_frequency;
     const bool recovery_enabled =
-        control->iteration_limit >= 350'000U
+        !Common && control->iteration_limit >= 350'000U
         && fmin(control->feasibility_tolerance, control->optimality_tolerance)
             <= 1.0e-6;
     const std::uint64_t pdhg_limit =
         recovery_enabled ? 300'000U : control->iteration_limit;
+
+    if constexpr (Common) {
+        if (threadIdx.x == 0) {
+            problem->common_kkt->result = {};
+            if (*cancellation != 0) {
+                report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+                atomicExch(&should_stop, 1);
+            }
+        }
+        __syncthreads();
+        // Natural telemetry remains available, but only the explicit policy certifies.
+        evaluate_report(problem, control, report, 0);
+        if (atomicAdd(&should_stop, 0)) return;
+        common_kkt_evaluate<false>(problem, 0);
+        if (threadIdx.x == 0) {
+            if (*cancellation != 0) report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+            else if (!problem->common_kkt->result.finite) report->termination = SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE;
+            else if (problem->common_kkt->result.passes) report->termination = SPACEPDHCG_CUDA_TERMINATION_OPTIMAL;
+            if (report->termination != SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT) atomicExch(&should_stop, 1);
+        }
+        __syncthreads();
+        if (atomicAdd(&should_stop, 0)) return;
+    }
 
     std::uint64_t iteration = 1;
     for (; iteration <= pdhg_limit; ++iteration) {
@@ -1295,14 +1325,19 @@ __global__ void solve_kernel(
         if (iteration == 1U || iteration % check_frequency == 0U
             || iteration == pdhg_limit) {
             evaluate_report(problem, control, report, iteration);
+            if constexpr (Common) common_kkt_evaluate<false>(problem, iteration);
             if (threadIdx.x == 0) {
-                if (!isfinite(report->objective)
+                if (Common && *cancellation != 0) {
+                    report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+                    atomicExch(&should_stop, 1);
+                } else if (Common ? !problem->common_kkt->result.finite
+                    : (!isfinite(report->objective)
                     || !isfinite(report->relative_primal_residual)
-                    || !isfinite(report->relative_dual_residual)) {
+                    || !isfinite(report->relative_dual_residual))) {
                     report->termination = SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE;
                     atomicExch(&should_stop, 1);
                 } else if (
-                    report->natural_residual_inf
+                    Common ? problem->common_kkt->result.passes : report->natural_residual_inf
                         <= fmin(
                             control->feasibility_tolerance,
                             control->optimality_tolerance
@@ -1322,6 +1357,10 @@ __global__ void solve_kernel(
         // Cancellation is sampled before an iteration starts. Refresh the report
         // for the actual returned point, including work since the last check.
         evaluate_report(problem, control, report, iteration - 1U);
+        if (Common && threadIdx.x == 0) {
+            problem->common_kkt->result.valid = 0;
+            problem->common_kkt->result.passes = 0;
+        }
         if (threadIdx.x == 0) report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
     }
 }
@@ -2645,9 +2684,9 @@ cudaError_t preload_solve_kernels() {
              reinterpret_cast<const void*>(request_scaling_refresh_kernel),
              reinterpret_cast<const void*>(initialise_control_kernel),
              reinterpret_cast<const void*>(set_solve_options_kernel),
-             reinterpret_cast<const void*>(solve_kernel),
+             reinterpret_cast<const void*>(solve_kernel<false>),
              reinterpret_cast<const void*>(cooperative_initialise_kernel),
-             reinterpret_cast<const void*>(cooperative_solve_kernel),
+             reinterpret_cast<const void*>(cooperative_solve_kernel<false>),
              reinterpret_cast<const void*>(cooperative_residual_kernel),
              reinterpret_cast<const void*>(recovery_kernel),
              reinterpret_cast<const void*>(residual_kernel),
@@ -2932,6 +2971,12 @@ struct spacepdhcg_cuda_workspace {
     DeviceControl* control{nullptr};
     DeviceReport* report{nullptr};
     DeviceReport* host_report{nullptr};
+    CommonKktState* common_kkt{nullptr};
+    CommonKktState common_setup{};
+    spacepdhcg_cuda_common_kkt_diagnostics* host_common_kkt{nullptr};
+    bool common_enabled{false};
+    bool common_valid{false};
+    int common_cooperative_capacity{0};
     double* grid_partials{nullptr};
     int* grid_flags{nullptr};
     int cooperative_capacity{0};
@@ -3234,10 +3279,13 @@ spacepdhcg_cuda_status record_completion(
         return cuda_failure(workspace, status, "cudaEventRecord");
     }
     workspace->last_operation = operation;
+    if (operation != LastOperation::solve) workspace->common_valid = false;
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 void finish_solve(spacepdhcg_cuda_workspace* workspace) {
+    workspace->common_valid = workspace->common_enabled && workspace->host_common_kkt
+        && workspace->host_common_kkt->valid;
     workspace->termination =
         static_cast<spacepdhcg_cuda_termination>(workspace->host_report->termination);
     if (workspace->termination == SPACEPDHCG_CUDA_TERMINATION_CANCELLED) {
@@ -3251,7 +3299,7 @@ void finish_solve(spacepdhcg_cuda_workspace* workspace) {
     workspace->solve_seconds = workspace->solve_timer.elapsed_seconds();
     workspace->scaling_seconds = workspace->scaling_timer.elapsed_seconds();
     workspace->recovery_seconds =
-        workspace->host_report->recovery_attempt_count > 0U
+        !workspace->common_enabled && workspace->host_report->recovery_attempt_count > 0U
         ? workspace->recovery_timer.elapsed_seconds()
         : 0.0;
     if (workspace->host_report->scaling_refreshed != 0) {
@@ -3448,7 +3496,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
                 &initialise_occupancy, cooperative_initialise_kernel, kThreads, 0);
             if (cuda_status == cudaSuccess) {
                 cuda_status = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-                    &solve_occupancy, cooperative_solve_kernel, kThreads, 0);
+                    &solve_occupancy, cooperative_solve_kernel<false>, kThreads, 0);
             }
             if (cuda_status == cudaSuccess) {
                 cuda_status = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -3898,6 +3946,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             static_cast<int>(structure->variable_cone_count),
             result->grid_partials,
             result->grid_flags,
+            nullptr,
         };
         DeviceControl host_control{
             1.0e-6,
@@ -4065,6 +4114,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_update_async(
     if (topology_fingerprint != workspace->structure.topology_fingerprint) {
         set_error(workspace, "numerical update topology fingerprint mismatch");
         return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
+    }
+    if (workspace->common_enabled) {
+        set_error(workspace, "disable common-KKT policy before numerical updates, then revalidate its domain");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
     }
     if (workspace->state == SPACEPDHCG_CUDA_SOLVING) {
         return SPACEPDHCG_CUDA_BUSY;
@@ -4251,6 +4304,151 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_warm_start_async(
     return record_completion(workspace, cuda_stream, LastOperation::warm_start);
 }
 
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_common_kkt_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_common_kkt_options* options
+) {
+    if (!workspace || !options || options->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || (options->enabled != 0 && options->enabled != 1) || options->reserved != 0
+        || options->equality_rows < 0 || options->equality_rows > workspace->structure.scalar_rows
+        || options->relative_tolerance != 1e-9 || options->cone_tolerance != 1e-8)
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::lock_guard lock(workspace->mutex);
+    auto status = finalize_if_complete(workspace);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    const auto stream = native_stream(workspace->consumer_stream);
+    if (!options->enabled) {
+        common_bind<<<1, 1, 0, stream>>>(workspace->device_problem, nullptr);
+        auto error = cudaGetLastError();
+        if (error == cudaSuccess) error = cudaStreamSynchronize(stream);
+        if (error != cudaSuccess) return cuda_failure(workspace, error, "disable common-KKT policy");
+        workspace->common_enabled = false;
+        workspace->common_valid = false;
+        workspace->termination = SPACEPDHCG_CUDA_TERMINATION_UNSPECIFIED;
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
+    const auto nnz = workspace->structure.scalar_nonzeros + workspace->structure.affine_nonzeros;
+    const auto rows64 = std::int64_t(workspace->structure.scalar_rows) + workspace->structure.affine_rows;
+    if (nnz > std::size_t(INT_MAX) || rows64 > INT_MAX) {
+        set_error(workspace, "common-KKT combined row/index domain exceeds int32");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
+    // Keep legacy kernel resources unchanged. Only the opt-in instantiation
+    // carries the compensated evaluator, and it has its own occupancy limit.
+    cudaFuncAttributes common_attributes{};
+    auto occupancy_error = cudaFuncGetAttributes(&common_attributes, solve_kernel<true>);
+    cudaDeviceProp common_properties{};
+    if (occupancy_error == cudaSuccess) occupancy_error = cudaGetDeviceProperties(
+        &common_properties, workspace->consumer_stream.device.id);
+    int active_blocks = 0;
+    if (occupancy_error == cudaSuccess && common_properties.cooperativeLaunch) occupancy_error =
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&active_blocks, cooperative_solve_kernel<true>, kThreads, 0);
+    if (occupancy_error != cudaSuccess) return cuda_failure(workspace, occupancy_error, "common-KKT kernel occupancy");
+    const int common_capacity = std::min(workspace->cooperative_capacity, active_blocks * common_properties.multiProcessorCount);
+    if (workspace->cooperative_blocks > common_capacity) {
+        set_error(workspace, "requested cooperative grid exceeds common-KKT kernel occupancy; select fewer blocks first");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
+    int* invalid = nullptr;
+    status = allocate_device(workspace, reinterpret_cast<void**>(&invalid), sizeof(int), AllocationCategory::diagnostics);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    auto error = cudaMemsetAsync(invalid, 0, sizeof(int), stream);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT validation initialization");
+    const int blocks = std::max(1, std::min(256, (workspace->structure.variables + kThreads - 1) / kThreads));
+    common_validate_domain<<<blocks, kThreads, 0, stream>>>(workspace->device_problem, options->equality_rows, invalid);
+    int host_invalid = 0;
+    error = cudaGetLastError();
+    if (error == cudaSuccess) {
+        status = copy_async(workspace, &host_invalid, invalid, sizeof(int), cudaMemcpyDeviceToHost, stream, false);
+        if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    }
+    if (error == cudaSuccess) error = cudaStreamSynchronize(stream);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT domain validation");
+    error = workspace->ledger.release(invalid, workspace->update_epoch + workspace->solve_epoch + 2U);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT validation cleanup");
+    if (host_invalid) {
+        set_error(workspace, "common-KKT requires finite symmetric convex QP data, free primal variables, equality prefix, upper-only scalar rows and contiguous standard affine SOCs");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
+    if (!workspace->common_kkt) {
+        CommonKktState setup{};
+        unsigned long long *keys_in = nullptr, *keys_out = nullptr;
+        int *positions_in = nullptr, *positions_out = nullptr, *offsets = nullptr;
+        const int rows = static_cast<int>(rows64), entries = static_cast<int>(nnz);
+#define COMMON_ALLOC(pointer, count, type, category) \
+        status = allocate_device(workspace, reinterpret_cast<void**>(&(pointer)), \
+            std::max<std::size_t>(1, (count)) * sizeof(type), category); \
+        if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+        COMMON_ALLOC(keys_in, nnz, unsigned long long, AllocationCategory::topology)
+        COMMON_ALLOC(keys_out, nnz, unsigned long long, AllocationCategory::topology)
+        COMMON_ALLOC(positions_in, nnz, int, AllocationCategory::topology)
+        COMMON_ALLOC(positions_out, nnz, int, AllocationCategory::topology)
+        COMMON_ALLOC(offsets, std::size_t(rows) + 1, int, AllocationCategory::topology)
+        COMMON_ALLOC(setup.row_products, rows, ck::Sum, AllocationCategory::residual)
+        COMMON_ALLOC(setup.slack, rows, double, AllocationCategory::residual)
+        COMMON_ALLOC(setup.partials, std::size_t(std::max(1, workspace->cooperative_capacity)) * kThreads, CommonPartial, AllocationCategory::residual)
+        if (entries) {
+            common_entry_keys<<<blocks, kThreads, 0, stream>>>(workspace->device_problem, keys_in, positions_in);
+            error = cudaGetLastError();
+            if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT row keys");
+            std::size_t temporary_bytes = 0;
+            error = cub::DeviceRadixSort::SortPairs(nullptr, temporary_bytes, keys_in, keys_out,
+                positions_in, positions_out, entries, 0, 64, stream);
+            if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT row sort sizing");
+            void* temporary = nullptr;
+            COMMON_ALLOC(temporary, temporary_bytes, unsigned char, AllocationCategory::residual)
+            error = cub::DeviceRadixSort::SortPairs(temporary, temporary_bytes, keys_in, keys_out,
+                positions_in, positions_out, entries, 0, 64, stream);
+            if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT row sort");
+        }
+        common_row_offsets<<<blocks, kThreads, 0, stream>>>(keys_out, entries, rows, offsets);
+        error = cudaGetLastError();
+        if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT row offsets");
+        setup.row_keys = keys_out; setup.row_positions = positions_out; setup.row_offsets = offsets;
+        CommonKktState* new_state = nullptr;
+        spacepdhcg_cuda_common_kkt_diagnostics* new_report = nullptr;
+        COMMON_ALLOC(new_state, 1, CommonKktState, AllocationCategory::diagnostics)
+#undef COMMON_ALLOC
+        error = workspace->ledger.allocate_pinned(reinterpret_cast<void**>(&new_report),
+            sizeof(spacepdhcg_cuda_common_kkt_diagnostics), AllocationCategory::diagnostics, workspace->update_epoch + 1U);
+        if (error != cudaSuccess) return cuda_failure(workspace, error, "common-KKT pinned report");
+        *new_report = {};
+        workspace->host_common_kkt = new_report;
+        workspace->common_setup = setup;
+        workspace->common_kkt = new_state;
+    }
+    workspace->common_setup.options = *options;
+    workspace->common_setup.result = {};
+    status = copy_async(workspace, workspace->common_kkt, &workspace->common_setup,
+        sizeof(CommonKktState), cudaMemcpyHostToDevice, stream, false);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    common_bind<<<1, 1, 0, stream>>>(workspace->device_problem, workspace->common_kkt);
+    error = cudaGetLastError();
+    if (error == cudaSuccess) error = cudaStreamSynchronize(stream);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "enable common-KKT policy");
+    workspace->common_enabled = true;
+    workspace->common_cooperative_capacity = common_capacity;
+    workspace->common_valid = false;
+    workspace->termination = SPACEPDHCG_CUDA_TERMINATION_UNSPECIFIED;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_common_kkt_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_common_kkt_diagnostics* diagnostics
+) {
+    if (!workspace || !diagnostics) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::lock_guard lock(workspace->mutex);
+    const auto status = finalize_if_complete(workspace);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    *diagnostics = {};
+    diagnostics->abi_version = SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
+    diagnostics->enabled = workspace->common_enabled;
+    diagnostics->equality_rows = workspace->common_enabled ? workspace->common_setup.options.equality_rows : 0;
+    if (workspace->common_valid) *diagnostics = *workspace->host_common_kkt;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks(
     spacepdhcg_cuda_workspace* workspace,
     const int32_t blocks
@@ -4259,7 +4457,9 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks
     std::lock_guard lock(workspace->mutex);
     const auto status = finalize_if_complete(workspace);
     if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
-    if (blocks > workspace->cooperative_capacity) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if (blocks > workspace->cooperative_capacity
+        || (workspace->common_enabled && blocks > workspace->common_cooperative_capacity))
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     workspace->cooperative_blocks = blocks;
     workspace->cooperative_scaling_blocks = blocks;
     return SPACEPDHCG_CUDA_SUCCESS;
@@ -4333,15 +4533,20 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
         return cuda_failure(workspace, cuda_status, "scaling/solve timing boundary");
     }
     if (workspace->cooperative_blocks == 0) {
-        solve_kernel<<<1, kThreads, 0, cuda_stream>>>(
-            workspace->device_problem, workspace->control,
-            workspace->report, workspace->solver.cancellation);
+        if (workspace->common_enabled) {
+            solve_kernel<true><<<1, kThreads, 0, cuda_stream>>>(workspace->device_problem,
+                workspace->control, workspace->report, workspace->solver.cancellation);
+        } else {
+            solve_kernel<false><<<1, kThreads, 0, cuda_stream>>>(workspace->device_problem,
+                workspace->control, workspace->report, workspace->solver.cancellation);
+        }
         cuda_status = cudaGetLastError();
     } else {
         void* arguments[] = {&workspace->device_problem, &workspace->control,
                              &workspace->report, &workspace->solver.cancellation};
         cuda_status = cudaLaunchCooperativeKernel(
-            reinterpret_cast<const void*>(cooperative_solve_kernel),
+            workspace->common_enabled ? reinterpret_cast<const void*>(cooperative_solve_kernel<true>)
+                : reinterpret_cast<const void*>(cooperative_solve_kernel<false>),
             dim3(workspace->cooperative_blocks), dim3(kThreads), arguments, 0, cuda_stream);
     }
     if (cuda_status != cudaSuccess) {
@@ -4351,12 +4556,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "recovery timing start");
     }
-    recovery_kernel<<<1, kThreads, 0, cuda_stream>>>(
-        workspace->device_problem,
-        workspace->control,
-        workspace->report,
-        workspace->solver.cancellation
-    );
+    if (!workspace->common_enabled) {
+        recovery_kernel<<<1, kThreads, 0, cuda_stream>>>(workspace->device_problem,
+            workspace->control, workspace->report, workspace->solver.cancellation);
+    }
     cuda_status = workspace->recovery_timer.end(cuda_stream);
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "recovery timing stop");
@@ -4378,6 +4581,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
         cuda_stream,
         false
     );
+    if (status == SPACEPDHCG_CUDA_SUCCESS && workspace->common_enabled) {
+        status = copy_async(workspace, workspace->host_common_kkt,
+            reinterpret_cast<const char*>(workspace->common_kkt) + offsetof(CommonKktState, result),
+            sizeof(spacepdhcg_cuda_common_kkt_diagnostics), cudaMemcpyDeviceToHost, cuda_stream, false);
+    }
     if (status == SPACEPDHCG_CUDA_SUCCESS) {
         status = copy_async(
             workspace,

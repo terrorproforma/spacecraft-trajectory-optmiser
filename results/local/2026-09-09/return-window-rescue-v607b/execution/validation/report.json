@@ -1,0 +1,581 @@
+{
+  "GPU_calls": 0,
+  "utc": "2026-09-08T17:32:56.962281+00:00",
+  "checks": [
+    {
+      "name": "pytest",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/test_rescue.py"
+      ],
+      "returncode": 0,
+      "log_sha256": "de9ea7db59cca6dcc06e99f355d5dc9d0d2a2a39255f0d09a47135380a6b91a3"
+    },
+    {
+      "name": "ruff-check",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/support.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/prefix.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/screen.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/test_rescue.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/validate.py"
+      ],
+      "returncode": 0,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "name": "ruff-format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/support.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/prefix.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/screen.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/test_rescue.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/return-window-rescue-v607b/validate.py"
+      ],
+      "returncode": 0,
+      "log_sha256": "8e93d18ae56550d4eef2feac77e6630617c7e169246e56e39c75d58b46167985"
+    }
+  ],
+  "source_commit": "b08b1f5aa464659e558926713d29bcd364a3778f",
+  "source_files": 190,
+  "input_files": 78,
+  "native_libraries": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": {
+      "path": "/home/angus/build-spacepdhcg-joint-v590/build/cuda/libspacepdhcg_cuda.so",
+      "sha256": "ffbae813f1f683d276213cb83ec8be17d1c2338c9c4a96f3ec5283e26a432b73"
+    },
+    "SPACEPDHCG_QOCO_LIBRARY": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+      "sha256": "0cc27a1d8bde1edd74f7ef00e04ec64c2d6c0f8fe526a1d94b04d509a74b3315"
+    }
+  },
+  "catalogue_sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675",
+  "bonus_sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21",
+  "original_control_Result_byte_identical": true,
+  "original_control_Result_sha256": "cbe09a096752cf778a7ab870e7eeab8a779fec48b97919784daaf8e15776b710",
+  "control_prefix_emission": {
+    "asteroid_events": 16,
+    "prefix_burns_preserved": 777,
+    "solution_sha256": "cbe09a096752cf778a7ab870e7eeab8a779fec48b97919784daaf8e15776b710"
+  },
+  "prefix_audits": {
+    "control": {
+      "fresh_rollout": true,
+      "certified_legs": 16,
+      "legs": [
+        {
+          "index": 0,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.07843791919200586,
+            "velocity_error_km_s": 6.111480909782833e-09,
+            "final_mass_kg": 2602.6107325016383,
+            "minimum_sun_distance_au": 0.9877805260734002,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.07843791933573449
+          },
+          "preserved_event_mass_kg": 2602.6107325016383
+        },
+        {
+          "index": 1,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.007578153428694917,
+            "velocity_error_km_s": 1.3855720411181863e-09,
+            "final_mass_kg": 2446.7079001936186,
+            "minimum_sun_distance_au": 2.7931531626295514,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.007578143240449263
+          },
+          "preserved_event_mass_kg": 2446.7079001936186
+        },
+        {
+          "index": 2,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.03463092522897002,
+            "velocity_error_km_s": 1.680998433862779e-09,
+            "final_mass_kg": 2218.2996015479825,
+            "minimum_sun_distance_au": 2.6340624009142712,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.03463092522897002
+          },
+          "preserved_event_mass_kg": 2218.2996015479825
+        },
+        {
+          "index": 3,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.0065617135358231795,
+            "velocity_error_km_s": 1.1961569495488276e-09,
+            "final_mass_kg": 2068.009023768697,
+            "minimum_sun_distance_au": 2.639382725054867,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.006561702112435921
+          },
+          "preserved_event_mass_kg": 2068.009023768697
+        },
+        {
+          "index": 4,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.01610535344508507,
+            "velocity_error_km_s": 8.567377963611534e-10,
+            "final_mass_kg": 1906.0343988123295,
+            "minimum_sun_distance_au": 2.7555177140411895,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.01610535344508507
+          },
+          "preserved_event_mass_kg": 1906.0343988123295
+        },
+        {
+          "index": 5,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.012436800659465655,
+            "velocity_error_km_s": 8.598019838559511e-10,
+            "final_mass_kg": 1754.3300753666763,
+            "minimum_sun_distance_au": 2.834629599810283,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.012436758944069747
+          },
+          "preserved_event_mass_kg": 1754.3300753666763
+        },
+        {
+          "index": 6,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.030597589304199063,
+            "velocity_error_km_s": 5.42004818111616e-10,
+            "final_mass_kg": 1572.1339788878452,
+            "minimum_sun_distance_au": 2.873891573310614,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.030597579543624846
+          },
+          "preserved_event_mass_kg": 1572.1339788878452
+        },
+        {
+          "index": 7,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.03495690864805733,
+            "velocity_error_km_s": 1.752473593764574e-09,
+            "final_mass_kg": 1403.6351270844896,
+            "minimum_sun_distance_au": 2.6742411353612803,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.03495690864805733
+          },
+          "preserved_event_mass_kg": 1403.6351270844896
+        },
+        {
+          "index": 8,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.016622481763675256,
+            "velocity_error_km_s": 1.1856793899455078e-09,
+            "final_mass_kg": 1310.160261720287,
+            "minimum_sun_distance_au": 2.7757271476658083,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.016622481763675256
+          },
+          "preserved_event_mass_kg": 1310.160261720287
+        },
+        {
+          "index": 9,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.0640730944754945,
+            "velocity_error_km_s": 2.011745564061328e-09,
+            "final_mass_kg": 1262.116559119378,
+            "minimum_sun_distance_au": 2.731016480750426,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.06407309275285025
+          },
+          "preserved_event_mass_kg": 1262.116559119378
+        },
+        {
+          "index": 10,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.014294648423341405,
+            "velocity_error_km_s": 8.544371059573939e-10,
+            "final_mass_kg": 1246.96476814195,
+            "minimum_sun_distance_au": 2.6367278578278643,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.014294653600036997
+          },
+          "preserved_event_mass_kg": 1246.96476814195
+        },
+        {
+          "index": 11,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.007970999950921645,
+            "velocity_error_km_s": 1.2569751972375704e-09,
+            "final_mass_kg": 1248.2558720652128,
+            "minimum_sun_distance_au": 2.6343925530654215,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.007970958767192185
+          },
+          "preserved_event_mass_kg": 1248.2558720652128
+        },
+        {
+          "index": 12,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.006786786203243317,
+            "velocity_error_km_s": 3.167573536327628e-10,
+            "final_mass_kg": 1246.3372552501667,
+            "minimum_sun_distance_au": 2.6487098826858473,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.006786786203243317
+          },
+          "preserved_event_mass_kg": 1246.3372552501667
+        },
+        {
+          "index": 13,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.024495672749713693,
+            "velocity_error_km_s": 5.330872560502178e-10,
+            "final_mass_kg": 1204.3701444591272,
+            "minimum_sun_distance_au": 2.6761529498903616,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.024495672749713693
+          },
+          "preserved_event_mass_kg": 1204.3701444591272
+        },
+        {
+          "index": 14,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.009594850850004789,
+            "velocity_error_km_s": 1.0835168492493438e-09,
+            "final_mass_kg": 1232.1518414169338,
+            "minimum_sun_distance_au": 2.7757449204358045,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.009594975701101498
+          },
+          "preserved_event_mass_kg": 1232.1518414169338
+        },
+        {
+          "index": 15,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.015089776474274645,
+            "velocity_error_km_s": 8.44544543282109e-10,
+            "final_mass_kg": 1189.1678308309063,
+            "minimum_sun_distance_au": 2.7470485800941704,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.015089776474274645
+          },
+          "preserved_event_mass_kg": 1189.1678308309063
+        }
+      ],
+      "missing_archived_virtual_inf": "not used in replay, emission or certification",
+      "fingerprint": "01ebebf21ffb01bfa39a274eb63695f41815aabe25284bd4418681923e1458fc"
+    },
+    "probe": {
+      "fresh_rollout": true,
+      "certified_legs": 16,
+      "legs": [
+        {
+          "index": 0,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.07644585711572958,
+            "velocity_error_km_s": 6.029767369932143e-09,
+            "final_mass_kg": 2602.610732569874,
+            "minimum_sun_distance_au": 0.9877805260734002,
+            "maximum_thrust_n": 0.5999999994000003,
+            "rk4_vs_dop853_km": 0.07644579303992431
+          },
+          "preserved_event_mass_kg": 2602.610732569874
+        },
+        {
+          "index": 1,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.007569939782743258,
+            "velocity_error_km_s": 1.3854725677062445e-09,
+            "final_mass_kg": 2446.7079002577984,
+            "minimum_sun_distance_au": 2.793153162629508,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.007569939782743258
+          },
+          "preserved_event_mass_kg": 2446.7079002577984
+        },
+        {
+          "index": 2,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.04217837520984982,
+            "velocity_error_km_s": 1.7063297407942072e-09,
+            "final_mass_kg": 2112.5593905065707,
+            "minimum_sun_distance_au": 2.7215479657920474,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.04217837528249418
+          },
+          "preserved_event_mass_kg": 2112.5593905065707
+        },
+        {
+          "index": 3,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.04566232229142165,
+            "velocity_error_km_s": 2.4169605992662495e-09,
+            "final_mass_kg": 1877.326318371251,
+            "minimum_sun_distance_au": 2.7592692531419716,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.04566226667767825
+          },
+          "preserved_event_mass_kg": 1877.326318371251
+        },
+        {
+          "index": 4,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.01637097470711124,
+            "velocity_error_km_s": 8.453149626847437e-10,
+            "final_mass_kg": 1729.401169451597,
+            "minimum_sun_distance_au": 2.7555934241477322,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.01637097470711124
+          },
+          "preserved_event_mass_kg": 1729.401169451597
+        },
+        {
+          "index": 5,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.012644629082963394,
+            "velocity_error_km_s": 8.492605448356197e-10,
+            "final_mass_kg": 1590.6026363391493,
+            "minimum_sun_distance_au": 2.834629599810283,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.012644619076042278
+          },
+          "preserved_event_mass_kg": 1590.6026363391493
+        },
+        {
+          "index": 6,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.03093369343154351,
+            "velocity_error_km_s": 5.237293589896153e-10,
+            "final_mass_kg": 1425.1739158976573,
+            "minimum_sun_distance_au": 2.8738915733101966,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.0309336836751496
+          },
+          "preserved_event_mass_kg": 1425.1739158976573
+        },
+        {
+          "index": 7,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.034498208395996925,
+            "velocity_error_km_s": 1.7621624152576276e-09,
+            "final_mass_kg": 1270.4084090621072,
+            "minimum_sun_distance_au": 2.6742894656157032,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.034498208395996925
+          },
+          "preserved_event_mass_kg": 1270.4084090621072
+        },
+        {
+          "index": 8,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.012079215263717222,
+            "velocity_error_km_s": 1.108354818010683e-09,
+            "final_mass_kg": 1182.17556370098,
+            "minimum_sun_distance_au": 2.7758579345830134,
+            "maximum_thrust_n": 0.5999999994,
+            "rk4_vs_dop853_km": 0.012079215263717222
+          },
+          "preserved_event_mass_kg": 1182.17556370098
+        },
+        {
+          "index": 9,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.06353900358243691,
+            "velocity_error_km_s": 2.006786446597025e-09,
+            "final_mass_kg": 1147.028624705213,
+            "minimum_sun_distance_au": 2.731016480749918,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.06353900186129961
+          },
+          "preserved_event_mass_kg": 1147.028624705213
+        },
+        {
+          "index": 10,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.015214214928841516,
+            "velocity_error_km_s": 2.196914742703088e-09,
+            "final_mass_kg": 1091.1180678689018,
+            "minimum_sun_distance_au": 2.629413702850523,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.015214214928841516
+          },
+          "preserved_event_mass_kg": 1091.1180678689018
+        },
+        {
+          "index": 11,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.00982872907614951,
+            "velocity_error_km_s": 2.20596110743103e-09,
+            "final_mass_kg": 1112.5668854377743,
+            "minimum_sun_distance_au": 2.631865825504862,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.009828704665599377
+          },
+          "preserved_event_mass_kg": 1112.5668854377743
+        },
+        {
+          "index": 12,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.006743936280613691,
+            "velocity_error_km_s": 3.163132601802743e-10,
+            "final_mass_kg": 1120.7933795825122,
+            "minimum_sun_distance_au": 2.6487262476972706,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.006743936280613691
+          },
+          "preserved_event_mass_kg": 1120.7933795825122
+        },
+        {
+          "index": 13,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.024387283926494592,
+            "velocity_error_km_s": 5.183701639335674e-10,
+            "final_mass_kg": 1094.192047555792,
+            "minimum_sun_distance_au": 2.676156383310983,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.024387293334086704
+          },
+          "preserved_event_mass_kg": 1094.192047555792
+        },
+        {
+          "index": 14,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.009769474509630081,
+            "velocity_error_km_s": 1.0827101791826133e-09,
+            "final_mass_kg": 1127.9133081143768,
+            "minimum_sun_distance_au": 2.7758174886615956,
+            "maximum_thrust_n": 0.5999999994,
+            "rk4_vs_dop853_km": 0.009769547205599468
+          },
+          "preserved_event_mass_kg": 1127.9133081143768
+        },
+        {
+          "index": 15,
+          "fresh_rollout": true,
+          "fresh_certificate": {
+            "position_error_km": 0.015866420545944213,
+            "velocity_error_km_s": 8.124165271809826e-10,
+            "final_mass_kg": 1095.007296327592,
+            "minimum_sun_distance_au": 2.747049380599446,
+            "maximum_thrust_n": 0.5999999994000002,
+            "rk4_vs_dop853_km": 0.015866420545944213
+          },
+          "preserved_event_mass_kg": 1095.007296327592
+        }
+      ],
+      "missing_archived_virtual_inf": "not used in replay, emission or certification",
+      "fingerprint": "106aa7ecd046183a45ef4df198d91d7a1af49c989dbdea3d133cb426583e198e"
+    }
+  },
+  "positive_waits": [
+    {
+      "accepted": 1.0,
+      "departure_mjd": 69218.0,
+      "arrival_mjd": 69219,
+      "position_error_km": 6.417488354437364e-07,
+      "velocity_error_km_s": 2.8268273681735245e-14,
+      "minimum_sun_distance_au": 2.7470537750714663,
+      "analytic_perihelion_lower_bound_au": 2.7467748,
+      "mass_preserved_kg": 1207.2044215842654,
+      "additional_asteroid_events": 0
+    },
+    {
+      "accepted": 1.0,
+      "departure_mjd": 69218.0,
+      "arrival_mjd": 69248,
+      "position_error_km": 1.1944189326376765e-07,
+      "velocity_error_km_s": 2.2247786310271853e-16,
+      "minimum_sun_distance_au": 2.7470537750714663,
+      "analytic_perihelion_lower_bound_au": 2.7467748,
+      "mass_preserved_kg": 1207.2044215842654,
+      "additional_asteroid_events": 0
+    },
+    {
+      "accepted": 1.0,
+      "departure_mjd": 69218.0,
+      "arrival_mjd": 69297,
+      "position_error_km": 4.196246431663681e-07,
+      "velocity_error_km_s": 1.379595599263342e-14,
+      "minimum_sun_distance_au": 2.7470537750714663,
+      "analytic_perihelion_lower_bound_au": 2.7467748,
+      "mass_preserved_kg": 1207.2044215842654,
+      "additional_asteroid_events": 0
+    },
+    {
+      "accepted": 1.0,
+      "departure_mjd": 69218.0,
+      "arrival_mjd": 69518,
+      "position_error_km": 1.862645149230957e-09,
+      "velocity_error_km_s": 6.404986226324272e-15,
+      "minimum_sun_distance_au": 2.7470537750714663,
+      "analytic_perihelion_lower_bound_au": 2.7467748,
+      "mass_preserved_kg": 1207.2044215842654,
+      "additional_asteroid_events": 0
+    },
+    {
+      "accepted": 1.0,
+      "departure_mjd": 69218.0,
+      "arrival_mjd": 69806,
+      "position_error_km": 4.2991609352456776e-07,
+      "velocity_error_km_s": 1.5177605551475487e-14,
+      "minimum_sun_distance_au": 2.7470537750714663,
+      "analytic_perihelion_lower_bound_au": 2.7467748,
+      "mass_preserved_kg": 1207.2044215842654,
+      "additional_asteroid_events": 0
+    }
+  ],
+  "coarse_rows": 7022,
+  "maximum_fine_rows": 2592,
+  "maximum_geometry_pairs": 9614,
+  "maximum_direction_requests": 19228,
+  "maximum_native_returns": 5,
+  "maximum_candidate_returns": 4,
+  "whole_route_reruns": 0,
+  "soft_wall_seconds": 1800,
+  "control_failure_stops_candidates": true,
+  "ready": true
+}

@@ -59,8 +59,8 @@ struct Arguments {
     std::string path,mode="cold",initial_point;
     double tolerance{},deadline{},audit_tolerance=1e-9,cone_tolerance=1e-8;
     std::uint64_t iterations{};
-    int repeats=1;
-    bool validate_only=false,fold_singleton_bounds=false;
+    int repeats=1,execution_blocks=-1;
+    bool validate_only=false,fold_singleton_bounds=false,common_kkt_stop=false;
 };
 Arguments arguments(int argc,char** argv) {
     s::require(argc>=2,"usage: persistent_snapshot_replay SNAPSHOT --tolerance T --iterations N --deadline-seconds S [--repeats N] [--mode cold|reuse|full-retained] [--fold-singleton-bounds] [--initial-point PATH] [--audit-tolerance T] [--cone-tolerance T], or SNAPSHOT --validate-only");
@@ -79,6 +79,7 @@ Arguments arguments(int argc,char** argv) {
         const std::string name(argv[i]);s::require(std::find(seen.begin(),seen.end(),name)==seen.end(),"duplicate option");seen.push_back(name);
         if(name=="--validate-only") {out.validate_only=true;continue;}
         if(name=="--fold-singleton-bounds") {out.fold_singleton_bounds=true;continue;}
+        if(name=="--common-kkt-stop") {out.common_kkt_stop=true;continue;}
         s::require(i+1<argc,"missing option value");const std::string value(argv[++i]);
         if(name=="--tolerance")out.tolerance=number_arg(value);
         else if(name=="--iterations")out.iterations=integer_arg(value,100'000'000);
@@ -86,6 +87,7 @@ Arguments arguments(int argc,char** argv) {
         else if(name=="--audit-tolerance")out.audit_tolerance=number_arg(value);
         else if(name=="--cone-tolerance")out.cone_tolerance=number_arg(value);
         else if(name=="--repeats")out.repeats=static_cast<int>(integer_arg(value,1000));
+        else if(name=="--execution-blocks")out.execution_blocks=value=="0"?0:static_cast<int>(integer_arg(value,1000000));
         else if(name=="--mode") {s::require(value=="cold"||value=="reuse"||value=="full-retained","unsupported repeat mode");out.mode=value;}
         else if(name=="--initial-point") {s::require(!value.empty(),"empty initial-point path");out.initial_point=value;}
         else throw std::runtime_error("unknown option: "+name);
@@ -178,6 +180,9 @@ int main(int argc,char** argv) try {
     const auto args=arguments(argc,argv);
     const auto prepare=Clock::now();
     const auto snapshot=s::read(s::file_bytes(args.path,128ULL*1024*1024));
+    s::require(!args.common_kkt_stop || (!snapshot.shifted && !args.fold_singleton_bounds
+        && args.audit_tolerance==1e-9 && args.cone_tolerance==1e-8),
+        "common-KKT stopping requires an unshifted generic capture and fixed 1e-9 relative/1e-8 cone audit gates");
     const auto canonical=s::canonical(snapshot,args.fold_singleton_bounds);
     const double conversion_seconds=elapsed(prepare);
     const auto initial_begin=Clock::now();std::optional<s::InitialPoint> initial;
@@ -192,6 +197,9 @@ int main(int argc,char** argv) try {
     std::cout<<",\"source_sha256\":";json_string(SPACEPDHCG_SNAPSHOT_SOURCE_SHA256);
     std::cout<<",\"coordinate_system\":\"original\",\"slack_source\":\"reconstructed_h_minus_Gx\",\"shifted\":"<<snapshot.shifted;
     std::cout<<",\"native_objective_coordinates\":";json_string(snapshot.shifted?"translated":"original");metric("objective_offset",snapshot.offset);
+    std::cout<<",\"stopping_policy\":";json_string(args.common_kkt_stop?"gpu_common_kkt_original_equations":"native_absolute_natural_residual");
+    std::cout<<",\"common_kkt_initial_check\":"<<args.common_kkt_stop<<",\"common_kkt_recovery_disabled\":"<<args.common_kkt_stop;
+    std::cout<<",\"requested_execution_blocks\":";if(args.execution_blocks<0)std::cout<<"null";else std::cout<<args.execution_blocks;
     std::cout<<",\"convexity_evidence\":";json_string(canonical.convexity_evidence);
     std::cout<<",\"variables\":"<<snapshot.n<<",\"equalities\":"<<snapshot.p<<",\"inequalities\":"<<snapshot.m;
     std::cout<<",\"soc_count\":"<<snapshot.soc.size()<<",\"symmetric_quadratic_entries\":"<<canonical.Q.values.size();
@@ -246,6 +254,15 @@ int main(int argc,char** argv) try {
         const bool fresh=!owner || args.mode=="cold";
         if(fresh) {owner.reset();owner=std::make_unique<Owner>(snapshot,canonical);}
         auto& p=owner->storage;auto* w=owner->workspace;
+        if(fresh && args.execution_blocks>=0) {
+            api(spacepdhcg_cuda_workspace_wait(w),"complete creation before explicit execution strategy",w);
+            api(spacepdhcg_cuda_workspace_set_execution_blocks(w,args.execution_blocks),"select explicit execution blocks",w);
+        }
+        if(fresh && args.common_kkt_stop) {
+            api(spacepdhcg_cuda_workspace_wait(w),"complete creation before common policy setup",w);
+            const spacepdhcg_cuda_common_kkt_options policy{SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,1,snapshot.p,0,1e-9,1e-8};
+            api(spacepdhcg_cuda_workspace_set_common_kkt_options(w,&policy),"configure GPU common-KKT stopping",w);
+        }
         if(!fresh) {
             if(args.mode=="reuse")api(spacepdhcg_cuda_workspace_reset_async(w,SPACEPDHCG_CUDA_RESET_ITERATES,p.exchange.consumer_stream),"reset iterates",w);
             else api(spacepdhcg_cuda_workspace_warm_start_async(w,SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,nullptr,p.exchange.consumer_stream),"full retained warm start",w);
@@ -319,6 +336,8 @@ int main(int argc,char** argv) try {
         const auto status=waited.status;const double wall=waited.wall_seconds;
         spacepdhcg_cuda_diagnostics diagnostic{};
         api(spacepdhcg_cuda_workspace_diagnostics(w,&diagnostic),"diagnostics",w);
+        spacepdhcg_cuda_common_kkt_diagnostics common{};
+        if(args.common_kkt_stop)api(spacepdhcg_cuda_workspace_common_kkt_diagnostics(w,&common),"common-KKT diagnostics",w);
         const auto download=Clock::now();const auto primal=p.primal.download(p.stream),dual=p.dual.download(p.stream);
         const double download_seconds=elapsed(download);const auto audit_begin=Clock::now();
         const auto original=s::original_vectors(snapshot,canonical,primal,dual);
@@ -331,6 +350,7 @@ int main(int argc,char** argv) try {
         const double cleanup_seconds=elapsed(cleanup_begin),repeat_seconds=elapsed(complete_begin);
         std::cout<<"PERSISTENT_REPLAY {\"repeat\":"<<repeat<<",\"termination\":"<<diagnostic.termination<<",\"termination_name\":";json_string(termination_name(diagnostic.termination));
         std::cout<<",\"api_status\":"<<status<<",\"solver_optimal\":"<<optimal;
+        std::cout<<",\"execution_blocks\":";if(args.execution_blocks<0)std::cout<<"null";else std::cout<<args.execution_blocks;
         std::cout<<",\"fresh_workspace\":"<<fresh<<",\"within_requested_wall_deadline\":"<<(wall<=args.deadline);
         std::cout<<",\"initial_point_applied\":"<<initial_applied<<",\"state_before_solve\":"<<before.state;
         std::cout<<",\"solve_epoch_before\":"<<before.solve_epoch<<",\"warm_start_mode_before\":"<<before.warm_start_mode<<",\"warm_start_accepted_before\":"<<bool(before.warm_start_accepted);
@@ -346,6 +366,18 @@ int main(int argc,char** argv) try {
         metric("solve_seconds",diagnostic.solve_seconds);metric("recovery_seconds",diagnostic.recovery_seconds);
         metric("download_seconds",download_seconds);metric("audit_seconds",audit_seconds);metric("cleanup_seconds",cleanup_seconds);metric("repeat_seconds",repeat_seconds);
         metric("native_objective",diagnostic.objective);metric("native_natural_residual",diagnostic.natural_residual_inf);
+        if(args.common_kkt_stop) {
+            std::cout<<",\"gpu_common_kkt\":{\"enabled\":"<<bool(common.enabled)<<",\"valid\":"<<bool(common.valid)
+                <<",\"finite\":"<<bool(common.finite)<<",\"passes\":"<<bool(common.passes)
+                <<",\"evaluations\":"<<common.evaluations<<",\"evaluated_iteration\":"<<common.evaluated_iteration
+                <<",\"evaluation_clock_cycles\":"<<common.evaluation_clock_cycles;
+            metric("primal",common.primal_relative);metric("dual",common.dual_relative);metric("gap",common.gap_relative);
+            metric("block_complementarity_normalized",common.block_complementarity_relative);
+            metric("primal_cone_violation",common.primal_cone_violation);metric("dual_cone_violation",common.dual_cone_violation);
+            metric("primal_absolute",common.primal_absolute);metric("conic_equation_absolute",common.conic_equation_absolute);
+            metric("stationarity_absolute",common.dual_absolute);metric("objective",common.objective);metric("dual_objective",common.dual_objective);
+            std::cout<<'}';
+        }
         std::cout<<",\"peak_workspace_bytes\":"<<diagnostic.peak_active_bytes<<",\"audit\":";audit_json(quality);
         std::cout<<",\"x\":";vector_json(original.x);std::cout<<",\"x_solver\":";vector_json(primal);
         std::cout<<",\"y\":";vector_json(original.y);std::cout<<",\"z\":";vector_json(original.z);std::cout<<",\"s\":";vector_json(original.s);

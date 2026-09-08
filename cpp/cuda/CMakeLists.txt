@@ -248,6 +248,33 @@ if(BUILD_TESTING)
         SPACEPDHCG_SOURCE_COMMIT="${SPACEPDHCG_SOURCE_COMMIT}"
         SPACEPDHCG_SNAPSHOT_SOURCE_SHA256="${SPACEPDHCG_SNAPSHOT_SOURCE_SHA256}")
 
+    # The original algorithm remains a separate one-shot diagnostic baseline.
+    # It imports the identical capture and exports vectors for the same KKT audit.
+    add_executable(upstream_snapshot_replay tests/upstream_snapshot_replay.cu)
+    target_include_directories(upstream_snapshot_replay PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+    target_link_libraries(upstream_snapshot_replay PRIVATE spacepdhcg_pinned_reference)
+    set_target_properties(upstream_snapshot_replay PROPERTIES CUDA_STANDARD 20
+        CUDA_STANDARD_REQUIRED ON CUDA_RESOLVE_DEVICE_SYMBOLS ON
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/cuda-tests")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        tests/upstream_snapshot_replay.cu
+        "${CMAKE_CURRENT_SOURCE_DIR}/../include/spacepdhcg/accelerator_c_api.h"
+        "${SPACEPDHCG_PDHCG_CLEANUP_PATCH}")
+    set(SPACEPDHCG_UPSTREAM_REPLAY_HASHES
+        "upstream:${SPACEPDHCG_PDHCG_COMMIT}\ntree:${SPACEPDHCG_PDHCG_TREE}\npatch:${SPACEPDHCG_PDHCG_CLEANUP_PATCH_SHA256}\n")
+    foreach(replay_source tests/persistent_snapshot.hpp tests/upstream_snapshot_replay.cu
+            include/spacepdhcg/cuda/persistent_pdhcg_c_api.h)
+        file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/${replay_source}" replay_hash)
+        string(APPEND SPACEPDHCG_UPSTREAM_REPLAY_HASHES "${replay_source}:${replay_hash}\n")
+    endforeach()
+    file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/../include/spacepdhcg/accelerator_c_api.h" replay_hash)
+    string(APPEND SPACEPDHCG_UPSTREAM_REPLAY_HASHES "accelerator_c_api.h:${replay_hash}\n")
+    string(SHA256 SPACEPDHCG_UPSTREAM_REPLAY_SOURCE_SHA256 "${SPACEPDHCG_UPSTREAM_REPLAY_HASHES}")
+    target_compile_definitions(upstream_snapshot_replay PRIVATE
+        SPACEPDHCG_SOURCE_COMMIT="${SPACEPDHCG_SOURCE_COMMIT}"
+        SPACEPDHCG_UPSTREAM_REPLAY_SOURCE_SHA256="${SPACEPDHCG_UPSTREAM_REPLAY_SOURCE_SHA256}")
+
     file(
         GLOB SPACEPDHCG_CUDA_TEST_SOURCES
         CONFIGURE_DEPENDS

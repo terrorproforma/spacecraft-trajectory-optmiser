@@ -1,0 +1,19 @@
+{
+  "complete": true,
+  "gpu_executables": 2,
+  "solve_api_calls": 14,
+  "actual_iterations": 6,
+  "bootstrap_iterations": 0,
+  "all_asserted_outcomes_passed": true,
+  "real_captured_QP_calls_in_this_bundle": 0,
+  "core_sha256": "a38d579579be2f47f9d8a8290a9440fd43f5beca2864773d9a5d6465a2ee61dd",
+  "replay_sha256": "68683409e81b51acc30d9039349c7479b16b8320a16ea08967adcc2a5fd240ed",
+  "test_sha256": "c7773aad1a90c017262541f99cd29a8b3750ca5bdbb73e0f7aecacd2a37ad402",
+  "source_core_fields_unchanged_by_replay_selector": true,
+  "live_owned_source_matches_frozen": true,
+  "earlier_builds": {
+    "v609a": "compile rejected missing math_constants include; zero GPU calls",
+    "v609b": "compile rejected implicit initializer under -Werror; zero GPU calls",
+    "v609c": "CPU checks passed; runtime branch increased default registers; superseded before GPU"
+  }
+}

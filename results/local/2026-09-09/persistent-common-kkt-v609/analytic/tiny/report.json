@@ -1,0 +1,292 @@
+{
+  "complete": true,
+  "pid": 1463,
+  "manifest_sha256": "29b95ebf552f1aa083e9e3132e9796686aef33114c148769f4be924aeb9f9fca",
+  "runner_sha256": "041c79e91a15e4952686ac59721268b10aa91ef3f21ecd02cd85173a178db19a",
+  "binary_sha256": "c7773aad1a90c017262541f99cd29a8b3750ca5bdbb73e0f7aecacd2a37ad402",
+  "core_sha256": "a38d579579be2f47f9d8a8290a9440fd43f5beca2864773d9a5d6465a2ee61dd",
+  "cases": [
+    {
+      "name": "legacy",
+      "command": [
+        "/home/angus/spacepdhcg-common-kkt-v609d/build/cuda-tests/persistent_common_kkt_test",
+        "--execution-blocks",
+        "0"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.2654256680000344,
+      "log_sha256": "0726b3d0851399c79e4758879f61da674b85c49c250f729041b44ce4a077922e",
+      "records": [
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "mixed_exact_zero_step",
+            "termination": 1,
+            "iterations": 0,
+            "valid": 1,
+            "finite": 1,
+            "passes": 1,
+            "evaluations": 1,
+            "cycles": 103245,
+            "dual": 0,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "mixed_legacy_unchanged",
+            "termination": 1,
+            "iterations": 1,
+            "valid": 0,
+            "finite": 0,
+            "passes": 0,
+            "evaluations": 0,
+            "cycles": 0,
+            "dual": 0,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "separate_equality_denominator",
+            "termination": 1,
+            "iterations": 0,
+            "valid": 1,
+            "finite": 1,
+            "passes": 1,
+            "evaluations": 1,
+            "cycles": 84990,
+            "dual": 9.094947017712739e-13,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "combined_G_denominator",
+            "termination": 2,
+            "iterations": 1,
+            "valid": 1,
+            "finite": 1,
+            "passes": 0,
+            "evaluations": 2,
+            "cycles": 178134,
+            "dual": 0.5,
+            "gap": 0.3181980515339464,
+            "block": 349862457597.24097
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "block_complementarity_cancellation",
+            "termination": 2,
+            "iterations": 1,
+            "valid": 1,
+            "finite": 1,
+            "passes": 0,
+            "evaluations": 2,
+            "cycles": 151634,
+            "dual": 0,
+            "gap": 0.4500000000009368,
+            "block": 10000
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_VALIDATION",
+          "record": {
+            "unsupported_domains_rejected": 3
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "cancellation_before_initial_certificate",
+            "termination": 3,
+            "iterations": 0,
+            "valid": 0,
+            "finite": 0,
+            "passes": 0,
+            "evaluations": 0,
+            "cycles": 0,
+            "dual": 0,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "nonfinite_seed_never_certified",
+            "termination": 4,
+            "iterations": 0,
+            "valid": 1,
+            "finite": 0,
+            "passes": 0,
+            "evaluations": 1,
+            "cycles": 100469,
+            "dual": 0,
+            "gap": null,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_SUMMARY",
+          "record": {
+            "complete": true,
+            "execution_blocks": 0,
+            "solve_calls": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "cooperative",
+      "command": [
+        "/home/angus/spacepdhcg-common-kkt-v609d/build/cuda-tests/persistent_common_kkt_test",
+        "--execution-blocks",
+        "2"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.2653678269999773,
+      "log_sha256": "dad4e9fd43dd6ea6e6731f43ed43c4a8c22b8f9f8ec7ae400cf090029fdee7ee",
+      "records": [
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "mixed_exact_zero_step",
+            "termination": 1,
+            "iterations": 0,
+            "valid": 1,
+            "finite": 1,
+            "passes": 1,
+            "evaluations": 1,
+            "cycles": 148191,
+            "dual": 0,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "mixed_legacy_unchanged",
+            "termination": 1,
+            "iterations": 1,
+            "valid": 0,
+            "finite": 0,
+            "passes": 0,
+            "evaluations": 0,
+            "cycles": 0,
+            "dual": 0,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "separate_equality_denominator",
+            "termination": 1,
+            "iterations": 0,
+            "valid": 1,
+            "finite": 1,
+            "passes": 1,
+            "evaluations": 1,
+            "cycles": 120659,
+            "dual": 9.094947017712739e-13,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "combined_G_denominator",
+            "termination": 2,
+            "iterations": 1,
+            "valid": 1,
+            "finite": 1,
+            "passes": 0,
+            "evaluations": 2,
+            "cycles": 266671,
+            "dual": 0.5,
+            "gap": 0.3181980515339464,
+            "block": 349862457597.24097
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "block_complementarity_cancellation",
+            "termination": 2,
+            "iterations": 1,
+            "valid": 1,
+            "finite": 1,
+            "passes": 0,
+            "evaluations": 2,
+            "cycles": 224926,
+            "dual": 0,
+            "gap": 0.4500000000009368,
+            "block": 10000
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_VALIDATION",
+          "record": {
+            "unsupported_domains_rejected": 3
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "cancellation_before_initial_certificate",
+            "termination": 3,
+            "iterations": 0,
+            "valid": 0,
+            "finite": 0,
+            "passes": 0,
+            "evaluations": 0,
+            "cycles": 0,
+            "dual": 0,
+            "gap": 0,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_TEST",
+          "record": {
+            "case": "nonfinite_seed_never_certified",
+            "termination": 4,
+            "iterations": 0,
+            "valid": 1,
+            "finite": 0,
+            "passes": 0,
+            "evaluations": 1,
+            "cycles": 137561,
+            "dual": 0,
+            "gap": null,
+            "block": 0
+          }
+        },
+        {
+          "prefix": "COMMON_KKT_SUMMARY",
+          "record": {
+            "complete": true,
+            "execution_blocks": 2,
+            "solve_calls": 7
+          }
+        }
+      ]
+    }
+  ],
+  "gpu_invocations": 2,
+  "scope": "two execution strategies; seven bounded solve calls each; no real captures",
+  "lock_acquired": true,
+  "lock_scope_ended": true
+}

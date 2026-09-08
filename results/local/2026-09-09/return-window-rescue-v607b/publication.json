@@ -1,0 +1,38 @@
+{
+  "experiment": "return-window-rescue-v607b",
+  "execution_environment": "local RTX 5090",
+  "actual_native_return_solves": 5,
+  "actual_control_returns": 1,
+  "actual_candidate_returns": 4,
+  "whole_route_reruns": 0,
+  "H100_executions": 0,
+  "status": "incumbent_retained",
+  "promotions": 0,
+  "raw_mass_kg": 14051.854893908598,
+  "fixed_bonus_weighted_score_kg": 12810.135953048577,
+  "ready_sha256": "9414730e31bc2d896285761dc6436277cefb7d92af8a297291d9e3116a2c28ec",
+  "output_report_sha256": "8c750c5ddf348f2234e824d14045fd46e0ffff739a4e4730215b059e7174874b",
+  "independent_audit_sha256": "0005b09c653bf47f3e07f3d161387c1fdbb30f6624641213bff42087dfb8babb",
+  "source_commit": "b08b1f5aa464659e558926713d29bcd364a3778f",
+  "source_manifest_sha256": "292fbf35e2a1a8de90b94f8654338d5491c3a07e9f40c852e4a7b495420f65df",
+  "native_libraries": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": {
+      "path": "/home/angus/build-spacepdhcg-joint-v590/build/cuda/libspacepdhcg_cuda.so",
+      "sha256": "ffbae813f1f683d276213cb83ec8be17d1c2338c9c4a96f3ec5283e26a432b73"
+    },
+    "SPACEPDHCG_QOCO_LIBRARY": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+      "sha256": "0cc27a1d8bde1edd74f7ef00e04ec64c2d6c0f8fe526a1d94b04d509a74b3315"
+    }
+  },
+  "native_source": {
+    "relative_path": "../joint-candidates-v596/original-v590/native-source.tar.gz",
+    "sha256": "6f10438bd50bb52401f25d1fe3d44524fdf1028080c0e9e5644c0037e4dbdf33"
+  },
+  "inherited_metadata": {
+    "execution/preparation.json": "v606 provenance and demonstrated full-route settings; not v607b actual work counts",
+    "execution/profiles.json": "v606 profiles retained exactly; v607b used only local profile",
+    "execution/README.md": "Historical frozen preparation; GPU execution was pending when written"
+  },
+  "reproduction": "Restore source/ and inputs/ archives alongside execution files in a fresh kit directory; requires pinned external data and native libraries. Historical launch marker prevents automatic replay."
+}

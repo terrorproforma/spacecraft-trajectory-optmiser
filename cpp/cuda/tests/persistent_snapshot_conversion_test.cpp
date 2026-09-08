@@ -1,4 +1,5 @@
 #include "persistent_snapshot.hpp"
+#include "spacepdhcg/cuda/common_kkt_arithmetic.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -52,6 +53,24 @@ void reject_point(const s::Snapshot& q,const s::Canonical& c,std::string bytes,c
     s::require(rejected,"malformed or unqualified initial point was accepted");
 }
 void checks() {
+    // Independent cancellation identities exercise arithmetic used by the GPU
+    // gate. Ordinary FP64 loses these terms before a final tolerance comparison.
+    namespace ck=spacepdhcg::cuda::common_kkt;
+    const double epsilon=std::ldexp(1.0,-27);
+    const auto cancelled_product=ck::add(ck::product(1+epsilon,1-epsilon),{-1,0});
+    s::require(ck::value(cancelled_product)==-std::ldexp(1.0,-54),"compensated product lost the exact remainder");
+    s::require(ck::value(ck::add(ck::add({1e16,0},{1,0}),{-1e16,0}))==1,"sparse reduction lost a cancelled unit");
+    const auto norm=ck::square_root(ck::add(ck::product(3,3),ck::product(4,4)));
+    s::require(ck::value(norm)==5 && ck::finite(norm),"compensated SOC norm identity failed");
+    s::require(!ck::finite(ck::product(std::numeric_limits<double>::max(),2)),"overflow was hidden by compensated arithmetic");
+    const double magnitude=std::ldexp(1.0,40);
+    const auto grouped=ck::add({magnitude+1,0},{-magnitude,0});
+    const double separate_denominator=1+std::max(magnitude+1,magnitude);
+    s::require(ck::value(grouped)/separate_denominator<1e-9 && ck::value(grouped)/(1+ck::absolute(grouped))>1e-9,
+        "equality and original G normalization fixture failed");
+    const auto conic_sum=ck::add({magnitude,0},{-magnitude,0});
+    s::require(1/(1+std::max(1.0,ck::absolute(conic_sum)))>1e-9 && 1/(1+magnitude)<1e-9,
+        "combined nonnegative/SOC normalization fixture failed");
     s::require(s::sha256("")=="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","SHA empty");
     s::require(s::sha256("abc")=="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad","SHA abc");
     s::require(s::sha256(std::string(1000000,'a'))=="cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0","SHA multiblock");

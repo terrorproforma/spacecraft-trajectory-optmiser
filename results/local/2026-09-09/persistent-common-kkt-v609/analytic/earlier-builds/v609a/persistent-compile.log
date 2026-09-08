@@ -1,0 +1,9 @@
+/home/angus/spacepdhcg-common-kkt-v609a/repo/cpp/cuda/src/persistent_common_kkt.cuh(163): error: identifier "CUDART_INF" is undefined
+          if(p->variable_lower[j]!=-CUDART_INF || p->variable_upper[j]!=CUDART_INF || !isfinite(p->c[j]))atomicExch(invalid,1);
+                                    ^
+
+/home/angus/spacepdhcg-common-kkt-v609a/repo/cpp/cuda/src/persistent_common_kkt.cuh(169): error: identifier "CUDART_INF" is undefined
+          if(!isfinite(p->scalar_upper[r]) || (r<equalities?p->scalar_lower[r]!=p->scalar_upper[r]:p->scalar_lower[r]!=-CUDART_INF))atomicExch(invalid,1);
+                                                                                                                        ^
+
+2 errors detected in the compilation of "/home/angus/spacepdhcg-common-kkt-v609a/repo/cpp/cuda/src/persistent_pdhcg.cu".

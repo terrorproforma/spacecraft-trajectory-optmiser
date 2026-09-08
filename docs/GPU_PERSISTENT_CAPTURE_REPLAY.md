@@ -136,3 +136,56 @@ This implements the first diagnostic step of the
 [SOTA execution plan](SOTA_EXECUTION_PLAN_2026-09-09.md). Solver improvements must
 eventually deliver qualified complete trajectories; the separate asteroid/fleet
 search must produce higher verified mission scores.
+
+## Pinned upstream comparator and optional GPU stopping policy
+
+`upstream_snapshot_replay` now invokes the pinned upstream C API on the same
+captured matrices and exports original-coordinate vectors. Both real supplied
+known points qualify at iteration zero. Both cold starts remain unqualified after
+100,000 iterations. Their zero Hessians retain off-diagonal structural zeros,
+which select upstream's sparse-Q inner path; this run did not exercise an explicit
+zero-Q fast path. All eight diagnostic outcomes and independent audits are
+[retained](../results/local/2026-09-09/upstream-identical-capture-v608/README.md).
+
+The persistent replay now accepts `--common-kkt-stop`. It enables an additive
+diagnostic C API that evaluates original-equation primal/dual residuals, objective
+gap, cone membership and per-block complementarity on the GPU, before any update
+and at subsequent residual checks. It uses compensated FP64 products and retained
+row-gather maps, with the existing independent CPU audit still applied to exported
+vectors. The fixed thresholds remain 1e-9 for normalized residuals, gap and block
+complementarity, and 1e-8 for cone violations. Native natural-residual telemetry is
+retained separately.
+
+The option currently supports unshifted generic captures with free primal
+variables, an equality prefix, upper-only scalar inequalities and contiguous
+standard affine SOCs. Shifted or folded imports are rejected by the replay.
+Numerical updates require disabling the policy and revalidating its domain before
+reenabling it. This is a diagnostic policy, not yet a native GTOC12 backend or a
+certificate of nonlinear trajectory physics. Its convexity assumptions remain
+those of the original snapshot audit.
+
+Cancellation takes precedence over acceptance; reset/reseed invalidates old
+certificates, and this policy disables the legacy recovery acceptance path. The
+new kernels are separate template instantiations. Default single-block and
+cooperative register counts remain 148 and 80, respectively; the common-policy
+variants use 204 and 96. Preserving those counts does not by itself prove identical
+latency. Both execution strategies pass fourteen focused GPU calls covering a
+non-diagonal quadratic, exact seeds, normalization traps, complementarity,
+cancellation, nonfinite data and lifecycle changes.
+
+An explicit `--execution-blocks 0` chooses the single-block iteration and `2`
+chooses two cooperative blocks. Omitting the flag retains automatic selection.
+The accepted requested count is recorded in replay metadata. Four real
+known-point runs across these two strategies stop at zero iterations, preserve
+the installed primal/dual bits and pass the unchanged independent gate. Their
+four separately reported one-step bootstraps only enable the older residual-only
+diagnostic epoch; they are not hidden work or seeded optimisation iterations.
+These are correctness results, not a cold-start speedup.
+
+The four matched cold calls force the single-block path in both policies and
+remain unqualified at their 60-second deadlines, before the 100,000-iteration
+cap. They are not a measurement of automatic multi-block performance. The option
+also adds diagnostic workspace: the recorded peaks are about 19 MB versus about
+2 MB without it on these inputs. Keep it opt-in while the next convergence and
+integration experiments establish usefulness and cost. [Exact sources, fourteen
+focused tests, all real vectors and deadline outcomes](../results/local/2026-09-09/persistent-common-kkt-v609/README.md).

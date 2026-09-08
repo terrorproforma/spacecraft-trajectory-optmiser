@@ -243,6 +243,61 @@ typedef struct spacepdhcg_cuda_pointer_snapshot {
     uintptr_t scaling;
 } spacepdhcg_cuda_pointer_snapshot;
 
+/* Optional diagnostic policy. Existing public structs and the default stopping
+ * rule are unchanged. This policy audits the supplied native coordinates;
+ * callers translating a problem must not describe it as an original-coordinate
+ * certificate. Only free primal variables, an equality prefix followed by
+ * upper-only scalar rows, and contiguous standard SOC affine rows are supported.
+ * Q must be the full symmetric positive-semidefinite Hessian, with both off-
+ * diagonal entries stored. Symmetry and convexity remain caller preconditions;
+ * this domain validator does not prove them. A residual pass is not a PSD proof.
+ * Numeric updates are unsupported while enabled; disable before updating and
+ * reconfigure afterward. Checkpoints do not change this workspace policy.
+ * The fixed tolerances are explicit and independent of solve_options.
+ */
+typedef struct spacepdhcg_cuda_common_kkt_options {
+    uint32_t abi_version;
+    int32_t enabled;
+    int32_t equality_rows;
+    int32_t reserved;
+    double relative_tolerance; /* Must be 1e-9 in this bounded diagnostic. */
+    double cone_tolerance;     /* Must be 1e-8. */
+} spacepdhcg_cuda_common_kkt_options;
+
+typedef struct spacepdhcg_cuda_common_kkt_diagnostics {
+    uint32_t abi_version;
+    int32_t enabled;
+    int32_t valid; /* Last completed solve only; reset/reseed/update invalidate. */
+    int32_t finite;
+    int32_t passes;
+    int32_t equality_rows;
+    uint64_t evaluations;
+    uint64_t evaluated_iteration;
+    uint64_t evaluation_clock_cycles; /* Block-zero device cycles, not seconds. */
+    double primal_relative;
+    double dual_relative;
+    double gap_relative;
+    double block_complementarity_relative;
+    double primal_cone_violation;
+    double dual_cone_violation;
+    double primal_absolute;
+    double conic_equation_absolute;
+    double dual_absolute;
+    double objective;
+    double dual_objective;
+} spacepdhcg_cuda_common_kkt_diagnostics;
+
+/* Synchronous opt-in setup, including GPU domain validation and retained row
+ * topology preparation. Requires prior operations to have completed. */
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_common_kkt_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_common_kkt_options* options
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_common_kkt_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_common_kkt_diagnostics* diagnostics
+);
+
 spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
     const spacepdhcg_cuda_structure* structure,
     const spacepdhcg_cqp_accelerator_exchange* exchange,

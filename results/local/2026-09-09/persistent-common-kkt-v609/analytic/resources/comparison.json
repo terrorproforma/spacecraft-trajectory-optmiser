@@ -1,0 +1,67 @@
+{
+  "spacepdhcg-persistent-replay-v603": {
+    "command": [
+      "/usr/local/cuda-12.8/bin/cuobjdump",
+      "--dump-resource-usage",
+      "/home/angus/spacepdhcg-persistent-replay-v603/build/cuda/libspacepdhcg_cuda.so"
+    ],
+    "core_sha256": "d4b0bea9672bb0cea612b7d4e8db5d448f1b79b9831be5710723276edd128633",
+    "raw_sha256": "9ab637aec3e55471963535a4ed4ee87a90e773d10b96163884a36745eae9a30e",
+    "selected": [
+      [
+        " Function __nv_static_46__0f27a34f_19_persistent_pdhcg_cu_9edd962b_1404__ZN57_GLOBAL__N__0f27a34f_19_persistent_pdhcg_cu_9edd962b_140424cooperative_solve_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:80 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ],
+      [
+        " Function __nv_static_46__0f27a34f_19_persistent_pdhcg_cu_9edd962b_1404__ZN57_GLOBAL__N__0f27a34f_19_persistent_pdhcg_cu_9edd962b_140412solve_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:148 STACK:40 SHARED:1032 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ]
+    ]
+  },
+  "spacepdhcg-common-kkt-v609c": {
+    "command": [
+      "/usr/local/cuda-12.8/bin/cuobjdump",
+      "--dump-resource-usage",
+      "/home/angus/spacepdhcg-common-kkt-v609c/build/cuda/libspacepdhcg_cuda.so"
+    ],
+    "core_sha256": "d2423d5e58e916c5bbe3bf832871b47955470f711982dcbbcf54e955e886a8a6",
+    "raw_sha256": "49a868812dc4a39f6cfa98621482e4edc78b2261acce7ea5df9630b9bd019dc6",
+    "selected": [
+      [
+        " Function __nv_static_45__91d9f747_19_persistent_pdhcg_cu_3978fb66_894__ZN56_GLOBAL__N__91d9f747_19_persistent_pdhcg_cu_3978fb66_89424cooperative_solve_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:96 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ],
+      [
+        " Function __nv_static_45__91d9f747_19_persistent_pdhcg_cu_3978fb66_894__ZN56_GLOBAL__N__91d9f747_19_persistent_pdhcg_cu_3978fb66_89412solve_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:204 STACK:40 SHARED:1032 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ]
+    ]
+  },
+  "spacepdhcg-common-kkt-v609d": {
+    "command": [
+      "/usr/local/cuda-12.8/bin/cuobjdump",
+      "--dump-resource-usage",
+      "/home/angus/spacepdhcg-common-kkt-v609d/build/cuda/libspacepdhcg_cuda.so"
+    ],
+    "core_sha256": "a38d579579be2f47f9d8a8290a9440fd43f5beca2864773d9a5d6465a2ee61dd",
+    "raw_sha256": "9c425f8238842014f36f9cd05086d716a43c3466c743295a67b3d3ede347e5bc",
+    "selected": [
+      [
+        " Function __nv_static_45__a317c359_19_persistent_pdhcg_cu_737fc3f4_972__ZN56_GLOBAL__N__a317c359_19_persistent_pdhcg_cu_737fc3f4_97224cooperative_solve_kernelILb1EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:96 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ],
+      [
+        " Function __nv_static_45__a317c359_19_persistent_pdhcg_cu_737fc3f4_972__ZN56_GLOBAL__N__a317c359_19_persistent_pdhcg_cu_737fc3f4_97212solve_kernelILb1EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:204 STACK:40 SHARED:1032 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ],
+      [
+        " Function __nv_static_45__a317c359_19_persistent_pdhcg_cu_737fc3f4_972__ZN56_GLOBAL__N__a317c359_19_persistent_pdhcg_cu_737fc3f4_97224cooperative_solve_kernelILb0EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:80 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ],
+      [
+        " Function __nv_static_45__a317c359_19_persistent_pdhcg_cu_737fc3f4_972__ZN56_GLOBAL__N__a317c359_19_persistent_pdhcg_cu_737fc3f4_97212solve_kernelILb0EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:",
+        "  REG:148 STACK:40 SHARED:1032 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0"
+      ]
+    ]
+  }
+}

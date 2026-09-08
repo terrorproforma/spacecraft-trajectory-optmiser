@@ -80,8 +80,9 @@ diagnosis first and align requested accuracy and common external qualification
 before drawing latency conclusions. General snapshot replay through the
 persistent backend, including original-coordinate primal/dual qualification,
 is now implemented and measured below. The separate QOCO snapshot executable
-remains QOCO-only. Identical-input upstream comparison, real-capture convergence
-and native GTOC12 backend integration are the remaining gaps.
+remains QOCO-only. The identical-input pinned upstream C API comparison is now
+[implemented and measured](../results/local/2026-09-09/upstream-identical-capture-v608/README.md).
+Real-capture cold convergence and native GTOC12 backend integration remain gaps.
 
 Once captured GTOC12 subproblems qualify through the persistent core, add its
 explicit backend integration to native GTOC12 SCvx: retained assembly, warm-start
@@ -231,13 +232,33 @@ The implementation audit also distinguishes the explicit persistent/cooperative
 PDHG iteration from upstream PDHCG-CQP's inexact conic quadratic proximal scheme.
 Recovery CGLS is not that inner solve. Both current captures have zero Hessians,
 so missing quadratic inner iterations cannot explain these particular failures.
-Keep the reusable native core, but restore an identical-input upstream reference
+Keep the reusable native core, use the identical-input upstream reference
 and add nonzero-quadratic trajectory captures before drawing general conclusions
 about the method. Audit native versus common KKT stopping, then test one
 primal-dual balance or restart intervention at a time. A global 2^-13 objective
 rescaling is largely neutralized by existing balance; equality-penalty curvature
 adds substantial sparse work without activating an upstream proximal solve.
 Neither is a justified default or a measured improvement.
+
+The pinned native upstream reference now replays those exact captures. It accepts
+both supplied known-qualified points at iteration zero under its native rule and
+the unchanged independent common gate. Both cold starts reach 100,000 iterations
+without qualification: common gaps 0.00132932 and 0.0170812, with native one-shot
+API wall times 37.3320 and 34.8176 seconds. Thus the evidence supports an explicit
+common-KKT check before the persistent iteration, while cold convergence remains
+a separate problem in both implementations. Two tiny upstream cold solves report
+OPTIMAL but narrowly fail the stricter common gap gate; native status alone cannot
+replace external qualification. These eight one-off diagnostics do not establish
+a speedup. [Exact inputs, complete vectors and independent audits](../results/local/2026-09-09/upstream-identical-capture-v608/README.md).
+
+An explicit GPU common-KKT stopping policy now fixes the known-point regression:
+four actual captured starts across single-block and two-block kernels stop at
+zero iterations with unchanged primal/dual bits and pass the independent gate.
+Fourteen focused GPU calls cover mathematical and lifecycle failure cases. The
+default kernels retain their previous compiled resource footprints. The policy
+remains opt-in; four forced-single-block cold comparisons still fail at their
+60-second deadlines, so no cold-convergence or general speed claim follows.
+[Implementation, memory cost and complete evidence](GPU_PERSISTENT_CAPTURE_REPLAY.md#pinned-upstream-comparator-and-optional-gpu-stopping-policy).
 
 The bounded low-thrust truth set has also completed locally: four routes,
 66 native leg solves, 110.374 seconds including verification. Both original
@@ -251,6 +272,18 @@ the next score experiment toward broader itinerary construction and coupled
 timing/mass choices, with a matched-budget baseline, rather than repeatedly
 sampling this rejected substitution neighborhood.
 [Fixed cargo, full controls, failures and exact work counts](../results/local/2026-09-09/fixed-cargo-truth-v606/README.md).
+
+A final bounded return-window rescue also completed. It reused the certified
+ship-7 prefixes and fixed cargo, screened 9,438 legal window pairs, and ran one
+fresh original-route control plus four candidate returns. The control passes both
+fleet checkers; every candidate remains uncertified. The cheapest proxy estimate
+is 213.617946 kg against 91.543915 kg available, and all four low-thrust attempts
+consume that allowance while retaining nonzero defects. The run took 86.221170
+seconds including verification and produced no score gain. Do not repeat this
+return-only grid: the next distinct mission hypothesis must reduce preceding
+fuel use or change replacement geometry and coupled itinerary timing. This finite
+failed search does not prove physical infeasibility.
+[Complete controls, failed arrays and independent accounting](../results/local/2026-09-09/return-window-rescue-v607b/README.md).
 
 ## Reporting after each tranche
 

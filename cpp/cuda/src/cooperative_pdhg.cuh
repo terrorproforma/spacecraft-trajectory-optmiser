@@ -763,7 +763,7 @@ __global__ void cooperative_residual_kernel(
     grid_evaluate_report(problem, control, report, report->iterations);
 }
 
-__global__ void cooperative_solve_kernel(
+template<bool Common> __global__ void cooperative_solve_kernel(
     DeviceProblem* problem,
     DeviceControl* control,
     DeviceReport* report,
@@ -795,11 +795,33 @@ __global__ void cooperative_solve_kernel(
     const unsigned int check_frequency =
         control->residual_check_frequency == 0U ? 1U : control->residual_check_frequency;
     const bool recovery_enabled =
-        control->iteration_limit >= 350'000U
+        !Common && control->iteration_limit >= 350'000U
         && fmin(control->feasibility_tolerance, control->optimality_tolerance)
             <= 1.0e-6;
     const std::uint64_t pdhg_limit =
         recovery_enabled ? 300'000U : control->iteration_limit;
+
+    if constexpr (Common) {
+        if (grid_rank() == 0) {
+            problem->common_kkt->result = {};
+            if (*cancellation != 0) {
+                report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+                atomicExch(&should_stop, 1);
+            }
+        }
+        grid_barrier();
+        grid_evaluate_report(problem, control, report, 0);
+        if (atomicAdd(&should_stop, 0)) return;
+        common_kkt_evaluate<true>(problem, 0);
+        if (grid_rank() == 0) {
+            if (*cancellation != 0) report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+            else if (!problem->common_kkt->result.finite) report->termination = SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE;
+            else if (problem->common_kkt->result.passes) report->termination = SPACEPDHCG_CUDA_TERMINATION_OPTIMAL;
+            if (report->termination != SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT) atomicExch(&should_stop, 1);
+        }
+        grid_barrier();
+        if (atomicAdd(&should_stop, 0)) return;
+    }
 
     std::uint64_t iteration = 1;
     for (; iteration <= pdhg_limit; ++iteration) {
@@ -919,14 +941,19 @@ __global__ void cooperative_solve_kernel(
         if (iteration == 1U || iteration % check_frequency == 0U
             || iteration == pdhg_limit) {
             grid_evaluate_report(problem, control, report, iteration);
+            if constexpr (Common) common_kkt_evaluate<true>(problem, iteration);
             if (grid_rank() == 0) {
-                if (!isfinite(report->objective)
+                if (Common && *cancellation != 0) {
+                    report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
+                    atomicExch(&should_stop, 1);
+                } else if (Common ? !problem->common_kkt->result.finite
+                    : (!isfinite(report->objective)
                     || !isfinite(report->relative_primal_residual)
-                    || !isfinite(report->relative_dual_residual)) {
+                    || !isfinite(report->relative_dual_residual))) {
                     report->termination = SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE;
                     atomicExch(&should_stop, 1);
                 } else if (
-                    report->natural_residual_inf
+                    Common ? problem->common_kkt->result.passes : report->natural_residual_inf
                         <= fmin(
                             control->feasibility_tolerance,
                             control->optimality_tolerance
@@ -944,6 +971,10 @@ __global__ void cooperative_solve_kernel(
     }
     if (atomicAdd(&cancelled, 0) != 0) {
         grid_evaluate_report(problem, control, report, iteration - 1U);
+        if (Common && grid_rank() == 0) {
+            problem->common_kkt->result.valid = 0;
+            problem->common_kkt->result.passes = 0;
+        }
         if (grid_rank() == 0) report->termination = SPACEPDHCG_CUDA_TERMINATION_CANCELLED;
     }
 }
