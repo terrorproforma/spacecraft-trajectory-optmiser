@@ -1,0 +1,93 @@
+{
+  "scope": "CPU saved-evidence verification and independent source review; no GPU calls",
+  "manifest_sha256": "ee312d9988b4ee9c1ca68d5cc0236d00583eeb637c911af7ca101abe9d90c12a",
+  "source_commit": "32efbed13eae47d2c8352771e884a2ad5ff5d07e",
+  "source_archive_sha256": "2b7e17d162cfb0e401ba6e06537a566f813bc85deb13ffceb5ed01f41b74cbda",
+  "core_sha256": "83487574646fe67fce156c9a2055f448341c99f189ac2c66d856bfcf1b280047",
+  "replay_sha256": "f20ef5fd5f8af347c4c372d9e76352f3ba718d47680bf6175b0454bf945999de",
+  "test_sha256": "2f31dd17a57a025249c4b35bcc3ff4b47b88d9d0f6c76be3fcc8b5675d7d056e",
+  "script_sha256": "0d68e6f850e9c35abb0b6c21956d27963bd8a84625e1425d6de2963182935605",
+  "owned_source_hashes_verified": {
+    "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h": "ca11846bf8cd727d497a3bc5826685bcf54a4673cc0f896841dc66b9c6186962",
+    "cpp/cuda/include/spacepdhcg/cuda/l1_epigraph_arithmetic.hpp": "3137cd44b44b4dc83d9ade97d74376bfa37e9cd8b068e96b3b7caa184f4d525e",
+    "cpp/cuda/src/persistent_pdhcg.cu": "e9e613da9aeaa54ff7c8285c3749e6393c4ff2e2cfb34762fb76709f4686478e",
+    "cpp/cuda/src/persistent_l1.cuh": "28178337cdf6957a6be1038688efca82a9b2428858777939390e6a5f8421b796",
+    "cpp/cuda/src/persistent_l1_host.cuh": "d924f5f189f9971f26cacb1c4258b77985fd93d39875b642d7abb069d3a51efa",
+    "cpp/cuda/tests/persistent_l1_snapshot.hpp": "d20a7617e36ff7a180fcbbaaa75216b6e3c16a41a14ff91c1d9c749c13708be5",
+    "cpp/cuda/tests/persistent_snapshot_replay.cu": "c3e2ce5604275fb319baf6eeb937357f89c06ea2f0f031f128c09c16e5e6ef86",
+    "cpp/cuda/tests/persistent_snapshot_conversion_test.cpp": "4b2361a71ff83c0b17c4e1054d2b5982e51bce22460d25052f53764429d792fa",
+    "cpp/cuda/tests/persistent_l1_test.cu": "bad5da16f7717d6c2794f5adf4d1adf5d410e8ab6d8fbeacbf04c81954a0f6ea",
+    "cpp/cuda/CMakeLists.txt": "8efce781ee1b45bfebb2f6b39b2fea81eb3cb6daf50c6e41853594d927ed7b63"
+  },
+  "captures": {
+    "conditioning": {
+      "snapshot_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "point_sha256": "9caf303469dcd254d56b74f8bf3818c8044f51a3a20bc3c07835b76dd23c5632",
+      "map_count": 1470,
+      "all_map_entries_match": true,
+      "all_original_point_bits_preserved_before_cuda": true
+    },
+    "difficult": {
+      "snapshot_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "point_sha256": "b92be6c5a0051ab99c000c459ef466c69fc8b2fd669c38b3580aea000d926da6",
+      "map_count": 1631,
+      "all_map_entries_match": true,
+      "all_original_point_bits_preserved_before_cuda": true
+    }
+  },
+  "compiled_resources": {
+    "cooperative_solve_kernelILb1": {
+      "registers": 96,
+      "stack": 0,
+      "shared": 7168,
+      "local": 0
+    },
+    "12solve_kernelILb1": {
+      "registers": 204,
+      "stack": 40,
+      "shared": 1032,
+      "local": 0
+    },
+    "cooperative_solve_kernelILb0": {
+      "registers": 80,
+      "stack": 0,
+      "shared": 7168,
+      "local": 0
+    },
+    "12solve_kernelILb0": {
+      "registers": 148,
+      "stack": 40,
+      "shared": 1032,
+      "local": 0
+    },
+    "cooperative_l1_kernel": {
+      "registers": 198,
+      "stack": 40,
+      "shared": 7168,
+      "local": 0
+    },
+    "cooperative_l1_initialise_kernel": {
+      "registers": 58,
+      "stack": 0,
+      "shared": 5120,
+      "local": 0
+    },
+    "cooperative_halpern_kernel": {
+      "registers": 96,
+      "stack": 0,
+      "shared": 7168,
+      "local": 0
+    }
+  },
+  "source_review": {
+    "blocking_findings_remaining": [],
+    "fixed_before_gpu": "Deleted exactly-zero Q traversal: atomic writes at inactive t could race ordinary dummy stores even though the values were zero.",
+    "mapping": "Disjoint native row/variable descriptor bounds on host; exact Q=0, isolated positive-cost t and +/-v-t zero-upper rows proved from original device CSC/CSR.",
+    "working_state": "Separate masked A/smooth c view shares iterate buffers; inactive t and pair rows excluded from Ruiz, norms, power products and updates. Original coefficients/common view retained.",
+    "prox_and_recovery": "Dual-first retained Moreau step, diagonal-metric soft(v-d*g,d*lambda), then t=abs(v). Nonzero v selects strict endpoint; exactly zero uses clipped negative retained gradient.",
+    "accuracy": "Initial original point audited before completion. Every acceptance uses original objective, grouping, cones, gap and block complementarity with unchanged thresholds.",
+    "lifecycle": "Disable resets original history and forces original scaling; enable forces reduced refresh; checkpoint/numeric/common-policy changes rejected while enabled. Cancellation takes precedence.",
+    "occupancy": "Setter uses min(original common capacity, L1 solve occupancy, L1 initializer occupancy); subsequent grid changes recheck L1 capacity.",
+    "limits": "20-step norm estimate remains heuristic. Full storage retained. Build/analytic evidence cannot establish cold convergence, equal-accuracy speedup, mission score or SOTA."
+  }
+}

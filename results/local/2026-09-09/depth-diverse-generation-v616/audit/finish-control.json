@@ -1,0 +1,31 @@
+{
+  "GPU_calls": 0,
+  "fresh_lambert_evaluations": 0,
+  "generations": 0,
+  "refinements": 0,
+  "scalar_finish_checks": 2,
+  "controls": [
+    {
+      "control": "current_flat_deploy_proxy",
+      "mass_after_deploys_kg": 1465.4389852022405,
+      "current_completion_return_inflation": 1.4623077270440392,
+      "accepted_by_frozen_scalar_finish": false,
+      "failure": "mass_below_dry_plus_collected",
+      "cargo_preserved_kg": 654.0999315537304,
+      "final_cargo_margin_kg": null,
+      "no_physical_certificate": true
+    },
+    {
+      "control": "measured_deploy_prefix_mass_control",
+      "mass_after_deploys_kg": 1496.8023275605192,
+      "current_completion_return_inflation": 1.468577583205441,
+      "accepted_by_frozen_scalar_finish": false,
+      "failure": "mass_below_dry_plus_collected",
+      "cargo_preserved_kg": 654.0999315537304,
+      "final_cargo_margin_kg": null,
+      "no_physical_certificate": true
+    }
+  ],
+  "measured_minus_proxy_deploy_mass_kg": 31.363342358278715,
+  "scope": "Exact frozen _finish on saved incumbent epochs and Lambert DVs; this bypasses grid generation for diagnosis only and emits no candidate or fleet"
+}

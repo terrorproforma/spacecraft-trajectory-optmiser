@@ -223,9 +223,9 @@ feasibility and complementarity errors. Numerical spectral estimates put the
 current zero-Q stability products at about 0.898 and 0.908, despite modest
 underestimation by the twenty-step power method. This is evidence against a
 step-size violation on these two captures, not a general spectral certificate.
-The restarted Halpern experiment is reported below. Exact elimination of the
-detected L1 epigraph pairs remains a separate hypothesis requiring original
-primal/dual recovery and equivalence checks.
+The restarted Halpern and exact L1 epigraph experiments are reported below. Both
+retain the original-equation accuracy gate; neither has qualified these cold
+captures within the tested budget.
 
 ## Optional Halpern and restart comparison
 
@@ -271,3 +271,59 @@ both worsen. These single samples measure unqualified iteration cost, not time
 to a qualified solution. Retain both modes as explicit diagnostics; neither earns
 default selection, a fleet improvement, or a SOTA claim.
 [All source attempts, CPU checks, tiny outcomes and real vectors](../results/local/2026-09-09/halpern-core-v612/README.md).
+
+## Optional exact L1 proximal representation
+
+`--l1-prox` is a separate, default-off diagnostic. It requires the common-KKT
+policy, a positive explicit cooperative grid, exactly zero Q, and provably
+isolated pairs `v-t <= 0`, `-v-t <= 0` with positive cost `lambda*t`. The working
+problem replaces those pairs with `lambda*abs(v)` and a diagonal soft-threshold
+step. It retains the dual-first update and is mutually exclusive with Halpern.
+Original coefficients, arrays and acceptance equations are preserved. New
+iterates reconstruct `t=abs(v)` and the original dual pair; supplied original
+points are checked before any reconstruction. The GPU independently validates
+the exact mapping, including tiny nonzero coefficients that must be rejected.
+
+Explicit masks remove 1,470/1,631 logical epigraph variables and twice as many
+working rows. They do not reduce allocation: this diagnostic retains the full
+original layout and adds private masks/coefficients. Peak recorded workspace
+bytes increase from 19,052,707 to 19,472,455 for conditioning and from 19,420,931
+to 19,886,603 for difficult. Scaling uses retained operators and a joint norm
+including both smooth costs and L1 penalties. Enabling or disabling the mode
+forces appropriate scaling/history refresh; checkpoint/restore while enabled
+is unsupported. Production default/common compiled resource counts are
+unchanged. The existing experimental Halpern kernel changes from 94 to 96
+registers; runtime parity for that mode was not tested in this tranche.
+
+Source review caught and removed a structural-zero Q traversal race before any
+GPU execution. The final frozen build passes nine tiny solver calls with ten
+actual updates, including signed/zero scalar-SOC oracles, untouched original
+seed acceptance, mode-off continuation without reseeding, cancellation and
+nonfinite rejection. Two actual supplied capture points also qualify at zero
+updates with unchanged primal/dual bits, following two separately counted
+one-step bootstraps.
+
+The four cold calls share the final binary, 128 blocks, a 100,000-update cap and
+30-second deadline. All finish the full iteration budget and remain unqualified:
+
+| Capture | Mode | Native solve seconds | Original normalized gap | Qualified |
+| --- | --- | ---: | ---: | --- |
+| conditioning | off | 5.424073 | 0.999924306 | No |
+| conditioning | L1 | 3.610990 | 1.000290548 | No |
+| difficult | off | 5.549215 | 0.011227050 | No |
+| difficult | L1 | 3.656115 | 0.003878469 | No |
+
+The difficult gap improves, but primal feasibility worsens on both captures.
+Independent 65-digit arithmetic confirms the reconstructed epigraph pairs have
+zero complementarity error: all 1,470 conditioning penalty variables are exactly
+zero; difficult has 1,629 zeros and two positive values with the correct endpoint
+duals. Retained stationarity/equality errors still dominate conditioning, and
+retained SOC feasibility and complementarity errors remain on difficult. The
+representation is working as designed; the remaining equations still need to
+converge.
+These single measurements establish lower iteration cost, not lower time to
+verified accuracy. No default selection, native GTOC12 backend integration or
+fleet promotion follows. Reduced-coordinate balance diagnostics motivate a
+separate investigation; reference-derived weights are not a deployed tuning
+policy or a demonstrated convergence bound.
+[Exact source, preserved build attempts, mathematical review and complete GPU outputs](../results/local/2026-09-09/l1-prox-core-v615/README.md).

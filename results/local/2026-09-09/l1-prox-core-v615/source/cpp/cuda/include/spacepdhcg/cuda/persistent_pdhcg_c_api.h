@@ -1,0 +1,496 @@
+/*
+ * SpacePDHCG persistent CUDA workspace C ABI.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#pragma once
+
+#include "spacepdhcg/accelerator_c_api.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION 1U
+
+typedef struct spacepdhcg_cuda_workspace spacepdhcg_cuda_workspace;
+
+typedef enum spacepdhcg_cuda_status {
+    SPACEPDHCG_CUDA_SUCCESS = 0,
+    SPACEPDHCG_CUDA_INVALID_ARGUMENT = 1,
+    SPACEPDHCG_CUDA_INVALID_STATE = 2,
+    SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH = 3,
+    SPACEPDHCG_CUDA_POINTER_CONTRACT = 4,
+    SPACEPDHCG_CUDA_BUSY = 5,
+    SPACEPDHCG_CUDA_RUNTIME_ERROR = 6,
+    SPACEPDHCG_CUDA_NUMERICAL_FAILURE = 7,
+    SPACEPDHCG_CUDA_UNSUPPORTED = 8,
+    SPACEPDHCG_CUDA_OUT_OF_MEMORY = 9,
+    SPACEPDHCG_CUDA_INTERNAL_ERROR = 10
+} spacepdhcg_cuda_status;
+
+typedef enum spacepdhcg_cuda_workspace_state {
+    SPACEPDHCG_CUDA_UNINITIALISED = 0,
+    SPACEPDHCG_CUDA_CREATED = 1,
+    SPACEPDHCG_CUDA_VALUES_UPDATED = 2,
+    SPACEPDHCG_CUDA_WARM_STARTED = 3,
+    SPACEPDHCG_CUDA_SOLVING = 4,
+    SPACEPDHCG_CUDA_SOLVED = 5,
+    SPACEPDHCG_CUDA_FAILED = 6,
+    SPACEPDHCG_CUDA_CANCELLED = 7,
+    SPACEPDHCG_CUDA_DESTROYED = 8
+} spacepdhcg_cuda_workspace_state;
+
+typedef enum spacepdhcg_cuda_cone_kind {
+    SPACEPDHCG_CUDA_CONE_SECOND_ORDER = 0,
+    SPACEPDHCG_CUDA_CONE_ROTATED_SECOND_ORDER = 1,
+    SPACEPDHCG_CUDA_CONE_EXPONENTIAL = 2,
+    SPACEPDHCG_CUDA_CONE_POWER = 3,
+    SPACEPDHCG_CUDA_CONE_POSITIVE_SEMIDEFINITE = 4
+} spacepdhcg_cuda_cone_kind;
+
+typedef enum spacepdhcg_cuda_warm_start_mode {
+    SPACEPDHCG_CUDA_WARM_START_NONE = 0,
+    SPACEPDHCG_CUDA_WARM_START_PRIMAL = 1,
+    SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL = 2,
+    SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED = 3
+} spacepdhcg_cuda_warm_start_mode;
+
+typedef enum spacepdhcg_cuda_scaling_mode {
+    SPACEPDHCG_CUDA_SCALING_ALWAYS_REFRESH = 0,
+    SPACEPDHCG_CUDA_SCALING_REUSE = 1,
+    SPACEPDHCG_CUDA_SCALING_REFRESH_IF_NEEDED = 2
+} spacepdhcg_cuda_scaling_mode;
+
+typedef enum spacepdhcg_cuda_reset_flags {
+    SPACEPDHCG_CUDA_RESET_ITERATES = 1U,
+    SPACEPDHCG_CUDA_RESET_SCALING = 2U,
+    SPACEPDHCG_CUDA_RESET_FULL = 3U
+} spacepdhcg_cuda_reset_flags;
+
+typedef enum spacepdhcg_cuda_termination {
+    SPACEPDHCG_CUDA_TERMINATION_UNSPECIFIED = 0,
+    SPACEPDHCG_CUDA_TERMINATION_OPTIMAL = 1,
+    SPACEPDHCG_CUDA_TERMINATION_ITERATION_LIMIT = 2,
+    SPACEPDHCG_CUDA_TERMINATION_CANCELLED = 3,
+    SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE = 4
+} spacepdhcg_cuda_termination;
+
+typedef enum spacepdhcg_cuda_recovery_reason {
+    SPACEPDHCG_CUDA_RECOVERY_NOT_TRIGGERED = 0,
+    SPACEPDHCG_CUDA_RECOVERY_TIGHT_ITERATION_LIMIT = 1,
+    SPACEPDHCG_CUDA_RECOVERY_QUALIFIED = 2,
+    SPACEPDHCG_CUDA_RECOVERY_UNSUPPORTED_CONE = 3,
+    SPACEPDHCG_CUDA_RECOVERY_NONFINITE_INPUT = 4,
+    SPACEPDHCG_CUDA_RECOVERY_ZERO_CURVATURE = 5,
+    SPACEPDHCG_CUDA_RECOVERY_INCONSISTENT_ACTIVE_SET = 6,
+    SPACEPDHCG_CUDA_RECOVERY_DUAL_INFEASIBLE = 7,
+    SPACEPDHCG_CUDA_RECOVERY_EXHAUSTED = 8,
+    SPACEPDHCG_CUDA_RECOVERY_CANCELLED = 9
+} spacepdhcg_cuda_recovery_reason;
+
+typedef struct spacepdhcg_cuda_cone_descriptor {
+    spacepdhcg_cuda_cone_kind kind;
+    int32_t start;
+    int32_t vector_dimension;
+    double power_alpha;
+} spacepdhcg_cuda_cone_descriptor;
+
+/*
+ * Sparse topology is supplied through the accelerator exchange. Cone
+ * descriptors are small host metadata copied synchronously during create.
+ */
+typedef struct spacepdhcg_cuda_structure {
+    uint32_t abi_version;
+    uint64_t topology_fingerprint;
+    int32_t variables;
+    int32_t scalar_rows;
+    int32_t affine_rows;
+    size_t quadratic_nonzeros;
+    size_t scalar_nonzeros;
+    size_t affine_nonzeros;
+    const spacepdhcg_cuda_cone_descriptor* affine_cones;
+    size_t affine_cone_count;
+    const spacepdhcg_cuda_cone_descriptor* variable_cones;
+    size_t variable_cone_count;
+} spacepdhcg_cuda_structure;
+
+typedef void (*spacepdhcg_cuda_external_retain_fn)(void* context);
+typedef void (*spacepdhcg_cuda_external_release_fn)(void* context);
+
+typedef struct spacepdhcg_cuda_create_options {
+    uint32_t abi_version;
+    spacepdhcg_cuda_scaling_mode scaling_mode;
+    double maximum_relative_matrix_change;
+    double maximum_relative_vector_change;
+    uint64_t maximum_scaling_reuse_updates;
+    int32_t debug_validate_aliases;
+    void* external_lifetime_context;
+    spacepdhcg_cuda_external_retain_fn retain_external;
+    spacepdhcg_cuda_external_release_fn release_external;
+} spacepdhcg_cuda_create_options;
+
+typedef struct spacepdhcg_cuda_solve_options {
+    uint32_t abi_version;
+    double optimality_tolerance;
+    double feasibility_tolerance;
+    uint64_t iteration_limit;
+    uint32_t residual_check_frequency;
+} spacepdhcg_cuda_solve_options;
+
+typedef struct spacepdhcg_cuda_diagnostics {
+    uint32_t abi_version;
+    spacepdhcg_cuda_workspace_state state;
+    spacepdhcg_cuda_termination termination;
+    uint64_t iterations;
+    double objective;
+    double scalar_primal_violation_inf;
+    double box_violation_inf;
+    double affine_cone_distance_inf;
+    double stationarity_inf;
+    double natural_residual_inf;
+    double complementarity_inf;
+    double relative_primal_residual;
+    double relative_dual_residual;
+    double coefficient_change_max;
+    double coefficient_change_norm;
+    double scaling_min;
+    double scaling_max;
+    double update_seconds;
+    double scaling_seconds; /* Preamble, measured separately from solve_seconds. */
+    double solve_seconds;   /* Iteration and recovery time; excludes scaling. */
+    double residual_seconds;
+    uint64_t allocation_count;
+    uint64_t free_count;
+    uint64_t active_allocation_count;
+    uint64_t active_bytes;
+    uint64_t peak_active_bytes;
+    uint64_t topology_allocation_count;
+    uint64_t topology_index_copy_count;
+    uint64_t total_copy_count;
+    uint64_t total_copy_bytes;
+    uint64_t h2d_copy_count;
+    uint64_t h2d_copy_bytes;
+    uint64_t d2h_copy_count;
+    uint64_t d2h_copy_bytes;
+    uint64_t d2d_copy_count;
+    uint64_t d2d_copy_bytes;
+    uint64_t update_epoch;
+    uint64_t solve_epoch;
+    uint64_t scaling_epoch;
+    uint64_t scaling_reuse_count;
+    uint64_t graph_epoch;
+    uint64_t allocation_delta_last_update;
+    uint64_t topology_allocation_delta_last_update;
+    uint64_t topology_index_copy_delta_last_update;
+    spacepdhcg_cuda_warm_start_mode warm_start_mode;
+    int32_t warm_start_accepted;
+    int32_t scaling_refreshed;
+    int32_t used_declared_stream;
+    int32_t hidden_cpu_fallback;
+    uint64_t recovery_count;
+    uint64_t recovery_rejected_count;
+    uint64_t recovery_iterations;
+    uint64_t recovery_attempt_count;
+    spacepdhcg_cuda_recovery_reason recovery_trigger_reason;
+    spacepdhcg_cuda_recovery_reason recovery_outcome_reason;
+    double recovery_seconds;
+    double recovery_initial_residual;
+    double recovery_final_residual;
+    double recovery_final_primal_residual;
+    double recovery_final_stationarity;
+    double recovery_final_complementarity;
+    int32_t recovery_stationarity_index;
+    double recovery_stationarity_value;
+} spacepdhcg_cuda_diagnostics;
+
+/* Device-clock phase counts for the last solve's recovery attempt. Counts are
+ * cycles, not nanoseconds; use recovery_seconds for elapsed time. Reading this
+ * cached profile does not enqueue a device-to-host transfer. */
+typedef struct spacepdhcg_cuda_recovery_profile {
+    uint32_t abi_version;
+    double initial_primal_residual;
+    double initial_stationarity;
+    uint64_t projection_cycles;
+    uint64_t feasibility_cycles;
+    uint64_t dual_refinement_cycles;
+    uint64_t certificate_cycles;
+    uint64_t certificate_attempts;
+    double last_certificate_residual;
+    double last_certificate_primal;
+} spacepdhcg_cuda_recovery_profile;
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_recovery_profile(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_recovery_profile* profile
+);
+
+typedef struct spacepdhcg_cuda_pointer_snapshot {
+    uintptr_t quadratic_offsets;
+    uintptr_t quadratic_indices;
+    uintptr_t scalar_offsets;
+    uintptr_t scalar_indices;
+    uintptr_t affine_offsets;
+    uintptr_t affine_indices;
+    uintptr_t quadratic_values;
+    uintptr_t scalar_values;
+    uintptr_t affine_values;
+    uintptr_t primal;
+    uintptr_t dual;
+    uintptr_t scaling;
+} spacepdhcg_cuda_pointer_snapshot;
+
+/* Optional diagnostic policy. Existing public structs and the default stopping
+ * rule are unchanged. This policy audits the supplied native coordinates;
+ * callers translating a problem must not describe it as an original-coordinate
+ * certificate. Only free primal variables, an equality prefix followed by
+ * upper-only scalar rows, and contiguous standard SOC affine rows are supported.
+ * Q must be the full symmetric positive-semidefinite Hessian, with both off-
+ * diagonal entries stored. Symmetry and convexity remain caller preconditions;
+ * this domain validator does not prove them. A residual pass is not a PSD proof.
+ * Numeric updates are unsupported while enabled; disable before updating and
+ * reconfigure afterward. Checkpoints do not change this workspace policy.
+ * The fixed tolerances are explicit and independent of solve_options.
+ */
+typedef struct spacepdhcg_cuda_common_kkt_options {
+    uint32_t abi_version;
+    int32_t enabled;
+    int32_t equality_rows;
+    int32_t reserved;
+    double relative_tolerance; /* Must be 1e-9 in this bounded diagnostic. */
+    double cone_tolerance;     /* Must be 1e-8. */
+} spacepdhcg_cuda_common_kkt_options;
+
+typedef struct spacepdhcg_cuda_common_kkt_diagnostics {
+    uint32_t abi_version;
+    int32_t enabled;
+    int32_t valid; /* Last completed solve only; reset/reseed/update invalidate. */
+    int32_t finite;
+    int32_t passes;
+    int32_t equality_rows;
+    uint64_t evaluations;
+    uint64_t evaluated_iteration;
+    uint64_t evaluation_clock_cycles; /* Block-zero device cycles, not seconds. */
+    double primal_relative;
+    double dual_relative;
+    double gap_relative;
+    double block_complementarity_relative;
+    double primal_cone_violation;
+    double dual_cone_violation;
+    double primal_absolute;
+    double conic_equation_absolute;
+    double dual_absolute;
+    double objective;
+    double dual_objective;
+} spacepdhcg_cuda_common_kkt_diagnostics;
+
+/* Synchronous opt-in setup, including GPU domain validation and retained row
+ * topology preparation. Requires prior operations to have completed. */
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_common_kkt_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_common_kkt_options* options
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_common_kkt_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_common_kkt_diagnostics* diagnostics
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
+    const spacepdhcg_cuda_structure* structure,
+    const spacepdhcg_cqp_accelerator_exchange* exchange,
+    const spacepdhcg_cuda_create_options* options,
+    spacepdhcg_cuda_workspace** workspace
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_update_async(
+    spacepdhcg_cuda_workspace* workspace,
+    uint64_t topology_fingerprint,
+    const spacepdhcg_cqp_numeric_accelerator_views* values,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_warm_start_async(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_warm_start_mode mode,
+    const spacepdhcg_cqp_iterate_accelerator_views* iterates,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_solve_options* options,
+    spacepdhcg_accelerator_stream stream
+);
+
+/* Select execution without changing numerical tolerances or checkpoint layout.
+ * blocks == 0 selects the legacy single-block implementation; blocks > 0 selects
+ * a cooperative grid. The grid must fit the device's occupancy limit. Call only
+ * after pending workspace work has completed. This is intended for reproducible
+ * tuning; create selects a size-dependent default on supported devices. */
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks(
+    spacepdhcg_cuda_workspace* workspace,
+    int32_t blocks
+);
+
+/* Experimental, opt-in primal-first reflected Halpern iteration. Existing
+ * default kernels and ABI layouts are unchanged. Requires common-KKT policy,
+ * exactly zero Q, its supported free-variable domain and a positive cooperative
+ * block count. The existing spectral heuristic is retained: a positive-definite
+ * PDHG metric is a caller precondition, not proved by the power estimate.
+ * Mode 1 is plain Halpern; mode 2 adds 200-step adaptive restarts/weighting.
+ * Audits and output always describe the proximal PDHG point T(z). Every solve
+ * starts a new anchor/weight epoch from its supplied iterate. No anchored state
+ * is retained between solves. Checkpoint/restore are unsupported while enabled;
+ * re-enable refreshes scaling metadata. Disable this before disabling common KKT.
+ */
+typedef struct spacepdhcg_cuda_halpern_options {
+    uint32_t abi_version;
+    int32_t mode; /* 0 disabled, 1 plain, 2 adaptive */
+    int32_t reserved[2];
+} spacepdhcg_cuda_halpern_options;
+
+typedef struct spacepdhcg_cuda_halpern_diagnostics {
+    uint32_t abi_version;
+    int32_t mode;
+    int32_t valid;
+    int32_t finite;
+    uint64_t updates;
+    uint64_t inner_iterations;
+    uint64_t restarts;
+    uint64_t weight_updates;
+    uint64_t weight_fallbacks;
+    uint64_t metric_evaluations;
+    uint64_t last_restart_iteration;
+    uint64_t epoch_reference_iteration;
+    double primal_weight;
+    double minimum_primal_weight;
+    double maximum_primal_weight;
+    double fixed_point_error;
+    double epoch_initial_error;
+    double eta;
+} spacepdhcg_cuda_halpern_diagnostics;
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_halpern_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_halpern_options* options
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_halpern_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_halpern_diagnostics* diagnostics
+);
+
+/* Diagnostic exact L1 reduction, default off and mutually exclusive with
+ * Halpern. Requires common-KKT, exact Q=0 and a positive cooperative grid.
+ * Each host descriptor proves two original scalar rows v-t<=0 and -v-t<=0;
+ * t has positive c_t and no other actual nonzero coupling. The setter checks
+ * this on-device. Descriptors/targets must be disjoint. The full original
+ * layout is retained in memory; masked working operators and a GPU soft prox
+ * replace these rows/columns. Original equations govern qualification of every
+ * returned point, including unqualified iteration-limit/cancelled outputs.
+ * Original supplied points are checked before any completion. Enable/disable
+ * refresh scaling; checkpoint/restore are unsupported while enabled. The
+ * existing 20-step spectral heuristic is not a proved upper norm bound. */
+typedef struct spacepdhcg_cuda_l1_pair {
+    int32_t epigraph_variable;
+    int32_t absolute_variable;
+    int32_t positive_scalar_row;
+    int32_t negative_scalar_row;
+} spacepdhcg_cuda_l1_pair;
+typedef struct spacepdhcg_cuda_l1_options {
+    uint32_t abi_version;
+    int32_t enabled;
+    int32_t pair_count;
+    int32_t reserved;
+} spacepdhcg_cuda_l1_options;
+typedef struct spacepdhcg_cuda_l1_diagnostics {
+    uint32_t abi_version;
+    int32_t enabled, valid, finite;
+    int32_t pairs, active_variables, active_rows;
+    int32_t retained_variables, retained_rows;
+    uint64_t updates, completions;
+    double eta, bound_scale, objective_scale;
+    double minimum_threshold, maximum_threshold;
+} spacepdhcg_cuda_l1_diagnostics;
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_l1_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_l1_options* options,
+    const spacepdhcg_cuda_l1_pair* host_pairs
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_l1_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_l1_diagnostics* diagnostics
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_query(
+    spacepdhcg_cuda_workspace* workspace,
+    int32_t* complete
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_wait(
+    spacepdhcg_cuda_workspace* workspace
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_diagnostics* diagnostics
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_residuals_async(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_pointer_snapshot(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_pointer_snapshot* snapshot
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_reset_async(
+    spacepdhcg_cuda_workspace* workspace,
+    uint32_t reset_flags,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_refresh_scaling_async(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_checkpoint_bytes(
+    const spacepdhcg_cuda_workspace* workspace,
+    size_t* bytes
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_checkpoint_async(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_accelerator_buffer_view checkpoint,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_restore_async(
+    spacepdhcg_cuda_workspace* workspace,
+    uint64_t topology_fingerprint,
+    spacepdhcg_accelerator_buffer_view checkpoint,
+    spacepdhcg_accelerator_stream stream
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_cancel(
+    spacepdhcg_cuda_workspace* workspace
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_last_error(
+    const spacepdhcg_cuda_workspace* workspace,
+    char* destination,
+    size_t destination_bytes
+);
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_destroy(
+    spacepdhcg_cuda_workspace** workspace
+);
+
+#ifdef __cplusplus
+}
+#endif

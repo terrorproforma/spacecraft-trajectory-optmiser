@@ -1,0 +1,986 @@
+{
+  "GPU_calls": 0,
+  "generations": 0,
+  "refinements": 0,
+  "fresh_lambert_evaluations": 0,
+  "source_commit": "f8b2ac7aeba9e29ea90f5814060bb8cfe5db22d7",
+  "input_sha256": "8a5e629546ee68ac999c0c2aae9fe996057030473b1ecb1ae25bb605a139545d",
+  "original_exact_plan_sha256": "4d2acec11541574783768c5dc5cd27cc3b9aa7e5b458b5a3f344c21ecd045107",
+  "original_deploy_order": [
+    30805,
+    40868,
+    12930,
+    14880,
+    55827,
+    17199,
+    27463,
+    49284,
+    36235
+  ],
+  "original_collect_order": [
+    40868,
+    12930,
+    14880,
+    55827,
+    17199,
+    49284,
+    36235,
+    27463,
+    30805
+  ],
+  "original_raw_kg": 654.0999315535996,
+  "original_weighted_kg": 542.1211869124701,
+  "original_deploy_end": 67075.0,
+  "original_collect_start": 67688.0,
+  "original_collect_end": 69278.0,
+  "original_return_epoch": 69728.0,
+  "grid_comparison": [
+    {
+      "role": "deploy_hop",
+      "from": 30805,
+      "to": 40868,
+      "departure": 64973.0,
+      "arrival": 65259.0,
+      "tof_days": 286.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 300.0,
+        "offset_days": 14.0
+      }
+    },
+    {
+      "role": "deploy_hop",
+      "from": 40868,
+      "to": 12930,
+      "departure": 65259.0,
+      "arrival": 65520.0,
+      "tof_days": 261.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 240.0,
+        "offset_days": -21.0
+      }
+    },
+    {
+      "role": "deploy_hop",
+      "from": 12930,
+      "to": 14880,
+      "departure": 65520.0,
+      "arrival": 65663.0,
+      "tof_days": 143.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 150.0,
+        "offset_days": 7.0
+      }
+    },
+    {
+      "role": "deploy_hop",
+      "from": 14880,
+      "to": 55827,
+      "departure": 65663.0,
+      "arrival": 65948.0,
+      "tof_days": 285.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 300.0,
+        "offset_days": 15.0
+      }
+    },
+    {
+      "role": "deploy_hop",
+      "from": 55827,
+      "to": 17199,
+      "departure": 65948.0,
+      "arrival": 66113.0,
+      "tof_days": 165.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 150.0,
+        "offset_days": -15.0
+      }
+    },
+    {
+      "role": "deploy_hop",
+      "from": 17199,
+      "to": 27463,
+      "departure": 66113.0,
+      "arrival": 66308.0,
+      "tof_days": 195.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 180.0,
+        "offset_days": -15.0
+      }
+    },
+    {
+      "role": "deploy_hop",
+      "from": 27463,
+      "to": 49284,
+      "departure": 66308.0,
+      "arrival": 66713.0,
+      "tof_days": 405.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 420.0,
+        "offset_days": 15.0
+      }
+    },
+    {
+      "role": "deploy_hop",
+      "from": 49284,
+      "to": 36235,
+      "departure": 66713.0,
+      "arrival": 67075.0,
+      "tof_days": 362.0,
+      "wait_grid": {
+        "exact": true,
+        "nearest": 0.0,
+        "offset_days": 0.0
+      },
+      "tof_grid": {
+        "exact": false,
+        "nearest": 360.0,
+        "offset_days": -2.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 36235,
+      "to": 40868,
+      "departure": 67193.0,
+      "arrival": 67418.0,
+      "tof_days": 225.0,
+      "dp_tof_grid": {
+        "exact": false,
+        "nearest": 210.0,
+        "offset_days": -15.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 67193.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": false,
+        "nearest": 240.0,
+        "offset_days": 15.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 40868,
+      "to": 12930,
+      "departure": 67688.0,
+      "arrival": 68003.0,
+      "tof_days": 315.0,
+      "dp_tof_grid": {
+        "exact": false,
+        "nearest": 300.0,
+        "offset_days": -15.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 67688.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": false,
+        "nearest": 300.0,
+        "offset_days": -15.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 12930,
+      "to": 14880,
+      "departure": 68003.0,
+      "arrival": 68243.0,
+      "tof_days": 240.0,
+      "dp_tof_grid": {
+        "exact": true,
+        "nearest": 240.0,
+        "offset_days": 0.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 68003.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": true,
+        "nearest": 240.0,
+        "offset_days": 0.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 14880,
+      "to": 55827,
+      "departure": 68243.0,
+      "arrival": 68534.0,
+      "tof_days": 291.0,
+      "dp_tof_grid": {
+        "exact": false,
+        "nearest": 300.0,
+        "offset_days": 9.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 68243.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": false,
+        "nearest": 300.0,
+        "offset_days": 9.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 55827,
+      "to": 17199,
+      "departure": 68534.0,
+      "arrival": 68663.0,
+      "tof_days": 129.0,
+      "dp_tof_grid": {
+        "exact": false,
+        "nearest": 120.0,
+        "offset_days": -9.0
+      },
+      "dp_departure_grid": {
+        "exact": false,
+        "nearest": 68528.0,
+        "offset_days": -6.0
+      },
+      "heuristic_tof_grid": {
+        "exact": false,
+        "nearest": 120.0,
+        "offset_days": -9.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 17199,
+      "to": 49284,
+      "departure": 68663.0,
+      "arrival": 68843.0,
+      "tof_days": 180.0,
+      "dp_tof_grid": {
+        "exact": true,
+        "nearest": 180.0,
+        "offset_days": 0.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 68663.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": true,
+        "nearest": 180.0,
+        "offset_days": 0.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 49284,
+      "to": 36235,
+      "departure": 68843.0,
+      "arrival": 69038.0,
+      "tof_days": 195.0,
+      "dp_tof_grid": {
+        "exact": false,
+        "nearest": 180.0,
+        "offset_days": -15.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 68843.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": false,
+        "nearest": 180.0,
+        "offset_days": -15.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 36235,
+      "to": 27463,
+      "departure": 69038.0,
+      "arrival": 69173.0,
+      "tof_days": 135.0,
+      "dp_tof_grid": {
+        "exact": false,
+        "nearest": 120.0,
+        "offset_days": -15.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 69038.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": false,
+        "nearest": 120.0,
+        "offset_days": -15.0
+      }
+    },
+    {
+      "role": "collect_hop",
+      "from": 27463,
+      "to": 30805,
+      "departure": 69173.0,
+      "arrival": 69278.0,
+      "tof_days": 105.0,
+      "dp_tof_grid": {
+        "exact": false,
+        "nearest": 90.0,
+        "offset_days": -15.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 69173.0,
+        "offset_days": 0.0
+      },
+      "heuristic_tof_grid": {
+        "exact": false,
+        "nearest": 90.0,
+        "offset_days": -15.0
+      }
+    },
+    {
+      "role": "earth_return",
+      "from": 30805,
+      "to": 0,
+      "departure": 69278.0,
+      "arrival": 69728.0,
+      "tof_days": 450.0,
+      "dp_tof_grid": {
+        "exact": true,
+        "nearest": 450.0,
+        "offset_days": 0.0
+      },
+      "dp_departure_grid": {
+        "exact": true,
+        "nearest": 69278.0,
+        "offset_days": 0.0
+      }
+    }
+  ],
+  "original_deploy_tofs_off_grid": 8,
+  "original_collect_tofs_off_dp_grid": 7,
+  "original_collect_departures_off_dp_grid": 1,
+  "original_order_present_in_generated_candidates": [],
+  "original_deployed_set_present_in_generated_candidates": [],
+  "maximum_original_order_prefix_reaching_completion": 2,
+  "closest_completion_prefixes": [
+    {
+      "depth": 2,
+      "prefix_length": 2,
+      "deployed": [
+        [
+          30805,
+          64973.0
+        ],
+        [
+          40868,
+          65273.0
+        ]
+      ]
+    },
+    {
+      "depth": 2,
+      "prefix_length": 2,
+      "deployed": [
+        [
+          30805,
+          64973.0
+        ],
+        [
+          40868,
+          65333.0
+        ]
+      ]
+    },
+    {
+      "depth": 10,
+      "prefix_length": 1,
+      "deployed": [
+        [
+          30805,
+          64973.0
+        ],
+        [
+          15833,
+          65093.0
+        ],
+        [
+          29792,
+          65243.0
+        ],
+        [
+          13949,
+          65663.0
+        ],
+        [
+          32309,
+          65963.0
+        ],
+        [
+          40706,
+          66143.0
+        ],
+        [
+          35464,
+          66293.0
+        ],
+        [
+          28844,
+          66653.0
+        ],
+        [
+          2922,
+          67193.0
+        ],
+        [
+          51451,
+          67493.0
+        ]
+      ]
+    },
+    {
+      "depth": 10,
+      "prefix_length": 1,
+      "deployed": [
+        [
+          30805,
+          64973.0
+        ],
+        [
+          15833,
+          65093.0
+        ],
+        [
+          29792,
+          65243.0
+        ],
+        [
+          13949,
+          65663.0
+        ],
+        [
+          32309,
+          65963.0
+        ],
+        [
+          40706,
+          66143.0
+        ],
+        [
+          35464,
+          66293.0
+        ],
+        [
+          28844,
+          66653.0
+        ],
+        [
+          2922,
+          67193.0
+        ],
+        [
+          51451,
+          67553.0
+        ]
+      ]
+    },
+    {
+      "depth": 10,
+      "prefix_length": 1,
+      "deployed": [
+        [
+          30805,
+          64973.0
+        ],
+        [
+          15833,
+          65093.0
+        ],
+        [
+          29792,
+          65243.0
+        ],
+        [
+          13949,
+          65663.0
+        ],
+        [
+          32309,
+          65963.0
+        ],
+        [
+          40706,
+          66143.0
+        ],
+        [
+          35464,
+          66293.0
+        ],
+        [
+          28844,
+          66653.0
+        ],
+        [
+          2922,
+          67193.0
+        ],
+        [
+          28675,
+          67613.0
+        ]
+      ]
+    }
+  ],
+  "incumbent_saved_dv_scalar_proxy_deploy_checks": [
+    {
+      "depth": 2,
+      "from": 30805,
+      "to": 40868,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 2.5484800341728713,
+      "authority_limit_at_sequential_proxy_mass": 3.892311959069685,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 190.55126055050644,
+      "measured_propellant_kg": 190.17570111592931,
+      "sequential_proxy_mass_after_deploy_kg": 2310.12435435155,
+      "measured_mass_after_deploy_kg": 2310.499914393946,
+      "reserve_kg": 371.4961344954558,
+      "reserve_margin_kg": 1438.6282198560943,
+      "reserve_gate_passes": true
+    },
+    {
+      "depth": 3,
+      "from": 40868,
+      "to": 12930,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 1.9149878674830016,
+      "authority_limit_at_sequential_proxy_mass": 3.906573281650553,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 131.44469851408297,
+      "measured_propellant_kg": 134.3139561586081,
+      "sequential_proxy_mass_after_deploy_kg": 2138.679655837467,
+      "measured_mass_after_deploy_kg": 2136.185958365677,
+      "reserve_kg": 489.79636315813053,
+      "reserve_margin_kg": 1148.8832926793366,
+      "reserve_gate_passes": true
+    },
+    {
+      "depth": 4,
+      "from": 12930,
+      "to": 14880,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 0.8327594785162549,
+      "authority_limit_at_sequential_proxy_mass": 2.311964312422379,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 53.79547465336967,
+      "measured_propellant_kg": 51.7437396985365,
+      "sequential_proxy_mass_after_deploy_kg": 2044.8841811840975,
+      "measured_mass_after_deploy_kg": 2044.4422187160217,
+      "reserve_kg": 538.2122903461632,
+      "reserve_margin_kg": 1006.6718908379344,
+      "reserve_gate_passes": true
+    },
+    {
+      "depth": 5,
+      "from": 14880,
+      "to": 55827,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 1.4010719315877376,
+      "authority_limit_at_sequential_proxy_mass": 4.819111463952791,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 85.7937891048522,
+      "measured_propellant_kg": 79.45700091866343,
+      "sequential_proxy_mass_after_deploy_kg": 1919.0903920792452,
+      "measured_mass_after_deploy_kg": 1924.9852178752683,
+      "reserve_kg": 615.4267005405302,
+      "reserve_margin_kg": 803.663691538715,
+      "reserve_gate_passes": true
+    },
+    {
+      "depth": 6,
+      "from": 55827,
+      "to": 17199,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 0.8993211271813717,
+      "authority_limit_at_sequential_proxy_mass": 2.972893420522326,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 52.07753759818195,
+      "measured_propellant_kg": 47.11157820598373,
+      "sequential_proxy_mass_after_deploy_kg": 1827.0128544810632,
+      "measured_mass_after_deploy_kg": 1837.8736397130629,
+      "reserve_kg": 662.2964843788939,
+      "reserve_margin_kg": 664.7163701021693,
+      "reserve_gate_passes": true
+    },
+    {
+      "depth": 7,
+      "from": 17199,
+      "to": 27463,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 1.621372649892898,
+      "authority_limit_at_sequential_proxy_mass": 3.6904883200261502,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 88.4095125447472,
+      "measured_propellant_kg": 80.14520871245259,
+      "sequential_proxy_mass_after_deploy_kg": 1698.603341936316,
+      "measured_mass_after_deploy_kg": 1717.7284310776845,
+      "reserve_kg": 741.8650456691664,
+      "reserve_margin_kg": 456.7382962671495,
+      "reserve_gate_passes": true
+    },
+    {
+      "depth": 8,
+      "from": 27463,
+      "to": 49284,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 1.5368048930796419,
+      "authority_limit_at_sequential_proxy_mass": 8.24430168848981,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 78.00860431936117,
+      "measured_propellant_kg": 72.24197789926302,
+      "sequential_proxy_mass_after_deploy_kg": 1580.5947376169547,
+      "measured_mass_after_deploy_kg": 1605.4864532485017,
+      "reserve_kg": 812.0727895565915,
+      "reserve_margin_kg": 268.52194806036323,
+      "reserve_gate_passes": true
+    },
+    {
+      "depth": 9,
+      "from": 49284,
+      "to": 36235,
+      "candidate_pool_contains_target": true,
+      "saved_lambert_dv": 1.5924905255132233,
+      "authority_limit_at_sequential_proxy_mass": 7.919155405307566,
+      "authority_gate_passes": true,
+      "proxy_propellant_kg": 75.15575241471434,
+      "measured_propellant_kg": 68.68412575413254,
+      "sequential_proxy_mass_after_deploy_kg": 1465.4389852022405,
+      "measured_mass_after_deploy_kg": 1496.8023275605192,
+      "reserve_kg": 879.7129667298344,
+      "reserve_margin_kg": 85.72601847240605,
+      "reserve_gate_passes": true
+    }
+  ],
+  "incumbent_saved_dv_scalar_proxy_collect_checks": [
+    {
+      "role": "collect_hop",
+      "from": 36235,
+      "to": 40868,
+      "saved_lambert_dv": 1.3218064873317321,
+      "sequential_proxy_mass_before_kg": 1465.4389852022405,
+      "authority_limit_at_sequential_proxy_mass": 5.308912945922701,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 58.07446464936895,
+      "measured_propellant_kg": 50.75628197343826
+    },
+    {
+      "role": "collect_hop",
+      "from": 40868,
+      "to": 12930,
+      "saved_lambert_dv": 2.910184566901946,
+      "sequential_proxy_mass_before_kg": 1473.86691617231,
+      "authority_limit_at_sequential_proxy_mass": 7.389977399239372,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 125.5425239527753,
+      "measured_propellant_kg": 124.59184716304799
+    },
+    {
+      "role": "collect_hop",
+      "from": 12930,
+      "to": 14880,
+      "saved_lambert_dv": 1.9062268443808619,
+      "sequential_proxy_mass_before_kg": 1416.3052272640248,
+      "authority_limit_at_sequential_proxy_mass": 5.859292926589617,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 80.22888558767757,
+      "measured_propellant_kg": 77.92156679513369
+    },
+    {
+      "role": "collect_hop",
+      "from": 14880,
+      "to": 55827,
+      "saved_lambert_dv": 2.7124290204253088,
+      "sequential_proxy_mass_before_kg": 1406.7128919843556,
+      "authority_limit_at_sequential_proxy_mass": 7.152837325466058,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 112.01359513925286,
+      "measured_propellant_kg": 111.27014641451683
+    },
+    {
+      "role": "collect_hop",
+      "from": 55827,
+      "to": 17199,
+      "saved_lambert_dv": 1.8594619156077954,
+      "sequential_proxy_mass_before_kg": 1365.5001182003389,
+      "authority_limit_at_sequential_proxy_mass": 3.2665461251505974,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 75.50679233711476,
+      "measured_propellant_kg": 84.20198943189484
+    },
+    {
+      "role": "collect_hop",
+      "from": 17199,
+      "to": 49284,
+      "saved_lambert_dv": 2.0015996871340187,
+      "sequential_proxy_mass_before_kg": 1359.8085209350927,
+      "authority_limit_at_sequential_proxy_mass": 4.577049124328207,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 80.76571947773694,
+      "measured_propellant_kg": 82.38827147095844
+    },
+    {
+      "role": "collect_hop",
+      "from": 49284,
+      "to": 36235,
+      "saved_lambert_dv": 1.664892818385272,
+      "sequential_proxy_mass_before_kg": 1337.3590232232696,
+      "authority_limit_at_sequential_proxy_mass": 5.041704944532565,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 66.40826991652224,
+      "measured_propellant_kg": 64.41619063901362
+    },
+    {
+      "role": "collect_hop",
+      "from": 36235,
+      "to": 27463,
+      "saved_lambert_dv": 1.6262562236594191,
+      "sequential_proxy_mass_before_kg": 1324.6947642581506,
+      "authority_limit_at_sequential_proxy_mass": 3.523779912132523,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 64.29055417548264,
+      "measured_propellant_kg": 67.50789980154286
+    },
+    {
+      "role": "collect_hop",
+      "from": 27463,
+      "to": 30805,
+      "saved_lambert_dv": 1.8717752586440208,
+      "sequential_proxy_mass_before_kg": 1338.8436351340026,
+      "authority_limit_at_sequential_proxy_mass": 2.711753863352847,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.2,
+      "proxy_propellant_kg": 74.50913715076933,
+      "measured_propellant_kg": 76.68617908265287
+    },
+    {
+      "role": "earth_return",
+      "from": 30805,
+      "to": 0,
+      "saved_lambert_dv": 6.001941066254261,
+      "sequential_proxy_mass_before_kg": 1382.1989743692702,
+      "authority_limit_at_sequential_proxy_mass": 8.438727141526464,
+      "authority_gate_passes": true,
+      "applied_proxy_inflation": 1.3149058548835355,
+      "proxy_propellant_kg": 251.89567662200386,
+      "measured_propellant_kg": 254.20057221204252
+    }
+  ],
+  "incumbent_saved_dv_sequential_proxy_final_cargo_margin_kg": -23.796633806464115,
+  "all_generated_cargo_equals_mining_at_saved_epochs": true,
+  "generated_cargo_shrink_detected": false,
+  "best_raw_by_depth": {
+    "8": {
+      "index": 2,
+      "raw_kg": 609.4455852156058,
+      "weighted_kg": 549.7907063122153,
+      "deploy_order": [
+        30805,
+        15833,
+        29792,
+        13949,
+        32309,
+        40706,
+        35464,
+        20805
+      ],
+      "deploy_end": 66713.0,
+      "collect_start": 67448.0,
+      "collect_end": 69308.0,
+      "earth_return": 69728.0
+    },
+    "7": {
+      "index": 4,
+      "raw_kg": 591.7864476386037,
+      "weighted_kg": 543.6497583582128,
+      "deploy_order": [
+        30805,
+        15833,
+        29792,
+        13949,
+        1283,
+        16364,
+        14239
+      ],
+      "deploy_end": 66443.0,
+      "collect_start": 68018.0,
+      "collect_end": 69308.0,
+      "earth_return": 69728.0
+    },
+    "6": {
+      "index": 31,
+      "raw_kg": 525.6673511293634,
+      "weighted_kg": 494.6540402204315,
+      "deploy_order": [
+        30805,
+        15833,
+        29792,
+        13949,
+        1283,
+        55279
+      ],
+      "deploy_end": 66143.0,
+      "collect_start": 68003.0,
+      "collect_end": 69233.0,
+      "earth_return": 69743.0
+    },
+    "9": {
+      "index": 36,
+      "raw_kg": 563.4496919917865,
+      "weighted_kg": 501.84540473337756,
+      "deploy_order": [
+        30805,
+        15833,
+        29792,
+        13949,
+        32309,
+        40706,
+        35464,
+        53831,
+        2922
+      ],
+      "deploy_end": 66983.0,
+      "collect_start": 67073.0,
+      "collect_end": 69173.0,
+      "earth_return": 69743.0
+    },
+    "5": {
+      "index": 51,
+      "raw_kg": 457.49486652977413,
+      "weighted_kg": 438.0118433630889,
+      "deploy_order": [
+        30805,
+        15833,
+        40868,
+        20805,
+        35319
+      ],
+      "deploy_end": 66083.0,
+      "collect_start": 68453.0,
+      "collect_end": 69203.0,
+      "earth_return": 69743.0
+    },
+    "4": {
+      "index": 99,
+      "raw_kg": 386.03696098562625,
+      "weighted_kg": 366.23190437816936,
+      "deploy_order": [
+        30805,
+        15833,
+        40868,
+        1283
+      ],
+      "deploy_end": 65573.0,
+      "collect_start": 68303.0,
+      "collect_end": 69203.0,
+      "earth_return": 69743.0
+    },
+    "3": {
+      "index": 119,
+      "raw_kg": 306.36550308008214,
+      "weighted_kg": 285.7553628706961,
+      "deploy_order": [
+        30805,
+        15833,
+        40868
+      ],
+      "deploy_end": 65333.0,
+      "collect_start": 68603.0,
+      "collect_end": 69173.0,
+      "earth_return": 69743.0
+    },
+    "2": {
+      "index": 139,
+      "raw_kg": 204.51745379876797,
+      "weighted_kg": 182.53867146610236,
+      "deploy_order": [
+        30805,
+        40868
+      ],
+      "deploy_end": 65273.0,
+      "collect_start": 68648.0,
+      "collect_end": 69068.0,
+      "earth_return": 69728.0
+    }
+  },
+  "failed_completion_depths": {
+    "1": 1,
+    "8": 3,
+    "9": 22,
+    "10": 4
+  },
+  "nine_ten_failure_strings": {
+    "greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected": 6,
+    "greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected": 8,
+    "greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:camp_negative,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected": 6,
+    "greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:camp_negative,forwardx16:no_return,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected": 2,
+    "greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected": 3,
+    "greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:camp_negative,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected": 1
+  },
+  "finite_conclusion": "The exact incumbent schedule is outside the generation grid. The retained beam did not recover its topology/quality. Proxy checks are estimates on saved Lambert values; they are not actual trace evidence that an ungenerated incumbent branch was pruned. No conclusion of physical infeasibility or global family exhaustion follows."
+}

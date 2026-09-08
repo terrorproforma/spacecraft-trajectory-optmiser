@@ -1,0 +1,181 @@
+{
+  "complete": true,
+  "gpu_calls": 0,
+  "manifest_sha256": "855b8fabfeb9850dae129ada30afb7f704f91792484275c606da0854ff2beb19",
+  "owned_source_identities": {
+    "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h": "e3c451f87f3a9cc52afe5254fb8041c50e7e33a8ffa77da431911e13430a5dda",
+    "cpp/cuda/include/spacepdhcg/cuda/l1_epigraph_arithmetic.hpp": "3137cd44b44b4dc83d9ade97d74376bfa37e9cd8b068e96b3b7caa184f4d525e",
+    "cpp/cuda/src/persistent_pdhcg.cu": "e9e613da9aeaa54ff7c8285c3749e6393c4ff2e2cfb34762fb76709f4686478e",
+    "cpp/cuda/src/persistent_l1.cuh": "439392fc722811c2f19615e1e6c17f9c5e4c332683d2b97118779ad0cf3123a4",
+    "cpp/cuda/src/persistent_l1_host.cuh": "d924f5f189f9971f26cacb1c4258b77985fd93d39875b642d7abb069d3a51efa",
+    "cpp/cuda/tests/persistent_l1_snapshot.hpp": "d20a7617e36ff7a180fcbbaaa75216b6e3c16a41a14ff91c1d9c749c13708be5",
+    "cpp/cuda/tests/persistent_snapshot_replay.cu": "c3e2ce5604275fb319baf6eeb937357f89c06ea2f0f031f128c09c16e5e6ef86",
+    "cpp/cuda/tests/persistent_snapshot_conversion_test.cpp": "4b2361a71ff83c0b17c4e1054d2b5982e51bce22460d25052f53764429d792fa",
+    "cpp/cuda/tests/persistent_l1_test.cu": "a817d575d78a6b5854c2ae65e89f8714a204ed3eff889532f27eaf2ba4c79d05",
+    "cpp/cuda/CMakeLists.txt": "8efce781ee1b45bfebb2f6b39b2fea81eb3cb6daf50c6e41853594d927ed7b63"
+  },
+  "resource_comparison": {
+    "cooperative_solve_kernelILb1": {
+      "before": {
+        "REG": 96,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 96,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "equal": true
+    },
+    "solve_kernelILb1": {
+      "before": {
+        "REG": 204,
+        "STACK": 40,
+        "SHARED": 1032,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 204,
+        "STACK": 40,
+        "SHARED": 1032,
+        "LOCAL": 0
+      },
+      "equal": true
+    },
+    "cooperative_solve_kernelILb0": {
+      "before": {
+        "REG": 80,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 80,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "equal": true
+    },
+    "solve_kernelILb0": {
+      "before": {
+        "REG": 148,
+        "STACK": 40,
+        "SHARED": 1032,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 148,
+        "STACK": 40,
+        "SHARED": 1032,
+        "LOCAL": 0
+      },
+      "equal": true
+    },
+    "cooperative_halpern_kernel": {
+      "before": {
+        "REG": 94,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 96,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "equal": false
+    },
+    "cooperative_residual_kernel": {
+      "before": {
+        "REG": 72,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 72,
+        "STACK": 0,
+        "SHARED": 7168,
+        "LOCAL": 0
+      },
+      "equal": true
+    },
+    "cooperative_initialise_kernel": {
+      "before": {
+        "REG": 58,
+        "STACK": 0,
+        "SHARED": 5120,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 58,
+        "STACK": 0,
+        "SHARED": 5120,
+        "LOCAL": 0
+      },
+      "equal": true
+    },
+    "recovery_kernel": {
+      "before": {
+        "REG": 148,
+        "STACK": 40,
+        "SHARED": 1120,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 148,
+        "STACK": 40,
+        "SHARED": 1120,
+        "LOCAL": 0
+      },
+      "equal": true
+    },
+    "initialise_control_kernel": {
+      "before": {
+        "REG": 50,
+        "STACK": 0,
+        "SHARED": 0,
+        "LOCAL": 0
+      },
+      "after": {
+        "REG": 50,
+        "STACK": 0,
+        "SHARED": 0,
+        "LOCAL": 0
+      },
+      "equal": true
+    }
+  },
+  "new_resources": {
+    "cooperative_l1_kernel": {
+      "REG": 198,
+      "STACK": 40,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_l1_initialise_kernel": {
+      "REG": 62,
+      "STACK": 0,
+      "SHARED": 5120,
+      "LOCAL": 0
+    }
+  },
+  "initial_points": [
+    {
+      "capture": "conditioning",
+      "point_sha256": "9caf303469dcd254d56b74f8bf3818c8044f51a3a20bc3c07835b76dd23c5632",
+      "all_original_vector_bits_preserved_by_cpu_import": true
+    },
+    {
+      "capture": "difficult",
+      "point_sha256": "b92be6c5a0051ab99c000c459ef466c69fc8b2fd669c38b3580aea000d926da6",
+      "all_original_vector_bits_preserved_by_cpu_import": true
+    }
+  ],
+  "scope": "CPU/build only; GPU arithmetic, capacity, original gate and timing remain untested"
+}

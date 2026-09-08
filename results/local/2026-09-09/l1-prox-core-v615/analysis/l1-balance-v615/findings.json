@@ -1,0 +1,61 @@
+{
+  "scope": "CPU diagnostic using known reference distances; no solver calls and no deployable oracle tuning",
+  "source_sha256": "9364815297985af01875ff07f0a61ca41d7ab89efbbea987a3c64c90745bd93c",
+  "scaling_findings_sha256": "9bfd11597cf1a271ee9b0faa341c3c7d427a350fbe45f4bc153b991d7dc0282a",
+  "meaning": "O is a positive coordinate normalization; both policies must still scale every smooth and L1 objective term consistently",
+  "caveat": "The projected reference is not certified for the reduced nonsmooth KKT system; near-zero v require original initial acceptance",
+  "cases": [
+    {
+      "capture": "conditioning",
+      "point_sha256": "9caf303469dcd254d56b74f8bf3818c8044f51a3a20bc3c07835b76dd23c5632",
+      "policies": [
+        {
+          "mode": "joint_smooth_and_l1_norm",
+          "O": 2.608170118708883e-06,
+          "scaled_primal_distance": 0.536387678751975,
+          "scaled_dual_distance": 2.7640765455606644e-05,
+          "oracle_weight": 5.153132062973374e-05,
+          "unit_over_oracle_distance_bound_coefficient": 9702.836939118475,
+          "same_eta_primal_step_multiplier_versus_joint": 1.0,
+          "L1_lambda_remains_in_objective_and_prox": true
+        },
+        {
+          "mode": "smooth_norm_only_diagnostic",
+          "O": 0.9773424791010579,
+          "scaled_primal_distance": 0.536387678751975,
+          "scaled_dual_distance": 10.35764271695836,
+          "oracle_weight": 19.309993736354485,
+          "unit_over_oracle_distance_bound_coefficient": 9.680890196099908,
+          "same_eta_primal_step_multiplier_versus_joint": 374723.4400434239,
+          "L1_lambda_remains_in_objective_and_prox": true
+        }
+      ]
+    },
+    {
+      "capture": "difficult",
+      "point_sha256": "b92be6c5a0051ab99c000c459ef466c69fc8b2fd669c38b3580aea000d926da6",
+      "policies": [
+        {
+          "mode": "joint_smooth_and_l1_norm",
+          "O": 2.476055248348682e-06,
+          "scaled_primal_distance": 0.5993471287408516,
+          "scaled_dual_distance": 0.25747943880173557,
+          "oracle_weight": 0.42959985366521325,
+          "unit_over_oracle_distance_bound_coefficient": 1.378673693860585,
+          "same_eta_primal_step_multiplier_versus_joint": 1.0,
+          "L1_lambda_remains_in_objective_and_prox": true
+        },
+        {
+          "mode": "smooth_norm_only_diagnostic",
+          "O": 0.9867511383716334,
+          "scaled_primal_distance": 0.5993471287408516,
+          "scaled_dual_distance": 102610.04051276468,
+          "oracle_weight": 171203.02341038105,
+          "unit_over_oracle_distance_bound_coefficient": 85601.51170811104,
+          "same_eta_primal_step_multiplier_versus_joint": 398517.41556643875,
+          "L1_lambda_remains_in_objective_and_prox": true
+        }
+      ]
+    }
+  ]
+}

@@ -182,6 +182,21 @@ kg/ship, diversity and qualification rate. The first milestone is a reproducible
 record beyond 12,810.135953 weighted kg; sustained larger gains and a common-score
 comparison with the strongest published missions are required to reach the goal.
 
+Before allocating a larger generation budget, require a positive control: the
+generator and screening pipeline must represent and retain the known certified
+incumbent route at its actual timings and fixed cargo. Record the first rejection
+at each construction, pruning, completion and refinement stage. A proxy rejection
+of that control is a search-model discrepancy to diagnose, not evidence that the
+certified trajectory is infeasible. Keep genuine low-thrust constraints and the
+independent fleet gates unchanged while investigating that discrepancy.
+
+These are separate decision gates. The numerical core must qualify captured
+problems before its iteration throughput justifies native mission integration.
+The search must reproduce its positive controls before more proxy evaluations
+justify a larger search. Only improved independently verified missions justify a
+score claim. Preserve the PDHCG-inspired core, but require each representation,
+preconditioner and search change to earn its place through these measurements.
+
 ## Targeted literature review tied to experiments
 
 | Question | Primary sources | Concrete use |
@@ -279,13 +294,25 @@ iterations. Adaptive gaps are 0.0255402/0.0184402 against same-build default
 change does not yet earn default selection or native mission integration.
 [Complete source, negative comparisons and accuracy checks](../results/local/2026-09-09/halpern-core-v612/README.md).
 
-The next distinct core hypothesis is an exact L1 proximal representation of the
-detected 10,000-cost epigraph pairs. Establish algebraic equivalence, reconstruct
-original primal and dual variables, and pass the original-equation gate before
-comparing convergence. Preserve the reusable PDHCG-inspired GPU core. Interval
-operators and batching remain on the roadmap, but their speed must eventually
-translate into qualified complete trajectories. A broad new literature survey
-does not replace this focused experiment or the comparative campaign.
+The exact L1 proximal representation of the detected 10,000-cost epigraph pairs
+has now been implemented and tested as a separate, default-off mode. Nine tiny
+GPU calls pass their expected outcomes, and both original supplied certificates
+qualify at zero updates with unchanged primal/dual bits. All four same-build cold
+comparisons remain unqualified at 100,000 updates. L1 iteration times fall to
+3.610990/3.656115 seconds versus 5.424073/5.549215, while its original gaps are
+1.000291/0.00387847 versus 0.999924/0.0112271. Primal residuals worsen on both
+captures. The logical reduction retains full original allocations for audit and
+adds private working storage; it is not a memory reduction. These results earn
+neither default selection nor native mission integration.
+[Equivalence, independent review and complete GPU evidence](../results/local/2026-09-09/l1-prox-core-v615/README.md).
+
+Preserve the reusable PDHCG-inspired GPU core. The next numerical intervention
+must address the measured feasibility/stationarity and balance behavior; changing
+representation or restarting alone has not delivered qualified cold solves.
+Interval operators and batching remain on the roadmap, but their speed must
+eventually translate into qualified complete trajectories. Use targeted literature
+to specify that intervention and its benchmark, rather than restarting a broad
+survey or repeating an unchanged iteration budget.
 
 The bounded low-thrust truth set has also completed locally: four routes,
 66 native leg solves, 110.374 seconds including verification. Both original
@@ -333,12 +360,34 @@ have nine miners and none has ten. These are archived certificates, not fresh
 trajectory re-verifications or an exhaustive feasibility result.
 `bundles.refine_candidates` retains only one chain per Earth-departure leg before
 applying the small refinement limit. Consequently, longer alternatives can be
-discarded before low-thrust testing. The next bounded mission experiment should
-compare that selection with depth-stratified selection on the same generated
-candidate pool and the same total refinement budget. Preserve full collection
+discarded before low-thrust testing. Once the generator passes incumbent admission
+controls and produces an eligible pool, compare that selection with depth-stratified
+selection on the same pool and the same total refinement budget. Preserve full collection
 and Earth-return costing, fixed cargo during each refinement, and the complete
 fleet gates; do not assume adding a miner improves a mission.
 [Source and bounded archive evidence](../results/local/2026-09-09/route-family-cap-audit-v611/README.md).
+
+The follow-up generation v616 retained all 167 complete proxy routes from one
+certified Earth-departure seed and a 62-asteroid family. It evaluated 8,556,740
+Lambert directions in 18.544582 seconds of recorded generation-driver time,
+excluding the initial source/input preflight. Two completed
+routes collect from nine asteroids; none passes both fleet-improvement screening
+conditions. The old selector discards alternatives, but a wider shortlist cannot
+rescue this particular pool. No low-thrust refinement or score promotion followed.
+
+The positive-control audit identifies a more immediate gap. All eight asteroid
+deployment transfer times in the retained ship-23 incumbent are outside the
+generation grid, as are seven of its nine collection transfer times. Its original
+asteroid-order prefix appears only through depth two in the completion journal;
+the journal does not identify the unrecorded child-pruning decision responsible.
+The frozen finishing calculation rejects the actual incumbent schedule at fixed
+cargo both with estimated and measured deployment-prefix mass. These two CPU
+checks reuse stored Lambert values; they are not fresh trajectory solves. They
+demonstrate a discrepancy between the proxy and an already certified route, not
+physical infeasibility. All generated candidates retain their full mining-rate
+cargo, so cargo shrinkage does not explain this pool's lower haul. Prioritize
+incumbent reproduction and measured whole-route proxy error before another broad
+generation run. [Complete pool, accounting and positive-control diagnosis](../results/local/2026-09-09/depth-diverse-generation-v616/README.md).
 
 ## Reporting after each tranche
 

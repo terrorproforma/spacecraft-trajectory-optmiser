@@ -1,0 +1,251 @@
+{
+  "complete": true,
+  "gpu_calls_started": 1,
+  "maximum_executions": 1,
+  "maximum_solve_api_calls": 9,
+  "expected_optimization_iterations": 10,
+  "maximum_requested_iterations": 13,
+  "manifest_sha256": "ee312d9988b4ee9c1ca68d5cc0236d00583eeb637c911af7ca101abe9d90c12a",
+  "source_commit": "32efbed13eae47d2c8352771e884a2ad5ff5d07e",
+  "core_sha256": "83487574646fe67fce156c9a2055f448341c99f189ac2c66d856bfcf1b280047",
+  "test_sha256": "2f31dd17a57a025249c4b35bcc3ff4b47b88d9d0f6c76be3fcc8b5675d7d056e",
+  "runner_sha256": "4d98ade975f17d05e72a7bbf7f50df413e360cd63e12ebd72bc79b606220aad9",
+  "lock_path": "/home/angus/.spacepdhcg-gpu.lock",
+  "lock_policy": "LOCK_EX|LOCK_NB",
+  "cases": [
+    {
+      "command": [
+        "/home/angus/spacepdhcg-l1-v615c/build/cuda-tests/persistent_l1_test"
+      ],
+      "started": true,
+      "returncode": 0,
+      "wall_seconds": 0.41733025600001383,
+      "log_sha256": "62e6f9fadfdd79f5dd4bd79397a4a8367afafa049c1e722c0a5acf8049e85dee",
+      "records": [
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "positive_prox",
+            "termination": 2,
+            "iterations": 2,
+            "common_valid": 1,
+            "common_passes": 0,
+            "l1_enabled": 1,
+            "l1_valid": 1,
+            "finite": 1,
+            "updates": 2,
+            "completions": 2,
+            "active_variables": 2,
+            "active_rows": 4,
+            "eta": 0.5196152422706632,
+            "B": 0.4142135623730951,
+            "O": 0.1,
+            "threshold": 0.5017848660422467,
+            "gap": 0.9484528968363334
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "disabled_original_scaling_refresh",
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "l1_enabled": 0,
+            "l1_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "active_variables": 0,
+            "active_rows": 0,
+            "eta": 0,
+            "B": 0,
+            "O": 0,
+            "threshold": 0,
+            "gap": 0.8690116277500134
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "fresh_original_control",
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "l1_enabled": 0,
+            "l1_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "active_variables": 0,
+            "active_rows": 0,
+            "eta": 0,
+            "B": 0,
+            "O": 0,
+            "threshold": 0,
+            "gap": 0.8690116277500134
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "negative_prox",
+            "termination": 2,
+            "iterations": 2,
+            "common_valid": 1,
+            "common_passes": 0,
+            "l1_enabled": 1,
+            "l1_valid": 1,
+            "finite": 1,
+            "updates": 2,
+            "completions": 2,
+            "active_variables": 2,
+            "active_rows": 4,
+            "eta": 0.5196152422706632,
+            "B": 0.4142135623730951,
+            "O": 0.1,
+            "threshold": 0.5017848660422467,
+            "gap": 0.9956512842209126
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "positive_zero_prox",
+            "termination": 2,
+            "iterations": 2,
+            "common_valid": 1,
+            "common_passes": 0,
+            "l1_enabled": 1,
+            "l1_valid": 1,
+            "finite": 1,
+            "updates": 2,
+            "completions": 2,
+            "active_variables": 2,
+            "active_rows": 4,
+            "eta": 0.5196152422706632,
+            "B": 0.4142135623730951,
+            "O": 0.1951941016011038,
+            "threshold": 0.9794544612414655,
+            "gap": 0.8573410023729396
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "negative_zero_prox",
+            "termination": 2,
+            "iterations": 2,
+            "common_valid": 1,
+            "common_passes": 0,
+            "l1_enabled": 1,
+            "l1_valid": 1,
+            "finite": 1,
+            "updates": 2,
+            "completions": 2,
+            "active_variables": 2,
+            "active_rows": 4,
+            "eta": 0.5196152422706632,
+            "B": 0.4142135623730951,
+            "O": 0.1951941016011038,
+            "threshold": 0.9794544612414655,
+            "gap": 0.8573410023729396
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "original_weak_seed_zero_step",
+            "termination": 1,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 1,
+            "l1_enabled": 1,
+            "l1_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "completions": 0,
+            "active_variables": 2,
+            "active_rows": 1,
+            "eta": 0.6363961030678927,
+            "B": 0.5,
+            "O": 0.1951941016011038,
+            "threshold": 0.9937661248062462,
+            "gap": 4e-20
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "cancel_before_initial",
+            "termination": 3,
+            "iterations": 0,
+            "common_valid": 0,
+            "common_passes": 0,
+            "l1_enabled": 1,
+            "l1_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "completions": 0,
+            "active_variables": 2,
+            "active_rows": 1,
+            "eta": 0,
+            "B": 0,
+            "O": 0,
+            "threshold": 0,
+            "gap": 0
+          }
+        },
+        {
+          "prefix": "L1_TEST",
+          "record": {
+            "case": "nonfinite_initial",
+            "termination": 4,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 0,
+            "l1_enabled": 1,
+            "l1_valid": 1,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "active_variables": 2,
+            "active_rows": 1,
+            "eta": 0.6363961030678927,
+            "B": 0.5,
+            "O": 0.1951941016011038,
+            "threshold": 0.9937661248062462,
+            "gap": null
+          }
+        },
+        {
+          "prefix": "L1_VALIDATION",
+          "record": {
+            "nonzero_q": true,
+            "tiny_epigraph_coupling": true,
+            "overlapping_roles": true
+          }
+        },
+        {
+          "prefix": "L1_SUMMARY",
+          "record": {
+            "complete": true,
+            "solve_calls": 9,
+            "maximum_requested_iterations": 13,
+            "expected_optimization_iterations": 10
+          }
+        }
+      ],
+      "strict_json_parsed": true
+    }
+  ],
+  "lock_acquired": true,
+  "pid": 295,
+  "actual_solve_api_calls": 9,
+  "actual_optimization_iterations": 10,
+  "status": "passed",
+  "wall_seconds": 0.49564569500000744,
+  "lock_scope_ending": true
+}

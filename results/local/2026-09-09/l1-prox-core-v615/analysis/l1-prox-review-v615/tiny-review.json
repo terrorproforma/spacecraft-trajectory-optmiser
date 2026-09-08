@@ -1,0 +1,17 @@
+{
+  "scope": "Independent saved-record, identity and analytic scaling check; zero additional GPU calls",
+  "script_sha256": "df9365922b9b169fdc545109f898605bf1d4fbc41e3b3269c7ad52b8d6d52d85",
+  "report_sha256": "3f2b85397508ced11536d72800a093e07abdff154d415532583db6924da07483",
+  "raw_log_sha256": "62e6f9fadfdd79f5dd4bd79397a4a8367afafa049c1e722c0a5acf8049e85dee",
+  "manifest_sha256": "ee312d9988b4ee9c1ca68d5cc0236d00583eeb637c911af7ca101abe9d90c12a",
+  "core_sha256": "83487574646fe67fce156c9a2055f448341c99f189ac2c66d856bfcf1b280047",
+  "test_sha256": "2f31dd17a57a025249c4b35bcc3ff4b47b88d9d0f6c76be3fcc8b5675d7d056e",
+  "executions": 1,
+  "solve_api_calls": 9,
+  "actual_updates": 10,
+  "all_expected_outcomes": true,
+  "analytic_B_O_eta_thresholds_match": true,
+  "mode_off_and_fresh_control_records_match": true,
+  "vector_evidence_scope": "Raw logs contain no vectors. The pinned test's exit0 certifies its in-process GPU-download versus independent CPU prox/SOC oracle checks and exact weak-seed preservation assertion. This script does not independently replay those unrecorded vectors.",
+  "interpretation": "Expected iteration limits, cancellation and nonfinite rejection are successful test outcomes, not newly qualified optimizer solutions. No cold convergence or speedup claim."
+}

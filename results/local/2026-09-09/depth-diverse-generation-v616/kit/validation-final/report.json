@@ -1,0 +1,42 @@
+{
+  "GPU_calls": 0,
+  "started_utc": "2026-09-08T19:02:11.632653+00:00",
+  "commands": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "test_generation.py",
+        "-q",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "returncode": 0,
+      "log": "validation-final/01.log",
+      "sha256": "4830bebab65751fbf4ef9c86934d40c2bb281c40f3fa1877ea31e786cced79c8"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "check",
+        "common.py",
+        "conftest.py",
+        "domain.py",
+        "launch.py",
+        "prepare.py",
+        "recording.py",
+        "run.py",
+        "test_generation.py",
+        "validate_prepare.py"
+      ],
+      "returncode": 1,
+      "log": "validation-final/02.log",
+      "sha256": "adbd951f82b984e0f9594c70d046930583bb3df077e5c208ee4520409cf78921"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+E501 Line too long (103 > 100)
+   --> validate_prepare.py:115:101
+    |
+113 |                 "no_depth_diverse_policy_implemented": True,
+114 |                 "matched_refinement_comparison_prepared": False,
+115 |                 "reason": "No adequate saved generated pool; bounded fresh generation is prerequisite",
+    |                                                                                                     ^^^
+116 |                 "driver_sha256": common.sha(root / "run.py"),
+117 |                 "supervisor_sha256": common.sha(root / "launch.py"),
+    |
+
+Found 1 error.

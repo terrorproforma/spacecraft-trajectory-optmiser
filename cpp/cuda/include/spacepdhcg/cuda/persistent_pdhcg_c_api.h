@@ -382,6 +382,48 @@ spacepdhcg_cuda_status spacepdhcg_cuda_workspace_halpern_diagnostics(
     spacepdhcg_cuda_halpern_diagnostics* diagnostics
 );
 
+/* Diagnostic exact L1 reduction, default off and mutually exclusive with
+ * Halpern. Requires common-KKT, exact Q=0 and a positive cooperative grid.
+ * Each host descriptor proves two original scalar rows v-t<=0 and -v-t<=0;
+ * t has positive c_t and no other actual nonzero coupling. The setter checks
+ * this on-device. Descriptors/targets must be disjoint. The full original
+ * layout is retained in memory; masked working operators and a GPU soft prox
+ * replace these rows/columns. Original equations govern qualification of every
+ * returned point, including unqualified iteration-limit/cancelled outputs.
+ * Original supplied points are checked before any completion. Enable/disable
+ * refresh scaling; checkpoint/restore are unsupported while enabled. The
+ * existing 20-step spectral heuristic is not a proved upper norm bound. */
+typedef struct spacepdhcg_cuda_l1_pair {
+    int32_t epigraph_variable;
+    int32_t absolute_variable;
+    int32_t positive_scalar_row;
+    int32_t negative_scalar_row;
+} spacepdhcg_cuda_l1_pair;
+typedef struct spacepdhcg_cuda_l1_options {
+    uint32_t abi_version;
+    int32_t enabled;
+    int32_t pair_count;
+    int32_t reserved;
+} spacepdhcg_cuda_l1_options;
+typedef struct spacepdhcg_cuda_l1_diagnostics {
+    uint32_t abi_version;
+    int32_t enabled, valid, finite;
+    int32_t pairs, active_variables, active_rows;
+    int32_t retained_variables, retained_rows;
+    uint64_t updates, completions;
+    double eta, bound_scale, objective_scale;
+    double minimum_threshold, maximum_threshold;
+} spacepdhcg_cuda_l1_diagnostics;
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_l1_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_l1_options* options,
+    const spacepdhcg_cuda_l1_pair* host_pairs
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_l1_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_l1_diagnostics* diagnostics
+);
+
 spacepdhcg_cuda_status spacepdhcg_cuda_workspace_query(
     spacepdhcg_cuda_workspace* workspace,
     int32_t* complete

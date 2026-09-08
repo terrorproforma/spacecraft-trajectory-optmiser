@@ -1,0 +1,109 @@
+{
+  "GPU_calls": 0,
+  "started_utc": "2026-09-08T19:02:40.345518+00:00",
+  "commands": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "test_generation.py",
+        "-q",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "returncode": 0,
+      "log": "validation-final-02/01.log",
+      "sha256": "26eaca78f40443c6ebb52e3416bf1ab296073e7d032780e8bcdb214fc52b8951"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "check",
+        "common.py",
+        "conftest.py",
+        "domain.py",
+        "launch.py",
+        "prepare.py",
+        "recording.py",
+        "run.py",
+        "test_generation.py",
+        "validate_prepare.py"
+      ],
+      "returncode": 0,
+      "log": "validation-final-02/02.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "common.py",
+        "conftest.py",
+        "domain.py",
+        "launch.py",
+        "prepare.py",
+        "recording.py",
+        "run.py",
+        "test_generation.py",
+        "validate_prepare.py"
+      ],
+      "returncode": 0,
+      "log": "validation-final-02/03.log",
+      "sha256": "2ce9758b9f8abd876ec3e76c589e099e8b05377b1e7ea2331e81ee80f07bdff8"
+    }
+  ],
+  "native_symbol_inventory": {
+    "scope": "Export presence only, no library load or GPU execution",
+    "requested": [
+      "spacepdhcg_collect_create",
+      "spacepdhcg_collect_create_tables",
+      "spacepdhcg_collect_destroy",
+      "spacepdhcg_collect_solve_v2",
+      "spacepdhcg_collect_table_create",
+      "spacepdhcg_collect_table_destroy",
+      "spacepdhcg_collect_table_min_propellant",
+      "spacepdhcg_collect_table_read",
+      "spacepdhcg_gtoc12_collection_create",
+      "spacepdhcg_gtoc12_collection_destroy",
+      "spacepdhcg_gtoc12_collection_host",
+      "spacepdhcg_gtoc12_collection_options_destroy",
+      "spacepdhcg_gtoc12_collection_options_read",
+      "spacepdhcg_gtoc12_collection_resident",
+      "spacepdhcg_gtoc12_neighbours_create",
+      "spacepdhcg_gtoc12_neighbours_destroy",
+      "spacepdhcg_gtoc12_neighbours_host",
+      "spacepdhcg_orbitweaver_hop_elements_host",
+      "spacepdhcg_orbitweaver_hop_options_host",
+      "spacepdhcg_orbitweaver_hop_options_resident",
+      "spacepdhcg_orbitweaver_hop_screening_host",
+      "spacepdhcg_orbitweaver_lambert_screening_host",
+      "spacepdhcg_orbitweaver_lambert_workspace_create",
+      "spacepdhcg_orbitweaver_lambert_workspace_destroy",
+      "spacepdhcg_orbitweaver_lambert_workspace_finish"
+    ],
+    "missing": [],
+    "library_sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa"
+  },
+  "passed": true,
+  "finished_utc": "2026-09-08T19:02:48.075018+00:00",
+  "authored_file_hashes": {
+    "common.py": "de3039c5bedf1060b496cb3df8a1a6847edba2c52d0362d238c4d4f97170da31",
+    "conftest.py": "5787264dee15a02685c284284b5f2435f0c64866b36405886a91581c57c85992",
+    "domain.py": "f07c839c7cef329c4f6c79873bb56e9b254423589d81bdfb47079a25079d5837",
+    "launch.py": "49b78a79c8251563dff0e82558c9514dea07d920c659ac2bd27cee6cca2b080b",
+    "prepare.py": "e9a6cd63746fb6eea48de99e7fcaf2dbfabcdf6f0b387461ef313a45bb0307d3",
+    "recording.py": "083cdf48900051ac7cf5fc157a4a573a4101cf4277c23881388d3dc8b9f147f8",
+    "run.py": "1d01c3b5ddc57396e87bef46720ac099d16b24ca136094bd685204e6aaf741a5",
+    "test_generation.py": "4ac7bb16b5907426bd27a2257898ab6b26b8c363dde9025e00a8bd5d709346ac",
+    "validate_prepare.py": "966a7e99e6fe12e3990977e718882c68a8dad9650c0ce5f0339b927ea6a8f0f2"
+  }
+}
