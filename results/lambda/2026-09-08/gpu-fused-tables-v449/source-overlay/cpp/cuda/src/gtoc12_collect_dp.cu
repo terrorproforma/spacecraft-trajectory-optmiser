@@ -356,7 +356,7 @@ extern "C" int spacepdhcg_collect_table_create(spacepdhcg_orbitweaver_lambert_wo
     table->n=n;table->nt=nt;const size_t count=size_t(n)*nt;
     const double *de=nullptr,*dt=nullptr;double* dv=nullptr;uint8_t* ok=nullptr;
     const char* setting=std::getenv("SPACEPDHCG_TEST_GTOC12_FUSED_TABLES");
-    const bool fused=!setting||std::strcmp(setting,"0")!=0;
+    const bool fused=setting&&std::strcmp(setting,"1")==0;
     bool good=cudaGetDevice(&table->device)==cudaSuccess
         &&cudaStreamCreateWithFlags(&table->stream,cudaStreamNonBlocking)==cudaSuccess
         &&(fused||copy(de,epochs,n,table->stream))&&copy(dt,tofs,nt,table->stream)

@@ -1,0 +1,96 @@
+{
+  "campaigns": [
+    {
+      "name": "default",
+      "candidate": true,
+      "seconds": 31.609916267043445,
+      "score": 548.2546201233001,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "compact_option_download_bytes": 27175508,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_compact_options": 1131935,
+        "completed_earth_beam_rows": 582,
+        "completed_element_hops": 22345089,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "earth_beam_download_bytes": 27944,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09330895595485345
+      },
+      "independent": {
+        "max_mass_error_kg": 8.253664418589324e-11,
+        "max_position_error_km": 0.6333709191821114,
+        "max_velocity_error_km_s": 1.1078403555997319e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ship_limit": 17.924449255082738,
+        "ships": 1,
+        "total_mass_kg": 548.2546201233001,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201233001
+      }
+    }
+  ],
+  "scope": "Final default-on source and native build; 26 integration tests, three sanitizers, and full mission.",
+  "hardware": "Lambda H100",
+  "source_sha256": {
+    "cpp/cuda/src/orbitweaver_gpu.cu": "766705257ab1926b840339c9af02a3d3570dd0235dc4199b24b4cf02142e91fb",
+    "cpp/cuda/src/orbitweaver_beam.cuh": "de060662ff89fc7f9006f702d6666ff7bde79abc06155c8c6d3e6b10b15ef793",
+    "cpp/cuda/src/gtoc12_collect_dp.cu": "523800cc4594a49bffbd90340cc129e58a9fcd3507b8408c11dcbd316a5db6ce",
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": "7c94debd020ecfa0a7cf1c089473c952032866cdd87dc0a0c5ab4a937f366a60",
+    "src/spacepdhcg/gtoc12/gpu_collect_tables.py": "04ed6a70e12a85619842a0cdf91d1d6382d3de49216c5d4fa31fed4d0d8afff0",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "7c8ecec05550b4947bef59d44ab7b3c3bb65d7a245b5c2073a5a851b2e576b13",
+    "tests/test_gtoc12_gpu_fused_tables.py": "884181f2cd2c9d4945a53fd8716013ce1d4f3d0b85629c0f3235298a6c7152a7"
+  },
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "c56184610b7294ac02a672e958ab73ecf315efdeac0418b086c4d4f87b9d8d45",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "source_base": "v444 repository plus recorded opt-in overlay for v449; v453 reuses v449 with captured grid trace; v456 rebuilds the same fused path enabled by default."
+}

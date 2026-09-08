@@ -1,0 +1,30 @@
+{
+  "pid": 184394,
+  "complete": true,
+  "stages": [
+    {
+      "name": "micro",
+      "returncode": 0,
+      "seconds": 4.119360894022975,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/fused_tables_micro.py',run_name='__main__')",
+        "build/performance/fused-tables-profile-v451/collect-grids.json",
+        "/home/ubuntu/spacepdhcg-fused-tables-v453/measurement.json"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "micro",
+  "source_sha256": {
+    "build/performance/fused_tables_micro.py": "2467b5b22fdec3f25bf3cf47464c173d0df28a7cfb55e2f34fbc0eaafb2f7949",
+    "build/performance/fused-tables-profile-v451/collect-grids.json": "5ff929a24a794817569fc94b32506f5b324726d873fd3e35e7428a9c0d108862"
+  },
+  "frozen_source_commit": "9f6d4588817d526cdeb19b17728ce482290682ec",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "1c559e9c877af1a84cf76a07fcf45ffe4b76a432d5de9ea6b319f7f3343c8371",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 184400
+}

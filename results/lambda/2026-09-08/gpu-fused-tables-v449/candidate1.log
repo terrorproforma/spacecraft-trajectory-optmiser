@@ -1,0 +1,166 @@
+{
+  "best_by_depth": {
+    "1": 119.28815879534565,
+    "2": 205.0650239561944,
+    "3": 290.34907597535937,
+    "4": 348.25462012320327,
+    "5": 431.34839151266254,
+    "6": 496.9199178644764,
+    "7": 482.1355236139631
+  },
+  "candidates": 106,
+  "peak_rss_mb": 377.7,
+  "search_wall_seconds": 5.2,
+  "ship": 1
+}
+FACTOR_GRAPH allocator bytes=24696268 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=18390876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=18390876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=29517164 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=22470884 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=18390876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=17117796 blocks=9 misses=0
+{
+  "certified": true,
+  "rank": 0,
+  "refined_arcs": 13,
+  "score_kg": 475.975,
+  "ship": 1
+}
+FACTOR_GRAPH allocator bytes=24696268 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=18390876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=18390876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=29517164 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=22470884 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=18390876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=17117796 blocks=9 misses=0
+{
+  "certified": true,
+  "rank": 1,
+  "refined_arcs": 13,
+  "score_kg": 475.154,
+  "ship": 1
+}
+FACTOR_GRAPH allocator bytes=24696268 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=9853436 blocks=9 misses=0
+{
+  "certified": false,
+  "rank": 2,
+  "refined_arcs": 5,
+  "score_kg": null,
+  "ship": 1
+}
+FACTOR_GRAPH allocator bytes=23185748 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=14892532 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=11293436 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=12708156 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=11293436 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=15499876 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=18894852 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=17689060 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=12708156 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=21724820 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=8116644 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=14892532 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=16252236 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=14892532 blocks=9 misses=0
+FACTOR_GRAPH allocator bytes=20469188 blocks=9 misses=0
+{
+  "retiming": {
+    "after": {
+      "asteroids": 8,
+      "final_mass_kg": 599.2811564215999,
+      "score_kg": 548.255
+    },
+    "attempts": 2,
+    "before": {
+      "asteroids": 6,
+      "final_mass_kg": 890.435393660054,
+      "score_kg": 475.975
+    },
+    "wall_seconds": 6.1
+  },
+  "ship": 1
+}
+{
+  "fleet": {
+    "asteroids": [
+      4928,
+      9595,
+      10664,
+      16118,
+      23760,
+      25792,
+      53410,
+      57530
+    ],
+    "average_collected_kg": 548.2546201232033,
+    "collected_kg_per_ship": [
+      548.2546201232033
+    ],
+    "greedy": {
+      "asteroids": [
+        4928,
+        9595,
+        10664,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "average_collected_kg": 548.2546201232033,
+      "collected_kg_per_ship": [
+        548.2546201232033
+      ],
+      "rule_satisfied": true,
+      "ship_limit": 17.92444925507579,
+      "ships": 1,
+      "total_collected_kg": 548.2546201232033
+    },
+    "rule_satisfied": true,
+    "ship_limit": 17.92444925507579,
+    "ships": 1,
+    "total_collected_kg": 548.2546201232033
+  },
+  "official": {
+    "message": "Check successfully!",
+    "mined_asteroids": 8,
+    "ok": true,
+    "return_code": 0,
+    "score_data": {
+      "4928": 32.85420944559996,
+      "9595": 71.45790554409996,
+      "10664": 13.141683778199877,
+      "16118": 81.72484599590007,
+      "23760": 71.86858316230018,
+      "25792": 85.83162217659992,
+      "53410": 73.5112936344999,
+      "57530": 117.86447638610002
+    },
+    "ships": 1,
+    "total_mass_kg": 548.255,
+    "wall_seconds": 0.09299249498872086
+  },
+  "peak_rss_mb": 617.25390625,
+  "run_id": "fused449_candidate1",
+  "score_kg": 548.255,
+  "status": "scored",
+  "wall_seconds_total": 31.208694608008955
+}

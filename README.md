@@ -49,6 +49,15 @@ checkers accept every run. A wider confirmation retains four ships and
 2,088.669 weighted kg in 221.56 seconds. Pool filtering, route objects and fleet
 orchestration remain host work. [Measurements, limits and validation](docs/GPU_EARTH_BEAM.md).
 
+Collection tables now write their final device values directly from double-precision
+Lambert results, removing temporary full-grid cost and feasibility arrays and
+reusing axis buffers. Replaying 1,122 real grids (4.64 million cells) produces
+bitwise-identical tables on both GPUs, with **2.75% less construction time locally**
+and **7.33% less on H100**. Complete-run timing varies; the H100 comparison is
+effectively flat, so this does not establish an overall speedup. The existing
+float32 table storage and all physics gates are unchanged.
+[Implementation, measurements and reproducible evidence](docs/GPU_FUSED_COLLECTION_TABLES.md).
+
 A larger H100 campaign generated **32 individual routes** in
 **56 min 59 sec**, evaluating **1.417 billion transfer branches** and **137.35
 million collection options**. Fleet selection returned **15 ships, 105 mined
