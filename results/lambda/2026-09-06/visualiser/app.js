@@ -64,6 +64,7 @@ const FLEET_DATASETS = {
   "gtoc12-v588": { directory: "./data/gtoc12-v588", label: "H100 faster Lambert v588 (1 ship, 548 weighted kg; benchmark)" },
   "gtoc12-family-v589": { directory: "./data/gtoc12-family-v589", label: "H100 richer family v589 (3 ships, 1,421 weighted kg; pilot)" },
   "gtoc12-orphan-v595": { directory: "./data/gtoc12-orphan-v595", label: "Improved fleet v595 (23 ships, 12,810 weighted kg; best)" },
+  "gtoc12-joint-v642": { directory: "./data/gtoc12-joint-v642", label: "H100 GPU itinerary v642 (23 ships, 12,810 weighted kg; verified)" },
   "gtoc12-v380": { directory: "./data/gtoc12-v380", label: "GPU recovery v380 (4 ships, 2,089 weighted kg)" },
   "gtoc12-v374": { directory: "./data/gtoc12-v374", label: "GPU fleet v374 (3 ships, 1,670 weighted kg)" },
   "gtoc12-v360": { directory: "./data/gtoc12-v360", label: "GPU SOC step v360 (548 kg certified)" },

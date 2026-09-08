@@ -1,0 +1,64 @@
+--- measured/gpu_joint.py
++++ compatible/gpu_joint.py
+@@ -178,8 +178,7 @@
+         self.best = getattr(gpu.library, "spacepdhcg_gtoc12_joint_best_host", None)
+         if self.best is not None:
+             self.best.argtypes = (
+-                [ct.c_void_p, ct.c_int32] + [ct.c_void_p] * 6
+-                + [ct.c_double] + [ct.c_void_p] * 5
++                [ct.c_void_p, ct.c_int32] + [ct.c_void_p] * 6 + [ct.c_double] + [ct.c_void_p] * 5
+             )
+             self.best.restype = ct.c_int
+         self.destroy = gpu.library.spacepdhcg_gtoc12_joint_destroy
+@@ -202,6 +201,17 @@
+         from .search import PlannedLeg, RoutePlan
+ 
+         self.gpu._owned()
++        selection_override = os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION")
++        if selection_override == "1" and self.best is None:
++            raise RuntimeError(
++                "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION=1 requires "
++                "spacepdhcg_gtoc12_joint_best_host in the native library"
++            )
++        # Older cores retain native full-result arithmetic and host selection.
++        # An explicit request for the optional reducer must fail before any work.
++        device_selection = minimum_objective is not None and (
++            self.best is not None if selection_override is None else selection_override == "1"
++        )
+         metadata, stages, policy = _metadata(joint, visits)
+         count, n = arrivals.shape
+         costs = np.zeros((count, n - 1), COST)
+@@ -268,11 +278,6 @@
+         # Match the scalar path's bounded retained cache across mesh iterations.
+         if len(joint._lambert) > 400_000:
+             joint._lambert.clear()
+-        device_selection = minimum_objective is not None and os.environ.get(
+-            "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION", "1"
+-        ) == "1"
+-        if device_selection and self.best is None:
+-            raise RuntimeError("CUDA joint winner selection requires a newer native library")
+         output_rows = 1 if device_selection else count
+         result = np.empty(output_rows, RESULT)
+         masses, inflations, proxies = (np.empty((output_rows, n - 1)) for _ in range(3))
+@@ -292,11 +297,16 @@
+         )
+         if device_selection:
+             selection = np.empty(1, SELECTION)
+-            self._check(self.best(
+-                self.handle, count, *(array.ctypes.data for array in arrays[:6]),
+-                float(minimum_objective), selection.ctypes.data,
+-                *(array.ctypes.data for array in arrays[7:]),
+-            ))
++            self._check(
++                self.best(
++                    self.handle,
++                    count,
++                    *(array.ctypes.data for array in arrays[:6]),
++                    float(minimum_objective),
++                    selection.ctypes.data,
++                    *(array.ctypes.data for array in arrays[7:]),
++                )
++            )
+             result = selection["value"]
+         else:
+             self._check(self.evaluate(self.handle, count, *(array.ctypes.data for array in arrays)))

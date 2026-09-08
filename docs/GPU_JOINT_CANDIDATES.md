@@ -12,6 +12,11 @@ Enabling it requires an active CUDA Lambert backend. This evidence set contains
 no new H100 measurement: its Lambda upload was blocked by automatic approval
 review, and all measurements below were made locally.
 
+The later [H100 and repeated full-fleet validation](GPU_JOINT_ITINERARY.md)
+records a separate successful H100 build, 62 tests on each GPU, and eight
+physics-checked fleet replays with GPU winner selection. Its frozen sources,
+timings and downloaded solution are archived separately from this checkpoint.
+
 ## What runs on the GPU
 
 [gtoc12_joint.cu](../cpp/cuda/src/gtoc12_joint.cu) evaluates one candidate per CUDA

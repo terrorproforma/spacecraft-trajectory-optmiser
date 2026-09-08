@@ -30,6 +30,14 @@ core; the native implementation passes memory, race and synchronization checks.
 The feature remains opt-in, with Python still orchestrating the wider search.
 [Implementation, exact measurements and GPU/CPU boundaries](docs/GPU_JOINT_CANDIDATES.md).
 
+The subsequent H100 validation measures **10.92–12.81x** for that joint-search
+stage and passes 62 tests on each GPU. Eight complete fleet replays with the new
+core pass both physics checkers, reproducing **12,810.136 weighted kg**. GPU
+winner selection reduces final-result downloads by **99.42%** across the run;
+whole-process timing remains too variable to claim a reliable additional speedup.
+The retrieved H100 fleet is available in the existing visualiser.
+[H100 evidence, repeated campaigns and loading instructions](docs/GPU_JOINT_ITINERARY.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

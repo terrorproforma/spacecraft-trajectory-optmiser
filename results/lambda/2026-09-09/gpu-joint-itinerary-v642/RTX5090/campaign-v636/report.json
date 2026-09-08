@@ -1,0 +1,270 @@
+{
+  "complete": true,
+  "success": false,
+  "pid": 420,
+  "core_sha256": "806a69db47528b25772edd0a0b2405d0fa66367deb5371c6e5d0f79f27577ad3",
+  "qoco_sha256": "0cc27a1d8bde1edd74f7ef00e04ec64c2d6c0f8fe526a1d94b04d509a74b3315",
+  "runs": [
+    {
+      "name": "baseline0",
+      "selection": 0,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-selection-v630/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-joint-selection-v630/repo",
+        "--output",
+        "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/baseline0",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4"
+      ],
+      "process_seconds": 79.1855109710001,
+      "campaign_seconds": 78.09307973,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908798,
+          "weighted_score_fixed_bonus_kg": 12810.135953048766,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.033462080099216,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.1895910719999847,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048766,
+        "total_mass_kg": 14051.854893908798,
+        "solution": "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/baseline0/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/baseline0/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557407,
+              "sha256": "2c7723b7d061cdcc875eb458f3abc44b3456c4ff00bafa402629e46294ff2da5"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "6eebf950368d667d2dba3622d57548725974475eb83cd8208c5ca88548caf5a8",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 15359152
+      },
+      "native_solves": 36
+    },
+    {
+      "name": "candidate0",
+      "selection": 1,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-selection-v630/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-joint-selection-v630/repo",
+        "--output",
+        "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/candidate0",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4"
+      ],
+      "process_seconds": 77.58854175599993,
+      "campaign_seconds": 76.73868456699995,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908398,
+          "weighted_score_fixed_bonus_kg": 12810.135953048413,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009762,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.183923582000034,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048413,
+        "total_mass_kg": 14051.854893908398,
+        "solution": "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/candidate0/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/candidate0/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557372,
+              "sha256": "0db47acb931af74be1490e8692b1960de762c89ab21d6c7a3c380f6d792cdf32"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "f079c91d649905b4fe916ec529a2fdd6c1cef1fe1fea90a6d1217a3b1bf63866",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "native_solves": 36
+    },
+    {
+      "name": "candidate1",
+      "selection": 1,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-selection-v630/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-joint-selection-v630/repo",
+        "--output",
+        "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/candidate1",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4"
+      ],
+      "process_seconds": 78.09038332199998,
+      "campaign_seconds": 77.23531237100008,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908298,
+          "weighted_score_fixed_bonus_kg": 12810.135953048291,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.033462080097223,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.390532795805484e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.1807770169999685,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048291,
+        "total_mass_kg": 14051.854893908298,
+        "solution": "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/candidate1/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-joint-selection-v630/campaign-v636/candidate1/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557377,
+              "sha256": "142848434983d5764d0ea1f0bdd9cd83102c7f75e5bda37a07d8762d79fb35d7"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "8fdc21db5265cd151622b74a6a276a8c6c7fee280a063161ce3b416c67525cd5",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 4220,
+        "completed_branch_requests": 106024898,
+        "gpu_used": true,
+        "completed_element_hops": 53012449,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_preflight_download_bytes": 1481088,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576
+      },
+      "native_solves": 36
+    }
+  ],
+  "stage": "baseline1",
+  "child_pid": 711,
+  "exception": "Traceback (most recent call last):\n  File \"/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/run_joint_campaign_v636.py\", line 22, in <module>\n    assert code==0,(name,code)\n           ^^^^^^^\nAssertionError: ('baseline1', 1)\n"
+}
