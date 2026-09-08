@@ -582,11 +582,72 @@ __global__ void hop_warp_kernel(const spacepdhcg_orbitweaver_hop_request* reques
         }
     }
 }
+// Separate warps solve the two directions, then share their candidate results.
+__global__ void hop_parallel_kernel(const spacepdhcg_orbitweaver_hop_request* requests,
+    size_t count,uint32_t samples,spacepdhcg_orbitweaver_hop_result* results,
+    const double* cached,bool fast_root) {
+    const size_t i=(size_t(blockIdx.x)*blockDim.x+threadIdx.x)/64;
+    const int lane=threadIdx.x&63;
+    // Full-warp groups include padding in the final block's shared-memory barrier.
+    const spacepdhcg_orbitweaver_hop_request empty{};
+    const auto& hop=i<count?requests[i]:empty;
+    spacepdhcg_orbitweaver_hop_result local{};
+    local.departure_delta_v=local.arrival_delta_v=INFINITY;
+    for(int k=0;k<3;++k)local.departure_velocity[k]=local.arrival_velocity[k]=NAN;
+    auto request=hop.lambert;
+    request.include_short_way=request.include_long_way=1;request.maximum_revolutions=0;
+    bool input_valid=valid(request)&&isfinite(hop.departure_allowance)
+        &&isfinite(hop.arrival_allowance)&&hop.departure_allowance>=0&&hop.arrival_allowance>=0;
+    for(int k=0;k<3;++k)input_valid=input_valid&&isfinite(hop.departure_body_velocity[k])
+        &&isfinite(hop.arrival_body_velocity[k]);
+    if(input_valid) {
+        const auto value=geometry(request,lane>=32);
+        Root root{};
+        if(value.valid&&scan_warp(-4*pi*pi,4*pi*pi-1e-8,samples,value,request,root,cached,fast_root)) {
+            if((lane&31)==0) {
+                spacepdhcg_orbitweaver_lambert_result candidate{};
+                if(solution(request,value,root,candidate)) {
+                    double dep2=0,arr2=0;
+                    for(int k=0;k<3;++k) {
+                        const double dep=candidate.departure_velocity[k]-hop.departure_body_velocity[k];
+                        const double arr=candidate.arrival_velocity[k]-hop.arrival_body_velocity[k];
+                        dep2+=dep*dep;arr2+=arr*arr;
+                    }
+                    const double dep=fmax(sqrt(dep2)-hop.departure_allowance,0.0);
+                    const double arr=fmax(sqrt(arr2)-hop.arrival_allowance,0.0);
+                    if(isfinite(dep)&&isfinite(arr)&&isfinite(dep+arr)) {
+                        local.feasible=1;local.long_way=lane>=32;
+                        local.departure_delta_v=dep;local.arrival_delta_v=arr;
+                        for(int k=0;k<3;++k) {
+                            local.departure_velocity[k]=candidate.departure_velocity[k];
+                            local.arrival_velocity[k]=candidate.arrival_velocity[k];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // The 128-thread launch has four warps and two hops per block.
+    __shared__ spacepdhcg_orbitweaver_hop_result branches[4];
+    const int warp=threadIdx.x/32;
+    if((lane&31)==0)branches[warp]=local;
+    __syncthreads();
+    if(lane==0&&i<count) {
+        const auto& shorter=branches[warp];
+        const auto& longer=branches[warp+1];
+        // Strict comparison preserves short-way ties, including two invalid costs.
+        results[i]=longer.departure_delta_v+longer.arrival_delta_v
+            <shorter.departure_delta_v+shorter.arrival_delta_v?longer:shorter;
+    }
+}
 void launch_hops(const spacepdhcg_orbitweaver_hop_request* requests,size_t count,
     uint32_t samples,spacepdhcg_orbitweaver_hop_result* results,const double* cached,cudaStream_t stream) {
     const auto* setting=std::getenv("SPACEPDHCG_TEST_GTOC12_FAST_LAMBERT_ROOT");
     const bool fast_root=!setting||setting[0]=='1';
-    if(count<=16384)hop_warp_kernel<<<static_cast<unsigned>((count+3)/4),128,0,stream>>>(requests,count,samples,results,cached,fast_root);
+    const auto* parallel=std::getenv("SPACEPDHCG_TEST_GTOC12_PARALLEL_DIRECTIONS");
+    if(parallel&&parallel[0]=='1'&&count<=1024)
+        hop_parallel_kernel<<<static_cast<unsigned>((count+1)/2),128,0,stream>>>(requests,count,samples,results,cached,fast_root);
+    else if(count<=16384)hop_warp_kernel<<<static_cast<unsigned>((count+3)/4),128,0,stream>>>(requests,count,samples,results,cached,fast_root);
     else hop_kernel<<<static_cast<unsigned>((count+63)/64),64,0,stream>>>(requests,count,samples,results,cached,fast_root);
 }
 

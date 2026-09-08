@@ -24,6 +24,13 @@ modes on each GPU. All ten campaign runs pass both mission verifiers, retaining
 548.254620 weighted kg. The best fleet remains **12,805.194 weighted kg**.
 [Method, measurements, archived results and viewer](docs/GPU_FAST_LAMBERT_ROOTS.md).
 
+An opt-in small-batch kernel now solves short/long Lambert directions in separate
+GPU warps. It passes **106 tests per GPU**, exact hop-result comparisons and all
+three Lambert sanitizer modes. Complete campaign medians improve 1.57% locally /
+7.62% on H100, but ranges overlap, so the default remains unchanged. Larger-batch
+layouts that regressed are retained in the evidence archive.
+[Parallel-direction measurements and limitations](docs/GPU_PARALLEL_DIRECTIONS.md).
+
 Initial bound classification now also runs on CUDA, downloading one byte per
 bound pair instead of four floating-point arrays. First-fresh-solve downloads
 fall from **515,324 to 244,499 bytes**. Both GPUs retain all **205 certified
