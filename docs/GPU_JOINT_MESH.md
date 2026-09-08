@@ -116,6 +116,14 @@ rejected. GPU-generated seeds and assembled conic matrices remain to be captured
 to locate the divergence below the Python input boundary.
 [Exact inputs, repeated failure and rejected workarounds](../results/local/2026-09-09/return-replay-v672/).
 
+The subsequent capture finds byte-identical first conic problems across six
+calls. Ordinary native dispatch also reproduces the trajectory failure. Eight
+standalone replays of that exact conic input all fail the independent accuracy
+audit; increasing regularization to 1e-8 or disabling both IPM and factor graphs
+also fails eight of eight. This narrows the investigation to inner-solver
+numerical accuracy for a concrete input, without yet establishing a validated
+fix. [Captured problems, failed comparisons and independent oracle](../results/local/2026-09-09/return-qp-v680/).
+
 [Downloaded H100 result and both complete evidence archives](../results/lambda/2026-09-09/gpu-joint-mesh-v670/)
 preserve frozen source/binaries, all validation and sanitizer logs, all eight
 campaign attempts, benchmark samples and hashes. The source was frozen from
