@@ -1,0 +1,73 @@
+{
+  "scope": "ABBA two observations per mode, same native binary. Process time includes teardown. Exact initial plans and listed logical counts; both final checkers pass.",
+  "baseline_process_median": 29.73130667951773,
+  "candidate_process_median": 29.053776586515596,
+  "less_process_time_percent": 2.27884398188557,
+  "logical_counts": {
+    "completed_branch_requests": 45188558,
+    "completed_element_hops": 22345089,
+    "completed_compact_options": 1131935,
+    "completed_collection_options": 2782091,
+    "completed_collection_queries": 5930,
+    "completed_batches": 5663,
+    "completed_collection_dp_passes": 378,
+    "completed_retime_dp_calls": 293,
+    "completed_retime_driver_calls": 50,
+    "completed_earth_beam_rows": 582
+  },
+  "rows": [
+    {
+      "name": "baseline0",
+      "candidate": false,
+      "process_seconds": 30.155209649004973,
+      "cli_seconds": 29.335506368021015,
+      "score": 548.2546201232997,
+      "option_download_bytes": 27175508,
+      "option_upload_bytes": 66770184,
+      "host_table_read_bytes": 0,
+      "resident_builds": 0,
+      "return_pruning_queries": 0,
+      "reported_selection_download_bytes": 0
+    },
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "process_seconds": 28.802613985026255,
+      "cli_seconds": 27.96981317800237,
+      "score": 548.2546201231996,
+      "option_download_bytes": 9068,
+      "option_upload_bytes": 0,
+      "host_table_read_bytes": 0,
+      "resident_builds": 2267,
+      "return_pruning_queries": 132,
+      "reported_selection_download_bytes": 237200
+    },
+    {
+      "name": "candidate1",
+      "candidate": true,
+      "process_seconds": 29.304939188004937,
+      "cli_seconds": 28.498241390974727,
+      "score": 548.2546201232997,
+      "option_download_bytes": 9068,
+      "option_upload_bytes": 0,
+      "host_table_read_bytes": 0,
+      "resident_builds": 2267,
+      "return_pruning_queries": 132,
+      "reported_selection_download_bytes": 237200
+    },
+    {
+      "name": "baseline1",
+      "candidate": false,
+      "process_seconds": 29.307403710030485,
+      "cli_seconds": 28.465596432972234,
+      "score": 548.2546201232997,
+      "option_download_bytes": 27175508,
+      "option_upload_bytes": 66770184,
+      "host_table_read_bytes": 0,
+      "resident_builds": 0,
+      "return_pruning_queries": 0,
+      "reported_selection_download_bytes": 0
+    }
+  ],
+  "telemetry_note": "v496/v497 selection-download field excludes 132 return-pruning queries (5280 bytes). Actual resident selection outputs are 242480 bytes. Final Python telemetry includes them; array upload/read counters are unaffected."
+}

@@ -1,0 +1,10 @@
+from pathlib import Path
+source=Path('build/performance/prepare_tables_compare_v292.py').read_text()
+source=source.replace('launch_collect_campaign_v291.py','launch_resident_campaign_v299.py').replace("[(292,'cpu'),(293,'cuda'),(294,'cpu')]","[(300,'host'),(301,'resident'),(302,'host')]").replace("'v291'","'v299'")
+source=source.replace('collection_table_mode','collection_residency_mode').replace("mode=='cpu'","mode=='host'")
+source=source.replace("from spacepdhcg.gtoc12 import collectdp;collectdp.cuda_leg_table=lambda *args:None;", "from spacepdhcg.gtoc12.gpu_lambert import GpuLambert;original=GpuLambert.__init__;GpuLambert.__init__=lambda self,*args,**kwargs:(original(self,*args,**kwargs),setattr(self,'collect_tables_resident',False))[-1];")
+source=source.replace('spacepdhcg-tables-comparison-v292','spacepdhcg-resident-comparison-v300').replace('spacepdhcg-collect-tables-campaign-v','spacepdhcg-collect-resident-campaign-v').replace('launch_tables_compare_v292.py','launch_resident_compare_v300.py')
+exec(compile(source,'prepare-resident-compare','exec'))
+poll=Path('build/performance/poll_tables_compare_v292.py').read_text().replace('spacepdhcg-tables-comparison-v292','spacepdhcg-resident-comparison-v300').replace('spacepdhcg-collect-tables-campaign-v','spacepdhcg-collect-resident-campaign-v').replace('[291,292,293,294]','[299,300,301,302]')
+poll=poll.replace("branches=run['screening']['completed_branch_requests']", "screening=run['screening']")
+Path('build/performance/poll_resident_compare_v300.py').write_text(poll)

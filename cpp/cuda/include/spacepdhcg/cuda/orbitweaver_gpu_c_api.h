@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #pragma once
+#include "spacepdhcg/cuda/gtoc12_collection_c_api.h"
 
 #include "spacepdhcg/accelerator_c_api.h"
 #include "spacepdhcg/cuda/persistent_pdhcg_c_api.h"
@@ -189,6 +190,14 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_host(
     const spacepdhcg_orbitweaver_hop_elements* elements,
     const double* times, size_t count, int32_t sort_returns,
     spacepdhcg_orbitweaver_hop_option* options, size_t capacity, size_t* selected);
+/* Same generation/filter/order as the host bridge, but retains the packed
+ * rows on device. Only the count is downloaded. *table must initially be null;
+ * destroy it with collection_options_destroy. A zero-count table is valid. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_resident(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* times, size_t count, int32_t sort_returns,
+    spacepdhcg_gtoc12_collection_options** table, size_t* selected);
 
 /* Blocking resident grid bridge. Epochs, TOFs and output arrays are device
  * buffers on the workspace device. Only the fixed orbital elements are host

@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 typedef struct spacepdhcg_gtoc12_collection spacepdhcg_gtoc12_collection;
+typedef struct spacepdhcg_gtoc12_collection_options spacepdhcg_gtoc12_collection_options;
 typedef struct spacepdhcg_gtoc12_collection_option {
     double delta_v, departure, tof;
 } spacepdhcg_gtoc12_collection_option;
@@ -41,6 +42,19 @@ spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_host(
     spacepdhcg_gtoc12_collection_result* result);
 spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_destroy(
     spacepdhcg_gtoc12_collection** workspace);
+/* Immutable resident option tables belong to their creating thread/device.
+ * Blocking operations; caller retains the table until selection completes.
+ * read is an explicit host-consumer bridge, never needed for device selection. */
+spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_options_read(
+    spacepdhcg_gtoc12_collection_options* table,
+    spacepdhcg_gtoc12_collection_option* rows, int32_t capacity);
+spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_options_destroy(
+    spacepdhcg_gtoc12_collection_options** table);
+spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_resident(
+    spacepdhcg_gtoc12_collection* workspace, spacepdhcg_gtoc12_collection_options* table,
+    const spacepdhcg_gtoc12_collection_query* query,
+    spacepdhcg_gtoc12_collection_result* result,
+    spacepdhcg_gtoc12_collection_option* selected);
 #ifdef __cplusplus
 }
 #endif

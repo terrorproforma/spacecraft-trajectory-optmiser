@@ -1,4 +1,5 @@
 #include "spacepdhcg/cuda/orbitweaver_gpu_c_api.h"
+#include "../internal/gtoc12_collection_options.h"
 
 #include <cuda_runtime_api.h>
 #include <cub/device/device_merge_sort.cuh>
@@ -1150,13 +1151,14 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_earth_beam_host(
     return earth_beam_host(w,config,targets,na,epochs,ne,tofs,nt,block,limit,options,capacity,selected);
 }
 
-spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_host(
+static spacepdhcg_cuda_status hop_options_impl(
     spacepdhcg_orbitweaver_lambert_workspace* w,
     const spacepdhcg_orbitweaver_hop_elements* elements,
     const double* times,size_t count,int32_t sort_returns,
-    spacepdhcg_orbitweaver_hop_option* options,size_t capacity,size_t* selected
+    spacepdhcg_orbitweaver_hop_option* options,size_t capacity,size_t* selected,
+    spacepdhcg_gtoc12_collection_options** resident
 ) {
-    if(!w||!elements||!selected||!times||!options||!count||count>capacity
+    if(!w||!elements||!selected||!times||(!options&&!resident)||(resident&&*resident)||!count||count>capacity
         ||count>INT_MAX||count>SIZE_MAX/(2*sizeof(RankedHopOption)+sizeof(*options))
         ||(sort_returns!=0&&sort_returns!=1)||!valid_elements(elements->departure)
         ||!valid_elements(elements->arrival)||!std::isfinite(elements->gravitational_parameter)
@@ -1206,8 +1208,13 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_host(
     if(status==cudaSuccess)status=done;
     if(status!=cudaSuccess)return mapped(status);
     if(valid_count<0||size_t(valid_count)>count)return SPACEPDHCG_CUDA_RUNTIME_ERROR;
-    if(valid_count)status=cudaMemcpyAsync(options,scratch.packed,size_t(valid_count)*sizeof(*options),cudaMemcpyDeviceToHost,w->stream);
-    done=cudaStreamSynchronize(w->stream);
+    if(resident) {
+        static_assert(sizeof(spacepdhcg_orbitweaver_hop_option)==sizeof(spacepdhcg_gtoc12_collection_option));
+        const auto copied=gtoc12_collection_options_copy_device(
+            reinterpret_cast<const spacepdhcg_gtoc12_collection_option*>(scratch.packed),valid_count,w->stream,resident);
+        if(copied!=SPACEPDHCG_CUDA_SUCCESS)return copied;
+    } else if(valid_count)status=cudaMemcpyAsync(options,scratch.packed,size_t(valid_count)*sizeof(*options),cudaMemcpyDeviceToHost,w->stream);
+    done=resident?cudaSuccess:cudaStreamSynchronize(w->stream);
     if(status==cudaSuccess)status=done;
     if(status==cudaSuccess){
         *selected=size_t(valid_count);
@@ -1215,9 +1222,24 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_host(
         w->batches+=batches;w->request_count+=count;w->result_count+=size_t(valid_count);
         w->feasible+=valid_count;w->failed+=count-size_t(valid_count);
         w->input_bytes+=count*2*sizeof(double)+batches*sizeof(*elements);
-        w->output_bytes+=size_t(valid_count)*sizeof(*options)+sizeof(int);
+        w->output_bytes+=(resident?0:size_t(valid_count)*sizeof(*options))+sizeof(int);
     }
     return mapped(status);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_host(
+    spacepdhcg_orbitweaver_lambert_workspace* w,const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* times,size_t count,int32_t sort_returns,spacepdhcg_orbitweaver_hop_option* options,
+    size_t capacity,size_t* selected) {
+    return hop_options_impl(w,elements,times,count,sort_returns,options,capacity,selected,nullptr);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_resident(
+    spacepdhcg_orbitweaver_lambert_workspace* w,const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* times,size_t count,int32_t sort_returns,spacepdhcg_gtoc12_collection_options** table,
+    size_t* selected) {
+    if(!table)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    return hop_options_impl(w,elements,times,count,sort_returns,nullptr,count,selected,table);
 }
 
 spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_grid_device(

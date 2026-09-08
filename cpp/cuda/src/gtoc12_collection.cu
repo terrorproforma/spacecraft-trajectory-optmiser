@@ -1,8 +1,10 @@
 #include "spacepdhcg/cuda/gtoc12_collection_c_api.h"
+#include "../internal/gtoc12_collection_options.h"
 #include <cuda_runtime.h>
 #include <cmath>
 #include <mutex>
 #include <new>
+#include <thread>
 
 namespace {
 using Option = spacepdhcg_gtoc12_collection_option;
@@ -82,6 +84,51 @@ struct spacepdhcg_gtoc12_collection {
     std::mutex mutex;
 };
 
+struct spacepdhcg_gtoc12_collection_options {
+    Option* rows{};
+    int count{},device{};
+    std::thread::id owner{std::this_thread::get_id()};
+};
+
+namespace {
+bool owned(const spacepdhcg_gtoc12_collection_options* table) {
+    int device=-1;
+    return table && table->owner==std::this_thread::get_id()
+        && cudaGetDevice(&device)==cudaSuccess && device==table->device;
+}
+__global__ void gather_selected(const Option* rows,const Result* result,Option* selected) {
+    *selected=result->status==0 && result->index>=0?rows[result->index]:Option{};
+}
+}
+
+spacepdhcg_cuda_status gtoc12_collection_options_copy_device(
+    const Option* rows,int count,cudaStream_t stream,spacepdhcg_gtoc12_collection_options** output) {
+    if(!rows || count<0 || !output || *output)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    auto* table=new(std::nothrow) spacepdhcg_gtoc12_collection_options;
+    if(!table)return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    table->count=count;
+    auto status=cudaGetDevice(&table->device);
+    if(status==cudaSuccess)status=cudaMalloc(&table->rows,size_t(count?count:1)*sizeof(Option));
+    if(status==cudaSuccess && count)status=cudaMemcpyAsync(table->rows,rows,size_t(count)*sizeof(Option),cudaMemcpyDeviceToDevice,stream);
+    const auto done=cudaStreamSynchronize(stream);
+    if(status==cudaSuccess)status=done;
+    if(status!=cudaSuccess){cudaFree(table->rows);delete table;return mapped(status);}
+    *output=table;return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_options_read(
+    spacepdhcg_gtoc12_collection_options* table,Option* rows,int capacity) {
+    if(!owned(table)||!rows||capacity<table->count)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    return mapped(cudaMemcpy(rows,table->rows,size_t(table->count)*sizeof(Option),cudaMemcpyDeviceToHost));
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_options_destroy(
+    spacepdhcg_gtoc12_collection_options** output) {
+    if(!output||!owned(*output))return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    auto* table=*output;const auto status=cudaFree(table->rows);
+    delete table;*output=nullptr;return mapped(status);
+}
+
 extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_launch_device(
     spacepdhcg_gtoc12_collection* w, const Option* options, int n, const Query* query,
     Result* result, spacepdhcg_accelerator_stream stream) {
@@ -155,4 +202,29 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_host(
     const auto complete = cudaStreamSynchronize(w->stream);
     if (result_status != SPACEPDHCG_CUDA_SUCCESS) return result_status;
     return mapped(s == cudaSuccess ? complete : s);
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_resident(
+    spacepdhcg_gtoc12_collection* w,spacepdhcg_gtoc12_collection_options* table,
+    const Query* query,Result* result,Option* selected) {
+    if(!w||!owned(table)||table->device!=w->device||table->count>w->capacity
+        ||!query||!result||!selected)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);
+    if(!lock.owns_lock())return SPACEPDHCG_CUDA_BUSY;
+    auto status=cudaMemcpyAsync(w->query,query,sizeof(Query),cudaMemcpyHostToDevice,w->stream);
+    auto code=mapped(status);
+    if(status==cudaSuccess)code=spacepdhcg_gtoc12_collection_launch_device(
+        w,table->rows,table->count,w->query,w->result,
+        {{SPACEPDHCG_DEVICE_CUDA,w->device},reinterpret_cast<uintptr_t>(w->stream)});
+    // Reuse one row of the host-input scratch as the selected tuple. The table
+    // is immutable and every call completes before another workspace lease.
+    if(code==SPACEPDHCG_CUDA_SUCCESS) {
+        gather_selected<<<1,1,0,w->stream>>>(table->rows,w->result,w->options);
+        status=cudaGetLastError();
+        if(status==cudaSuccess)status=cudaMemcpyAsync(result,w->result,sizeof(Result),cudaMemcpyDeviceToHost,w->stream);
+        if(status==cudaSuccess)status=cudaMemcpyAsync(selected,w->options,sizeof(Option),cudaMemcpyDeviceToHost,w->stream);
+    }
+    const auto done=cudaStreamSynchronize(w->stream);
+    if(code!=SPACEPDHCG_CUDA_SUCCESS)return code;
+    return mapped(status==cudaSuccess?done:status);
 }

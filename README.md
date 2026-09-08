@@ -14,6 +14,16 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+Return and collection options now stay on CUDA through selection and return
+pruning. The measured one-ship run eliminates **66.77 MB of option uploads** and
+reduces generation-result downloads from **27.18 MB to 9.1 kB**. Complete-process
+medians fall **8.99% locally / 2.28% on H100** over two runs per mode, though H100
+timing ranges overlap. All 5,930 captured selections retain bitwise results on
+both GPUs. Validation also fixed adaptive independent replay crossing changes
+in cubic thrust interpolation; no solver or physics tolerance was relaxed.
+The reverified incumbent remains **12,805.194 weighted kg**.
+[Implementation, verifier diagnosis and reproducible results](docs/GPU_RESIDENT_OPTIONS.md).
+
 Compatible trajectory legs now reuse GPU QOCO workspaces, sparse conversion and
 vendor graphs. Complete-process one-ship medians fall **5.40% on RTX 5090** and
 **5.03% on H100**, with unchanged verified score. The fixed 225-leg replay takes

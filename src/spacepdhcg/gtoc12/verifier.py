@@ -21,6 +21,7 @@ import itertools
 import math
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -284,24 +285,50 @@ def propagate_burn(
     interpolant = LagrangeThrust(epochs_s, thrust, C.THRUST_INTERPOLATION_ORDER)
     samples = np.arange(t0, t1, sample_days * C.DAY_S)
     t_eval = np.unique(np.concatenate((samples, [t1])))
-    result = solve_ivp(
-        _thrust_dynamics(interpolant),
-        (t0, t1),
-        y0,
-        method="DOP853",
-        rtol=rtol,
-        atol=np.array([1e-7, 1e-7, 1e-7, 1e-10, 1e-10, 1e-10, 1e-9]),
-        t_eval=t_eval,
-    )
-    if not result.success:
-        raise RuntimeError(f"burn integration failed: {result.message}")
-    states = result.y.T
-    radii = np.linalg.norm(states[:, 0:3], axis=1)
+    # t_eval only samples dense output; it does not constrain adaptive steps.
+    # A step spanning several cubic-stencil changes can miss thrust structure
+    # despite a small local error estimate. Restart at each polynomial change.
+    # Constant-thrust arcs and a single polynomial retain one integration call.
+    cuts = [t0]
+    if not np.all(interpolant.thrust == interpolant.thrust[0]):
+        for i in range(1, len(interpolant.epochs) - 1):
+            if interpolant.stencil(interpolant.epochs[i - 1]) != interpolant.stencil(
+                interpolant.epochs[i]
+            ):
+                cuts.append(float(interpolant.epochs[i]))
+    cuts.append(t1)
+    pieces = []
+    final = y0
+    min_radius = float(np.linalg.norm(position))
+    dynamics = _thrust_dynamics(interpolant)
+    for segment, (lo, hi) in enumerate(pairwise(cuts)):
+        left = np.searchsorted(t_eval, lo, side="left" if segment == 0 else "right")
+        right = np.searchsorted(t_eval, hi, side="right")
+        requested = t_eval[left:right]
+        # Always integrate to the boundary, even if the viewer requests no
+        # sample there. Only requested samples enter the returned history.
+        evaluation = requested
+        if not len(requested) or requested[-1] != hi:
+            evaluation = np.concatenate((requested, [hi]))
+        result = solve_ivp(
+            dynamics,
+            (lo, hi),
+            final,
+            method="DOP853",
+            rtol=rtol,
+            atol=np.array([1e-7, 1e-7, 1e-7, 1e-10, 1e-10, 1e-10, 1e-9]),
+            t_eval=evaluation,
+        )
+        if not result.success:
+            raise RuntimeError(f"burn integration failed: {result.message}")
+        final = result.y[:, -1]
+        min_radius = min(min_radius, float(np.min(np.linalg.norm(result.y[:3], axis=0))))
+        pieces.append(result.y[:, : len(requested)].T)
+    states = np.concatenate(pieces, axis=0)
     if history is not None:
-        for t, y in zip(result.t, states, strict=True):
+        for t, y in zip(t_eval, states, strict=True):
             history.append(epoch0_mjd + t / C.DAY_S, y[0:3], y[3:6], y[6], interpolant(float(t)))
-    final = states[-1]
-    return final[0:3].copy(), final[3:6].copy(), float(final[6]), float(np.min(radii))
+    return final[0:3].copy(), final[3:6].copy(), float(final[6]), min_radius
 
 
 def propagate_coast(

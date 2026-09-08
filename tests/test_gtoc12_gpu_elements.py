@@ -209,9 +209,9 @@ def test_compact_search_bypasses_detailed_host_screening(monkeypatch):
         monkeypatch.setattr(search, "asteroid_state", forbidden)
         monkeypatch.setattr(search, "earth_state", forbidden)
         monkeypatch.setattr(LambertHop, "total_delta_v", property(forbidden))
-        assert runner._return_options(45738, C.MISSION_END_MJD) == expected_return
+        assert list(runner._return_options(45738, C.MISSION_END_MJD)) == expected_return
         actual_collect = runner._collect_hop_options(45738, 25792, C.MISSION_END_MJD - 500)
-        assert actual_collect == expected_collect
+        assert list(actual_collect) == expected_collect
         assert runner.lambert_evaluations == 2 * before
         evaluated = gpu.evaluations
         assert runner._collect_hop_options(45738, 25792, C.MISSION_END_MJD - 500) is actual_collect

@@ -1621,6 +1621,17 @@ class RouteSearch:
         if asteroid not in self._return_cache:
             end = C.MISSION_END_MJD - self.settings.end_margin_days
             self._return_cache[asteroid] = self._return_options(asteroid, end)
+        from .gpu_options import GpuResidentOptions
+        from .lambert import cuda_select_collection
+
+        options = self._return_cache[asteroid]
+        if isinstance(options, GpuResidentOptions):
+            selected = cuda_select_collection(
+                options, mass_guess, C.MISSION_END_MJD, self.settings,
+                first=True, _return_feasibility=True,
+            )
+            if selected is not None:
+                return selected[1] is not None
         return any(
             self._feasible(mass_guess, dv, tof, "earth_return")
             for dv, _departure, tof in self._return_cache[asteroid]

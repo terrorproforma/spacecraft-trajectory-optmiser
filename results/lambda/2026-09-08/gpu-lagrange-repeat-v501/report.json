@@ -1,0 +1,34 @@
+{
+  "pid": 194026,
+  "complete": true,
+  "stages": [
+    {
+      "name": "prior",
+      "returncode": 0,
+      "seconds": 18.13840205501765,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-lagrange-repeat-v501/diagnose.py",
+        "/home/ubuntu/spacepdhcg-lagrange-repeat-v501/prior"
+      ]
+    },
+    {
+      "name": "candidate",
+      "returncode": 0,
+      "seconds": 18.137589039979503,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-lagrange-repeat-v501/diagnose.py",
+        "/home/ubuntu/spacepdhcg-lagrange-repeat-v501/candidate"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "candidate",
+  "source_base": "resident-options-v500/repo",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "d682739ec9bcc9ea17db5dc61e7c94354598406317bde1afde40608fea49f241",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 194033
+}

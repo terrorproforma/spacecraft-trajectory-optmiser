@@ -86,6 +86,9 @@ def cuda_paired_hops(*args, **kwargs):
 def cuda_paired_options(*args, **kwargs):
     gpu = _GPU_BACKEND.get()
     enabled = os.environ.get("SPACEPDHCG_TEST_GTOC12_COMPACT_OPTIONS", "1") != "0"
+    kwargs.setdefault(
+        "resident", os.environ.get("SPACEPDHCG_TEST_GTOC12_RESIDENT_OPTIONS", "1") != "0"
+    )
     return gpu.paired_options(*args, **kwargs) if gpu is not None and enabled else None
 
 

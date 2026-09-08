@@ -70,8 +70,15 @@ class GpuCollection:
     def select(
         self, options, mass, epoch, settings, penalty_scale=1.0, max_span=np.inf, *, first=False
     ):
-        rows = np.ascontiguousarray(options, dtype=np.float64).reshape(-1, 3)
-        count = len(rows)
+        from .gpu_options import GpuResidentOptions
+
+        resident = isinstance(options, GpuResidentOptions)
+        if resident:
+            options.owned()
+            if options.gpu.device_id != self.device:
+                raise ValueError("CUDA option table belongs to another device")
+        rows = None if resident else np.ascontiguousarray(options, dtype=np.float64).reshape(-1, 3)
+        count = len(options) if resident else len(rows)
         if count > 2**31 - 1:
             raise ValueError("collection option count exceeds int32")
         if not self.handle.value or count > self.capacity:
@@ -97,6 +104,29 @@ class GpuCollection:
             C.ISP_S * C.G0_M_S2 * 1e-3,
         )
         result = Result()
+        if resident:
+            native = options.gpu.library.spacepdhcg_gtoc12_collection_resident
+            native.argtypes = [
+                ct.c_void_p,
+                ct.c_void_p,
+                ct.POINTER(Query),
+                ct.POINTER(Result),
+                ct.c_void_p,
+            ]
+            native.restype = ct.c_int
+            winner = np.empty(3, dtype=np.float64)
+            self._check(
+                native(
+                    self.handle,
+                    options.handle,
+                    ct.byref(query),
+                    ct.byref(result),
+                    winner.ctypes.data,
+                )
+            )
+            if result.status or not -1 <= result.index < count:
+                raise RuntimeError("CUDA collection query or option is invalid")
+            return result.cost, None if result.index == -1 else tuple(float(x) for x in winner)
         self._check(
             self.evaluate(self.handle, rows.ctypes.data, count, ct.byref(query), ct.byref(result))
         )

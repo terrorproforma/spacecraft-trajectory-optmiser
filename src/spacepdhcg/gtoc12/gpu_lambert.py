@@ -190,6 +190,7 @@ class GpuLambert:
         self.collect_tables_resident = True
         self.collect_table_cache = OrderedDict()
         self.collect_table_objects = WeakSet()
+        self.option_objects = WeakSet()
         self.retime_workspace = None
         self.telemetry = {
             "backend": "cuda",
@@ -217,6 +218,8 @@ class GpuLambert:
             self.collect_dp_workspace.close()
             self.collect_dp_workspace = None
         for table in list(self.collect_table_objects):
+            table.close()
+        for table in list(self.option_objects):
             table.close()
         self.collect_table_cache.clear()
         if self.retime_workspace is not None:
@@ -262,13 +265,25 @@ class GpuLambert:
     def __exit__(self, *args):
         self.close()
 
-    def select_collection(self, options, *args, **kwargs):
+    def select_collection(self, options, *args, _return_feasibility=False, **kwargs):
         from .gpu_collection import GpuCollection
+        from .gpu_options import GpuResidentOptions
 
         self._owned()
         if self.collection_workspace is None:
             self.collection_workspace = GpuCollection(self.library, self.device_id)
         result = self.collection_workspace.select(options, *args, **kwargs)
+        resident = isinstance(options, GpuResidentOptions)
+        if resident:
+            key = "resident_option_selection_download_bytes"
+            self.telemetry[key] = self.telemetry.get(key, 0) + 40
+        if _return_feasibility:
+            self.telemetry["completed_return_feasibility_queries"] = (
+                self.telemetry.get("completed_return_feasibility_queries", 0) + 1
+            )
+            return result
+        key = "collection_option_upload_bytes"
+        self.telemetry[key] = self.telemetry.get(key, 0) + (0 if resident else 24 * len(options))
         for key, count in [
             ("completed_collection_queries", 1),
             ("completed_collection_options", len(options)),
@@ -318,7 +333,9 @@ class GpuLambert:
             gpu_used=True,
         )
 
-    def paired_options(self, catalogue, from_body, to_body, departures, tofs, *, sort_returns):
+    def paired_options(
+        self, catalogue, from_body, to_body, departures, tofs, *, sort_returns, resident=False
+    ):
         """Return compact CUDA-filtered options with the existing tie ordering."""
         from . import constants as C
 
@@ -340,34 +357,57 @@ class GpuLambert:
             C.MAX_VINF_EARTH_KM_S if from_body == 0 else 0.0,
             C.MAX_VINF_EARTH_KM_S if to_body == 0 else 0.0,
         )
-        native = self.library.spacepdhcg_orbitweaver_hop_options_host
+        native = (
+            self.library.spacepdhcg_orbitweaver_hop_options_resident
+            if resident
+            else self.library.spacepdhcg_orbitweaver_hop_options_host
+        )
         native.argtypes = [
             ct.c_void_p,
             ct.POINTER(HopElements),
             ct.c_void_p,
             ct.c_size_t,
             ct.c_int32,
-            ct.c_void_p,
-            ct.c_size_t,
-            ct.POINTER(ct.c_size_t),
+            *(
+                [ct.POINTER(ct.c_void_p), ct.POINTER(ct.c_size_t)]
+                if resident
+                else [ct.c_void_p, ct.c_size_t, ct.POINTER(ct.c_size_t)]
+            ),
         ]
         native.restype = ct.c_int
         self._prepare(256)
         times = np.column_stack((departures, tofs))
-        output = np.empty((count, 3), dtype=np.float64)
         selected = ct.c_size_t()
-        self._check(
-            native(
-                self.handle,
-                ct.byref(query),
-                times.ctypes.data,
-                count,
-                int(sort_returns),
-                output.ctypes.data,
-                count,
-                ct.byref(selected),
+        if resident:
+            from .gpu_options import GpuResidentOptions
+
+            output = GpuResidentOptions(self)
+            self._check(
+                native(
+                    self.handle,
+                    ct.byref(query),
+                    times.ctypes.data,
+                    count,
+                    int(sort_returns),
+                    ct.byref(output.handle),
+                    ct.byref(selected),
+                )
             )
-        )
+            output.count = selected.value
+        else:
+            output = np.empty((count, 3), dtype=np.float64)
+            self._check(
+                native(
+                    self.handle,
+                    ct.byref(query),
+                    times.ctypes.data,
+                    count,
+                    int(sort_returns),
+                    output.ctypes.data,
+                    count,
+                    ct.byref(selected),
+                )
+            )
         for start in range(0, count, self.capacity):
             self._record(2 * min(count - start, self.capacity))
         self.telemetry["completed_element_hops"] = (
@@ -377,8 +417,15 @@ class GpuLambert:
             self.telemetry.get("completed_compact_options", 0) + selected.value
         )
         self.telemetry["compact_option_download_bytes"] = (
-            self.telemetry.get("compact_option_download_bytes", 0) + 24 * selected.value + 4
+            self.telemetry.get("compact_option_download_bytes", 0)
+            + (0 if resident else 24 * selected.value)
+            + 4
         )
+        if resident:
+            self.telemetry["resident_option_builds"] = (
+                self.telemetry.get("resident_option_builds", 0) + 1
+            )
+            return output
         return list(map(tuple, output[: selected.value].tolist()))
 
     def paired_hops(self, catalogue, from_body, to_body, departures, tofs):
