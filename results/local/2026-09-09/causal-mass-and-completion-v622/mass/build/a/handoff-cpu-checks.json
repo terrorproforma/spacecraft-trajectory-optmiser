@@ -1,0 +1,109 @@
+{
+  "passed": true,
+  "gpu_calls": 0,
+  "old_resource_sha256": "3a84bc0f96be6c1866f07bea1ed9aeaef9766da837ea9c6e35e9735d62fb444d",
+  "new_resource_sha256": "f5c5238013ffafea6f268c7a224ce4479fea2a28de058c5effd43369c9b50a63",
+  "existing_kernels": {
+    "24cooperative_solve_kernelILb0E": {
+      "REG": 80,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "24cooperative_solve_kernelILb1E": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "12solve_kernelILb0E": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "12solve_kernelILb1E": {
+      "REG": 204,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "26cooperative_halpern_kernel": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "21cooperative_l1_kernelILb0E": {
+      "REG": 94,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "21cooperative_l1_kernelILb1E": {
+      "REG": 94,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "32cooperative_l1_initialise_kernel": {
+      "REG": 58,
+      "STACK": 0,
+      "SHARED": 5120,
+      "LOCAL": 0
+    },
+    "29cooperative_initialise_kernel": {
+      "REG": 58,
+      "STACK": 0,
+      "SHARED": 5120,
+      "LOCAL": 0
+    },
+    "27cooperative_residual_kernel": {
+      "REG": 72,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "15residual_kernel": {
+      "REG": 66,
+      "STACK": 0,
+      "SHARED": 0,
+      "LOCAL": 0
+    },
+    "15recovery_kernel": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1120,
+      "LOCAL": 0
+    }
+  },
+  "new_kernels": {
+    "23cooperative_mass_kernel": {
+      "REG": 198,
+      "STACK": 40,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "34cooperative_mass_initialise_kernel": {
+      "REG": 48,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "13mass_validate": {
+      "REG": 40,
+      "STACK": 0,
+      "SHARED": 0,
+      "LOCAL": 0
+    },
+    "12mass_prepare": {
+      "REG": 18,
+      "STACK": 0,
+      "SHARED": 0,
+      "LOCAL": 0
+    }
+  },
+  "runner_sha256": "691fa7fb4e3e82de59d555ad8e2f51bc2d24600194e91cccaed60dab470b8a84",
+  "runner_syntax_passed": true,
+  "manifest_sha256": "ca970d7acd9893ba71d7e58f85393cb2a26c003ca931e2071e2718e4292ad026"
+}

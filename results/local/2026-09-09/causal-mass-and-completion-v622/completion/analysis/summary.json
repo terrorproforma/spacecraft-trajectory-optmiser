@@ -1,0 +1,549 @@
+{
+  "scope": "Saved component timing arithmetic; no new model or GPU evaluation",
+  "device": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, NVIDIA GeForce RTX 5090, 595.97",
+  "ready_sha256": "64d36a429381edeae90f3300520516f5310337f8d154ed292d5c89642143ba9d",
+  "library_sha256": "9c3e6a250002893363d2f4dcf68babe3b7158508b5b97149f83c8261437f1fa7",
+  "report_sha256": "ccd74d20bec17954b72e731bc05341ce93168e80c4876cefd336d5ee8591483a",
+  "launch_sha256": "97a29a527989f7ea30a5cb4fd690722cf8b63cf76e57801c31fd3b4a047606c3",
+  "worker_seconds_including_setup_evidence_validation": 7.535983891000001,
+  "catalogue_load_seconds": 0.038440592000000606,
+  "native_evaluate_calls": 80,
+  "kernel_launches_from_frozen_source": 160,
+  "candidate_evaluations_each_arm": {
+    "ordinary": 13520,
+    "compact": 13520
+  },
+  "accepted_proxy_evaluations_each_arm": {
+    "ordinary": 1370,
+    "compact": 1370
+  },
+  "historical_unique_controls": 20,
+  "reported_frozen_oracle_field_comparisons": 3585000,
+  "maximum_reported_absolute_finite_difference": 4.547473508864641e-13,
+  "correctness_scope": "All saved classifications/cargo checks passed and reports were cross-checked; this summary does not redo the independent numerical/formula audit",
+  "new_mission_solves": 0,
+  "score_changes": 0,
+  "raw_output_files": 255,
+  "groups": [
+    {
+      "id": "v616_no_fit-n24",
+      "model": "v616_no_fit",
+      "batch_size": 24,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 3,
+      "request_sha256": "22cea52431621786632f0d25c899219943acc1a005acc0db9bbe564192d4d7b9",
+      "construction_seconds": {
+        "ordinary": 0.030477442000005794,
+        "compact": 0.02957838200001106
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.17027371000000358,
+        "compact": 0.00011944100000960134
+      },
+      "workspace_close_seconds": 0.0010705550000125186,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.01047375100000636,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.0012940739999862672,
+            0.0011843899999917085,
+            0.0012589840000032382,
+            0.001190118000010898
+          ],
+          "warm_median_seconds": 0.001224551000007068,
+          "warm_min_seconds": 0.0011843899999917085,
+          "warm_max_seconds": 0.0012940739999862672,
+          "warm_proxy_evaluations_per_second": 19599.020375518434,
+          "warm_pack_median_seconds": 0.000628842500006499,
+          "warm_paired_pack_share_median": 0.5261811888857493,
+          "warm_native_call_median_seconds": 0.00047094199999264674,
+          "warm_kernel_median_seconds": 3.1808000057935676e-05,
+          "numeric_readback_sha256": "0e63b599714fd968afe766cfe3ba15298075e31de3ee8db3e55f5d4203daa976",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.004457467999998244,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.001910315000003493,
+            0.0018089079999867863,
+            0.0019325230000220017,
+            0.0017732209999792303
+          ],
+          "warm_median_seconds": 0.0018596114999951396,
+          "warm_min_seconds": 0.0017732209999792303,
+          "warm_max_seconds": 0.0019325230000220017,
+          "warm_proxy_evaluations_per_second": 12905.921478794215,
+          "warm_pack_median_seconds": 0.0012201539999949773,
+          "warm_paired_pack_share_median": 0.6648144744221358,
+          "warm_native_call_median_seconds": 0.0004934589999834316,
+          "warm_kernel_median_seconds": 4.0672000497579564e-05,
+          "numeric_readback_sha256": "0e63b599714fd968afe766cfe3ba15298075e31de3ee8db3e55f5d4203daa976",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 0.6584982938695898,
+      "compact_method_time_reduction_fraction": -0.5186068199563807,
+      "first_call_ordinary_over_compact_ratio": 2.3497086238219738,
+      "cross_arm_numeric_payload_identical": true
+    },
+    {
+      "id": "v616_no_fit-n48",
+      "model": "v616_no_fit",
+      "batch_size": 48,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 5,
+      "request_sha256": "568a7e30e2deafa271e2898536fcdef348e44c24f0d50622be1f5db3b6b2dbee",
+      "construction_seconds": {
+        "ordinary": 0.03109554200000275,
+        "compact": 0.030967876999994814
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.0005149670000150763,
+        "compact": 0.00011807900000349036
+      },
+      "workspace_close_seconds": 0.0006080750000023727,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.0018450059999963742,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.0019522329999972499,
+            0.002160338999999567,
+            0.001993377999980339,
+            0.0019342249999851902
+          ],
+          "warm_median_seconds": 0.0019728054999887945,
+          "warm_min_seconds": 0.0019342249999851902,
+          "warm_max_seconds": 0.002160338999999567,
+          "warm_proxy_evaluations_per_second": 24330.832411138676,
+          "warm_pack_median_seconds": 0.0011595289999917213,
+          "warm_paired_pack_share_median": 0.5877131091025447,
+          "warm_native_call_median_seconds": 0.0006609640000050376,
+          "warm_kernel_median_seconds": 7.131199911236764e-05,
+          "numeric_readback_sha256": "3c1c284f250c80e257e81c4aca59791c1bc2facfa04b454b8ec79ca2ba2b6ca5",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.0036364409999976033,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.0021831749999989825,
+            0.0022475579999934325,
+            0.0022110630000042875,
+            0.002194919999993772
+          ],
+          "warm_median_seconds": 0.0022029914999990297,
+          "warm_min_seconds": 0.0021831749999989825,
+          "warm_max_seconds": 0.0022475579999934325,
+          "warm_proxy_evaluations_per_second": 21788.55433623831,
+          "warm_pack_median_seconds": 0.0015381445000031135,
+          "warm_paired_pack_share_median": 0.695125120140105,
+          "warm_native_call_median_seconds": 0.0005187434999953666,
+          "warm_kernel_median_seconds": 4.665600135922433e-05,
+          "numeric_readback_sha256": "3c1c284f250c80e257e81c4aca59791c1bc2facfa04b454b8ec79ca2ba2b6ca5",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 0.8955120798194924,
+      "compact_method_time_reduction_fraction": -0.11667952061748754,
+      "first_call_ordinary_over_compact_ratio": 0.5073658557907553,
+      "cross_arm_numeric_payload_identical": true
+    },
+    {
+      "id": "v616_no_fit-n256",
+      "model": "v616_no_fit",
+      "batch_size": 256,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 26,
+      "request_sha256": "b41b1fdaf99db9a062b49e9141ecf70634dbbdd5215ad2dc56a85a3f2d63908a",
+      "construction_seconds": {
+        "ordinary": 0.054783417000010104,
+        "compact": 0.049529780999989725
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.000679254000004903,
+        "compact": 0.00016895699999963654
+      },
+      "workspace_close_seconds": 0.000697690000009743,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.0066347690000156945,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.007273478999991312,
+            0.006672407999985808,
+            0.0071018480000191175,
+            0.007060645999985127
+          ],
+          "warm_median_seconds": 0.007081247000002122,
+          "warm_min_seconds": 0.006672407999985808,
+          "warm_max_seconds": 0.007273478999991312,
+          "warm_proxy_evaluations_per_second": 36151.82467154772,
+          "warm_pack_median_seconds": 0.005798248999994371,
+          "warm_paired_pack_share_median": 0.8188106358295015,
+          "warm_native_call_median_seconds": 0.0006676210000051697,
+          "warm_kernel_median_seconds": 9.079999849200251e-05,
+          "numeric_readback_sha256": "767321d39ef2abf6734979c440eed7b47945af8ce48e1439884dd15b07f3bfaa",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.0074116110000090885,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.005680280999996512,
+            0.005980895999982749,
+            0.00580470699998159,
+            0.005838764999992918
+          ],
+          "warm_median_seconds": 0.005821735999987254,
+          "warm_min_seconds": 0.005680280999996512,
+          "warm_max_seconds": 0.005980895999982749,
+          "warm_proxy_evaluations_per_second": 43973.13790947588,
+          "warm_pack_median_seconds": 0.004532287499998233,
+          "warm_paired_pack_share_median": 0.7841876224002498,
+          "warm_native_call_median_seconds": 0.0006475465000050917,
+          "warm_kernel_median_seconds": 0.00010095999762415884,
+          "numeric_readback_sha256": "767321d39ef2abf6734979c440eed7b47945af8ce48e1439884dd15b07f3bfaa",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 1.2163462925865456,
+      "compact_method_time_reduction_fraction": 0.17786570642352828,
+      "first_call_ordinary_over_compact_ratio": 0.8951858104813594,
+      "cross_arm_numeric_payload_identical": true
+    },
+    {
+      "id": "v616_no_fit-n1024",
+      "model": "v616_no_fit",
+      "batch_size": 1024,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 103,
+      "request_sha256": "5985c5949f2f39239b7e57343122887e835660727b17c4f9c4990aebb9941e59",
+      "construction_seconds": {
+        "ordinary": 0.128832339000013,
+        "compact": 0.11945088400000259
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.0010401849999936985,
+        "compact": 0.0014166280000154075
+      },
+      "workspace_close_seconds": 0.0010695230000123956,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.02756349300000238,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.026636504999999033,
+            0.02675045399999476,
+            0.026145466999992095,
+            0.026943737000010515
+          ],
+          "warm_median_seconds": 0.026693479499996897,
+          "warm_min_seconds": 0.026145466999992095,
+          "warm_max_seconds": 0.026943737000010515,
+          "warm_proxy_evaluations_per_second": 38361.428303122455,
+          "warm_pack_median_seconds": 0.023273681500015186,
+          "warm_paired_pack_share_median": 0.8766121543168641,
+          "warm_native_call_median_seconds": 0.0009458255000112104,
+          "warm_kernel_median_seconds": 8.451200276613234e-05,
+          "numeric_readback_sha256": "b2b7279c077191503365291e4e2914536d4766cb5e06194dc2dc739bdcf9f048",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.019584979999990537,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.018659770999988723,
+            0.01889226299999791,
+            0.01834313899999529,
+            0.01913922600002138
+          ],
+          "warm_median_seconds": 0.018776016999993317,
+          "warm_min_seconds": 0.01834313899999529,
+          "warm_max_seconds": 0.01913922600002138,
+          "warm_proxy_evaluations_per_second": 54537.65833298748,
+          "warm_pack_median_seconds": 0.015739907499991546,
+          "warm_paired_pack_share_median": 0.8409541561431675,
+          "warm_native_call_median_seconds": 0.0008437660000026881,
+          "warm_kernel_median_seconds": 9.299200028181076e-05,
+          "numeric_readback_sha256": "b2b7279c077191503365291e4e2914536d4766cb5e06194dc2dc739bdcf9f048",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 1.4216795553607775,
+      "compact_method_time_reduction_fraction": 0.2966066113638165,
+      "first_call_ordinary_over_compact_ratio": 1.4073791752667453,
+      "cross_arm_numeric_payload_identical": true
+    },
+    {
+      "id": "existing_fit_no_refit-n24",
+      "model": "existing_fit_no_refit",
+      "batch_size": 24,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 3,
+      "request_sha256": "22cea52431621786632f0d25c899219943acc1a005acc0db9bbe564192d4d7b9",
+      "construction_seconds": {
+        "ordinary": 0.03158865099999275,
+        "compact": 0.030540309000002708
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.0005211789999748362,
+        "compact": 0.00011532800002100885
+      },
+      "workspace_close_seconds": 0.0007356339999944339,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.0024997570000095948,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.0019601049999948827,
+            0.0018329689999916354,
+            0.001712607999991178,
+            0.0016494010000087655
+          ],
+          "warm_median_seconds": 0.0017727884999914068,
+          "warm_min_seconds": 0.0016494010000087655,
+          "warm_max_seconds": 0.0019601049999948827,
+          "warm_proxy_evaluations_per_second": 13537.99395704357,
+          "warm_pack_median_seconds": 0.0010798634999957812,
+          "warm_paired_pack_share_median": 0.6015865633691074,
+          "warm_native_call_median_seconds": 0.0005781159999997953,
+          "warm_kernel_median_seconds": 4.4223999604582796e-05,
+          "numeric_readback_sha256": "3cf0a71f411ac296521d6196fdfe4d4e4923ea6ec41f26db7e6cc2ee2f835a81",
+          "geometry_cache_pairs": 42,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.004040115999998761,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.0018989049999902363,
+            0.0017758749999927659,
+            0.0018857990000071823,
+            0.0017624819999753072
+          ],
+          "warm_median_seconds": 0.001830836999999974,
+          "warm_min_seconds": 0.0017624819999753072,
+          "warm_max_seconds": 0.0018989049999902363,
+          "warm_proxy_evaluations_per_second": 13108.758453101145,
+          "warm_pack_median_seconds": 0.0011905850000033524,
+          "warm_paired_pack_share_median": 0.6578144762554474,
+          "warm_native_call_median_seconds": 0.0005102325000052588,
+          "warm_kernel_median_seconds": 5.564799904823304e-05,
+          "numeric_readback_sha256": "71cf1eb5530c0178a2b9c93b74c8d579fad53cb2bb8e3c98a73df06e4f0a118e",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 0.9682940097842855,
+      "compact_method_time_reduction_fraction": -0.032744176763809474,
+      "first_call_ordinary_over_compact_ratio": 0.6187339670470752,
+      "cross_arm_numeric_payload_identical": false
+    },
+    {
+      "id": "existing_fit_no_refit-n48",
+      "model": "existing_fit_no_refit",
+      "batch_size": 48,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 5,
+      "request_sha256": "568a7e30e2deafa271e2898536fcdef348e44c24f0d50622be1f5db3b6b2dbee",
+      "construction_seconds": {
+        "ordinary": 0.03266842000002157,
+        "compact": 0.031709087999985286
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.00043215700000587276,
+        "compact": 0.00010800799998378352
+      },
+      "workspace_close_seconds": 0.0007284130000186906,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.003620346000019481,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.003043044999998301,
+            0.002730782999975645,
+            0.0025607089999937216,
+            0.0026468229999920823
+          ],
+          "warm_median_seconds": 0.0026888029999838636,
+          "warm_min_seconds": 0.0025607089999937216,
+          "warm_max_seconds": 0.003043044999998301,
+          "warm_proxy_evaluations_per_second": 17851.809894695914,
+          "warm_pack_median_seconds": 0.001965569500001152,
+          "warm_paired_pack_share_median": 0.7286542630204362,
+          "warm_native_call_median_seconds": 0.000557779999994068,
+          "warm_kernel_median_seconds": 7.756799831986426e-05,
+          "numeric_readback_sha256": "892323494224af6b73776f2192b3c5594b7b10f52cc096f9aaafda096e457e35",
+          "geometry_cache_pairs": 42,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.0038243420000014794,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.002238553000012189,
+            0.0021528040000191595,
+            0.002147707000005994,
+            0.0024733319999938885
+          ],
+          "warm_median_seconds": 0.0021956785000156742,
+          "warm_min_seconds": 0.002147707000005994,
+          "warm_max_seconds": 0.0024733319999938885,
+          "warm_proxy_evaluations_per_second": 21861.124021416315,
+          "warm_pack_median_seconds": 0.0015553599999975631,
+          "warm_paired_pack_share_median": 0.7052676402957899,
+          "warm_native_call_median_seconds": 0.0005197820000120146,
+          "warm_kernel_median_seconds": 5.870399996638297e-05,
+          "numeric_readback_sha256": "19d4220887de5c5b42b4601ec6f614a55eb3d13212e36c5001fbafb9087b5d6f",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 1.2245886635792396,
+      "compact_method_time_reduction_fraction": 0.1833992672468563,
+      "first_call_ordinary_over_compact_ratio": 0.9466585362967226,
+      "cross_arm_numeric_payload_identical": false
+    },
+    {
+      "id": "existing_fit_no_refit-n256",
+      "model": "existing_fit_no_refit",
+      "batch_size": 256,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 26,
+      "request_sha256": "b41b1fdaf99db9a062b49e9141ecf70634dbbdd5215ad2dc56a85a3f2d63908a",
+      "construction_seconds": {
+        "ordinary": 0.057716051999989304,
+        "compact": 0.053846614999997655
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.0007373869999867111,
+        "compact": 0.00021437399999513218
+      },
+      "workspace_close_seconds": 0.0007535660000144162,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.011468435000011823,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.010908547000013868,
+            0.01063835200000085,
+            0.01076906800000188,
+            0.010952371999991328
+          ],
+          "warm_median_seconds": 0.010838807500007874,
+          "warm_min_seconds": 0.01063835200000085,
+          "warm_max_seconds": 0.010952371999991328,
+          "warm_proxy_evaluations_per_second": 23618.834452020117,
+          "warm_pack_median_seconds": 0.009454439999998954,
+          "warm_paired_pack_share_median": 0.8828409770655351,
+          "warm_native_call_median_seconds": 0.0006042469999982814,
+          "warm_kernel_median_seconds": 9.731199964880944e-05,
+          "numeric_readback_sha256": "1c0dfdb48a0fa4e19a04456810082480e70f52de9eba9ea1bd4840107392d79e",
+          "geometry_cache_pairs": 42,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.007371778000020868,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.005886638999982097,
+            0.005982629000016004,
+            0.005663857999991251,
+            0.005646041000005653
+          ],
+          "warm_median_seconds": 0.005775248499986674,
+          "warm_min_seconds": 0.005646041000005653,
+          "warm_max_seconds": 0.005982629000016004,
+          "warm_proxy_evaluations_per_second": 44327.096920693664,
+          "warm_pack_median_seconds": 0.0045376359999949045,
+          "warm_paired_pack_share_median": 0.7857776273914735,
+          "warm_native_call_median_seconds": 0.0006496895000083214,
+          "warm_kernel_median_seconds": 0.00011102399975061417,
+          "numeric_readback_sha256": "611d961f824bb2996d0895f818f48af2865543f5fa900b9f49a37fc82bf8be03",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 1.8767690256155878,
+      "compact_method_time_reduction_fraction": 0.46716938187319246,
+      "first_call_ordinary_over_compact_ratio": 1.5557216997011247,
+      "cross_arm_numeric_payload_identical": false
+    },
+    {
+      "id": "existing_fit_no_refit-n1024",
+      "model": "existing_fit_no_refit",
+      "batch_size": 1024,
+      "unique_controls": 10,
+      "expected_accepted_each_call": 103,
+      "request_sha256": "5985c5949f2f39239b7e57343122887e835660727b17c4f9c4990aebb9941e59",
+      "construction_seconds": {
+        "ordinary": 0.12910545200000456,
+        "compact": 0.11813839699999562
+      },
+      "workspace_create_seconds": {
+        "ordinary": 0.0013466030000017781,
+        "compact": 0.0013067600000056245
+      },
+      "workspace_close_seconds": 0.0011386950000087381,
+      "arms": {
+        "ordinary": {
+          "first_call_seconds": 0.043860419999987244,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.04146324199999185,
+            0.041372303999992255,
+            0.04051864799998839,
+            0.04023110999997925
+          ],
+          "warm_median_seconds": 0.04094547599999032,
+          "warm_min_seconds": 0.04023110999997925,
+          "warm_max_seconds": 0.04146324199999185,
+          "warm_proxy_evaluations_per_second": 25008.86789056359,
+          "warm_pack_median_seconds": 0.0375740849999886,
+          "warm_paired_pack_share_median": 0.9179462272240578,
+          "warm_native_call_median_seconds": 0.0009773415000040586,
+          "warm_kernel_median_seconds": 9.572799876332283e-05,
+          "numeric_readback_sha256": "f8039c63750bea1dfca78103de2f5315405b587e272fd57e1b4a4bafa4f64442",
+          "geometry_cache_pairs": 42,
+          "model_rebuilds": 0
+        },
+        "compact": {
+          "first_call_seconds": 0.02000045799999839,
+          "warm_sample_count": 4,
+          "warm_method_samples_seconds": [
+            0.020121250000016744,
+            0.018647796999999855,
+            0.01915071899998111,
+            0.01878149000000917
+          ],
+          "warm_median_seconds": 0.01896610449999514,
+          "warm_min_seconds": 0.018647796999999855,
+          "warm_max_seconds": 0.020121250000016744,
+          "warm_proxy_evaluations_per_second": 53991.05546425004,
+          "warm_pack_median_seconds": 0.016023827499978438,
+          "warm_paired_pack_share_median": 0.8458342766292413,
+          "warm_native_call_median_seconds": 0.0007582930000182841,
+          "warm_kernel_median_seconds": 9.57760028541088e-05,
+          "numeric_readback_sha256": "a9422b9a2fc737393c8f3b80fde9625cdd7d5e7bfaaf58cc36cda2bd3a9cd45a",
+          "geometry_cache_pairs": 0,
+          "model_rebuilds": 1
+        }
+      },
+      "ordinary_over_compact_warm_ratio": 2.158876431372653,
+      "compact_method_time_reduction_fraction": 0.5367960919540995,
+      "first_call_ordinary_over_compact_ratio": 2.1929707809686545,
+      "cross_arm_numeric_payload_identical": false
+    }
+  ]
+}

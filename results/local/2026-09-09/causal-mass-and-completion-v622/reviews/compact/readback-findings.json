@@ -1,0 +1,293 @@
+{
+  "scope": "Saved NPZ and frozen test control-flow review only; no runtime work. Exact integer gates and cargo; tolerance applies only to ordinary arithmetic.",
+  "independent_formula_sha256": "86d63e1be44bd2222e8bd7103b489a2bf05a049e82979a3c1c56b0fd661aa88a",
+  "runs": {
+    "completion-model-gpu-v622": {
+      "report_sha256": "31459f934124fbdf8d535d03fbf4a2c4befa3a4de854f4dd9b2653a561fd6228",
+      "source_report_sha256": "44f17d31b5d9e39c192adc8cfe0a667983e84308488720e01cf1394480b86594",
+      "library_sha256": "a0c4b534002b4827b93b6eb7d255c6d74e4ef80fb697e7e17bd5296fb65c58bc",
+      "complete": false,
+      "exit_code": 1,
+      "junit": {
+        "tests": 6,
+        "failures": 3,
+        "errors": 0,
+        "skipped": 0
+      },
+      "saved_original_compact_pairs": 777,
+      "saved_pair_valid_calls": 6,
+      "saved_pair_candidate_evaluations": 1554,
+      "files": {
+        "fit-259.npz": {
+          "sha256": "829e5720266f8c5bf594166a0e7997a1372cdcf73dcc1d9d21a9446575a77087",
+          "candidate_pairs": 259,
+          "max_result_error": 4.547473508864641e-13,
+          "max_leg_error": 2.2737367544323206e-13,
+          "max_independent_formula_error": 4.547473508864641e-13,
+          "max_supported_metadata_error": 1.4210854715202004e-14,
+          "unsupported_unused_field_mismatches": {
+            "floor": 87,
+            "flat": 172
+          },
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "flat-259.npz": {
+          "sha256": "bf217a850d53d573374c2646b29f529d050b2bfe594f3a0dce23bafb2ed371dd",
+          "candidate_pairs": 259,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 1.2789769243681803e-13,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {
+            "floor": 259
+          },
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "ratio-259.npz": {
+          "sha256": "73a76092bafdcd6c68373877fd1edbc86a86088d2cb4f47381aabb184fe9a0f7",
+          "candidate_pairs": 259,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 4.547473508864641e-13,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {
+            "flat": 259
+          },
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        }
+      },
+      "observed_control_flow": "Six valid calls /1554 evaluations; metadata assertion stops each model before size3, malformed and production-capture calls."
+    },
+    "completion-model-gpu-v622b": {
+      "report_sha256": "d514e25fff0faf89279239f4ff8f27300512cce2706d93f38e8621b6d88426e5",
+      "source_report_sha256": "23ba79736f25285d22a6e99975739773c933447a206e46a74d7ef33eb37e2d4f",
+      "library_sha256": "a40a85bdb4acb1e0720c46aaed99189ecbbe481e382f5386945579003b0fb442",
+      "complete": false,
+      "exit_code": 1,
+      "junit": {
+        "tests": 6,
+        "failures": 3,
+        "errors": 0,
+        "skipped": 0
+      },
+      "saved_original_compact_pairs": 786,
+      "saved_pair_valid_calls": 12,
+      "saved_pair_candidate_evaluations": 1572,
+      "files": {
+        "fit-259.npz": {
+          "sha256": "553548f893596e02566b0e4c2e7edb79b3ab540c0530a45a50c68166d89ec09d",
+          "candidate_pairs": 259,
+          "max_result_error": 4.547473508864641e-13,
+          "max_leg_error": 2.2737367544323206e-13,
+          "max_independent_formula_error": 4.547473508864641e-13,
+          "max_supported_metadata_error": 1.4210854715202004e-14,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "fit-3.npz": {
+          "sha256": "d858846d33a3e51289b494510219b989aa4ced5f60427d2b516b75bdeb94febc",
+          "candidate_pairs": 3,
+          "max_result_error": 0.0,
+          "max_leg_error": 4.440892098500626e-16,
+          "max_independent_formula_error": 4.440892098500626e-16,
+          "max_supported_metadata_error": 1.4210854715202004e-14,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 1,
+            "5": 2
+          }
+        },
+        "flat-259.npz": {
+          "sha256": "423decab39c09fe8934648e079ba9c4e80e54a6e73097186dda239e9b08b01e5",
+          "candidate_pairs": 259,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 1.2789769243681803e-13,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "flat-3.npz": {
+          "sha256": "aa02074a4acb0af760bdf4609f6f869f1497b0576cac458d4a5e950286952156",
+          "candidate_pairs": 3,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 0.0,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 1,
+            "5": 2
+          }
+        },
+        "ratio-259.npz": {
+          "sha256": "05abb8581f76ac7b3db80f19f6f98dfdb8e4d4d3f1c44f314dd03b889d568399",
+          "candidate_pairs": 259,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 4.547473508864641e-13,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "ratio-3.npz": {
+          "sha256": "97abe3ce76a6661cae5f2cec6e2472f45456e1ac6b0baa4de6cee995ca592753",
+          "candidate_pairs": 3,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 0.0,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 1,
+            "5": 2
+          }
+        }
+      },
+      "observed_control_flow": "Twelve valid calls /1572 evaluations plus three malformed calls; CollectDPSettings construction throws before second malformed call and all production captures."
+    },
+    "completion-model-gpu-v622d": {
+      "report_sha256": "643caf4e5550373ac3b06761197ae4ee1f7801569e614498786ba089b34a54ff",
+      "source_report_sha256": "56a65032e639a6eb9af08052e9f3df87f5f1c84cfe9cf2ece6f3f63eafb2a12a",
+      "library_sha256": "9c3e6a250002893363d2f4dcf68babe3b7158508b5b97149f83c8261437f1fa7",
+      "complete": true,
+      "exit_code": 0,
+      "junit": {
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "saved_original_compact_pairs": 786,
+      "saved_pair_valid_calls": 12,
+      "saved_pair_candidate_evaluations": 1572,
+      "files": {
+        "fit-259.npz": {
+          "sha256": "535e9d181d9001d1f8f8cbcc7f4aff8f0663305e92ebc28e5a14527aa66bf429",
+          "candidate_pairs": 259,
+          "max_result_error": 4.547473508864641e-13,
+          "max_leg_error": 2.2737367544323206e-13,
+          "max_independent_formula_error": 4.547473508864641e-13,
+          "max_supported_metadata_error": 1.4210854715202004e-14,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "fit-3.npz": {
+          "sha256": "12145814f275635a2687130f1bee90eb32da3adacb3eeace3b431ef3b75d397a",
+          "candidate_pairs": 3,
+          "max_result_error": 0.0,
+          "max_leg_error": 4.440892098500626e-16,
+          "max_independent_formula_error": 4.440892098500626e-16,
+          "max_supported_metadata_error": 1.4210854715202004e-14,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 1,
+            "5": 2
+          }
+        },
+        "flat-259.npz": {
+          "sha256": "fd5b7161c3b82cc15c9566a0b3281307bdbdd2411a2c912cd824552006569ddf",
+          "candidate_pairs": 259,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 1.2789769243681803e-13,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "flat-3.npz": {
+          "sha256": "bca63f824c994f10e0dfc6151b9d271fb8eb04ac935319c65f85124a4c1a4b5d",
+          "candidate_pairs": 3,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 0.0,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 1,
+            "5": 2
+          }
+        },
+        "ratio-259.npz": {
+          "sha256": "af76ba3d659b6629b090c6144756ba66830cbb7838366f20b396465d9a739c4f",
+          "candidate_pairs": 259,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 4.547473508864641e-13,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 16,
+            "5": 22,
+            "0": 197,
+            "2": 13,
+            "3": 11
+          }
+        },
+        "ratio-3.npz": {
+          "sha256": "17b34a9a055996c3e9c81923515892fa84bcef89581c37a96a8d6308d4691620",
+          "candidate_pairs": 3,
+          "max_result_error": 0.0,
+          "max_leg_error": 0.0,
+          "max_independent_formula_error": 0.0,
+          "max_supported_metadata_error": 0.0,
+          "unsupported_unused_field_mismatches": {},
+          "failure_counts": {
+            "1": 1,
+            "5": 2
+          }
+        }
+      },
+      "observed_control_flow": "Passed test control flow:18 valid calls/2358 evaluations, six malformed calls; production capture outcomes are asserted by tests but not part of these six saved comparison NPZs."
+    }
+  },
+  "reviewer_GPU_calls": 0
+}

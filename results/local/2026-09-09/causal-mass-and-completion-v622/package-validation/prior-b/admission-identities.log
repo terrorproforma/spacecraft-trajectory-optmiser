@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/v622-portable-check-b/portable-cpu-recheck/guard.py", line 5, in <module>
+    runpy.run_path(sys.argv[1],run_name="__main__")
+  File "/usr/lib/python3.10/runpy.py", line 289, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "/usr/lib/python3.10/runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/v622-portable-check-b/build/performance/refinement-admission-v622/audit.py", line 148, in <module>
+    main()
+  File "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/v622-portable-check-b/build/performance/refinement-admission-v622/audit.py", line 137, in main
+    with (KIT / "readback-audit.json").open("x") as stream:
+  File "/usr/lib/python3.10/pathlib.py", line 1119, in open
+    return self._accessor.open(self, mode, buffering, encoding, errors,
+FileExistsError: [Errno 17] File exists: '/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/v622-portable-check-b/build/performance/refinement-admission-v622/readback-audit.json'

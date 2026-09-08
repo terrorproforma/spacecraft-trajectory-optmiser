@@ -1,0 +1,11 @@
+Independent review of the provisional v622 mass path found no build blocker. This is source/math review and CPU fixture validation, not a GPU result or convergence claim.
+
+The device path uses a signed linear prefix and a separate affine prefix for shifted upper bounds. Its reverse suffix is the transpose; recovered equality duals have the negative suffix sign. Retained primal steps act directly in original coordinates, including the L1 threshold. Mass reconstruction precedes epigraph dual completion, and the initial common KKT gate checks the supplied original point before either completion. The original audit arrays remain separate from the working operator.
+
+The coefficient metric uses upward absolute sums, tied SOC denominators, downward theta division and an upward product bound. The corrected zero-denominator policy is a unit dummy denominator, hence theta. Eliminated public slots retain unit placeholders; they are not active metric entries. The metric is rebuilt for every solve. No previous Ruiz diagonals or B/O factors enter this path.
+
+The seven planned solve calls request nine updates and expect five actual updates: three independent-oracle updates, two one-step mode-transition controls, and four zero-step acceptance/cancellation/numerical cases. The fixture's final full primal/dual vectors, active diagonal values and SOC step equality are checked. Near-zero qualified input preserves its original bits. The disable control starts from actual downloaded GPU buffers; reset/reseed invalidate certificates. Map rejection proof kernels are additional non-solve work and must be reported separately.
+
+Host validation checks disjoint indices before device proof, verifies supported exact numerical mass rows independently on GPU, and limits cooperative capacity by both new kernels. Existing L1/common/Halpern/update/checkpoint guards retain the unsupported-mode boundaries. No change to physics constraints or common KKT thresholds was found.
+
+Run `python review.py` from this directory to recheck every generated fixture array bitwise against the independent JSON oracle and record reviewed source identities. Build/resource identities and actual GPU evidence require a later review.

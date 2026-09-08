@@ -1,0 +1,125 @@
+{
+  "scope": "Saved CPU/build/source evidence only; no GPU calls or native loading by reviewer.",
+  "manifest_sha256": "ca970d7acd9893ba71d7e58f85393cb2a26c003ca931e2071e2718e4292ad026",
+  "source_tree_sha256": "8d72fb3e441dfcdfcabe28d65d0e7d0a959e099622c05dfb8b5e93d1c83039a7",
+  "source_archive_sha256": "1b64328171dfe6cb1623fb75739006abfa2f31433c5ad2b12f92d766bd949511",
+  "source_files": 384,
+  "git_base_verified": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+  "only_reviewed_overlays": true,
+  "core": {
+    "path": "/home/angus/spacepdhcg-mass-v622a/build/cuda/libspacepdhcg_cuda.so",
+    "bytes": 23425688,
+    "sha256": "a89b8b30267399c033a88f3fd8ec7fa8ac1bceb1bd41e79b9841807af1060cb2"
+  },
+  "test": {
+    "path": "/home/angus/spacepdhcg-mass-v622a/build/cuda-tests/persistent_mass_test",
+    "bytes": 116152,
+    "sha256": "376c4119c45f53709330420174cc9538b357af370cb0a7cdc6c1fbf3fb6e408e"
+  },
+  "replay": {
+    "path": "/home/angus/spacepdhcg-mass-v622a/build/cuda-tests/persistent_snapshot_replay",
+    "bytes": 208936,
+    "sha256": "367f24e77bd43456c2fedd1c55e8492fef2b018eae9a3cc195a38ed567173457"
+  },
+  "resources": {
+    "cooperative_l1_kernelILb1": {
+      "REG": 94,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_l1_kernelILb0": {
+      "REG": 94,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_solve_kernelILb1": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "12solve_kernelILb1": {
+      "REG": 204,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "cooperative_solve_kernelILb0": {
+      "REG": 80,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "12solve_kernelILb0": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "cooperative_mass_kernel": {
+      "REG": 198,
+      "STACK": 40,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_mass_initialise_kernel": {
+      "REG": 48,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_halpern_kernel": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    }
+  },
+  "hidden_replay_records": {
+    "conditioning-unit": {
+      "records": 1,
+      "log_sha256": "2d210673d2b372a2c482a0044b164b39da271bbf727426ed7be08285b0250a06"
+    },
+    "conditioning-mass": {
+      "records": 1,
+      "log_sha256": "24d9b97198d7d664f7e5a7347680af5cfd3a75ab0254df28c80f81da9a726f36"
+    },
+    "conditioning-mass-seed": {
+      "records": 2,
+      "log_sha256": "d66b85d8c27acb072462f3400359cfabb0099ff94578db0d4085d6cada1cb4a5"
+    },
+    "difficult-unit": {
+      "records": 1,
+      "log_sha256": "ab7bac81436352ab49ced02fb2617b99593001585041ec1f30ed787d370a977b"
+    },
+    "difficult-mass": {
+      "records": 1,
+      "log_sha256": "d1859d9f288942cba77d198afc1b8a86b1a8ce5f130b74bef6420b1f1275787e"
+    },
+    "difficult-mass-seed": {
+      "records": 2,
+      "log_sha256": "14640058931cb5e93762d0d88b64b6135fe09fcf39b301efcae7baef2c1f578a"
+    }
+  },
+  "stage_logs_sha256": {
+    "compiler-version": "68f8b0a1301428031e307cf5260142a517bff25cc232a09eae2734be475d721f",
+    "configure": "656eccac43107e624f04432e815afef900c8472bd578730b21cc4e2fe6697b4f",
+    "compile": "ed2c91310cc0337feefb322af409b401b43c26a3800b8d5217b5fd1ba56c1b95",
+    "cpu-mass": "a2b0e522fbc3b6488441c8f77a0cc0a2261d9101621c60c3704a40d6e0bfc4b5",
+    "cpu-snapshot": "fb0f02b70c937c8bfe89313fb0622b949dfb0d6be2e4ad3c8665cfb9f633746f",
+    "validate-conditioning-unit": "2d210673d2b372a2c482a0044b164b39da271bbf727426ed7be08285b0250a06",
+    "validate-conditioning-mass": "24d9b97198d7d664f7e5a7347680af5cfd3a75ab0254df28c80f81da9a726f36",
+    "validate-conditioning-mass-seed": "d66b85d8c27acb072462f3400359cfabb0099ff94578db0d4085d6cada1cb4a5",
+    "validate-difficult-unit": "ab7bac81436352ab49ced02fb2617b99593001585041ec1f30ed787d370a977b",
+    "validate-difficult-mass": "d1859d9f288942cba77d198afc1b8a86b1a8ce5f130b74bef6420b1f1275787e",
+    "validate-difficult-mass-seed": "14640058931cb5e93762d0d88b64b6135fe09fcf39b301efcae7baef2c1f578a",
+    "reject-without-l1": "afa4d450145bbabc4b5581ad2d5b4b54d19f851d72b44bfe0c98597606cf956a",
+    "reject-weighted": "afa4d450145bbabc4b5581ad2d5b4b54d19f851d72b44bfe0c98597606cf956a",
+    "ctest-enumerate": "4274f505aff202ddac6392be51bb40b94a9aaa0b48e18c085261d1e567077334",
+    "resources": "f5c5238013ffafea6f268c7a224ce4479fea2a28de058c5effd43369c9b50a63",
+    "symbols": "2e81d435ccd9c7b6643dfc328dbee99ee24366b97b77853a7e6a9cec81d2d369"
+  },
+  "decision": "Frozen build/source/resource checks pass; tiny launch separately gated by reviewed supervisor."
+}

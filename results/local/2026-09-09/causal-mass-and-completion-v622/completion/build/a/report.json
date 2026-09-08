@@ -1,0 +1,31 @@
+{
+  "base": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+  "complete": false,
+  "gpu_calls": 0,
+  "owned_sources": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+    "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+    "cpp/cuda/src/gtoc12_completion_model.cuh": "986da2c3d7c5cb068cb2eae2560daf85dd104859242077cbac135cf995d3e1e8",
+    "src/spacepdhcg/gtoc12/gpu_completion.py": "126970e5a997bbab25cc0fb909b57554f1ca8eb10b8005212dbc96bf332e965a",
+    "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+    "tests/test_gtoc12_gpu_completion_model.py": "97cb0cf370b96f025c1e0555b1c6446f9ed36070b431784a8aac7b63b4d2b3c5"
+  },
+  "stages": [
+    {
+      "name": "ruff",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--no-cache",
+        "/home/angus/spacepdhcg-completion-model-v622a/source/src/spacepdhcg/gtoc12/gpu_completion.py",
+        "/home/angus/spacepdhcg-completion-model-v622a/source/src/spacepdhcg/gtoc12/gpu_completion_model.py",
+        "/home/angus/spacepdhcg-completion-model-v622a/source/tests/test_gtoc12_gpu_completion_model.py"
+      ],
+      "exit_code": 1,
+      "seconds": 0.031933932999997694,
+      "log_sha256": "0b30954d47dc3fc2959c6f654b7dad4b0ad1ed3e90aa88d82f8e0c41c0831345"
+    }
+  ]
+}

@@ -282,6 +282,7 @@ class GpuCompletion:
         self.leg_results = np.zeros(leg_capacity, LEG_RESULT)
         self.collected = np.zeros(deploy_capacity)
         self.stats = np.zeros(1, STATS)
+        self.native_model = None
         self._check(self.create(gpu.device_id, *self.capacities, ct.byref(self.handle)))
 
     @staticmethod
@@ -290,22 +291,36 @@ class GpuCompletion:
             raise RuntimeError(f"CUDA completion failed (native status {status})")
 
     def close(self):
+        if self.native_model is not None:
+            self.native_model.close()
         if self.handle.value:
             self.gpu._owned()
             self._check(self.destroy(ct.byref(self.handle)))
 
     def run(self, search, requests):
+        from .gpu_completion_model import NativeModelOwner, pack_requests
+        from .gpu_completion_model import enabled as model_enabled
         from .search import RoutePlan
 
         self.gpu._owned()
         started = time.perf_counter()
-        inputs = pack_inputs(search, requests, self.inputs)
+        compact = model_enabled()
+        if compact:
+            if self.native_model is None:
+                self.native_model = NativeModelOwner(self)
+            inputs = pack_requests(search, requests, self.native_model.inputs)
+            self.native_model.configure(search, requests)
+        else:
+            inputs = pack_inputs(search, requests, self.inputs)
         n, nd, nl = counts(requests)
         outputs = (self.results[:n], self.leg_results[:nl], self.collected[:nd], self.stats)
         packed = time.perf_counter()
-        self._check(
-            self.evaluate(self.handle, n, nd, nl, *(a.ctypes.data for a in (*inputs, *outputs)))
-        )
+        if compact:
+            self.native_model.run(inputs, outputs)
+        else:
+            self._check(
+                self.evaluate(self.handle, n, nd, nl, *(a.ctypes.data for a in (*inputs, *outputs)))
+            )
         downloaded = time.perf_counter()
         telemetry = self.gpu.telemetry
         for key, value in {
@@ -319,7 +334,8 @@ class GpuCompletion:
             telemetry[key] = telemetry.get(key, 0) + value
         telemetry["gpu_used"] = True
         plans = []
-        l0 = 0
+        l0 = d0 = 0
+        recorder = getattr(search, "completion_capture", None)
         for index, (partial, deploy, collect, forward, _) in enumerate(requests):
             value = self.results[index]
             failure = int(value["failure"])
@@ -327,6 +343,20 @@ class GpuCompletion:
                 raise ValueError("stay must be finite and non-negative")
             if not 0 <= failure < len(FAILURES):
                 raise RuntimeError("CUDA completion returned an unknown failure")
+            if recorder is not None:
+                recorder(
+                    requests[index],
+                    value,
+                    self.leg_results[l0 : l0 + len(forward)],
+                    self.collected[d0 : d0 + len(deploy)],
+                    (
+                        inputs[0],
+                        inputs[1][index : index + 1],
+                        inputs[2][d0 : d0 + len(deploy)],
+                        inputs[3][l0 : l0 + len(forward)],
+                    ),
+                    self.native_model.signature if compact else None,
+                )
             if failure:
                 plans.append((None, FAILURES[failure]))
             else:
@@ -347,6 +377,7 @@ class GpuCompletion:
                 )
                 plans.append((plan, ""))
             l0 += len(forward)
+            d0 += len(deploy)
         telemetry["completion_total_seconds"] = (
             telemetry.get("completion_total_seconds", 0.0) + time.perf_counter() - started
         )

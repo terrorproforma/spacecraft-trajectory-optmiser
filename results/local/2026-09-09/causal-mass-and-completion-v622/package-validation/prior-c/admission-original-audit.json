@@ -1,0 +1,389 @@
+{
+  "passed": true,
+  "report_sha256": "7416d7975cc2f540859bc4a51b92021a85caa0c1410d49116723bd62660d0aac",
+  "source_hashes_checked": true,
+  "raw_readback_identities": 54,
+  "saved_scalar_bookkeeping_checks": 608,
+  "fresh_model_evaluations_in_audit": 0,
+  "producer_counts": {
+    "saved_v619_CPU_readback_validated_in_v621": 20,
+    "fresh_v622_scalar_finish_cpu_saved_DVs_cached_features": 34
+  },
+  "ordered_shortlists": [
+    {
+      "group": "development",
+      "model": "v616_no_fit",
+      "prefix": "flat_deployment_proxy",
+      "priority_order": [
+        "ship04-v616_no_fit-flat_deployment_proxy",
+        "ship01-v616_no_fit-flat_deployment_proxy",
+        "ship23-v616_no_fit-flat_deployment_proxy"
+      ],
+      "selected_uncertain": 2
+    },
+    {
+      "group": "development",
+      "model": "v616_no_fit",
+      "prefix": "measured_deployment_prefix",
+      "priority_order": [
+        "ship01-v616_no_fit-measured_deployment_prefix",
+        "ship04-v616_no_fit-measured_deployment_prefix"
+      ],
+      "selected_uncertain": 2
+    },
+    {
+      "group": "development",
+      "model": "existing_fit_no_refit",
+      "prefix": "flat_deployment_proxy",
+      "priority_order": [
+        "ship04-existing_fit_no_refit-flat_deployment_proxy",
+        "ship23-existing_fit_no_refit-flat_deployment_proxy",
+        "ship01-existing_fit_no_refit-flat_deployment_proxy"
+      ],
+      "selected_uncertain": 2
+    },
+    {
+      "group": "development",
+      "model": "existing_fit_no_refit",
+      "prefix": "measured_deployment_prefix",
+      "priority_order": [
+        "ship23-existing_fit_no_refit-measured_deployment_prefix",
+        "ship04-existing_fit_no_refit-measured_deployment_prefix"
+      ],
+      "selected_uncertain": 2
+    },
+    {
+      "group": "queue_held_out",
+      "model": "v616_no_fit",
+      "prefix": "measured_deployment_prefix",
+      "priority_order": [
+        "ship02-v616_no_fit-measured_deployment_prefix",
+        "ship17-v616_no_fit-measured_deployment_prefix",
+        "ship21-v616_no_fit-measured_deployment_prefix",
+        "ship19-v616_no_fit-measured_deployment_prefix"
+      ],
+      "selected_uncertain": 2
+    },
+    {
+      "group": "queue_held_out",
+      "model": "existing_fit_no_refit",
+      "prefix": "measured_deployment_prefix",
+      "priority_order": [
+        "ship22-existing_fit_no_refit-measured_deployment_prefix",
+        "ship15-existing_fit_no_refit-measured_deployment_prefix",
+        "ship11-existing_fit_no_refit-measured_deployment_prefix",
+        "ship02-existing_fit_no_refit-measured_deployment_prefix"
+      ],
+      "selected_uncertain": 2
+    }
+  ],
+  "held_out_sequential_fuel_residuals": {
+    "ship02-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 902.9991308917531,
+      "archived_measured_collection_and_return_fuel_kg": 897.2382745987122,
+      "archived_solver_reported_fuel_kg": 897.2382754674361,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.687238732818514e-07,
+      "sequential_completion_fuel_error_kg": 5.760856293040888,
+      "archived_dry_margin_kg": 2.6785624567701234,
+      "proxy_dry_plus_cargo_margin_kg": -3.082293836270537
+    },
+    "ship02-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 894.1036688062909,
+      "archived_measured_collection_and_return_fuel_kg": 897.2382745987122,
+      "archived_solver_reported_fuel_kg": 897.2382754674361,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.687238732818514e-07,
+      "sequential_completion_fuel_error_kg": -3.1346057924213255,
+      "archived_dry_margin_kg": 2.6785624567701234,
+      "proxy_dry_plus_cargo_margin_kg": 5.813168249191449
+    },
+    "ship05-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1004.9931233325892,
+      "archived_measured_collection_and_return_fuel_kg": 963.5513517579941,
+      "archived_solver_reported_fuel_kg": 963.5513526618461,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.038519692694535e-07,
+      "sequential_completion_fuel_error_kg": 41.44177157459512,
+      "archived_dry_margin_kg": 1.3467144712669779,
+      "proxy_dry_plus_cargo_margin_kg": -40.09505710332837
+    },
+    "ship05-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 999.5691849001597,
+      "archived_measured_collection_and_return_fuel_kg": 963.5513517579941,
+      "archived_solver_reported_fuel_kg": 963.5513526618461,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.038519692694535e-07,
+      "sequential_completion_fuel_error_kg": 36.017833142165614,
+      "archived_dry_margin_kg": 1.3467144712669779,
+      "proxy_dry_plus_cargo_margin_kg": -34.671118670898295
+    },
+    "ship06-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 926.2171185980011,
+      "archived_measured_collection_and_return_fuel_kg": 898.6957264844918,
+      "archived_solver_reported_fuel_kg": 898.6957273645537,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.800618616078282e-07,
+      "sequential_completion_fuel_error_kg": 27.52139211350925,
+      "archived_dry_margin_kg": 3.673761780541554,
+      "proxy_dry_plus_cargo_margin_kg": -23.847630332967583
+    },
+    "ship06-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 937.4472776824606,
+      "archived_measured_collection_and_return_fuel_kg": 898.6957264844918,
+      "archived_solver_reported_fuel_kg": 898.6957273645537,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.800618616078282e-07,
+      "sequential_completion_fuel_error_kg": 38.75155119796875,
+      "archived_dry_margin_kg": 3.673761780541554,
+      "proxy_dry_plus_cargo_margin_kg": -35.07778941742731
+    },
+    "ship08-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 859.7066711026227,
+      "archived_measured_collection_and_return_fuel_kg": 851.0712033184095,
+      "archived_solver_reported_fuel_kg": 851.0712041735869,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.551774044462945e-07,
+      "sequential_completion_fuel_error_kg": 8.635467784213233,
+      "archived_dry_margin_kg": 4.010769734048495,
+      "proxy_dry_plus_cargo_margin_kg": -4.62469805016508
+    },
+    "ship08-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 851.6036928597283,
+      "archived_measured_collection_and_return_fuel_kg": 851.0712033184095,
+      "archived_solver_reported_fuel_kg": 851.0712041735869,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.551774044462945e-07,
+      "sequential_completion_fuel_error_kg": 0.532489541318796,
+      "archived_dry_margin_kg": 4.010769734048495,
+      "proxy_dry_plus_cargo_margin_kg": 3.4782801927294713
+    },
+    "ship09-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1070.1262229029517,
+      "archived_measured_collection_and_return_fuel_kg": 971.3995979501374,
+      "archived_solver_reported_fuel_kg": 971.3995988881443,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.380069059261587e-07,
+      "sequential_completion_fuel_error_kg": 98.72662495281429,
+      "archived_dry_margin_kg": 2.471506547929039,
+      "proxy_dry_plus_cargo_margin_kg": -96.25511840488514
+    },
+    "ship09-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1062.776676543424,
+      "archived_measured_collection_and_return_fuel_kg": 971.3995979501374,
+      "archived_solver_reported_fuel_kg": 971.3995988881443,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.380069059261587e-07,
+      "sequential_completion_fuel_error_kg": 91.37707859328657,
+      "archived_dry_margin_kg": 2.471506547929039,
+      "proxy_dry_plus_cargo_margin_kg": -88.90557204535776
+    },
+    "ship11-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1001.0441349939182,
+      "archived_measured_collection_and_return_fuel_kg": 996.6555131778719,
+      "archived_solver_reported_fuel_kg": 996.6555141664494,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.885775398288388e-07,
+      "sequential_completion_fuel_error_kg": 4.388621816046339,
+      "archived_dry_margin_kg": 1.8949132897413392,
+      "proxy_dry_plus_cargo_margin_kg": -2.493708526304772
+    },
+    "ship11-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 995.5670186612439,
+      "archived_measured_collection_and_return_fuel_kg": 996.6555131778719,
+      "archived_solver_reported_fuel_kg": 996.6555141664494,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.885775398288388e-07,
+      "sequential_completion_fuel_error_kg": -1.088494516627975,
+      "archived_dry_margin_kg": 1.8949132897413392,
+      "proxy_dry_plus_cargo_margin_kg": 2.983407806369314
+    },
+    "ship12-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 987.7129992286486,
+      "archived_measured_collection_and_return_fuel_kg": 937.8442539399034,
+      "archived_solver_reported_fuel_kg": 937.8442549079293,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.680259154265514e-07,
+      "sequential_completion_fuel_error_kg": 49.86874528874523,
+      "archived_dry_margin_kg": 0.7603186650655971,
+      "proxy_dry_plus_cargo_margin_kg": -49.108426623679975
+    },
+    "ship12-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 983.7917771721277,
+      "archived_measured_collection_and_return_fuel_kg": 937.8442539399034,
+      "archived_solver_reported_fuel_kg": 937.8442549079293,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.680259154265514e-07,
+      "sequential_completion_fuel_error_kg": 45.947523232224285,
+      "archived_dry_margin_kg": 0.7603186650655971,
+      "proxy_dry_plus_cargo_margin_kg": -45.187204567158915
+    },
+    "ship13-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 942.3047704185967,
+      "archived_measured_collection_and_return_fuel_kg": 938.3062449233353,
+      "archived_solver_reported_fuel_kg": 938.3062458310981,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.077627964870771e-07,
+      "sequential_completion_fuel_error_kg": 3.998525495261447,
+      "archived_dry_margin_kg": 5.129572181167418,
+      "proxy_dry_plus_cargo_margin_kg": 1.1310466859058579
+    },
+    "ship13-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 937.6862192901298,
+      "archived_measured_collection_and_return_fuel_kg": 938.3062449233353,
+      "archived_solver_reported_fuel_kg": 938.3062458310981,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.077627964870771e-07,
+      "sequential_completion_fuel_error_kg": -0.6200256332055005,
+      "archived_dry_margin_kg": 5.129572181167418,
+      "proxy_dry_plus_cargo_margin_kg": 5.749597814372919
+    },
+    "ship14-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 874.0348570138918,
+      "archived_measured_collection_and_return_fuel_kg": 821.5538360868873,
+      "archived_solver_reported_fuel_kg": 821.5538368876446,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.007573342183605e-07,
+      "sequential_completion_fuel_error_kg": 52.48102092700458,
+      "archived_dry_margin_kg": 4.366678060019922,
+      "proxy_dry_plus_cargo_margin_kg": -48.11434286698454
+    },
+    "ship14-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 881.5344744644522,
+      "archived_measured_collection_and_return_fuel_kg": 821.5538360868873,
+      "archived_solver_reported_fuel_kg": 821.5538368876446,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.007573342183605e-07,
+      "sequential_completion_fuel_error_kg": 59.9806383775649,
+      "archived_dry_margin_kg": 4.366678060019922,
+      "proxy_dry_plus_cargo_margin_kg": -55.61396031754521
+    },
+    "ship15-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 884.748489674321,
+      "archived_measured_collection_and_return_fuel_kg": 890.4661248176694,
+      "archived_solver_reported_fuel_kg": 890.4661257014654,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.837960194796324e-07,
+      "sequential_completion_fuel_error_kg": -5.717635143348389,
+      "archived_dry_margin_kg": 8.954567419028763,
+      "proxy_dry_plus_cargo_margin_kg": 14.672202562377379
+    },
+    "ship15-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 889.6134313208773,
+      "archived_measured_collection_and_return_fuel_kg": 890.4661248176694,
+      "archived_solver_reported_fuel_kg": 890.4661257014654,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.837960194796324e-07,
+      "sequential_completion_fuel_error_kg": -0.8526934967920852,
+      "archived_dry_margin_kg": 8.954567419028763,
+      "proxy_dry_plus_cargo_margin_kg": 9.807260915820962
+    },
+    "ship16-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 928.034988243814,
+      "archived_measured_collection_and_return_fuel_kg": 890.2812665968013,
+      "archived_solver_reported_fuel_kg": 890.281267600071,
+      "certificate_mass_loss_minus_reported_fuel_kg": -1.0032697446149541e-06,
+      "sequential_completion_fuel_error_kg": 37.75372164701275,
+      "archived_dry_margin_kg": 3.826489069483614,
+      "proxy_dry_plus_cargo_margin_kg": -33.92723257752914
+    },
+    "ship16-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 921.4899039032471,
+      "archived_measured_collection_and_return_fuel_kg": 890.2812665968013,
+      "archived_solver_reported_fuel_kg": 890.281267600071,
+      "certificate_mass_loss_minus_reported_fuel_kg": -1.0032697446149541e-06,
+      "sequential_completion_fuel_error_kg": 31.20863730644578,
+      "archived_dry_margin_kg": 3.826489069483614,
+      "proxy_dry_plus_cargo_margin_kg": -27.38214823696194
+    },
+    "ship17-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1082.1296339220678,
+      "archived_measured_collection_and_return_fuel_kg": 1072.7782394808794,
+      "archived_solver_reported_fuel_kg": 1072.7782405966584,
+      "certificate_mass_loss_minus_reported_fuel_kg": -1.1157790140714496e-06,
+      "sequential_completion_fuel_error_kg": 9.351394441188404,
+      "archived_dry_margin_kg": 1.8125523934168086,
+      "proxy_dry_plus_cargo_margin_kg": -7.538842047771595
+    },
+    "ship17-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1062.481560887794,
+      "archived_measured_collection_and_return_fuel_kg": 1072.7782394808794,
+      "archived_solver_reported_fuel_kg": 1072.7782405966584,
+      "certificate_mass_loss_minus_reported_fuel_kg": -1.1157790140714496e-06,
+      "sequential_completion_fuel_error_kg": -10.29667859308529,
+      "archived_dry_margin_kg": 1.8125523934168086,
+      "proxy_dry_plus_cargo_margin_kg": 12.109230986502553
+    },
+    "ship18-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 958.4157116262002,
+      "archived_measured_collection_and_return_fuel_kg": 942.8379604232748,
+      "archived_solver_reported_fuel_kg": 942.8379613432357,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.199609394272557e-07,
+      "sequential_completion_fuel_error_kg": 15.577751202925356,
+      "archived_dry_margin_kg": 1.8467172031224663,
+      "proxy_dry_plus_cargo_margin_kg": -13.73103399980323
+    },
+    "ship18-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 940.6564896681984,
+      "archived_measured_collection_and_return_fuel_kg": 942.8379604232748,
+      "archived_solver_reported_fuel_kg": 942.8379613432357,
+      "certificate_mass_loss_minus_reported_fuel_kg": -9.199609394272557e-07,
+      "sequential_completion_fuel_error_kg": -2.1814707550763615,
+      "archived_dry_margin_kg": 1.8467172031224663,
+      "proxy_dry_plus_cargo_margin_kg": 4.028187958198487
+    },
+    "ship19-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 902.8284941232754,
+      "archived_measured_collection_and_return_fuel_kg": 884.1441789882617,
+      "archived_solver_reported_fuel_kg": 884.1441798525525,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.642907687317347e-07,
+      "sequential_completion_fuel_error_kg": 18.684315135013662,
+      "archived_dry_margin_kg": 2.3845343450558403,
+      "proxy_dry_plus_cargo_margin_kg": -16.29978078995805
+    },
+    "ship19-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 910.3413639124316,
+      "archived_measured_collection_and_return_fuel_kg": 884.1441789882617,
+      "archived_solver_reported_fuel_kg": 884.1441798525525,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.642907687317347e-07,
+      "sequential_completion_fuel_error_kg": 26.197184924169846,
+      "archived_dry_margin_kg": 2.3845343450558403,
+      "proxy_dry_plus_cargo_margin_kg": -23.812650579114006
+    },
+    "ship20-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1049.6683760939532,
+      "archived_measured_collection_and_return_fuel_kg": 1003.6814645665074,
+      "archived_solver_reported_fuel_kg": 1003.681465618555,
+      "certificate_mass_loss_minus_reported_fuel_kg": -1.0520475370867644e-06,
+      "sequential_completion_fuel_error_kg": 45.98691152744573,
+      "archived_dry_margin_kg": 3.1467343565282135,
+      "proxy_dry_plus_cargo_margin_kg": -42.840177170917514
+    },
+    "ship20-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 1045.5686861510253,
+      "archived_measured_collection_and_return_fuel_kg": 1003.6814645665074,
+      "archived_solver_reported_fuel_kg": 1003.681465618555,
+      "certificate_mass_loss_minus_reported_fuel_kg": -1.0520475370867644e-06,
+      "sequential_completion_fuel_error_kg": 41.887221584517874,
+      "archived_dry_margin_kg": 3.1467343565282135,
+      "proxy_dry_plus_cargo_margin_kg": -38.74048722798989
+    },
+    "ship21-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 900.010058844854,
+      "archived_measured_collection_and_return_fuel_kg": 885.3568458020486,
+      "archived_solver_reported_fuel_kg": 885.3568466558577,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.538090696674772e-07,
+      "sequential_completion_fuel_error_kg": 14.653213042805419,
+      "archived_dry_margin_kg": 2.61728974118887,
+      "proxy_dry_plus_cargo_margin_kg": -12.035923301616776
+    },
+    "ship21-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 907.6732106866411,
+      "archived_measured_collection_and_return_fuel_kg": 885.3568458020486,
+      "archived_solver_reported_fuel_kg": 885.3568466558577,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.538090696674772e-07,
+      "sequential_completion_fuel_error_kg": 22.31636488459253,
+      "archived_dry_margin_kg": 2.61728974118887,
+      "proxy_dry_plus_cargo_margin_kg": -19.69907514340366
+    },
+    "ship22-existing_fit_no_refit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 833.1126010069179,
+      "archived_measured_collection_and_return_fuel_kg": 838.1209522172283,
+      "archived_solver_reported_fuel_kg": 838.1209530340616,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.168333351932233e-07,
+      "sequential_completion_fuel_error_kg": -5.008351210310366,
+      "archived_dry_margin_kg": 1.7975441430987757,
+      "proxy_dry_plus_cargo_margin_kg": 6.8058953534091415
+    },
+    "ship22-v616_no_fit-measured_deployment_prefix": {
+      "predicted_collection_and_return_fuel_kg": 838.280587222879,
+      "archived_measured_collection_and_return_fuel_kg": 838.1209522172283,
+      "archived_solver_reported_fuel_kg": 838.1209530340616,
+      "certificate_mass_loss_minus_reported_fuel_kg": -8.168333351932233e-07,
+      "sequential_completion_fuel_error_kg": 0.15963500565078448,
+      "archived_dry_margin_kg": 1.7975441430987757,
+      "proxy_dry_plus_cargo_margin_kg": 1.6379091374478776
+    }
+  },
+  "scope": "Bookkeeping and saved-readback audit; no model re-evaluation or certification. Sequential fuel identity uses archived certified mass_before-minus-mass_after; separate solver-reported fuel differs by roughly one milligram in these routes."
+}

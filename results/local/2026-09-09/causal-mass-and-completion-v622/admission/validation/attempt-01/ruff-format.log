@@ -1,0 +1,28 @@
+unformatted: File would be reformatted
+  --> build/performance/refinement-admission-v622/validate.py:28:26
+   |
+27 |     tests = ["tests/test_gtoc12_refinement_admission.py"]
+   -     for source, test in (("src/spacepdhcg/gtoc12/fixed_refinement.py", "tests/test_gtoc12_fixed_refinement.py"),):
+28 +     for source, test in (
+29 +         ("src/spacepdhcg/gtoc12/fixed_refinement.py", "tests/test_gtoc12_fixed_refinement.py"),
+30 +     ):
+31 |         if (ROOT / source).exists():
+--------------------------------------------------------------------------------
+47 |     for name, command in commands:
+   -         result = subprocess.run(command, cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+48 +         result = subprocess.run(
+49 +             command, cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+50 +         )
+51 |         (attempt / f"{name}.log").write_text(result.stdout)
+52 |         report.append({"name": name, "command": command, "returncode": result.returncode})
+53 |     (attempt / "report.json").write_text(json.dumps(report, indent=2) + "\n")
+   -     print(json.dumps({"path": str(attempt), "commands": [(x["name"], x["returncode"]) for x in report]}))
+54 +     print(
+55 +         json.dumps(
+56 +             {"path": str(attempt), "commands": [(x["name"], x["returncode"]) for x in report]}
+57 +         )
+58 +     )
+59 |     raise SystemExit(int(any(x["returncode"] for x in report)))
+   |
+
+1 file would be reformatted, 4 files already formatted

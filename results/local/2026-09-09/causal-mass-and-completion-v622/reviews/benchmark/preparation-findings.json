@@ -1,0 +1,178 @@
+{
+  "scope": "CPU-only frozen source/manifest/finite-budget review; no benchmark or native execution",
+  "ready_sha256": "64d36a429381edeae90f3300520516f5310337f8d154ed292d5c89642143ba9d",
+  "indexed_files": 406,
+  "indexed_bytes": 6009259,
+  "source_files": 341,
+  "owned_overlay_files": 12,
+  "source_and_input_indices_verified": true,
+  "archives_roundtrip_verified": true,
+  "source_report_sha256": "56a65032e639a6eb9af08052e9f3df87f5f1c84cfe9cf2ece6f3f63eafb2a12a",
+  "core_sha256": "9c3e6a250002893363d2f4dcf68babe3b7158508b5b97149f83c8261437f1fa7",
+  "prerequisite_sha256": "643caf4e5550373ac3b06761197ae4ee1f7801569e614498786ba089b34a54ff",
+  "source_files_sha256": {
+    "launch.py": "47b66d4a0da046172e0b590f4834063105827178c5505f90a7091fe0a421586f",
+    "run.py": "852d314b75fa78139cf7e2ed0f3b5dbd533949926508e45a606607ea607d5935",
+    "common.py": "5eb9ee888561b22a5bcb077db2c2aa5f6cf7a8bfc86bcb4f153fd0b440717904",
+    "test_preparation.py": "b714108cbcd1ac85528bb59c50cc59d1b4460faaab0b7f027143565d64d114fb",
+    "profile.json": "5b5665ad0f0f50ed28f5581486e17937b2a49515536d234e605d7ddd68e21762",
+    "plan.json": "4d545db13178ddbf55e8563cb61e355e32368b26f19712a5c697359e7a234b25"
+  },
+  "expected_counts": {
+    "evaluate_calls": 80,
+    "kernels_from_source": 160,
+    "candidates_per_arm": {
+      "ordinary": 13520,
+      "compact": 13520
+    },
+    "unique_historical_controls": 20
+  },
+  "groups": [
+    {
+      "id": "v616_no_fit-n24",
+      "size": 24,
+      "accepted": 3,
+      "order": [
+        "ordinary",
+        "compact",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    },
+    {
+      "id": "v616_no_fit-n48",
+      "size": 48,
+      "accepted": 5,
+      "order": [
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    },
+    {
+      "id": "v616_no_fit-n256",
+      "size": 256,
+      "accepted": 26,
+      "order": [
+        "ordinary",
+        "compact",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    },
+    {
+      "id": "v616_no_fit-n1024",
+      "size": 1024,
+      "accepted": 103,
+      "order": [
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n24",
+      "size": 24,
+      "accepted": 3,
+      "order": [
+        "ordinary",
+        "compact",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n48",
+      "size": 48,
+      "accepted": 5,
+      "order": [
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n256",
+      "size": 256,
+      "accepted": 26,
+      "order": [
+        "ordinary",
+        "compact",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    },
+    {
+      "id": "existing_fit_no_refit-n1024",
+      "size": 1024,
+      "accepted": 103,
+      "order": [
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact",
+        "compact",
+        "ordinary",
+        "compact",
+        "ordinary",
+        "ordinary",
+        "compact"
+      ]
+    }
+  ],
+  "preparation_tests": 18,
+  "failed_readback_retention_fixed": true,
+  "launch_review": "GO for the single finite supervised run specified by this exact ready hash; reviewer has not executed it",
+  "timing_review": "Both arms time production GpuCompletion.run including packing, metadata/hash validation, synchronous native work/transfers and plan reconstruction. Catalogue/request construction and ordinary workspace create/close are separately recorded. Compact model configuration is timed. First calls share one process; four warm samples/arm use ABBA/BAAB.",
+  "limitations": [
+    "Repeated proxy completions, not fresh routes or physics-qualified solutions",
+    "Historical 20-control corpus; not latest fleet",
+    "No default promotion or full-mission/SOTA claim",
+    "Kernel count is source-derived, not a profiler measurement"
+  ]
+}

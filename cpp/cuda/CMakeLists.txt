@@ -248,10 +248,10 @@ if(BUILD_TESTING)
     set_target_properties(persistent_snapshot_replay PROPERTIES CUDA_STANDARD 20
         CUDA_STANDARD_REQUIRED ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/cuda-tests")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-        tests/persistent_snapshot.hpp tests/persistent_snapshot_replay.cu tests/cuda_test_support.hpp tests/persistent_l1_snapshot.hpp
+        tests/persistent_snapshot.hpp tests/persistent_snapshot_replay.cu tests/cuda_test_support.hpp tests/persistent_l1_snapshot.hpp tests/persistent_mass_snapshot.hpp
         include/spacepdhcg/cuda/persistent_pdhcg_c_api.h)
     set(SPACEPDHCG_SNAPSHOT_SOURCE_HASHES "")
-    foreach(snapshot_source tests/persistent_snapshot.hpp tests/persistent_snapshot_replay.cu tests/cuda_test_support.hpp tests/persistent_l1_snapshot.hpp
+    foreach(snapshot_source tests/persistent_snapshot.hpp tests/persistent_snapshot_replay.cu tests/cuda_test_support.hpp tests/persistent_l1_snapshot.hpp tests/persistent_mass_snapshot.hpp
             include/spacepdhcg/cuda/persistent_pdhcg_c_api.h)
         file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/${snapshot_source}" snapshot_hash)
         string(APPEND SPACEPDHCG_SNAPSHOT_SOURCE_HASHES "${snapshot_source}:${snapshot_hash}\n")

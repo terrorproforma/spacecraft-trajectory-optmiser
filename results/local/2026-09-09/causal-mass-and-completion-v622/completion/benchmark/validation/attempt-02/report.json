@@ -1,0 +1,52 @@
+[
+  {
+    "name": "ruff",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-m",
+      "ruff",
+      "check",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/prepare.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/common.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/run.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/launch.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/test_preparation.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/validate.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "format",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/prepare.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/common.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/run.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/launch.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/test_preparation.py",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/validate.py"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "pytest",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/test_preparation.py",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--junitxml=/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/completion-pack-benchmark-v622/validation/attempt-02/pytest.xml"
+    ],
+    "exit_code": 0
+  }
+]

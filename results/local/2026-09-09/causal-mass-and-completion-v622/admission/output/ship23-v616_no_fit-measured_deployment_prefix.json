@@ -1,0 +1,209 @@
+{
+  "id": "ship23-v616_no_fit-measured_deployment_prefix",
+  "ship": 23,
+  "model": "v616_no_fit",
+  "prefix": "measured_deployment_prefix",
+  "request_sha256": "653ebc2f9285dd64992c942aaef3dc9b086439859c34ca93b31f59ddfaf76587",
+  "readback_sha256": "8454a2a8e9e1f182c0b690086e950ed092ee21c0275e8a9ab76b14611e66db0f",
+  "input_route_sha256": "8a5e629546ee68ac999c0c2aae9fe996057030473b1ecb1ae25bb605a139545d",
+  "provenance": {
+    "kind": "saved_v619_CPU_readback_validated_in_v621",
+    "case_id": "historical-01-ship23-v616_no_fit-measured_deployment_prefix",
+    "producer_sha256": "9c5d64e37ceea7e5fd8c680556cd41bfbbb1e5a282aacba5d3ede0cbe0797d18",
+    "fixture_file_sha256": "bd2581b1a7034961adce09f063a5bf57610c3636d4cd95591dcdbd36dab97713"
+  },
+  "proxy_failure": "mass_below_dry_plus_collected",
+  "proxy_deficit_kg": 9.587670207789415,
+  "admission_blocker": "",
+  "archived_final_dry_margin_kg": 2.8613835527478386,
+  "raw_cargo_kg": 654.0999315537304,
+  "weighted_cargo_kg": 542.1211869125834,
+  "fixed_cargo_events_unchanged": true,
+  "new_certificate": false,
+  "proxy_readback": {
+    "result": {
+      "failure": 5,
+      "failed_leg": -1,
+      "failed_deploy": -1,
+      "processed_legs": 12,
+      "propellant": 2149.5876702077894,
+      "final_mass": 1144.512261345941,
+      "collected": 654.0999315537304,
+      "margin": -9.587670207789415
+    },
+    "failure_name": "mass_below_dry_plus_collected",
+    "leg_results": [
+      {
+        "stage": 1,
+        "pickup": 0,
+        "mass_before": 1496.8023275605192,
+        "gained": 0.0,
+        "departure_mass": 1496.8023275605192,
+        "mass_after": 1496.8023275605192,
+        "authority": 0.0,
+        "inflation": 1.0,
+        "propellant": 0.0,
+        "tof": 118.0
+      },
+      {
+        "stage": 4,
+        "pickup": 0,
+        "mass_before": 1496.8023275605192,
+        "gained": 0.0,
+        "departure_mass": 1496.8023275605192,
+        "mass_after": 1437.4849525372185,
+        "authority": 7.792612147396862,
+        "inflation": 1.2,
+        "propellant": 59.31737502330072,
+        "tof": 225.0
+      },
+      {
+        "stage": 1,
+        "pickup": 0,
+        "mass_before": 1437.4849525372185,
+        "gained": 0.0,
+        "departure_mass": 1437.4849525372185,
+        "mass_after": 1437.4849525372185,
+        "authority": 0.0,
+        "inflation": 1.0,
+        "propellant": 0.0,
+        "tof": 270.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1437.4849525372185,
+        "gained": 66.50239561943874,
+        "departure_mass": 1503.9873481566574,
+        "mass_after": 1375.8791956438197,
+        "authority": 10.8575381435317,
+        "inflation": 1.2,
+        "propellant": 128.10815251283776,
+        "tof": 315.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1375.8791956438197,
+        "gained": 67.98083504449008,
+        "departure_mass": 1443.8600306883097,
+        "mass_after": 1362.0702589803511,
+        "authority": 8.61690173255153,
+        "inflation": 1.2,
+        "propellant": 81.78977170795862,
+        "tof": 240.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1362.0702589803511,
+        "gained": 70.63655030800821,
+        "departure_mass": 1432.7068092883594,
+        "mass_after": 1318.6233730709696,
+        "authority": 10.529328053862672,
+        "inflation": 1.2,
+        "propellant": 114.0834362173897,
+        "tof": 291.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1318.6233730709696,
+        "gained": 70.80082135523614,
+        "departure_mass": 1389.4241944262058,
+        "mass_after": 1312.5944946565933,
+        "authority": 4.813044156584374,
+        "inflation": 1.2,
+        "propellant": 76.82969976961256,
+        "tof": 129.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1312.5944946565933,
+        "gained": 69.81519507186859,
+        "departure_mass": 1382.409689728462,
+        "mass_after": 1300.3015756190316,
+        "authority": 6.749952687204376,
+        "inflation": 1.2,
+        "propellant": 82.10811410943035,
+        "tof": 180.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1300.3015756190316,
+        "gained": 58.31622176591376,
+        "departure_mass": 1358.6177973849453,
+        "mass_after": 1291.1538958929764,
+        "authority": 7.440503149198635,
+        "inflation": 1.2,
+        "propellant": 67.46390149196887,
+        "tof": 195.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1291.1538958929764,
+        "gained": 53.74401095140315,
+        "departure_mass": 1344.8979068443796,
+        "mass_after": 1279.6268466172387,
+        "authority": 5.20366636336047,
+        "inflation": 1.2,
+        "propellant": 65.27106022714077,
+        "tof": 135.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1279.6268466172387,
+        "gained": 78.43942505133471,
+        "departure_mass": 1358.0662716685733,
+        "mass_after": 1282.48735906056,
+        "authority": 4.008051826007188,
+        "inflation": 1.2,
+        "propellant": 75.57891260801334,
+        "tof": 105.0
+      },
+      {
+        "stage": 4,
+        "pickup": 1,
+        "mass_before": 1282.48735906056,
+        "gained": 117.86447638603696,
+        "departure_mass": 1400.351835446597,
+        "mass_after": 1144.512261345941,
+        "authority": 16.6586706351267,
+        "inflation": 1.3185347993554795,
+        "propellant": 255.83957410065617,
+        "tof": 450.0
+      }
+    ],
+    "collected_by_deploy": [
+      117.86447638603696,
+      66.50239561943874,
+      67.98083504449008,
+      70.63655030800821,
+      70.80082135523614,
+      69.81519507186859,
+      78.43942505133471,
+      58.31622176591376,
+      53.74401095140315
+    ],
+    "pickup_insertion_order": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      7,
+      8,
+      6,
+      0
+    ],
+    "source_return_kind": "None",
+    "frozen_source_check": {
+      "source_return_kind": "None",
+      "authority_calls": 10
+    }
+  }
+}

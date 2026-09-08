@@ -1,0 +1,132 @@
+{
+  "scope": "Independent manual ABI/model/capture/lifecycle review; frozen CPU/build evidence verification only.",
+  "frozen_versions": {
+    "c": {
+      "report_sha256": "3fd8a7f1a6abcbcfd3528ff2d5b5e12b03168d27e1338ab29a2839dd6f6f6988",
+      "owned_sources": {
+        "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+        "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+        "cpp/cuda/src/gtoc12_completion_model.cuh": "9efe14ce07f62c10e7550892efff34cc8cecaf9cfd60002b5fc6efa949000bee",
+        "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+        "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+        "src/spacepdhcg/gtoc12/completion_capture.py": "4d7371fbac742a6a94bb9ddfff3be5d9fd58ebe239cdd0642a94e82cad896115",
+        "src/spacepdhcg/gtoc12/refinement_admission.py": "b3f2c1f08af1f328f0d76d43f49edd8639a5ae5e500cbcea789b8e86125c79e5",
+        "tests/test_gtoc12_gpu_completion_model.py": "8394e64fb9d2fa4c3170baa35ea1c2f1d1d6395a13fb428fee83d411e0a6f3ed"
+      },
+      "library": {
+        "path": "/home/angus/spacepdhcg-completion-model-v622c/libspacepdhcg_completion.so",
+        "sha256": "3bd14a2dcf2885a0f8ce01325138f12fb853560bfb9532c17fc4627aba75624d",
+        "bytes": 1172760
+      },
+      "archive_sha256": "cadc2b59996c2ada5fb278dbab81ebdf24826b4ebe4462afd29325446be2f542",
+      "all_stage_logs_verified": true
+    },
+    "d": {
+      "report_sha256": "25bc035bb6d863085ec7aa4dd2f8b63e366e93e42ce596c62af580b0e2367a66",
+      "owned_sources": {
+        "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+        "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+        "cpp/cuda/src/gtoc12_completion_model.cuh": "9efe14ce07f62c10e7550892efff34cc8cecaf9cfd60002b5fc6efa949000bee",
+        "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+        "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+        "src/spacepdhcg/gtoc12/completion_capture.py": "4d7371fbac742a6a94bb9ddfff3be5d9fd58ebe239cdd0642a94e82cad896115",
+        "src/spacepdhcg/gtoc12/refinement_admission.py": "b3f2c1f08af1f328f0d76d43f49edd8639a5ae5e500cbcea789b8e86125c79e5",
+        "tests/test_gtoc12_gpu_completion_model.py": "a8022ffa5cb176e31797d3bd441a309f83cef6440428a3b63f2d18088a2f8798"
+      },
+      "library": {
+        "path": "/home/angus/spacepdhcg-completion-model-v622d/libspacepdhcg_completion.so",
+        "sha256": "45c2de53b960ec51f1823d6ea0c81f9f8f0bf943845eb6f97fcd506474f9a1e9",
+        "bytes": 1172760
+      },
+      "archive_sha256": "b18ea2940f4054a847ec22a05eea74b575adbb5acc8262a98006e0b977e8ad4d",
+      "all_stage_logs_verified": true
+    },
+    "e": {
+      "report_sha256": "44f17d31b5d9e39c192adc8cfe0a667983e84308488720e01cf1394480b86594",
+      "owned_sources": {
+        "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+        "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+        "cpp/cuda/src/gtoc12_completion_model.cuh": "9efe14ce07f62c10e7550892efff34cc8cecaf9cfd60002b5fc6efa949000bee",
+        "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+        "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+        "src/spacepdhcg/gtoc12/completion_capture.py": "bad09268a48b13c12ff18113bd0fbdd9aafc92c87c5e185186d9447e3edc69a5",
+        "src/spacepdhcg/gtoc12/refinement_admission.py": "b3f2c1f08af1f328f0d76d43f49edd8639a5ae5e500cbcea789b8e86125c79e5",
+        "tests/test_gtoc12_gpu_completion_model.py": "a8022ffa5cb176e31797d3bd441a309f83cef6440428a3b63f2d18088a2f8798"
+      },
+      "library": {
+        "path": "/home/angus/spacepdhcg-completion-model-v622e/libspacepdhcg_completion.so",
+        "sha256": "a0c4b534002b4827b93b6eb7d255c6d74e4ef80fb697e7e17bd5296fb65c58bc",
+        "bytes": 1172760
+      },
+      "archive_sha256": "03a98ed2ef0d9d7eeaddc75235ada2433f9b2433e2d92c12bbbf817a9187d565",
+      "all_stage_logs_verified": true
+    },
+    "f": {
+      "report_sha256": "23ba79736f25285d22a6e99975739773c933447a206e46a74d7ef33eb37e2d4f",
+      "owned_sources": {
+        "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+        "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+        "cpp/cuda/src/gtoc12_completion_model.cuh": "ebce472ecd3e66edf8c4ce6b1de667e5050d3081e3616895de9e8f3113c576ee",
+        "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+        "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+        "src/spacepdhcg/gtoc12/completion_capture.py": "bad09268a48b13c12ff18113bd0fbdd9aafc92c87c5e185186d9447e3edc69a5",
+        "src/spacepdhcg/gtoc12/refinement_admission.py": "9cb73643a4a838c6b955e79996bdbd4679acceb8038f807a50935e86846a64fd",
+        "src/spacepdhcg/gtoc12/fixed_refinement.py": "8ae8bcfd8f4f28532ce84ff62e0128114899bbddc93843b675ade88b3c07821f",
+        "tests/test_gtoc12_gpu_completion_model.py": "a8022ffa5cb176e31797d3bd441a309f83cef6440428a3b63f2d18088a2f8798",
+        "tests/test_gtoc12_completion_capture.py": "7f4bd8ea1bd41ba9f6b45b5a25e3db58ecd00dcc5320bae026dcfb9816b2b7ea",
+        "tests/test_gtoc12_refinement_admission.py": "9cc85c7127f61fa3488e396a822fdeea0fcc777a241eb8e6b05b5377cd3ea123",
+        "tests/test_gtoc12_fixed_refinement.py": "452836638b3ccb07d4118bd06f8fa2ff51d90953d999edea48c1acf141dffddd"
+      },
+      "library": {
+        "path": "/home/angus/spacepdhcg-completion-model-v622f/libspacepdhcg_completion.so",
+        "sha256": "a40a85bdb4acb1e0720c46aaed99189ecbbe481e382f5386945579003b0fb442",
+        "bytes": 1172760
+      },
+      "archive_sha256": "191dcb5240adf1e6309cef8982e652301895ac0ebdbe318b96a52285c83f6d65",
+      "all_stage_logs_verified": true
+    },
+    "g": {
+      "report_sha256": "56a65032e639a6eb9af08052e9f3df87f5f1c84cfe9cf2ece6f3f63eafb2a12a",
+      "owned_sources": {
+        "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+        "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+        "cpp/cuda/src/gtoc12_completion_model.cuh": "ebce472ecd3e66edf8c4ce6b1de667e5050d3081e3616895de9e8f3113c576ee",
+        "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+        "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+        "src/spacepdhcg/gtoc12/completion_capture.py": "bad09268a48b13c12ff18113bd0fbdd9aafc92c87c5e185186d9447e3edc69a5",
+        "src/spacepdhcg/gtoc12/refinement_admission.py": "9cb73643a4a838c6b955e79996bdbd4679acceb8038f807a50935e86846a64fd",
+        "src/spacepdhcg/gtoc12/fixed_refinement.py": "74b49ec79c08786c7fd2f5b8477c27f74d5bec0a95772f897b1b243c5991610d",
+        "tests/test_gtoc12_gpu_completion_model.py": "e042f6f6e53d8a1da33b97da99aeca5dd2f4e6d7c743b0f06714f1f818439158",
+        "tests/test_gtoc12_completion_capture.py": "7f4bd8ea1bd41ba9f6b45b5a25e3db58ecd00dcc5320bae026dcfb9816b2b7ea",
+        "tests/test_gtoc12_refinement_admission.py": "9cc85c7127f61fa3488e396a822fdeea0fcc777a241eb8e6b05b5377cd3ea123",
+        "tests/test_gtoc12_fixed_refinement.py": "22c9dd6f641b1c7b436ed307455979fc18331bf22439ef93fc1f219cfb156f8a"
+      },
+      "library": {
+        "path": "/home/angus/spacepdhcg-completion-model-v622g/libspacepdhcg_completion.so",
+        "sha256": "9c3e6a250002893363d2f4dcf68babe3b7158508b5b97149f83c8261437f1fa7",
+        "bytes": 1172760
+      },
+      "archive_sha256": "da7528753945c337e95ce2fec59904c0c1e858b7c3c5e86e628c9a74e2a31809",
+      "all_stage_logs_verified": true
+    }
+  },
+  "c_to_d_source_delta": "Test saves six comparison NPZ readbacks before assertions; production source is identical.",
+  "d_to_e_source_delta": "Capture checks exact per-deploy collected readback and finite nonnegative COSTED inflation; CUDA/model code is identical.",
+  "e_to_f_runtime_delta": "Compact leg metadata only fills parameters for the selected model, matching the original packer; cost arithmetic/gates unchanged. Additional queue/refiner CPU files frozen.",
+  "f_to_g_runtime_delta": "No native source change. Overflow test uses valid half-day lattice and adds a CPU fixture-path regression; direct refiner continuity validation also included in frozen CPU sources.",
+  "reviewed_fixes": [
+    "Production compact input packing validates request epochs before model/sweep lookup.",
+    "Native cached-grid return row quotient must be finite before any output write or kernel."
+  ],
+  "planned_models": [
+    "fit",
+    "flat",
+    "ratio"
+  ],
+  "planned_valid_evaluate_calls": 18,
+  "planned_candidate_evaluations": 2358,
+  "planned_malformed_evaluate_calls_without_kernels": 6,
+  "planned_valid_kernels": 42,
+  "actual_review_GPU_calls": 0,
+  "decision": "Source/test GO for finite parent-owned launch; not a runtime parity or performance result."
+}

@@ -1,0 +1,68 @@
+{
+  "complete": false,
+  "pid": 1213,
+  "maximum_executions": 6,
+  "maximum_solve_API_calls": 8,
+  "maximum_bootstrap_iterations": 2,
+  "cold_iteration_cap": 100000,
+  "cold_deadline_seconds": 30,
+  "execution_blocks": 128,
+  "capacity_policy": "Native setter validates original and new solve/init occupancy; abort if 128 unsupported, no fallback or grid sweep.",
+  "binary_sha256": "367f24e77bd43456c2fedd1c55e8492fef2b018eae9a3cc195a38ed567173457",
+  "core_sha256": "a89b8b30267399c033a88f3fd8ec7fa8ac1bceb1bd41e79b9841807af1060cb2",
+  "tiny_report_sha256": "471537ac89b61cf1623d03ec4d18a61f5f2a6fb83343a54387668cd25b234618",
+  "manifest_sha256": "ca970d7acd9893ba71d7e58f85393cb2a26c003ca931e2071e2718e4292ad026",
+  "runner_sha256": "f4bfb29c683eaa1ac394e5b8e52e1f2f59bea73a77be20daae4c8df896579f37",
+  "source_tree_sha256": "8d72fb3e441dfcdfcabe28d65d0e7d0a959e099622c05dfb8b5e93d1c83039a7",
+  "source_archive_sha256": "1b64328171dfe6cb1623fb75739006abfa2f31433c5ad2b12f92d766bd949511",
+  "source_commit": null,
+  "source_commit_scope": "uncommitted frozen C++ source tree, not a Git commit",
+  "base_commit": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+  "compiled_snapshot_source_sha256": "cf40d43996d6898dc6a398af79d61e95173676704a452c00199baf3a88b38972",
+  "auditor_sha256": "0d944f768ad9c089499cc6e95cd1313677e153f650eced2c7d84b9815c00c7ff",
+  "inputs_sha256": {
+    "conditioning.txt": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+    "difficult.txt": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+    "conditioning-initial.txt": "9caf303469dcd254d56b74f8bf3818c8044f51a3a20bc3c07835b76dd23c5632",
+    "difficult-initial.txt": "b92be6c5a0051ab99c000c459ef466c69fc8b2fd669c38b3580aea000d926da6"
+  },
+  "gpu_uuid_required": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+  "executions_started": 0,
+  "cases": [],
+  "lock_policy": "LOCK_EX|LOCK_NB, inherited by native child",
+  "scope": "Same-build unit L1 versus causal mass elimination plus a direct original-coordinate diagonal metric. The reduction and metric change together. Full original x/y/z/s and actual mass steps are retained. All six final candidates receive the unchanged original common KKT audit regardless of termination. No tolerance weakening, extra weight arm or convergence claim.",
+  "bootstrap_scope": "Two seeded executions each contain a separately counted at-most-one-update bootstrap. Bootstrap original vectors are not exported; only final seeded/cold vectors receive the independent audit.",
+  "status": "prepared_only_zero_GPU_calls",
+  "plan": [
+    [
+      "conditioning",
+      "mass",
+      true
+    ],
+    [
+      "difficult",
+      "mass",
+      true
+    ],
+    [
+      "conditioning",
+      "unit",
+      false
+    ],
+    [
+      "conditioning",
+      "mass",
+      false
+    ],
+    [
+      "difficult",
+      "unit",
+      false
+    ],
+    [
+      "difficult",
+      "mass",
+      false
+    ]
+  ]
+}

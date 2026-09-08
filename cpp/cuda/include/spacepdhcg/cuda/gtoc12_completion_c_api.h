@@ -149,6 +149,80 @@ int spacepdhcg_gtoc12_completion_evaluate_host(
  * ownership and capacity checks still apply. No input sorting or result ranking. */
 int spacepdhcg_gtoc12_completion_destroy(void** workspace);
 
+/* Additive compact-request API. A model is an immutable, device-owned snapshot;
+ * re-create it when catalogue, model parameters or certified return grids change.
+ * Inputs are copied during create, and may then be released by the caller.
+ * Geometry is evaluated on CUDA at each flight departure (the scalar, one-epoch
+ * CollectPairTable.pair_geometry convention). No Lambert or trajectory solve is
+ * performed here. The ordinary completion gates and output ABI are unchanged.
+ */
+typedef struct spacepdhcg_gtoc12_completion_model_policy {
+    int32_t abi_version, hop_model, table_hop_model, return_model;
+    int32_t table_return_model, reserved0, reserved1, reserved2;
+    double hop_flat, hop_floor, hop_slope, return_flat, table_return_flat, fit_floor;
+    double fit[5], authority_ratio[5], epoch0, step_days;
+} spacepdhcg_gtoc12_completion_model_policy;
+/* ABI=1; hop_model=0/1, table_hop_model=0/1/2, return_model=0/3,
+ * table_return_model=0/5; reserved=0. Model values preserve the old numeric
+ * failure semantics. epoch0 finite and step_days finite/positive. */
+typedef struct spacepdhcg_gtoc12_completion_orbit {
+    double semi_major_axis_km, epoch_mjd, mean_anomaly_rad;
+    double ascending_node_rad, argument_of_perihelion_rad;
+} spacepdhcg_gtoc12_completion_orbit;
+/* Body i+1 is orbits[i], using official catalogue identity order. All entries
+ * finite, a>0; no Earth entry. Constants are the repository's official GTOC12
+ * AU, solar mu and day. Host validation rejects unsupported geometry inputs. */
+typedef struct spacepdhcg_gtoc12_completion_return_grid {
+    int32_t body_id, rows, cell_begin, reserved;
+} spacepdhcg_gtoc12_completion_return_grid;
+/* Grids have unique valid body IDs and partition cell arrays in supplied order.
+ * Each row has return_tof_count cells. CUDA uses ties-to-even epoch rounding and
+ * the FIRST nearest TOF, matching round/argmin. Only ok=1 overrides the generic
+ * model. A cell's inflation still passes the ordinary post-authority gate. */
+typedef struct spacepdhcg_gtoc12_completion_compact_candidate {
+    int32_t deploy_begin, deploy_count, leg_begin, leg_count;
+    double partial_mass;
+    int32_t use_table, reserved;
+} spacepdhcg_gtoc12_completion_compact_candidate;
+typedef struct spacepdhcg_gtoc12_completion_compact_deploy {
+    double deploy_epoch, collect_epoch;
+    int32_t has_collect, body_id, reserved0, reserved1;
+} spacepdhcg_gtoc12_completion_compact_deploy;
+typedef struct spacepdhcg_gtoc12_completion_compact_leg {
+    int32_t role, from_id, to_id, candidate;
+    double departure, arrival, dv, input_inflation;
+} spacepdhcg_gtoc12_completion_compact_leg;
+/* Partitions/order match the ordinary ABI. Compact epochs must be finite;
+ * source/body IDs must be valid, each collection source must be deployed, and
+ * every leg's candidate index must match its partition. Structural errors reject
+ * the whole call without touching output buffers. No new physical timing gate.
+ */
+int spacepdhcg_gtoc12_completion_model_create(
+    int32_t device, const spacepdhcg_gtoc12_completion_model_policy* policy,
+    int32_t orbit_count, const spacepdhcg_gtoc12_completion_orbit* orbits,
+    int32_t return_tof_count, const double* return_tofs,
+    int32_t grid_count, const spacepdhcg_gtoc12_completion_return_grid* grids,
+    int32_t cell_count, const double* cell_inflation, const uint8_t* cell_ok,
+    void** model);
+int spacepdhcg_gtoc12_completion_model_destroy(void** model);
+int spacepdhcg_gtoc12_completion_evaluate_compact_host(
+    void* workspace, const void* model,
+    int32_t candidate_count, int32_t deploy_count, int32_t leg_count,
+    const spacepdhcg_gtoc12_completion_policy* policy,
+    const spacepdhcg_gtoc12_completion_compact_candidate* candidates,
+    const spacepdhcg_gtoc12_completion_compact_deploy* deploys,
+    const spacepdhcg_gtoc12_completion_compact_leg* legs,
+    spacepdhcg_gtoc12_completion_result* results,
+    spacepdhcg_gtoc12_completion_leg_result* leg_results,
+    double* collected_by_deploy, spacepdhcg_gtoc12_completion_stats* stats,
+    spacepdhcg_gtoc12_completion_leg* expanded_legs);
+/* expanded_legs is optional diagnostic readout, outside normal search use.
+ * Retained workspace buffers cover both input APIs. No allocation during eval;
+ * kernel_ms includes metadata assembly and the original forward-cost kernel.
+ * Model must remain alive until eval returns. Models and workspaces must use the
+ * current device. Outputs from a CUDA error are incomplete and must not be used.
+ */
+
 #ifdef __cplusplus
 }
 #endif

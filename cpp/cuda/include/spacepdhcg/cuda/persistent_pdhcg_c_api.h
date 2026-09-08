@@ -467,6 +467,59 @@ spacepdhcg_cuda_status spacepdhcg_cuda_workspace_l1_weight_diagnostics(
     spacepdhcg_cuda_l1_weight_diagnostics* diagnostics
 );
 
+/* Experimental exact causal mass elimination within unit-weight L1, default
+ * off. Requires the original-coordinate common-KKT domain, exact Q=0 and a
+ * positive cooperative grid. Shifted snapshot import is unsupported; the C API
+ * certifies its supplied coordinate system and cannot infer an external shift.
+ * Node zero proves m0=1; later nodes prove m_j-m_(j-1)+g*Gamma-nu=a, g>0.
+ * Every mass has zero objective and exactly three retained singleton +/-mass
+ * upper rows, no other numerical coupling; all virtual controls are retained.
+ * Descriptors are ordered, disjoint, and checked against original device data.
+ * The full original storage remains allocated. Parallel prefix/suffix products
+ * replace cumulative sparse fill. Original mass equality duals are recovered
+ * before L1 pair completion. Original supplied seeds are checked untouched.
+ * Direct original-coordinate steps use upward-rounded absolute coefficient
+ * sums, tied SOC denominators and downward-rounded theta/denominator, theta=.95.
+ * This metric is rebuilt each solve. No previous B/O/R/D or spectral step enters
+ * these updates. The exposed bound
+ * applies to the represented coefficient operator, not iterative roundoff.
+ * Original KKT gates govern qualification of every returned point. Enable and
+ * disable restore history/refresh scaling; disable mass before changing L1 or
+ * its weight. Reset/reseed preserve this setting and invalidate diagnostics.
+ * Checkpoint/restore and coefficient updates remain unsupported while enabled.
+ * Logical reduction does not imply reduced allocated memory. */
+typedef struct spacepdhcg_cuda_mass_node {
+    int32_t mass_variable;
+    int32_t equality_row;
+    int32_t gamma_variable;   /* -1 for initial node */
+    int32_t virtual_variable; /* -1 for initial node */
+} spacepdhcg_cuda_mass_node;
+typedef struct spacepdhcg_cuda_mass_options {
+    uint32_t abi_version;
+    int32_t enabled;
+    int32_t node_count; /* 2..4096, including the initial node */
+    int32_t reserved;
+} spacepdhcg_cuda_mass_options;
+typedef struct spacepdhcg_cuda_mass_diagnostics {
+    uint32_t abi_version;
+    int32_t enabled, valid, finite;
+    int32_t nodes, active_variables, active_rows, retained_variables, retained_rows;
+    uint64_t updates, completions;
+    double theta, row_factor_upper, column_factor_upper, norm_squared_upper;
+    double minimum_primal_step, maximum_primal_step;
+    double minimum_dual_step, maximum_dual_step;
+    double minimum_threshold, maximum_threshold;
+} spacepdhcg_cuda_mass_diagnostics;
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_mass_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_mass_options* options,
+    const spacepdhcg_cuda_mass_node* host_nodes
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_mass_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_mass_diagnostics* diagnostics
+);
+
 spacepdhcg_cuda_status spacepdhcg_cuda_workspace_query(
     spacepdhcg_cuda_workspace* workspace,
     int32_t* complete

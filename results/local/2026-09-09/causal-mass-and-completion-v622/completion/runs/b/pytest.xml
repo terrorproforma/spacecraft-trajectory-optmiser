@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="0.466" timestamp="2026-09-09T07:28:58.610374+10:00" hostname="DESKTOP-31AD96J"><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_abi_and_bulk_topology" time="0.001" /><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_signature_tracks_live_inputs_without_pair_geometry" time="0.001" /><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_rejects_synthetic_geometry_and_invalid_epoch" time="0.000" /><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_native_metadata_gates_reuse_and_invalid_batch[fit]" time="0.230"><failure message="OverflowError: cannot convert float infinity to integer">model = 'fit'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x768dfb42e210&gt;
+
+    @requires_gpu
+    @pytest.mark.parametrize("model", ["fit", "flat", "ratio"])
+    def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatch):
+        search, partial, tour = real_geometry_fixture(fit=model == "fit")
+        if model == "ratio":
+            search.settings = dataclasses.replace(search.settings, hop_inflation_slope=0.3)
+        rows = []
+        for i in range(259):
+            p, t = deepcopy(partial), deepcopy(tour)
+            p.mass = 500.0 + (i % 100) * 10.0
+            # New epochs and payloads in every group, including tie-to-even row
+            # boundaries and a nearest-TOF tie. No request identity cache is involved.
+            shift = float((i % 13) * 7.5)
+            t.hops = [(a, b, dep + shift, tof, dv) for a, b, dep, tof, dv in t.hops]
+            t.collect_epochs = {a: epoch + shift for a, epoch in t.collect_epochs.items()}
+            t.return_departure += shift
+            t.return_tof = 465.0 if i % 2 else 450.0
+            row = request(search, p, t, i % 3 != 0)
+            if i % 17 == 0:
+                row[2].pop(11)
+            elif i % 19 == 0:
+                row[2][11] = row[1][11]
+            elif i % 23 == 0:
+                row[3][-1] = dataclasses.replace(row[3][-1], delta_v_proxy_km_s=100.0)
+            rows.append(row)
+        # Distinguish adjacent cells; a uniform override cannot detect bad rounding.
+        grid, ok = search.collect_table._return_overrides[11]
+        grid[:] = 0.8 + np.arange(grid.size).reshape(grid.shape) * 1e-5
+        ok[::3, ::2] = False
+        owner = GpuCompletion(StandaloneOwner(), 300, 1000, 2000)
+        native = NativeModelOwner(owner)
+        owner.native_model = native
+        try:
+            for selected in (rows, rows[:3]):
+                native.configure(search, selected)
+                compact = pack_requests(search, selected, native.inputs)
+                full = pack_inputs(search, selected)
+                n, nd, nl = len(selected), len(compact[2]), len(compact[3])
+                expected = (
+                    np.zeros(n, RESULT),
+                    np.zeros(nl, LEG_RESULT),
+                    np.zeros(nd),
+                    np.zeros(1, STATS),
+                )
+                owner._check(
+                    owner.evaluate(
+                        owner.handle, n, nd, nl, *(a.ctypes.data for a in (*full, *expected))
+                    )
+                )
+                actual = tuple(np.zeros_like(a) for a in expected)
+                expanded = np.zeros(nl, EXPANDED_LEG)
+                native.run(compact, actual, expanded=expanded)
+                save_comparison(model, n, compact, full, actual, expected, expanded)
+                assert_records_close(expanded, full[3], atol=1e-12)
+                assert_records_close(actual[0], expected[0])
+                assert_records_close(actual[1], expected[1])
+                np.testing.assert_array_equal(actual[2], expected[2])
+            assert native.rebuilds == 1
+            # An updated grid must create a replacement model and release its old one.
+            search.collect_table._return_overrides[11][0][0, 0] += 0.01
+            native.configure(search, rows[:3])
+            assert native.rebuilds == 2
+            malformed = [a.copy() for a in compact]
+            malformed[3]["candidate"][-1] = 99
+            untouched = tuple(a.copy() for a in actual)
+            with pytest.raises(RuntimeError, match="native status 1"):
+                native.run(malformed, actual)
+            for a, b in zip(actual, untouched, strict=True):
+                assert a.tobytes() == b.tobytes()
+            # Finite epochs with an overflowing row quotient must reject before
+            # touching outputs, rather than falling back to generic return prices.
+            huge = [a.copy() for a in compact]
+            huge[3]["departure"][-1] = np.finfo(float).max
+            old_step = search.collect_table.settings.step_days
+&gt;           search.collect_table.settings = dataclasses.replace(
+                search.collect_table.settings, step_days=np.finfo(float).tiny
+            )
+
+tests/test_gtoc12_gpu_completion_model.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;string&gt;:22: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CollectDPSettings(step_days=np.float64(2.2250738585072014e-308), tofs=(60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, ...coefficients=(0.95, 0.55, 0.1, 0.2, 0.1), quantile=0.5, floor=1.0, residuals={}), harvest_phase=None, phase_weight=1.0)
+
+    def __post_init__(self) -&gt; None:
+        for tof in self.tofs:
+&gt;           if abs(tof / self.step_days - round(tof / self.step_days)) &gt; 1e-9:
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           OverflowError: cannot convert float infinity to integer
+
+src/spacepdhcg/gtoc12/collectdp.py:116: OverflowError</failure></testcase><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_native_metadata_gates_reuse_and_invalid_batch[flat]" time="0.045"><failure message="OverflowError: cannot convert float infinity to integer">model = 'flat'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x768dfb45b410&gt;
+
+    @requires_gpu
+    @pytest.mark.parametrize("model", ["fit", "flat", "ratio"])
+    def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatch):
+        search, partial, tour = real_geometry_fixture(fit=model == "fit")
+        if model == "ratio":
+            search.settings = dataclasses.replace(search.settings, hop_inflation_slope=0.3)
+        rows = []
+        for i in range(259):
+            p, t = deepcopy(partial), deepcopy(tour)
+            p.mass = 500.0 + (i % 100) * 10.0
+            # New epochs and payloads in every group, including tie-to-even row
+            # boundaries and a nearest-TOF tie. No request identity cache is involved.
+            shift = float((i % 13) * 7.5)
+            t.hops = [(a, b, dep + shift, tof, dv) for a, b, dep, tof, dv in t.hops]
+            t.collect_epochs = {a: epoch + shift for a, epoch in t.collect_epochs.items()}
+            t.return_departure += shift
+            t.return_tof = 465.0 if i % 2 else 450.0
+            row = request(search, p, t, i % 3 != 0)
+            if i % 17 == 0:
+                row[2].pop(11)
+            elif i % 19 == 0:
+                row[2][11] = row[1][11]
+            elif i % 23 == 0:
+                row[3][-1] = dataclasses.replace(row[3][-1], delta_v_proxy_km_s=100.0)
+            rows.append(row)
+        # Distinguish adjacent cells; a uniform override cannot detect bad rounding.
+        grid, ok = search.collect_table._return_overrides[11]
+        grid[:] = 0.8 + np.arange(grid.size).reshape(grid.shape) * 1e-5
+        ok[::3, ::2] = False
+        owner = GpuCompletion(StandaloneOwner(), 300, 1000, 2000)
+        native = NativeModelOwner(owner)
+        owner.native_model = native
+        try:
+            for selected in (rows, rows[:3]):
+                native.configure(search, selected)
+                compact = pack_requests(search, selected, native.inputs)
+                full = pack_inputs(search, selected)
+                n, nd, nl = len(selected), len(compact[2]), len(compact[3])
+                expected = (
+                    np.zeros(n, RESULT),
+                    np.zeros(nl, LEG_RESULT),
+                    np.zeros(nd),
+                    np.zeros(1, STATS),
+                )
+                owner._check(
+                    owner.evaluate(
+                        owner.handle, n, nd, nl, *(a.ctypes.data for a in (*full, *expected))
+                    )
+                )
+                actual = tuple(np.zeros_like(a) for a in expected)
+                expanded = np.zeros(nl, EXPANDED_LEG)
+                native.run(compact, actual, expanded=expanded)
+                save_comparison(model, n, compact, full, actual, expected, expanded)
+                assert_records_close(expanded, full[3], atol=1e-12)
+                assert_records_close(actual[0], expected[0])
+                assert_records_close(actual[1], expected[1])
+                np.testing.assert_array_equal(actual[2], expected[2])
+            assert native.rebuilds == 1
+            # An updated grid must create a replacement model and release its old one.
+            search.collect_table._return_overrides[11][0][0, 0] += 0.01
+            native.configure(search, rows[:3])
+            assert native.rebuilds == 2
+            malformed = [a.copy() for a in compact]
+            malformed[3]["candidate"][-1] = 99
+            untouched = tuple(a.copy() for a in actual)
+            with pytest.raises(RuntimeError, match="native status 1"):
+                native.run(malformed, actual)
+            for a, b in zip(actual, untouched, strict=True):
+                assert a.tobytes() == b.tobytes()
+            # Finite epochs with an overflowing row quotient must reject before
+            # touching outputs, rather than falling back to generic return prices.
+            huge = [a.copy() for a in compact]
+            huge[3]["departure"][-1] = np.finfo(float).max
+            old_step = search.collect_table.settings.step_days
+&gt;           search.collect_table.settings = dataclasses.replace(
+                search.collect_table.settings, step_days=np.finfo(float).tiny
+            )
+
+tests/test_gtoc12_gpu_completion_model.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;string&gt;:22: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CollectDPSettings(step_days=np.float64(2.2250738585072014e-308), tofs=(60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, ...pairs=20000, cache_geometry=2048, fraction_cache_entries=512, inflation_fit=None, harvest_phase=None, phase_weight=1.0)
+
+    def __post_init__(self) -&gt; None:
+        for tof in self.tofs:
+&gt;           if abs(tof / self.step_days - round(tof / self.step_days)) &gt; 1e-9:
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           OverflowError: cannot convert float infinity to integer
+
+src/spacepdhcg/gtoc12/collectdp.py:116: OverflowError</failure></testcase><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_native_metadata_gates_reuse_and_invalid_batch[ratio]" time="0.041"><failure message="OverflowError: cannot convert float infinity to integer">model = 'ratio'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x768dfb48ac60&gt;
+
+    @requires_gpu
+    @pytest.mark.parametrize("model", ["fit", "flat", "ratio"])
+    def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatch):
+        search, partial, tour = real_geometry_fixture(fit=model == "fit")
+        if model == "ratio":
+            search.settings = dataclasses.replace(search.settings, hop_inflation_slope=0.3)
+        rows = []
+        for i in range(259):
+            p, t = deepcopy(partial), deepcopy(tour)
+            p.mass = 500.0 + (i % 100) * 10.0
+            # New epochs and payloads in every group, including tie-to-even row
+            # boundaries and a nearest-TOF tie. No request identity cache is involved.
+            shift = float((i % 13) * 7.5)
+            t.hops = [(a, b, dep + shift, tof, dv) for a, b, dep, tof, dv in t.hops]
+            t.collect_epochs = {a: epoch + shift for a, epoch in t.collect_epochs.items()}
+            t.return_departure += shift
+            t.return_tof = 465.0 if i % 2 else 450.0
+            row = request(search, p, t, i % 3 != 0)
+            if i % 17 == 0:
+                row[2].pop(11)
+            elif i % 19 == 0:
+                row[2][11] = row[1][11]
+            elif i % 23 == 0:
+                row[3][-1] = dataclasses.replace(row[3][-1], delta_v_proxy_km_s=100.0)
+            rows.append(row)
+        # Distinguish adjacent cells; a uniform override cannot detect bad rounding.
+        grid, ok = search.collect_table._return_overrides[11]
+        grid[:] = 0.8 + np.arange(grid.size).reshape(grid.shape) * 1e-5
+        ok[::3, ::2] = False
+        owner = GpuCompletion(StandaloneOwner(), 300, 1000, 2000)
+        native = NativeModelOwner(owner)
+        owner.native_model = native
+        try:
+            for selected in (rows, rows[:3]):
+                native.configure(search, selected)
+                compact = pack_requests(search, selected, native.inputs)
+                full = pack_inputs(search, selected)
+                n, nd, nl = len(selected), len(compact[2]), len(compact[3])
+                expected = (
+                    np.zeros(n, RESULT),
+                    np.zeros(nl, LEG_RESULT),
+                    np.zeros(nd),
+                    np.zeros(1, STATS),
+                )
+                owner._check(
+                    owner.evaluate(
+                        owner.handle, n, nd, nl, *(a.ctypes.data for a in (*full, *expected))
+                    )
+                )
+                actual = tuple(np.zeros_like(a) for a in expected)
+                expanded = np.zeros(nl, EXPANDED_LEG)
+                native.run(compact, actual, expanded=expanded)
+                save_comparison(model, n, compact, full, actual, expected, expanded)
+                assert_records_close(expanded, full[3], atol=1e-12)
+                assert_records_close(actual[0], expected[0])
+                assert_records_close(actual[1], expected[1])
+                np.testing.assert_array_equal(actual[2], expected[2])
+            assert native.rebuilds == 1
+            # An updated grid must create a replacement model and release its old one.
+            search.collect_table._return_overrides[11][0][0, 0] += 0.01
+            native.configure(search, rows[:3])
+            assert native.rebuilds == 2
+            malformed = [a.copy() for a in compact]
+            malformed[3]["candidate"][-1] = 99
+            untouched = tuple(a.copy() for a in actual)
+            with pytest.raises(RuntimeError, match="native status 1"):
+                native.run(malformed, actual)
+            for a, b in zip(actual, untouched, strict=True):
+                assert a.tobytes() == b.tobytes()
+            # Finite epochs with an overflowing row quotient must reject before
+            # touching outputs, rather than falling back to generic return prices.
+            huge = [a.copy() for a in compact]
+            huge[3]["departure"][-1] = np.finfo(float).max
+            old_step = search.collect_table.settings.step_days
+&gt;           search.collect_table.settings = dataclasses.replace(
+                search.collect_table.settings, step_days=np.finfo(float).tiny
+            )
+
+tests/test_gtoc12_gpu_completion_model.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/dataclasses.py:1588: in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;string&gt;:22: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CollectDPSettings(step_days=np.float64(2.2250738585072014e-308), tofs=(60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, ...pairs=20000, cache_geometry=2048, fraction_cache_entries=512, inflation_fit=None, harvest_phase=None, phase_weight=1.0)
+
+    def __post_init__(self) -&gt; None:
+        for tof in self.tofs:
+&gt;           if abs(tof / self.step_days - round(tof / self.step_days)) &gt; 1e-9:
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           OverflowError: cannot convert float infinity to integer
+
+src/spacepdhcg/gtoc12/collectdp.py:116: OverflowError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,14 @@
+B011 Do not `assert False` (`python -O` removes these calls), raise `AssertionError()`
+   --> build/performance/completion-pack-benchmark-v622/test_preparation.py:153:20
+    |
+151 |         assert rows == ["unvalidated-result"] and elapsed >= 0
+152 |         with pytest.raises(AssertionError, match="downstream comparison"):
+153 |             assert False, "downstream comparison rejected the result"
+    |                    ^^^^^
+154 |     with np.load(tmp_path / "attempt.npz") as saved:
+155 |         assert set(saved.files) == {"results", "leg_results", "collected_by_deploy", "stats"}
+    |
+help: Replace `assert False`
+
+Found 1 error.
+No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).

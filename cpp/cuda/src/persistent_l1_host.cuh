@@ -12,6 +12,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_l1_options(
     std::lock_guard lock(workspace->mutex);
     auto status=finalize_if_complete(workspace);if(status!=SPACEPDHCG_CUDA_SUCCESS)return status;
     const auto stream=native_stream(workspace->consumer_stream);
+    if(workspace->mass_enabled) {
+        set_error(workspace,"disable mass elimination before changing L1 options");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
     if(!options->enabled) {
         if(workspace->l1_enabled) {
             halpern_restore_default_history<<<64,kThreads,0,stream>>>(workspace->device_problem);
@@ -121,6 +125,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_l1_weight(
     auto status=finalize_if_complete(workspace);if(status!=SPACEPDHCG_CUDA_SUCCESS)return status;
     if(!workspace->l1_enabled) {
         set_error(workspace,"fixed L1 weight requires enabled L1; each fresh enable resets omega to one");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
+    if(workspace->mass_enabled) {
+        set_error(workspace,"disable mass elimination before changing L1 weight");
         return SPACEPDHCG_CUDA_UNSUPPORTED;
     }
     if(options->mode==workspace->l1_setup.weight_mode&&options->omega==workspace->l1_setup.omega)return SPACEPDHCG_CUDA_SUCCESS;

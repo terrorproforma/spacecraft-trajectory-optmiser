@@ -1,0 +1,147 @@
+{
+  "scope": "CPU-only source/archive/build/log audit; no native loading or GPU execution by reviewer",
+  "manifest_sha256": "9bff6c54af1edca6323502908d440305b4edc8447550572a5d93b50a421e3730",
+  "source_tree_sha256": "cb0aed789a3fc788f296a80818818c35b3149fb017aba6e0d3c6df88ec805078",
+  "source_archive_sha256": "36c1d41c9543802d85a98a331fbc836ce7b5d2099d8988fd47bc719b6cf8bee5",
+  "source_files": 385,
+  "verified_git_base": "258e5c3aad1fd8e592527c759f1514925039cf2a",
+  "exact_reviewed_overlays": 14,
+  "component_pins_verified": true,
+  "working_tree_foreign_changes_excluded": true,
+  "core": {
+    "path": "/home/angus/spacepdhcg-combined-v622a/build/cuda/libspacepdhcg_cuda.so",
+    "bytes": 23551448,
+    "sha256": "6b32c2b5c4f87cd8990ee95816b00c0cb5dc863c7225cb244a17993ef344d8b1"
+  },
+  "mass_test": {
+    "path": "/home/angus/spacepdhcg-combined-v622a/build/cuda-tests/persistent_mass_test",
+    "bytes": 116152,
+    "sha256": "ba082c9b2860c60fe53fce9e94afaf25156066ff3cd9293ccef7785c164e1bf9"
+  },
+  "completion_test": {
+    "path": "/home/angus/spacepdhcg-combined-v622a/build/cuda-tests/gtoc12_completion_test",
+    "bytes": 53200,
+    "sha256": "ee2cf5fad87544155d55d3fafb4842d5b3ea3e7847fc8fa49967b38b97b48697"
+  },
+  "replay": {
+    "path": "/home/angus/spacepdhcg-combined-v622a/build/cuda-tests/persistent_snapshot_replay",
+    "bytes": 208936,
+    "sha256": "e3609d4c19d3396d2774f120a102b0c608c55741caf60df99d885397f800bddf"
+  },
+  "resources_equal_isolated_mass_build": {
+    "cooperative_l1_kernelILb1": {
+      "REG": 94,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_l1_kernelILb0": {
+      "REG": 94,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_solve_kernelILb1": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "12solve_kernelILb1": {
+      "REG": 204,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "cooperative_solve_kernelILb0": {
+      "REG": 80,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "12solve_kernelILb0": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "cooperative_mass_kernel": {
+      "REG": 198,
+      "STACK": 40,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_mass_initialise_kernel": {
+      "REG": 48,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_halpern_kernel": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    }
+  },
+  "native_compilation_flags": [
+    {
+      "directory": "/home/angus/spacepdhcg-combined-v622a/build",
+      "command": "/usr/local/cuda-12.8/bin/nvcc -forward-unknown-to-host-compiler -Dspacepdhcg_cuda_EXPORTS -I/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/include -I/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/../include -I/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/internal -isystem /usr/local/cuda-12.8/targets/x86_64-linux/include -O3 -DNDEBUG -std=c++20 \"--generate-code=arch=compute_120,code=[compute_120,sm_120]\" -Xcompiler=-fPIC -lineinfo -Xcompiler=-Wall,-Wextra -Xcompiler=-Werror --fmad=false -x cu -rdc=true -c /home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/src/gtoc12_completion.cu -o cuda/CMakeFiles/spacepdhcg_cuda.dir/src/gtoc12_completion.cu.o",
+      "file": "/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/src/gtoc12_completion.cu",
+      "output": "/home/angus/spacepdhcg-combined-v622a/build/cuda/CMakeFiles/spacepdhcg_cuda.dir/src/gtoc12_completion.cu.o"
+    },
+    {
+      "directory": "/home/angus/spacepdhcg-combined-v622a/build",
+      "command": "/usr/local/cuda-12.8/bin/nvcc -forward-unknown-to-host-compiler -Dspacepdhcg_cuda_EXPORTS -I/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/include -I/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/../include -I/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/internal -isystem /usr/local/cuda-12.8/targets/x86_64-linux/include -O3 -DNDEBUG -std=c++20 \"--generate-code=arch=compute_120,code=[compute_120,sm_120]\" -Xcompiler=-fPIC -lineinfo -Xcompiler=-Wall,-Wextra -Xcompiler=-Werror -x cu -rdc=true -c /home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/src/persistent_pdhcg.cu -o cuda/CMakeFiles/spacepdhcg_cuda.dir/src/persistent_pdhcg.cu.o",
+      "file": "/home/angus/spacepdhcg-combined-v622a/repo/cpp/cuda/src/persistent_pdhcg.cu",
+      "output": "/home/angus/spacepdhcg-combined-v622a/build/cuda/CMakeFiles/spacepdhcg_cuda.dir/src/persistent_pdhcg.cu.o"
+    }
+  ],
+  "hidden_replay_checks": {
+    "conditioning-unit": {
+      "records": 1,
+      "sha256": "81deb65a7b05b66557fd17541261b26ba17b3de21d190ccccb7820e53ca7d27c"
+    },
+    "conditioning-mass": {
+      "records": 1,
+      "sha256": "37c00be823a90d7aea44b64b45912f8b9a1a1d0144d6709be5333af12e068cea"
+    },
+    "conditioning-mass-seed": {
+      "records": 2,
+      "sha256": "8880ef3bf63da74b04d839fddc1266ded8b74436ec4fbd418b2d42f27345c0a5"
+    },
+    "difficult-unit": {
+      "records": 1,
+      "sha256": "d3cd1af3df990c0fc457efb4db3d888895beb5a4601947a279cac063cd26201d"
+    },
+    "difficult-mass": {
+      "records": 1,
+      "sha256": "2eda12e682dc76d300b699e30a72d0dc8f4089d716ee8a71f49b1dd770f89f21"
+    },
+    "difficult-mass-seed": {
+      "records": 2,
+      "sha256": "3f892ec2ce77c8237a1ee01d431aee1db5dfb1b19a705bcec98c919e82a6af70"
+    }
+  },
+  "stage_logs_sha256": {
+    "compiler-version": "68f8b0a1301428031e307cf5260142a517bff25cc232a09eae2734be475d721f",
+    "configure": "44d21d505b24e91c45b73330795459f8bee56eeca98dc1ee35be981d2273262d",
+    "compile": "4de7c2de2813741f7ccba5014fd9aff5b4918bdadebcf20f4b786c9c53818b06",
+    "cpu-mass": "a2b0e522fbc3b6488441c8f77a0cc0a2261d9101621c60c3704a40d6e0bfc4b5",
+    "cpu-snapshot": "fb0f02b70c937c8bfe89313fb0622b949dfb0d6be2e4ad3c8665cfb9f633746f",
+    "cpu-completion": "c17e86cf19a7ee4cb0e12fbfd172352681d14f6a16285ca2849cd81846ff43c1",
+    "validate-conditioning-unit": "81deb65a7b05b66557fd17541261b26ba17b3de21d190ccccb7820e53ca7d27c",
+    "validate-conditioning-mass": "37c00be823a90d7aea44b64b45912f8b9a1a1d0144d6709be5333af12e068cea",
+    "validate-conditioning-mass-seed": "8880ef3bf63da74b04d839fddc1266ded8b74436ec4fbd418b2d42f27345c0a5",
+    "validate-difficult-unit": "d3cd1af3df990c0fc457efb4db3d888895beb5a4601947a279cac063cd26201d",
+    "validate-difficult-mass": "2eda12e682dc76d300b699e30a72d0dc8f4089d716ee8a71f49b1dd770f89f21",
+    "validate-difficult-mass-seed": "3f892ec2ce77c8237a1ee01d431aee1db5dfb1b19a705bcec98c919e82a6af70",
+    "reject-without-l1": "afa4d450145bbabc4b5581ad2d5b4b54d19f851d72b44bfe0c98597606cf956a",
+    "reject-weighted": "afa4d450145bbabc4b5581ad2d5b4b54d19f851d72b44bfe0c98597606cf956a",
+    "ctest-enumerate": "8ba9aa6db99cf152b0d6d105891155b9a671fd2b65ca64866352681d5294cffd",
+    "resources": "4ea8b88cdceb675ec656ba30cac5ff619d89d69bf9c9825f281421ef6083fa76",
+    "symbols": "a373cd24aa531b3bdc4178d338943074fe49021cf0900949e1a327d863d3b421"
+  },
+  "decision": "Source/build checks pass for bounded integration smoke; no cold solve or performance qualification inferred"
+}

@@ -1,0 +1,113 @@
+{
+  "base": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+  "complete": true,
+  "gpu_calls": 0,
+  "owned_sources": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+    "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+    "cpp/cuda/src/gtoc12_completion_model.cuh": "9efe14ce07f62c10e7550892efff34cc8cecaf9cfd60002b5fc6efa949000bee",
+    "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+    "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+    "src/spacepdhcg/gtoc12/completion_capture.py": "bad09268a48b13c12ff18113bd0fbdd9aafc92c87c5e185186d9447e3edc69a5",
+    "src/spacepdhcg/gtoc12/refinement_admission.py": "b3f2c1f08af1f328f0d76d43f49edd8639a5ae5e500cbcea789b8e86125c79e5",
+    "tests/test_gtoc12_gpu_completion_model.py": "a8022ffa5cb176e31797d3bd441a309f83cef6440428a3b63f2d18088a2f8798"
+  },
+  "stages": [
+    {
+      "name": "ruff",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--no-cache",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/gpu_completion.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/gpu_completion_model.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/completion_capture.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/refinement_admission.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/tests/test_gtoc12_gpu_completion_model.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.031869852999989234,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "name": "format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--no-cache",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/gpu_completion.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/gpu_completion_model.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/completion_capture.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/src/spacepdhcg/gtoc12/refinement_admission.py",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/tests/test_gtoc12_gpu_completion_model.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.031956688999969174,
+      "log_sha256": "f114d83b30c5c657ee43a847a45bafccaea255d82673feb87c26d252c61e29c1"
+    },
+    {
+      "name": "cpu-tests",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/home/angus/spacepdhcg-completion-model-v622e/prepare.py",
+        "--cpu"
+      ],
+      "exit_code": 0,
+      "seconds": 0.769238587000018,
+      "log_sha256": "16e97d7f25b97dd8a9c5156d6c41afd258e6b073d17084ea51ddf4d8dd66f15e"
+    },
+    {
+      "name": "compiler-version",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "--version"
+      ],
+      "exit_code": 0,
+      "seconds": 0.01630285700002787,
+      "log_sha256": "68f8b0a1301428031e307cf5260142a517bff25cc232a09eae2734be475d721f"
+    },
+    {
+      "name": "build",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "-std=c++20",
+        "-O3",
+        "--fmad=false",
+        "-shared",
+        "-Xcompiler=-fPIC",
+        "-gencode=arch=compute_90,code=sm_90",
+        "-gencode=arch=compute_120,code=sm_120",
+        "-I/home/angus/spacepdhcg-completion-model-v622e/source/cpp/cuda/include",
+        "/home/angus/spacepdhcg-completion-model-v622e/source/cpp/cuda/src/gtoc12_completion.cu",
+        "-o",
+        "/home/angus/spacepdhcg-completion-model-v622e/libspacepdhcg_completion.so"
+      ],
+      "exit_code": 0,
+      "seconds": 2.5227638889999753,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "resource-usage",
+      "command": [
+        "/usr/local/cuda-12.8/bin/cuobjdump",
+        "--dump-resource-usage",
+        "/home/angus/spacepdhcg-completion-model-v622e/libspacepdhcg_completion.so"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004314529999987826,
+      "log_sha256": "0549d3ceab2af7a79316cf799f0bb648632c11075a1508031c7a8d06586634c5"
+    }
+  ],
+  "library": {
+    "path": "/home/angus/spacepdhcg-completion-model-v622e/libspacepdhcg_completion.so",
+    "sha256": "a0c4b534002b4827b93b6eb7d255c6d74e4ef80fb697e7e17bd5296fb65c58bc",
+    "bytes": 1172760
+  },
+  "source_archive_sha256": "03a98ed2ef0d9d7eeaddc75235ada2433f9b2433e2d92c12bbbf817a9187d565"
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-m",
+      "ruff",
+      "check",
+      "build/performance/completion-pack-benchmark-v622/prepare.py",
+      "build/performance/completion-pack-benchmark-v622/common.py",
+      "build/performance/completion-pack-benchmark-v622/run.py",
+      "build/performance/completion-pack-benchmark-v622/launch.py",
+      "build/performance/completion-pack-benchmark-v622/test_preparation.py",
+      "build/performance/completion-pack-benchmark-v622/validate.py",
+      "build/performance/completion-pack-benchmark-v622/freeze.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "build/performance/completion-pack-benchmark-v622/prepare.py",
+      "build/performance/completion-pack-benchmark-v622/common.py",
+      "build/performance/completion-pack-benchmark-v622/run.py",
+      "build/performance/completion-pack-benchmark-v622/launch.py",
+      "build/performance/completion-pack-benchmark-v622/test_preparation.py",
+      "build/performance/completion-pack-benchmark-v622/validate.py",
+      "build/performance/completion-pack-benchmark-v622/freeze.py"
+    ],
+    "exit_code": 0
+  }
+]

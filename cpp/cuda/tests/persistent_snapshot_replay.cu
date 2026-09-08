@@ -1,6 +1,7 @@
 // Diagnostic importer for the production persistent C ABI. No GTOC12 backend alias.
 #include "persistent_snapshot.hpp"
 #include "persistent_l1_snapshot.hpp"
+#include "persistent_mass_snapshot.hpp"
 #include "cuda_test_support.hpp"
 
 #include <atomic>
@@ -67,7 +68,7 @@ struct Arguments {
     double tolerance{},deadline{},audit_tolerance=1e-9,cone_tolerance=1e-8,l1_weight=1.0;
     std::uint64_t iterations{};
     int repeats=1,execution_blocks=-1,l1_weight_mode=SPACEPDHCG_CUDA_L1_WEIGHT_UNIT;
-    bool validate_only=false,fold_singleton_bounds=false,common_kkt_stop=false,l1_prox=false,l1_weight_explicit=false;
+    bool validate_only=false,fold_singleton_bounds=false,common_kkt_stop=false,l1_prox=false,l1_weight_explicit=false,mass_eliminate=false;
 };
 Arguments arguments(int argc,char** argv) {
     s::require(argc>=2,"usage: persistent_snapshot_replay SNAPSHOT --tolerance T --iterations N --deadline-seconds S [--repeats N] [--mode cold|reuse|full-retained] [--fold-singleton-bounds] [--initial-point PATH] [--audit-tolerance T] [--cone-tolerance T], or SNAPSHOT --validate-only");
@@ -88,6 +89,7 @@ Arguments arguments(int argc,char** argv) {
         if(name=="--fold-singleton-bounds") {out.fold_singleton_bounds=true;continue;}
         if(name=="--common-kkt-stop") {out.common_kkt_stop=true;continue;}
         if(name=="--l1-prox") {out.l1_prox=true;continue;}
+        if(name=="--mass-eliminate") {out.mass_eliminate=true;continue;}
         s::require(i+1<argc,"missing option value");const std::string value(argv[++i]);
         if(name=="--tolerance")out.tolerance=number_arg(value);
         else if(name=="--iterations")out.iterations=integer_arg(value,100'000'000);
@@ -211,6 +213,10 @@ int main(int argc,char** argv) try {
         l1_map=s::l1::detect(snapshot,canonical);
         s::require(!l1_map->pairs.empty(),"L1 prox requested but no provable isolated epigraph pair exists");
     }
+    s::require(!args.mass_eliminate || (args.l1_prox && args.l1_weight==1.0),
+        "mass elimination requires exact L1 with unit weight");
+    std::vector<spacepdhcg_cuda_mass_node> mass_nodes;
+    if(args.mass_eliminate)mass_nodes=s::mass::detect(snapshot,canonical,*l1_map);
     const double conversion_seconds=elapsed(prepare);
     const auto initial_begin=Clock::now();std::optional<s::InitialPoint> initial;
     if(!args.initial_point.empty())initial=s::initial_point(s::file_bytes(args.initial_point,128ULL*1024*1024),snapshot,canonical);
@@ -234,22 +240,35 @@ int main(int argc,char** argv) try {
     std::cout<<",\"requested_execution_blocks\":";if(args.execution_blocks<0)std::cout<<"null";else std::cout<<args.execution_blocks;
     std::cout<<",\"halpern_mode\":";json_string(args.halpern);
     std::cout<<",\"l1_prox\":"<<args.l1_prox;
+    std::cout<<",\"mass_eliminate\":"<<args.mass_eliminate;
     std::cout<<",\"requested_l1_weight\":";if(args.l1_weight_mode==SPACEPDHCG_CUDA_L1_WEIGHT_FIXED)number(args.l1_weight);else std::cout<<"null";
     std::cout<<",\"l1_weight_policy\":";json_string(args.l1_weight_mode==SPACEPDHCG_CUDA_L1_WEIGHT_CANCEL_GLOBAL
         ?"cancel_global_normalization":args.l1_weight_explicit?"fixed_user_input":"unit_default");
     if(l1_map) {
         std::cout<<",\"l1_representation\":\"original_layout_with_masked_working_operator\",\"l1_pairs\":"<<l1_map->pairs.size();
-        std::cout<<",\"l1_active_variables\":"<<snapshot.n-l1_map->pairs.size()
-            <<",\"l1_active_rows\":"<<canonical.A.rows+canonical.F.rows-2*l1_map->pairs.size();
-        std::cout<<",\"l1_scaling\":\"reduced_Ruiz_B_and_O_norm_including_smooth_c_over_D_and_lambda_over_target_D\"";
+        std::cout<<",\"l1_active_variables\":"<<snapshot.n-l1_map->pairs.size()-mass_nodes.size()
+            <<",\"l1_active_rows\":"<<canonical.A.rows+canonical.F.rows-2*l1_map->pairs.size()-mass_nodes.size();
+        std::cout<<",\"l1_scaling\":";json_string(args.mass_eliminate?"direct_original_coordinate_diagonal_abs_sums_no_B_O_D_R":
+            "reduced_Ruiz_B_and_O_norm_including_smooth_c_over_D_and_lambda_over_target_D");
         std::cout<<",\"l1_weight\":";if(args.l1_weight_mode==SPACEPDHCG_CUDA_L1_WEIGHT_CANCEL_GLOBAL)std::cout<<"null";else number(args.l1_weight);
         std::cout<<",\"l1_weight_rule\":\"primal_eta_div_omega_dual_eta_times_omega_cancel_global_chooses_O_div_B_once_after_scaling\"";
-        std::cout<<",\"l1_natural_residual_metric\":\"legacy_unweighted_original_problem_diagnostic\"";
+        std::cout<<",\"l1_natural_residual_metric\":";json_string(args.mass_eliminate?
+            "original_problem_diagnostic_with_direct_retained_steps_and_unit_eliminated_placeholders":"legacy_unweighted_original_problem_diagnostic");
         std::cout<<",\"l1_dual_completion\":\"strict_sign_for_nonzero_v_clipped_retained_gradient_only_at_exact_zero\"";
         std::cout<<",\"l1_initial_point\":\"original_x_t_y_z_checked_before_any_completion\",\"l1_map\":[";
         for(std::size_t i=0;i<l1_map->pairs.size();++i) {
             if(i)std::cout<<',';const auto p=l1_map->pairs[i];
             std::cout<<'['<<p.epigraph<<','<<p.variable<<','<<p.positive_row<<','<<p.negative_row<<',';number(p.lambda);std::cout<<']';
+        }
+        std::cout<<']';
+    }
+    if(args.mass_eliminate) {
+        std::cout<<",\"mass_metric\":\"upward_absolute_sums_SOC_tied_downward_theta_division\",\"mass_theta\":0.95";
+        std::cout<<",\"mass_metric_refresh\":\"every_solve\"";
+        std::cout<<",\"mass_affine_convention\":\"linear_prefix_and_once_shifted_upper_bounds\",\"mass_map\":[";
+        for(std::size_t i=0;i<mass_nodes.size();++i) {
+            if(i)std::cout<<',';const auto node=mass_nodes[i];
+            std::cout<<'['<<node.mass_variable<<','<<node.equality_row<<','<<node.gamma_variable<<','<<node.virtual_variable<<']';
         }
         std::cout<<']';
     }
@@ -335,6 +354,10 @@ int main(int argc,char** argv) try {
                 api(spacepdhcg_cuda_workspace_set_l1_weight(w,&weight),"configure fixed L1 reciprocal weight",w);
             }
         }
+        if(fresh && args.mass_eliminate) {
+            const spacepdhcg_cuda_mass_options policy{SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,1,static_cast<int>(mass_nodes.size()),0};
+            api(spacepdhcg_cuda_workspace_set_mass_options(w,&policy,mass_nodes.data()),"configure exact causal mass elimination",w);
+        }
         if(!fresh) {
             if(args.mode=="reuse")api(spacepdhcg_cuda_workspace_reset_async(w,SPACEPDHCG_CUDA_RESET_ITERATES,p.exchange.consumer_stream),"reset iterates",w);
             else api(spacepdhcg_cuda_workspace_warm_start_async(w,SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,nullptr,p.exchange.consumer_stream),"full retained warm start",w);
@@ -415,8 +438,18 @@ int main(int argc,char** argv) try {
         if(args.l1_prox)api(spacepdhcg_cuda_workspace_l1_diagnostics(w,&l1),"L1 diagnostics",w);
         spacepdhcg_cuda_l1_weight_diagnostics l1_weight{};
         if(args.l1_prox)api(spacepdhcg_cuda_workspace_l1_weight_diagnostics(w,&l1_weight),"L1 weight diagnostics",w);
+        spacepdhcg_cuda_mass_diagnostics mass{};
+        if(args.mass_eliminate)api(spacepdhcg_cuda_workspace_mass_diagnostics(w,&mass),"mass diagnostics",w);
         if(args.halpern!="off")api(spacepdhcg_cuda_workspace_halpern_diagnostics(w,&halpern),"Halpern diagnostics",w);
         const auto download=Clock::now();const auto primal=p.primal.download(p.stream),dual=p.dual.download(p.stream);
+        std::vector<double> mass_steps;
+        if(args.mass_eliminate) {
+            spacepdhcg_cuda_pointer_snapshot pointers{};
+            api(spacepdhcg_cuda_workspace_pointer_snapshot(w,&pointers),"mass step pointer snapshot",w);
+            mass_steps.resize(snapshot.n+canonical.A.rows+canonical.F.rows);
+            test::cuda_require(cudaMemcpy(mass_steps.data(),reinterpret_cast<const void*>(pointers.scaling),
+                mass_steps.size()*sizeof(double),cudaMemcpyDeviceToHost),"mass direct-step readback");
+        }
         const double download_seconds=elapsed(download);const auto audit_begin=Clock::now();
         const auto original=s::original_vectors(snapshot,canonical,primal,dual);
         const auto quality=s::audit(snapshot,original,args.audit_tolerance,args.cone_tolerance);
@@ -453,6 +486,18 @@ int main(int argc,char** argv) try {
             metric("omega",l1_weight.omega);metric("primal_base_step",l1_weight.primal_base_step);metric("dual_base_step",l1_weight.dual_base_step);
             std::cout<<",\"weight_valid\":"<<bool(l1_weight.valid)<<",\"weight_mode\":"<<l1_weight.mode;
             metric("minimum_threshold",l1.minimum_threshold);metric("maximum_threshold",l1.maximum_threshold);std::cout<<'}';
+        }
+        if(args.mass_eliminate) {
+            std::cout<<",\"mass\":{\"enabled\":"<<bool(mass.enabled)<<",\"valid\":"<<bool(mass.valid)<<",\"finite\":"<<bool(mass.finite);
+            std::cout<<",\"nodes\":"<<mass.nodes<<",\"active_variables\":"<<mass.active_variables<<",\"active_rows\":"<<mass.active_rows;
+            std::cout<<",\"retained_variables\":"<<mass.retained_variables<<",\"retained_rows\":"<<mass.retained_rows;
+            std::cout<<",\"updates\":"<<mass.updates<<",\"completions\":"<<mass.completions;
+            metric("theta",mass.theta);metric("row_factor_upper",mass.row_factor_upper);metric("column_factor_upper",mass.column_factor_upper);
+            metric("norm_squared_upper",mass.norm_squared_upper);metric("minimum_primal_step",mass.minimum_primal_step);metric("maximum_primal_step",mass.maximum_primal_step);
+            metric("minimum_dual_step",mass.minimum_dual_step);metric("maximum_dual_step",mass.maximum_dual_step);
+            metric("minimum_threshold",mass.minimum_threshold);metric("maximum_threshold",mass.maximum_threshold);
+            std::cout<<",\"steps_original_layout\":";vector_json(mass_steps);
+            std::cout<<",\"step_layout\":\"primal_then_scalar_then_affine; eliminated_slots_are_unit_dummies\"}";
         }
         if(args.halpern!="off") {
             std::cout<<",\"halpern\":{\"mode\":"<<halpern.mode<<",\"valid\":"<<bool(halpern.valid)<<",\"finite\":"<<bool(halpern.finite);

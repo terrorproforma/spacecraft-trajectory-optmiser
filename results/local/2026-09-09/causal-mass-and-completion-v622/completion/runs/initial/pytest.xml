@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="0.488" timestamp="2026-09-09T07:26:08.026450+10:00" hostname="DESKTOP-31AD96J"><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_abi_and_bulk_topology" time="0.001" /><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_signature_tracks_live_inputs_without_pair_geometry" time="0.001" /><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_rejects_synthetic_geometry_and_invalid_epoch" time="0.000" /><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_native_metadata_gates_reuse_and_invalid_batch[fit]" time="0.218"><failure message="AssertionError: &#10;Not equal to tolerance rtol=2e-14, atol=1e-12&#10;&#10;Mismatched elements: 172 / 777 (22.1%)&#10;First 5 mismatches are at indices:&#10; [4]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [7]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [13]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [16]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [22]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10;Max absolute difference among violations: 0.2&#10;Max relative difference among violations: 0.2&#10; ACTUAL: array([1.     , 1.2    , 1.6    , 1.     , 1.2    , 0.83611, 1.     ,&#10;       1.2    , 0.83628, 1.     , 1.2    , 1.6    , 1.     , 1.2    ,&#10;       0.83645, 1.     , 1.2    , 0.83645, 1.     , 1.2    , 1.6    ,...&#10; DESIRED: array([1.     , 1.2    , 1.6    , 1.     , 1.     , 0.83611, 1.     ,&#10;       1.     , 0.83628, 1.     , 1.2    , 1.6    , 1.     , 1.     ,&#10;       0.83645, 1.     , 1.     , 0.83645, 1.     , 1.2    , 1.6    ,...">model = 'fit'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x74ab7f38b620&gt;
+
+    @requires_gpu
+    @pytest.mark.parametrize("model", ["fit", "flat", "ratio"])
+    def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatch):
+        search, partial, tour = real_geometry_fixture(fit=model == "fit")
+        if model == "ratio":
+            search.settings = dataclasses.replace(search.settings, hop_inflation_slope=0.3)
+        rows = []
+        for i in range(259):
+            p, t = deepcopy(partial), deepcopy(tour)
+            p.mass = 500.0 + (i % 100) * 10.0
+            # New epochs and payloads in every group, including tie-to-even row
+            # boundaries and a nearest-TOF tie. No request identity cache is involved.
+            shift = float((i % 13) * 7.5)
+            t.hops = [(a, b, dep + shift, tof, dv) for a, b, dep, tof, dv in t.hops]
+            t.collect_epochs = {a: epoch + shift for a, epoch in t.collect_epochs.items()}
+            t.return_departure += shift
+            t.return_tof = 465.0 if i % 2 else 450.0
+            row = request(search, p, t, i % 3 != 0)
+            if i % 17 == 0:
+                row[2].pop(11)
+            elif i % 19 == 0:
+                row[2][11] = row[1][11]
+            elif i % 23 == 0:
+                row[3][-1] = dataclasses.replace(row[3][-1], delta_v_proxy_km_s=100.0)
+            rows.append(row)
+        # Distinguish adjacent cells; a uniform override cannot detect bad rounding.
+        grid, ok = search.collect_table._return_overrides[11]
+        grid[:] = 0.8 + np.arange(grid.size).reshape(grid.shape) * 1e-5
+        ok[::3, ::2] = False
+        owner = GpuCompletion(StandaloneOwner(), 300, 1000, 2000)
+        native = NativeModelOwner(owner)
+        owner.native_model = native
+        try:
+            for selected in (rows, rows[:3]):
+                native.configure(search, selected)
+                compact = pack_requests(search, selected, native.inputs)
+                full = pack_inputs(search, selected)
+                n, nd, nl = len(selected), len(compact[2]), len(compact[3])
+                expected = (
+                    np.zeros(n, RESULT),
+                    np.zeros(nl, LEG_RESULT),
+                    np.zeros(nd),
+                    np.zeros(1, STATS),
+                )
+                owner._check(
+                    owner.evaluate(
+                        owner.handle, n, nd, nl, *(a.ctypes.data for a in (*full, *expected))
+                    )
+                )
+                actual = tuple(np.zeros_like(a) for a in expected)
+                expanded = np.zeros(nl, EXPANDED_LEG)
+                native.run(compact, actual, expanded=expanded)
+                save_comparison(model, n, compact, full, actual, expected, expanded)
+&gt;               assert_records_close(expanded, full[3], atol=1e-12)
+
+tests/test_gtoc12_gpu_completion_model.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+actual = array([(0, 0, -1, 0, 65078. , 67328. ,   0., 1.     , 0.  , 0., [0.  , 0.  , 0.  , 0.  , 0.  ],  0.        , 0.       ... '&lt;f8', '&lt;f8'], 'offsets': [0, 4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 104, 112, 120], 'itemsize': 128, 'aligned': True})
+expected = array([(0, 0, -1, 0, 65078. , 67328. ,   0., 1.     , 0., 0., [0.  , 0.  , 0.  , 0.  , 0.  ],  0.        , 0.        ,... '&lt;f8', '&lt;f8'], 'offsets': [0, 4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 104, 112, 120], 'itemsize': 128, 'aligned': True})
+atol = 1e-12
+
+    def assert_records_close(actual, expected, *, atol=2e-11):
+        for field in actual.dtype.names:
+            if actual.dtype[field].kind in "iu":
+                np.testing.assert_array_equal(actual[field], expected[field])
+            else:
+&gt;               np.testing.assert_allclose(
+                    actual[field], expected[field], rtol=2e-14, atol=atol, equal_nan=True
+                )
+E               AssertionError: 
+E               Not equal to tolerance rtol=2e-14, atol=1e-12
+E               
+E               Mismatched elements: 172 / 777 (22.1%)
+E               First 5 mismatches are at indices:
+E                [4]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [7]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [13]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [16]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [22]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E               Max absolute difference among violations: 0.2
+E               Max relative difference among violations: 0.2
+E                ACTUAL: array([1.     , 1.2    , 1.6    , 1.     , 1.2    , 0.83611, 1.     ,
+E                      1.2    , 0.83628, 1.     , 1.2    , 1.6    , 1.     , 1.2    ,
+E                      0.83645, 1.     , 1.2    , 0.83645, 1.     , 1.2    , 1.6    ,...
+E                DESIRED: array([1.     , 1.2    , 1.6    , 1.     , 1.     , 0.83611, 1.     ,
+E                      1.     , 0.83628, 1.     , 1.2    , 1.6    , 1.     , 1.     ,
+E                      0.83645, 1.     , 1.     , 0.83645, 1.     , 1.2    , 1.6    ,...
+
+tests/test_gtoc12_gpu_completion_model.py:131: AssertionError</failure></testcase><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_native_metadata_gates_reuse_and_invalid_batch[flat]" time="0.042"><failure message="AssertionError: &#10;Not equal to tolerance rtol=2e-14, atol=1e-12&#10;&#10;Mismatched elements: 259 / 777 (33.3%)&#10;First 5 mismatches are at indices:&#10; [1]: 1.05 (ACTUAL), 0.0 (DESIRED)&#10; [4]: 1.05 (ACTUAL), 0.0 (DESIRED)&#10; [7]: 1.05 (ACTUAL), 0.0 (DESIRED)&#10; [10]: 1.05 (ACTUAL), 0.0 (DESIRED)&#10; [13]: 1.05 (ACTUAL), 0.0 (DESIRED)&#10;Max absolute difference among violations: 1.05&#10;Max relative difference among violations: inf&#10; ACTUAL: array([0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05,&#10;       0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  ,&#10;       1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  ,...&#10; DESIRED: array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,&#10;       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,&#10;       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,...">model = 'flat'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x74ab7f183e90&gt;
+
+    @requires_gpu
+    @pytest.mark.parametrize("model", ["fit", "flat", "ratio"])
+    def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatch):
+        search, partial, tour = real_geometry_fixture(fit=model == "fit")
+        if model == "ratio":
+            search.settings = dataclasses.replace(search.settings, hop_inflation_slope=0.3)
+        rows = []
+        for i in range(259):
+            p, t = deepcopy(partial), deepcopy(tour)
+            p.mass = 500.0 + (i % 100) * 10.0
+            # New epochs and payloads in every group, including tie-to-even row
+            # boundaries and a nearest-TOF tie. No request identity cache is involved.
+            shift = float((i % 13) * 7.5)
+            t.hops = [(a, b, dep + shift, tof, dv) for a, b, dep, tof, dv in t.hops]
+            t.collect_epochs = {a: epoch + shift for a, epoch in t.collect_epochs.items()}
+            t.return_departure += shift
+            t.return_tof = 465.0 if i % 2 else 450.0
+            row = request(search, p, t, i % 3 != 0)
+            if i % 17 == 0:
+                row[2].pop(11)
+            elif i % 19 == 0:
+                row[2][11] = row[1][11]
+            elif i % 23 == 0:
+                row[3][-1] = dataclasses.replace(row[3][-1], delta_v_proxy_km_s=100.0)
+            rows.append(row)
+        # Distinguish adjacent cells; a uniform override cannot detect bad rounding.
+        grid, ok = search.collect_table._return_overrides[11]
+        grid[:] = 0.8 + np.arange(grid.size).reshape(grid.shape) * 1e-5
+        ok[::3, ::2] = False
+        owner = GpuCompletion(StandaloneOwner(), 300, 1000, 2000)
+        native = NativeModelOwner(owner)
+        owner.native_model = native
+        try:
+            for selected in (rows, rows[:3]):
+                native.configure(search, selected)
+                compact = pack_requests(search, selected, native.inputs)
+                full = pack_inputs(search, selected)
+                n, nd, nl = len(selected), len(compact[2]), len(compact[3])
+                expected = (
+                    np.zeros(n, RESULT),
+                    np.zeros(nl, LEG_RESULT),
+                    np.zeros(nd),
+                    np.zeros(1, STATS),
+                )
+                owner._check(
+                    owner.evaluate(
+                        owner.handle, n, nd, nl, *(a.ctypes.data for a in (*full, *expected))
+                    )
+                )
+                actual = tuple(np.zeros_like(a) for a in expected)
+                expanded = np.zeros(nl, EXPANDED_LEG)
+                native.run(compact, actual, expanded=expanded)
+                save_comparison(model, n, compact, full, actual, expected, expanded)
+&gt;               assert_records_close(expanded, full[3], atol=1e-12)
+
+tests/test_gtoc12_gpu_completion_model.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+actual = array([(0, 0, -1, 0, 65078. , 67328. ,   0., 1.     , 0.  , 0., [0., 0., 0., 0., 0.], 0., 0., 0.667),
+       (3, 0,  1... '&lt;f8', '&lt;f8'], 'offsets': [0, 4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 104, 112, 120], 'itemsize': 128, 'aligned': True})
+expected = array([(0, 0, -1, 0, 65078. , 67328. ,   0., 1.     , 0., 0., [0., 0., 0., 0., 0.], 0., 0., 0.667),
+       (3, 0,  1, ... '&lt;f8', '&lt;f8'], 'offsets': [0, 4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 104, 112, 120], 'itemsize': 128, 'aligned': True})
+atol = 1e-12
+
+    def assert_records_close(actual, expected, *, atol=2e-11):
+        for field in actual.dtype.names:
+            if actual.dtype[field].kind in "iu":
+                np.testing.assert_array_equal(actual[field], expected[field])
+            else:
+&gt;               np.testing.assert_allclose(
+                    actual[field], expected[field], rtol=2e-14, atol=atol, equal_nan=True
+                )
+E               AssertionError: 
+E               Not equal to tolerance rtol=2e-14, atol=1e-12
+E               
+E               Mismatched elements: 259 / 777 (33.3%)
+E               First 5 mismatches are at indices:
+E                [1]: 1.05 (ACTUAL), 0.0 (DESIRED)
+E                [4]: 1.05 (ACTUAL), 0.0 (DESIRED)
+E                [7]: 1.05 (ACTUAL), 0.0 (DESIRED)
+E                [10]: 1.05 (ACTUAL), 0.0 (DESIRED)
+E                [13]: 1.05 (ACTUAL), 0.0 (DESIRED)
+E               Max absolute difference among violations: 1.05
+E               Max relative difference among violations: inf
+E                ACTUAL: array([0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05,
+E                      0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  ,
+E                      1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  , 0.  , 1.05, 0.  ,...
+E                DESIRED: array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+E                      0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+E                      0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,...
+
+tests/test_gtoc12_gpu_completion_model.py:131: AssertionError</failure></testcase><testcase classname="tests.test_gtoc12_gpu_completion_model" name="test_compact_native_metadata_gates_reuse_and_invalid_batch[ratio]" time="0.030"><failure message="AssertionError: &#10;Not equal to tolerance rtol=2e-14, atol=1e-12&#10;&#10;Mismatched elements: 259 / 777 (33.3%)&#10;First 5 mismatches are at indices:&#10; [1]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [4]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [7]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [10]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10; [13]: 1.2 (ACTUAL), 1.0 (DESIRED)&#10;Max absolute difference among violations: 0.2&#10;Max relative difference among violations: 0.2&#10; ACTUAL: array([1.     , 1.2    , 1.6    , 1.     , 1.2    , 0.83611, 1.     ,&#10;       1.2    , 0.83628, 1.     , 1.2    , 1.6    , 1.     , 1.2    ,&#10;       0.83645, 1.     , 1.2    , 0.83645, 1.     , 1.2    , 1.6    ,...&#10; DESIRED: array([1.     , 1.     , 1.6    , 1.     , 1.     , 0.83611, 1.     ,&#10;       1.     , 0.83628, 1.     , 1.     , 1.6    , 1.     , 1.     ,&#10;       0.83645, 1.     , 1.     , 0.83645, 1.     , 1.     , 1.6    ,...">model = 'ratio'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x74ab7f230290&gt;
+
+    @requires_gpu
+    @pytest.mark.parametrize("model", ["fit", "flat", "ratio"])
+    def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatch):
+        search, partial, tour = real_geometry_fixture(fit=model == "fit")
+        if model == "ratio":
+            search.settings = dataclasses.replace(search.settings, hop_inflation_slope=0.3)
+        rows = []
+        for i in range(259):
+            p, t = deepcopy(partial), deepcopy(tour)
+            p.mass = 500.0 + (i % 100) * 10.0
+            # New epochs and payloads in every group, including tie-to-even row
+            # boundaries and a nearest-TOF tie. No request identity cache is involved.
+            shift = float((i % 13) * 7.5)
+            t.hops = [(a, b, dep + shift, tof, dv) for a, b, dep, tof, dv in t.hops]
+            t.collect_epochs = {a: epoch + shift for a, epoch in t.collect_epochs.items()}
+            t.return_departure += shift
+            t.return_tof = 465.0 if i % 2 else 450.0
+            row = request(search, p, t, i % 3 != 0)
+            if i % 17 == 0:
+                row[2].pop(11)
+            elif i % 19 == 0:
+                row[2][11] = row[1][11]
+            elif i % 23 == 0:
+                row[3][-1] = dataclasses.replace(row[3][-1], delta_v_proxy_km_s=100.0)
+            rows.append(row)
+        # Distinguish adjacent cells; a uniform override cannot detect bad rounding.
+        grid, ok = search.collect_table._return_overrides[11]
+        grid[:] = 0.8 + np.arange(grid.size).reshape(grid.shape) * 1e-5
+        ok[::3, ::2] = False
+        owner = GpuCompletion(StandaloneOwner(), 300, 1000, 2000)
+        native = NativeModelOwner(owner)
+        owner.native_model = native
+        try:
+            for selected in (rows, rows[:3]):
+                native.configure(search, selected)
+                compact = pack_requests(search, selected, native.inputs)
+                full = pack_inputs(search, selected)
+                n, nd, nl = len(selected), len(compact[2]), len(compact[3])
+                expected = (
+                    np.zeros(n, RESULT),
+                    np.zeros(nl, LEG_RESULT),
+                    np.zeros(nd),
+                    np.zeros(1, STATS),
+                )
+                owner._check(
+                    owner.evaluate(
+                        owner.handle, n, nd, nl, *(a.ctypes.data for a in (*full, *expected))
+                    )
+                )
+                actual = tuple(np.zeros_like(a) for a in expected)
+                expanded = np.zeros(nl, EXPANDED_LEG)
+                native.run(compact, actual, expanded=expanded)
+                save_comparison(model, n, compact, full, actual, expected, expanded)
+&gt;               assert_records_close(expanded, full[3], atol=1e-12)
+
+tests/test_gtoc12_gpu_completion_model.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+actual = array([(0, 0, -1, 0, 65078. , 67328. ,   0., 1.     , 0.  , 0. , [0., 0., 0., 0., 0.], 0., 0., 0.667),
+       (3, 1,  ... '&lt;f8', '&lt;f8'], 'offsets': [0, 4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 104, 112, 120], 'itemsize': 128, 'aligned': True})
+expected = array([(0, 0, -1, 0, 65078. , 67328. ,   0., 1.     , 0.  , 0. , [0., 0., 0., 0., 0.], 0., 0., 0.667),
+       (3, 1,  ... '&lt;f8', '&lt;f8'], 'offsets': [0, 4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 104, 112, 120], 'itemsize': 128, 'aligned': True})
+atol = 1e-12
+
+    def assert_records_close(actual, expected, *, atol=2e-11):
+        for field in actual.dtype.names:
+            if actual.dtype[field].kind in "iu":
+                np.testing.assert_array_equal(actual[field], expected[field])
+            else:
+&gt;               np.testing.assert_allclose(
+                    actual[field], expected[field], rtol=2e-14, atol=atol, equal_nan=True
+                )
+E               AssertionError: 
+E               Not equal to tolerance rtol=2e-14, atol=1e-12
+E               
+E               Mismatched elements: 259 / 777 (33.3%)
+E               First 5 mismatches are at indices:
+E                [1]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [4]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [7]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [10]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E                [13]: 1.2 (ACTUAL), 1.0 (DESIRED)
+E               Max absolute difference among violations: 0.2
+E               Max relative difference among violations: 0.2
+E                ACTUAL: array([1.     , 1.2    , 1.6    , 1.     , 1.2    , 0.83611, 1.     ,
+E                      1.2    , 0.83628, 1.     , 1.2    , 1.6    , 1.     , 1.2    ,
+E                      0.83645, 1.     , 1.2    , 0.83645, 1.     , 1.2    , 1.6    ,...
+E                DESIRED: array([1.     , 1.     , 1.6    , 1.     , 1.     , 0.83611, 1.     ,
+E                      1.     , 0.83628, 1.     , 1.     , 1.6    , 1.     , 1.     ,
+E                      0.83645, 1.     , 1.     , 0.83645, 1.     , 1.     , 1.6    ,...
+
+tests/test_gtoc12_gpu_completion_model.py:131: AssertionError</failure></testcase></testsuite></testsuites>

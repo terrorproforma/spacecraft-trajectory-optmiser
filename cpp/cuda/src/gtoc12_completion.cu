@@ -15,6 +15,9 @@ using Leg = spacepdhcg_gtoc12_completion_leg;
 using Result = spacepdhcg_gtoc12_completion_result;
 using LegResult = spacepdhcg_gtoc12_completion_leg_result;
 using Stats = spacepdhcg_gtoc12_completion_stats;
+using CompactCandidate = spacepdhcg_gtoc12_completion_compact_candidate;
+using CompactDeploy = spacepdhcg_gtoc12_completion_compact_deploy;
+using CompactLeg = spacepdhcg_gtoc12_completion_compact_leg;
 static_assert(sizeof(Policy) == 80 && sizeof(Candidate) == 24);
 static_assert(sizeof(Deploy) == 24 && sizeof(Leg) == 128);
 static_assert(sizeof(Result) == 48 && sizeof(LegResult) == 72 && sizeof(Stats) == 48);
@@ -30,6 +33,9 @@ struct Workspace {
     LegResult* leg_results{};
     double* collected{};
     int32_t* seen{};
+    CompactCandidate* compact_candidates{};
+    CompactDeploy* compact_deploys{};
+    CompactLeg* compact_legs{};
     std::mutex mutex;
 };
 
@@ -185,15 +191,21 @@ bool correct_device(Workspace* w) {
     return w && cudaGetDevice(&device) == cudaSuccess && device == w->device;
 }
 bool nonnegative(double x) { return std::isfinite(x) && x >= 0.0; }
-int validate(int count, int deploy_count, int leg_count, const Policy* policy,
-    const Candidate* candidates, const Deploy* deploys, const Leg* legs, const Result* results) {
-    if (!policy || !candidates || !results || (deploy_count && !deploys) || (leg_count && !legs)) return 1;
+int validate_policy(const Policy* policy) {
+    if (!policy) return 1;
     const Policy& p = *policy;
     if (p.abi_version != 1 || p.sum_mode != 1 || p.reserved0 || p.reserved1) return 4;
     if (!nonnegative(p.initial_mass) || !nonnegative(p.dry_mass) || !nonnegative(p.miner_mass) ||
         !nonnegative(p.mining_rate) || !nonnegative(p.minimum_stay) ||
         !std::isfinite(p.thrust) || p.thrust <= 0 || !std::isfinite(p.exhaust) || p.exhaust <= 0 ||
         !std::isfinite(p.year_days) || p.year_days <= 0) return 1;
+    return 0;
+}
+int validate(int count, int deploy_count, int leg_count, const Policy* policy,
+    const Candidate* candidates, const Deploy* deploys, const Leg* legs, const Result* results) {
+    if (!policy || !candidates || !results || (deploy_count && !deploys) || (leg_count && !legs)) return 1;
+    const int policy_status = validate_policy(policy);
+    if (policy_status) return policy_status;
     int64_t next_deploy = 0, next_leg = 0;
     for (int i = 0; i < count; ++i) {
         const Candidate& c = candidates[i];
@@ -237,6 +249,7 @@ bool release(Workspace* w) {
     };
     free_buffer(w->candidates); free_buffer(w->deploys); free_buffer(w->legs);
     free_buffer(w->results); free_buffer(w->leg_results); free_buffer(w->collected); free_buffer(w->seen);
+    free_buffer(w->compact_candidates); free_buffer(w->compact_deploys); free_buffer(w->compact_legs);
     for (cudaEvent_t event : w->events) if (event && cudaEventDestroy(event) != cudaSuccess) ok = false;
     if (w->stream && cudaStreamDestroy(w->stream) != cudaSuccess) ok = false;
     return ok;
@@ -260,7 +273,9 @@ extern "C" int spacepdhcg_gtoc12_completion_create(
     for (auto& event : w->events) if (ok) ok = cudaEventCreate(&event) == cudaSuccess;
     ok = ok && allocate(w->candidates, candidates) && allocate(w->deploys, deploys) &&
         allocate(w->legs, legs) && allocate(w->results, candidates) &&
-        allocate(w->leg_results, legs) && allocate(w->collected, deploys) && allocate(w->seen, deploys);
+        allocate(w->leg_results, legs) && allocate(w->collected, deploys) && allocate(w->seen, deploys) &&
+        allocate(w->compact_candidates, candidates) && allocate(w->compact_deploys, deploys) &&
+        allocate(w->compact_legs, legs);
     if (!ok) release(w);
     if (previous != device && cudaSetDevice(previous) != cudaSuccess) {
         if (ok) { cudaSetDevice(device); release(w); }
@@ -324,3 +339,5 @@ extern "C" int spacepdhcg_gtoc12_completion_destroy(void** opaque) {
     lock.unlock(); delete w; *opaque = nullptr;
     return ok ? 0 : 2;
 }
+
+#include "gtoc12_completion_model.cuh"

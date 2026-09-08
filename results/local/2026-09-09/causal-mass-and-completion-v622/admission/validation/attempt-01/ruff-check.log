@@ -1,0 +1,189 @@
+UP017 [*] Use `datetime.UTC` alias
+   --> build/performance/refinement-admission-v622/prepare.py:114:40
+    |
+112 |         KIT / "selection.json",
+113 |         {
+114 |             "frozen_utc": datetime.now(timezone.utc).isoformat(),
+    |                                        ^^^^^^^^^^^^
+115 |             "development_ships": development,
+116 |             "queue_held_out_ships": held_out,
+    |
+help: Convert to `datetime.UTC` alias
+    |
+7   | import shutil
+    - from datetime import datetime, timezone
+8   + from datetime import datetime, timezone, UTC
+9   | from pathlib import Path
+--------------------------------------------------------------------------------
+113 |         {
+    -             "frozen_utc": datetime.now(timezone.utc).isoformat(),
+114 +             "frozen_utc": datetime.now(UTC).isoformat(),
+115 |             "development_ships": development,
+    |
+
+E501 Line too long (199 > 100)
+   --> build/performance/refinement-admission-v622/prepare.py:120:101
+    |
+118 | …
+119 | …
+120 | …s. Held-out means excluded from queue policy development; not unseen data or held out from the old inflation fit.",
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+121 | …
+122 | …
+    |
+
+E501 Line too long (133 > 100)
+   --> build/performance/refinement-admission-v622/prepare.py:126:101
+    |
+124 |             "models": ["v616_no_fit", "existing_fit_no_refit"],
+125 |             "policy": {"retained_requests": 48, "refinement_budget": 4, "uncertainty_budget": 2},
+126 |             "priority": "ascending final proxy deficit, descending weighted gain, exact prescription SHA; no learned deficit cutoff",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+127 |             "replay_controls": "equal-score immutable replacements may be inventoried; queue cannot claim/launch them",
+128 |             "actual_refinements": 0,
+    |
+
+E501 Line too long (119 > 100)
+   --> build/performance/refinement-admission-v622/prepare.py:127:101
+    |
+125 |             "policy": {"retained_requests": 48, "refinement_budget": 4, "uncertainty_budget": 2},
+126 |             "priority": "ascending final proxy deficit, descending weighted gain, exact prescription SHA; no learned deficit cutoff",
+127 |             "replay_controls": "equal-score immutable replacements may be inventoried; queue cannot claim/launch them",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+128 |             "actual_refinements": 0,
+129 |             "GPU_calls": 0,
+    |
+
+E501 Line too long (108 > 100)
+   --> build/performance/refinement-admission-v622/prepare.py:141:101
+    |
+139 |         KIT / "preparation.json",
+140 |         {
+141 |             "source_base": "frozen final-b v621 adapter source; isolated new admission helper/test overlay",
+    |                                                                                                     ^^^^^^^^
+142 |             "source_sha256": sha(KIT / "source-sha256.json"),
+143 |             "selection_sha256": sha(KIT / "selection.json"),
+    |
+
+E501 Line too long (131 > 100)
+   --> build/performance/refinement-admission-v622/prepare.py:147:101
+    |
+145 |             "policy_source_sha256": source_index["src/spacepdhcg/gtoc12/refinement_admission.py"],
+146 |             "historical_full_fleet_Result_sha256": verifier["solution_sha256"],
+147 |             "archival_verification": "Exact old Result/checker evidence retained; no new trajectory or fleet verification in v622",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+148 |         },
+149 |     )
+    |
+
+B023 Function definition does not bind loop variable `table`
+   --> build/performance/refinement-admission-v622/replay.py:229:79
+    |
+228 |                 def cached_only(source, target, epochs):
+229 |                     assert (source, target, float(epochs[0]), len(epochs)) in table._geometry
+    |                                                                               ^^^^^
+230 |                     return cached_geometry(source, target, epochs)
+    |
+
+B023 Function definition does not bind loop variable `cached_geometry`
+   --> build/performance/refinement-admission-v622/replay.py:230:28
+    |
+228 |                 def cached_only(source, target, epochs):
+229 |                     assert (source, target, float(epochs[0]), len(epochs)) in table._geometry
+230 |                     return cached_geometry(source, target, epochs)
+    |                            ^^^^^^^^^^^^^^^
+231 |
+232 |                 table.pair_geometry = cached_only
+    |
+
+E501 Line too long (132 > 100)
+   --> build/performance/refinement-admission-v622/replay.py:366:101
+    |
+364 |             {
+365 |                 "source_sha256": sha(KIT / "inputs/residuals.json"),
+366 |                 "scope": "Existing actual-burn-mass local component errors; not summed as sequential completion error or refitted.",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+367 |                 "routes": [x for x in residuals["routes"] if x["ship"] != 3],
+368 |                 "legs": [x for x in residuals["legs"] if x["ship"] != 3],
+    |
+
+E501 Line too long (188 > 100)
+   --> build/performance/refinement-admission-v622/replay.py:387:101
+    |
+385 | …
+386 | …
+387 | …admission remains uncertified; held-out is relative to this queue policy, not earlier audits or the old fit.",
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+388 | …
+389 | …
+    |
+
+E501 Line too long (114 > 100)
+  --> build/performance/refinement-admission-v622/validate.py:28:101
+   |
+26 |     ]
+27 |     tests = ["tests/test_gtoc12_refinement_admission.py"]
+28 |     for source, test in (("src/spacepdhcg/gtoc12/fixed_refinement.py", "tests/test_gtoc12_fixed_refinement.py"),):
+   |                                                                                                     ^^^^^^^^^^^^^^
+29 |         if (ROOT / source).exists():
+30 |             files += [source, test]
+   |
+
+RUF005 Consider iterable unpacking instead of concatenation
+  --> build/performance/refinement-admission-v622/validate.py:37:41
+   |
+35 |         "f.__class__.__module__!='_editable_skbc_spacepdhcg']; "
+36 |         f"sys.path.insert(0,{str(ROOT / 'src')!r}); import pytest; "
+37 |         f"raise SystemExit(pytest.main({tests + ['-q', '-p', 'no:cacheprovider', '--junitxml=' + str(attempt / 'pytest.xml')]!r}))"
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+38 |     )
+39 |     commands = [
+   |
+help: Replace with iterable unpacking
+
+E501 Line too long (131 > 100)
+  --> build/performance/refinement-admission-v622/validate.py:37:101
+   |
+35 |         "f.__class__.__module__!='_editable_skbc_spacepdhcg']; "
+36 |         f"sys.path.insert(0,{str(ROOT / 'src')!r}); import pytest; "
+37 |         f"raise SystemExit(pytest.main({tests + ['-q', '-p', 'no:cacheprovider', '--junitxml=' + str(attempt / 'pytest.xml')]!r}))"
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+38 |     )
+39 |     commands = [
+   |
+
+E501 Line too long (120 > 100)
+  --> build/performance/refinement-admission-v622/validate.py:46:101
+   |
+44 |     report = []
+45 |     for name, command in commands:
+46 |         result = subprocess.run(command, cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+47 |         (attempt / f"{name}.log").write_text(result.stdout)
+48 |         report.append({"name": name, "command": command, "returncode": result.returncode})
+   |
+
+E501 Line too long (105 > 100)
+  --> build/performance/refinement-admission-v622/validate.py:50:101
+   |
+48 |         report.append({"name": name, "command": command, "returncode": result.returncode})
+49 |     (attempt / "report.json").write_text(json.dumps(report, indent=2) + "\n")
+50 |     print(json.dumps({"path": str(attempt), "commands": [(x["name"], x["returncode"]) for x in report]}))
+   |                                                                                                     ^^^^^
+51 |     raise SystemExit(int(any(x["returncode"] for x in report)))
+   |
+
+E731 Do not assign a `lambda` expression, use a `def`
+   --> src/spacepdhcg/gtoc12/refinement_admission.py:226:13
+    |
+224 |             if previous == candidate:
+225 |                 return "duplicate_prescription"
+226 |             tie_key = lambda x: (*x.priority, x.observation.readback_sha256)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+227 |             self._pending[key] = min((previous, candidate), key=tie_key)
+228 |             return "duplicate_prescription_other_proxy"
+    |
+help: Rewrite `tie_key` as a `def`
+
+Found 16 errors.
+[*] 1 fixable with the `--fix` option (2 hidden fixes can be enabled with the `--unsafe-fixes` option).

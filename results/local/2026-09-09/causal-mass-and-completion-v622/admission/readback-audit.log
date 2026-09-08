@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/refinement-admission-v622/audit.py", line 132, in <module>
+    main()
+  File "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/refinement-admission-v622/audit.py", line 80, in main
+    assert math.isclose(row["archived_final_dry_margin_kg"] - proxy_margin, bias, abs_tol=1e-7)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

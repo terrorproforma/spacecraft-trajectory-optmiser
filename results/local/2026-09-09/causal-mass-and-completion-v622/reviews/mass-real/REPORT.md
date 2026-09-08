@@ -1,0 +1,22 @@
+The mass reduction and its metric behave correctly on the two fixed captures, but neither cold solve reaches the unchanged original KKT target. All six saved vector sets agree with the independent Decimal65 audit. Both supplied qualified seeds return at zero updates with exactly preserved x/y/z bits. Four cold runs each use 100,000 updates; the complete batch makes eight solve APIs, including two separately counted bootstrap updates.
+
+| Capture / mode | Solve seconds | Normalized primal | Normalized stationarity | Normalized gap | Qualified |
+|---|---:|---:|---:|---:|---|
+| Conditioning / unit L1 | 3.596 | 1.73919e-4 | 2.24718e-4 | 1.00029055 | No |
+| Conditioning / mass + metric | 7.377 | 5.07471e-5 | 1.00572e-7 | 0.22951008 | No |
+| Difficult / unit L1 | 3.660 | 5.46409e-6 | 1.88836e-5 | 0.00387847 | No |
+| Difficult / mass + metric | 7.648 | 3.10502e-5 | 1.50240e-8 | 0.08789139 | No |
+
+These are fixed-budget unqualified timings, not time to verified accuracy. The mass change combines elimination and a different coefficient metric, so their individual effects cannot be isolated by this comparison. No default promotion, fleet-score change or SOTA result follows.
+
+For both mass cold outputs, the recovered initial mass is exactly 1. Dynamics mass defects are at most 2.1223e-16 and 2.8786e-16 in original capture coordinates. The independently replayed FP64 affine/linear prefixes reproduce every exported mass bit, and the reverse covector suffix reproduces every exported mass-equality dual bit. Original mass-dual stationarity is at most 1.565e-34 and 3.371e-34. These checks use the final retained original multipliers and the actual signed coefficients; they do not infer correctness from a small solver-reported residual.
+
+An independent Fraction calculation verifies every actual exported primal and dual step is inward from theta divided by the appropriate exact absolute sum. SOC rows share identical step bits. The coefficient-based product bound is at most the represented theta squared and is covered by the reported 0.9025 bound. The largest relative reduction from the ideal exact step is below 8.5e-16. This is a bound on represented coefficients and stored steps, not a bound on accumulated iteration roundoff or convergence time. Preserved supplied seeds are intentionally exempt from canonical prefix/suffix reconstruction.
+
+Remaining error is concentrated outside the eliminated mass equations. In the conditioning mass run, the largest equalities are late z-position dynamics (intervals 203–205), about 1.80e-4 absolute. The largest stationarity terms are y-position state variables around nodes 104–106, about 1.006e-3 absolute. Of the signed objective discrepancy 0.22951008, x dotted with stationarity contributes 0.22939517 and the negative equality-residual/dual pairing contributes 0.00011492. The largest primal cone violation is 1.1097e-7, also above the 1e-8 cone threshold.
+
+In the difficult mass run, the largest equalities are late y-velocity dynamics (intervals 230–232), about 1.19e-4 absolute. The largest stationarity terms are Gamma controls around nodes 80–82, about 1.50e-4 absolute. The negative equality-residual/dual pairing contributes -0.08722196 to signed discrepancy -0.08789139; stationarity contributes -0.00061680. The last-node thrust/Gamma cone (block 233) has primal violation 2.9392e-5 and dominates block complementarity. Thus mass feasibility is fixed, while the retained kinematic equations and cone accuracy still prevent qualification.
+
+The objective denominator matters when comparing gaps. Difficult unit L1 has computed objectives 85.36946 and 85.03835, giving absolute discrepancy 0.33110 and normalized gap 0.00387847. The mass output has computed objectives 0.15401 and 0.24190, giving smaller absolute discrepancy 0.08789 but a normalization denominator of 1 and larger normalized gap 0.08789139. These are unqualified iterates, so their smaller objective values cannot be credited as superior feasible solutions.
+
+The evidence supports focusing any next bounded convergence diagnosis on the remaining kinematic equality and cone blocks, with the current original KKT gates retained. It does not justify a solution-derived weight, a broad parameter sweep or another unmeasured speed claim. `review_real.py` reproduces the six original audits, gap identities, step certificate and cold prefix/suffix checks using only Python's standard library and two pinned historical independent-audit source files.

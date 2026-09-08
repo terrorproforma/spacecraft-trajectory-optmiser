@@ -1,0 +1,337 @@
+{
+  "complete": true,
+  "selection_sha256": "089ac294a87403941b5ad3ae43b23226eb96c02d666078cab0d933590c75a7ca",
+  "saved_development_trace_count": 20,
+  "fresh_scalar_finish_cpu_calls": 34,
+  "unique_routes": 22,
+  "requests": 54,
+  "queue_groups": [
+    {
+      "group": "development",
+      "model": "v616_no_fit",
+      "prefix": "flat_deployment_proxy",
+      "requests": 5,
+      "dispositions": [
+        {
+          "id": "ship23-v616_no_fit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship01-v616_no_fit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship04-v616_no_fit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship07-v616_no_fit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship10-v616_no_fit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        }
+      ],
+      "selected": [
+        "ship23-v616_no_fit-flat_deployment_proxy",
+        "ship01-v616_no_fit-flat_deployment_proxy",
+        "ship04-v616_no_fit-flat_deployment_proxy"
+      ],
+      "proxy_accepted": 1,
+      "uncertain_eligible": 4,
+      "earlier_or_other_rejected": 0,
+      "actual_refinements": 0
+    },
+    {
+      "group": "development",
+      "model": "v616_no_fit",
+      "prefix": "measured_deployment_prefix",
+      "requests": 5,
+      "dispositions": [
+        {
+          "id": "ship23-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship01-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship04-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship07-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship10-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        }
+      ],
+      "selected": [
+        "ship01-v616_no_fit-measured_deployment_prefix",
+        "ship04-v616_no_fit-measured_deployment_prefix"
+      ],
+      "proxy_accepted": 0,
+      "uncertain_eligible": 5,
+      "earlier_or_other_rejected": 0,
+      "actual_refinements": 0
+    },
+    {
+      "group": "development",
+      "model": "existing_fit_no_refit",
+      "prefix": "flat_deployment_proxy",
+      "requests": 5,
+      "dispositions": [
+        {
+          "id": "ship23-existing_fit_no_refit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship01-existing_fit_no_refit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship04-existing_fit_no_refit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship07-existing_fit_no_refit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship10-existing_fit_no_refit-flat_deployment_proxy",
+          "disposition": "refinement_eligible"
+        }
+      ],
+      "selected": [
+        "ship23-existing_fit_no_refit-flat_deployment_proxy",
+        "ship01-existing_fit_no_refit-flat_deployment_proxy",
+        "ship04-existing_fit_no_refit-flat_deployment_proxy"
+      ],
+      "proxy_accepted": 1,
+      "uncertain_eligible": 4,
+      "earlier_or_other_rejected": 0,
+      "actual_refinements": 0
+    },
+    {
+      "group": "development",
+      "model": "existing_fit_no_refit",
+      "prefix": "measured_deployment_prefix",
+      "requests": 5,
+      "dispositions": [
+        {
+          "id": "ship23-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship01-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship04-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship07-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship10-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        }
+      ],
+      "selected": [
+        "ship23-existing_fit_no_refit-measured_deployment_prefix",
+        "ship04-existing_fit_no_refit-measured_deployment_prefix"
+      ],
+      "proxy_accepted": 0,
+      "uncertain_eligible": 5,
+      "earlier_or_other_rejected": 0,
+      "actual_refinements": 0
+    },
+    {
+      "group": "queue_held_out",
+      "model": "v616_no_fit",
+      "prefix": "measured_deployment_prefix",
+      "requests": 17,
+      "dispositions": [
+        {
+          "id": "ship02-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship05-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship06-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship08-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship09-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship11-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship12-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship13-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship14-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship15-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship16-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship17-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship18-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship19-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship20-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship21-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship22-v616_no_fit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        }
+      ],
+      "selected": [
+        "ship02-v616_no_fit-measured_deployment_prefix",
+        "ship17-v616_no_fit-measured_deployment_prefix",
+        "ship19-v616_no_fit-measured_deployment_prefix",
+        "ship21-v616_no_fit-measured_deployment_prefix"
+      ],
+      "proxy_accepted": 8,
+      "uncertain_eligible": 9,
+      "earlier_or_other_rejected": 0,
+      "actual_refinements": 0
+    },
+    {
+      "group": "queue_held_out",
+      "model": "existing_fit_no_refit",
+      "prefix": "measured_deployment_prefix",
+      "requests": 17,
+      "dispositions": [
+        {
+          "id": "ship02-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship05-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship06-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship08-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship09-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship11-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship12-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship13-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship14-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship15-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship16-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship17-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship18-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship19-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship20-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship21-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        },
+        {
+          "id": "ship22-existing_fit_no_refit-measured_deployment_prefix",
+          "disposition": "refinement_eligible"
+        }
+      ],
+      "selected": [
+        "ship02-existing_fit_no_refit-measured_deployment_prefix",
+        "ship11-existing_fit_no_refit-measured_deployment_prefix",
+        "ship15-existing_fit_no_refit-measured_deployment_prefix",
+        "ship22-existing_fit_no_refit-measured_deployment_prefix"
+      ],
+      "proxy_accepted": 3,
+      "uncertain_eligible": 14,
+      "earlier_or_other_rejected": 0,
+      "actual_refinements": 0
+    }
+  ],
+  "GPU_calls": 0,
+  "Lambert_calls": 0,
+  "new_geometry_calls": 0,
+  "new_feature_arithmetic_calls": 0,
+  "refinements": 0,
+  "model_refits": 0,
+  "fresh_physics_certifications": 0,
+  "fleet_promotions": 0,
+  "scope": "Historical positive controls test admission only. Every admission remains uncertified; held-out is relative to this queue policy, not earlier audits or the old fit."
+}

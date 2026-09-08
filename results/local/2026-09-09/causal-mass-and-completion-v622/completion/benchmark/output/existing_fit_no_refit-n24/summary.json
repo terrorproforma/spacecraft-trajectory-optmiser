@@ -1,0 +1,301 @@
+{
+  "group": {
+    "id": "existing_fit_no_refit-n24",
+    "model": "existing_fit_no_refit",
+    "size": 24,
+    "fixture_indices": [
+      10,
+      2,
+      3,
+      6,
+      7,
+      11,
+      14,
+      15,
+      18,
+      19,
+      10,
+      2,
+      3,
+      6,
+      7,
+      11,
+      14,
+      15,
+      18,
+      19,
+      10,
+      2,
+      3,
+      6
+    ],
+    "unique_control_count": 10,
+    "expected_accepted": 3,
+    "role": "observed_v616_shortlist"
+  },
+  "construction_seconds": {
+    "ordinary": 0.03158865099999275,
+    "compact": 0.030540309000002708
+  },
+  "workspace_create_seconds": {
+    "ordinary": 0.0005211789999748362,
+    "compact": 0.00011532800002100885
+  },
+  "measurements": [
+    {
+      "trial": 0,
+      "backend": "ordinary",
+      "first_call": true,
+      "method_seconds": 0.0024997570000095948,
+      "proxy_completions_per_second": 9600.93321067123,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0018464339999866297,
+        "completion_native_call_seconds": 0.000545888999994304,
+        "completion_kernel_seconds": 4.416000097990036e-05,
+        "completion_total_seconds": 0.002486073000000033
+      },
+      "numeric_readback_sha256": "3cf0a71f411ac296521d6196fdfe4d4e4923ea6ec41f26db7e6cc2ee2f835a81",
+      "ordinary_geometry_cache_pairs": 42,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "post_method_validation_capture_seconds": 0.011043738000012127
+    },
+    {
+      "trial": 1,
+      "backend": "compact",
+      "first_call": true,
+      "method_seconds": 0.004040115999998761,
+      "proxy_completions_per_second": 5940.423492792623,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.003406182000020408,
+        "completion_native_call_seconds": 0.0005137629999865112,
+        "completion_kernel_seconds": 7.680000364780426e-05,
+        "completion_total_seconds": 0.00401903600001674
+      },
+      "numeric_readback_sha256": "71cf1eb5530c0178a2b9c93b74c8d579fad53cb2bb8e3c98a73df06e4f0a118e",
+      "ordinary_geometry_cache_pairs": 0,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "native_model_signature": "62323f398ff98822323ff256b0b8e58ca90224c16f410914e235e94582b0c77e",
+      "native_model_rebuilds": 1,
+      "post_method_validation_capture_seconds": 0.011972807999995894
+    },
+    {
+      "trial": 2,
+      "backend": "ordinary",
+      "first_call": false,
+      "method_seconds": 0.0019601049999948827,
+      "proxy_completions_per_second": 12244.24201767898,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0011134840000011081,
+        "completion_native_call_seconds": 0.0007227859999829889,
+        "completion_kernel_seconds": 4.355200007557868e-05,
+        "completion_total_seconds": 0.0019450739999911093
+      },
+      "numeric_readback_sha256": "3cf0a71f411ac296521d6196fdfe4d4e4923ea6ec41f26db7e6cc2ee2f835a81",
+      "ordinary_geometry_cache_pairs": 42,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "post_method_validation_capture_seconds": 0.011646531000025107
+    },
+    {
+      "trial": 3,
+      "backend": "compact",
+      "first_call": false,
+      "method_seconds": 0.0018989049999902363,
+      "proxy_completions_per_second": 12638.86292369729,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0012463569999852098,
+        "completion_native_call_seconds": 0.0005419260000110171,
+        "completion_kernel_seconds": 5.564799904823305e-05,
+        "completion_total_seconds": 0.0018823300000008203
+      },
+      "numeric_readback_sha256": "71cf1eb5530c0178a2b9c93b74c8d579fad53cb2bb8e3c98a73df06e4f0a118e",
+      "ordinary_geometry_cache_pairs": 0,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "native_model_signature": "62323f398ff98822323ff256b0b8e58ca90224c16f410914e235e94582b0c77e",
+      "native_model_rebuilds": 1,
+      "post_method_validation_capture_seconds": 0.011637823000000935
+    },
+    {
+      "trial": 4,
+      "backend": "compact",
+      "first_call": false,
+      "method_seconds": 0.0017758749999927659,
+      "proxy_completions_per_second": 13514.464700554805,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0011707870000066123,
+        "completion_native_call_seconds": 0.00047853899999950045,
+        "completion_kernel_seconds": 5.5647999048233035e-05,
+        "completion_total_seconds": 0.001760925000013458
+      },
+      "numeric_readback_sha256": "71cf1eb5530c0178a2b9c93b74c8d579fad53cb2bb8e3c98a73df06e4f0a118e",
+      "ordinary_geometry_cache_pairs": 0,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "native_model_signature": "62323f398ff98822323ff256b0b8e58ca90224c16f410914e235e94582b0c77e",
+      "native_model_rebuilds": 1,
+      "post_method_validation_capture_seconds": 0.012026480999992373
+    },
+    {
+      "trial": 5,
+      "backend": "ordinary",
+      "first_call": false,
+      "method_seconds": 0.0018329689999916354,
+      "proxy_completions_per_second": 13093.511128725866,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0010462429999904543,
+        "completion_native_call_seconds": 0.0006584449999991193,
+        "completion_kernel_seconds": 4.444799944758416e-05,
+        "completion_total_seconds": 0.001818344999975352
+      },
+      "numeric_readback_sha256": "3cf0a71f411ac296521d6196fdfe4d4e4923ea6ec41f26db7e6cc2ee2f835a81",
+      "ordinary_geometry_cache_pairs": 42,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "post_method_validation_capture_seconds": 0.011286955000002763
+    },
+    {
+      "trial": 6,
+      "backend": "compact",
+      "first_call": false,
+      "method_seconds": 0.0018857990000071823,
+      "proxy_completions_per_second": 12726.700989823727,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0011703899999986334,
+        "completion_native_call_seconds": 0.000588114999999334,
+        "completion_kernel_seconds": 5.5424001067876815e-05,
+        "completion_total_seconds": 0.0018694510000045739
+      },
+      "numeric_readback_sha256": "71cf1eb5530c0178a2b9c93b74c8d579fad53cb2bb8e3c98a73df06e4f0a118e",
+      "ordinary_geometry_cache_pairs": 0,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "native_model_signature": "62323f398ff98822323ff256b0b8e58ca90224c16f410914e235e94582b0c77e",
+      "native_model_rebuilds": 1,
+      "post_method_validation_capture_seconds": 0.011195126000018263
+    },
+    {
+      "trial": 7,
+      "backend": "ordinary",
+      "first_call": false,
+      "method_seconds": 0.001712607999991178,
+      "proxy_completions_per_second": 14013.714755579576,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0011322249999921041,
+        "completion_native_call_seconds": 0.00047759299999938776,
+        "completion_kernel_seconds": 4.438399896025658e-05,
+        "completion_total_seconds": 0.001696520999985296
+      },
+      "numeric_readback_sha256": "3cf0a71f411ac296521d6196fdfe4d4e4923ea6ec41f26db7e6cc2ee2f835a81",
+      "ordinary_geometry_cache_pairs": 42,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "post_method_validation_capture_seconds": 0.012030530999993516
+    },
+    {
+      "trial": 8,
+      "backend": "ordinary",
+      "first_call": false,
+      "method_seconds": 0.0016494010000087655,
+      "proxy_completions_per_second": 14550.736903804747,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0010430509999821425,
+        "completion_native_call_seconds": 0.0004977870000004714,
+        "completion_kernel_seconds": 4.406400024890901e-05,
+        "completion_total_seconds": 0.001629737999991221
+      },
+      "numeric_readback_sha256": "3cf0a71f411ac296521d6196fdfe4d4e4923ea6ec41f26db7e6cc2ee2f835a81",
+      "ordinary_geometry_cache_pairs": 42,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "post_method_validation_capture_seconds": 0.01189963999999577
+    },
+    {
+      "trial": 9,
+      "backend": "compact",
+      "first_call": false,
+      "method_seconds": 0.0017624819999753072,
+      "proxy_completions_per_second": 13617.160345658138,
+      "telemetry_delta": {
+        "completion_batches": 1,
+        "completion_candidates": 24,
+        "completion_leg_slots": 278,
+        "completion_pack_seconds": 0.0012103830000000926,
+        "completion_native_call_seconds": 0.0004168070000218904,
+        "completion_kernel_seconds": 5.580800026655199e-05,
+        "completion_total_seconds": 0.0017487970000047426
+      },
+      "numeric_readback_sha256": "71cf1eb5530c0178a2b9c93b74c8d579fad53cb2bb8e3c98a73df06e4f0a118e",
+      "ordinary_geometry_cache_pairs": 0,
+      "validation": {
+        "passed": true,
+        "accepted": 3,
+        "rejected": 21
+      },
+      "native_model_signature": "62323f398ff98822323ff256b0b8e58ca90224c16f410914e235e94582b0c77e",
+      "native_model_rebuilds": 1,
+      "post_method_validation_capture_seconds": 0.011592357000012043
+    }
+  ],
+  "request_sha256": "22cea52431621786632f0d25c899219943acc1a005acc0db9bbe564192d4d7b9",
+  "ordinary_warm_median_seconds": 0.0017727884999914068,
+  "compact_warm_median_seconds": 0.001830836999999974,
+  "ordinary_over_compact_warm_ratio": 0.9682940097842855,
+  "workspace_close_seconds": 0.0007356339999944339
+}

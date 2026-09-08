@@ -1,0 +1,54 @@
+{
+  "utc": "2026-09-08T21:28:58.094084+00:00",
+  "complete": false,
+  "source_report_sha256": "23ba79736f25285d22a6e99975739773c933447a206e46a74d7ef33eb37e2d4f",
+  "library_sha256": "a40a85bdb4acb1e0720c46aaed99189ecbbe481e382f5386945579003b0fb442",
+  "gpu_uuid": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+  "maximum_valid_evaluations": 18,
+  "maximum_candidates": 2358,
+  "maximum_invalid_calls": 6,
+  "worker_timeout_seconds": 90,
+  "fresh_lambert_solves": 0,
+  "fresh_refinements": 0,
+  "fleet_promotions": 0,
+  "preflight_gpu": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, NVIDIA GeForce RTX 5090, 2 %, 6626 MiB",
+  "preflight_compute": "",
+  "worker_pid": 1297,
+  "exit_code": 1,
+  "worker_seconds": 0.9760100739999871,
+  "postflight_compute": "",
+  "readbacks": {
+    "fit-259.npz": {
+      "sha256": "553548f893596e02566b0e4c2e7edb79b3ab540c0530a45a50c68166d89ec09d",
+      "bytes": 431886
+    },
+    "fit-3.npz": {
+      "sha256": "d858846d33a3e51289b494510219b989aa4ced5f60427d2b516b75bdeb94febc",
+      "bytes": 12046
+    },
+    "flat-259.npz": {
+      "sha256": "423decab39c09fe8934648e079ba9c4e80e54a6e73097186dda239e9b08b01e5",
+      "bytes": 431886
+    },
+    "flat-3.npz": {
+      "sha256": "aa02074a4acb0af760bdf4609f6f869f1497b0576cac458d4a5e950286952156",
+      "bytes": 12046
+    },
+    "ratio-259.npz": {
+      "sha256": "05abb8581f76ac7b3db80f19f6f98dfdb8e4d4d3f1c44f314dd03b889d568399",
+      "bytes": 431886
+    },
+    "ratio-3.npz": {
+      "sha256": "97abe3ce76a6661cae5f2cec6e2472f45456e1ac6b0baa4de6cee995ca592753",
+      "bytes": 12046
+    }
+  },
+  "expected_readbacks_present": true,
+  "junit": {
+    "tests": 6,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0
+  },
+  "log_sha256": "0b5362b129fccd420798692766d1561e31659538fbc77f3adbfe29c1cfa19323"
+}

@@ -1,0 +1,69 @@
+I001 [*] Import block is un-sorted or un-formatted
+   --> src/spacepdhcg/gtoc12/gpu_completion.py:301:9
+    |
+300 |       def run(self, search, requests):
+301 | /         from .gpu_completion_model import NativeModelOwner, enabled as model_enabled, pack_requests
+302 | |         from .search import RoutePlan
+    | |_____________________________________^
+303 |
+304 |           self.gpu._owned()
+    |
+help: Organize imports
+    |
+300 |     def run(self, search, requests):
+    -         from .gpu_completion_model import NativeModelOwner, enabled as model_enabled, pack_requests
+301 +         from .gpu_completion_model import NativeModelOwner, pack_requests
+302 +         from .gpu_completion_model import enabled as model_enabled
+303 |         from .search import RoutePlan
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_gtoc12_gpu_completion_model.py:3:1
+   |
+ 1 |   """Catalogue-derived CUDA metadata: compare full numeric inputs and all forward gates."""
+ 2 |
+ 3 | / from __future__ import annotations
+ 4 | |
+ 5 | | import ctypes as ct
+ 6 | | import dataclasses
+ 7 | | import os
+ 8 | | from copy import deepcopy
+ 9 | | from types import SimpleNamespace
+10 | |
+11 | | import numpy as np
+12 | | import pytest
+13 | | from test_gtoc12_completion_costs import fixture
+14 | | from test_gtoc12_gpu_completion import request
+15 | |
+16 | | from spacepdhcg.gtoc12 import constants as C
+17 | | from spacepdhcg.gtoc12.gpu_completion import (
+18 | |     LEG as EXPANDED_LEG,
+19 | |     LEG_RESULT,
+20 | |     POLICY,
+21 | |     RESULT,
+22 | |     STATS,
+23 | |     GpuCompletion,
+24 | |     pack_inputs,
+25 | | )
+26 | | from spacepdhcg.gtoc12.gpu_completion_model import (
+27 | |     CANDIDATE,
+28 | |     DEPLOY,
+29 | |     GRID,
+30 | |     LEG,
+31 | |     MODEL,
+32 | |     ORBIT,
+33 | |     NativeModelOwner,
+34 | |     model_sources,
+35 | |     pack_requests,
+36 | | )
+   | |_^
+help: Organize imports
+   |
+18 |     LEG as EXPANDED_LEG,
+19 + )
+20 + from spacepdhcg.gtoc12.gpu_completion import (
+21 |     LEG_RESULT,
+   |
+
+Found 2 errors.
+[*] 2 fixable with the `--fix` option.

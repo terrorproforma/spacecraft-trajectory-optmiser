@@ -1,0 +1,22 @@
+{
+  "scope": "Source/AST/hash review only; no native imports, supervisor preflight or GPU calls executed by reviewer",
+  "runner_sha256": "54477378ae310a58ebd291a08a14ab15e3110d096ef8130b8ae17172ea977d3e",
+  "manifest_sha256": "9bff6c54af1edca6323502908d440305b4edc8447550572a5d93b50a421e3730",
+  "host_report_sha256": "56a65032e639a6eb9af08052e9f3df87f5f1c84cfe9cf2ece6f3f63eafb2a12a",
+  "host_full_source_sha256": "f38ec9f963a4ea75982bd71a5bbd59909ae318e12f30bf796738dcbff45d803f",
+  "host_full_archive_sha256": "7281c43ff8a4d30237f84d31ae7435ee36ff90eed711f1e718f5af0732ea532e",
+  "host_files_verified": 341,
+  "full_host_dependency_binding_fixed": true,
+  "maximum_processes": 3,
+  "per_process_timeout_seconds": 90,
+  "mass_solve_APIs": 7,
+  "mass_iteration_caps": 9,
+  "mass_expected_updates": 5,
+  "legacy_nonempty_completion_evaluations": 2,
+  "legacy_completion_candidates": 262,
+  "compact_valid_calls": 18,
+  "compact_candidate_evaluations": 2358,
+  "compact_malformed_calls": 6,
+  "scope_limit": "Same existing tests on combined linkage. No cold 100k repeat, numerical change, performance trial or fleet promotion.",
+  "decision": "GO for one bounded supervised integration smoke with this exact runner and pins; actual outcomes remain to be audited"
+}

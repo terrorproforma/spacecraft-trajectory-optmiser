@@ -1,0 +1,83 @@
+{
+  "scope": "Read-only saved logs/NPZ/source-identity audit; no GPU or native calls by reviewer",
+  "report_sha256": "aae7e90de93a7a13887712dea85167c2e5f9d8c5ef93cf22f3642b9f47e73a44",
+  "core_sha256": "6b32c2b5c4f87cd8990ee95816b00c0cb5dc863c7225cb244a17993ef344d8b1",
+  "manifest_sha256": "9bff6c54af1edca6323502908d440305b4edc8447550572a5d93b50a421e3730",
+  "runner_sha256": "54477378ae310a58ebd291a08a14ab15e3110d096ef8130b8ae17172ea977d3e",
+  "mass_log_bitwise_equal_to_isolated_tiny": true,
+  "mass_solve_APIs": 7,
+  "mass_actual_updates": 5,
+  "mass_scope": "Exact same frozen fixture/native assertions and raw seven outcomes; full vectors are asserted in the test but not emitted in its log",
+  "legacy_nonempty_evaluations": 2,
+  "legacy_candidates": 262,
+  "legacy_scope": "Unchanged native fixture performs internal numerical/gate assertions; raw log emits summary, not all 262 vectors",
+  "compact_junit": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "compact_valid_calls_from_test_control_flow": 18,
+  "compact_candidate_evaluations_from_test_control_flow": 2358,
+  "compact_malformed_calls_from_test_control_flow": 6,
+  "saved_original_compact_pairs_independently_replayed": 786,
+  "compact_scope": "Six NPZs cover 786 paired ordinary/compact candidates; production capture checks are test assertions rather than additional NPZ exports",
+  "files": {
+    "fit-259.npz": {
+      "sha256": "b35d5a4fa113e4523d95a430054cac6ffc4072d7199584f9e604da5b32a1b739",
+      "bytes": 431886,
+      "candidate_pairs": 259,
+      "maximum_combined_vs_standalone_difference_excluding_times": 0.0,
+      "maximum_result_difference": 4.547473508864641e-13,
+      "maximum_expanded_metadata_difference": 1.4210854715202004e-14,
+      "maximum_independent_formula_difference": 4.547473508864641e-13
+    },
+    "fit-3.npz": {
+      "sha256": "0ea86a57942c7f2336647ec0369da39d09438f6c82d8ad60bf939f1bb5ba124d",
+      "bytes": 12046,
+      "candidate_pairs": 3,
+      "maximum_combined_vs_standalone_difference_excluding_times": 0.0,
+      "maximum_result_difference": 4.440892098500626e-16,
+      "maximum_expanded_metadata_difference": 1.4210854715202004e-14,
+      "maximum_independent_formula_difference": 4.440892098500626e-16
+    },
+    "flat-259.npz": {
+      "sha256": "d597ede4b11dc958266a9babc48daaed2a353e5c967be8356a05d1e8ea37f235",
+      "bytes": 431886,
+      "candidate_pairs": 259,
+      "maximum_combined_vs_standalone_difference_excluding_times": 0.0,
+      "maximum_result_difference": 0.0,
+      "maximum_expanded_metadata_difference": 0.0,
+      "maximum_independent_formula_difference": 1.2789769243681803e-13
+    },
+    "flat-3.npz": {
+      "sha256": "4e94dc98a0297bc2818e1f9552e177c667f82527b274be732c5f6f1b4f588bed",
+      "bytes": 12046,
+      "candidate_pairs": 3,
+      "maximum_combined_vs_standalone_difference_excluding_times": 0.0,
+      "maximum_result_difference": 0.0,
+      "maximum_expanded_metadata_difference": 0.0,
+      "maximum_independent_formula_difference": 0.0
+    },
+    "ratio-259.npz": {
+      "sha256": "84334d3e72744941edca286dcda579ac0c23a813fa26315a7f5985648132b8a2",
+      "bytes": 431886,
+      "candidate_pairs": 259,
+      "maximum_combined_vs_standalone_difference_excluding_times": 0.0,
+      "maximum_result_difference": 0.0,
+      "maximum_expanded_metadata_difference": 0.0,
+      "maximum_independent_formula_difference": 4.547473508864641e-13
+    },
+    "ratio-3.npz": {
+      "sha256": "db1fdf46c9ef1f0cc5e8fa59b827a6fedc3ee3a0a11c166dd882b1c38914e4fe",
+      "bytes": 12046,
+      "candidate_pairs": 3,
+      "maximum_combined_vs_standalone_difference_excluding_times": 0.0,
+      "maximum_result_difference": 0.0,
+      "maximum_expanded_metadata_difference": 0.0,
+      "maximum_independent_formula_difference": 0.0
+    }
+  },
+  "decision": "Combined linkage smoke passes; no new cold-convergence, performance, fleet-score or default-promotion claim",
+  "reviewer_GPU_calls": 0
+}

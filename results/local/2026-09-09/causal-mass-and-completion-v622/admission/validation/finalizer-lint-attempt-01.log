@@ -1,0 +1,45 @@
+E501 Line too long (102 > 100)
+  --> build/performance/refinement-admission-v622/finalize.py:80:101
+   |
+78 |             "passed": True,
+79 |             "original_refine_fixed_function_AST_unchanged": True,
+80 |             "new_direct_input_validation": "Immutable prescription validation before runner creation",
+   |                                                                                                     ^^
+81 |             "new_leg_telemetry": "Preserve actual record.certification_backend",
+82 |             "historical_policy_difference": "Only additive retained() getter; no policy/model rerun",
+   |
+
+E501 Line too long (101 > 100)
+  --> build/performance/refinement-admission-v622/finalize.py:82:101
+   |
+80 |             "new_direct_input_validation": "Immutable prescription validation before runner creation",
+81 |             "new_leg_telemetry": "Preserve actual record.certification_backend",
+82 |             "historical_policy_difference": "Only additive retained() getter; no policy/model rerun",
+   |                                                                                                     ^
+83 |             "frozen_control_source_index_sha256": sha(KIT / "source-sha256.json"),
+84 |             "final_integration_overlay_index_sha256": sha(KIT / "implementation-sha256.json"),
+   |
+
+E501 Line too long (120 > 100)
+  --> build/performance/refinement-admission-v622/finalize.py:86:101
+   |
+84 |             "final_integration_overlay_index_sha256": sha(KIT / "implementation-sha256.json"),
+85 |             "overlay_files": len(retained),
+86 |             "reconstruction": "Copy source/, then implementation/ over it; use explicit reconstructed src import path.",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+87 |             "validation": "76 CPU tests, no native load/solve; no new core validation claimed here",
+88 |         },
+   |
+
+E501 Line too long (116 > 100)
+   --> build/performance/refinement-admission-v622/finalize.py:100:101
+    |
+ 98 |         }
+ 99 |     ready = {
+100 |         "scope": "CPU-only v622 admission controls and additive integration; no GPU launch authorized by this file",
+    |                                                                                                     ^^^^^^^^^^^^^^^^
+101 |         "files": index,
+102 |         "file_count": len(index),
+    |
+
+Found 4 errors.

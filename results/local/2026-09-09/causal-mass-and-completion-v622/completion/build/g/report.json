@@ -1,0 +1,125 @@
+{
+  "base": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+  "complete": true,
+  "gpu_calls": 0,
+  "owned_sources": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+    "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+    "cpp/cuda/src/gtoc12_completion_model.cuh": "ebce472ecd3e66edf8c4ce6b1de667e5050d3081e3616895de9e8f3113c576ee",
+    "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+    "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+    "src/spacepdhcg/gtoc12/completion_capture.py": "bad09268a48b13c12ff18113bd0fbdd9aafc92c87c5e185186d9447e3edc69a5",
+    "src/spacepdhcg/gtoc12/refinement_admission.py": "9cb73643a4a838c6b955e79996bdbd4679acceb8038f807a50935e86846a64fd",
+    "src/spacepdhcg/gtoc12/fixed_refinement.py": "74b49ec79c08786c7fd2f5b8477c27f74d5bec0a95772f897b1b243c5991610d",
+    "tests/test_gtoc12_gpu_completion_model.py": "e042f6f6e53d8a1da33b97da99aeca5dd2f4e6d7c743b0f06714f1f818439158",
+    "tests/test_gtoc12_completion_capture.py": "7f4bd8ea1bd41ba9f6b45b5a25e3db58ecd00dcc5320bae026dcfb9816b2b7ea",
+    "tests/test_gtoc12_refinement_admission.py": "9cc85c7127f61fa3488e396a822fdeea0fcc777a241eb8e6b05b5377cd3ea123",
+    "tests/test_gtoc12_fixed_refinement.py": "22c9dd6f641b1c7b436ed307455979fc18331bf22439ef93fc1f219cfb156f8a"
+  },
+  "stages": [
+    {
+      "name": "ruff",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--no-cache",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/gpu_completion.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/gpu_completion_model.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/completion_capture.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/refinement_admission.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/fixed_refinement.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_gpu_completion_model.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_completion_capture.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_refinement_admission.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_fixed_refinement.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.03184763500007648,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "name": "format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--no-cache",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/gpu_completion.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/gpu_completion_model.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/completion_capture.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/refinement_admission.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/src/spacepdhcg/gtoc12/fixed_refinement.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_gpu_completion_model.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_completion_capture.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_refinement_admission.py",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/tests/test_gtoc12_fixed_refinement.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.031843643000001975,
+      "log_sha256": "2ce9758b9f8abd876ec3e76c589e099e8b05377b1e7ea2331e81ee80f07bdff8"
+    },
+    {
+      "name": "cpu-tests",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/home/angus/spacepdhcg-completion-model-v622g/prepare.py",
+        "--cpu"
+      ],
+      "exit_code": 0,
+      "seconds": 0.9723229029999629,
+      "log_sha256": "baaf9aa29f6b04890f649a458411846c42474b244d266c615be232884fefc571"
+    },
+    {
+      "name": "compiler-version",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "--version"
+      ],
+      "exit_code": 0,
+      "seconds": 0.001420318999976189,
+      "log_sha256": "68f8b0a1301428031e307cf5260142a517bff25cc232a09eae2734be475d721f"
+    },
+    {
+      "name": "build",
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "-std=c++20",
+        "-O3",
+        "--fmad=false",
+        "-shared",
+        "-Xcompiler=-fPIC",
+        "-gencode=arch=compute_90,code=sm_90",
+        "-gencode=arch=compute_120,code=sm_120",
+        "-I/home/angus/spacepdhcg-completion-model-v622g/source/cpp/cuda/include",
+        "/home/angus/spacepdhcg-completion-model-v622g/source/cpp/cuda/src/gtoc12_completion.cu",
+        "-o",
+        "/home/angus/spacepdhcg-completion-model-v622g/libspacepdhcg_completion.so"
+      ],
+      "exit_code": 0,
+      "seconds": 2.3192933020000055,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "resource-usage",
+      "command": [
+        "/usr/local/cuda-12.8/bin/cuobjdump",
+        "--dump-resource-usage",
+        "/home/angus/spacepdhcg-completion-model-v622g/libspacepdhcg_completion.so"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004169702000012876,
+      "log_sha256": "47b4d2c4161800d07908153e0f671f34d01d9a841f090efe55960b8870b99e76"
+    }
+  ],
+  "library": {
+    "path": "/home/angus/spacepdhcg-completion-model-v622g/libspacepdhcg_completion.so",
+    "sha256": "9c3e6a250002893363d2f4dcf68babe3b7158508b5b97149f83c8261437f1fa7",
+    "bytes": 1172760
+  },
+  "source_archive_sha256": "da7528753945c337e95ce2fec59904c0c1e858b7c3c5e86e628c9a74e2a31809"
+}

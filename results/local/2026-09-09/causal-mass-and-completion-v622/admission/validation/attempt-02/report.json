@@ -1,0 +1,49 @@
+[
+  {
+    "name": "ruff-check",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-m",
+      "ruff",
+      "check",
+      "src/spacepdhcg/gtoc12/refinement_admission.py",
+      "tests/test_gtoc12_refinement_admission.py",
+      "build/performance/refinement-admission-v622/prepare.py",
+      "build/performance/refinement-admission-v622/replay.py",
+      "build/performance/refinement-admission-v622/validate.py",
+      "src/spacepdhcg/gtoc12/fixed_refinement.py",
+      "tests/test_gtoc12_fixed_refinement.py"
+    ],
+    "returncode": 1
+  },
+  {
+    "name": "ruff-format",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "src/spacepdhcg/gtoc12/refinement_admission.py",
+      "tests/test_gtoc12_refinement_admission.py",
+      "build/performance/refinement-admission-v622/prepare.py",
+      "build/performance/refinement-admission-v622/replay.py",
+      "build/performance/refinement-admission-v622/validate.py",
+      "src/spacepdhcg/gtoc12/fixed_refinement.py",
+      "tests/test_gtoc12_fixed_refinement.py"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "pytest",
+    "command": [
+      "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "-B",
+      "-c",
+      "import sys; sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg']; sys.path.insert(0,'/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/src'); import pytest; raise SystemExit(pytest.main(['tests/test_gtoc12_refinement_admission.py', 'tests/test_gtoc12_fixed_refinement.py', '-q', '-p', 'no:cacheprovider', '--junitxml=/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/refinement-admission-v622/validation/attempt-02/pytest.xml']))"
+    ],
+    "returncode": 0
+  }
+]

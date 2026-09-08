@@ -1,0 +1,255 @@
+{
+  "complete": true,
+  "passed": true,
+  "supervisor_pid": 302,
+  "runner_sha256": "54477378ae310a58ebd291a08a14ab15e3110d096ef8130b8ae17172ea977d3e",
+  "manifest_sha256": "9bff6c54af1edca6323502908d440305b4edc8447550572a5d93b50a421e3730",
+  "host_report_sha256": "56a65032e639a6eb9af08052e9f3df87f5f1c84cfe9cf2ece6f3f63eafb2a12a",
+  "core_sha256": "6b32c2b5c4f87cd8990ee95816b00c0cb5dc863c7225cb244a17993ef344d8b1",
+  "host_full_source_sha256": "f38ec9f963a4ea75982bd71a5bbd59909ae318e12f30bf796738dcbff45d803f",
+  "host_full_archive_sha256": "7281c43ff8a4d30237f84d31ae7435ee36ff90eed711f1e718f5af0732ea532e",
+  "gpu_uuid": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+  "maximum_processes": 3,
+  "per_process_timeout_seconds": 90,
+  "mass_solve_API_budget": 7,
+  "mass_iteration_caps": 9,
+  "mass_expected_updates": 5,
+  "legacy_completion_candidate_budget": 262,
+  "legacy_nonempty_evaluations": 2,
+  "compact_valid_call_budget": 18,
+  "compact_candidate_budget": 2358,
+  "compact_malformed_call_budget": 6,
+  "fresh_lambert_solves": 0,
+  "fresh_refinements": 0,
+  "fleet_promotions": 0,
+  "scope": "Full combined-core correctness only; no cold convergence rerun or performance claim.",
+  "cases": [
+    {
+      "name": "mass",
+      "command": [
+        "/home/angus/spacepdhcg-combined-v622a/build/cuda-tests/persistent_mass_test"
+      ],
+      "pid": 369,
+      "exit_code": 0,
+      "wall_seconds": 0.41901649200002566,
+      "log_sha256": "a3b32d6b6df42b7473e1cef264df95397ff9d77e082d8bfdc229146f5195664e",
+      "records": [
+        [
+          "MASS_CPU",
+          {
+            "passed": true,
+            "nodes": 4,
+            "pairs": 3,
+            "GPU_calls": 0
+          }
+        ],
+        [
+          "MASS_TEST",
+          {
+            "case": "three_interval_oracle",
+            "termination": 2,
+            "iterations": 3,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 1,
+            "updates": 3,
+            "completions": 3,
+            "norm_squared_upper": 0.9025,
+            "gap": 0.9295692967484144
+          }
+        ],
+        [
+          "MASS_TEST",
+          {
+            "case": "disabled_to_L1",
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 0,
+            "mass_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0,
+            "gap": 0.9384391614852511
+          }
+        ],
+        [
+          "MASS_TEST",
+          {
+            "case": "fresh_L1_control",
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 0,
+            "mass_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0,
+            "gap": 0.9384391614852511
+          }
+        ],
+        [
+          "MASS_TEST",
+          {
+            "case": "original_seed_zero_step",
+            "termination": 1,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 1,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0.9025,
+            "gap": 2.5e-21
+          }
+        ],
+        [
+          "MASS_TEST",
+          {
+            "case": "cancel_before_initial",
+            "termination": 3,
+            "iterations": 0,
+            "common_valid": 0,
+            "common_passes": 0,
+            "mass_enabled": 1,
+            "mass_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0,
+            "gap": 0
+          }
+        ],
+        [
+          "MASS_TEST",
+          {
+            "case": "nonfinite_seed",
+            "termination": 4,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0.9025,
+            "gap": null
+          }
+        ],
+        [
+          "MASS_TEST",
+          {
+            "case": "metric_overflow",
+            "termination": 4,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 1,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0.9025,
+            "gap": 2.5e-21
+          }
+        ],
+        [
+          "MASS_VALIDATION",
+          {
+            "mass_cost": true,
+            "extra_equality": true,
+            "extra_SOC": true,
+            "negative_gamma": true,
+            "overlap": true
+          }
+        ],
+        [
+          "MASS_TEST_SUMMARY",
+          {
+            "passed": true,
+            "solve_API_calls": 7,
+            "iteration_caps": 9,
+            "actual_updates": 5
+          }
+        ]
+      ]
+    },
+    {
+      "name": "legacy",
+      "command": [
+        "/home/angus/spacepdhcg-combined-v622a/build/cuda-tests/gtoc12_completion_test"
+      ],
+      "pid": 375,
+      "exit_code": 0,
+      "wall_seconds": 0.22040492000002132,
+      "log_sha256": "bedc9967f5ad204c41ddd578ba50914dfb315753ab38ec712ae2f746d9839970",
+      "records": [
+        {
+          "phase": "native",
+          "kernel_launches": 2,
+          "candidates": 262,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "name": "compact",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/combined-smoke-v622a/run.py",
+        "--child-compact"
+      ],
+      "pid": 380,
+      "exit_code": 0,
+      "wall_seconds": 1.1721304900000291,
+      "log_sha256": "1f87f2c86d2f3957ef586bd86beadd737fe4c2e98b3540452b2d7bfdd4f3b8f7",
+      "junit": {
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "failures": [],
+  "lock_acquired": true,
+  "gpu_inventory": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, NVIDIA GeForce RTX 5090, 595.97",
+  "compute_before": "",
+  "compute_after": "",
+  "readbacks": {
+    "fit-259.npz": {
+      "sha256": "b35d5a4fa113e4523d95a430054cac6ffc4072d7199584f9e604da5b32a1b739",
+      "bytes": 431886
+    },
+    "fit-3.npz": {
+      "sha256": "0ea86a57942c7f2336647ec0369da39d09438f6c82d8ad60bf939f1bb5ba124d",
+      "bytes": 12046
+    },
+    "flat-259.npz": {
+      "sha256": "d597ede4b11dc958266a9babc48daaed2a353e5c967be8356a05d1e8ea37f235",
+      "bytes": 431886
+    },
+    "flat-3.npz": {
+      "sha256": "4e94dc98a0297bc2818e1f9552e177c667f82527b274be732c5f6f1b4f588bed",
+      "bytes": 12046
+    },
+    "ratio-259.npz": {
+      "sha256": "84334d3e72744941edca286dcda579ac0c23a813fa26315a7f5985648132b8a2",
+      "bytes": 431886
+    },
+    "ratio-3.npz": {
+      "sha256": "db1fdf46c9ef1f0cc5e8fa59b827a6fedc3ee3a0a11c166dd882b1c38914e4fe",
+      "bytes": 12046
+    }
+  }
+}

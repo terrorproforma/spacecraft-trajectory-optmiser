@@ -1,0 +1,194 @@
+{
+  "complete": true,
+  "gpu_executions_started": 1,
+  "maximum_executions": 1,
+  "maximum_solve_api_calls": 7,
+  "maximum_requested_iterations": 9,
+  "expected_optimization_iterations": 5,
+  "call_scope": "One native process; seven solve APIs. Setup/proof/residual kernels are additional GPU kernels, not additional solves.",
+  "manifest_sha256": "ca970d7acd9893ba71d7e58f85393cb2a26c003ca931e2071e2718e4292ad026",
+  "source_tree_sha256": "8d72fb3e441dfcdfcabe28d65d0e7d0a959e099622c05dfb8b5e93d1c83039a7",
+  "base_commit": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+  "source_commit": null,
+  "source_commit_scope": "uncommitted frozen C++ source tree, not a Git commit",
+  "source_archive_sha256": "1b64328171dfe6cb1623fb75739006abfa2f31433c5ad2b12f92d766bd949511",
+  "core_sha256": "a89b8b30267399c033a88f3fd8ec7fa8ac1bceb1bd41e79b9841807af1060cb2",
+  "test_sha256": "376c4119c45f53709330420174cc9538b357af370cb0a7cdc6c1fbf3fb6e408e",
+  "runner_sha256": "691fa7fb4e3e82de59d555ad8e2f51bc2d24600194e91cccaed60dab470b8a84",
+  "gpu_uuid_required": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+  "lock_path": "/home/angus/.spacepdhcg-gpu.lock",
+  "lock_policy": "LOCK_EX|LOCK_NB",
+  "process_timeout_seconds": 180,
+  "cases": [
+    {
+      "command": [
+        "/home/angus/spacepdhcg-mass-v622a/build/cuda-tests/persistent_mass_test"
+      ],
+      "started": true,
+      "records": [
+        {
+          "prefix": "MASS_CPU",
+          "record": {
+            "passed": true,
+            "nodes": 4,
+            "pairs": 3,
+            "GPU_calls": 0
+          }
+        },
+        {
+          "prefix": "MASS_TEST",
+          "record": {
+            "case": "three_interval_oracle",
+            "termination": 2,
+            "iterations": 3,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 1,
+            "updates": 3,
+            "completions": 3,
+            "norm_squared_upper": 0.9025,
+            "gap": 0.9295692967484144
+          }
+        },
+        {
+          "prefix": "MASS_TEST",
+          "record": {
+            "case": "disabled_to_L1",
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 0,
+            "mass_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0,
+            "gap": 0.9384391614852511
+          }
+        },
+        {
+          "prefix": "MASS_TEST",
+          "record": {
+            "case": "fresh_L1_control",
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 0,
+            "mass_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0,
+            "gap": 0.9384391614852511
+          }
+        },
+        {
+          "prefix": "MASS_TEST",
+          "record": {
+            "case": "original_seed_zero_step",
+            "termination": 1,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 1,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0.9025,
+            "gap": 2.5e-21
+          }
+        },
+        {
+          "prefix": "MASS_TEST",
+          "record": {
+            "case": "cancel_before_initial",
+            "termination": 3,
+            "iterations": 0,
+            "common_valid": 0,
+            "common_passes": 0,
+            "mass_enabled": 1,
+            "mass_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0,
+            "gap": 0
+          }
+        },
+        {
+          "prefix": "MASS_TEST",
+          "record": {
+            "case": "nonfinite_seed",
+            "termination": 4,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 0,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0.9025,
+            "gap": null
+          }
+        },
+        {
+          "prefix": "MASS_TEST",
+          "record": {
+            "case": "metric_overflow",
+            "termination": 4,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 1,
+            "mass_enabled": 1,
+            "mass_valid": 1,
+            "finite": 0,
+            "updates": 0,
+            "completions": 0,
+            "norm_squared_upper": 0.9025,
+            "gap": 2.5e-21
+          }
+        },
+        {
+          "prefix": "MASS_VALIDATION",
+          "record": {
+            "mass_cost": true,
+            "extra_equality": true,
+            "extra_SOC": true,
+            "negative_gamma": true,
+            "overlap": true
+          }
+        },
+        {
+          "prefix": "MASS_TEST_SUMMARY",
+          "record": {
+            "passed": true,
+            "solve_API_calls": 7,
+            "iteration_caps": 9,
+            "actual_updates": 5
+          }
+        }
+      ],
+      "wall_seconds": 0.3174570209999956,
+      "log_sha256": "a3b32d6b6df42b7473e1cef264df95397ff9d77e082d8bfdc229146f5195664e",
+      "returncode": 0,
+      "strict_json_parsed": true
+    }
+  ],
+  "lock_acquired": true,
+  "pid": 1458,
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+    "solver_overrides_removed": true
+  },
+  "actual_solve_api_calls": 7,
+  "actual_optimization_iterations": 5,
+  "status": "passed",
+  "wall_seconds": 0.4317659939999885,
+  "lock_scope_ending": true
+}

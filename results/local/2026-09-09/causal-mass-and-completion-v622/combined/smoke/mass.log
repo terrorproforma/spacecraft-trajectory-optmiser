@@ -1,0 +1,10 @@
+MASS_CPU {"passed":true,"nodes":4,"pairs":3,"GPU_calls":0}
+MASS_TEST {"case":"three_interval_oracle","termination":2,"iterations":3,"common_valid":1,"common_passes":0,"mass_enabled":1,"mass_valid":1,"finite":1,"updates":3,"completions":3,"norm_squared_upper":0.90249999999999997,"gap":0.92956929674841438}
+MASS_TEST {"case":"disabled_to_L1","termination":2,"iterations":1,"common_valid":1,"common_passes":0,"mass_enabled":0,"mass_valid":0,"finite":0,"updates":0,"completions":0,"norm_squared_upper":0,"gap":0.93843916148525108}
+MASS_TEST {"case":"fresh_L1_control","termination":2,"iterations":1,"common_valid":1,"common_passes":0,"mass_enabled":0,"mass_valid":0,"finite":0,"updates":0,"completions":0,"norm_squared_upper":0,"gap":0.93843916148525108}
+MASS_TEST {"case":"original_seed_zero_step","termination":1,"iterations":0,"common_valid":1,"common_passes":1,"mass_enabled":1,"mass_valid":1,"finite":1,"updates":0,"completions":0,"norm_squared_upper":0.90249999999999997,"gap":2.4999999999999999e-21}
+MASS_TEST {"case":"cancel_before_initial","termination":3,"iterations":0,"common_valid":0,"common_passes":0,"mass_enabled":1,"mass_valid":0,"finite":0,"updates":0,"completions":0,"norm_squared_upper":0,"gap":0}
+MASS_TEST {"case":"nonfinite_seed","termination":4,"iterations":0,"common_valid":1,"common_passes":0,"mass_enabled":1,"mass_valid":1,"finite":0,"updates":0,"completions":0,"norm_squared_upper":0.90249999999999997,"gap":null}
+MASS_TEST {"case":"metric_overflow","termination":4,"iterations":0,"common_valid":1,"common_passes":1,"mass_enabled":1,"mass_valid":1,"finite":0,"updates":0,"completions":0,"norm_squared_upper":0.90249999999999997,"gap":2.4999999999999999e-21}
+MASS_VALIDATION {"mass_cost":true,"extra_equality":true,"extra_SOC":true,"negative_gamma":true,"overlap":true}
+MASS_TEST_SUMMARY {"passed":true,"solve_API_calls":7,"iteration_caps":9,"actual_updates":5}

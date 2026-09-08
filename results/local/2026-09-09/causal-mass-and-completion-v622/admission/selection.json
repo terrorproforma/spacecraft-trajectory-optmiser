@@ -1,0 +1,82 @@
+{
+  "frozen_utc": "2026-09-08T21:15:33.248032+00:00",
+  "development_ships": [
+    1,
+    4,
+    7,
+    10,
+    23
+  ],
+  "queue_held_out_ships": [
+    2,
+    5,
+    6,
+    8,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "excluded": [
+    {
+      "ship": 3,
+      "reason": "independent_inventory=false"
+    }
+  ],
+  "cross_route_asteroid_overlaps": [],
+  "route_source_sha256": {
+    "1": "bbfe9885b9637642f9179bebf5be2aae99e187f9b94d87c84a439b684d5fbfc8",
+    "2": "1b8f84cf32a5a7f9fe0f9bd2fcbf9067a269b457600d40262f98f1993a32c341",
+    "3": "331462e1778ddd477ece9a1f1e7a062e775a1f73e2ed05546f5469509816e624",
+    "4": "3e075bffdf76af8e345c40b649568d51941e394b6ac7487bcfe4c6df15820318",
+    "5": "d368e5fd62ff5eb2c4373ff2592a116ebd26ef69e57325dfad6dd7b983c3eab3",
+    "6": "ba695df0719ea5dbfd810569ab4783a3e57df5e11049973714ef174aec445638",
+    "7": "033e0c5457fd4aeffea325b7ea6d5a5b1809e2e1a8c5483ed58923e062075068",
+    "8": "597ffc9760d8804b2ae491afbe6b3e27722c363c08d8b49086a81460af24170e",
+    "9": "9bb470c453a6f84aae9552ac9dd4c508c319fa7f812b3e936375c52ebb78834f",
+    "10": "8255accd56912b13e6c35277ebd6536eb69b861146dac341a17dd608621e0bd5",
+    "11": "5071d85638abd163189b541f73583efad1845d46154665b002e2e52ddc086f2d",
+    "12": "345af76ba5c2193c4f29f1c033ac56669ae872cbb4c66ad0ecece04ec1ae3d66",
+    "13": "5e590a8de6295666aa759503fd2aacf394d2e83a6953ca0c034a7693f11515e9",
+    "14": "f2640dcfa495e16fbc390f2d573af6b161d50a74c746dda8ac0a63114adef928",
+    "15": "17bfe449576e6557a2d2cbb48e9c36b45d860e2e3f72e69954de4a0d44e167f7",
+    "16": "288d872277e10e6e55f45867df426f84d3fdbd59834ebaabf1e670a8c7e91d0d",
+    "17": "ef3cc6e366a3d788660dee4b8adf7995af2f5592a7f196468ab51638df0c9e92",
+    "18": "8dd27054af9db6b0f863079b4f8359867bb2201af6b474e420f17443a7d69d43",
+    "19": "cc97248f84f1eab1d6dd69e8cdfdd17548223b91482fef8f82e870dd23a67343",
+    "20": "a98be42e862f6915e783ddbe43a5786f18bf01688578f11afc441ac4448fe905",
+    "21": "11513e92885c6e70214d426141ab6661a4d7f85cfe1ea920e3bb0af45c0c71ea",
+    "22": "4fe4af79174fbf427e69347e6e2500621914371f2f7662d566efa74fdea793ac",
+    "23": "8a5e629546ee68ac999c0c2aae9fe996057030473b1ecb1ae25bb605a139545d"
+  },
+  "split_scope": "All historical outcomes have been exposed in prior audits. Held-out means excluded from queue policy development; not unseen data or held out from the old inflation fit.",
+  "development_saved_traces": 20,
+  "held_out_scalar_finish_cpu_calls": 34,
+  "held_out_prefix": "archived measured deployment prefix",
+  "models": [
+    "v616_no_fit",
+    "existing_fit_no_refit"
+  ],
+  "policy": {
+    "retained_requests": 48,
+    "refinement_budget": 4,
+    "uncertainty_budget": 2
+  },
+  "priority": "ascending final proxy deficit, descending weighted gain, exact prescription SHA; no learned deficit cutoff",
+  "replay_controls": "equal-score immutable replacements may be inventoried; queue cannot claim/launch them",
+  "actual_refinements": 0,
+  "GPU_calls": 0,
+  "Lambert_calls": 0,
+  "new_geometry_calls": 0,
+  "model_refits": 0,
+  "fresh_certifications": 0
+}

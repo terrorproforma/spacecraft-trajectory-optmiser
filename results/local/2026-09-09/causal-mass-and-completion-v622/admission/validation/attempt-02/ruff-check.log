@@ -1,0 +1,12 @@
+E501 Line too long (103 > 100)
+   --> build/performance/refinement-admission-v622/prepare.py:135:101
+    |
+133 |             ),
+134 |             "replay_controls": (
+135 |                 "equal-score immutable replacements may be inventoried; queue cannot claim/launch them"
+    |                                                                                                     ^^^
+136 |             ),
+137 |             "actual_refinements": 0,
+    |
+
+Found 1 error.

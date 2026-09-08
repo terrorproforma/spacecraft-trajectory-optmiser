@@ -1,0 +1,64 @@
+{
+  "passed": false,
+  "GPU_calls": 0,
+  "native_library_loads": 0,
+  "Git_calls": 0,
+  "verification": {
+    "passed": true,
+    "files": 323,
+    "source_objects": 734,
+    "source_archives": 9,
+    "raw_members": 22,
+    "mass_source_tree_sha256": "8d72fb3e441dfcdfcabe28d65d0e7d0a959e099622c05dfb8b5e93d1c83039a7",
+    "original_baseline_file_bytes_recoverable": 378,
+    "source_proof_scope": "Offline exact file/map/overlay proof; original recorded Git-base verification is retained, not rerun.",
+    "GPU_calls": 0,
+    "native_library_loads": 0,
+    "Git_calls": 0
+  },
+  "commands": [
+    {
+      "name": "mass-source-fixture",
+      "returncode": 0,
+      "seconds": 0.08383265899999515,
+      "script_sha256": "9b29fb3559461f5b5bb5a4732bbc429c683c7be79a96bf63678b257cd919b51a",
+      "log_sha256": "189a9bcfefd2ba900d3ca2965dfed6f8088170577aeed556a8445c7160b7ed4a"
+    },
+    {
+      "name": "mass-tiny",
+      "returncode": 0,
+      "seconds": 0.07563828600001443,
+      "script_sha256": "73d63dd4c72d6473fcea51518f1ca063b5dcdb011a4de0a8a4ae054ace3994f7",
+      "log_sha256": "f1f51be93fb455891f24fcfaec9f9c37304766202885aefc47fbebfe3c7d2255"
+    },
+    {
+      "name": "mass-original-KKT-metric",
+      "returncode": 0,
+      "seconds": 1.4622243720000085,
+      "script_sha256": "bc0b9fe85275056281d4568937c3f74f6fb5c11ea77c7fc16863b5ec4b196c7f",
+      "log_sha256": "aa20b0ee0fda2225868a5fc829f672ef6c6c17a1c2187219b7876105248fbe36"
+    },
+    {
+      "name": "compact-frozen-revisions",
+      "returncode": 0,
+      "seconds": 0.16939995000001318,
+      "script_sha256": "15a0b590986692cb114b4363a1fea101dc95fbe6b5a06baa48ad30c523e76646",
+      "log_sha256": "f683fea9cc9bfa3662c72fb057b12336e2f861bfe1f8e185ff95c06abe685f48"
+    },
+    {
+      "name": "compact-readbacks",
+      "returncode": 0,
+      "seconds": 0.40535179900001594,
+      "script_sha256": "0817f1d872e426b37d684102b114f78122f51caaa8108da9ca56cab9a9c9bd8b",
+      "log_sha256": "f37d751c7ae6c65e17bf89ba583d16045eb84a3d59555e802effc2df24d164fb"
+    },
+    {
+      "name": "admission-identities",
+      "returncode": 1,
+      "seconds": 0.9540154259999838,
+      "script_sha256": "1de72f4662b8799981ce62ca52cf6f61ed5487c295fb90d65b8d7275ce48c8c4",
+      "log_sha256": "6fe571bad20fe7dc8b8980131e265510af5896586533aff9e71a3feed8520c6d"
+    }
+  ],
+  "scope": "Saved arrays, original equations, identities and source assertions only; no model/solver/trajectory reruns."
+}

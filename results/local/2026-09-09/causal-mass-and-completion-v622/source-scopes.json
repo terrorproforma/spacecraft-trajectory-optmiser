@@ -1,0 +1,93 @@
+{
+  "identity_kind": "Frozen SHA256 source trees, not synthetic Git commits",
+  "mass": {
+    "base_commit": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+    "source_tree_sha256": "8d72fb3e441dfcdfcabe28d65d0e7d0a959e099622c05dfb8b5e93d1c83039a7",
+    "source_archive_sha256": "1b64328171dfe6cb1623fb75739006abfa2f31433c5ad2b12f92d766bd949511",
+    "owned_paths": [
+      "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h",
+      "cpp/cuda/include/spacepdhcg/cuda/mass_causal_arithmetic.hpp",
+      "cpp/cuda/src/persistent_pdhcg.cu",
+      "cpp/cuda/src/persistent_l1_host.cuh",
+      "cpp/cuda/src/persistent_mass.cuh",
+      "cpp/cuda/src/persistent_mass_host.cuh",
+      "cpp/cuda/tests/persistent_snapshot_replay.cu",
+      "cpp/cuda/tests/persistent_mass_snapshot.hpp",
+      "cpp/cuda/tests/persistent_mass_fixture.hpp",
+      "cpp/cuda/tests/persistent_mass_test.cu",
+      "cpp/cuda/CMakeLists.txt"
+    ],
+    "library_sha256": "a89b8b30267399c033a88f3fd8ec7fa8ac1bceb1bd41e79b9841807af1060cb2"
+  },
+  "combined": {
+    "base_commit": "258e5c3aad1fd8e592527c759f1514925039cf2a",
+    "source_tree_sha256": "cb0aed789a3fc788f296a80818818c35b3149fb017aba6e0d3c6df88ec805078",
+    "source_archive_sha256": "36c1d41c9543802d85a98a331fbc836ce7b5d2099d8988fd47bc719b6cf8bee5",
+    "owned_paths": [
+      "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h",
+      "cpp/cuda/include/spacepdhcg/cuda/mass_causal_arithmetic.hpp",
+      "cpp/cuda/src/persistent_pdhcg.cu",
+      "cpp/cuda/src/persistent_l1_host.cuh",
+      "cpp/cuda/src/persistent_mass.cuh",
+      "cpp/cuda/src/persistent_mass_host.cuh",
+      "cpp/cuda/tests/persistent_snapshot_replay.cu",
+      "cpp/cuda/tests/persistent_mass_snapshot.hpp",
+      "cpp/cuda/tests/persistent_mass_fixture.hpp",
+      "cpp/cuda/tests/persistent_mass_test.cu",
+      "cpp/cuda/CMakeLists.txt",
+      "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h",
+      "cpp/cuda/src/gtoc12_completion.cu",
+      "cpp/cuda/src/gtoc12_completion_model.cuh"
+    ],
+    "library_sha256": "6b32c2b5c4f87cd8990ee95816b00c0cb5dc863c7225cb244a17993ef344d8b1"
+  },
+  "compact_g_owned_sources": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+    "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+    "cpp/cuda/src/gtoc12_completion_model.cuh": "ebce472ecd3e66edf8c4ce6b1de667e5050d3081e3616895de9e8f3113c576ee",
+    "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+    "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+    "src/spacepdhcg/gtoc12/completion_capture.py": "bad09268a48b13c12ff18113bd0fbdd9aafc92c87c5e185186d9447e3edc69a5",
+    "src/spacepdhcg/gtoc12/refinement_admission.py": "9cb73643a4a838c6b955e79996bdbd4679acceb8038f807a50935e86846a64fd",
+    "src/spacepdhcg/gtoc12/fixed_refinement.py": "74b49ec79c08786c7fd2f5b8477c27f74d5bec0a95772f897b1b243c5991610d",
+    "tests/test_gtoc12_gpu_completion_model.py": "e042f6f6e53d8a1da33b97da99aeca5dd2f4e6d7c743b0f06714f1f818439158",
+    "tests/test_gtoc12_completion_capture.py": "7f4bd8ea1bd41ba9f6b45b5a25e3db58ecd00dcc5320bae026dcfb9816b2b7ea",
+    "tests/test_gtoc12_refinement_admission.py": "9cc85c7127f61fa3488e396a822fdeea0fcc777a241eb8e6b05b5377cd3ea123",
+    "tests/test_gtoc12_fixed_refinement.py": "22c9dd6f641b1c7b436ed307455979fc18331bf22439ef93fc1f219cfb156f8a"
+  },
+  "final_owned_source_sha256_verified_against_live": {
+    "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h": "458142e1c1524c6bf6c445382f586df5379c49b774c74088ecf4d5257fd0a4cf",
+    "cpp/cuda/include/spacepdhcg/cuda/mass_causal_arithmetic.hpp": "937d705fa7d3b5a17776f4ec58021729e6ed7fa284a5cbc8676d13eeff67953a",
+    "cpp/cuda/src/persistent_pdhcg.cu": "490501df922a987658ac9a5e66e055b4392549a3fa1b0a3aedc3570e266b4a25",
+    "cpp/cuda/src/persistent_l1_host.cuh": "80f796d88fa6a385d33ab0c9f070150a798351af35de6796d0f78473c37b26bc",
+    "cpp/cuda/src/persistent_mass.cuh": "722244fee0d58354eb2b196065bf2e78da83991831af16f0f8059676a6f52d9d",
+    "cpp/cuda/src/persistent_mass_host.cuh": "3c28b7165a80b5a737318ebede92bf9148d83263d41bd230a0b4af1e620aed8e",
+    "cpp/cuda/tests/persistent_snapshot_replay.cu": "b531b5024d9df60ac30d745c1ceff2f0d8cf863cde7419bc254c69c50eda2e57",
+    "cpp/cuda/tests/persistent_mass_snapshot.hpp": "e5cda66f4f98bb59d296da0339fdc73216c0cdba4eefcd021d6db5002030714c",
+    "cpp/cuda/tests/persistent_mass_fixture.hpp": "27e69a46f28057b507299978aa61206cdc200253a2a90ea06338b5859e4fa08e",
+    "cpp/cuda/tests/persistent_mass_test.cu": "9def91285d9a8c6736b2d3ab0954e773e1bb9a1f68139cfbdefd507d91444106",
+    "cpp/cuda/CMakeLists.txt": "106e68215e23e0b613a0ac5ff7e388b223b490266af50799582c601cbd84e94d",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915",
+    "cpp/cuda/src/gtoc12_completion.cu": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23",
+    "cpp/cuda/src/gtoc12_completion_model.cuh": "ebce472ecd3e66edf8c4ce6b1de667e5050d3081e3616895de9e8f3113c576ee",
+    "src/spacepdhcg/gtoc12/gpu_completion.py": "ed0c2222652414e3d5254362be7eeffaebfc78c17977987cb731be593e3df11a",
+    "src/spacepdhcg/gtoc12/gpu_completion_model.py": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5",
+    "src/spacepdhcg/gtoc12/completion_capture.py": "bad09268a48b13c12ff18113bd0fbdd9aafc92c87c5e185186d9447e3edc69a5",
+    "src/spacepdhcg/gtoc12/refinement_admission.py": "9cb73643a4a838c6b955e79996bdbd4679acceb8038f807a50935e86846a64fd",
+    "src/spacepdhcg/gtoc12/fixed_refinement.py": "74b49ec79c08786c7fd2f5b8477c27f74d5bec0a95772f897b1b243c5991610d",
+    "tests/test_gtoc12_gpu_completion_model.py": "e042f6f6e53d8a1da33b97da99aeca5dd2f4e6d7c743b0f06714f1f818439158",
+    "tests/test_gtoc12_completion_capture.py": "7f4bd8ea1bd41ba9f6b45b5a25e3db58ecd00dcc5320bae026dcfb9816b2b7ea",
+    "tests/test_gtoc12_refinement_admission.py": "9cc85c7127f61fa3488e396a822fdeea0fcc777a241eb8e6b05b5377cd3ea123",
+    "tests/test_gtoc12_fixed_refinement.py": "22c9dd6f641b1c7b436ed307455979fc18331bf22439ef93fc1f219cfb156f8a"
+  },
+  "host_runtime": {
+    "scope": "Separate 341-file Python/test source tree used by benchmark and combined compact smoke",
+    "source_map_sha256": "f38ec9f963a4ea75982bd71a5bbd59909ae318e12f30bf796738dcbff45d803f",
+    "source_archive_sha256": "7281c43ff8a4d30237f84d31ae7435ee36ff90eed711f1e718f5af0732ea532e"
+  },
+  "queue_revision_maps": [
+    "build/performance/refinement-admission-v622/implementation",
+    "build/performance/refinement-admission-v622/source"
+  ],
+  "binary_payloads_included": false
+}

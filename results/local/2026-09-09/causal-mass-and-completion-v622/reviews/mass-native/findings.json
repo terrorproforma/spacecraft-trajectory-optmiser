@@ -1,0 +1,81 @@
+{
+  "scope": "Manual source/math/test review plus exact CPU fixture serialization check; no build, GPU or native loading.",
+  "base_commit": "fdf52ae31d259240ffebdcf79ed0965dce8b9298",
+  "source_sha256": {
+    "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h": "458142e1c1524c6bf6c445382f586df5379c49b774c74088ecf4d5257fd0a4cf",
+    "cpp/cuda/include/spacepdhcg/cuda/mass_causal_arithmetic.hpp": "937d705fa7d3b5a17776f4ec58021729e6ed7fa284a5cbc8676d13eeff67953a",
+    "cpp/cuda/src/persistent_mass.cuh": "722244fee0d58354eb2b196065bf2e78da83991831af16f0f8059676a6f52d9d",
+    "cpp/cuda/src/persistent_mass_host.cuh": "3c28b7165a80b5a737318ebede92bf9148d83263d41bd230a0b4af1e620aed8e",
+    "cpp/cuda/src/persistent_pdhcg.cu": "490501df922a987658ac9a5e66e055b4392549a3fa1b0a3aedc3570e266b4a25",
+    "cpp/cuda/src/persistent_l1_host.cuh": "80f796d88fa6a385d33ab0c9f070150a798351af35de6796d0f78473c37b26bc",
+    "cpp/cuda/tests/persistent_mass_test.cu": "9def91285d9a8c6736b2d3ab0954e773e1bb9a1f68139cfbdefd507d91444106",
+    "cpp/cuda/tests/persistent_mass_fixture.hpp": "27e69a46f28057b507299978aa61206cdc200253a2a90ea06338b5859e4fa08e",
+    "cpp/cuda/tests/persistent_mass_snapshot.hpp": "e5cda66f4f98bb59d296da0339fdc73216c0cdba4eefcd021d6db5002030714c",
+    "cpp/cuda/tests/persistent_snapshot_replay.cu": "b531b5024d9df60ac30d745c1ceff2f0d8cf863cde7419bc254c69c50eda2e57",
+    "cpp/cuda/CMakeLists.txt": "106e68215e23e0b613a0ac5ff7e388b223b490266af50799582c601cbd84e94d",
+    "build/performance/build_mass_core_v622a.py": "3bdced4799f30440566da6f22c656796b93598b9998cd266a2a8ee9a9eb0978e",
+    "build/performance/generate_mass_fixture_v622.py": "35a653df6e70af1567f6ea3e738e84eb315b71b45c4381e8c07308223d4b543b"
+  },
+  "oracle_fixture_sha256": "7312df3f38291175e76df66459da86c68fdb71cb8c1895a67b68d72790291169",
+  "fixture_arrays_checked_bitwise": [
+    "A",
+    "F",
+    "c",
+    "scalar_upper",
+    "affine_offset",
+    "initial_x",
+    "initial_y",
+    "seed_x",
+    "seed_y",
+    "seed_c",
+    "expected_x",
+    "expected_y",
+    "tau",
+    "sigma",
+    "row_sums",
+    "column_sums"
+  ],
+  "fixture_matches": true,
+  "planned_solve_cases": [
+    [
+      "three_interval_oracle",
+      3,
+      3
+    ],
+    [
+      "disabled_to_L1",
+      1,
+      1
+    ],
+    [
+      "fresh_L1_control",
+      1,
+      1
+    ],
+    [
+      "original_seed_zero_step",
+      1,
+      0
+    ],
+    [
+      "cancel_before_initial",
+      1,
+      0
+    ],
+    [
+      "nonfinite_seed",
+      1,
+      0
+    ],
+    [
+      "metric_overflow",
+      1,
+      0
+    ]
+  ],
+  "planned_solve_APIs": 7,
+  "planned_iteration_caps": 9,
+  "expected_updates": 5,
+  "actual_GPU_calls": 0,
+  "decision": "No provisional source/test blocker; GPU-hidden freeze/build cleared. Native launch requires final frozen build/resource review."
+}

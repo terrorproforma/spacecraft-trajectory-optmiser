@@ -2684,6 +2684,7 @@ __global__ void restore_steps_kernel(DeviceControl* control, const double* sourc
 #include "cooperative_pdhg.cuh"
 #include "persistent_halpern.cuh"
 #include "persistent_l1.cuh"
+#include "persistent_mass.cuh"
 
 cudaError_t preload_solve_kernels() {
     cudaFuncAttributes attributes{};
@@ -2997,6 +2998,11 @@ struct spacepdhcg_cuda_workspace {
     spacepdhcg_cuda_l1_diagnostics* host_l1{nullptr};
     bool l1_enabled{false}, l1_valid{false};
     int l1_cooperative_capacity{0};
+    MassState* mass{nullptr};
+    MassState mass_setup{};
+    spacepdhcg_cuda_mass_diagnostics* host_mass{nullptr};
+    bool mass_enabled{false}, mass_valid{false};
+    int mass_cooperative_capacity{0};
     double* grid_partials{nullptr};
     int* grid_flags{nullptr};
     int cooperative_capacity{0};
@@ -3303,11 +3309,13 @@ spacepdhcg_cuda_status record_completion(
         workspace->common_valid = false;
         workspace->halpern_valid = false;
         workspace->l1_valid = false;
+        workspace->mass_valid = false;
     }
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 void finish_solve(spacepdhcg_cuda_workspace* workspace) {
+    workspace->mass_valid = workspace->mass_enabled && workspace->host_mass && workspace->host_mass->valid;
     workspace->l1_valid = workspace->l1_enabled && workspace->host_l1 && workspace->host_l1->valid;
     workspace->halpern_valid = workspace->halpern_mode && workspace->host_halpern
         && workspace->host_halpern->valid;
@@ -4488,6 +4496,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_common_kkt_diagnosti
 }
 
 #include "persistent_l1_host.cuh"
+#include "persistent_mass_host.cuh"
 
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_halpern_options(
     spacepdhcg_cuda_workspace* workspace, const spacepdhcg_cuda_halpern_options* options
@@ -4617,6 +4626,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks
         return SPACEPDHCG_CUDA_UNSUPPORTED;
     if (workspace->l1_enabled && (blocks == 0 || blocks > workspace->l1_cooperative_capacity))
         return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if (workspace->mass_enabled && (blocks == 0 || blocks > workspace->mass_cooperative_capacity))
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
     workspace->cooperative_blocks = blocks;
     workspace->cooperative_scaling_blocks = blocks;
     return SPACEPDHCG_CUDA_SUCCESS;
@@ -4625,6 +4636,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks
 namespace {
 cudaError_t launch_initialise(spacepdhcg_cuda_workspace* workspace,
                              volatile int* cancellation, cudaStream_t stream) {
+    if (workspace->mass_enabled) {
+        void* arguments[] = {&workspace->control, &workspace->device_problem, &cancellation, &workspace->l1, &workspace->mass};
+        return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(cooperative_mass_initialise_kernel),
+            dim3(workspace->cooperative_scaling_blocks), dim3(kThreads), arguments, 0, stream);
+    }
     if (workspace->l1_enabled) {
         void* arguments[] = {&workspace->control, &workspace->device_problem, &cancellation, &workspace->l1};
         return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(cooperative_l1_initialise_kernel),
@@ -4694,7 +4710,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "scaling/solve timing boundary");
     }
-    if (workspace->l1_enabled) {
+    if (workspace->mass_enabled) {
+        void* arguments[] = {&workspace->device_problem, &workspace->control,
+            &workspace->report, &workspace->solver.cancellation, &workspace->l1, &workspace->mass};
+        cuda_status = cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(cooperative_mass_kernel),
+            dim3(workspace->cooperative_blocks), dim3(kThreads), arguments, 0, cuda_stream);
+    } else if (workspace->l1_enabled) {
         void* arguments[] = {&workspace->device_problem, &workspace->control,
             &workspace->report, &workspace->solver.cancellation, &workspace->l1};
         const auto kernel=workspace->l1_setup.omega==1.0
@@ -4771,6 +4792,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
         status = copy_async(workspace, workspace->host_l1,
             reinterpret_cast<const char*>(workspace->l1) + offsetof(L1State, result),
             sizeof(spacepdhcg_cuda_l1_diagnostics), cudaMemcpyDeviceToHost, cuda_stream, false);
+    }
+    if (status == SPACEPDHCG_CUDA_SUCCESS && workspace->mass_enabled) {
+        status = copy_async(workspace, workspace->host_mass,
+            reinterpret_cast<const char*>(workspace->mass) + offsetof(MassState, result),
+            sizeof(spacepdhcg_cuda_mass_diagnostics), cudaMemcpyDeviceToHost, cuda_stream, false);
     }
     if (status == SPACEPDHCG_CUDA_SUCCESS) {
         status = copy_async(

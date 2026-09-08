@@ -1,0 +1,22 @@
+{
+  "preparation_only": true,
+  "GPU_calls": 0,
+  "source_files": 341,
+  "original_owned_overlay_archive_files": 12,
+  "original_owned_overlay_archive_roundtrip": true,
+  "complete_source_archive_roundtrip": true,
+  "complete_source_archive_sha256": "7281c43ff8a4d30237f84d31ae7435ee36ff90eed711f1e718f5af0732ea532e",
+  "CPU_tests": {
+    "passed": 16,
+    "report": "validation/attempt-02/report.json"
+  },
+  "matching_GPU_correctness": {
+    "path": "build/performance/completion-model-gpu-v622d/report.json",
+    "sha256": "643caf4e5550373ac3b06761197ae4ee1f7801569e614498786ba089b34a54ff",
+    "tests_passed": 7,
+    "scope": "Separate already-completed correctness run, not this benchmark"
+  },
+  "future_evaluate_calls": 80,
+  "future_kernel_launches_from_frozen_source": 160,
+  "future_candidate_evaluations": 27040
+}

@@ -1,0 +1,84 @@
+E501 Line too long (122 > 100)
+  --> build/performance/completion-pack-benchmark-v622/prepare.py:97:101
+   |
+95 |         "data_path": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+96 |         "geometry": "Both arms use the official catalogue. No injected saved geometry cache.",
+97 |         "timer": "Entire production run; includes per-call model/source hashing, packing, native call and reconstruction",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^
+98 |         "outside_timer": "Catalogue load, request construction, common workspace create/close, capture and validation",
+99 |         "first_call": "Reported separately for each fresh arm workspace; compact model configure remains inside run",
+   |
+
+E501 Line too long (119 > 100)
+   --> build/performance/completion-pack-benchmark-v622/prepare.py:98:101
+    |
+ 96 |         "geometry": "Both arms use the official catalogue. No injected saved geometry cache.",
+ 97 |         "timer": "Entire production run; includes per-call model/source hashing, packing, native call and reconstruction",
+ 98 |         "outside_timer": "Catalogue load, request construction, common workspace create/close, capture and validation",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+ 99 |         "first_call": "Reported separately for each fresh arm workspace; compact model configure remains inside run",
+100 |         "throughput_unit": "repeated archived proxy completions/second, not mission solutions/second",
+    |
+
+E501 Line too long (117 > 100)
+   --> build/performance/completion-pack-benchmark-v622/prepare.py:99:101
+    |
+ 97 |         "timer": "Entire production run; includes per-call model/source hashing, packing, native call and reconstruction",
+ 98 |         "outside_timer": "Catalogue load, request construction, common workspace create/close, capture and validation",
+ 99 |         "first_call": "Reported separately for each fresh arm workspace; compact model configure remains inside run",
+    |                                                                                                     ^^^^^^^^^^^^^^^^^
+100 |         "throughput_unit": "repeated archived proxy completions/second, not mission solutions/second",
+101 |         "launch_gate": "A matching complete passing compact-g GPU correctness report is required by exact hash",
+    |
+
+E501 Line too long (102 > 100)
+   --> build/performance/completion-pack-benchmark-v622/prepare.py:100:101
+    |
+ 98 |         "outside_timer": "Catalogue load, request construction, common workspace create/close, capture and validation",
+ 99 |         "first_call": "Reported separately for each fresh arm workspace; compact model configure remains inside run",
+100 |         "throughput_unit": "repeated archived proxy completions/second, not mission solutions/second",
+    |                                                                                                     ^^
+101 |         "launch_gate": "A matching complete passing compact-g GPU correctness report is required by exact hash",
+102 |     }
+    |
+
+E501 Line too long (112 > 100)
+   --> build/performance/completion-pack-benchmark-v622/prepare.py:101:101
+    |
+ 99 |         "first_call": "Reported separately for each fresh arm workspace; compact model configure remains inside run",
+100 |         "throughput_unit": "repeated archived proxy completions/second, not mission solutions/second",
+101 |         "launch_gate": "A matching complete passing compact-g GPU correctness report is required by exact hash",
+    |                                                                                                     ^^^^^^^^^^^^
+102 |     }
+103 |     write(KIT / "plan.json", plan)
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> build/performance/completion-pack-benchmark-v622/test_preparation.py:3:1
+   |
+ 1 |   """CPU construction/identity and prerequisite gates; native execution forbidden."""
+ 2 |
+ 3 | / from __future__ import annotations
+ 4 | |
+ 5 | | import ctypes
+ 6 | | import json
+ 7 | | import os
+ 8 | |
+ 9 | | import pytest
+10 | |
+11 | | from common import KIT, construct, read, sha, signature
+12 | | from launch import validate_prerequisite
+13 | |
+14 | | from spacepdhcg.gtoc12.collectdp import CollectPairTable
+15 | | from spacepdhcg.gtoc12.data import load_catalogue
+16 | | from spacepdhcg.gtoc12.search import RouteSearch
+   | |________________________________________________^
+help: Organize imports
+   |
+9  | import pytest
+   -
+10 | from common import KIT, construct, read, sha, signature
+   |
+
+Found 6 errors.
+[*] 1 fixable with the `--fix` option.

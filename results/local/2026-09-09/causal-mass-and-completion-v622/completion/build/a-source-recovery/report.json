@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "GPU_calls": 0,
+  "native_loads": 0,
+  "original_report_sha256": "96dbaac5485cca843ca88b573ec2427a7d1f1e1572ae11f55184fdcd347739ac",
+  "scope": "Exact source bytes recovered from the preserved frozen a workspace after its pre-build failure; no source correction or rerun.",
+  "files": {
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_completion_c_api.h": {
+      "bytes": 12504,
+      "sha256": "902d2432db6f4c786d7b9009ff66aeea9a977dd9baccd78096563779e5dbf915"
+    },
+    "cpp/cuda/src/gtoc12_completion.cu": {
+      "bytes": 17201,
+      "sha256": "ed61678525656362555bece97224d280f13cb0800122c7c57066df775e477b23"
+    },
+    "cpp/cuda/src/gtoc12_completion_model.cuh": {
+      "bytes": 13905,
+      "sha256": "986da2c3d7c5cb068cb2eae2560daf85dd104859242077cbac135cf995d3e1e8"
+    },
+    "src/spacepdhcg/gtoc12/gpu_completion.py": {
+      "bytes": 15585,
+      "sha256": "126970e5a997bbab25cc0fb909b57554f1ca8eb10b8005212dbc96bf332e965a"
+    },
+    "src/spacepdhcg/gtoc12/gpu_completion_model.py": {
+      "bytes": 12568,
+      "sha256": "365c2fda8cb012cfdd9d4b388dbe0a296391ca23bd083c815e9a3099a67167f5"
+    },
+    "tests/test_gtoc12_gpu_completion_model.py": {
+      "bytes": 7525,
+      "sha256": "97cb0cf370b96f025c1e0555b1c6446f9ed36070b431784a8aac7b63b4d2b3c5"
+    }
+  }
+}
