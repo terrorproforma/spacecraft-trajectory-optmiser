@@ -1,0 +1,237 @@
+{
+  "pid": 172739,
+  "complete": true,
+  "stages": [
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 2.367110323975794,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 49.593357420002576,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 6.17214578401763,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_resident_retime.py",
+        "tests/test_gtoc12_gpu_retime.py",
+        "tests/test_gtoc12_retime_driver.py",
+        "tests/test_gtoc12_retime_forward.py",
+        "tests/test_gtoc12_retime_graph.py",
+        "tests/test_gtoc12_retime_finish.py",
+        "tests/test_gtoc12_retime_warp.py",
+        "tests/test_gtoc12_packed_retime.py",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_run_final_verification.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "compile-probe",
+      "returncode": 0,
+      "seconds": 0.8649808699847199,
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-grid-cache-v400/repo/cpp/include",
+        "-I/home/ubuntu/spacepdhcg-grid-cache-v400/repo/cpp/cuda/include",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/repo/cpp/cuda/tests/orbitweaver_grid_cache_test.cu",
+        "-L/home/ubuntu/spacepdhcg-grid-cache-v400/core-build/cuda",
+        "-lspacepdhcg_cuda",
+        "-o",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/grid-cache-probe"
+      ]
+    },
+    {
+      "name": "probe",
+      "returncode": 0,
+      "seconds": 0.41439841396640986,
+      "command": [
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/grid-cache-probe"
+      ]
+    },
+    {
+      "name": "eviction",
+      "returncode": 0,
+      "seconds": 0.9150224350159988,
+      "command": [
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/grid-cache-probe",
+        "--eviction"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 2.417206010024529,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/grid-cache-probe"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 0.6148893799982034,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/grid-cache-probe"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 1.3656935169710778,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/grid-cache-probe"
+      ]
+    },
+    {
+      "name": "candidate0",
+      "returncode": 0,
+      "seconds": 44.0250816050102,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('spacepdhcg',run_name='__main__')",
+        "gtoc12",
+        "run",
+        "--run-id",
+        "grid_cache400_candidate0",
+        "--output",
+        "/home/ubuntu/spacepdhcg-grid-cache-v400/candidate0/output",
+        "--full-catalogue",
+        "--ships",
+        "1",
+        "--beam-width",
+        "16",
+        "--max-deploys",
+        "10",
+        "--neighbours",
+        "48",
+        "--refine-top",
+        "3",
+        "--search-budget-seconds",
+        "120",
+        "--budget-seconds",
+        "600",
+        "--retime-attempts",
+        "4",
+        "--retime-budget-seconds",
+        "300",
+        "--no-cooperative",
+        "--node-days",
+        "2",
+        "--scvx-iterations",
+        "40",
+        "--screening-backend",
+        "cuda",
+        "--seed-backend",
+        "cuda",
+        "--discretisation-backend",
+        "cuda",
+        "--assembly-backend",
+        "cuda",
+        "--convex-solver",
+        "qoco",
+        "--outer-loop-backend",
+        "cuda",
+        "--gpu-execution",
+        "graph"
+      ]
+    }
+  ],
+  "campaigns": [
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "seconds": 43.22824169101659,
+      "score": 548.2546201230998,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    }
+  ],
+  "stage": "candidate0",
+  "source_sha256": {
+    "cpp/cuda/src/orbitweaver_gpu.cu": "30c90b8fc9f37d923cbb04189da8e2394d635d01c9b9c599452ec3dc829da9ea",
+    "cpp/cuda/src/gtoc12_retime.cu": "72784a9bf0410220c0a4f2742eb40f26da06298484a75f3cbec60716a7ca90a6",
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": "99f9e741bd3503231157c6cd7eaaf3c5fb2eda5f494d56dee6ceb67ef0cc65ae",
+    "cpp/cuda/tests/orbitweaver_grid_cache_test.cu": "7c1bf2e9debf1727cdaa492dfef97eca0a56536b9e7f30bd4920400ee0578607",
+    "src/spacepdhcg/gtoc12/cli.py": "0276a4b140f1ecb72c72709246ded5c15025959d16706d31876cfdfbc9dd2951",
+    "tests/test_gtoc12_run_final_verification.py": "baaf0b8d2f80d97584c5dc991a6bedc2366e75010623dd953d42539b0f30a76d"
+  },
+  "frozen_source_commit": "a31b27f68f71784dc55a67981da48fe7439a2f0f",
+  "child_pid": 173398,
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "6d39137fb2d500e205c704f5f7903035d4760a56146871f42d4e044fc7c5f3cb",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  }
+}

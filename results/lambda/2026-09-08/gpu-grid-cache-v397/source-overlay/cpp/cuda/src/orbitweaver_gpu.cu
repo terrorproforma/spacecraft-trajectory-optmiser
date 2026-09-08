@@ -1144,9 +1144,7 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_grid_cached_host(
         if(status==cudaSuccess)status=cudaMemcpyAsync(axes.tofs,tofs,nt*sizeof(double),cudaMemcpyHostToDevice,w->stream);
         if(status!=cudaSuccess){cudaStreamSynchronize(w->stream);return mapped(status);}
         if(bytes>limit)return hop_grid_locked(w,elements,axes.epochs,n,axes.tofs,nt,dv,ok);
-        // Also bound entry count so tiny tables cannot accumulate unbounded
-        // allocation and host-key overhead while staying below the byte cap.
-        while(w->grid_cache_bytes+bytes>limit || w->grid_cache.size()>=256) {
+        while(w->grid_cache_bytes+bytes>limit) {
             w->grid_cache_bytes-=w->grid_cache.back()->bytes;
             w->grid_cache.pop_back();++w->grid_cache_evictions;
         }

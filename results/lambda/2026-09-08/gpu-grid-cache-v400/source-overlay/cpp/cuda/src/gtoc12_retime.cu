@@ -422,7 +422,7 @@ extern "C" int spacepdhcg_gtoc12_retime_create_elements(int32_t device,int32_t n
     if(status)return status;
     auto* w=static_cast<Workspace*>(*output);
     const auto* cache_option=std::getenv("SPACEPDHCG_TEST_GTOC12_RETIME_TABLE_CACHE");
-    const bool cache=!cache_option||cache_option[0]!='0';
+    const bool cache=cache_option&&cache_option[0]=='1';
     for(int j=0;j<stages;++j) {
         const auto code=cache
             ? spacepdhcg_orbitweaver_hop_grid_cached_host(lambert,elements+j,epochs,n,

@@ -153,7 +153,7 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_grid_device(
     double* delta_v, uint8_t* feasible);
 
 /* Blocking grid bridge with HOST epochs/TOFs and DEVICE output arrays. The
- * workspace retains at most 256 tables and 64 MiB of device cost/flag data in LRU
+ * workspace retains at most 64 MiB of immutable device cost/flag tables in LRU
  * order. Keys compare every element and grid-axis byte; the workspace fixes the
  * scan configuration. Oversize tables are computed without retention. No table
  * is downloaded and changing the caller's input buffers cannot change old keys.

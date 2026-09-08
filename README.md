@@ -38,6 +38,15 @@ using complete-run elapsed time. These are transfer candidates, not fully solved
 missions; the runs evaluate 45.19 million and 169.75 million branches respectively.
 [Accuracy checks, measurements and reproducible archives](docs/GPU_COOPERATIVE_HOP_SCAN.md).
 
+Retiming now also reuses immutable transfer tables in a bounded GPU cache.
+A separate paired one-ship comparison reduced RTX 5090 runtime from **43.45 to
+36.00 seconds** (1.21×), with the same verified score. H100 showed only about
+1% less time over two samples per mode, which does not establish a significant
+speedup there. The cache serves 736 of 821 table requests in the measured local
+campaign using about 12 MiB of retained payload. Logical screening counters now
+include reused tables; they are not counts of fresh GPU solves.
+[Implementation, limits and validation](docs/GPU_RETIMING_GRID_CACHE.md).
+
 Resident harvest-window pricing also removes full collection-table downloads
 from the measured campaign. The H100 comparison showed **1.92% longer** median
 runtime over two samples per mode, so this is improved GPU residency, not an
