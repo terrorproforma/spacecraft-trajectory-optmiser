@@ -29,6 +29,7 @@ template<class T> struct Array {
 int main(int argc, char** argv) {
     const int ruiz_iterations = argc > 1 ? std::atoi(argv[1]) : 0;
     const bool origin_test = argc > 3 && std::strcmp(argv[3], "origin") == 0;
+    const bool device_initialization = argc > 4 && std::strcmp(argv[4], "device-init") == 0;
     require(ruiz_iterations >= 0 && ruiz_iterations <= 100, "Ruiz iteration argument");
     if (!std::getenv("SPACEPDHCG_QOCO_LIBRARY")) { std::puts("SKIP: isolated QOCO library required"); return 0; }
     const bool device_validation = argc > 2 && std::strcmp(argv[2], "device-validation") == 0;
@@ -78,7 +79,9 @@ int main(int argc, char** argv) {
     spacepdhcg_native_qoco* workspace{};
     const bool trajectory_test = argc > 2 && std::strcmp(argv[2], "trajectory") == 0;
     const auto create = [&] {
-        require(spacepdhcg_native_qoco_create(&problem, stream, ruiz_iterations, &workspace) == SPACEPDHCG_CUDA_SUCCESS,
+        require((device_initialization
+            ? spacepdhcg_native_qoco_create_configured(&problem,stream,ruiz_iterations,1e-8,true,&workspace)
+            : spacepdhcg_native_qoco_create(&problem,stream,ruiz_iterations,&workspace)) == SPACEPDHCG_CUDA_SUCCESS,
             "compile mixed scalar/box/SOC/RSOC conversion with duplicate sparse entries");
     };
     if (trajectory_test) {
@@ -148,7 +151,8 @@ int main(int argc, char** argv) {
     c.values[6] -= 0.01; c.upload(stream);
     require(solve() == SPACEPDHCG_CUDA_SUCCESS && report.numeric_updates == 1, "compiled update agrees with CPU conversion and KKT audit");
     if (std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_UPDATE_REQUIRED"))
-        require(report.device_numeric_updates == (ruiz_iterations > 0 ? 2U : 1U),
+        require(report.device_numeric_updates == (ruiz_iterations > 0 ? 2U : 1U)
+                + (device_initialization ? 1U : 0U),
             "device extension must perform requested initial equilibration and numeric update");
     const auto reprime = [&] {
         if (!device_validation) return;

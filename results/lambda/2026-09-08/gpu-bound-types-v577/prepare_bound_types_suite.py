@@ -1,0 +1,22 @@
+from pathlib import Path
+p=Path('build/performance')
+s=(p/'check_bound_types_v567.py').read_text().replace('bound-types-v567','bound-types-v568')
+s=s.replace("sources=['tests", "sources=['cpp/cuda/tests/native_qoco_conversion_test.cu','tests",1)
+pos=s.index('r=dict(')
+s=s[:pos]+"""native=str(root.resolve()/'native-conversion-test')
+jobs.insert(2,('compile-native',['/usr/local/cuda-12.8/bin/nvcc','-std=c++17','--fmad=false','-arch=sm_120','-Icpp/include','-Icpp/cuda/include','cpp/cuda/tests/native_qoco_conversion_test.cu','-L'+str(core.parent),'-lspacepdhcg_cuda','-o',native]))
+for ruiz in (0,2,5):jobs.append(('native-'+str(ruiz),[native,str(ruiz),'compare','plain','device-init']))
+for tool in ['memcheck','synccheck','racecheck']:jobs.append(('bounds-'+tool,['/usr/local/cuda-12.8/bin/compute-sanitizer','--tool',tool,'--error-exitcode','99',probe]))
+"""+s[pos:]
+(p/'check_bound_types_v568.py').write_text(s)
+# Broad tests and original complete replay use the same frozen candidate core.
+s=(p/'validate_device_initialization_v558.py').read_text().replace('device-init-v558','bound-types-v570').replace('device-init-v555','bound-types-v568').replace('validate_device_initialization_v558.py','validate_bound_types_v570.py').replace('replay_device_initialization.py','replay_bound_types.py')
+s=s.replace("env['SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION']='1'","env['SPACEPDHCG_TEST_QOCO_DEVICE_BOUND_TYPES']='1'")
+s=s.replace("tests=['tests/'+name", "tests=['tests/test_gtoc12_gpu_bound_types.py']+['tests/'+name")
+s=s.replace("files=['tests", "files=['cpp/cuda/src/native_qoco_gpu.cu','cpp/cuda/internal/native_qoco_gpu.h','tests/test_gtoc12_gpu_bound_types.py','tests",1)
+(p/'validate_bound_types_v570.py').write_text(s)
+s=(p/'replay_device_initialization.py').read_text().replace("os.environ['SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION']=mode","os.environ['SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION']='1'\nos.environ['SPACEPDHCG_TEST_QOCO_DEVICE_BOUND_TYPES']=mode")
+(p/'replay_bound_types.py').write_text(s)
+s=(p/'run_device_initialization_campaign_v560.py').read_text().replace('device-init-campaign-v560','bound-types-campaign-v571').replace('device-init-v555','bound-types-v568').replace('device560','bounds571')
+s=s.replace("env['SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION']='1' if enabled else '0'","env['SPACEPDHCG_TEST_QOCO_DEVICE_INITIALIZATION']='1'\n   env['SPACEPDHCG_TEST_QOCO_DEVICE_BOUND_TYPES']='1' if enabled else '0'")
+(p/'run_bound_types_campaign_v571.py').write_text(s)

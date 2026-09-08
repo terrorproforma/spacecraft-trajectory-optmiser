@@ -1,0 +1,480 @@
+{
+  "source_base_commit": "08c1b67701d5a0f26b41870114d4bee8106d74b1",
+  "default_enabled_with_device_initialization": true,
+  "disable_flag": "SPACEPDHCG_TEST_QOCO_DEVICE_BOUND_TYPES=0",
+  "local_legs": {
+    "baseline": {
+      "seconds": 127.86919902499858,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 13,
+        "failed": 7
+      }
+    },
+    "candidate": {
+      "seconds": 128.25013669000236,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "failed": 7,
+        "infeasible": 13
+      }
+    },
+    "scope": "One full pass per mode with identical binaries and production zero-Ruiz workspace reuse. Only device bound classification differs. Original budgets and accuracy tolerances unchanged. Solver time excludes certification.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 57,
+      "delta_kg": 4.046296453452669e-08
+    },
+    "less_time_percent": -0.29791198185993295,
+    "largest_timing_changes": [
+      {
+        "index": 12,
+        "baseline_seconds": 5.085945200999959,
+        "candidate_seconds": 1.2081392899999628,
+        "difference": -3.877805910999996,
+        "baseline_iterations": 29,
+        "candidate_iterations": 16
+      },
+      {
+        "index": 175,
+        "baseline_seconds": 0.9140519210000093,
+        "candidate_seconds": 4.151571940999929,
+        "difference": 3.23752001999992,
+        "baseline_iterations": 14,
+        "candidate_iterations": 37
+      },
+      {
+        "index": 198,
+        "baseline_seconds": 5.630520209000224,
+        "candidate_seconds": 2.4844450179998603,
+        "difference": -3.1460751910003637,
+        "baseline_iterations": 44,
+        "candidate_iterations": 36
+      },
+      {
+        "index": 204,
+        "baseline_seconds": 4.316876100000172,
+        "candidate_seconds": 5.49760721299981,
+        "difference": 1.1807311129996378,
+        "baseline_iterations": 44,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 195,
+        "baseline_seconds": 3.0209346540000297,
+        "candidate_seconds": 4.196800214999712,
+        "difference": 1.1758655609996822,
+        "baseline_iterations": 42,
+        "candidate_iterations": 41
+      },
+      {
+        "index": 170,
+        "baseline_seconds": 0.5183277320002162,
+        "candidate_seconds": 1.609006424999734,
+        "difference": 1.0906786929995178,
+        "baseline_iterations": 8,
+        "candidate_iterations": 24
+      },
+      {
+        "index": 98,
+        "baseline_seconds": 3.6134385360001033,
+        "candidate_seconds": 4.410897319000014,
+        "difference": 0.7974587829999109,
+        "baseline_iterations": 42,
+        "candidate_iterations": 42
+      },
+      {
+        "index": 213,
+        "baseline_seconds": 4.02420139600008,
+        "candidate_seconds": 3.4454000019995874,
+        "difference": -0.578801394000493,
+        "baseline_iterations": 44,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 207,
+        "baseline_seconds": 2.818304542000078,
+        "candidate_seconds": 3.3528113429997575,
+        "difference": 0.5345068009996794,
+        "baseline_iterations": 40,
+        "candidate_iterations": 41
+      },
+      {
+        "index": 44,
+        "baseline_seconds": 1.323144124999999,
+        "candidate_seconds": 0.9101771150003515,
+        "difference": -0.4129670099996474,
+        "baseline_iterations": 10,
+        "candidate_iterations": 7
+      }
+    ]
+  },
+  "lambda_legs": {
+    "baseline": {
+      "seconds": 157.0263495723484,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 16,
+        "failed": 4
+      }
+    },
+    "candidate": {
+      "seconds": 164.31392523017712,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 17,
+        "failed": 3
+      }
+    },
+    "scope": "One full pass per mode with identical binaries and production zero-Ruiz workspace reuse. Only device bound classification differs. Original budgets and accuracy tolerances unchanged. Solver time excludes certification.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 45,
+      "delta_kg": 1.041835275827907e-07
+    },
+    "less_time_percent": -4.640989029978715,
+    "largest_timing_changes": [
+      {
+        "index": 87,
+        "baseline_seconds": 2.561231241968926,
+        "candidate_seconds": 9.758970788971055,
+        "difference": 7.197739547002129,
+        "baseline_iterations": 25,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 175,
+        "baseline_seconds": 6.089779303991236,
+        "candidate_seconds": 0.9215343309915625,
+        "difference": -5.168244972999673,
+        "baseline_iterations": 44,
+        "candidate_iterations": 12
+      },
+      {
+        "index": 170,
+        "baseline_seconds": 2.317203728016466,
+        "candidate_seconds": 5.966071413015015,
+        "difference": 3.6488676849985495,
+        "baseline_iterations": 29,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 98,
+        "baseline_seconds": 4.565301875991281,
+        "candidate_seconds": 7.802241676021367,
+        "difference": 3.236939800030086,
+        "baseline_iterations": 42,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 198,
+        "baseline_seconds": 6.891181884973776,
+        "candidate_seconds": 3.8654689809773117,
+        "difference": -3.025712903996464,
+        "baseline_iterations": 44,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 195,
+        "baseline_seconds": 6.0428262439672835,
+        "candidate_seconds": 3.5525014049489982,
+        "difference": -2.4903248390182853,
+        "baseline_iterations": 44,
+        "candidate_iterations": 42
+      },
+      {
+        "index": 134,
+        "baseline_seconds": 0.7295993760344572,
+        "candidate_seconds": 2.053794904029928,
+        "difference": 1.324195527995471,
+        "baseline_iterations": 10,
+        "candidate_iterations": 27
+      },
+      {
+        "index": 213,
+        "baseline_seconds": 3.933471718977671,
+        "candidate_seconds": 4.92245760204969,
+        "difference": 0.9889858830720186,
+        "baseline_iterations": 43,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 60,
+        "baseline_seconds": 11.659735378983896,
+        "candidate_seconds": 12.220492444001138,
+        "difference": 0.560757065017242,
+        "baseline_iterations": 31,
+        "candidate_iterations": 33
+      },
+      {
+        "index": 129,
+        "baseline_seconds": 12.97225841897307,
+        "candidate_seconds": 13.52604823303409,
+        "difference": 0.5537898140610196,
+        "baseline_iterations": 29,
+        "candidate_iterations": 29
+      }
+    ]
+  },
+  "local_campaign": {
+    "scope": "ABBA two runs per mode with identical binaries and production zero-Ruiz workspace reuse. Only device bound classification differs. Both mission checkers must pass.",
+    "baseline_process_median": 28.579937206000295,
+    "candidate_process_median": 28.39677373450013,
+    "less_process_time_percent": 0.6408812943847542,
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 29.097621216000334,
+        "cli_seconds": 28.125519192999946,
+        "score": 548.2546201230996,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 10.24229282600163,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 28.255092052000236,
+        "cli_seconds": 27.335536791999857,
+        "score": 548.2546201231,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 9.470211298000777,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 28.538455417000023,
+        "cli_seconds": 27.565152565000062,
+        "score": 548.2546201230998,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 9.779025527999238,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 28.062253196000256,
+        "cli_seconds": 27.08012571099971,
+        "score": 548.2546201234,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 9.632843076996778,
+        "converged": 46,
+        "workspace_creations": 17
+      }
+    ]
+  },
+  "lambda_campaign": {
+    "scope": "ABBA two runs per mode with identical binaries and production zero-Ruiz workspace reuse. Only device bound classification differs. Both mission checkers must pass.",
+    "baseline_process_median": 30.184427225001855,
+    "candidate_process_median": 29.308346567006083,
+    "less_process_time_percent": 2.902425981004242,
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 30.25877167400904,
+        "cli_seconds": 29.409114183974452,
+        "score": 548.2546201234,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 12.396172814304009,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 28.454866265994497,
+        "cli_seconds": 27.63541663903743,
+        "score": 548.2546201230996,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 10.439679126022384,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 30.16182686801767,
+        "cli_seconds": 29.356942535028793,
+        "score": 548.2546201231003,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 12.126454192970414,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 30.11008277599467,
+        "cli_seconds": 29.27434170700144,
+        "score": 548.2546201231999,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 11.75609619205352,
+        "converged": 46,
+        "workspace_creations": 17
+      }
+    ]
+  },
+  "local_first_fresh_solve_downloads": {
+    "baseline0": {
+      "adapter_d2h_bytes": 515324,
+      "adapter_d2h_count": 13,
+      "device_numeric_updates": 1
+    },
+    "candidate0": {
+      "adapter_d2h_bytes": 244499,
+      "adapter_d2h_count": 10,
+      "device_numeric_updates": 1
+    }
+  },
+  "lambda_first_fresh_solve_downloads": {
+    "baseline0": {
+      "adapter_d2h_bytes": 515324,
+      "adapter_d2h_count": 13,
+      "device_numeric_updates": 1
+    },
+    "candidate0": {
+      "adapter_d2h_bytes": 244499,
+      "adapter_d2h_count": 10,
+      "device_numeric_updates": 1
+    }
+  },
+  "final_tests_per_gpu": 77,
+  "broad_tests_per_gpu": 154,
+  "final_local_validation": {
+    "default_bound_types": true,
+    "pid": 1532,
+    "complete": true,
+    "stages": [
+      {
+        "name": "pytest",
+        "code": 0,
+        "seconds": 40.83714690199986,
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_bound_types.py",
+          "tests/test_gtoc12_gpu_qoco.py",
+          "tests/test_gtoc12_gpu_scvx.py",
+          "tests/test_gtoc12_gpu_device_initialization.py",
+          "tests/test_gtoc12_gpu_retained_replay.py",
+          "tests/test_gtoc12_gpu_workspace_pool.py",
+          "-x",
+          "-s",
+          "-q"
+        ]
+      }
+    ],
+    "core_sha256": "f4b97fa15825012c553a401caefac29305d23c2adc16010c042ebe5d00185921",
+    "qoco_sha256": "0cc27a1d8bde1edd74f7ef00e04ec64c2d6c0f8fe526a1d94b04d509a74b3315",
+    "source_sha256": {
+      "cpp/cuda/tests/native_qoco_conversion_test.cu": "299f2c53599058f7698a9d6db9b973dae6ffcd1091cbb76e48f28c6c491f61f1",
+      "tests/test_gtoc12_gpu_bound_types.py": "30479474ae3bd69f56e9174ca9a96ca2ffb5e3a909bae2da78e35851376b71a6",
+      "cpp/cuda/src/native_qoco_gpu.cu": "cbc11c030bba84be06a5f0ed9cbfb8885510673d2c7cf1c7a4ce10a5bf838f66",
+      "cpp/cuda/internal/native_qoco_gpu.h": "3804a4eca3c6bfa92a3a8dc0e2d652504fa4e81874511a16cb75b398d7edfc0f",
+      "cpp/cuda/tests/qoco_gpu_bound_types_test.cu": "4342cc3dd01f97b812c63412d1702c7167c51771cd0f6565a45eb4a0af762982",
+      "tests/test_gtoc12_gpu_qoco.py": "0e590aa872796a60303319c6ee12671d81418f98f44dd9846a2776a95f58464c",
+      "tests/test_gtoc12_gpu_scvx.py": "9cdf9e4417521a36e98496b088143dd7da2271cb3801cce5b6c67ff711b6d606",
+      "tests/test_gtoc12_gpu_device_initialization.py": "6298a3323318d65e1ccaa0c9715a28d05d2531d5d2d89c70138086bb594fb2c2",
+      "scripts/gpu/prepare_qoco_preserve_objective.py": "8218f2385fefea541a7b625b47057886c88ff2585be9b91fcfb879198fbfe69d",
+      "cpp/cuda/src/native_qoco_adapter.cpp": "6b7abade0300770260b782f01e80878f868023e936767982ea0255a5670f94fe",
+      "cpp/cuda/src/gtoc12_qoco.cu": "30c099f224e2d328a97df6acfa295e926eb99dc060f7288dc78b65fd2a589749",
+      "cpp/cuda/src/gtoc12_scvx.cu": "cbc57ee0df683d71ec2d14ded277fc490b642aff5a0093eb38616175c53914bb",
+      "tests/test_gtoc12_gpu_retained_replay.py": "9260302c9eb26ce3accbbd03486b1e550b87231093e87f9c8df8e68b9184df37",
+      "tests/test_gtoc12_gpu_workspace_pool.py": "73f6a39db3fb2017b8bcf8af3fdf37d0cc0b15064d015c994d14ccbb5ace2217",
+      "src/spacepdhcg/gtoc12/verifier.py": "56148828b0c0bed3e52263f54f1ad189019cf250b15008a75d8d5f3ea3b658cd",
+      "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e"
+    },
+    "stage": "pytest",
+    "child_pid": 2022
+  },
+  "final_lambda_validation": {
+    "default_bound_types": true,
+    "pid": 208114,
+    "complete": true,
+    "stages": [
+      {
+        "name": "pytest",
+        "code": 0,
+        "seconds": 50.63552841899218,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_bound_types.py",
+          "tests/test_gtoc12_gpu_qoco.py",
+          "tests/test_gtoc12_gpu_scvx.py",
+          "tests/test_gtoc12_gpu_device_initialization.py",
+          "tests/test_gtoc12_gpu_retained_replay.py",
+          "tests/test_gtoc12_gpu_workspace_pool.py",
+          "-x",
+          "-s",
+          "-q"
+        ]
+      }
+    ],
+    "core_sha256": "7c77a8981d63d5c67021eb2cae6e787fabf4634d8e1d5c374efc2a42c7a0a534",
+    "qoco_sha256": "b50d61903921659c1f431b7c2f3472e0f353e5e5a72159e4164d7d282d27c906",
+    "source_sha256": {
+      "cpp/cuda/tests/native_qoco_conversion_test.cu": "299f2c53599058f7698a9d6db9b973dae6ffcd1091cbb76e48f28c6c491f61f1",
+      "tests/test_gtoc12_gpu_bound_types.py": "30479474ae3bd69f56e9174ca9a96ca2ffb5e3a909bae2da78e35851376b71a6",
+      "cpp/cuda/src/native_qoco_gpu.cu": "cbc11c030bba84be06a5f0ed9cbfb8885510673d2c7cf1c7a4ce10a5bf838f66",
+      "cpp/cuda/internal/native_qoco_gpu.h": "3804a4eca3c6bfa92a3a8dc0e2d652504fa4e81874511a16cb75b398d7edfc0f",
+      "cpp/cuda/tests/qoco_gpu_bound_types_test.cu": "4342cc3dd01f97b812c63412d1702c7167c51771cd0f6565a45eb4a0af762982",
+      "tests/test_gtoc12_gpu_qoco.py": "0e590aa872796a60303319c6ee12671d81418f98f44dd9846a2776a95f58464c",
+      "tests/test_gtoc12_gpu_scvx.py": "9cdf9e4417521a36e98496b088143dd7da2271cb3801cce5b6c67ff711b6d606",
+      "tests/test_gtoc12_gpu_device_initialization.py": "6298a3323318d65e1ccaa0c9715a28d05d2531d5d2d89c70138086bb594fb2c2",
+      "scripts/gpu/prepare_qoco_preserve_objective.py": "8218f2385fefea541a7b625b47057886c88ff2585be9b91fcfb879198fbfe69d",
+      "cpp/cuda/src/native_qoco_adapter.cpp": "6b7abade0300770260b782f01e80878f868023e936767982ea0255a5670f94fe",
+      "cpp/cuda/src/gtoc12_qoco.cu": "30c099f224e2d328a97df6acfa295e926eb99dc060f7288dc78b65fd2a589749",
+      "cpp/cuda/src/gtoc12_scvx.cu": "cbc57ee0df683d71ec2d14ded277fc490b642aff5a0093eb38616175c53914bb",
+      "tests/test_gtoc12_gpu_retained_replay.py": "9260302c9eb26ce3accbbd03486b1e550b87231093e87f9c8df8e68b9184df37",
+      "tests/test_gtoc12_gpu_workspace_pool.py": "73f6a39db3fb2017b8bcf8af3fdf37d0cc0b15064d015c994d14ccbb5ace2217",
+      "src/spacepdhcg/gtoc12/verifier.py": "56148828b0c0bed3e52263f54f1ad189019cf250b15008a75d8d5f3ea3b658cd",
+      "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e"
+    },
+    "stage": "pytest",
+    "child_pid": 208691
+  },
+  "limitations": [
+    "One-byte bound classes are downloaded for host symbolic sparse assembly; raw bound values remain on CUDA. Topology, vendor setup and route/fleet orchestration still use the CPU.",
+    "Two campaigns per mode and one full replay per mode cannot establish a universal speedup. Numerical convergence variation remains.",
+    "Standalone classification memcheck, synccheck and racecheck pass. Previously documented full-solver cuDSS instrumentation failures remain unresolved.",
+    "No new fleet record; incumbent remains 12805.194102488575 weighted kg.",
+    "Replays and campaigns use explicit flag values on the experiment build. Final builds change only the flag default and extend the regression test to cover that default; 77 final tests validate both GPUs."
+  ]
+}

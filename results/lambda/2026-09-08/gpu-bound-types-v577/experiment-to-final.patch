@@ -1,0 +1,11 @@
+--- experiment-v568
++++ default-v575-v576
+@@ -752,7 +752,7 @@
+     std::vector<double> variable_lower{};
+     std::vector<double> variable_upper{};
+     const auto* bound_option=std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_BOUND_TYPES");
+-    const bool device_bounds=layout_only && bound_option && bound_option[0]=='1';
++    const bool device_bounds=layout_only && (!bound_option || bound_option[0]=='1');
+     std::vector<unsigned char> bound_types;
+ 
+     if (topology->device) {

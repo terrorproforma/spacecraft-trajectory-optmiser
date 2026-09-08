@@ -120,6 +120,13 @@ struct QocoConversionPlan {
     const QocoConversionPair* symmetry{};
 };
 struct QocoConversionInputs { const double* arrays[9]{}; };
+// Initial symbolic classification on CUDA. Download one byte per bound pair,
+// scalar rows then variables: 0=free, 1=upper, 2=lower, 3=both, 4=equality,
+// 255=NaN. No floating-point bound values leave the device. Completes stream.
+cudaError_t qoco_gpu_bound_types(int scalar_rows, int variables,
+    const double* scalar_lower, const double* scalar_upper,
+    const double* variable_lower, const double* variable_upper,
+    unsigned char* host_types, cudaStream_t);
 struct QocoGpuConversion;
 cudaError_t qoco_gpu_conversion_create(const QocoConversionPlan&, cudaStream_t, QocoGpuConversion**);
 // invalid: bit 1=changed bound classification, bit 2=nonfinite arithmetic,

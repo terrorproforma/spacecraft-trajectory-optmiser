@@ -751,6 +751,9 @@ spacepdhcg_cuda_status convert(
     std::vector<double> affine_offset{};
     std::vector<double> variable_lower{};
     std::vector<double> variable_upper{};
+    const auto* bound_option=std::getenv("SPACEPDHCG_TEST_QOCO_DEVICE_BOUND_TYPES");
+    const bool device_bounds=layout_only && (!bound_option || bound_option[0]=='1');
+    std::vector<unsigned char> bound_types;
 
     if (topology->device) {
         const auto status = validate_cached_topology(problem, stream, *topology);
@@ -828,31 +831,19 @@ spacepdhcg_cuda_status convert(
         static_cast<std::size_t>(n),
         output->c
     )
-    SPACEPDHCG_QOCO_LOAD(
-        problem.numeric.scalar_lower,
-        static_cast<std::size_t>(structure.scalar_rows),
-        lower
-    )
-    SPACEPDHCG_QOCO_LOAD(
-        problem.numeric.scalar_upper,
-        static_cast<std::size_t>(structure.scalar_rows),
-        upper
-    )
+    if (status == SPACEPDHCG_CUDA_SUCCESS)
+        status=load(problem.numeric.scalar_lower,structure.scalar_rows,&lower,device_bounds);
+    if (status == SPACEPDHCG_CUDA_SUCCESS)
+        status=load(problem.numeric.scalar_upper,structure.scalar_rows,&upper,device_bounds);
     SPACEPDHCG_QOCO_LOAD_NUMERIC(
         problem.numeric.affine_offset,
         static_cast<std::size_t>(structure.affine_rows),
         affine_offset
     )
-    SPACEPDHCG_QOCO_LOAD(
-        problem.numeric.variable_lower,
-        static_cast<std::size_t>(n),
-        variable_lower
-    )
-    SPACEPDHCG_QOCO_LOAD(
-        problem.numeric.variable_upper,
-        static_cast<std::size_t>(n),
-        variable_upper
-    )
+    if (status == SPACEPDHCG_CUDA_SUCCESS)
+        status=load(problem.numeric.variable_lower,n,&variable_lower,device_bounds);
+    if (status == SPACEPDHCG_CUDA_SUCCESS)
+        status=load(problem.numeric.variable_upper,n,&variable_upper,device_bounds);
 #undef SPACEPDHCG_QOCO_LOAD
 #undef SPACEPDHCG_QOCO_LOAD_NUMERIC
     const auto downloaded = downloads.finish();
@@ -860,6 +851,21 @@ spacepdhcg_cuda_status convert(
         return status;
     }
     if (downloaded != cudaSuccess) return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    if (device_bounds) {
+        if (structure.scalar_rows>std::numeric_limits<int>::max()-n) return SPACEPDHCG_CUDA_UNSUPPORTED;
+        const auto pointer=[](const auto& view) {
+            return view.data ? reinterpret_cast<const double*>(static_cast<const unsigned char*>(view.data)+view.byte_offset) : nullptr;
+        };
+        bound_types.resize(static_cast<std::size_t>(structure.scalar_rows)+n);
+        const auto classified=qoco_gpu_bound_types(structure.scalar_rows,n,
+            pointer(problem.numeric.scalar_lower),pointer(problem.numeric.scalar_upper),
+            pointer(problem.numeric.variable_lower),pointer(problem.numeric.variable_upper),bound_types.data(),stream);
+        if (classified!=cudaSuccess) return classified==cudaErrorMemoryAllocation
+            ? SPACEPDHCG_CUDA_OUT_OF_MEMORY : SPACEPDHCG_CUDA_RUNTIME_ERROR;
+        if (!bound_types.empty()) { ++*copy_count; *copy_bytes+=bound_types.size(); }
+        if (std::find(bound_types.begin(),bound_types.end(),255)!=bound_types.end())
+            return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
     if (!topology->device) {
         QocoTopologyInput input{};
         for (int i = 0; i < 6; ++i) {
@@ -934,17 +940,20 @@ spacepdhcg_cuda_status convert(
                 append_row(*rows, index, target, scale, destination);
             }
         };
-        if (std::isfinite(lo) && std::isfinite(hi) && lo == hi) {
+        const int kind=device_bounds ? bound_types[(source==Source::variable ? structure.scalar_rows : 0)+index]
+            : (std::isfinite(lo) && std::isfinite(hi) && lo==hi ? 4
+                : (std::isfinite(lo) ? 2 : 0)+(std::isfinite(hi) ? 1 : 0));
+        if (kind == 4) {
             add(&equality_entries, static_cast<int>(output->b.size()), 1.0);
             output->b.push_back(lo);
             output->equality_map.push_back({source, index, 0, -1, 0, 0, false});
         } else {
-            if (std::isfinite(hi)) {
+            if (kind & 1) {
                 add(&conic_entries, static_cast<int>(output->h.size()), 1.0);
                 output->h.push_back(hi);
                 output->conic_map.push_back({source, index, 1, -1, 0, 0, false});
             }
-            if (std::isfinite(lo)) {
+            if (kind & 2) {
                 add(&conic_entries, static_cast<int>(output->h.size()), -1.0);
                 output->h.push_back(-lo);
                 output->conic_map.push_back({source, index, -1, -1, 0, 0, false});

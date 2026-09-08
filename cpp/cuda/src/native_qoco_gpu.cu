@@ -642,6 +642,19 @@ struct QocoGpuConversion {
 };
 
 namespace {
+__device__ int bound_kind(double lower, double upper) {
+    return isfinite(lower) && isfinite(upper) && lower == upper ? 4
+        : (isfinite(lower) ? 2 : 0) + (isfinite(upper) ? 1 : 0);
+}
+__global__ void classify_bounds(int scalar_rows, int count,
+    const double* scalar_lower, const double* scalar_upper,
+    const double* variable_lower, const double* variable_upper, unsigned char* types) {
+    for (std::int64_t i=blockIdx.x*blockDim.x+threadIdx.x; i<count; i+=gridDim.x*blockDim.x) {
+        const double lower=i<scalar_rows ? scalar_lower[i] : variable_lower[i-scalar_rows];
+        const double upper=i<scalar_rows ? scalar_upper[i] : variable_upper[i-scalar_rows];
+        types[i]=isnan(lower) || isnan(upper) ? 255 : bound_kind(lower,upper);
+    }
+}
 __global__ void combine_validation(const int* input,int* flags,int bit) {
     if (*input) *flags |= bit;
 }
@@ -658,8 +671,7 @@ __global__ void conversion_validate(QocoConversionPlan plan, QocoConversionInput
         if (isnan(value) || (!bound && !isfinite(value))) atomicOr(invalid, 2);
         if (array == 4 || array == 7) {
             const double upper = in.arrays[array + 1][i];
-            const int kind = isfinite(value) && isfinite(upper) && value == upper ? 4
-                : (isfinite(value) ? 2 : 0) + (isfinite(upper) ? 1 : 0);
+            const int kind = bound_kind(value, upper);
             const int expected = plan.bound_types[(array == 7 ? plan.input_counts[4] : 0) + i];
             if (kind != expected) atomicOr(invalid, 1);
         }
@@ -693,6 +705,29 @@ __global__ void conversion_gather(QocoConversionPlan plan, QocoConversionInputs 
         output[i] = sum;
     }
 }
+}
+
+cudaError_t qoco_gpu_bound_types(int scalar_rows, int variables,
+    const double* scalar_lower, const double* scalar_upper,
+    const double* variable_lower, const double* variable_upper,
+    unsigned char* host_types, cudaStream_t stream) {
+    if (scalar_rows<0 || variables<0 || scalar_rows>INT_MAX-variables
+        || (scalar_rows && (!scalar_lower || !scalar_upper))
+        || (variables && (!variable_lower || !variable_upper))) return cudaErrorInvalidValue;
+    const int count=scalar_rows+variables;
+    if (!count) return cudaStreamSynchronize(stream);
+    if (!host_types) return cudaErrorInvalidValue;
+    try {
+        QocoAuditMemory memory{};
+        Buffer<unsigned char> types;
+        types.allocate(count,memory);
+        classify_bounds<<<std::min(512,1+(count-1)/256),256,0,stream>>>(scalar_rows,count,
+            scalar_lower,scalar_upper,variable_lower,variable_upper,types.data);
+        check(cudaGetLastError());
+        check(cudaMemcpyAsync(host_types,types.data,count,cudaMemcpyDeviceToHost,stream));
+        check(cudaStreamSynchronize(stream));
+        return cudaSuccess;
+    } catch (const Failure& failure) { return failure.status; }
 }
 
 cudaError_t qoco_gpu_conversion_create(const QocoConversionPlan& in, cudaStream_t stream,
