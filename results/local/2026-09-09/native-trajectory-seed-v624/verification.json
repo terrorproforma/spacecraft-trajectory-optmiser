@@ -1,0 +1,117 @@
+{
+  "complete": true,
+  "passed": true,
+  "index_sha256": "8a0029d2dc9163a7662154f761f5f9339884e8715d8b3a62c1312d3e0a0cfb38",
+  "audit_helper_sha256": "e4e1a2ab107e3e30a2a3258a17defc5b3f7a943625a6383c753d72fca52f5fe3",
+  "external_index_pin_supplied": true,
+  "archive_sha256": "4f43b84567bb9b2076e8e81d6bfe3fb26a5d454a08a8ee5ee3b7f6b368bb1316",
+  "files": 373,
+  "indexed_bytes": 18831919,
+  "scanned_members": 1688,
+  "nested_archives": 12,
+  "scanned_expanded_bytes": 32649007,
+  "core_builds": {
+    "a": {
+      "manifest_sha256": "4b03b2b7258a96a5c4f4b8e8ff5e6534806435381121551aa334714aa7ae0b7d",
+      "source_files": 388,
+      "source_tree_sha256": "07ddc154563618c42693d4d8acd19fb6f6e11122c9f332d0960880bd2cdbc0d9",
+      "complete": false
+    },
+    "b": {
+      "manifest_sha256": "bf90b268a35378acf30513835b86defd37d55545cf2e342225ed15b9a167ef9b",
+      "source_files": 388,
+      "source_tree_sha256": "9179e8110cc3955ab089cdef03ef40dc8f7606e81876a38627181e683bc1bfcf",
+      "complete": true
+    },
+    "c": {
+      "manifest_sha256": "eb2c43c8c949b8cc57028b10cb3c116b30a749da0b5c6c1fb811af346d7a0640",
+      "source_files": 388,
+      "source_tree_sha256": "397397cc56e59fef65d78e13f69fd505b54cf11bb4777f3aa25dad7dcbe05565",
+      "complete": true
+    }
+  },
+  "python_validation": {
+    "source_files": 6,
+    "passed": 57,
+    "skipped": 2,
+    "GPU_calls": 0
+  },
+  "gpu_unit_evidence": {
+    "stages": [
+      "gtoc12_scvx_test",
+      "gtoc12_verification_test",
+      "gtoc12_zoh_seed_test",
+      "memcheck",
+      "racecheck",
+      "synccheck"
+    ],
+    "passed": 6,
+    "gpu_uuid": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4",
+    "artifact_hash_scope": "Reported hashes bound to c manifest; executable bytes omitted."
+  },
+  "runtime_source": {
+    "base_host_files": 189,
+    "python_overlays": 5,
+    "extraction_files_retained": 18,
+    "worker_ready_files": 48
+  },
+  "mission_evidence": {
+    "status": "certified_first_leg",
+    "inspection_calls": 1,
+    "native_solves": 1,
+    "certificate_calls": 1,
+    "saved_leg_certified": true,
+    "independent_saved_metric_gate": true,
+    "independent_result_findings_sha256": "b697a4c8f35ddc0c89346d84a43beacb779bf472dc721964392ca40130beb1c6",
+    "qualification_scope": "Saved original certificate status; independent NPZ/gate math is in the separate result auditor.",
+    "fleet_score_promotions": 0
+  },
+  "separate_CPU_certificate_evidence": {
+    "whole_leg_CPU_replays": 1,
+    "burn_DOP853_calls": 159,
+    "coast_calls": 1,
+    "GPU_calls": 0,
+    "optimizer_calls": 0,
+    "passed_original_gates": true,
+    "report_sha256": "8d62eccc4c8117f481651eccf4eee0c37d3ef394c2599cdaed075562e4343d56",
+    "scope": "Separate saved CPU reference; excluded from original GPU timing. No replay performed by this audit.",
+    "external_scipy_source_hashes": {
+      "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/scipy/integrate/_ivp/ivp.py": "b952d024de4bfe1aefd4702e934b773a27679772ce3c27b60b2917aaf8b39f1e",
+      "/home/angus/worktrees/spacepdhcg-literature-venv/lib/python3.12/site-packages/scipy/integrate/_ivp/rk.py": "2a6b9eec1914e8b1dd57d2214f0f6f17900319dac9ae94a47577879211f0250b"
+    }
+  },
+  "audit_actions": {
+    "archive_extractions": 0,
+    "archived_code_executions": 0,
+    "GPU_calls": 0,
+    "solver_calls": 0,
+    "propagation_calls": 0
+  },
+  "limitations": [
+    "Source base agreement is against hash-pinned reviewed manifests; no Git/network lookup is performed.",
+    "Binary and hardware identities are reported provenance; binary bytes are intentionally absent.",
+    "This audit does not recompute trajectories, original certificate arithmetic, performance or score."
+  ],
+  "fresh_saved_data_audits": [
+    {
+      "name": "gpu",
+      "passed": true,
+      "parsed_findings_identical": true,
+      "archived_findings_sha256": "b697a4c8f35ddc0c89346d84a43beacb779bf472dc721964392ca40130beb1c6",
+      "fresh_findings_sha256": "b697a4c8f35ddc0c89346d84a43beacb779bf472dc721964392ca40130beb1c6",
+      "GPU_calls": 0,
+      "solver_calls": 0,
+      "propagation_calls": 0
+    },
+    {
+      "name": "cpu",
+      "passed": true,
+      "parsed_findings_identical": true,
+      "archived_findings_sha256": "8616cf0081c098e8c3d9d9a725265ae75be046200db2c0b89cc1b725fb195d39",
+      "fresh_findings_sha256": "8616cf0081c098e8c3d9d9a725265ae75be046200db2c0b89cc1b725fb195d39",
+      "GPU_calls": 0,
+      "solver_calls": 0,
+      "propagation_calls": 0
+    }
+  ]
+}

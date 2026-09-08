@@ -1,5 +1,6 @@
 #include "spacepdhcg/cuda/gtoc12_scvx_c_api.h"
 #include "spacepdhcg/cuda/gtoc12_discretisation_c_api.h"
+#include "spacepdhcg/cuda/gtoc12_verification_c_api.h"
 #include <cuda_runtime.h>
 #include <math_constants.h>
 #include <algorithm>
@@ -103,6 +104,15 @@ __global__ void initialize(State* s, Settings p, spacepdhcg_gtoc12_conic_paramet
     s->trust_state=p.initial_trust_state; s->trust_control=p.initial_trust_control;
     *conic={p.initial_trust_state,p.initial_trust_control,p.virtual_weight,p.minimum_mass,
         p.radius_floor,p.vinf_max,p.smoothness_weight};
+}
+
+struct BoundaryVelocities { double departure[3], arrival[3]; };
+__global__ void initialize_vinf(State* s, const double* states, int nodes,
+    int free_dep, int free_arr, BoundaryVelocities body) {
+    for(int j=0;j<3;++j) {
+        s->result.departure_vinf[j]=free_dep ? states[3+j]-body.departure[j] : 0.0;
+        s->result.arrival_vinf[j]=free_arr ? states[7*(nodes-1)+3+j]-body.arrival[j] : 0.0;
+    }
 }
 
 __global__ void set_reference(State* s, const Metrics* m, Settings p, bool only_refresh=false) {
@@ -310,6 +320,8 @@ struct Workspace {
     spacepdhcg_gtoc12_qoco* qoco{};
     spacepdhcg_gtoc12_discretisation* dynamics{};
     double *states{},*controls{},*fuel{};
+    double *seed_times{},*seed_initial{},*seed_thrust{};
+    spacepdhcg_verify_result* seed_report{};
     Metrics *partial{},*metrics{};
     State* state{};
     Command* host_command{};
@@ -337,10 +349,20 @@ struct Workspace {
             retain_qoco=false;
         gtoc12_qoco_release(qoco,retain_qoco); spacepdhcg_gtoc12_discretisation_destroy(dynamics);
         cudaFree(states); cudaFree(controls); cudaFree(fuel); cudaFree(partial); cudaFree(metrics);
+        cudaFree(seed_times); cudaFree(seed_initial); cudaFree(seed_thrust); cudaFree(seed_report);
         cudaFree(state); cudaFree(records); cudaFree(parameters);
         cudaFree(graph_exit_result);cudaFree(graph_reports);
         cudaFreeHost(host_command);
         if (stream) cudaStreamDestroy(stream);
+    }
+    bool prepare_zoh(int nodes,const double* times,const double* initial,const double* thrust) {
+        return allocate(&seed_times,nodes) && allocate(&seed_initial,7)
+            && allocate(&seed_thrust,3*nodes) && allocate(&seed_report,1)
+            && cudaMemcpyAsync(seed_times,times,nodes*sizeof(double),cudaMemcpyHostToDevice,stream)==cudaSuccess
+            && cudaMemcpyAsync(seed_initial,initial,7*sizeof(double),cudaMemcpyHostToDevice,stream)==cudaSuccess
+            && cudaMemcpyAsync(seed_thrust,thrust,3*nodes*sizeof(double),cudaMemcpyHostToDevice,stream)==cudaSuccess
+            && spacepdhcg_gtoc12_verify_zoh_seed_launch(nodes,seed_times,seed_initial,seed_thrust,
+                100000,states,controls,seed_report,stream)==cudaSuccess;
     }
 };
 bool valid(const Settings& p) {
@@ -367,10 +389,11 @@ bool valid(const Settings& p) {
 }
 }
 
-extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free_dep,int free_arr,
+static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
     double kappa,double mass_flow,const double* times,const double* boundary,const double* fuel,
     const double* seed_states,const double* seed_controls,int ruiz,const Settings* settings,
-    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result) {
+    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result,
+    bool physical_zoh_seed) {
     if (!settings || !valid(*settings) || (bool(seed_states)!=bool(seed_controls)) || !states || !controls
         || !records || !reports || !result) return 1;
     *result={};
@@ -418,7 +441,9 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         w.conditioning_retry=true;
     }
     if (cudaMemcpyAsync(w.fuel,fuel,nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess) return 2;
-    if (seed_states) {
+    if (physical_zoh_seed) {
+        if(!w.prepare_zoh(nodes,times,seed_states,seed_controls)) return 2;
+    } else if (seed_states) {
         if (cudaMemcpyAsync(w.states,seed_states,7*nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess
             || cudaMemcpyAsync(w.controls,seed_controls,4*nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess) return 2;
     } else {
@@ -440,7 +465,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };
     struct ConsumerContext {
-        const decltype(measure)* measure;
+        const decltype(measure)* measure_fn;
         Workspace* workspace;
         Settings settings;
         int nodes,free_dep,free_arr,substeps;
@@ -455,7 +480,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
             w.state,report,w.graph_base,w.graph_progress,w.graph_reports);
         // Speculative measurement handles invalid numbers on device; acceptance
         // is always gated by the independent conic qualification in decide.
-        const int status=(*c.measure)(x,x+7*c.nodes,c.substeps,true);
+        const int status=(*c.measure_fn)(x,x+7*c.nodes,c.substeps,true);
         if (status) return status;
         decide<<<1,1,0,w.stream>>>(w.state,c.settings,w.metrics,x,c.nodes,c.free_dep,c.free_arr,
             0,-1,w.records,w.parameters,report,c.stop_stationary);
@@ -480,6 +505,9 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };
     initialize<<<1,1,0,w.stream>>>(w.state,p,w.parameters);
+    BoundaryVelocities velocities{};
+    for(int j=0;j<3;++j) { velocities.departure[j]=boundary[3+j]; velocities.arrival[j]=boundary[9+j]; }
+    initialize_vinf<<<1,1,0,w.stream>>>(w.state,w.states,nodes,free_dep,free_arr,velocities);
     if ((code=measure(w.states,w.controls,p.substeps,false))) return code;
     set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p);
     auto& command=*w.host_command;
@@ -618,13 +646,60 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         || cudaMemcpyAsync(records,w.records,attempts*sizeof(Record),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
         || cudaMemcpyAsync(result,&w.state->result,sizeof(Result),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
         || cudaStreamSynchronize(w.stream)!=cudaSuccess) return 2;
-    result->trajectory_upload_bytes=seed_states ? 11*nodes*sizeof(double) : 0;
+    result->trajectory_upload_bytes=physical_zoh_seed ? (3*nodes+7)*sizeof(double)
+        : seed_states ? 11*nodes*sizeof(double) : 0;
     result->trajectory_download_bytes=11*nodes*sizeof(double);
     result->control_download_bytes=control_bytes;
     trace.iterations=result->iterations;trace.status=result->status;
     w.retain_qoco=result->status==1;
     trace.phase(PhaseTrace::Cleanup);
     return 0;
+}
+
+extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free_dep,int free_arr,
+    double kappa,double mass_flow,const double* times,const double* boundary,const double* fuel,
+    const double* seed_states,const double* seed_controls,int ruiz,const Settings* settings,
+    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result) {
+    return solve_impl(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,fuel,
+        seed_states,seed_controls,ruiz,settings,states,controls,records,reports,result,false);
+}
+
+extern "C" int spacepdhcg_gtoc12_scvx_solve_zoh_seed_host(int intervals,int hold,int free_dep,int free_arr,
+    double kappa,double mass_flow,const double* times,const double* boundary,const double* fuel,
+    const double* initial,const double* thrust,int ruiz,const Settings* settings,
+    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result) {
+    if(intervals<1 || intervals>(INT_MAX-1024)/512 || hold!=0 || !times || !boundary || !fuel
+        || !initial || !thrust || !(initial[6]>0.0) || !std::isfinite(initial[6])) return 1;
+    constexpr double du=1.49597870691e8;
+    const double tu=std::sqrt(du*du*du/1.32712440018e11),vu=du/tu;
+    const double expected_kappa=0.6/(initial[6]*(du*1000.0/(tu*tu)));
+    const double expected_flow=0.6*tu/(4000.0*9.80665*initial[6]);
+    if(!(expected_kappa>0.0) || !(expected_flow>0.0)
+        || !std::isfinite(expected_kappa) || !std::isfinite(expected_flow)
+        || !(kappa>0.0) || !(mass_flow>0.0) || !std::isfinite(kappa) || !std::isfinite(mass_flow)
+        || std::fabs(kappa-expected_kappa)>1e-12*expected_kappa
+        || std::fabs(mass_flow-expected_flow)>1e-12*expected_flow) return 1;
+    for(int j=0;j<6;++j) {
+        if(!std::isfinite(initial[j]) || !std::isfinite(boundary[j])) return 1;
+        if((j<3 || !free_dep) && std::fabs(initial[j]/(j<3 ? du : vu)-boundary[j])>1e-12) return 1;
+    }
+    return solve_impl(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,fuel,
+        initial,thrust,ruiz,settings,states,controls,records,reports,result,true);
+}
+
+extern "C" int spacepdhcg_gtoc12_zoh_seed_evaluate_host(int nodes,const double* times,
+    const double* initial,const double* thrust,double* states,double* controls) {
+    if(nodes<2 || nodes>(INT_MAX-1024)/512 || !times || !initial || !thrust || !states || !controls) return 1;
+    Workspace w;
+    if(cudaStreamCreateWithFlags(&w.stream,cudaStreamNonBlocking)!=cudaSuccess
+        || !allocate(&w.states,7*nodes) || !allocate(&w.controls,4*nodes)
+        || !w.prepare_zoh(nodes,times,initial,thrust)) return 2;
+    spacepdhcg_verify_result report{};
+    if(cudaMemcpyAsync(states,w.states,7*nodes*sizeof(double),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
+        || cudaMemcpyAsync(controls,w.controls,4*nodes*sizeof(double),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
+        || cudaMemcpyAsync(&report,w.seed_report,sizeof(report),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
+        || cudaStreamSynchronize(w.stream)!=cudaSuccess) return 2;
+    return report.status ? 3 : 0;
 }
 
 extern "C" int spacepdhcg_gtoc12_seed_evaluate_host(int nodes,const double* times,const double* boundary,

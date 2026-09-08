@@ -31,6 +31,17 @@ cudaError_t spacepdhcg_gtoc12_verify_launch(
     const spacepdhcg_verify_arc* arcs, int32_t arc_count,
     const spacepdhcg_verify_sample* samples, int32_t sample_count,
     int32_t max_steps, spacepdhcg_verify_result* results, cudaStream_t stream);
+// Exact same-grid ZOH initialization. Inputs are device arrays: one physical
+// initial state [km, km/s, kg], increasing nondimensional node times, and N*3
+// thrust samples in newtons (the inactive last sample must be zero). Outputs
+// are N*7 states [r/AU, v/(AU/TU), m/m0] and N*4 controls [T, |T|]/0.6.
+// DOP853 advances the original piecewise-constant control without clipping or
+// endpoint snapping. This prepares an iterate, not an optimality certificate.
+// The step budget covers the entire leg; every output is NaN on failure.
+cudaError_t spacepdhcg_gtoc12_verify_zoh_seed_launch(
+    int32_t nodes, const double* times, const double* initial,
+    const double* thrust, int32_t max_steps, double* states, double* controls,
+    spacepdhcg_verify_result* result, cudaStream_t stream);
 // Retained host bridge for existing application callers. Fixed capacities,
 // serialized calls from the creating thread/device; one upload and final read.
 typedef struct spacepdhcg_verify_workspace spacepdhcg_verify_workspace;

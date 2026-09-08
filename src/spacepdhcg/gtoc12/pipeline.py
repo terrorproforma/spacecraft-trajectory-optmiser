@@ -50,6 +50,7 @@ from .low_thrust import (
     LegCertificate,
     LegSolution,
     ScvxSettings,
+    ZohTrajectorySeed,
     certify_leg,
     solve_leg,
 )
@@ -80,6 +81,7 @@ class LegRecord:
     certificate: LegCertificate | None = None
     certification_backend: str | None = None
     result: ArcResult | None = None
+    seed: ZohTrajectorySeed | None = None
 
 
 class LegRegistry:
@@ -88,8 +90,10 @@ class LegRegistry:
     def __init__(self) -> None:
         self.records: dict[int, LegRecord] = {}
 
-    def register(self, request: ArcRequest, boundary: LegBoundary) -> None:
-        self.records[request.deterministic_id] = LegRecord(request, boundary)
+    def register(
+        self, request: ArcRequest, boundary: LegBoundary, *, seed: ZohTrajectorySeed | None = None
+    ) -> None:
+        self.records[request.deterministic_id] = LegRecord(request, boundary, seed=seed)
 
 
 class Gtoc12ScvxDriver:
@@ -135,7 +139,10 @@ class Gtoc12ScvxDriver:
         record.certificate = None
         record.certification_backend = None
         try:
-            solution = solve_leg(record.boundary, self.settings)
+            solution = (
+                solve_leg(record.boundary, self.settings, seed=record.seed)
+                if record.seed is not None else solve_leg(record.boundary, self.settings)
+            )
         except Exception as error:
             return G3Solve(
                 G3Status.NUMERICAL_FAILURE, diagnostic=f"{type(error).__name__}: {error}"

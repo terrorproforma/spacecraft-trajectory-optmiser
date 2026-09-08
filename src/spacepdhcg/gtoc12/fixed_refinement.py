@@ -77,7 +77,7 @@ class FrozenLegRunner:
             tolerance=0.5,
         )
 
-    def solve(self, leg, boundary, index):
+    def solve(self, leg, boundary, index, *, seed=None):
         node_count = math.floor(leg.tof_days + 1e-9) + 2
         topology = p.TopologyKey(
             p._hash_int(f"{p.MODEL_IDENTIFIER}:{node_count}"),
@@ -103,7 +103,10 @@ class FrozenLegRunner:
         )
         if request.from_target == request.to_target:
             raise ValueError("leg endpoints coincide")
-        self.registry.register(request, boundary)
+        if seed is None:
+            self.registry.register(request, boundary)
+        else:
+            self.registry.register(request, boundary, seed=seed)
         result = self.scheduler.run([request])[0]
         record = self.registry.records[request.deterministic_id]
         certification = self.certifier.certify(result)

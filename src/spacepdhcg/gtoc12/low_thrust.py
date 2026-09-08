@@ -31,6 +31,7 @@ import scipy.sparse as sp
 from numpy.typing import NDArray
 
 from . import constants as C
+from .trajectory_seed import ZohTrajectorySeed
 
 FloatArray = NDArray[np.float64]
 
@@ -650,14 +651,25 @@ def _ballistic_reference(
     return states, controls
 
 
-def solve_leg(boundary: LegBoundary, settings: ScvxSettings | None = None) -> LegSolution:
+def solve_leg(
+    boundary: LegBoundary,
+    settings: ScvxSettings | None = None,
+    *,
+    seed: ZohTrajectorySeed | None = None,
+) -> LegSolution:
     """Run SCvx on one leg and return the nodal thrust samples plus diagnostics."""
 
     with ExitStack() as resources:
-        return _solve_leg(boundary, settings or ScvxSettings(), resources)
+        return _solve_leg(boundary, settings or ScvxSettings(), resources, seed=seed)
 
 
-def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitStack) -> LegSolution:
+def _solve_leg(
+    boundary: LegBoundary,
+    settings: ScvxSettings,
+    resources: ExitStack,
+    *,
+    seed: ZohTrajectorySeed | None = None,
+) -> LegSolution:
 
     settings = settings or ScvxSettings()
     if settings.outer_loop_backend not in {"python", "cuda"}:
@@ -691,6 +703,10 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
         node_days = np.linspace(0.0, duration_days, STENCIL)
     node_times = node_days * C.DAY_S / TU_S
     nodes = node_times.shape[0]
+    if seed is not None:
+        if not isinstance(seed, ZohTrajectorySeed):
+            raise TypeError("seed must be a ZohTrajectorySeed")
+        seed.validate_for(boundary, settings, boundary.departure_epoch + node_days)
     model = _Model(boundary.initial_mass)
     if settings.discretisation_backend == "numpy":
         disc = _Discretisation(model, node_times, settings.substeps, settings.hold)
@@ -734,6 +750,9 @@ def _solve_leg(boundary: LegBoundary, settings: ScvxSettings, resources: ExitSta
     if settings.outer_loop_backend == "cuda":
         from .gpu_scvx import solve_native
 
+        if seed is not None:
+            return solve_native(boundary, settings, model, node_times, node_days, bnd, fuel_weights,
+                                states, controls, started, seed=seed)
         return solve_native(boundary, settings, model, node_times, node_days, bnd, fuel_weights,
                             states, controls, started)
     if settings.convex_solver_backend == "qoco":

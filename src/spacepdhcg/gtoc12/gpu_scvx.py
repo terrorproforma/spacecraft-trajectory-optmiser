@@ -109,8 +109,27 @@ class _Result(ct.Structure):
 
 
 def solve_native(
-    boundary, settings, model, times, days, bnd, fuel, seed_states, seed_controls, started
+    boundary,
+    settings,
+    model,
+    times,
+    days,
+    bnd,
+    fuel,
+    seed_states,
+    seed_controls,
+    started,
+    *,
+    seed=None,
 ):
+    if seed is not None:
+        from .trajectory_seed import ZohTrajectorySeed
+
+        if not isinstance(seed, ZohTrajectorySeed):
+            raise TypeError("seed must be a ZohTrajectorySeed")
+        seed.validate_for(boundary, settings, boundary.departure_epoch + days)
+        if seed_states is not None or seed_controls is not None:
+            raise ValueError("a ZOH trajectory seed cannot be combined with internal seed arrays")
     conditioning_retry = os.environ.get("SPACEPDHCG_TEST_GTOC12_CONDITIONING_RETRY") == "1"
     path = os.environ.get("SPACEPDHCG_GTOC12_CUDA_LIBRARY")
     qoco = os.environ.get("SPACEPDHCG_QOCO_LIBRARY")
@@ -118,10 +137,22 @@ def solve_native(
         raise RuntimeError("CUDA outer loop requires configured native core and GPU QOCO libraries")
     library = ct.CDLL(str(Path(path).resolve(strict=True)))
     try:
-        solve = library.spacepdhcg_gtoc12_scvx_solve_host
+        solve = (
+            library.spacepdhcg_gtoc12_scvx_solve_zoh_seed_host
+            if seed is not None
+            else library.spacepdhcg_gtoc12_scvx_solve_host
+        )
     except AttributeError as exc:
+        if seed is not None:
+            raise RuntimeError(
+                "Native core lacks CUDA ZOH replay seed extension; no fallback"
+            ) from exc
         raise RuntimeError("Native core lacks CUDA SCvx extension; no Python fallback") from exc
-    if seed_states is None and not hasattr(library, "spacepdhcg_gtoc12_seed_evaluate_host"):
+    if (
+        seed is None
+        and seed_states is None
+        and not hasattr(library, "spacepdhcg_gtoc12_seed_evaluate_host")
+    ):
         raise RuntimeError("Native core lacks GPU seed extension; no CPU fallback")
     solve.argtypes = (
         [ct.c_int] * 4
@@ -162,8 +193,8 @@ def solve_native(
             times,
             np.concatenate([bnd[k] for k in ("r0", "v0", "rf", "vf")]),
             fuel,
-            seed_states,
-            seed_controls,
+            seed.initial_state if seed is not None else seed_states,
+            seed.thrust_n if seed is not None else seed_controls,
         )
     ]
     states, controls = np.empty((len(times), 7)), np.empty((len(times), 4))
@@ -263,7 +294,9 @@ def solve_native(
         convex_solver_backend="qoco",
         solver_reports=solver_reports,
         outer_loop_backend="cuda",
-        seed_backend="cuda" if seed_states is None else "numpy",
+        seed_backend="cuda_zoh_replay"
+        if seed is not None
+        else ("cuda" if seed_states is None else "numpy"),
         outer_transfer_bytes={
             name: getattr(result, name)
             for name in (

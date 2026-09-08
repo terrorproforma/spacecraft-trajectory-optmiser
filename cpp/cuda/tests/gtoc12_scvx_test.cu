@@ -263,7 +263,36 @@ void reductions(int nodes,bool poison) {
     CUDA(cudaFree(invalid)); CUDA(cudaFree(partial)); CUDA(cudaFree(out));
 }
 
+void initial_velocity_outputs() {
+    // Invalid model scaling must be rejected before allocation or GPU access.
+    double tiny_initial[7]={1.49597870691e8,0,0,0,0,0,1e-320};
+    double dummy[12]={};
+    REQUIRE(spacepdhcg_gtoc12_scvx_solve_zoh_seed_host(1,0,1,0,1,1,dummy,dummy,dummy,
+        tiny_initial,dummy,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr)==1);
+    State* state{}; double* states{};
+    spacepdhcg_gtoc12_conic_parameters* parameters{};
+    CUDA(cudaMalloc(&state,sizeof(State))); CUDA(cudaMalloc(&states,14*sizeof(double)));
+    CUDA(cudaMalloc(&parameters,sizeof(*parameters)));
+    double values[14]={1,0,0,.1,.2,.3,1, 1,0,0,.4,.5,.6,.9};
+    CUDA(cudaMemcpy(states,values,sizeof(values),cudaMemcpyHostToDevice));
+    BoundaryVelocities body{{.01,.02,.03},{.04,.05,.06}};
+    for(int departure=0;departure<2;++departure) for(int arrival=0;arrival<2;++arrival) {
+        const auto p=fixture();
+        initialize<<<1,1>>>(state,p,parameters);
+        initialize_vinf<<<1,1>>>(state,states,2,departure,arrival,body);
+        finalize<<<1,1>>>(state,p,1); // no candidate accepted before the deadline
+        State out{}; CUDA(cudaMemcpy(&out,state,sizeof(out),cudaMemcpyDeviceToHost));
+        REQUIRE(out.result.accepted_iterations==0 && out.result.status==4);
+        for(int j=0;j<3;++j) {
+            REQUIRE(out.result.departure_vinf[j]==(departure ? values[3+j]-body.departure[j] : 0.0));
+            REQUIRE(out.result.arrival_vinf[j]==(arrival ? values[10+j]-body.arrival[j] : 0.0));
+        }
+    }
+    CUDA(cudaFree(state)); CUDA(cudaFree(states)); CUDA(cudaFree(parameters));
+}
+
 int main() {
+    initial_velocity_outputs();
     controller();
     for (int n:{4,37,4097,10001}) for (bool poison:{false,true}) reductions(n,poison);
     std::puts("PASS: 22 controller branches, 18 bounded-retry transitions, 48 stationary-failure transitions, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");

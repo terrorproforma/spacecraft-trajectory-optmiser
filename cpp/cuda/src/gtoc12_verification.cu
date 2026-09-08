@@ -163,7 +163,64 @@ __global__ void verify(const spacepdhcg_verify_leg* legs, int nlegs,
     if(lane<7) result.final_state[lane]=s.status ? nan("") : s.y[lane];
     if(lane==0) { result.status=s.status; if(s.status) result.minimum_radius_km=nan(""); }
 }
+
+// A single forward rollout has a causal dependency between intervals. Its
+// seven state components cooperate in one warp; SCvx subsequently linearizes
+// all intervals in parallel. No trajectory states return to the host here.
+__global__ void zoh_seed(int nodes, const double* times, const double* initial,
+    const double* thrust, int budget, double* states, double* controls,
+    spacepdhcg_verify_result* output) {
+    const int lane=threadIdx.x;
+    __shared__ Scratch s;
+    __shared__ spacepdhcg_verify_sample samples[2];
+    auto& result=*output;
+    constexpr double du=1.49597870691e8;
+    const double tu=sqrt(du*du*du/1.32712440018e11),vu=du/tu;
+    if(lane==0) { result={}; s.status=0; }
+    if(lane<7) s.y[lane]=initial[lane];
+    bool bad=false;
+    for(int i=lane;i<nodes;i+=32) {
+        bad |= !isfinite(times[i]) || (i && !(times[i]>times[i-1]));
+        for(int j=0;j<3;++j) bad |= !isfinite(thrust[3*i+j]) ||
+            (i==nodes-1 && thrust[3*i+j]!=0.0);
+    }
+    const bool bad_input=__any_sync(mask,bad);
+    __syncwarp(mask);
+    if(!valid_state(s.y,lane) || bad_input) { if(lane==0) s.status=1; }
+    __syncwarp(mask);
+    if(lane==0) result.minimum_radius_km=radius(s.y);
+    for(int i=0;i<nodes && !s.status;++i) {
+        if(lane<7) states[7*i+lane]=s.y[lane]/(lane<3 ? du : lane<6 ? vu : initial[6]);
+        if(lane<3) controls[4*i+lane]=thrust[3*i+lane]/0.6;
+        if(lane==3) {
+            const double x=thrust[3*i],y=thrust[3*i+1],z=thrust[3*i+2];
+            controls[4*i+3]=sqrt(x*x+y*y+z*z)/0.6;
+        }
+        if(i==nodes-1) break;
+        if(lane<2) samples[lane].seconds=(times[i+lane]-times[0])*tu;
+        if(lane<3) samples[0].thrust[lane]=samples[1].thrust[lane]=thrust[3*i+lane];
+        __syncwarp(mask);
+        segment(s,samples[0].seconds,samples[1].seconds,samples,2,budget,result,lane);
+        __syncwarp(mask);
+    }
+    if(s.status) {
+        for(int i=lane;i<7*nodes;i+=32) states[i]=nan("");
+        for(int i=lane;i<4*nodes;i+=32) controls[i]=nan("");
+    }
+    if(lane<7) result.final_state[lane]=s.status ? nan("") : s.y[lane];
+    if(lane==0) { result.status=s.status; if(s.status) result.minimum_radius_km=nan(""); }
+}
 } // namespace
+
+extern "C" cudaError_t spacepdhcg_gtoc12_verify_zoh_seed_launch(
+    int32_t nodes, const double* times, const double* initial, const double* thrust,
+    int32_t max_steps, double* states, double* controls,
+    spacepdhcg_verify_result* result, cudaStream_t stream) {
+    if(nodes<2 || nodes>(INT32_MAX-32)/7 || !times || !initial || !thrust ||
+       max_steps<1 || !states || !controls || !result) return cudaErrorInvalidValue;
+    zoh_seed<<<1,32,0,stream>>>(nodes,times,initial,thrust,max_steps,states,controls,result);
+    return cudaGetLastError();
+}
 
 extern "C" cudaError_t spacepdhcg_gtoc12_verify_launch(
     const spacepdhcg_verify_leg* legs, int32_t leg_count,

@@ -21,8 +21,18 @@ Separate CPU equality-projection tests on the two cold captures also remain
 unqualified. This is new convergence evidence, not an improvement in verified throughput.
 The separate native mission control also fails to regenerate a known feasible
 departure leg from a cold start, despite a qualified final conic subproblem.
-It stops before the two candidate refinements. Reliable initialization from the
-verified trajectory is now the next mission gate; keep all physical tolerances.
+It stops before the two candidate refinements. This makes reliable initialization
+from the verified trajectory the next mission gate, with all physical tolerances
+retained.
+
+The [v624 native GPU initializer](GPU_VERIFIED_TRAJECTORY_INITIALIZATION.md)
+passes that first-leg control: GPU propagation reproduces the archived schedule
+within 5.2 mm of the independent CPU reference, and native refinement converges
+in one accepted SCvx iteration with a 57 m arrival error. The observed native
+call takes 0.416 s. This is successful regeneration of a known feasible trajectory,
+not a paired speedup, fleet score gain or PDHCG convergence result. The next
+mission checks are the complete archived route with consistent mass carried
+between legs and H100 validation, followed by compatible changed-route seeds.
 
 This plan began with an audit of published commit
 `3091c716714c8bdec364d54c5e7357f2b5d85730`. The frozen v622 mission baseline below

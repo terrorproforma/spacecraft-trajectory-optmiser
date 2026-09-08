@@ -66,6 +66,30 @@ int spacepdhcg_gtoc12_scvx_solve_host(
     double* states, double* controls, spacepdhcg_gtoc12_scvx_record* records,
     spacepdhcg_gtoc12_qoco_report* reports, spacepdhcg_gtoc12_scvx_result* result);
 
+/* Same optimizer and unchanged qualification gates, initialized by an exact
+ * same-grid ZOH control schedule. hold must be zero. initial_state is physical
+ * [km, km/s, kg], thrust_n has (intervals+1)*3 values in N with zero inactive
+ * last row. These inputs are uploaded once; normalization, Gamma and DOP853
+ * rollout run on device and feed retained SCvx buffers directly. No seed state
+ * download, CPU propagation, clipping, or endpoint snapping. The initial mass
+ * must agree with kappa/mass_flow, and the starting boundary must agree with
+ * initial_state (departure velocity may differ only when free_departure=1).
+ * The initializer is bounded to 100000 integration steps across the leg.
+ * It does not certify the initial iterate or bypass any SCvx solve.
+ */
+int spacepdhcg_gtoc12_scvx_solve_zoh_seed_host(
+    int intervals, int hold, int free_departure, int free_arrival,
+    double kappa, double mass_flow, const double* times, const double* boundary,
+    const double* fuel_weights, const double* initial_state, const double* thrust_n,
+    int ruiz_iterations, const spacepdhcg_gtoc12_scvx_settings* settings,
+    double* states, double* controls, spacepdhcg_gtoc12_scvx_record* records,
+    spacepdhcg_gtoc12_qoco_report* reports, spacepdhcg_gtoc12_scvx_result* result);
+
+/* Inspection bridge only: downloads the same GPU ZOH seed for an independent
+ * reference comparison. Units and outputs match the seeded solve above. */
+int spacepdhcg_gtoc12_zoh_seed_evaluate_host(int nodes, const double* times,
+    const double* initial_state, const double* thrust_n, double* states, double* controls);
+
 /* Standalone GPU seed bridge for seed inspection and independent parity checks.
  * Times and boundary are in the same scaled GTOC12 units as the solver.
  * This bridge downloads the seed; the null-seed solve path above does not.
