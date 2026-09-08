@@ -1,0 +1,217 @@
+{
+  "complete": true,
+  "baseline_median_seconds": 75.38907734199984,
+  "candidate_median_seconds": 42.67374072349958,
+  "speedup": 1.7666385946916665,
+  "time_reduction_percent": 43.39532697832116,
+  "same_search_counts": true,
+  "all_mission_checkers_pass": true,
+  "campaigns": [
+    {
+      "name": "baseline0",
+      "candidate": false,
+      "seconds": 76.03850686899932,
+      "score": 548.2546201231996,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    },
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "seconds": 42.2888126630005,
+      "score": 548.2546201234002,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    },
+    {
+      "name": "candidate1",
+      "candidate": true,
+      "seconds": 43.058668783998655,
+      "score": 548.2546201230996,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    },
+    {
+      "name": "baseline1",
+      "candidate": false,
+      "seconds": 74.73964781500035,
+      "score": 548.2546201231996,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    }
+  ],
+  "hardware": "Local NVIDIA RTX 5090",
+  "status": "Validated locally; H100 validation queued behind the v381 fleet campaign. Four-ship paired comparison running locally.",
+  "pytest_passed": 120,
+  "python_hop_memcheck_passed": 8,
+  "python_hop_synccheck_passed": 8,
+  "native_graph_probe": "Pass; memcheck/synccheck/racecheck clean",
+  "accuracy_audit": {
+    "compared_outputs": 216,
+    "all_fields_exact_equal": true,
+    "mismatches": [],
+    "timings": [
+      {
+        "count": 1,
+        "baseline_ms": 1.053472000421607,
+        "candidate_ms": 0.4315075002523372,
+        "speedup": 2.441375873665132
+      },
+      {
+        "count": 31,
+        "baseline_ms": 8.348658499926387,
+        "candidate_ms": 0.4712760000984417,
+        "speedup": 17.715008823242623
+      },
+      {
+        "count": 32,
+        "baseline_ms": 8.603618500274024,
+        "candidate_ms": 0.480616000459122,
+        "speedup": 17.901231944119992
+      },
+      {
+        "count": 127,
+        "baseline_ms": 10.40552700033004,
+        "candidate_ms": 0.49050600046030013,
+        "speedup": 21.21386280813139
+      },
+      {
+        "count": 257,
+        "baseline_ms": 10.403488000520156,
+        "candidate_ms": 0.48665550093573984,
+        "speedup": 21.377520608554427
+      },
+      {
+        "count": 451,
+        "baseline_ms": 10.429587499857007,
+        "candidate_ms": 0.5314974996508681,
+        "speedup": 19.623022698522625
+      },
+      {
+        "count": 480,
+        "baseline_ms": 10.435371998937626,
+        "candidate_ms": 0.5374795000534505,
+        "speedup": 19.415386071282466
+      },
+      {
+        "count": 533,
+        "baseline_ms": 10.457144000611152,
+        "candidate_ms": 0.5372109999370878,
+        "speedup": 19.46561779605365
+      },
+      {
+        "count": 1024,
+        "baseline_ms": 10.475153500010492,
+        "candidate_ms": 0.8808730008240673,
+        "speedup": 11.891786319039023
+      },
+      {
+        "count": 1025,
+        "baseline_ms": 10.495706999790855,
+        "candidate_ms": 0.8792969993010047,
+        "speedup": 11.936475398112805
+      },
+      {
+        "count": 4096,
+        "baseline_ms": 11.035410500880971,
+        "candidate_ms": 2.8288230005273363,
+        "speedup": 3.901060794126674
+      },
+      {
+        "count": 16384,
+        "baseline_ms": 11.839694000627787,
+        "candidate_ms": 9.809417500036943,
+        "speedup": 1.206972177561328
+      }
+    ]
+  },
+  "profile_caveat": "cProfile v382 reports impossible 158.48 s self time for a SciPy check_option callback within an 81.59 s run. Do not sum or use that profile for timing claims; direct perf_counter timers v383 confirmed the CUDA bottleneck instead."
+}

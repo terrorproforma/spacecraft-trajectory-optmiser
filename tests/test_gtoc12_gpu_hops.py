@@ -83,3 +83,22 @@ def test_gpu_workspace_retries_after_recreation_failure(monkeypatch):
         assert not gpu.handle.value
         monkeypatch.setattr(gpu, "create", create)
         assert gpu.screen_hops(r1, [0, 0, 0], r2, [0, 0, 0], 64328, 300).feasible.all()
+
+
+@pytest.mark.parametrize("count", [31, 257, 1025])
+def test_cooperative_hops_close_independent_kepler_orbits(count):
+    from spacepdhcg.gtoc12.ephemeris import propagate_kepler
+
+    rng = np.random.default_rng(384)
+    r1, r2 = (rng.normal(size=(count, 3)) for _ in range(2))
+    for positions in [r1, r2]:
+        positions *= C.AU_KM * rng.uniform(1, 3, count)[:, None] / np.linalg.norm(
+            positions, axis=1
+        )[:, None]
+    days = rng.uniform(150, 800, count)
+    with GpuLambert(count) as gpu:
+        actual = gpu.screen_hops(r1, [0, 0, 0], r2, [0, 0, 0], 64328, days)
+    assert actual.feasible.all()
+    position, velocity = propagate_kepler(r1, actual.departure_velocity, days * C.DAY_S)
+    assert np.max(np.linalg.norm(position - r2, axis=1)) < 0.01
+    assert np.max(np.linalg.norm(velocity - actual.arrival_velocity, axis=1)) < 1e-8
