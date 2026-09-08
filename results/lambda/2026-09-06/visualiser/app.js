@@ -73,6 +73,7 @@ const FLEET_DATASETS = {
   "gtoc12-fleet-v724": { directory: "./data/gtoc12-fleet-v724", label: "H100 CUDA fleet selector v724 (unchanged verified fleet; packing benchmark)" },
   "gtoc12-exchange-v733": { directory: "./data/gtoc12-exchange-v733", label: "H100 GPU fleet exchanges v733 (23 ships, 12,843 weighted kg; verified checkpoint)" },
   "gtoc12-routes-v767": { directory: "./data/gtoc12-routes-v767", label: "H100 GPU route search v767 (23 ships, 12,843.556 weighted kg; new verified best)" },
+  "gtoc12-seeded-route-v625": { directory: "./data/gtoc12-seeded-route-v625", label: "Local GPU seeded route v625 (ship 23; unchanged-score control, 22 ships retained)" },
   "gtoc12-insertions-v774": { directory: "./data/gtoc12-insertions-v774", label: "H100 CUDA insertion batches v774 (23 ships, 12,843.556 weighted kg; verified faster replay)" },
   "gtoc12-layouts-v780": { directory: "./data/gtoc12-layouts-v780", label: "H100 CUDA layout generation v780 (23 ships, 12,843.556 weighted kg; verified faster replay)" },
   "gtoc12-v380": { directory: "./data/gtoc12-v380", label: "GPU recovery v380 (4 ships, 2,089 weighted kg)" },

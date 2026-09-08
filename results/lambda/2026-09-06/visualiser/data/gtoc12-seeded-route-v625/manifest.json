@@ -1,0 +1,57 @@
+{
+  "control": {
+    "incumbent_promoted": false,
+    "newly_solved_ship": 23,
+    "retained_ships": 22,
+    "unchanged_score": true
+  },
+  "dataset_kind": "gtoc12-fleet",
+  "files": {
+    "checker-binding.json": {
+      "bytes": 865,
+      "sha256": "951870419ab38075323c38882312ae7f234d509574d17bd442f8ec7f8ce8e627"
+    },
+    "compute.json": {
+      "bytes": 2605,
+      "sha256": "ec6c219f8f88543938b1724e62811ab30ac5e0e65e4d79e8ddcd4066bdc8cde3"
+    },
+    "fleet.json": {
+      "bytes": 2164845,
+      "sha256": "d6f49cbedb19e7501a01950757aaf659621d7070f6f3f5b74873781856a5ec59"
+    }
+  },
+  "kepler_check": {
+    "asteroid_max_error_km": 0.000003589728468840934,
+    "context_points_checked": 73201,
+    "earth_max_error_km": 3.0719530854108674e-7,
+    "tolerance_km": 0.01
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "catalogue": {
+      "bytes": 6840111,
+      "name": "catalogue-v767.txt",
+      "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675"
+    },
+    "export_manifest_sha256": "108d3f4817ff4cafc91c476108bc81fc1c40cd6ffa6177b42b034e016656068a",
+    "export_trajectories_bytes": 10522461,
+    "export_trajectories_sha256": "502db17abef66b499284484833bf23aec1eb8de1259753af01bab4be0fc64c63",
+    "fleet_json_sha256": "4781c04294f524b27a3025b472775f502d2ab912f7e81c72fd88bc15fc4d053c",
+    "generator": "spacepdhcg.gtoc12.pipeline",
+    "independent_verifier_ok": true,
+    "official_verifier_ok": true,
+    "solution_basename": "Result.txt",
+    "solution_bytes": 10091905,
+    "solution_sha256": "6fa61648cbc958aec0f93b941d0bafc650fa6f0bcb2497b60743481a88e53ba8",
+    "solution_verified_locally": true,
+    "transform": "Ship 23 sampled after the run through frozen CPU verifier model; unchanged ships 1–22 reuse hash-bound v767 replay. Deterministic exact-sample decimation, no visual interpolation; qualification from retained full-fleet checker binding."
+  },
+  "summary": {
+    "events": 436,
+    "official_total_mass_kg": 14044.4,
+    "replay_points": 11680,
+    "ships": 23,
+    "unique_asteroids": 195
+  },
+  "transform": "Verified export copied losslessly (exact samples, indices, hashes); events classified; pinned Keplerian elements attached; Kepler propagation cross-checked against exporter context orbits."
+}

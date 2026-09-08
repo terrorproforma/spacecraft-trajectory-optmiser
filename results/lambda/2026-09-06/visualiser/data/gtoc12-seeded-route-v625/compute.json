@@ -1,0 +1,59 @@
+{
+ "commit": "f9570808+native-seed-v624c+fixed-boundary-hooks-v625",
+ "fleet_run_id": "local_seeded_route_v625_unchanged_score_control",
+ "hardware": {
+  "gpu": "Local NVIDIA GeForce RTX 5090",
+  "upstream_search": "No search: one archived ship 23 control, other 22 ships retained"
+ },
+ "model": {
+  "dynamics": "Official GTOC12 dynamics. Original complete fleet passed independent CPU and official checkers at unchanged tolerances.",
+  "local_refine": "19 native warm leg solves, 19 SCvx iterations, 19 flight and 2 waiting-coast CUDA certificates. Other 22 numerical trajectories retained byte-for-byte."
+ },
+ "optimisation": {
+  "proven_optimal": false,
+  "strategy": "Unchanged-score control. No new mission search, no score gain and no incumbent promotion. Ship 23 re-solved with archived thrust seeds and actual certified mass handoffs. Display samples reuse 22 prior histories and separately sample the new ship 23 on CPU."
+ },
+ "raw_kg_per_ship": 610.6240514239869,
+ "regression": {
+  "both_checkers_passed": true,
+  "incumbent_promoted": false,
+  "parity_is_not_a_relaxed_physics_tolerance": true,
+  "raw_delta_from_retained_kg": 1.000444171950221e-10,
+  "raw_kg": 14044.353182751698,
+  "regression_passed": true,
+  "score_parity_reporting_bound_kg": 1e-08,
+  "score_serialization_parity": true,
+  "weighted_delta_from_retained_kg": 8.36735125631094e-11,
+  "weighted_kg": 12843.555695585272
+ },
+ "result_sha256": "6fa61648cbc958aec0f93b941d0bafc650fa6f0bcb2497b60743481a88e53ba8",
+ "run_counts": {
+  "flight_certificate_calls": 19,
+  "full_fleet_CPU_checks": 1,
+  "full_fleet_official_checks": 1,
+  "incumbent_promotions": 0,
+  "native_iterations": 19,
+  "native_solves_returned": 19,
+  "native_solves_started": 19,
+  "search_or_Lambert_calls": 0,
+  "wait_certificate_calls": 2,
+  "whole_routes_started": 1
+ },
+ "run_id": "local_seeded_route_v625_unchanged_score_control",
+ "separate_display_replay": {
+  "CPU_burn_replays": 834,
+  "CPU_coast_replays": 21,
+  "GPU_calls": 0,
+  "full_fleet_checks": 0,
+  "native_solves": 0,
+  "seconds": 0.8575759889999972,
+  "ships_replayed": 1,
+  "ships_reused": 22
+ },
+ "source_revision_note": "Ship 23 sampled after the run through frozen CPU verifier model; unchanged ships 1\u201322 reuse hash-bound v767 replay. Deterministic exact-sample decimation, no visual interpolation; qualification from retained full-fleet checker binding.",
+ "timing": {
+  "wall_human": "25.193 s original worker including both fleet checks; separate CPU display replay 0.858 s",
+  "wall_seconds_total": 25.19275697000012
+ },
+ "weighted_score_fixed_bonus_kg": 12843.555695585272
+}

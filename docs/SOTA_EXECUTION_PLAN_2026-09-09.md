@@ -34,6 +34,21 @@ not a paired speedup, fleet score gain or PDHCG convergence result. The next
 mission checks are the complete archived route with consistent mass carried
 between legs and H100 validation, followed by compatible changed-route seeds.
 
+The [v625 constrained dual correction](PDHCG_CONSTRAINED_DUAL_POLISH.md) passes
+all original numerical gates for the saved near-converged PDHCG iterate while
+keeping its primal variables unchanged. One auxiliary CPU solve takes 11.618 ms;
+it is a hybrid diagnostic and preserves PDHCG's iteration-limit status. The final
+gap has only 9.36e-17 of margin to its limit. This supports a focused GPU correction
+experiment and broader fixed-capture validation, not a convergence or SOTA claim.
+The [complete v625 seeded-route regression](GPU_FIXED_ROUTE_INITIALIZATION.md)
+passes all 19 native leg solves and both waits in 3.876 s locally. Both full-fleet
+checkers accept the replacement at unchanged cargo/score; the full worker takes
+25.193 s. A fresh H100 build and the first-leg control pass as well. The final
+73-test CPU suite also covers cumulative route telemetry. These reliability
+gates are now met for the archived control; compatible changed-route refinement
+is the next mission experiment. The complete pipeline and PDHCG backend
+integration still have the gaps described below.
+
 This plan began with an audit of published commit
 `3091c716714c8bdec364d54c5e7357f2b5d85730`. The frozen v622 mission baseline below
 includes the separately published v733 fleet-exchange result at `2ccb93c1`.

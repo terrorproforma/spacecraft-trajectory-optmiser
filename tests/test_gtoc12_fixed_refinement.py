@@ -202,6 +202,7 @@ def test_native_leg_record_preserves_actual_certification_backend(camp_plan):
     certificate = p.LegCertificate(0, 0, 2900, 1, 0, 0)
     state = SimpleNamespace(certificate=certificate, solution=None, certification_backend="cuda")
     runner = object.__new__(f.FrozenLegRunner)
+    runner._scheduler_totals = dict.fromkeys(runner._COUNTERS, 0)
     runner.registry = SimpleNamespace(
         records=records,
         register=lambda request, value: records.update({request.deterministic_id: state}),
@@ -209,13 +210,243 @@ def test_native_leg_record_preserves_actual_certification_backend(camp_plan):
     result = SimpleNamespace(
         feasible=True, status=SimpleNamespace(value="converged"), diagnostic=""
     )
-    runner.scheduler = SimpleNamespace(run=lambda requests: [result])
+    runner.scheduler = SimpleNamespace(run=lambda requests: [result], telemetry=SimpleNamespace())
     runner.certifier = SimpleNamespace(
         certify=lambda value: SimpleNamespace(accepted=True, diagnostic="")
     )
     refined, record = runner.solve(leg, boundary, 0)
     assert refined.certification_backend == record["certification_backend"] == "cuda"
     assert refined.certified
+
+
+@pytest.mark.parametrize("failure_stage", [None, "before_reset", "after_reset"])
+def test_native_runner_counts_all_scheduler_runs_once(camp_plan, failure_stage):
+    runner = object.__new__(f.FrozenLegRunner)
+    runner._scheduler_totals = dict.fromkeys(runner._COUNTERS, 0)
+    runner.adapter = SimpleNamespace(workspace_creations=1, numeric_updates=2)
+    result = SimpleNamespace(
+        feasible=True, status=SimpleNamespace(value="converged"), diagnostic=""
+    )
+    certificate = p.LegCertificate(0, 0, 2900, 1, 0, 0)
+    state = SimpleNamespace(certificate=certificate, solution=None, certification_backend="cuda")
+    runner.registry = SimpleNamespace(records={}, register=lambda request, boundary: None)
+    runner.certifier = SimpleNamespace(
+        certify=lambda value: SimpleNamespace(accepted=True, diagnostic="")
+    )
+    calls = []
+
+    def run(requests):
+        index = len(calls)
+        calls.append(index)
+        if index == 2 and failure_stage == "before_reset":
+            raise ValueError("request validation failed before telemetry reset")
+        runner.scheduler.telemetry = SimpleNamespace(
+            submitted=1, completed=0, feasible=0, failed=0, batches=0
+        )
+        if index == 2 and failure_stage == "after_reset":
+            raise RuntimeError("partial scheduler run")
+        runner.scheduler.telemetry.completed = 1
+        runner.scheduler.telemetry.feasible = 1
+        runner.scheduler.telemetry.batches = 1
+        runner.registry.records[requests[0].deterministic_id] = state
+        return [result]
+
+    runner.scheduler = SimpleNamespace(run=run, telemetry=SimpleNamespace())
+    leg = camp_plan.legs[0]
+    boundary = p.LegBoundary(
+        leg.departure_epoch,
+        np.zeros(3),
+        np.zeros(3),
+        leg.arrival_epoch,
+        np.zeros(3),
+        np.zeros(3),
+        3000,
+    )
+    runner.solve(leg, boundary, 0)
+    runner.solve(leg, boundary, 1)
+    if failure_stage is None:
+        runner.solve(leg, boundary, 2)
+    else:
+        with pytest.raises((ValueError, RuntimeError)):
+            runner.solve(leg, boundary, 2)
+    assert runner.telemetry == {
+        "submitted": 2 if failure_stage == "before_reset" else 3,
+        "completed": 3 if failure_stage is None else 2,
+        "feasible": 3 if failure_stage is None else 2,
+        "failed": 0,
+        "batches": 3 if failure_stage is None else 2,
+        "workspace_creations": 1,
+        "numeric_updates": 2,
+    }
+    snapshot = runner.telemetry
+    snapshot["submitted"] = -1
+    assert runner.telemetry["submitted"] >= 2
+
+
+def test_seed_callbacks_receive_certified_mass_and_effective_boundary(camp_plan, monkeypatch):
+    position = np.array([1.5e8, -2e7, 1e3])
+    velocity = np.array([15.0, 29.0, -2.0])
+    monkeypatch.setattr(p, "body_state", lambda *args: (position, velocity))
+    archived = position.copy()
+    archived[0] = np.nextafter(archived[0], math.inf)
+    callback_order, seeds = [], []
+
+    class SeedRunner(LegRunner):
+        def solve(self, leg, boundary, index, *, seed):
+            assert seed is seeds[index]
+            assert seed["mass"] == boundary.initial_mass
+            assert seed["boundary"] is boundary
+            np.testing.assert_array_equal(boundary.departure_position, archived)
+            return super().solve(leg, boundary, index)
+
+    def boundary_factory(leg, boundary, index):
+        callback_order.append((index, "boundary"))
+        return dataclasses.replace(boundary, departure_position=archived)
+
+    def seed_factory(leg, boundary, index):
+        callback_order.append((index, "seed"))
+        seed = {"mass": boundary.initial_mass, "boundary": boundary}
+        seeds.append(seed)
+        return seed
+
+    runner = SeedRunner()
+    result = f.refine_fixed(
+        camp_plan,
+        None,
+        camp_plan.collected_mass,
+        settings=settings(),
+        runner_factory=lambda _: runner,
+        boundary_factory=boundary_factory,
+        seed_factory=seed_factory,
+    )
+    assert result.certified
+    assert [seed["mass"] for seed in seeds] == [3000, 2860, 2730, 2660]
+    assert callback_order == [(i, stage) for i in range(4) for stage in ("boundary", "seed")]
+    assert not np.shares_memory(runner.boundaries[0].departure_position, archived)
+    assert position[0] == 1.5e8
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"initial_mass": 3001},
+        {"minimum_final_mass": 499},
+        {"departure_epoch": 64329},
+        {"arrival_epoch": 64829},
+        {"free_departure_vinf": False},
+        {"free_arrival_vinf": True},
+        {"departure_position": np.array([0.001, 0, 0])},
+        {"arrival_velocity": np.array([1e-10, 0, 0])},
+        {"arrival_position": np.array([math.nan, 0, 0])},
+        {"departure_velocity": np.zeros(4)},
+    ],
+)
+def test_seed_boundary_cannot_change_physical_problem(camp_plan, change):
+    runner, calls = LegRunner(), []
+    result = f.refine_fixed(
+        camp_plan,
+        None,
+        camp_plan.collected_mass,
+        settings=settings(),
+        runner_factory=lambda _: runner,
+        boundary_factory=lambda leg, boundary, index: dataclasses.replace(boundary, **change),
+        seed_factory=lambda *args: calls.append(args),
+    )
+    assert not result.certified and not calls and not runner.boundaries
+    assert result.failures[0]["status"] == "initialization_exception"
+    assert runner.closed and not runner.master_called
+
+
+@pytest.mark.parametrize("stage", ["boundary", "seed"])
+@pytest.mark.parametrize("mutation", ["write", "setflags"])
+def test_seed_hooks_cannot_mutate_coordinate_snapshots(camp_plan, stage, mutation):
+    def mutate(leg, boundary, index):
+        if mutation == "write":
+            boundary.departure_position[0] = 1
+        else:
+            boundary.departure_position.setflags(write=True)
+        return boundary
+
+    runner = LegRunner()
+    result = f.refine_fixed(
+        camp_plan,
+        None,
+        camp_plan.collected_mass,
+        settings=settings(),
+        runner_factory=lambda _: runner,
+        **{stage + "_factory": mutate},
+    )
+    assert result.failures[0]["status"] == "initialization_exception"
+    assert not runner.boundaries and not result.certified and runner.closed
+
+
+def test_seed_factory_failure_retains_previous_legs(camp_plan):
+    def initialize(leg, boundary, index):
+        if index == 2:
+            raise ValueError("missing compatible archived controls")
+        return None
+
+    runner = LegRunner()
+    result = f.refine_fixed(
+        camp_plan,
+        None,
+        camp_plan.collected_mass,
+        settings=settings(),
+        runner_factory=lambda _: runner,
+        seed_factory=initialize,
+    )
+    assert len(result.legs) == len(runner.boundaries) == 2
+    assert result.failures == [
+        {
+            "leg": 2,
+            "status": "initialization_exception",
+            "error": "ValueError('missing compatible archived controls')",
+        }
+    ]
+    assert not result.certified and runner.closed and not runner.master_called
+
+
+def test_deadline_expired_by_initialization_stops_before_native_call(camp_plan, monkeypatch):
+    now = [0.0]
+    monkeypatch.setattr(f.time, "perf_counter", lambda: now[0])
+
+    def initialize(*args):
+        now[0] = 11.0
+
+    runner = LegRunner()
+    result = f.refine_fixed(
+        camp_plan,
+        None,
+        camp_plan.collected_mass,
+        settings=settings(),
+        deadline=10.0,
+        runner_factory=lambda _: runner,
+        seed_factory=initialize,
+    )
+    assert result.failures == [{"leg": 0, "status": "campaign_deadline_after_initialization"}]
+    assert not runner.boundaries and not result.certified and runner.closed
+
+
+def test_post_leg_wait_failure_blocks_route_even_after_last_certified_leg(camp_plan):
+    def reject_wait(index, item, record):
+        if index == 3:
+            record["wait_certified"] = False
+            raise ValueError("independent wait certificate failed")
+
+    runner = LegRunner()
+    result = f.refine_fixed(
+        camp_plan,
+        None,
+        camp_plan.collected_mass,
+        settings=settings(),
+        runner_factory=lambda _: runner,
+        on_leg=reject_wait,
+    )
+    assert len(result.legs) == 4 and all(item.certified for item in result.legs)
+    assert not result.certified and not result.master_certified and not runner.master_called
+    assert math.isnan(result.final_mass_kg) and runner.closed
+    assert result.failures[0]["status"] == "post_leg_callback_exception"
+    assert result.failures[0]["leg_record"]["wait_certified"] is False
 
 
 def queued(plan, gain=5.0, uncertain=True, replay=False):

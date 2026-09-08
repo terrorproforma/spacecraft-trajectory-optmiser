@@ -299,7 +299,7 @@ def test_frozen_runner_registers_seed_before_scheduler(monkeypatch):
         assert runner.registry.records[requests[0].deterministic_id].seed is seed
         raise StopBeforeSolve
 
-    runner.scheduler = SimpleNamespace(run=stop)
+    runner.scheduler = SimpleNamespace(run=stop, telemetry=SimpleNamespace())
     leg = pipeline.PlannedLeg(0, 1, 64400.0, 64406.0, 0.0, 1.0, "earth_out")
     with pytest.raises(StopBeforeSolve):
         runner.solve(leg, boundary(), 0, seed=seed)

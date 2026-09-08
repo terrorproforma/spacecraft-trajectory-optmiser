@@ -12,7 +12,9 @@ import time
 from collections import Counter
 from collections.abc import Mapping
 from copy import deepcopy
-from dataclasses import asdict
+from dataclasses import asdict, replace
+
+import numpy as np
 
 from . import pipeline as p
 from .refinement_admission import FixedCargoRequest, promotion_blockers
@@ -63,6 +65,8 @@ def validate_prescription(plan, cargo):
 class FrozenLegRunner:
     """The stock scheduler/driver path, including clamp_thrust and DOP853 certification."""
 
+    _COUNTERS = ("submitted", "completed", "feasible", "failed", "batches")
+
     def __init__(self, settings):
         self.registry = p.LegRegistry()
         self.adapter = p.G3TrajectoryOracleAdapter(
@@ -71,6 +75,7 @@ class FrozenLegRunner:
         self.scheduler = p.BoundedScheduler(
             self.adapter, config=p.SchedulerConfig(maximum_batch_size=8, maximum_buffered_arcs=64)
         )
+        self._scheduler_totals = dict.fromkeys(self._COUNTERS, 0)
         self.certifier = p.IndependentCertifier(
             p.certification_callback(self.registry),
             backend_identifier="gtoc12-verifier-model-dop853",
@@ -107,7 +112,17 @@ class FrozenLegRunner:
             self.registry.register(request, boundary)
         else:
             self.registry.register(request, boundary, seed=seed)
-        result = self.scheduler.run([request])[0]
+        previous = self.scheduler.telemetry
+        try:
+            result = self.scheduler.run([request])[0]
+        finally:
+            # BoundedScheduler replaces telemetry for each run. Count a new
+            # snapshot once, including partial failures, but do not count the
+            # previous run again if request validation raised before the reset.
+            current = self.scheduler.telemetry
+            if current is not previous:
+                for key in self._COUNTERS:
+                    self._scheduler_totals[key] += getattr(current, key)
         record = self.registry.records[request.deterministic_id]
         certification = self.certifier.certify(result)
         after = record.certificate.final_mass_kg if record.certificate is not None else math.nan
@@ -168,16 +183,57 @@ class FrozenLegRunner:
 
     @property
     def telemetry(self):
-        return {
-            key: getattr(self.scheduler.telemetry, key)
-            for key in ("submitted", "completed", "feasible", "failed", "batches")
-        } | {
+        return dict(self._scheduler_totals) | {
             "workspace_creations": self.adapter.workspace_creations,
             "numeric_updates": self.adapter.numeric_updates,
         }
 
     def close(self):
         self.adapter.close()
+
+
+_BOUNDARY_VECTORS = (
+    "departure_position",
+    "departure_velocity",
+    "arrival_position",
+    "arrival_velocity",
+)
+_BOUNDARY_SCALARS = (
+    "departure_epoch",
+    "arrival_epoch",
+    "initial_mass",
+    "minimum_final_mass",
+    "free_departure_vinf",
+    "free_arrival_vinf",
+)
+
+
+def _immutable_boundary(boundary):
+    """Snapshot coordinates so initializer callbacks cannot change their reference."""
+    if not isinstance(boundary, p.LegBoundary):
+        raise ValueError("boundary factory must return a LegBoundary")
+    vectors = {}
+    for name in _BOUNDARY_VECTORS:
+        value = np.asarray(getattr(boundary, name), dtype=np.float64)
+        if value.shape != (3,) or not np.all(np.isfinite(value)):
+            raise ValueError(f"boundary {name} must be a finite three-vector")
+        # Bytes-backed arrays cannot be made writable again with setflags.
+        vectors[name] = np.frombuffer(value.tobytes(), dtype=np.float64)
+    return replace(boundary, **vectors)
+
+
+def _validate_boundary_representation(reference, candidate):
+    """Allow archived decimal roundoff, never a change to the physical boundary."""
+    candidate = _immutable_boundary(candidate)
+    for name in _BOUNDARY_SCALARS:
+        if getattr(candidate, name) != getattr(reference, name):
+            raise ValueError(f"boundary factory changed {name}")
+    for name in _BOUNDARY_VECTORS:
+        expected = getattr(reference, name)
+        tolerance = 64 * np.finfo(np.float64).eps * max(1.0, float(np.max(np.abs(expected))))
+        if np.any(np.abs(getattr(candidate, name) - expected) > tolerance):
+            raise ValueError(f"boundary factory changed {name} beyond representation roundoff")
+    return candidate
 
 
 def refine_fixed(
@@ -187,10 +243,20 @@ def refine_fixed(
     *,
     settings,
     on_leg=None,
+    boundary_factory=None,
+    seed_factory=None,
     deadline=math.inf,
     runner_factory=FrozenLegRunner,
 ):
-    """One sequential native refinement, no cargo resizing or epoch search on any outcome."""
+    """One sequential refinement with fixed cargo, epochs and certified mass handoffs.
+
+    Optional ``boundary_factory(leg, boundary, index)`` may restore an archived
+    decimal representation within FP64 roundoff only. ``seed_factory`` receives
+    that effective boundary, including the previous certificate's mass, and
+    returns an explicit trajectory seed. Neither hook may alter the plan/cargo.
+    Initializer and post-leg callback failures stop the route and retain partial
+    results; a callback may therefore reject an independently checked coast wait.
+    """
     validate_prescription(plan, prescribed_cargo)
     cargo = {int(body): float(mass) for body, mass in prescribed_cargo.items()}
     original_cargo = dict(cargo)
@@ -222,7 +288,28 @@ def refine_fixed(
                 minimum_final_mass=p.C.DRY_MASS_KG + carried,
             )
             try:
-                item, record = runner.solve(leg, boundary, index)
+                seed = None
+                if boundary_factory is not None or seed_factory is not None:
+                    boundary = _immutable_boundary(boundary)
+                if boundary_factory is not None:
+                    boundary = _validate_boundary_representation(
+                        boundary, boundary_factory(leg, boundary, index)
+                    )
+                if seed_factory is not None:
+                    seed = seed_factory(leg, boundary, index)
+            except Exception as error:
+                failures.append(
+                    {"leg": index, "status": "initialization_exception", "error": repr(error)}
+                )
+                break
+            if time.perf_counter() >= deadline:
+                failures.append({"leg": index, "status": "campaign_deadline_after_initialization"})
+                break
+            try:
+                if seed is None:
+                    item, record = runner.solve(leg, boundary, index)
+                else:
+                    item, record = runner.solve(leg, boundary, index, seed=seed)
             except Exception as error:
                 failures.append(
                     {"leg": index, "status": "solver_path_exception", "error": repr(error)}
@@ -230,7 +317,18 @@ def refine_fixed(
                 break
             refined.append(item)
             if on_leg is not None:
-                on_leg(index, item, record)
+                try:
+                    on_leg(index, item, record)
+                except Exception as error:
+                    failures.append(
+                        {
+                            "leg": index,
+                            "status": "post_leg_callback_exception",
+                            "error": repr(error),
+                            "leg_record": record,
+                        }
+                    )
+                    break
             if not item.certified or not math.isfinite(item.mass_after_leg):
                 failures.append(record)
                 break
@@ -257,7 +355,9 @@ def refine_fixed(
                 and abs(plan.collect_epochs[next_leg.from_id] - leg.arrival_epoch) >= 1e-6
             ):
                 mass += cargo[next_leg.from_id]
-        all_legs = len(refined) == len(flown) and all(item.certified for item in refined)
+        all_legs = (
+            not failures and len(refined) == len(flown) and all(item.certified for item in refined)
+        )
         final_dry = mass - sum(cargo.values()) if all_legs else math.nan
         physical_mass_ok = (
             all_legs and math.isfinite(final_dry) and final_dry >= p.C.DRY_MASS_KG - 1e-9

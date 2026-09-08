@@ -1,0 +1,79 @@
+{
+  "complete": true,
+  "passed": true,
+  "audit_helper_sha256": "25f39d19819ab7c95d60317377d3db41ab0b7f0610d148c79be9507d57adf561",
+  "original_audit_findings_sha256": "3129b897cc658f23b9b9875d5c3ffb4610fbf9cb9f72f2abab7842cbd5ca87a4",
+  "findings": {
+    "passed": true,
+    "package_index_sha256": "73b46a3d88d3e3d33d42618792018dce58d077ca01a67bfad6a80fbac73eef6a",
+    "archive_sha256": "3d25c4929d8fdfca59fb26698b3023cacc1b332afa4871c97d8fbb6a4dcea684",
+    "previous_archive_sha256": "4f43b84567bb9b2076e8e81d6bfe3fb26a5d454a08a8ee5ee3b7f6b368bb1316",
+    "previous_index_sha256": "8a0029d2dc9163a7662154f761f5f9339884e8715d8b3a62c1312d3e0a0cfb38",
+    "current_indexed_files": 472,
+    "previous_indexed_files": 373,
+    "current_indexed_bytes": 47263461,
+    "archive_safety": {
+      "members_checked_including_nested": 3294,
+      "bytes_checked_including_nested": 101052808,
+      "nested_archives_checked": 107,
+      "no_executables_keys_git_caches_or_links": true
+    },
+    "ordered_unpack": "Exact prior v624 archive first, indexed v625 overlays second, fresh temporary root.",
+    "changed_prior_paths": {
+      "docs/SOTA_EXECUTION_PLAN_2026-09-09.md": {
+        "previous": "b19fc6ed896e1eab49337dcb05d4bf00858b42635d3727446b974e912b3a3959",
+        "current": "e6c83d238dca614a7a6a4d2fadba1dd79db4e922bcee8ceb84ca65d3c0641e4a"
+      },
+      "src/spacepdhcg/gtoc12/fixed_refinement.py": {
+        "previous": "d8dcc85131c64676e3395f85d87f5f1e6be8fe88c2dacf56fa3d6d3c10b0c758",
+        "current": "3850b09e7d146f2e7362b674490a76cec6e113c8b74a655635f16e784bd3b0f1"
+      },
+      "tests/test_gtoc12_zoh_trajectory_seed.py": {
+        "previous": "c08c62cf356cbb04692d6cd25f58a6fdba47deca78637c0e09ff3eeb699ee2a1",
+        "current": "a6dce1025c6c66c819f3d2148939a9cf9fde4eeb5607bac714a32ab33b986fc7"
+      }
+    },
+    "source_pins": {
+      "src/spacepdhcg/gtoc12/fixed_refinement.py": "3850b09e7d146f2e7362b674490a76cec6e113c8b74a655635f16e784bd3b0f1",
+      "build/performance/seeded-route-v625/overlay/spacepdhcg/gtoc12/fixed_refinement.py": "1cc99d88159d4f13e108e4a53ce81c3f74c78e24f24e1b123e0b341116ec35cc",
+      "build/performance/seeded-route-v625/ready.json": "2324d89ee541cde90364c587b68ae15385aa5a4f5e615278eb49a6e8ec30a4b5",
+      "build/performance/seeded-route-v625/output/report.json": "6bdd68e982a8256a87048825d577e5920369413bcc9744cd9feff919abd205f3",
+      "build/performance/seeded-route-review-v625/audit.py": "8e2613182fc5d1e6c5a28848973e46b61ce962883e0bd1366d3f375dc6035fb9",
+      "build/performance/seeded-route-review-v625/findings-final.json": "9b6e61463c37122ce7e865d83dc49972dec6f3f5752d18f3a7d7e1f25f50bf7c",
+      "build/performance/native-seed-h100-v625/sha256.json": "4559cc6049501939266bfe7d5cd0b02034070c63d92fd353109d86a3cb6e6cb1",
+      "build/performance/native-seed-h100-v625/audit_saved.py": "029c12ef080b264a07e2c46f45090e9bce0ecf33f77bc235b8713cb11d9f09dd",
+      "build/performance/native-seed-h100-v625/findings.json": "22ba730958c05890b69d0d558b28cc5c266d8ca69b2f9fc5489fe86dd55c7a25",
+      "build/performance/native-seed-core-v624c/manifest.json": "eb2c43c8c949b8cc57028b10cb3c116b30a749da0b5c6c1fb811af346d7a0640",
+      "build/performance/native-seed-core-v624c/source.tar.gz": "bbc7146bd448a7639c7dbf2d9100f8fc74e75e1f21507d3da159308cfd8bb375",
+      "build/performance/dual-polish-v625/final-audit.json": "1810a166c0901618f68abc3cdc8591d18a6942caac93ecf82e55bfb177227487",
+      "build/performance/dual-polish-review-v625/findings.json": "69a3e3ad1fc21b32ee49353427cdac37987facabc3a500d2ef7e6f87aa9f74d4"
+    },
+    "production_reporting_source_distinct_from_measured_source": true,
+    "CPU_regressions_saved_passed": 73,
+    "h100_saved_replay": {
+      "exit_code": 0,
+      "script_sha256": "029c12ef080b264a07e2c46f45090e9bce0ecf33f77bc235b8713cb11d9f09dd"
+    },
+    "route_saved_replay": {
+      "exit_code": 0,
+      "script_sha256": "8e2613182fc5d1e6c5a28848973e46b61ce962883e0bd1366d3f375dc6035fb9"
+    },
+    "omissions": [
+      {
+        "path": "build/performance/seeded-route-v625/output/fleet/official/GTOC12_Verify",
+        "sha256": "d4e4bc81129266420b27c9bde038bce9eda1960e7de9c695772fbfdb1cc82cd6",
+        "bytes": 187200,
+        "binary_bytes_reverified": false,
+        "statement": "Compiled official checker omitted; recorded invocation, identity and results retained. No checker was executed by this audit."
+      }
+    ],
+    "route_output_hash_exception_is_exactly_declared_binary": true,
+    "all_H100_findings_equal": true,
+    "all_route_physical_findings_equal": true,
+    "dual_saved_numeric_pass_native_limit_preserved": true,
+    "new_GPU_calls": 0,
+    "new_optimizer_calls": 0,
+    "new_propagations": 0,
+    "new_official_checker_calls": 0
+  }
+}
