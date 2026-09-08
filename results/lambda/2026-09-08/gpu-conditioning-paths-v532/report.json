@@ -1,0 +1,55 @@
+{
+  "pid": 198376,
+  "complete": true,
+  "stages": [
+    {
+      "name": "replay_conditioning_paths_v529.py",
+      "returncode": 0,
+      "seconds": 20.34331397904316
+    },
+    {
+      "name": "inspect_conditioning_v530.py",
+      "returncode": 0,
+      "seconds": 5.47155204101
+    },
+    {
+      "name": "isolate_conditioning_cost_v531.py",
+      "returncode": 0,
+      "seconds": 9.226537483045831
+    }
+  ],
+  "executed_sources": {
+    "build/performance/inspect_conditioning_v530.py": "31001f995f440bb829d03526200c48b0dac4730cdb2ded0de554ee47c336a5ac",
+    "build/performance/analyse_qps_v169.py": "518b13a0615db461db207bc5b555529f27a9c19ff81bfbd29c2c9e2172b28a4b",
+    "build/performance/replay_conditioning_paths_v529.py": "7caab50bf8e72536940857d50f9691e186d8f5dfaa15956f51ccd4c5dfe6911a",
+    "build/performance/isolate_conditioning_cost_v531.py": "9f1709e15ab017a9ac12dce1348471ea3e80adb55640df1beee56790470871ce"
+  },
+  "headers_sha256": {
+    "include/definitions.h": "c64d0546afdcf5bcec1734bd30c8673afec649317b17eeefd21b78cce19e0d8e",
+    "include/structs.h": "701abfcaee9d2a45b668c79e9bced38b0c862cea44fb1b0071dba837f3ac5eee",
+    "include/common_linalg.h": "42fdc4ad64e09a9f42f4d84a30fec0a7df0a664e13cc2ddcc432d2f3f4de2a53",
+    "include/qoco_utils.h": "29b885feb7991544abc8a1aa9848389a82b12572e34d2b7c5ea19ab5332a5025",
+    "include/kkt.h": "d31fde487ec1395891fee862ddfe8b81305a75abe6ce3323730515fe4c707fab",
+    "include/qoco.h": "d7c9ea9bfa4f91ddf082b85a995bffe8553c33bedb0a68a78c7e39be6feb0cc2",
+    "include/enums.h": "795f63092b32a997bf0323fd6e2076417b974f18d692f8686e27c8ea130d3777",
+    "include/input_validation.h": "d0d763250b38c1afeae09a89cf4eb8113840a0e06f9509623d69f36b87241388",
+    "include/timer.h": "91a9e4efc285315a32d23715020062878921957a674335612407ec6444cfbea0",
+    "include/cone.h": "5d20ae15124f6bd86ccafb46b8db1080f23a81df51130f560a367f3a3961c705",
+    "include/qoco_api.h": "e4d4b6216fdf56c6fc38ed4c5fda566e65cd7583bb2860e64eb1d516ba5f6085",
+    "include/qoco_linalg.h": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f",
+    "include/qoco_status.h": "14dd9dac70e078ef14ce5604ce7a0188781336d16fd6925cd21fb55292643a82",
+    "include/qoco_config.h": "1b1993a1af4667749da3181b8ff35fcc51a9196954f7ada3eb7842d263d5e3d7",
+    "include/equilibration.h": "e036ad7946b842abb61d4e1e95b482cede482056a81056358cc41654ef077c34",
+    "algebra/cuda/cuda_types.h": "98249e08bd636f42335de38a40e71c5829fa690166e00c26c52c5b8cf23debbf",
+    "algebra/cuda/qoco_gpu_replay.h": "d827706dccfec91254e34077fa38dabcdefaea7fc5efa465e240adba1374c2a4",
+    "algebra/cuda/cudss_backend.h": "8e939b1827605129caba6a1a1105da5846485df1843f12cf996d9eb9943f4391",
+    "lib/qdldl/include/qdldl.h": "73c582f68201804d8960dbf62e80a3aab0efd445a88f6a7606c3b299063e376c",
+    "lib/qdldl/include/qdldl_types.h": "12294736f88f8a469fde0a5823a6392fe75ac3c558075d4a92e01dda04a27653",
+    "lib/qdldl/include/qdldl_version.h": "3a00e3624f0ecb533c1b27c030418894ed43c5862d5d90475087e6f1dee7e812",
+    "lib/amd/SuiteSparse_config.h": "f5e3dd426ee4735f8c5299014bd82c0842d66c6311d6bba793ee6d06278b608a",
+    "lib/amd/amd_internal.h": "1144537093b9f80d2e8d7ae16a89123a8ae996ab3362b50ad45c517933007e42",
+    "lib/amd/amd.h": "7c4a8a5c277ba04121a7d662c5619622f7554963995da9f3c16bf1cc306ebae9"
+  },
+  "stage": "isolate_conditioning_cost_v531.py",
+  "child_pid": 198686
+}

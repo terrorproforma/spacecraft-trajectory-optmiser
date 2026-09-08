@@ -1,0 +1,815 @@
+{
+  "source_base_commit": "66c039a158bc234a80b106774bc426ba10a5b1a3",
+  "production_settings_changed": false,
+  "reports": {
+    "conditioning-paths-v529": {
+      "pid": 198377,
+      "complete": true,
+      "cases": [
+        {
+          "ruiz": 0,
+          "direct": false,
+          "graph": false,
+          "audits": [
+            {
+              "primal": 1.5803116922964182e-13,
+              "dual": 9.3440903449916e-17,
+              "gap": 1.265163533426027e-11,
+              "primal_absolute": 5.594413821086164e-13,
+              "dual_absolute": 9.345024754026099e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418490202,
+              "qualified": true
+            },
+            {
+              "primal": 2.059830759079753e-13,
+              "dual": 9.343483252484259e-17,
+              "gap": 1.2650838645563269e-11,
+              "primal_absolute": 7.291944825738028e-13,
+              "dual_absolute": 9.344417600809507e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418490019,
+              "qualified": true
+            },
+            {
+              "primal": 9.972993017468962e-14,
+              "dual": 9.343049614979015e-17,
+              "gap": 1.2630581930556713e-11,
+              "primal_absolute": 3.530509218307998e-13,
+              "dual_absolute": 9.343983919940513e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418489365,
+              "qualified": true
+            }
+          ],
+          "iterations": [
+            27,
+            27,
+            27
+          ],
+          "seconds": [
+            0.7254840710083954,
+            0.6252192769898102,
+            0.6248623499996029
+          ]
+        },
+        {
+          "ruiz": 0,
+          "direct": false,
+          "graph": true,
+          "audits": [
+            {
+              "primal": 2.119104208145842e-13,
+              "dual": 9.34412503599202e-17,
+              "gap": 1.2636885658170397e-11,
+              "primal_absolute": 7.501776977392183e-13,
+              "dual_absolute": 9.345059448495618e-13,
+              "cone_violation": 0.0,
+              "objective": 0.031840114184891334,
+              "qualified": true
+            },
+            {
+              "primal": 2.517396696579351e-13,
+              "dual": 9.371981909328873e-17,
+              "gap": 1.268084332404682e-11,
+              "primal_absolute": 8.911760218666132e-13,
+              "dual_absolute": 9.372919107519806e-13,
+              "cone_violation": 0.0,
+              "objective": 0.0318401141849008,
+              "qualified": true
+            },
+            {
+              "primal": 1.1224321386641954e-13,
+              "dual": 9.371669690325097e-17,
+              "gap": 1.2623474287360922e-11,
+              "primal_absolute": 3.9734882051334353e-13,
+              "dual_absolute": 9.37260685729413e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418488444,
+              "qualified": true
+            }
+          ],
+          "iterations": [
+            27,
+            27,
+            27
+          ],
+          "seconds": [
+            0.5744632810237817,
+            0.5745934619917534,
+            0.5745320539572276
+          ]
+        },
+        {
+          "ruiz": 0,
+          "direct": true,
+          "graph": false,
+          "audits": [
+            {
+              "primal": 2.3715651949088143e-13,
+              "dual": 9.30017153846052e-17,
+              "gap": 1.260466101475231e-11,
+              "primal_absolute": 8.395506512215434e-13,
+              "dual_absolute": 9.301101555614366e-13,
+              "cone_violation": 0.0,
+              "objective": 0.031840114184878685,
+              "qualified": true
+            },
+            {
+              "primal": 1.2892759212205944e-13,
+              "dual": 9.258056663951254e-17,
+              "gap": 1.2678711172711991e-11,
+              "primal_absolute": 4.564126854234019e-13,
+              "dual_absolute": 9.25898246961765e-13,
+              "cone_violation": 0.0,
+              "objective": 0.031840114184918236,
+              "qualified": true
+            },
+            {
+              "primal": 1.3937100933846564e-13,
+              "dual": 9.370177977307059e-17,
+              "gap": 1.2654862421369092e-11,
+              "primal_absolute": 4.933831121434196e-13,
+              "dual_absolute": 9.37111499510479e-13,
+              "cone_violation": 0.0,
+              "objective": 0.031840114184902006,
+              "qualified": true
+            }
+          ],
+          "iterations": [
+            27,
+            27,
+            27
+          ],
+          "seconds": [
+            0.5747197220334783,
+            0.5745597860077396,
+            0.6247383590089157
+          ]
+        },
+        {
+          "ruiz": 0,
+          "direct": true,
+          "graph": true,
+          "audits": [
+            {
+              "primal": 1.5652581179304275e-13,
+              "dual": 9.318280240679496e-17,
+              "gap": 1.2710623396497813e-11,
+              "primal_absolute": 5.541123115904156e-13,
+              "dual_absolute": 9.319212068703564e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418492985,
+              "qualified": true
+            },
+            {
+              "primal": 1.7775762397174239e-13,
+              "dual": 9.32216563272648e-17,
+              "gap": 1.2601000456838665e-11,
+              "primal_absolute": 6.292744103575387e-13,
+              "dual_absolute": 9.323097849289752e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418487698,
+              "qualified": true
+            },
+            {
+              "primal": 2.6182703587924265e-13,
+              "dual": 9.227251055578744e-17,
+              "gap": 1.2600902058715249e-11,
+              "primal_absolute": 9.268860031835492e-13,
+              "dual_absolute": 9.228173780684301e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418470242,
+              "qualified": true
+            }
+          ],
+          "iterations": [
+            27,
+            27,
+            27
+          ],
+          "seconds": [
+            0.5746141360141337,
+            0.5745852499967441,
+            0.5746853550081141
+          ]
+        },
+        {
+          "ruiz": 2,
+          "direct": false,
+          "graph": false,
+          "audits": [
+            {
+              "primal": 1.3628502659343749e-11,
+              "dual": 3.517850644622695e-11,
+              "gap": 6.275237645658431e-08,
+              "primal_absolute": 4.82458517581108e-11,
+              "dual_absolute": 3.518202429687158e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184104535824599,
+              "qualified": false
+            },
+            {
+              "primal": 1.4577379630213375e-11,
+              "dual": 2.952587755289921e-11,
+              "gap": 1.77129276378602e-07,
+              "primal_absolute": 5.1604942541416676e-11,
+              "dual_absolute": 2.952883014065451e-07,
+              "cone_violation": 0.0,
+              "objective": 0.031840928791155486,
+              "qualified": false
+            },
+            {
+              "primal": 1.0221513417525503e-10,
+              "dual": 2.520162302720541e-11,
+              "gap": 9.293668294847474e-09,
+              "primal_absolute": 3.6184871765598814e-10,
+              "dual_absolute": 2.5204143189508134e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184076295735834,
+              "qualified": false
+            }
+          ],
+          "iterations": [
+            200,
+            200,
+            200
+          ],
+          "seconds": [
+            0.9755499490420334,
+            0.9252235500025563,
+            0.9252078950521536
+          ]
+        },
+        {
+          "ruiz": 2,
+          "direct": false,
+          "graph": true,
+          "audits": [
+            {
+              "primal": 7.466721853194476e-10,
+              "dual": 2.985350440771157e-11,
+              "gap": 2.146216478602008e-07,
+              "primal_absolute": 2.6432717126212424e-09,
+              "dual_absolute": 2.985648975815235e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184086421596719,
+              "qualified": false
+            },
+            {
+              "primal": 2.6001098153978183e-11,
+              "dual": 3.382582561110428e-11,
+              "gap": 1.722452550591993e-07,
+              "primal_absolute": 9.20457043918077e-11,
+              "dual_absolute": 3.38292081936654e-07,
+              "cone_violation": 0.0,
+              "objective": 0.031841046657668744,
+              "qualified": false
+            },
+            {
+              "primal": 5.916606690227838e-11,
+              "dual": 5.009636976174162e-11,
+              "gap": 2.2694652518071067e-08,
+              "primal_absolute": 2.0945201129052293e-10,
+              "dual_absolute": 5.01013793987178e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184082161416157,
+              "qualified": false
+            }
+          ],
+          "iterations": [
+            200,
+            200,
+            200
+          ],
+          "seconds": [
+            0.9252868909970857,
+            0.9253768799826503,
+            0.8752344159875065
+          ]
+        },
+        {
+          "ruiz": 2,
+          "direct": true,
+          "graph": false,
+          "audits": [
+            {
+              "primal": 1.0157085687319727e-11,
+              "dual": 2.964040834067613e-11,
+              "gap": 6.389774348094986e-09,
+              "primal_absolute": 3.5956793098534945e-11,
+              "dual_absolute": 2.96433723815102e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184092611931699,
+              "qualified": false
+            },
+            {
+              "primal": 5.06642471629524e-11,
+              "dual": 2.4586929889600263e-11,
+              "gap": 2.891572123420386e-07,
+              "primal_absolute": 1.7935497531595956e-10,
+              "dual_absolute": 2.4589388582589227e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184083037876757,
+              "qualified": false
+            },
+            {
+              "primal": 7.735780973776617e-12,
+              "dual": 2.724992024716018e-11,
+              "gap": 2.5641574852032614e-08,
+              "primal_absolute": 2.738520521461396e-11,
+              "dual_absolute": 2.7252645239184905e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184096615865799,
+              "qualified": false
+            }
+          ],
+          "iterations": [
+            200,
+            200,
+            200
+          ],
+          "seconds": [
+            0.9254058280494064,
+            0.9252852009958588,
+            0.9254096790100448
+          ]
+        },
+        {
+          "ruiz": 2,
+          "direct": true,
+          "graph": true,
+          "audits": [
+            {
+              "primal": 2.1277694218902657e-11,
+              "dual": 2.984509426725105e-11,
+              "gap": 6.390485025852203e-08,
+              "primal_absolute": 7.532452439562576e-11,
+              "dual_absolute": 2.984807877667778e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184088824422585,
+              "qualified": false
+            },
+            {
+              "primal": 7.1335752759104565e-12,
+              "dual": 3.4675491909053274e-11,
+              "gap": 5.2283450846289474e-09,
+              "primal_absolute": 2.5253354962728736e-11,
+              "dual_absolute": 3.4678959458244183e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184108068186203,
+              "qualified": false
+            },
+            {
+              "primal": 1.9785195043741184e-11,
+              "dual": 2.9849164728767447e-11,
+              "gap": 1.7674961582496903e-07,
+              "primal_absolute": 7.004097302143464e-11,
+              "dual_absolute": 2.985214964524033e-07,
+              "cone_violation": 0.0,
+              "objective": 0.031840890210413676,
+              "qualified": false
+            }
+          ],
+          "iterations": [
+            200,
+            200,
+            200
+          ],
+          "seconds": [
+            0.8751792320399545,
+            0.9253135030157864,
+            0.9251494749914855
+          ]
+        }
+      ],
+      "qoco_sha256": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a",
+      "scope": "Identical QP and tolerances; direct setup versus numeric update, graph versus host-dispatched GPU arithmetic. Fresh process for each of three repeats.",
+      "build_command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/include",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/algebra/cuda",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/lib/qdldl/include",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/lib/amd",
+        "build/performance/conditioning-paths-v529/qoco_snapshot_replay.cu",
+        "-L",
+        "/home/ubuntu/spacepdhcg-step-final-v359/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-conditioning-paths-v532/build/performance/conditioning-paths-v529/qoco_snapshot_replay"
+      ],
+      "binary_sha256": "24710e4a867c1f1868f8ae3c212a537cc5465ef60914315b88f3bf4e0d467cd1",
+      "stage": "ruiz2-direct1-graph1",
+      "repeat": 2,
+      "child_pid": 198597
+    },
+    "conditioning-matrices-v530": {
+      "pid": 198603,
+      "complete": true,
+      "cases": [
+        {
+          "ruiz": 0,
+          "direct": false,
+          "k": 1,
+          "ranges": {
+            "D": [
+              1,
+              1
+            ],
+            "E": [
+              1,
+              1
+            ],
+            "F": [
+              1,
+              1
+            ]
+          },
+          "scaled_data_relative_errors": {
+            "P": 0.0,
+            "A": 0.0,
+            "G": 0.0,
+            "c": 0.0,
+            "b": 0.0,
+            "h": 0.0
+          },
+          "iterations": 27,
+          "audit": {
+            "primal": 2.0679847785279981e-13,
+            "dual": 9.340378407946714e-17,
+            "gap": 1.2636117429780424e-11,
+            "primal_absolute": 7.320810624378282e-13,
+            "dual_absolute": 9.341312445787509e-13,
+            "cone_violation": 0.0,
+            "objective": 0.031840114184894165,
+            "qualified": true
+          }
+        },
+        {
+          "ruiz": 0,
+          "direct": true,
+          "k": 1,
+          "ranges": {
+            "D": [
+              1,
+              1
+            ],
+            "E": [
+              1,
+              1
+            ],
+            "F": [
+              1,
+              1
+            ]
+          },
+          "scaled_data_relative_errors": {
+            "P": 0.0,
+            "A": 0.0,
+            "G": 0.0,
+            "c": 0.0,
+            "b": 0.0,
+            "h": 0.0
+          },
+          "iterations": 27,
+          "audit": {
+            "primal": 2.3991634145797977e-13,
+            "dual": 9.36462741723994e-17,
+            "gap": 1.2680740067342417e-11,
+            "primal_absolute": 8.493206138382448e-13,
+            "dual_absolute": 9.365563879981664e-13,
+            "cone_violation": 0.0,
+            "objective": 0.031840114184918396,
+            "qualified": true
+          }
+        },
+        {
+          "ruiz": 2,
+          "direct": false,
+          "k": 0.0001,
+          "ranges": {
+            "D": [
+              0.9999472567606859,
+              1
+            ],
+            "E": [
+              0.9999472567606859,
+              1.0000119343152056
+            ],
+            "F": [
+              1,
+              1.2968662237602346
+            ]
+          },
+          "scaled_data_relative_errors": {
+            "P": 0.0,
+            "A": 2.220446049250312e-16,
+            "G": 3.3306690738754696e-16,
+            "c": 0.0,
+            "b": 0.0,
+            "h": 0.0
+          },
+          "iterations": 135,
+          "audit": {
+            "primal": 6.883066549573074e-11,
+            "dual": 3.2166852622638566e-11,
+            "gap": 4.176627956891918e-07,
+            "primal_absolute": 2.4366536566233776e-10,
+            "dual_absolute": 3.217006930790085e-07,
+            "cone_violation": 2.4246318115154347e-20,
+            "objective": 0.0318408530225109,
+            "qualified": false
+          }
+        },
+        {
+          "ruiz": 2,
+          "direct": true,
+          "k": 0.0001,
+          "ranges": {
+            "D": [
+              0.9999472567606859,
+              1
+            ],
+            "E": [
+              0.9999472567606859,
+              1.0000119343152056
+            ],
+            "F": [
+              1,
+              1.2968662237602346
+            ]
+          },
+          "scaled_data_relative_errors": {
+            "P": 0.0,
+            "A": 2.220446049250312e-16,
+            "G": 3.3306690738754696e-16,
+            "c": 0.0,
+            "b": 0.0,
+            "h": 0.0
+          },
+          "iterations": 200,
+          "audit": {
+            "primal": 4.3007027030398304e-11,
+            "dual": 2.4356110427504832e-11,
+            "gap": 1.2210705771901635e-07,
+            "primal_absolute": 1.522478809690142e-10,
+            "dual_absolute": 2.435854603854759e-07,
+            "cone_violation": 0.0,
+            "objective": 0.0318408362480773,
+            "qualified": false
+          }
+        }
+      ],
+      "qoco_sha256": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a",
+      "build_command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/include",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/algebra/cuda",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/lib/qdldl/include",
+        "-I",
+        "/home/ubuntu/spacepdhcg-step-final-v359/qoco/lib/amd",
+        "build/performance/conditioning-matrices-v530/qoco_snapshot_replay.cu",
+        "-L",
+        "/home/ubuntu/spacepdhcg-step-final-v359/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-conditioning-paths-v532/build/performance/conditioning-matrices-v530/qoco_snapshot_replay"
+      ],
+      "binary_sha256": "1e6de48b6b2d812e8b5ee73d7ce602f178e70c746f6528b4425287e62c28d5ab",
+      "stage": "ruiz2-direct1",
+      "child_pid": 198680,
+      "clarabel": {
+        "version": "0.11.1",
+        "status": "Solved",
+        "audit": {
+          "primal": 2.3644774703114936e-12,
+          "dual": 2.7282112841903657e-16,
+          "gap": 3.578061492112792e-12,
+          "primal_absolute": 8.370415471858905e-12,
+          "dual_absolute": 2.7284841053187847e-12,
+          "cone_violation": 0.0,
+          "objective": 0.03184011405446981,
+          "qualified": true
+        }
+      }
+    },
+    "conditioning-cost-v531": {
+      "pid": 198686,
+      "complete": true,
+      "cases": [
+        {
+          "diagonal": false,
+          "cost_scale": 1.0,
+          "iterations": [
+            27,
+            27,
+            27
+          ],
+          "audits": [
+            {
+              "primal": 1.2942937793425914e-13,
+              "dual": 9.297188112424443e-17,
+              "gap": 1.267508704060321e-11,
+              "primal_absolute": 4.581890422628021e-13,
+              "dual_absolute": 9.298117831235686e-13,
+              "cone_violation": 0.0,
+              "objective": 0.031840114184911276,
+              "qualified": true
+            },
+            {
+              "primal": 2.356825236675448e-13,
+              "dual": 9.338262256921125e-17,
+              "gap": 1.264345050910106e-11,
+              "primal_absolute": 8.343326030058051e-13,
+              "dual_absolute": 9.339196083146817e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418489413,
+              "qualified": true
+            },
+            {
+              "primal": 1.8133284788366522e-13,
+              "dual": 9.310509456585529e-17,
+              "gap": 1.2619295982252334e-11,
+              "primal_absolute": 6.419309528382655e-13,
+              "dual_absolute": 9.311440507531188e-13,
+              "cone_violation": 0.0,
+              "objective": 0.0318401141848897,
+              "qualified": true
+            }
+          ],
+          "seconds": [
+            0.5752548519521952,
+            0.5761546890134923,
+            0.5753561059827916
+          ]
+        },
+        {
+          "diagonal": true,
+          "cost_scale": 1.0,
+          "iterations": [
+            27,
+            27,
+            27
+          ],
+          "audits": [
+            {
+              "primal": 2.4759993670728763e-13,
+              "dual": 9.255107928915597e-17,
+              "gap": 3.4027517674221908e-12,
+              "primal_absolute": 8.765210779415611e-13,
+              "dual_absolute": 9.256033439708489e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418119103,
+              "qualified": true
+            },
+            {
+              "primal": 2.430525027842279e-13,
+              "dual": 9.183066646075702e-17,
+              "gap": 3.4317658713671137e-12,
+              "primal_absolute": 8.604228440844963e-13,
+              "dual_absolute": 9.18398495274031e-13,
+              "cone_violation": 0.0,
+              "objective": 0.031840114181205185,
+              "qualified": true
+            },
+            {
+              "primal": 2.2592906194291324e-13,
+              "dual": 9.207269039337114e-17,
+              "gap": 3.431698677937474e-12,
+              "primal_absolute": 7.998046669399628e-13,
+              "dual_absolute": 9.208189766241048e-13,
+              "cone_violation": 0.0,
+              "objective": 0.03184011418120503,
+              "qualified": true
+            }
+          ],
+          "seconds": [
+            0.5766795130330138,
+            0.5753826720174402,
+            0.5756094949902035
+          ]
+        },
+        {
+          "diagonal": false,
+          "cost_scale": 0.0001,
+          "iterations": [
+            200,
+            200,
+            200
+          ],
+          "audits": [
+            {
+              "primal": 6.470528048315083e-12,
+              "dual": 3.2978859074332194e-11,
+              "gap": 3.293885888394777e-07,
+              "primal_absolute": 2.290612144406623e-11,
+              "dual_absolute": 3.298215696023964e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184102312877546,
+              "qualified": false
+            },
+            {
+              "primal": 1.2594949332665425e-11,
+              "dual": 2.4313107123761362e-11,
+              "gap": 3.325659843168948e-07,
+              "primal_absolute": 4.4587000758156137e-11,
+              "dual_absolute": 2.4315538434473743e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184078760084364,
+              "qualified": false
+            },
+            {
+              "primal": 1.621301320830481e-11,
+              "dual": 2.42806603570125e-11,
+              "gap": 3.3179006769118864e-07,
+              "primal_absolute": 5.739519970404672e-11,
+              "dual_absolute": 2.4283088423048205e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184078968165746,
+              "qualified": false
+            }
+          ],
+          "seconds": [
+            0.8761276750010438,
+            0.8757570739835501,
+            0.8771534470142797
+          ]
+        },
+        {
+          "diagonal": true,
+          "cost_scale": 0.0001,
+          "iterations": [
+            200,
+            200,
+            200
+          ],
+          "audits": [
+            {
+              "primal": 1.4022310437080723e-11,
+              "dual": 2.3629140081795187e-11,
+              "gap": 1.2061142426256083e-07,
+              "primal_absolute": 4.963995881013261e-11,
+              "dual_absolute": 2.363150299580337e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184084248509441,
+              "qualified": false
+            },
+            {
+              "primal": 1.203439185721184e-11,
+              "dual": 2.0191869582459293e-11,
+              "gap": 2.5857384617887106e-07,
+              "primal_absolute": 4.260258812394113e-11,
+              "dual_absolute": 2.0193888769417543e-07,
+              "cone_violation": 0.0,
+              "objective": 0.031840720326584755,
+              "qualified": false
+            },
+            {
+              "primal": 5.2879129738001866e-12,
+              "dual": 2.4191216579065184e-11,
+              "gap": 2.8698672851072116e-07,
+              "primal_absolute": 1.8719581440507227e-11,
+              "dual_absolute": 2.4193635700723094e-07,
+              "cone_violation": 0.0,
+              "objective": 0.03184083828562673,
+              "qualified": false
+            }
+          ],
+          "seconds": [
+            0.8759045110200532,
+            0.9258746660198085,
+            0.9258426770102233
+          ]
+        }
+      ],
+      "binary_sha256": "24710e4a867c1f1868f8ae3c212a537cc5465ef60914315b88f3bf4e0d467cd1",
+      "qoco_sha256": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a",
+      "scope": "Externally applied equivalent objective and diagonal scalings, native Ruiz disabled. Native stopping tolerances tightened with objective scale; independent original-unit acceptance unchanged. Fresh process per repeat.",
+      "stage": "diagonal1-cost0.0001",
+      "repeat": 2,
+      "child_pid": 198781
+    }
+  },
+  "finding": "Objective multiplier 0.0001 alone reproduces the captured failure; variable and constraint scaling without that multiplier qualifies all sampled trials.",
+  "limitations": [
+    "Single captured QP; not complete-workload performance or a general solver fix.",
+    "Direct setup and instrumented inspections use CPU work; these are diagnostic comparisons only.",
+    "Original-unit independent accuracy gates unchanged; externally scaled runs tighten native tolerances with the objective multiplier.",
+    "No new fleet score; no production numerical setting promoted."
+  ]
+}

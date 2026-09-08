@@ -71,10 +71,45 @@ or 1e-16, including increasing its maximum from 20 to 80, also fails all sampled
 scaled repeats. Those experimental settings were not promoted. Translating the
 state origin likewise fails to recover all three sampled lost trajectory cases.
 
-This isolates a scaled-solver numerical problem without attributing it to an
-incorrect physical trajectory model. It does not yet identify a specific faulty
-kernel or prove a general solver defect. Further work must inspect scaled KKT
-directions, cone scaling and original-unit stopping behavior using this exact QP.
+## Objective normalization isolates the regression on both GPUs
+
+Follow-up v529-v532 tests use the same captured QP on RTX 5090 and H100. Each
+hardware runs three fresh processes per setup/graph combination. Zero Ruiz passes
+qualify all 12 trials; two passes qualify none of 12. This holds with CUDA Graphs
+enabled or disabled and with direct setup or device numerical updates. The graph
+and numerical-update paths are therefore not necessary to reproduce this failure.
+
+An instrumented diagnostic downloads the scaled matrices before solving. They
+match the intended transformations `k D P D`, `E A D`, `F G D`, `k D c`, `E b`
+and `F h`, including the configured P regularization. Maximum relative matrix
+errors are 3.34e-16 on both GPUs. This checks the assembled problem, not each
+subsequent factorization or Newton direction. CPU Clarabel 0.11.1 solves the
+original QP and passes the same independent original-equation audit on both hosts.
+
+The observed objective scale is **k = 0.0001**. The variable scaling is close to
+one, and cone-row scaling ranges from 1 to approximately 1.297. Separating those
+transformations outside the solver, with native Ruiz disabled, gives:
+
+| Equivalent input transformation | RTX qualified / repeats | H100 qualified / repeats |
+|---|---:|---:|
+| None | 3 / 3 | 3 / 3 |
+| Variable and constraint scalings only | 3 / 3 | 3 / 3 |
+| Objective multiplied by 0.0001 only | 0 / 3 | 0 / 3 |
+| Both transformations | 0 / 3 | 0 / 3 |
+
+All unscaled-objective trials take 27 inner iterations. The external-transformation
+diagnostic maps primal/dual/slack values back to the original problem before
+qualification. It tightens native stopping tolerances in proportion to the
+objective multiplier; the independent 1e-9 residual/gap and 1e-8 cone gates remain
+unchanged. No accuracy improvement is claimed merely from evaluating smaller
+scaled residuals. The instrumented traces are diagnostic, not throughput measurements.
+
+This isolates objective normalization as sufficient to trigger this numerical
+regression. It does not yet identify a faulty kernel or establish a general cure.
+Preserving objective magnitude during equilibration is the next candidate to
+evaluate over the complete workload; it has not been implemented or promoted.
+The earlier static-regularization and iterative-refinement sweeps did not restore
+reliable qualification. All production solver settings remain unchanged.
 
 ## Evidence
 
@@ -82,6 +117,8 @@ directions, cone scaling and original-unit stopping behavior using this exact QP
 - [H100 pilot](../results/lambda/2026-09-08/gpu-conditioning-v520/analysis.json)
 - [H100 full trajectory comparison](../results/lambda/2026-09-08/gpu-conditioning-legs-v522/analysis.json)
 - [H100 complete campaigns](../results/lambda/2026-09-08/gpu-conditioning-campaign-v524/analysis.json)
+- [Local setup-path, matrix and objective-scaling isolation](../results/lambda/2026-09-08/gpu-conditioning-cost-local-v531/summary.json)
+- [H100 replication and retrieved logs](../results/lambda/2026-09-08/gpu-conditioning-paths-v532/summary.json)
 
 Archives retain source/input snapshots, exact commands, numerical outputs and
 library hashes. SHA-256 manifests cover published files and archive members.
