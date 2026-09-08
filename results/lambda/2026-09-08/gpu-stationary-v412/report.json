@@ -1,0 +1,219 @@
+{
+  "pid": 176236,
+  "complete": true,
+  "stages": [
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 2.367203726025764,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-stationary-v412/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-stationary-v412/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 49.64787215803517,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-stationary-v412/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 5.321114800986834,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_run_final_verification.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "compile-probe",
+      "returncode": 0,
+      "seconds": 2.216847780975513,
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++17",
+        "--fmad=false",
+        "-arch=sm_90",
+        "-I/home/ubuntu/spacepdhcg-stationary-v412/repo/cpp/include",
+        "-I/home/ubuntu/spacepdhcg-stationary-v412/repo/cpp/cuda/include",
+        "/home/ubuntu/spacepdhcg-stationary-v412/repo/cpp/cuda/tests/gtoc12_scvx_test.cu",
+        "-L/home/ubuntu/spacepdhcg-stationary-v412/core-build/cuda",
+        "-lspacepdhcg_cuda",
+        "-o",
+        "/home/ubuntu/spacepdhcg-stationary-v412/stationary-probe"
+      ]
+    },
+    {
+      "name": "probe",
+      "returncode": 0,
+      "seconds": 0.4144081200356595,
+      "command": [
+        "/home/ubuntu/spacepdhcg-stationary-v412/stationary-probe"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 0.5145204850123264,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-stationary-v412/stationary-probe"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 0.4644941719598137,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-stationary-v412/stationary-probe"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 2.0693935430026613,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-stationary-v412/stationary-probe"
+      ]
+    },
+    {
+      "name": "candidate0",
+      "returncode": 0,
+      "seconds": 38.416690319019835,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('spacepdhcg',run_name='__main__')",
+        "gtoc12",
+        "run",
+        "--run-id",
+        "stationary_default412_candidate0",
+        "--output",
+        "/home/ubuntu/spacepdhcg-stationary-v412/candidate0/output",
+        "--full-catalogue",
+        "--ships",
+        "1",
+        "--beam-width",
+        "16",
+        "--max-deploys",
+        "10",
+        "--neighbours",
+        "48",
+        "--refine-top",
+        "3",
+        "--search-budget-seconds",
+        "120",
+        "--budget-seconds",
+        "600",
+        "--retime-attempts",
+        "4",
+        "--retime-budget-seconds",
+        "300",
+        "--no-cooperative",
+        "--node-days",
+        "2",
+        "--scvx-iterations",
+        "40",
+        "--screening-backend",
+        "cuda",
+        "--seed-backend",
+        "cuda",
+        "--discretisation-backend",
+        "cuda",
+        "--assembly-backend",
+        "cuda",
+        "--convex-solver",
+        "qoco",
+        "--outer-loop-backend",
+        "cuda",
+        "--gpu-execution",
+        "graph"
+      ]
+    }
+  ],
+  "campaigns": [
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "seconds": 37.632594002992846,
+      "score": 548.2546201231996,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    }
+  ],
+  "stage": "candidate0",
+  "source_sha256": {
+    "cpp/cuda/src/gtoc12_scvx.cu": "256d55ee1e88fdb5001748cb0dc8da07e0e225986cdf6711b07ecd3efb24c368",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": "b93ce71dd01ccf96c4f8313a7cbcf6757572176df0895b9657d333d3a0186f99",
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": "0d30413bd29bf42d147faae7c9758c5020d86a945b0626e3604df1e21a780a73",
+    "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e"
+  },
+  "frozen_source_commit": "808e3a87aefd9491e17075b6cd7b84d4459f76f1",
+  "child_pid": 176911,
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "58472022eaa6478bd525cd331f2acabaecd65901b2ab93ef920400ef0183d4bd",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  }
+}

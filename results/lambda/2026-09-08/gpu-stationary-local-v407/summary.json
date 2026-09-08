@@ -1,0 +1,41 @@
+{
+  "baseline": {
+    "cases": 225,
+    "seconds": 161.22971606599276,
+    "statuses": {
+      "converged": 205,
+      "infeasible": 20
+    },
+    "outer_iterations": 1658,
+    "converged_seconds": 49.82451893698999,
+    "unsuccessful_seconds": 111.40519712900277,
+    "uncertified": []
+  },
+  "candidate": {
+    "cases": 225,
+    "seconds": 128.49411670798872,
+    "statuses": {
+      "converged": 205,
+      "infeasible": 15,
+      "failed": 5
+    },
+    "outer_iterations": 1529,
+    "converged_seconds": 49.871986889991604,
+    "unsuccessful_seconds": 78.62212981799712,
+    "uncertified": []
+  },
+  "speedup": 1.2547634101598428,
+  "less_time_percent": 20.30370092855902,
+  "lost_baseline": [],
+  "gained": [],
+  "lost_prior": [],
+  "max_final_mass_change_kg": 3.949890015064739e-08,
+  "stationary_failures": [
+    44,
+    87,
+    134,
+    170,
+    175
+  ],
+  "scope": "One complete replay per mode, same frozen native binary, original boundaries/settings; independently propagated converged outputs. Timing includes GPU seed and solve, excluding independent certification. No global infeasibility or universal speedup claim."
+}

@@ -181,7 +181,7 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
         // Compare successive model objectives: the nonlinear penalty has a
         // per-component defect deadband that the raw virtual-control model
         // does not, so their absolute difference need not vanish at stagnation.
-        // This local termination avoids a long trust-collapse tail;
+        // This optional local termination avoids a long trust-collapse tail;
         // callers may still retry this boundary or another seed.
         const double model=m->fuel+p.virtual_weight*m->virtual_sum;
         const bool stalled=stop_stationary && !feasible && m->step<=p.step_tolerance
@@ -347,7 +347,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     const auto started=std::chrono::steady_clock::now();
     const auto p=*settings;
     const auto* stationary_option=std::getenv("SPACEPDHCG_TEST_GTOC12_STATIONARY_FAILURE");
-    const bool stop_stationary=!stationary_option || stationary_option[0]!='0';
+    const bool stop_stationary=stationary_option&&stationary_option[0]=='1';
     const char* scheduling_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEVICE_SCHEDULING");
     const char* deferred_option=std::getenv("SPACEPDHCG_TEST_GTOC12_DEFERRED_REPORTS");
     const char* graph_option=std::getenv("SPACEPDHCG_TEST_GTOC12_OUTER_GRAPH");

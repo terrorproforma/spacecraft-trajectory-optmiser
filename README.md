@@ -14,7 +14,15 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest complete H100 campaign generated **32 individual routes** in
+The CUDA SCvx controller now stops stationary unsuccessful attempts earlier,
+while preserving all 205 converged legs in a fixed 225-leg replay on both GPUs.
+Replay solve time fell **20.3% on RTX 5090** and **19.5% on H100**. A separate
+paired H100 complete-campaign comparison fell from **43.14 to 38.66 seconds**
+(10.38% less time), with unchanged search counts, score and both mission checks.
+The wider local confirmation retained four ships and 2,088.669 weighted kg in
+247.18 seconds. [Stopping rule, accuracy evidence and reproducible results](docs/GPU_STATIONARY_FAILURE.md).
+
+A larger H100 campaign generated **32 individual routes** in
 **56 min 59 sec**, evaluating **1.417 billion transfer branches** and **137.35
 million collection options**. Fleet selection returned **15 ships, 105 mined
 asteroids and 7,802.295 weighted kg**, accepted by both final mission checkers.

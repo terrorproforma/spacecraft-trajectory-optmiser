@@ -1,0 +1,55 @@
+from pathlib import Path
+import subprocess,os,json,shutil,tarfile,hashlib,ast,fcntl,time
+root=Path('/home/ubuntu/spacepdhcg-stationary-v408');repo=root/'repo';baseline=Path('/home/ubuntu/spacepdhcg-gpu-execution-v328/repo')
+report=dict(pid=os.getpid(),complete=False,stages=[],campaigns=[])
+def save():(root/'report.json').write_text(json.dumps(report,indent=2))
+save()
+lock=open('/home/ubuntu/.spacepdhcg-gpu.lock','a');report['stage']='waiting_for_gpu';save()
+fcntl.flock(lock,fcntl.LOCK_EX)
+try:
+ shutil.copytree('/home/ubuntu/spacepdhcg-grid-cache-v402/repo',repo,ignore=shutil.ignore_patterns('__pycache__','.pytest_cache','.git'))
+ with tarfile.open('/tmp/stationary-v408.tar.gz') as t:
+  for m in t.getmembers():
+   target=(repo/m.name).resolve();assert target.is_relative_to(repo.resolve()) and m.isfile()
+   target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(t.extractfile(m).read())
+ source=json.loads((repo/'stationary-source-sha256.json').read_text())
+ assert all(hashlib.sha256((repo/p).read_bytes()).hexdigest()==sha for p,sha in source.items())
+ report['source_sha256']=source
+ subprocess.run(['git','init',str(repo)],check=True,capture_output=True)
+ subprocess.run(['git','-C',str(repo),'add','.'],check=True,capture_output=True)
+ subprocess.run(['git','-C',str(repo),'-c','user.name=GPU validation','-c','user.email=gpu-validation@localhost','commit','-m','Freeze fleet recovery validation source'],check=True,capture_output=True)
+ report['frozen_source_commit']=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip()
+ cmake='/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake';py='/home/ubuntu/spacepdhcg/v1/.venv/bin/python'
+ core=root/'core-build/cuda/libspacepdhcg_cuda.so';qoco=Path('/home/ubuntu/spacepdhcg-step-final-v359/final/libqoco.so')
+ env={k:v for k,v in os.environ.items() if not k.startswith('SPACEPDHCG_TEST_')}
+ env.update(PYTHONPATH=str(repo/'src'),SPACEPDHCG_GTOC12_CUDA_LIBRARY=str(core),SPACEPDHCG_QOCO_LIBRARY=str(qoco),SPACEPDHCG_GTOC12_GPU_TESTS='1',SPACEPDHCG_GTOC12_DATA='/home/ubuntu/spacepdhcg/gtoc12/benchmarks/gtoc12/data',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')
+ for node in ast.parse(Path('/home/ubuntu/spacepdhcg-diagnose-v174/diagnose.py').read_text()).body:
+  if isinstance(node,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='runtime' for t in node.targets):runtime=ast.literal_eval(node.value)
+ env['LD_LIBRARY_PATH']=str(core.parent)+':'+str(qoco.parent)+':'+runtime+'/lib:/usr/local/cuda/lib64'
+ def run(name,cmd,timeout=900,environment=None,cwd=None):
+  start=time.perf_counter()
+  with (root/(name+'.log')).open('x') as log:
+   child=subprocess.Popen(cmd,cwd=cwd or repo,env=environment or env,stdout=log,stderr=subprocess.STDOUT)
+   report['child_pid']=child.pid;report['stage']=name;save()
+   try:code=child.wait(timeout=timeout)
+   except subprocess.TimeoutExpired:child.kill();child.wait();raise
+  report['stages'].append(dict(name=name,returncode=code,seconds=time.perf_counter()-start,command=cmd));save()
+  assert code==0,(name,code)
+ run('configure',[cmake,'-S',str(repo/'cpp'),'-B',str(root/'core-build'),'-G','Ninja','-DCMAKE_BUILD_TYPE=Release','-DSPACEPDHCG_BUILD_CUDA=ON','-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF','-DBUILD_TESTING=ON','-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc','-DCMAKE_CUDA_ARCHITECTURES=90','-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg'])
+ run('build',[cmake,'--build',str(root/'core-build'),'--target','spacepdhcg_cuda','-j','3'])
+ report['runtime_sha256']={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in [core,qoco]};save()
+ boot="import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))"
+ tests=['tests/test_gtoc12_gpu_scvx.py','tests/test_gtoc12_gpu_cli.py','tests/test_gtoc12_run_final_verification.py']
+ env['SPACEPDHCG_TEST_GTOC12_STATIONARY_FAILURE']='1'
+ run('pytest',[py,'-c',boot,*tests,'-q'],300)
+ binary=str(root/'stationary-probe')
+ run('compile-probe',['/usr/local/cuda/bin/nvcc','-std=c++17','--fmad=false','-arch=sm_90','-I'+str(repo/'cpp/include'),'-I'+str(repo/'cpp/cuda/include'),str(repo/'cpp/cuda/tests/gtoc12_scvx_test.cu'),'-L'+str(core.parent),'-lspacepdhcg_cuda','-o',binary])
+ run('probe',[binary])
+ for name in ['memcheck','synccheck','racecheck']:
+  run(name,['/usr/local/cuda/bin/compute-sanitizer','--tool',name,'--error-exitcode','99',binary])
+ replay="import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_stationary_v405.py',run_name='__main__')"
+ for name,mode,indices in [('smoke','1','0,1,12,44,60,129,134,176,224'),('baseline','0',None),('candidate','1',None)]:
+  run(name,[py,'-c',replay,mode,str(root/name)]+([indices] if indices else []),1200)
+ report['complete']=True
+except Exception as e:report['error']=repr(e)
+save();print('complete',report['complete'],report.get('error'),flush=True)

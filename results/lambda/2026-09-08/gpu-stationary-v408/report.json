@@ -1,0 +1,173 @@
+{
+  "pid": 174924,
+  "complete": true,
+  "stages": [
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 2.3672073800116777,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-stationary-v408/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-stationary-v408/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 50.13286483898992,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-stationary-v408/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 5.270918571972288,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_run_final_verification.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "compile-probe",
+      "returncode": 0,
+      "seconds": 2.216860051965341,
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++17",
+        "--fmad=false",
+        "-arch=sm_90",
+        "-I/home/ubuntu/spacepdhcg-stationary-v408/repo/cpp/include",
+        "-I/home/ubuntu/spacepdhcg-stationary-v408/repo/cpp/cuda/include",
+        "/home/ubuntu/spacepdhcg-stationary-v408/repo/cpp/cuda/tests/gtoc12_scvx_test.cu",
+        "-L/home/ubuntu/spacepdhcg-stationary-v408/core-build/cuda",
+        "-lspacepdhcg_cuda",
+        "-o",
+        "/home/ubuntu/spacepdhcg-stationary-v408/stationary-probe"
+      ]
+    },
+    {
+      "name": "probe",
+      "returncode": 0,
+      "seconds": 0.41441199596738443,
+      "command": [
+        "/home/ubuntu/spacepdhcg-stationary-v408/stationary-probe"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 0.5145441300119273,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-stationary-v408/stationary-probe"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 0.46437461604364216,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-stationary-v408/stationary-probe"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 2.1175640060100704,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-stationary-v408/stationary-probe"
+      ]
+    },
+    {
+      "name": "smoke",
+      "returncode": 0,
+      "seconds": 36.01248084404506,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_stationary_v405.py',run_name='__main__')",
+        "1",
+        "/home/ubuntu/spacepdhcg-stationary-v408/smoke",
+        "0,1,12,44,60,129,134,176,224"
+      ]
+    },
+    {
+      "name": "baseline",
+      "returncode": 0,
+      "seconds": 224.31751849496504,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_stationary_v405.py',run_name='__main__')",
+        "0",
+        "/home/ubuntu/spacepdhcg-stationary-v408/baseline"
+      ]
+    },
+    {
+      "name": "candidate",
+      "returncode": 0,
+      "seconds": 185.82623046898516,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_stationary_v405.py',run_name='__main__')",
+        "1",
+        "/home/ubuntu/spacepdhcg-stationary-v408/candidate"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "candidate",
+  "source_sha256": {
+    "cpp/cuda/src/gtoc12_scvx.cu": "4cc12c61448375decab96695d75cfa5bad8ed3ff47b7ba5b2087ad20d5a4725c",
+    "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": "b93ce71dd01ccf96c4f8313a7cbcf6757572176df0895b9657d333d3a0186f99",
+    "cpp/cuda/tests/gtoc12_scvx_test.cu": "0d30413bd29bf42d147faae7c9758c5020d86a945b0626e3604df1e21a780a73",
+    "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e",
+    "build/performance/replay_stationary_v405.py": "03b8c6a8f90c8e1be1bc1e6d73d4145783c329a2370186d35f96e55733db75c7",
+    "build/performance/grid-cache-fleet-v403/scvx-calls.json": "09da720e7eca6481e9504ffa02840b5f35b9c2398ed229098c574c885510c846"
+  },
+  "frozen_source_commit": "bbb052b97510b6c0996b753e3da1bf6f1fc86e58",
+  "child_pid": 175751,
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "aad9e34d85ea2069e4491df76911655321b81a5e326a9387ce7b0b6ca5d16ce7",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  }
+}
