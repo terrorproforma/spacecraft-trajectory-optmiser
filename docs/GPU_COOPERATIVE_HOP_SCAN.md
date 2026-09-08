@@ -59,8 +59,17 @@ The complete one-ship CLI comparison retained identical search counts:
 
 Median runtime fell from **75.389077 to 42.673741 seconds**: **43.40% less time**,
 or **1.77× faster**, for this fixture and GPU. Both mission checkers passed for
-every run. Two samples per mode do not establish a universal speedup. A wider
-four-ship paired comparison is running separately.
+every run. Two samples per mode do not establish a universal speedup.
+
+The subsequent four-ship comparison completed in **287.109863 seconds** with
+the cooperative scan versus **469.526522 seconds** with the original kernel:
+**1.64× faster**, or **38.85% less time**. Both searched 169,753,864 transfer
+branches and 18,250,121 collection options, and returned the same four-ship,
+29-asteroid fleet at 2,088.668592 weighted kg. Both final mission checkers passed.
+This comparison has one run per mode, candidate first, so it provides a wider
+fixture check rather than a statistical estimate across arbitrary missions.
+[Four-ship reports, source snapshot and reproduction recipes](../results/lambda/2026-09-08/gpu-warp-fleet-v389/summary.json)
+are archived with per-file checksums.
 
 Validation also includes 120 passing tests, independent Kepler closure for
 cooperative batches, eight hop tests under both memory and synchronization
