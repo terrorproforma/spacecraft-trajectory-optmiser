@@ -129,7 +129,10 @@ def test_native_zero_time_preserves_seed_and_never_claims_convergence():
 @GPU
 @pytest.mark.parametrize("state_origin", [False, True])
 @pytest.mark.parametrize("ruiz", [0, 5])
-def test_gpu_outer_graph_retains_physics_and_objective(monkeypatch, state_origin, ruiz):
+@pytest.mark.parametrize("early_graph", [False, True])
+def test_gpu_outer_graph_retains_physics_and_objective(
+    monkeypatch, state_origin, ruiz, early_graph
+):
     from spacepdhcg.gtoc12 import low_thrust
     from spacepdhcg.gtoc12.gpu_discretisation import GpuDiscretisation
     from spacepdhcg.gtoc12.gpu_qoco import GpuQocoProblem
@@ -143,6 +146,7 @@ def test_gpu_outer_graph_retains_physics_and_objective(monkeypatch, state_origin
     ):
         monkeypatch.setenv("SPACEPDHCG_TEST_" + flag, "1")
     monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_STATE_ORIGIN", str(int(state_origin)))
+    monkeypatch.setenv("SPACEPDHCG_TEST_QOCO_EARLY_OUTER_GRAPH", str(int(early_graph)))
 
     def forbidden(*args, **kwargs):
         raise AssertionError("host numerical iteration must not run")
@@ -166,6 +170,8 @@ def test_gpu_outer_graph_retains_physics_and_objective(monkeypatch, state_origin
     # graph execution still performs no per-iteration command downloads.
     priming_count = len(sol.solver_reports) - len(graph_rows)
     assert priming_count in (2, 3)
+    if ruiz == 0 and not state_origin:
+        assert priming_count == (2 if early_graph else 3)
     assert sol.outer_transfer_bytes["control_download_bytes"] == 8 * (priming_count + 1) + 16
     assert sol.outer_transfer_bytes["trajectory_upload_bytes"] == 0
     assert graph_rows[-1]["workspace_creations"] == 1

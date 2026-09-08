@@ -14,6 +14,13 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+New solver phase measurements identify **7.87 s locally / 9.49 s on H100** in
+host-dispatched priming across a 47-call campaign. An early CUDA Graph entry
+experiment reduces priming dispatches from 141 to 94 and retains all 205
+certified legs in the fixed replay, but the H100 replay is **12.06% slower**.
+It remains **disabled by default**. The best fleet score is unchanged.
+[Phase breakdown, validation and retained negative results](docs/GPU_SOLVER_PRIMING.md).
+
 The CUDA SCvx controller now stops stationary unsuccessful attempts earlier,
 while preserving all 205 converged legs in a fixed 225-leg replay on both GPUs.
 Replay solve time fell **20.3% on RTX 5090** and **19.5% on H100**. A separate

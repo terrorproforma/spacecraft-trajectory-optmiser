@@ -1,0 +1,291 @@
+{
+  "default_early_graph": false,
+  "hardware": "RTX 5090",
+  "source_base_commit": "fb079591a35d59a1a8305957004eb1d15ffba595",
+  "phase_profile": {
+    "calls": 47,
+    "phase_seconds": {
+      "setup": 0.223928382,
+      "priming": 7.866679628000001,
+      "graph_build": 0.09631366999999999,
+      "graph_run": 2.398069696000001,
+      "graph_close": 0.029124295,
+      "download": 0.013565872999999999,
+      "cleanup": 0.19788658299999995
+    },
+    "status_counts": {
+      "1": 46,
+      "2": 1
+    },
+    "cold_reports": {
+      "setup_seconds": 2.2688757550000003,
+      "update_seconds": 0.029473018999999993,
+      "solve_seconds": 5.24105817084082,
+      "residual_seconds": 0.013603550983710763
+    },
+    "native_call_seconds": 10.872026598997763,
+    "cold_outer_attempts": 141,
+    "cold_inner_iterations": 3321,
+    "all_outer_attempts": 203,
+    "all_inner_iterations": 4860,
+    "dimensions": {
+      "251": 3,
+      "76": 8,
+      "151": 10,
+      "181": 6,
+      "301": 2,
+      "226": 2,
+      "166": 2,
+      "91": 1,
+      "234": 1,
+      "144": 3,
+      "106": 2,
+      "121": 2,
+      "189": 1,
+      "174": 1,
+      "219": 1,
+      "159": 1,
+      "204": 1
+    }
+  },
+  "full_campaign": {
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "seconds": 31.90039986100237,
+        "score": 548.2546201230998,
+        "native_seconds": 14.243910933993902,
+        "native_calls": 47,
+        "priming": 141,
+        "outer_attempts": 234,
+        "inner_iterations": 6354
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "seconds": 28.718610583000554,
+        "score": 548.2546201232997,
+        "native_seconds": 11.09381143898645,
+        "native_calls": 47,
+        "priming": 94,
+        "outer_attempts": 208,
+        "inner_iterations": 5054
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "seconds": 27.958045361996483,
+        "score": 548.2546201233004,
+        "native_seconds": 10.496340213987423,
+        "native_calls": 47,
+        "priming": 94,
+        "outer_attempts": 200,
+        "inner_iterations": 4757
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "seconds": 32.315945867001574,
+        "score": 548.2546201232997,
+        "native_seconds": 14.672322450995125,
+        "native_calls": 47,
+        "priming": 141,
+        "outer_attempts": 239,
+        "inner_iterations": 6735
+      }
+    ],
+    "baseline_median": 32.10817286400197,
+    "candidate_median": 28.33832797249852,
+    "less_time_percent": 11.741075730067497,
+    "scope": "ABBA, two observations per mode, same binary with readiness switch. Full initial plans and screening counts match; both mission checkers pass. Nonlinear iteration counts vary and complete-runtime gains are not universal."
+  },
+  "fixed_225_legs": {
+    "baseline": {
+      "seconds": 138.6504386039851,
+      "converged": 205,
+      "priming": 675,
+      "control_bytes": 10800,
+      "status_counts": {
+        "converged": 205,
+        "infeasible": 17,
+        "failed": 3
+      },
+      "lost_prior": []
+    },
+    "candidate": {
+      "seconds": 135.64983979001045,
+      "converged": 205,
+      "priming": 450,
+      "control_bytes": 9000,
+      "status_counts": {
+        "converged": 205,
+        "infeasible": 16,
+        "failed": 4
+      },
+      "lost_prior": []
+    },
+    "lost_baseline": [],
+    "max_certified_mass_delta_kg": 2.0983361537219025e-07,
+    "less_time_percent": 2.1641466440254
+  },
+  "validation": {
+    "pid": 622,
+    "complete": true,
+    "stages": [
+      {
+        "name": "pytest",
+        "code": 0,
+        "seconds": 6.255446716000733,
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_scvx.py",
+          "tests/test_gtoc12_gpu_cli.py",
+          "tests/test_gtoc12_run_final_verification.py",
+          "-q"
+        ]
+      }
+    ],
+    "core_sha256": "6f8eaff1ca5f28a3c3e0675de7f2c44bb87c73a8928a28a7f7f38c9c25bbca18",
+    "qoco_sha256": "d97e1bc4e332f9d7a8e7623c86729cf4b85649433e52ba788c52004d5328b723",
+    "source_sha256": {
+      "cpp/cuda/src/native_qoco_adapter.cpp": "d5f13d0003977348d7fa9cc1310386eac57a96322de954fd2475a12a50fc7b34",
+      "tests/test_gtoc12_gpu_scvx.py": "078cf7390ef9a85d5f42d93102c4c89eb4fffa73ab1d5566bbaf350de55421ea",
+      "cpp/cuda/src/gtoc12_scvx.cu": "49198ac6c6bf797e2ea99efebbfee7ccd1da7ca548acb6fb433998653b1fe256",
+      "cpp/cuda/include/spacepdhcg/cuda/gtoc12_scvx_c_api.h": "b93ce71dd01ccf96c4f8313a7cbcf6757572176df0895b9657d333d3a0186f99",
+      "cpp/cuda/tests/gtoc12_scvx_test.cu": "0d30413bd29bf42d147faae7c9758c5020d86a945b0626e3604df1e21a780a73",
+      "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e"
+    },
+    "stage": "pytest",
+    "child_pid": 686
+  },
+  "wider": {
+    "process_seconds": 218.96806944900163,
+    "cli_seconds": 217.3478711659991,
+    "screening": {
+      "backend": "cuda",
+      "collect_resident_builds": 6427,
+      "collect_resident_dp_builds": 1904,
+      "collect_window_download_bytes": 21456,
+      "collect_window_geometry_upload_bytes": 0,
+      "collect_window_queries": 2682,
+      "compact_option_download_bytes": 185454344,
+      "completed_batches": 29984,
+      "completed_branch_requests": 169753864,
+      "completed_collection_dp_passes": 2900,
+      "completed_collection_options": 18250121,
+      "completed_collection_queries": 38630,
+      "completed_compact_options": 7724721,
+      "completed_earth_beam_rows": 2292,
+      "completed_element_hops": 83267972,
+      "completed_neighbour_queries": 3362,
+      "completed_retime_dp_calls": 770,
+      "completed_retime_driver_calls": 139,
+      "completed_retime_forward_calls": 770,
+      "earth_beam_download_bytes": 110048,
+      "gpu_used": true,
+      "refinement_recovery_download_bytes": 772,
+      "refinement_recovery_order_calls": 1,
+      "refinement_recovery_upload_bytes": 20592,
+      "retime_resident_builds": 139,
+      "retime_resident_cells": 34900662,
+      "retime_sweep_samples": 0,
+      "retime_sweep_updates": 0,
+      "retime_table_uploads": 0
+    },
+    "independent": {
+      "max_mass_error_kg": 9.00399754755199e-11,
+      "max_position_error_km": 1.2749843579891005,
+      "max_velocity_error_km_s": 2.109215172677888e-07,
+      "mined_asteroids": 29,
+      "ok": true,
+      "scored_masses": {
+        "806": 25.735797399099965,
+        "1122": 78.30253251199997,
+        "4928": 32.85420944559996,
+        "7885": 20.123203285399995,
+        "8123": 68.44626967829981,
+        "8846": 102.9431895962,
+        "9595": 71.45790554409996,
+        "9644": 111.704312115,
+        "10664": 13.141683778299921,
+        "11147": 79.67145790549989,
+        "12706": 42.710472279200076,
+        "16118": 81.72484599589984,
+        "16459": 119.780971937,
+        "18336": 82.81998631069996,
+        "18870": 120.73921971250002,
+        "20550": 49.965776865199814,
+        "22878": 50.10266940449992,
+        "23760": 71.86858316229996,
+        "25792": 85.83162217659992,
+        "27861": 100.4791238877001,
+        "32153": 57.08418891170004,
+        "36389": 63.92881587950001,
+        "37385": 71.73169062279999,
+        "44653": 102.53251197810005,
+        "49900": 100.47912388779991,
+        "51359": 51.33470225869996,
+        "53410": 73.51129363450013,
+        "57530": 117.86447638610002,
+        "57949": 47.0910335387
+      },
+      "ship_limit": 16.26651744440048,
+      "ships": 4,
+      "total_mass_kg": 2095.961670088999,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 2088.668592155172
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 29,
+      "ok": true,
+      "return_code": 0,
+      "score_data": {
+        "806": 25.735797399099965,
+        "1122": 78.30253251199997,
+        "4928": 32.85420944559996,
+        "7885": 20.123203285399995,
+        "8123": 68.44626967829981,
+        "8846": 102.9431895962,
+        "9595": 71.45790554409996,
+        "9644": 111.704312115,
+        "10664": 13.141683778299921,
+        "11147": 79.67145790549989,
+        "12706": 42.710472279200076,
+        "16118": 81.72484599589984,
+        "16459": 119.780971937,
+        "18336": 82.81998631069996,
+        "18870": 120.73921971250002,
+        "20550": 49.965776865199814,
+        "22878": 50.10266940449992,
+        "23760": 71.86858316229996,
+        "25792": 85.83162217659992,
+        "27861": 100.4791238877001,
+        "32153": 57.08418891170004,
+        "36389": 63.92881587950001,
+        "37385": 71.73169062279999,
+        "44653": 102.53251197810005,
+        "49900": 100.47912388779991,
+        "51359": 51.33470225869996,
+        "53410": 73.51129363450013,
+        "57530": 117.86447638610002,
+        "57949": 47.0910335387
+      },
+      "ships": 4,
+      "total_mass_kg": 2095.96,
+      "wall_seconds": 0.062201377000747016
+    }
+  },
+  "limitations": [
+    "Phase trace measures host wall time at existing synchronization boundaries, not per-kernel time. Nsight API trace has no kernel timeline on this installation.",
+    "Early readiness removes one host-dispatched priming solve; it does not remove that numerical solve. H100 regressions prevent default enablement.",
+    "v460 and H100 v459 mission checkers passed but their diagnostic exporter failed on a numpy array. Fixed exporter is retained with v461/v462.",
+    "v463 runner failed before a numerical child due to a copy2 argument error; corrected v465 ran.",
+    "v464 and H100 v466 had 44 passing tests and one incorrect priming-count assertion for state-origin mode; corrected v468/v469 passed all 45. Final test source differs from v468 only in AST-equivalent line wrapping.",
+    "v464 State-controller probe passed memcheck, synccheck and racecheck. This is not full vendor IPM graph sanitizer coverage."
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "pid": 188171,
+  "complete": true,
+  "stages": [
+    {
+      "name": "baseline0",
+      "returncode": 0,
+      "seconds": 11.679358795983717,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_early_graph.py',run_name='__main__')",
+        "0",
+        "/home/ubuntu/spacepdhcg-early-graph-focus-v473/baseline0",
+        "44,201,98"
+      ]
+    },
+    {
+      "name": "candidate0",
+      "returncode": 0,
+      "seconds": 11.679428116010968,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_early_graph.py',run_name='__main__')",
+        "1",
+        "/home/ubuntu/spacepdhcg-early-graph-focus-v473/candidate0",
+        "44,201,98"
+      ]
+    },
+    {
+      "name": "candidate1",
+      "returncode": 0,
+      "seconds": 15.684770870953798,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_early_graph.py',run_name='__main__')",
+        "1",
+        "/home/ubuntu/spacepdhcg-early-graph-focus-v473/candidate1",
+        "44,201,98"
+      ]
+    },
+    {
+      "name": "baseline1",
+      "returncode": 0,
+      "seconds": 10.47771719499724,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_early_graph.py',run_name='__main__')",
+        "0",
+        "/home/ubuntu/spacepdhcg-early-graph-focus-v473/baseline1",
+        "44,201,98"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "baseline1",
+  "source_report": {
+    "pid": 187293,
+    "complete": true,
+    "stages": [
+      {
+        "name": "baseline",
+        "returncode": 0,
+        "seconds": 193.89752966800006,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_early_graph.py',run_name='__main__')",
+          "0",
+          "/home/ubuntu/spacepdhcg-early-graph-v471/baseline"
+        ]
+      },
+      {
+        "name": "candidate",
+        "returncode": 0,
+        "seconds": 213.57405667903367,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_early_graph.py',run_name='__main__')",
+          "1",
+          "/home/ubuntu/spacepdhcg-early-graph-v471/candidate"
+        ]
+      }
+    ],
+    "campaigns": [],
+    "stage": "candidate",
+    "source_sha256": {
+      "build/performance/replay_early_graph.py": "ece359d0e219e378fd3a31942c7d69019df136b6be0b53a6dad27069e2e8e82f",
+      "build/performance/grid-cache-fleet-v403/scvx-calls.json": "09da720e7eca6481e9504ffa02840b5f35b9c2398ed229098c574c885510c846"
+    },
+    "frozen_source_commit": "e8fc57ab214ac258b862f2143607d92fe078215b",
+    "runtime_sha256": {
+      "libspacepdhcg_cuda.so": "f15ddf1fa0e8581174641b424294e824f09769e08256b602a0db577b22b28f6f",
+      "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+    },
+    "child_pid": 187612
+  },
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "f15ddf1fa0e8581174641b424294e824f09769e08256b602a0db577b22b28f6f",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 188233
+}

@@ -1,0 +1,70 @@
+{
+  "pid": 186563,
+  "complete": false,
+  "stages": [
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 2.3671592159662396,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-early-graph-v466/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-early-graph-v466/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 50.0386088299565,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-early-graph-v466/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 1,
+      "seconds": 6.227298327023163,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_run_final_verification.py",
+        "-q"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "pytest",
+  "source_sha256": {
+    "cpp/cuda/src/gtoc12_scvx.cu": "49198ac6c6bf797e2ea99efebbfee7ccd1da7ca548acb6fb433998653b1fe256",
+    "cpp/cuda/src/native_qoco_adapter.cpp": "d5f13d0003977348d7fa9cc1310386eac57a96322de954fd2475a12a50fc7b34",
+    "tests/test_gtoc12_gpu_scvx.py": "290e06a1229d57af513531ee23c790501bc410f5780e4d33cad0df7c1100e81b",
+    "build/performance/solver_phase_details.py": "3d859ab7b2fafa0e67f6205996cdc7cebb486213c1155c15a5e4db2a70324648"
+  },
+  "frozen_source_commit": "2c63a929351cbfa241fc9b569e37b184dcc750e1",
+  "child_pid": 187071,
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "f15ddf1fa0e8581174641b424294e824f09769e08256b602a0db577b22b28f6f",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "error": "AssertionError(('pytest', 1))"
+}

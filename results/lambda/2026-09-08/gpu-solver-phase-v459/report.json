@@ -1,0 +1,108 @@
+{
+  "pid": 185677,
+  "complete": false,
+  "stages": [
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 2.367304105020594,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-solver-phase-v459/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-solver-phase-v459/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 50.14380997803528,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-solver-phase-v459/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ]
+    },
+    {
+      "name": "default",
+      "returncode": 1,
+      "seconds": 32.007683699950576,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/solver_phase_details.py',run_name='__main__')",
+        "gtoc12",
+        "run",
+        "--run-id",
+        "solver_phase459_default",
+        "--output",
+        "/home/ubuntu/spacepdhcg-solver-phase-v459/default/output",
+        "--full-catalogue",
+        "--ships",
+        "1",
+        "--beam-width",
+        "16",
+        "--max-deploys",
+        "10",
+        "--neighbours",
+        "48",
+        "--refine-top",
+        "3",
+        "--search-budget-seconds",
+        "120",
+        "--budget-seconds",
+        "600",
+        "--retime-attempts",
+        "4",
+        "--retime-budget-seconds",
+        "300",
+        "--no-cooperative",
+        "--node-days",
+        "2",
+        "--scvx-iterations",
+        "40",
+        "--screening-backend",
+        "cuda",
+        "--seed-backend",
+        "cuda",
+        "--discretisation-backend",
+        "cuda",
+        "--assembly-backend",
+        "cuda",
+        "--convex-solver",
+        "qoco",
+        "--outer-loop-backend",
+        "cuda",
+        "--gpu-execution",
+        "graph"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "default",
+  "source_sha256": {
+    "cpp/cuda/src/gtoc12_scvx.cu": "49198ac6c6bf797e2ea99efebbfee7ccd1da7ca548acb6fb433998653b1fe256",
+    "build/performance/solver_phase_details.py": "f4cda69d7505eb7037dcae9ccfd030b367d9e1250ce59a2e7944980b07e00b7f"
+  },
+  "frozen_source_commit": "354c8733bc0c69e75af02c1db4cf74f7318670f5",
+  "child_pid": 186165,
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "a3c2b1af6dda352a853cdb78720d02ba611bc09d2a359d28aa40317d5c428838",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "error": "AssertionError(('default', 1))"
+}

@@ -421,6 +421,7 @@ struct spacepdhcg_native_qoco {
     cudaEvent_t replay_events[3]{};
     bool deferred_active{};
     bool deferred_ready{};
+    bool numeric_scale_primed{};
     bool origin_mode{}, origin_applied{};
     cudaStream_t deferred_stream{};
     const QocoReplayStatus* deferred_status{};
@@ -667,7 +668,13 @@ bool solve_with_device_audit(spacepdhcg_native_qoco* w, cudaStream_t stream,
     }
     const bool collected=collect_device_replay(w,stream,device_status,status,audit);
     if (collected) { pending.finished=true; *replayed=true; }
-    if (collected && updated) w->deferred_ready=true;
+    const auto* early=std::getenv("SPACEPDHCG_TEST_QOCO_EARLY_OUTER_GRAPH");
+    // A successful synchronous scale-packet prime already satisfies the queued
+    // updater's scale_valid prerequisite. Once a subsequent device IPM replay
+    // has completed, another whole host-dispatched SCvx solve is unnecessary.
+    // Retain the old readiness proof unless this measured path is selected.
+    if (collected && (updated || (early && early[0]=='1' && w->numeric_scale_primed)))
+        w->deferred_ready=true;
     return collected;
 }
 
@@ -2024,6 +2031,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         }
         if (workspace->needs_fresh_solver) {
             workspace->deferred_ready=false;
+            workspace->numeric_scale_primed=false;
             // The previous solve failed. QOCO carries its best-iterate tracker and
             // the stall-escalated kkt_dynamic_reg across solves, so a numeric update
             // would not give an independent attempt (observed: 101, 62, then 1
@@ -2083,6 +2091,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
                     }
                     updated=workspace->device_numeric_update(workspace->numeric_update_context,
                         solver_values,stream);
+                    if(updated==0)workspace->numeric_scale_primed=true;
                 }
                 // A partial enqueue failure may not publish an output pointer.
                 if (queued && updated) workspace->finish_numeric_update(workspace->numeric_update_context,1);

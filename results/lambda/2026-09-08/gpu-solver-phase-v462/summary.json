@@ -1,0 +1,50 @@
+{
+  "hardware": "Lambda H100",
+  "default_early_graph": false,
+  "measurements": {
+    "calls": 47,
+    "phase_seconds": {
+      "setup": 0.213679914,
+      "priming": 9.492261620999999,
+      "graph_build": 0.075373445,
+      "graph_run": 4.6514395859999995,
+      "graph_close": 0.017044789,
+      "download": 0.002361463,
+      "cleanup": 0.13408725900000001
+    },
+    "status_counts": {
+      "1": 46,
+      "2": 1
+    },
+    "cold_reports": {
+      "setup_seconds": 3.132207085000001,
+      "update_seconds": 0.014034553,
+      "solve_seconds": 6.024999573643187,
+      "residual_seconds": 0.007496751009993792
+    },
+    "native_call_seconds": 14.65791271883063,
+    "cold_outer_attempts": 141,
+    "cold_inner_iterations": 3343,
+    "all_outer_attempts": 226,
+    "all_inner_iterations": 5554,
+    "dimensions": {
+      "251": 3,
+      "76": 8,
+      "151": 10,
+      "181": 6,
+      "301": 2,
+      "226": 2,
+      "166": 2,
+      "91": 1,
+      "234": 1,
+      "144": 3,
+      "106": 2,
+      "121": 2,
+      "189": 1,
+      "174": 1,
+      "219": 1,
+      "159": 1,
+      "204": 1
+    }
+  }
+}

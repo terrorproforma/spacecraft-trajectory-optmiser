@@ -1,0 +1,156 @@
+{
+  "all": {
+    "cases": 225,
+    "old_seconds": 165.43217477784492,
+    "new_seconds": 185.389277656388,
+    "median_ratio": 1.00049928698035
+  },
+  "baseline_converged": {
+    "cases": 205,
+    "old_seconds": 58.88982987968484,
+    "new_seconds": 60.56630926730577,
+    "median_ratio": 1.0004361601517338
+  },
+  "baseline_unsuccessful": {
+    "cases": 20,
+    "old_seconds": 106.54234489816008,
+    "new_seconds": 124.82296838908223,
+    "median_ratio": 1.0167346470960337
+  },
+  "slowest_deltas": [
+    {
+      "index": 44,
+      "old_status": "failed",
+      "new_status": "infeasible",
+      "old": 1.362135207047686,
+      "new": 16.524094866006635,
+      "delta": 15.16195965895895,
+      "old_iters": 8,
+      "new_iters": 43
+    },
+    {
+      "index": 201,
+      "old_status": "infeasible",
+      "new_status": "infeasible",
+      "old": 3.5977059040451422,
+      "new": 6.757802654989064,
+      "delta": 3.1600967509439215,
+      "old_iters": 41,
+      "new_iters": 44
+    },
+    {
+      "index": 98,
+      "old_status": "infeasible",
+      "new_status": "infeasible",
+      "old": 4.513377890980337,
+      "new": 7.279203926969785,
+      "delta": 2.7658260359894484,
+      "old_iters": 43,
+      "new_iters": 44
+    },
+    {
+      "index": 205,
+      "old_status": "converged",
+      "new_status": "converged",
+      "old": 0.5453053449746221,
+      "new": 1.1105402639950626,
+      "delta": 0.5652349190204404,
+      "old_iters": 6,
+      "new_iters": 10
+    },
+    {
+      "index": 170,
+      "old_status": "failed",
+      "new_status": "failed",
+      "old": 1.6240831390023232,
+      "new": 2.145543962949887,
+      "delta": 0.5214608239475638,
+      "old_iters": 20,
+      "new_iters": 27
+    },
+    {
+      "index": 45,
+      "old_status": "converged",
+      "new_status": "converged",
+      "old": 0.49666852498194203,
+      "new": 0.9582981209969148,
+      "delta": 0.4616295960149728,
+      "old_iters": 5,
+      "new_iters": 9
+    },
+    {
+      "index": 193,
+      "old_status": "converged",
+      "new_status": "converged",
+      "old": 0.5088953580125235,
+      "new": 0.9408322470262647,
+      "delta": 0.43193688901374117,
+      "old_iters": 6,
+      "new_iters": 9
+    },
+    {
+      "index": 195,
+      "old_status": "infeasible",
+      "new_status": "infeasible",
+      "old": 3.56463649898069,
+      "new": 3.9740052859997377,
+      "delta": 0.4093687870190479,
+      "old_iters": 42,
+      "new_iters": 40
+    }
+  ],
+  "fastest_deltas": [
+    {
+      "index": 204,
+      "old_status": "failed",
+      "new_status": "infeasible",
+      "old": 4.819768054003362,
+      "new": 3.5544016729691066,
+      "delta": -1.265366381034255,
+      "old_iters": 37,
+      "new_iters": 40
+    },
+    {
+      "index": 175,
+      "old_status": "failed",
+      "new_status": "failed",
+      "old": 2.444901793031022,
+      "new": 1.359369895013515,
+      "delta": -1.085531898017507,
+      "old_iters": 30,
+      "new_iters": 18
+    },
+    {
+      "index": 208,
+      "old_status": "infeasible",
+      "new_status": "infeasible",
+      "old": 6.881674299016595,
+      "new": 6.188590460049454,
+      "delta": -0.6930838389671408,
+      "old_iters": 28,
+      "new_iters": 28
+    },
+    {
+      "index": 87,
+      "old_status": "infeasible",
+      "new_status": "infeasible",
+      "old": 7.964772168023046,
+      "new": 7.330463991034776,
+      "delta": -0.6343081769882701,
+      "old_iters": 44,
+      "new_iters": 44
+    },
+    {
+      "index": 60,
+      "old_status": "infeasible",
+      "new_status": "infeasible",
+      "old": 12.215858151030261,
+      "new": 11.744145837030374,
+      "delta": -0.47171231399988756,
+      "old_iters": 32,
+      "new_iters": 31
+    }
+  ],
+  "uncertified": [],
+  "lost_baseline": []
+}

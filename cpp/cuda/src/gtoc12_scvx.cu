@@ -278,6 +278,31 @@ __global__ void retain_graph_report(const State* s,const spacepdhcg_gtoc12_qoco_
 }
 
 template<class T> bool allocate(T** p,size_t n) { return cudaMalloc(p,n*sizeof(T))==cudaSuccess; }
+// Optional host-wall phase trace. No added CUDA events, waits, or downloads.
+// A phase includes queued work consumed by its existing synchronization points;
+// these are not kernel timings. Declared before Workspace to include teardown.
+struct PhaseTrace {
+    enum Phase { Setup, Priming, GraphBuild, GraphRun, GraphClose, Download, Cleanup, Count };
+    using Clock=std::chrono::steady_clock;
+    bool enabled=std::getenv("SPACEPDHCG_TEST_GTOC12_PHASE_TRACE")!=nullptr;
+    Clock::time_point last{};
+    double seconds[Count]{};
+    Phase current=Setup;
+    int intervals,iterations=-1,status=-1;
+    explicit PhaseTrace(int n):intervals(n) { if(enabled)last=Clock::now(); }
+    void phase(Phase next) {
+        if(!enabled)return;
+        const auto now=Clock::now();seconds[current]+=std::chrono::duration<double>(now-last).count();
+        last=now;current=next;
+    }
+    ~PhaseTrace() {
+        if(!enabled)return;
+        phase(current);
+        std::fprintf(stderr,"SCVX_PHASE {\"intervals\":%d,\"iterations\":%d,\"status\":%d,\"setup\":%.9g,\"priming\":%.9g,\"graph_build\":%.9g,\"graph_run\":%.9g,\"graph_close\":%.9g,\"download\":%.9g,\"cleanup\":%.9g}\n",
+            intervals,iterations,status,seconds[Setup],seconds[Priming],seconds[GraphBuild],
+            seconds[GraphRun],seconds[GraphClose],seconds[Download],seconds[Cleanup]);
+    }
+};
 struct Workspace {
     gtoc12_seed::Scratch seed;
     cudaStream_t stream{};
@@ -364,6 +389,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         const int arch=10*properties.major+properties.minor;
         if(arch!=90 && arch!=120) return 5;
     }
+    PhaseTrace trace(intervals);
     Workspace w;
     int code=spacepdhcg_gtoc12_qoco_create(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,
         fuel,p.conic_tolerance,ruiz,&w.qoco);
@@ -458,12 +484,14 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     };
     if (!read_command()) return 2;
     if (command.error) return command.error;
+    trace.phase(PhaseTrace::Priming);
     int attempts=0,timeout=0;
     for (;attempts<budget && !command.done;++attempts) {
         if (std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()>p.time_limit_s) {
             timeout=1; break;
         }
         if(outer_graph && spacepdhcg_gtoc12_qoco_can_enqueue(w.qoco)) {
+            trace.phase(PhaseTrace::GraphBuild);
             try {
             if(!attempts) return 2;
             code=spacepdhcg_gtoc12_qoco_begin_graph(w.qoco,w.stream,&w.graph_progress);
@@ -500,6 +528,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
                 if(length<0 || length>=int(sizeof(path)) || cudaGraphDebugDotPrint(w.graph,path,cudaGraphDebugDotFlagsVerbose)!=cudaSuccess) return 2;
             }
             if(cudaGraphInstantiate(&w.executable,w.graph,0)!=cudaSuccess) return 2;
+            trace.phase(PhaseTrace::GraphRun);
             const double remaining=p.time_limit_s-std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count();
             const auto allowance=remaining<=0 ? 0ULL : remaining>=1e10 ? ULLONG_MAX
                 : static_cast<unsigned long long>(remaining*1e9);
@@ -508,6 +537,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
             if(cudaGetLastError()!=cudaSuccess || cudaGraphLaunch(w.executable,w.stream)!=cudaSuccess
                 || cudaMemcpyAsync(&exit,w.graph_exit_result,sizeof(exit),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
                 || cudaStreamSynchronize(w.stream)!=cudaSuccess) return 2;
+            trace.phase(PhaseTrace::GraphClose);
             control_bytes+=sizeof(exit);
             if(exit.iterations<attempts || exit.iterations>budget) return 2;
             if(exit.iterations>attempts && cudaMemcpyAsync(reports+attempts,w.graph_reports+attempts,
@@ -569,6 +599,7 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         }
         if (command.error) return command.error;
     }
+    trace.phase(PhaseTrace::Download);
     finalize<<<1,1,0,w.stream>>>(w.state,p,timeout);
     if (cudaGetLastError()!=cudaSuccess
         || cudaMemcpyAsync(states,w.states,7*nodes*sizeof(double),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
@@ -579,6 +610,8 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
     result->trajectory_upload_bytes=seed_states ? 11*nodes*sizeof(double) : 0;
     result->trajectory_download_bytes=11*nodes*sizeof(double);
     result->control_download_bytes=control_bytes;
+    trace.iterations=result->iterations;trace.status=result->status;
+    trace.phase(PhaseTrace::Cleanup);
     return 0;
 }
 
