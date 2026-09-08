@@ -48,4 +48,11 @@ or proof that normalization alone causes every failure.
 The fleet incumbent remains **12,805.194 weighted kg**. CPU orchestration and
 broader solver qualification failures remain outstanding.
 
+Subsequent local diagnostics excluded a combined rounded-endpoint/compensated-NT
+candidate (28/32 qualified versus baseline 31/32) and per-factorization GPU KKT
+equilibration (16/32 versus 28/32). A captured cone-division audit agrees with a
+100-digit reference to 7.5e-16 on valid inputs; subsequent invalid inputs already
+contain nonfinite values. [Complete reports and frozen experimental sources](../results/lambda/2026-09-08/gpu-qualification-v371/README.md)
+preserve these negative results without enabling the candidates in production.
+
 [Reproducible results, source hashes and visualiser instructions](../results/lambda/2026-09-08/gpu-soc-step-v359/README.md).

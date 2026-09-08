@@ -1,0 +1,199 @@
+[  3%] Building C object lib/amd/CMakeFiles/amd.dir/amd_1.c.o
+[ 11%] Building C object lib/qdldl/CMakeFiles/qdldlobject.dir/src/qdldl.c.o
+[ 11%] Building C object lib/amd/CMakeFiles/amd.dir/amd_2.c.o
+[ 14%] Building C object lib/amd/CMakeFiles/amd.dir/amd_aat.c.o
+[ 25%] Building C object lib/amd/CMakeFiles/amd.dir/amd_control.c.o
+[ 25%] Building C object lib/amd/CMakeFiles/amd.dir/amd_defaults.c.o
+[ 25%] Building C object lib/amd/CMakeFiles/amd.dir/amd_info.c.o
+[ 29%] Building C object lib/amd/CMakeFiles/amd.dir/amd_dump.c.o
+[ 33%] Building C object lib/amd/CMakeFiles/amd.dir/amd_order.c.o
+[ 37%] Building C object lib/amd/CMakeFiles/amd.dir/amd_post_tree.c.o
+[ 40%] Building C object lib/amd/CMakeFiles/amd.dir/amd_postorder.c.o
+[ 44%] Building C object lib/amd/CMakeFiles/amd.dir/amd_preprocess.c.o
+[ 48%] Building C object lib/amd/CMakeFiles/amd.dir/amd_valid.c.o
+[ 51%] Building C object lib/amd/CMakeFiles/amd.dir/amd_version.c.o
+[ 55%] Building C object lib/amd/CMakeFiles/amd.dir/SuiteSparse_config.c.o
+[ 55%] Built target qdldlobject
+[ 55%] Built target amd
+[ 59%] Building C object CMakeFiles/qoco.dir/src/input_validation.c.o
+[ 62%] Building C object CMakeFiles/qoco.dir/src/common_linalg.c.o
+[ 66%] Building C object CMakeFiles/qoco.dir/src/kkt.c.o
+[ 70%] Building C object CMakeFiles/qoco.dir/src/qoco_api.c.o
+[ 74%] Building C object CMakeFiles/qoco.dir/src/timer_linux.c.o
+[ 77%] Building C object CMakeFiles/qoco.dir/src/qoco_status.c.o
+[ 81%] Building C object CMakeFiles/qoco.dir/src/qoco_utils.c.o
+[ 85%] Building C object CMakeFiles/qoco.dir/src/equilibration.c.o
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_utils.c: In function ‘qoco_reference_stopping_metrics’:
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_utils.c:233:14: warning: unused variable ‘Fruiz_data’ [-Wunused-variable]
+  233 |   QOCOFloat* Fruiz_data = get_data_vectorf(work->scaling->Fruiz);
+      |              ^~~~~~~~~~
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_utils.c:224:14: warning: unused variable ‘ubuff2’ [-Wunused-variable]
+  224 |   QOCOFloat* ubuff2 = get_data_vectorf(work->ubuff2);
+      |              ^~~~~~
+[ 92%] Building CUDA object CMakeFiles/qoco.dir/algebra/cuda/cuda_linalg.cu.o
+[ 92%] Building CUDA object CMakeFiles/qoco.dir/algebra/cuda/cudss_backend.cu.o
+[ 96%] Building CUDA object CMakeFiles/qoco.dir/src/cone.cu.o
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(3): error: identifier "DD" is undefined
+  __attribute__((device)) DD divide(DD a, DD b) {
+                          ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(3): error: identifier "DD" is undefined
+  __attribute__((device)) DD divide(DD a, DD b) {
+                                    ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(3): error: identifier "DD" is undefined
+  __attribute__((device)) DD divide(DD a, DD b) {
+                                          ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(5): error: identifier "DD" is undefined
+      DD r=add(a,neg(mul(b,DD(q1))));
+      ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(5): error: identifier "DD" is undefined
+      DD r=add(a,neg(mul(b,DD(q1))));
+                           ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(5): error: identifier "mul" is undefined
+      DD r=add(a,neg(mul(b,DD(q1))));
+                     ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(5): error: identifier "neg" is undefined
+      DD r=add(a,neg(mul(b,DD(q1))));
+                 ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(5): error: identifier "add" is undefined
+      DD r=add(a,neg(mul(b,DD(q1))));
+           ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(10): error: identifier "DD" is undefined
+  __attribute__((device)) DD root(DD a) {
+                          ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(10): error: identifier "DD" is undefined
+  __attribute__((device)) DD root(DD a) {
+                                  ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(12): error: identifier "DD" is undefined
+      if(!(h>0.0) || !isfinite(h)) return DD(h);
+                                          ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(13): error: identifier "DD" is undefined
+      DD r=add(a,neg(mul(DD(h),DD(h))));
+      ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(13): error: identifier "DD" is undefined
+      DD r=add(a,neg(mul(DD(h),DD(h))));
+                         ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(13): error: identifier "mul" is undefined
+      DD r=add(a,neg(mul(DD(h),DD(h))));
+                     ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(13): error: identifier "neg" is undefined
+      DD r=add(a,neg(mul(DD(h),DD(h))));
+                 ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(13): error: identifier "add" is undefined
+      DD r=add(a,neg(mul(DD(h),DD(h))));
+           ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(16): error: identifier "DD" is undefined
+  __attribute__((device)) DD euclidean(const double* s,const double* z,int n) {
+                          ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(17): error: identifier "DD" is undefined
+      DD sum;
+      ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(18): error: identifier "DD" is undefined
+      for(int j=0;j<n;++j)sum=add(sum,mul(DD(s[j]),DD(z[j])));
+                                          ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(18): error: identifier "mul" is undefined
+      for(int j=0;j<n;++j)sum=add(sum,mul(DD(s[j]),DD(z[j])));
+                                      ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/qoco_nt_precision.cuh(18): error: identifier "add" is undefined
+      for(int j=0;j<n;++j)sum=add(sum,mul(DD(s[j]),DD(z[j])));
+                              ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(270): error: identifier "DD" is undefined
+    DD ss=root(inner(&s[idx],&s[idx],qi));
+    ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(270): error: identifier "inner" is undefined
+    DD ss=root(inner(&s[idx],&s[idx],qi));
+               ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(271): error: identifier "DD" is undefined
+    DD zz=root(inner(&z[idx],&z[idx],qi));
+    ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(272): error: identifier "DD" is undefined
+    DD gamma=root(mul(DD(0.5),add(DD(1.0),
+    ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(272): error: identifier "DD" is undefined
+    DD gamma=root(mul(DD(0.5),add(DD(1.0),
+                      ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(273): error: identifier "mul" is undefined
+        divide(euclidean(&s[idx],&z[idx],qi),mul(ss,zz)))));
+                                             ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(272): error: identifier "add" is undefined
+    DD gamma=root(mul(DD(0.5),add(DD(1.0),
+                              ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(272): error: identifier "mul" is undefined
+    DD gamma=root(mul(DD(0.5),add(DD(1.0),
+                  ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(274): error: expected a ";"
+    DD denominator=mul(DD(2.0),gamma);
+       ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(276): error: expected a ";"
+      DD sn=divide(DD(s[idx+j]),ss), zn=divide(DD(z[idx+j]),zz);
+         ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(277): error: identifier "sn" is undefined
+      sbar[idx+j]=rounded(divide(add(sn,j==0?zn:neg(zn)),denominator));
+                                     ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(277): error: identifier "zn" is undefined
+      sbar[idx+j]=rounded(divide(add(sn,j==0?zn:neg(zn)),denominator));
+                                             ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(277): error: identifier "neg" is undefined
+      sbar[idx+j]=rounded(divide(add(sn,j==0?zn:neg(zn)),denominator));
+                                                ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(277): error: identifier "denominator" is undefined
+      sbar[idx+j]=rounded(divide(add(sn,j==0?zn:neg(zn)),denominator));
+                                                         ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(277): error: identifier "rounded" is undefined
+      sbar[idx+j]=rounded(divide(add(sn,j==0?zn:neg(zn)),denominator));
+                  ^
+
+/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu(279): error: identifier "rounded" is undefined
+    QOCOFloat eta=rounded(root(divide(ss,zz)));
+                  ^
+
+37 errors detected in the compilation of "/home/angus/build-qoco-interior-nt-v369/source/src/cone.cu".
+gmake[3]: *** [CMakeFiles/qoco.dir/build.make:222: CMakeFiles/qoco.dir/src/cone.cu.o] Error 2
+gmake[3]: *** Waiting for unfinished jobs....
+/home/angus/build-qoco-interior-nt-v369/source/algebra/cuda/qoco_batched_stopping.cuh(86): warning #177-D: variable "u2" was declared but never referenced
+           *u2 = w->ubuff2->d_data, *u3 = w->ubuff3->d_data, *res = w->kktres->d_data;
+            ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/angus/build-qoco-interior-nt-v369/source/algebra/cuda/qoco_batched_stopping.cuh(88): warning #177-D: variable "f" was declared but never referenced
+           *fi = scale->Finvruiz->d_data, *f = scale->Fruiz->d_data;
+                                           ^
+
+gmake[2]: *** [CMakeFiles/Makefile2:178: CMakeFiles/qoco.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:185: CMakeFiles/qoco.dir/rule] Error 2
+gmake: *** [Makefile:169: qoco] Error 2

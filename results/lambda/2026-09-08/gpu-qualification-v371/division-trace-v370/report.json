@@ -1,0 +1,465 @@
+{
+  "valid_interior_pairs": 12168,
+  "invalid_input_pairs": 3744,
+  "invalid_reasons": {
+    "nonfinite_rhs": 3696,
+    "nonfinite_lambda": 48
+  },
+  "first_invalid": {
+    "file": "division-0052.bin",
+    "cone": 0,
+    "reason": "nonfinite_rhs",
+    "lambda_values": [
+      6.608765114217675e-08,
+      -1.0139194445263935e-09,
+      -1.0075457099884484e-09,
+      -1.1245598475831797e-10
+    ],
+    "rhs": [
+      NaN,
+      NaN,
+      NaN,
+      NaN
+    ]
+  },
+  "worst": {
+    "file": "division-0012.bin",
+    "cone": 233,
+    "relative_error": 7.4990040737767e-16,
+    "lambda_values": [
+      2.2052361617150247,
+      1.5984284076176134,
+      0.5295517035358175,
+      -0.17340776904533958
+    ],
+    "v": [
+      4.838941384089662,
+      5.482241581935552,
+      -1.5860149568219384,
+      0.5579604782827736
+    ],
+    "output": [
+      1.4240450772148803,
+      1.4538159370168946,
+      -1.0611654633637733,
+      0.3649953561058188
+    ],
+    "reference": [
+      "1.424045077214879536466069176474541922089961486823501437433365748221444446031681357846249587381363265",
+      "1.453815937016895689626674522958725879709412027706005200778713441714417938333538909218190928187298445",
+      "-1.061165463363773081429314977873132574692865000677745719573863929841558386401488286641113442249397135",
+      "0.3649953561058186982949887574406916430539022192164715204089528541621058053974849466240473277896502763"
+    ],
+    "determinant": "1.997597893573667052671493590164763967634553983711368122021036563493992174733726585600379621610045433"
+  },
+  "rows": [
+    {
+      "file": "division-0000.bin",
+      "max_relative_error": 3.4673572476396263e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "43a6b7129d3374c0f8ad1798a12d19f8280c68f1134a3652547ed5b17172ea19"
+    },
+    {
+      "file": "division-0001.bin",
+      "max_relative_error": 3.4673572476396263e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "43a6b7129d3374c0f8ad1798a12d19f8280c68f1134a3652547ed5b17172ea19"
+    },
+    {
+      "file": "division-0002.bin",
+      "max_relative_error": 3.0930582827450467e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "314a34abc1c92e023ca112884191aa9c02afd7416d94972d34afbbf99b8ebcba"
+    },
+    {
+      "file": "division-0003.bin",
+      "max_relative_error": 3.0930582827450467e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "314a34abc1c92e023ca112884191aa9c02afd7416d94972d34afbbf99b8ebcba"
+    },
+    {
+      "file": "division-0004.bin",
+      "max_relative_error": 3.0070470376596603e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "d67949aa79e4d5281f911fea2971072084d8f19a6740bd450d9448d7c2c37a54"
+    },
+    {
+      "file": "division-0005.bin",
+      "max_relative_error": 3.0070470376596603e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "d67949aa79e4d5281f911fea2971072084d8f19a6740bd450d9448d7c2c37a54"
+    },
+    {
+      "file": "division-0006.bin",
+      "max_relative_error": 3.6413744337496897e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "7a63a864fd0dc761ff456676aac6518de6f3d759b0e40d1bd1419c5d254f3f50"
+    },
+    {
+      "file": "division-0007.bin",
+      "max_relative_error": 3.6413744337496897e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "7a63a864fd0dc761ff456676aac6518de6f3d759b0e40d1bd1419c5d254f3f50"
+    },
+    {
+      "file": "division-0008.bin",
+      "max_relative_error": 2.9202222437009437e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "c8cfe582b78764258f455bfe50147dbf8118994aa2eb75b26d8f19581244b162"
+    },
+    {
+      "file": "division-0009.bin",
+      "max_relative_error": 2.9202222437009437e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "c8cfe582b78764258f455bfe50147dbf8118994aa2eb75b26d8f19581244b162"
+    },
+    {
+      "file": "division-0010.bin",
+      "max_relative_error": 3.1257693762896767e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "30088d6671e71cf519072f3349071d9e8960dd6c3f5458dfdc73d3bf84c34b7e"
+    },
+    {
+      "file": "division-0011.bin",
+      "max_relative_error": 3.1257693762896767e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "30088d6671e71cf519072f3349071d9e8960dd6c3f5458dfdc73d3bf84c34b7e"
+    },
+    {
+      "file": "division-0012.bin",
+      "max_relative_error": 7.4990040737767e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "a4d2707ee79e4e1ba7c464b33a4b6e5625a0c932f14b0dae0043d17de21c8d7f"
+    },
+    {
+      "file": "division-0013.bin",
+      "max_relative_error": 7.4990040737767e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "a4d2707ee79e4e1ba7c464b33a4b6e5625a0c932f14b0dae0043d17de21c8d7f"
+    },
+    {
+      "file": "division-0014.bin",
+      "max_relative_error": 3.1409968596601937e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "f092e925a78e4d2a3330bab6778401b2e2af13316027d6b5932ade2bcd086efb"
+    },
+    {
+      "file": "division-0015.bin",
+      "max_relative_error": 3.1409968596601937e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "f092e925a78e4d2a3330bab6778401b2e2af13316027d6b5932ade2bcd086efb"
+    },
+    {
+      "file": "division-0016.bin",
+      "max_relative_error": 2.609916682107759e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "e9b90d01e57da331965319ab5eb3b1fe510a204a065605dafcbfd406cfb3ebfd"
+    },
+    {
+      "file": "division-0017.bin",
+      "max_relative_error": 2.609916682107759e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "e9b90d01e57da331965319ab5eb3b1fe510a204a065605dafcbfd406cfb3ebfd"
+    },
+    {
+      "file": "division-0018.bin",
+      "max_relative_error": 2.6575968598340545e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "f587b594f1d08831fdefb4e371e4cce00ad9cfd4fe6d2223ec9c73fee3a699ba"
+    },
+    {
+      "file": "division-0019.bin",
+      "max_relative_error": 2.6575968598340545e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "f587b594f1d08831fdefb4e371e4cce00ad9cfd4fe6d2223ec9c73fee3a699ba"
+    },
+    {
+      "file": "division-0020.bin",
+      "max_relative_error": 2.984959377989448e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "b1747258dbc223c510b5944cc714f36bc47f5e45f742ec24cc50ecd8be0a2063"
+    },
+    {
+      "file": "division-0021.bin",
+      "max_relative_error": 2.984959377989448e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "b1747258dbc223c510b5944cc714f36bc47f5e45f742ec24cc50ecd8be0a2063"
+    },
+    {
+      "file": "division-0022.bin",
+      "max_relative_error": 3.061164455225351e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "c9f31b785e6c5848d42f637b8be68312556403341ad6764f6e1cb1a183c2b73b"
+    },
+    {
+      "file": "division-0023.bin",
+      "max_relative_error": 3.061164455225351e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "c9f31b785e6c5848d42f637b8be68312556403341ad6764f6e1cb1a183c2b73b"
+    },
+    {
+      "file": "division-0024.bin",
+      "max_relative_error": 2.857798553917625e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "c08515f300940d6a333119076d875261fb386ff74b35cc1c4d387b945dd67ac4"
+    },
+    {
+      "file": "division-0025.bin",
+      "max_relative_error": 2.857798553917625e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "c08515f300940d6a333119076d875261fb386ff74b35cc1c4d387b945dd67ac4"
+    },
+    {
+      "file": "division-0026.bin",
+      "max_relative_error": 2.592637370968312e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "1b89537c82ce4b88b1c1b58ad6301f972b55264ceaef2a71b1ee5023e37236d9"
+    },
+    {
+      "file": "division-0027.bin",
+      "max_relative_error": 2.592637370968312e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "1b89537c82ce4b88b1c1b58ad6301f972b55264ceaef2a71b1ee5023e37236d9"
+    },
+    {
+      "file": "division-0028.bin",
+      "max_relative_error": 2.9229898714940297e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "61da7bd66780261f6b9c960b5bde54f20b7d5280bc6e2594e6c8ceb59fcb2842"
+    },
+    {
+      "file": "division-0029.bin",
+      "max_relative_error": 2.9229898714940297e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "61da7bd66780261f6b9c960b5bde54f20b7d5280bc6e2594e6c8ceb59fcb2842"
+    },
+    {
+      "file": "division-0030.bin",
+      "max_relative_error": 2.7657636600941006e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "361994b31a96b9c544ad51223f0320bf69a04df88505081e54846eb95f97846d"
+    },
+    {
+      "file": "division-0031.bin",
+      "max_relative_error": 2.7657636600941006e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "361994b31a96b9c544ad51223f0320bf69a04df88505081e54846eb95f97846d"
+    },
+    {
+      "file": "division-0032.bin",
+      "max_relative_error": 2.6952168808254216e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "4e68fddcc44259e89ce9190a4f3094571fbf51a6102045d1c81c1f1a62a40146"
+    },
+    {
+      "file": "division-0033.bin",
+      "max_relative_error": 2.6952168808254216e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "4e68fddcc44259e89ce9190a4f3094571fbf51a6102045d1c81c1f1a62a40146"
+    },
+    {
+      "file": "division-0034.bin",
+      "max_relative_error": 3.218405041195132e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "b1180dbc6e4aed105f3d601300bc314f9d07fee96a6e7b310539b8e8ea584616"
+    },
+    {
+      "file": "division-0035.bin",
+      "max_relative_error": 3.218405041195132e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "b1180dbc6e4aed105f3d601300bc314f9d07fee96a6e7b310539b8e8ea584616"
+    },
+    {
+      "file": "division-0036.bin",
+      "max_relative_error": 2.84434664218734e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "d5147140df548ae6f5c871c21f278e5b1c3d040b456944d344aa87d14c99218b"
+    },
+    {
+      "file": "division-0037.bin",
+      "max_relative_error": 2.84434664218734e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "d5147140df548ae6f5c871c21f278e5b1c3d040b456944d344aa87d14c99218b"
+    },
+    {
+      "file": "division-0038.bin",
+      "max_relative_error": 2.8747550175857977e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "547e1f4c0dfcc2e3fdec4570fc8c112521245943a9e8c5ae5948c22bebe1a329"
+    },
+    {
+      "file": "division-0039.bin",
+      "max_relative_error": 2.8747550175857977e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "547e1f4c0dfcc2e3fdec4570fc8c112521245943a9e8c5ae5948c22bebe1a329"
+    },
+    {
+      "file": "division-0040.bin",
+      "max_relative_error": 2.648775675317028e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "b689d4a7960ec26260aa3d8e4865be6435919af671994fc3dae17d7388e45c04"
+    },
+    {
+      "file": "division-0041.bin",
+      "max_relative_error": 2.648775675317028e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "b689d4a7960ec26260aa3d8e4865be6435919af671994fc3dae17d7388e45c04"
+    },
+    {
+      "file": "division-0042.bin",
+      "max_relative_error": 2.5577890392058416e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "cb99712c42934ff9f17629301c486316756f9cbb39907a33ff9b6c6171a69372"
+    },
+    {
+      "file": "division-0043.bin",
+      "max_relative_error": 2.5577890392058416e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "cb99712c42934ff9f17629301c486316756f9cbb39907a33ff9b6c6171a69372"
+    },
+    {
+      "file": "division-0044.bin",
+      "max_relative_error": 3.0131390226415544e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "3b8cea5cf342d22619bb5c930c02629943d37dcf269f7dee566db2ac50db7d5c"
+    },
+    {
+      "file": "division-0045.bin",
+      "max_relative_error": 3.0131390226415544e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "3b8cea5cf342d22619bb5c930c02629943d37dcf269f7dee566db2ac50db7d5c"
+    },
+    {
+      "file": "division-0046.bin",
+      "max_relative_error": 3.0749539926800197e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "dbdf84a35b70ed52ab2fe0167d2e176f2ad70e76d28315d9f423d66af301e49e"
+    },
+    {
+      "file": "division-0047.bin",
+      "max_relative_error": 3.0749539926800197e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "dbdf84a35b70ed52ab2fe0167d2e176f2ad70e76d28315d9f423d66af301e49e"
+    },
+    {
+      "file": "division-0048.bin",
+      "max_relative_error": 5.446228319159337e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "fbcf81fc8f84223fdcc92e8282939947f363cdfca6064cfa15ff61295890c232"
+    },
+    {
+      "file": "division-0049.bin",
+      "max_relative_error": 5.446228319159337e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "fbcf81fc8f84223fdcc92e8282939947f363cdfca6064cfa15ff61295890c232"
+    },
+    {
+      "file": "division-0050.bin",
+      "max_relative_error": 3.6111908371216145e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "2fde0c6416c25a9c00a1a74cb802f010526dfe4976367b43c50756b7fdeeb111"
+    },
+    {
+      "file": "division-0051.bin",
+      "max_relative_error": 3.6111908371216145e-16,
+      "nonfinite_outputs": 0,
+      "sha256": "2fde0c6416c25a9c00a1a74cb802f010526dfe4976367b43c50756b7fdeeb111"
+    },
+    {
+      "file": "division-0052.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0053.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0054.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0055.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0056.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0057.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0058.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0059.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0060.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0061.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0062.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0063.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0064.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0065.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0066.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    },
+    {
+      "file": "division-0067.bin",
+      "max_relative_error": 0.0,
+      "nonfinite_outputs": 0,
+      "sha256": "eef7d549dae20dc69e85e0493e6588321f5da64281e460fef7cd8410a97e9d19"
+    }
+  ]
+}
