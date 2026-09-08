@@ -17,7 +17,9 @@ All numerical trajectory work in that comparison still runs on CUDA.
 
 Eight standalone replays of the identical first QP, without any trajectory loop,
 all fail the independent long-double 1e-9 residual/gap audit and produce different
-numerical results. Raising static factor regularization to 1e-8 fails 8/8 too.
+numerical results. Explicitly setting static factor regularization to 1e-8 fails
+8/8 too. Correction: this repeats the captured baseline value, not an increase;
+the original description overstated that comparison. Raw inputs/logs are unchanged.
 Disabling only the factor graph while retaining the IPM graph is unsupported and
 exits before producing a replay. Disabling both graphs completes eight replays;
 all eight still fail the audit. Graph execution alone does not explain the issue.

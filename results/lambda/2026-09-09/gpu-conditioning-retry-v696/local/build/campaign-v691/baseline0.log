@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/home/angus/spacepdhcg-retry-report-v690/repo/build/performance/orphan-recovery-v595/run.py", line 388, in <module>
+    raise SystemExit(run(args))
+                     ^^^^^^^^^
+  File "/home/angus/spacepdhcg-retry-report-v690/repo/build/performance/orphan-recovery-v595/run.py", line 147, in run
+    summaries = {ship: json.loads(path.read_text()) for ship, path in paths.items()}
+                                  ^^^^^^^^^^^^^^^^
+  File "/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/angus/spacepdhcg-retry-report-v690/repo/results/lambda/2026-09-08/fleet-objective-v229/incumbent-sources/ship-01.json'

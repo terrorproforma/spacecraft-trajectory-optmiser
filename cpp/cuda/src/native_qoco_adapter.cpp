@@ -189,6 +189,7 @@ using DeviceNumericUpdateFn = int (*)(void*, const double*, cudaStream_t);
 using QueuedNumericUpdateFn = int (*)(void*, const double*, cudaStream_t, const double**);
 using FinishNumericUpdateFn = int (*)(void*, int);
 using NumericPreservesObjectiveFn = int (*)(const void*);
+using NumericRetryConditioningFn = int (*)(void*,const int*);
 using DestroyNumericUpdateFn = void (*)(void*);
 using SetTrajectoryFn = int (*)(int, int, int, const int*, const int*, const int*, cudaStream_t);
 
@@ -442,6 +443,8 @@ struct spacepdhcg_native_qoco {
     QueuedNumericUpdateFn capture_numeric_update{};
     FinishNumericUpdateFn finish_numeric_update{};
     NumericPreservesObjectiveFn numeric_preserves_objective{};
+    NumericRetryConditioningFn numeric_retry_conditioning{};
+    const int* conditioning_retry{};
     const double* queued_numeric_result{};
     bool numeric_update_invalid{};
     bool queue_validation_allowed{}, validation_pending{};
@@ -1447,6 +1450,10 @@ int setup_solver(spacepdhcg_native_qoco* workspace) {
             &workspace->numeric_update_context);
         // Seed actual coefficients at zero Ruiz before cost normalization can
         // inspect the old objective. No placeholder problem is ever solved.
+        if (created == 0 && workspace->conditioning_retry) {
+            created = workspace->numeric_retry_conditioning(workspace->numeric_update_context,
+                workspace->conditioning_retry);
+        }
         if (created == 0 && workspace->device_initialization) {
             created = workspace->device_numeric_update(workspace->numeric_update_context,
                 qoco_gpu_conversion_values(workspace->conversion.device), nullptr);
@@ -1551,6 +1558,7 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_capture_numeric_update", &result->capture_numeric_update);
     symbol(result->library, "qoco_gpu_finish_numeric_update", &result->finish_numeric_update);
     symbol(result->library, "qoco_gpu_numeric_preserves_objective", &result->numeric_preserves_objective);
+    symbol(result->library, "qoco_gpu_numeric_retry_conditioning", &result->numeric_retry_conditioning);
     symbol(result->library, "qoco_gpu_destroy_numeric_update", &result->destroy_numeric_update);
     symbol(result->library, "qoco_gpu_set_trajectory", &result->set_trajectory);
     if (result->set_trajectory && problem->intervals > 0
@@ -2462,6 +2470,21 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_reset_warm_state(
 void spacepdhcg_native_qoco_destroy(spacepdhcg_native_qoco* workspace) {
     if (workspace && workspace->graph_active) { workspace->destroy_after_graph=true; return; }
     delete workspace;
+}
+
+spacepdhcg_cuda_status spacepdhcg_native_qoco_set_conditioning_retry(
+    spacepdhcg_native_qoco* w,const int* retry) {
+    int device=-1;
+    if(!w || w->graph_active || w->deferred_active ||
+        std::this_thread::get_id()!=w->creation_owner || cudaGetDevice(&device)!=cudaSuccess ||
+        device!=w->creation_device) return SPACEPDHCG_CUDA_INVALID_STATE;
+    if(retry && (w->configured_settings.ruiz_iters || !w->numeric_retry_conditioning))
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if(w->numeric_update_context && w->numeric_retry_conditioning &&
+        w->numeric_retry_conditioning(w->numeric_update_context,retry))
+        return SPACEPDHCG_CUDA_RUNTIME_ERROR;
+    w->conditioning_retry=retry;
+    return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 spacepdhcg_cuda_status spacepdhcg_native_qoco_restart_leg(spacepdhcg_native_qoco* w) {

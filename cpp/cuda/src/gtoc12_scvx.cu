@@ -319,6 +319,7 @@ struct Workspace {
     cudaGraphExec_t executable{};
     bool graph_lease{};
     bool retain_qoco{};
+    bool conditioning_retry{};
     const QocoGraphProgress* graph_progress{};
     GraphExit* graph_exit_result{};
     spacepdhcg_gtoc12_qoco_report *graph_reports{},graph_base{};
@@ -332,6 +333,8 @@ struct Workspace {
     ~Workspace() {
         if (stream) cudaStreamSynchronize(stream);
         close_graph();
+        if(conditioning_retry && spacepdhcg_gtoc12_qoco_set_conditioning_retry(qoco,nullptr))
+            retain_qoco=false;
         gtoc12_qoco_release(qoco,retain_qoco); spacepdhcg_gtoc12_discretisation_destroy(dynamics);
         cudaFree(states); cudaFree(controls); cudaFree(fuel); cudaFree(partial); cudaFree(metrics);
         cudaFree(state); cudaFree(records); cudaFree(parameters);
@@ -408,6 +411,12 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         || !allocate(&w.records,budget) || !allocate(&w.parameters,1)) return 2;
     if (cudaMallocHost(&w.host_command,sizeof(Command))!=cudaSuccess) return 2;
     *w.host_command={};
+    const auto* retry_option=std::getenv("SPACEPDHCG_TEST_GTOC12_CONDITIONING_RETRY");
+    if(retry_option && retry_option[0]=='1') {
+        code=spacepdhcg_gtoc12_qoco_set_conditioning_retry(w.qoco,&w.state->inaccurate_retries);
+        if(code) return code;
+        w.conditioning_retry=true;
+    }
     if (cudaMemcpyAsync(w.fuel,fuel,nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess) return 2;
     if (seed_states) {
         if (cudaMemcpyAsync(w.states,seed_states,7*nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess

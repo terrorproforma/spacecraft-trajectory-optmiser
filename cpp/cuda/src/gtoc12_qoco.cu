@@ -127,6 +127,7 @@ struct spacepdhcg_gtoc12_qoco {
     spacepdhcg_gtoc12_conic_parameters* parameters{};
     spacepdhcg_cuda_scvx_problem problem{};
     spacepdhcg_native_qoco* solver{};
+    const int* conditioning_retry{};
     spacepdhcg_native_qoco_report native_report{};
     int intervals{},device{},ruiz{},count{};
     int hold{},free_departure{},free_arrival{};
@@ -461,6 +462,10 @@ static int solve_device_with_consumer_impl(spacepdhcg_gtoc12_qoco* w,
         const double internal_tolerance=std::max(w->tolerance*0.01,std::numeric_limits<double>::min());
         const auto created=spacepdhcg_native_qoco_create_configured(&w->problem,stream,w->ruiz,internal_tolerance,true,&w->solver);
         if (created!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(created); }
+        if(w->conditioning_retry) {
+            const auto bound=spacepdhcg_native_qoco_set_conditioning_retry(w->solver,w->conditioning_retry);
+            if(bound!=SPACEPDHCG_CUDA_SUCCESS) { cudaStreamSynchronize(stream); return status_code(bound); }
+        }
     }
     if (w->state_origin) {
         const auto shifted=spacepdhcg_native_qoco_set_origin(w->solver,states,7*(w->intervals+1),stream);
@@ -605,6 +610,16 @@ extern "C" int spacepdhcg_gtoc12_qoco_solve_host(spacepdhcg_gtoc12_qoco* w,
     if (status) return failed(status);
     if (cudaMemcpyAsync(primal,w->primal,w->dimensions.variables*sizeof(double),cudaMemcpyDeviceToHost,w->stream)!=cudaSuccess) return failed(2);
     return cudaStreamSynchronize(w->stream)==cudaSuccess ? 0 : 2;
+}
+
+int spacepdhcg_gtoc12_qoco_set_conditioning_retry(spacepdhcg_gtoc12_qoco* w,const int* retry) {
+    if(!correct_device(w) || w->pending || w->graph_active || (retry && w->ruiz)) return 1;
+    if(w->solver) {
+        const auto code=spacepdhcg_native_qoco_set_conditioning_retry(w->solver,retry);
+        if(code!=SPACEPDHCG_CUDA_SUCCESS) return status_code(code);
+    }
+    w->conditioning_retry=retry;
+    return 0;
 }
 
 int spacepdhcg_gtoc12_qoco_begin_graph(spacepdhcg_gtoc12_qoco* w,cudaStream_t stream,

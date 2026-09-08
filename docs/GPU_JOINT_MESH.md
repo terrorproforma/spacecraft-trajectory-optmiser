@@ -119,10 +119,16 @@ to locate the divergence below the Python input boundary.
 The subsequent capture finds byte-identical first conic problems across six
 calls. Ordinary native dispatch also reproduces the trajectory failure. Eight
 standalone replays of that exact conic input all fail the independent accuracy
-audit; increasing regularization to 1e-8 or disabling both IPM and factor graphs
-also fails eight of eight. This narrows the investigation to inner-solver
+audit; repeating the configured 1e-8 regularization or disabling both IPM and
+factor graphs also fails eight of eight. The earlier description incorrectly
+called 1e-8 an increase; the saved input already used it. This narrows the investigation to inner-solver
 numerical accuracy for a concrete input, without yet establishing a validated
 fix. [Captured problems, failed comparisons and independent oracle](../results/local/2026-09-09/return-qp-v680/).
+
+The subsequent [GPU conditioning retry](GPU_CONDITIONING_RETRY.md) resolves this
+captured return on both GPUs and preserves all 205 previously qualified legs
+in each 225-leg comparison. Its new full campaigns complete all 36 native legs
+at the same verified fleet score. The earlier failed trials remain archived.
 
 [Downloaded H100 result and both complete evidence archives](../results/lambda/2026-09-09/gpu-joint-mesh-v670/)
 preserve frozen source/binaries, all validation and sanitizer logs, all eight

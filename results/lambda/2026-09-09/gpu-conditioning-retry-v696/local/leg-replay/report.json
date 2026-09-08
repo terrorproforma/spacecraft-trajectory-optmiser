@@ -1,0 +1,35 @@
+{
+  "complete": true,
+  "fixture_sha256": "09da720e7eca6481e9504ffa02840b5f35b9c2398ed229098c574c885510c846",
+  "driver_sha256": "584b4226eca0de601450285cff5ceb18693ee9ad8eb2cc570a53cf9c8a3a2904",
+  "stages": [
+    {
+      "name": "baseline",
+      "returncode": 0,
+      "seconds": 136.628367288,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/angus/spacepdhcg-retry-fleet-legs-v688/run.py",
+        "0",
+        "/home/angus/spacepdhcg-retry-fleet-legs-v688/baseline"
+      ]
+    },
+    {
+      "name": "candidate",
+      "returncode": 0,
+      "seconds": 127.90048305000005,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/angus/spacepdhcg-retry-fleet-legs-v688/run.py",
+        "1",
+        "/home/angus/spacepdhcg-retry-fleet-legs-v688/candidate"
+      ]
+    }
+  ],
+  "stage": "candidate",
+  "child_pid": 711
+}

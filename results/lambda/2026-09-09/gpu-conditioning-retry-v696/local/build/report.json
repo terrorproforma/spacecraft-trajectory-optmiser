@@ -1,0 +1,132 @@
+{
+  "complete": true,
+  "success": true,
+  "base_commit": "e7da7d9e7a25aa4a8309f5c80e516f0d4852dd8a",
+  "source_sha256": {
+    "cpp/cuda/internal/native_qoco_adapter.h": "e54fde032b560be8a86f5078048344da2667845c9afe7c65cab8f2dcc0868791",
+    "cpp/cuda/internal/gtoc12_qoco_graph.h": "ff341f4b67bc5a1d3b165fd294d1ab902395b008469250a675b9ac29818c8489",
+    "cpp/cuda/src/native_qoco_adapter.cpp": "621485cc19d28b562fa09613a19782b56e74ea47a9ba99f452a300a2dac62f7a",
+    "cpp/cuda/src/gtoc12_qoco.cu": "4a8e376022f4068ddbc4113bc811234ec6783c96c2203ce8f2c2635a7a4c31e2",
+    "cpp/cuda/src/gtoc12_scvx.cu": "e7fb2f9037f8fe35f8e7c85bc8bf448a6104acd3635f1d8511c36c5e02ef3b5b",
+    "scripts/gpu/prepare_qoco_retry_conditioning.py": "6c58898c97fe9b8652cebf9bd8396d08d474808644d1d0ae5b8fa16b56e54f92"
+  },
+  "stages": [
+    {
+      "name": "prepare",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/repo/scripts/gpu/prepare_qoco_retry_conditioning.py",
+        "--destination",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/qoco"
+      ],
+      "returncode": 0,
+      "seconds": 0.02211055300000453
+    },
+    {
+      "name": "git-init",
+      "command": [
+        "git",
+        "init"
+      ],
+      "returncode": 0,
+      "seconds": 0.005183782999992559
+    },
+    {
+      "name": "git-add",
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ],
+      "returncode": 0,
+      "seconds": 0.14494412899999531
+    },
+    {
+      "name": "git-freeze",
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze conditional GPU conditioning retry"
+      ],
+      "returncode": 0,
+      "seconds": 0.03434023700000921
+    },
+    {
+      "name": "qoco-configure",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/qoco",
+        "-B",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/qoco-build",
+        "-G",
+        "Ninja",
+        "-DQOCO_ALGEBRA_BACKEND=cuda",
+        "-DQOCO_BUILD_TYPE=Release",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBUILD_QOCO_DEMO=OFF",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DCMAKE_CUDA_FLAGS=--default-stream per-thread -I/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/include",
+        "-DCUDSS_LIB=/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib/libcudss.so"
+      ],
+      "returncode": 0,
+      "seconds": 12.617930176000002
+    },
+    {
+      "name": "qoco-build",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/qoco-build",
+        "-j3"
+      ],
+      "returncode": 0,
+      "seconds": 14.904055065000009
+    },
+    {
+      "name": "core-configure",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/repo/cpp",
+        "-B",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg"
+      ],
+      "returncode": 0,
+      "seconds": 15.751792080000001
+    },
+    {
+      "name": "core-build",
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/spacepdhcg-retry-conditioning-v683/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ],
+      "returncode": 0,
+      "seconds": 52.593828371
+    }
+  ],
+  "libraries": {
+    "libqoco.so": "5b1b1a047f9d5041f821b64490562a3d598f51b47fedb08d89cdae211728940a",
+    "libspacepdhcg_cuda.so": "d2a885ee4c68ed800cf9b6ace353e591d0fdd32b4cb27afac4aa09b7b476b896"
+  }
+}

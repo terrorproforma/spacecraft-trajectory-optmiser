@@ -111,6 +111,7 @@ class _Result(ct.Structure):
 def solve_native(
     boundary, settings, model, times, days, bnd, fuel, seed_states, seed_controls, started
 ):
+    conditioning_retry = os.environ.get("SPACEPDHCG_TEST_GTOC12_CONDITIONING_RETRY") == "1"
     path = os.environ.get("SPACEPDHCG_GTOC12_CUDA_LIBRARY")
     qoco = os.environ.get("SPACEPDHCG_QOCO_LIBRARY")
     if not path or not qoco or not Path(qoco).is_file():
@@ -186,6 +187,7 @@ def solve_native(
     if code:
         raise RuntimeError(f"CUDA SCvx failed (status {code}); no CPU fallback")
     history, solver_reports = [], []
+    inaccurate_retries = 0
     for i in range(result.iterations):
         record, report = records[i], reports[i]
         if record.conic_rejected:
@@ -210,7 +212,16 @@ def solve_native(
             k: None if isinstance(v, float) and not math.isfinite(v) else v
             for k, v in entry.items()
         }
-        entry.update(outer_iteration=i + 1, api_status=0 if report.qualified else 4)
+        # Reconstruct the native counter from its recorded unchanged-retry
+        # transitions. This is final telemetry, never a host solve decision.
+        conditioned = conditioning_retry and inaccurate_retries == 1
+        entry.update(
+            outer_iteration=i + 1,
+            api_status=0 if report.qualified else 4,
+            conditioning_retry=conditioned,
+            ruiz_iterations=5 if conditioned else settings.qoco_ruiz_iterations,
+        )
+        inaccurate_retries = inaccurate_retries + 1 if record.conic_rejected == 2 else 0
         solver_reports.append(entry)
     diagnostics = (
         "",

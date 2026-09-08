@@ -1,0 +1,177 @@
+{
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "git-init",
+      "returncode": 0,
+      "seconds": 0.0035609290353022516,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "returncode": 0,
+      "seconds": 0.21398476901231334,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "returncode": 0,
+      "seconds": 0.06380881898803636,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Frozen GPU conditioning retry"
+      ]
+    },
+    {
+      "name": "qoco-configure",
+      "returncode": 0,
+      "seconds": 2.216804010036867,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/qoco",
+        "-B",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/qoco-build",
+        "-G",
+        "Ninja",
+        "-DQOCO_ALGEBRA_BACKEND=cuda",
+        "-DQOCO_BUILD_TYPE=Release",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBUILD_QOCO_DEMO=OFF",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DCMAKE_CUDA_FLAGS=--default-stream per-thread -I/home/ubuntu/spacepdhcg-recovery-v152/cudss/include",
+        "-DCUDSS_LIB=/home/ubuntu/spacepdhcg-recovery-v152/cudss/lib/libcudss.so"
+      ]
+    },
+    {
+      "name": "qoco-build",
+      "returncode": 0,
+      "seconds": 23.84819318301743,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/qoco-build",
+        "-j3"
+      ]
+    },
+    {
+      "name": "core-configure",
+      "returncode": 0,
+      "seconds": 2.36703858000692,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "core-build",
+      "returncode": 0,
+      "seconds": 52.39053658902412,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ]
+    },
+    {
+      "name": "replay-build",
+      "returncode": 0,
+      "seconds": 1.8160982500412501,
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "--default-stream",
+        "per-thread",
+        "-arch=sm_90",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-retry-conditioning-v686/qoco/include",
+        "-I/home/ubuntu/spacepdhcg-retry-conditioning-v686/qoco/algebra/cuda",
+        "-I/home/ubuntu/spacepdhcg-retry-conditioning-v686/qoco/lib/qdldl/include",
+        "-I/home/ubuntu/spacepdhcg-retry-conditioning-v686/qoco/lib/amd",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/retry_snapshot_replay.cu",
+        "-L/home/ubuntu/spacepdhcg-retry-conditioning-v686/final",
+        "-lqoco",
+        "-o",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/retry_snapshot_replay"
+      ]
+    },
+    {
+      "name": "return-replay",
+      "returncode": 0,
+      "seconds": 6.272186464979313,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/return-pinned.py",
+        "--repo",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/repo",
+        "--fixture",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/return-fixture.json",
+        "--output",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/return-output",
+        "--execute",
+        "--max-solves",
+        "6",
+        "--wall-seconds",
+        "600",
+        "--lock",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/child.lock"
+      ]
+    },
+    {
+      "name": "pytest-new",
+      "returncode": 0,
+      "seconds": 10.878435266960878,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_conditioning_retry.py"
+      ]
+    },
+    {
+      "name": "qp-replay",
+      "returncode": 0,
+      "seconds": 2.4170536029851064,
+      "command": [
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/retry_snapshot_replay",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/input-qp.txt",
+        "12"
+      ]
+    }
+  ],
+  "libraries": {
+    "libspacepdhcg_cuda.so": "43870b04d9aafd80dec5e58038566b538901c56dd3f00e936ef180e924b76887",
+    "libqoco.so": "3df0f33931bcd14d683acbca0781a34ae1d6c237e7840c8b8ffaf358784a8239"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "complete": true,
+  "stages": [
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 12.63234932400519,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_conditioning_retry.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 38.669543465948664,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--target-processes",
+        "all",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_conditioning_retry.py::test_captured_return_converges_and_certifies_after_rebinding[True-True]"
+      ]
+    },
+    {
+      "name": "campaign",
+      "returncode": 0,
+      "seconds": 0.1640383590129204,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/campaign-runner-v693.py"
+      ]
+    }
+  ],
+  "stage": "campaign",
+  "child_pid": 224164
+}

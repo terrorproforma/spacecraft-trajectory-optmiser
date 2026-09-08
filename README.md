@@ -25,7 +25,7 @@ describe their own historical results.
 The next 61-order GPU search evaluated 49,286 timing candidates in 2.157 seconds
 without improving that incumbent. Six local return-leg diagnostic replays pass
 unchanged physics checks but expose varying convergence for identical inputs;
-the intermittent H100 failure remains unresolved. [Current score, why progress
+that historical failure is addressed by the conditional retry below. [Current score, why progress
 has been slow, remaining GPU work and displayed result](docs/GTOC12_PROGRESS.md).
 
 Joint timing candidates can now be evaluated and ranked in native CUDA batches.
@@ -59,6 +59,16 @@ both checkers at the same score. Whole-process comparisons are confounded by
 alternative-leg convergence failures; a fixed-input replay now reproduces that
 failure, and neither disabling workspace reuse nor five Ruiz iterations fixes
 it. [GPU mesh results, diagnosis and visualiser](docs/GPU_JOINT_MESH.md).
+
+An optional CUDA-controlled conditioning retry now fixes that captured return
+on both GPUs: six of six complete replays converge and pass independent physics
+checks on each. Both GPUs pass five new tests and 117 existing regressions.
+Matched 225-leg comparisons preserve all 205 qualified legs while using **7.1%
+less solver time locally and 11.7% less on H100** (one paired run per GPU).
+All 36 native legs converge in the new full campaigns, retaining the same
+**12,810.136 weighted-kg** fleet. The retry adds no attempts or relaxed tolerances;
+wider Python search control remains. [Implementation, evidence, timing limits
+and downloaded H100 visualiser](docs/GPU_CONDITIONING_RETRY.md).
 
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /

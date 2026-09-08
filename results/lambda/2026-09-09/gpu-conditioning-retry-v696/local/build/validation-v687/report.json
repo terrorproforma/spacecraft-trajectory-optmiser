@@ -1,0 +1,46 @@
+{
+  "complete": true,
+  "checks": [
+    {
+      "name": "new",
+      "returncode": 0,
+      "seconds": 10.252040750000006,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_conditioning_retry.py"
+      ],
+      "flags": {}
+    },
+    {
+      "name": "regression",
+      "returncode": 0,
+      "seconds": 153.146787436,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_scaled_workspace_pool.py",
+        "tests/test_gtoc12_gpu_retained_replay.py",
+        "tests/test_gtoc12_gpu_workspace_pool.py",
+        "tests/test_gtoc12_verifier_knots.py",
+        "tests/test_gtoc12_verifier.py",
+        "tests/test_gtoc12_gpu_verifier.py",
+        "tests/test_gtoc12_gpu_resident_options.py",
+        "tests/test_gtoc12_gpu_collection.py",
+        "tests/test_gtoc12_gpu_elements.py",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_run_final_verification.py"
+      ],
+      "flags": {
+        "SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE": "1",
+        "SPACEPDHCG_TEST_QOCO_RETAINED_REPLAY": "1"
+      }
+    }
+  ],
+  "test_sha256": "7b96a7712a573fcca2a1b5b86c97c8b1c73a8a2a33363da606798a6a1b0701b3"
+}

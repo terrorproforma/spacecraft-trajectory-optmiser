@@ -1,0 +1,538 @@
+{
+  "complete": true,
+  "original_sha256": "1b5b36ac2ae38cd25b5c3c3b8f1bffcbc68fdc998baf02306eaa472586a46c2f",
+  "binary_sha256": "6de5dbd735c8565e62a63b9dea86d2c9be48968859e2f7759387cdd98a571d06",
+  "physical_equations_changed": false,
+  "rows": [
+    {
+      "name": "baseline",
+      "settings_lines": [
+        "200 0 20 0",
+        "9.9999999999999998e-13 1e-08 1e-08 1e-08 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {},
+      "returncode": 0,
+      "seconds": 1.5035306790000007,
+      "audits": [
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 645,
+          "primal": 4.730528596199191e-12,
+          "dual": 1.5997968672285217e-15,
+          "gap": 2.5053820682594847e-07,
+          "primal_absolute": 1.879636054888758e-11,
+          "dual_absolute": 1.5999568469152447e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13748688997623,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 652,
+          "primal": 4.732333596626797e-12,
+          "dual": 6.976201753471161e-15,
+          "gap": 2.503902272813052e-07,
+          "primal_absolute": 1.8803532567434396e-11,
+          "dual_absolute": 6.97689937364651e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13748684930655,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 645,
+          "primal": 1.1121021089891886e-11,
+          "dual": 7.441647232907938e-15,
+          "gap": 2.791529960846236e-07,
+          "primal_absolute": 4.4188449097494616e-11,
+          "dual_absolute": 7.44239139763123e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13749389617317,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 35,
+          "ir_iterations": 626,
+          "primal": 1.8762321660756142e-12,
+          "dual": 1.1711605772721464e-15,
+          "gap": 1.0339709970029399e-07,
+          "primal_absolute": 7.45505191434902e-12,
+          "dual_absolute": 1.1712776933298738e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13745065228616,
+          "qualified": false
+        }
+      ],
+      "qualified": 0,
+      "repeats": 4
+    },
+    {
+      "name": "reg-1e-11",
+      "settings_lines": [
+        "200 0 20 0",
+        "9.9999999999999998e-13 1e-11 1e-11 1e-11 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {},
+      "returncode": 0,
+      "seconds": 0.6489087429999998,
+      "audits": [
+        {
+          "status": 2,
+          "iterations": 32,
+          "ir_iterations": 114,
+          "primal": 2.0428672463240863e-11,
+          "dual": 2.3685349823658157e-16,
+          "gap": 4.159706027708255e-06,
+          "primal_absolute": 8.117162497711661e-11,
+          "dual_absolute": 2.368771835864053e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13602853347396,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 32,
+          "ir_iterations": 120,
+          "primal": 4.952911976342728e-07,
+          "dual": 7.820576197767718e-11,
+          "gap": 4.515433702810003e-08,
+          "primal_absolute": 1.967998234891575e-06,
+          "dual_absolute": 7.821358255387496e-07,
+          "cone_violation": 0.0,
+          "objective": 246.13741401349546,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 32,
+          "ir_iterations": 113,
+          "primal": 4.923538801394706e-07,
+          "dual": 3.799224074032558e-13,
+          "gap": 1.425602706252942e-06,
+          "primal_absolute": 1.956327048985793e-06,
+          "dual_absolute": 3.799603996439962e-09,
+          "cone_violation": 0.0,
+          "objective": 246.1377750019884,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 32,
+          "ir_iterations": 116,
+          "primal": 1.3095872577521166e-07,
+          "dual": 3.0097607993290596e-11,
+          "gap": 4.6450081700963384e-07,
+          "primal_absolute": 5.203535665488926e-07,
+          "dual_absolute": 3.0100617754089933e-07,
+          "cone_violation": 0.0,
+          "objective": 246.13753883541588,
+          "qualified": false
+        }
+      ],
+      "qualified": 0,
+      "repeats": 4
+    },
+    {
+      "name": "reg-1e-13",
+      "settings_lines": [
+        "200 0 20 0",
+        "9.9999999999999998e-13 1e-13 1e-13 1e-13 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {},
+      "returncode": 0,
+      "seconds": 0.6457120130000007,
+      "audits": [
+        {
+          "status": 3,
+          "iterations": 31,
+          "ir_iterations": 111,
+          "primal": 6.918873913792203e-06,
+          "dual": 2.2123711613763093e-10,
+          "gap": 2.6163105934537513e-05,
+          "primal_absolute": 2.7491568020626992e-05,
+          "dual_absolute": 2.2125923984927842e-06,
+          "cone_violation": 0.0,
+          "objective": 246.13066177248595,
+          "qualified": false
+        },
+        {
+          "status": 3,
+          "iterations": 30,
+          "ir_iterations": 110,
+          "primal": 6.723787489965323e-07,
+          "dual": 2.95052395465927e-11,
+          "gap": 0.00021613542675635172,
+          "primal_absolute": 2.67164083982141e-06,
+          "dual_absolute": 2.9508190070547376e-07,
+          "cone_violation": 0.0,
+          "objective": 246.07938590110487,
+          "qualified": false
+        },
+        {
+          "status": 3,
+          "iterations": 31,
+          "ir_iterations": 109,
+          "primal": 2.085919988874408e-05,
+          "dual": 2.6693316502517727e-09,
+          "gap": 4.015850629754069e-05,
+          "primal_absolute": 8.288228976887895e-05,
+          "dual_absolute": 2.6695985834168027e-05,
+          "cone_violation": 0.0,
+          "objective": 246.14697101154962,
+          "qualified": false
+        },
+        {
+          "status": 3,
+          "iterations": 31,
+          "ir_iterations": 108,
+          "primal": 8.119081993067353e-05,
+          "dual": 3.6219994462492525e-10,
+          "gap": 0.0002689866383096025,
+          "primal_absolute": 0.00032260494649644593,
+          "dual_absolute": 3.6223616461938946e-06,
+          "cone_violation": 0.0,
+          "objective": 246.06864077086433,
+          "qualified": false
+        }
+      ],
+      "qualified": 0,
+      "repeats": 4
+    },
+    {
+      "name": "reg-1e-7",
+      "settings_lines": [
+        "200 0 20 0",
+        "9.9999999999999998e-13 1e-7 1e-7 1e-7 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {},
+      "returncode": 0,
+      "seconds": 1.946885733000002,
+      "audits": [
+        {
+          "status": 4,
+          "iterations": 200,
+          "ir_iterations": 646,
+          "primal": 2.9320301181903276e-07,
+          "dual": 1.2636301326283134e-11,
+          "gap": 0.003775021806235334,
+          "primal_absolute": 1.165017695611923e-06,
+          "dual_absolute": 1.2637564956415766e-07,
+          "cone_violation": 0.0,
+          "objective": 245.19879401260354,
+          "qualified": false
+        },
+        {
+          "status": 4,
+          "iterations": 200,
+          "ir_iterations": 647,
+          "primal": 2.932023170896261e-07,
+          "dual": 8.910479171190227e-12,
+          "gap": 0.003779762717468763,
+          "primal_absolute": 1.1650149351626104e-06,
+          "dual_absolute": 8.911370219107347e-08,
+          "cone_violation": 0.0,
+          "objective": 245.1976054687924,
+          "qualified": false
+        },
+        {
+          "status": 4,
+          "iterations": 200,
+          "ir_iterations": 645,
+          "primal": 2.9453279961844583e-07,
+          "dual": 5.72107703620605e-12,
+          "gap": 0.0036049912524718747,
+          "primal_absolute": 1.1703014964436868e-06,
+          "dual_absolute": 5.7216491439096714e-08,
+          "cone_violation": 0.0,
+          "objective": 245.24130663244648,
+          "qualified": false
+        },
+        {
+          "status": 4,
+          "iterations": 200,
+          "ir_iterations": 647,
+          "primal": 2.935978382207359e-07,
+          "dual": 2.3902586306424336e-12,
+          "gap": 0.0037240946732635563,
+          "primal_absolute": 1.1665865053653605e-06,
+          "dual_absolute": 2.390497656505498e-08,
+          "cone_violation": 0.0,
+          "objective": 245.21152842956786,
+          "qualified": false
+        }
+      ],
+      "qualified": 0,
+      "repeats": 4
+    },
+    {
+      "name": "ir-100-tight",
+      "settings_lines": [
+        "200 0 100 0",
+        "1e-14 1e-08 1e-08 1e-08 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {},
+      "returncode": 0,
+      "seconds": 1.5970597690000048,
+      "audits": [
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 1395,
+          "primal": 1.8076853570097818e-09,
+          "dual": 3.025787746301032e-13,
+          "gap": 3.1320782508422915e-07,
+          "primal_absolute": 7.182686889706247e-09,
+          "dual_absolute": 3.0260903250756626e-09,
+          "cone_violation": 0.0,
+          "objective": 246.13750651334553,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 37,
+          "ir_iterations": 1453,
+          "primal": 2.348344335598868e-12,
+          "dual": 2.348908181629277e-15,
+          "gap": 1.6713097058097562e-07,
+          "primal_absolute": 9.330950215652294e-12,
+          "dual_absolute": 2.3491430724474403e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13746652402105,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 35,
+          "ir_iterations": 1439,
+          "primal": 4.662815920294823e-12,
+          "dual": 4.898956256572624e-15,
+          "gap": 2.930080861654679e-07,
+          "primal_absolute": 1.8527309882741924e-11,
+          "dual_absolute": 4.8994461521982826e-11,
+          "cone_violation": 0.0,
+          "objective": 246.1374974468282,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 1460,
+          "primal": 4.5464784946134e-12,
+          "dual": 7.761117006725903e-15,
+          "gap": 2.9253123827563826e-07,
+          "primal_absolute": 1.806505283176576e-11,
+          "dual_absolute": 7.761893118426577e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13749731270337,
+          "qualified": false
+        }
+      ],
+      "qualified": 0,
+      "repeats": 4
+    },
+    {
+      "name": "ruiz5",
+      "settings_lines": [
+        "200 5 20 0",
+        "9.9999999999999998e-13 1e-08 1e-08 1e-08 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {},
+      "returncode": 0,
+      "seconds": 0.6443478520000028,
+      "audits": [
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 65,
+          "primal": 3.1298692496705622e-12,
+          "dual": 3.9579262317617054e-16,
+          "gap": 5.899691814185377e-11,
+          "primal_absolute": 1.2436274232641154e-11,
+          "dual_absolute": 3.958322024384882e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13742942478606,
+          "qualified": true
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 80,
+          "primal": 3.592995792425968e-12,
+          "dual": 4.0447792859124406e-16,
+          "gap": 5.947910791295621e-11,
+          "primal_absolute": 1.427646889595735e-11,
+          "dual_absolute": 4.045183763841032e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13742942482128,
+          "qualified": true
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 62,
+          "primal": 4.96010622886256e-12,
+          "dual": 3.609629815548748e-16,
+          "gap": 6.307489381811826e-11,
+          "primal_absolute": 1.9708568110843316e-11,
+          "dual_absolute": 3.609990778530303e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13742942565494,
+          "qualified": true
+        },
+        {
+          "status": 2,
+          "iterations": 35,
+          "ir_iterations": 60,
+          "primal": 5.320911842533785e-12,
+          "dual": 7.957574882551105e-16,
+          "gap": 6.02383268529536e-11,
+          "primal_absolute": 2.114219910254178e-11,
+          "dual_absolute": 7.958370640039361e-12,
+          "cone_violation": 0.0,
+          "objective": 246.1374294249804,
+          "qualified": true
+        }
+      ],
+      "qualified": 4,
+      "repeats": 4
+    },
+    {
+      "name": "ruiz10",
+      "settings_lines": [
+        "200 10 20 0",
+        "9.9999999999999998e-13 1e-08 1e-08 1e-08 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {},
+      "returncode": 0,
+      "seconds": 0.6439546679999921,
+      "audits": [
+        {
+          "status": 2,
+          "iterations": 37,
+          "ir_iterations": 69,
+          "primal": 4.444533923165863e-12,
+          "dual": 7.670780499266256e-15,
+          "gap": 5.424697825098423e-11,
+          "primal_absolute": 1.7659984585804978e-11,
+          "dual_absolute": 7.671547577316184e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13742942314636,
+          "qualified": true
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 68,
+          "primal": 4.235449403139395e-12,
+          "dual": 3.7091894338763493e-16,
+          "gap": 5.816136380592754e-11,
+          "primal_absolute": 1.6829204696477973e-11,
+          "dual_absolute": 3.7095603528197375e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13742942449912,
+          "qualified": true
+        },
+        {
+          "status": 2,
+          "iterations": 39,
+          "ir_iterations": 61,
+          "primal": 4.281189261389205e-12,
+          "dual": 3.3581157261323624e-16,
+          "gap": 6.168836869410492e-11,
+          "primal_absolute": 1.701094820560911e-11,
+          "dual_absolute": 3.358451537704976e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13742942501563,
+          "qualified": true
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 73,
+          "primal": 3.6109620287452276e-12,
+          "dual": 2.661755307131697e-16,
+          "gap": 6.001665509674326e-11,
+          "primal_absolute": 1.4347856236440748e-11,
+          "dual_absolute": 2.6620214826624107e-12,
+          "cone_violation": 0.0,
+          "objective": 246.1374294248731,
+          "qualified": true
+        }
+      ],
+      "qualified": 4,
+      "repeats": 4
+    },
+    {
+      "name": "ruiz5-preserve",
+      "settings_lines": [
+        "200 5 20 0",
+        "9.9999999999999998e-13 1e-08 1e-08 1e-08 1e-13 1.0000000000000001e-11 1.0000000000000001e-11 1.0000000000000001e-05 1.0000000000000001e-05"
+      ],
+      "flags": {
+        "SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE": "1"
+      },
+      "returncode": 0,
+      "seconds": 1.0454087159999972,
+      "audits": [
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 651,
+          "primal": 3.1527017674410926e-12,
+          "dual": 2.23787536606514e-15,
+          "gap": 3.5635251906977453e-09,
+          "primal_absolute": 1.2526997336312611e-11,
+          "dual_absolute": 2.238099153601747e-11,
+          "cone_violation": 0.0,
+          "objective": 246.13742727501705,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 38,
+          "ir_iterations": 651,
+          "primal": 4.819601232186796e-13,
+          "dual": 4.752013631517405e-16,
+          "gap": 2.7614768419733323e-09,
+          "primal_absolute": 1.9150283233639563e-12,
+          "dual_absolute": 4.752488832880557e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13742704747602,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 35,
+          "ir_iterations": 654,
+          "primal": 2.1171993673362448e-13,
+          "dual": 5.217393970345877e-16,
+          "gap": 1.0095157299907638e-08,
+          "primal_absolute": 8.412514976508778e-13,
+          "dual_absolute": 5.2179157097429125e-12,
+          "cone_violation": 0.0,
+          "objective": 246.13742387785598,
+          "qualified": false
+        },
+        {
+          "status": 2,
+          "iterations": 36,
+          "ir_iterations": 655,
+          "primal": 4.7873768211177915e-09,
+          "dual": 1.5861277288142645e-13,
+          "gap": 1.3993875460369662e-08,
+          "primal_absolute": 1.9022242225830155e-08,
+          "dual_absolute": 1.5862863415871461e-09,
+          "cone_violation": 0.0,
+          "objective": 246.13743286312322,
+          "qualified": false
+        }
+      ],
+      "qualified": 0,
+      "repeats": 4
+    }
+  ]
+}

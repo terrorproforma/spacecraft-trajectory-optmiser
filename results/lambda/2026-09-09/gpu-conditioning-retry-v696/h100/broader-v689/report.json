@@ -1,0 +1,215 @@
+{
+  "complete": true,
+  "stages": [
+    {
+      "name": "regression",
+      "returncode": 0,
+      "seconds": 268.94257903599646,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_scaled_workspace_pool.py",
+        "tests/test_gtoc12_gpu_retained_replay.py",
+        "tests/test_gtoc12_gpu_workspace_pool.py",
+        "tests/test_gtoc12_verifier_knots.py",
+        "tests/test_gtoc12_verifier.py",
+        "tests/test_gtoc12_gpu_verifier.py",
+        "tests/test_gtoc12_gpu_resident_options.py",
+        "tests/test_gtoc12_gpu_collection.py",
+        "tests/test_gtoc12_gpu_elements.py",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "tests/test_gtoc12_run_final_verification.py"
+      ]
+    },
+    {
+      "name": "baseline",
+      "returncode": 0,
+      "seconds": 184.22834771999624,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/legs-run.py",
+        "0",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/broader-v689/baseline"
+      ]
+    },
+    {
+      "name": "candidate",
+      "returncode": 0,
+      "seconds": 165.74017244001152,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/legs-run.py",
+        "1",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/broader-v689/candidate"
+      ]
+    }
+  ],
+  "old_library_available": true,
+  "qp_audits": [
+    {
+      "mode": 0,
+      "status": 2,
+      "iterations": 35,
+      "primal": 2.079298925594221e-12,
+      "dual": 1.6011427078104325e-15,
+      "gap": 1.4102911236744654e-07,
+      "primal_absolute": 8.261920734563477e-12,
+      "dual_absolute": 1.6013028220812137e-11,
+      "cone_violation": 0.0,
+      "objective": 246.13746000223,
+      "qualified": false
+    },
+    {
+      "mode": 1,
+      "status": 2,
+      "iterations": 36,
+      "primal": 4.126562275711472e-12,
+      "dual": 3.599148797047008e-16,
+      "gap": 5.565271907394844e-11,
+      "primal_absolute": 1.639655078378155e-11,
+      "dual_absolute": 3.5995087119267133e-12,
+      "cone_violation": 0.0,
+      "objective": 246.13742942384988,
+      "qualified": true
+    },
+    {
+      "mode": 2,
+      "status": 2,
+      "iterations": 35,
+      "primal": 1.1051100919179834e-11,
+      "dual": 1.0121644013401549e-14,
+      "gap": 2.793207070780805e-07,
+      "primal_absolute": 4.391062713497663e-11,
+      "dual_absolute": 1.0122656177802891e-10,
+      "cone_violation": 0.0,
+      "objective": 246.13749394322244,
+      "qualified": false
+    },
+    {
+      "mode": 0,
+      "status": 2,
+      "iterations": 35,
+      "primal": 1.1040846057564588e-11,
+      "dual": 1.0051139492453487e-14,
+      "gap": 2.711100314953483e-07,
+      "primal_absolute": 4.386988029825864e-11,
+      "dual_absolute": 1.0052144606402735e-10,
+      "cone_violation": 0.0,
+      "objective": 246.13749190413787,
+      "qualified": false
+    },
+    {
+      "mode": 1,
+      "status": 2,
+      "iterations": 35,
+      "primal": 3.739463927395732e-12,
+      "dual": 4.1390387686190385e-16,
+      "gap": 6.023631710681055e-11,
+      "primal_absolute": 1.4858447805465858e-11,
+      "dual_absolute": 4.139452672495901e-12,
+      "cone_violation": 0.0,
+      "objective": 246.1374294250308,
+      "qualified": true
+    },
+    {
+      "mode": 2,
+      "status": 2,
+      "iterations": 37,
+      "primal": 6.352609719005496e-09,
+      "dual": 2.6403713032938938e-14,
+      "gap": 7.664396931684071e-08,
+      "primal_absolute": 2.524156450522952e-08,
+      "dual_absolute": 2.6406353404242237e-10,
+      "cone_violation": 3.7816971776294395e-16,
+      "objective": 246.1374482842399,
+      "qualified": false
+    },
+    {
+      "mode": 0,
+      "status": 2,
+      "iterations": 35,
+      "primal": 4.637854333295509e-12,
+      "dual": 5.592835243460882e-15,
+      "gap": 2.502464920292342e-07,
+      "primal_absolute": 1.8428127100190202e-11,
+      "dual_absolute": 5.59339452698523e-11,
+      "cone_violation": 0.0,
+      "objective": 246.1374868059924,
+      "qualified": false
+    },
+    {
+      "mode": 1,
+      "status": 2,
+      "iterations": 36,
+      "primal": 4.349533606703215e-12,
+      "dual": 3.447176199992713e-16,
+      "gap": 2.775152032997292e-11,
+      "primal_absolute": 1.7282508757432424e-11,
+      "dual_absolute": 3.447520917612713e-12,
+      "cone_violation": 0.0,
+      "objective": 246.13742941709202,
+      "qualified": true
+    },
+    {
+      "mode": 2,
+      "status": 2,
+      "iterations": 36,
+      "primal": 3.9549700217547625e-09,
+      "dual": 1.5965123969135072e-13,
+      "gap": 2.2310649664911572e-07,
+      "primal_absolute": 1.5714743284434007e-08,
+      "dual_absolute": 1.5966720481531988e-09,
+      "cone_violation": 0.0,
+      "objective": 246.1374843327453,
+      "qualified": false
+    },
+    {
+      "mode": 0,
+      "status": 2,
+      "iterations": 36,
+      "primal": 5.745983297301183e-09,
+      "dual": 2.2923501772423156e-13,
+      "gap": 1.3840908092806126e-07,
+      "primal_absolute": 2.2831185049961627e-08,
+      "dual_absolute": 2.2925794122600403e-09,
+      "cone_violation": 0.0,
+      "objective": 246.13746348624872,
+      "qualified": false
+    },
+    {
+      "mode": 1,
+      "status": 2,
+      "iterations": 36,
+      "primal": 4.168669768920064e-12,
+      "dual": 1.8903458019392273e-14,
+      "gap": 5.986464730395877e-11,
+      "primal_absolute": 1.656386139359256e-11,
+      "dual_absolute": 1.8905348365194218e-10,
+      "cone_violation": 0.0,
+      "objective": 246.1374294249585,
+      "qualified": true
+    },
+    {
+      "mode": 2,
+      "status": 2,
+      "iterations": 36,
+      "primal": 1.064726689008433e-12,
+      "dual": 2.519747786638322e-15,
+      "gap": 4.950394889698498e-08,
+      "primal_absolute": 4.2306026325906835e-12,
+      "dual_absolute": 2.5199997614169862e-11,
+      "cone_violation": 0.0,
+      "objective": 246.13743750405015,
+      "qualified": false
+    }
+  ],
+  "stage": "candidate",
+  "child_pid": 223991
+}

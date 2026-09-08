@@ -1,0 +1,105 @@
+{
+  "complete": true,
+  "success": true,
+  "pid": 224333,
+  "core_sha256": "43870b04d9aafd80dec5e58038566b538901c56dd3f00e936ef180e924b76887",
+  "qoco_sha256": "3df0f33931bcd14d683acbca0781a34ae1d6c237e7840c8b8ffaf358784a8239",
+  "runs": [
+    {
+      "name": "candidate0",
+      "conditioning_retry": 1,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/reporting-v692/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/reporting-v692/repo",
+        "--output",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/campaign-v695/candidate0",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/ubuntu/spacepdhcg-retry-conditioning-v686/campaign-v695/child.lock"
+      ],
+      "process_seconds": 135.40578086097958,
+      "campaign_seconds": 133.80742547300179,
+      "status": "improved",
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908498,
+          "weighted_score_fixed_bonus_kg": 12810.135953048477,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009802,
+          "max_position_error_km": 66.8554018025909,
+          "max_velocity_error_km_s": 4.949671007934027e-06,
+          "max_mass_error_kg": 9.185896487906575e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.35468761197989807,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048477,
+        "total_mass_kg": 14051.854893908498,
+        "solution": "/home/ubuntu/spacepdhcg-retry-conditioning-v686/campaign-v695/candidate0/best/Result.txt",
+        "viewer_manifest": "/home/ubuntu/spacepdhcg-retry-conditioning-v686/campaign-v695/candidate0/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557256,
+              "sha256": "9fbe351857f8ccb844b6d55d47d894e48461aea166b6ebedf5b89e25f872b2f1"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "d42c5c62495749a1c7e507e69542b6b98e6c89bc38c2521ee01feba09a63f7bc",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 3728,
+        "completed_branch_requests": 106462390,
+        "gpu_used": true,
+        "completed_element_hops": 53231195,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_geometry_computed_hops": 221023,
+        "joint_geometry_cached_hops": 0,
+        "joint_geometry_rejected_hops": 206881,
+        "joint_geometry_stats_download_bytes": 3168,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576,
+        "completed_joint_mesh_batches": 128,
+        "joint_mesh_epoch_upload_bytes": 39888,
+        "joint_mesh_epoch_download_bytes": 39888
+      },
+      "native_solves": 36
+    }
+  ],
+  "stage": "candidate0",
+  "child_pid": 224334
+}

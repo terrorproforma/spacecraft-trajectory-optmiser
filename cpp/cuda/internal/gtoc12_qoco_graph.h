@@ -3,6 +3,8 @@
 #include "native_qoco_gpu.h"
 #include <cuda_runtime.h>
 
+int spacepdhcg_gtoc12_qoco_set_conditioning_retry(spacepdhcg_gtoc12_qoco*,const int*);
+
 // Internal graph lease over assembly, conversion, IPM and original-coordinate
 // qualification. Prime the ordinary cold device path first. Graph resources
 // and borrowed inputs must outlive every launch. Destroy all emitted graphs
