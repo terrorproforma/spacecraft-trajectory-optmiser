@@ -222,6 +222,34 @@ int spacepdhcg_gtoc12_joint_search_host(
     spacepdhcg_gtoc12_joint_geometry_stats* stats,
     spacepdhcg_gtoc12_joint_search_report* report);
 
+/* Batched insertion screening. Workspace N is the expanded visit count; base
+ * epochs contain N-2 entries. Each layout has visits[N], stages/elements[N-1],
+ * and slots[2] = (deploy-after, collect-after) in the original itinerary.
+ * CUDA generates four ordered seeds per layout, preserving the scalar borrow
+ * arithmetic and its >1 day admission rule. Skipped seeds have failure=18 and
+ * enabled=0; their detail outputs are unspecified. Other rows use the ordinary
+ * joint result contract. All result rows retain layout-major, seed-major order.
+ * records are independently sorted within offsets[L+1], beginning at 0 and
+ * ending at record_count. Base epochs are finite and bounded by DBL_MAX/16.
+ * Required outputs: results[4L], enabled[4L], stats. Detail/epoch outputs are
+ * optional, with 4L rows. L=0 permits null inputs/outputs except stats.
+ * Metadata is host supplied; all candidate epochs, geometry and mass arithmetic
+ * run on CUDA with one final synchronization. No CPU geometry fallback.
+ */
+int spacepdhcg_gtoc12_joint_insertions_host(
+    void* workspace, int32_t layouts, int32_t camp,
+    const spacepdhcg_gtoc12_joint_policy* policy,
+    const spacepdhcg_gtoc12_joint_visit* visits,
+    const spacepdhcg_gtoc12_joint_stage* stages,
+    const int32_t* slots, const double* base_arrivals, const double* base_departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const spacepdhcg_gtoc12_joint_cached_cost* records, int32_t record_count,
+    const int32_t* record_offsets,
+    spacepdhcg_gtoc12_joint_result* results, uint8_t* enabled,
+    double* masses, double* inflations, double* proxies, double* collected,
+    double* arrivals, double* departures,
+    spacepdhcg_gtoc12_joint_geometry_stats* stats);
+
 #ifdef __cplusplus
 }
 #endif

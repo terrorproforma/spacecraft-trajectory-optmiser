@@ -290,9 +290,6 @@ class GpuJoint:
         mesh_delta=None,
         search_config=None,
     ):
-        from .jointopt import Evaluation
-        from .search import PlannedLeg, RoutePlan
-
         self.gpu._owned()
         if search_config is not None and self.search is None:
             raise RuntimeError("CUDA joint search requires spacepdhcg_gtoc12_joint_search_host")
@@ -546,67 +543,22 @@ class GpuJoint:
             if failure and failure != 15:
                 evaluations.append(joint._fail(FAILURES[failure]))
                 continue
-            plan = None
-            if not failure:
-                arr, dep = (
-                    (arrivals[row], departures[row])
-                    if mesh_epochs is None
-                    else (mesh_epochs[0][0], mesh_epochs[1][0])
-                )
-                deployed, collected, foreign, quantities = {}, {}, {}, {}
-                for j, visit in enumerate(visits):
-                    if visit.deploy:
-                        deployed[visit.body] = float(arr[j])
-                    if visit.collect:
-                        collected[visit.body] = float(dep[j])
-                        quantities[visit.body] = float(payload[detail_row, j])
-                        if visit.body not in deployed:
-                            foreign[visit.body] = visit.foreign_deploy_epoch
-                legs = []
-                for j, (visit, nxt) in enumerate(pairwise(visits)):
-                    if dep[j] > arr[j] + 1e-9:
-                        legs.append(
-                            PlannedLeg(
-                                visit.body,
-                                visit.body,
-                                float(arr[j]),
-                                float(dep[j]),
-                                0.0,
-                                1.0,
-                                "camp",
-                            )
-                        )
-                    legs.append(
-                        PlannedLeg(
-                            visit.body,
-                            nxt.body,
-                            float(dep[j]),
-                            float(arr[j + 1]),
-                            float(proxies[detail_row, j]),
-                            float(inflations[detail_row, j]),
-                            visit.role_out,
-                        )
-                    )
-                plan = RoutePlan(
-                    tuple(legs),
-                    deployed,
-                    collected,
-                    quantities,
-                    float(value["propellant"]),
-                    float(value["final_mass"]),
-                    foreign,
-                )
+            arr, dep = (
+                (arrivals[row], departures[row])
+                if mesh_epochs is None
+                else (mesh_epochs[0][0], mesh_epochs[1][0])
+            )
             evaluations.append(
-                Evaluation(
-                    plan,
-                    float(value["objective"]),
-                    float(value["weighted"]),
-                    float(value["collected"]),
-                    float(value["spare"]),
-                    float(value["propellant"]),
-                    masses[detail_row, : int(value["mass_count"])].tolist(),
-                    int(value["measured_legs"]),
-                    FAILURES[failure],
+                _decode_evaluation(
+                    joint,
+                    visits,
+                    arr,
+                    dep,
+                    value,
+                    masses[detail_row],
+                    inflations[detail_row],
+                    proxies[detail_row],
+                    payload[detail_row],
                 )
             )
         return finish(evaluations if minimum_objective is None else (indices[0], evaluations[0]))
@@ -626,6 +578,18 @@ def cuda_mesh_enabled():
     return (
         cuda_joint_enabled() and os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_MESH") == "1"
     )
+
+
+def cuda_insertions_enabled():
+    """Use native insertion batches when the active core provides them."""
+    from .lambert import _GPU_BACKEND
+
+    if not cuda_joint_enabled():
+        return False
+    requested = os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_INSERTIONS")
+    if requested is not None:
+        return requested == "1"
+    return hasattr(_GPU_BACKEND.get().library, "spacepdhcg_gtoc12_joint_insertions_host")
 
 
 def cuda_search_enabled():
@@ -753,3 +717,69 @@ def evaluate_mesh(joint, visits, arrivals, departures, delta, minimum_objective)
         raise RuntimeError("CUDA joint mesh backend is unavailable")
     selected, arr, dep = output
     return None if selected[0] is None else (arr[0], dep[0], selected[1])
+
+
+def _decode_evaluation(joint, visits, arr, dep, value, masses, inflations, proxies, payload):
+    """Reconstruct a plan only after native evaluation; shared by all batch layouts."""
+    from .jointopt import Evaluation
+    from .search import PlannedLeg, RoutePlan
+
+    failure = int(value["failure"])
+    if failure and failure != 15:
+        return joint._fail(FAILURES[failure])
+    plan = None
+    if not failure:
+        deployed, collected, foreign, quantities = {}, {}, {}, {}
+        for j, visit in enumerate(visits):
+            if visit.deploy:
+                deployed[visit.body] = float(arr[j])
+            if visit.collect:
+                collected[visit.body] = float(dep[j])
+                quantities[visit.body] = float(payload[j])
+                if visit.body not in deployed:
+                    foreign[visit.body] = visit.foreign_deploy_epoch
+        legs = []
+        for j, (visit, nxt) in enumerate(pairwise(visits)):
+            if dep[j] > arr[j] + 1e-9:
+                legs.append(
+                    PlannedLeg(
+                        visit.body,
+                        visit.body,
+                        float(arr[j]),
+                        float(dep[j]),
+                        0.0,
+                        1.0,
+                        "camp",
+                    )
+                )
+            legs.append(
+                PlannedLeg(
+                    visit.body,
+                    nxt.body,
+                    float(dep[j]),
+                    float(arr[j + 1]),
+                    float(proxies[j]),
+                    float(inflations[j]),
+                    visit.role_out,
+                )
+            )
+        plan = RoutePlan(
+            tuple(legs),
+            deployed,
+            collected,
+            quantities,
+            float(value["propellant"]),
+            float(value["final_mass"]),
+            foreign,
+        )
+    return Evaluation(
+        plan,
+        float(value["objective"]),
+        float(value["weighted"]),
+        float(value["collected"]),
+        float(value["spare"]),
+        float(value["propellant"]),
+        masses[: int(value["mass_count"])].tolist(),
+        int(value["measured_legs"]),
+        FAILURES[failure],
+    )

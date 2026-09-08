@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_insertion_search_v774_h100",
+  "fleet_run_id": "gpu_insertion_search_v773",
+  "commit": "e80b9cc4",
+  "source_revision_note": "Frozen v772 wrapper with v768 CUDA core and retained QOCO v686. Native insertion generation and mixed-layout screening; both complete-fleet physics checkers pass.",
+  "weighted_score_fixed_bonus_kg": 12843.555695585288,
+  "raw_kg_per_ship": 610.6240514239869,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "Two routes; 15,748 evaluations in 193 joint batches; 220,079 computed geometry hops"
+  },
+  "timing": {
+    "wall_seconds_total": 71.78150396700948,
+    "wall_human": "71.782 s search + 36 native leg attempts + full checks and export; historical fleet generation excluded"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 dynamics; fresh official and independent full-fleet checks at unchanged tolerances",
+    "local_refine": "33 legs in two accepted routes converge and have CUDA certificates. Three exploratory Earth-leg attempts are also included in work/timing. Other 21 routes retained."
+  },
+  "optimisation": {
+    "strategy": "Same verified mission score with native CUDA insertion schedules. Repeated 12,992-schedule screening: 10.67x RTX / 5.32x H100 faster. Full replay joint calls fall from 13,172 to 193. Four accepted timing moves; no asteroid insertion qualified. Structural metadata packing, result sorting and independent audits remain on CPU.",
+    "proven_optimal": false
+  }
+}

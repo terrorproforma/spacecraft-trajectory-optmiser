@@ -751,6 +751,13 @@ class JointItinerary:
         ship, evaluated on the surrogate with the new visits' epochs at the midpoints of the
         gaps they split; feasible ones sorted best first."""
 
+        from .gpu_joint import cuda_insertions_enabled
+
+        if cuda_insertions_enabled():
+            from .gpu_joint_insertions import insertions
+
+            return insertions(self, visits, arrivals, departures, candidates)
+
         n = len(visits)
         present = {v.body for v in visits}
         camp = next((j for j in range(1, n - 1) if visits[j].deploy and visits[j].collect), None)

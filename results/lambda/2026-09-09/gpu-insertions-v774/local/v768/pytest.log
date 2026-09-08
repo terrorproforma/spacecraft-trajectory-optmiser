@@ -1,0 +1,104 @@
+FFFF....F.                                                               [100%]
+=================================== FAILURES ===================================
+__________ test_generated_heterogeneous_rows[ship-01.json-0.0-False] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ac046c2be00>
+gpu = <spacepdhcg.gtoc12.gpu_lambert.GpuLambert object at 0x7ac046c2bcb0>
+incumbent = (<spacepdhcg.gtoc12.jointopt.JointItinerary object at 0x7ac046d886b0>, [Visit(body=0, deploy=False, collect=False, rol...66333.,
+       66623., 66908., 67673., 67903., 68183., 68303., 68503., 68663.,
+       68813., 68963., 69203., 69653.]))
+warm = False, slack = 0.0
+
+    @pytest.mark.parametrize("warm", [False, True])
+    @pytest.mark.parametrize("slack", [0.0, 800.0])
+    def test_generated_heterogeneous_rows(monkeypatch, gpu, incumbent, warm, slack):
+        joint, visits, arr, dep = incumbent
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
+>       camp = next(j for j, v in enumerate(visits) if v.deploy and v.collect)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_gtoc12_gpu_joint_insertions.py:25: StopIteration
+___________ test_generated_heterogeneous_rows[ship-01.json-0.0-True] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ac046c2bce0>
+gpu = <spacepdhcg.gtoc12.gpu_lambert.GpuLambert object at 0x7ac046c2cf20>
+incumbent = (<spacepdhcg.gtoc12.jointopt.JointItinerary object at 0x7ac046c2c290>, [Visit(body=0, deploy=False, collect=False, rol...66333.,
+       66623., 66908., 67673., 67903., 68183., 68303., 68503., 68663.,
+       68813., 68963., 69203., 69653.]))
+warm = True, slack = 0.0
+
+    @pytest.mark.parametrize("warm", [False, True])
+    @pytest.mark.parametrize("slack", [0.0, 800.0])
+    def test_generated_heterogeneous_rows(monkeypatch, gpu, incumbent, warm, slack):
+        joint, visits, arr, dep = incumbent
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
+>       camp = next(j for j, v in enumerate(visits) if v.deploy and v.collect)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_gtoc12_gpu_joint_insertions.py:25: StopIteration
+_________ test_generated_heterogeneous_rows[ship-01.json-800.0-False] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ac046c2c050>
+gpu = <spacepdhcg.gtoc12.gpu_lambert.GpuLambert object at 0x7ac046c2ca10>
+incumbent = (<spacepdhcg.gtoc12.jointopt.JointItinerary object at 0x7ac046c2d460>, [Visit(body=0, deploy=False, collect=False, rol...66333.,
+       66623., 66908., 67673., 67903., 68183., 68303., 68503., 68663.,
+       68813., 68963., 69203., 69653.]))
+warm = False, slack = 800.0
+
+    @pytest.mark.parametrize("warm", [False, True])
+    @pytest.mark.parametrize("slack", [0.0, 800.0])
+    def test_generated_heterogeneous_rows(monkeypatch, gpu, incumbent, warm, slack):
+        joint, visits, arr, dep = incumbent
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
+>       camp = next(j for j, v in enumerate(visits) if v.deploy and v.collect)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_gtoc12_gpu_joint_insertions.py:25: StopIteration
+__________ test_generated_heterogeneous_rows[ship-01.json-800.0-True] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ac046c2c4d0>
+gpu = <spacepdhcg.gtoc12.gpu_lambert.GpuLambert object at 0x7ac046c2d4c0>
+incumbent = (<spacepdhcg.gtoc12.jointopt.JointItinerary object at 0x7ac046c2df10>, [Visit(body=0, deploy=False, collect=False, rol...66333.,
+       66623., 66908., 67673., 67903., 68183., 68303., 68503., 68663.,
+       68813., 68963., 69203., 69653.]))
+warm = True, slack = 800.0
+
+    @pytest.mark.parametrize("warm", [False, True])
+    @pytest.mark.parametrize("slack", [0.0, 800.0])
+    def test_generated_heterogeneous_rows(monkeypatch, gpu, incumbent, warm, slack):
+        joint, visits, arr, dep = incumbent
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
+>       camp = next(j for j, v in enumerate(visits) if v.deploy and v.collect)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_gtoc12_gpu_joint_insertions.py:25: StopIteration
+______ test_full_insertion_ranking_and_no_scalar_generation[ship-01.json] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ac046c2e720>
+gpu = <spacepdhcg.gtoc12.gpu_lambert.GpuLambert object at 0x7ac046c2de20>
+incumbent = (<spacepdhcg.gtoc12.jointopt.JointItinerary object at 0x7ac046c1e390>, [Visit(body=0, deploy=False, collect=False, rol...66333.,
+       66623., 66908., 67673., 67903., 68183., 68303., 68503., 68663.,
+       68813., 68963., 69203., 69653.]))
+
+    def test_full_insertion_ranking_and_no_scalar_generation(monkeypatch, gpu, incumbent):
+        joint, visits, arr, dep = incumbent
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
+        present = {v.body for v in visits}
+        asteroid = next(a for a in range(1, 30) if a not in present)
+        candidates = [visits[1].body, asteroid, asteroid]
+>       camp = next(j for j, v in enumerate(visits) if v.deploy and v.collect)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests/test_gtoc12_gpu_joint_insertions.py:83: StopIteration
+=========================== short test summary info ============================
+FAILED tests/test_gtoc12_gpu_joint_insertions.py::test_generated_heterogeneous_rows[ship-01.json-0.0-False]
+FAILED tests/test_gtoc12_gpu_joint_insertions.py::test_generated_heterogeneous_rows[ship-01.json-0.0-True]
+FAILED tests/test_gtoc12_gpu_joint_insertions.py::test_generated_heterogeneous_rows[ship-01.json-800.0-False]
+FAILED tests/test_gtoc12_gpu_joint_insertions.py::test_generated_heterogeneous_rows[ship-01.json-800.0-True]
+FAILED tests/test_gtoc12_gpu_joint_insertions.py::test_full_insertion_ranking_and_no_scalar_generation[ship-01.json]
+5 failed, 5 passed in 1.49s

@@ -11,4 +11,5 @@ cudaError_t spacepdhcg_joint_geometry_launch(
     spacepdhcg_gtoc12_joint_cost* costs,
     spacepdhcg_orbitweaver_hop_request* requests,
     spacepdhcg_orbitweaver_hop_result* results,
-    spacepdhcg_gtoc12_joint_geometry_stats* stats, cudaStream_t stream);
+    spacepdhcg_gtoc12_joint_geometry_stats* stats, cudaStream_t stream,
+    int rows_per_layout = 0, const int32_t* record_offsets = nullptr);

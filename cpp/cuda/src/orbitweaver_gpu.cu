@@ -705,10 +705,18 @@ __global__ void joint_hops_prepare(int count, int n,
     const double* departures, const spacepdhcg_gtoc12_joint_result* preflight,
     const spacepdhcg_gtoc12_joint_cached_cost* records, int record_count,
     spacepdhcg_gtoc12_joint_cost* costs, spacepdhcg_orbitweaver_hop_request* requests,
-    spacepdhcg_gtoc12_joint_geometry_stats* stats) {
+    spacepdhcg_gtoc12_joint_geometry_stats* stats,
+    int rows_per_layout, const int32_t* record_offsets) {
     const size_t index=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
     if (index>=size_t(count)*(n-1)) return;
     const int row=int(index/(n-1)), leg=int(index%(n-1));
+    if (rows_per_layout) {
+        const int layout=row/rows_per_layout;
+        elements+=size_t(layout)*(n-1);
+        const int begin=record_offsets[layout];
+        record_count=record_offsets[layout+1]-begin;
+        if(begin) records+=begin;
+    }
     auto& hop=requests[index];hop={};hop.lambert.time_of_flight=NAN;
     hop.lambert.deterministic_id=UINT64_MAX;
     if (preflight[row].failure!=SPACEPDHCG_JOINT_LEG_INFEASIBLE) {
@@ -794,10 +802,12 @@ cudaError_t spacepdhcg_joint_geometry_launch(int count, int n,
     const spacepdhcg_gtoc12_joint_cached_cost* records, int record_count,
     spacepdhcg_gtoc12_joint_cost* costs, spacepdhcg_orbitweaver_hop_request* requests,
     spacepdhcg_orbitweaver_hop_result* results,
-    spacepdhcg_gtoc12_joint_geometry_stats* stats, cudaStream_t stream) {
+    spacepdhcg_gtoc12_joint_geometry_stats* stats, cudaStream_t stream,
+    int rows_per_layout, const int32_t* record_offsets) {
     const size_t size=size_t(count)*(n-1);
     joint_hops_prepare<<<unsigned((size+127)/128),128,0,stream>>>(count,n,elements,
-        arrivals,departures,preflight,records,record_count,costs,requests,stats);
+        arrivals,departures,preflight,records,record_count,costs,requests,stats,
+        rows_per_layout,record_offsets);
     auto status=cudaGetLastError();if(status!=cudaSuccess)return status;
     launch_hops(requests,size,256,results,nullptr,stream);
     status=cudaGetLastError();if(status!=cudaSuccess)return status;

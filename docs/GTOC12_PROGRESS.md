@@ -1,5 +1,11 @@
 # GTOC12 score progress — 9 September 2026
 
+The latest execution checkpoint preserves the score below while moving insertion
+schedule generation and heterogeneous screening onto CUDA. Complete screening
+is **10.67× / 5.32× faster** on RTX 5090 / H100 for 12,992 identical schedules.
+Both GPUs pass 116 tests, CUDA safety checks and fresh full-fleet physics checks.
+[Batched insertion results and downloaded mission replay](GPU_INSERTION_BATCHES.md).
+
 The latest verified checkpoint is **12,843.555696 weighted kg / 14,044.353183 raw
 kg**, across 23 ships and 195 asteroids. GPU timing searches around two routes
 gain **0.585023 weighted kg / 0.602327 raw kg**. Both full-fleet physics checkers

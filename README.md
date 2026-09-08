@@ -14,6 +14,14 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+CUDA now generates and screens insertion schedules in batches of different route
+layouts. The measured 12,992-schedule neighbourhood runs **10.67× faster on RTX
+5090 / 5.32× on H100**, at approximately **12,121 / 6,227 schedules per second**.
+A complete mission replay reduces joint calls from 13,172 to 193, retaining the
+same score and passing both full-fleet physics checks. These schedule evaluations
+are search surrogates; native refinement and independent checks still qualify
+accepted trajectories. [Measurements, remaining GPU work and latest replay](docs/GPU_INSERTION_BATCHES.md).
+
 The latest verified fleet returns **14,044.353 raw kg / 12,843.556 weighted kg**,
 with **610.624 raw kg per ship** across 23 ships. GPU-controlled timing searches
 around the two recently replaced routes gained another **0.585 weighted kg**.

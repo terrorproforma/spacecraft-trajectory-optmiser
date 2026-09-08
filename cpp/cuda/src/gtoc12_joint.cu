@@ -57,6 +57,11 @@ struct Workspace {
     SearchState* search = nullptr;
     double *mesh_days = nullptr, *best_payload = nullptr;
     int mesh_capacity = 0;
+    Visit* insertion_visits = nullptr;
+    Stage* insertion_stages = nullptr;
+    spacepdhcg_orbitweaver_hop_elements* insertion_elements = nullptr;
+    int32_t *insertion_slots = nullptr, *insertion_offsets = nullptr;
+    uint8_t* insertion_enabled = nullptr;
     std::mutex mutex;
 };
 
@@ -169,9 +174,15 @@ __device__ Result forward(int n, const Policy& p, const Visit* visits,
 __global__ void evaluate_candidates(int count, int n, const Policy* policy,
     const Visit* visits, const Stage* stages, const double* arrivals, const double* departures,
     const Cost* all_costs, Result* results, double* all_masses, double* all_inflations,
-    double* all_proxies, double* all_collected) {
+    double* all_proxies, double* all_collected,
+    int rows_per_layout = 0, const uint8_t* enabled = nullptr) {
     const size_t index = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
     if (index >= size_t(count)) return;
+    if (enabled && !enabled[index]) { results[index]=failure(18); return; }
+    if (rows_per_layout) {
+        const size_t layout=index/rows_per_layout;
+        visits+=layout*n; stages+=layout*(n-1);
+    }
     const Policy p = *policy;
     const double* arr = arrivals + index * n;
     const double* dep = departures + index * n;
@@ -530,6 +541,9 @@ bool release(Workspace* w) {
     free_buffer(w->elements); free_buffer(w->hop_requests); free_buffer(w->hop_results);
     free_buffer(w->cached_costs); free_buffer(w->geometry_stats);
     free_buffer(w->search); free_buffer(w->mesh_days); free_buffer(w->best_payload);
+    free_buffer(w->insertion_visits); free_buffer(w->insertion_stages);
+    free_buffer(w->insertion_elements); free_buffer(w->insertion_slots);
+    free_buffer(w->insertion_offsets); free_buffer(w->insertion_enabled);
     if (w->stream && cudaStreamDestroy(w->stream) != cudaSuccess) ok = false;
     return ok;
 }
@@ -938,3 +952,5 @@ extern "C" int spacepdhcg_gtoc12_joint_search_host(void* opaque, const double* d
         elements,records,record_count,0,nullptr,selection,masses,inflations,proxies,collected,
         stats,true,0,output_arrivals,output_departures,&config);
 }
+
+#include "gtoc12_joint_insertion.cuh"

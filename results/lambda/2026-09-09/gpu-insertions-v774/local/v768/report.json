@@ -1,0 +1,92 @@
+{
+  "pid": 400,
+  "complete": true,
+  "success": false,
+  "stages": [
+    {
+      "name": "git-init",
+      "code": 0,
+      "seconds": 0.004962325999997574,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "code": 0,
+      "seconds": 0.15053564499999794,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "code": 0,
+      "seconds": 0.0371061800000021,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze CUDA insertion batches"
+      ]
+    },
+    {
+      "name": "configure",
+      "code": 0,
+      "seconds": 16.171992703,
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/spacepdhcg-insertions-v768/repo/cpp",
+        "-B",
+        "/home/angus/spacepdhcg-insertions-v768/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "code": 0,
+      "seconds": 77.635148743,
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/spacepdhcg-insertions-v768/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "code": 1,
+      "seconds": 1.7182256159999838,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_insertions.py"
+      ]
+    }
+  ],
+  "stage": "pytest",
+  "child_pid": 1009,
+  "core_sha256": "5493c3b06df21192c49dfc6c288abaedc16d231cb00b3ef23e8037ead07921cb",
+  "error": "Traceback (most recent call last):\n  File \"/home/angus/spacepdhcg-insertions-v768/worker.py\", line 33, in <module>\n    run('pytest',[py,'-c',boot,'-q','tests/test_gtoc12_gpu_joint_insertions.py'])\n  File \"/home/angus/spacepdhcg-insertions-v768/worker.py\", line 22, in run\n    if code:raise RuntimeError((name,code))\nRuntimeError: ('pytest', 1)\n"
+}
