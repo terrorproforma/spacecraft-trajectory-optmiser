@@ -1,0 +1,94 @@
+{
+  "scope": "Inclusive direct wall timers; nested rows must not be summed. Native screening includes CUDA synchronization.",
+  "wall_seconds": 266.3518364190004,
+  "timers": {
+    "native_hop_screening_including_sync": {
+      "calls": 19461,
+      "seconds": 18.516604727932645,
+      "max_seconds": 0.011572874998819316
+    },
+    "GpuLambert.screen_hops": {
+      "calls": 18643,
+      "seconds": 20.158311849065285,
+      "max_seconds": 0.49164109099911
+    },
+    "RouteSearch._return_options": {
+      "calls": 10292,
+      "seconds": 18.808928335871315,
+      "max_seconds": 0.02031255500151019
+    },
+    "GpuCollection.select": {
+      "calls": 38630,
+      "seconds": 8.3961311670555,
+      "max_seconds": 0.008641751999675762
+    },
+    "RouteSearch._collect_hop_options": {
+      "calls": 28450,
+      "seconds": 7.780691833109813,
+      "max_seconds": 0.04687158500018995
+    },
+    "GpuCollectTable.__init__": {
+      "calls": 6427,
+      "seconds": 16.89371820091037,
+      "max_seconds": 0.015686022999943816
+    },
+    "GpuCollectTable.minimum_propellant": {
+      "calls": 2682,
+      "seconds": 0.3859813940416643,
+      "max_seconds": 0.03886560799946892
+    },
+    "RouteSearch.run": {
+      "calls": 4,
+      "seconds": 84.52415667199966,
+      "max_seconds": 22.074071634000575
+    },
+    "spacepdhcg.gtoc12.gpu_scvx.solve_native": {
+      "calls": 225,
+      "seconds": 155.77569023399883,
+      "max_seconds": 12.14713165899957
+    },
+    "Gtoc12Verifier.verify_file": {
+      "calls": 8,
+      "seconds": 9.090589155997804,
+      "max_seconds": 3.2912348989993916
+    },
+    "native_retime.create_elements": {
+      "calls": 139,
+      "seconds": 2.5670127630055504,
+      "max_seconds": 0.15735871200013207
+    },
+    "native_retime.evaluate_order": {
+      "calls": 139,
+      "seconds": 0.2620727839948813,
+      "max_seconds": 0.0032433029991807416
+    },
+    "GpuRetime.solve": {
+      "calls": 139,
+      "seconds": 3.0075029320105386,
+      "max_seconds": 0.16124560099888186
+    },
+    "native_retime.destroy": {
+      "calls": 139,
+      "seconds": 0.055090615991503,
+      "max_seconds": 0.0009697479999886127
+    },
+    "spacepdhcg.gtoc12.cooperative.solve_fleet_master": {
+      "calls": 5,
+      "seconds": 0.025678107998828636,
+      "max_seconds": 0.005813019999550306
+    }
+  },
+  "screening_batch_sizes": {
+    "451": 4968,
+    "480": 3312,
+    "490": 30,
+    "500": 9,
+    "533": 10292,
+    "1032": 1,
+    "3632": 1,
+    "12216": 1,
+    "12364": 28,
+    "14816": 1,
+    "16384": 818
+  }
+}

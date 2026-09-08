@@ -69,3 +69,17 @@ The H100 source is the archived v387 base plus each recorded overlay. Native
 runtime hashes distinguish the initial byte-cap experiment, added entry cap and
 final default-on build. The independent fleet incumbent remains 12,805.194
 weighted kg.
+
+## Wider default-mode confirmation
+
+A subsequent instrumented RTX 5090 run completed four ships in **265.820712
+seconds**, retaining **29 mined asteroids and 2,088.668592 weighted kg**. Both
+final mission checkers pass, with exactly the same logical screening counts as
+the earlier v389 four-ship run. This is one instrumented confirmation, not a
+paired speed estimate. Native grid construction took 2.567 seconds and all
+retiming took 3.008 seconds across 139 calls. Native SCvx now dominates the
+measured costs: 155.776 seconds across 225 calls.
+
+[Full output, cache observations and direct timers](../results/lambda/2026-09-08/gpu-grid-cache-fleet-v403/summary.json)
+are archived with source/runtime provenance and per-member hashes. Diagnostic
+timers are inclusive and may be nested; do not sum them.
