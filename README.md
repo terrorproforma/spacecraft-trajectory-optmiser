@@ -14,6 +14,12 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+Insertion route layouts are now constructed on CUDA from shared edge inputs.
+The same 12,992-schedule screen takes **60 ms on RTX 5090 / 56 ms on H100**,
+another **18.4× / 37.4× improvement** over host layout construction in the same
+core. Full mission replays retain the score and pass both physics checkers.
+[GPU layout generation, batch-size measurements and latest visualiser replay](docs/GPU_INSERTION_LAYOUTS.md).
+
 CUDA now generates and screens insertion schedules in batches of different route
 layouts. The measured 12,992-schedule neighbourhood runs **10.67× faster on RTX
 5090 / 5.32× on H100**, at approximately **12,121 / 6,227 schedules per second**.

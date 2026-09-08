@@ -1,0 +1,13 @@
+from pathlib import Path
+p=Path('build/performance')
+s=(p/'bench_insertions_v769.py').read_text().replace('spacepdhcg-insertions-v768','spacepdhcg-layouts-v776')
+s=s.replace('from spacepdhcg.gtoc12.gpu_joint_insertions import insertions','from spacepdhcg.gtoc12.gpu_joint_insertions import insertions\nfrom spacepdhcg.gtoc12.gpu_joint_layouts import insertions as prepared_insertions')
+s=s.replace("modes=['scalar','native'] if repeat%2==0 else ['native','scalar']", "modes=['current','prepared64','prepared256','prepared1024','prepared4096'];modes=modes[repeat%len(modes):]+modes[:repeat%len(modes)]")
+s=s.replace("result=joint.insertions(visits,arr,dep,candidates) if mode=='scalar' else insertions(joint,visits,arr,dep,candidates)","result=insertions(joint,visits,arr,dep,candidates) if mode=='current' else prepared_insertions(joint,visits,arr,dep,candidates,layouts_per_batch=int(mode[8:]))")
+s=s.replace("assert outputs['scalar']==outputs['native'],outputs", "assert len(set(outputs.values()))==1,outputs")
+s=s.replace("for mode in ('scalar','native')", "for mode in ('current','prepared64','prepared256','prepared1024','prepared4096')")
+(p/'bench_layouts_v777.py').write_text(s)
+launch=(p/'launch_insertions_bench_v769.py').read_text().replace('spacepdhcg-insertions-v769','spacepdhcg-layouts-v777').replace("script=Path('build/performance/bench_insertions_v769.py').read_text().replace('spacepdhcg-insertions-v768','spacepdhcg-insertions-v770')", "script=Path('build/performance/bench_layouts_v777.py').read_text()")
+launch=launch.replace('spacepdhcg-insertions-v770/final','spacepdhcg-layouts-v776/final')
+Path('build/performance/status_layout_bench_v777.py').write_text((p/'status_insertions_bench_v769.py').read_text().replace('spacepdhcg-insertions-v769','spacepdhcg-layouts-v777'))
+exec(compile(launch,__file__,'exec'))

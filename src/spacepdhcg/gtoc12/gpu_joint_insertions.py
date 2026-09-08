@@ -6,6 +6,7 @@ still require the ordinary trajectory refinement and independent certification.
 """
 
 import ctypes as ct
+import os
 from dataclasses import replace
 
 import numpy as np
@@ -162,9 +163,32 @@ def insertion_batch(joint, visits, arrivals, departures, layouts, camp):
     return result, enabled, out_arr, out_dep, masses, inflations, proxies, payload
 
 
-def insertions(joint, visits, arrivals, departures, candidates, *, layouts_per_batch=256):
+def insertions(joint, visits, arrivals, departures, candidates, *, layouts_per_batch=None):
     """Bounded native batches, stable ranking; no scalar trial evaluator calls."""
     from itertools import islice
+
+    from .lambert import _GPU_BACKEND
+
+    gpu = _GPU_BACKEND.get()
+    requested = os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_LAYOUTS")
+    available = gpu is not None and hasattr(
+        gpu.library, "spacepdhcg_gtoc12_joint_prepare_insertions_host"
+    )
+    if requested == "1" or (requested is None and available):
+        if not available:
+            raise RuntimeError("CUDA insertion layouts require the prepared insertion API")
+        from .gpu_joint_layouts import insertions as prepared_insertions
+
+        return prepared_insertions(
+            joint,
+            visits,
+            arrivals,
+            departures,
+            candidates,
+            layouts_per_batch=4096 if layouts_per_batch is None else layouts_per_batch,
+        )
+    if layouts_per_batch is None:
+        layouts_per_batch = 256
 
     camp = next(
         (j for j in range(1, len(visits) - 1) if visits[j].deploy and visits[j].collect), None

@@ -36,6 +36,8 @@ static_assert(sizeof(Selection) == 72, "joint selection ABI");
 static_assert(sizeof(CachedCost) == 56, "joint cached cost ABI");
 static_assert(sizeof(GeometryStats) == 24, "joint geometry stats ABI");
 
+struct PreparedInsertion;
+bool release_prepared_insertion(PreparedInsertion* source);
 struct Workspace {
     int device = -1, capacity = 0, n = 0;
     cudaStream_t stream = nullptr;
@@ -62,6 +64,8 @@ struct Workspace {
     spacepdhcg_orbitweaver_hop_elements* insertion_elements = nullptr;
     int32_t *insertion_slots = nullptr, *insertion_offsets = nullptr;
     uint8_t* insertion_enabled = nullptr;
+    PreparedInsertion* prepared_insertion = nullptr;
+    int32_t* insertion_edge_ids = nullptr;
     std::mutex mutex;
 };
 
@@ -544,6 +548,8 @@ bool release(Workspace* w) {
     free_buffer(w->insertion_visits); free_buffer(w->insertion_stages);
     free_buffer(w->insertion_elements); free_buffer(w->insertion_slots);
     free_buffer(w->insertion_offsets); free_buffer(w->insertion_enabled);
+    free_buffer(w->insertion_edge_ids);
+    if(!release_prepared_insertion(w->prepared_insertion))ok=false;
     if (w->stream && cudaStreamDestroy(w->stream) != cudaSuccess) ok = false;
     return ok;
 }
@@ -954,3 +960,4 @@ extern "C" int spacepdhcg_gtoc12_joint_search_host(void* opaque, const double* d
 }
 
 #include "gtoc12_joint_insertion.cuh"
+#include "gtoc12_joint_layout.cuh"

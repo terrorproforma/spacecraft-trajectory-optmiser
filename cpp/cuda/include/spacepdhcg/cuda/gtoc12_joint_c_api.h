@@ -250,6 +250,39 @@ int spacepdhcg_gtoc12_joint_insertions_host(
     double* arrivals, double* departures,
     spacepdhcg_gtoc12_joint_geometry_stats* stats);
 
+/* Compact insertion source, retained independently of other workspace operators.
+ * B=N-2 original visits; D=camp-1 deploy slots; K=B-1-camp collect slots.
+ * Edges are: original B-1 legs, then per asteroid 2*(B-2) split edges, in
+ * deploy-slot order (before->new, new->after), then collect-slot order likewise.
+ * stages/elements[E], E=(B-1)+asteroids*2*(B-2). Sparse records use edge IDs
+ * instead of stage IDs and are globally sorted by (edge, departure, arrival).
+ * weights[asteroids] and new_dwell_limit describe the new deploy/collect visits.
+ * Candidates must be absent from the original route. Duplicate candidate entries
+ * are allowed and retain order. Host metadata describes the original route only.
+ * Prepare validates/uploads once. Validation/upload failures preserve a prior source.
+ */
+int spacepdhcg_gtoc12_joint_prepare_insertions_host(void* workspace,
+    int32_t asteroids, int32_t camp, const spacepdhcg_gtoc12_joint_policy* policy,
+    const spacepdhcg_gtoc12_joint_visit* visits, const double* arrivals,
+    const double* departures, const double* weights, double new_dwell_limit,
+    const spacepdhcg_gtoc12_joint_stage* stages,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const spacepdhcg_gtoc12_joint_cached_cost* records, int32_t record_count);
+/* Construct layouts and schedules on CUDA, then use resident geometry and mass
+ * evaluation. Global layout order is asteroid, deploy slot, collect slot. Each
+ * layout emits four rows, with the insertion_host enabled/failure contract.
+ * first_layout and layouts select a bounded slice of the prepared neighbourhood.
+ * Only output buffers are transferred. Optional generated_visits[layouts,N] and
+ * edge_ids[layouts,N-1] expose generated metadata for independent parity checks.
+ */
+int spacepdhcg_gtoc12_joint_prepared_insertions_host(void* workspace,
+    int64_t first_layout, int32_t layouts,
+    spacepdhcg_gtoc12_joint_result* results, uint8_t* enabled,
+    double* masses, double* inflations, double* proxies, double* collected,
+    double* arrivals, double* departures,
+    spacepdhcg_gtoc12_joint_geometry_stats* stats,
+    spacepdhcg_gtoc12_joint_visit* generated_visits, int32_t* edge_ids);
+
 #ifdef __cplusplus
 }
 #endif

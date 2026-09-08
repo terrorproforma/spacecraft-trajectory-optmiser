@@ -706,11 +706,16 @@ __global__ void joint_hops_prepare(int count, int n,
     const spacepdhcg_gtoc12_joint_cached_cost* records, int record_count,
     spacepdhcg_gtoc12_joint_cost* costs, spacepdhcg_orbitweaver_hop_request* requests,
     spacepdhcg_gtoc12_joint_geometry_stats* stats,
-    int rows_per_layout, const int32_t* record_offsets) {
+    int rows_per_layout, const int32_t* record_offsets, const int32_t* edge_ids) {
     const size_t index=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
     if (index>=size_t(count)*(n-1)) return;
-    const int row=int(index/(n-1)), leg=int(index%(n-1));
-    if (rows_per_layout) {
+    const int row=int(index/(n-1));
+    int leg=int(index%(n-1)), element_index=leg;
+    const int epoch_leg=leg;
+    if (edge_ids) {
+        leg=edge_ids[size_t(row/rows_per_layout)*(n-1)+leg];
+        element_index=leg;
+    } else if (rows_per_layout) {
         const int layout=row/rows_per_layout;
         elements+=size_t(layout)*(n-1);
         const int begin=record_offsets[layout];
@@ -722,8 +727,8 @@ __global__ void joint_hops_prepare(int count, int n,
     if (preflight[row].failure!=SPACEPDHCG_JOINT_LEG_INFEASIBLE) {
         atomicAdd(reinterpret_cast<unsigned long long*>(&stats->rejected_hops),1ULL);return;
     }
-    const double departure=departures[size_t(row)*n+leg];
-    const double arrival=arrivals[size_t(row)*n+leg+1];
+    const double departure=departures[size_t(row)*n+epoch_leg];
+    const double arrival=arrivals[size_t(row)*n+epoch_leg+1];
     int lo=0,hi=record_count;
     while (lo<hi) {
         const int mid=lo+(hi-lo)/2;const auto& r=records[mid];
@@ -741,7 +746,7 @@ __global__ void joint_hops_prepare(int count, int n,
         }
     }
     atomicAdd(reinterpret_cast<unsigned long long*>(&stats->computed_hops),1ULL);
-    const auto& e=elements[leg];auto& q=hop.lambert;
+    const auto& e=elements[element_index];auto& q=hop.lambert;
     const double tof=arrival-departure;
     q.deterministic_id=index;q.gravitational_parameter=e.gravitational_parameter;
     q.time_tolerance=1e-8;q.maximum_iterations=256;q.time_of_flight=tof*86400.0;
@@ -803,11 +808,11 @@ cudaError_t spacepdhcg_joint_geometry_launch(int count, int n,
     spacepdhcg_gtoc12_joint_cost* costs, spacepdhcg_orbitweaver_hop_request* requests,
     spacepdhcg_orbitweaver_hop_result* results,
     spacepdhcg_gtoc12_joint_geometry_stats* stats, cudaStream_t stream,
-    int rows_per_layout, const int32_t* record_offsets) {
+    int rows_per_layout, const int32_t* record_offsets, const int32_t* edge_ids) {
     const size_t size=size_t(count)*(n-1);
     joint_hops_prepare<<<unsigned((size+127)/128),128,0,stream>>>(count,n,elements,
         arrivals,departures,preflight,records,record_count,costs,requests,stats,
-        rows_per_layout,record_offsets);
+        rows_per_layout,record_offsets,edge_ids);
     auto status=cudaGetLastError();if(status!=cudaSuccess)return status;
     launch_hops(requests,size,256,results,nullptr,stream);
     status=cudaGetLastError();if(status!=cudaSuccess)return status;

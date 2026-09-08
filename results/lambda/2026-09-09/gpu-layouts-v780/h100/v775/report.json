@@ -1,0 +1,608 @@
+{
+  "pid": 247347,
+  "complete": true,
+  "success": true,
+  "trials": [
+    {
+      "repeat": 0,
+      "identifier": 1786,
+      "mode": "native",
+      "seconds": 4.769966225023381,
+      "evaluations": 12992,
+      "feasible": 0,
+      "signature": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "telemetry": {
+        "completed_batches": 13,
+        "completed_branch_requests": 380016,
+        "gpu_used": 1,
+        "completed_joint_batches": 13,
+        "completed_joint_insertion_batches": 13,
+        "completed_joint_insertion_layouts": 3248,
+        "completed_joint_evaluations": 12992,
+        "completed_element_hops": 190008,
+        "joint_geometry_stats_download_bytes": 312,
+        "joint_insertion_epoch_upload_bytes": 3536,
+        "joint_insertion_epoch_download_bytes": 3949568,
+        "joint_result_download_bytes": 8431808,
+        "joint_geometry_computed_hops": 190008,
+        "joint_geometry_rejected_hops": 43848
+      }
+    },
+    {
+      "repeat": 0,
+      "identifier": 2297,
+      "mode": "native",
+      "seconds": 1.831102417781949e-05,
+      "evaluations": 0,
+      "feasible": 0,
+      "signature": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "telemetry": {}
+    }
+  ],
+  "core_sha256": "5ead8a4bf117963556607c6512075bd04faaffda7d2639862a3fe46185037016",
+  "fixtures": [
+    {
+      "identifier": 1786,
+      "candidates": [
+        869,
+        1187,
+        1305,
+        3322,
+        4171,
+        5235,
+        6244,
+        7684,
+        9929,
+        11454,
+        11732,
+        13113,
+        13227,
+        13466,
+        13676,
+        13895,
+        13949,
+        14427,
+        14972,
+        15050,
+        15060,
+        16012,
+        16278,
+        18064,
+        18166,
+        18262,
+        19112,
+        19181,
+        22439,
+        24393,
+        24425,
+        25887,
+        28767,
+        29063,
+        30230,
+        32081,
+        32661,
+        33633,
+        34266,
+        35123,
+        35329,
+        38811,
+        41828,
+        41837,
+        44738,
+        45619,
+        45794,
+        46348,
+        48927,
+        50474,
+        50592,
+        50873,
+        51566,
+        53276,
+        53520,
+        54045,
+        58731,
+        59064
+      ]
+    },
+    {
+      "identifier": 2297,
+      "candidates": [
+        1984,
+        3969,
+        6049,
+        9586,
+        10787,
+        16591,
+        17971,
+        22777,
+        23564,
+        23652,
+        28938,
+        29748,
+        30577,
+        31194,
+        32559,
+        33426,
+        38597,
+        39288,
+        39930,
+        40470,
+        43141,
+        43196,
+        44808,
+        48792,
+        51168,
+        52925,
+        53110,
+        57152,
+        59698,
+        59812
+      ]
+    }
+  ],
+  "profiles": {
+    "1786": [
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint_insertions.py",
+        "line": 165,
+        "name": "insertions",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 0.0015244450000000001,
+        "cumulative_seconds": 4.769954141
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint_insertions.py",
+        "line": 47,
+        "name": "insertion_batch",
+        "primitive_calls": 13,
+        "calls": 13,
+        "own_seconds": 0.110673619,
+        "cumulative_seconds": 4.740529714
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint.py",
+        "line": 187,
+        "name": "_geometry_inputs",
+        "primitive_calls": 3248,
+        "calls": 3248,
+        "own_seconds": 0.47780674300000003,
+        "cumulative_seconds": 3.414726518
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+        "line": 48,
+        "name": "body_elements",
+        "primitive_calls": 116928,
+        "calls": 116928,
+        "own_seconds": 0.414181093,
+        "cumulative_seconds": 2.823544343
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/data.py",
+        "line": 138,
+        "name": "index_of",
+        "primitive_calls": 110432,
+        "calls": 110432,
+        "own_seconds": 0.46929606,
+        "cumulative_seconds": 1.8539771850000002
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint.py",
+        "line": 108,
+        "name": "_metadata",
+        "primitive_calls": 3248,
+        "calls": 3248,
+        "own_seconds": 0.564949645,
+        "cumulative_seconds": 0.8444755540000001
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+        "line": 2474,
+        "name": "any",
+        "primitive_calls": 220877,
+        "calls": 220877,
+        "own_seconds": 0.133566305,
+        "cumulative_seconds": 0.7822108280000001
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+        "line": 86,
+        "name": "_wrapreduction_any_all",
+        "primitive_calls": 220877,
+        "calls": 220877,
+        "own_seconds": 0.227111004,
+        "cumulative_seconds": 0.6486445230000001
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/numeric.py",
+        "line": 2471,
+        "name": "array_equal",
+        "primitive_calls": 110432,
+        "calls": 110432,
+        "own_seconds": 0.170661849,
+        "cumulative_seconds": 0.394795891
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+        "line": 68,
+        "name": "<genexpr>",
+        "primitive_calls": 883456,
+        "calls": 883456,
+        "own_seconds": 0.286454133,
+        "cumulative_seconds": 0.37867005400000003
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'any' of 'numpy.generic' objects>",
+        "primitive_calls": 220864,
+        "calls": 220864,
+        "own_seconds": 0.153087615,
+        "cumulative_seconds": 0.345221901
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint.py",
+        "line": 225,
+        "name": "__init__",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 0.315716637,
+        "cumulative_seconds": 0.31574369900000004
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/_methods.py",
+        "line": 55,
+        "name": "_any",
+        "primitive_calls": 220864,
+        "calls": 220864,
+        "own_seconds": 0.065266392,
+        "cumulative_seconds": 0.19213428600000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'reduce' of 'numpy.ufunc' objects>",
+        "primitive_calls": 331309,
+        "calls": 331309,
+        "own_seconds": 0.189199955,
+        "cumulative_seconds": 0.189199955
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/retiming.py",
+        "line": 450,
+        "name": "_limits",
+        "primitive_calls": 58464,
+        "calls": 58464,
+        "own_seconds": 0.08002655900000001,
+        "cumulative_seconds": 0.14867591500000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'all' of 'numpy.ndarray' objects>",
+        "primitive_calls": 110432,
+        "calls": 110432,
+        "own_seconds": 0.045333942,
+        "cumulative_seconds": 0.13965537
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method numpy.asarray>",
+        "primitive_calls": 441754,
+        "calls": 441754,
+        "own_seconds": 0.13898632700000002,
+        "cumulative_seconds": 0.13898632700000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.getattr>",
+        "primitive_calls": 1013731,
+        "calls": 1013731,
+        "own_seconds": 0.132163912,
+        "cumulative_seconds": 0.13218902600000002
+      },
+      {
+        "file": "<frozen importlib._bootstrap>",
+        "line": 1390,
+        "name": "_handle_fromlist",
+        "primitive_calls": 116928,
+        "calls": 116928,
+        "own_seconds": 0.068370295,
+        "cumulative_seconds": 0.104843318
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/_methods.py",
+        "line": 64,
+        "name": "_all",
+        "primitive_calls": 110432,
+        "calls": 110432,
+        "own_seconds": 0.032052353,
+        "cumulative_seconds": 0.09432142800000001
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.len>",
+        "primitive_calls": 156363,
+        "calls": 156363,
+        "own_seconds": 0.047139214000000006,
+        "cumulative_seconds": 0.08272931700000001
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'get' of 'dict' objects>",
+        "primitive_calls": 397933,
+        "calls": 397933,
+        "own_seconds": 0.07538397100000001,
+        "cumulative_seconds": 0.07538397100000001
+      },
+      {
+        "file": "<frozen importlib._bootstrap>",
+        "line": 645,
+        "name": "parent",
+        "primitive_calls": 120281,
+        "calls": 120281,
+        "own_seconds": 0.045476552,
+        "cumulative_seconds": 0.075014309
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/jointopt.py",
+        "line": 300,
+        "name": "tof_limits",
+        "primitive_calls": 58464,
+        "calls": 58464,
+        "own_seconds": 0.035385373000000005,
+        "cumulative_seconds": 0.050090640000000006
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/_internal.py",
+        "line": 409,
+        "name": "_promote_fields",
+        "primitive_calls": 3235,
+        "calls": 6470,
+        "own_seconds": 0.032768316,
+        "cumulative_seconds": 0.045384607
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'items' of 'dict' objects>",
+        "primitive_calls": 224138,
+        "calls": 224138,
+        "own_seconds": 0.03946947,
+        "cumulative_seconds": 0.03946947
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/data.py",
+        "line": 135,
+        "name": "__len__",
+        "primitive_calls": 110432,
+        "calls": 110432,
+        "own_seconds": 0.035590103000000005,
+        "cumulative_seconds": 0.035590103000000005
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/retiming.py",
+        "line": 483,
+        "name": "_modelled",
+        "primitive_calls": 58464,
+        "calls": 58464,
+        "own_seconds": 0.02135607,
+        "cumulative_seconds": 0.032345996
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method numpy.asanyarray>",
+        "primitive_calls": 110445,
+        "calls": 110445,
+        "own_seconds": 0.031624586,
+        "cumulative_seconds": 0.031624586
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py",
+        "line": 2469,
+        "name": "_any_dispatcher",
+        "primitive_calls": 220877,
+        "calls": 220877,
+        "own_seconds": 0.030156982000000002,
+        "cumulative_seconds": 0.030156982000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'rpartition' of 'str' objects>",
+        "primitive_calls": 120281,
+        "calls": 120281,
+        "own_seconds": 0.029537757,
+        "cumulative_seconds": 0.029537757
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint_insertions.py",
+        "line": 27,
+        "name": "_layouts",
+        "primitive_calls": 3249,
+        "calls": 3249,
+        "own_seconds": 0.005409957,
+        "cumulative_seconds": 0.027716914000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method numpy.promote_types>",
+        "primitive_calls": 16175,
+        "calls": 32350,
+        "own_seconds": 0.005166122,
+        "cumulative_seconds": 0.025230574000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'append' of 'list' objects>",
+        "primitive_calls": 151656,
+        "calls": 151656,
+        "own_seconds": 0.025200265000000003,
+        "cumulative_seconds": 0.025200265000000003
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'sort' of 'list' objects>",
+        "primitive_calls": 3249,
+        "calls": 3249,
+        "own_seconds": 0.014488763000000002,
+        "cumulative_seconds": 0.021890385000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.hasattr>",
+        "primitive_calls": 120176,
+        "calls": 120176,
+        "own_seconds": 0.019911547,
+        "cumulative_seconds": 0.019911547
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/retiming.py",
+        "line": 467,
+        "name": "_ratio_model",
+        "primitive_calls": 113680,
+        "calls": 113680,
+        "own_seconds": 0.019476303,
+        "cumulative_seconds": 0.019476303
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.isinstance>",
+        "primitive_calls": 116962,
+        "calls": 116962,
+        "own_seconds": 0.016952830000000002,
+        "cumulative_seconds": 0.016952830000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'setdefault' of 'dict' objects>",
+        "primitive_calls": 58464,
+        "calls": 58464,
+        "own_seconds": 0.016693729,
+        "cumulative_seconds": 0.016693729
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method numpy.zeros>",
+        "primitive_calls": 13005,
+        "calls": 13005,
+        "own_seconds": 0.016378240000000002,
+        "cumulative_seconds": 0.016378240000000002
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/_core/numeric.py",
+        "line": 2452,
+        "name": "_array_equal_dispatcher",
+        "primitive_calls": 110432,
+        "calls": 110432,
+        "own_seconds": 0.015420525000000001,
+        "cumulative_seconds": 0.015420525000000001
+      },
+      {
+        "file": "/home/ubuntu/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/dataclasses.py",
+        "line": 1540,
+        "name": "replace",
+        "primitive_calls": 3248,
+        "calls": 3248,
+        "own_seconds": 0.00821198,
+        "cumulative_seconds": 0.014969260000000002
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.max>",
+        "primitive_calls": 58464,
+        "calls": 58464,
+        "own_seconds": 0.014705267000000001,
+        "cumulative_seconds": 0.014705267000000001
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.min>",
+        "primitive_calls": 58464,
+        "calls": 58464,
+        "own_seconds": 0.014336660000000001,
+        "cumulative_seconds": 0.014336660000000001
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method math.isfinite>",
+        "primitive_calls": 103936,
+        "calls": 103936,
+        "own_seconds": 0.012796784,
+        "cumulative_seconds": 0.012796784
+      }
+    ],
+    "2297": [
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<method 'disable' of '_lsprof.Profiler' objects>",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 1.6974e-05,
+        "cumulative_seconds": 1.6974e-05
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint_insertions.py",
+        "line": 165,
+        "name": "insertions",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 9.032000000000001e-06,
+        "cumulative_seconds": 1.3182e-05
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.next>",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 1.292e-06,
+        "cumulative_seconds": 3.5790000000000004e-06
+      },
+      {
+        "file": "/home/ubuntu/spacepdhcg-insertions-v772/repo/src/spacepdhcg/gtoc12/gpu_joint_insertions.py",
+        "line": 170,
+        "name": "<genexpr>",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 2.2870000000000003e-06,
+        "cumulative_seconds": 2.2870000000000003e-06
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method time.perf_counter>",
+        "primitive_calls": 2,
+        "calls": 2,
+        "own_seconds": 9.72e-07,
+        "cumulative_seconds": 9.72e-07
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "name": "<built-in method builtins.len>",
+        "primitive_calls": 1,
+        "calls": 1,
+        "own_seconds": 5.71e-07,
+        "cumulative_seconds": 5.71e-07
+      }
+    ]
+  }
+}

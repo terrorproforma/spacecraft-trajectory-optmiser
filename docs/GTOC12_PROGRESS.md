@@ -1,5 +1,11 @@
 # GTOC12 score progress — 9 September 2026
 
+The newest checkpoint moves insertion layout construction onto CUDA and retains
+shared edge inputs on device. The 12,992-schedule screen takes **60 / 56 ms** on
+RTX 5090 / H100, with matching decisions. Both GPUs pass 124 joint-search tests,
+CUDA safety checks and fresh full-fleet physics checks. The score is unchanged.
+[GPU layout measurements and downloaded mission replay](GPU_INSERTION_LAYOUTS.md).
+
 The latest execution checkpoint preserves the score below while moving insertion
 schedule generation and heterogeneous screening onto CUDA. Complete screening
 is **10.67× / 5.32× faster** on RTX 5090 / H100 for 12,992 identical schedules.
