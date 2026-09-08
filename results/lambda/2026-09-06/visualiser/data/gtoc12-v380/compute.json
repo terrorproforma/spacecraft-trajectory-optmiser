@@ -1,0 +1,24 @@
+{
+  "run_id": "recovery380",
+  "fleet_run_id": "recovery380_fleet",
+  "commit": "b418abea813e6ae74f16108a2060bb4115df3ec8",
+  "source_revision_note": "v380 source snapshot and native library hashes are archived in gpu-fleet-recovery-v380/local/report.json. Includes GPU recovery and harvest pricing.",
+  "weighted_score_fixed_bonus_kg": 2088.668592155373,
+  "raw_kg_per_ship": 523.9904175223,
+  "hardware": {
+    "gpu": "Local NVIDIA RTX 5090",
+    "upstream_search": "169,753,864 CUDA transfer branches"
+  },
+  "timing": {
+    "wall_seconds_total": 467.6892191480001,
+    "wall_human": "467.69 s complete four-ship campaign"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; both fleet checkers pass",
+    "local_refine": "CUDA SCvx and QOCO graph loops"
+  },
+  "optimisation": {
+    "strategy": "Bounded CUDA recovery selected rank 26 after the first five ship-four candidates failed. Incumbent remains 12,805.194 weighted kg.",
+    "proven_optimal": false
+  }
+}

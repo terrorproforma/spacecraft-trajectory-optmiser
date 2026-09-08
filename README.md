@@ -14,6 +14,18 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+The latest fleet recovery fixes premature stopping after several similar routes
+fail refinement. A complete RTX 5090 run now verifies **four ships, 29 asteroids,
+2,095.962 kg returned and 2,088.669 weighted kg** in **467.69 seconds**, with both
+mission checkers passing. CUDA orders the bounded recovery attempts; Python
+still orchestrates the fleet. The separate best fleet remains **12,805.194
+weighted kg**. [Implementation, evidence, visualiser and copy/paste loading instructions](docs/GPU_FLEET_RECOVERY.md).
+
+Resident harvest-window pricing also removes full collection-table downloads
+from the measured campaign. The H100 comparison showed **1.92% longer** median
+runtime over two samples per mode, so this is improved GPU residency, not an
+established speedup. [Measurements and accuracy checks](docs/GPU_HARVEST_WINDOW.md).
+
 ## What is PDHCG, and why use it for trajectories?
 
 **PDHCG means Primal-Dual Hybrid Conjugate Gradient.** It is an optimisation method:

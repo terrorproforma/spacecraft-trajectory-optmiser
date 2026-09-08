@@ -1,0 +1,350 @@
+{
+  "attempts": [
+    {
+      "attempt": 0,
+      "bans": {},
+      "calibrated_pairs": 0,
+      "proxy": {
+        "asteroids_after": 7,
+        "asteroids_before": 5,
+        "camp_days_after": 915.0,
+        "camp_days_before": 1825.0,
+        "collected_after_kg": 489.93839835728954,
+        "collected_before_kg": 419.0280629705681,
+        "deploy_phase_days_after": 1680.0,
+        "deploy_phase_days_before": 1320.0,
+        "final_mass_after_kg": 1084.6366348420534,
+        "final_mass_before_kg": 1394.1508688254644,
+        "lambert_evaluations": 16335312,
+        "steps": [
+          {
+            "camp_days_after": 2175.0,
+            "camp_days_before": 1825.0,
+            "collected_after_kg": 448.870636550308,
+            "collected_before_kg": 419.0280629705681,
+            "deploy_phase_days_after": 1140.0,
+            "deploy_phase_days_before": 1320.0,
+            "end_gap_days_after": 94.0,
+            "end_gap_days_before": 124.0,
+            "failure": "",
+            "final_mass_after_kg": 1046.240256404493,
+            "final_mass_before_kg": 1394.1508688254644,
+            "improved": true,
+            "kind": "retime",
+            "lambert_evaluations": 313296,
+            "mass_rounds": 2,
+            "objective_after_kg": 448.870636550308,
+            "objective_before_kg": 419.0280629705681,
+            "price_rounds": 8,
+            "propellant_price": 0.01875,
+            "wall_seconds": 0.16235477200098103
+          },
+          {
+            "asteroids": 5,
+            "closing_variants": 12,
+            "failures": [],
+            "kind": "extend",
+            "result": {
+              "camp_days": 1560.0,
+              "collected_kg": 485.8316221765914,
+              "final_mass_kg": 999.02317636084,
+              "inserted": 53138,
+              "kind": "self_cleaning",
+              "value_after_kg": 484.1158704722099
+            },
+            "value_before_kg": 448.870636550308
+          },
+          {
+            "asteroids": 6,
+            "closing_variants": 7,
+            "failures": [
+              {
+                "asteroid": 47622,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 17066,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 45868,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 16879,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 48223,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              }
+            ],
+            "kind": "extend",
+            "result": {
+              "camp_days": 915.0,
+              "collected_kg": 489.93839835728954,
+              "final_mass_kg": 1084.6366348420534,
+              "inserted": 19989,
+              "kind": "self_cleaning",
+              "value_after_kg": 486.18543885256605
+            },
+            "value_before_kg": 484.1158704722099
+          },
+          {
+            "asteroids": 7,
+            "closing_variants": 0,
+            "failures": [
+              {
+                "asteroid": 28238,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 55824,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 15059,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 725,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 43809,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 6279,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 17066,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 56701,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 50639,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 719,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 27029,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              },
+              {
+                "asteroid": 53259,
+                "kind": "self_cleaning",
+                "price": 38.4,
+                "reason": "mass_below_dry_plus_collected"
+              }
+            ],
+            "kind": "extend",
+            "result": "no improving insertion",
+            "value_before_kg": 486.18543885256605
+          }
+        ],
+        "wall_seconds": 8.528553961999933
+      },
+      "refined": {
+        "certified": false,
+        "collected_kg": 0.0,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 8.410e-03",
+            "from": 0,
+            "leg": 0,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 16459
+          }
+        ],
+        "final_mass_kg": 3000.0,
+        "refined_arcs": 1,
+        "wall_seconds": 5.566379494999637
+      },
+      "result": {
+        "banned": "0->16459",
+        "departure": 64328.0,
+        "mass_before": 3000.0,
+        "ratio": 0.489510303058449,
+        "tof_days": 465.0
+      }
+    },
+    {
+      "attempt": 1,
+      "bans": {
+        "0->16459": 0.4405592727526041
+      },
+      "calibrated_pairs": 0,
+      "proxy": {
+        "asteroids_after": 5,
+        "asteroids_before": 5,
+        "camp_days_after": 1825.0,
+        "camp_days_before": 1825.0,
+        "collected_after_kg": 419.0280629705681,
+        "collected_before_kg": 419.0280629705681,
+        "deploy_phase_days_after": 1320.0,
+        "deploy_phase_days_before": 1320.0,
+        "final_mass_after_kg": 1394.1508688254644,
+        "final_mass_before_kg": 1394.1508688254644,
+        "lambert_evaluations": 21198720,
+        "steps": [
+          {
+            "camp_days_after": null,
+            "camp_days_before": 1825.0,
+            "collected_after_kg": null,
+            "collected_before_kg": 419.0280629705681,
+            "deploy_phase_days_after": null,
+            "deploy_phase_days_before": 1320.0,
+            "end_gap_days_after": null,
+            "end_gap_days_before": 124.0,
+            "failure": "dp_infeasible",
+            "final_mass_after_kg": null,
+            "final_mass_before_kg": 1394.1508688254644,
+            "improved": false,
+            "kind": "retime",
+            "lambert_evaluations": 16648608,
+            "mass_rounds": 1,
+            "objective_after_kg": 419.0280629705681,
+            "objective_before_kg": 419.0280629705681,
+            "price_rounds": 1,
+            "propellant_price": 0.15,
+            "wall_seconds": 0.16082047900090402
+          },
+          {
+            "asteroids": 5,
+            "closing_variants": 0,
+            "failures": [
+              {
+                "asteroid": 4931,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 53138,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 45242,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 32360,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 54825,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 51281,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 37050,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 59403,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 13355,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 55710,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 1538,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              },
+              {
+                "asteroid": 58356,
+                "kind": "self_cleaning",
+                "price": 0.15,
+                "reason": "dp_infeasible"
+              }
+            ],
+            "kind": "extend",
+            "result": "no improving insertion",
+            "value_before_kg": 419.0280629705681
+          }
+        ],
+        "wall_seconds": 2.504092855999261
+      },
+      "result": "no proxy improvement"
+    }
+  ],
+  "before": {
+    "asteroids": 5,
+    "final_mass_kg": 973.8431560644842,
+    "score_kg": 419.028
+  },
+  "certified": false,
+  "certified_variants": 0,
+  "route": null,
+  "wall_seconds": 16.59913495500041
+}
