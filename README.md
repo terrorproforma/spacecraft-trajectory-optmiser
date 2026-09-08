@@ -39,6 +39,16 @@ The wider local confirmation returned four ships and 2,088.669 weighted kg in
 231.98 seconds. Python still constructs schedule axes and orchestrates the beam
 and fleet. [Implementation, limits and reproducible evidence](docs/GPU_COMPACT_SEARCH_OPTIONS.md).
 
+Initial Earth-beam ephemerides, screening, physical proxy scoring and ranking
+now also run on CUDA. Isolated beam construction is **1.77x faster on RTX 5090**
+and **11.67x faster on H100**, returning the same 582 candidates while reducing
+that stage's result downloads from **248.3 MB to 27.9 kB**. Across four complete
+runs per mode, combined median runtime falls **2.00% locally** and **7.38% on H100**;
+timing ranges overlap because later refinement varies substantially. Both mission
+checkers accept every run. A wider confirmation retains four ships and
+2,088.669 weighted kg in 221.56 seconds. Pool filtering, route objects and fleet
+orchestration remain host work. [Measurements, limits and validation](docs/GPU_EARTH_BEAM.md).
+
 A larger H100 campaign generated **32 individual routes** in
 **56 min 59 sec**, evaluating **1.417 billion transfer branches** and **137.35
 million collection options**. Fleet selection returned **15 ships, 105 mined

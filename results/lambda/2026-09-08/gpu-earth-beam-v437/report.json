@@ -1,0 +1,137 @@
+{
+  "pid": 181318,
+  "complete": true,
+  "stages": [
+    {
+      "name": "compile-probe",
+      "returncode": 0,
+      "seconds": 8.725748487981036,
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++17",
+        "--fmad=false",
+        "-arch=sm_90",
+        "-I/home/ubuntu/spacepdhcg-earth-beam-v437/repo/cpp/include",
+        "-I/home/ubuntu/spacepdhcg-earth-beam-v437/repo/cpp/cuda/include",
+        "/home/ubuntu/spacepdhcg-earth-beam-v437/repo/cpp/cuda/tests/orbitweaver_beam_test.cu",
+        "-L/home/ubuntu/spacepdhcg-earth-beam-v434/core-build/cuda",
+        "-lspacepdhcg_cuda",
+        "-o",
+        "/home/ubuntu/spacepdhcg-earth-beam-v437/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "probe",
+      "returncode": 0,
+      "seconds": 0.4644230789854191,
+      "command": [
+        "/home/ubuntu/spacepdhcg-earth-beam-v437/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 1.417670285969507,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-earth-beam-v437/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 0.9150371289579198,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-earth-beam-v437/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 82.31055964203551,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-earth-beam-v437/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "micro",
+      "returncode": 0,
+      "seconds": 15.737968009954784,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/earth_beam_micro_v436.py',run_name='__main__')",
+        "gtoc12",
+        "run",
+        "--run-id",
+        "earth_micro437",
+        "--output",
+        "/home/ubuntu/spacepdhcg-earth-beam-v437/output",
+        "--full-catalogue",
+        "--ships",
+        "1",
+        "--beam-width",
+        "16",
+        "--max-deploys",
+        "10",
+        "--neighbours",
+        "48",
+        "--refine-top",
+        "3",
+        "--search-budget-seconds",
+        "120",
+        "--budget-seconds",
+        "600",
+        "--retime-attempts",
+        "4",
+        "--retime-budget-seconds",
+        "300",
+        "--no-cooperative",
+        "--node-days",
+        "2",
+        "--scvx-iterations",
+        "40",
+        "--screening-backend",
+        "cuda",
+        "--seed-backend",
+        "cuda",
+        "--discretisation-backend",
+        "cuda",
+        "--assembly-backend",
+        "cuda",
+        "--convex-solver",
+        "qoco",
+        "--outer-loop-backend",
+        "cuda",
+        "--gpu-execution",
+        "graph"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "micro",
+  "source_sha256": {
+    "cpp/cuda/tests/orbitweaver_beam_test.cu": "78656c102320357ad161c228a6f7e58699f2e707d2679824342bad368ac3cd9f",
+    "build/performance/earth_beam_micro_v436.py": "e541def5886c4bbccff9f0f9a7ca6107ab58b172e98602a7242b49058d0308d5"
+  },
+  "frozen_source_commit": "c6a45b26727607f7fdbb038556cdd27d33930f55",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "0a4fab9acd0e4c2764a17802c7033b387b77864137fc8a23b60312a07945ff30",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 181514
+}

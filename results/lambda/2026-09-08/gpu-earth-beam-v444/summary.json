@@ -1,0 +1,99 @@
+{
+  "campaigns": [
+    {
+      "name": "default",
+      "candidate": true,
+      "seconds": 30.823402903974056,
+      "score": 548.2546201232997,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "compact_option_download_bytes": 27175508,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_compact_options": 1131935,
+        "completed_earth_beam_rows": 582,
+        "completed_element_hops": 22345089,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "earth_beam_download_bytes": 27944,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09376931801671162
+      },
+      "independent": {
+        "max_mass_error_kg": 8.753886504564434e-11,
+        "max_position_error_km": 0.630306278311053,
+        "max_velocity_error_km_s": 1.1031487993908357e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ship_limit": 17.924449255082706,
+        "ships": 1,
+        "total_mass_kg": 548.2546201232997,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201232997
+      }
+    }
+  ],
+  "scope": "Final default-on validation, not a paired speed comparison.",
+  "hardware": "Lambda H100",
+  "source_sha256": {
+    "cpp/cuda/src/orbitweaver_gpu.cu": "343ab5b50bafbd8f79b55b332e69c9086c3c9b5112719494892663e38274e3a3",
+    "cpp/cuda/src/orbitweaver_beam.cuh": "de060662ff89fc7f9006f702d6666ff7bde79abc06155c8c6d3e6b10b15ef793",
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": "5b9ebaff97ab9689f8c45aaf96a753fd0f8b417374589c0894e98cec100cf475",
+    "cpp/cuda/tests/orbitweaver_beam_test.cu": "78656c102320357ad161c228a6f7e58699f2e707d2679824342bad368ac3cd9f",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "7c8ecec05550b4947bef59d44ab7b3c3bb65d7a245b5c2073a5a851b2e576b13",
+    "src/spacepdhcg/gtoc12/gpu_beam.py": "92824506f03c381cb781d6ea756ebb890f003b644466fd53c6d6c3cfd03867ce",
+    "src/spacepdhcg/gtoc12/lambert.py": "b031ec9406a2c1e172c6e969f2f51011d040efb68e4a084df0bae3491c99810f",
+    "src/spacepdhcg/gtoc12/search.py": "5a8785869ce02bd287d50e9e3d903a39d5a3120af9062b923f9cb80502ccfde2",
+    "tests/test_gtoc12_gpu_elements.py": "65cd923bd471eebc3515010ad6f86488ea80ebd52224d887b5f7dab65605eb69",
+    "tests/test_gtoc12_gpu_beam.py": "f314ec076c5596ed1e0fc07038e4eadc2706ac3771efc34baab1b62b2093059a"
+  },
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "7cadb9cdac3bda1eab68050606ba172f1c9c3f55dbc0d38d66a8d0ad8fc9cbd5",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "source_base": "Frozen v442 source/runtime plus final Python guard for zero-limit evaluation telemetry; tests and default campaign repeat on unchanged native binary."
+}

@@ -1,0 +1,2324 @@
+"""Deterministic beam search for self-cleaning GTOC12 mining-ship routes.
+
+A route is ``Earth -> A1 -> ... -> Ak (deploy at each) -> camp at Ak -> collection tour over
+{A1..Ak} -> Earth``.  Deploy hops are expanded forwards from a launch-epoch grid with Lambert
+rendezvous costs; the collection tour is scheduled *backwards* from the end of the window so every
+miner works as long as possible.  Costs are impulsive proxies inflated for finite thrust; the
+low-thrust refinement (``pipeline``) replaces them with certified arcs.
+
+The candidate generator encodes what the archived JPL/Antipodes solutions do (see
+``references.py`` and ``docs/GTOC12_TRACK.md``): the next asteroid is picked in *position space
+at the departure epoch* — within a few hundredths of an AU in semi-major axis, a few degrees of
+inclination, and a few degrees of phase — so that a 100-250 day, sub-revolution hop costs
+50-100 kg.  Chains also keep a propellant reserve for the collection tour so the beam does not
+fill up with deploy phases that can never be collected.
+
+Everything is deterministic: candidate order is fixed, ties break on asteroid ID, and the only use
+of ``seed`` is to shuffle nothing unless ``randomise`` is requested.
+"""
+
+from __future__ import annotations
+
+import math
+import time
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from pathlib import Path
+
+import numpy as np
+from numpy.typing import NDArray
+
+from . import constants as C
+from .chainprior import ChainPrior
+from .clusters import ClusterBands, ComovingClusters
+from .collectdp import CollectDPSettings, CollectPairTable, CollectTour, plan_collect_tour
+from .data import AsteroidCatalogue
+from .ephemeris import asteroid_state, earth_state
+from .hopcalib import load_fit
+from .memory import peak_rss_mb as _peak_rss_mb
+from .proxies import phasing_edelbaum_proxy
+from .screening import (
+    exhaust_velocity_km_s,
+    lambert_hops,
+    low_thrust_inflation,
+    propellant_for_delta_v,
+    return_inflation_model,
+    screen_asteroid_hops,
+    screen_earth_to_asteroids,
+    thrust_authority_km_s,
+)
+
+FloatArray = NDArray[np.float64]
+EARTH_ID = 0
+
+
+@dataclass(frozen=True, slots=True)
+class SearchSettings:
+    beam_width: int = 24
+    max_deploys: int = 10
+    min_deploys: int = 1
+    launch_epochs: tuple[float, ...] = tuple(C.MISSION_START_MJD + np.arange(0.0, 731.0, 30.0))
+    earth_leg_tofs: tuple[float, ...] = tuple(np.arange(300.0, 901.0, 50.0))
+    hop_tofs: tuple[float, ...] = (
+        60.0,
+        90.0,
+        120.0,
+        150.0,
+        180.0,
+        240.0,
+        300.0,
+        360.0,
+        420.0,
+        480.0,
+    )
+    collect_hop_tofs: tuple[float, ...] = (
+        90.0,
+        120.0,
+        150.0,
+        180.0,
+        240.0,
+        300.0,
+        360.0,
+        420.0,
+        480.0,
+        600.0,
+        720.0,
+    )
+    deploy_wait_days: tuple[float, ...] = (0.0, 30.0, 60.0, 120.0)
+    max_per_first: int = 8  # beam diversity: variants sharing the first asteroid
+    neighbours: int = 48
+    # position-space candidate metric scales (reference-hop p95 values; see references.py)
+    band_a_au: float = 0.04
+    band_i_deg: float = 4.5  # relative inclination (vector difference), deg
+    band_e: float = 0.06  # eccentricity-vector difference
+    band_phase_deg: float = 3.3
+    filter_scale: float = 1.5  # element-band filter = filter_scale x reference p95 bands
+    # Leg model: propellant = rocket equation at ``inflation x`` the zero-revolution Lambert ΔV,
+    # and a leg is admissible while Lambert ΔV / (T_max/m x TOF) <= the role's authority ratio.
+    #
+    # Earth out: the 111 archived Earth legs (all to a = 2.73-2.80 AU, 490-565 days) cost
+    # 0.83x their Lambert ΔV and fly at 0.72 of the *full* authority, but that is measured on
+    # *their* legs.  For the legs our beam picks the story is different: the nine certified
+    # Earth legs of the fleet runs all had Lambert ratio <= 0.49 and cost 0.86-2.22x (median
+    # 1.4x) the Lambert ΔV, while every ratio-0.71 leg the 0.85 limit admitted
+    # (fleet6_coop_v1, E->6014/15614/26515) failed SCvx with virtual control left.  The
+    # single-conic Lambert arc with a free 6 km/s asymptote is a loose proxy here, so the limit
+    # stays at the certified envelope and the re-timer calibrates per pair.
+    earth_out_inflation: float = 1.6
+    earth_out_authority_ratio: float = 0.5
+    # Earth return: certified returns cost ~1.0x Lambert at ratios <= 0.4; above that is
+    # untested by SCvx so the limit stays at the proven envelope (the re-timer bans what does
+    # not fly).
+    earth_return_inflation: float = 1.6
+    earth_return_authority_ratio: float = 0.5
+    # price the return with the archive's TOF/ratio model (``screening.return_inflation_model``)
+    # in the collect DP and the re-timer: certified returns cost 1.30x Lambert at 405-435 d but
+    # 0.96x at 525-555 d, which a flat factor cannot express (the v6 fleet's 420-day returns were
+    # under-priced by 65 kg median and cost 279 kg against the references' 208-216)
+    earth_return_tof_model: bool = True
+    # hops: reference hops cost 1.16x Lambert (p90 1.34).  The beam keeps the 0.667 ratio
+    # (1.2x ΔV within 0.8 duty) that found the 544-548 kg / 8-asteroid chains: tightening it
+    # to the certified 0.49 envelope cut chains to depth 5-6 (376-446 kg) because collect hops
+    # of the heavy ship no longer fit the window; the re-timer applies 0.45 to what it moves.
+    hop_inflation: float = 1.2
+    # ratio-dependent hop inflation ``floor + slope x (Lambert ΔV / full authority)``, fitted on
+    # 1674 certified hops (``screening.low_thrust_inflation``); ``None`` keeps the flat factor.
+    # Off in the beam by default: the beam's chains are seeds the re-timer re-prices anyway, and
+    # with the model the beam closes fewer, shorter chains (6 asteroids / 401 kg vs 7 / 440 kg
+    # on the 99-member family 0) because it prices its fast deploy hops out of the mass budget.
+    hop_inflation_slope: float | None = None
+    hop_inflation_floor: float = 1.05
+    hop_authority_ratio: float = 0.667
+    end_margin_days: float = 2.0
+    return_window_days: float = 600.0
+    collect_wait_window_days: float = 600.0
+    max_per_deployed_set: int = 2
+    first_level_limit: int = 4000
+    # injected (certified) Earth legs unlock the Lambert grid for their target within this many
+    # days of the certified launch and TOF, priced at the per-target measured/Lambert ratio
+    first_level_window_days: float = 200.0
+    earth_block: int = 1500  # asteroids per Earth-leg screening block (bounds memory)
+    schedule_step_days: float = 15.0
+    wait_penalty: float = 1.0  # kg propellant-equivalent per kg of mining mass forgone
+    # a collect hop may take up to slack x the mean time left per remaining collect; 1.5 was
+    # neutral on the full-catalogue probe once the hop ratio went back to 0.667, so it is off
+    collect_span_slack: float = float("inf")
+    reserve_fraction: float = 0.9  # collect-phase hop propellant ~ deploy-phase hop propellant
+    return_reserve_kg: float = 250.0  # reference Earth returns cost 190-230 kg
+    # beam heuristic weights; full-catalogue chains die on the 15-year window with 230-430 kg
+    # of propellant unused, but pricing time (0.02-0.05 kg/day) steered the beam into 120-180
+    # day hops that SCvx could not fly (full_catalogue_search4/5), so it is off by default
+    propellant_weight: float = 0.15
+    time_weight: float = 0.0  # kg of heuristic score per day of deploy-phase duration
+    # collect look-ahead: a deploy pair is re-flown ~3 years later by the collection tour, when
+    # the family's relative phase drift can make the same pair cost 2-3x (measured: our collect
+    # hops 110 kg vs 66 kg for the references at equal deploy-hop cost).  Each deploy hop also
+    # prices the pair at ``departure + collect_gap_days`` (cheapest TOF, same inflation) and the
+    # beam score charges ``collect_lookahead_weight`` x that propellant.  0 = off.
+    collect_lookahead_weight: float = 0.0
+    collect_gap_days: float = 3.0 * C.YEAR_DAYS
+    # harvest-window ranking: with the collect DP on, the look-ahead prices the deploy pair with
+    # the DP's own calibrated pair table (``CollectPairTable.harvest_window_cost``) - the
+    # cheapest direction, epoch and TOF <= ``harvest_max_tof_days`` inside the harvest window
+    # ``[END - harvest_window_days[0], END - harvest_window_days[1]]`` - instead of the Lambert
+    # ΔV at one epoch three years ahead.  The window minimum is what the DP will actually pay
+    # for the pair, so ranking deploy candidates by it steers the tour towards asteroids whose
+    # collect hop is cheap when it is flown (target: ~70 kg / 180 d as in the references).
+    harvest_window_ranking: bool = True
+    harvest_window_days: tuple[float, float] = (1300.0, 400.0)
+    harvest_max_tof_days: float = 240.0
+    # mass the harvest-window table is priced at (a collector after its deploys, ~1400 kg with
+    # the mined mass); the per-ship cost is rescaled linearly, which is exact to first order
+    harvest_reference_mass: float = 1400.0
+    # charged (kg) to a deploy pair the window cannot re-fly - a deterrent, not a prune
+    harvest_unreachable_kg: float = 250.0
+    # harvest substitution (``RouteSearch._substitution_pass``): once the beam has completed its
+    # chains, the dearest collect hops of the best plans are attacked by swapping one endpoint
+    # of the deploy chain for a neighbouring miner whose harvest-window pair cost to the tour's
+    # neighbours is lower (the pair's relative phase crosses zero when the tour flies it), the
+    # deploy chain is re-flown through the substitute and the collect tour re-solved with the
+    # same DP + exact forward mass pass; a substitute is kept only when the plan score rises.
+    harvest_substitution: bool = True
+    substitution_top: int = 2  # completed plans the local search starts from
+    substitution_rounds: int = 2  # accepted swaps per plan (each round re-ranks the hops)
+    substitution_hops: int = 2  # dearest collect hops attacked per round
+    substitution_candidates: int = 6  # substitutes tried per attacked endpoint
+    # predicted (harvest saved - deploy cost) threshold: substitutes predicted to cost up to
+    # this much more are still re-toured (the prediction is a window optimum vs a paid cost)
+    substitution_slack_kg: float = 60.0
+    substitution_budget_seconds: float = 180.0
+    # exact collect-tour pricing (collectdp.py): every completed partial with at least
+    # ``collect_dp_min_deploys`` asteroids also gets the Held-Karp order + timing DP over the
+    # pair-cost table at the actual collect epochs; the best of the heuristic tours and the DP
+    # tour is kept.  The table is shared by all partials of the search (bounded cache).
+    collect_dp: bool = True
+    collect_dp_min_deploys: int = 2
+    collect_dp_max_deploys: int = 10
+    collect_dp_step_days: float = 15.0
+    # collect hop TOFs of the DP (multiples of the step; ``None`` = the CollectDPSettings grid)
+    collect_dp_tofs: tuple[float, ...] | None = None
+    # Earth-return TOFs of the DP (``None`` = the CollectDPSettings 30-day 240-720 d grid)
+    collect_dp_return_tofs: tuple[float, ...] | None = None
+    collect_dp_propellant_weight: float = 1.0
+    # bounded pair cache: 15-day tables are 14 kB per pair; the campaigns' searches used 364-782
+    # pairs, so 6000 (84 MB worst case) never evicts a live pair and bounds the worker memory
+    collect_dp_cache_pairs: int = 6_000
+    # calibrated hop inflation for the DP table: path of a ``hopcalib`` fit JSON (``""`` = the
+    # flat ``hop_inflation``); fitted on the certified archive, evaluated per pair and epoch
+    collect_dp_inflation_fit: str = ""
+    # chain-level objective in the beam (ninth iteration): from ``chain_tour_min_deploys``
+    # deploys on, the ``chain_tour_candidates`` best partials of a level by the heuristic score
+    # are re-scored by *deploy propellant + the DP's actual collect tour* - the Held-Karp tour
+    # over the chain so far (calibrated pair table, sweep-cell returns, one mass pass with the
+    # parent chain's burn schedule) - so the beam trades a dearer deploy hop for a cheaper
+    # collect loop at the exchange rate the DP measures instead of a per-pair proxy.  The
+    # score is ``weighted collected (at the tour's epochs) - propellant_weight x (deploy +
+    # collect + return propellant) - asteroid prices - chain_prior_weight x prior penalty``; a
+    # chain whose tour does not close on the mass budget ranks below every chain that does.
+    chain_tour_scoring: bool = False
+    chain_tour_candidates: int = 48
+    chain_tour_min_deploys: int = 3
+    # margin (kg) the DP tour must leave above the dry mass for the chain to count as closing
+    chain_tour_margin_kg: float = 0.0
+    # nominal burn per collect hop (fraction of the ship mass) for the first scored level, when
+    # no parent tour has measured one yet (a 1.5 km/s hop at 1.2x costs ~4.5 % of the mass)
+    chain_tour_burn_fraction: float = 0.05
+    # reference-chain prior (``chainprior.ChainPrior``): kg of score per kg the chain lies off
+    # the reference manifold (collect hops above the reference p75 per hop; deploy hops below
+    # the reference p25 while the harvest is dear); 0 = off.  The targets are data
+    # (benchmarks/gtoc12/chain_prior_v1.json, extracted by ``gtoc12 chain-prior``).
+    chain_prior_weight: float = 0.0
+    # harvest-phase prior (``harvestphase.HarvestPhasePrior``, tenth iteration): path of the
+    # extracted document ("" = off) and the kg of score per kg of its penalty.  Applied in two
+    # places: the collect DP charges every hop departing beyond the references' p75 of |Δλ|
+    # (so an aligned 180-day hop beats a misaligned 210-day one at comparable propellant), and
+    # ``_chain_score`` subtracts the scored tour's total penalty, so the beam prefers chains
+    # whose consecutive miners are phase-aligned at the projected harvest epochs.
+    harvest_phase_path: str = ""
+    harvest_phase_weight: float = 0.0
+    # cluster-first prior (clusters.py): Earth targets need at least ``cluster_min_density``
+    # co-moving neighbours, and partials earn ``cluster_bonus_kg`` x (unvisited co-moving
+    # neighbours of the current asteroid, capped at the remaining deploy slots) / max_deploys
+    # Off by default: on the full-catalogue pool the prior (density >= 8, 150 kg) and the
+    # co-moving-first expansion lost the 544 kg / 8-asteroid chain (446 kg at best) - the
+    # densest co-moving families are not the ones a 0.5-ratio Earth leg reaches.  The
+    # co-moving structure is exploited after the beam instead: insertion candidates, orphan
+    # ranking and cooperative seeding all use the same element bands.
+    cluster_min_density: int = 0
+    cluster_bonus_kg: float = 0.0
+    cluster_density_cap: int = 30  # Earth-target bonus saturates at this co-moving density
+    cluster_radius: float = 1.5
+    cluster_phase_band_deg: float = 8.0
+    cluster_neighbours_first: bool = False  # expansions try co-moving neighbours first
+    # cooperative pricing: first-level bonus for Earth targets co-moving with a seed (orphan)
+    seed_bonus_kg: float = 120.0
+    initial_mass: float = C.MAX_INITIAL_MASS_KG
+    time_budget_seconds: float = float("inf")  # stop expanding (keep completed plans) past this
+    seed: int = 0
+    randomise: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class EarthLeg:
+    """A pre-screened (typically SCvx-certified) Earth -> asteroid leg to seed the beam with.
+
+    ``propellant_kg`` is what the leg really costs (the SCvx-measured value when certified), so
+    the chain built on it starts from the right mass instead of the inflated Lambert estimate.
+    """
+
+    target: int
+    launch_epoch: float
+    tof_days: float
+    delta_v_km_s: float  # zero-revolution Lambert proxy (kept for the plan record)
+    propellant_kg: float
+    certified: bool = True
+
+    @property
+    def arrival_epoch(self) -> float:
+        return self.launch_epoch + self.tof_days
+
+
+@dataclass(frozen=True, slots=True)
+class PlannedLeg:
+    from_id: int  # 0 = Earth
+    to_id: int
+    departure_epoch: float
+    arrival_epoch: float
+    delta_v_proxy_km_s: float
+    inflation: float
+    role: str  # "earth_out" | "deploy_hop" | "collect_hop" | "earth_return" | "camp"
+
+    @property
+    def tof_days(self) -> float:
+        return self.arrival_epoch - self.departure_epoch
+
+
+@dataclass(frozen=True, slots=True)
+class RoutePlan:
+    legs: tuple[PlannedLeg, ...]
+    deploy_epochs: dict[int, float]
+    collect_epochs: dict[int, float]
+    collected_mass: dict[int, float]
+    propellant_proxy_kg: float
+    final_mass_proxy_kg: float
+    # cooperative collection: deploy epochs of miners this ship collects but another ship
+    # deployed (the collected mass is mined from that epoch); empty for self-cleaning plans
+    foreign_deploy_epochs: dict[int, float] = field(default_factory=dict)
+
+    @property
+    def asteroids(self) -> tuple[int, ...]:
+        """Every asteroid the ship touches: its deploys first, then foreign collects."""
+
+        foreign = [a for a in self.collect_epochs if a not in self.deploy_epochs]
+        return (*self.deploy_epochs, *foreign)
+
+    @property
+    def orphaned(self) -> tuple[int, ...]:
+        """Asteroids this ship deploys on but leaves for another ship to collect."""
+
+        return tuple(a for a in self.deploy_epochs if a not in self.collect_epochs)
+
+    @property
+    def self_cleaning(self) -> bool:
+        return set(self.deploy_epochs) == set(self.collect_epochs)
+
+    def deploy_epoch_of(self, asteroid: int) -> float:
+        """Epoch the miner collected at ``asteroid`` was deployed (own or foreign)."""
+
+        if asteroid in self.deploy_epochs:
+            return self.deploy_epochs[asteroid]
+        return self.foreign_deploy_epochs[asteroid]
+
+    @property
+    def total_collected_kg(self) -> float:
+        return sum(self.collected_mass.values())
+
+    @property
+    def feasible(self) -> bool:
+        return self.final_mass_proxy_kg >= C.DRY_MASS_KG + self.total_collected_kg
+
+    @classmethod
+    def from_summary(cls, data: dict[str, object]) -> RoutePlan:
+        """Inverse of :meth:`summary` (used to re-time archived plans and in tests)."""
+
+        defaults = SearchSettings()
+        default_inflation = {
+            "earth_out": defaults.earth_out_inflation,
+            "earth_return": defaults.earth_return_inflation,
+            "deploy_hop": defaults.hop_inflation,
+            "collect_hop": defaults.hop_inflation,
+            "camp": 1.0,
+        }
+        legs = tuple(
+            PlannedLeg(
+                int(item["from"]),
+                int(item["to"]),
+                float(item["t0"]),
+                float(item["tf"]),
+                float(item["dv_proxy_km_s"]),
+                float(item.get("inflation", default_inflation[str(item["role"])])),
+                str(item["role"]),
+            )
+            for item in data["legs"]  # type: ignore[union-attr]
+        )
+        return cls(
+            legs,
+            {int(k): float(v) for k, v in data["deploy_epochs"].items()},  # type: ignore[union-attr]
+            {int(k): float(v) for k, v in data["collect_epochs"].items()},  # type: ignore[union-attr]
+            {int(k): float(v) for k, v in data["collected_mass_kg"].items()},  # type: ignore[union-attr]
+            float(data["propellant_proxy_kg"]),  # type: ignore[arg-type]
+            float(data["final_mass_proxy_kg"]),  # type: ignore[arg-type]
+            {
+                int(k): float(v)
+                for k, v in data.get("foreign_deploy_epochs", {}).items()  # type: ignore[union-attr]
+            },
+        )
+
+    def summary(self) -> dict[str, object]:
+        return {
+            "asteroids": list(self.asteroids),
+            "orphaned": list(self.orphaned),
+            "self_cleaning": self.self_cleaning,
+            "launch_epoch": self.legs[0].departure_epoch,
+            "earth_return_epoch": self.legs[-1].arrival_epoch,
+            "deploy_epochs": dict(self.deploy_epochs),
+            "collect_epochs": dict(self.collect_epochs),
+            "foreign_deploy_epochs": dict(self.foreign_deploy_epochs),
+            "collected_mass_kg": dict(self.collected_mass),
+            "total_collected_kg": self.total_collected_kg,
+            "propellant_proxy_kg": self.propellant_proxy_kg,
+            "final_mass_proxy_kg": self.final_mass_proxy_kg,
+            "feasible_proxy": self.feasible,
+            "legs": [
+                {
+                    "from": leg.from_id,
+                    "to": leg.to_id,
+                    "t0": leg.departure_epoch,
+                    "tf": leg.arrival_epoch,
+                    "dv_proxy_km_s": leg.delta_v_proxy_km_s,
+                    "inflation": leg.inflation,
+                    "role": leg.role,
+                }
+                for leg in self.legs
+            ],
+        }
+
+
+@dataclass(slots=True)
+class _Partial:
+    legs: list[PlannedLeg]
+    location: int
+    epoch: float
+    mass: float
+    deployed: list[tuple[int, float]]
+    hop_propellant: float = 0.0
+    score: float = 0.0
+    lookahead_kg: float = 0.0  # estimated collect-time cost of re-flying the deploy pairs
+    # chain-tour scoring: mean collect-hop burn (kg) of the chain's last scored tour, inherited
+    # by the children as the mass schedule of their single DP pass (-1 = none measured yet)
+    chain_burn: float = -1.0
+    # the scored tour's components (kg): collect hops, return, collected at the tour's epochs
+    chain_collect_kg: float = math.nan
+    chain_return_kg: float = math.nan
+    chain_collected_kg: float = math.nan
+    # harvest-phase penalty (kg) the scored tour paid for misaligned collect departures
+    chain_phase_kg: float = math.nan
+
+
+@dataclass(slots=True)
+class SearchResult:
+    best: RoutePlan | None
+    candidates: list[RoutePlan]
+    expansions: int
+    lambert_evaluations: int
+    wall_seconds: float
+    failures: list[dict[str, object]] = field(default_factory=list)
+    depth_reached: int = 0
+    best_by_depth: dict[int, float] = field(default_factory=dict)
+    first_level: int = 0  # Earth-leg partials the beam started from
+
+
+def element_deviations(
+    catalogue: AsteroidCatalogue, source: int, pool: NDArray[np.int64]
+) -> tuple[FloatArray, FloatArray, FloatArray]:
+    """|Δa| (AU), |Δe-vector| and relative inclination (deg) between ``source`` and ``pool``.
+
+    Vector forms are used because two orbits with equal e but different perihelion directions
+    (or equal i but different nodes) are different ellipses that drift apart within years.
+    """
+
+    index = catalogue.index_of(pool)
+    s_index = catalogue.index_of(source)
+    da = (
+        np.abs(catalogue.semi_major_axis_km[index] - catalogue.semi_major_axis_km[s_index])
+        / C.AU_KM
+    )
+    varpi = catalogue.ascending_node_rad + catalogue.argument_of_perihelion_rad
+    e_vec = catalogue.eccentricity[:, None] * np.stack([np.cos(varpi), np.sin(varpi)], axis=1)
+    de = np.linalg.norm(e_vec[index] - e_vec[s_index], axis=1)
+    inc = catalogue.inclination_rad
+    node = catalogue.ascending_node_rad
+    i_vec = inc[:, None] * np.stack([np.cos(node), np.sin(node)], axis=1)
+    di = np.rad2deg(np.linalg.norm(i_vec[index] - i_vec[s_index], axis=1))
+    return da, de, di
+
+
+def positional_candidates(
+    catalogue: AsteroidCatalogue,
+    source: int,
+    pool: NDArray[np.int64],
+    epoch: float,
+    settings: SearchSettings,
+) -> tuple[NDArray[np.int64], FloatArray]:
+    """Rank ``pool`` by closeness to ``source`` in (a, e, i, phase) at ``epoch``.
+
+    The metric is the sum of squared deviations scaled by the reference-hop p95 bands, i.e. the
+    *cluster-first* generator: it favours asteroids that are physically near the ship at
+    departure and on a nearly identical orbit, which is where the 50-100 kg hops live.
+    """
+
+    pool = pool[pool != source]
+    r_pool, _ = asteroid_state(catalogue, pool, np.full(pool.shape[0], epoch))
+    r_source, _ = asteroid_state(catalogue, source, epoch)
+    da, de, di = element_deviations(catalogue, source, pool)
+    cross_z = r_source[0] * r_pool[:, 1] - r_source[1] * r_pool[:, 0]
+    phase = np.rad2deg(np.arctan2(cross_z, r_pool @ r_source))
+    metric = (
+        (da / settings.band_a_au) ** 2
+        + (di / settings.band_i_deg) ** 2
+        + (de / settings.band_e) ** 2
+        + (phase / settings.band_phase_deg) ** 2
+    )
+    order = np.lexsort((pool, metric))
+    return pool[order], metric[order]
+
+
+def proxy_candidates(
+    catalogue: AsteroidCatalogue,
+    source: int,
+    pool: NDArray[np.int64],
+    epoch: float,
+    settings: SearchSettings,
+) -> tuple[NDArray[np.int64], FloatArray]:
+    """Rank ``pool`` by the Lambert-free phasing/Edelbaum ΔV proxy over the hop TOF grid."""
+
+    pool = pool[pool != source]
+    proxy = phasing_edelbaum_proxy(catalogue, source, pool, epoch, np.asarray(settings.hop_tofs))
+    order = np.lexsort((pool, proxy["best_delta_v"]))
+    return pool[order], proxy["best_delta_v"][order]
+
+
+class RouteSearch:
+    def __init__(
+        self,
+        catalogue: AsteroidCatalogue,
+        asteroid_ids: NDArray[np.int64],
+        settings: SearchSettings | None = None,
+        excluded: set[int] | frozenset[int] | None = None,
+        weights: dict[int, float] | None = None,
+        seeds: dict[int, float] | None = None,
+        first_level: Sequence[EarthLeg] | None = None,
+        asteroid_prices: dict[int, float] | None = None,
+        chain_prior: ChainPrior | None = None,
+    ) -> None:
+        self.catalogue = catalogue
+        # master LP duals (kg per asteroid): the price the fleet master already pays for an
+        # asteroid a richer selected ship uses.  Subtracted from every chain's score and from
+        # ``plan_score`` (column-generation reduced cost), never from the reported mass, so a
+        # family prices the ships the master would actually take (conflict-free columns).
+        self.asteroid_prices: dict[int, float] = {
+            int(a): float(p) for a, p in (asteroid_prices or {}).items() if p > 0.0
+        }
+        # reference-chain prior (chainprior.py); priced at ``settings.chain_prior_weight``
+        self.chain_prior: ChainPrior | None = chain_prior
+        # cooperative pricing: uncollected miners of earlier ships (asteroid -> deploy epoch);
+        # Earth targets co-moving with them earn ``seed_bonus_kg`` in the first level
+        self.seeds: dict[int, float] = dict(seeds or {})
+        # cluster pricing: when given, these (SCvx-certified) Earth legs seed the first level
+        # (a calibrated grid around them) instead of the Lambert launch-grid screening
+        self.first_level: tuple[EarthLeg, ...] | None = (
+            None if first_level is None else tuple(first_level)
+        )
+        # legs SCvx refused: ``(from, to)`` asteroid pairs are never hopped again (deploy or
+        # collect), ``(target, launch, tof)`` Earth legs never seed the first level again.  The
+        # pricing loop fills these so a refused chain is not rebuilt for the next ship slot.
+        self.banned_pairs: set[tuple[int, int]] = set()
+        self.banned_earth: set[tuple[int, float, float]] = set()
+        banned = set(excluded or ())
+        self.excluded: frozenset[int] = frozenset(banned)
+        self.ids = np.asarray(
+            sorted(int(item) for item in asteroid_ids if int(item) not in banned), dtype=np.int64
+        )
+        self.settings = settings or SearchSettings()
+        # per-asteroid score weights (the frozen bonus coefficients); 1.0 when absent
+        self.weights = weights or {}
+        self.lambert_evaluations = 0
+        self._hop_cache: dict[tuple[int, float], dict[str, FloatArray]] = {}
+        self._return_cache: dict[int, list[tuple[float, float, float]]] = {}
+        self._collect_cache: dict[tuple[int, int, float], list[tuple[float, float, float]]] = {}
+        self._lookahead_cache: dict[tuple[int, float], FloatArray] = {}
+        self._harvest_cache: dict[tuple[int, int], float] = {}  # unordered pair -> kg
+        self.last_failure = ""
+        self._band_cache: dict[int, NDArray[np.int64]] = {}
+        self._clusters: ComovingClusters | None = None
+        self._collect_table: CollectPairTable | None = None
+        # collect-DP telemetry: tours priced, tours that beat the heuristic modes, DP seconds
+        self.collect_dp_stats: dict[str, float] = {
+            "priced": 0,
+            "won": 0,
+            "failed": 0,
+            "seconds": 0.0,
+            "peak_growth_mb": 0.0,
+        }
+        # harvest-substitution telemetry: chains re-flown, swaps that raised the plan score,
+        # collected kg gained by the accepted swaps, wall seconds
+        self.substitution_stats: dict[str, float] = {
+            "endpoints": 0,  # dear-hop endpoints attacked
+            "candidates": 0,  # substitutes ranked below the endpoint's paid cost
+            "rebuild_failed": 0,  # chains that did not re-fly through the substitute
+            "tried": 0,  # chains re-flown and re-toured
+            "improved": 0,
+            "gain_kg": 0.0,
+            "seconds": 0.0,
+        }
+        # why re-toured substitute chains were rejected (tour failure reason -> count)
+        self.substitution_failures: dict[str, int] = {}
+        # chain-tour scoring telemetry: partials scored by their DP tour, tours that did not
+        # close (fallback score), cache hits, DP seconds, and how many of the selected beam
+        # entries the tour ranking changed against the heuristic order (per level, summed)
+        self.chain_tour_stats: dict[str, float] = {
+            "scored": 0,
+            "no_tour": 0,
+            "not_closing": 0,
+            "cache_hits": 0,
+            "seconds": 0.0,
+            "reranked": 0,
+            "levels": 0,
+            "phase_kg": 0.0,  # harvest-phase penalty summed over the scored closing tours
+        }
+        self._chain_tour_cache: dict[tuple, CollectTour | None] = {}
+
+    def release_caches(self) -> dict[str, int]:
+        """Drop the beam's memo tables once the slot is priced (Lambert hop/return/collect
+        candidates, look-ahead, harvest-window costs, the DP pair table); everything is recomputed
+        on demand, so a parked search stays usable for the orphan repair at a few MB instead of
+        ~110 MB.  Returns the entry counts released, for the bundle report."""
+
+        released = {
+            "hops": len(self._hop_cache),
+            "returns": len(self._return_cache),
+            "collects": len(self._collect_cache),
+            "lookahead": len(self._lookahead_cache),
+            "harvest": len(self._harvest_cache),
+            "chain_tours": len(self._chain_tour_cache),
+            "pairs": self._collect_table.release_caches() if self._collect_table else 0,
+        }
+        self._hop_cache.clear()
+        self._return_cache.clear()
+        self._collect_cache.clear()
+        self._lookahead_cache.clear()
+        self._harvest_cache.clear()
+        self._chain_tour_cache.clear()
+        return released
+
+    @property
+    def collect_table(self) -> CollectPairTable:
+        """Pair/return cost table of the exact collect-tour DP (built on first use)."""
+
+        if self._collect_table is None:
+            s = self.settings
+            step = s.collect_dp_step_days
+            defaults = CollectDPSettings()
+            if s.collect_dp_tofs is not None:
+                tofs = tuple(float(t) for t in s.collect_dp_tofs)
+            else:
+                tofs = tuple(
+                    float(t)
+                    for t in defaults.tofs
+                    if abs(t / step - round(t / step)) < 1e-9 and t <= 720.0
+                )
+            return_tofs = (
+                tuple(float(t) for t in s.collect_dp_return_tofs)
+                if s.collect_dp_return_tofs is not None
+                else defaults.return_tofs
+            )
+            fit = load_fit(Path(s.collect_dp_inflation_fit)) if s.collect_dp_inflation_fit else None
+            if s.collect_dp_inflation_fit and fit is None:
+                raise FileNotFoundError(
+                    f"collect DP inflation fit not readable: {s.collect_dp_inflation_fit}"
+                )
+            phase = None
+            if s.harvest_phase_path and s.harvest_phase_weight > 0.0:
+                from .harvestphase import load_harvest_phase
+
+                phase = load_harvest_phase(s.harvest_phase_path)
+            self._collect_table = CollectPairTable(
+                self.catalogue,
+                CollectDPSettings(
+                    step_days=step,
+                    tofs=tofs,
+                    return_tofs=return_tofs,
+                    inflation_fit=fit,
+                    harvest_phase=phase,
+                    phase_weight=s.harvest_phase_weight,
+                    max_asteroids=s.collect_dp_max_deploys,
+                    end_margin_days=s.end_margin_days,
+                    propellant_weight=s.collect_dp_propellant_weight,
+                    hop_inflation=s.hop_inflation,
+                    hop_inflation_slope=s.hop_inflation_slope,
+                    hop_inflation_floor=s.hop_inflation_floor,
+                    hop_authority_ratio=s.hop_authority_ratio,
+                    return_inflation=s.earth_return_inflation,
+                    return_authority_ratio=s.earth_return_authority_ratio,
+                    return_tof_model=s.earth_return_tof_model,
+                    cache_pairs=s.collect_dp_cache_pairs,
+                ),
+            )
+        return self._collect_table
+
+    @property
+    def collect_dp_used(self) -> bool:
+        """Whether the collect DP table has been built (and so holds cached pairs)."""
+
+        return self._collect_table is not None
+
+    @property
+    def clusters(self) -> ComovingClusters | None:
+        """Co-moving clusters of the pool (built lazily, only when the prior is enabled)."""
+
+        s = self.settings
+        if s.cluster_min_density <= 0 and s.cluster_bonus_kg <= 0.0:
+            return None
+        if self._clusters is None:
+            self._clusters = ComovingClusters(
+                self.catalogue,
+                self.ids,
+                ClusterBands(
+                    a_au=s.band_a_au,
+                    e=s.band_e,
+                    i_deg=s.band_i_deg,
+                    phase_deg=s.cluster_phase_band_deg,
+                    radius=s.cluster_radius,
+                ),
+            )
+        return self._clusters
+
+    def seeded_mask(self, pool: NDArray[np.int64]) -> NDArray[np.float64] | None:
+        """1.0 for pool asteroids co-moving (within the filter bands) with a seed asteroid."""
+
+        s = self.settings
+        if not self.seeds or s.seed_bonus_kg <= 0.0 or pool.shape[0] == 0:
+            return None
+        mask = np.zeros(pool.shape[0], dtype=bool)
+        for seed in sorted(self.seeds):
+            da, de, di = element_deviations(self.catalogue, seed, pool)
+            mask |= (
+                (da <= s.filter_scale * s.band_a_au)
+                & (de <= s.filter_scale * s.band_e)
+                & (di <= s.filter_scale * s.band_i_deg)
+            )
+        return mask.astype(np.float64)
+
+    def _cluster_potential_kg(self, partial: _Partial) -> float:
+        clusters = self.clusters
+        if clusters is None or self.settings.cluster_bonus_kg <= 0.0:
+            return 0.0
+        visited = {item for item, _ in partial.deployed}
+        remaining = max(self.settings.max_deploys - len(partial.deployed), 0)
+        potential = min(clusters.unvisited_potential(partial.location, visited), remaining)
+        return self.settings.cluster_bonus_kg * potential / max(self.settings.max_deploys, 1)
+
+    def weighted(self, plan: RoutePlan) -> float:
+        """Bonus-weighted collected mass (the fixed post-competition score of the plan)."""
+
+        return sum(self.weights.get(a, 1.0) * m for a, m in plan.collected_mass.items())
+
+    # -- proxies --
+
+    def _propellant(self, mass: float, delta_v: float, inflation: float) -> float:
+        return float(propellant_for_delta_v(mass, delta_v * inflation))
+
+    def hop_inflation_for(self, delta_v: float, mass: float, tof: float) -> float:
+        """Propellant inflation of an asteroid hop at this mass and TOF (ratio model or flat)."""
+
+        s = self.settings
+        if s.hop_inflation_slope is None:
+            return s.hop_inflation
+        return float(
+            low_thrust_inflation(
+                delta_v, mass, tof, floor=s.hop_inflation_floor, slope=s.hop_inflation_slope
+            )
+        )
+
+    def return_inflation_for(self, delta_v: float, mass: float, tof: float) -> float:
+        """Propellant inflation of the Earth return: the TOF/ratio model or the flat setting."""
+
+        s = self.settings
+        if not s.earth_return_tof_model:
+            return s.earth_return_inflation
+        ratio = delta_v / max(float(thrust_authority_km_s(mass, tof, 1.0)), 1e-12)
+        return float(return_inflation_model(tof, ratio))
+
+    def limits(self, role: str) -> tuple[float, float]:
+        """(propellant inflation, Lambert-ΔV / full-authority ratio limit) for a leg role."""
+
+        s = self.settings
+        if role == "earth_out":
+            return s.earth_out_inflation, s.earth_out_authority_ratio
+        if role == "earth_return":
+            return s.earth_return_inflation, s.earth_return_authority_ratio
+        return s.hop_inflation, s.hop_authority_ratio
+
+    def _feasible(self, mass: float, delta_v: float, tof: float, role: str) -> bool:
+        _, ratio = self.limits(role)
+        return delta_v <= ratio * float(thrust_authority_km_s(mass, tof, 1.0))
+
+    def band_pool(self, asteroid_id: int) -> NDArray[np.int64]:
+        """Asteroids on orbits similar enough to ``asteroid_id`` to be collectable years later.
+
+        Reference hops stay within |Δa| 0.04 AU, |Δe| 0.045, |Δi| 3° (p95); the filter uses 1.5x
+        those bands and falls back to the nearest ``neighbours`` asteroids by scaled element
+        distance when the pool is too sparse (e.g. the reduced instance).
+        """
+
+        if asteroid_id in self._band_cache:
+            return self._band_cache[asteroid_id]
+        s = self.settings
+        pool = self.ids[self.ids != asteroid_id]
+        da, de, di = element_deviations(self.catalogue, asteroid_id, pool)
+        inside = (
+            (da <= s.filter_scale * s.band_a_au)
+            & (de <= s.filter_scale * s.band_e)
+            & (di <= s.filter_scale * s.band_i_deg)
+        )
+        if inside.sum() >= s.neighbours:
+            chosen = pool[inside]
+        else:
+            metric = (da / s.band_a_au) ** 2 + (de / s.band_e) ** 2 + (di / s.band_i_deg) ** 2
+            chosen = pool[np.lexsort((pool, metric))[: s.neighbours]]
+        self._band_cache[asteroid_id] = np.sort(chosen)
+        return self._band_cache[asteroid_id]
+
+    def candidates(self, asteroid_id: int, epoch: float) -> NDArray[np.int64]:
+        """Union of the proxy-ΔV ranking and the positional (cluster) ranking, proxy first."""
+
+        from .lambert import cuda_neighbour_candidates
+
+        s = self.settings
+        ranked = cuda_neighbour_candidates(self.catalogue, self.ids, asteroid_id, epoch, s)
+        if ranked is None:
+            pool = self.band_pool(asteroid_id)
+            by_proxy, _ = proxy_candidates(self.catalogue, asteroid_id, pool, epoch, s)
+            by_position, _ = positional_candidates(self.catalogue, asteroid_id, pool, epoch, s)
+            ranked = list(by_proxy[: s.neighbours]) + list(by_position[: s.neighbours // 2])
+        chosen: list[int] = []
+        seen: set[int] = set()
+        comoving: list[int] = []
+        clusters = self.clusters
+        if clusters is not None and s.cluster_neighbours_first and clusters.contains(asteroid_id):
+            # (a source outside the pool - e.g. an excluded asteroid of an archived plan being
+            # re-timed - simply gets no co-moving preference)
+            allowed = set(self.ids.tolist())
+            comoving = [int(a) for a in clusters.neighbours(asteroid_id) if int(a) in allowed][
+                : s.neighbours
+            ]
+        for item in comoving + list(ranked):
+            if int(item) not in seen:
+                seen.add(int(item))
+                chosen.append(int(item))
+        return np.asarray(chosen, dtype=np.int64)
+
+    def hops_from(self, asteroid_id: int, epoch: float) -> dict[str, FloatArray]:
+        key = (asteroid_id, round(epoch, 6))
+        if key not in self._hop_cache:
+            targets = self.candidates(asteroid_id, epoch)
+            result = screen_asteroid_hops(
+                self.catalogue, asteroid_id, targets, epoch, np.asarray(self.settings.hop_tofs)
+            )
+            self.lambert_evaluations += 2 * targets.shape[0] * len(self.settings.hop_tofs)
+            self._hop_cache[key] = result
+        return self._hop_cache[key]
+
+    def collect_lookahead(
+        self, asteroid_id: int, targets: NDArray[np.int64], departure: float, mass: float
+    ) -> FloatArray:
+        """Propellant (kg) of re-flying ``asteroid_id -> target`` ``collect_gap_days`` later.
+
+        The cheapest feasible TOF of the collect grid at the later epoch, inflated like a hop;
+        ``inf`` when no TOF is feasible (the pair has drifted out of reach).  Cached per
+        (source, departure) - the targets are the deploy screening's, in the same order.
+        """
+
+        s = self.settings
+        if s.harvest_window_ranking and s.collect_dp:
+            return self.harvest_window_costs(asteroid_id, targets, mass)
+        key = (asteroid_id, round(departure, 6))
+        if key not in self._lookahead_cache:
+            epoch = departure + s.collect_gap_days
+            tofs = np.asarray(s.collect_hop_tofs, dtype=np.float64)
+            hops = screen_asteroid_hops(self.catalogue, asteroid_id, targets, epoch, tofs)
+            self.lambert_evaluations += 2 * targets.shape[0] * tofs.shape[0]
+            dv = np.where(
+                hops["feasible"] & np.isfinite(hops["total_delta_v"]),
+                hops["total_delta_v"],
+                np.inf,
+            )
+            best = np.min(dv, axis=1)
+            self._lookahead_cache[key] = best
+        best = self._lookahead_cache[key]
+        cost = np.full(best.shape[0], np.inf)
+        finite = np.isfinite(best)
+        cost[finite] = propellant_for_delta_v(mass, best[finite] * s.hop_inflation)
+        return cost
+
+    def harvest_window_costs(
+        self, asteroid_id: int, targets: NDArray[np.int64], mass: float
+    ) -> FloatArray:
+        """Calibrated harvest-window cost (kg) of each ``asteroid_id <-> target`` pair from the
+        collect DP's pair table (cached per unordered pair).
+
+        Priced at the collector's reference mass - that is what the DP will pay for the hop,
+        not the deploy-time mass of the ship (``mass`` is unused; the signature matches the
+        Lambert lookahead).  A pair that cannot be re-flown inside the window is charged
+        ``harvest_unreachable_kg`` rather than pruned: the DP orders the tour itself, so a
+        deploy pair need not be a collect pair - the first probe pruned on ``inf`` and lost
+        124 kg on family 54 at every weight.
+        """
+
+        s = self.settings
+        window = (
+            C.MISSION_END_MJD - s.harvest_window_days[0],
+            C.MISSION_END_MJD - s.harvest_window_days[1],
+        )
+        table = self.collect_table
+        cost = np.empty(targets.shape[0])
+        for i, target in enumerate(targets):
+            key = (min(asteroid_id, int(target)), max(asteroid_id, int(target)))
+            cached = self._harvest_cache.get(key)
+            if cached is None:
+                cached = table.harvest_window_cost(
+                    key[0],
+                    key[1],
+                    s.harvest_reference_mass,
+                    window=window,
+                    max_tof_days=s.harvest_max_tof_days,
+                )
+                self._harvest_cache[key] = cached
+            cost[i] = cached if np.isfinite(cached) else s.harvest_unreachable_kg
+        return cost
+
+    def _reserve(self, partial: _Partial) -> float:
+        """Propellant the collection tour and Earth return will need (reference-calibrated)."""
+
+        s = self.settings
+        return s.reserve_fraction * partial.hop_propellant + s.return_reserve_kg
+
+    # -- search --
+
+    def _first_level(self) -> list[_Partial]:
+        """Earth -> A1 candidates, screened block-wise to bound memory at catalogue scale."""
+
+        s = self.settings
+        if s.max_deploys < 1 or self.ids.shape[0] == 0:
+            return []
+        if self.first_level is not None:
+            return self._injected_first_level()
+        epochs = np.asarray(s.launch_epochs)
+        tofs = np.asarray(s.earth_leg_tofs)
+        kept: list[tuple[float, int, float, float, float, float]] = []
+        clusters = self.clusters
+        pool = self.ids
+        if clusters is not None and s.cluster_min_density > 0:
+            # cluster-first: only asteroids with enough co-moving neighbours can start a chain
+            dense = np.asarray(
+                [clusters.density_of(int(a)) >= s.cluster_min_density for a in pool], dtype=bool
+            )
+            # sparse pools (reduced instances, tests) fall back to the densest quartile so the
+            # prior never empties the first level
+            if int(dense.sum()) < s.beam_width:
+                densities = np.asarray([clusters.density_of(int(a)) for a in pool])
+                cutoff = np.quantile(densities, 0.75) if densities.size else 0
+                dense = densities >= cutoff
+            pool = pool[dense]
+        seeded = self.seeded_mask(pool)
+        from .lambert import cuda_earth_beam
+
+        device_options = cuda_earth_beam(self, pool, seeded)
+        if device_options is not None:
+            self.lambert_evaluations += 2 * len(pool) * len(epochs) * len(tofs)
+            return self._earth_beam_partials(device_options)
+        horizon = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
+        tof_grid = np.broadcast_to(tofs[None, None, :], (1, epochs.shape[0], tofs.shape[0]))
+        out_inflation, out_ratio = self.limits("earth_out")
+        authority = out_ratio * thrust_authority_km_s(s.initial_mass, tof_grid, 1.0)
+        arrival_grid = epochs[None, :, None] + tofs[None, None, :]
+        mined_grid = (
+            C.MINING_RATE_KG_PER_YEAR * np.maximum(horizon - arrival_grid, 0.0) / C.YEAR_DAYS
+        )
+        for start in range(0, pool.shape[0], s.earth_block):
+            block = pool[start : start + s.earth_block]
+            grid = screen_earth_to_asteroids(self.catalogue, block, epochs, tofs)
+            self.lambert_evaluations += 2 * grid["total_delta_v"].size
+            dv_grid = np.where(grid["feasible"], grid["total_delta_v"], np.inf)
+            ok = np.isfinite(dv_grid) & (dv_grid <= authority)
+            propellant_grid = propellant_for_delta_v(s.initial_mass, dv_grid * out_inflation)
+            weight = np.asarray([self.weights.get(int(a), 1.0) for a in block])[:, None, None]
+            score_grid = np.where(
+                ok,
+                weight * mined_grid - s.propellant_weight * (propellant_grid + C.MINER_MASS_KG),
+                -np.inf,
+            )
+            if clusters is not None and s.cluster_bonus_kg > 0.0:
+                potential = np.asarray(
+                    [
+                        min(clusters.density_of(int(a)), s.cluster_density_cap)
+                        / s.cluster_density_cap
+                        for a in block
+                    ]
+                )[:, None, None]
+                score_grid = np.where(ok, score_grid + s.cluster_bonus_kg * potential, -np.inf)
+            if seeded is not None:
+                # pricing seeded from clusters with uncollected miners: chains starting there can
+                # pick the orphans up in their collect tour (cooperative collection)
+                bonus = s.seed_bonus_kg * seeded[start : start + s.earth_block][:, None, None]
+                score_grid = np.where(ok, score_grid + bonus, -np.inf)
+            flat = np.argsort(-score_grid.ravel(), kind="stable")[: s.first_level_limit]
+            for index in flat:
+                a_index, e_index, t_index = np.unravel_index(int(index), score_grid.shape)
+                if not ok[a_index, e_index, t_index]:
+                    break
+                kept.append(
+                    (
+                        float(score_grid[a_index, e_index, t_index]),
+                        int(block[a_index]),
+                        float(epochs[e_index]),
+                        float(tofs[t_index]),
+                        float(dv_grid[a_index, e_index, t_index]),
+                        float(propellant_grid[a_index, e_index, t_index]),
+                    )
+                )
+        kept.sort(key=lambda item: (-item[0], item[1], item[2], item[3]))
+        return self._earth_beam_partials(kept[: s.first_level_limit])
+
+    def _earth_beam_partials(self, options) -> list[_Partial]:
+        s = self.settings
+        out_inflation, _ = self.limits("earth_out")
+        beam: list[_Partial] = []
+        for _score, asteroid, launch, tof, dv, propellant in options:
+            arrival = launch + tof
+            leg = PlannedLeg(EARTH_ID, asteroid, launch, arrival, dv, out_inflation, "earth_out")
+            mass = s.initial_mass - propellant - C.MINER_MASS_KG
+            beam.append(_Partial([leg], asteroid, arrival, mass, [(asteroid, arrival)]))
+        return beam
+
+    def _injected_first_level(self) -> list[_Partial]:
+        """First level from pre-certified Earth legs: a calibrated grid around each of them.
+
+        The certified legs say which targets SCvx can really reach and what the Earth leg truly
+        costs. Seeding the beam with those exact legs alone starves it (a handful of partials,
+        one arrival epoch each), so each certified leg also unlocks the Lambert launch/TOF grid
+        for its target within ``first_level_window_days`` of the certified launch and TOF, priced
+        with the per-target inflation ``measured Delta-V / Lambert Delta-V`` instead of the global
+        one. The certified legs themselves are kept at their measured propellant.
+        """
+
+        s = self.settings
+        _out_inflation, out_ratio = self.limits("earth_out")
+        horizon = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
+        allowed = set(self.ids.tolist())
+        legs = [leg for leg in self.first_level or () if leg.target in allowed]
+        if not legs:
+            return []
+        exhaust = exhaust_velocity_km_s()
+        epochs = np.asarray(s.launch_epochs)
+        tofs = np.asarray(s.earth_leg_tofs)
+        window = s.first_level_window_days
+        # per-target calibration: the smallest measured/Lambert ratio over that target's legs
+        calibration: dict[int, float] = {}
+        for leg in legs:
+            true_dv = exhaust * math.log(s.initial_mass / (s.initial_mass - leg.propellant_kg))
+            ratio = true_dv / max(leg.delta_v_km_s, 1e-9)
+            calibration[leg.target] = min(calibration.get(leg.target, np.inf), ratio)
+        # (score, target, launch, tof, lambert dv, propellant, inflation)
+        kept: list[tuple[float, int, float, float, float, float, float]] = []
+        seen: set[tuple[int, float, float]] = set()
+        for leg in legs:
+            key = (leg.target, leg.launch_epoch, leg.tof_days)
+            if key in seen:
+                continue
+            seen.add(key)
+            mined = C.MINING_RATE_KG_PER_YEAR * max(horizon - leg.arrival_epoch, 0.0) / C.YEAR_DAYS
+            score = self.weights.get(leg.target, 1.0) * mined - s.propellant_weight * (
+                leg.propellant_kg + C.MINER_MASS_KG
+            )
+            kept.append(
+                (
+                    score,
+                    leg.target,
+                    leg.launch_epoch,
+                    leg.tof_days,
+                    leg.delta_v_km_s,
+                    leg.propellant_kg,
+                    calibration[leg.target],
+                )
+            )
+        if window > 0.0 and epochs.size and tofs.size:
+            targets = np.asarray(sorted(calibration), dtype=np.int64)
+            grid = screen_earth_to_asteroids(self.catalogue, targets, epochs, tofs)
+            self.lambert_evaluations += 2 * grid["total_delta_v"].size
+            dv_grid = np.where(grid["feasible"], grid["total_delta_v"], np.inf)
+            tof_grid = np.broadcast_to(tofs[None, :], (epochs.shape[0], tofs.shape[0]))
+            authority = out_ratio * thrust_authority_km_s(s.initial_mass, tof_grid, 1.0)
+            arrival_grid = epochs[:, None] + tofs[None, :]
+            mined_grid = (
+                C.MINING_RATE_KG_PER_YEAR * np.maximum(horizon - arrival_grid, 0.0) / C.YEAR_DAYS
+            )
+            for t_index, target in enumerate(targets.tolist()):
+                inflation = calibration[target]
+                near = np.zeros((epochs.shape[0], tofs.shape[0]), dtype=bool)
+                for leg in legs:
+                    if leg.target != target:
+                        continue
+                    near |= (np.abs(epochs[:, None] - leg.launch_epoch) <= window) & (
+                        np.abs(tofs[None, :] - leg.tof_days) <= window
+                    )
+                dv = dv_grid[t_index]
+                ok = near & np.isfinite(dv) & (dv * inflation <= authority)
+                propellant = propellant_for_delta_v(s.initial_mass, dv * inflation)
+                weight = self.weights.get(target, 1.0)
+                score_grid = np.where(
+                    ok,
+                    weight * mined_grid - s.propellant_weight * (propellant + C.MINER_MASS_KG),
+                    -np.inf,
+                )
+                for e_index, t2_index in zip(*np.nonzero(ok), strict=True):
+                    key = (target, float(epochs[e_index]), float(tofs[t2_index]))
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    kept.append(
+                        (
+                            float(score_grid[e_index, t2_index]),
+                            target,
+                            key[1],
+                            key[2],
+                            float(dv[e_index, t2_index]),
+                            float(propellant[e_index, t2_index]),
+                            inflation,
+                        )
+                    )
+        kept = [item for item in kept if (item[1], item[2], item[3]) not in self.banned_earth]
+        kept.sort(key=lambda item: (-item[0], item[1], item[2], item[3]))
+        beam: list[_Partial] = []
+        for _score, target, launch, tof, dv, propellant, inflation in kept[: s.first_level_limit]:
+            arrival = launch + tof
+            planned = PlannedLeg(EARTH_ID, target, launch, arrival, dv, inflation, "earth_out")
+            mass = s.initial_mass - propellant - C.MINER_MASS_KG
+            beam.append(_Partial([planned], target, arrival, mass, [(target, arrival)]))
+        return beam
+
+    def _expand(self, partial: _Partial) -> list[_Partial]:
+        s = self.settings
+        visited = {item for item, _ in partial.deployed}
+        children: list[_Partial] = []
+        for wait in s.deploy_wait_days:
+            departure = partial.epoch + float(wait)
+            hops = self.hops_from(partial.location, departure)
+            lookahead: FloatArray | None = None
+            if s.collect_lookahead_weight > 0.0:
+                lookahead = self.collect_lookahead(
+                    partial.location,
+                    np.asarray(hops["target_ids"], dtype=np.int64),
+                    departure,
+                    partial.mass,
+                )
+            for t_index, target in enumerate(hops["target_ids"]):
+                target = int(target)
+                if target in visited or (partial.location, target) in self.banned_pairs:
+                    continue
+                # a pair that cannot be re-flown at collect time is not a deploy candidate
+                pair_lookahead = 0.0 if lookahead is None else float(lookahead[t_index])
+                if not np.isfinite(pair_lookahead):
+                    continue
+                for f_index, tof in enumerate(hops["tofs_days"]):
+                    if not hops["feasible"][t_index, f_index]:
+                        continue
+                    dv = float(hops["total_delta_v"][t_index, f_index])
+                    if not self._feasible(partial.mass, dv, float(tof), "deploy_hop"):
+                        continue
+                    inflation = self.hop_inflation_for(dv, partial.mass, float(tof))
+                    propellant = self._propellant(partial.mass, dv, inflation)
+                    arrival = departure + float(tof)
+                    if arrival > C.MISSION_END_MJD - 3.0 * C.YEAR_DAYS:
+                        continue
+                    legs = list(partial.legs)
+                    if wait > 0.0:
+                        legs.append(
+                            PlannedLeg(
+                                partial.location,
+                                partial.location,
+                                partial.epoch,
+                                departure,
+                                0.0,
+                                1.0,
+                                "camp",
+                            )
+                        )
+                    legs.append(
+                        PlannedLeg(
+                            partial.location,
+                            target,
+                            departure,
+                            arrival,
+                            dv,
+                            inflation,
+                            "deploy_hop",
+                        )
+                    )
+                    children.append(
+                        _Partial(
+                            legs,
+                            target,
+                            arrival,
+                            partial.mass - propellant - C.MINER_MASS_KG,
+                            [*partial.deployed, (target, arrival)],
+                            partial.hop_propellant + propellant,
+                            lookahead_kg=partial.lookahead_kg + pair_lookahead,
+                            chain_burn=partial.chain_burn,
+                        )
+                    )
+        return children
+
+    def run(self) -> SearchResult:
+        from .lambert import completed_branch_requests
+
+        initial_branches = completed_branch_requests()
+        started = time.perf_counter()
+        s = self.settings
+        beam = self._first_level()
+        if not beam:
+            self.lambert_evaluations = completed_branch_requests() - initial_branches
+            return SearchResult(None, [], 0, self.lambert_evaluations, 0.0, [], 0, {}, 0)
+        expansions = 0
+        completed: list[RoutePlan] = []
+        # the chain each completed plan came from (the substitution pass re-flies chains)
+        origins: dict[int, _Partial] = {}
+        failures: list[dict[str, object]] = []
+        best_by_depth: dict[int, float] = {}
+        current = self._select(beam)
+        depth = 1
+        for partial in current:
+            plan = self._complete(partial)
+            if plan is not None:
+                completed.append(plan)
+                origins[id(plan)] = partial
+                best_by_depth[1] = max(best_by_depth.get(1, 0.0), plan.total_collected_kg)
+        for depth in range(2, s.max_deploys + 1):
+            if time.perf_counter() - started > s.time_budget_seconds:
+                failures.append({"reason": "time budget exhausted", "depth": depth - 1})
+                depth -= 1
+                break
+            next_beam: list[_Partial] = []
+            for partial in current:
+                expansions += 1
+                next_beam.extend(self._expand(partial))
+            current = self._select(next_beam)
+            if not current:
+                depth -= 1
+                break
+            for partial in current:
+                if len(partial.deployed) >= s.min_deploys:
+                    plan = self._complete(partial)
+                    if plan is not None:
+                        completed.append(plan)
+                        origins[id(plan)] = partial
+                        best_by_depth[depth] = max(
+                            best_by_depth.get(depth, 0.0), plan.total_collected_kg
+                        )
+                    else:
+                        failures.append(
+                            {
+                                "asteroids": [item for item, _ in partial.deployed],
+                                "reason": f"no feasible collection tour ({self.last_failure})",
+                                "mass_after_deploys_kg": partial.mass,
+                                "deploy_end_epoch": partial.epoch,
+                            }
+                        )
+        completed.sort(
+            key=lambda item: (-self.plan_score(item), item.propellant_proxy_kg, item.asteroids)
+        )
+        if s.harvest_substitution and completed:
+            substituted = self._substitution_pass(completed, origins)
+            if substituted:
+                completed.extend(substituted)
+                completed.sort(
+                    key=lambda item: (
+                        -self.plan_score(item),
+                        item.propellant_proxy_kg,
+                        item.asteroids,
+                    )
+                )
+        best = next((item for item in completed if item.feasible), None)
+        # Count actual operator rows, including collection and return helpers
+        # omitted by the historical manual increments in expansion routines.
+        self.lambert_evaluations = completed_branch_requests() - initial_branches
+        return SearchResult(
+            best,
+            completed,
+            expansions,
+            self.lambert_evaluations,
+            time.perf_counter() - started,
+            failures,
+            depth,
+            best_by_depth,
+            len(beam),
+        )
+
+    # -- harvest substitution --
+
+    def _substitution_pass(
+        self, completed: list[RoutePlan], origins: dict[int, _Partial]
+    ) -> list[RoutePlan]:
+        """Local search over the best completed plans: swap the endpoint of a dear collect hop
+        for a cheaper-to-harvest neighbour, re-fly the chain, re-solve the tour.
+
+        ``completed`` is sorted best-first; the top ``substitution_top`` feasible plans with a
+        known chain are attacked for up to ``substitution_rounds`` accepted swaps each, inside
+        ``substitution_budget_seconds``.  Returns the improved plans (every accepted step, so the
+        beam's candidate list keeps the intermediate plans as fall-backs for SCvx).
+        """
+
+        s = self.settings
+        started = time.perf_counter()
+        deadline = started + s.substitution_budget_seconds
+        improved: list[RoutePlan] = []
+        seeds = [p for p in completed if p.feasible and id(p) in origins][: s.substitution_top]
+        for seed in seeds:
+            plan, partial = seed, origins[id(seed)]
+            for _round in range(s.substitution_rounds):
+                if time.perf_counter() > deadline:
+                    break
+                step = self._substitute_once(plan, partial, deadline)
+                if step is None:
+                    break
+                new_plan, new_partial = step
+                self.substitution_stats["improved"] += 1
+                self.substitution_stats["gain_kg"] += (
+                    new_plan.total_collected_kg - plan.total_collected_kg
+                )
+                improved.append(new_plan)
+                plan, partial = new_plan, new_partial
+        self.substitution_stats["seconds"] += time.perf_counter() - started
+        return improved
+
+    def dear_collect_hops(self, plan: RoutePlan) -> list[PlannedLeg]:
+        """The plan's collect hops, dearest first (inflated ΔV: the propellant ranking at any one
+        mass, so no forward pass is needed to order them)."""
+
+        hops = [leg for leg in plan.legs if leg.role == "collect_hop"]
+        hops.sort(key=lambda leg: -leg.delta_v_proxy_km_s * leg.inflation)
+        return hops
+
+    def tour_neighbours(self, plan: RoutePlan, asteroid: int) -> list[int]:
+        """Asteroids adjacent to ``asteroid`` in the plan's collect tour (hop partners)."""
+
+        partners: list[int] = []
+        for leg in plan.legs:
+            if leg.role != "collect_hop":
+                continue
+            if leg.from_id == asteroid and leg.to_id != asteroid:
+                partners.append(leg.to_id)
+            elif leg.to_id == asteroid and leg.from_id != asteroid:
+                partners.append(leg.from_id)
+        return partners
+
+    def _substitute_once(
+        self, plan: RoutePlan, partial: _Partial, deadline: float
+    ) -> tuple[RoutePlan, _Partial] | None:
+        """One accepted substitution on ``plan`` (or ``None`` when no candidate beats it).
+
+        For each endpoint of the ``substitution_hops`` dearest collect hops (never the Earth
+        leg's target - that leg is certified), the substitutes are the deploy-hop neighbours of
+        the chain's previous asteroid at the same departure whose summed harvest-window cost to
+        the endpoint's tour partners is below the endpoint's own; the best
+        ``substitution_candidates`` are re-flown (:meth:`_rebuild_chain`) and re-toured
+        (:meth:`_complete`).  The first candidate set that yields a better plan wins.
+        """
+
+        s = self.settings
+        deployed = [a for a, _ in partial.deployed]
+        position = {a: i for i, a in enumerate(deployed)}
+        chain = set(deployed)
+        current_score = self.plan_score(plan)
+        attacked: set[int] = set()
+        best: tuple[float, RoutePlan, _Partial] | None = None
+        for hop in self.dear_collect_hops(plan)[: s.substitution_hops]:
+            for endpoint in (hop.to_id, hop.from_id):
+                if endpoint in attacked or position.get(endpoint, 0) < 1:
+                    continue  # foreign, already tried, or the Earth leg's target
+                attacked.add(endpoint)
+                p = position[endpoint]
+                previous = deployed[p - 1]
+                departure = self._deploy_departure(partial, endpoint)
+                if departure is None:
+                    continue
+                partners = np.asarray(
+                    [a for a in self.tour_neighbours(plan, endpoint) if a != endpoint],
+                    dtype=np.int64,
+                )
+                if partners.shape[0] == 0:
+                    continue
+                pool = np.asarray(self.hops_from(previous, departure)["target_ids"], dtype=np.int64)
+                pool = np.asarray(
+                    [
+                        int(b)
+                        for b in pool
+                        if int(b) not in chain and (previous, int(b)) not in self.banned_pairs
+                    ],
+                    dtype=np.int64,
+                )
+                if pool.shape[0] == 0:
+                    continue
+                self.substitution_stats["endpoints"] += 1
+                # a substitute is promising when the harvest it saves exceeds the deploy
+                # propellant it costs: (harvest-window optimum of the substitute against the
+                # same partners - what the tour pays now for the endpoint's hops) + (deploy
+                # hops into and out of the substitute - the endpoint's own).  The first probe
+                # ranked on the harvest side alone and every substitute chain died on the
+                # deploy side (family 7: +180-260 kg of deploy propellant, no tour closed).
+                paid = self._paid_for(plan, endpoint, s.harvest_reference_mass)
+                masses = self._chain_masses(partial)
+                cost = np.asarray(
+                    [
+                        self._harvest_sum(int(b), partners)
+                        - paid
+                        + self._deploy_delta(partial, p, int(b), masses)
+                        for b in pool
+                    ]
+                )
+                order = np.argsort(cost, kind="stable")
+                if cost.shape[0]:
+                    self.substitution_stats["best_predicted_kg"] = min(
+                        self.substitution_stats.get("best_predicted_kg", np.inf),
+                        float(cost[order[0]]),
+                    )
+                # the prediction is a window optimum against a paid cost: substitutes predicted
+                # up to ``substitution_slack_kg`` dearer are still worth a re-tour
+                candidates = [
+                    int(pool[i]) for i in order if cost[i] < s.substitution_slack_kg - 1e-9
+                ][: s.substitution_candidates]
+                self.substitution_stats["candidates"] += len(candidates)
+                for substitute in candidates:
+                    if time.perf_counter() > deadline:
+                        break
+                    rebuilt = self._rebuild_chain(partial, p, substitute)
+                    if rebuilt is None:
+                        self.substitution_stats["rebuild_failed"] += 1
+                        continue
+                    self.substitution_stats["tried"] += 1
+                    candidate = self._complete(rebuilt)
+                    if candidate is None or not candidate.feasible:
+                        reason = "infeasible" if candidate is not None else self.last_failure
+                        self.substitution_failures[reason] = (
+                            self.substitution_failures.get(reason, 0) + 1
+                        )
+                        continue
+                    score = self.plan_score(candidate)
+                    if score > current_score + 1e-6 and (best is None or score > best[0]):
+                        best = (score, candidate, rebuilt)
+            if best is not None:
+                break  # the dearest hop that can be improved is enough for one round
+        if best is None:
+            return None
+        return best[1], best[2]
+
+    def _chain_masses(self, partial: _Partial) -> list[float]:
+        """Ship mass on departure of each deploy hop of the chain (index ``p`` = the hop into
+        the ``p``-th deployed asteroid; index 0 is the mass after the Earth leg and the first
+        miner), replayed exactly from the chain's own legs."""
+
+        n = len(partial.deployed)
+        mass = partial.mass + partial.hop_propellant + C.MINER_MASS_KG * (n - 1)
+        masses = [mass]
+        for leg in partial.legs[1:]:
+            if leg.role != "deploy_hop":
+                continue
+            mass -= self._propellant(mass, leg.delta_v_proxy_km_s, leg.inflation)
+            mass -= C.MINER_MASS_KG
+            masses.append(mass)
+        return masses
+
+    def _cheapest_deploy_hop(
+        self, source: int, target: int, departure: float, mass: float
+    ) -> tuple[float, float] | None:
+        """``(propellant, tof)`` of the cheapest feasible deploy hop ``source -> target``
+        departing at ``departure`` on the beam's hop grid; ``None`` when none flies."""
+
+        hops = self.hops_from(source, departure)
+        ids = np.asarray(hops["target_ids"], dtype=np.int64)
+        found = np.nonzero(ids == target)[0]
+        if found.shape[0] == 0:
+            return None
+        t_index = int(found[0])
+        best: tuple[float, float] | None = None
+        for f_index, tof in enumerate(hops["tofs_days"]):
+            if not hops["feasible"][t_index, f_index]:
+                continue
+            dv = float(hops["total_delta_v"][t_index, f_index])
+            if not self._feasible(mass, dv, float(tof), "deploy_hop"):
+                continue
+            propellant = self._propellant(mass, dv, self.hop_inflation_for(dv, mass, float(tof)))
+            if best is None or propellant < best[0]:
+                best = (propellant, float(tof))
+        return best
+
+    def _deploy_delta(
+        self, partial: _Partial, position: int, substitute: int, masses: list[float]
+    ) -> float:
+        """Extra deploy propellant (kg) of routing the chain through ``substitute`` instead of
+        the asteroid at ``position``: the hops into and out of it (cheapest feasible TOF each,
+        at the chain's masses) minus the chain's own two hops.  ``inf`` when a hop cannot fly."""
+
+        deployed = [a for a, _ in partial.deployed]
+        legs = [leg for leg in partial.legs if leg.role == "deploy_hop"]
+        leg_in = legs[position - 1]
+        mass_in = masses[position - 1]
+        own = self._propellant(mass_in, leg_in.delta_v_proxy_km_s, leg_in.inflation)
+        hop_in = self._cheapest_deploy_hop(
+            deployed[position - 1], substitute, leg_in.departure_epoch, mass_in
+        )
+        if hop_in is None:
+            return float("inf")
+        new = hop_in[0]
+        if position + 1 < len(deployed):
+            leg_out = legs[position]
+            own += self._propellant(masses[position], leg_out.delta_v_proxy_km_s, leg_out.inflation)
+            wait = leg_out.departure_epoch - leg_in.arrival_epoch
+            departure = leg_in.departure_epoch + hop_in[1] + wait
+            mass_out = mass_in - hop_in[0] - C.MINER_MASS_KG
+            hop_out = self._cheapest_deploy_hop(
+                substitute, deployed[position + 1], departure, mass_out
+            )
+            if hop_out is None:
+                return float("inf")
+            new += hop_out[0]
+        return new - own
+
+    @staticmethod
+    def _paid_for(plan: RoutePlan, asteroid: int, mass: float) -> float:
+        """Propellant (kg at ``mass``) the plan's collect hops touching ``asteroid`` cost."""
+
+        total = 0.0
+        for leg in plan.legs:
+            if leg.role == "collect_hop" and asteroid in (leg.from_id, leg.to_id):
+                total += float(propellant_for_delta_v(mass, leg.delta_v_proxy_km_s * leg.inflation))
+        return total
+
+    def _harvest_sum(self, asteroid: int, partners: NDArray[np.int64]) -> float:
+        """Summed harvest-window cost (kg, collector reference mass) of ``asteroid`` against
+        its would-be tour partners: the substitution ranking."""
+
+        mass = self.settings.harvest_reference_mass
+        return float(np.sum(self.harvest_window_costs(asteroid, partners, mass)))
+
+    @staticmethod
+    def _deploy_departure(partial: _Partial, asteroid: int) -> float | None:
+        for leg in partial.legs:
+            if leg.role == "deploy_hop" and leg.to_id == asteroid:
+                return leg.departure_epoch
+        return None
+
+    def _rebuild_chain(self, partial: _Partial, position: int, substitute: int) -> _Partial | None:
+        """Re-fly ``partial``'s deploy chain with ``substitute`` at deploy ``position`` (>= 1).
+
+        The Earth leg is kept verbatim.  Every later deploy hop keeps its camp wait; the hops
+        into and out of the substitute take the cheapest feasible TOF of the beam's hop grid,
+        the others keep their TOF and are re-priced (Lambert at the shifted departure, the
+        beam's inflation and authority limits, exact mass chain with one miner per stop).
+        ``None`` when the substitute is not a screened neighbour of its predecessor, a leg is
+        infeasible, a pair is banned or an asteroid would be visited twice.
+        """
+
+        if position < 1 or position >= len(partial.deployed):
+            return None
+        steps: list[tuple[int, float, float]] = []  # (target, wait days, tof days)
+        wait = 0.0
+        for leg in partial.legs[1:]:
+            if leg.role == "camp":
+                wait = leg.tof_days
+            elif leg.role == "deploy_hop":
+                steps.append((leg.to_id, wait, leg.tof_days))
+                wait = 0.0
+        if len(steps) != len(partial.deployed) - 1:
+            return None
+        # mass after the Earth leg and the first miner: every deploy hop's propellant is in
+        # ``hop_propellant`` and one miner was dropped at each of the later stops
+        n = len(partial.deployed)
+        mass = partial.mass + partial.hop_propellant + C.MINER_MASS_KG * (n - 1)
+        first_asteroid, first_epoch = partial.deployed[0]
+        location, epoch = first_asteroid, first_epoch
+        legs: list[PlannedLeg] = [partial.legs[0]]
+        deployed: list[tuple[int, float]] = [(first_asteroid, first_epoch)]
+        visited = {first_asteroid}
+        hop_propellant = 0.0
+        horizon = C.MISSION_END_MJD - 3.0 * C.YEAR_DAYS
+        for index, (original, wait, tof) in enumerate(steps, start=1):
+            target = substitute if index == position else original
+            if target in visited or (location, target) in self.banned_pairs:
+                return None
+            departure = epoch + wait
+            hops = self.hops_from(location, departure)
+            ids = np.asarray(hops["target_ids"], dtype=np.int64)
+            found = np.nonzero(ids == target)[0]
+            if found.shape[0] == 0:
+                return None
+            t_index = int(found[0])
+            tofs = np.asarray(hops["tofs_days"], dtype=np.float64)
+            free_tof = index in (position, position + 1)
+            # hops touching the substitute take the cheapest feasible TOF; the others keep
+            # their TOF when it still flies at the (possibly shifted) departure, else the
+            # cheapest feasible one
+            stages = [range(tofs.shape[0])]
+            if not free_tof:
+                stages.insert(0, np.nonzero(np.abs(tofs - tof) < 1e-9)[0])
+            chosen: tuple[float, float, float, float] | None = None  # propellant, dv, infl, tof
+            for options in stages:
+                for f_index in options:
+                    if not hops["feasible"][t_index, f_index]:
+                        continue
+                    dv = float(hops["total_delta_v"][t_index, f_index])
+                    leg_tof = float(tofs[f_index])
+                    if not self._feasible(mass, dv, leg_tof, "deploy_hop"):
+                        continue
+                    if departure + leg_tof > horizon:
+                        continue
+                    inflation = self.hop_inflation_for(dv, mass, leg_tof)
+                    propellant = self._propellant(mass, dv, inflation)
+                    if chosen is None or propellant < chosen[0]:
+                        chosen = (propellant, dv, inflation, leg_tof)
+                if chosen is not None:
+                    break
+            if chosen is None:
+                return None
+            propellant, dv, inflation, leg_tof = chosen
+            if wait > 0.0:
+                legs.append(PlannedLeg(location, location, epoch, departure, 0.0, 1.0, "camp"))
+            arrival = departure + leg_tof
+            legs.append(
+                PlannedLeg(location, target, departure, arrival, dv, inflation, "deploy_hop")
+            )
+            mass -= propellant + C.MINER_MASS_KG
+            hop_propellant += propellant
+            location, epoch = target, arrival
+            deployed.append((target, arrival))
+            visited.add(target)
+        return _Partial(legs, location, epoch, mass, deployed, hop_propellant)
+
+    def _return_feasible(self, asteroid: int, mass_guess: float) -> bool:
+        """Cached test that *some* Earth return from ``asteroid`` fits inside the final window."""
+
+        if asteroid not in self._return_cache:
+            end = C.MISSION_END_MJD - self.settings.end_margin_days
+            self._return_cache[asteroid] = self._return_options(asteroid, end)
+        return any(
+            self._feasible(mass_guess, dv, tof, "earth_return")
+            for dv, _departure, tof in self._return_cache[asteroid]
+        )
+
+    def _select(self, partials: list[_Partial]) -> list[_Partial]:
+        """Stable top-``beam_width`` by heuristic, with diversity, reserve and return pruning.
+
+        Score = expected mined mass minus a propellant penalty.  At most
+        ``max_per_deployed_set`` variants of one deployed set survive; chains whose mass after the
+        deploy phase cannot cover the dry mass plus the collect-phase reserve are dropped, as are
+        chains whose first asteroid (the last one collected before the Earth return) has no
+        feasible return.
+        """
+
+        end = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS  # rough collection horizon
+        for partial in partials:
+            mined = sum(
+                self.weights.get(asteroid, 1.0)
+                * C.maximum_collected_mass(max(end - deploy_epoch, 0.0))
+                for asteroid, deploy_epoch in partial.deployed
+            )
+            spent = self.settings.initial_mass - partial.mass
+            elapsed = partial.epoch - partial.legs[0].departure_epoch
+            partial.score = (
+                mined
+                - self.settings.propellant_weight * spent
+                - self.settings.time_weight * elapsed
+                - self.settings.collect_lookahead_weight * partial.lookahead_kg
+                + self._cluster_potential_kg(partial)
+                - self._price_of(partial.deployed)
+            )
+        ordered = self._ordered(partials)
+        s = self.settings
+        depth = len(partials[0].deployed) if partials else 0
+        if not (s.chain_tour_scoring and s.collect_dp and depth >= s.chain_tour_min_deploys):
+            return self._filter(ordered, s.beam_width)
+        # chain-level objective: the shortlist (heuristic order, same pruning and diversity
+        # caps) is re-scored by its actual collect tour and the beam is the best of it
+        shortlist = self._filter(ordered, max(s.chain_tour_candidates, s.beam_width))
+        heuristic_order = [id(p) for p in shortlist[: s.beam_width]]
+        started = time.perf_counter()
+        for partial in shortlist:
+            partial.score = self._chain_score(partial)
+        self.chain_tour_stats["seconds"] += time.perf_counter() - started
+        self.chain_tour_stats["levels"] += 1
+        selected = self._ordered(shortlist)[: s.beam_width]
+        self.chain_tour_stats["reranked"] += sum(
+            1 for p in selected if id(p) not in heuristic_order
+        )
+        return selected
+
+    def _price_of(self, deployed: list[tuple[int, float]]) -> float:
+        """Master-LP price (kg) of the asteroids a chain claims (0 without duals)."""
+
+        if not self.asteroid_prices:
+            return 0.0
+        return sum(self.asteroid_prices.get(asteroid, 0.0) for asteroid, _ in deployed)
+
+    @staticmethod
+    def _ordered(partials: list[_Partial]) -> list[_Partial]:
+        return sorted(
+            partials,
+            key=lambda item: (-item.score, item.epoch, tuple(a for a, _ in item.deployed)),
+        )
+
+    # a chain whose DP tour does not close (or has none) keeps its heuristic score minus this,
+    # so it ranks below every closing chain but can still fill an otherwise empty beam
+    CHAIN_FALLBACK_KG = 10_000.0
+
+    def _chain_tour(self, partial: _Partial) -> CollectTour | None:
+        """The chain's collect tour for scoring: one Held-Karp pass at the DP's propellant
+        weight with the parent chain's burn schedule (or the nominal one); cached per
+        (deployed set with epochs, camp, camp epoch, mass, burn)."""
+
+        s = self.settings
+        burn = (
+            partial.chain_burn
+            if partial.chain_burn >= 0.0
+            else s.chain_tour_burn_fraction * partial.mass
+        )
+        key = (
+            tuple(sorted((int(a), round(e, 6)) for a, e in partial.deployed)),
+            partial.location,
+            round(partial.epoch, 6),
+            round(partial.mass, 3),
+            round(burn, 3),
+        )
+        if key in self._chain_tour_cache:
+            self.chain_tour_stats["cache_hits"] += 1
+            return self._chain_tour_cache[key]
+        tour = plan_collect_tour(
+            self.collect_table,
+            partial.deployed,
+            partial.location,
+            partial.epoch,
+            partial.mass,
+            weights=self.weights,
+            banned_pairs=self.banned_pairs,
+            propellant_weight=s.collect_dp_propellant_weight,
+            burn_per_hop=burn,
+        )
+        self._chain_tour_cache[key] = tour
+        self.chain_tour_stats["scored"] += 1
+        return tour
+
+    def _chain_score(self, partial: _Partial) -> float:
+        """Deploy propellant + the DP's actual collect tour, at the beam's exchange rate.
+
+        The chain's DP tour is turned into a plan by the same exact forward mass pass every
+        completed plan goes through (:meth:`_plan_from_tour` -> :meth:`_finish`), so the chain is
+        ranked by exactly the :meth:`plan_score` its completion would get - ``weighted collected
+        at the tour's epochs - propellant_weight x everything spent from launch to Earth arrival
+        - asteroid prices`` - minus ``chain_prior_weight x`` the prior penalty.  A chain whose
+        tour has none or whose plan does not close on the true mass profile keeps its heuristic
+        score minus :attr:`CHAIN_FALLBACK_KG`.  (The DP's own mass model is deliberately
+        pessimistic - collected mass mined to the window end on every move - and rejected most
+        9-asteroid chains that the exact pass closes; judging closure on the plan is what
+        `_complete` does.)  Also records the tour's components and burn on the partial for
+        its children.
+        """
+
+        s = self.settings
+        tour = self._chain_tour(partial)
+        if tour is None:
+            self.chain_tour_stats["no_tour"] += 1
+            return partial.score - self.CHAIN_FALLBACK_KG
+        plan = self._plan_from_tour(partial, tour)
+        if plan is None or (
+            plan.final_mass_proxy_kg - C.DRY_MASS_KG - sum(plan.collected_mass.values())
+            < s.chain_tour_margin_kg
+        ):
+            self.chain_tour_stats["not_closing"] += 1
+            return partial.score - self.CHAIN_FALLBACK_KG
+        collect_kg = float(sum(tour.hop_propellant_kg))
+        partial.chain_collect_kg = collect_kg
+        partial.chain_return_kg = float(tour.propellant_proxy_kg) - collect_kg
+        partial.chain_collected_kg = float(sum(plan.collected_mass.values()))
+        if tour.hop_propellant_kg:
+            partial.chain_burn = collect_kg / len(tour.hop_propellant_kg)
+        partial.chain_phase_kg = float(tour.phase_penalty_kg)
+        self.chain_tour_stats["phase_kg"] = self.chain_tour_stats.get("phase_kg", 0.0) + float(
+            tour.phase_penalty_kg
+        )
+        score = (
+            self.plan_score(plan)
+            - s.time_weight * (partial.epoch - partial.legs[0].departure_epoch)
+            + self._cluster_potential_kg(partial)
+            # harvest-phase prior: the DP already charged the tour's misaligned departures
+            # (``phase_weight`` inside the table), so the chain pays the same kg here
+            - tour.phase_penalty_kg
+        )
+        if self.chain_prior is not None and s.chain_prior_weight > 0.0:
+            score -= s.chain_prior_weight * self.chain_prior.penalty(
+                deploy_hops_kg=partial.hop_propellant,
+                deploy_hops=max(len(partial.deployed) - 1, 0),
+                collect_hops_kg=collect_kg,
+                collect_hops=len(tour.hop_propellant_kg),
+            )
+        return score
+
+    def _filter(self, ordered: list[_Partial], limit: int) -> list[_Partial]:
+        """Top-``limit`` of ``ordered`` after the reserve, diversity and return prunes."""
+
+        selected: list[_Partial] = []
+        per_set: dict[tuple[int, ...], int] = {}
+        per_first: dict[int, int] = {}
+        end = C.MISSION_END_MJD - 2.0 * C.YEAR_DAYS
+        for partial in ordered:
+            if len(selected) >= limit:
+                break
+            if partial.mass < C.DRY_MASS_KG + self._reserve(partial):
+                continue
+            key = tuple(sorted(a for a, _ in partial.deployed))
+            if per_set.get(key, 0) >= self.settings.max_per_deployed_set:
+                continue
+            first = partial.deployed[0][0]
+            if per_first.get(first, 0) >= self.settings.max_per_first:
+                continue
+            # mass at the Earth-return departure: the collect tour has burnt the deploy-phase
+            # surplus, so the ship is dry mass + cargo + the return propellant, not the
+            # post-deploy mass plus cargo (that guess made every ratio-0.35 return look 0.7 and
+            # pruned whole families whose returns SCvx flies without trouble)
+            mined = sum(C.maximum_collected_mass(max(end - d, 0.0)) for _, d in partial.deployed)
+            guess = min(
+                partial.mass + mined, C.DRY_MASS_KG + mined + self.settings.return_reserve_kg
+            )
+            if not self._return_feasible(first, guess):
+                continue
+            per_set[key] = per_set.get(key, 0) + 1
+            per_first[first] = per_first.get(first, 0) + 1
+            selected.append(partial)
+        return selected
+
+    def _return_options(self, asteroid: int, end: float) -> list[tuple[float, float, float]]:
+        """Candidate ``(dv, departure, tof)`` Earth returns arriving inside the final window."""
+
+        s = self.settings
+        arrivals = np.arange(end - s.return_window_days, end + 1e-9, s.schedule_step_days)
+        tofs = np.asarray(s.earth_leg_tofs)
+        a_idx, t_idx = np.meshgrid(
+            np.arange(arrivals.shape[0]), np.arange(tofs.shape[0]), indexing="ij"
+        )
+        a_idx, t_idx = a_idx.ravel(), t_idx.ravel()
+        departures = arrivals[a_idx] - tofs[t_idx]
+        from .lambert import cuda_paired_hops, cuda_paired_options
+
+        options = cuda_paired_options(
+            self.catalogue, asteroid, EARTH_ID, departures, tofs[t_idx], sort_returns=True
+        )
+        if options is not None:
+            self.lambert_evaluations += 2 * departures.shape[0]
+            return options
+
+        hop = cuda_paired_hops(self.catalogue, asteroid, EARTH_ID, departures, tofs[t_idx])
+        if hop is None:
+            r_s, v_s = asteroid_state(
+                self.catalogue, np.full(departures.shape[0], asteroid), departures
+            )
+            r_e, v_e = earth_state(arrivals[a_idx])
+            hop = lambert_hops(
+                r_s,
+                v_s,
+                r_e,
+                v_e,
+                departures,
+                tofs[t_idx],
+                arrival_allowance_km_s=C.MAX_VINF_EARTH_KM_S,
+            )
+        self.lambert_evaluations += 2 * departures.shape[0]
+        delta_v = hop.total_delta_v
+        options = [
+            (float(delta_v[k]), float(departures[k]), float(tofs[t_idx[k]]))
+            for k in range(departures.shape[0])
+            if hop.feasible[k] and np.isfinite(delta_v[k])
+        ]
+        options.sort(key=lambda item: (item[0], -item[1]))
+        return options
+
+    def _collect_hop_options(
+        self, source: int, target: int, latest_arrival: float
+    ) -> list[tuple[float, float, float]]:
+        """Candidate ``(dv, departure, tof)`` hops ``source -> target`` arriving by the deadline.
+
+        The ship may arrive early and camp at ``target`` until the scheduled collection, and it
+        collects at ``source`` when it departs; later departures therefore mine more.
+        """
+
+        key = (source, target, round(latest_arrival, 6))
+        if key in self._collect_cache:
+            return self._collect_cache[key]
+        s = self.settings
+        tofs = np.asarray(s.collect_hop_tofs)
+        waits = np.arange(0.0, s.collect_wait_window_days + 1e-9, s.schedule_step_days)
+        w_idx, t_idx = np.meshgrid(
+            np.arange(waits.shape[0]), np.arange(tofs.shape[0]), indexing="ij"
+        )
+        w_idx, t_idx = w_idx.ravel(), t_idx.ravel()
+        arrivals = latest_arrival - waits[w_idx]
+        departures = arrivals - tofs[t_idx]
+        from .lambert import cuda_paired_hops, cuda_paired_options
+
+        options = cuda_paired_options(
+            self.catalogue, source, target, departures, tofs[t_idx], sort_returns=False
+        )
+        if options is not None:
+            self.lambert_evaluations += 2 * departures.shape[0]
+            self._collect_cache[key] = options
+            return options
+
+        hop = cuda_paired_hops(self.catalogue, source, target, departures, tofs[t_idx])
+        if hop is None:
+            r_s, v_s = asteroid_state(
+                self.catalogue, np.full(departures.shape[0], source), departures
+            )
+            r_t, v_t = asteroid_state(
+                self.catalogue, np.full(departures.shape[0], target), arrivals
+            )
+            hop = lambert_hops(r_s, v_s, r_t, v_t, departures, tofs[t_idx])
+        self.lambert_evaluations += 2 * departures.shape[0]
+        delta_v = hop.total_delta_v
+        options = [
+            (float(delta_v[k]), float(departures[k]), float(tofs[t_idx[k]]))
+            for k in range(departures.shape[0])
+            if hop.feasible[k] and np.isfinite(delta_v[k])
+        ]
+        self._collect_cache[key] = options
+        return options
+
+    def _best_collect_hop(
+        self,
+        source: int,
+        target: int,
+        epoch: float,
+        mass_guess: float,
+        penalty_scale: float = 1.0,
+        max_span_days: float = np.inf,
+    ) -> tuple[float, tuple[float, float, float] | None]:
+        s = self.settings
+        best_hop = None
+        best_cost = np.inf
+        if (source, target) in self.banned_pairs:
+            return best_cost, None
+        from .lambert import cuda_select_collection
+
+        options = self._collect_hop_options(source, target, epoch)
+        selected = cuda_select_collection(
+            options, mass_guess, epoch, s, penalty_scale, max_span_days
+        )
+        if selected is not None:
+            return selected
+        for dv, departure, tof in options:
+            if epoch - departure > max_span_days:
+                continue  # hop + camp would not leave time for the remaining collections
+            if not self._feasible(mass_guess, dv, tof, "collect_hop"):
+                continue
+            # propellant proxy plus the mining mass lost by collecting ``source`` earlier (the
+            # whole hop duration counts: the miner at ``source`` stops when the ship leaves)
+            lost = C.maximum_collected_mass(epoch - departure)
+            cost = self._propellant(mass_guess, dv, self.hop_inflation_for(dv, mass_guess, tof))
+            cost += s.wait_penalty * penalty_scale * lost
+            if cost < best_cost - 1e-12 or (
+                abs(cost - best_cost) <= 1e-12 and best_hop is not None and departure > best_hop[1]
+            ):
+                best_cost = cost
+                best_hop = (dv, departure, tof)
+        return best_cost, best_hop
+
+    TOUR_MODES = ("greedy", "reverse", "forward", "forward_revisit")
+
+    def _complete(self, partial: _Partial) -> RoutePlan | None:
+        """Schedule the collection tour: best of the greedy-backward, reverse and forward orders.
+
+        The forward tours (collect in deployment order after one repositioning hop back to the
+        first asteroid) are what make the collect hops as cheap as the deploy hops: the deploy
+        chain follows the family's phase drift, and traversing it backwards fights that drift
+        (measured on family 0: reverse collect hops 2.3-3.3 km/s where the same pairs cost
+        1.2-2.0 km/s on the way out).
+        """
+
+        plans: list[RoutePlan] = []
+        reasons: list[str] = []
+        for penalty_scale in (1.0, 4.0, 16.0):
+            for mode in self.TOUR_MODES:
+                plan = self._schedule(partial, mode, penalty_scale)
+                if plan is not None:
+                    plans.append(plan)
+                else:
+                    reasons.append(f"{mode}x{penalty_scale:g}:{self.last_failure}")
+            if plans:
+                break
+        heuristic_best = max((self.plan_score(p) for p in plans), default=-np.inf)
+        s = self.settings
+        if (
+            s.collect_dp
+            and s.collect_dp_min_deploys <= len(partial.deployed) <= s.collect_dp_max_deploys
+        ):
+            started = time.perf_counter()
+            peak_before = _peak_rss_mb()
+            dp_plans = self._schedule_dp(partial)
+            self.collect_dp_stats["seconds"] += time.perf_counter() - started
+            self.collect_dp_stats["priced"] += 1
+            # share of the process high-water mark the DP itself pushed up (0 when the peak was
+            # set elsewhere): attributes the beam's memory transient
+            self.collect_dp_stats["peak_growth_mb"] += max(_peak_rss_mb() - peak_before, 0.0)
+            if dp_plans:
+                plans.extend(dp_plans)
+                if max(self.plan_score(p) for p in dp_plans) > heuristic_best + 1e-9:
+                    self.collect_dp_stats["won"] += 1
+            else:
+                self.collect_dp_stats["failed"] += 1
+                reasons.append(f"dp:{self.last_failure}")
+        if not plans:
+            self.last_failure = ",".join(reasons)
+            return None
+        plans.sort(key=lambda item: (-self.plan_score(item), item.propellant_proxy_kg))
+        return plans[0]
+
+    def plan_score(self, plan: RoutePlan) -> float:
+        """Ranking of alternative tours of one chain: weighted mass minus the beam's propellant
+        weight x propellant, minus the master's price of the asteroids claimed (reduced cost).
+        A tour that collects a little less but leaves hundreds of kg of propellant is the better
+        seed: the re-timer turns the margin into later collects."""
+
+        score = self.weighted(plan) - self.settings.propellant_weight * plan.propellant_proxy_kg
+        if self.asteroid_prices:
+            score -= sum(self.asteroid_prices.get(a, 0.0) for a in plan.deploy_epochs)
+        return score
+
+    def _schedule_dp(self, partial: _Partial) -> list[RoutePlan]:
+        """Collect tours from the exact order + timing DP (``collectdp.plan_collect_tour``).
+
+        The DP prices every collect order and every lattice epoch with the same leg model as
+        the heuristic tours, at ``collect_dp_propellant_weight`` kg of value per kg of propellant
+        (propellant-first) and again at the beam's own ``propellant_weight`` (mass-first, later
+        collects); each tour is re-priced by the exact forward mass pass of :meth:`_finish`, so
+        a DP tour that does not close on the true mass profile is rejected like any other.
+        """
+
+        s = self.settings
+        plans: list[RoutePlan] = []
+        reasons: list[str] = []
+        weights = [s.collect_dp_propellant_weight]
+        if s.propellant_weight > 0.0 and abs(s.propellant_weight - weights[0]) > 1e-9:
+            weights.append(s.propellant_weight)
+        burn_per_hop: float | None = None  # the first tour's burn schedule prices the rest
+        for weight in weights:
+            tour = plan_collect_tour(
+                self.collect_table,
+                partial.deployed,
+                partial.location,
+                partial.epoch,
+                partial.mass,
+                weights=self.weights,
+                banned_pairs=self.banned_pairs,
+                propellant_weight=weight,
+                burn_per_hop=burn_per_hop,
+            )
+            if tour is None:
+                reasons.append(f"w{weight:g}:no_tour")
+                continue
+            if burn_per_hop is None and tour.hop_propellant_kg:
+                mean_burn = float(np.mean(tour.hop_propellant_kg))
+                if np.isfinite(mean_burn):
+                    burn_per_hop = mean_burn
+            plan = self._plan_from_tour(partial, tour)
+            if plan is None:
+                reasons.append(f"w{weight:g}:{self.last_failure}")
+            else:
+                plans.append(plan)
+        if not plans:
+            self.last_failure = ",".join(reasons)
+        return plans
+
+    def _dp_hop_inflation(
+        self, source: int, target: int, departure: float, dv: float, mass: float, tof: float
+    ) -> float:
+        """Inflation of a DP collect hop: the table's calibrated fit when it has one (so the
+        forward mass pass prices the leg as the DP did), else the beam's hop model."""
+
+        fit = self.collect_table.settings.inflation_fit
+        if fit is None:
+            return self.hop_inflation_for(dv, mass, tof)
+        delta_a, delta_l = self.collect_table.pair_geometry(source, target, np.asarray([departure]))
+        return float(fit.inflation(np.asarray([dv]), mass, np.asarray([tof]), delta_a, delta_l)[0])
+
+    def _plan_from_tour(self, partial: _Partial, tour: CollectTour) -> RoutePlan | None:
+        """Legs of a DP tour (camps inserted between arrivals and departures) -> RoutePlan."""
+
+        deploy = dict(partial.deployed)
+        mass_guess = partial.mass + sum(
+            C.maximum_collected_mass(max(tour.collect_epochs[a] - deploy[a], 0.0)) for a in deploy
+        )
+        legs_forward: list[PlannedLeg] = []
+        location = partial.location
+        epoch = partial.epoch
+        for source, target, departure, tof, dv in tour.hops:
+            if source != location:
+                self.last_failure = "dp_tour_disconnected"
+                return None
+            if departure < epoch - 1e-6:
+                self.last_failure = "dp_departure_before_arrival"
+                return None
+            if departure > epoch + 1e-6:
+                legs_forward.append(
+                    PlannedLeg(location, location, epoch, departure, 0.0, 1.0, "camp")
+                )
+            legs_forward.append(
+                PlannedLeg(
+                    source,
+                    target,
+                    departure,
+                    departure + tof,
+                    dv,
+                    self._dp_hop_inflation(source, target, departure, dv, mass_guess, tof),
+                    "collect_hop",
+                )
+            )
+            location, epoch = target, departure + tof
+        if tour.return_departure > epoch + 1e-6:
+            legs_forward.append(
+                PlannedLeg(location, location, epoch, tour.return_departure, 0.0, 1.0, "camp")
+            )
+        elif tour.return_departure < epoch - 1e-6:
+            self.last_failure = "dp_return_before_arrival"
+            return None
+        # the DP priced the return with the table's (TOF-dependent) inflation at the mass after
+        # the deploys plus the mined mass - or, with a sweep set for the camp, the certified
+        # cell's measured inflation; the forward pass re-prices at the same figure
+        return_inflation = self.collect_table.return_inflation_at(
+            location, tour.return_departure, tour.return_tof, tour.return_dv, mass_guess
+        )
+        legs_forward.append(
+            PlannedLeg(
+                location,
+                EARTH_ID,
+                tour.return_departure,
+                tour.return_departure + tour.return_tof,
+                tour.return_dv,
+                return_inflation,
+                "earth_return",
+            )
+        )
+        return self._finish(partial, deploy, dict(tour.collect_epochs), legs_forward)
+
+    def _schedule(
+        self, partial: _Partial, mode: str | bool, penalty_scale: float = 1.0
+    ) -> RoutePlan | None:
+        """Schedule the collection tour and Earth return backwards from the window end.
+
+        ``mode`` is one of :attr:`TOUR_MODES` (``True``/``False`` are accepted for the legacy
+        greedy/reverse flags):
+
+        * ``"greedy"`` - the first deployed asteroid is collected last (the return departs from
+          it); the remaining order is chosen greedily backwards by proxy cost, with the camp
+          asteroid (last deployed) forced to be the first collected because the ship is there;
+        * ``"reverse"`` - strict reverse of deployment (camp first, first-deployed last);
+        * ``"forward"`` - the camp asteroid is collected first (on departure, as usual), then the
+          others in deployment order; the return departs from the second-to-last deployed one;
+        * ``"forward_revisit"`` - the ship leaves the camp *without collecting*, collects in
+          deployment order and returns from the camp asteroid after collecting it last on the
+          revisit.  The repositioning hop is charged like a collect hop but triggers no collection.
+        """
+
+        if isinstance(mode, bool):
+            mode = "greedy" if mode else "reverse"
+        if mode not in self.TOUR_MODES:
+            raise ValueError(f"unknown tour mode {mode!r}")
+        s = self.settings
+        deploy = dict(partial.deployed)
+        deployed_order = [asteroid for asteroid, _ in partial.deployed]
+        remaining = list(deployed_order)
+        end = C.MISSION_END_MJD - s.end_margin_days
+        camp_asteroid = partial.location
+        # explicit collect order (first collected -> last collected) for the ordered modes
+        order: list[int] | None
+        if mode == "reverse":
+            order = list(reversed(deployed_order))
+        elif mode == "forward":
+            order = [camp_asteroid, *deployed_order[:-1]]
+        elif mode == "forward_revisit":
+            order = list(deployed_order)
+        else:
+            order = None
+        if order is not None and len(order) < 2 and mode != "reverse":
+            self.last_failure = "forward_needs_two"
+            return None
+        # the last asteroid collected before returning to Earth
+        first = order[-1] if order is not None else remaining[0]
+        mass_guess = partial.mass + sum(
+            C.maximum_collected_mass(max(end - deploy_epoch, 0.0))
+            for _, deploy_epoch in partial.deployed
+        )
+        from .lambert import cuda_select_collection
+
+        return_options = self._return_options(first, end)
+        selected = cuda_select_collection(return_options, mass_guess, end, s, first=True)
+        best_return = selected[1] if selected is not None else None
+        if selected is None:
+            for dv, departure, tof in return_options:
+                if self._feasible(mass_guess, dv, tof, "earth_return"):
+                    best_return = (dv, departure, tof)
+                    break
+        if best_return is None:
+            self.last_failure = "no_return"
+            return None
+        legs_backward: list[PlannedLeg] = [
+            PlannedLeg(
+                first,
+                EARTH_ID,
+                best_return[1],
+                best_return[1] + best_return[2],
+                best_return[0],
+                self.return_inflation_for(best_return[0], mass_guess, best_return[2]),
+                "earth_return",
+            )
+        ]
+        collect: dict[int, float] = {first: best_return[1]}
+        epoch = best_return[1]  # collection (=departure) epoch at the current asteroid
+        location = first
+        remaining.remove(first)
+        sequence = order[:-1] if order is not None else None  # still to place, collect order
+        # forward_revisit: after the collections (built backwards) one more hop brings the ship
+        # from its camp to the first-deployed asteroid without collecting anything
+        reposition = mode == "forward_revisit"
+        while remaining or reposition:
+            if sequence is not None:
+                # ordered modes: the asteroid collected just before ``location`` is the last of
+                # the sequence still to place; then (revisit) the repositioning hop from the camp
+                choices = [sequence[-1]] if sequence else [camp_asteroid]
+            elif len(remaining) == 1:
+                choices = list(remaining)
+            else:
+                choices = [a for a in remaining if a != camp_asteroid] or list(remaining)
+            # time-aware: the remaining hops (each hop + camp) must fit between the end of the
+            # deploy phase and the current collection epoch; the slack lets one hop run long
+            # when others are short.  Without this the propellant-first choice picks 480-720
+            # day hops and 8-10 asteroid chains die with ``camp_negative``.
+            time_left = epoch - partial.epoch
+            hops_left = len(remaining) + (1 if reposition else 0)
+            max_span = s.collect_span_slack * time_left / hops_left
+            best_choice = None
+            for previous in choices:
+                cost, hop = self._best_collect_hop(
+                    previous, location, epoch, mass_guess, penalty_scale, max_span
+                )
+                if hop is not None and (best_choice is None or cost < best_choice[0] - 1e-12):
+                    best_choice = (cost, previous, hop)
+            if best_choice is None:
+                self.last_failure = "no_collect_hop" if remaining else "no_reposition_hop"
+                return None
+            _cost, previous, best_hop = best_choice
+            arrival = best_hop[1] + best_hop[2]
+            if arrival < epoch:
+                legs_backward.append(
+                    PlannedLeg(location, location, arrival, epoch, 0.0, 1.0, "camp")
+                )
+            legs_backward.append(
+                PlannedLeg(
+                    previous,
+                    location,
+                    best_hop[1],
+                    arrival,
+                    best_hop[0],
+                    self.hop_inflation_for(best_hop[0], mass_guess, best_hop[2]),
+                    "collect_hop",
+                )
+            )
+            epoch = best_hop[1]
+            location = previous
+            if remaining:
+                collect[previous] = best_hop[1]
+                remaining.remove(previous)
+                if sequence is not None:
+                    sequence.pop()
+            else:
+                reposition = False  # the camp -> first-deployed hop collects nothing
+        if location != camp_asteroid:
+            self.last_failure = "tour_not_ending_at_camp"
+            return None
+        # camp at the last deployed asteroid between its deploy and its collection
+        camp_start = partial.epoch
+        camp_end = epoch
+        if camp_end - camp_start < 0.0:
+            self.last_failure = "camp_negative"
+            return None
+        legs_forward: list[PlannedLeg] = []
+        if camp_end > camp_start:
+            legs_forward.append(
+                PlannedLeg(
+                    partial.location, partial.location, camp_start, camp_end, 0.0, 1.0, "camp"
+                )
+            )
+        legs_forward.extend(reversed(legs_backward))
+        return self._finish(partial, deploy, collect, legs_forward)
+
+    def _finish(
+        self,
+        partial: _Partial,
+        deploy: dict[int, float],
+        collect: dict[int, float],
+        legs_forward: list[PlannedLeg],
+    ) -> RoutePlan | None:
+        """Exact forward mass pass over the collect-phase legs -> RoutePlan (or None + reason)."""
+
+        s = self.settings
+        for asteroid in deploy:
+            if asteroid not in collect:
+                self.last_failure = "uncollected"
+                return None
+            if collect[asteroid] - deploy[asteroid] < C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS - 1e-6:
+                self.last_failure = "stay_too_short"
+                return None
+        legs = [*partial.legs, *legs_forward]
+        # mass proxy forward through the collection tour (heavier ship after each collection)
+        mass = partial.mass
+        collected: dict[int, float] = {}
+        propellant_total = s.initial_mass - partial.mass - C.MINER_MASS_KG * len(deploy)
+        for leg in legs[len(partial.legs) :]:
+            if leg.role == "camp":
+                continue
+            if leg.role == "collect_hop" or leg.role == "earth_return":
+                # collection happens at departure of the leg (not on the forward tour's
+                # repositioning hop, which leaves the camp asteroid for a later revisit)
+                asteroid = leg.from_id
+                if abs(collect[asteroid] - leg.departure_epoch) < 1e-6:
+                    gained = C.maximum_collected_mass(collect[asteroid] - deploy[asteroid])
+                    collected[asteroid] = gained
+                    mass += gained
+            if not self._feasible(mass, leg.delta_v_proxy_km_s, leg.tof_days, leg.role):
+                self.last_failure = "leg_authority"
+                return None
+            inflation = leg.inflation
+            if leg.role == "collect_hop":  # priced at the guessed mass above; use the actual one
+                inflation = self.hop_inflation_for(leg.delta_v_proxy_km_s, mass, leg.tof_days)
+            propellant = self._propellant(mass, leg.delta_v_proxy_km_s, inflation)
+            propellant_total += propellant
+            mass -= propellant
+        if mass < C.DRY_MASS_KG + sum(collected.values()):
+            self.last_failure = "mass_below_dry_plus_collected"
+            return None
+        return RoutePlan(tuple(legs), deploy, collect, collected, propellant_total, mass)

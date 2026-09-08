@@ -1,0 +1,247 @@
+{
+  "pid": 182018,
+  "complete": true,
+  "stages": [
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 2.3672242969623767,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/core-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 50.094364111020695,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/core-build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j",
+        "3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 2.4170949310064316,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_elements.py",
+        "tests/test_gtoc12_gpu_hops.py",
+        "tests/test_gtoc12_search2.py",
+        "tests/test_gtoc12_gpu_beam.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "compile-probe",
+      "returncode": 0,
+      "seconds": 8.67560064198915,
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++17",
+        "--fmad=false",
+        "-arch=sm_90",
+        "-I/home/ubuntu/spacepdhcg-earth-beam-v442/repo/cpp/include",
+        "-I/home/ubuntu/spacepdhcg-earth-beam-v442/repo/cpp/cuda/include",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/repo/cpp/cuda/tests/orbitweaver_beam_test.cu",
+        "-L/home/ubuntu/spacepdhcg-earth-beam-v442/core-build/cuda",
+        "-lspacepdhcg_cuda",
+        "-o",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "probe",
+      "returncode": 0,
+      "seconds": 0.46448593598324805,
+      "command": [
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 1.4156868470017798,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 0.9151631600107066,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 82.37645266600884,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/earth-beam-probe"
+      ]
+    },
+    {
+      "name": "api-memcheck",
+      "returncode": 0,
+      "seconds": 1.916476849000901,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "tests/test_gtoc12_gpu_beam.py",
+        "-q"
+      ]
+    },
+    {
+      "name": "default",
+      "returncode": 0,
+      "seconds": 31.706531452015042,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_module('spacepdhcg',run_name='__main__')",
+        "gtoc12",
+        "run",
+        "--run-id",
+        "earth_default442_default",
+        "--output",
+        "/home/ubuntu/spacepdhcg-earth-beam-v442/default/output",
+        "--full-catalogue",
+        "--ships",
+        "1",
+        "--beam-width",
+        "16",
+        "--max-deploys",
+        "10",
+        "--neighbours",
+        "48",
+        "--refine-top",
+        "3",
+        "--search-budget-seconds",
+        "120",
+        "--budget-seconds",
+        "600",
+        "--retime-attempts",
+        "4",
+        "--retime-budget-seconds",
+        "300",
+        "--no-cooperative",
+        "--node-days",
+        "2",
+        "--scvx-iterations",
+        "40",
+        "--screening-backend",
+        "cuda",
+        "--seed-backend",
+        "cuda",
+        "--discretisation-backend",
+        "cuda",
+        "--assembly-backend",
+        "cuda",
+        "--convex-solver",
+        "qoco",
+        "--outer-loop-backend",
+        "cuda",
+        "--gpu-execution",
+        "graph"
+      ]
+    }
+  ],
+  "campaigns": [
+    {
+      "name": "default",
+      "candidate": true,
+      "seconds": 30.800794554001186,
+      "score": 548.2546201230996,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "compact_option_download_bytes": 27175508,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_compact_options": 1131935,
+        "completed_earth_beam_rows": 582,
+        "completed_element_hops": 22345089,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "earth_beam_download_bytes": 27944,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      }
+    }
+  ],
+  "stage": "default",
+  "source_sha256": {
+    "cpp/cuda/src/orbitweaver_gpu.cu": "343ab5b50bafbd8f79b55b332e69c9086c3c9b5112719494892663e38274e3a3",
+    "cpp/cuda/src/orbitweaver_beam.cuh": "de060662ff89fc7f9006f702d6666ff7bde79abc06155c8c6d3e6b10b15ef793",
+    "cpp/cuda/include/spacepdhcg/cuda/orbitweaver_gpu_c_api.h": "5b9ebaff97ab9689f8c45aaf96a753fd0f8b417374589c0894e98cec100cf475",
+    "cpp/cuda/tests/orbitweaver_beam_test.cu": "78656c102320357ad161c228a6f7e58699f2e707d2679824342bad368ac3cd9f",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "7c8ecec05550b4947bef59d44ab7b3c3bb65d7a245b5c2073a5a851b2e576b13",
+    "src/spacepdhcg/gtoc12/gpu_beam.py": "92824506f03c381cb781d6ea756ebb890f003b644466fd53c6d6c3cfd03867ce",
+    "src/spacepdhcg/gtoc12/lambert.py": "b031ec9406a2c1e172c6e969f2f51011d040efb68e4a084df0bae3491c99810f",
+    "src/spacepdhcg/gtoc12/search.py": "5b9bf69334188c742dfd4d9dd9e73ae1b316084f0363aa076168af5c2d6101f5",
+    "tests/test_gtoc12_gpu_elements.py": "65cd923bd471eebc3515010ad6f86488ea80ebd52224d887b5f7dab65605eb69",
+    "tests/test_gtoc12_gpu_beam.py": "9d9133788fb69490bae8418bc69e0949b70922b4078c95577a4b0d45ad46268f"
+  },
+  "frozen_source_commit": "15c3216af49c75d93747f0ab4b0023d4e9673bb4",
+  "child_pid": 182723,
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "7cadb9cdac3bda1eab68050606ba172f1c9c3f55dbc0d38d66a8d0ad8fc9cbd5",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  }
+}

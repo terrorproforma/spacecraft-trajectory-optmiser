@@ -1,5 +1,10 @@
 # CUDA filtering and ordering of search options
 
+This records the return/collection option migration. The subsequent
+[GPU initial Earth beam](GPU_EARTH_BEAM.md) also migrates initial-beam ephemerides,
+scoring and ranking; the remaining-work discussion below describes this earlier
+measurement stage.
+
 The return-window and collection-hop search paths can now compute total delta-v,
 filter invalid transfers and order return candidates in C++/CUDA. Previously
 Python downloaded every detailed screening result and performed these operations
