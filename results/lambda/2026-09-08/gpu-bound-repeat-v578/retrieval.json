@@ -1,0 +1,26 @@
+{
+  "path": "/home/ubuntu/bound-repeat-results-v578.tar.gz",
+  "sha256": "a58e2ed5aa512e0d8991460281fabf5c2caccc141a69c32f71737963a717d360",
+  "bytes": 5955382,
+  "analysis": {
+    "scope": "Two 225-leg passes per mode on the same frozen H100 binary, first A/B then B/A after campaign validation. Solver time excludes certification. Repeated due to convergence/timing variability.",
+    "seconds": {
+      "baseline": [
+        157.0263495723484,
+        154.5053849046817
+      ],
+      "candidate": [
+        164.31392523017712,
+        153.9951028660871
+      ]
+    },
+    "medians": {
+      "baseline": 155.76586723851506,
+      "candidate": 159.1545140481321
+    },
+    "less_time_percent": -2.175474556584489,
+    "qualified_per_pass": 205,
+    "max_mass_delta_kg": 1.041835275827907e-07,
+    "source_core_sha256": "88134a3877f876700b6ca97b95d862817630ca07b090f8687f7bc1787b0a4917"
+  }
+}

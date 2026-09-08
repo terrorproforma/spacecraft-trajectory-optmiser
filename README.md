@@ -18,8 +18,9 @@ Initial bound classification now also runs on CUDA, downloading one byte per
 bound pair instead of four floating-point arrays. First-fresh-solve downloads
 fall from **515,324 to 244,499 bytes**. Both GPUs retain all **205 certified
 legs**, pass 154 broad tests and 77 final-build tests. Complete campaign medians
-improve by 0.64% locally / 2.90% on H100, but full replays are 0.30% / 4.64% slower;
-these observations do not establish an overall speedup.
+improve by 0.64% locally / 2.90% on H100. The local replay is 0.30% slower;
+two H100 replays per mode show 2.18% more solver time with overlapping ranges.
+These observations do not establish an overall speedup.
 [Implementation and reproducible results](docs/GPU_BOUND_CLASSIFICATION.md).
 
 Fresh native trajectory workspaces now initialize numerical values from GPU

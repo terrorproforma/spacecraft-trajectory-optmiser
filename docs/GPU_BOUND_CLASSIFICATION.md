@@ -90,6 +90,21 @@ replay per mode, do not establish a general speedup. The default advances GPU
 residency while preserving verified results; the replay regressions are retained.
 The best fleet remains **12,805.194102 weighted kg**, with no new submission.
 
+### Repeated H100 replay
+
+A second full pair ran GPU then host classification on the same frozen binary,
+after the campaign validation. All four passes retain the same 205 certified
+trajectories. The maximum mass difference relative to the first baseline remains
+1.0418e-7 kg. Host times are 157.0263 and 154.5054 seconds; GPU times are 164.3139
+and 153.9951 seconds. Their two-run medians are 155.7659 and 159.1545 seconds,
+respectively: **2.18% more solver time** with GPU classification. The repeated
+pair alone slightly favours GPU classification, and the timing ranges overlap.
+This reinforces the limited timing evidence rather than establishing a speedup.
+[The supplementary results](../results/lambda/2026-09-08/gpu-bound-repeat-v578/summary.json)
+include all four timings and the second pair's verified archive. Source and
+runtime identities match the original pair; all 493 retrieved files were checked
+against their member hashes.
+
 ## Reproduction
 
 [The evidence bundle](../results/lambda/2026-09-08/gpu-bound-types-v577/summary.json)
