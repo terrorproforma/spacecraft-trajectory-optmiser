@@ -210,6 +210,11 @@ struct DeviceControl {
     std::uint64_t recovery_count;
     std::uint64_t recovery_rejected_count;
     std::uint64_t recovery_attempt_count;
+    // Private metadata for opt-in scaled Halpern displacement guards. Checkpoint
+    // ABI is unchanged; the opt-in policy rejects checkpoint/restore and refreshes
+    // these values on enable. Legacy kernels never consume these fields.
+    double halpern_bound_scale;
+    double halpern_objective_scale;
 };
 
 struct DeviceReport {
@@ -875,6 +880,8 @@ __global__ void initialise_control_kernel(
         const double denominator = fmax(1.0, q_norm + operator_norm);
         control->primal_step = 0.9 / denominator;
         control->dual_step = 0.9 / fmax(1.0, operator_norm);
+        control->halpern_bound_scale = bound_scale;
+        control->halpern_objective_scale = objective_scale;
         for (int variable = 0; variable < problem->variables; ++variable) {
             problem->scaling[variable] =
                 objective_scale
@@ -2675,6 +2682,7 @@ __global__ void restore_steps_kernel(DeviceControl* control, const double* sourc
 // keeps that cost out of every attempt window. cudaFuncGetAttributes triggers the load without
 // enqueueing work and without touching the workspace's allocation accounting.
 #include "cooperative_pdhg.cuh"
+#include "persistent_halpern.cuh"
 
 cudaError_t preload_solve_kernels() {
     cudaFuncAttributes attributes{};
@@ -2977,6 +2985,12 @@ struct spacepdhcg_cuda_workspace {
     bool common_enabled{false};
     bool common_valid{false};
     int common_cooperative_capacity{0};
+    HalpernState* halpern{nullptr};
+    HalpernState halpern_setup{};
+    spacepdhcg_cuda_halpern_diagnostics* host_halpern{nullptr};
+    int halpern_mode{0};
+    int halpern_cooperative_capacity{0};
+    bool halpern_valid{false};
     double* grid_partials{nullptr};
     int* grid_flags{nullptr};
     int cooperative_capacity{0};
@@ -3279,11 +3293,16 @@ spacepdhcg_cuda_status record_completion(
         return cuda_failure(workspace, status, "cudaEventRecord");
     }
     workspace->last_operation = operation;
-    if (operation != LastOperation::solve) workspace->common_valid = false;
+    if (operation != LastOperation::solve) {
+        workspace->common_valid = false;
+        workspace->halpern_valid = false;
+    }
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 void finish_solve(spacepdhcg_cuda_workspace* workspace) {
+    workspace->halpern_valid = workspace->halpern_mode && workspace->host_halpern
+        && workspace->host_halpern->valid;
     workspace->common_valid = workspace->common_enabled && workspace->host_common_kkt
         && workspace->host_common_kkt->valid;
     workspace->termination =
@@ -3971,6 +3990,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_create(
             0U,
             0U,
             0U,
+            0.0,
+            0.0,
         };
         status = copy_async(
             result,
@@ -4318,6 +4339,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_common_kkt_optio
     if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
     const auto stream = native_stream(workspace->consumer_stream);
     if (!options->enabled) {
+        if (workspace->halpern_mode) {
+            set_error(workspace, "disable Halpern before disabling common-KKT policy");
+            return SPACEPDHCG_CUDA_UNSUPPORTED;
+        }
         common_bind<<<1, 1, 0, stream>>>(workspace->device_problem, nullptr);
         auto error = cudaGetLastError();
         if (error == cudaSuccess) error = cudaStreamSynchronize(stream);
@@ -4429,6 +4454,7 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_common_kkt_optio
     workspace->common_enabled = true;
     workspace->common_cooperative_capacity = common_capacity;
     workspace->common_valid = false;
+    workspace->halpern_valid = false;
     workspace->termination = SPACEPDHCG_CUDA_TERMINATION_UNSPECIFIED;
     return SPACEPDHCG_CUDA_SUCCESS;
 }
@@ -4449,6 +4475,119 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_common_kkt_diagnosti
     return SPACEPDHCG_CUDA_SUCCESS;
 }
 
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_halpern_options(
+    spacepdhcg_cuda_workspace* workspace, const spacepdhcg_cuda_halpern_options* options
+) {
+    if (!workspace || !options || options->abi_version != SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION
+        || options->mode < 0 || options->mode > 2 || options->reserved[0] || options->reserved[1])
+        return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::lock_guard lock(workspace->mutex);
+    auto status = finalize_if_complete(workspace);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    if (!options->mode) {
+        if (workspace->halpern_mode) {
+            const auto stream = native_stream(workspace->consumer_stream);
+            halpern_restore_default_history<<<64, kThreads, 0, stream>>>(workspace->device_problem);
+            auto error = cudaGetLastError();
+            if (error == cudaSuccess) error = cudaStreamSynchronize(stream);
+            if (error != cudaSuccess) return cuda_failure(workspace, error, "restore default primal history");
+        }
+        workspace->halpern_mode = 0;
+        workspace->halpern_valid = workspace->common_valid = false;
+        workspace->termination = SPACEPDHCG_CUDA_TERMINATION_UNSPECIFIED;
+        return SPACEPDHCG_CUDA_SUCCESS;
+    }
+    if (!workspace->common_enabled || workspace->cooperative_blocks <= 0) {
+        set_error(workspace, "Halpern requires enabled common-KKT policy and an explicit supported cooperative grid");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
+    cudaDeviceProp properties{};
+    auto error = cudaGetDeviceProperties(&properties, workspace->consumer_stream.device.id);
+    int active = 0;
+    if (error == cudaSuccess) error = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &active, cooperative_halpern_kernel, kThreads, 0);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "Halpern cooperative occupancy");
+    const int capacity = std::min(workspace->common_cooperative_capacity, active * properties.multiProcessorCount);
+    if (workspace->cooperative_blocks > capacity) {
+        set_error(workspace, "requested grid exceeds Halpern occupancy; select fewer positive blocks first");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
+    const auto stream = native_stream(workspace->consumer_stream);
+    int* invalid = nullptr;
+    status = allocate_device(workspace, reinterpret_cast<void**>(&invalid), sizeof(int), AllocationCategory::diagnostics);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    error = cudaMemsetAsync(invalid, 0, sizeof(int), stream);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "Halpern Q validation initialization");
+    halpern_validate_zero_q<<<64, kThreads, 0, stream>>>(workspace->device_problem, invalid);
+    error = cudaGetLastError();
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "Halpern Q validation kernel");
+    int host_invalid = 0;
+    status = copy_async(workspace, &host_invalid, invalid, sizeof(int), cudaMemcpyDeviceToHost, stream, false);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    error = cudaStreamSynchronize(stream);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "Halpern Q validation wait");
+    error = workspace->ledger.release(invalid, workspace->update_epoch + workspace->solve_epoch + 2U);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "Halpern Q validation cleanup");
+    if (host_invalid) {
+        set_error(workspace, "Halpern supports exactly zero Q only, including every stored coefficient");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
+    if (!workspace->halpern) {
+        HalpernState setup{};
+#define HALPERN_ALLOC(pointer, count, type) \
+        status = allocate_device(workspace, reinterpret_cast<void**>(&(pointer)), \
+            std::max<std::size_t>(1, (count)) * sizeof(type), AllocationCategory::iterate); \
+        if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+        const auto n = workspace->structure.variables;
+        const auto m = workspace->structure.scalar_rows + workspace->structure.affine_rows;
+        HALPERN_ALLOC(setup.working_x, n, double)
+        HALPERN_ALLOC(setup.anchor_x, n, double)
+        HALPERN_ALLOC(setup.working_y, m, double)
+        HALPERN_ALLOC(setup.anchor_y, m, double)
+        HalpernState* device_state = nullptr;
+        HALPERN_ALLOC(device_state, 1, HalpernState)
+#undef HALPERN_ALLOC
+        spacepdhcg_cuda_halpern_diagnostics* host_report = nullptr;
+        error = workspace->ledger.allocate_pinned(reinterpret_cast<void**>(&host_report),
+            sizeof(spacepdhcg_cuda_halpern_diagnostics), AllocationCategory::diagnostics, workspace->update_epoch + 1U);
+        if (error != cudaSuccess) return cuda_failure(workspace, error, "Halpern pinned diagnostics");
+        *host_report = {};
+        workspace->halpern = device_state;
+        workspace->halpern_setup = setup;
+        workspace->host_halpern = host_report;
+    }
+    workspace->halpern_setup.options = *options;
+    workspace->halpern_setup.result = {};
+    status = copy_async(workspace, workspace->halpern, &workspace->halpern_setup,
+        sizeof(HalpernState), cudaMemcpyHostToDevice, stream, false);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    // Old checkpoints do not contain B/O: enabling always refreshes this private
+    // metadata together with the unchanged diagonal/step calculation.
+    halpern_force_refresh<<<1, 1, 0, stream>>>(workspace->control);
+    error = cudaGetLastError();
+    if (error == cudaSuccess) error = cudaStreamSynchronize(stream);
+    if (error != cudaSuccess) return cuda_failure(workspace, error, "Halpern initialization");
+    workspace->halpern_mode = options->mode;
+    workspace->halpern_cooperative_capacity = capacity;
+    workspace->halpern_valid = workspace->common_valid = false;
+    workspace->termination = SPACEPDHCG_CUDA_TERMINATION_UNSPECIFIED;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_halpern_diagnostics(
+    spacepdhcg_cuda_workspace* workspace, spacepdhcg_cuda_halpern_diagnostics* diagnostics
+) {
+    if (!workspace || !diagnostics) return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::lock_guard lock(workspace->mutex);
+    const auto status = finalize_if_complete(workspace);
+    if (status != SPACEPDHCG_CUDA_SUCCESS) return status;
+    *diagnostics = {};
+    diagnostics->abi_version = SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION;
+    diagnostics->mode = workspace->halpern_mode;
+    if (workspace->halpern_valid) *diagnostics = *workspace->host_halpern;
+    return SPACEPDHCG_CUDA_SUCCESS;
+}
+
 extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks(
     spacepdhcg_cuda_workspace* workspace,
     const int32_t blocks
@@ -4460,6 +4599,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks
     if (blocks > workspace->cooperative_capacity
         || (workspace->common_enabled && blocks > workspace->common_cooperative_capacity))
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if (workspace->halpern_mode && (blocks == 0 || blocks > workspace->halpern_cooperative_capacity))
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
     workspace->cooperative_blocks = blocks;
     workspace->cooperative_scaling_blocks = blocks;
     return SPACEPDHCG_CUDA_SUCCESS;
@@ -4532,7 +4673,13 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
     if (cuda_status != cudaSuccess) {
         return cuda_failure(workspace, cuda_status, "scaling/solve timing boundary");
     }
-    if (workspace->cooperative_blocks == 0) {
+    if (workspace->halpern_mode) {
+        void* arguments[] = {&workspace->device_problem, &workspace->control,
+            &workspace->report, &workspace->solver.cancellation, &workspace->halpern};
+        cuda_status = cudaLaunchCooperativeKernel(
+            reinterpret_cast<const void*>(cooperative_halpern_kernel),
+            dim3(workspace->cooperative_blocks), dim3(kThreads), arguments, 0, cuda_stream);
+    } else if (workspace->cooperative_blocks == 0) {
         if (workspace->common_enabled) {
             solve_kernel<true><<<1, kThreads, 0, cuda_stream>>>(workspace->device_problem,
                 workspace->control, workspace->report, workspace->solver.cancellation);
@@ -4585,6 +4732,11 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_solve_async(
         status = copy_async(workspace, workspace->host_common_kkt,
             reinterpret_cast<const char*>(workspace->common_kkt) + offsetof(CommonKktState, result),
             sizeof(spacepdhcg_cuda_common_kkt_diagnostics), cudaMemcpyDeviceToHost, cuda_stream, false);
+    }
+    if (status == SPACEPDHCG_CUDA_SUCCESS && workspace->halpern_mode) {
+        status = copy_async(workspace, workspace->host_halpern,
+            reinterpret_cast<const char*>(workspace->halpern) + offsetof(HalpernState, result),
+            sizeof(spacepdhcg_cuda_halpern_diagnostics), cudaMemcpyDeviceToHost, cuda_stream, false);
     }
     if (status == SPACEPDHCG_CUDA_SUCCESS) {
         status = copy_async(
@@ -4998,6 +5150,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_checkpoint_async(
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     std::lock_guard lock(workspace->mutex);
+    if (workspace->halpern_mode) {
+        set_error(workspace, "checkpoint is unsupported while experimental Halpern is enabled");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
     if (workspace->state == SPACEPDHCG_CUDA_SOLVING) {
         return SPACEPDHCG_CUDA_BUSY;
     }
@@ -5075,6 +5231,10 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_cuda_workspace_restore_async(
         return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     }
     std::lock_guard lock(workspace->mutex);
+    if (workspace->halpern_mode) {
+        set_error(workspace, "restore is unsupported while experimental Halpern is enabled");
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    }
     if (topology_fingerprint != workspace->structure.topology_fingerprint) {
         return SPACEPDHCG_CUDA_TOPOLOGY_MISMATCH;
     }

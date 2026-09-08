@@ -524,6 +524,8 @@ __global__ void cooperative_initialise_kernel(
         if (grid_rank() == 0) {
             control->primal_step = 0.9 / denominator;
             control->dual_step = 0.9 / fmax(1.0, operator_norm);
+            control->halpern_bound_scale = bound_scale;
+            control->halpern_objective_scale = objective_scale;
         }
         grid_barrier();
         for (int variable = grid_rank(); variable < problem->variables; variable += grid_stride()) {
@@ -555,12 +557,25 @@ __global__ void cooperative_initialise_kernel(
     if (grid_rank() == 0) control->force_scaling_refresh = 0;
 }
 
-__device__ void grid_evaluate_report(
+// A separate optional algorithm instantiation keeps its additional call sites
+// from changing the compiler's outlining decision for the default solver.
+template<int Variant = 0> __device__ __forceinline__ void grid_evaluate_report(
     DeviceProblem* problem,
     DeviceControl* control,
     DeviceReport* report,
     const std::uint64_t iteration
 ) {
+    if constexpr (Variant == 1) {
+        // This optional path has replaced T since its previous certificate.
+        // Keep that certificate invalid until the subsequent common evaluator.
+        // The real side effect also prevents identical-function merging from
+        // undoing the separate algorithm/report instantiations.
+        if (grid_rank() == 0) {
+            problem->common_kkt->result.valid = 0;
+            problem->common_kkt->result.passes = 0;
+        }
+        grid_barrier();
+    }
     grid_compute_products(problem, problem->primal);
     // Objective uses Qx, whereas stationarity additionally uses the dual gradient.
     double objective = 0.0;

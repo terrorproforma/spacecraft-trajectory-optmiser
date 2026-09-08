@@ -1,0 +1,37 @@
+{
+  "complete": false,
+  "pid": 303,
+  "maximum_solve_calls": 4,
+  "iteration_cap_each": 100000,
+  "deadline_seconds_each": 30,
+  "binary_sha256": "68683409e81b51acc30d9039349c7479b16b8320a16ea08967adcc2a5fd240ed",
+  "core_sha256": "a38d579579be2f47f9d8a8290a9440fd43f5beca2864773d9a5d6465a2ee61dd",
+  "runner_sha256": "979897c6c5009b3075c7075c99624751c86d0c38382156370044841c2498fe21",
+  "source_commit": "f8b2ac7aeba9e29ea90f5814060bb8cfe5db22d7",
+  "scope": "automatic-grid comparison of existing stopping policies; no method change or SOTA claim",
+  "cases": [
+    {
+      "name": "conditioning-natural-auto",
+      "command": [
+        "/home/angus/spacepdhcg-common-kkt-v609e/build/cuda-tests/persistent_snapshot_replay",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/auto-cold-v610/inputs/conditioning.txt",
+        "--tolerance",
+        "1e-9",
+        "--iterations",
+        "100000",
+        "--deadline-seconds",
+        "30",
+        "--mode",
+        "cold"
+      ],
+      "common": false,
+      "returncode": 0,
+      "wall_seconds": 5.4793589380000185,
+      "log_sha256": "74c9452f607600ff730d0b605b0e727795088fcd2d6a40dab008ef506de579de"
+    }
+  ],
+  "compute_processes_before": "",
+  "gpu_identity": "NVIDIA GeForce RTX 5090, GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, 595.97\n",
+  "active_case": "conditioning-natural-auto",
+  "failure": "TypeError(\"'>' not supported between instances of 'NoneType' and 'int'\")"
+}

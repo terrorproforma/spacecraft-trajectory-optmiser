@@ -1,0 +1,466 @@
+
+Fatbin elf code:
+================
+arch = sm_120
+code version = [1,8]
+host = linux
+compile_size = 64bit
+compressed
+
+Resource usage:
+ Common:
+  GLOBAL:1238 CONSTANT[3]:1552
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dblrcp_rn_slowpath_v3:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e18variational_kernelILi3ELi14ELi7EEEvPKdS2_PdS3_S3_S3_m31spacepdhcg_cuda_dynamics_config:
+  REG:255 STACK:19856 SHARED:0 LOCAL:0 CONSTANT[0]:1048 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e18variational_kernelILi2ELi7ELi4EEEvPKdS2_PdS3_S3_S3_m31spacepdhcg_cuda_dynamics_config:
+  REG:255 STACK:3040 SHARED:0 LOCAL:0 CONSTANT[0]:1048 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e18variational_kernelILi1ELi7ELi4EEEvPKdS2_PdS3_S3_S3_m31spacepdhcg_cuda_dynamics_config:
+  REG:255 STACK:3024 SHARED:0 LOCAL:0 CONSTANT[0]:1048 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e31time_dilated_variational_kernelILi3ELi14ELi7EEEvPKdS2_PdS3_S3_S3_S3_mmdd31spacepdhcg_cuda_dynamics_config:
+  REG:255 STACK:29168 SHARED:0 LOCAL:0 CONSTANT[0]:1080 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e31time_dilated_variational_kernelILi1ELi7ELi4EEEvPKdS2_PdS3_S3_S3_S3_mmdd31spacepdhcg_cuda_dynamics_config:
+  REG:255 STACK:4208 SHARED:0 LOCAL:0 CONSTANT[0]:1080 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e18replay_scvx_kernelILi3ELi14ELi7EEEvPKdS2_Pdm31spacepdhcg_cuda_dynamics_config:
+  REG:164 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1024 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e18replay_scvx_kernelILi2ELi7ELi4EEEvPKdS2_Pdm31spacepdhcg_cuda_dynamics_config:
+  REG:94 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1024 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e18replay_scvx_kernelILi1ELi7ELi4EEEvPKdS2_Pdm31spacepdhcg_cuda_dynamics_config:
+  REG:74 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1024 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __internal_accurate_pow:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e30condition_dynamics_rows_kernelE28spacepdhcg_cuda_scvx_problem:
+  REG:44 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:3792 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_rem_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e26update_scvx_numeric_kernelE28spacepdhcg_cuda_scvx_problemdd:
+  REG:50 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:3808 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e34fill_time_dilated_sigma_csc_kernelEPKdPKiPdmm:
+  REG:20 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e24fill_dynamics_csc_kernelEPKdS1_S1_PKiS3_S3_S3_PdS4_S4_mmmm:
+  REG:28 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1008 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __internal_trig_reduction_slowpathd:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN47_GLOBAL__N__bedfbcf5_14_device_scvx_cu_75de509e16hcw_exact_kernelEPKdS1_PdS2_S2_S2_m31spacepdhcg_cuda_dynamics_config:
+  REG:62 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:1048 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN10spacepdhcg4cuda6detail26finish_scvx_metrics_kernelEPKNS1_11ScvxMetricsEmPS2_:
+  REG:68 STACK:0 SHARED:2368 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__bedfbcf5_14_device_scvx_cu_75de509e__ZN10spacepdhcg4cuda6detail19hash_numeric_kernelEPKdmyPy:
+  REG:18 STACK:0 SHARED:1088 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN10spacepdhcg4cuda6detail19scvx_metrics_kernelILb1EEEvPKdS4_S4_S4_S4_S4_S4_PKimmmmiddd35spacepdhcg_cuda_scvx_numeric_updateS4_S4_S4_S6_S6_PNS1_11ScvxMetricsE:
+  REG:96 STACK:0 SHARED:2368 LOCAL:0 CONSTANT[0]:1552 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN10spacepdhcg4cuda6detail17hcw_replay_kernelILb1EEEvPKdS4_Pdm31spacepdhcg_cuda_dynamics_config:
+  REG:62 STACK:48 SHARED:1456 LOCAL:0 CONSTANT[0]:1024 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN10spacepdhcg4cuda6detail28gather_scvx_candidate_kernelEPKdPKiS5_PdS6_mm:
+  REG:20 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:952 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dblrcp_rn_slowpath_v3:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_46__2cb1d68d_24_gtoc12_discretisation_cu_94229363__ZN57_GLOBAL__N__2cb1d68d_24_gtoc12_discretisation_cu_9422936315interval_kernelILb0ELb1EEEviiiddPKdS2_S2_PdS3_S3_S3_PiPKiS6_:
+  REG:54 STACK:0 SHARED:9160 LOCAL:0 CONSTANT[0]:1008 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_46__2cb1d68d_24_gtoc12_discretisation_cu_94229363__ZN57_GLOBAL__N__2cb1d68d_24_gtoc12_discretisation_cu_9422936315interval_kernelILb1ELb1EEEviiiddPKdS2_S2_PdS3_S3_S3_PiPKiS6_:
+  REG:58 STACK:0 SHARED:9784 LOCAL:0 CONSTANT[0]:1008 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_46__2cb1d68d_24_gtoc12_discretisation_cu_94229363__ZN57_GLOBAL__N__2cb1d68d_24_gtoc12_discretisation_cu_9422936315interval_kernelILb0ELb0EEEviiiddPKdS2_S2_PdS3_S3_S3_PiPKiS6_:
+  REG:52 STACK:0 SHARED:9160 LOCAL:0 CONSTANT[0]:1008 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_46__2cb1d68d_24_gtoc12_discretisation_cu_94229363__ZN57_GLOBAL__N__2cb1d68d_24_gtoc12_discretisation_cu_9422936315interval_kernelILb1ELb0EEEviiiddPKdS2_S2_PdS3_S3_S3_PiPKiS6_:
+  REG:56 STACK:0 SHARED:9784 LOCAL:0 CONSTANT[0]:1008 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_46__2cb1d68d_24_gtoc12_discretisation_cu_94229363__ZN57_GLOBAL__N__2cb1d68d_24_gtoc12_discretisation_cu_9422936324reset_controlled_invalidEPKiS1_Pi:
+  REG:10 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_37__73c1f7ca_15_gtoc12_conic_cu_ca45b08e__ZN48_GLOBAL__N__73c1f7ca_15_gtoc12_conic_cu_ca45b08e8assembleILb1EEEviPKNS_4TermEPKdS5_S5_S5_S5_S5_S5_PK34spacepdhcg_gtoc12_conic_parametersPKiPdPiSA_:
+  REG:36 STACK:0 SHARED:0 LOCAL:0 CONSTANT[2]:12 CONSTANT[0]:1008 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_37__73c1f7ca_15_gtoc12_conic_cu_ca45b08e__ZN48_GLOBAL__N__73c1f7ca_15_gtoc12_conic_cu_ca45b08e8assembleILb0EEEviPKNS_4TermEPKdS5_S5_S5_S5_S5_S5_PK34spacepdhcg_gtoc12_conic_parametersPKiPdPiSA_:
+  REG:36 STACK:0 SHARED:0 LOCAL:0 CONSTANT[2]:12 CONSTANT[0]:1008 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_37__73c1f7ca_15_gtoc12_conic_cu_ca45b08e__ZN48_GLOBAL__N__73c1f7ca_15_gtoc12_conic_cu_ca45b08e24reset_controlled_invalidEPKiPi:
+  REG:6 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__f670b5d4_14_gtoc12_qoco_cu_457ce7e5__ZN47_GLOBAL__N__f670b5d4_14_gtoc12_qoco_cu_457ce7e516objective_finishEiPKdPd:
+  REG:32 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__f670b5d4_14_gtoc12_qoco_cu_457ce7e5__ZN47_GLOBAL__N__f670b5d4_14_gtoc12_qoco_cu_457ce7e517objective_partialEiiiiPKiS1_PKdS3_S3_S3_S3_S3_Pd:
+  REG:36 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:984 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__f670b5d4_14_gtoc12_qoco_cu_457ce7e5__ZN47_GLOBAL__N__f670b5d4_14_gtoc12_qoco_cu_457ce7e56boundsEiiiPKdPdS2_S2_:
+  REG:18 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__f670b5d4_14_gtoc12_qoco_cu_457ce7e5__ZN47_GLOBAL__N__f670b5d4_14_gtoc12_qoco_cu_457ce7e514convert_valuesEiPKNS_3MapEPKdPd:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN11gtoc12_qoco7qualifyEPK16QocoReplayStatusPK15QocoAuditResultPKddP29spacepdhcg_gtoc12_qoco_report:
+  REG:26 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640319retain_graph_reportEPKNS_5StateEPK29spacepdhcg_gtoc12_qoco_reportS3_PK17QocoGraphProgressPS3_:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1096 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640310graph_exitEPKNS_5StateEPNS_9GraphExitE:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640310graph_gateEPNS_5StateEiPK17QocoGraphProgressy:
+  REG:24 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640317start_graph_clockEPNS_5StateEy:
+  REG:10 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d64038finalizeEPNS_5StateE31spacepdhcg_gtoc12_scvx_settingsi:
+  REG:8 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1076 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640316accept_candidateEPKNS_5StateEiPKdPdS5_:
+  REG:20 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d64036decideEPNS_5StateE31spacepdhcg_gtoc12_scvx_settingsPKNS_7MetricsEPKdiiiiiP29spacepdhcg_gtoc12_scvx_recordP34spacepdhcg_gtoc12_conic_parametersPK29spacepdhcg_gtoc12_qoco_reportb:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1137 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640313set_referenceEPNS_5StateEPKNS_7MetricsE31spacepdhcg_gtoc12_scvx_settingsb:
+  REG:16 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1081 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640310initializeEPNS_5StateE31spacepdhcg_gtoc12_scvx_settingsP34spacepdhcg_gtoc12_conic_parameters:
+  REG:30 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1080 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640314finish_metricsEiPKNS_7MetricsEPS0_PKi:
+  REG:28 STACK:0 SHARED:15360 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_36__73e31352_14_gtoc12_scvx_cu_3a1d6403__ZN47_GLOBAL__N__73e31352_14_gtoc12_scvx_cu_3a1d640314reduce_metricsEiiPKdS1_S1_S1_S1_S1_PKiS1_diPNS_7MetricsES3_:
+  REG:40 STACK:0 SHARED:15360 LOCAL:0 CONSTANT[0]:1000 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __internal_trig_reduction_slowpathd:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN11gtoc12_seed6sampleEiPKdS1_PKNS_6BranchEPKiiidPdS7_Pi:
+  REG:82 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:976 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN11gtoc12_seed6chooseEPKNS_6BranchEPKdPi:
+  REG:34 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN11gtoc12_seed6refineEPKdiS1_S1_PKiPNS_6BranchE:
+  REG:72 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN11gtoc12_seed8bracketsEPKdPKiPi:
+  REG:18 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN11gtoc12_seed8evaluateEPKdiS1_PdPi:
+  REG:62 STACK:48 SHARED:2048 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __internal_accurate_pow:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_44__85ed8f0c_22_gtoc12_verification_cu_6900a7ae__ZN55_GLOBAL__N__85ed8f0c_22_gtoc12_verification_cu_6900a7ae6verifyEPK21spacepdhcg_verify_legiPK21spacepdhcg_verify_arciPK24spacepdhcg_verify_sampleiiP24spacepdhcg_verify_result:
+  REG:78 STACK:72 SHARED:4512 LOCAL:0 CONSTANT[0]:952 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_12406finishEiPKiS1_PiS1_:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_12407compactEPKNS_7DerivedEPKiiS4_S4_S4_PlPiS4_:
+  REG:16 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:968 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_124015unique_positionEPKNS_7DerivedEPKiiPK33spacepdhcg_gtoc12_neighbour_queryPKdS4_PKlS4_Pi:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:968 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_124013collect_proxyEPKNS_7DerivedEPKiiPK33spacepdhcg_gtoc12_neighbour_queryPKdS4_PiPlSA_:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:968 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __internal_trig_reduction_slowpathd:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_12407metricsEPKNS_7DerivedEPKiiPK33spacepdhcg_gtoc12_neighbour_queryS4_PKdiddPdSA_PiSB_:
+  REG:85 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:1000 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_124011eligibilityEiPK33spacepdhcg_gtoc12_neighbour_queryPKdPKiS6_S6_Pi:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:952 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_12405bandsEPKNS_7DerivedEiPKiiPK33spacepdhcg_gtoc12_neighbour_querydPdPiS9_S9_S9_:
+  REG:44 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:984 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_47__ed931bff_20_gtoc12_neighbours_cu_9edd962b_1240__ZN58_GLOBAL__N__ed931bff_20_gtoc12_neighbours_cu_9edd962b_12406deriveEPK32spacepdhcg_gtoc12_neighbour_bodyPNS_7DerivedEid:
+  REG:62 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS16DeviceScanKernelINS0_16DeviceScanPolicyIiN4cuda3std3__44plusIvEEE9Policy900EPiSA_NS0_13ScanTileStateIiLb1EEES7_NS0_6detail10InputValueIiSA_EEjiLb0EEEvT0_T1_T2_iT3_T4_T5_:
+  REG:80 STACK:0 SHARED:13328 LOCAL:0 CONSTANT[0]:948 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS20DeviceScanInitKernelINS0_13ScanTileStateIiLb1EEEEEvT_i:
+  REG:8 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:908 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS29DeviceRadixSortOnesweepKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900ELb0EdijiiNS0_6detail21identity_decomposer_tEEEvPT5_S8_PT3_PKS9_PT1_PKSD_PT2_PKSH_T4_iiT6_:
+  REG:96 STACK:0 SHARED:48128 LOCAL:0 CONSTANT[0]:973 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS33DeviceRadixSortExclusiveSumKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900EjEEvPT0_:
+  REG:26 STACK:0 SHARED:2208 LOCAL:0 CONSTANT[0]:904 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortHistogramKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900ELb0EdjNS0_6detail21identity_decomposer_tEEEvPT2_PKT1_S7_iiT3_:
+  REG:96 STACK:0 SHARED:9216 LOCAL:0 CONSTANT[0]:925 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortDownsweepKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900ELb1ELb0EdijNS0_6detail21identity_decomposer_tEEEvPKT2_PS7_PKT3_PSB_PT4_SF_iiNS0_13GridEvenShareISF_EET5_:
+  REG:177 STACK:0 SHARED:48384 LOCAL:0 CONSTANT[0]:989 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortDownsweepKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900ELb0ELb0EdijNS0_6detail21identity_decomposer_tEEEvPKT2_PS7_PKT3_PSB_PT4_SF_iiNS0_13GridEvenShareISF_EET5_:
+  REG:106 STACK:0 SHARED:46592 LOCAL:0 CONSTANT[0]:989 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS23RadixSortScanBinsKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900EjEEvPT0_i:
+  REG:80 STACK:0 SHARED:48144 LOCAL:0 CONSTANT[0]:908 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS28DeviceRadixSortUpsweepKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900ELb1ELb0EdjNS0_6detail21identity_decomposer_tEEEvPKT2_PT3_SA_iiNS0_13GridEvenShareISA_EET4_:
+  REG:70 STACK:0 SHARED:17408 LOCAL:0 CONSTANT[0]:965 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS28DeviceRadixSortUpsweepKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900ELb0ELb0EdjNS0_6detail21identity_decomposer_tEEEvPKT2_PT3_SA_iiNS0_13GridEvenShareISA_EET4_:
+  REG:54 STACK:0 SHARED:33792 LOCAL:0 CONSTANT[0]:965 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS31DeviceRadixSortSingleTileKernelINS0_21DeviceRadixSortPolicyIdijE9Policy900ELb0EdijNS0_6detail21identity_decomposer_tEEEvPKT1_PS7_PKT2_PSB_T3_iiT4_:
+  REG:100 STACK:0 SHARED:34880 LOCAL:0 CONSTANT[0]:941 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS11EmptyKernelIvEEvv:
+  REG:4 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:896 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__df14f539_20_gtoc12_collection_cu_f08842c5__ZN53_GLOBAL__N__df14f539_20_gtoc12_collection_cu_f08842c515gather_selectedEPK35spacepdhcg_gtoc12_collection_optionPK35spacepdhcg_gtoc12_collection_resultPS0_:
+  REG:16 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__df14f539_20_gtoc12_collection_cu_f08842c5__ZN53_GLOBAL__N__df14f539_20_gtoc12_collection_cu_f08842c56selectEPK35spacepdhcg_gtoc12_collection_optioniPK34spacepdhcg_gtoc12_collection_queryPKdPKiP35spacepdhcg_gtoc12_collection_result:
+  REG:22 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__df14f539_20_gtoc12_collection_cu_f08842c5__ZN53_GLOBAL__N__df14f539_20_gtoc12_collection_cu_f08842c58evaluateEPK35spacepdhcg_gtoc12_collection_optioniPK34spacepdhcg_gtoc12_collection_queryPdPi:
+  REG:50 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_38__f785c304_16_gtoc12_retime_cu_d3daaedb__ZN49_GLOBAL__N__f785c304_16_gtoc12_retime_cu_d3daaedb13finish_driverEiPK30spacepdhcg_gtoc12_retime_stagePKNS_8ControlsEPKNS_11DriverStateEPhm:
+  REG:29 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_38__f785c304_16_gtoc12_retime_cu_d3daaedb__ZN49_GLOBAL__N__f785c304_16_gtoc12_retime_cu_d3daaedb14advance_driverEiP30spacepdhcg_gtoc12_retime_stagePNS_8ControlsEPK31spacepdhcg_gtoc12_forward_visitPK32spacepdhcg_gtoc12_forward_policyPK31spacepdhcg_gtoc12_driver_policyPK31spacepdhcg_gtoc12_driver_weightPNS_11DriverStateEPKdPKiPK32spacepdhcg_gtoc12_forward_resultSJ_SJ_PKhPhmy:
+  REG:48 STACK:0 SHARED:1025 LOCAL:0 CONSTANT[0]:1032 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_38__f785c304_16_gtoc12_retime_cu_d3daaedb__ZN49_GLOBAL__N__f785c304_16_gtoc12_retime_cu_d3daaedb11init_driverEPNS_11DriverStateEPKNS_8ControlsE:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_38__f785c304_16_gtoc12_retime_cu_d3daaedb__ZN49_GLOBAL__N__f785c304_16_gtoc12_retime_cu_d3daaedb6finishEPKdiiPKiS3_PiS4_PNS_6ResultEPK30spacepdhcg_gtoc12_retime_stageS1_S3_PdS1_PKhSA_PhPKNS_8ControlsEPK31spacepdhcg_gtoc12_forward_visitPK32spacepdhcg_gtoc12_forward_policyS1_S1_P32spacepdhcg_gtoc12_forward_resultSA_SA_SA_:
+  REG:70 STACK:160 SHARED:1072 LOCAL:0 CONSTANT[0]:1088 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_38__f785c304_16_gtoc12_retime_cu_d3daaedb__ZN49_GLOBAL__N__f785c304_16_gtoc12_retime_cu_d3daaedb3legEPK30spacepdhcg_gtoc12_retime_stageiiPKdPKhS4_S6_S4_PKiS4_PKNS_8ControlsEPdPi:
+  REG:78 STACK:160 SHARED:0 LOCAL:0 CONSTANT[0]:992 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_38__f785c304_16_gtoc12_retime_cu_d3daaedb__ZN49_GLOBAL__N__f785c304_16_gtoc12_retime_cu_d3daaedb4campEPK30spacepdhcg_gtoc12_retime_stageiPKdiS4_PdPi:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:952 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_38__f785c304_16_gtoc12_retime_cu_d3daaedb__ZN49_GLOBAL__N__f785c304_16_gtoc12_retime_cu_d3daaedb10sweep_gridEiiPKdPK28spacepdhcg_gtoc12_sweep_celliiPdPh:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_rem_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271215assemble_tablesEPKPKfiiiiimPdS4_:
+  REG:34 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:952 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271211round_tableEPKdPKhS1_S1_imdPf:
+  REG:24 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:960 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271214window_minimumEPdi:
+  REG:13 STACK:0 SHARED:3072 LOCAL:0 CONSTANT[0]:908 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271211window_costEPKfPKdS3_25spacepdhcg_collect_policyiiidddPd:
+  REG:56 STACK:0 SHARED:3072 LOCAL:0 CONSTANT[0]:1112 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e3727126finishENS_4ViewEd:
+  REG:53 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1216 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e3727129terminalsENS_4ViewEd:
+  REG:64 STACK:160 SHARED:0 LOCAL:0 CONSTANT[0]:1216 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271211transitionsENS_4ViewEidd:
+  REG:84 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1232 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e3727128prefixesENS_4ViewEib:
+  REG:28 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1213 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e3727125startENS_4ViewE:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1208 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271210initialiseENS_4ViewEm:
+  REG:22 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1216 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271214recovery_ranksEPKiiiPi:
+  REG:28 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_42__ca210034_20_gtoc12_collect_dp_cu_9e372712__ZN53_GLOBAL__N__ca210034_20_gtoc12_collect_dp_cu_9e37271216recovery_noveltyEPKdiiPi:
+  REG:18 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_37__0e656f6f_15_gtoc12_joint_cu_8ba75cd7__ZN48_GLOBAL__N__0e656f6f_15_gtoc12_joint_cu_8ba75cd720clear_geometry_costsEmP28spacepdhcg_gtoc12_joint_cost:
+  REG:10 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_37__0e656f6f_15_gtoc12_joint_cu_8ba75cd7__ZN48_GLOBAL__N__0e656f6f_15_gtoc12_joint_cu_8ba75cd716select_candidateEiidPK30spacepdhcg_gtoc12_joint_resultP33spacepdhcg_gtoc12_joint_selectionPdS5_S5_S5_:
+  REG:40 STACK:0 SHARED:3072 LOCAL:0 CONSTANT[0]:960 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_37__0e656f6f_15_gtoc12_joint_cu_8ba75cd7__ZN48_GLOBAL__N__0e656f6f_15_gtoc12_joint_cu_8ba75cd719evaluate_candidatesEiiPK30spacepdhcg_gtoc12_joint_policyPK29spacepdhcg_gtoc12_joint_visitPK29spacepdhcg_gtoc12_joint_stagePKdSA_PK28spacepdhcg_gtoc12_joint_costP30spacepdhcg_gtoc12_joint_resultPdSG_SG_SG_:
+  REG:109 STACK:160 SHARED:0 LOCAL:0 CONSTANT[0]:992 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138517conversion_gatherE18QocoConversionPlan20QocoConversionInputsPdPi:
+  REG:26 STACK:72 SHARED:0 LOCAL:0 CONSTANT[0]:1064 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138519conversion_symmetryE18QocoConversionPlanPKdPi:
+  REG:30 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:992 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138519conversion_validateE18QocoConversionPlan20QocoConversionInputsPi:
+  REG:40 STACK:152 SHARED:0 LOCAL:0 CONSTANT[0]:1056 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138520guard_numeric_resultEPKdPKiPd:
+  REG:22 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138518combine_validationEPKiPii:
+  REG:8 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:916 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138515classify_boundsEiiPKdS1_S1_S1_Ph:
+  REG:30 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138517validate_topologyE17QocoTopologyInputS0_Pi:
+  REG:36 STACK:144 SHARED:0 LOCAL:0 CONSTANT[0]:1048 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138521publish_replay_statusEiiP16QocoReplayStatus:
+  REG:8 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138521compact_replay_statusEPKiP16QocoReplayStatus:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138518reconstruct_originEiiPKdS1_Pd:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138513translate_rhsENS_6MatrixEPKdS2_Pd:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:984 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138519translate_objectiveENS_6MatrixEPKdS2_Pd:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:984 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138520finish_origin_offsetEiPKdPd:
+  REG:14 STACK:0 SHARED:3072 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138523origin_objective_offsetEiPKdS1_S1_Pd:
+  REG:26 STACK:0 SHARED:3072 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138522record_graph_executionEP17QocoGraphProgressPK16QocoReplayStatusPK15QocoAuditResultPKimm:
+  REG:26 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138514reduce_metricsEPKNS_6MetricEiPS0_P15QocoAuditResult:
+  REG:48 STACK:0 SHARED:13312 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_13858map_dualENS_6MatrixEiPKdS2_Pd:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:992 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138511audit_conesEPKiiPKdS3_PNS_6MetricE:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138515audit_variablesENS_6MatrixES0_S0_PKdS2_S2_S2_PNS_6MetricE:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1128 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138510audit_rowsENS_6MatrixES0_PKdS2_iS2_S2_S2_PdPNS_6MetricE:
+  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1088 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138514gather_offsetsEPKiiiPi:
+  REG:16 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__b9671aad_18_native_qoco_gpu_cu_9edd962b_1385__ZN56_GLOBAL__N__b9671aad_18_native_qoco_gpu_cu_9edd962b_138511gather_keysENS_6MatrixEPiS1_S1_:
+  REG:26 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:984 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS29DeviceRadixSortOnesweepKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900ELb0EiijiiNS0_6detail21identity_decomposer_tEEEvPT5_S8_PT3_PKS9_PT1_PKSD_PT2_PKSH_T4_iiT6_:
+  REG:117 STACK:0 SHARED:37376 LOCAL:0 CONSTANT[0]:973 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS33DeviceRadixSortExclusiveSumKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900EjEEvPT0_:
+  REG:26 STACK:0 SHARED:2208 LOCAL:0 CONSTANT[0]:904 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortHistogramKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900ELb0EijNS0_6detail21identity_decomposer_tEEEvPT2_PKT1_S7_iiT3_:
+  REG:63 STACK:0 SHARED:5120 LOCAL:0 CONSTANT[0]:925 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortDownsweepKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900ELb1ELb0EiijNS0_6detail21identity_decomposer_tEEEvPKT2_PS7_PKT3_PSB_PT4_SF_iiNS0_13GridEvenShareISF_EET5_:
+  REG:255 STACK:0 SHARED:49408 LOCAL:0 CONSTANT[0]:989 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortDownsweepKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900ELb0ELb0EiijNS0_6detail21identity_decomposer_tEEEvPKT2_PS7_PKT3_PSB_PT4_SF_iiNS0_13GridEvenShareISF_EET5_:
+  REG:128 STACK:32 SHARED:48640 LOCAL:0 CONSTANT[0]:989 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS23RadixSortScanBinsKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900EjEEvPT0_i:
+  REG:80 STACK:0 SHARED:48144 LOCAL:0 CONSTANT[0]:908 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS28DeviceRadixSortUpsweepKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900ELb1ELb0EijNS0_6detail21identity_decomposer_tEEEvPKT2_PT3_SA_iiNS0_13GridEvenShareISA_EET4_:
+  REG:72 STACK:0 SHARED:17408 LOCAL:0 CONSTANT[0]:965 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS28DeviceRadixSortUpsweepKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900ELb0ELb0EijNS0_6detail21identity_decomposer_tEEEvPKT2_PT3_SA_iiNS0_13GridEvenShareISA_EET4_:
+  REG:56 STACK:0 SHARED:33792 LOCAL:0 CONSTANT[0]:965 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS31DeviceRadixSortSingleTileKernelINS0_21DeviceRadixSortPolicyIiijE9Policy900ELb0EiijNS0_6detail21identity_decomposer_tEEEvPKT1_PS7_PKT2_PSB_T3_iiT4_:
+  REG:131 STACK:0 SHARED:34880 LOCAL:0 CONSTANT[0]:941 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138721collection_grid_costsEPK33spacepdhcg_orbitweaver_hop_resultPKdmdPf:
+  REG:18 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138710grid_costsEPK33spacepdhcg_orbitweaver_hop_resultmPdPh:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138710grid_timesEPKdS1_mmmPd:
+  REG:24 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:944 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138717joint_hops_finishEmPK34spacepdhcg_orbitweaver_hop_requestPK33spacepdhcg_orbitweaver_hop_resultP28spacepdhcg_gtoc12_joint_cost:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __internal_trig_reduction_slowpathd:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138718joint_hops_prepareEiiPK35spacepdhcg_orbitweaver_hop_elementsPKdS4_PK30spacepdhcg_gtoc12_joint_resultPK35spacepdhcg_gtoc12_joint_cached_costiP28spacepdhcg_gtoc12_joint_costP34spacepdhcg_orbitweaver_hop_requestP38spacepdhcg_gtoc12_joint_geometry_stats:
+  REG:87 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:976 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138712element_hopsE35spacepdhcg_orbitweaver_hop_elementsPKdmP34spacepdhcg_orbitweaver_hop_request:
+  REG:84 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:1056 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138719hop_parallel_kernelEPK34spacepdhcg_orbitweaver_hop_requestmjP33spacepdhcg_orbitweaver_hop_resultPKdb:
+  REG:154 STACK:48 SHARED:1312 LOCAL:0 CONSTANT[0]:937 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138715hop_warp_kernelEPK34spacepdhcg_orbitweaver_hop_requestmjP33spacepdhcg_orbitweaver_hop_resultPKdb:
+  REG:165 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:937 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138710hop_kernelEPK34spacepdhcg_orbitweaver_hop_requestmjP33spacepdhcg_orbitweaver_hop_resultPKdb:
+  REG:118 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:937 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_13876kernelEPK38spacepdhcg_orbitweaver_lambert_requestmjjP37spacepdhcg_orbitweaver_lambert_resultPyPKiPKd:
+  REG:101 STACK:88 SHARED:0 LOCAL:0 CONSTANT[0]:952 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_1387__ZN56_GLOBAL__N__8d8a030f_18_orbitweaver_gpu_cu_e6bcff42_138720initialize_scan_gridEPdj:
+  REG:62 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:908 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS23DeviceSelectSweepKernelINS0_6detail24device_select_policy_hubI15RankedHopOptionNS0_8NullTypeEiLb0ELb0EE9Policy900EPS4_PS5_S8_PiNS0_13ScanTileStateIiLb1EEE14ValidHopOptionS5_iLb0ELb0EEEvT0_T1_T2_T3_T4_T5_T6_T7_iNS2_7vsmem_tE:
+  REG:40 STACK:0 SHARED:9264 LOCAL:0 CONSTANT[0]:960 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS23DeviceCompactInitKernelINS0_13ScanTileStateIiLb1EEEPiEEvT_iT0_:
+  REG:10 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS26DeviceMergeSortMergeKernelINS0_21DeviceMergeSortPolicyIP15RankedHopOptionE9Policy600ES4_PNS0_8NullTypeES4_S8_i13HopOptionLessS3_S7_EEvbT2_T3_T4_PT6_PT7_T5_PSC_SC_NS0_6detail7vsmem_tE:
+  REG:38 STACK:0 SHARED:17440 LOCAL:0 CONSTANT[0]:976 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceMergeSortPartitionKernelIP15RankedHopOptioni13HopOptionLessS2_EEvbT_PT2_T0_S8_PS8_T1_S8_i:
+  REG:23 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:948 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceMergeSortBlockSortKernelINS0_21DeviceMergeSortPolicyIP15RankedHopOptionE9Policy600ES4_PNS0_8NullTypeES4_S8_i13HopOptionLessS3_S7_EEvbT0_T1_T2_T3_T4_PT6_PT7_T5_NS0_6detail7vsmem_tE:
+  REG:46 STACK:0 SHARED:17440 LOCAL:0 CONSTANT[0]:976 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS26DeviceMergeSortMergeKernelINS0_21DeviceMergeSortPolicyIP16RankedBeamOptionE9Policy600ES4_PNS0_8NullTypeES4_S8_i8BeamLessS3_S7_EEvbT2_T3_T4_PT6_PT7_T5_PSC_SC_NS0_6detail7vsmem_tE:
+  REG:36 STACK:0 SHARED:15424 LOCAL:0 CONSTANT[0]:976 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceMergeSortPartitionKernelIP16RankedBeamOptioni8BeamLessS2_EEvbT_PT2_T0_S8_PS8_T1_S8_i:
+  REG:30 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:948 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceMergeSortBlockSortKernelINS0_21DeviceMergeSortPolicyIP16RankedBeamOptionE9Policy600ES4_PNS0_8NullTypeES4_S8_i8BeamLessS3_S7_EEvbT0_T1_T2_T3_T4_PT6_PT7_T5_NS0_6detail7vsmem_tE:
+  REG:40 STACK:0 SHARED:15424 LOCAL:0 CONSTANT[0]:976 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_rem_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _Z9beam_packPK16RankedBeamOptionmP34spacepdhcg_orbitweaver_beam_optionPj:
+  REG:24 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _Z11beam_scores34spacepdhcg_orbitweaver_beam_configPK34spacepdhcg_orbitweaver_beam_targetPKdS4_mmmmPK33spacepdhcg_orbitweaver_hop_resultP16RankedBeamOptionPj:
+  REG:50 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:1152 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _Z13beam_requests34spacepdhcg_orbitweaver_beam_configPK34spacepdhcg_orbitweaver_beam_targetPKdS4_mmmmP34spacepdhcg_orbitweaver_hop_request:
+  REG:88 STACK:48 SHARED:0 LOCAL:0 CONSTANT[0]:1136 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _Z16pack_hop_optionsPK15RankedHopOptionPKiP33spacepdhcg_orbitweaver_hop_option:
+  REG:18 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _Z17build_hop_optionsPK33spacepdhcg_orbitweaver_hop_resultPKdmmP15RankedHopOption:
+  REG:18 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_rem_u64:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_div_rn_f64_full:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dsqrt_rn_f64_mediumpath_v1:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78824cooperative_solve_kernelILb1EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:
+  REG:96 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN54_INTERNAL_70ff467d_19_persistent_pdhcg_cu_b9df0f12_78856_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78815evaluate_reportEPNS0_13DeviceProblemEPNS0_13DeviceControlEPNS0_12DeviceReportEm:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN54_INTERNAL_70ff467d_19_persistent_pdhcg_cu_b9df0f12_78856_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78819common_kkt_evaluateILb0EEEvPNS0_13DeviceProblemEm:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78812solve_kernelILb1EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:
+  REG:204 STACK:40 SHARED:1032 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78824cooperative_solve_kernelILb0EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:
+  REG:80 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78812solve_kernelILb0EEEvPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:
+  REG:148 STACK:40 SHARED:1032 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __cuda_sm20_dblrcp_rn_slowpath_v3:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78826cooperative_halpern_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPViPNS_12HalpernStateE:
+  REG:94 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:936 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78831halpern_restore_default_historyEPNS_13DeviceProblemE:
+  REG:16 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:904 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78821halpern_force_refreshEPNS_13DeviceControlE:
+  REG:8 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:904 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78823halpern_validate_zero_qEPKNS_13DeviceProblemEPi:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78827cooperative_residual_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportE:
+  REG:72 STACK:0 SHARED:7168 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78829cooperative_initialise_kernelEPNS_13DeviceControlEPNS_13DeviceProblemEPVi:
+  REG:58 STACK:0 SHARED:5120 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78820restore_steps_kernelEPNS_13DeviceControlEPKd:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78823checkpoint_steps_kernelEPdPKNS_13DeviceControlE:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78825prepare_warm_start_kernelEPdS0_PKdi:
+  REG:18 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:924 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78819set_constant_kernelEPdid:
+  REG:12 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78815residual_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportE:
+  REG:66 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN54_INTERNAL_70ff467d_19_persistent_pdhcg_cu_b9df0f12_78856_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78825recovery_reconstruct_dualEPNS0_13DeviceProblemEPViPiii:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN54_INTERNAL_70ff467d_19_persistent_pdhcg_cu_b9df0f12_78856_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78822recovery_project_imageEPNS0_13DeviceProblemEbi:
+  REG:0 STACK:0 SHARED:0 LOCAL:0 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78815recovery_kernelEPNS_13DeviceProblemEPNS_13DeviceControlEPNS_12DeviceReportEPVi:
+  REG:148 STACK:40 SHARED:1120 LOCAL:0 CONSTANT[0]:928 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78824set_solve_options_kernelEPNS_13DeviceControlEddmj:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:932 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78825initialise_control_kernelEPNS_13DeviceControlEPNS_13DeviceProblemEPVi:
+  REG:50 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78830request_scaling_refresh_kernelEPNS_13DeviceControlE:
+  REG:8 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:904 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78832finish_coefficient_change_kernelEPNS_13DeviceControlEPKNS_13DeviceProblemEi:
+  REG:24 STACK:0 SHARED:5120 LOCAL:0 CONSTANT[0]:916 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78825coefficient_change_kernelEPNS_13DeviceControlENS_15NumericPointersEPNS_13DeviceProblemE:
+  REG:43 STACK:0 SHARED:5120 LOCAL:0 CONSTANT[0]:984 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78811common_bindEPNS_13DeviceProblemEPNS_14CommonKktStateE:
+  REG:8 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:912 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78818common_row_offsetsEPKyiiPi:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78817common_entry_keysEPKNS_13DeviceProblemEPyPi:
+  REG:22 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function __nv_static_45__70ff467d_19_persistent_pdhcg_cu_b9df0f12_788__ZN56_GLOBAL__N__70ff467d_19_persistent_pdhcg_cu_b9df0f12_78822common_validate_domainEPKNS_13DeviceProblemEiPi:
+  REG:17 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:920 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS29DeviceRadixSortOnesweepKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900ELb0EyijiiNS0_6detail21identity_decomposer_tEEEvPT5_S8_PT3_PKS9_PT1_PKSD_PT2_PKSH_T4_iiT6_:
+  REG:96 STACK:0 SHARED:48128 LOCAL:0 CONSTANT[0]:973 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS33DeviceRadixSortExclusiveSumKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900EjEEvPT0_:
+  REG:26 STACK:0 SHARED:2208 LOCAL:0 CONSTANT[0]:904 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortHistogramKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900ELb0EyjNS0_6detail21identity_decomposer_tEEEvPT2_PKT1_S7_iiT3_:
+  REG:96 STACK:0 SHARED:9216 LOCAL:0 CONSTANT[0]:925 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortDownsweepKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900ELb1ELb0EyijNS0_6detail21identity_decomposer_tEEEvPKT2_PS7_PKT3_PSB_PT4_SF_iiNS0_13GridEvenShareISF_EET5_:
+  REG:196 STACK:0 SHARED:48384 LOCAL:0 CONSTANT[0]:989 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS30DeviceRadixSortDownsweepKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900ELb0ELb0EyijNS0_6detail21identity_decomposer_tEEEvPKT2_PS7_PKT3_PSB_PT4_SF_iiNS0_13GridEvenShareISF_EET5_:
+  REG:128 STACK:0 SHARED:46592 LOCAL:0 CONSTANT[0]:989 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS23RadixSortScanBinsKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900EjEEvPT0_i:
+  REG:80 STACK:0 SHARED:48144 LOCAL:0 CONSTANT[0]:908 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS28DeviceRadixSortUpsweepKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900ELb1ELb0EyjNS0_6detail21identity_decomposer_tEEEvPKT2_PT3_SA_iiNS0_13GridEvenShareISA_EET4_:
+  REG:67 STACK:0 SHARED:17408 LOCAL:0 CONSTANT[0]:965 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS28DeviceRadixSortUpsweepKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900ELb0ELb0EyjNS0_6detail21identity_decomposer_tEEEvPKT2_PT3_SA_iiNS0_13GridEvenShareISA_EET4_:
+  REG:51 STACK:0 SHARED:33792 LOCAL:0 CONSTANT[0]:965 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN3cub18CUB_200700_1200_NS31DeviceRadixSortSingleTileKernelINS0_21DeviceRadixSortPolicyIyijE9Policy900ELb0EyijNS0_6detail21identity_decomposer_tEEEvPKT1_PS7_PKT2_PSB_T3_iiT4_:
+  REG:100 STACK:0 SHARED:34880 LOCAL:0 CONSTANT[0]:941 TEXTURE:0 SURFACE:0 SAMPLER:0

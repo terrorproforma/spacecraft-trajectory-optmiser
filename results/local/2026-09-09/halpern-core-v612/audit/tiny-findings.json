@@ -1,0 +1,45 @@
+{
+  "scope": "Independent CPU inspection of existing logs/source; no GPU rerun or separate vector re-export.",
+  "report_sha256": "dbe2072d2873be88dde87e6d6c135ebe15cc11d37639d876acec18d239707acc",
+  "source_matches_frozen_archive_and_live": {
+    "cpp/cuda/include/spacepdhcg/cuda/persistent_pdhcg_c_api.h": true,
+    "cpp/cuda/include/spacepdhcg/cuda/halpern_arithmetic.hpp": true,
+    "cpp/cuda/src/persistent_pdhcg.cu": true,
+    "cpp/cuda/src/cooperative_pdhg.cuh": true,
+    "cpp/cuda/src/persistent_halpern.cuh": true,
+    "cpp/cuda/tests/persistent_snapshot_replay.cu": true,
+    "cpp/cuda/tests/persistent_snapshot_conversion_test.cpp": true,
+    "cpp/cuda/tests/persistent_halpern_test.cu": true,
+    "cpp/cuda/CMakeLists.txt": true
+  },
+  "actual_executions": 2,
+  "actual_solve_api_calls": 14,
+  "actual_optimization_iterations": 410,
+  "native_termination_counts": {
+    "1": 2,
+    "2": 8,
+    "3": 2,
+    "4": 2
+  },
+  "all_expected_outcomes_pass": true,
+  "raw_cases": [
+    {
+      "mode": "plain",
+      "raw_log_sha256": "c3e9f6f87629bfa958c1ccdc38a84881768ca46baaa40bde22af93092f45aa4c",
+      "records_equal_report": true,
+      "expected_outcomes_match": true
+    },
+    {
+      "mode": "adaptive",
+      "raw_log_sha256": "3c2b75ee682c97d3fb55eb86759a879d5709846bcfb60aad1f805d88572bb18c",
+      "records_equal_report": true,
+      "expected_outcomes_match": true
+    }
+  ],
+  "caveats": [
+    "The two zero-step exact mixed seeds qualify; eight deliberate bounded iteration-limit outcomes are not solver successes.",
+    "Cancellation and nonfinite outcomes are expected test assertions. Invalid/disabled diagnostic zeros are not certificates.",
+    "Tiny raw logs expose metrics and assertion outcomes, not all iterate arrays; independent scalar/SOC oracles and unchanged-point checks run inside the pinned test executable.",
+    "No captured-problem result, throughput gain or fleet-score improvement is included in this package."
+  ]
+}

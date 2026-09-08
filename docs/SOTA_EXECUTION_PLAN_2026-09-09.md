@@ -155,11 +155,11 @@ The incumbent is the acceptance baseline throughout. The recent fixed-footprint
 61-order experiment found no eligible improvement; repeating the same sampled
 neighborhood is unlikely to answer why the fleet remains below the leaders.
 
-The next bounded preparation is asteroid substitution v599: ships 2, 21 and 7,
-496 paired deployment/collection substitutions, at most 1,488 initial epoch
-samples, 12 retimings, four short joint polishes and four full refinements.
-New asteroid IDs exclude the retained fleet's 196-body footprint. This is a
-prepared experiment, not a GPU result or a claim of an exhaustive neighborhood.
+Asteroid substitution v599 and the subsequent incident-window, fixed-cargo,
+return-window and coupled-fuel experiments are complete; their measured outcomes
+are recorded below. None improved the incumbent. The next score experiment must
+change route construction or improve whole-route fuel prediction; another sweep
+of the rejected schedules is not the current priority.
 
 Candidate ranking must use weighted payload and fleet feasibility together.
 The current fleet has approximately 8.359441 raw kg of ship-count slack, so a
@@ -260,6 +260,33 @@ remains opt-in; four forced-single-block cold comparisons still fail at their
 60-second deadlines, so no cold-convergence or general speed claim follows.
 [Implementation, memory cost and complete evidence](GPU_PERSISTENT_CAPTURE_REPLAY.md#pinned-upstream-comparator-and-optional-gpu-stopping-policy).
 
+Four subsequent automatic-grid comparisons finish all 100,000 updates in about
+5.04–5.47 seconds but remain unqualified; common stopping leaves their trajectories
+unchanged to rounding noise. The exact-linear upstream dispatch also remains
+unqualified, while reducing its single-sample API times to 10.3160/8.7967 seconds.
+The unchanged original equations and gates remain the basis of comparison.
+[Automatic-grid and reference follow-ups](GPU_PERSISTENT_CAPTURE_REPLAY.md#automatic-grid-and-exact-linear-reference-follow-ups).
+
+CPU spectral and gap decompositions now narrow the next core intervention.
+The two observed failures do not exhibit a violated measured PDHG spectral bound
+or a large initial global weight imbalance. They retain substantive equality,
+stationarity and block-complementarity errors. The opt-in Halpern and adaptive
+restart experiment is now complete. All fourteen tiny GPU calls have their
+expected outcomes, and four actual supplied starts stop at zero iterations with
+unchanged primal/dual bits. None of six cold comparisons qualifies at 100,000
+iterations. Adaptive gaps are 0.0255402/0.0184402 against same-build default
+0.999924/0.0112271; plain Halpern gaps exceed one on both captures. Thus this
+change does not yet earn default selection or native mission integration.
+[Complete source, negative comparisons and accuracy checks](../results/local/2026-09-09/halpern-core-v612/README.md).
+
+The next distinct core hypothesis is an exact L1 proximal representation of the
+detected 10,000-cost epigraph pairs. Establish algebraic equivalence, reconstruct
+original primal and dual variables, and pass the original-equation gate before
+comparing convergence. Preserve the reusable PDHCG-inspired GPU core. Interval
+operators and batching remain on the roadmap, but their speed must eventually
+translate into qualified complete trajectories. A broad new literature survey
+does not replace this focused experiment or the comparative campaign.
+
 The bounded low-thrust truth set has also completed locally: four routes,
 66 native leg solves, 110.374 seconds including verification. Both original
 controls pass both fleet checkers. Both proposals certify every preceding leg,
@@ -284,6 +311,34 @@ return-only grid: the next distinct mission hypothesis must reduce preceding
 fuel use or change replacement geometry and coupled itinerary timing. This finite
 failed search does not prove physical infeasibility.
 [Complete controls, failed arrays and independent accounting](../results/local/2026-09-09/return-window-rescue-v607b/README.md).
+
+The coupled itinerary fuel search v611 also completed: twelve device searches
+evaluated 39,852 complete itinerary proxies and 793,152 Lambert direction requests
+in 0.450427 seconds of search-wrapper time. The complete run took 34.844880 seconds,
+including baseline verification and seventeen native leg refinements. Only the
+largest eligible candidate per fuel-price setting was shortlisted; this selected
+ship 20's predicted +6.033277 weighted kg. Its first sixteen legs certified, but
+the Earth return exhausted its fixed 292.503659 kg propellant allowance and remained
+uncertified. Three smaller positive proxy candidates were retained but unrefined;
+their feasibility remains unknown. The fleet stays at 12,810.135953 weighted kg.
+The evidence supports changing route construction and whole-route fuel modelling,
+not extrapolating proxy throughput into certified solutions or claiming every
+eligible candidate failed. [Full work counts and retained failures](../results/local/2026-09-09/coupled-fuel-search-v611/README.md).
+
+The route-family audit rules out a global eight-miner cap: search defaults permit
+ten deployments and eleven incumbent ships already collect from nine asteroids.
+A bounded scan of archived summaries contains 1,374 records marked certified,
+independent and closed, representing 1,282 distinct plans; 158 distinct plans
+have nine miners and none has ten. These are archived certificates, not fresh
+trajectory re-verifications or an exhaustive feasibility result.
+`bundles.refine_candidates` retains only one chain per Earth-departure leg before
+applying the small refinement limit. Consequently, longer alternatives can be
+discarded before low-thrust testing. The next bounded mission experiment should
+compare that selection with depth-stratified selection on the same generated
+candidate pool and the same total refinement budget. Preserve full collection
+and Earth-return costing, fixed cargo during each refinement, and the complete
+fleet gates; do not assume adding a miner improves a mission.
+[Source and bounded archive evidence](../results/local/2026-09-09/route-family-cap-audit-v611/README.md).
 
 ## Reporting after each tranche
 

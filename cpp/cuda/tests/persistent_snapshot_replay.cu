@@ -56,7 +56,7 @@ void audit_json(const s::Quality& q) {
     std::cout<<",\"finite\":"<<(q.finite?"true":"false")<<'}';
 }
 struct Arguments {
-    std::string path,mode="cold",initial_point;
+    std::string path,mode="cold",initial_point,halpern="off";
     double tolerance{},deadline{},audit_tolerance=1e-9,cone_tolerance=1e-8;
     std::uint64_t iterations{};
     int repeats=1,execution_blocks=-1;
@@ -88,6 +88,7 @@ Arguments arguments(int argc,char** argv) {
         else if(name=="--cone-tolerance")out.cone_tolerance=number_arg(value);
         else if(name=="--repeats")out.repeats=static_cast<int>(integer_arg(value,1000));
         else if(name=="--execution-blocks")out.execution_blocks=value=="0"?0:static_cast<int>(integer_arg(value,1000000));
+        else if(name=="--halpern") {s::require(value=="off"||value=="plain"||value=="adaptive","unsupported Halpern mode");out.halpern=value;}
         else if(name=="--mode") {s::require(value=="cold"||value=="reuse"||value=="full-retained","unsupported repeat mode");out.mode=value;}
         else if(name=="--initial-point") {s::require(!value.empty(),"empty initial-point path");out.initial_point=value;}
         else throw std::runtime_error("unknown option: "+name);
@@ -184,6 +185,9 @@ int main(int argc,char** argv) try {
         && args.audit_tolerance==1e-9 && args.cone_tolerance==1e-8),
         "common-KKT stopping requires an unshifted generic capture and fixed 1e-9 relative/1e-8 cone audit gates");
     const auto canonical=s::canonical(snapshot,args.fold_singleton_bounds);
+    s::require(args.halpern=="off" || (args.common_kkt_stop && args.execution_blocks>0
+        && std::all_of(canonical.Q.values.begin(),canonical.Q.values.end(),[](double v){return v==0.0;})),
+        "Halpern requires common-KKT, explicit positive cooperative blocks and exactly zero Q");
     const double conversion_seconds=elapsed(prepare);
     const auto initial_begin=Clock::now();std::optional<s::InitialPoint> initial;
     if(!args.initial_point.empty())initial=s::initial_point(s::file_bytes(args.initial_point,128ULL*1024*1024),snapshot,canonical);
@@ -200,6 +204,12 @@ int main(int argc,char** argv) try {
     std::cout<<",\"stopping_policy\":";json_string(args.common_kkt_stop?"gpu_common_kkt_original_equations":"native_absolute_natural_residual");
     std::cout<<",\"common_kkt_initial_check\":"<<args.common_kkt_stop<<",\"common_kkt_recovery_disabled\":"<<args.common_kkt_stop;
     std::cout<<",\"requested_execution_blocks\":";if(args.execution_blocks<0)std::cout<<"null";else std::cout<<args.execution_blocks;
+    std::cout<<",\"halpern_mode\":";json_string(args.halpern);
+    if(args.halpern!="off") {
+        std::cout<<",\"halpern_output_point\":\"proximal_T_not_anchored_working_state\",\"halpern_restart_frequency\":200";
+        std::cout<<",\"halpern_weight_guard_residuals\":\"common_normalized_primal_dual\",\"halpern_spectral_policy\":\"unchanged_20_power_heuristic_not_a_proved_upper_bound\"";
+        std::cout<<",\"halpern_repeat_state\":\"fresh_anchor_and_unit_weight_each_solve_including_bootstrap\"";
+    }
     std::cout<<",\"convexity_evidence\":";json_string(canonical.convexity_evidence);
     std::cout<<",\"variables\":"<<snapshot.n<<",\"equalities\":"<<snapshot.p<<",\"inequalities\":"<<snapshot.m;
     std::cout<<",\"soc_count\":"<<snapshot.soc.size()<<",\"symmetric_quadratic_entries\":"<<canonical.Q.values.size();
@@ -262,6 +272,10 @@ int main(int argc,char** argv) try {
             api(spacepdhcg_cuda_workspace_wait(w),"complete creation before common policy setup",w);
             const spacepdhcg_cuda_common_kkt_options policy{SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,1,snapshot.p,0,1e-9,1e-8};
             api(spacepdhcg_cuda_workspace_set_common_kkt_options(w,&policy),"configure GPU common-KKT stopping",w);
+        }
+        if(fresh && args.halpern!="off") {
+            const spacepdhcg_cuda_halpern_options policy{SPACEPDHCG_CUDA_WORKSPACE_ABI_VERSION,args.halpern=="plain"?1:2,{0,0}};
+            api(spacepdhcg_cuda_workspace_set_halpern_options(w,&policy),"configure experimental Halpern",w);
         }
         if(!fresh) {
             if(args.mode=="reuse")api(spacepdhcg_cuda_workspace_reset_async(w,SPACEPDHCG_CUDA_RESET_ITERATES,p.exchange.consumer_stream),"reset iterates",w);
@@ -338,6 +352,8 @@ int main(int argc,char** argv) try {
         api(spacepdhcg_cuda_workspace_diagnostics(w,&diagnostic),"diagnostics",w);
         spacepdhcg_cuda_common_kkt_diagnostics common{};
         if(args.common_kkt_stop)api(spacepdhcg_cuda_workspace_common_kkt_diagnostics(w,&common),"common-KKT diagnostics",w);
+        spacepdhcg_cuda_halpern_diagnostics halpern{};
+        if(args.halpern!="off")api(spacepdhcg_cuda_workspace_halpern_diagnostics(w,&halpern),"Halpern diagnostics",w);
         const auto download=Clock::now();const auto primal=p.primal.download(p.stream),dual=p.dual.download(p.stream);
         const double download_seconds=elapsed(download);const auto audit_begin=Clock::now();
         const auto original=s::original_vectors(snapshot,canonical,primal,dual);
@@ -366,6 +382,15 @@ int main(int argc,char** argv) try {
         metric("solve_seconds",diagnostic.solve_seconds);metric("recovery_seconds",diagnostic.recovery_seconds);
         metric("download_seconds",download_seconds);metric("audit_seconds",audit_seconds);metric("cleanup_seconds",cleanup_seconds);metric("repeat_seconds",repeat_seconds);
         metric("native_objective",diagnostic.objective);metric("native_natural_residual",diagnostic.natural_residual_inf);
+        if(args.halpern!="off") {
+            std::cout<<",\"halpern\":{\"mode\":"<<halpern.mode<<",\"valid\":"<<bool(halpern.valid)<<",\"finite\":"<<bool(halpern.finite);
+            std::cout<<",\"updates\":"<<halpern.updates<<",\"inner_iterations\":"<<halpern.inner_iterations<<",\"restarts\":"<<halpern.restarts;
+            std::cout<<",\"weight_updates\":"<<halpern.weight_updates<<",\"weight_fallbacks\":"<<halpern.weight_fallbacks;
+            std::cout<<",\"metric_evaluations\":"<<halpern.metric_evaluations<<",\"last_restart_iteration\":"<<halpern.last_restart_iteration;
+            std::cout<<",\"epoch_reference_iteration\":"<<halpern.epoch_reference_iteration;
+            metric("primal_weight",halpern.primal_weight);metric("minimum_primal_weight",halpern.minimum_primal_weight);metric("maximum_primal_weight",halpern.maximum_primal_weight);
+            metric("fixed_point_error",halpern.fixed_point_error);metric("epoch_initial_error",halpern.epoch_initial_error);metric("eta",halpern.eta);std::cout<<'}';
+        }
         if(args.common_kkt_stop) {
             std::cout<<",\"gpu_common_kkt\":{\"enabled\":"<<bool(common.enabled)<<",\"valid\":"<<bool(common.valid)
                 <<",\"finite\":"<<bool(common.finite)<<",\"passes\":"<<bool(common.passes)

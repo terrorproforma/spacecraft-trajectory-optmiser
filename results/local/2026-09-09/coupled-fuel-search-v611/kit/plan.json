@@ -1,0 +1,124 @@
+{
+  "status": "prepared_no_GPU_execution",
+  "hypothesis": "Coupled itinerary timing with increased proxy fuel-margin valuation",
+  "source_commit": "f8b2ac7aeba9e29ea90f5814060bb8cfe5db22d7",
+  "incumbent": {
+    "ships": 23,
+    "raw_kg": 14051.854893908598,
+    "weighted_fixed_bonus_kg": 12810.135953048577,
+    "raw_ship_count_floor_kg": 14043.495453372925
+  },
+  "selected_ships": [
+    {
+      "ship": 20,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-20.json",
+      "sha256": "a98be42e862f6915e783ddbe43a5786f18bf01688578f11afc441ac4448fe905",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 17,
+      "raw_kg": 591.8685831622176,
+      "weighted_kg": 567.8395405254118,
+      "certified_hop_propellant_kg": 1471.109325842202,
+      "maximum_hop_propellant_kg": 218.41843495001376,
+      "CPU_initial_feasible": true,
+      "failure": "",
+      "visits": 18,
+      "measured_legs": 17
+    },
+    {
+      "ship": 7,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-07.json",
+      "sha256": "033e0c5457fd4aeffea325b7ea6d5a5b1809e2e1a8c5483ed58923e062075068",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 17,
+      "raw_kg": 614.4284736481861,
+      "weighted_kg": 522.6358885649358,
+      "certified_hop_propellant_kg": 1595.6742500287655,
+      "maximum_hop_propellant_kg": 188.4082986404619,
+      "CPU_initial_feasible": true,
+      "failure": "",
+      "visits": 18,
+      "measured_legs": 17
+    },
+    {
+      "ship": 10,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-10.json",
+      "sha256": "8255accd56912b13e6c35277ebd6536eb69b861146dac341a17dd608621e0bd5",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 17,
+      "raw_kg": 582.0670773442847,
+      "weighted_kg": 556.9120091770276,
+      "certified_hop_propellant_kg": 1529.5596536704777,
+      "maximum_hop_propellant_kg": 174.50352529012298,
+      "CPU_initial_feasible": true,
+      "failure": "",
+      "visits": 18,
+      "measured_legs": 17
+    },
+    {
+      "ship": 11,
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/inputs/ship-11.json",
+      "sha256": "5071d85638abd163189b541f73583efad1845d46154665b002e2e52ddc086f2d",
+      "independent_inventory": true,
+      "cargo_matches_retained_Result": true,
+      "flight_legs": 17,
+      "raw_kg": 617.9329226557153,
+      "weighted_kg": 546.4764792349288,
+      "certified_hop_propellant_kg": 1469.4914023226968,
+      "maximum_hop_propellant_kg": 164.97644227469323,
+      "CPU_initial_feasible": true,
+      "failure": "",
+      "visits": 18,
+      "measured_legs": 17
+    }
+  ],
+  "margin_prices": [
+    0.05,
+    0.25,
+    1.0
+  ],
+  "mesh_days": [
+    30.0,
+    10.0,
+    3.0,
+    1.0
+  ],
+  "max_moves_per_level": 12,
+  "per_search_soft_deadline_seconds": 30,
+  "bounds": {
+    "searches": 12,
+    "visits": 18,
+    "flight_legs_per_route": 17,
+    "max_rows_per_search": 7969,
+    "max_itinerary_rows": 95628,
+    "max_lambert_direction_requests": 3251352,
+    "max_full_refinements": 4,
+    "max_native_leg_solves": 68
+  },
+  "maximum_selected_final_candidates": 3,
+  "planned_new_native_leg_cap": 51,
+  "archived_control_reuse": "Exact original ship bytes, same core/QOCO and critical source",
+  "fresh_control": "Both complete fleet checkers before GPU work; zero repeated full routes",
+  "comparison": "Same four seeds/caps per price; actual work may differ",
+  "acceptance": {
+    "objective": "Verified fixed-bonus weighted cargo gain",
+    "raw_fleet_ship_rule": true,
+    "both_complete_fleet_checkers": true,
+    "exact_selected_cargo_and_epochs_during_refinement": true,
+    "unchanged_physics_tolerances": true
+  },
+  "requested_initial_wall_seconds": 600,
+  "outer_timeout_seconds": 630,
+  "termination_grace_seconds": 10,
+  "launch": "launch.py --execute --wall-seconds 600",
+  "resource_scope": "One local RTX5090, serial graph searches/refinements; CPU fleet checks",
+  "limitations": [
+    "Proxy fuel is an estimate, not a physical certificate",
+    "Only final search outcomes are retained by existing graph API",
+    "Existing local active-loop memcheck CUDA999 is unresolved",
+    "No new performance or score measurements; no guaranteed gain"
+  ],
+  "rejected_initial_preparation": "seed-audit-01.json retains four infeasible substitution starts"
+}

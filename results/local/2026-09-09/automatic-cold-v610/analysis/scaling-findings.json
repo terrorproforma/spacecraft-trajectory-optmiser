@@ -1,0 +1,149 @@
+{
+  "scope": "CPU source/scaling analysis only; no solver or GPU run, no speedup prediction",
+  "script_sha256": "067e1be1eeaaa99af47e76185c8919b3e4ab528c2856fd594514589f48238b3a",
+  "auditor_sha256": "0d944f768ad9c089499cc6e95cd1313677e153f650eced2c7d84b9815c00c7ff",
+  "source_sha256": {
+    "cpp/cuda/src/persistent_pdhcg.cu": "70c1ec49d00941e87c6cf21b5298ca8356c240b871901043ab6bb027b8dce118",
+    "cpp/cuda/src/cooperative_pdhg.cuh": "aec8114b6230843585aacd9f528eba97ea3baaa6128eb4c9b15cd07bff2e48a6"
+  },
+  "arithmetic": "FP64 scaling and SciPy sparse products; native atomic/reduction ordering can differ",
+  "norm_caveat": "eigenvalue is a numerical estimate with reported residual, not a formal spectral upper certificate; one/infinity bound is conservative",
+  "coordinate_derivation": "Ktilde=R^-1 K D^-1; xtilde=B D x; ytilde=O R y; Qtilde=(O/B)D^-1 Q D^-1",
+  "balance_derivation": "For zero Q, tau=eta/omega and sigma=eta*omega preserve tau*sigma and the PDHG spectral condition. An oracle distance-bound coefficient omega*||xtilde*||^2+||ytilde*||^2/omega is minimized by omega=||ytilde*||/||xtilde*||. This uses a known solution and is diagnostic, not a deployable heuristic.",
+  "cases": [
+    {
+      "capture": "conditioning",
+      "snapshot_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "point_sha256": "9caf303469dcd254d56b74f8bf3818c8044f51a3a20bc3c07835b76dd23c5632",
+      "n": 5261,
+      "rows": 10751,
+      "stored_K_entries": 29863,
+      "scaled_K_sha256": "a631a77deac66a80ea96f2b7d38e1a461f91fef1526429ff68dbae1854c352f2",
+      "D_sha256": "6c0bc3f1e2470bfacd8d975728ec3dc66b8eff771cdc9d4f78b3c6b18132f4bb",
+      "R_sha256": "18cfc5cac778578149b410596e728dea394268e7c110416926f4016e9be2d2e8",
+      "D_range": [
+        1.0,
+        1.0000527460213102
+      ],
+      "R_range": [
+        0.7073243585288005,
+        1.0000527460213102
+      ],
+      "bound_scale_B": 0.014048666509029594,
+      "objective_scale_O": 2.608195852083155e-06,
+      "O_over_B": 0.00018565433597607088,
+      "native_power20_estimates": [
+        1.6803182392791676,
+        1.8226553314305218,
+        1.9820140395349335,
+        2.1127289811481016,
+        2.1925972935041234,
+        2.2395175910818095,
+        2.279079012056037,
+        2.330807618307735,
+        2.405962380865501,
+        2.5004395900614127,
+        2.5932336548287753,
+        2.664401761239782,
+        2.7101515464695267,
+        2.737326295591662,
+        2.7536161199263818,
+        2.7640943868516223,
+        2.771516619516468,
+        2.7772688122895435,
+        2.782037059828572,
+        2.786170182818184
+      ],
+      "power20_estimate": 2.786170182818184,
+      "largest_singular_value_numeric": 2.9337002044331575,
+      "largest_eigenpair_residual_l2": 1.6916402837055537e-13,
+      "safe_one_infinity_norm_upper_bound": 3.898627739490767,
+      "power20_over_numeric_norm": 0.9497119639586762,
+      "eta": 0.3230240584549142,
+      "eta_squared_numeric_norm_squared": 0.8980514135447072,
+      "eta_squared_safe_upper_squared": 1.5859638199133916,
+      "original_primal_step_range": [
+        5.996449113325848e-05,
+        5.9970817076742606e-05
+      ],
+      "original_dual_step_range": [
+        1739.7384390995867,
+        3477.7034312818123
+      ],
+      "known_point_scaled_primal_l2": 0.536387678751975,
+      "known_point_scaled_dual_l2": 0.7071049377204253,
+      "oracle_distance_balancing_omega": 1.3182721485431244,
+      "oracle_tau_multiplier": 0.75856870761105,
+      "oracle_sigma_multiplier": 1.3182721485431244,
+      "baseline_over_optimal_ergodic_distance_bound_coefficient": 1.0384204280770872,
+      "cpu_seconds": 0.16696080700000948
+    },
+    {
+      "capture": "difficult",
+      "snapshot_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "point_sha256": "b92be6c5a0051ab99c000c459ef466c69fc8b2fd669c38b3580aea000d926da6",
+      "n": 5839,
+      "rows": 11928,
+      "stored_K_entries": 33135,
+      "scaled_K_sha256": "9a10d1efbad883e05fce67c89ba271596b1c508a2f743dc14208c2cc5b157d98",
+      "D_sha256": "195c519bac83eacc7a0d2016daf022ae681388d7180b024a0b6772a78b300b9b",
+      "R_sha256": "6a929ca33578377cb5959f3ce6a3b16ec7190660920b52c52ba799376cc14f9d",
+      "D_range": [
+        1.0,
+        1.0004419589416893
+      ],
+      "R_range": [
+        0.7098549188141214,
+        1.0004419589416893
+      ],
+      "bound_scale_B": 0.013737035079155508,
+      "objective_scale_O": 2.4761214600162438e-06,
+      "O_over_B": 0.00018025152048810702,
+      "native_power20_estimates": [
+        1.67799797891678,
+        1.8190799312278387,
+        1.978943799782956,
+        2.109668199201857,
+        2.1860079368124095,
+        2.2242785422674487,
+        2.247254591282955,
+        2.270371172552062,
+        2.304782404440323,
+        2.3594816392113978,
+        2.436891351271595,
+        2.525763439048509,
+        2.6058905562610657,
+        2.6645536355700203,
+        2.7023384782155273,
+        2.725796782561927,
+        2.740948303206655,
+        2.7516099285643563,
+        2.759867806586072,
+        2.766798946490766
+      ],
+      "power20_estimate": 2.766798946490766,
+      "largest_singular_value_numeric": 2.9297021006307937,
+      "largest_eigenpair_residual_l2": 6.713232286729717e-13,
+      "safe_one_infinity_norm_upper_bound": 3.9704068476807337,
+      "power20_over_numeric_norm": 0.9443960004995207,
+      "eta": 0.3252856522666757,
+      "eta_squared_numeric_norm_squared": 0.9081900520777347,
+      "eta_squared_safe_upper_squared": 1.6680145629386902,
+      "original_primal_step_range": [
+        5.858144078830862e-05,
+        5.863323341403395e-05
+      ],
+      "original_dual_step_range": [
+        1803.0267710419312,
+        3581.3501057466206
+      ],
+      "known_point_scaled_primal_l2": 0.5993471368352031,
+      "known_point_scaled_dual_l2": 0.7737967621553681,
+      "oracle_distance_balancing_omega": 1.291066086077144,
+      "oracle_tau_multiplier": 0.7745536892216437,
+      "oracle_sigma_multiplier": 1.291066086077144,
+      "baseline_over_optimal_ergodic_distance_bound_coefficient": 1.0328098876493939,
+      "cpu_seconds": 0.1892478710000205
+    }
+  ]
+}

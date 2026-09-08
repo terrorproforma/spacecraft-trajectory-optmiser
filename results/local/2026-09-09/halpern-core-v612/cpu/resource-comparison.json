@@ -1,0 +1,123 @@
+{
+  "baseline_core_sha256": "a38d579579be2f47f9d8a8290a9440fd43f5beca2864773d9a5d6465a2ee61dd",
+  "candidate_core_sha256": "49d0eef5702a7dee319ef3b7747ded844bec0f39313300405f9d6f30fc61730e",
+  "baseline": {
+    "cooperative_default": {
+      "REG": 80,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_common": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "single_default": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "single_common": {
+      "REG": 204,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "cooperative_scaling": {
+      "REG": 58,
+      "STACK": 0,
+      "SHARED": 5120,
+      "LOCAL": 0
+    },
+    "single_scaling": {
+      "REG": 50,
+      "STACK": 0,
+      "SHARED": 0,
+      "LOCAL": 0
+    },
+    "cooperative_residual": {
+      "REG": 72,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "single_residual": {
+      "REG": 66,
+      "STACK": 0,
+      "SHARED": 0,
+      "LOCAL": 0
+    },
+    "recovery": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1120,
+      "LOCAL": 0
+    }
+  },
+  "candidate": {
+    "cooperative_default": {
+      "REG": 80,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "cooperative_common": {
+      "REG": 96,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "single_default": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "single_common": {
+      "REG": 204,
+      "STACK": 40,
+      "SHARED": 1032,
+      "LOCAL": 0
+    },
+    "cooperative_scaling": {
+      "REG": 58,
+      "STACK": 0,
+      "SHARED": 5120,
+      "LOCAL": 0
+    },
+    "single_scaling": {
+      "REG": 50,
+      "STACK": 0,
+      "SHARED": 0,
+      "LOCAL": 0
+    },
+    "cooperative_residual": {
+      "REG": 72,
+      "STACK": 0,
+      "SHARED": 7168,
+      "LOCAL": 0
+    },
+    "single_residual": {
+      "REG": 66,
+      "STACK": 0,
+      "SHARED": 0,
+      "LOCAL": 0
+    },
+    "recovery": {
+      "REG": 148,
+      "STACK": 40,
+      "SHARED": 1120,
+      "LOCAL": 0
+    }
+  },
+  "all_listed_default_resources_match": true,
+  "new_halpern": {
+    "REG": 94,
+    "STACK": 0,
+    "SHARED": 7168
+  },
+  "scope": "Compiler footprints only; no runtime or convergence inference."
+}

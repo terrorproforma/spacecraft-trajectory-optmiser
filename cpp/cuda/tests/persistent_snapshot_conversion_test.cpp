@@ -1,5 +1,6 @@
 #include "persistent_snapshot.hpp"
 #include "spacepdhcg/cuda/common_kkt_arithmetic.hpp"
+#include "spacepdhcg/cuda/halpern_arithmetic.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -219,6 +220,20 @@ void checks() {
 }
 } // namespace
 int main(int argc,char** argv) try {
+    namespace hm=spacepdhcg::cuda::halpern;
+    // Independent two-step 1D oracle: min 2x, x=3, eta=.5, omega=1.
+    // The proximal T2 differs from the anchored working point; its metric has
+    // a negative cross term in the native normal-dual sign convention.
+    const double tx1=-1,ty1=-2.5;
+    const double wx1=hm::blend(0,2*tx1,0),wy1=hm::blend(0,2*ty1,0);
+    const double tx2=wx1-.5*(2+wy1),ty2=wy1+.5*(2*tx2-wx1-3);
+    s::require(wx1==tx1 && wy1==ty1 && tx2==-.75 && ty2==-4.25,"Halpern primal-first oracle");
+    s::require(std::abs(hm::blend(0,2*tx2-wx1,1)+1.0/3)<1e-15
+        && hm::blend(0,2*ty2-wy1,1)==-4,"Halpern anchored point differs from proximal output");
+    s::require(hm::metric_squared(.25,12.25,-1.75,.5,1)==14.25,"Halpern metric cross sign");
+    s::require(!hm::restart(0,0,0,0,INFINITY) && hm::restart(200,200,99,0,INFINITY),"first forced restart counter");
+    s::require(hm::restart(400,200,9,100,8) && hm::restart(1000,200,70,100,60)
+        && hm::restart(1000,360,99,100,98) && !hm::restart(1000,200,81,100,82),"restart reduction and artificial guards");
     checks();
     if(argc==3 && std::string(argv[1])=="--write-fixtures") {
         const std::filesystem::path root(argv[2]);

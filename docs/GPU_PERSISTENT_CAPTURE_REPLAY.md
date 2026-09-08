@@ -169,7 +169,7 @@ certificates, and this policy disables the legacy recovery acceptance path. The
 new kernels are separate template instantiations. Default single-block and
 cooperative register counts remain 148 and 80, respectively; the common-policy
 variants use 204 and 96. Preserving those counts does not by itself prove identical
-latency. Both execution strategies pass fourteen focused GPU calls covering a
+latency. Fourteen focused GPU calls in total across both strategies pass, covering a
 non-diagonal quadratic, exact seeds, normalization traps, complementarity,
 cancellation, nonfinite data and lifecycle changes.
 
@@ -189,3 +189,85 @@ also adds diagnostic workspace: the recorded peaks are about 19 MB versus about
 2 MB without it on these inputs. Keep it opt-in while the next convergence and
 integration experiments establish usefulness and cost. [Exact sources, fourteen
 focused tests, all real vectors and deadline outcomes](../results/local/2026-09-09/persistent-common-kkt-v609/README.md).
+
+## Automatic-grid and exact-linear reference follow-ups
+
+The four v610 cold calls use automatic grid selection and finish all 100,000
+iterations. Natural/common stopping takes 5.0354/5.4137 seconds on conditioning
+and 5.0787/5.4702 seconds on difficult; every result remains unqualified. The two
+policies follow the same iterate trajectory to FP64 rounding differences. The
+executable records automatic selection as a null requested block count and does
+not export the effective grid size. These measurements supersede neither the
+forced-single-block experiment nor its deadline evidence. The first completed
+call's parser failure was repaired by reusing its saved output and executing only
+the remaining three calls. [All four outcomes and CPU analysis](../results/local/2026-09-09/automatic-cold-v610/README.md).
+
+The upstream comparator now also exposes `--omit-zero-quadratic`. It requires
+every quadratic coefficient to be exactly zero before passing a null descriptor,
+preserving the original mathematical problem and audit coordinates. The default
+still passes the original full symmetric CSC. Five checks with CUDA hidden cover
+valid zero-Q inputs, rejection of nonzero-Q inputs and duplicate options.
+
+With this option, two supplied points qualify at zero updates and both cold calls
+still fail after 100,000 iterations. Native C API wall time falls to 10.3160 and
+8.7967 seconds in these single diagnostic samples, compared with 37.3320 and
+34.8176 seconds for v608's general quadratic dispatch. This removes avoidable
+reference work; it establishes no qualified cold throughput or mission gain.
+Upstream's reported inner counter includes one unconditional increment per outer
+update even on its direct linear path: the reported 100,000 is not 100,000 BB
+iterations. The original observation failure and bounded continuation preserve
+all four actual calls. [Exact-zero dispatch, complete vectors and accounting](../results/local/2026-09-09/upstream-zero-quadratic-v613/README.md).
+
+The independent CPU analysis attributes the failed gaps to actual stationarity,
+feasibility and complementarity errors. Numerical spectral estimates put the
+current zero-Q stability products at about 0.898 and 0.908, despite modest
+underestimation by the twenty-step power method. This is evidence against a
+step-size violation on these two captures, not a general spectral certificate.
+The restarted Halpern experiment is reported below. Exact elimination of the
+detected L1 epigraph pairs remains a separate hypothesis requiring original
+primal/dual recovery and equivalence checks.
+
+## Optional Halpern and restart comparison
+
+The replay now accepts `--halpern off|plain|adaptive`. The two experimental modes
+require exactly zero quadratic coefficients, the common-KKT policy and an
+explicit positive cooperative block count. Each relevant kernel's occupancy
+limit is checked before solving; there is no silent fallback. The default remains
+off. Existing API struct layouts and the compiled resource counts of the previous
+solver, initialization, scaling and recovery kernels are preserved.
+
+The new path forms a primal-first proximal map, reflects it, and blends the
+working state with a retained anchor. It exports and checks the actual proximal
+point. The adaptive variant additionally restarts and adjusts reciprocal
+primal/dual weights on the GPU. This compares algorithm packages against the
+existing dual-first default; it does not isolate anchoring from update order.
+Checkpoint/restore is explicitly unsupported while enabled. Disabling restores
+the default primal history. Cancellation and numerical failure remain authoritative.
+See the packaged design for equations, the upstream-derived restart rules, their
+documented residual-guard variant and the unproven general spectral precondition.
+
+The fourteen bounded tiny GPU calls pass their expected outcomes, including
+scalar/SOC proximal oracles, restart counters, default-mode transitions,
+nonfinite input and cancellation. Four supplied real-capture points pass the
+common gate at zero iterations with unchanged primal/dual bits, following four
+separately counted one-step bootstraps.
+
+Six cold calls use the same v612d binary, 128 blocks, 100,000-iteration cap and
+30-second deadline. All reach the iteration cap and remain unqualified:
+
+| Capture | Mode | Native solve seconds | Original normalized gap | Qualified |
+| --- | --- | ---: | ---: | --- |
+| conditioning | off | 5.345601 | 0.999924306 | No |
+| conditioning | plain | 3.474233 | 1.370163221 | No |
+| conditioning | adaptive | 3.401526 | 0.025540171 | No |
+| difficult | off | 5.520818 | 0.011227050 | No |
+| difficult | plain | 3.495427 | 1.027070844 | No |
+| difficult | adaptive | 3.486708 | 0.018440177 | No |
+
+Adaptive runs perform 21/22 restarts. The smaller conditioning global gap does
+not mean uniform improvement: its normalized worst-block complementarity rises
+from about 0.000663 to 0.405898. On difficult, adaptive primal residual and gap
+both worsen. These single samples measure unqualified iteration cost, not time
+to a qualified solution. Retain both modes as explicit diagnostics; neither earns
+default selection, a fleet improvement, or a SOTA claim.
+[All source attempts, CPU checks, tiny outcomes and real vectors](../results/local/2026-09-09/halpern-core-v612/README.md).

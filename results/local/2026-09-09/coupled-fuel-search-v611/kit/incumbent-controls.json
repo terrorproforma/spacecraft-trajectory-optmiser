@@ -1,0 +1,41 @@
+{
+  "ships": [
+    20,
+    7,
+    10,
+    11
+  ],
+  "exact_ship_bytes_equal": {
+    "20": true,
+    "7": true,
+    "10": true,
+    "11": true
+  },
+  "archived_control_both_fleet_checks_pass": true,
+  "archived_fullfleet_sha256": "58917fe6ce52274e6c9745aea19b1be781c492b9eec22f352e0d10892b3242bd",
+  "archived_local_campaign_core_and_qoco_match": true,
+  "native_search_export": [
+    "0000000000063530 T spacepdhcg_gtoc12_joint_search_host"
+  ],
+  "nm_output_sha256": "963a1c9469de079e50bab3b5cd9090576cad2cd346e89cb46649fd70de4d65e0",
+  "archive_members": {
+    "campaign/candidate0/best/Result.txt": {
+      "bytes": 10084994,
+      "sha256": "58917fe6ce52274e6c9745aea19b1be781c492b9eec22f352e0d10892b3242bd"
+    },
+    "campaign/candidate0/report.json": {
+      "bytes": 54637,
+      "sha256": "412c4d98a57f7379c173582b216fec51f3249deb8f1023bd08daa270fc23d70b"
+    }
+  },
+  "source_differences_from_v707": {
+    "results/gtoc12/hop_inflation_fit.json": {
+      "frozen_sha256": "574561f788ee52a54c353805ef7bcdb95c28340ff84b3bfc043d59565644c230",
+      "v707_sha256": null
+    }
+  },
+  "critical_source_differences": [],
+  "fresh_control_refinement_required": false,
+  "runtime_control_gate": "Fresh both-checker verification of retained fleet and repeat exact selected-ship byte comparison; no new control full route",
+  "GPU_calls": 0
+}

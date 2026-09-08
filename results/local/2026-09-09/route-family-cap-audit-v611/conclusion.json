@@ -1,0 +1,654 @@
+{
+  "scope": "Read-only existing source/archives and exact Result events; no numerical solve",
+  "GPU_calls": 0,
+  "retained_Result_sha256": "33701ef2b797f44ef2e8aa50a2dd59cb238df9aab604e7cef25ead6cbdd669e8",
+  "actual_fleet_deploy_histogram": {
+    "8": 11,
+    "9": 12
+  },
+  "actual_fleet_collect_histogram": {
+    "8": 12,
+    "9": 11
+  },
+  "actual_fleet_deployed_miners": 196,
+  "actual_fleet_collected_miners": 195,
+  "actual_fleet_raw_kg": 14051.854893908598,
+  "ten_deployer_records": 40,
+  "ten_deployer_collect_histogram": {
+    "5": 2,
+    "6": 2,
+    "7": 18,
+    "8": 11,
+    "9": 7
+  },
+  "ten_deployer_closed_records": 0,
+  "source_findings": [
+    {
+      "file": "search.py",
+      "lines": [
+        58,
+        196,
+        1217
+      ],
+      "finding": "Default generation and collect-DP cap are10; inclusive depth loop attempts through10"
+    },
+    {
+      "file": "bundles.py",
+      "lines": [
+        226,
+        275,
+        657,
+        680
+      ],
+      "finding": "Cluster depth cap propagates10; refinement deduplicates solely by Earth leg then keeps top2"
+    },
+    {
+      "file": "bundles.py",
+      "lines": [
+        211,
+        213
+      ],
+      "finding": "Joint asteroid insertion is disabled by default after earlier unsuccessful trial"
+    },
+    {
+      "file": "search.py",
+      "lines": [
+        1796,
+        1806,
+        1809,
+        1812,
+        1822
+      ],
+      "finding": "Beam prunes estimated reserve/return feasibility and diversity before deeper completion"
+    },
+    {
+      "file": "cooperative.py",
+      "lines": [
+        950,
+        971,
+        1049
+      ],
+      "finding": "Master limits fleet ship count, asteroid conflicts, dependency and raw ship rule; no per-column8-miner cap"
+    }
+  ],
+  "conclusion": "Nine-miner closed routes are already present. Ten-deployer routes exist but no certified independently closed10-miner route was found in the inspected published pool. Raising max_deploys from8to10 is not the fix: defaults and recorded family campaigns already use10.",
+  "recommendation": "Next route-family expansion should retain depth diversity through the finite refinement shortlist: pair certified Earth legs with separate9/10-miner deploy-and-collect chains, carrying the complete collection/return cost into ranking. The existing one-chain-per-Earth-leg rule can exclude every larger alternative behind a higher-ranked shorter chain. Compare a bounded depth-stratified arm with current selection using identical generated candidates; rank true fixed-bonus contribution and preserve raw ship eligibility and both final fleet checkers. Do not simply repeat insertion or increase beam/deploy budgets without collecting depth/prune/refinement attrition.",
+  "limits": "Archive scope excludes packed-only/newer outputs outside results/gtoc12/runs. Per-route certified flags and cargo are archive evidence, not a new physical or complete-fleet certification. Source shows a possible selection bottleneck; existing reports do not prove a specific rejected 10-miner alternative would certify. No GPU experiment prepared or launched.",
+  "actual_fleet_ships": [
+    {
+      "ship": 1,
+      "deploys": [
+        3909,
+        2009,
+        6872,
+        26896,
+        2363,
+        28079,
+        51643,
+        24677,
+        27157
+      ],
+      "collects": [
+        2009,
+        6872,
+        26896,
+        3909,
+        24677,
+        2363,
+        27157,
+        51643,
+        28079
+      ],
+      "raw_kg": 617.3853524984993
+    },
+    {
+      "ship": 2,
+      "deploys": [
+        31520,
+        41045,
+        22674,
+        665,
+        31302,
+        41270,
+        38331,
+        59701
+      ],
+      "collects": [
+        59701,
+        41270,
+        31302,
+        38331,
+        41045,
+        665,
+        22674,
+        31520
+      ],
+      "raw_kg": 632.2518822721995
+    },
+    {
+      "ship": 3,
+      "deploys": [
+        15060,
+        45619,
+        10341,
+        17222,
+        333,
+        6736,
+        26975,
+        35329,
+        44233
+      ],
+      "collects": [
+        17222,
+        333,
+        6736,
+        10341,
+        45619,
+        35329,
+        26975,
+        15060
+      ],
+      "raw_kg": 590.6913073239
+    },
+    {
+      "ship": 4,
+      "deploys": [
+        42615,
+        34287,
+        32321,
+        10938,
+        27344,
+        34724,
+        46525,
+        43563,
+        56811
+      ],
+      "collects": [
+        56811,
+        34287,
+        43563,
+        46525,
+        34724,
+        27344,
+        42615,
+        10938,
+        32321
+      ],
+      "raw_kg": 586.8583162218001
+    },
+    {
+      "ship": 5,
+      "deploys": [
+        16821,
+        4367,
+        21105,
+        24025,
+        5095,
+        44683,
+        19906,
+        15711,
+        56502
+      ],
+      "collects": [
+        21105,
+        19906,
+        24025,
+        56502,
+        4367,
+        44683,
+        5095,
+        16821,
+        15711
+      ],
+      "raw_kg": 625.3524982888
+    },
+    {
+      "ship": 6,
+      "deploys": [
+        49519,
+        5473,
+        10828,
+        54545,
+        8226,
+        52453,
+        32647,
+        25358,
+        23402
+      ],
+      "collects": [
+        8226,
+        52453,
+        49519,
+        23402,
+        25358,
+        32647,
+        54545,
+        10828,
+        5473
+      ],
+      "raw_kg": 644.3531827515999
+    },
+    {
+      "ship": 7,
+      "deploys": [
+        26251,
+        59653,
+        15206,
+        15785,
+        37789,
+        51006,
+        16048,
+        33441
+      ],
+      "collects": [
+        26251,
+        16048,
+        15206,
+        51006,
+        37789,
+        15785,
+        33441,
+        59653
+      ],
+      "raw_kg": 614.4284736481002
+    },
+    {
+      "ship": 8,
+      "deploys": [
+        2000,
+        45699,
+        3027,
+        52020,
+        6014,
+        21016,
+        30519,
+        35731
+      ],
+      "collects": [
+        35731,
+        6014,
+        2000,
+        45699,
+        3027,
+        21016,
+        30519,
+        52020
+      ],
+      "raw_kg": 617.1115674195
+    },
+    {
+      "ship": 9,
+      "deploys": [
+        8913,
+        36739,
+        10646,
+        41073,
+        28411,
+        43651,
+        51489,
+        1965
+      ],
+      "collects": [
+        1965,
+        10646,
+        41073,
+        51489,
+        43651,
+        8913,
+        28411,
+        36739
+      ],
+      "raw_kg": 608.2956878850994
+    },
+    {
+      "ship": 10,
+      "deploys": [
+        40153,
+        33279,
+        33300,
+        4650,
+        31365,
+        1297,
+        9767,
+        12705
+      ],
+      "collects": [
+        1297,
+        31365,
+        4650,
+        40153,
+        12705,
+        33279,
+        33300,
+        9767
+      ],
+      "raw_kg": 582.0670773444001
+    },
+    {
+      "ship": 11,
+      "deploys": [
+        3944,
+        3896,
+        56400,
+        57827,
+        53400,
+        57189,
+        51417,
+        17697
+      ],
+      "collects": [
+        57827,
+        56400,
+        53400,
+        3896,
+        51417,
+        17697,
+        57189,
+        3944
+      ],
+      "raw_kg": 617.9329226557995
+    },
+    {
+      "ship": 12,
+      "deploys": [
+        34101,
+        50075,
+        2328,
+        11187,
+        50674,
+        22490,
+        15049,
+        59027,
+        56730
+      ],
+      "collects": [
+        11187,
+        34101,
+        50075,
+        2328,
+        50674,
+        22490,
+        56730,
+        59027,
+        15049
+      ],
+      "raw_kg": 570.7597535933
+    },
+    {
+      "ship": 13,
+      "deploys": [
+        3002,
+        49691,
+        50091,
+        913,
+        49850,
+        39085,
+        14708,
+        13998,
+        53201
+      ],
+      "collects": [
+        49850,
+        3002,
+        50091,
+        913,
+        49691,
+        14708,
+        13998,
+        39085,
+        53201
+      ],
+      "raw_kg": 598.9596167007999
+    },
+    {
+      "ship": 14,
+      "deploys": [
+        42326,
+        57878,
+        1897,
+        24172,
+        23448,
+        27087,
+        2642,
+        28740
+      ],
+      "collects": [
+        2642,
+        57878,
+        27087,
+        24172,
+        23448,
+        42326,
+        28740,
+        1897
+      ],
+      "raw_kg": 595.6468172484001
+    },
+    {
+      "ship": 15,
+      "deploys": [
+        35473,
+        5162,
+        3299,
+        23153,
+        13077,
+        49856,
+        51831,
+        6757,
+        19102
+      ],
+      "collects": [
+        19102,
+        6757,
+        51831,
+        49856,
+        3299,
+        5162,
+        23153,
+        35473,
+        13077
+      ],
+      "raw_kg": 609.6919917865
+    },
+    {
+      "ship": 16,
+      "deploys": [
+        32087,
+        47458,
+        33208,
+        22542,
+        44769,
+        10538,
+        11983,
+        34523
+      ],
+      "collects": [
+        34523,
+        22542,
+        44769,
+        33208,
+        32087,
+        47458,
+        11983,
+        10538
+      ],
+      "raw_kg": 614.7296372346998
+    },
+    {
+      "ship": 17,
+      "deploys": [
+        27464,
+        25279,
+        11721,
+        3750,
+        3196,
+        51591,
+        23457,
+        25023,
+        15372
+      ],
+      "collects": [
+        15372,
+        11721,
+        23457,
+        3750,
+        3196,
+        51591,
+        27464,
+        25279,
+        25023
+      ],
+      "raw_kg": 628.5284052021998
+    },
+    {
+      "ship": 18,
+      "deploys": [
+        8846,
+        27861,
+        37385,
+        49900,
+        8123,
+        1122,
+        57949,
+        50601
+      ],
+      "collects": [
+        50601,
+        37385,
+        1122,
+        57949,
+        27861,
+        49900,
+        8123,
+        8846
+      ],
+      "raw_kg": 594.7980835045996
+    },
+    {
+      "ship": 19,
+      "deploys": [
+        47630,
+        37322,
+        28118,
+        49218,
+        37066,
+        39740,
+        54492,
+        57844,
+        28553
+      ],
+      "collects": [
+        28118,
+        37066,
+        49218,
+        28553,
+        47630,
+        39740,
+        54492,
+        57844,
+        37322
+      ],
+      "raw_kg": 609.965776865
+    },
+    {
+      "ship": 20,
+      "deploys": [
+        4524,
+        19401,
+        27855,
+        34525,
+        2154,
+        41944,
+        14130,
+        29787
+      ],
+      "collects": [
+        27855,
+        29787,
+        4524,
+        19401,
+        14130,
+        41944,
+        2154,
+        34525
+      ],
+      "raw_kg": 591.8685831622001
+    },
+    {
+      "ship": 21,
+      "deploys": [
+        29766,
+        1908,
+        33707,
+        39584,
+        53228,
+        3194,
+        19893,
+        30383,
+        43005
+      ],
+      "collects": [
+        43005,
+        53228,
+        3194,
+        19893,
+        30383,
+        33707,
+        29766,
+        39584,
+        1908
+      ],
+      "raw_kg": 623.8466803561
+    },
+    {
+      "ship": 22,
+      "deploys": [
+        9443,
+        35344,
+        44409,
+        30797,
+        12944,
+        11253,
+        57877,
+        53343
+      ],
+      "collects": [
+        53343,
+        57877,
+        12944,
+        44409,
+        30797,
+        11253,
+        9443,
+        35344
+      ],
+      "raw_kg": 622.2313483915007
+    },
+    {
+      "ship": 23,
+      "deploys": [
+        30805,
+        40868,
+        12930,
+        14880,
+        55827,
+        17199,
+        27463,
+        49284,
+        36235
+      ],
+      "collects": [
+        40868,
+        12930,
+        14880,
+        55827,
+        17199,
+        49284,
+        36235,
+        27463,
+        30805
+      ],
+      "raw_kg": 654.0999315535996
+    }
+  ]
+}

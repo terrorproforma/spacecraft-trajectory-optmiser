@@ -1,0 +1,392 @@
+{
+  "complete": true,
+  "gpu_calls_started": 2,
+  "maximum_executions": 2,
+  "maximum_solve_api_calls": 14,
+  "expected_optimization_iterations": 410,
+  "maximum_requested_iterations": 416,
+  "manifest_sha256": "c64efa7a6356d3a17f9f29e2ba2c5706c5bda180ac7cf8e6cf919ba6b422300a",
+  "source_commit": "6fbff324b152b75e6c27e3d91b4dc0835c65ab93",
+  "core_sha256": "49d0eef5702a7dee319ef3b7747ded844bec0f39313300405f9d6f30fc61730e",
+  "test_sha256": "6da1ba381a566a23923da26d21cc9e72e9e6eb8159399c800350f6a79e73bed7",
+  "runner_sha256": "ac215e34e52284a20a7b654abe6a128e0428662b0c3f573d540cbc88697f4e67",
+  "lock_path": "/home/angus/.spacepdhcg-gpu.lock",
+  "lock_policy": "LOCK_EX|LOCK_NB",
+  "cases": [
+    {
+      "mode": "plain",
+      "command": [
+        "/home/angus/spacepdhcg-halpern-v612d/build/cuda-tests/persistent_halpern_test",
+        "plain"
+      ],
+      "started": true,
+      "returncode": 0,
+      "wall_seconds": 0.3644733869999994,
+      "log_sha256": "c3e9f6f87629bfa958c1ccdc38a84881768ca46baaa40bde22af93092f45aa4c",
+      "records": [
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "mixed_exact_zero_step",
+            "mode": 1,
+            "termination": 1,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 1,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "two_step_proximal_output",
+            "mode": 1,
+            "termination": 2,
+            "iterations": 2,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 2,
+            "restarts": 0,
+            "inner": 2,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0.7204960366779902
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "disabled_default_transition",
+            "mode": 1,
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 0,
+            "fixed_point_error": 0,
+            "gap": 0.32724380822540333
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "mixed_cold_proximal_step",
+            "mode": 1,
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 1,
+            "restarts": 0,
+            "inner": 1,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0.7096478227768611
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "first_restart_epoch",
+            "mode": 1,
+            "termination": 2,
+            "iterations": 201,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 201,
+            "restarts": 0,
+            "inner": 201,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0.19667389861835843,
+            "gap": 1
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "cancel_before_initial",
+            "mode": 1,
+            "termination": 3,
+            "iterations": 0,
+            "common_valid": 0,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "nonfinite_initial",
+            "mode": 1,
+            "termination": 4,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 0,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": null
+          }
+        },
+        {
+          "prefix": "HALPERN_VALIDATION",
+          "record": {
+            "nonzero_q_rejected": true
+          }
+        },
+        {
+          "prefix": "HALPERN_SUMMARY",
+          "record": {
+            "complete": true,
+            "mode": 1,
+            "solve_calls": 7,
+            "maximum_requested_iterations": 208,
+            "expected_optimization_iterations": 205
+          }
+        }
+      ],
+      "strict_json_parsed": true
+    },
+    {
+      "mode": "adaptive",
+      "command": [
+        "/home/angus/spacepdhcg-halpern-v612d/build/cuda-tests/persistent_halpern_test",
+        "adaptive"
+      ],
+      "started": true,
+      "returncode": 0,
+      "wall_seconds": 0.26424463999999936,
+      "log_sha256": "3c2b75ee682c97d3fb55eb86759a879d5709846bcfb60aad1f805d88572bb18c",
+      "records": [
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "mixed_exact_zero_step",
+            "mode": 2,
+            "termination": 1,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 1,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "two_step_proximal_output",
+            "mode": 2,
+            "termination": 2,
+            "iterations": 2,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 2,
+            "restarts": 0,
+            "inner": 2,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0.7204960366779902
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "disabled_default_transition",
+            "mode": 2,
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 0,
+            "finite": 0,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 0,
+            "fixed_point_error": 0,
+            "gap": 0.32724380822540333
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "mixed_cold_proximal_step",
+            "mode": 2,
+            "termination": 2,
+            "iterations": 1,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 1,
+            "restarts": 0,
+            "inner": 1,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0.7096478227768611
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "first_restart_epoch",
+            "mode": 2,
+            "termination": 2,
+            "iterations": 201,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 201,
+            "restarts": 1,
+            "inner": 1,
+            "epoch_reference": 201,
+            "weight_updates": 1,
+            "weight_fallbacks": 0,
+            "weight": 60.25599389167595,
+            "fixed_point_error": 1.526666812626269,
+            "gap": 1
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "cancel_before_initial",
+            "mode": 2,
+            "termination": 3,
+            "iterations": 0,
+            "common_valid": 0,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 1,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": 0
+          }
+        },
+        {
+          "prefix": "HALPERN_TEST",
+          "record": {
+            "case": "nonfinite_initial",
+            "mode": 2,
+            "termination": 4,
+            "iterations": 0,
+            "common_valid": 1,
+            "common_passes": 0,
+            "halpern_valid": 1,
+            "finite": 0,
+            "updates": 0,
+            "restarts": 0,
+            "inner": 0,
+            "epoch_reference": 0,
+            "weight_updates": 0,
+            "weight_fallbacks": 0,
+            "weight": 1,
+            "fixed_point_error": 0,
+            "gap": null
+          }
+        },
+        {
+          "prefix": "HALPERN_VALIDATION",
+          "record": {
+            "nonzero_q_rejected": true
+          }
+        },
+        {
+          "prefix": "HALPERN_SUMMARY",
+          "record": {
+            "complete": true,
+            "mode": 2,
+            "solve_calls": 7,
+            "maximum_requested_iterations": 208,
+            "expected_optimization_iterations": 205
+          }
+        }
+      ],
+      "strict_json_parsed": true
+    }
+  ],
+  "lock_acquired": true,
+  "pid": 417,
+  "actual_solve_api_calls": 14,
+  "actual_optimization_iterations": 410,
+  "status": "passed",
+  "wall_seconds": 0.6888144449999993,
+  "lock_scope_ending": true
+}

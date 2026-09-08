@@ -1,0 +1,96 @@
+{
+  "status": "ready_for_root_review_no_GPU_executed",
+  "timestamp_utc": "2026-09-08T18:26:40.692196+00:00",
+  "commands": {
+    "pytest": {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/test_experiment.py"
+      ],
+      "returncode": 0
+    },
+    "ruff-check": {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/audit_seeds.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/common.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/domain.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/freeze_incumbents.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/inspect_incumbents.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/test_experiment.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/validate.py"
+      ],
+      "returncode": 0
+    },
+    "ruff-format": {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/audit_seeds.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/common.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/domain.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/freeze_incumbents.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/inspect_incumbents.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/test_experiment.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/coupled-fuel-search-v611/validate.py"
+      ],
+      "returncode": 0
+    }
+  },
+  "GPU_calls": 0,
+  "native_loading_prohibited": true,
+  "source_commit": "f8b2ac7aeba9e29ea90f5814060bb8cfe5db22d7",
+  "final_source_count": 190,
+  "final_input_count": 33,
+  "original_preparation_input_count": 27,
+  "runtime_libraries_rehashed": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": {
+      "path": "/home/angus/spacepdhcg-joint-search-v702/final/libspacepdhcg_cuda.so",
+      "sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa"
+    },
+    "SPACEPDHCG_QOCO_LIBRARY": {
+      "path": "/home/angus/spacepdhcg-retry-conditioning-v683/final/libqoco.so",
+      "sha256": "5b1b1a047f9d5041f821b64490562a3d598f51b47fedb08d89cdae211728940a"
+    }
+  },
+  "native_search_symbol": [
+    "0000000000063530 T spacepdhcg_gtoc12_joint_search_host"
+  ],
+  "archived_controls_qualified": true,
+  "bounds": {
+    "searches": 12,
+    "visits": 18,
+    "flight_legs_per_route": 17,
+    "max_rows_per_search": 7969,
+    "max_itinerary_rows": 95628,
+    "max_lambert_direction_requests": 3251352,
+    "max_full_refinements": 4,
+    "max_native_leg_solves": 68
+  },
+  "planned_probe_cap": 3,
+  "planned_new_native_leg_cap": 51,
+  "requested_initial_wall_seconds": 600,
+  "supervisor_timeout_seconds": 630,
+  "termination_grace_seconds": 10,
+  "test_scope": "CPU behavior, real harmless child timeout, no CUDA execution"
+}

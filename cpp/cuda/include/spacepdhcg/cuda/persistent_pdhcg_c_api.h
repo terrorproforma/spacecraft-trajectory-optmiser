@@ -335,6 +335,53 @@ spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_execution_blocks(
     int32_t blocks
 );
 
+/* Experimental, opt-in primal-first reflected Halpern iteration. Existing
+ * default kernels and ABI layouts are unchanged. Requires common-KKT policy,
+ * exactly zero Q, its supported free-variable domain and a positive cooperative
+ * block count. The existing spectral heuristic is retained: a positive-definite
+ * PDHG metric is a caller precondition, not proved by the power estimate.
+ * Mode 1 is plain Halpern; mode 2 adds 200-step adaptive restarts/weighting.
+ * Audits and output always describe the proximal PDHG point T(z). Every solve
+ * starts a new anchor/weight epoch from its supplied iterate. No anchored state
+ * is retained between solves. Checkpoint/restore are unsupported while enabled;
+ * re-enable refreshes scaling metadata. Disable this before disabling common KKT.
+ */
+typedef struct spacepdhcg_cuda_halpern_options {
+    uint32_t abi_version;
+    int32_t mode; /* 0 disabled, 1 plain, 2 adaptive */
+    int32_t reserved[2];
+} spacepdhcg_cuda_halpern_options;
+
+typedef struct spacepdhcg_cuda_halpern_diagnostics {
+    uint32_t abi_version;
+    int32_t mode;
+    int32_t valid;
+    int32_t finite;
+    uint64_t updates;
+    uint64_t inner_iterations;
+    uint64_t restarts;
+    uint64_t weight_updates;
+    uint64_t weight_fallbacks;
+    uint64_t metric_evaluations;
+    uint64_t last_restart_iteration;
+    uint64_t epoch_reference_iteration;
+    double primal_weight;
+    double minimum_primal_weight;
+    double maximum_primal_weight;
+    double fixed_point_error;
+    double epoch_initial_error;
+    double eta;
+} spacepdhcg_cuda_halpern_diagnostics;
+
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_set_halpern_options(
+    spacepdhcg_cuda_workspace* workspace,
+    const spacepdhcg_cuda_halpern_options* options
+);
+spacepdhcg_cuda_status spacepdhcg_cuda_workspace_halpern_diagnostics(
+    spacepdhcg_cuda_workspace* workspace,
+    spacepdhcg_cuda_halpern_diagnostics* diagnostics
+);
+
 spacepdhcg_cuda_status spacepdhcg_cuda_workspace_query(
     spacepdhcg_cuda_workspace* workspace,
     int32_t* complete

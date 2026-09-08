@@ -1,0 +1,37 @@
+{
+  "a": {
+    "source_commit": "23a646a6b8dd3a6210076579485e07044c2e9b58",
+    "manifest_sha256": "7a0b94843e11318f8df51e1eca61ac43ee50b93012954d5826fd449ed5ef7137",
+    "complete_build_script": false,
+    "source_archive_sha256": "f8dbde061bb5214e405074dd6bcd230436327e41559a2915df264a9351c38d89",
+    "gpu_executions": 0,
+    "resource_isolation_passed": false,
+    "limitation": "All compilation, CPU conversion/parser and resource stages completed; configure launch raised FileNotFoundError because cmake was absent from PATH. Original empty configure log retained. No GPU was launched."
+  },
+  "b": {
+    "source_commit": "be9ef450fd44f28e3e6f6810e8309409cad849f4",
+    "manifest_sha256": "24c679ce0d86be0f1644675ad3dcf10bcc1c5373fa24099faaa62bc0f0feacc8",
+    "complete_build_script": true,
+    "source_archive_sha256": "a63b057dbbe1630c727be7b31e4cb5bcc3ca31de390a57415f78c7db165aa23e",
+    "gpu_executions": 0,
+    "resource_isolation_passed": false,
+    "limitation": "CPU/parser/configure checks completed; cooperative default/common kernel resource footprints regressed to158 registers/40 stack bytes. Superseded before any GPU run."
+  },
+  "c": {
+    "source_commit": "66b291a56c988ed938c00ad7eeebdcad2f5a1d6b",
+    "manifest_sha256": "22ef2db4e887d29e0e2a99c918bec8243291747630d7617441b05aa7da9844d4",
+    "complete_build_script": true,
+    "source_archive_sha256": "ab3e6302170ab660a4cd0fb7b496528c71f8dcc01488fc685cf22d875708038c",
+    "gpu_executions": 0,
+    "resource_isolation_passed": false,
+    "limitation": "CPU/parser/configure checks completed; cooperative default/common kernel resource footprints regressed to158 registers/40 stack bytes. Superseded before any GPU run."
+  },
+  "d": {
+    "source_commit": "6fbff324b152b75e6c27e3d91b4dc0835c65ab93",
+    "manifest_sha256": "c64efa7a6356d3a17f9f29e2ba2c5706c5bda180ac7cf8e6cf919ba6b422300a",
+    "complete_build_script": true,
+    "source_archive_sha256": "8e4ab79b15ea2b3c94bcf82a48f6e77a014de004f23591181bfb4089546ad7d9",
+    "gpu_executions": 0,
+    "resource_isolation_passed": true
+  }
+}
